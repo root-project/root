@@ -33,11 +33,11 @@
 
 // Routines used for processing <IMG> markup
 
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 #include "TGHtml.h"
-//#include <TGHtmlUri.h>
+#include "snprintf.h"
 #include "TImage.h"
 #include "TUrl.h"
 #include "TSocket.h"
@@ -330,7 +330,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
    if (!strchr(z, '%')) return z;
    // coverity[secure_coding]
    if (!sscanf(z, "%d", &n)) return z;
-   if (n < 0 || n > 100) return z;
+   if (n <= 0 || n > 100) return z;
    if (opt[0] == 'h') {
       val = fCanvas->GetHeight() * 100;
    } else {

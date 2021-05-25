@@ -85,8 +85,4 @@ public:
    ClassDef(TGraphAsymmErrors,3)  //A graph with asymmetric error bars
 };
 
-inline Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
-   return AllocateArrays(6, size);
-}
-
 #endif

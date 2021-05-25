@@ -28,17 +28,16 @@ public:
   } ;  
 
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, const RooArgSet& projDeps,
-			 Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE, Bool_t showProgress=kFALSE, Bool_t verbose=kTRUE) ;
+                         RooAbsTestStatistic::Configuration const& cfg, bool showProgress=false) ;
 
   RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooDataWeightedAverage(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,
-				      const RooArgSet& projDeps, const char* /*rangeName*/=0, const char* /*addCoefRangeName*/=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE,
-                                      Bool_t verbose=kTRUE, Bool_t /*splitCutRange*/=kFALSE, Bool_t = kFALSE) {
+                                      const RooArgSet& projDeps,
+                                      RooAbsTestStatistic::Configuration const& cfg) {
     // Virtual constructor
-    return new RooDataWeightedAverage(name,title,real,adata,projDeps,nCPU,interleave, CPUAffinity, verbose) ;
+    return new RooDataWeightedAverage(name,title,real,adata,projDeps,cfg) ;
   }
 
   virtual Double_t globalNormalization() const ;
@@ -50,7 +49,7 @@ protected:
 
   Double_t _sumWeight ;  // Global sum of weights needed for normalization
   Bool_t _showProgress ; // Show progress indication during evaluation if true
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
   
   ClassDef(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
 };

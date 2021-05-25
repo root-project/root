@@ -33,12 +33,13 @@
 
 // Routines used to render HTML onto the screen for the TGHtml widget.
 
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 #include "TGHtml.h"
 #include "TImage.h"
-
+#include "TVirtualX.h"
+#include "strlcpy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor.
@@ -145,7 +146,7 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
       zBuf[2] = 0;
    }
 
-   strcat(zBuf, ".");
+   strcat(zBuf, "."); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +205,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
       }
    }
 
-   strcat(zBuf, ".");
+   strcat(zBuf, "."); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -220,6 +220,50 @@ template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
 template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
 template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+// External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
+#if __GNUC__ > 5
+template class TakeHelper<bool, bool, std::vector<bool>>;
+template class TakeHelper<unsigned int, unsigned int, std::vector<unsigned int>>;
+template class TakeHelper<unsigned long, unsigned long, std::vector<unsigned long>>;
+template class TakeHelper<unsigned long long, unsigned long long, std::vector<unsigned long long>>;
+template class TakeHelper<int, int, std::vector<int>>;
+template class TakeHelper<long, long, std::vector<long>>;
+template class TakeHelper<long long, long long, std::vector<long long>>;
+template class TakeHelper<float, float, std::vector<float>>;
+template class TakeHelper<double, double, std::vector<double>>;
+#endif
+
+void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName)
+{
+   TString fileMode = opts.fMode;
+   fileMode.ToLower();
+   if (fileMode != "update")
+      return;
+
+   // output file opened in "update" mode: must check whether output TTree is already present in file
+   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "update")};
+   if (!outFile || outFile->IsZombie())
+      throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
+
+   TObject *outTree = outFile->Get(treeName.c_str());
+   if (outTree == nullptr)
+      return;
+
+   // object called treeName is already present in the file
+   if (opts.fOverwriteIfExists) {
+      if (outTree->InheritsFrom("TTree")) {
+         static_cast<TTree *>(outTree)->Delete("all");
+      } else {
+         outFile->Delete(treeName.c_str());
+      }
+   } else {
+      const std::string msg = "Snapshot: tree \"" + treeName + "\" already present in file \"" + fileName +
+                              "\". If you want to delete the original tree and write another, please set "
+                              "RSnapshotOptions::fOverwriteIfExists to true.";
+      throw std::invalid_argument(msg);
+   }
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

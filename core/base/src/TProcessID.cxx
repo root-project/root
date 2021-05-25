@@ -50,11 +50,13 @@ of TUUIDs.
 #include "TExMap.h"
 #include "TVirtualMutex.h"
 #include "TError.h"
+#include "snprintf.h"
 
-TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
-TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
+TObjArray  *TProcessID::fgPIDs   = nullptr; //pointer to the list of TProcessID
+TProcessID *TProcessID::fgPID    = nullptr; //pointer to the TProcessID of the current session
 std::atomic_uint TProcessID::fgNumber(0); //Current referenced object instance count
-TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
+TExMap     *TProcessID::fgObjPIDs = nullptr; //Table (pointer,pids)
+
 ClassImp(TProcessID);
 
 static std::atomic<TProcessID *> gIsValidCache;
@@ -270,7 +272,7 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
       ULong_t hash = Void_Hash(obj);
 
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
-      pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
+      pid = fgObjPIDs->GetValue(hash,(Longptr_t)obj);
       return (TProcessID*)fgPIDs->At(pid);
    } else {
       auto current = gGetProcessWithUIDCache.load();
@@ -399,7 +401,7 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
       // if the address has already been registered, we want to
       // update it's uniqueID (this can easily happen when the
       // referenced object have been stored in a TClonesArray.
-      (*fgObjPIDs)(hash, (Long_t)obj) = GetUniqueID();
+      (*fgObjPIDs)(hash, (Longptr_t)obj) = GetUniqueID();
    }
 }
 
@@ -414,7 +416,11 @@ void TProcessID::RecursiveRemove(TObject *obj)
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == GetObjectWithID(uid)) {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
-      if (fgObjPIDs) {
+      // Only attempt to remove from the map the items that are already
+      // registered (because they are associated with a TProcessID with index 
+      // greater than 255.  Attempting to remove an item that is not in the map
+      // issues a Warning message.  
+      if (fgObjPIDs && ((obj->GetUniqueID()&0xff000000)==0xff000000)) {
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);
       }

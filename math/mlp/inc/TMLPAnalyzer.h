@@ -22,17 +22,6 @@ class TMultiLayerPerceptron;
 class TProfile;
 class THStack;
 
-//____________________________________________________________________
-//
-// TMLPAnalyzer
-//
-// This utility class contains a set of tests usefull when developing
-// a neural network.
-// It allows you to check for unneeded variables, and to control
-// the network structure.
-//
-//--------------------------------------------------------------------
-
 class TMLPAnalyzer : public TObject {
 
 private:

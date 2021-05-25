@@ -88,7 +88,7 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
   for (Int_t i=0 ; i<cacheHist.numEntries() ; i++) {
     const RooArgSet* obs = cacheHist.get(i) ;
     Double_t wgt = clone2->getVal(obs) ;
-    cacheHist.set(wgt) ;
+    cacheHist.set(i, wgt, 0.);
   }
 
   delete cloneSet ;
@@ -103,17 +103,14 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
 RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const 
 {
   // Make list of servers
-  RooArgSet servers ;
+  RooArgSet serverSet;
 
-  TIterator* siter = serverIterator() ;
-  siter->Reset() ;
-  RooAbsArg* server ;
-  while((server=(RooAbsArg*)siter->Next())) {
-    servers.add(*server) ;
+  for (auto server : _serverList) {
+    serverSet.add(*server);
   }
   
   // Return servers that are in common with given normalization set
-  return (RooArgSet*) servers.selectCommon(nset) ;
+  return (RooArgSet*) serverSet.selectCommon(nset);
   
 }
 
@@ -126,19 +123,16 @@ RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
 RooArgSet* RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const 
 {  
   // Make list of servers
-  RooArgSet *servers = new RooArgSet ;
-
-  TIterator* siter = serverIterator() ;
-  siter->Reset() ;
-  RooAbsArg* server ;
-  while((server=(RooAbsArg*)siter->Next())) {
-    servers->add(*server) ;
+  RooArgSet *serverSet = new RooArgSet;
+  
+  for (auto server : _serverList) {
+    serverSet->add(*server);
   }
   
   // Remove all given observables from server list
-  servers->remove(nset,kTRUE,kTRUE) ;
+  serverSet->remove(nset,kTRUE,kTRUE);
 
-  return servers ;
+  return serverSet;
 }
 
 

@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 
 set(FIT_HEADERS
     ParameterSettings.h
@@ -70,6 +76,7 @@ target_compile_definitions(
     Minuit2Math
     PUBLIC
     ROOT_Math_VecTypes
+    MATHCORE_STANDALONE
     )
 
 target_link_libraries(Minuit2Math PUBLIC Minuit2Common)

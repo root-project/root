@@ -26,25 +26,26 @@ using namespace clang;
 namespace cling {
 
   Transaction::Transaction(Sema& S) : m_Sema(S) {
-    Initialize(S);
+    Initialize();
   }
 
   Transaction::Transaction(const CompilationOptions& Opts, Sema& S)
     : m_Sema(S) {
-    Initialize(S);
+    Initialize();
     m_Opts = Opts; // intentional copy.
   }
 
-  void Transaction::Initialize(Sema& S) {
+  void Transaction::Initialize() {
     m_NestedTransactions.reset(0);
     m_Parent = 0;
     m_State = kCollecting;
+    m_Unloading = false;
     m_IssuedDiags = kNone;
     m_Opts = CompilationOptions();
+    m_DefinitionShadowNS = 0;
     m_Module = 0;
     m_WrapperFD = 0;
     m_Next = 0;
-    //m_Sema = S;
     m_BufferFID = FileID(); // sets it to invalid.
     m_Exe = 0;
   }
@@ -59,6 +60,13 @@ namespace cling {
                && "All nested transactions must be committed!");
         delete (*m_NestedTransactions)[i];
       }
+  }
+
+  void Transaction::setDefinitionShadowNS(clang::NamespaceDecl* NS) {
+    assert(!m_DefinitionShadowNS && "Transaction has a __cling_N5xxx NS?");
+    m_DefinitionShadowNS = NS;
+    // Ensure `NS` is unloaded from the AST on transaction rollback, e.g. '.undo X'
+    append(static_cast<clang::Decl*>(NS));
   }
 
   NamedDecl* Transaction::containsNamedDecl(llvm::StringRef name) const {
@@ -87,6 +95,7 @@ namespace cling {
   }
 
   void Transaction::addNestedTransaction(Transaction* nested) {
+    assert(!m_Unloading && "Must not nest within unloading transaction");
     // Create lazily the list
     if (!m_NestedTransactions)
       m_NestedTransactions.reset(new NestedTransactions());
@@ -350,6 +359,8 @@ namespace cling {
     }
     cling::log() << indent << " state: " << stateNames[getState()]
                  << " decl groups, ";
+    if (m_Unloading)
+      cling::log() << "currently unloading, ";
     if (hasNestedTransactions())
       cling::log() << m_NestedTransactions->size();
     else

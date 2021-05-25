@@ -17,7 +17,7 @@
 #define ROO_RESOLUTION_MODEL
 
 #include "RooAbsPdf.h"
-#include "RooRealProxy.h"
+#include "RooTemplateProxy.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 
@@ -28,7 +28,7 @@ public:
 
   // Constructors, assignment etc
   inline RooResolutionModel() : _basis(0) { }
-  RooResolutionModel(const char *name, const char *title, RooRealVar& x) ; 
+  RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooResolutionModel(const RooResolutionModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual ~RooResolutionModel();
@@ -39,7 +39,8 @@ public:
 
   Double_t getValV(const RooArgSet* nset=0) const ;
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
-  RooRealVar& convVar() const ;
+  /// Return the convolution variable of the resolution model.
+  RooAbsRealLValue& convVar() const {return *x;}
   const RooRealVar& basisConvVar() const ;
 
   inline Bool_t isBasisSupported(const char* name) const { return basisCode(name)?kTRUE:kFALSE ; }
@@ -53,23 +54,18 @@ public:
 
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  static void cleanup() ;
-
   static RooFormulaVar* identity() ;
 
   virtual void changeBasis(RooFormulaVar* basis) ;
 
 protected:
 
-  static RooFormulaVar* _identity ;  // Identity basis function pointe
-
-
   friend class RooConvGenContext ;
   friend class RooAddModel ;
-  RooRealProxy x ;                   // Dependent/convolution variable
+  RooTemplateProxy<RooAbsRealLValue> x;                   // Dependent/convolution variable
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  Bool_t traceEvalHook(Double_t value) const ;
+//  Bool_t traceEvalHook(Double_t value) const ;
 
 
   friend class RooAbsAnaConvPdf ;
@@ -78,7 +74,7 @@ protected:
   RooFormulaVar* _basis ;    // Basis function convolved with this resolution model
   Bool_t _ownBasis ;         // Flag indicating ownership of _basis 
 
-  ClassDef(RooResolutionModel,1) // Abstract Resolution Model
+  ClassDef(RooResolutionModel, 2) // Abstract Resolution Model
 };
 
 #endif

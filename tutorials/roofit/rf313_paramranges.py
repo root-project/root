@@ -1,18 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
-##
-## Working with parameterized ranges to define non-rectangular regions
-## for fitting and integration
+## Multidimensional models: working with parameterized ranges to define non-rectangular
+## regions for fitting and integration
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -27,8 +22,12 @@ z = ROOT.RooRealVar("z", "z", 0, 10)
 
 # Define 3 dimensional pdf
 z0 = ROOT.RooRealVar("z0", "z0", -0.1, 1)
-px = ROOT.RooPolynomial("px", "px", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0)))
-py = ROOT.RooPolynomial("py", "py", y, ROOT.RooArgList(ROOT.RooFit.RooConst(0)))
+px = ROOT.RooPolynomial(
+    "px", "px", x, ROOT.RooArgList(
+        ROOT.RooFit.RooConst(0)))
+py = ROOT.RooPolynomial(
+    "py", "py", y, ROOT.RooArgList(
+        ROOT.RooFit.RooConst(0)))
 pz = ROOT.RooPolynomial("pz", "pz", z, ROOT.RooArgList(z0))
 pxyz = ROOT.RooProdPdf("pxyz", "pxyz", ROOT.RooArgList(px, py, pz))
 

@@ -1,9 +1,8 @@
-//===--- Module.cpp - Module description ------------------------*- C++ -*-===//
+//===- Module.cpp - Module description ------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -11,8 +10,12 @@
 //  been loaded from an AST file.
 //
 //===----------------------------------------------------------------------===//
+
 #include "clang/Serialization/Module.h"
 #include "ASTReaderInternals.h"
+#include "clang/Serialization/ContinuousRangeMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
@@ -26,15 +29,16 @@ ModuleFile::~ModuleFile() {
 }
 
 template<typename Key, typename Offset, unsigned InitialCapacity>
-static void 
+static void
 dumpLocalRemap(StringRef Name,
                const ContinuousRangeMap<Key, Offset, InitialCapacity> &Map) {
   if (Map.begin() == Map.end())
     return;
-  
-  typedef ContinuousRangeMap<Key, Offset, InitialCapacity> MapType;
+
+  using MapType = ContinuousRangeMap<Key, Offset, InitialCapacity>;
+
   llvm::errs() << "  " << Name << ":\n";
-  for (typename MapType::const_iterator I = Map.begin(), IEnd = Map.end(); 
+  for (typename MapType::const_iterator I = Map.begin(), IEnd = Map.end();
        I != IEnd; ++I) {
     llvm::errs() << "    " << I->first << " -> " << I->second << "\n";
   }
@@ -51,12 +55,12 @@ LLVM_DUMP_METHOD void ModuleFile::dump() {
     }
     llvm::errs() << "\n";
   }
-  
+
   // Remapping tables.
-  llvm::errs() << "  Base source location offset: " << SLocEntryBaseOffset 
+  llvm::errs() << "  Base source location offset: " << SLocEntryBaseOffset
                << '\n';
   dumpLocalRemap("Source location offset local -> global map", SLocRemap);
-  
+
   llvm::errs() << "  Base identifier ID: " << BaseIdentifierID << '\n'
                << "  Number of identifiers: " << LocalNumIdentifiers << '\n';
   dumpLocalRemap("Identifier ID local -> global map", IdentifierRemap);
@@ -72,18 +76,18 @@ LLVM_DUMP_METHOD void ModuleFile::dump() {
   llvm::errs() << "  Base selector ID: " << BaseSelectorID << '\n'
                << "  Number of selectors: " << LocalNumSelectors << '\n';
   dumpLocalRemap("Selector ID local -> global map", SelectorRemap);
-  
+
   llvm::errs() << "  Base preprocessed entity ID: " << BasePreprocessedEntityID
-               << '\n'  
-               << "  Number of preprocessed entities: " 
+               << '\n'
+               << "  Number of preprocessed entities: "
                << NumPreprocessedEntities << '\n';
-  dumpLocalRemap("Preprocessed entity ID local -> global map", 
+  dumpLocalRemap("Preprocessed entity ID local -> global map",
                  PreprocessedEntityRemap);
-  
+
   llvm::errs() << "  Base type index: " << BaseTypeIndex << '\n'
                << "  Number of types: " << LocalNumTypes << '\n';
   dumpLocalRemap("Type index local -> global map", TypeRemap);
-  
+
   llvm::errs() << "  Base decl ID: " << BaseDeclID << '\n'
                << "  Number of decls: " << LocalNumDecls << '\n';
   dumpLocalRemap("Decl ID local -> global map", DeclRemap);

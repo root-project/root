@@ -21,7 +21,10 @@
 #include "TH1.h"
 #include "TList.h"
 #include "TClass.h"
+#include "TBuffer.h"
 #include "TROOT.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 ClassImp(TLinearFitter);
 
@@ -52,7 +55,7 @@ The general form of this kind of model is
 Functions f are fixed functions of x. For example, fitting with a
 polynomial is linear fitting in this sense.
 
-### Introduction 
+### Introduction
 
 ####   The fitting method
 
@@ -656,7 +659,7 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
       //general case
       for (ii=0; ii<fNfunctions; ii++){
          if (!fFunctions.IsEmpty()){
-            // ffunctions can be TF1 or TFormula depending on how they are created 
+            // ffunctions can be TF1 or TFormula depending on how they are created
             TObject * obj = fFunctions.UncheckedAt(ii);
             if (obj->IsA() == TFormula::Class() ) {
                TFormula *f1 = (TFormula*)(obj);
@@ -664,7 +667,7 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
             }
             else if  (obj->IsA() == TF1::Class() ) {
                TF1 *f1 = (TF1*)(obj);
-               fVal[ii]=f1->EvalPar(x)/e;               
+               fVal[ii]=f1->EvalPar(x)/e;
             }
             else {
                Error("AddToDesign","Basis Function %s is of an invalid type %s",obj->GetName(),obj->IsA()->GetName());
@@ -1471,7 +1474,7 @@ Int_t TLinearFitter::Merge(TCollection *list)
 void TLinearFitter::SetBasisFunctions(TObjArray * functions)
 {
    fFunctions = *(functions);
-   fFunctions.SetOwner(kTRUE); 
+   fFunctions.SetOwner(kTRUE);
    int size = fFunctions.GetEntries();
 
    fNfunctions=size;
@@ -1535,7 +1538,9 @@ void TLinearFitter::SetFormula(const char *formula)
    Int_t i;
    //Int_t len = strlen(formula);
    if (fInputFunction)
-      fInputFunction = 0;
+      fInputFunction = nullptr;
+   if (fFormula)
+      delete [] fFormula;
    fFormulaSize = strlen(formula);
    fFormula = new char[fFormulaSize+1];
    strlcpy(fFormula, formula,fFormulaSize+1);
@@ -1567,7 +1572,7 @@ void TLinearFitter::SetFormula(const char *formula)
          fFunctions.Clear();
 
       // do not own the functions in this case
-      fFunctions.SetOwner(kFALSE); 
+      fFunctions.SetOwner(kFALSE);
 
       fNfunctions = oa->GetEntriesFast();
       fFunctions.Expand(fNfunctions);

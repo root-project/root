@@ -12,9 +12,10 @@
 #include "TPie.h"
 #include "TPieSlice.h"
 
-#include <Riostream.h>
+#include <iostream>
 #include <TROOT.h>
 #include <TVirtualPad.h>
+#include <TVirtualX.h>
 #include <TArc.h>
 #include <TLegend.h>
 #include <TMath.h>
@@ -23,6 +24,7 @@
 #include <TPaveText.h>
 #include <TH1.h>
 #include <TColor.h>
+#include <TLine.h>
 
 ClassImp(TPie);
 
@@ -562,7 +564,8 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if ( ((isMovingPie || isMovingSlice || isRotating) && gPad->OpaqueMoving()) ||
                (isResizing && gPad->OpaqueResizing()) ) {
             isRedrawing = kTRUE;
-            event = kButton1Up;
+            // event = kButton1Up;
+            // intentionally no break to continue with kButton1Up handling
          }
          else break;
 
@@ -575,7 +578,6 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (gROOT->IsEscaped()) {
             gROOT->SetEscape(kFALSE);
             gIsUptSlice = kFALSE;
-            isRedrawing = kFALSE;
             break;
          }
 
@@ -599,7 +601,6 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gPad->Modified(kTRUE);
 
 
-         isRedrawing = kFALSE;
          gIsUptSlice = kFALSE;
 
          gVirtualX->SetLineColor(-1);

@@ -16,7 +16,7 @@
 /// The transparency is available on all platforms when the flag
 /// `OpenGL.CanvasPreferGL` is set to `1` in `$ROOTSYS/etc/system.rootrc`, or
 /// on Mac with the Cocoa backend. X11 does not support transparency. On the file
-/// output it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+/// output it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 ///
 /// \macro_image
 /// \macro_code
@@ -25,14 +25,14 @@
 
 void transparency()
 {
-   TCanvas *c1 = new TCanvas("c1", "c1",224,330,700,527);
+   auto c1 = new TCanvas("c1", "c1",224,330,700,527);
    c1->Range(-0.125,-0.125,1.125,1.125);
 
-   TLatex *tex = new TLatex(0.06303724,0.0194223,"This text is opaque and this line is transparent");
+   auto tex = new TLatex(0.06303724,0.0194223,"This text is opaque and this line is transparent");
    tex->SetLineWidth(2);
    tex->Draw();
 
-   TArrow *arrow = new TArrow(0.5555158,0.07171314,0.8939828,0.6195219,0.05,"|>");
+   auto arrow = new TArrow(0.5555158,0.07171314,0.8939828,0.6195219,0.05,"|>");
    arrow->SetLineWidth(4);
    arrow->SetAngle(30);
    arrow->Draw();
@@ -44,13 +44,13 @@ void transparency()
    Double_t y[10] = {
    0.7290837, 0.9631474, 0.4775896, 0.6494024, 0.3555777,
    0.622012, 0.7938247, 0.9482072, 0.3904382, 0.2410359};
-   TGraph *graph = new TGraph(10,x,y);
+   auto graph = new TGraph(10,x,y);
    graph->SetLineColorAlpha(46, 0.1);
    graph->SetLineWidth(7);
    graph->Draw("l");
 
    // Draw an ellipse with opaque colors.
-   TEllipse *ellipse = new TEllipse(0.1740688,0.8352632,0.1518625,0.1010526,0,360,0);
+   auto ellipse = new TEllipse(0.1740688,0.8352632,0.1518625,0.1010526,0,360,0);
    ellipse->SetFillColor(30);
    ellipse->SetLineColor(51);
    ellipse->SetLineWidth(3);
@@ -69,4 +69,24 @@ void transparency()
    tex->SetTextSize(0.125);
    tex->SetTextAngle(26.0);
    tex->Draw();
+
+   // Draw two transparent markers
+   auto marker = new TMarker(0.03080229,0.998008,20);
+   marker->SetMarkerColorAlpha(2, .3);
+   marker->SetMarkerStyle(20);
+   marker->SetMarkerSize(1.7);
+   marker->Draw();
+   marker = new TMarker(0.1239255,0.8635458,20);
+   marker->SetMarkerColorAlpha(2, .2);
+   marker->SetMarkerStyle(20);
+   marker->SetMarkerSize(1.7);
+   marker->Draw();
+
+   // Draw an opaque marker
+   marker = new TMarker(0.3047994,0.6344622,20);
+   marker->SetMarkerColor(2);
+   marker->SetMarkerStyle(20);
+   marker->SetMarkerSize(1.7);
+   marker->Draw();
+
 }

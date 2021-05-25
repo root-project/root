@@ -1,20 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
-##
-## Easy CINT interactive access to workspace contents through a
-## 'C++' namespace in CINT that maps the workspace contents in a typesafe way
-##
-## NB: ROOT.This macro exploits a feature native to CINT and _cannot_ be compiled
+## Organization and simultaneous fits: easy interactive access to workspace contents - CINT
+## to CLING code migration
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -35,28 +28,34 @@ def fillWorkspace(w):
     sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
     sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
-    # Build Chebychev polynomial p.d.f.
+    # Build Chebychev polynomial pdf
     a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
     a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
     bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
-    # Sum the signal components into a composite signal p.d.f.
+    # Sum the signal components into a composite signal pdf
     sig1frac = ROOT.RooRealVar(
         "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
     sig = ROOT.RooAddPdf(
-        "sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+        "sig", "Signal", ROOT.RooArgList(
+            sig1, sig2), ROOT.RooArgList(sig1frac))
 
     # Sum the composite signal and background
     bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0., 1.)
     model = ROOT.RooAddPdf(
-        "model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
+        "model",
+        "g1+g2+a",
+        ROOT.RooArgList(
+            bkg,
+            sig),
+        ROOT.RooArgList(bkgfrac))
 
-    getattr(w, 'import')(model)
-
+    w.Import(model)
 
 
 # Create and fill workspace
 # ------------------------------------------------
+
 
 # Create a workspace named 'w'
 # With CINT w could exports its contents to
@@ -66,7 +65,7 @@ def fillWorkspace(w):
 # change the code
 w = ROOT.RooWorkspace("w", ROOT.kTRUE)
 
-# Fill workspace with p.d.f. and data in a separate function
+# Fill workspace with pdf and data in a separate function
 fillWorkspace(w)
 
 # Print workspace contents
@@ -109,7 +108,7 @@ bkg = w.pdf("bkg")
 model.plotOn(frame)
 ras_bkg = ROOT.RooArgSet(bkg)
 model.plotOn(frame, ROOT.RooFit.Components(ras_bkg),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
+             ROOT.RooFit.LineStyle(ROOT.kDashed))
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)

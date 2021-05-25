@@ -14,6 +14,7 @@
 
 #include "TH2Poly.h"
 #include "TProfile.h"
+#include <vector>
 
 class TProfile2PolyBin : public TH2PolyBin {
 public:
@@ -74,7 +75,7 @@ public:
    Long64_t Merge(TCollection *in) override;
    virtual void Reset(Option_t *option = "") override;
 
-   // option to dispay different measures on bins
+   // option to display different measures on bins
    void SetContentToAverage(); // this one is used by default
    void SetContentToError();
 
@@ -111,6 +112,6 @@ protected:
    Int_t OverflowIdxToArrayIdx(Int_t val) { return -val - 1; }
 
 
-   ClassDefOverride(TProfile2Poly, 1)
+   ClassDefOverride(TProfile2Poly, 2)
 };
 #endif

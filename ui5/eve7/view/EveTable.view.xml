@@ -1,0 +1,39 @@
+<core:View
+    controllerName="rootui5.eve7.controller.EveTable"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.uxap"
+    xmlns:layout="sap.ui.layout"
+    xmlns:m="sap.m"
+    xmlns:table="sap.ui.table"
+    xmlns:f="sap.ui.layout.form"
+    height="100%">
+  <m:FlexBox direction="Column" height="100%">
+    <layout:VerticalLayout id="header" width="100%" >
+      <m:Label text="Choose Collection:" />
+      <layout:HorizontalLayout id="gedHeader">
+        <m:ComboBox id="ccombo" change="collectionChanged"
+                    items="{
+                           path: 'collections>/itemx'
+                           }">
+          <core:Item key="{collections>key}" text="{collections>text}" />
+        </m:ComboBox>
+
+        <m:Label text="Edit table:" labelFor="toggleButtonId"/>
+        <m:Button icon="sap-icon://edit" id="toggleButtonId" press="toggleTableEdit" tooltip="toggle table edit"/>
+      </layout:HorizontalLayout  >
+    </layout:VerticalLayout >
+    <table:Table
+        id="table"
+	sort="sortTable"
+        class="sapUiNoMarginTop"
+        selectionBehavior="RowOnly"
+        editable="false"
+        rowHeight="22"
+        showColumnVisibilityMenu="true"
+        visibleRowCountMode="Auto">
+      <table:layoutData>
+        <m:FlexItemData growFactor="1"/>
+      </table:layoutData>
+    </table:Table>
+  </m:FlexBox>
+</core:View>

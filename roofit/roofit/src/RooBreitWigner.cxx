@@ -25,13 +25,12 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <math.h>
 
 #include "RooBreitWigner.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-// #include "RooFitTools/RooRandom.h"
+#include "RooBatchCompute.h"
 
 using namespace std;
 
@@ -63,6 +62,12 @@ Double_t RooBreitWigner::evaluate() const
 {
   Double_t arg= x - mean;
   return 1. / (arg*arg + 0.25*width*width);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of BreitWigner distribution.  
+RooSpan<double> RooBreitWigner::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeBreitWigner(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

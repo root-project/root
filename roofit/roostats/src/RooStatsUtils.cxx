@@ -16,7 +16,11 @@ NamespaceImp(RooStats)
 #endif
 
 #include "TTree.h"
+#include "TBranch.h"
 
+#include "RooArgSet.h"
+#include "RooWorkspace.h"
+#include "RooAbsPdf.h"
 #include "RooUniform.h"
 #include "RooProdPdf.h"
 #include "RooExtendPdf.h"
@@ -24,14 +28,35 @@ NamespaceImp(RooStats)
 #include "RooStats/ModelConfig.h"
 #include "RooStats/RooStatsUtils.h"
 #include <typeinfo>
-
 using namespace std;
 
-// this file is only for the documentation of RooStats namespace
+
+namespace {
+     template<class listT, class stringT> void getParameterNames(const listT* l,std::vector<stringT>& names){
+       // extract the parameter names from a list
+       if(!l) return;
+       RooAbsArg* obj;
+       RooFIter itr(l->fwdIterator());
+       while((obj = itr.next())){
+         names.push_back(obj->GetName());
+       }
+     }
+     void getArgs(RooWorkspace* ws, const std::vector<TString> names, RooArgSet& args){
+       for(const auto& p:names){
+         RooRealVar* v = ws->var(p.Data());
+         if(v){
+           args.add(*v);
+         }
+       }
+     }
+   }   
 
 namespace RooStats {
 
-   bool gUseOffset = false;
+   RooStatsConfig& GetGlobalRooStatsConfig() {
+      static RooStatsConfig theConfig;
+      return theConfig;
+   }
 
    Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b ) {
    // Asimov significance
@@ -55,14 +80,14 @@ namespace RooStats {
       return std::sqrt(za2); 
    }
 
-
+   /// Use an offset in NLL calculations.
    void UseNLLOffset(bool on) {
-      // use offset in NLL calculations
-      gUseOffset = on;
+      GetGlobalRooStatsConfig().useLikelihoodOffset = on;
    }
 
+   /// Test of RooStats should by default offset NLL calculations.
    bool IsNLLOffset() {
-      return gUseOffset;
+      return GetGlobalRooStatsConfig().useLikelihoodOffset;
    }
 
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
@@ -89,7 +114,7 @@ namespace RooStats {
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().clone(sim->indexCat().GetName());
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
             cat->setBin(ic);
-            RooAbsPdf* catPdf = sim->getPdf(cat->getLabel());
+            RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
             // it is possible that a pdf is not defined for every category
             if (catPdf != 0) FactorizePdf(observables, *catPdf, obsTerms, constraints);
          }
@@ -120,9 +145,7 @@ namespace RooStats {
       if(constraints.getSize() == 0) {
          oocoutW((TObject *)0, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
          return 0;
-      } else if(constraints.getSize() == 1) {
-         return dynamic_cast<RooAbsPdf *>(constraints.first()->clone(name));
-      }
+      } 
       return new RooProdPdf(name,"", constraints);
    }
 
@@ -178,7 +201,7 @@ namespace RooStats {
 
          for (int ic = 0, nc = cat->numBins((const char *)NULL); ic < nc; ++ic) {
             cat->setBin(ic);
-            RooAbsPdf* catPdf = sim->getPdf(cat->getLabel());
+            RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
             RooAbsPdf* newPdf = NULL;
             // it is possible that a pdf is not defined for every category
             if (catPdf != NULL) newPdf = StripConstraints(*catPdf, observables);
@@ -329,4 +352,87 @@ namespace RooStats {
       }
       os << ")\n";
    }
+
+   // clone a workspace, copying all needed components and discarding all others
+   // start off with the old workspace
+   RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName,
+                                   bool copySnapshots, const char *mcname,
+                                   const char *newmcname) {
+      auto objects = oldWS->allGenericObjects();
+      RooStats::ModelConfig *oldMC =
+          dynamic_cast<RooStats::ModelConfig *>(oldWS->obj(mcname));
+      auto data = oldWS->allData();
+      for (auto it : objects) {
+        if (!oldMC) {
+          oldMC = dynamic_cast<RooStats::ModelConfig *>(it);
+        }
+      }
+      if (!oldMC)
+        throw std::runtime_error("unable to retrieve ModelConfig");
+  
+      RooAbsPdf *origPdf = oldMC->GetPdf();
+  
+      // start off with the old modelconfig
+      std::vector<TString> poilist;
+      std::vector<TString> nplist;
+      std::vector<TString> obslist;
+      std::vector<TString> globobslist;
+      RooAbsPdf *pdf = NULL;
+      if (oldMC) {
+        pdf = oldMC->GetPdf();
+        ::getParameterNames(oldMC->GetParametersOfInterest(), poilist);
+        ::getParameterNames(oldMC->GetNuisanceParameters(), nplist);
+        ::getParameterNames(oldMC->GetObservables(), obslist);
+        ::getParameterNames(oldMC->GetGlobalObservables(), globobslist);
+      }
+      if (!pdf) {
+        if (origPdf)
+          pdf = origPdf;
+      }
+      if (!pdf) {
+        return NULL;
+      }
+  
+      // create them anew
+      RooWorkspace *newWS = new RooWorkspace(newName ? newName : oldWS->GetName());
+      newWS->autoImportClassCode(true);
+      RooStats::ModelConfig *newMC = new RooStats::ModelConfig(newmcname, newWS);
+  
+      // Copy snapshots
+      if (copySnapshots) {
+        RooFIter itr(oldWS->getSnapshots().fwdIterator());
+        RooArgSet *snap;
+        while ((snap = (RooArgSet *)itr.next())) {
+          RooArgSet *snapClone = (RooArgSet *)snap->snapshot();
+          snapClone->setName(snap->GetName());
+          newWS->getSnapshots().Add(snapClone);
+        }
+      }
+  
+      newWS->import(*pdf, RooFit::RecycleConflictNodes());
+      RooAbsPdf *newPdf = newWS->pdf(pdf->GetName());
+      newMC->SetPdf(*newPdf);
+  
+      for (auto d : data) {
+        newWS->import(*d);
+      }
+  
+      RooArgSet poiset;
+      ::getArgs(newWS, poilist, poiset);
+      RooArgSet npset;
+      ::getArgs(newWS, nplist, npset);
+      RooArgSet obsset;
+      ::getArgs(newWS, obslist, obsset);
+      RooArgSet globobsset;
+      ::getArgs(newWS, globobslist, globobsset);
+  
+      newMC->SetParametersOfInterest(poiset);
+      newMC->SetNuisanceParameters(npset);
+      newMC->SetObservables(obsset);
+      newMC->SetGlobalObservables(globobsset);
+      newWS->import(*newMC);
+  
+      return newWS;
+  }
+
 }

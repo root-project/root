@@ -66,6 +66,8 @@ namespace TMVA {
       Double_t       GetRMS ()     const { return fXrmsNorm; }
       Double_t       GetVariance() const { return fXvarianceNorm; }
 
+      void           SetInternalName(const char *name) { fInternalName = name; }
+
       void           SetMin         ( Double_t v ) { fXminNorm     = v; }
       void           SetMax         ( Double_t v ) { fXmaxNorm     = v; }
       void           SetMean        ( Double_t v ) { fXmeanNorm    = v; }

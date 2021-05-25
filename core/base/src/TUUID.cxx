@@ -21,6 +21,14 @@ originally used in the Network Computing System (NCS) and
 later in the Open Software Foundation's (OSF) Distributed Computing
 Environment (DCE).
 
+\note In the way this UUID is constructed, when used outside of
+their original concept (NCS), they are actually not Globally unique
+and indeed multiple distinct concurrent processes are actually likely
+to generate the same UUID.  Technically this is because the UUID is
+constructed only from the node information and time information.
+To make a globally unique number, this needs to be combined with
+TProcessUUID.
+
 Structure of universal unique IDs (UUIDs).
 
 Depending on the network data representation, the multi-
@@ -106,7 +114,9 @@ system clock catches up.
 */
 
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TUUID.h"
+#include "TBuffer.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TInetAddress.h"
@@ -129,6 +139,8 @@ system clock catches up.
 #if defined(R__LINUX) && !defined(R__WINGCC)
 #include <sys/sysinfo.h>
 #endif
+#include <ifaddrs.h>
+#include <netinet/in.h>
 #endif
 #include <chrono>
 
@@ -417,9 +429,34 @@ void TUUID::GetNodeIdentifier()
    if (gSystem) {
 #ifndef R__WIN32
       if (!adr) {
-         TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-         if (addr.IsValid())
-            adr = addr.GetAddress();
+         UInt_t addr = 0;
+
+         struct ifaddrs *ifAddrStruct = nullptr;
+         struct ifaddrs *ifa = nullptr;
+
+         if (getifaddrs(&ifAddrStruct) != 0) {
+            adr = 1;
+         } else {
+            for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+               if (!ifa->ifa_addr) {
+                  continue;
+               }
+               if (ifa->ifa_addr->sa_family != AF_INET) { // check only IP4
+                  continue;
+               }
+               if (strncmp(ifa->ifa_name,"lo",2) == 0) { // skip loop back.
+                  continue;
+               }
+               addr = ntohl(((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr);
+               break;
+            }
+         }
+
+         if (ifAddrStruct != nullptr)
+            freeifaddrs(ifAddrStruct);
+
+         if (addr)
+            adr = addr;
          else
             adr = 1;  // illegal address
       }

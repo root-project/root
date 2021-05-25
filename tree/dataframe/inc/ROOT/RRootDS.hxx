@@ -19,6 +19,8 @@
 
 namespace ROOT {
 
+namespace Internal {
+
 namespace RDF {
 
 class RRootDS final : public ROOT::RDF::RDataSource {
@@ -50,12 +52,14 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
-   std::string GetDataSourceType();
+   std::string GetLabel();
 };
 
 RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);
 
 } // ns RDF
+
+} // ns Internal
 
 } // ns ROOT
 

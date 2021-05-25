@@ -20,7 +20,6 @@
 #include <map>
 #include <string>
 #include <cmath>
-#include <cassert>
 #include <memory>
 
 namespace ROOT {
@@ -33,7 +32,7 @@ namespace ROOT {
    namespace Fit {
 
       class FitConfig;
-      class FitData; 
+      class FitData;
       class BinData;
 
 //___________________________________________________________________________________
@@ -95,7 +94,7 @@ public:
       Note that in this case MINOS is not re-run. If one wants to run also MINOS
       a new result must be created
     */
-   bool Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool isValid, unsigned int ncalls = 0 );
+   bool Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const ROOT::Fit::FitConfig & fconfig, bool isValid, unsigned int ncalls = 0);
 
    /** minimization quantities **/
 
@@ -145,14 +144,14 @@ public:
    /** fitting quantities **/
 
    /// Return pointer to model (fit) function with fitted parameter values.
-   /// Pointer is managed internally. I must not be deleted 
+   /// Pointer is managed internally. I must not be deleted
    const IModelFunction * FittedFunction() const {
-      return fFitFunc.get(); 
+      return fFitFunc.get();
    }
 
    /// return BinData used in the fit (return a nullptr in case a different fit is done
    /// or the data are not available
-   /// Pointer is managed internally, it must not be deleted 
+   /// Pointer is managed internally, it must not be deleted
    const BinData * FittedBinData() const;
 
 
@@ -271,14 +270,14 @@ public:
       cl is the desired confidedence interval value
       norm is a flag to control if the intervals need to be normalized to the chi2/ndf value
       The intervals can be corrected optionally using the chi2/ndf value of the fit if a chi2 fit is performed.
-      This has changed since ROOT 6.14, before the interval were corrected by default. 
+      This has changed since ROOT 6.14, before the interval were corrected by default.
     */
    void GetConfidenceIntervals(unsigned int n, unsigned int stride1, unsigned int stride2, const double * x,  double * ci, double cl=0.95, bool norm = false ) const;
 
    /**
       evaluate confidence interval for the point specified in the passed data sets
       the confidence interval are returned in the array ci
-      cl is the desired confidence interval value. 
+      cl is the desired confidence interval value.
       This method is mantained for backward compatibility and will be deprecated
    */
    void GetConfidenceIntervals(const BinData & data, double * ci, double cl=0.95, bool norm = false ) const;
@@ -289,10 +288,19 @@ public:
     */
    std::vector<double> GetConfidenceIntervals(double cl=0.95, bool norm = false ) const;
 
+   /**
+      scan likelihood value of  parameter and fill the given graph.
+    */
+   bool Scan(unsigned int ipar, unsigned int &npoints, double *pntsx, double *pntsy, double xmin = 0, double xmax = 0);
+
+   /**
+      create contour of two parameters around the minimum
+      pass as option confidence level:  default is a value of 0.683
+   */
+   bool Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoints, double *pntsx, double *pntsy, double confLevel = 0.683);
 
    /// get index for parameter name (return -1 if not found)
    int Index(const std::string & name) const;
-
 
    ///normalize errors using chi2/ndf for chi2 fits
    void NormalizeErrors();
@@ -330,7 +338,6 @@ protected:
    std::shared_ptr<IModelFunction> ModelFunction()  { return fFitFunc; }
    void SetModelFunction(const std::shared_ptr<IModelFunction> & func) { fFitFunc = func; }
 
-
    friend class Fitter;
 
 
@@ -346,7 +353,7 @@ protected:
    double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)
    std::shared_ptr<ROOT::Math::Minimizer> fMinimizer; //! minimizer object used for fitting
    std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunc; //! objective function used for fitting
-   std::shared_ptr<IModelFunction> fFitFunc; //! model function resulting  from the fit. 
+   std::shared_ptr<IModelFunction> fFitFunc; //! model function resulting  from the fit.
    std::shared_ptr<FitData>    fFitData; //! data set used in the fit
    std::map<unsigned int, bool>           fFixedParams; // list of fixed parameters
    std::map<unsigned int, unsigned int>   fBoundParams; // list of limited parameters

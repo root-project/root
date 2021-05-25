@@ -293,8 +293,7 @@ int XrdProofWorker::GetNActiveSessions()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge session objects from the other worker object in order to merge all
-/// the objects in only one. This was added to support hybrid satatically and
-/// dinamically Bonjour workers discovery.
+/// the objects in only one.
 
 void XrdProofWorker::MergeProofServs(const XrdProofWorker &other)
 {

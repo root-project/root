@@ -18,7 +18,7 @@ exception handling functionality.
 
 #include "TException.h"
 
-ExceptionContext_t *gException;
+ExceptionContext_t *gException = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If an exception context has been set (using the TRY and RETRY macros)
@@ -34,4 +34,4 @@ void Throw(int code)
 #endif
 }
 
-
+TExceptionHandler* gExceptionHandler = nullptr;

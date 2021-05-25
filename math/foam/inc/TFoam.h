@@ -4,19 +4,13 @@
 #ifndef ROOT_TFoam
 #define ROOT_TFoam
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TFoam is the main class of the multi-dimensional general purpose         //
-// Monte Carlo event generator (integrator) FOAM.                           //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-
 #include "TString.h"
 
+#include <vector>
+
 class TH1D;
-class TRefArray;
 class TMethodCall;
 class TRandom;
 class TFoamIntegrand;
@@ -26,62 +20,59 @@ class TFoamCell;
 
 class TFoam : public TObject {
 protected:
-  // COMPONENTS //
-    //-------------- Input parameters
-   TString fName;             // Name of a given instance of the FOAM class
-   TString fVersion;          // Actual version of the FOAM like (1.01m)
-   TString fDate;             // Release date of FOAM
-   Int_t   fDim;              // Dimension of the integration/simulation space
-   Int_t   fNCells;           // Maximum number of cells
-   Int_t   fRNmax;            // Maximum No. of the rand. numb. requested at once
-   //-------------------
-   Int_t   fOptDrive;         // Optimization switch =1,2 for variance or maximum weight optimization
-   Int_t   fChat;             // Chat=0,1,2 chat level in output, Chat=1 normal level
-   Int_t   fOptRej;           // Switch =0 for weighted events; =1 for unweighted events in MC
-   //-------------------
-   Int_t   fNBin;             // No. of bins in the edge histogram for cell MC exploration
-   Int_t   fNSampl;           // No. of MC events, when dividing (exploring) cell
-   Int_t   fEvPerBin;         // Maximum number of effective (wt=1) events per bin
-   //-------------------  MULTI-BRANCHING ---------------------
-   Int_t  *fMaskDiv;          //! [fDim] Dynamic Mask for  cell division
-   Int_t  *fInhiDiv;          //! [fDim] Flags for inhibiting cell division
-   Int_t   fOptPRD;           //  Option switch for predefined division, for quick check
-   TFoamVect **fXdivPRD;      //! Lists of division values encoded in one vector per direction
-   //-------------------  GEOMETRY ----------------------------
-   Int_t   fNoAct;            // Number of active cells
-   Int_t   fLastCe;           // Index of the last cell
-   TFoamCell **fCells;           // [fNCells] Array of ALL cells
-   //------------------ M.C. generation----------------------------
-   TFoamMaxwt   *fMCMonit;    // Monitor of the MC weight for measuring MC efficiency
-   Double_t   fMaxWtRej;      // Maximum weight in rejection for getting wt=1 events
-   TRefArray *fCellsAct;      // Array of pointers to active cells, constructed at the end of foam build-up
-   Double_t  *fPrimAcu;       // [fNoAct] Array of cumulative probability of all active cells
-   TObjArray *fHistEdg;       // Histograms of wt, one for each cell edge
-   TObjArray *fHistDbg;       // Histograms of wt, for debug
-   TH1D      *fHistWt;        // Histogram of the MC wt
 
-   Double_t *fMCvect;         // [fDim] Generated MC vector for the outside user
-   Double_t  fMCwt;           // MC weight
-   Double_t *fRvec;           // [fRNmax] random number vector from r.n. generator fDim+1 maximum elements
-   //----------- Procedures
-   TFoamIntegrand *fRho;      //! Pointer to the user-defined integrand function/distribution
-   TMethodCall *fMethodCall;  //! ROOT's pointer to user-defined global distribution function
-   TRandom         *fPseRan;  // Pointer to user-defined generator of pseudorandom numbers
-   //----------- Statistics and MC results
-   Long_t   fNCalls;          // Total number of the function calls
-   Long_t   fNEffev;          // Total number of effective events (wt=1) in the foam buildup
-   Double_t fSumWt, fSumWt2;  // Total sum of wt and wt^2
-   Double_t fSumOve;          // Total Sum of overveighted events
-   Double_t fNevGen;          // Total number of the generated MC events
-   Double_t fWtMax, fWtMin;   // Maximum/Minimum MC weight
-   Double_t fPrime;           // Primary integral R' (R=R'<wt>)
-   Double_t fMCresult;        // True Integral R from MC series
-   Double_t fMCerror;         // and its error
-   //----------  working space for CELL exploration -------------
-   Double_t *fAlpha;          // [fDim] Internal parameters of the hyperrectangle
-   //////////////////////////////////////////////////////////////////////////////////////////////
-   //                                     METHODS                                              //
-   //////////////////////////////////////////////////////////////////////////////////////////////
+   TString fName;             ///< Name of a given instance of the FOAM class
+   TString fVersion;          ///< Actual version of the FOAM like (1.01m)
+   TString fDate;             ///< Release date of FOAM
+   Int_t   fDim;              ///< Dimension of the integration/simulation space
+   Int_t   fNCells;           ///< Maximum number of cells
+   Int_t   fRNmax;            ///< Maximum No. of the rand. numb. requested at once
+
+   Int_t   fOptDrive;         ///< Optimization switch =1,2 for variance or maximum weight optimization
+   Int_t   fChat;             ///< Chat=0,1,2 chat level in output, Chat=1 normal level
+   Int_t   fOptRej;           ///< Switch =0 for weighted events; =1 for unweighted events in MC
+
+   Int_t   fNBin;             ///< No. of bins in the edge histogram for cell MC exploration
+   Int_t   fNSampl;           ///< No. of MC events, when dividing (exploring) cell
+   Int_t   fEvPerBin;         ///< Maximum number of effective (wt=1) events per bin
+
+   Int_t  *fMaskDiv;          ///<! [fDim] Dynamic Mask for  cell division
+   Int_t  *fInhiDiv;          ///<! [fDim] Flags for inhibiting cell division
+   Int_t   fOptPRD;           ///<  Option switch for predefined division, for quick check
+   TFoamVect **fXdivPRD;      ///<! Lists of division values encoded in one vector per direction
+
+   Int_t   fNoAct;            ///< Number of active cells
+   Int_t   fLastCe;           ///< Index of the last cell
+   TFoamCell **fCells;        ///< [fNCells] Array of ALL cells
+
+   TFoamMaxwt   *fMCMonit;    ///< Monitor of the MC weight for measuring MC efficiency
+   Double_t   fMaxWtRej;      ///< Maximum weight in rejection for getting wt=1 events
+   std::vector<Long_t> fCellsAct; ///< Index of active cells, constructed at the end of foam build-up
+   Double_t  *fPrimAcu;       ///< [fNoAct] Array of cumulative probability of all active cells
+   TObjArray *fHistEdg;       ///< Histograms of wt, one for each cell edge
+   TObjArray *fHistDbg;       ///< Histograms of wt, for debug
+   TH1D      *fHistWt;        ///< Histogram of the MC wt
+
+   Double_t *fMCvect;         ///< [fDim] Generated MC vector for the outside user
+   Double_t  fMCwt;           ///< MC weight
+   Double_t *fRvec;           ///< [fRNmax] random number vector from r.n. generator fDim+1 maximum elements
+
+   TFoamIntegrand *fRho;      ///<! Pointer to the user-defined integrand function/distribution
+   TMethodCall *fMethodCall;  ///<! ROOT's pointer to user-defined global distribution function
+   TRandom         *fPseRan;  ///< Pointer to user-defined generator of pseudorandom numbers
+
+   Long_t   fNCalls;          ///< Total number of the function calls
+   Long_t   fNEffev;          ///< Total number of effective events (wt=1) in the foam buildup
+   Double_t fSumWt, fSumWt2;  ///< Total sum of wt and wt^2
+   Double_t fSumOve;          ///< Total Sum of overweighted events
+   Double_t fNevGen;          ///< Total number of the generated MC events
+   Double_t fWtMax, fWtMin;   ///< Maximum/Minimum MC weight
+   Double_t fPrime;           ///< Primary integral R' (R=R'<wt>)
+   Double_t fMCresult;        ///< True Integral R from MC series
+   Double_t fMCerror;         ///< and its error
+
+   Double_t *fAlpha;          ///< [fDim] Internal parameters of the hyper-rectangle
+
 public:
    TFoam();                          // Default constructor (used only by ROOT streamer)
    TFoam(const Char_t*);             // Principal user-defined constructor
@@ -94,8 +85,8 @@ public:
    virtual Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
    virtual void Explore(TFoamCell *Cell);       // Exploration of the new cell, determine <wt>, wtMax etc.
    virtual void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
-   virtual void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variace reduction
-   virtual void MakeAlpha();                 // Provides random point inside hyperrectangle
+   virtual void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
+   virtual void MakeAlpha();                 // Provides random point inside hyper-rectangle
    virtual void Grow();                      // Adds new cells to FOAM object until buffer is full
    virtual Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
    virtual Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, taged as inactive
@@ -147,8 +138,8 @@ public:
    // Inline
 private:
    Double_t Sqr(Double_t x) const { return x*x;}      // Square function
-   //////////////////////////////////////////////////////////////////////////////////////////////
-   ClassDef(TFoam,1);   // General purpose self-adapting Monte Carlo event generator
+
+   ClassDef(TFoam,2);   // General purpose self-adapting Monte Carlo event generator
 };
 
 #endif

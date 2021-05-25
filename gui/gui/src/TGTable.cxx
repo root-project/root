@@ -9,17 +9,11 @@
  *************************************************************************/
 
 #include "TGCanvas.h"
-#include "TGFrame.h"
-#include "TClass.h"
 #include "TGWindow.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
-#include "TSystem.h"
-#include "TImage.h"
-#include "TEnv.h"
-#include "TGToolTip.h"
+#include <iostream>
+#include <iomanip>
 #include "TGWidget.h"
-#include "TGPicture.h"
 #include "TRandom3.h"
 #include "TVirtualTableInterface.h"
 #include "TGTable.h"
@@ -29,7 +23,6 @@
 #include "TGTableContainer.h"
 #include "TGScrollBar.h"
 #include "TGButton.h"
-#include "TGNumberEntry.h"
 #include "TGTextEntry.h"
 #include "TGLabel.h"
 #include "TColor.h"
@@ -37,27 +30,27 @@
 ClassImp(TGTable);
 ClassImp(TTableRange);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Create an array to hold a bunch of numbers
 
-/* Begin_Html
-<center><h2>TGTable</h2></center>
-<br><br>
+/** \class TGTable
+    \ingroup guiwidgets
+
+Create an array to hold a bunch of numbers
+
 TGTable implements a table widget to display data in rows and
 columns. The data is supplied by a TVirtualTableInterface.
-<br><br>
+
 The table is a TGCanvas to make use of already available viewport
 functionality and drawing optimizations.
-<br><br>
+
 The top left cell in a table has coordinates (0,0)
-<br><br>
+
 A TObjArray is used internally to ensure little overhead and fast
 acces to cells.
-<br><br>
+
 If the data source has more rows than the default 50 rows of cells in
 memory, buttons at the bottom of the table can be used to load the
 next or previous chunk of data.
-<br><br>
+
 At the top of the table, a frame is visible that shows the coordinates
 of the top left cell currently in memmory in row,column. The amount of
 rows and columns is also shown in rows x columns. These values can be
@@ -65,14 +58,14 @@ edited to move to a different area of the data source or to resize the
 table. Tab will switch between the enties, return will move to the
 currently entered range and resize the table if needed. Clicking the
 goto button has the same effect.
-<br><br>
+
 A TGTable is created by first creating an appropriate
 TVirtualTableInterface from the data that needs visualization and
 then creating the TGTable using this interface.
-<br><br>
+
 A simple macro to use a TGTable with a TGSimpleTableInterface:
-End_Html
-Begin_Macro(source, gui)
+
+~~~
 {
    Int_t i = 0, j = 0;
    UInt_t nrows = 6, ncolumns = 5;
@@ -111,13 +104,12 @@ Begin_Macro(source, gui)
 
    return mainframe;
 }
-End_Macro
-Begin_Html
+~~~
 
 It is also possible to visualise data from a tree. A simple macro
 showing the use of a TTreeTableInterface follows.
-End_Html
-Begin_Macro(source, gui)
+
+~~~
 {
    // Open a root file.
    TFile *file = new TFile("$ROOTSYS/tutorials/hsimple.root");
@@ -153,14 +145,9 @@ Begin_Macro(source, gui)
 
    return mainframe;
 }
-End_Macro
+~~~
 */
 
-// const TGGC *TGTable::fgDefaultSelectGC = 0;
-// const TGGC *TGTable::fgDefaultBckgndGC = 0;
-// const Int_t TGTable::fgDefaultTMode = kTextLeft | kTextTop;
-
-// TList *TGTable::fgEditList = 0 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTable constuctor.
@@ -1397,7 +1384,6 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       xtl = xbr - ncolumns;
       if (xtl < 0) {
          xtl = 0;
-         ncolumns = TMath::Abs(xbr - xtl);
          Info("TGTable::GotoTableRange", "Right column boundry out of"
                                          " bounds, set to 0");
       }
@@ -1518,7 +1504,6 @@ void TGTable::UserRangeChange()
    TString range(fRangeEntry->GetText());
    if(!range.Contains("x")) return;
 
-   pos = 0;
    pos = range.First('x');
    TString ir = range(0,pos);
    TString jr = range(pos+1, range.Length());

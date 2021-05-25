@@ -19,7 +19,7 @@ A TLeaf for a 16 bit Integer data type.
 #include "TBranch.h"
 #include "TBuffer.h"
 #include "TClonesArray.h"
-#include "Riostream.h"
+#include <iostream>
 
 ClassImp(TLeafS);
 
@@ -176,6 +176,14 @@ void TLeafS::ReadBasket(TBuffer &b)
          b.ReadFastArray(fValue,fLen);
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize input by performing byteswap as needed.
+bool TLeafS::ReadBasketFast(TBuffer& input_buf, Long64_t N)
+{
+   if (R__unlikely(fLeafCount)) {return false;}
+   return input_buf.ByteSwapBuffer(fLen*N, kShort_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

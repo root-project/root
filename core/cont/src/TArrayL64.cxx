@@ -25,7 +25,7 @@ ClassImp(TArrayL64);
 
 TArrayL64::TArrayL64()
 {
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ TArrayL64::TArrayL64()
 
 TArrayL64::TArrayL64(Int_t n)
 {
-   fArray = 0;
+   fArray = nullptr;
    if (n > 0) Set(n);
 }
 
@@ -42,7 +42,7 @@ TArrayL64::TArrayL64(Int_t n)
 
 TArrayL64::TArrayL64(Int_t n, const Long64_t *array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(n, array);
 }
 
@@ -51,7 +51,7 @@ TArrayL64::TArrayL64(Int_t n, const Long64_t *array)
 
 TArrayL64::TArrayL64(const TArrayL64 &array) : TArray(array)
 {
-   fArray = 0;
+   fArray = nullptr;
    Set(array.fN, array.fArray);
 }
 
@@ -109,13 +109,16 @@ void TArrayL64::Set(Int_t n)
       Long64_t *temp = fArray;
       if (n != 0) {
          fArray = new Long64_t[n];
-         if (n < fN) memcpy(fArray,temp, n*sizeof(Long64_t));
-         else {
-            memcpy(fArray,temp,fN*sizeof(Long64_t));
-            memset(&fArray[fN],0,(n-fN)*sizeof(Long64_t));
+         if (n < fN) {
+            memcpy(fArray, temp, n*sizeof(Long64_t));
+         } else if (temp) {
+            memcpy(fArray, temp, fN*sizeof(Long64_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Long64_t));
+         } else {
+            memset(fArray, 0, n*sizeof(Long64_t));
          }
       } else {
-         fArray = 0;
+         fArray = nullptr;
       }
       if (fN) delete [] temp;
       fN = n;
@@ -130,11 +133,11 @@ void TArrayL64::Set(Int_t n, const Long64_t *array)
 {
    if (fArray && fN != n) {
       delete [] fArray;
-      fArray = 0;
+      fArray = nullptr;
    }
    fN = n;
-   if (fN == 0) return;
-   if (array == 0) return;
+   if ((fN == 0) || !array)
+      return;
    if (!fArray) fArray = new Long64_t[fN];
    memmove(fArray, array, n*sizeof(Long64_t));
 }

@@ -14,17 +14,12 @@
 
 #include "TSQLResult.h"
 
-#if !defined(__CINT__)
-#include <sqlite3.h>
-#else
-struct sqlite3_stmt;
-#endif
-
+class sqlite3_stmt;
 
 class TSQLiteResult : public TSQLResult {
 
 private:
-   sqlite3_stmt   *fResult;  // query result (rows)
+   sqlite3_stmt   *fResult{nullptr};  // query result (rows)
 
    Bool_t  IsValid(Int_t field);
 
@@ -32,13 +27,13 @@ public:
    TSQLiteResult(void *result);
    ~TSQLiteResult();
 
-   void        Close(Option_t *opt="");
-   Int_t       GetFieldCount();
-   const char *GetFieldName(Int_t field);
-   Int_t       GetRowCount() const;
-   TSQLRow    *Next();
+   void        Close(Option_t *opt="") final;
+   Int_t       GetFieldCount() final;
+   const char *GetFieldName(Int_t field) final;
+   Int_t       GetRowCount() const final;
+   TSQLRow    *Next() final;
 
-   ClassDef(TSQLiteResult, 0)  // SQLite query result
+   ClassDefOverride(TSQLiteResult, 0)  // SQLite query result
 };
 
 #endif

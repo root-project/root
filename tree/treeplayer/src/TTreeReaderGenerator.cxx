@@ -28,6 +28,7 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TTree.h"
+#include "TObjString.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 
@@ -55,7 +56,7 @@ namespace Internal {
       if(BranchNeedsReader(branchName, parent, isLeaf)) {
          // Ignore unknown types
          if (dataType.EqualTo("")) {
-            Warning("AddReader", "Ingored branch %s because type is unknown.", branchName.Data());
+            Warning("TTreeReaderGenerator::AddReader", "Ignored branch %s because type is unsupported.", branchName.Data());
             return;
          }
          // Loop through existing readers to check duplicate branch names
@@ -743,7 +744,7 @@ namespace Internal {
          }
 
          // Analyze sub-branches (if exist) and add readers
-         if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
+         if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-split
             if (cl) { // Non-split object
                if (desc) { // If there is a descriptor add reader (otherwise
                            // it was already added).
@@ -755,7 +756,7 @@ namespace Internal {
             } else { // Top-level RAW type
                AnalyzeOldBranch(branch); // Analyze branch and extract readers
             }
-         } else { // Branch is splitted
+         } else { // Branch is split
             TIter subnext( branch->GetListOfBranches() );
             if (desc) {
                // Analyze sub-branches and extract readers
@@ -995,7 +996,7 @@ Bool_t )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
    //
    // The return value is currently not used.
 
-   fReader.SetEntry(entry);
+   fReader.SetLocalEntry(entry);
 
    return kTRUE;
 }

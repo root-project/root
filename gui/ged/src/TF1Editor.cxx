@@ -9,27 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TF1Editor                                                           //
-//                                                                      //
-//  GUI for TF1 attributes and parameters.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TF1Editor
+    \ingroup ged
+
+GUI for TF1 attributes and parameters.
+
+*/
 
 #include "TF1Editor.h"
 #include "TGedEditor.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TGTextEntry.h"
-#include "TGToolTip.h"
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 #include "TString.h"
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
 #include "TFunctionParametersDialog.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 
 
 ClassImp(TF1Editor);

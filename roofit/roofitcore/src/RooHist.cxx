@@ -28,9 +28,9 @@ a RooPlot.
 #include "RooFit.h"
 
 #include "RooHist.h"
-#include "RooHist.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
+#include "RooScaledFunc.h"
 #include "RooMsgService.h"
 
 #include "TH1.h"
@@ -97,6 +97,10 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
     if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
   }
   setYAxisLabel(data.GetYaxis()->GetTitle());
+
+  if (correctForBinWidth && etype == RooAbsData::Poisson) {
+    coutW(Plotting) << "Cannot apply a bin width correction and use Poisson errors. Not correcting for bin width." << std::endl;
+  }
 
   // initialize our contents from the input histogram's contents
   Int_t nbin= data.GetNbinsX();
@@ -234,17 +238,9 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     Int_t i,n=hist1.GetN() ;
     for(i=0 ; i<n ; i++) {
       Double_t x1,y1,x2,y2,dx1 ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist1.GetPoint(i,x1,y1) ;
-#else
-      const_cast<RooHist&>(hist1).GetPoint(i,x1,y1) ;
-#endif
       dx1 = hist1.GetErrorX(i) ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist2.GetPoint(i,x2,y2) ;
-#else
-      const_cast<RooHist&>(hist2).GetPoint(i,x2,y2) ;
-#endif
       addBin(x1,roundBin(wgt1*y1+wgt2*y2),2*dx1/xErrorFrac,xErrorFrac) ;
     }
 
@@ -255,24 +251,89 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     Int_t i,n=hist1.GetN() ;
     for(i=0 ; i<n ; i++) {
       Double_t x1,y1,x2,y2,dx1,dy1,dy2 ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist1.GetPoint(i,x1,y1) ;
-#else
-      const_cast<RooHist&>(hist1).GetPoint(i,x1,y1) ;
-#endif
       dx1 = hist1.GetErrorX(i) ;
       dy1 = hist1.GetErrorY(i) ;
       dy2 = hist2.GetErrorY(i) ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
       hist2.GetPoint(i,x2,y2) ;
-#else
-      const_cast<RooHist&>(hist2).GetPoint(i,x2,y2) ;
-#endif
       Double_t dy = sqrt(wgt1*wgt1*dy1*dy1+wgt2*wgt2*dy2*dy2) ;
       addBinWithError(x1,wgt1*y1+wgt2*y2,dy,dy,2*dx1/xErrorFrac,xErrorFrac) ;
     }
   }
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create histogram from a pdf or function. Errors are computed based on the fit result provided.
+///
+/// This signature is intended for unfolding/deconvolution scenarios,
+/// where a pdf is constructed as "data minus background" and is thus
+/// intended to be displayed as "data" (or at least data-like).
+/// Usage of this signature is triggered by the draw style "P" in RooAbsReal::plotOn.
+/// 
+/// More details.
+/// \param[in] f The function to be plotted.
+/// \param[in] x The variable on the x-axis
+/// \param[in] xErrorFrac Size of the errror in x as a fraction of the bin width
+/// \param[in] scaleFactor arbitrary scaling of the y-values
+/// \param[in] normVars variables over which to normalize
+RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, Double_t scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
+  TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
+{
+  // grab the function's name and title
+  TString name(f.GetName());
+  SetName(name.Data());
+  TString title(f.GetTitle());
+  SetTitle(title.Data());
+  // append " ( [<funit> ][/ <xunit> ])" to our y-axis label if necessary
+  if(0 != strlen(f.getUnit()) || 0 != strlen(x.getUnit())) {
+    title.Append(" ( ");
+    if(0 != strlen(f.getUnit())) {
+      title.Append(f.getUnit());
+      title.Append(" ");
+    }
+    if(0 != strlen(x.getUnit())) {
+      title.Append("/ ");
+      title.Append(x.getUnit());
+      title.Append(" ");
+    }
+    title.Append(")");
+  }
+  setYAxisLabel(title.Data());
+
+  RooAbsFunc *funcPtr = nullptr;
+  RooAbsFunc *rawPtr  = nullptr;
+  funcPtr= f.bindVars(x,normVars,kTRUE);
+
+  // apply a scale factor if necessary
+  if(scaleFactor != 1) {
+    rawPtr= funcPtr;
+    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
+  }
+  
+  // apply a scale factor if necessary
+  assert(funcPtr);
+
+  // calculate the points to add to our curve
+  int xbins = x.numBins();
+  RooArgSet nset;
+  if(normVars) nset.add(*normVars);
+  for(int i=0; i<xbins; ++i){
+    double xval = x.getBinning().binCenter(i);
+    double xwidth = x.getBinning().binWidth(i);
+    Axis_t xval_ax = xval;
+    double yval = (*funcPtr)(&xval);
+    double yerr = sqrt(yval);
+    if(fr) yerr = f.getPropagatedError(*fr,nset);
+    addBinWithError(xval_ax,yval,yerr,yerr,xwidth,xErrorFrac,false,scaleFactor) ;
+    _entries += yval;
+  }
+  _nominalBinWidth = 1.;
+  
+  // cleanup
+  delete funcPtr;
+  if(rawPtr) delete rawPtr;
 }
 
 
@@ -306,11 +367,7 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   for (int i=0 ; i<GetN() ; i++) {
     Double_t x,y ;
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x,y) ;
-#else
-    const_cast<RooHist*>(this)->GetPoint(i,x,y) ;
-#endif
 
     if (x>=xlo && x<=xhi) {
       sum += y ;
@@ -318,10 +375,12 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   }
 
   if (_rawEntries!=-1) {
-    coutW(Plotting) << "RooHist::getFitRangeNEvt() WARNING: Number of normalization events associated to histogram is not equal to number of events in histogram" << endl
-          << "                           due cut made in RooAbsData::plotOn() call. Automatic normalization over sub-range of plot variable assumes"    << endl
-          << "                           that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To be sure of"   << endl
-          << "                           correct normalization explicit pass normalization information to RooAbsPdf::plotOn() call using Normalization()" << endl ;
+    coutW(Plotting) << "RooHist::getFitRangeNEvt() WARNING: The number of normalisation events associated to histogram " << GetName() << " is not equal to number of events in this histogram."
+          << "\n\t\t This is due a cut being applied while plotting the data. Automatic normalisation over a sub-range of a plot variable assumes"
+          << "\n\t\t that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To obtain a correct normalisation, it needs to be passed explicitly:"
+          << "\n\t\t\t data->plotOn(frame01,CutRange(\"SB1\"));"
+          << "\n\t\t\t const double nData = data->sumEntries(\"\", \"SB1\"); //or the cut string such as sumEntries(\"x > 0.\");"
+          << "\n\t\t\t model.plotOn(frame01, RooFit::Normalization(nData, RooAbsReal::NumEvent), ProjectionRange(\"SB1\"));" << endl ;
     sum *= _rawEntries / _entries ;
   }
 
@@ -586,13 +645,8 @@ Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
   for (i=0 ; i<GetN() ; i++) {
     Double_t x1,x2,y1,y2 ;
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x1,y1) ;
     other.GetPoint(i,x2,y2) ;
-#else
-    const_cast<RooHist&>(*this).GetPoint(i,x1,y1) ;
-    const_cast<RooHist&>(other).GetPoint(i,x2,y2) ;
-#endif
 
     if (fabs(x1-x2)>1e-10) {
       return kFALSE ;
@@ -712,22 +766,13 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useA
 
   // Determine range of curve
   Double_t xstart,xstop,y ;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
   curve.GetPoint(0,xstart,y) ;
   curve.GetPoint(curve.GetN()-1,xstop,y) ;
-#else
-  const_cast<RooCurve&>(curve).GetPoint(0,xstart,y) ;
-  const_cast<RooCurve&>(curve).GetPoint(curve.GetN()-1,xstop,y) ;
-#endif
 
   // Add histograms, calculate Poisson confidence interval on sum value
   for(Int_t i=0 ; i<GetN() ; i++) {
     Double_t x,point;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
     GetPoint(i,x,point) ;
-#else
-    const_cast<RooHist&>(*this).GetPoint(i,x,point) ;
-#endif
 
     // Only calculate pull for bins inside curve range
     if (x<xstart || x>xstop) continue ;

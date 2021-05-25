@@ -820,7 +820,7 @@ void TestMainFrame::HandleMenu(Int_t id)
             static TString dir(".");
             TGFileInfo fi;
             fi.fFileTypes = filetypes;
-            fi.fIniDir    = StrDup(dir);
+            fi.SetIniDir(dir);
             printf("fIniDir = %s\n", fi.fIniDir);
             new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
             printf("Open file: %s (dir: %s)\n", fi.fFilename, fi.fIniDir);
@@ -1914,7 +1914,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
                       "OnDoubleClick(TGListTreeItem*,Int_t)");
    fContents->Connect("Clicked(TGListTreeItem*,Int_t)","TestDirList",this,
                       "OnDoubleClick(TGListTreeItem*,Int_t)");
-#ifdef G__WIN32
+#ifdef R__WIN32
    fContents->AddItem(0,"c:\\");  // browse the upper directory
 #else
    fContents->AddItem(0,"/");  // browse the upper directory
@@ -1951,8 +1951,8 @@ TString TestDirList::DirName(TGListTreeItem* item)
    TGListTreeItem* parent;
    TString dirname = item->GetText();
 
-   while ((parent=item->GetParent())) {
-      dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
+   while ((parent = item->GetParent())) {
+      gSystem->PrependPathName(parent->GetText(),dirname);
       item = parent;
    }
 

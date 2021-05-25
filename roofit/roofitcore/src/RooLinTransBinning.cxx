@@ -28,7 +28,6 @@ way that RooLinearVar does
 #include "RooFit.h"
 
 #include "RooLinTransBinning.h"
-#include "RooLinTransBinning.h"
 
 using namespace std;
 
@@ -42,8 +41,7 @@ ClassImp(RooLinTransBinning);
 /// construct the linear transformation
 
 RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slope, Double_t offset, const char* name) :
-  RooAbsBinning(name),
-  _array(0) 
+  RooAbsBinning(name)
 {
   updateInput(input,slope,offset) ;
 }
@@ -54,8 +52,7 @@ RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slop
 /// Copy constructor
 
 RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const char* name) :
-  RooAbsBinning(name),
-  _array(0)
+  RooAbsBinning(name)
 {
   _input = other._input ;
   _slope = other._slope ;
@@ -87,25 +84,24 @@ void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/)
 
 Double_t* RooLinTransBinning::array() const 
 {
-  Int_t n = numBoundaries() ;
+  const int n = numBoundaries();
   // Return array with boundary values
   if (_array) delete[] _array ;
   _array = new Double_t[n] ;
 
-  Double_t* inputArray = _input->array() ;
+  const double* inputArray = _input->array() ;
 
-  Int_t i ;
   if (_slope>0) {
-    for (i=0 ; i<n ; i++) {
+    for (int i=0; i < n; i++) {
       _array[i] = trans(inputArray[i]) ;
     }
   } else {
-    for (i=0 ; i<n ; i++) {
+    for (int i=0; i < n; i++) {
       _array[i] = trans(inputArray[n-i-1]) ;
     }
   }
-  return _array ;
 
+  return _array;
 }
 
 

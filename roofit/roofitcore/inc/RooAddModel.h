@@ -22,7 +22,6 @@
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
 #include "RooNameSet.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 
 class RooAddModel : public RooResolutionModel {
@@ -132,9 +131,7 @@ protected:
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
-  mutable RooArgList* _snormList ;  //!  List of supplemental normalization factors
-  TIterator* _pdfIter ;     //! Iterator over PDF list
-  TIterator* _coefIter ;    //! Iterator over coefficient list
+  mutable RooArgList* _snormList{nullptr};  //!  List of supplemental normalization factors
   
   Bool_t _haveLastCoef ;    //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable

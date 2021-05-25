@@ -13,16 +13,6 @@
 #define ROOT_TGObject
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGObject                                                             //
-//                                                                      //
-// This class is the baseclass for all ROOT GUI widgets.                //
-// The ROOT GUI components emulate the Win95 look and feel and the code //
-// is based on the XClass'95 code (see Copyleft in source).             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "GuiTypes.h"
 
@@ -33,8 +23,8 @@ class TGObject : public TObject {
 
 
 protected:
-   Handle_t    fId;                  // X11/Win32 Window identifier
-   TGClient   *fClient;              // Connection to display server
+   Handle_t    fId;                  ///< X11/Win32 Window identifier
+   TGClient   *fClient;              ///< Connection to display server
 
    TGObject& operator=(const TGObject& tgo)
      {if(this!=&tgo) { TObject::operator=(tgo); fId=tgo.fId;

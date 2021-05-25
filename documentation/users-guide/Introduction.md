@@ -495,7 +495,7 @@ the plugin class of which an object will be created
 contains many plugin definitions, or by calls to
 `gROOT->GetPluginManager()->AddHandler()`.
 
-#### Library Autoloading
+#### Library AutoLoading
 
 When using a class in Cling, e.g. in an interpreted source file, ROOT
 will automatically load the library that defines this class. On
@@ -534,7 +534,7 @@ Statistics functions `matrix`: Matrices (**`TMatrix`**) examples
 `mlp`: Neural networks with **`TMultiLayerPerceptron`** `net`: Network
 classes (client/server examples) `physics`: LorentzVectors, phase
 space `pyroot`: Python tutorials `pythia`: Example with `pythia6`
-`quadp`: Quadratic Programming `ruby`: ruby tutorials `smatrix`:
+`quadp`: Quadratic Programming `smatrix`:
 Matrices with a templated package `spectrum`: Peak finder, background,
 deconvolutions `splot`: Example of the **`TSplot`** class
 (signal/background estimator) `sql`: Interfaces to SQL (mysql, oracle,

@@ -28,7 +28,6 @@ reference count until zero, when the object is actually removed.
 #include "RooFit.h"
 
 #include "RooRefCountList.h"
-#include "RooRefCountList.h"
 
 #include "Riostream.h"
 #include <stdlib.h>
@@ -109,7 +108,7 @@ Bool_t RooRefCountList::RemoveAll(TObject* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference count associated with 'obj'
 
-Int_t RooRefCountList::refCount(TObject* obj) 
+Int_t RooRefCountList::refCount(TObject* obj) const
 {
   RooLinkedListElem* link = findLink(obj) ;
   if (!link) {

@@ -17,7 +17,6 @@
 #include "TBranch.h"
 #include "TFile.h"
 #include "TLeaf.h"
-#include "TBufferFile.h"
 #include "TMath.h"
 #include "TROOT.h"
 #include "TTreeCache.h"
@@ -43,7 +42,7 @@ See picture in TTree.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default contructor.
+/// Default constructor.
 
 TBasket::TBasket()
 {
@@ -115,6 +114,11 @@ TBasket::~TBasket()
       delete fCompressedBufferRef;
       fCompressedBufferRef = 0;
    }
+   // TKey::~TKey will use fMotherDir to attempt to remove they key
+   // from the directory's list of key.  A basket is never in that list
+   // and in some cases (eg. f = new TFile(); TTree t; delete f;) the
+   // directory is gone before the TTree.
+   fMotherDir = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +261,7 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
-   TFileCacheRead *pf = file->GetCacheRead(tree);
+   TFileCacheRead *pf = tree->GetReadCache(file);
    if (pf) {
       TVirtualPerfStats* temp = gPerfStats;
       if (tree->GetPerfStats()) gPerfStats = tree->GetPerfStats();
@@ -361,7 +365,7 @@ Int_t TBasket::ReadBasketBuffersUncompressedCase()
    // Indicate that this buffer is weird.
    fBufferRef->SetBit(TBufferFile::kNotDecompressed);
 
-   // Usage of this mode assume the existance of only ONE
+   // Usage of this mode assume the existence of only ONE
    // entry in this basket.
    ResetEntryOffset();
    delete [] fDisplacement; fDisplacement = 0;
@@ -454,7 +458,7 @@ void TBasket::ResetEntryOffset()
 /// receiving only a pointer to that buffer (so we shall not
 /// delete that pointer), although we get a new buffer in case
 /// it's not found in the cache.
-/// There is a lot of code duplication but it was necesary to assure
+/// There is a lot of code duplication but it was necessary to assure
 /// the expected behavior when there is no cache.
 
 Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
@@ -471,7 +475,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    TFileCacheRead *pf = nullptr;
    {
       R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
-      pf = file->GetCacheRead(fBranch->GetTree());
+      pf = fBranch->GetTree()->GetReadCache(file);
    }
    if (pf) {
       Int_t res = -1;
@@ -491,8 +495,12 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // the basket was not compressed.
    TBuffer* readBufferRef;
    if (R__unlikely(fBranch->GetCompressionLevel()==0)) {
+      // Initialize the buffer to hold the uncompressed data.
+      fBufferRef = R__InitializeReadBasketBuffer(fBufferRef, len, file);
       readBufferRef = fBufferRef;
    } else {
+      // Initialize the buffer to hold the compressed data.
+      fCompressedBufferRef = R__InitializeReadBasketBuffer(fCompressedBufferRef, len, file);
       readBufferRef = fCompressedBufferRef;
    }
 
@@ -500,8 +508,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // and we will re-add the new size later on.
    fBranch->GetTree()->IncrementTotalBuffers(-fBufferSize);
 
-   // Initialize the buffer to hold the compressed data.
-   readBufferRef = R__InitializeReadBasketBuffer(readBufferRef, len, file);
    if (!readBufferRef) {
       Error("ReadBasketBuffers", "Unable to allocate buffer.");
       return 1;
@@ -669,7 +675,7 @@ AfterBuffer:
       }
    }
    fReadEntryOffset = kTRUE;
-   // Read the array of diplacement if any.
+   // Read the array of displacement if any.
    delete [] fDisplacement;
    fDisplacement = 0;
    if (fBufferRef->Length() != len) {
@@ -700,11 +706,104 @@ Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset the basket to the starting state. i.e. as it was after calling
+/// Disown all references to the internal buffer - some other object likely now
+/// owns it.
+///
+/// This TBasket is now useless and invalid until it is told to adopt a buffer.
+void TBasket::DisownBuffer()
+{
+   fBufferRef = NULL;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt a buffer from an external entity
+void TBasket::AdoptBuffer(TBuffer *user_buffer)
+{
+   delete fBufferRef;
+   fBufferRef = user_buffer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the read basket TBuffer memory allocation if needed.
+///
+/// This allows to reduce the number of memory allocation while avoiding to
+/// always use the maximum size.
+
+void TBasket::ReadResetBuffer(Int_t basketnumber)
+{
+   // By default, we don't reallocate.
+   fResetAllocation = false;
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+   fResetAllocationTime = 0;
+#endif
+
+   // Downsize the buffer if needed.
+
+   const auto maxbaskets = fBranch->GetMaxBaskets();
+   if (!fBufferRef || basketnumber >= maxbaskets)
+      return;
+
+   Int_t curSize = fBufferRef->BufferSize();
+
+   const Float_t target_mem_ratio = fBranch->GetTree()->GetTargetMemoryRatio();
+   const auto basketbytes = fBranch->GetBasketBytes();
+
+   Int_t max_size = basketbytes[basketnumber];
+   for(Int_t b = basketnumber + 1; (b < maxbaskets) && (b < (basketnumber+10)); ++b) {
+      max_size = std::max(max_size, basketbytes[b]);
+   }
+
+   Float_t cx = 1;
+   if (fBranch->GetZipBytes())
+      cx = (Float_t)fBranch->GetTotBytes()/fBranch->GetZipBytes();
+
+   Int_t target_size = static_cast<Int_t>(cx * target_mem_ratio * Float_t(max_size));
+
+   if (target_size && (curSize > target_size)) {
+      /// Only reduce the size if significant enough?
+      Int_t newSize = max_size + 512 - max_size % 512; // Wiggle room and alignment, as above.
+      // We only bother with a resize if it saves 8KB (two normal memory pages).
+      if ((newSize <= curSize - 8 * 1024) &&
+          (static_cast<Float_t>(curSize) / static_cast<Float_t>(newSize) > target_mem_ratio))
+      {
+         if (gDebug > 0) {
+            Info("ReadResetBuffer",
+                 "Resizing %d to %d bytes (was %d); next 10 sizes are [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]. cx=%f ratio=%f max_size = %d ",
+                 basketnumber, newSize, curSize,
+                 basketbytes[basketnumber],
+                 (basketnumber + 1) < maxbaskets ? basketbytes[basketnumber + 1] : 0,
+                 (basketnumber + 2) < maxbaskets ? basketbytes[basketnumber + 2] : 0,
+                 (basketnumber + 3) < maxbaskets ? basketbytes[basketnumber + 3] : 0,
+                 (basketnumber + 4) < maxbaskets ? basketbytes[basketnumber + 4] : 0,
+                 (basketnumber + 5) < maxbaskets ? basketbytes[basketnumber + 5] : 0,
+                 (basketnumber + 6) < maxbaskets ? basketbytes[basketnumber + 6] : 0,
+                 (basketnumber + 7) < maxbaskets ? basketbytes[basketnumber + 7] : 0,
+                 (basketnumber + 8) < maxbaskets ? basketbytes[basketnumber + 8] : 0,
+                 (basketnumber + 9) < maxbaskets ? basketbytes[basketnumber + 9] : 0,
+                 cx, target_mem_ratio, max_size);
+         }
+         fResetAllocation = true;
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+         std::chrono::time_point<std::chrono::system_clock> start, end;
+         start = std::chrono::high_resolution_clock::now();
+#endif
+         fBufferRef->Expand(newSize, kFALSE); // Expand without copying the existing data.
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+         end = std::chrono::high_resolution_clock::now();
+         auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+         fResetAllocationTime = us.count();
+#endif
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the write basket to the starting state. i.e. as it was after calling
 /// the constructor (and potentially attaching a TBuffer.)
 /// Reduce memory used by fEntryOffset and the TBuffer if needed ..
 
-void TBasket::Reset()
+void TBasket::WriteReset()
 {
    // By default, we don't reallocate.
    fResetAllocation = false;
@@ -1031,7 +1130,7 @@ void TBasket::Update(Int_t offset, Int_t skipped)
 
 Int_t TBasket::WriteBuffer()
 {
-   const Int_t kWrite = 1;
+   constexpr Int_t kWrite = 1;
 
    TFile *file = fBranch->GetFile(kWrite);
    if (!file) return 0;
@@ -1105,14 +1204,18 @@ Int_t TBasket::WriteBuffer()
       }
    }
 
-   Int_t lbuf, nout, noutot, bufmax, nzip;
-   lbuf       = fBufferRef->Length();
-   fObjlen    = lbuf - fKeylen;
+   Int_t nout, noutot, bufmax, nzip;
+
+   fObjlen = fBufferRef->Length() - fKeylen;
 
    fHeaderOnly = kTRUE;
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
-   ROOT::ECompressionAlgorithm cxAlgorithm = static_cast<ROOT::ECompressionAlgorithm>(fBranch->GetCompressionAlgorithm());
+   if (cxlevel == ROOT::RCompressionSetting::ELevel::kInherit)
+      cxlevel = file->GetCompressionLevel();
+   ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fBranch->GetCompressionAlgorithm());
+   if (cxAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kInherit)
+      cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(file->GetCompressionAlgorithm());
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
@@ -1187,4 +1290,3 @@ WriteFile:
    fHeaderOnly = kFALSE;
    return nBytes>0 ? fKeylen+nout : -1;
 }
-

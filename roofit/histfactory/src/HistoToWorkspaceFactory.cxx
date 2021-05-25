@@ -10,13 +10,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class RooStats::HistFactory::HistoToWorkspaceFactory
+ *  \ingroup HistFactory
+ */
 
 
 #ifndef __CINT__
@@ -44,7 +40,6 @@ END_HTML
 #include "RooFitResult.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
-#include "RooProduct.h"
 #include "RooWorkspace.h"
 #include "RooCustomizer.h"
 #include "RooPlot.h"
@@ -52,22 +47,17 @@ END_HTML
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/ModelConfig.h"
 
-#include "TH2F.h"
-#include "TH3F.h"
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TLine.h"
 #include "TTree.h"
-#include "TMarker.h"
 #include "TStopwatch.h"
-#include "TROOT.h"
 #include "TStyle.h"
 #include "TVectorD.h"
 #include "TMatrixDSym.h"
 
 // specific to this package
-//#include "RooStats/HistFactory/Helper.h"
 #include "RooStats/HistFactory/LinInterpVar.h"
 #include "RooStats/HistFactory/HistoToWorkspaceFactory.h"
 #include "Helper.h"
@@ -1014,6 +1004,11 @@ namespace HistFactory{
     while((params_obj=params_itr->Next())){
       poi = (RooRealVar*) params_obj;
       cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
+    }
+    delete params_itr;
+    if (!poi) {
+       cerr << "found no POI" << endl;
+       return;
     }
     fprintf(pFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
 

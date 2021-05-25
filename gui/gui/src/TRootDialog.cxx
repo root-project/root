@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootDialog                                                          //
-//                                                                      //
-// A TRootDialog is used to prompt for the arguments of an object's     //
-// member function. A TRootDialog is created via the context menu's     //
-// when selecting a member function taking arguments.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootDialog
+    \ingroup guiwidgets
+
+A TRootDialog is used to prompt for the arguments of an object's
+member function. A TRootDialog is created via the context menu's
+when selecting a member function taking arguments.
+
+*/
+
 
 #include "TRootDialog.h"
 #include "TRootContextMenu.h"
@@ -29,6 +30,7 @@
 #include "TGButton.h"
 #include "TObjString.h"
 #include "KeySymbols.h"
+#include "TVirtualX.h"
 
 extern TGTextEntry *gBlinkingEntry;
 

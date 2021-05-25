@@ -21,11 +21,29 @@
 #include "TMySQLServer.h"
 #include "TDataType.h"
 #include "TDatime.h"
-#include <stdlib.h>
+#include "snprintf.h"
+#include "strlcpy.h"
+#include <cstdlib>
 
 ClassImp(TMySQLStatement);
 
 ULong64_t TMySQLStatement::fgAllocSizeLimit = 0x8000000; // 128 Mb
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return limit for maximal allocated memory for single parameter
+
+ULong_t TMySQLStatement::GetAllocSizeLimit()
+{
+   return fgAllocSizeLimit;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set limit for maximal allocated memory for single parameter
+
+void TMySQLStatement::SetAllocSizeLimit(ULong_t sz)
+{
+   fgAllocSizeLimit = sz;
+}
 
 #if MYSQL_VERSION_ID >= 40100
 
@@ -35,13 +53,7 @@ ULong64_t TMySQLStatement::fgAllocSizeLimit = 0x8000000; // 128 Mb
 
 TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
    TSQLStatement(errout),
-   fStmt(stmt),
-   fNumBuffers(0),
-   fBind(0),
-   fBuffer(0),
-   fWorkingMode(0),
-   fIterationCount(-1),
-   fNeedParBind(kFALSE)
+   fStmt(stmt)
 {
    ULong_t paramcount = mysql_stmt_param_count(fStmt);
 
@@ -69,7 +81,7 @@ void TMySQLStatement::Close(Option_t *)
    if (fStmt)
       mysql_stmt_close(fStmt);
 
-   fStmt = 0;
+   fStmt = nullptr;
 
    FreeBuffers();
 }
@@ -190,16 +202,14 @@ Bool_t TMySQLStatement::StoreResult()
 
       for (int n=0;n<count;n++) {
          SetSQLParamType(n, fields[n].type, (fields[n].flags & UNSIGNED_FLAG) == 0, fields[n].length);
-         if (fields[n].name!=0) {
-            fBuffer[n].fFieldName = new char[strlen(fields[n].name)+1];
-            strcpy(fBuffer[n].fFieldName, fields[n].name);
-         }
+         if (fields[n].name)
+            fBuffer[n].fFieldName = fields[n].name;
       }
 
       mysql_free_result(meta);
    }
 
-   if (fBind==0) return kFALSE;
+   if (!fBind) return kFALSE;
 
    /* Bind the buffers */
    if (mysql_stmt_bind_result(fStmt, fBind))
@@ -223,9 +233,9 @@ Int_t TMySQLStatement::GetNumFields()
 
 const char* TMySQLStatement::GetFieldName(Int_t nfield)
 {
-   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
+   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return nullptr;
 
-   return fBuffer[nfield].fFieldName;
+   return fBuffer[nfield].fFieldName.empty() ? nullptr : fBuffer[nfield].fFieldName.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,10 +293,6 @@ void TMySQLStatement::FreeBuffers()
    if (fBuffer) {
       for (Int_t n=0; n<fNumBuffers;n++) {
          free(fBuffer[n].fMem);
-         if (fBuffer[n].fStrBuffer)
-            delete[] fBuffer[n].fStrBuffer;
-         if (fBuffer[n].fFieldName)
-            delete[] fBuffer[n].fFieldName;
       }
       delete[] fBuffer;
    }
@@ -294,8 +300,8 @@ void TMySQLStatement::FreeBuffers()
    if (fBind)
       delete[] fBind;
 
-   fBuffer = 0;
-   fBind = 0;
+   fBuffer = nullptr;
+   fBind = nullptr;
    fNumBuffers = 0;
 }
 
@@ -313,77 +319,93 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
    memset(fBind, 0, sizeof(MYSQL_BIND)*fNumBuffers);
 
    fBuffer = new TParamData[fNumBuffers];
-   memset(fBuffer, 0, sizeof(TParamData)*fNumBuffers);
+   for (int n=0;n<fNumBuffers;++n) {
+      fBuffer[n].fMem = nullptr;
+      fBuffer[n].fSize = 0;
+      fBuffer[n].fSqlType = 0;
+      fBuffer[n].fSign = kFALSE;
+      fBuffer[n].fResLength = 0;
+      fBuffer[n].fResNull = false;
+      fBuffer[n].fStrBuffer.clear();
+      fBuffer[n].fFieldName.clear();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert field value to string.
 
-const char* TMySQLStatement::ConvertToString(Int_t npar)
+const char *TMySQLStatement::ConvertToString(Int_t npar)
 {
-   if (fBuffer[npar].fResNull) return 0;
+   if (fBuffer[npar].fResNull)
+      return nullptr;
 
-   void* addr = fBuffer[npar].fMem;
+   void *addr = fBuffer[npar].fMem;
    Bool_t sig = fBuffer[npar].fSign;
 
-   if (addr==0) return 0;
+   if (!addr)
+      return nullptr;
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
-      return (const char*) addr;
+      return (const char *) addr;
 
-   if (fBuffer[npar].fStrBuffer==0)
-      fBuffer[npar].fStrBuffer = new char[100];
-
-   char* buf = fBuffer[npar].fStrBuffer;
+   constexpr int kSize = 100;
+   char buf[kSize];
+   int len = 0;
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
-         if (sig) snprintf(buf,100,"%d",*((int*) addr));
-             else snprintf(buf,100,"%u",*((unsigned int*) addr));
+         if (sig) len = snprintf(buf, kSize, "%d",*((int*) addr));
+             else len = snprintf(buf, kSize, "%u",*((unsigned int*) addr));
          break;
       case MYSQL_TYPE_LONGLONG:
-         if (sig) snprintf(buf,100,"%lld",*((Long64_t*) addr)); else
-                  snprintf(buf,100,"%llu",*((ULong64_t*) addr));
+         if (sig) len = snprintf(buf, kSize, "%lld",*((Long64_t*) addr)); else
+                  len = snprintf(buf, kSize, "%llu",*((ULong64_t*) addr));
          break;
       case MYSQL_TYPE_SHORT:
-         if (sig) snprintf(buf,100,"%hd",*((short*) addr)); else
-                  snprintf(buf,100,"%hu",*((unsigned short*) addr));
+         if (sig) len = snprintf(buf, kSize, "%hd",*((short*) addr)); else
+                  len = snprintf(buf, kSize, "%hu",*((unsigned short*) addr));
          break;
       case MYSQL_TYPE_TINY:
-         if (sig) snprintf(buf,100,"%d",*((char*) addr)); else
-                  snprintf(buf,100,"%u",*((unsigned char*) addr));
+         if (sig) len = snprintf(buf, kSize, "%d",*((char*) addr)); else
+                  len = snprintf(buf, kSize, "%u",*((unsigned char*) addr));
          break;
       case MYSQL_TYPE_FLOAT:
-         snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((float*) addr));
+         len = snprintf(buf, kSize, TSQLServer::GetFloatFormat(), *((float*) addr));
          break;
       case MYSQL_TYPE_DOUBLE:
-         snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((double*) addr));
+         len = snprintf(buf, kSize, TSQLServer::GetFloatFormat(), *((double*) addr));
          break;
       case MYSQL_TYPE_DATETIME:
       case MYSQL_TYPE_TIMESTAMP: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         snprintf(buf,100,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
-                  tm->year, tm->month,  tm->day,
-                  tm->hour, tm->minute, tm->second);
+         len = snprintf(buf, kSize, "%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+                            tm->year, tm->month,  tm->day,
+                            tm->hour, tm->minute, tm->second);
          break;
       }
       case MYSQL_TYPE_TIME: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         snprintf(buf,100,"%2.2d:%2.2d:%2.2d",
-                  tm->hour, tm->minute, tm->second);
+         len = snprintf(buf, kSize, "%2.2d:%2.2d:%2.2d",
+                             tm->hour, tm->minute, tm->second);
          break;
       }
       case MYSQL_TYPE_DATE: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         snprintf(buf,100,"%4.4d-%2.2d-%2.2d",
-                  tm->year, tm->month,  tm->day);
+         len = snprintf(buf, kSize, "%4.4d-%2.2d-%2.2d",
+                             tm->year, tm->month,  tm->day);
          break;
       }
       default:
-         return 0;
+         return nullptr;
    }
-   return buf;
+
+   if (len >= kSize)
+      SetError(-1, Form("Cannot convert param %d into string - buffer too small", npar));
+
+   fBuffer[npar].fStrBuffer = buf;
+
+   return fBuffer[npar].fStrBuffer.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -568,8 +590,8 @@ const char *TMySQLStatement::GetString(Int_t npar)
       || (fBuffer[npar].fSqlType==MYSQL_TYPE_NEWDECIMAL)
 #endif
        ) {
-         if (fBuffer[npar].fResNull) return 0;
-         char* str = (char*) fBuffer[npar].fMem;
+         if (fBuffer[npar].fResNull) return nullptr;
+         char *str = (char *) fBuffer[npar].fMem;
          ULong_t len = fBuffer[npar].fResLength;
          Int_t size = fBuffer[npar].fSize;
          if (1.*len<size) str[len] = 0; else
@@ -716,18 +738,18 @@ Bool_t TMySQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parameter type to be used as buffer.
-/// Used in both setting data to database and retriving data from data base.
+/// Used in both setting data to database and retrieving data from data base.
 /// Initialize proper MYSQL_BIND structure and allocate required buffers.
 
 Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULong_t sqlsize)
 {
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
-   fBuffer[npar].fMem = 0;
+   fBuffer[npar].fMem = nullptr;
    fBuffer[npar].fSize = 0;
    fBuffer[npar].fResLength = 0;
    fBuffer[npar].fResNull = false;
-   fBuffer[npar].fStrBuffer = 0;
+   fBuffer[npar].fStrBuffer.clear();
 
    ULong64_t allocsize = 0;
 
@@ -753,17 +775,20 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULo
       case MYSQL_TYPE_DATE:
       case MYSQL_TYPE_TIMESTAMP:
       case MYSQL_TYPE_DATETIME: allocsize = sizeof(MYSQL_TIME); doreset = true; break;
-      default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
+      default: SetError(-1, Form("SQL type not supported: %d", sqltype),"SetSQLParamType"); return kFALSE;
    }
 
-   if (allocsize > fgAllocSizeLimit) allocsize = fgAllocSizeLimit;
+   // SL: 256 bytes is default size value for string or tiny blob
+   // therefore small fgAllocSizeLimit only has effect for data over limit of 256 bytes
+   if ((fgAllocSizeLimit > 256) && (allocsize > fgAllocSizeLimit))
+      allocsize = fgAllocSizeLimit;
 
    fBuffer[npar].fMem = malloc(allocsize);
    fBuffer[npar].fSize = allocsize;
    fBuffer[npar].fSqlType = sqltype;
    fBuffer[npar].fSign = sig;
 
-   if ((allocsize>0) && fBuffer[npar].fMem && doreset)
+   if (fBuffer[npar].fMem && doreset)
       memset(fBuffer[npar].fMem, 0, allocsize);
 
    fBind[npar].buffer_type = enum_field_types(sqltype);
@@ -915,9 +940,9 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
    Int_t len = value ? strlen(value) : 0;
 
-   void* addr = BeforeSet("SetString", npar, MYSQL_TYPE_STRING, true, maxsize);
+   void *addr = BeforeSet("SetString", npar, MYSQL_TYPE_STRING, true, maxsize);
 
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (len >= fBuffer[npar].fSize) {
       free(fBuffer[npar].fMem);
@@ -932,8 +957,10 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       fNeedParBind = kTRUE;
    }
 
-   if (value) strcpy((char*) addr, value);
-   else ((char*)addr)[0]='\0';
+   if (value)
+      strlcpy((char*) addr, value, fBuffer[npar].fSize);
+   else
+      ((char *)addr)[0] = 0;
 
    fBuffer[npar].fResLength = len;
 

@@ -9,7 +9,7 @@
 
 #include "cling/Utils/Platform.h"
 
-#if defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
 
 #include "cling/Utils/Output.h"
 
@@ -72,6 +72,7 @@ static void GetErrorAsString(DWORD Err, std::string& ErrStr, const char* Prefix)
     Strm << ": " << CharStr;
     ::LocalFree(Message);
     ErrStr = llvm::StringRef(Strm.str()).rtrim().str();
+    delete [] CharStr;
   }
 }
 
@@ -381,6 +382,8 @@ static int GetVisualStudioVersionCompiledWith() {
   return 14;
 #elif (_MSC_VER < 1920)
   return 15;
+#elif (_MSC_VER < 1930)
+  return 16;
 #else
   #error "Unsupported/Untested _MSC_VER"
   // As of now this is what is should be...have fun!
@@ -649,7 +652,7 @@ bool GetSystemLibraryPaths(llvm::SmallVectorImpl<std::string>& Paths) {
   }
   Paths.push_back(Buf);
   Buf[0] = 0; // Reset Buf.
-  
+
   // Generic form of C:\Windows
   result = ::SHGetFolderPathA(NULL, CSIDL_FLAG_CREATE | CSIDL_WINDOWS,
                               NULL, SHGFP_TYPE_CURRENT, Buf);
@@ -729,7 +732,7 @@ bool Popen(const std::string& Cmd, llvm::SmallVectorImpl<char>& Buf, bool RdE) {
   CloseHandle(hOutputWrite);
   if (RdE)
     CloseHandle(hErrorWrite);
-  
+
   if (Result != 0) {
     DWORD dwRead;
     const size_t Chunk = Buf.capacity_in_bytes();
@@ -979,4 +982,4 @@ __stdcall ClingRaiseSEHException(void* CxxExcept, void* Info) {
 } // namespace utils
 } // namespace cling
 
-#endif // LLVM_ON_WIN32
+#endif // _WIN32

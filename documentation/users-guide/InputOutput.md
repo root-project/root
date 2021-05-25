@@ -139,13 +139,13 @@ large file.
 | 34 `->` 37        | `fCompress`      | Zip compression level                 |
 | [42-\>45]         |                  |                                       |
 +-------------------+------------------+---------------------------------------+
-| 34 `->` 37        | `fSeekInfo`      | Pointer to **`TStreamerInfo`** record |
+| 38 `->` 41        | `fSeekInfo`      | Pointer to **`TStreamerInfo`** record |
 | [46-\>53]         |                  |                                       |
 +-------------------+------------------+---------------------------------------+
-| 34 `->` 37        | `fNBytesInfo`    | Number of bytes in                    |
+| 42 `->` 45        | `fNBytesInfo`    | Number of bytes in                    |
 | [54-\>57]         |                  | **`TStreamerInfo`** record            |
 +-------------------+------------------+---------------------------------------+
-| 34 `->` 37        | `fCompress`      | Universal Unique ID                   |
+| 46 `->` 63        | `fCompress`      | Universal Unique ID                   |
 | [58-\>75]         |                  |                                       |
 +-------------------+------------------+---------------------------------------+
 
@@ -1648,7 +1648,7 @@ identify the referenced **`TObject`**.
 When a referenced object is read from a file (its bit `kIsReferenced` is
 set), this object is entered into the objects table of the corresponding
 **`TProcessID`**. Each **`TFile`** has a list of **`TProcessIDs`** (see
-**`TFile`**`::fProcessIDs`) also accessible` from `TProcessID::fgPIDs`
+`TFile::fProcessIDs`) also accessible from `TProcessID::fgPIDs`
 (for all files). When this object is deleted, it is removed from the
 table via the cleanup mechanism invoked by the **`TObject`** destructor.
 Each **`TProcessID`** has a table (`TObjArray *fObjects`) that keeps
@@ -2467,223 +2467,6 @@ the macro was modified to create 1000 histograms. We have included two
 more examples to show the impact of compression on Trees in the next
 chapter.
 
-## Remotely Access to ROOT Files via a rootd
-
-
-Reading and writing ROOT files over the net can be done by creating a
-**`TNetFile`** object instead of a **`TFile`** object. Since the
-**`TNetFile`** class inherits from the **`TFile`** class, it has exactly
-the same interface and behavior. The only difference is that it reads
-and writes to a remote `rootd` daemon.
-
-### TNetFile URL
-
-
-**`TNetFile`** file names are in standard URL format with protocol
-"`root`". The following are valid **`TNetFile`** URL's:
-
-``` {.cpp}
-root://hpsalo/files/aap.root
-root://hpbrun.cern.ch/root/hsimple.root
-root://pcna49a:5151/~na49/data/run821.root
-root://pcna49d.cern.ch:5050//v1/data/run810.root
-```
-
-The only difference with the well-known http URL's is that the root of
-the remote file tree is the remote user's home directory. Therefore an
-absolute pathname requires a `//` after the host or port (as shown in
-the last example above). Further the expansion of the standard shell
-characters, like `~`, `$`, `..`, etc. is handled as expected. The
-default port on which the remote `rootd` listens is 1094 and
-**`TNetFile`** (actually by **`TUrl`** that is used by **`TNetFile`**)
-assumes this default port. The port number has been allocated by the
-IANA and is reserved for ROOT.
-
-### Remote Authentication
-
-
-Connecting to a `rootd` daemon requires a remote user id and password.
-**`TNetFile`** supports several ways for you to provide your login
-information:
-
-- Setting it globally via the static methods `TNetFile::SetUser` and
-**`TNetFile::SetPasswd`**
-
-- Via the `~/.netrc` file (same format and file as used by `ftp`)
-
-- Via command line prompt
-
-- Setting the SPR password file via the option `-P FILE`, i.e. the next
-line will start the `rootd` daemon using the files
-`$HOME/.srootdpass2.conf` and `$HOME/.srootdpass2` for SPR
-authentication:` rootd -P $HOME/.srootdpass2`
-
-### A Simple Session
-
-
-``` {.cpp}
-root[] TFile *f1 = TFile::Open("local/file.root","update")
-root[] TFile *f2 = TFile::Open("root://pcna49a.cern.ch/data/file.root","new")
-Name (pcna49a:rdm):
-Password:
-root[] TFile *f3 = TFile::Open("http://root.cern.ch/~rdm/hsimple.root")
-root[] f3.ls()
-TWebFile** http://root.cern.ch/~rdm/hsimple.root
-TWebFile* http://root.cern.ch/~rdm/hsimple.root
-KEY: TH1F hpx;1 This is the px distribution
-KEY: TH2F hpxpy;1 py vs px
-KEY: TProfile hprof;1 Profile of pz versus px
-KEY: TNtuple ntuple;1 Demo ntuple
-root[] hpx.Draw()
-```
-
-### The rootd Daemon
-
-
-The `rootd` daemon works with the **`TNetFile`** class. It allows remote
-access to ROOT database files in read or read/write mode. The `rootd`
-daemon can be found in the directory `$ROOTSYS/bin`. It can be started
-either via `inetd` or by hand from the command line (no need to be super
-user). Its performance is comparable with NFS but while NFS requires all
-kind of system permissions to setup, `rootd` can be started by any user.
-The simplest way to start `rootd` is by starting it from the command
-line while being logged in to the remote machine. Once started `rootd`
-goes immediately in the background (does not need `&`) and you can log
-out from the remote node. The only required argument is the range of
-ports (specified using `-p port1-port2`). `rootd` will listen on the
-first available port in this range. You can also specify `-p 0-N` to
-search relative to the service port specified in `/etc/services.` If a
-single port is specified (`rootd -p 1094)` then no search is made.
-Unless started by `inetd (rootd -i)`, it prints information about the
-found port, something like: `ROOTD_PORT=5151, ROOTD_PID=14433` before
-spawning the daemon. This way the user knows what was used (`eval`
-\``rootd`\` will set these as variables in Bourne-like shells). Also,
-`rootd` shows an error message (as well as sending the `syslog` message)
-if there is any problem binding the port or forking the daemon.
-
-Using **`TNetFile`** you can now read and write files on the remote
-machine.
-
-In the example below, `rootd` runs on the remote node under user id
-`minuser` and searches for an available port into the range 1094-1098.
-It finds and listens to port 1094. When creating a **`TNetFile`** object
-you have to specify the same port number 1094 and use `minuser` (and
-corresponding password) as login id. When `rootd` is started in this
-way, you can only login with the user id under which `rootd` was started
-on the remote machine.
-
-``` {.cpp}
-hpsalo[]     telnet fsgi02.fnal.gov
-login:     minuser
-Password:
-<fsgi02>     rootd -p 1094-1098
-ROOTD_PORT=1094
-ROOTD_PID=14433
-<fsgi02>     exit
-hpsalo[]     root
-root[]     TFile *f = TFile::Open("root://fsgi02.fnal.gov:1094/file.root","new")
-Name (fsgi02.fnal.gov:rdm):     minuser
-Password:
-root[]     f.ls()
-```
-
-However, you can make many connections since the original `rootd` will
-fork (spawn) a new `rootd` that will service the requests from the
-**`TNetFile`**. The original `rootd` keeps listening on the specified
-port for other connections. Each time a **`TNetFile`** makes a
-connection; it gets a new private `rootd` that will handle its requests.
-At the end of a ROOT, session when all **`TNetFile`**s are closed only
-the original `rootd` will stay alive ready to service future
-**`TNetFile`**s.
-
-### Starting rootd via inetd
-
-
-If you expect to often connect via **`TNetFile`** to a remote machine,
-it is more efficient to install `rootd` as a service of the `inetd`
-super daemon. In this way, it is not necessary for each user to run a
-private `rootd`. However, this requires a one-time modification of two
-system files (and super user privileges to do so). Add to
-`/etc/services` the line: `rootd 1094/tcp`. To `/etc/inetd.conf` the
-line:
-
-`rootd stream tcp nowait root /usr/local/root/bin/rootd rootd -i`
-
-After these changes force `inetd` to reread its configuration file with:
-"`kill -HUP <pid inetd>`". It is not necessary to specify a port number
-in the URL given to **`TNetFile`** when the setup done this way.
-**`TNetFile`** assumes the default port to be 1094 as specified above in
-the `/etc/services` file.
-
-### Command Line Arguments for rootd
-
-
-`rootd` supports the following arguments:
-
--   `-i       ` says that `rootd` is started by `inetd`
-
--   `-p port#-port#  ` specifies the range of ports to be searched
-
--   `-p 0-N   ` the service ports range in `/etc/services`
-
--   `-d level   ` level of debug info written to `syslogd`
-
-`0 = no debug (default)` `1 = minimum`
-
-`2 = medium3 = maximum `
-
-## Reading ROOT Files via Apache Web Server
-
-
-By adding one ROOT specific module to your Apache web server, you can
-distribute ROOT files to any ROOT user. There is no longer a need to
-send your files via FTP and risking (out of date) histograms or other
-objects. Your latest up-to-date results are always accessible to all
-your colleagues. To access ROOT files via a web server, create a
-**`TWebFile`** object instead of a **`TFile`** object with a standard
-URL as file name. For example:
-
-``` {.cpp}
-root[] TWebFile f("http://root.cern.ch/~rdm/hsimple.root")
-root[] f.ls()
-TWebFile** http://root.cern.ch/~rdm/hsimple.root
-TWebFile* http://root.cern.ch/~rdm/hsimple.root
-KEY: TH1F hpx;1 This is the px distribution
-KEY: TH2F hpxpy;1 py vs px
-KEY: TProfile hprof;1 Profile of pz versus px
-KEY: TNtuple ntuple;1 Demo ntuple
-root[] hpx.Draw()
-```
-
-Since **`TWebFile`** inherits from **`TFile`** all **`TFile`**
-operations work as expected. However, due to the nature of a web server
-a **`TWebFile`** is a read-only file. A **`TWebFile`** is ideally suited
-to read relatively small objects (like histograms or other data analysis
-results). Although possible, you don't want to analyze large `TTree's`
-via a **`TWebFile`**.
-
-Here follows a step-by-step recipe for making your Apache 1.1 or 1.2 web
-server ROOT aware:
-
--   Go to your Apache source directory and add the file
-    <ftp://root.cern.ch/root/mod_root.c> or
-    <ftp://root.cern.ch/root/mod_root133.c> when your Apache server is
-    \>1.2 (rename the file `mod_root.c`).
-
--   Add to the end of the `Configuration` file the line:
-    `Module root_module mod_root.o`
-
--   Run the `Configure` script
-
--   Type `make`
-
--   Copy the new `httpd` to its expected place
-
--   Go to the `conf` directory and add at the end of the `srm.conf` file
-    the line:`AddHandler root-action root`
-
--   Restart the `httpd` server
-
 ### Using the General Open Function of TFile
 
 
@@ -2696,8 +2479,9 @@ TFile *TFile::Open(const Text_t *name,Option_t *option="",
 const Text_t *title="",Int_t compress,Int_t netopt)
 ```
 
-Depending on the `name` argument, the function returns a **`TFile`**, a
-**`TNetFile`** or a **`TWebFile`** object. In case a **`TNetFile`** URL
+Depending on the `name` argument, the function returns a **`TFile`** or one
+of its derivations, for example a
+**`TXNetFile`** or a **`TDavixFile`** object. In case a URL
 specifies a local file, a **`TFile`** object will be returned (and of
 course no login information is needed). The arguments of the `Open()`
 function are the same as the ones for the **`TFile`** constructor.
@@ -2714,6 +2498,44 @@ RECREATE, UPDATE to READ. Thus the mode argument can be either "READ" or
 
 -   -1 in case of failure. In the last case the file cannot be used
     anymore.
+
+
+## Remotely Access to ROOT Files
+
+ROOT files can be accessed remotely in many ways, on the base of the protocol
+URL. Among the most popular are XRootD (protocols 'root://' and 'xrd://') and
+a Web server (protocl 'http://' or 'https://').
+
+The rootd daemon is deprecated and has been removed in version 6.16/00.
+
+Please refer to the XRootD documentation for starting and ensuring that such a
+daemon is running.
+
+Reading and writing ROOT files over the net can be done by creating a
+**`TFile`** object using the static method **`TFile::Open()`** object.
+This will instantiate the appropriate derivation of **`TFile`** to handle the
+request. Inheriting from the **`TFile`** class, the returned instance will have
+exactly the same interface and behavior of **`TFile`**. The only difference
+is that it reads and writes from a remote service.
+In the example below the file is read via a web server through the TDavixFile plug-in.
+
+
+### A Simple Session
+
+
+``` {.cpp}
+root[] TFile *f1 = TFile::Open("local/file.root","update")
+root[] TFile *f2 = TFile::Open("root://my.server.org/data/file.root","new")
+root[] TFile *f3 = TFile::Open("http://root.cern.ch/files/hsimple.root")
+root[] f3.ls()
+TDavixFile** http://root.cern.ch/files/hsimple.root
+TDavixFile* http://root.cern.ch/files/hsimple.root
+KEY: TH1F hpx;1 This is the px distribution
+KEY: TH2F hpxpy;1 py vs px
+KEY: TProfile hprof;1 Profile of pz versus px
+KEY: TNtuple ntuple;1 Demo ntuple
+root[] hpx.Draw()
+```
 
 ## XML Interface
 

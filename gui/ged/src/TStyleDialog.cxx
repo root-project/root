@@ -9,30 +9,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStyleDialog                                                        //
-//                                                                      //
-//  This small class is useful to ask the user for a name and a title,  //
-//       in order to rename a style, create a new style or import a     //
-//       style from a canvas.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TStyleDialog
+\ingroup ged
+
+This small class is useful to ask the user for a name and a title,
+   in order to rename a style, create a new style or import a
+   style from a canvas.
+
+*/
+
 
 #include "TStyleDialog.h"
 #include "TStyleManager.h"
 
 #include <TCanvas.h>
 #include <TGButton.h>
-#include <TGFrame.h>
 #include <TGLabel.h>
 #include <TGLayout.h>
 #include <TGTextEntry.h>
 #include <TROOT.h>
 #include <TStyle.h>
-#include <TVirtualPad.h>
 #include <TVirtualMutex.h>
-#include <stdlib.h>
+
+#include <cstdlib>
 
 ClassImp(TStyleDialog);
 

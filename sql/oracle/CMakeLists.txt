@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT sql/oracle package
 ############################################################################
@@ -13,8 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Oracle
     src/TOracleRow.cxx
     src/TOracleServer.cxx
     src/TOracleStatement.cxx
-  DICTIONARY_OPTIONS
-    -I${ORACLE_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Net
@@ -32,6 +36,6 @@ if(${GLIBCXX_USE_CXX11_ABI})
       COMPILE_DEFINITIONS _GLIBCXX_USE_CXX11_ABI=0)
 endif()
 
-target_compile_definitions(Oracle PUBLIC ${ORACLE_DEFINITIONS})
-target_include_directories(Oracle PUBLIC ${ORACLE_INCLUDE_DIR})
-target_link_libraries(Oracle PUBLIC ${ORACLE_LIBRARIES})
+target_compile_definitions(Oracle PRIVATE ${ORACLE_DEFINITIONS})
+target_include_directories(Oracle SYSTEM PRIVATE ${ORACLE_INCLUDE_DIR})
+target_link_libraries(Oracle PRIVATE ${ORACLE_LIBRARIES})

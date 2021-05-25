@@ -17,7 +17,6 @@ This class describes one single function template.
 #include "TFunctionTemplate.h"
 #include "TInterpreter.h"
 #include "TClass.h"
-#include "TROOT.h"
 
 ClassImp(TFunctionTemplate);
 
@@ -123,6 +122,14 @@ UInt_t TFunctionTemplate::GetTemplateMinReqArgs() const
 Long_t TFunctionTemplate::Property() const
 {
    return fInfo ? gCling->FuncTempInfo_Property(fInfo) : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the properties not already defined in Property.See TDictionary's EFunctionProperty.
+
+Long_t TFunctionTemplate::ExtraProperty() const
+{
+   return fInfo ? gCling->FuncTempInfo_ExtraProperty(fInfo) : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,7 @@
 #include "Math/MinimTransformFunction.h"
 #include "Math/MultiNumGradFunction.h"   // needed to use transformation function
 #include "Math/FitMethodFunction.h"
+#include "Math/GenAlgoOptions.h"
 
 #include <iostream>
 #include <cassert>
@@ -123,6 +124,54 @@ unsigned int GSLSimAnMinimizer::NCalls() const {
    if (f) return f->NCalls();
    return 0;
 }
+
+ROOT::Math::MinimizerOptions  GSLSimAnMinimizer::Options() const {
+   ROOT::Math::MinimizerOptions opt;
+   opt.SetMinimizerType("GSLSimAn");
+   // set dummy values since those are not used 
+   opt.SetTolerance(-1);
+   opt.SetPrintLevel(0);
+   opt.SetMaxIterations(-1);
+   opt.SetMaxFunctionCalls(0);
+   opt.SetStrategy(-1);
+   opt.SetErrorDef(0);
+   opt.SetPrecision(0);
+   opt.SetMinimizerAlgorithm("");
+   
+   const GSLSimAnParams & params = MinimizerParameters(); 
+
+   ROOT::Math::GenAlgoOptions simanOpt;
+   simanOpt.SetValue("n_tries",params.n_tries);
+   simanOpt.SetValue("iters_fixed_T",params.iters_fixed_T);
+   simanOpt.SetValue("step_size",params.step_size);
+   simanOpt.SetValue("k",params.k);
+   simanOpt.SetValue("t_initial",params.t_initial);
+   simanOpt.SetValue("mu_t",params.mu_t);
+   simanOpt.SetValue("t_min",params.t_min);
+
+   opt.SetExtraOptions(simanOpt);
+   return opt;
+}
+
+void GSLSimAnMinimizer::SetOptions(const ROOT::Math::MinimizerOptions & opt) {
+
+   // get the specific siman options
+   const ROOT::Math::IOptions * simanOpt = opt.ExtraOptions();
+   if (!simanOpt) {
+      MATH_WARN_MSG("GSLSimAnMinimizer::SetOptions", "No specific sim. annealing minimizer options are provided. No options are set");
+      return;
+   }
+   GSLSimAnParams params; 
+   simanOpt->GetValue("n_tries",params.n_tries);
+   simanOpt->GetValue("iters_fixed_T",params.iters_fixed_T);
+   simanOpt->GetValue("step_size",params.step_size);
+   simanOpt->GetValue("k",params.k);
+   simanOpt->GetValue("t_initial",params.t_initial);
+   simanOpt->GetValue("mu_t",params.mu_t);
+   simanOpt->GetValue("t_min",params.t_min);
+
+   SetParameters(params);
+} 
 
 
    } // end namespace Math

@@ -59,7 +59,15 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 #
 @ROOT_INCLUDE_DIR_SETUP@
 @ROOT_LIBRARY_DIR_SETUP@
+@ROOT_BINDIR_SETUP@
 @ROOT_BINARY_DIR_SETUP@
+
+# Python version used to build ROOT
+set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING_Development_Main@)
+
+#----------------------------------------------------------------------------
+# Include RootMacros.cmake to get ROOT's CMake macros
+include("${_thisdir}/RootMacros.cmake")
 
 #----------------------------------------------------------------------------
 # Include the file listing all the imported targets and options
@@ -69,11 +77,19 @@ endif()
 
 #----------------------------------------------------------------------------
 # Setup components and options
-set(_root_options @ROOT_ENABLED_OPTIONS@)
+set(_root_enabled_options @ROOT_ENABLED_OPTIONS@)
+set(_root_all_options @ROOT_ALL_OPTIONS@)
 
-foreach(_opt ${_root_options})
+foreach(_opt ${_root_enabled_options})
   set(ROOT_${_opt}_FOUND TRUE)
 endforeach()
+
+#----------------------------------------------------------------------------
+# Find external packages which were used in ROOT
+if (NOT ROOT_builtin_nlohmannjson_FOUND)
+  include(CMakeFindDependencyMacro)
+  find_dependency(nlohmann_json @nlohmann_json_VERSION@)
+endif()
 
 #----------------------------------------------------------------------------
 # Now set them to ROOT_LIBRARIES
@@ -82,7 +98,7 @@ if(MSVC)
   set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
-foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad ROOTDataFrame Tree TreePlayer Rint Postscript Matrix Physics MathCore Thread MultiProc ${ROOT_FIND_COMPONENTS})
+foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad ROOTDataFrame Tree TreePlayer Rint Postscript Matrix Physics MathCore Thread MultiProc ROOTVecOps ${ROOT_FIND_COMPONENTS})
   find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
   if(ROOT_${_cpt}_LIBRARY)
     mark_as_advanced(ROOT_${_cpt}_LIBRARY)
@@ -99,7 +115,7 @@ endif()
 set(ROOT_ALL_TOOLS genreflex genmap root rootcint rootcling hadd rootls rootrm rootmv rootmkdir rootcp rootdraw rootbrowse)
 foreach(_cpt ${ROOT_ALL_TOOLS})
   if(NOT ROOT_${_cpt}_CMD)
-    find_program(ROOT_${_cpt}_CMD ${_cpt} HINTS ${ROOT_BINARY_DIR})
+    find_program(ROOT_${_cpt}_CMD ${_cpt} HINTS ${ROOT_BINDIR})
     if(ROOT_${_cpt}_CMD)
       mark_as_advanced(ROOT_${_cpt}_CMD)
     endif()

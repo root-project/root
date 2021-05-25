@@ -1,8 +1,0 @@
-@prefix@/bin/cmsd
-#@prefix@/bin/olbd
-@prefix@/bin/xrd.bin
-@prefix@/bin/xrootd
-@prefix@/share/man/man1/cmsd.1*
-#@prefix@/share/man/man1/olbd.1*
-@prefix@/share/man/man1/xrd.1*
-@prefix@/share/man/man1/xrootd.1*

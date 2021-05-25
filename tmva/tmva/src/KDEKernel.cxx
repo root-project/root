@@ -34,15 +34,7 @@ KDE Kernel for "smoothing" the PDFs.
 #include "TH1F.h"
 #include "TF1.h"
 
-// #if ROOT_VERSION_CODE >= 364802
-// #ifndef ROOT_TMathBase
-// #include "TMathBase.h"
-// #endif
-// #else
-// #ifndef ROOT_TMath
 #include "TMath.h"
-// #endif
-// #endif
 
 #include "TMVA/KDEKernel.h"
 #include "TMVA/MsgLogger.h"

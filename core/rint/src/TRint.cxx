@@ -14,7 +14,7 @@
 // Rint                                                                 //
 //                                                                      //
 // Rint is the ROOT Interactive Interface. It allows interactive access //
-// to the ROOT system via the CINT C/C++ interpreter.                   //
+// to the ROOT system via the Cling C/C++ interpreter.                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,6 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TVirtualX.h"
-#include "TStyle.h"
 #include "TObjectTable.h"
 #include "TClassTable.h"
 #include "TStopwatch.h"
@@ -35,15 +34,17 @@
 #include "TError.h"
 #include "TException.h"
 #include "TInterpreter.h"
-#include "TObjArray.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TStorage.h" // ROOT::Internal::gMmallocDesc
+#include "ThreadLocalStorage.h"
 #include "TTabCom.h"
-#include "TError.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 
 #include "Getline.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #ifdef R__UNIX
 #include <signal.h>
@@ -138,12 +139,12 @@ ClassImp(TRint);
 /// Create an application environment. The TRint environment provides an
 /// interface to the WM manager functionality and eventloop via inheritance
 /// of TApplication and in addition provides interactive access to
-/// the CINT C++ interpreter via the command line.
+/// the Cling C++ interpreter via the command line.
 
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
    TApplication(appClassName, argc, argv, options, numOptions),
-   fCaughtSignal(0)
+   fCaughtSignal(-1)
 {
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
@@ -162,28 +163,30 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    if (!gClassTable->GetDict("TRandom"))
       gSystem->Load("libMathCore");
 
-   // Load some frequently used includes
-   Int_t includes = gEnv->GetValue("Rint.Includes", 1);
-   // When the interactive ROOT starts, it can automatically load some frequently
-   // used includes. However, this introduces several overheads
-   //   -The initialisation takes more time
-   //   -Memory overhead when including <vector>
-   // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
-   // to disable the loading of these includes at startup.
-   // You can set the variable to 1 (default) to load only <iostream>, <string> and <DllImport.h>
-   // You can set it to 2 to load in addition <vector> and <utility>
-   // We strongly recommend setting the variable to 2 if your scripts include <vector>
-   // and you execute your scripts multiple times.
-   if (includes > 0) {
-      TString code;
-      code = "#include <iostream>\n"
-             "#include <string>\n" // for std::string std::iostream.
-             "#include <DllImport.h>\n";// Defined R__EXTERN
-      if (includes > 1) {
-         code += "#include <vector>\n"
-                 "#include <utility>";
+   if (!gInterpreter->HasPCMForLibrary("std")) {
+      // Load some frequently used includes
+      Int_t includes = gEnv->GetValue("Rint.Includes", 1);
+      // When the interactive ROOT starts, it can automatically load some frequently
+      // used includes. However, this introduces several overheads
+      //   -The initialisation takes more time
+      //   -Memory overhead when including <vector>
+      // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
+      // to disable the loading of these includes at startup.
+      // You can set the variable to 1 (default) to load only <iostream>, <string> and <DllImport.h>
+      // You can set it to 2 to load in addition <vector> and <utility>
+      // We strongly recommend setting the variable to 2 if your scripts include <vector>
+      // and you execute your scripts multiple times.
+      if (includes > 0) {
+         TString code;
+         code = "#include <iostream>\n"
+            "#include <string>\n" // for std::string std::iostream.
+            "#include <DllImport.h>\n";// Defined R__EXTERN
+         if (includes > 1) {
+            code += "#include <vector>\n"
+               "#include <utility>";
+         }
+         ProcessLine(code, kTRUE);
       }
-      ProcessLine(code, kTRUE);
    }
 
    // Load user functions
@@ -265,7 +268,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Gl_in_key    = &Key_Pressed;
    Gl_beep_hook = &BeepHook;
 
-   // tell CINT to use our getline
+   // tell Cling to use our getline
    gCling->SetGetline(Getline, Gl_histadd);
 }
 
@@ -333,10 +336,10 @@ void TRint::ExecLogon()
 ////////////////////////////////////////////////////////////////////////////////
 /// Main application eventloop. First process files given on the command
 /// line and then go into the main application event loop, unless the -q
-/// command line option was specfied in which case the program terminates.
-/// When retrun is true this method returns even when -q was specified.
+/// command line option was specified in which case the program terminates.
+/// When return is true this method returns even when -q was specified.
 ///
-/// When QuitOpt is true and retrn is false, terminate the application with
+/// When QuitOpt is true and return is false, terminate the application with
 /// an error code equal to either the ProcessLine error (if any) or the
 /// return value of the command casted to a long.
 
@@ -347,7 +350,7 @@ void TRint::Run(Bool_t retrn)
       Getlinem(kInit, GetPrompt());
    }
 
-   Long_t retval = 0;
+   Longptr_t retval = 0;
    Int_t  error = 0;
    volatile Bool_t needGetlinemInit = kFALSE;
 
@@ -425,7 +428,7 @@ void TRint::Run(Bool_t retrn)
             // to call Getlinem(kInit, GetPrompt());
             needGetlinemInit = kTRUE;
 
-            if (error != 0 || fCaughtSignal) break;
+            if (error != 0 || fCaughtSignal != -1) break;
          }
       } ENDTRY;
 
@@ -433,7 +436,7 @@ void TRint::Run(Bool_t retrn)
          if (retrn) return;
          if (error) {
             retval = error;
-         } else if (fCaughtSignal) {
+         } else if (fCaughtSignal != -1) {
             retval = fCaughtSignal + 128;
          }
          // Bring retval into sensible range, 0..255.
@@ -454,13 +457,13 @@ void TRint::Run(Bool_t retrn)
    if (QuitOpt()) {
       printf("\n");
       if (retrn) return;
-      Terminate(fCaughtSignal ? fCaughtSignal + 128 : 0);
+      Terminate(fCaughtSignal != -1 ? fCaughtSignal + 128 : 0);
    }
 
    TApplication::Run(retrn);
 
    // Reset to happiness.
-   fCaughtSignal = 0;
+   fCaughtSignal = -1;
 
    Getlinem(kCleanUp, 0);
 }
@@ -477,7 +480,7 @@ void TRint::PrintLogo(Bool_t lite)
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("%%s(c) 1995-2018, The ROOT Team"));
+      lines.emplace_back(TString::Format("(c) 1995-2021, The ROOT Team; conception: R. Brun, F. Rademakers%%s"));
       lines.emplace_back(TString::Format("Built for %s on %s%%s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
@@ -498,6 +501,8 @@ void TRint::PrintLogo(Bool_t lite)
                                             gROOT->GetGitBranch(),
                                             gROOT->GetGitCommit()));
       }
+      lines.emplace_back(TString::Format("With %s %%s",
+                                         gSystem->GetBuildCompilerVersionStr()));
       lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
       // Find the longest line and its length:
@@ -714,9 +719,9 @@ void TRint::SetEchoMode(Bool_t mode)
 /// The last argument 'script' allows to specify an alternative script to
 /// be executed remotely to startup the session.
 
-Long_t TRint::ProcessRemote(const char *line, Int_t *)
+Longptr_t TRint::ProcessRemote(const char *line, Int_t *)
 {
-   Long_t ret = TApplication::ProcessRemote(line);
+   Longptr_t ret = TApplication::ProcessRemote(line);
 
    if (ret == 1) {
       if (fAppRemote) {
@@ -736,7 +741,7 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
 /// better diagnostics. Must be called after fNcmd has been increased for
 /// the next line.
 
-Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
+Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
 {
    Int_t err;
    if (!error)

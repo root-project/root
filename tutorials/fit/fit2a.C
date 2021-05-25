@@ -48,11 +48,11 @@ TCanvas *fit2a() {
    gStyle->SetPalette(57);
    const Int_t npar = 15;
    Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
-   TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
+   auto f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
    f2->SetParameters(f2params);
 
    //Create an histogram and fill it randomly with f2
-   TH2F *h2 = new TH2F("h2","From f2",40,-10,10,40,-10,10);
+   auto h2 = new TH2F("h2","From f2",40,-10,10,40,-10,10);
    Int_t nentries = 100000;
    h2->FillRandom("f2",nentries);
    //Fit h2 with original function f2
@@ -62,7 +62,7 @@ TCanvas *fit2a() {
    f2params[10] *= ratio;
    f2->SetParameters(f2params);
    h2->Fit("f2","N");
-   TCutG *cutg = new TCutG("cutg",5);
+   auto cutg = new TCutG("cutg",5);
    cutg->SetPoint(0,-7,-7);
    cutg->SetPoint(1, 2,-7);
    cutg->SetPoint(2, 2, 2);

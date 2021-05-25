@@ -72,7 +72,6 @@ TRootSecContext::~TRootSecContext()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set OffSet to -1 and expiring Date to default
 /// Remove from the list
-/// If globus, cleanup local stuff
 /// If Opt contains "C" or "c", ask for remote cleanup
 /// If Opt contains "R" or "r", remove from the list
 /// Default Opt="CR"
@@ -84,24 +83,12 @@ void TRootSecContext::DeActivate(Option_t *Opt)
    if (clean && fOffSet > -1)
       CleanupSecContext(kFALSE);
 
-   // Cleanup TPwdCtx object fro UsrPwd and SRP
-   if (fMethod == TAuthenticate::kClear ||
-       fMethod == TAuthenticate::kSRP)
+   // Cleanup TPwdCtx object fro UsrPwd
+   if (fMethod == TAuthenticate::kClear)
       if (fContext) {
          delete (TPwdCtx *)fContext;
          fContext = 0;
       }
-
-   // Cleanup globus security context if needed
-   if (fMethod == TAuthenticate::kGlobus && fContext) {
-      GlobusAuth_t globusAuthHook = TAuthenticate::GetGlobusAuthHook();
-      if (globusAuthHook != 0) {
-         TString det("context");
-         TString us("-1");
-         (*globusAuthHook)((TAuthenticate *)fContext,us,det);
-         fContext = 0;
-      }
-   }
 
    Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
    if (remove && fOffSet > -1){

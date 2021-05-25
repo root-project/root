@@ -9,29 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttMarkerEditor                                                    //
-//                                                                      //
-//  Implements GUI for editing marker attributes.                       //
-//            color, style and size                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TAttMarkerEditor.gif">
+/** \class TAttMarkerEditor
+    \ingroup ged
+
+Implements GUI for editing marker attributes.
+        color, style and size
+
 */
-//End_Html
 
 
 #include "TAttMarkerEditor.h"
+#include "TAttMarker.h"
 #include "TGedMarkerSelect.h"
 #include "TGColorSelect.h"
 #include "TGNumberEntry.h"
 #include "TColor.h"
 #include "TGLabel.h"
-#include "TGNumberEntry.h"
-#include "TPad.h"
+#include "TGSlider.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 

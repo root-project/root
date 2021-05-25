@@ -1,9 +1,8 @@
 //===-- LanaiMemAluCombiner.cpp - Pass to combine memory & ALU operations -===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // Simple pass to combine memory and ALU operations
@@ -23,15 +22,15 @@
 // in the same machine basic block into one machine instruction.
 //===----------------------------------------------------------------------===//
 
-#include "Lanai.h"
+#include "LanaiAluCode.h"
 #include "LanaiTargetMachine.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Target/TargetInstrInfo.h"
 using namespace llvm;
 
 #define GET_INSTRMAP_INFO
@@ -159,7 +158,8 @@ bool isNonVolatileMemoryOp(const MachineInstr &MI) {
   const MachineMemOperand *MemOperand = *MI.memoperands_begin();
 
   // Don't move volatile memory accesses
-  if (MemOperand->isVolatile())
+  // TODO: unclear if we need to be as conservative about atomics
+  if (MemOperand->isVolatile() || MemOperand->isAtomic())
     return false;
 
   return true;
@@ -277,8 +277,7 @@ void LanaiMemAluCombiner::insertMergedInstruction(MachineBasicBlock *BB,
     InstrBuilder.addImm(LPAC::makePostOp(AluOpcode));
 
   // Transfer memory operands.
-  InstrBuilder->setMemRefs(MemInstr->memoperands_begin(),
-                           MemInstr->memoperands_end());
+  InstrBuilder.setMemRefs(MemInstr->memoperands());
 }
 
 // Function determines if ALU operation (in alu_iter) can be combined with
@@ -343,7 +342,7 @@ MbbIterator LanaiMemAluCombiner::findClosestSuitableAluInstr(
       break;
 
     // Skip over debug instructions
-    if (First->isDebugValue())
+    if (First->isDebugInstr())
       continue;
 
     if (isSuitableAluInstr(IsSpls, First, *Base, *Offset)) {

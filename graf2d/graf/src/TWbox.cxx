@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TWbox.h"
@@ -34,15 +34,6 @@ End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// wbox default constructor.
-
-TWbox::TWbox(): TBox()
-{
-   fBorderSize  = 0;
-   fBorderMode  = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// wbox normal constructor.
 ///
 /// a WBOX is a box with a bordersize and a bordermode
@@ -62,20 +53,20 @@ TWbox::TWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// wbox default destructor.
-
-TWbox::~TWbox()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// wbox copy constructor.
 
 TWbox::TWbox(const TWbox &wbox) : TBox(wbox)
 {
-   fBorderSize  = 0;
-   fBorderMode  = 0;
-   ((TWbox&)wbox).Copy(*this);
+   wbox.TWbox::Copy(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
+TWbox &TWbox::operator=(const TWbox &src)
+{
+   src.TWbox::Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

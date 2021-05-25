@@ -44,7 +44,7 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    std::tuple<RResultPtr<std::vector<ColumnTypes>>...> fColumns;
    const std::vector<std::string> fColNames;
    const std::map<std::string, std::string> fColTypesMap;
-   // The role of the fPouinterHoldersModels is to be initialised with the pack
+   // The role of the fPointerHoldersModels is to be initialised with the pack
    // of arguments in the constrcutor signature at construction time
    // Once the number of slots is known, the fPointerHolders are initialised
    // according to the models.
@@ -200,7 +200,7 @@ public:
       }
    }
 
-   std::string GetDataSourceType() { return "LazyDS"; }
+   std::string GetLabel() { return "LazyDS"; }
 };
 
 } // ns RDF

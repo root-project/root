@@ -12,23 +12,32 @@
 #ifndef ROOT_TSpline
 #define ROOT_TSpline
 
+#ifdef R__LESS_INCLUDES
+#include "TNamed.h"
+#include "TAttLine.h"
+#include "TAttFill.h"
+#include "TAttMarker.h"
+#else
 #include "TGraph.h"
+#endif
 
 class TH1;
+class TH1F;
 class TF1;
+class TGraph;
 
 class TSpline : public TNamed, public TAttLine,
                 public TAttFill, public TAttMarker
 {
 protected:
-   Double_t  fDelta;     // Distance between equidistant knots
-   Double_t  fXmin;      // Minimum value of abscissa
-   Double_t  fXmax;      // Maximum value of abscissa
-   Int_t     fNp;        // Number of knots
-   Bool_t    fKstep;     // True of equidistant knots
-   TH1F     *fHistogram; // Temporary histogram
-   TGraph   *fGraph;     // Graph for drawing the knots
-   Int_t     fNpx;       // Number of points used for graphical representation
+   Double_t  fDelta;     ///< Distance between equidistant knots
+   Double_t  fXmin;      ///< Minimum value of abscissa
+   Double_t  fXmax;      ///< Maximum value of abscissa
+   Int_t     fNp;        ///< Number of knots
+   Bool_t    fKstep;     ///< True of equidistant knots
+   TH1F     *fHistogram; ///< Temporary histogram
+   TGraph   *fGraph;     ///< Graph for drawing the knots
+   Int_t     fNpx;       ///< Number of points used for graphical representation
 
    TSpline(const TSpline&);
    TSpline& operator=(const TSpline&);
@@ -68,8 +77,8 @@ public:
 class TSplinePoly : public TObject
 {
 protected:
-   Double_t fX;     // abscissa
-   Double_t fY;     // constant term
+   Double_t fX;     ///< Abscissa
+   Double_t fY;     ///< Constant term
 
 public:
    TSplinePoly() :
@@ -103,9 +112,9 @@ inline TSplinePoly::TSplinePoly(TSplinePoly const &other)
 class TSplinePoly3 : public TSplinePoly
 {
 private:
-   Double_t fB; // first order expansion coefficient :  fB*1! is the first derivative at x
-   Double_t fC; // second order expansion coefficient : fC*2! is the second derivative at x
-   Double_t fD; // third order expansion coefficient :  fD*3! is the third derivative at x
+   Double_t fB; ///< First order expansion coefficient :  fB*1! is the first derivative at x
+   Double_t fC; ///< Second order expansion coefficient : fC*2! is the second derivative at x
+   Double_t fD; ///< Third order expansion coefficient :  fD*3! is the third derivative at x
 
 public:
    TSplinePoly3() :
@@ -124,7 +133,7 @@ public:
    }
    Double_t Derivative(Double_t x) const {
       Double_t dx=x-fX;
-      return (fB+dx*(2*fC+3*fD*dx));      
+      return (fB+dx*(2*fC+3*fD*dx));
    }
 
 private:
@@ -144,11 +153,11 @@ inline TSplinePoly3::TSplinePoly3(TSplinePoly3 const &other)
 class TSplinePoly5 : public TSplinePoly
 {
 private:
-   Double_t fB; // first order expansion coefficient :  fB*1! is the first derivative at x
-   Double_t fC; // second order expansion coefficient : fC*2! is the second derivative at x
-   Double_t fD; // third order expansion coefficient :  fD*3! is the third derivative at x
-   Double_t fE; // fourth order expansion coefficient : fE*4! is the fourth derivative at x
-   Double_t fF; // fifth order expansion coefficient :  fF*5! is the fifth derivative at x
+   Double_t fB; ///< First order expansion coefficient :  fB*1! is the first derivative at x
+   Double_t fC; ///< Second order expansion coefficient : fC*2! is the second derivative at x
+   Double_t fD; ///< Third order expansion coefficient :  fD*3! is the third derivative at x
+   Double_t fE; ///< Fourth order expansion coefficient : fE*4! is the fourth derivative at x
+   Double_t fF; ///< Fifth order expansion coefficient :  fF*5! is the fifth derivative at x
 
 public:
    TSplinePoly5() :
@@ -191,11 +200,11 @@ inline TSplinePoly5::TSplinePoly5(TSplinePoly5 const &other)
 class TSpline3 : public TSpline
 {
 protected:
-   TSplinePoly3  *fPoly;       //[fNp] Array of polynomial terms
-   Double_t       fValBeg;     // Initial value of first or second derivative
-   Double_t       fValEnd;     // End value of first or second derivative
-   Int_t          fBegCond;    // 0=no beg cond, 1=first derivative, 2=second derivative
-   Int_t          fEndCond;    // 0=no end cond, 1=first derivative, 2=second derivative
+   TSplinePoly3  *fPoly;       ///<[fNp] Array of polynomial terms
+   Double_t       fValBeg;     ///< Initial value of first or second derivative
+   Double_t       fValEnd;     ///< End value of first or second derivative
+   Int_t          fBegCond;    ///< 0=no beg cond, 1=first derivative, 2=second derivative
+   Int_t          fEndCond;    ///< 0=no end cond, 1=first derivative, 2=second derivative
 
    void   BuildCoeff();
    void   SetCond(const char *opt);
@@ -247,7 +256,7 @@ public:
 class TSpline5 : public TSpline
 {
 protected:
-   TSplinePoly5  *fPoly;     //[fNp] Array of polynomial terms
+   TSplinePoly5  *fPoly;     ///<[fNp] Array of polynomial terms
 
    void BuildCoeff();
    void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,

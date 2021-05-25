@@ -13,17 +13,18 @@
 #include "TGuiBldHintsEditor.h"
 #include "TGuiBldNameFrame.h"
 #include "TGResourcePool.h"
-#include "TGTab.h"
 #include "TGLabel.h"
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
-#include "TGColorSelect.h"
-#include "TGColorDialog.h"
 #include "TGuiBldGeometryFrame.h"
 #include "TRootGuiBuilder.h"
 #include "TGuiBldDragManager.h"
 #include "TGFrame.h"
+
+/** \class TGuiBldGeometryFrame
+    \ingroup guibuilder
+*/
 
 ClassImp(TGuiBldGeometryFrame);
 

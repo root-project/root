@@ -23,6 +23,8 @@
 #include "TDatime.h"
 #include "TTimeStamp.h"
 
+#include <sqlite3.h>
+
 #include <stdlib.h>
 
 ClassImp(TSQLiteStatement);
@@ -66,8 +68,8 @@ void TSQLiteStatement::Close(Option_t *)
       sqlite3_finalize(fStmt->fRes);
    }
 
-   fStmt->fRes = 0;
-   fStmt->fConn = 0;
+   fStmt->fRes = nullptr;
+   fStmt->fConn = nullptr;
    delete fStmt;
 }
 
@@ -224,7 +226,7 @@ Bool_t TSQLiteStatement::NextResultRow()
 {
    ClearError();
 
-   if ((fStmt == 0) || !IsResultSetMode()) return kFALSE;
+   if (!fStmt || !IsResultSetMode()) return kFALSE;
 
    if (fIterationCount == 0) {
       // The interface says user should call NextResultRow() before getting any data,

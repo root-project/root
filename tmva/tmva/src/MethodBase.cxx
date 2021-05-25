@@ -80,7 +80,6 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDF.h"
 #include "TMVA/Ranking.h"
-#include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Results.h"
@@ -89,7 +88,6 @@
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/RootFinder.h"
 #include "TMVA/Timer.h"
-#include "TMVA/Tools.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableDecorrTransform.h"
@@ -111,9 +109,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TFile.h"
-#include "TKey.h"
 #include "TGraph.h"
-#include "Riostream.h"
 #include "TXMLEngine.h"
 
 #include <iomanip>
@@ -142,7 +138,6 @@ const Int_t    NBIN_HIST_HIGH = 10000;
 #endif
 
 
-#include "TGraph.h"
 #include "TMultiGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -764,8 +759,8 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
    regRes->Resize( nEvents );
 
    // Drawing the progress bar every event was causing a huge slowdown in the evaluation time
-   // So we set some parameters to draw the progress bar a total of totalProgressDraws, i.e. only draw every 1 in 100 
-   
+   // So we set some parameters to draw the progress bar a total of totalProgressDraws, i.e. only draw every 1 in 100
+
    Int_t totalProgressDraws = 100; // total number of times to update the progress bar
    Int_t drawProgressEvery = 1;    // draw every nth event such that we have a total of totalProgressDraws
    if(nEvents >= totalProgressDraws) drawProgressEvery = nEvents/totalProgressDraws;
@@ -888,9 +883,12 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
    if (type==Types::kTesting)
       SetTestTime(timer.ElapsedSeconds());
 
-   // load mva values to results object
-   for (Int_t ievt=0; ievt<nEvents; ievt++) {
-      clRes->SetValue( mvaValues[ievt], ievt );
+   // load mva values and type to results object
+   for (Int_t ievt = 0; ievt < nEvents; ievt++) {
+      // note we do not need the trasformed event to get the signal/background information
+      // by calling Data()->GetEvent instead of this->GetEvent we access the untransformed one
+      auto ev = Data()->GetEvent(ievt);
+      clRes->SetValue(mvaValues[ievt], ievt, DataInfo().IsSignal(ev));
    }
 }
 
@@ -959,7 +957,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
       Data()->SetCurrentEvent(ievt);
       Float_t proba = ((Float_t)GetProba( GetMvaValue(), 0.5 ));
       if (proba < 0) break;
-      mvaProb->SetValue( proba, ievt );
+      mvaProb->SetValue( proba, ievt, DataInfo().IsSignal( Data()->GetEvent()) );
 
       // print progress
       Int_t modulo = Int_t(nEvents/100);
@@ -1199,7 +1197,7 @@ void TMVA::MethodBase::TestClassification()
 
    Log() << kHEADER <<Form("[%s] : ",DataInfo().GetName())<< "Loop over test events and fill histograms with classifier response..." << Endl << Endl;
    if (mvaProb) Log() << kINFO << "Also filling probability and rarity histograms (on request)..." << Endl;
-   std::vector<Bool_t>* mvaResTypes = mvaRes->GetValueVectorTypes();
+   //std::vector<Bool_t>* mvaResTypes = mvaRes->GetValueVectorTypes();
 
    //LM: this is needed to avoid crashes in ROOCCURVE
    if ( mvaRes->GetSize() != GetNEvents() ) {
@@ -1214,7 +1212,7 @@ void TMVA::MethodBase::TestClassification()
       Float_t w = ev->GetWeight();
 
       if (DataInfo().IsSignal(ev)) {
-         mvaResTypes->push_back(kTRUE);
+         //mvaResTypes->push_back(kTRUE);
          mva_s ->Fill( v, w );
          if (mvaProb) {
             proba_s->Fill( (*mvaProb)[ievt][0], w );
@@ -1224,7 +1222,7 @@ void TMVA::MethodBase::TestClassification()
          mva_eff_s ->Fill( v, w );
       }
       else {
-         mvaResTypes->push_back(kFALSE);
+         //mvaResTypes->push_back(kFALSE);
          mva_b ->Fill( v, w );
          if (mvaProb) {
             proba_b->Fill( (*mvaProb)[ievt][0], w );
@@ -1425,11 +1423,7 @@ void TMVA::MethodBase::ReadStateFromFile()
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,29,0)
       void* doc = gTools().xmlengine().ParseFile(tfname,gTools().xmlenginebuffersize()); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
-#else
-      void* doc = gTools().xmlengine().ParseFile(tfname);
-#endif
       if (!doc) {
          Log() << kFATAL << "Error parsing XML file " << tfname << Endl;
       }
@@ -1462,15 +1456,10 @@ void TMVA::MethodBase::ReadStateFromFile()
 /// for reading from memory
 
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00)
    void* doc = gTools().xmlengine().ParseString(xmlstr);
    void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
    ReadStateFromXML(rootnode);
    gTools().xmlengine().FreeDoc(doc);
-#else
-   Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName()) << "Method MethodBase::ReadStateFromXMLString( const char* xmlstr = "
-         << xmlstr << " ) is not available for ROOT versions prior to 5.26/00." << Endl;
-#endif
 
    return;
 }
@@ -1982,6 +1971,13 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    if (fBaseDir != 0) return fBaseDir;
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " not set yet --> check if already there.." <<Endl;
 
+   if (IsSilentFile()) {
+      Log() << kFATAL << Form("Dataset[%s] : ", DataInfo().GetName())
+            << "MethodBase::BaseDir() - No directory exists when running a Method without output file. Enable the "
+               "output when creating the factory"
+            << Endl;
+   }
+
    TDirectory* methodDir = MethodBaseDir();
    if (methodDir==0)
       Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "MethodBase::BaseDir() - MethodBaseDir() return a NULL pointer!" << Endl;
@@ -1994,7 +1990,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
          sdir = methodDir->mkdir(defaultDir);
          sdir->cd();
          // write weight file name into target file
-         if (fModelPersistence) { 
+         if (fModelPersistence) {
             TObjString wfilePath( gSystem->WorkingDirectory() );
             TObjString wfileName( GetWeightFileName() );
             wfilePath.Write( "TrainingPath" );
@@ -2010,30 +2006,39 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 /// returns the ROOT directory where all instances of the
 /// corresponding MVA method are stored
 
- TDirectory* TMVA::MethodBase::MethodBaseDir() const
- {
-    if (fMethodBaseDir != 0) return fMethodBaseDir;
-
-    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
-
-
-    TDirectory *fFactoryBaseDir=GetFile();
-
-   fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName());
-   if(!fMethodBaseDir) //creating dataset directory
-      {
-         fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
-         if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
-      }
-   TString _methodDir = Form("Method_%s",GetMethodName().Data());
-   fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
-
-   if(!fMethodBaseDir){
-      fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
-      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+TDirectory *TMVA::MethodBase::MethodBaseDir() const
+{
+   if (fMethodBaseDir != 0) {
+      return fMethodBaseDir;
    }
 
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<"Return from MethodBaseDir() after creating base directory "<<Endl;
+   const char *datasetName = DataInfo().GetName();
+
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodTypeName()
+         << " not set yet --> check if already there.." << Endl;
+
+   TDirectory *factoryBaseDir = GetFile();
+   if (!factoryBaseDir) return nullptr;
+   fMethodBaseDir = factoryBaseDir->GetDirectory(datasetName);
+   if (!fMethodBaseDir) {
+      fMethodBaseDir = factoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
+      if (!fMethodBaseDir) {
+         Log() << kFATAL << "Can not create dir " << datasetName;
+      }
+   }
+   TString methodTypeDir = Form("Method_%s", GetMethodTypeName().Data());
+   fMethodBaseDir = fMethodBaseDir->GetDirectory(methodTypeDir.Data());
+
+   if (!fMethodBaseDir) {
+      TDirectory *datasetDir = factoryBaseDir->GetDirectory(datasetName);
+      TString methodTypeDirHelpStr = Form("Directory for all %s methods", GetMethodTypeName().Data());
+      fMethodBaseDir = datasetDir->mkdir(methodTypeDir.Data(), methodTypeDirHelpStr);
+      Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodName()
+            << " does not exist yet--> created it" << Endl;
+   }
+
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName)
+         << "Return from MethodBaseDir() after creating base directory " << Endl;
    return fMethodBaseDir;
 }
 
@@ -2043,7 +2048,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 void TMVA::MethodBase::SetWeightFileDir( TString fileDir )
 {
    fFileDir = fileDir;
-   gSystem->MakeDirectory( fFileDir );
+   gSystem->mkdir( fFileDir, kTRUE );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2100,7 +2105,13 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
             << "/kMaxAnalysisType" << Endl;
    results->GetStorage()->Write();
    if (treetype==Types::kTesting) {
-      GetTransformationHandler().PlotVariables (GetEventCollection( Types::kTesting ), BaseDir() );
+      // skipping plotting of variables if too many (default is 200)
+      if ((int) DataInfo().GetNVariables()< gConfig().GetVariablePlotting().fMaxNumOfAllowedVariables)
+         GetTransformationHandler().PlotVariables (GetEventCollection( Types::kTesting ), BaseDir() );
+      else
+         Log() << kINFO << TString::Format("Dataset[%s] : ",DataInfo().GetName())
+               << " variable plots are not produces ! The number of variables is " << DataInfo().GetNVariables()
+               << " , it is larger than " << gConfig().GetVariablePlotting().fMaxNumOfAllowedVariables << Endl;
    }
 }
 
@@ -3039,7 +3050,11 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   virtual ~IClassifierReader() {}" << std::endl;
    fout << std::endl;
    fout << "   // return classifier response" << std::endl;
-   fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   virtual std::vector<double> GetMulticlassValues( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   } else {
+      fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   }
    fout << std::endl;
    fout << "   // returns classifier status" << std::endl;
    fout << "   bool IsStatusClean() const { return fStatusIsClean; }" << std::endl;
@@ -3118,7 +3133,11 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // the classifier response" << std::endl;
    fout << "   // \"inputValues\" is a vector of input values in the same order as the" << std::endl;
    fout << "   // variables given to the constructor" << std::endl;
-   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   std::vector<double> GetMulticlassValues( const std::vector<double>& inputValues ) const override;" << std::endl;
+   } else {
+      fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
+   }
    fout << std::endl;
    fout << " private:" << std::endl;
    fout << std::endl;
@@ -3152,53 +3171,77 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << std::endl;
    fout << "   // initialize internal variables" << std::endl;
    fout << "   void Initialize();" << std::endl;
-   fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   std::vector<double> GetMulticlassValues__( const std::vector<double>& inputValues ) const;" << std::endl;
+   } else {
+      fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << std::endl;
+   }
    fout << "" << std::endl;
    fout << "   // private members (method specific)" << std::endl;
 
    // call the classifier specific output (the classifier must close the class !)
    MakeClassSpecific( fout, className );
 
-   fout << "   inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << std::endl;
-   fout << "   {" << std::endl;
-   fout << "      // classifier response value" << std::endl;
-   fout << "      double retval = 0;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "inline std::vector<double> " << className <<  "::GetMulticlassValues( const std::vector<double>& inputValues ) const" << std::endl;
+   } else {
+      fout << "inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << std::endl;
+   }
+   fout << "{" << std::endl;
+   fout << "   // classifier response value" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   std::vector<double> retval;" << std::endl;
+   } else {
+      fout << "   double retval = 0;" << std::endl;
+   }
    fout << std::endl;
-   fout << "      // classifier response, sanity check first" << std::endl;
-   fout << "      if (!IsStatusClean()) {" << std::endl;
-   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << std::endl;
-   fout << "                   << \" because status is dirty\" << std::endl;" << std::endl;
-   fout << "         retval = 0;" << std::endl;
-   fout << "      }" << std::endl;
-   fout << "      else {" << std::endl;
+   fout << "   // classifier response, sanity check first" << std::endl;
+   fout << "   if (!IsStatusClean()) {" << std::endl;
+   fout << "      std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << std::endl;
+   fout << "                << \" because status is dirty\" << std::endl;" << std::endl;
+   fout << "   }" << std::endl;
+   fout << "   else {" << std::endl;
    if (IsNormalised()) {
-      fout << "            // normalise variables" << std::endl;
-      fout << "            std::vector<double> iV;" << std::endl;
-      fout << "            iV.reserve(inputValues.size());" << std::endl;
-      fout << "            int ivar = 0;" << std::endl;
-      fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
-      fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
-      fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
-      fout << "            }" << std::endl;
+      fout << "         // normalise variables" << std::endl;
+      fout << "         std::vector<double> iV;" << std::endl;
+      fout << "         iV.reserve(inputValues.size());" << std::endl;
+      fout << "         int ivar = 0;" << std::endl;
+      fout << "         for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
+      fout << "              varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
+      fout << "            iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
+      fout << "         }" << std::endl;
       if (GetTransformationHandler().GetTransformationList().GetSize() != 0 && GetMethodType() != Types::kLikelihood &&
           GetMethodType() != Types::kHMatrix) {
-         fout << "            Transform( iV, -1 );" << std::endl;
+         fout << "         Transform( iV, -1 );" << std::endl;
       }
-      fout << "            retval = GetMvaValue__( iV );" << std::endl;
+
+      if(GetAnalysisType() == Types::kMulticlass) {
+         fout << "         retval = GetMulticlassValues__( iV );" << std::endl;
+      } else {
+         fout << "         retval = GetMvaValue__( iV );" << std::endl;
+      }
    } else {
       if (GetTransformationHandler().GetTransformationList().GetSize() != 0 && GetMethodType() != Types::kLikelihood &&
           GetMethodType() != Types::kHMatrix) {
-         fout << "            std::vector<double> iV(inputValues);" << std::endl;
-         fout << "            Transform( iV, -1 );" << std::endl;
-         fout << "            retval = GetMvaValue__( iV );" << std::endl;
+         fout << "         std::vector<double> iV(inputValues);" << std::endl;
+         fout << "         Transform( iV, -1 );" << std::endl;
+         if(GetAnalysisType() == Types::kMulticlass) {
+            fout << "         retval = GetMulticlassValues__( iV );" << std::endl;
+         } else {
+            fout << "         retval = GetMvaValue__( iV );" << std::endl;
+         }
       } else {
-         fout << "            retval = GetMvaValue__( inputValues );" << std::endl;
+         if(GetAnalysisType() == Types::kMulticlass) {
+            fout << "         retval = GetMulticlassValues__( inputValues );" << std::endl;
+         } else {
+            fout << "         retval = GetMvaValue__( inputValues );" << std::endl;
+         }
       }
    }
-   fout << "      }" << std::endl;
-   fout << std::endl;
-   fout << "      return retval;" << std::endl;
    fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   return retval;" << std::endl;
+   fout << "}" << std::endl;
 
    // create output for transformation - if any
    if (GetTransformationHandler().GetTransformationList().GetSize()!=0)

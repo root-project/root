@@ -1,9 +1,8 @@
 //===-- PPCELFObjectWriter.cpp - PPC ELF Writer ---------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -13,6 +12,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCExpr.h"
+#include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSymbolELF.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -54,6 +54,10 @@ static MCSymbolRefExpr::VariantKind getAccessVariant(const MCValue &Target,
     return MCSymbolRefExpr::VK_PPC_HI;
   case PPCMCExpr::VK_PPC_HA:
     return MCSymbolRefExpr::VK_PPC_HA;
+  case PPCMCExpr::VK_PPC_HIGH:
+    return MCSymbolRefExpr::VK_PPC_HIGH;
+  case PPCMCExpr::VK_PPC_HIGHA:
+    return MCSymbolRefExpr::VK_PPC_HIGHA;
   case PPCMCExpr::VK_PPC_HIGHERA:
     return MCSymbolRefExpr::VK_PPC_HIGHERA;
   case PPCMCExpr::VK_PPC_HIGHER:
@@ -129,6 +133,9 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
   } else {
     switch ((unsigned)Fixup.getKind()) {
       default: llvm_unreachable("invalid fixup kind!");
+    case FK_NONE:
+      Type = ELF::R_PPC_NONE;
+      break;
     case PPC::fixup_ppc_br24abs:
       Type = ELF::R_PPC_ADDR24;
       break;
@@ -149,6 +156,12 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
         break;
       case MCSymbolRefExpr::VK_PPC_HA:
         Type = ELF::R_PPC_ADDR16_HA;
+        break;
+      case MCSymbolRefExpr::VK_PPC_HIGH:
+        Type = ELF::R_PPC64_ADDR16_HIGH;
+        break;
+      case MCSymbolRefExpr::VK_PPC_HIGHA:
+        Type = ELF::R_PPC64_ADDR16_HIGHA;
         break;
       case MCSymbolRefExpr::VK_PPC_HIGHER:
         Type = ELF::R_PPC64_ADDR16_HIGHER;
@@ -198,6 +211,12 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
       case MCSymbolRefExpr::VK_PPC_TPREL_HA:
         Type = ELF::R_PPC_TPREL16_HA;
         break;
+      case MCSymbolRefExpr::VK_PPC_TPREL_HIGH:
+        Type = ELF::R_PPC64_TPREL16_HIGH;
+        break;
+      case MCSymbolRefExpr::VK_PPC_TPREL_HIGHA:
+        Type = ELF::R_PPC64_TPREL16_HIGHA;
+        break;
       case MCSymbolRefExpr::VK_PPC_TPREL_HIGHER:
         Type = ELF::R_PPC64_TPREL16_HIGHER;
         break;
@@ -221,6 +240,12 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
         break;
       case MCSymbolRefExpr::VK_PPC_DTPREL_HA:
         Type = ELF::R_PPC64_DTPREL16_HA;
+        break;
+      case MCSymbolRefExpr::VK_PPC_DTPREL_HIGH:
+        Type = ELF::R_PPC64_DTPREL16_HIGH;
+        break;
+      case MCSymbolRefExpr::VK_PPC_DTPREL_HIGHA:
+        Type = ELF::R_PPC64_DTPREL16_HIGHA;
         break;
       case MCSymbolRefExpr::VK_PPC_DTPREL_HIGHER:
         Type = ELF::R_PPC64_DTPREL16_HIGHER;
@@ -416,10 +441,7 @@ bool PPCELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
   }
 }
 
-MCObjectWriter *llvm::createPPCELFObjectWriter(raw_pwrite_stream &OS,
-                                               bool Is64Bit,
-                                               bool IsLittleEndian,
-                                               uint8_t OSABI) {
-  MCELFObjectTargetWriter *MOTW = new PPCELFObjectWriter(Is64Bit, OSABI);
-  return createELFObjectWriter(MOTW, OS, IsLittleEndian);
+std::unique_ptr<MCObjectTargetWriter>
+llvm::createPPCELFObjectWriter(bool Is64Bit, uint8_t OSABI) {
+  return llvm::make_unique<PPCELFObjectWriter>(Is64Bit, OSABI);
 }

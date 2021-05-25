@@ -55,6 +55,8 @@ template<typename Architecture_t>
 public:
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
+
 
 private:
 
@@ -149,6 +151,8 @@ public:
 
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
+
 
 private:
 
@@ -267,12 +271,15 @@ auto inline TLayer<Architecture_t>::Forward(Matrix_t & input,
 -> void
 {
    if (applyDropout && (fDropoutProbability != 1.0)) {
-      Architecture_t::Dropout(input, fDropoutProbability);
+      Architecture_t::DropoutForward(input, fDropoutProbability);
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
-   evaluateDerivative<Architecture_t>(fDerivatives, fF, fOutput);
-   evaluate<Architecture_t>(fOutput, fF);
+   Tensor_t tOutput(fOutput); 
+   Tensor_t tDerivatives(fDerivatives); 
+   evaluateDerivative<Architecture_t>(tDerivatives, fF, tOutput);
+  
+   evaluate<Architecture_t>(tOutput, fF);
 }
 
 //______________________________________________________________________________
@@ -283,13 +290,20 @@ auto TLayer<Architecture_t>::Backward(Matrix_t & gradients_backward,
                                     Scalar_t weightDecay)
 -> void
 {
-   Architecture_t::Backward(gradients_backward,
+
+   Tensor_t tGradBw(gradients_backward);
+   Tensor_t tActBw(activations_backward);
+   Tensor_t tActGrad(fActivationGradients);
+   Tensor_t tDeriv(fDerivatives);
+
+   Architecture_t::Hadamard( tDeriv, tActGrad); 
+   Architecture_t::Backward( tGradBw,
                             fWeightGradients,
                             fBiasGradients,
-                            fDerivatives,
-                            fActivationGradients,
+                            tDeriv,
+                            tActGrad,
                             fWeights,
-                            activations_backward);
+                            tActBw);
    addRegularizationGradients<Architecture_t>(fWeightGradients,
                                               fWeights,
                                               weightDecay, r);
@@ -344,12 +358,14 @@ auto inline TSharedLayer<Architecture_t>::Forward(Matrix_t & input,
 -> void
 {
    if (applyDropout && (fDropoutProbability != 1.0)) {
-      Architecture_t::Dropout(input, fDropoutProbability);
+      Architecture_t::DropoutForward(input, fDropoutProbability);
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
-   evaluateDerivative<Architecture_t>(fDerivatives, fF, fOutput);
-   evaluate<Architecture_t>(fOutput, fF);
+   Tensor_t tOutput(fOutput); 
+   Tensor_t tDerivatives(fDerivatives); 
+   evaluateDerivative<Architecture_t>(tDerivatives, fF, tOutput);
+   evaluate<Architecture_t>(tOutput, fF);
 }
 
 //______________________________________________________________________________

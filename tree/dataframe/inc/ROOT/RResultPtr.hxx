@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,28 +12,44 @@
 #define ROOT_RRESULTPTR
 
 #include "ROOT/RDF/RActionBase.hxx"
+#include "RtypesCore.h"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TError.h" // Warning
 
 #include <memory>
 #include <functional>
-
-namespace ROOT {
-namespace Internal {
-namespace RDF {
-class GraphCreatorHelper;
-}
-}
-}
+#include <type_traits> // std::is_constructible
 
 namespace ROOT {
 namespace RDF {
-// Fwd decl for MakeResultPtr
 template <typename T>
 class RResultPtr;
 
-} // ns RDF
+template <typename Proxied, typename DataSource>
+class RInterface;
+} // namespace RDF
+
+namespace Internal {
+namespace RDF {
+class GraphCreatorHelper;
+
+// no-op overload
+template <typename T>
+inline void WarnOnLazySnapshotNotTriggered(const ROOT::RDF::RResultPtr<T> &)
+{
+}
+
+template <typename DS>
+void WarnOnLazySnapshotNotTriggered(
+   const ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, DS>> &r)
+{
+   if (!r.IsReady()) {
+      Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
+}
+}
+} // namespace Internal
 
 namespace Detail {
 namespace RDF {
@@ -42,8 +58,15 @@ using ROOT::RDF::RResultPtr;
 template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &df,
                             std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
-} // ns RDF
-} // ns Detail
+
+// Fwd decl for GetMergeableValue
+template <typename T>
+class RMergeableValue;
+
+template <typename T>
+std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr);
+} // namespace RDF
+} // namespace Detail
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace RDFDetail = ROOT::Detail::RDF;
@@ -75,6 +98,9 @@ class RResultPtr {
 
    // friend declarations
    template <typename T1>
+   friend class RResultPtr;
+
+   template <typename T1>
    friend RResultPtr<T1> RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, ::ROOT::Detail::RDF::RLoopManager &,
                                                   std::shared_ptr<RDFInternal::RActionBase>);
    template <class T1, class T2>
@@ -89,8 +115,11 @@ class RResultPtr {
    friend bool operator!=(const RResultPtr<T1> &lhs, std::nullptr_t rhs);
    template <class T1>
    friend bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs);
+   friend std::unique_ptr<RDFDetail::RMergeableValue<T>> RDFDetail::GetMergeableValue<T>(RResultPtr<T> &rptr);
 
    friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
+
+   friend class RResultHandle;
 
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool hasBeginEnd = TTraits::HasBeginAndEnd<V>::value>
@@ -124,9 +153,15 @@ class RResultPtr {
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T *Get()
    {
-      if (!fActionPtr->HasRun())
+      if (fActionPtr != nullptr && !fActionPtr->HasRun())
          TriggerRun();
       return fObjPtr.get();
+   }
+
+   void ThrowIfNull()
+   {
+      if (fObjPtr == nullptr)
+         throw std::runtime_error("Trying to access the contents of a null RResultPtr.");
    }
 
    RResultPtr(std::shared_ptr<T> objPtr, RDFDetail::RLoopManager *lm,
@@ -145,10 +180,30 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
+   ~RResultPtr()
+   {
+      if (fObjPtr.use_count() == 1) {
+         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
+      }
+   }
+
+   /// Convert a RResultPtr<T2> to a RResultPtr<T>.
+   ///
+   /// Useful e.g. to store a number of RResultPtr<TH1D> and RResultPtr<TH2D> in a std::vector<RResultPtr<TH1>>.
+   /// The requirements on T2 and T are the same as for conversion between std::shared_ptr<T2> and std::shared_ptr<T>.
+   template <typename T2, typename std::enable_if<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value,
+                                                  int>::type = 0>
+   RResultPtr(const RResultPtr<T2> &r) : fLoopManager(r.fLoopManager), fObjPtr(r.fObjPtr), fActionPtr(r.fActionPtr)
+   {
+   }
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   const T &GetValue() { return *Get(); }
+   const T &GetValue()
+   {
+      ThrowIfNull();
+      return *Get();
+   }
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
@@ -156,17 +211,26 @@ public:
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T &operator*() { return *Get(); }
+   T &operator*()
+   {
+      ThrowIfNull();
+      return *Get();
+   }
 
    /// Get a pointer to the encapsulated object.
    /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *operator->() { return Get(); }
+   T *operator->()
+   {
+      ThrowIfNull();
+      return Get();
+   }
 
    /// Return an iterator to the beginning of the contained object if this makes
    /// sense, throw a compilation error otherwise
    typename RIterationHelper<T>::Iterator_t begin()
    {
+      ThrowIfNull();
       if (!fActionPtr->HasRun())
          TriggerRun();
       return RIterationHelper<T>::GetBegin(*fObjPtr);
@@ -176,6 +240,7 @@ public:
    /// sense, throw a compilation error otherwise
    typename RIterationHelper<T>::Iterator_t end()
    {
+      ThrowIfNull();
       if (!fActionPtr->HasRun())
          TriggerRun();
       return RIterationHelper<T>::GetEnd(*fObjPtr);
@@ -220,11 +285,13 @@ public:
    ///   one call to the next
    /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
    ///   might change between calls
+   ///
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
-   /// OnPartialResultSlot.
+   /// OnPartialResultSlot().
    // clang-format on
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
+      ThrowIfNull();
       const auto nSlots = fLoopManager->GetNSlots();
       auto actionPtr = fActionPtr;
       auto c = [nSlots, actionPtr, callback](unsigned int slot) {
@@ -241,7 +308,7 @@ public:
    /// Register a callback that RDataFrame will execute in each worker thread concurrently on that thread's partial result.
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called by each thread, as a number of events processed
-   /// \param[in] a callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this RResultPtr
+   /// \param[in] callback A callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this RResultPtr
    /// \return this RResultPtr, to allow chaining of OnPartialResultSlot with other calls
    ///
    /// See `OnPartialResult` for a generic explanation of the callback mechanism.
@@ -270,6 +337,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
+      ThrowIfNull();
       auto actionPtr = fActionPtr;
       auto c = [actionPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
@@ -277,6 +345,23 @@ public:
       };
       fLoopManager->RegisterCallback(everyNEvents, std::move(c));
       return *this;
+   }
+
+   // clang-format off
+   /// Check whether the result has already been computed
+   ///
+   /// ~~~{.cpp}
+   /// auto res = df.Count();
+   /// res.IsReady(); // false, access will trigger event loop
+   /// std::cout << *res << std::endl; // triggers event loop
+   /// res.IsReady(); // true
+   /// ~~~
+   // clang-format on
+   bool IsReady() const
+   {
+      if (fActionPtr == nullptr)
+         return false;
+      return fActionPtr->HasRun();
    }
 };
 
@@ -322,7 +407,7 @@ bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs)
    return lhs != rhs.fObjPtr;
 }
 
-} // end NS RDF
+} // namespace RDF
 
 namespace Detail {
 namespace RDF {
@@ -334,8 +419,38 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
 {
    return RResultPtr<T>(r, &lm, std::move(actionPtr));
 }
-} // end NS RDF
-} // end NS Detail
-} // end NS ROOT
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve a mergeable value from an RDataFrame action.
+/// \param[in] rptr lvalue reference of an RResultPtr object.
+/// \returns An RMergeableValue holding the result of the action, wrapped in an
+///          `std::unique_ptr`.
+///
+/// This function triggers the execution of the RDataFrame computation graph.
+/// Then retrieves an RMergeableValue object created with the result wrapped by
+/// the RResultPtr argument. The user obtains ownership of the mergeable, which
+/// in turn holds a copy of the result of the action. The RResultPtr is not
+/// destroyed in the process and will still retain (shared) ownership of the
+/// original result.
+///
+/// Example usage:
+/// ~~~{.cpp}
+/// using namespace ROOT::Detail::RDF;
+/// ROOT::RDataFrame d("myTree", "file_*.root");
+/// auto h = d.Histo1D("Branch_A");
+/// auto mergeablehisto = GetMergeableValue(h);
+/// ~~~
+template <typename T>
+std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr)
+{
+
+   if (!rptr.fActionPtr->HasRun())
+      rptr.TriggerRun(); // Prevents from using `const` specifier in parameter
+   return std::unique_ptr<RMergeableValue<T>>{
+      static_cast<RMergeableValue<T> *>(rptr.fActionPtr->GetMergeableValue().release())};
+}
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
 
 #endif // ROOT_TRESULTPROXY

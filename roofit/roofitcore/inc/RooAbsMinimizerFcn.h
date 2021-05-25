@@ -50,14 +50,22 @@ public:
    RooArgList *GetConstParamList();
    RooArgList *GetInitFloatParamList();
    RooArgList *GetInitConstParamList();
-   Int_t GetNumInvalidNLL();
+   Int_t GetNumInvalidNLL() const;
 
    // need access from Minimizer:
    void SetEvalErrorWall(Bool_t flag);
+   /// Try to recover from invalid function values. When invalid function values are encountered,
+   /// a penalty term is returned to the minimiser to make it back off. This sets the strength of this penalty.
+   /// \note A strength of zero is equivalent to a constant penalty (= the gradient vanishes, ROOT < 6.24).
+   /// Positive values lead to a gradient pointing away from the undefined regions. Use ~10 to force the minimiser
+   /// away from invalid function values.
+   void SetRecoverFromNaNStrength(double strength) { _recoverFromNaNStrength = strength; }
    void SetPrintEvalErrors(Int_t numEvalErrors);
    Double_t &GetMaxFCN();
    Int_t evalCounter() const;
    void zeroEvalCount();
+   /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
+   double getOffset() const { return _funcOffset; }
    void SetVerbose(Bool_t flag = kTRUE);
 
    // put Minuit results back into RooFit objects:
@@ -89,35 +97,34 @@ protected:
    void ClearPdfParamAsymErr(Int_t index);
    void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
 
-   // doesn't seem to be used, TODO: make sure
-//   Double_t GetPdfParamVal(Int_t index);
-//   Double_t GetPdfParamErr(Int_t index);
+   Bool_t SetPdfParamVal(int index, double value) const;
+   void printEvalErrors() const;
 
-   void updateFloatVec();
+    void updateFloatVec();
 
    // members
-   RooMinimizer *_context;
+   const RooMinimizer *_context;
 
    // the following four are mutable because DoEval is const (in child classes)
-   mutable Int_t _evalCounter = 0;
    // Reset the *largest* negative log-likelihood value we have seen so far:
-   mutable double _maxFCN = -1e30;
+   mutable double _maxFCN = -std::numeric_limits<double>::infinity();
+   mutable double _funcOffset{0.};
+   double _recoverFromNaNStrength{10.};
    mutable int _numBadNLL = 0;
    mutable int _printEvalErrors = 10;
+   mutable int _evalCounter{0};
 
-   Bool_t _doEvalErrorWall = kTRUE;
    unsigned int _nDim = 0;
 
-   Bool_t _optConst = kFALSE;
-
-   std::ofstream *_logfile = nullptr;
-   bool _verbose;
 
    RooArgList *_floatParamList;
-   std::vector<RooAbsArg *> _floatParamVec;
    RooArgList *_constParamList;
    RooArgList *_initFloatParamList;
    RooArgList *_initConstParamList;
+
+   std::ofstream *_logfile = nullptr;
+   bool _doEvalErrorWall{true};
+   bool _verbose;
 };
 
 #endif

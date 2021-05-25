@@ -16,6 +16,7 @@
 from contextlib import contextmanager
 import os
 import sys
+from time import sleep
 
 # Support both Python2 and Python3 at the same time
 if sys.version_info.major > 2 :
@@ -75,13 +76,11 @@ def stderrRedirected():
 
 ##
 # redirect output (escape characters during ROOT importation...)
-# The gymnastic with sys argv  is necessary to workaround for ROOT-7577
-argvTmp = sys.argv[:]
-sys.argv = []
 with stdoutRedirected():
     import ROOT
+# Silence Davix warning (see ROOT-7577)
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.GetVersion()
-sys.argv = argvTmp
 
 import argparse
 import glob
@@ -303,7 +302,7 @@ def joinPathSplit(pathSplit):
     """
     return "/".join(pathSplit)
 
-MANY_OCCURENCE_WARNING = "Same name objects aren't supported: '{0}' of '{1}' won't be processed"
+MANY_OCCURENCE_WARNING = "Several versions of '{0}' are present in '{1}'. Only the most recent will be considered."
 
 def manyOccurenceRemove(pathSplitList,fileName):
     """
@@ -313,7 +312,7 @@ def manyOccurenceRemove(pathSplitList,fileName):
         for n in pathSplitList:
             if pathSplitList.count(n) != 1:
                 logging.warning(MANY_OCCURENCE_WARNING.format(joinPathSplit(n),fileName))
-                while n in pathSplitList: pathSplitList.remove(n)
+                while n in pathSplitList and pathSplitList.count(n) != 1 : pathSplitList.remove(n)
 
 def patternToPathSplitList(fileName,pattern):
     """
@@ -380,16 +379,13 @@ def patternToFileNameAndPathSplitList(pattern,wildcards = True):
     s3RootObjPattern = s3RootFilePattern+":*"
     gsRootFilePattern = "gs://*.root"
     gsRootObjPattern = gsRootFilePattern+":*"
-    rfioRootFilePattern = "rfio://*.root"
-    rfioRootObjPattern = rfioRootFilePattern+":*"
     pcmFilePattern = "*.pcm"
     pcmObjPattern = pcmFilePattern+":*"
 
     if fnmatch.fnmatch(pattern,httpRootObjPattern) or \
        fnmatch.fnmatch(pattern,xrootdRootObjPattern) or \
        fnmatch.fnmatch(pattern,s3RootObjPattern) or \
-       fnmatch.fnmatch(pattern,gsRootObjPattern) or \
-       fnmatch.fnmatch(pattern,rfioRootObjPattern):
+       fnmatch.fnmatch(pattern,gsRootObjPattern):
         patternSplit = pattern.rsplit(":", 1)
         fileName = patternSplit[0]
         objPattern = patternSplit[1]
@@ -399,8 +395,7 @@ def patternToFileNameAndPathSplitList(pattern,wildcards = True):
     if fnmatch.fnmatch(pattern,httpRootFilePattern) or \
        fnmatch.fnmatch(pattern,xrootdRootFilePattern) or \
        fnmatch.fnmatch(pattern,s3RootFilePattern) or \
-       fnmatch.fnmatch(pattern,gsRootFilePattern) or \
-       fnmatch.fnmatch(pattern,rfioRootFilePattern):
+       fnmatch.fnmatch(pattern,gsRootFilePattern):
         fileName = pattern
         pathSplitList = [[]]
         return [(fileName,pathSplitList)]
@@ -499,8 +494,7 @@ def getSourceDestListOptDict(parser, wildcards = True):
 # Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
-OMITTING_FILE_ERROR = "omitting file '{0}'"
-OMITTING_DIRECTORY_ERROR = "omitting directory '{0}'"
+OMITTING_ERROR = "omitting {0} '{1}'. Did you forget to specify the -r option for a recursive copy?"
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
 def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,oneSource,recursive,replace):
@@ -521,12 +515,12 @@ def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,oneSource,r
     # OMITTING_FILE_ERROR or OMITTING_DIRECTORY_ERROR
     if not recursiveOption:
         if sourcePathSplit == []:
-            logging.warning(OMITTING_FILE_ERROR.format( \
-                sourceFile.GetName()))
+            logging.warning(OMITTING_ERROR.format( \
+                "file", sourceFile.GetName()))
             retcode += 1
         elif isDirectory(sourceFile,sourcePathSplit):
             logging.warning(OMITTING_DIRECTORY_ERROR.format( \
-                sourcePathSplit[-1]))
+                "directory", sourcePathSplit[-1]))
             retcode += 1
     # Run copyRootObjectRecursive function with the wish
     # to follow the unix copy behaviour
@@ -734,7 +728,16 @@ REPLACE_HELP = "replace object if already existing"
 
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
-    _input("Press enter to exit.")
+    if ROOT.gSystem.InheritsFrom('TMacOSXSystem'):
+        print("Press ctrl+c to exit.")
+        try:
+            while True:
+                ROOT.gSystem.ProcessEvents()
+                sleep(0.01)
+        except (KeyboardInterrupt, SystemExit):
+            pass
+    else:
+        _input("Press enter to exit.")
 
 def rootBrowse(fileName=None):
     if fileName:
@@ -818,19 +821,20 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
         lastEvent = nbrEntries-1
     numberOfEntries = (lastEvent-firstEvent)+1
 
-    # "Skim" events based on branch values using selectionString
-    # as well as selecting a range of events by index
-    outputTree = bigTree.CopyTree(selectionString,"",numberOfEntries,firstEvent)
-
     # "Slim" tree by removing branches -
     # This is done after the skimming to allow for the user to skim on a
     # branch they no longer need to keep
+    outputTree = bigTree
     if branchexclude:
         _setBranchStatus(outputTree,branchexclude,0)
     if branchinclude:
         _setBranchStatus(outputTree,branchinclude,1)
     if branchexclude or branchinclude:
         outputTree = outputTree.CloneTree()
+
+    # "Skim" events based on branch values using selectionString
+    # as well as selecting a range of events by index
+    outputTree = outputTree.CopyTree(selectionString,"",numberOfEntries,firstEvent)
 
     outputTree.Write()
     return retcode
@@ -925,6 +929,7 @@ def _recursifTreePrinter(tree,indent):
             str(branch.GetTotBytes())]
         write(TREE_TEMPLATE.format(*rec,**dic),indent,end="\n")
         _recursifTreePrinter(branch,indent+2)
+    write("")
 
 def _prepareTime(time):
     """Get time in the proper shape
@@ -941,6 +946,21 @@ LONG_TEMPLATE = \
     isSpecial(ANSI_BOLD,"{0:{classWidth}}")+"{1:{timeWidth}}" + \
     "{2:{nameWidth}}{3:{titleWidth}}"
 
+def _printClusters(tree, indent):
+    clusterStart = 0
+    nTotClusters = 0
+    clusterIter = tree.GetClusterIterator(0)
+    clusterStart = clusterIter()
+    write(isSpecial(ANSI_BOLD, "Cluster INCLUSIVE ranges:\n"), indent)
+    while clusterStart < tree.GetEntries():
+        # here we list the inclusive ranges, therefore we have a -1
+        clustLine = " - # %d: [%d, %d]\n" % (
+            nTotClusters, clusterStart, clusterIter.GetNextEntry() - 1)
+        write(clustLine, indent)
+        nTotClusters += 1
+        clusterStart = clusterIter()
+    write(isSpecial(ANSI_BOLD,"The total number of clusters is %d\n" % nTotClusters), indent)
+
 def _rootLsPrintLongLs(keyList,indent,treeListing):
     """Print a list of Tkey in columns
     pattern : classname, datetime, name and title"""
@@ -953,7 +973,6 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
             "timeWidth":maxCharTime+2, \
             "nameWidth":maxCharName+2, \
             "titleWidth":1}
-    date = ROOT.Long(0)
     for key in keyList:
         datime = key.GetDatime()
         time = datime.GetTime()
@@ -970,6 +989,8 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
         if treeListing and isTreeKey(key):
             tree = key.ReadObj()
             _recursifTreePrinter(tree,indent+2)
+            tree = tree.GetTree()
+            _printClusters(tree, indent+2)
         if treeListing and isTHnSparseKey(key):
             hs = key.ReadObj()
             hs.Print('all')
@@ -1115,7 +1136,7 @@ def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
 def _rootLsPrint(keyList, indent, oneColumn, \
                  longListing, treeListing):
     """Print informations given by keyList with a rootLs
-    style choosen with the options"""
+    style chosen with the options"""
     if longListing or treeListing: \
        _rootLsPrintLongLs(keyList, indent, treeListing)
     else:

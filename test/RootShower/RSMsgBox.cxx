@@ -8,6 +8,7 @@
  *************************************************************************/
 
 #include <TSystem.h>
+#include <TVirtualX.h>
 #include <TRootHelpDialog.h>
 
 #include "RSMsgBox.h"
@@ -27,7 +28,7 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
 
    fVFrame  = new TGVerticalFrame(this, w, wh1, 0);
 
-   TString theLogoFilename = StrDup(gProgPath);
+   TString theLogoFilename = gProgPath;
    theLogoFilename.Append("/icons/mclogo01.xpm");
    fIconPicture = (TGPicture *)gClient->GetPicture(theLogoFilename);
    fIcon = new TGIcon(this, fIconPicture,

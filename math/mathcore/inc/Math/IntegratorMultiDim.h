@@ -30,6 +30,7 @@
 #endif
 
 #include <memory>
+#include <string>
 
 namespace ROOT {
 namespace Math {
@@ -59,7 +60,7 @@ public:
        @param type   integration type (adaptive, MC methods, etc..)
        @param absTol desired absolute Error
        @param relTol desired relative Error
-       @param size maximum number of sub-intervals
+       @param ncall  number of function calls (apply only to MC integration methods)
 
        In case no parameter  values are passed the default ones used in IntegratorMultiDimOptions are used
     */
@@ -76,7 +77,7 @@ public:
        @param type   integration type (adaptive, MC methods, etc..)
        @param absTol desired absolute Error
        @param relTol desired relative Error
-       @param ncall  number of function calls (apply only to MC integratioon methods)
+       @param ncall  number of function calls (apply only to MC integration methods)
     */
    explicit
    IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
@@ -86,18 +87,18 @@ public:
       SetFunction(f);
    }
 
-   // remove template constructor since is ambigous
+   // remove template constructor since is ambiguous
 
     /** Template Constructor of multi dimensional Integrator passing a generic function. By default uses the adaptive integration method
 
-       @param f      integration function (generic function implementin operator()(const double *)
+       @param f      integration function (generic function implementing operator()(const double *)
        @param dim    function dimension
        @param type   integration type (adaptive, MC methods, etc..)
        @param absTol desired absolute Error
        @param relTol desired relative Error
-       @param ncall  number of function calls (apply only to MC integratioon methods)
+       @param ncall  number of function calls (apply only to MC integration methods)
     */
-// this is ambigous
+// this is ambiguous
 //    template<class Function>
 //    IntegratorMultiDim(Function & f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) {
 //       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
@@ -110,7 +111,7 @@ public:
    }
 
 
-   // disable copy constructur and assignment operator
+   // disable copy constructor and assignment operator
 
 private:
    IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(nullptr) {}
@@ -197,8 +198,8 @@ protected:
 
  private:
 
-   VirtualIntegratorMultiDim * fIntegrator;     // pointer to multi-dimensional integrator base class
-   std::unique_ptr<IMultiGenFunction> fFunc;    // pointer to owned function
+   VirtualIntegratorMultiDim * fIntegrator;     ///< pointer to multi-dimensional integrator base class
+   std::unique_ptr<IMultiGenFunction> fFunc;    ///< pointer to owned function
 
 
 };

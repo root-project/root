@@ -3,12 +3,15 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #include "gzguts.h"
 
 #if defined(_WIN32) && !defined(__BORLANDC__)
 #  define LSEEK _lseeki64
 #else
-#include <unistd.h>
 #if defined(_LARGEFILE64_SOURCE) && _LFS64_LARGEFILE-0
 #  define LSEEK lseek64
 #else

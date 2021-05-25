@@ -16,7 +16,6 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
 #include "TClass.h"
@@ -108,6 +107,11 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
          case TEveProjection::kPT_RPhi:
          {
             fProjections[type] = new TEveRPhiProjection();
+            break;
+         }
+         case TEveProjection::kPT_XZ:
+         {
+            fProjections[type] = new TEveXZProjection();
             break;
          }
          case TEveProjection::kPT_RhoZ:

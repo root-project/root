@@ -1,21 +1,36 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT core/macosx package
 ############################################################################
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm)
-ROOT_GLOB_SOURCES(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
+set(Macosx_dict_headers
+  TMacOSXSystem.h
+  PARENT_SCOPE
+)
 
-set(Macosx_dict_headers ${headers} PARENT_SCOPE)
+ROOT_OBJECT_LIBRARY(Macosx
+  src/CocoaUtils.mm
+  src/TMacOSXSystem.mm
+)
 
-if(cxxmodules)
-  # FIXME: Disable modules for ObjC/ObjC++.
-  # ROOT top-most module, cannot be built implicitly in ObjC/ObjC++ TU context
-  # because of issues in TBonjourBrowser (when incluing dns_sd.h) on OSX.
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-endif(cxxmodules)
+target_compile_options(Macosx PRIVATE -ObjC++)
 
-ROOT_OBJECT_LIBRARY(Macosx ${sources})
-set_source_files_properties(${sources} COMPILE_FLAGS "-ObjC++ -std=c++11")
+target_include_directories(Macosx PRIVATE
+   ${CMAKE_SOURCE_DIR}/core/unix/inc
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/textinput/inc
+   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
 
 ROOT_INSTALL_HEADERS()

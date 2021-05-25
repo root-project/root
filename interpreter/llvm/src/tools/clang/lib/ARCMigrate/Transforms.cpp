@@ -1,9 +1,8 @@
 //===--- Transforms.cpp - Transformations to ARC mode ---------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -74,8 +73,8 @@ bool trans::isPlusOneAssign(const BinaryOperator *E) {
 bool trans::isPlusOne(const Expr *E) {
   if (!E)
     return false;
-  if (const ExprWithCleanups *EWC = dyn_cast<ExprWithCleanups>(E))
-    E = EWC->getSubExpr();
+  if (const FullExpr *FE = dyn_cast<FullExpr>(E))
+    E = FE->getSubExpr();
 
   if (const ObjCMessageExpr *
         ME = dyn_cast<ObjCMessageExpr>(E->IgnoreParenCasts()))
@@ -111,7 +110,7 @@ bool trans::isPlusOne(const Expr *E) {
   return implCE && implCE->getCastKind() == CK_ARCConsumeObject;
 }
 
-/// \brief 'Loc' is the end of a statement range. This returns the location
+/// 'Loc' is the end of a statement range. This returns the location
 /// immediately after the semicolon following the statement.
 /// If no semicolon is found or the location is inside a macro, the returned
 /// source location will be invalid.
@@ -123,7 +122,7 @@ SourceLocation trans::findLocationAfterSemi(SourceLocation loc,
   return SemiLoc.getLocWithOffset(1);
 }
 
-/// \brief \arg Loc is the end of a statement range. This returns the location
+/// \arg Loc is the end of a statement range. This returns the location
 /// of the semicolon following the statement.
 /// If no semicolon is found or the location is inside a macro, the returned
 /// source location will be invalid.
@@ -203,7 +202,7 @@ bool trans::isGlobalVar(Expr *E) {
     return isGlobalVar(condOp->getTrueExpr()) &&
            isGlobalVar(condOp->getFalseExpr());
 
-  return false;  
+  return false;
 }
 
 StringRef trans::getNilString(MigrationPass &Pass) {
@@ -240,9 +239,9 @@ class RemovablesCollector : public RecursiveASTVisitor<RemovablesCollector> {
 public:
   RemovablesCollector(ExprSet &removables)
   : Removables(removables) { }
-  
+
   bool shouldWalkTypesOfTypeLocs() const { return false; }
-  
+
   bool TraverseStmtExpr(StmtExpr *E) {
     CompoundStmt *S = E->getSubStmt();
     for (CompoundStmt::body_iterator
@@ -253,44 +252,45 @@ public:
     }
     return true;
   }
-  
+
   bool VisitCompoundStmt(CompoundStmt *S) {
     for (auto *I : S->body())
       mark(I);
     return true;
   }
-  
+
   bool VisitIfStmt(IfStmt *S) {
     mark(S->getThen());
     mark(S->getElse());
     return true;
   }
-  
+
   bool VisitWhileStmt(WhileStmt *S) {
     mark(S->getBody());
     return true;
   }
-  
+
   bool VisitDoStmt(DoStmt *S) {
     mark(S->getBody());
     return true;
   }
-  
+
   bool VisitForStmt(ForStmt *S) {
     mark(S->getInit());
     mark(S->getInc());
     mark(S->getBody());
     return true;
   }
-  
+
 private:
   void mark(Stmt *S) {
     if (!S) return;
-    
-    while (LabelStmt *Label = dyn_cast<LabelStmt>(S))
+
+    while (auto *Label = dyn_cast<LabelStmt>(S))
       S = Label->getSubStmt();
-    S = S->IgnoreImplicit();
-    if (Expr *E = dyn_cast<Expr>(S))
+    if (auto *E = dyn_cast<Expr>(S))
+      S = E->IgnoreImplicit();
+    if (auto *E = dyn_cast<Expr>(S))
       Removables.insert(E);
   }
 };
@@ -359,7 +359,7 @@ MigrationContext::~MigrationContext() {
 bool MigrationContext::isGCOwnedNonObjC(QualType T) {
   while (!T.isNull()) {
     if (const AttributedType *AttrT = T->getAs<AttributedType>()) {
-      if (AttrT->getAttrKind() == AttributedType::attr_objc_ownership)
+      if (AttrT->getAttrKind() == attr::ObjCOwnership)
         return !AttrT->getModifiedType()->isObjCRetainableType();
     }
 
@@ -408,12 +408,12 @@ bool MigrationContext::rewritePropertyAttribute(StringRef fromAttr,
     return false;
   lexer.LexFromRawLexer(tok);
   if (tok.isNot(tok::l_paren)) return false;
-  
+
   Token BeforeTok = tok;
   Token AfterTok;
   AfterTok.startToken();
   SourceLocation AttrLoc;
-  
+
   lexer.LexFromRawLexer(tok);
   if (tok.is(tok::r_paren))
     return false;
@@ -454,7 +454,7 @@ bool MigrationContext::rewritePropertyAttribute(StringRef fromAttr,
 
     return true;
   }
-  
+
   return false;
 }
 
@@ -493,7 +493,7 @@ bool MigrationContext::addPropertyAttribute(StringRef attr,
     Pass.TA.insert(tok.getLocation(), std::string("(") + attr.str() + ") ");
     return true;
   }
-  
+
   lexer.LexFromRawLexer(tok);
   if (tok.is(tok::r_paren)) {
     Pass.TA.insert(tok.getLocation(), attr);
@@ -520,7 +520,7 @@ static void GCRewriteFinalize(MigrationPass &pass) {
   DeclContext *DC = Ctx.getTranslationUnitDecl();
   Selector FinalizeSel =
    Ctx.Selectors.getNullarySelector(&pass.Ctx.Idents.get("finalize"));
-  
+
   typedef DeclContext::specific_decl_iterator<ObjCImplementationDecl>
   impl_iterator;
   for (impl_iterator I = impl_iterator(DC->decls_begin()),
@@ -528,11 +528,11 @@ static void GCRewriteFinalize(MigrationPass &pass) {
     for (const auto *MD : I->instance_methods()) {
       if (!MD->hasBody())
         continue;
-      
+
       if (MD->isInstanceMethod() && MD->getSelector() == FinalizeSel) {
         const ObjCMethodDecl *FinalizeM = MD;
         Transaction Trans(TA);
-        TA.insert(FinalizeM->getSourceRange().getBegin(), 
+        TA.insert(FinalizeM->getSourceRange().getBegin(),
                   "#if !__has_feature(objc_arc)\n");
         CharSourceRange::getTokenRange(FinalizeM->getSourceRange());
         const SourceManager &SM = pass.Ctx.getSourceManager();
@@ -540,10 +540,10 @@ static void GCRewriteFinalize(MigrationPass &pass) {
         bool Invalid;
         std::string str = "\n#endif\n";
         str += Lexer::getSourceText(
-                  CharSourceRange::getTokenRange(FinalizeM->getSourceRange()), 
+                  CharSourceRange::getTokenRange(FinalizeM->getSourceRange()),
                                     SM, LangOpts, &Invalid);
         TA.insertAfterToken(FinalizeM->getSourceRange().getEnd(), str);
-        
+
         break;
       }
     }

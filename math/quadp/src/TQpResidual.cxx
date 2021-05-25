@@ -40,22 +40,20 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQpResidual                                                          //
-//                                                                      //
-// The Residuals class calculates and stores the quantities that appear //
-// on the right-hand side of the linear systems that arise at each      //
-// interior-point iteration. These residuals can be partitioned into    //
-// two fundamental categories: the components arising from the linear   //
-// equations in the KKT conditions, and the components arising from the //
-// complementarity conditions.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TQpResidual
+///
+/// The Residuals class calculates and stores the quantities that appear
+/// on the right-hand side of the linear systems that arise at each
+/// interior-point iteration. These residuals can be partitioned into
+/// two fundamental categories: the components arising from the linear
+/// equations in the KKT conditions, and the components arising from the
+/// complementarity conditions.
+///
+////////////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TQpResidual.h"
-#include "TMatrixD.h"
 
 ClassImp(TQpResidual);
 

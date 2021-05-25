@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
@@ -25,10 +25,15 @@
 #pragma link C++ class TTreeDrawArgsParser+;
 #pragma link C++ class TTreePerfStats+;
 #pragma link C++ class TTreeReader+;
+#pragma link C++ class ROOT::Experimental::TTreeReaderFast+;
 #pragma link C++ class TTreeTableInterface;
 #pragma link C++ class TSimpleAnalysis+;
+#ifndef _MSC_VER
 #pragma link C++ class TMPWorkerTree+;
+#endif
+#ifdef R__USE_IMT
 #pragma link C++ class ROOT::TTreeProcessorMT-;
+#endif
 
 #pragma link C++ class ROOT::Internal::TBranchProxyDirector+;
 #pragma link C++ class ROOT::Detail::TBranchProxy+;
@@ -99,8 +104,11 @@
 #endif
 
 #pragma link C++ class ROOT::Internal::TTreeReaderValueBase+;
+#pragma link C++ class ROOT::Experimental::Internal::TTreeReaderValueFastBase+;
 #pragma link C++ class ROOT::Internal::TTreeReaderArrayBase+;
 #pragma link C++ class ROOT::Internal::TNamedBranchProxy+;
+#pragma link C++ class TNotifyLink<ROOT::Detail::TBranchProxy>;
+#pragma link C++ class TNotifyLink<TTreeReader>;
 
 #endif
 

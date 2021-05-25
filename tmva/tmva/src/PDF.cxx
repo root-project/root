@@ -46,13 +46,14 @@ PDF wrapper for histograms; uses user-defined spline interpolation.
 #include "TMVA/TSpline2.h"
 #include "TMVA/Version.h"
 
-#include "Riostream.h"
 #include "TF1.h"
 #include "TH1F.h"
 #include "TMath.h"
 #include "TVectorD.h"
+#include "TGraph.h"
 
 #include <cstdlib>
+#include <iostream>
 #include <iomanip>
 
 // static configuration settings
@@ -498,11 +499,7 @@ void TMVA::PDF::SmoothHistogram()
             else MaxBin=bin;
          }
          else if (MaxBin >= 0) {
-#if ROOT_VERSION_CODE > ROOT_VERSION(5,19,2)
             fHist->Smooth(1,"R");
-#else
-            fHist->Smooth(1,MinBin+1,MaxBin+1);
-#endif
             MinBin=MaxBin=-1;
          }
          else     // can't smooth a single bin

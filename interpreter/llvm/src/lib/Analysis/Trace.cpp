@@ -1,9 +1,8 @@
 //===- Trace.cpp - Implementation of Trace class --------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,9 +15,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/Trace.h"
+#include "llvm/Config/llvm-config.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+
 using namespace llvm;
 
 Function *Trace::getFunction() const {
@@ -30,7 +33,6 @@ Module *Trace::getModule() const {
 }
 
 /// print - Write trace to output stream.
-///
 void Trace::print(raw_ostream &O) const {
   Function *F = getFunction();
   O << "; Trace from function " << F->getName() << ", blocks:\n";
@@ -45,7 +47,6 @@ void Trace::print(raw_ostream &O) const {
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 /// dump - Debugger convenience method; writes trace to standard error
 /// output stream.
-///
 LLVM_DUMP_METHOD void Trace::dump() const {
   print(dbgs());
 }

@@ -1,9 +1,8 @@
 //===- Thumb2InstrInfo.cpp - Thumb-2 Instruction Information --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -11,9 +10,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "Thumb2InstrInfo.h"
 #include "ARMMachineFunctionInfo.h"
 #include "MCTargetDesc/ARMAddressingModes.h"
-#include "Thumb2InstrInfo.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -22,6 +21,7 @@
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrDesc.h"
@@ -29,7 +29,6 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetRegisterInfo.h"
 #include <cassert>
 
 using namespace llvm;
@@ -82,7 +81,7 @@ Thumb2InstrInfo::ReplaceTailWithBranchTo(MachineBasicBlock::iterator Tail,
     MachineBasicBlock::iterator E = MBB->begin();
     unsigned Count = 4; // At most 4 instructions in an IT block.
     while (Count && MBBI != E) {
-      if (MBBI->isDebugValue()) {
+      if (MBBI->isDebugInstr()) {
         --MBBI;
         continue;
       }
@@ -109,7 +108,7 @@ Thumb2InstrInfo::ReplaceTailWithBranchTo(MachineBasicBlock::iterator Tail,
 bool
 Thumb2InstrInfo::isLegalToSplitMBBAt(MachineBasicBlock &MBB,
                                      MachineBasicBlock::iterator MBBI) const {
-  while (MBBI->isDebugValue()) {
+  while (MBBI->isDebugInstr()) {
     ++MBBI;
     if (MBBI == MBB.end())
       return false;
@@ -146,9 +145,7 @@ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
       MachinePointerInfo::getFixedStack(MF, FI), MachineMemOperand::MOStore,
       MFI.getObjectSize(FI), MFI.getObjectAlignment(FI));
 
-  if (RC == &ARM::GPRRegClass   || RC == &ARM::tGPRRegClass ||
-      RC == &ARM::tcGPRRegClass || RC == &ARM::rGPRRegClass ||
-      RC == &ARM::GPRnopcRegClass) {
+  if (ARM::GPRRegClass.hasSubClassEq(RC)) {
     BuildMI(MBB, I, DL, get(ARM::t2STRi12))
         .addReg(SrcReg, getKillRegState(isKill))
         .addFrameIndex(FI)
@@ -164,7 +161,7 @@ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
     // otherwise).
     if (TargetRegisterInfo::isVirtualRegister(SrcReg)) {
       MachineRegisterInfo *MRI = &MF.getRegInfo();
-      MRI->constrainRegClass(SrcReg, &ARM::GPRPair_with_gsub_1_in_rGPRRegClass);
+      MRI->constrainRegClass(SrcReg, &ARM::GPRPair_with_gsub_1_in_GPRwithAPSRnospRegClass);
     }
 
     MachineInstrBuilder MIB = BuildMI(MBB, I, DL, get(ARM::t2STRDi8));
@@ -190,9 +187,7 @@ loadRegFromStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   DebugLoc DL;
   if (I != MBB.end()) DL = I->getDebugLoc();
 
-  if (RC == &ARM::GPRRegClass   || RC == &ARM::tGPRRegClass ||
-      RC == &ARM::tcGPRRegClass || RC == &ARM::rGPRRegClass ||
-      RC == &ARM::GPRnopcRegClass) {
+  if (ARM::GPRRegClass.hasSubClassEq(RC)) {
     BuildMI(MBB, I, DL, get(ARM::t2LDRi12), DestReg)
         .addFrameIndex(FI)
         .addImm(0)
@@ -208,7 +203,7 @@ loadRegFromStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
     if (TargetRegisterInfo::isVirtualRegister(DestReg)) {
       MachineRegisterInfo *MRI = &MF.getRegInfo();
       MRI->constrainRegClass(DestReg,
-                             &ARM::GPRPair_with_gsub_1_in_rGPRRegClass);
+                             &ARM::GPRPair_with_gsub_1_in_GPRwithAPSRnospRegClass);
     }
 
     MachineInstrBuilder MIB = BuildMI(MBB, I, DL, get(ARM::t2LDRDi8));
@@ -482,14 +477,15 @@ bool llvm::rewriteT2FrameIndex(MachineInstr &MI, unsigned FrameRegIdx,
   bool isSub = false;
 
   // Memory operands in inline assembly always use AddrModeT2_i12.
-  if (Opcode == ARM::INLINEASM)
+  if (Opcode == ARM::INLINEASM || Opcode == ARM::INLINEASM_BR)
     AddrMode = ARMII::AddrModeT2_i12; // FIXME. mode for thumb2?
 
   if (Opcode == ARM::t2ADDri || Opcode == ARM::t2ADDri12) {
     Offset += MI.getOperand(FrameRegIdx+1).getImm();
 
     unsigned PredReg;
-    if (Offset == 0 && getInstrPredicate(MI, PredReg) == ARMCC::AL) {
+    if (Offset == 0 && getInstrPredicate(MI, PredReg) == ARMCC::AL &&
+        !MI.definesRegister(ARM::CPSR)) {
       // Turn it into a move.
       MI.setDesc(TII.get(ARM::tMOVr));
       MI.getOperand(FrameRegIdx).ChangeToRegister(FrameReg, false);
@@ -600,11 +596,44 @@ bool llvm::rewriteT2FrameIndex(MachineInstr &MI, unsigned FrameRegIdx,
         Offset = -Offset;
         isSub = true;
       }
-    } else if (AddrMode == ARMII::AddrModeT2_i8s4) {
-      Offset += MI.getOperand(FrameRegIdx + 1).getImm() * 4;
-      NumBits = 10; // 8 bits scaled by 4
+    } else if (AddrMode == ARMII::AddrMode5FP16) {
+      // VFP address mode.
+      const MachineOperand &OffOp = MI.getOperand(FrameRegIdx+1);
+      int InstrOffs = ARM_AM::getAM5FP16Offset(OffOp.getImm());
+      if (ARM_AM::getAM5FP16Op(OffOp.getImm()) == ARM_AM::sub)
+        InstrOffs *= -1;
+      NumBits = 8;
+      Scale = 2;
+      Offset += InstrOffs * 2;
+      assert((Offset & (Scale-1)) == 0 && "Can't encode this offset!");
+      if (Offset < 0) {
+        Offset = -Offset;
+        isSub = true;
+      }
+    } else if (AddrMode == ARMII::AddrModeT2_i7s4 ||
+               AddrMode == ARMII::AddrModeT2_i7s2 ||
+               AddrMode == ARMII::AddrModeT2_i7) {
+      Offset += MI.getOperand(FrameRegIdx + 1).getImm();
+      unsigned OffsetMask;
+      switch (AddrMode) {
+      case ARMII::AddrModeT2_i7s4: NumBits = 9; OffsetMask = 0x3; break;
+      case ARMII::AddrModeT2_i7s2: NumBits = 8; OffsetMask = 0x1; break;
+      default:                     NumBits = 7; OffsetMask = 0x0; break;
+      }
       // MCInst operand expects already scaled value.
       Scale = 1;
+      assert((Offset & OffsetMask) == 0 && "Can't encode this offset!");
+      (void)OffsetMask; // squash unused-variable warning at -NDEBUG
+    } else if (AddrMode == ARMII::AddrModeT2_i8s4) {
+      Offset += MI.getOperand(FrameRegIdx + 1).getImm() * 4;
+      NumBits = 8 + 2;
+      // MCInst operand expects already scaled value.
+      Scale = 1;
+      assert((Offset & 3) == 0 && "Can't encode this offset!");
+    } else if (AddrMode == ARMII::AddrModeT2_ldrex) {
+      Offset += MI.getOperand(FrameRegIdx + 1).getImm() * 4;
+      NumBits = 8; // 8 bits scaled by 4
+      Scale = 4;
       assert((Offset & 3) == 0 && "Can't encode this offset!");
     } else {
       llvm_unreachable("Unsupported addressing mode!");
@@ -623,7 +652,7 @@ bool llvm::rewriteT2FrameIndex(MachineInstr &MI, unsigned FrameRegIdx,
       // Replace the FrameIndex with fp/sp
       MI.getOperand(FrameRegIdx).ChangeToRegister(FrameReg, false);
       if (isSub) {
-        if (AddrMode == ARMII::AddrMode5)
+        if (AddrMode == ARMII::AddrMode5 || AddrMode == ARMII::AddrMode5FP16)
           // FIXME: Not consistent.
           ImmedOffset |= 1 << NumBits;
         else
@@ -637,7 +666,7 @@ bool llvm::rewriteT2FrameIndex(MachineInstr &MI, unsigned FrameRegIdx,
     // Otherwise, offset doesn't fit. Pull in what we can to simplify
     ImmedOffset = ImmedOffset & Mask;
     if (isSub) {
-      if (AddrMode == ARMII::AddrMode5)
+      if (AddrMode == ARMII::AddrMode5 || AddrMode == ARMII::AddrMode5FP16)
         // FIXME: Not consistent.
         ImmedOffset |= 1 << NumBits;
       else {
@@ -661,4 +690,29 @@ ARMCC::CondCodes llvm::getITInstrPredicate(const MachineInstr &MI,
   if (Opc == ARM::tBcc || Opc == ARM::t2Bcc)
     return ARMCC::AL;
   return getInstrPredicate(MI, PredReg);
+}
+
+int llvm::findFirstVPTPredOperandIdx(const MachineInstr &MI) {
+  const MCInstrDesc &MCID = MI.getDesc();
+
+  if (!MCID.OpInfo)
+    return -1;
+
+  for (unsigned i = 0, e = MCID.getNumOperands(); i != e; ++i)
+    if (ARM::isVpred(MCID.OpInfo[i].OperandType))
+      return i;
+
+  return -1;
+}
+
+ARMVCC::VPTCodes llvm::getVPTInstrPredicate(const MachineInstr &MI,
+                                            unsigned &PredReg) {
+  int PIdx = findFirstVPTPredOperandIdx(MI);
+  if (PIdx == -1) {
+    PredReg = 0;
+    return ARMVCC::None;
+  }
+
+  PredReg = MI.getOperand(PIdx+1).getReg();
+  return (ARMVCC::VPTCodes)MI.getOperand(PIdx).getImm();
 }

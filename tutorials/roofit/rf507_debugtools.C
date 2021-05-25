@@ -1,14 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #507
-///
-///    RooFit memory tracing debug tool
+/// Organization and simultaneous fits: RooFit memory tracing debug tool
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -20,39 +19,38 @@
 #include "TAxis.h"
 #include "RooPlot.h"
 #include "RooTrace.h"
-using namespace RooFit ;
-
+using namespace RooFit;
 
 void rf507_debugtools()
 {
    // Activate RooFit memory tracing
-   RooTrace::active(kTRUE) ;
+   RooTrace::active(kTRUE);
 
    // Construct gauss(x,m,s)
-   RooRealVar x("x","x",-10,10) ;
-   RooRealVar m("m","m",0,-10,10) ;
-   RooRealVar s("s","s",1,-10,10) ;
-   RooGaussian gauss("g","g",x,m,s) ;
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar m("m", "m", 0, -10, 10);
+   RooRealVar s("s", "s", 1, -10, 10);
+   RooGaussian gauss("g", "g", x, m, s);
 
    // Show dump of all RooFit object in memory
-   RooTrace::dump() ;
+   RooTrace::dump();
 
    // Activate verbose mode
-   RooTrace::verbose(kTRUE) ;
+   RooTrace::verbose(kTRUE);
 
    // Construct poly(x,p0)
-   RooRealVar p0("p0","p0",0.01,0.,1.) ;
-   RooPolynomial poly("p","p",x,p0) ;		 
+   RooRealVar p0("p0", "p0", 0.01, 0., 1.);
+   RooPolynomial poly("p", "p", x, p0);
 
    // Put marker in trace list for future reference
-   RooTrace::mark() ;
+   RooTrace::mark();
 
    // Construct model = f*gauss(x) + (1-f)*poly(x)
-   RooRealVar f("f","f",0.5,0.,1.) ;
-   RooAddPdf model("model","model",RooArgSet(gauss,poly),f) ;
+   RooRealVar f("f", "f", 0.5, 0., 1.);
+   RooAddPdf model("model", "model", RooArgSet(gauss, poly), f);
 
    // Show object added to memory since marker
-   RooTrace::printObjectCounts() ;
+   RooTrace::printObjectCounts();
 
    // Since verbose mode is still on, you will see messages
    // pertaining to destructor calls of all RooFit objects

@@ -127,13 +127,31 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 #include "TError.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"
+#include "snprintf.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 ClassImp(TClonesArray);
+
+// To allow backward compatibility of TClonesArray of v5 TF1 objects
+// that were stored member-wise.
+using Updater_t = void (*)(Int_t nobjects, TObject **from, TObject **to);
+Updater_t gClonesArrayTF1Updater = nullptr;
+Updater_t gClonesArrayTFormulaUpdater = nullptr;
+
+bool R__SetClonesArrayTF1Updater(Updater_t func) {
+   gClonesArrayTF1Updater = func;
+   return true;
+}
+
+bool R__SetClonesArrayTFormulaUpdater(Updater_t func) {
+   gClonesArrayTFormulaUpdater = func;
+   return true;
+}
 
 /// Internal Utility routine to correctly release the memory for an object
 static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
@@ -453,6 +471,10 @@ void TClonesArray::Expand(Int_t newSize)
       Error ("Expand", "newSize must be positive (%d)", newSize);
       return;
    }
+   if (!fKeep) {
+      Error("ExpandCreate", "Not initialized properly, fKeep is still a nullptr");
+      return;
+   }
    if (newSize == fSize)
       return;
    if (newSize < fSize) {
@@ -481,7 +503,11 @@ void TClonesArray::ExpandCreate(Int_t n)
 {
    if (n < 0) {
       Error("ExpandCreate", "n must be positive (%d)", n);
-      return ;
+      return;
+   }
+   if (!fKeep) {
+      Error("ExpandCreate", "Not initialized properly, fKeep is still a nullptr");
+      return;
    }
    if (n > fSize)
       Expand(TMath::Max(n, GrowBy(fSize)));
@@ -735,7 +761,8 @@ void TClonesArray::Streamer(TBuffer &b)
       }
       TClass *cl = TClass::GetClass(classv);
       if (!cl) {
-         printf("TClonesArray::Streamer expecting class %s\n", classv.Data());
+         Error("Streamer", "expecting class %s but it was not found by TClass::GetClass\n",
+               classv.Data());
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
          return;
       }
@@ -744,12 +771,15 @@ void TClonesArray::Streamer(TBuffer &b)
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
       b >> fLowerBound;
-      if (fClass == 0 && fKeep == 0) {
+      if (fClass == 0) {
          fClass = cl;
-         fKeep  = new TObjArray(fSize);
-         Expand(nobjects);
-      }
-      if (cl != fClass) {
+         if (fKeep == 0) {
+            fKeep  = new TObjArray(fSize);
+            Expand(nobjects);
+         }
+      } else if (cl != fClass && classv == fClass->GetName()) {
+         // If fClass' name is different from classv, the user has intentionally changed
+         // the target class, so we must not override it.
          fClass = cl;
          //this case may happen when switching from an emulated class to the real class
          //may not be an error. fClass may point to a deleted object
@@ -778,9 +808,28 @@ void TClonesArray::Streamer(TBuffer &b)
 
             fCont[i] = fKeep->fCont[i];
          }
-         //sinfo->ReadBufferClones(b,this,nobjects,-1,0);
-         b.ReadClones(this,nobjects,clv);
-
+         if (clv < 8 && classv == "TF1") {
+            // To allow backward compatibility of TClonesArray of v5 TF1 objects
+            // that were stored member-wise.
+            TClonesArray temp("ROOT::v5::TF1Data");
+            temp.ExpandCreate(nobjects);
+            b.ReadClones(&temp, nobjects, clv);
+            // And now covert the v5 into the current
+            if (gClonesArrayTF1Updater)
+               gClonesArrayTF1Updater(nobjects, temp.GetObjectRef(nullptr), this->GetObjectRef(nullptr));
+         } else if (clv <= 8 && clv > 3 && clv != 6 && classv == "TFormula") {
+            // To allow backwar compatibility of TClonesArray of v5 TF1 objects
+            // that were stored member-wise.
+            TClonesArray temp("ROOT::v5::TFormula");
+            temp.ExpandCreate(nobjects);
+            b.ReadClones(&temp, nobjects, clv);
+            // And now covert the v5 into the current
+            if (gClonesArrayTFormulaUpdater)
+               gClonesArrayTFormulaUpdater(nobjects, temp.GetObjectRef(nullptr), this->GetObjectRef(nullptr));
+         } else {
+            // sinfo->ReadBufferClones(b,this,nobjects,-1,0);
+            b.ReadClones(this, nobjects, clv);
+         }
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
             b >> nch;
@@ -859,7 +908,7 @@ void TClonesArray::Streamer(TBuffer &b)
 TObject *&TClonesArray::operator[](Int_t idx)
 {
    if (idx < 0) {
-      Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("operator[]", "out of bounds at %d in %zx", idx, (size_t)this);
       return fCont[0];
    }
    if (!fClass) {
@@ -893,7 +942,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
 TObject *TClonesArray::operator[](Int_t idx) const
 {
    if (idx < 0 || idx >= fSize) {
-      Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("operator[]", "out of bounds at %d in %zx", idx, (size_t)this);
       return 0;
    }
 
@@ -907,7 +956,7 @@ TObject *TClonesArray::operator[](Int_t idx) const
 TObject *TClonesArray::New(Int_t idx)
 {
    if (idx < 0) {
-      Error("New", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("New", "out of bounds at %d in %zx", idx, (size_t)this);
       return 0;
    }
    if (!fClass) {

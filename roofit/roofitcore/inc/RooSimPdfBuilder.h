@@ -18,10 +18,12 @@
 
 #include "Rtypes.h"
 #include "TObject.h"
+#include "TList.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsData.h"
 #include <list>
+
 class RooSimultaneous ;
 class RooAbsPdf ;
 class RooCategory ;
@@ -36,20 +38,20 @@ public:
   RooArgSet* createProtoBuildConfig() ;
 
   RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents, 
-				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) ;
+				  const RooArgSet* auxSplitCats=0, bool verbose=false) ;
 
   RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
-				  const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
+				  const RooArgSet& auxSplitCats, bool verbose=false) {
     return buildPdf(buildConfig,*dataSet->get(),&auxSplitCats,verbose) ;
   }
 
   RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
-				  const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
+				  const RooArgSet& auxSplitCats, bool verbose=false) {
     return buildPdf(buildConfig,dependents,&auxSplitCats,verbose) ;
   }
 
   RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
-				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) {
+				  const RooArgSet* auxSplitCats=0, bool verbose=false) {
     return buildPdf(buildConfig,*dataSet->get(),auxSplitCats,verbose) ;
   }
   

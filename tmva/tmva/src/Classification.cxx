@@ -29,25 +29,23 @@
 
 #include <TROOT.h>
 #include <TFile.h>
+#include <TKey.h>
 #include <TTree.h>
+#include <TKey.h>
 #include <TLeaf.h>
+#include <TBranch.h>
 #include <TEventList.h>
-#include <TH2.h>
-#include <TText.h>
-#include <TLegend.h>
 #include <TGraph.h>
-#include <TStyle.h>
 #include <TMatrixF.h>
 #include <TMatrixDSym.h>
 #include <TMultiGraph.h>
-#include <TPaletteAxis.h>
 #include <TPrincipal.h>
 #include <TMath.h>
-#include <TObjString.h>
 #include <TSystem.h>
-#include <TCanvas.h>
+
 #include <iostream>
 #include <memory>
+
 #define MinNoTrainingEvents 10
 
 //_______________________________________________________________________
@@ -261,7 +259,9 @@ void TMVA::Experimental::Classification::Evaluate()
       for (auto &meth : fMethods) {
          GetMethod(meth.GetValue<TString>("MethodName"), meth.GetValue<TString>("MethodTitle"));
       }
+#ifndef _MSC_VER
       fWorkers.SetNWorkers(fJobs);
+#endif
       auto executor = [=](UInt_t workerID) -> ClassificationResult {
          TMVA::MsgLogger::InhibitOutput();
          TMVA::gConfig().SetSilent(kTRUE);
@@ -285,7 +285,9 @@ void TMVA::Experimental::Classification::Evaluate()
          return GetResults(methodname, methodtitle);
       };
 
+#ifndef _MSC_VER
       fResults = fWorkers.Map(executor, ROOT::TSeqI(fMethods.size()));
+#endif
       if (!IsSilentFile())
          MergeFiles();
    }

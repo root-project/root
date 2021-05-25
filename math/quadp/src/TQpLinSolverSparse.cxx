@@ -40,16 +40,15 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQpLinSolverSparse                                                   //
-//                                                                      //
-// Implements the aspects of the solvers for dense general QP           //
-// formulation that are specific to the dense case.                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TQpLinSolverSparse
+///
+/// Implements the aspects of the solvers for dense general QP
+/// formulation that are specific to the dense case.
+///
+////////////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TQpLinSolverSparse.h"
 
 ClassImp(TQpLinSolverSparse);

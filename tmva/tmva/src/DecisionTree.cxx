@@ -61,14 +61,11 @@ more signal respective background events from the training sample.
 #include <algorithm>
 #include <vector>
 #include <limits>
-#include <fstream>
-#include <algorithm>
 #include <cassert>
 
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TMatrix.h"
-#include "TStopwatch.h"
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/DecisionTree.h"
@@ -1498,7 +1495,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             nBins[ivar] = node->GetSampleMax(ivar) - node->GetSampleMin(ivar) + 1;
          }
       }
-     
+
       cutValues[ivar] = new Double_t [nBins[ivar]];
    }
 
@@ -1855,15 +1852,15 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // #### Now in TrainNodeInfo, but I got a malloc segfault when I tried to destruct arrays there.
    // #### So, I changed these from dynamic arrays to std::vector to fix this memory problem
    // #### so no need to destruct them anymore. I didn't see any performance drop as a result.
-   //for (UInt_t i=0; i<cNvars; i++) {
+   for (UInt_t i=0; i<cNvars; i++) {
    //   delete [] nodeInfo.nSelS[i];
    //   delete [] nodeInfo.nSelB[i];
    //   delete [] nodeInfo.nSelS_unWeighted[i];
    //   delete [] nodeInfo.nSelB_unWeighted[i];
    //   delete [] nodeInfo.target[i];
    //   delete [] nodeInfo.target2[i];
-   //   delete [] cutValues[i];
-   //}
+     delete [] cutValues[i];
+   }
    //delete [] nodeInfo.nSelS;
    //delete [] nodeInfo.nSelB;
    //delete [] nodeInfo.nSelS_unWeighted;

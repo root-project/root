@@ -1,9 +1,8 @@
 //===--- Types.h - Input & Temporary Driver Types ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -76,6 +75,9 @@ namespace types {
 
   /// isCuda - Is this a CUDA input.
   bool isCuda(ID Id);
+
+  /// isHIP - Is this a HIP input.
+  bool isHIP(ID Id);
 
   /// isObjC - Is this an "ObjC" input (Obj-C and Obj-C++ sources and headers).
   bool isObjC(ID Id);

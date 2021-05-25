@@ -15,22 +15,24 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// RooFitResult is a container class to hold the input and output
-// of a PDF fit to a dataset. It contains:
-//
-//   - Values of all constant parameters
-//   - Initial and final values of floating parameters with error
-//   - Correlation matrix and global correlation coefficients
-//   - NLL and EDM at mininum
-//
-// No references to the fitted PDF and dataset are stored
-//
+/// \class RooFitResult
+/// RooFitResult is a container class to hold the input and output
+/// of a PDF fit to a dataset. It contains:
+///
+///   * Values of all constant parameters
+///   * Initial and final values of floating parameters with error
+///   * Correlation matrix and global correlation coefficients
+///   * NLL and EDM at mininum
+///
+/// No references to the fitted PDF and dataset are stored
+///
 
 #include "RooFit.h"
-#include "Riostream.h"
 
+#include <iostream>
 #include <iomanip>
+
+#include "TBuffer.h"
 #include "TMinuit.h"
 #include "TMath.h"
 #include "TMarker.h"
@@ -55,17 +57,14 @@
 #include "RooMultiVarGaussian.h"
 
 
-
 using namespace std;
 
-ClassImp(RooFitResult); 
-;
+ClassImp(RooFitResult);
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
-/// coverity[UNINIT_CTOR]
 
 RooFitResult::RooFitResult(const char* name, const char* title) : 
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
@@ -92,7 +91,8 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _Lt(0),
   _CM(0),
   _VM(0),
-  _GC(0)
+  _GC(0),
+  _statusHistory(other._statusHistory)
 {
   _constPars = (RooArgList*) other._constPars->snapshot() ;
   _initPars = (RooArgList*) other._initPars->snapshot() ;
@@ -227,21 +227,21 @@ const char* RooFitResult::statusLabelHistory(UInt_t icycle) const
 /// are determined by the options string which should be a concatenation
 /// of the following (not case sensitive):
 ///
-///   M - a marker at the best fit result
-///   E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
-///   1 - the 1-sigma error bar for parameter 1
-///   2 - the 1-sigma error bar for parameter 2
-///   B - the bounding box for the error ellipse
-///   H - a line and horizontal axis for reading off the correlation coefficient
-///   V - a line and vertical axis for reading off the correlation coefficient
-///   A - draw axes for reading off the correlation coefficients with the H or V options
+/// *  M - a marker at the best fit result
+/// *  E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
+/// *  1 - the 1-sigma error bar for parameter 1
+/// *  2 - the 1-sigma error bar for parameter 2
+/// *  B - the bounding box for the error ellipse
+/// *  H - a line and horizontal axis for reading off the correlation coefficient
+/// *  V - a line and vertical axis for reading off the correlation coefficient
+/// *  A - draw axes for reading off the correlation coefficients with the H or V options
 ///
 /// You can change the attributes of objects in the returned RooPlot using the
-/// various RooPlot::getAttXxx(name) member functions, e.g.
-///
+/// various `RooPlot::getAttXxx(name)` member functions, e.g.
+/// ```
 ///   plot->getAttLine("contour")->SetLineStyle(kDashed);
-///
-/// Use plot->Print() for a list of all objects and their names (unfortunately most
+/// ```
+/// Use `plot->Print()` for a list of all objects and their names (unfortunately most
 /// of the ROOT builtin graphics objects like TLine are unnamed). Drag the left mouse
 /// button along the labels of either axis button to interactively zoom in a plot.
 
@@ -494,7 +494,7 @@ Double_t RooFitResult::covariance(Int_t row, Int_t col) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print fit result to stream 'os'. In Verbose mode, the contant parameters and
+/// Print fit result to stream 'os'. In Verbose mode, the constant parameters and
 /// the initial and final values of the floating parameters are printed. 
 /// Standard mode only the final values of the floating parameters are printed
 
@@ -791,90 +791,109 @@ void RooFitResult::fillPrefitCorrMatrix()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if this fit result is identical to other within tolerance 'tol' on fitted values
-/// and tolerance 'tolCor' on correlation coefficients
+/// Return true if this fit result is identical to other within tolerances.
+/// \param[in] other Fit result to test against.
+/// \param[in] tol **Relative** tolerance for parameters and NLL.
+/// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
+/// \param[in] verbose Ignored.
 
 Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double_t tolCorr, Bool_t /*verbose*/) const 
 {
   Bool_t ret = kTRUE ;
+  auto deviation = [tol](const double left, const double right){
+    if (right != 0.)
+      return fabs((left - right)/right) >= tol;
+    else
+      return fabs(left) >= tol;
+  };
 
-  if (fabs(_minNLL-other._minNLL)>=tol) {
+  auto errMsg = [](std::string msgHead, const RooAbsReal* tv, const RooAbsReal* ov) {
+    cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in value:\t"
+        << tv->getVal() << " vs.\t" << ov->getVal()
+        << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << endl;
+  };
+
+  if (deviation(_minNLL, other._minNLL)) {
     cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << endl ;
     ret = kFALSE ;
   }
 
   for (Int_t i=0 ; i<_constPars->getSize() ; i++) {
-    RooAbsReal* ov = static_cast<RooAbsReal*>(other._constPars->find(_constPars->at(i)->GetName())) ;
+    auto tv = static_cast<const RooAbsReal*>(_constPars->at(i));
+    auto ov = static_cast<const RooAbsReal*>(other._constPars->find(tv->GetName())) ;
     if (!ov) {
       cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (ov && fabs(static_cast<RooAbsReal*>(_constPars->at(i))->getVal()-ov->getVal())>=tol) {
-      cout << "RooFitResult::isIdentical: constant parameter " << _constPars->at(i)->GetName() 
-	   << " differs in value: " << static_cast<RooAbsReal*>(_constPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+    if (ov && deviation(tv->getVal(), ov->getVal())) {
+      errMsg("constant parameter", tv, ov);
       ret = kFALSE ;
     }
   }
 
   for (Int_t i=0 ; i<_initPars->getSize() ; i++) {
-    RooAbsReal* ov = static_cast<RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
+    auto ov = static_cast<const RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
+    auto tv = static_cast<const RooAbsReal*>(_initPars->at(i));
     if (!ov) {
       cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (ov && fabs(static_cast<RooAbsReal*>(_initPars->at(i))->getVal()-ov->getVal())>=tol) {
-      cout << "RooFitResult::isIdentical: initial parameter " << _initPars->at(i)->GetName() 
-	   << " differs in value: " << static_cast<RooAbsReal*>(_initPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+    if (ov && deviation(tv->getVal(), ov->getVal())) {
+      errMsg("initial parameter", tv, ov);
       ret = kFALSE ;
     }
   }
 
   for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
-    RooAbsReal* ov = static_cast<RooAbsReal*>(other._finalPars->find(_finalPars->at(i)->GetName())) ;
+    auto tv = static_cast<const RooAbsReal*>(_finalPars->at(i));
+    auto ov = static_cast<const RooAbsReal*>(other._finalPars->find(tv->GetName())) ;
     if (!ov) {
-      cout << "RooFitResult::isIdentical: cannot find final parameter " << _finalPars->at(i)->GetName() << " in reference" << endl ;
+      cout << "RooFitResult::isIdentical: cannot find final parameter " << tv->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (ov && fabs(static_cast<RooAbsReal*>(_finalPars->at(i))->getVal()-ov->getVal())>=tol) {
-      cout << "RooFitResult::isIdentical: final parameter " << _finalPars->at(i)->GetName() 
-	   << " differs in value: " << static_cast<RooAbsReal*>(_finalPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+    if (ov && deviation(tv->getVal(), ov->getVal())) {
+      errMsg("final parameter", tv, ov);
       ret = kFALSE ;
     }
   }
 
+  auto deviationCorr = [tolCorr](const double left, const double right){
+    return fabs(left - right) >= tolCorr;
+  };
+
   // Only examine correlations for cases with >1 floating parameter
   if (_finalPars->getSize()>1) {
-    
+
     fillLegacyCorrMatrix() ;
     other.fillLegacyCorrMatrix() ;
-    
+
     for (Int_t i=0 ; i<_globalCorr->getSize() ; i++) {
-      RooAbsReal* ov = static_cast<RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
+      auto tv = static_cast<const RooAbsReal*>(_globalCorr->at(i));
+      auto ov = static_cast<const RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
       if (!ov) {
-	cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << _globalCorr->at(i)->GetName() << " in reference" << endl ;
-	ret = kFALSE ;
+        cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << tv->GetName() << " in reference" << endl ;
+        ret = kFALSE ;
       }
-      if (ov && fabs(static_cast<RooAbsReal*>(_globalCorr->at(i))->getVal()-ov->getVal())>=tolCorr) {
-	cout << "RooFitResult::isIdentical: global correlation coefficient " << _globalCorr->at(i)->GetName() 
-	     << " differs in value: " << static_cast<RooAbsReal*>(_globalCorr->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
-	ret = kFALSE ;
+      if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
+        errMsg("global correlation coefficient", tv, ov);
+        ret = kFALSE ;
       }
     }
-    
+
     for (Int_t j=0 ; j<_corrMatrix.GetSize() ; j++) {
       RooArgList* row = (RooArgList*) _corrMatrix.At(j) ;
       RooArgList* orow = (RooArgList*) other._corrMatrix.At(j) ;
       for (Int_t i=0 ; i<row->getSize() ; i++) {
-	RooAbsReal* ov = static_cast<RooAbsReal*>(orow->find(row->at(i)->GetName())) ;
-	if (!ov) {
-	  cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << row->at(i)->GetName() << " in reference" << endl ;
-	  ret = kFALSE ;
-	}
-	if (ov && fabs(static_cast<RooAbsReal*>(row->at(i))->getVal()-ov->getVal())>=tolCorr) {
-	  cout << "RooFitResult::isIdentical: correlation coefficient " << row->at(i)->GetName() 
-	       << " differs in value: " << static_cast<RooAbsReal*>(row->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
-	  ret = kFALSE ;
-	}
+        auto tv = static_cast<const RooAbsReal*>(row->at(i));
+        auto ov = static_cast<const RooAbsReal*>(orow->find(tv->GetName())) ;
+        if (!ov) {
+          cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << tv->GetName() << " in reference" << endl ;
+          ret = kFALSE ;
+        }
+        if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
+          errMsg("correlation coefficient", tv, ov);
+          ret = kFALSE ;
+        }
       }
     }
   }    
@@ -898,15 +917,14 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   }
 
   // Verify that all members of varList are of type RooRealVar
-  TIterator* iter = varList.createIterator() ;
+  TIter iter = varList.createIterator() ;
   RooAbsArg* arg  ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  while((arg=(RooAbsArg*)iter.Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
       oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
       return 0 ;
     }
   }
-  delete iter ;
 
   RooFitResult* r = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
 
@@ -984,13 +1002,13 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
 {
    // Verify that all members of varList are of type RooRealVar
-   TIterator *iter = paramList.createIterator();
+   TIter iter = paramList.createIterator();
    RooAbsArg *arg;
-   while ((arg = (RooAbsArg *)iter->Next())) {
+   while ((arg = (RooAbsArg *)iter.Next())) {
       if (!dynamic_cast<RooRealVar *>(arg)) {
          oocoutE((TObject *)0, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
                                                << "' is not of type RooRealVar" << endl;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -1001,15 +1019,14 @@ RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
    RooArgList constPars("constPars");
    RooArgList floatPars("floatPars");
 
-   iter->Reset();
-   while ((arg = (RooAbsArg *)iter->Next())) {
+   iter.Reset();
+   while ((arg = (RooAbsArg *)iter.Next())) {
       if (arg->isConstant()) {
          constPars.addClone(*arg);
       } else {
          floatPars.addClone(*arg);
       }
    }
-   delete iter;
 
    r->setConstParList(constPars);
    r->setInitParList(floatPars);
@@ -1138,14 +1155,14 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a reduced covariance matrix, which is calculated as
-///        ___                   -1
-/// Vred = V22  = V11 - V12 * V22   * V21
+/// \f[
+///   V_\mathrm{red} = \bar{V_{22}} = V_{11} - V_{12} \cdot V_{22}^{-1} \cdot V_{21},
+/// \f]
+/// where \f$ V_{11},V_{12},V_{21},V_{22} \f$ represent a block decomposition of the covariance matrix into observables that
+/// are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and \f$ \bar{V_{22}} \f$
+/// is the Shur complement of \f$ V_{22} \f$, calculated as shown above.
 ///
-/// Where V11,V12,V21,V22 represent a block decomposition of the covariance matrix into observables that
-/// are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and V22bar
-/// is the Shur complement of V22, calculated as shown above  
-///
-/// (Note that Vred is _not_ a simple sub-matrix of V)
+/// (Note that \f$ V_\mathrm{red} \f$ is *not* a simple sub-matrix of \f$ V \f$)
 
 TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) const 
 {

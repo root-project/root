@@ -25,7 +25,7 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/FitConfig.h"
-#include "Fit/FitExecutionPolicy.h"
+#include "ROOT/EExecutionPolicy.hxx"
 #include "Fit/FitResult.h"
 #include "Math/IParamFunction.h"
 #include <memory>
@@ -135,11 +135,11 @@ public:
        it must implement the 1D or multidimensional parametric function interface
    */
    template <class Data, class Function,
-             class cond = typename std::enable_if<!(std::is_same<Function, ROOT::Fit::ExecutionPolicy>::value ||
+             class cond = typename std::enable_if<!(std::is_same<Function, ROOT::EExecutionPolicy>::value ||
                                                     std::is_same<Function, int>::value),
                                                   Function>::type>
    bool Fit(const Data &data, const Function &func,
-            const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial)
+            const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential)
    {
       SetFunction(func);
       return Fit(data, executionPolicy);
@@ -148,11 +148,11 @@ public:
    /**
        Fit a binned data set using a least square fit (default method)
    */
-   bool Fit(const BinData & data, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+   bool Fit(const BinData & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
-   bool Fit(const std::shared_ptr<BinData> & data, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+   bool Fit(const std::shared_ptr<BinData> & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
@@ -167,7 +167,7 @@ public:
    /**
        fit an unbinned data set using loglikelihood method
    */
-   bool Fit(const UnBinData & data, bool extended = false, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+   bool Fit(const UnBinData & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -176,24 +176,24 @@ public:
       Binned Likelihood fit. Default is extended
     */
    bool LikelihoodFit(const BinData &data, bool extended = true,
-                      const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+                      const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
 
    bool LikelihoodFit(const std::shared_ptr<BinData> &data, bool extended = true,
-                      const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+                      const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
    /**
       Unbinned Likelihood fit. Default is not extended
     */
-   bool LikelihoodFit(const UnBinData & data, bool extended = false, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+   bool LikelihoodFit(const UnBinData & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
+   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -252,8 +252,7 @@ public:
       Note that passing a params != 0 will set the parameter settings to the new value AND also the
       step sizes to some pre-defined value (stepsize = 0.3 * abs(parameter_value) )
     */
-   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool
-      chi2fit = false);
+   bool FitFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Fit using a FitMethodFunction interface. Same as method above, but now extra information
@@ -266,7 +265,17 @@ public:
       (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
       See also note above for the initial parameters for FitFCN
     */
-   bool SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+
+   /**
+      Set the FCN function represented by a multi-dimensional function interface
+     (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
+      See also note above for the initial parameters for FitFCN
+      With this interface we pass in addition a ModelFunction that will be attached to the FitResult and
+      used to compute confidence interval of the fit
+   */
+   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params = 0,
+               unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Set the objective function (FCN)  using a FitMethodFunction interface.
@@ -280,7 +289,7 @@ public:
       gradient information provided by the function.
       For the options same consideration as in the previous method
     */
-   bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Fit using a FitMethodGradFunction interface. Same as method above, but now extra information
@@ -290,10 +299,20 @@ public:
 
    /**
       Set the FCN function represented by a multi-dimensional gradient function interface
-      (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
+      (ROOT::Math::IMultiGradFunction) and optionally the initial parameters
       See also note above for the initial parameters for FitFCN
     */
-   bool SetFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+
+   /**
+      Set the FCN function represented by a multi-dimensional gradient function interface
+     (ROOT::Math::IMultiGradFunction) and optionally the initial parameters
+      See also note above for the initial parameters for FitFCN
+      With this interface we pass in addition a ModelFunction that will be attached to the FitResult and
+      used to compute confidence interval of the fit
+   */
+   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const IModelFunction &func, const double *params = 0,
+               unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Set the objective function (FCN)  using a FitMethodGradFunction interface.
@@ -441,11 +460,11 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit(const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial);
+   bool DoLeastSquareFit(const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential);
    /// binned likelihood fit
-   bool DoBinnedLikelihoodFit(bool extended = true, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial);
+   bool DoBinnedLikelihoodFit(bool extended = true, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential);
    /// un-binned likelihood fit
-   bool DoUnbinnedLikelihoodFit( bool extended = false, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial);
+   bool DoUnbinnedLikelihoodFit( bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential);
    /// linear least square fit
    bool DoLinearFit();
 
@@ -457,9 +476,10 @@ protected:
    bool DoMinimization(const ROOT::Math::IMultiGenFunction * chifunc = 0);
    // update config after fit
    void DoUpdateFitConfig();
+   // update minimizer options for re-fitting
+   bool DoUpdateMinimizerOptions(bool canDifferentMinim = true);
    // get function calls from the FCN
    int GetNCallsFromFCN();
-
 
    //set data for the fit
    void SetData(const FitData & data) {

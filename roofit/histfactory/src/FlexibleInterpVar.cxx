@@ -11,13 +11,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class RooStats::HistFactory::FlexibleInterpVar
+ *  \ingroup HistFactory 
+ */
 
 #include "RooFit.h"
 
@@ -30,8 +26,6 @@ END_HTML
 #include "RooArgList.h"
 #include "RooMsgService.h"
 #include "RooTrace.h"
-
-#include "TMath.h"
 
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
 
@@ -47,7 +41,6 @@ using namespace HistFactory;
 
 FlexibleInterpVar::FlexibleInterpVar()
 {
-  _paramIter = _paramList.createIterator() ;
   _nominal = 0;
   _interpBoundary=1.;
   _logInit = kFALSE ;
@@ -59,18 +52,14 @@ FlexibleInterpVar::FlexibleInterpVar()
 
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title, 
 		       const RooArgList& paramList, 
-		       Double_t nominal, vector<double> low, vector<double> high) :
+		       Double_t argNominal, vector<double> lowVec, vector<double> highVec) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(nominal), _low(low), _high(high), _interpBoundary(1.)
+  _nominal(argNominal), _low(lowVec), _high(highVec), _interpBoundary(1.)
 {
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
 
-
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
@@ -85,39 +74,34 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _high.size());
   }
 
-  delete paramIter ;
   TRACE_CREATE
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title, 
 		       const RooArgList& paramList, 
-		       double nominal, const RooArgList& low, const RooArgList& high) :
+		       double argNominal, const RooArgList& lowList, const RooArgList& highList) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(nominal), _interpBoundary(1.)
+  _nominal(argNominal), _interpBoundary(1.)
 {
-  RooFIter lowIter = low.fwdIterator() ;
+  RooFIter lowIter = lowList.fwdIterator() ;
   RooAbsReal* val ; 
   while ((val = (RooAbsReal*) lowIter.next())) {
     _low.push_back(val->getVal()) ;
   }
 
-  RooFIter highIter = high.fwdIterator() ;
+  RooFIter highIter = highList.fwdIterator() ;
   while ((val = (RooAbsReal*) highIter.next())) {
     _high.push_back(val->getVal()) ;
   }
   
   
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
 
 
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
@@ -132,9 +116,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _high.size());
   }
 
-  delete paramIter ;
   TRACE_CREATE
-
 }
 
 
@@ -144,36 +126,32 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title, 
 				     const RooArgList& paramList, 
-				     double nominal, vector<double> low, vector<double> high,
+				     double argNominal, vector<double> lowVec, vector<double> highVec,
 				     vector<int> code) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(nominal), _low(low), _high(high), _interpCode(code), _interpBoundary(1.)
+  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
 {
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
 
-
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
-      coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
+      coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
 			    << " is not of type RooAbsReal" << endl ;
-      // use R__ASSERT which remains also in release mode 
+      // use R__ASSERT which remains also in release mode
       R__ASSERT(0) ;
     }
     _paramList.add(*param) ;
-  } 
+  }
+
   if (int(_low.size() ) != _paramList.getSize() || _low.size() != _high.size() || _low.size() != _interpCode.size()) {
      coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") invalid input vectors " << endl;
      R__ASSERT(int(_low.size() ) == _paramList.getSize());
      R__ASSERT(_low.size() == _high.size());
      R__ASSERT(_low.size() == _interpCode.size());
   }
-  delete paramIter ;
-  TRACE_CREATE
 
+  TRACE_CREATE
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +163,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   _nominal(0), _interpBoundary(1.)
 {
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
   TRACE_CREATE
 }
 
@@ -199,7 +176,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 {
   // Copy constructor
   _logInit = kFALSE ;
-  _paramIter = _paramList.createIterator() ;
   TRACE_CREATE
   
 }
@@ -210,7 +186,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 
 FlexibleInterpVar::~FlexibleInterpVar() 
 {
-  delete _paramIter ;
   TRACE_DESTROY
 }
 
@@ -382,24 +357,23 @@ double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Const getters
+
+const RooListProxy& FlexibleInterpVar::variables() const { return _paramList; }
+double FlexibleInterpVar::nominal() const { return _nominal; }        
+const std::vector<double>& FlexibleInterpVar::low() const { return _low; }
+const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
+
+////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
 Double_t FlexibleInterpVar::evaluate() const 
 {
   Double_t total(_nominal) ;
-  _paramIter->Reset() ;
-
-  RooAbsReal* param ;
-  //const RooArgSet* nset = _paramList.nset() ;
   int i=0;
 
-  // TString name = GetName();
-  // if (name == TString("ZHWW_ll12_vzll_epsilon") )
-  //    //    std::cout << "evaluate flexible interp var - init flag is " << _logInit << std::endl;
-
-  while((param=(RooAbsReal*)_paramIter->Next())) {
-    //    param->Print("v");
-
+  for (auto arg : _paramList) {
+    auto param = static_cast<const RooAbsReal*>(arg);
 
     Int_t icode = _interpCode[i] ;
 
@@ -494,10 +468,9 @@ void FlexibleInterpVar::printMultiline(ostream& os, Int_t contents,
 
 void FlexibleInterpVar::printFlexibleInterpVars(ostream& os) const
 {
-  _paramIter->Reset();
   for (int i=0;i<(int)_low.size();i++) {
-    RooAbsReal* param=(RooAbsReal*)_paramIter->Next();
-    os << setw(36) << param->GetName()<<": "<<setw(7) << _low[i]<<"  "<<setw(7) << _high[i]
+    auto& param = static_cast<RooAbsReal&>(_paramList[i]);
+    os << setw(36) << param.GetName()<<": "<<setw(7) << _low[i]<<"  "<<setw(7) << _high[i]
        <<endl;
   }
 }

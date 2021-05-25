@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   05/05/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,18 +20,18 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextBuffer                                                         //
-//                                                                      //
-// A text buffer is used in several widgets, like TGTextEntry,          //
-// TGFileDialog, etc. It is a little wrapper around the powerful        //
-// TString class and used for single line texts. For multi line texts   //
-// use TGText.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextBuffer
+    \ingroup guiwidgets
+
+A text buffer is used in several widgets, like TGTextEntry,
+TGFileDialog, etc. It is a little wrapper around the powerful
+TString class and used for single line texts. For multi line texts
+use TGText.
+
+*/
+
 
 #include "TGTextBuffer.h"
-
 
 ClassImp(TGTextBuffer);

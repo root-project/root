@@ -22,6 +22,10 @@ private:
    Double_t              fDz;                   // range on Z axis [-dz, dz]
    Double_t              fA;                    // quadratic coeff.
    Double_t              fB;                    // Z value of parabola at x=y=0
+
+   TGeoParaboloid(const TGeoParaboloid&) = delete;
+   TGeoParaboloid& operator=(const TGeoParaboloid&) = delete;
+
 public:
    // constructors
    TGeoParaboloid();

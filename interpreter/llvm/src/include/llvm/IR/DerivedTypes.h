@@ -1,9 +1,8 @@
 //===- llvm/DerivedTypes.h - Classes for handling data types ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,6 +23,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/Support/ScalableSize.h"
 #include <cassert>
 #include <cstdint>
 
@@ -36,7 +36,7 @@ class LLVMContext;
 /// Class to represent integer types. Note that this class is also used to
 /// represent the built-in integer types: Int1Ty, Int8Ty, Int16Ty, Int32Ty and
 /// Int64Ty.
-/// @brief Integer representation type
+/// Integer representation type
 class IntegerType : public Type {
   friend class LLVMContextImpl;
 
@@ -59,10 +59,10 @@ public:
   /// If an IntegerType with the same NumBits value was previously instantiated,
   /// that instance will be returned. Otherwise a new one will be created. Only
   /// one instance with a given NumBits value is ever created.
-  /// @brief Get or create an IntegerType instance.
+  /// Get or create an IntegerType instance.
   static IntegerType *get(LLVMContext &C, unsigned NumBits);
 
-  /// @brief Get the number of bits in this IntegerType
+  /// Get the number of bits in this IntegerType
   unsigned getBitWidth() const { return getSubclassData(); }
 
   /// Return a bitmask with ones set for all of the bits that can be set by an
@@ -79,13 +79,13 @@ public:
 
   /// For example, this is 0xFF for an 8 bit integer, 0xFFFF for i16, etc.
   /// @returns a bit mask with ones set for all the bits of this type.
-  /// @brief Get a bit mask for this type.
+  /// Get a bit mask for this type.
   APInt getMask() const;
 
   /// This method determines if the width of this IntegerType is a power-of-2
   /// in terms of 8 bit bytes.
   /// @returns true if this is a power-of-2 byte width.
-  /// @brief Is this a power-of-2 byte-width IntegerType ?
+  /// Is this a power-of-2 byte-width IntegerType ?
   bool isPowerOf2ByteWidth() const;
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast.
@@ -158,6 +158,38 @@ unsigned Type::getFunctionNumParams() const {
   return cast<FunctionType>(this)->getNumParams();
 }
 
+/// A handy container for a FunctionType+Callee-pointer pair, which can be
+/// passed around as a single entity. This assists in replacing the use of
+/// PointerType::getElementType() to access the function's type, since that's
+/// slated for removal as part of the [opaque pointer types] project.
+class FunctionCallee {
+public:
+  // Allow implicit conversion from types which have a getFunctionType member
+  // (e.g. Function and InlineAsm).
+  template <typename T, typename U = decltype(&T::getFunctionType)>
+  FunctionCallee(T *Fn)
+      : FnTy(Fn ? Fn->getFunctionType() : nullptr), Callee(Fn) {}
+
+  FunctionCallee(FunctionType *FnTy, Value *Callee)
+      : FnTy(FnTy), Callee(Callee) {
+    assert((FnTy == nullptr) == (Callee == nullptr));
+  }
+
+  FunctionCallee(std::nullptr_t) {}
+
+  FunctionCallee() = default;
+
+  FunctionType *getFunctionType() { return FnTy; }
+
+  Value *getCallee() { return Callee; }
+
+  explicit operator bool() { return Callee; }
+
+private:
+  FunctionType *FnTy = nullptr;
+  Value *Callee = nullptr;
+};
+
 /// Common super class of ArrayType, StructType and VectorType.
 class CompositeType : public Type {
 protected:
@@ -193,7 +225,7 @@ public:
 /// StructType::create() forms.
 ///
 /// Independent of what kind of struct you have, the body of a struct type are
-/// laid out in memory consequtively with the elements directly one after the
+/// laid out in memory consecutively with the elements directly one after the
 /// other (if the struct is packed) or (if not packed) with padding between the
 /// elements as defined by DataLayout (which is required to match what the code
 /// generator for a target expects).
@@ -356,6 +388,8 @@ public:
   SequentialType(const SequentialType &) = delete;
   SequentialType &operator=(const SequentialType &) = delete;
 
+  /// For scalable vectors, this will return the minimum number of elements
+  /// in the vector.
   uint64_t getNumElements() const { return NumElements; }
   Type *getElementType() const { return ContainedType; }
 
@@ -391,14 +425,37 @@ uint64_t Type::getArrayNumElements() const {
 
 /// Class to represent vector types.
 class VectorType : public SequentialType {
-  VectorType(Type *ElType, unsigned NumEl);
+  /// A fully specified VectorType is of the form <vscale x n x Ty>. 'n' is the
+  /// minimum number of elements of type Ty contained within the vector, and
+  /// 'vscale x' indicates that the total element count is an integer multiple
+  /// of 'n', where the multiple is either guaranteed to be one, or is
+  /// statically unknown at compile time.
+  ///
+  /// If the multiple is known to be 1, then the extra term is discarded in
+  /// textual IR:
+  ///
+  /// <4 x i32>          - a vector containing 4 i32s
+  /// <vscale x 4 x i32> - a vector containing an unknown integer multiple
+  ///                      of 4 i32s
+
+  VectorType(Type *ElType, unsigned NumEl, bool Scalable = false);
+  VectorType(Type *ElType, ElementCount EC);
+
+  // If true, the total number of elements is an unknown multiple of the
+  // minimum 'NumElements' from SequentialType. Otherwise the total number
+  // of elements is exactly equal to 'NumElements'.
+  bool Scalable;
 
 public:
   VectorType(const VectorType &) = delete;
   VectorType &operator=(const VectorType &) = delete;
 
   /// This static method is the primary way to construct an VectorType.
-  static VectorType *get(Type *ElementType, unsigned NumElements);
+  static VectorType *get(Type *ElementType, ElementCount EC);
+  static VectorType *get(Type *ElementType, unsigned NumElements,
+                         bool Scalable = false) {
+    return VectorType::get(ElementType, {NumElements, Scalable});
+  }
 
   /// This static method gets a VectorType with the same number of elements as
   /// the input type, and the element type is an integer type of the same width
@@ -407,7 +464,7 @@ public:
     unsigned EltBits = VTy->getElementType()->getPrimitiveSizeInBits();
     assert(EltBits && "Element size must be of a non-zero size");
     Type *EltTy = IntegerType::get(VTy->getContext(), EltBits);
-    return VectorType::get(EltTy, VTy->getNumElements());
+    return VectorType::get(EltTy, VTy->getElementCount());
   }
 
   /// This static method is like getInteger except that the element types are
@@ -415,7 +472,7 @@ public:
   static VectorType *getExtendedElementVectorType(VectorType *VTy) {
     unsigned EltBits = VTy->getElementType()->getPrimitiveSizeInBits();
     Type *EltTy = IntegerType::get(VTy->getContext(), EltBits * 2);
-    return VectorType::get(EltTy, VTy->getNumElements());
+    return VectorType::get(EltTy, VTy->getElementCount());
   }
 
   /// This static method is like getInteger except that the element types are
@@ -425,29 +482,45 @@ public:
     assert((EltBits & 1) == 0 &&
            "Cannot truncate vector element with odd bit-width");
     Type *EltTy = IntegerType::get(VTy->getContext(), EltBits / 2);
-    return VectorType::get(EltTy, VTy->getNumElements());
+    return VectorType::get(EltTy, VTy->getElementCount());
   }
 
   /// This static method returns a VectorType with half as many elements as the
   /// input type and the same element type.
   static VectorType *getHalfElementsVectorType(VectorType *VTy) {
-    unsigned NumElts = VTy->getNumElements();
-    assert ((NumElts & 1) == 0 &&
+    auto EltCnt = VTy->getElementCount();
+    assert ((EltCnt.Min & 1) == 0 &&
             "Cannot halve vector with odd number of elements.");
-    return VectorType::get(VTy->getElementType(), NumElts/2);
+    return VectorType::get(VTy->getElementType(), EltCnt/2);
   }
 
   /// This static method returns a VectorType with twice as many elements as the
   /// input type and the same element type.
   static VectorType *getDoubleElementsVectorType(VectorType *VTy) {
-    unsigned NumElts = VTy->getNumElements();
-    return VectorType::get(VTy->getElementType(), NumElts*2);
+    auto EltCnt = VTy->getElementCount();
+    assert((VTy->getNumElements() * 2ull) <= UINT_MAX &&
+           "Too many elements in vector");
+    return VectorType::get(VTy->getElementType(), EltCnt*2);
   }
 
   /// Return true if the specified type is valid as a element type.
   static bool isValidElementType(Type *ElemTy);
 
-  /// Return the number of bits in the Vector type.
+  /// Return an ElementCount instance to represent the (possibly scalable)
+  /// number of elements in the vector.
+  ElementCount getElementCount() const {
+    uint64_t MinimumEltCnt = getNumElements();
+    assert(MinimumEltCnt <= UINT_MAX && "Too many elements in vector");
+    return { (unsigned)MinimumEltCnt, Scalable };
+  }
+
+  /// Returns whether or not this is a scalable vector (meaning the total
+  /// element count is a multiple of the minimum).
+  bool isScalable() const {
+    return Scalable;
+  }
+
+  /// Return the minimum number of bits in the Vector type.
   /// Returns zero when the vector is a vector of pointers.
   unsigned getBitWidth() const {
     return getNumElements() * getElementType()->getPrimitiveSizeInBits();
@@ -461,6 +534,10 @@ public:
 
 unsigned Type::getVectorNumElements() const {
   return cast<VectorType>(this)->getNumElements();
+}
+
+bool Type::getVectorIsScalable() const {
+  return cast<VectorType>(this)->isScalable();
 }
 
 /// Class to represent pointers.

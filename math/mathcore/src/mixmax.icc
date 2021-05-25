@@ -239,7 +239,7 @@ myuint precalc(rng_state_t* X){
 
 int rng_get_N(void){return N;}
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !defined(_WIN64)
 inline myuint mod128(__uint128_t s){
     myuint s1;
     s1 = ( (  ((myuint)s)&MERSBASE )    + (  ((myuint)(s>>64)) * 8 )  + ( ((myuint)s) >>BITS) );
@@ -257,7 +257,7 @@ inline myuint fmodmulM61(myuint cum, myuint a, myuint b){
 
 inline myuint fmodmulM61(myuint cum, myuint s, myuint a)
 {
-    register myuint o,ph,pl,ah,al;
+    myuint o,ph,pl,ah,al;
     o=(s)*a;
     ph = ((s)>>32);
     pl = (s) & MASK32;

@@ -74,8 +74,8 @@ private:
    static Bool_t      fgGraphNeeded;    // True if graphics libs need to be initialized
    static Bool_t      fgGraphInit;      // True if graphics libs initialized
 
-   TApplication(const TApplication&);             // not implemented
-   TApplication& operator=(const TApplication&);  // not implemented
+   TApplication(const TApplication&) = delete;
+   TApplication& operator=(const TApplication&) = delete;
 
 protected:
    TApplication      *fAppRemote;      //Current remote application, if defined
@@ -84,7 +84,7 @@ protected:
 
    TApplication();
 
-   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
+   virtual Longptr_t  ProcessRemote(const char *line, Int_t *error = 0);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
    virtual void       MakeBatch();
@@ -105,13 +105,14 @@ public:
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);
-
+   void OpenInBrowser(const TString & url);
+   void OpenReferenceGuideFor(const TString & strippedClass);
    virtual void    HandleException(Int_t sig);
    virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
-   virtual Long_t  ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   virtual Longptr_t ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
+   virtual Longptr_t ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -154,7 +155,7 @@ public:
    virtual void    ReturnPressed(char *text );        //*SIGNAL*
    virtual Int_t   TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
 
-   static Long_t   ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   static Longptr_t ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();

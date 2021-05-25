@@ -37,7 +37,7 @@ End_Macro
 */
 
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -181,7 +181,6 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
       Double_t d2=(x2-x0)*(x2-x0)+(y2-y0)*(y2-y0);
       Double_t x3,y3;
 
-      Double_t safr=TGeoShape::Big();
       Double_t safz = TMath::Min(safz1,safz2);
       for (Int_t i=0; i<8; i++) {
          if (fRmax<fRmin) {
@@ -201,7 +200,7 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
             d1=(x1-x0)*(x1-x0)+(y1-y0)*(y1-y0);
          }
       }
-      safr=TMath::Sqrt(d1)-1.0E-3;
+      Double_t safr = TMath::Sqrt(d1)-1.0E-3;
       *safe = TMath::Min(safz, safr);
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
@@ -379,7 +378,6 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
    Double_t y0 = TMath::Abs(point[1]);
    Double_t x1, y1, dx, dy;
    Double_t safr, safz;
-   safr = safz = TGeoShape::Big();
    Double_t onepls = 1.+TGeoShape::Tolerance();
    Double_t onemin = 1.-TGeoShape::Tolerance();
    Double_t sqdist = x0*x0/(fRmin*fRmin)+y0*y0/(fRmax*fRmax);

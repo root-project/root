@@ -10,11 +10,9 @@
  *************************************************************************/
 
 #include "TROOT.h"
-#include "TApplication.h"
 #include "TSystem.h"
 #include "TGMenu.h"
 #include "TGComboBox.h"
-#include "TGFrame.h"
 #include "TGButton.h"
 #include "TGTextBuffer.h"
 #include "TGTextEntry.h"
@@ -26,10 +24,11 @@
 #include "TString.h"
 #include "TUrl.h"
 #include "TSocket.h"
-#include "Riostream.h"
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
 #include "TError.h"
+#include "TVirtualX.h"
+#include "snprintf.h"
 #ifdef R__SSL
 #include "TSSLSocket.h"
 #endif
@@ -37,14 +36,15 @@
 #include "TWin32SplashThread.h"
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 
-//_____________________________________________________________________________
-//
-// TGHtmlBrowser
-//
-// A very simple HTML browser.
-//_____________________________________________________________________________
+/** \class TGHtmlBrowser
+    \ingroup guihtml
+
+A very simple HTML browser.
+
+*/
+
 
 ClassImp(TGHtmlBrowser);
 
@@ -624,7 +624,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = gHtmlFTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this,
                                          kFDOpen, &fi);
                         dir = fi.fIniDir;
@@ -640,7 +640,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         static TString sdir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = gHtmlFTypes;
-                        fi.fIniDir    = StrDup(sdir);
+                        fi.SetIniDir(sdir);
                         new TGFileDialog(fClient->GetRoot(), this,
                                          kFDSave, &fi);
                         sdir = fi.fIniDir;

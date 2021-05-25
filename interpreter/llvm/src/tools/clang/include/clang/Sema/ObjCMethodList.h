@@ -1,9 +1,8 @@
 //===--- ObjCMethodList.h - A singly linked list of methods -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,13 +20,13 @@ namespace clang {
 
 class ObjCMethodDecl;
 
-/// \brief a linked list of methods with the same selector name but different
+/// a linked list of methods with the same selector name but different
 /// signatures.
 struct ObjCMethodList {
   // NOTE: If you add any members to this struct, make sure to serialize them.
-  /// \brief If there is more than one decl with this signature.
+  /// If there is more than one decl with this signature.
   llvm::PointerIntPair<ObjCMethodDecl *, 1> MethodAndHasMoreThanOneDecl;
-  /// \brief The next list object and 2 bits for extra info.
+  /// The next list object and 2 bits for extra info.
   llvm::PointerIntPair<ObjCMethodList *, 2> NextAndExtraBits;
 
   ObjCMethodList() { }

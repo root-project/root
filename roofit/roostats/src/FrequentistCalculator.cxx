@@ -94,10 +94,15 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       RooArgSet globalObs;
       if (fNullModel->GetGlobalObservables()) globalObs.add(*fNullModel->GetGlobalObservables());
 
+      auto& config = GetGlobalRooStatsConfig();
       RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
                                                         RooFit::GlobalObservables(globalObs),
-                                                        RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()) );
+                                                        RooFit::ConditionalObservables(conditionalObs),
+                                                        RooFit::Offset(config.useLikelihoodOffset));
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+      // set minimier options
+      profile->minimizer()->setMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
+      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); 
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult
@@ -201,12 +206,16 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       RooArgSet globalObs;
       if (fAltModel->GetGlobalObservables()) globalObs.add(*fAltModel->GetGlobalObservables());
 
-
+      const auto& config = GetGlobalRooStatsConfig();
       RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
                                                        RooFit::GlobalObservables(globalObs),
-                                                       RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
+                                                       RooFit::ConditionalObservables(conditionalObs),
+                                                       RooFit::Offset(config.useLikelihoodOffset));
 
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+      // set minimizer options
+      profile->minimizer()->setMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
+      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent 
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult

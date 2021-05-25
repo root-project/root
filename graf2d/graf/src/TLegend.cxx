@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
+#include <iostream>
 
 #include "TStyle.h"
 #include "TLatex.h"
 #include "TLine.h"
 #include "TPolyLine.h"
-#include "TBox.h"
 #include "TMarker.h"
 #include "TLegend.h"
 #include "TList.h"
@@ -23,9 +23,9 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TLegendEntry.h"
-#include "Riostream.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
+#include "TH1.h"
 #include "THStack.h"
 
 ClassImp(TLegend);
@@ -563,7 +563,7 @@ void TLegend::Paint( Option_t* option )
          fY2 = fY2+fY1;
          fX2 = fX2+fX1;
       } else {
-         Warning("Paint", "Legend to large to be automatically placed. A default position is used");
+         Warning("Paint", "Legend too large to be automatically placed; a default position is used");
          fX1 = 0.5;
          fY1 = 0.67;
          fX2 = 0.88;
@@ -627,8 +627,7 @@ void TLegend::PaintPrimitives()
    Double_t x2 = fX2NDC;
    Double_t y2 = fY2NDC;
    Double_t margin = fMargin*( x2-x1 )/fNColumns;
-   Double_t boxwidth = margin;
-   Double_t boxw = boxwidth*0.35;
+   Double_t boxw = margin*0.35;
    Double_t yspace = (y2-y1)/nRows;
    Double_t yspace2 = yspace/2.;
    Double_t textsize = GetTextSize();
@@ -854,7 +853,7 @@ void TLegend::PaintPrimitives()
          }
          entrymarker.SetNDC();
          entry->TAttMarker::Copy(entrymarker);
-         if (entrymarker.GetMarkerStyle() != 1 ) symbolsize = entrymarker.GetMarkerSize();
+         if (entrymarker.GetMarkerStyle() >= 5 ) symbolsize = entrymarker.GetMarkerSize();
       }
 
       // Draw line
@@ -870,11 +869,6 @@ void TLegend::PaintPrimitives()
          entry->TAttLine::Copy(entryline);
          // if the entry is filled, then surround the box with the line instead
          if ( opt.Contains("f") && !opt.Contains("l")) {
-            // box total height is yspace*0.7
-            boxwidth = yspace*
-               (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
-            if ( boxwidth > margin ) boxwidth = margin;
-
             entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
                                     xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,

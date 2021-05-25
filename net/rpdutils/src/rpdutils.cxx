@@ -18,7 +18,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include "TError.h"
+#include <ROOT/RConfig.hxx>
+#include "strlcpy.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -42,8 +44,8 @@
 #   define cygwingcc
 #endif
 
-#ifdef __linux__
-#define linux
+#if defined(__linux__) && !defined(linux)
+# define linux
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
@@ -140,23 +142,6 @@ static std::string gRndmSalt = std::string("ABCDEFGH");
 #include <shadow.h>
 #endif
 
-#ifdef R__AFS
-#include "AFSAuth.h"
-#endif
-
-#ifdef R__SRP
-extern "C" {
-   #include <t_pwd.h>
-   #include <t_server.h>
-}
-#endif
-
-#ifdef R__KRB5
-#include "Krb5Auth.h"
-#include <string>
-extern krb5_deltat krb5_clockskew;
-#endif
-
 #ifdef R__SSL
 // SSL specific headers for RSA keys
 #include <openssl/bio.h>
@@ -241,18 +226,13 @@ std::string gServName[3] = { "sockd", "rootd", "proofd" };
 //
 // Local global consts
 static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
-static const int gAUTH_SRP_MSK = 0x2;
-static const int gAUTH_KRB_MSK = 0x4;
-static const int gAUTH_GLB_MSK = 0x8;
-static const int gAUTH_SSH_MSK = 0x10;
 static const int gMAXTABSIZE = 50000000;
 
-static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
-                                                "Globus", "SSH", "UidGid" };
+static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Unsupported",
+                                                "Unsupported", "Unsupported", "Unsupported" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd
-static const std::string gSRootdPass = "/.srootdpass";  // SRP passwd
 static const std::string gKeyRoot    = "/rpk.";         // Root for key files
 
 //
@@ -269,7 +249,6 @@ static int gClientProtocol = -1;
 static int gCryptRequired = -1;
 static std::string gCryptToken;
 static int gAllowMeth[kMAXSEC];
-static std::string gAltSRPPass;
 static int gAnon = 0;
 static int gExistingAuth = 0;
 static int gAuthListSent = 0;
@@ -307,30 +286,12 @@ static int gSaltRequired = -1;
 static int gSec = -1;
 static int gServerProtocol = -1;
 static EService gService = kROOTD;
-static int gSshdPort = 22;
 static int gTriedMeth[kMAXSEC];
 static char gUser[64] = { 0 };
 static char *gUserAllow[kMAXSEC] = { 0 };          // User access control
 static unsigned int gUserAlwLen[kMAXSEC] = { 0 };
 static unsigned int gUserIgnLen[kMAXSEC] = { 0 };
 static char *gUserIgnore[kMAXSEC] = { 0 };
-
-//
-// Kerberos stuff
-#ifdef R__KRB5
-static krb5_context gKcontext;
-static krb5_keytab gKeytab = 0;        // default Keytab file can be changed
-static std::string gKeytabFile = "";   // via RpdSetKeytabFile
-#endif
-
-//
-// Globus stuff
-#ifdef R__GLBS
-static int gShmIdCred = -1;
-static gss_cred_id_t gGlbCredHandle = GSS_C_NO_CREDENTIAL;
-static bool gHaveGlobus = 1;
-static std::string gGlobusSubjName;
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
@@ -568,48 +529,6 @@ int RpdGetOffSet()
    return gOffSet;
 }
 
-#ifdef R__KRB5
-////////////////////////////////////////////////////////////////////////////////
-/// Change the value of the static gKeytab to keytab.
-
-void RpdSetKeytabFile(const char *keytabfile)
-{
-   gKeytabFile = std::string(keytabfile);
-   if (gDebug > 2)
-      ErrorInfo("RpdSetKeytabFile: using keytab file %s", gKeytabFile.c_str());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Free allocated quantities for Krb stuff
-
-void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal,
-                     krb5_ticket *ticket, krb5_auth_context auth_context,
-                     krb5_creds **creds)
-{
-   if (context) {
-      // free creds
-      if (creds)
-         krb5_free_tgt_creds(context,creds);
-
-      // free auth_context
-      if (auth_context)
-         krb5_auth_con_free(context, auth_context);
-
-      // free ticket
-      if (ticket)
-         krb5_free_ticket(context,ticket);
-
-      // free principal
-      if (principal)
-         krb5_free_principal(context, principal);
-
-      // free context
-      krb5_free_context(context);
-   }
-}
-
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 int RpdGetAuthMethod(int kind)
@@ -618,16 +537,6 @@ int RpdGetAuthMethod(int kind)
 
    if (kind == kROOTD_USER)
       method = 0;
-   if (kind == kROOTD_SRPUSER)
-      method = 1;
-   if (kind == kROOTD_KRB5)
-      method = 2;
-   if (kind == kROOTD_GLOBUS)
-      method = 3;
-   if (kind == kROOTD_SSH)
-      method = 4;
-   if (kind == kROOTD_RFIO)
-      method = 5;
 
    return method;
 }
@@ -1041,21 +950,6 @@ int RpdCleanupAuthTab(const char *crypttoken)
             // Delete Public Key file
             RpdDeleteKeyFile(pw);
 
-#ifdef R__GLBS
-            if (lsec == 3) {
-               int shmid = atoi(ctkn);
-               struct shmid_ds shm_ds;
-               if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
-                  if (GetErrno() != EIDRM) {
-                     ErrorInfo("RpdCleanupAuthTab: unable to mark shared"
-                               " memory segment %d (buf:%s)", shmid, ctkn);
-                     ErrorInfo("RpdCleanupAuthTab: for destruction"
-                               " (errno: %d)", GetErrno());
-                     retval++;
-                  }
-               }
-            }
-#endif
             // Locate 'act' ... skeep initial spaces, if any
             int slen = (int)strlen(line);
             int ka = 0;
@@ -1183,21 +1077,6 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
             // Delete Public Key file
             RpdDeleteKeyFile(pw);
 
-#ifdef R__GLBS
-            if (lsec == 3 && act > 0) {
-               int shmid = atoi(shmbuf);
-               struct shmid_ds shm_ds;
-               if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
-                  if (GetErrno() != EIDRM) {
-                     ErrorInfo("RpdCleanupAuthTab: unable to mark shared"
-                               " memory segment %d (buf:%s)", shmid, shmbuf);
-                     ErrorInfo("RpdCleanupAuthTab: for destruction"
-                               " (errno: %d)", GetErrno());
-                     retval++;
-                  }
-               }
-            }
-#endif
             // Deactivate active entries: remote client has gone ...
             if (act > 0) {
 
@@ -1338,28 +1217,9 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
 
    // Now check Token validity
    if (goodOfs && token && RpdCheckToken(token, tkn)) {
-
-      if (Sec == 3) {
-#ifdef R__GLBS
-         // kGlobus:
-         if (GlbsToolCheckContext(shmid)) {
-            retval = 1;
-            strlcpy(gUser, user, sizeof(gUser));
-         } else {
-            // set entry inactive
-            RpdCleanupAuthTab(Host,RemId,*OffSet);
-         }
-#else
-         ErrorInfo
-                ("RpdCheckAuthTab: compiled without Globus support:%s",
-                 " you shouldn't have got here!");
-#endif
-      } else {
-            retval = 1;
-      }
-
+      retval = 1;
       // Comunicate new offset to remote client
-      if (retval) *OffSet = ofs;
+      *OffSet = ofs;
    }
 
    if (tkn) delete[] tkn;
@@ -1625,7 +1485,6 @@ bool RpdCheckToken(char *token, char *tknref)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the requiring subject has already authenticated during this session
 /// and its 'ticket' is still valid.
-/// Not implemented for SRP and Krb5 (yet).
 
 int RpdReUseAuth(const char *sstr, int kind)
 {
@@ -1660,90 +1519,6 @@ int RpdReUseAuth(const char *sstr, int kind)
          strlcpy(gUser, user, sizeof(gUser));
       }
    }
-   // kSRP
-   if (kind == kROOTD_SRPUSER) {
-      if (!(gReUseAllow & gAUTH_SRP_MSK)) {
-         return 0;              // re-authentication required by administrator
-      }
-      gSec = 1;
-      // Decode subject string
-      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
-      user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-         // Fill gUser and free allocated memory
-         strlcpy(gUser, user, sizeof(gUser));
-      }
-   }
-   // kKrb5
-   if (kind == kROOTD_KRB5) {
-      if (!(gReUseAllow & gAUTH_KRB_MSK)) {
-         return 0;              // re-authentication required by administrator
-      }
-      gSec = 2;
-      // Decode subject string
-      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
-      user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-         // Fill gUser and free allocated memory
-         strlcpy(gUser, user, sizeof(gUser));
-      }
-   }
-   // kGlobus
-   if (kind == kROOTD_GLOBUS) {
-      if (!(gReUseAllow & gAUTH_GLB_MSK)) {
-         return 0;              //  re-authentication required by administrator
-      }
-      gSec = 3;
-      // Decode subject string
-      int lenS;
-      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenS, user);
-      user[lenS] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-      }
-   }
-   // kSSH
-   if (kind == kROOTD_SSH) {
-      if (!(gReUseAllow & gAUTH_SSH_MSK)) {
-         return 0;              //  re-authentication required by administrator
-      }
-      gSec = 4;
-      // Decode subject string
-      char pipe[kMAXPATHLEN];
-      sscanf(sstr, "%d %d %d %4095s %d %63s", &gRemPid, &offset, &opt, pipe, &lenU, user);
-      user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-         // Fill gUser and free allocated memory
-         strlcpy(gUser, user, sizeof(gUser));
-      }
-   }
 
    // Flag if existing token has been re-used
    if (auth > 0)
@@ -1765,14 +1540,6 @@ int RpdReUseAuth(const char *sstr, int kind)
 int RpdCheckAuthAllow(int Sec, const char *Host)
 {
    int retval = 1, found = 0;
-
-#ifdef R__GBLS
-   if (Sec == 3 && !gHaveGlobus) {
-      ErrorInfo("RpdCheckAuthAllow: meth: 3:"
-                " server does not have globus/GSI credentials");
-      return 1;
-   }
-#endif
 
    std::string theDaemonRc;
 
@@ -2267,1172 +2034,21 @@ void RpdSendAuthList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Authenitcation via ssh.
-
-int RpdSshAuth(const char *sstr)
-{
-   int auth = 0;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdSshAuth: contacted by host: %s for user %s",
-                gOpenHost.c_str(),sstr);
-
-   // Decode subject string
-   char user[kMAXUSERLEN];
-   char pipeId[10] = {0};
-   int lenU, ofs, opt;
-   char rproto[20] = {0};
-   sscanf(sstr, "%d %d %d %9s %d %127s %19s", &gRemPid, &ofs, &opt, pipeId, &lenU, user, rproto);
-
-   user[lenU] = '\0';
-   gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-   if (gRSASSLKey) {
-      // Determine type of RSA key required
-      gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-   } else
-      gRSAKey = 1;
-#else
-   gRSAKey = 1;
-#endif
-
-   // Check if we have been called to notify failure ...
-   if (gRemPid < 0) {
-
-      if (gDebug > 2)
-         ErrorInfo
-             ("RpdSshAuth: this is a failure notification (%s,%s,%d,%s)",
-              user, gOpenHost.c_str(), gRemPid, pipeId);
-
-      struct passwd *pw = getpwnam(user);
-      if (pw) {
-         std::string pipeFile =
-            std::string(pw->pw_dir) + std::string("/RootSshPipe.") + pipeId;
-         FILE *fpipe = fopen(pipeFile.c_str(), "r");
-         if (!fpipe) {
-            pipeFile= gTmpDir + std::string("/RootSshPipe.") + pipeId;
-            fpipe = fopen(pipeFile.c_str(), "r");
-         }
-         char pipe[kMAXPATHLEN];
-         if (fpipe) {
-            while (fgets(pipe, sizeof(pipe), fpipe)) {
-               if (pipe[strlen(pipe)-1] == '\n')
-               pipe[strlen(pipe)-1] = 0;
-            }
-            fclose(fpipe);
-            // Remove the temporary file
-            unlink(pipeFile.c_str());
-
-            if (SshToolNotifyFailure(pipe))
-               ErrorInfo("RpdSshAuth: failure notification may have"
-                         " failed ");
-         } else {
-            if (GetErrno() == ENOENT)
-               ErrorInfo("RpdSshAuth: pipe file %s does not exists",
-                          pipeFile.c_str());
-            else
-               ErrorInfo("RpdSshAuth: cannot open pipe file %s"
-                      " (errno= %d)",pipeFile.c_str(),GetErrno());
-         }
-
-      } else
-         ErrorInfo("RpdSshAuth: unable to get user info for '%s'"
-                   " (errno: %d)",user,GetErrno());
-
-      gClientProtocol = atoi(rproto);
-
-      // Improved diagnostics, check if there is something listening on
-      // port gSshdPort
-      char buf[20] = {0};
-#if defined(linux)
-      if (!RpdCheckSshd(0)) {
-         // Nothing found by netstat ... try opening a socket
-         if (!RpdCheckSshd(1)) {
-            if (gDebug > 2)
-               ErrorInfo("RpdSshAuth: sshd not found - return");
-            if (gClientProtocol > 9) {
-               SPrintf(buf, 20, "%d",gSshdPort);
-               NetSend(strlen(buf), kROOTD_SSH);
-               NetSend(buf, strlen(buf), kMESS_STRING);
-            }
-            return auth;
-         }
-      }
-#else
-      if (!RpdCheckSshd(1)) {
-         if (gDebug > 2)
-            ErrorInfo("RpdSshAuth: sshd not found - return");
-         if (gClientProtocol > 9) {
-            SPrintf(buf, 20,"%d",gSshdPort);
-            NetSend(strlen(buf), kROOTD_SSH);
-            NetSend(buf, strlen(buf), kMESS_STRING);
-         }
-         return auth;
-      }
-#endif
-      if (gClientProtocol > 9) {
-         SPrintf(buf,20,"OK");
-         NetSend(strlen(buf), kROOTD_SSH);
-         NetSend(buf, strlen(buf), kMESS_STRING);
-         ErrorInfo("RpdSshAuth: failure notified");
-      } else {
-         NetSend(kErrAuthNotOK,kROOTD_ERR);
-         ErrorInfo("RpdSshAuth: failure notified");
-      }
-      return auth;
-   }
-
-   // Protocol of our ssh implementation
-   int sshproto = atoi(rproto);
-
-   // Check user existence and get its environment
-   struct passwd *pw = getpwnam(user);
-   if (!pw) {
-      ErrorInfo("RpdSshAuth: entry for user % not found in /etc/passwd",
-                user);
-      NetSend(-2, kROOTD_SSH);
-      return auth;
-   }
-   // Method cannot be attempted for anonymous users ... (ie data servers )...
-   if (!strcmp(pw->pw_shell, "/bin/false")) {
-      ErrorInfo("RpdSshAuth: no SSH for anonymous user '%s' ", user);
-      NetSend(-2, kROOTD_SSH);
-      return auth;
-   }
-
-   // Some useful variables
-   char *pipeFile = 0;
-   char *authFile = 0;
-   char *uniquePipe = 0;
-   std::string cmdInfo = "";
-   int unixFd = -1;
-   struct stat st0, st1;
-
-   if (sshproto == 0) {
-
-      // Now we create an internal (UNIX) socket to listen to the
-      // result of sshd from ssh2rpd.
-      // Path will be /tmp/rootdSSH_<random_string>
-      if ((unixFd =
-           SshToolAllocateSocket(pw->pw_uid, pw->pw_gid, &uniquePipe)) < 0) {
-         ErrorInfo
-             ("RpdSshAuth: can't allocate UNIX socket for authentication");
-         NetSend(0, kROOTD_SSH);
-         delete[] uniquePipe;
-         return auth;
-      }
-
-      // Open a file to put the pipe to be read by ssh2rpd
-      int itmp = 0;
-      pipeFile = new char[strlen(pw->pw_dir) + 25];
-      SPrintf(pipeFile, strlen(pw->pw_dir) + 25, "%s/RootSshPipe.XXXXXX", pw->pw_dir);
-      mode_t oldumask = umask(0700);
-      int ipipe = mkstemp(pipeFile);
-      if (ipipe == -1) {
-         delete[] pipeFile;
-         pipeFile = new char[gTmpDir.length() + 25];
-         SPrintf(pipeFile, gTmpDir.length() + 25, "%s/RootSshPipe.XXXXXX", gTmpDir.c_str());
-         ipipe = mkstemp(pipeFile);
-         itmp = 1;
-      }
-      umask(oldumask);
-      FILE *fpipe = 0;
-      if (ipipe == -1 || !(fpipe = fdopen(ipipe,"w")) ) {
-         ErrorInfo("RpdSshAuth: failure creating pipe file %s (errno: %d)",
-                    pipeFile,GetErrno());
-         // Could not open the file: notify failure and close
-         // properly everything
-         if (SshToolNotifyFailure(uniquePipe))
-            ErrorInfo("RpdSshAuth: failure notification perhaps"
-                      " unsuccessful ... ");
-         NetSend(kErrNoPipeInfo, kROOTD_ERR);
-         delete[] uniquePipe;
-         delete[] pipeFile;
-         close(unixFd);
-         return auth;
-      } else {
-         // File open: fill it
-         fprintf(fpipe,"%s\n",uniquePipe);
-         fclose(fpipe);
-         // Set strict protections
-         chmod(pipeFile, 0600);
-         // Set ownership of the pipe file to the user
-         if (getuid() == 0)
-            if (chown(pipeFile,pw->pw_uid,pw->pw_gid) == -1)
-               ErrorInfo("RpdSshAuth: cannot change ownership of %s (errno: %d)",
-                         pipeFile,GetErrno());
-      }
-
-      // Get ID
-      char *pId = (char *)strstr(pipeFile,"SshPipe.")+strlen("SshPipe.");
-      strlcpy(pipeId, pId, sizeof(pipeId));
-
-      // Communicate command to be executed via ssh ...
-      std::string rootbindir;
-      if (getenv("ROOTBINDIR"))
-         rootbindir = getenv("ROOTBINDIR");
-      char dbgstr[4] = {0};
-      snprintf(dbgstr,3,"%d ",gDebug);
-      cmdInfo = std::string(rootbindir).append("/ssh2rpd ");
-      cmdInfo.append(dbgstr);
-      cmdInfo.append(" ");
-      cmdInfo.append(pipeId);
-
-      // Add Tmp dir, if used
-      if (itmp) {
-         cmdInfo.append(" ");
-         cmdInfo.append(gTmpDir);
-      }
-
-   } else {
-      // New protocol using scp
-      // Allocate a file to be overwritten by the client
-      authFile = new char[strlen(pw->pw_dir) + 25];
-      SPrintf(authFile, strlen(pw->pw_dir) + 25, "%s/RootSshAuth.XXXXXX", pw->pw_dir);
-      mode_t oldumask = umask(0700);
-      int iauth = mkstemp(authFile);
-      if (iauth == -1) {
-         if (gDebug > 2)
-            ErrorInfo("RpdSshAuth: failure creating Auth file %s (errno: %d)",
-                      authFile,GetErrno());
-         delete[] authFile;
-         authFile = new char[gTmpDir.length() + 25];
-         SPrintf(authFile, gTmpDir.length() + 25, "%s/RootSshAuth.XXXXXX", gTmpDir.c_str());
-         if ((iauth = mkstemp(authFile)) == -1) {
-            ErrorInfo("RpdSshAuth: failure creating Auth file %s (errno: %d)",
-                      authFile,GetErrno());
-            NetSend(kErrFileOpen, kROOTD_ERR);
-            delete[] authFile;
-            umask(oldumask);
-            return auth;
-         }
-      }
-      umask(oldumask);
-
-      // Store stat result to check changes
-      if (fstat(iauth, &st0) == -1)
-         ErrorInfo("RpdSshAuth: cannot stat %s",authFile);
-
-      // Make sure the permissions are the rigth ones
-      if (fchmod(iauth,0600)) {
-         if (gDebug > 0) {
-            ErrorInfo("RpdSshAuth: chmod: could not change"
-                      " '%s' permission (errno= %d)",authFile, errno);
-            ErrorInfo("RpdSshAuth: path (uid,gid) are: %d %d",
-                      st0.st_uid, st0.st_gid);
-            NetSend(kErrNoChangePermission, kROOTD_ERR);
-            delete[] authFile;
-            return auth;
-         }
-      }
-
-      if ((unsigned int)st0.st_uid != pw->pw_uid ||
-          (unsigned int)st0.st_gid != pw->pw_gid) {
-         if (fchown(iauth, pw->pw_uid, pw->pw_gid)) {
-            if (gDebug > 0) {
-               ErrorInfo("RpdSshAuth: chown: could not change file"
-                         " '%s' ownership (errno= %d)",authFile, errno);
-               ErrorInfo("RpdSshAuth: path (uid,gid) are: %d %d",
-                         st0.st_uid, st0.st_gid);
-               ErrorInfo("RpdSshAuth: may follow authentication problems");
-            }
-         }
-      }
-
-      // Reset reference time
-      if (fstat(iauth, &st0) == -1)
-         ErrorInfo("RpdSshAuth: cannot stat %s",authFile);
-
-      // Send Back the name of the file
-      if (gClientProtocol > 13) {
-         // Add the full coordinates, so that it works in all cases,
-         // included SSH tunnelling ...
-         char hostname[64];
-         gethostname(hostname, sizeof(hostname));
-         char *cmd = new char[strlen(authFile) + strlen(user) + strlen(hostname) + 5];
-         SPrintf(cmd, strlen(authFile) + strlen(user) + strlen(hostname) + 5,
-                      " %s@%s:%s ", user, hostname, authFile);
-         cmdInfo.append(cmd);
-         delete[] cmd;
-      } else {
-         cmdInfo = std::string(authFile);
-      }
-   }
-
-   // Add non-standard port, if so
-   if (gSshdPort != 22) {
-      char sshp[10];
-      snprintf(sshp,10," p:%d",gSshdPort);
-      cmdInfo.append(sshp);
-   }
-
-   // Add key type, if SSL
-   if (gRSAKey == 2) {
-      char key[10];
-      snprintf(key,10," k:%d",gRSAKey);
-      cmdInfo.append(key);
-   }
-
-   if (gDebug > 2)
-      ErrorInfo("RpdSshAuth: sending cmdInfo (%d) %s", cmdInfo.length(),
-                cmdInfo.c_str());
-   NetSend(cmdInfo.length(), kROOTD_SSH);
-   NetSend(cmdInfo.c_str(), cmdInfo.length(), kROOTD_SSH);
-
-   if (sshproto == 0) {
-
-      // Old protocol:
-      // Wait for verdict from sshd (via ssh2rpd ...)
-      // Additional check on the username ...
-      auth = SshToolGetAuth(unixFd, user);
-
-      // Close socket
-      SshToolDiscardSocket(uniquePipe, unixFd);
-
-   } else {
-
-      auth = 0;
-
-      // New Protocol:
-      // Get result from client and check it locally
-      EMessageTypes kind;
-      char res[5];
-      NetRecv(res, 5, kind);
-      if (kind != kROOTD_SSH) {
-         ErrorInfo("RpdSshAuth: expecting message kind: %d"
-                      " - received: %d", (int)kROOTD_SSH, kind);
-         if (!strncmp(res,"1",1))
-            NetSend(kErrBadOp, kROOTD_ERR);
-         if (unlink(authFile) == -1)
-            if (GetErrno() != ENOENT)
-               ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
-                         authFile,GetErrno());
-         delete[] authFile;
-         // Set to Auth failed
-         auth = 0;
-         return auth;
-      }
-      if (!strncmp(res,"0",1)) {
-         // Failure
-         if (unlink(authFile) == -1)
-            if (GetErrno() != ENOENT)
-               ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
-                         authFile,GetErrno());
-         delete[] authFile;
-         // Set to Auth failed
-         auth = 0;
-         return auth;
-      }
-      if (!strncmp(res,"1",1)) {
-         // Client pretends success: lets check it locally
-         FILE *floc = fopen(authFile,"r");
-         if (!floc) {
-            ErrorInfo("RpdSshAuth: cannot open auth file:"
-                      " %s (errno: %d)", authFile, GetErrno());
-            NetSend(kErrFileOpen, kROOTD_ERR);
-            if (unlink(authFile) == -1)
-               if (GetErrno() != ENOENT)
-                  ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
-                            authFile,GetErrno());
-            delete[] authFile;
-            // Set to Auth failed
-            auth = 0;
-            return auth;
-         }
-         // Stat again file to check for modification
-         if (fstat(fileno(floc), &st1) == -1) {
-            ErrorInfo("RpdSshAuth: cannot fstat descriptor %d", fileno(floc));
-            fclose(floc);
-            delete[] authFile;
-            // Set to Auth failed
-            auth = 0;
-            return auth;
-         }
-
-         char line[kMAXPATHLEN];
-         while (fgets(line, sizeof(line), floc) != 0) {
-            // Get rid of '\n'
-            if (line[strlen(line) - 1] == '\n')
-               line[strlen(line) - 1] = '\0';
-            if (gDebug > 2)
-               ErrorInfo("RpdSshAuth: read line ... '%s'", line);
-            if (!strncmp(line,"k:",2)) {
-               // The file contains some meaningful info ...
-               auth = 1;
-               // Get the key, if there
-               char key[4], val[10];
-               int nw = sscanf(line,"%3s %9s",key,val);
-               if (nw >= 2 && strncmp(val,"-1",2)) {
-                  gPubKeyLen = fread((void *)gPubKey,1,sizeof(gPubKey),floc);
-                  // Import Key and Determine key type
-                  gRSAKey = RpdGetRSAKeys(gPubKey, 0);
-                  if (gRSAKey == 0) {
-                     ErrorInfo("RpdSshAuth: could not import a valid key");
-                     gReUseRequired = 0;
-                  }
-               }
-            }
-         }
-         fclose(floc);
-
-         // If the file is still empty or scrappy return
-         if (auth == 0) {
-            // Send error only if the client really got in
-            // otherwise it already quit, and sending error
-            // would screw up negotiation
-            if (gDebug > 2)
-               ErrorInfo("RpdSshAuth: %d %d",st1.st_ctime,st0.st_ctime);
-            if (st1.st_ctime != st0.st_ctime)
-               // the file has been overwritten: the client got in
-               // but something went wrong
-               NetSend(kErrAuthNotOK, kROOTD_ERR);
-            if (unlink(authFile) == -1)
-               if (GetErrno() != ENOENT)
-                  ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
-                            authFile, GetErrno());
-            delete[] authFile;
-            return auth;
-         }
-      } else {
-         ErrorInfo("RpdSshAuth: got unknown reply: %s", res);
-         NetSend(kErrBadMess, kROOTD_ERR);
-         if (unlink(authFile) == -1)
-            if (GetErrno() != ENOENT)
-               ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
-                         authFile,GetErrno());
-         delete[] authFile;
-         // Set to Auth failed
-         auth = 0;
-         return auth;
-      }
-      // Remove the file
-      if (unlink(authFile) == -1)
-         if (GetErrno() != ENOENT)
-            ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
-                      authFile,GetErrno());
-   }
-
-   // If failure, notify and return ...
-   if (auth <= 0) {
-      if (auth == -1)
-         NetSend(kErrWrongUser, kROOTD_ERR);  // Send message length first
-      else
-         NetSend(kErrAuthNotOK, kROOTD_ERR);  // Send message length first
-      delete[] uniquePipe;
-      delete[] pipeFile;
-      // Set to Auth failed
-      auth = 0;
-      return auth;
-   }
-   // notify the client
-   if (gDebug > 0 && auth == 1)
-      ErrorInfo("RpdSshAuth: user %s authenticated by sshd", user);
-   gSec = 4;
-
-   // Save username ...
-   strlcpy(gUser, user, sizeof(gUser));
-
-   char line[kMAXPATHLEN];
-   if ((gReUseAllow & gAUTH_SSH_MSK) && gReUseRequired) {
-
-      if (sshproto == 0) {
-
-         // Ask for the RSA key
-         NetSend(gRSAKey, kROOTD_RSAKEY);
-
-         // Receive the key securely
-         if (RpdRecvClientRSAKey()) {
-            ErrorInfo("RpdSshAuth: could not import a valid key"
-                      " - switch off reuse for this session");
-            gReUseRequired = 0;
-         }
-      }
-
-      // Set an entry in the auth tab file for later (re)use, if required ...
-      int offset = -1;
-      char *token = 0;
-      if (gReUseRequired) {
-         SPrintf(line, kMAXPATHLEN, "4 1 %d %d %s %s",
-                 gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-         offset = RpdUpdateAuthTab(1, line, &token);
-      }
-      // Comunicate login user name to client
-      SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-      NetSend(strlen(line), kROOTD_SSH);   // Send message length first
-      NetSend(line, kMESS_STRING);
-
-      if (gReUseRequired && offset > -1) {
-         // Send over the token
-         if (!token || (token && RpdSecureSend(token) == -1)) {
-            ErrorInfo
-                ("RpdSshAuth: problems secure-sending token"
-                 " - may result in corrupted token");
-         }
-         if (token) delete[] token;
-      }
-      gOffSet = offset;
-   } else {
-      // Comunicate login user name to client
-      SPrintf(line, kMAXPATHLEN, "%s -1", gUser);
-      NetSend(strlen(line), kROOTD_SSH);   // Send message length first
-      NetSend(line, kMESS_STRING);
-   }
-
-   // Release allocated memory
-   delete[] uniquePipe;
-   delete[] pipeFile;
-   delete[] authFile;
-
-   return auth;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Authenticate via Kerberos.
 
-int RpdKrb5Auth(const char *sstr)
+int RpdKrb5Auth(const char *)
 {
-   int auth = 0;
-
-#ifdef R__KRB5
-   NetSend(1, kROOTD_KRB5);
-   // TAuthenticate will respond to our encouragement by sending krb5
-   // authentication through the socket
-
-   int retval;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: analyzing ... %s", sstr);
-
-   if (gClientProtocol > 8) {
-      int lenU, ofs, opt;
-      char dumm[256];
-      // Decode subject string
-      sscanf(sstr, "%d %d %d %d %255s", &gRemPid, &ofs, &opt, &lenU, dumm);
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-      if (gRSASSLKey) {
-         // Determine type of RSA key required
-         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-      } else
-         gRSAKey = 1;
-#else
-      gRSAKey = 1;
-#endif
-   }
-
-   // Init context
-   retval = krb5_init_context(&gKcontext);
-   if (retval) {
-      ErrorInfo("RpdKrb5Auth: %s while initializing krb5",
-            error_message(retval));
-      return auth;
-   }
-
-   // Use special Keytab file, if specified
-   if (gKeytabFile.length()) {
-      if ((retval = krb5_kt_resolve(gKcontext, gKeytabFile.c_str(), &gKeytab)))
-         ErrorInfo("RpdKrb5Auth: %s while resolving keytab file %s",
-                        error_message(retval),gKeytabFile.c_str());
-   }
-
-   // get service principal
-   const char *service = "host";
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: using service: %s ",service);
-
-   krb5_principal server;
-   if ((retval = krb5_sname_to_principal(gKcontext, 0, service,
-                                         KRB5_NT_SRV_HST, &server))) {
-      ErrorInfo("RpdKrb5Auth: while generating service name (%s): %d %s",
-                service, retval, error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, 0, 0, 0, 0);
-      return auth;
-   }
-
-   // listen for authentication from the client
-   krb5_auth_context auth_context = 0;
-   krb5_ticket *ticket;
-   char proto_version[100] = "krootd_v_1";
-   int sock = NetGetSockFd();
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: recvauth ... ");
-
-   if ((retval = krb5_recvauth(gKcontext, &auth_context,
-                               (krb5_pointer) &sock, proto_version, server,
-                               0, gKeytab,   // default gKeytab is 0
-                               &ticket))) {
-      ErrorInfo("RpdKrb5Auth: recvauth failed--%s", error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, server, 0, 0, 0);
-      return auth;
-   }
-
-   // get client name
-   char *cname;
-   if ((retval =
-        krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname))) {
-      ErrorInfo("RpdKrb5Auth: unparse failed: %s", error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0);
-      return auth;
-   }
-   if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: name in ticket is: %s",cname);
-
-   using std::string;
-   std::string user = std::string(cname);
-   free(cname);
-   std::string reply = std::string("authenticated as ").append(user);
-
-   // set user name
-   // avoid using 'erase' (it is buggy with some compilers)
-   snprintf(gUser,64,"%s",user.c_str());
-   char *pc = 0;
-   // cut off realm
-   if ((pc = (char *)strstr(gUser,"@")))
-      *pc = '\0';
-   // drop instances, if any
-   if ((pc = (char *)strstr(gUser,"/")))
-      *pc = '\0';
-
-   std::string targetUser = std::string(gUser);
-
-   if (gClientProtocol >= 9) {
-
-       // Receive target name
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: receiving target user ... ");
-
-      EMessageTypes kind;
-      char buffer[66];
-      NetRecv(buffer, 65, kind);
-
-      if (kind != kROOTD_KRB5) {
-         ErrorInfo("RpdKrb5Auth: protocol error, received message"
-                   " of type %d instead of %d\n",kind,kROOTD_KRB5);
-      }
-      buffer[65] = 0;
-      targetUser = std::string(buffer);
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: received target user %s ",buffer);
-   }
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: using ticket file: %s ... ",getenv("KRB5CCNAME"));
-
-
-   // If the target user is not the owner of the principal
-   // check if the user is authorized by the target user
-   if (targetUser != gUser) {
-      if (krb5_kuserok(gKcontext, ticket->enc_part2->client,
-                                        targetUser.c_str())) {
-         if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: change user from %s to %s successful",
-                   gUser,targetUser.c_str());
-         snprintf(gUser,64,"%s",targetUser.c_str());
-         reply =  std::string("authenticated as ").append(gUser);
-      } else {
-         ErrorInfo("RpdKrb5Auth: could not change user from %s to %s",
-                   gUser,targetUser.c_str());
-         ErrorInfo("RpdKrb5Auth: continuing with user: %s",gUser);
-      }
-   }
-
-   // Get credentials if in a PROOF session
-   if (gClientProtocol >= 9 &&
-      (gService == kPROOFD || gClientProtocol < 11)) {
-
-      char *data = 0;
-      int size = 0;
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: receiving forward cred ... ");
-
-      {
-         EMessageTypes kind;
-         char bufLen[20];
-         NetRecv(bufLen, 20, kind);
-
-         if (kind != kROOTD_KRB5) {
-            ErrorInfo("RpdKrb5Auth: protocol error, received"
-                      " message of type %d instead of %d\n",
-                      kind, kROOTD_KRB5);
-         }
-
-         size = atoi(bufLen);
-         if (gDebug > 3)
-            ErrorInfo("RpdKrb5Auth: got len '%s' %d ", bufLen, size);
-
-         data = new char[size+1];
-
-         // Receive and decode encoded public key
-         int Nrec = NetRecvRaw(data, size);
-
-         if (gDebug > 3)
-            ErrorInfo("RpdKrb5Auth: received %d ", Nrec);
-      }
-
-      krb5_data forwardCreds;
-      forwardCreds.data = data;
-      forwardCreds.length = size;
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: received forward cred ... %d %d %d",
-                   data[0], data[1], data[2]);
-
-      int net = sock;
-      retval = krb5_auth_con_genaddrs(gKcontext, auth_context, net,
-                   KRB5_AUTH_CONTEXT_GENERATE_REMOTE_FULL_ADDR);
-      if (retval) {
-         ErrorInfo("RpdKrb5Auth: failed auth_con_genaddrs is: %s\n",
-                   error_message(retval));
-      }
-
-      bool forwarding = true;
-      krb5_creds **creds = 0;
-      if ((retval = krb5_rd_cred(gKcontext, auth_context,
-                                 &forwardCreds, &creds, 0))) {
-         ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
-         forwarding = false;
-      }
-      if (data) delete[] data;
-
-      struct passwd *pw = getpwnam(gUser);
-      if (forwarding && pw) {
-         Int_t fromUid = getuid();
-         Int_t fromEUid = geteuid();
-
-         if (setresuid(pw->pw_uid, pw->pw_uid, fromEUid) == -1) {
-            ErrorInfo("RpdKrb5Auth: can't setuid for user %s", gUser);
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: saving ticket to cache ...");
-
-         krb5_context context;
-         // Init context
-         retval = krb5_init_context(&context);
-         if (retval) {
-            ErrorInfo("RpdKrb5Auth: %s while initializing second krb5",
-                error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-
-         krb5_ccache cache = 0;
-         char ccacheName[256];
-         SPrintf(ccacheName,256,"%240s_root_%d",krb5_cc_default_name(context),getpid());
-         if ((retval = krb5_cc_resolve(context, ccacheName, &cache))) {
-            ErrorInfo("RpdKrb5Auth: cc_default failed--%s",
-                      error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-         {
-            char *ccname = new char[strlen("KRB5CCNAME")+strlen(ccacheName)+2];
-            SPrintf(ccname, strlen("KRB5CCNAME")+strlen(ccacheName)+2, "KRB5CCNAME=%.*s", strlen(ccacheName), ccacheName);
-            putenv(ccname);
-         }
-
-         if (gDebug > 5)
-            ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
-                      krb5_cc_get_name(context,cache));
-
-         // this is not working (why?)
-         // this would mean that if a second user comes in, it will tremple
-         // the existing one :(
-         //       if ((retval = krb5_cc_gen_new(context,&cache))) {
-         //          ErrorInfo("RpdKrb5Auth: cc_gen_new failed--%s",
-         //                    error_message(retval));
-         //          return auth;
-         //       }
-
-         const char *cacheName = krb5_cc_get_name(context,cache);
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: working (2) on ticket"
-                      " to cache (%s) ... ",cacheName);
-
-         if ((retval = krb5_cc_initialize(context,cache,
-                                          ticket->enc_part2->client))) {
-            ErrorInfo("RpdKrb5Auth: cc_initialize failed--%s",
-                      error_message(retval));
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            krb5_free_context(context);
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            return auth;
-         }
-
-         if ((retval = krb5_cc_store_cred(context,cache, *creds))) {
-            ErrorInfo("RpdKrb5Auth: cc_store_cred failed--%s",
-                       error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",
-                      cacheName);
-
-         if ((retval = krb5_cc_close(context,cache))) {
-            ErrorInfo("RpdKrb5Auth: cc_close failed--%s",
-                       error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-
-         // free context
-         krb5_free_context(context);
-
-         //       if ( chown( cacheName, pw->pw_uid, pw->pw_gid) != 0 ) {
-         //          ErrorInfo("RpdKrb5Auth: could not change the owner"
-         //                    " ship of the cache file %s",cacheName);
-         //       }
-
-         if (setresuid(fromUid,fromEUid,pw->pw_uid) == -1) {
-            ErrorInfo("RpdKrb5Auth: can't setuid back to original uid");
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-      }
-
-      // free creds
-      krb5_free_tgt_creds(gKcontext,creds);
-   }
-
-   NetSend(reply.c_str(), kMESS_STRING);
-
-   // free allocated stuff
-   RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, (krb5_creds **)0);
-
-   // Authentication was successfull
-   auth = 1;
-   gSec = 2;
-
-   if (gClientProtocol > 8) {
-
-      char line[kMAXPATHLEN];
-      if ((gReUseAllow & gAUTH_KRB_MSK) && gReUseRequired) {
-
-         // Ask for the RSA key
-         NetSend(gRSAKey, kROOTD_RSAKEY);
-
-         // Receive the key securely
-         if (RpdRecvClientRSAKey()) {
-            ErrorInfo("RpdKrb5Auth: could not import a valid key"
-                      " - switch off reuse for this session");
-            gReUseRequired = 0;
-         }
-
-         // Set an entry in the auth tab file for later (re)use,
-         // if required ...
-         int offset = -1;
-         char *token = 0;
-         if (gReUseRequired) {
-            SPrintf(line, kMAXPATHLEN, "2 1 %d %d %s %s",
-                    gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-            offset = RpdUpdateAuthTab(1, line, &token);
-            if (gDebug > 2)
-               ErrorInfo("RpdKrb5Auth: line:%s offset:%d", line, offset);
-         }
-         // Comunicate login user name to client
-         SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-         NetSend(strlen(line), kROOTD_KRB5);   // Send message length first
-         NetSend(line, kMESS_STRING);
-
-         // Send Token
-         if (gReUseRequired && offset > -1) {
-            if (!token || (token && RpdSecureSend(token) == -1)) {
-               ErrorInfo("RpdKrb5Auth: problems secure-sending token"
-                         " - may result in corrupted token");
-            }
-            if (token) delete[] token;
-         }
-         gOffSet = offset;
-
-      } else {
-
-         // Comunicate login user name to client
-         SPrintf(line, kMAXPATHLEN, "%s -1", gUser);
-         NetSend(strlen(line), kROOTD_KRB5);   // Send message length first
-         NetSend(line, kMESS_STRING);
-
-      }
-   } else {
-      NetSend(user.c_str(), kMESS_STRING);
-   }
-
-   if (gDebug > 0)
-      ErrorInfo("RpdKrb5Auth: user %s authenticated", gUser);
-#else
-
-   // no krb5 support
-   if (sstr) { }   // remove compiler warning
-
-   NetSend(0, kROOTD_KRB5);
-#endif
-
-   return auth;
+   ::Error("RpdKrb5Auth", "Kerberos5 no longer supported by ROOT");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use Secure Remote Password protocol.
-/// Check user id in $HOME/.srootdpass file.
+/// Secure Remote Password protocol (no longer supported)
 
-int RpdSRPUser(const char *sstr)
+int RpdSRPUser(const char *)
 {
-   int auth = 0;
-
-   if (!*sstr) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: bad user name");
-      return auth;
-   }
-
-#ifdef R__SRP
-
-   // Decode subject string
-   char user[kMAXUSERLEN] = { 0 };
-   if (gClientProtocol > 8) {
-      int lenU, ofs, opt;
-      char dumm[20];
-      sscanf(sstr, "%d %d %d %d %127s %19s", &gRemPid, &ofs, &opt, &lenU, user, dumm);
-      lenU = (lenU > kMAXUSERLEN-1) ? kMAXUSERLEN-1 : lenU;
-      user[lenU] = '\0';
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-      if (gRSASSLKey) {
-         // Determine type of RSA key required
-         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-      } else
-         gRSAKey = 1;
-#else
-      gRSAKey = 1;
-#endif
-   } else {
-      SPrintf(user,kMAXUSERLEN,"%s",sstr);
-   }
-
-   struct passwd *pw = getpwnam(user);
-   if (!pw) {
-      NetSend(kErrNoUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user %s unknown", user);
-      return auth;
-   }
-   // Method cannot be attempted for anonymous users ... (ie data servers )...
-   if (!strcmp(pw->pw_shell, "/bin/false")) {
-      NetSend(kErrNotAllowed, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: no SRP for anonymous user '%s' ", user);
-      return auth;
-   }
-   // If server is not started as root and user is not same as the
-   // one who started rootd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user not same as effective user of rootd");
-      return auth;
-   }
-
-   NetSend(auth, kROOTD_AUTH);
-
-   strlcpy(gUser, user, sizeof(gUser));
-
-   std::string srootdpass, srootdconf;
-   if (gAltSRPPass.length()) {
-      srootdpass = gAltSRPPass;
-   } else {
-      srootdpass = std::string(pw->pw_dir).append(gSRootdPass);
-   }
-   srootdconf = srootdpass + std::string(".conf");
-
-   FILE *fp1 = fopen(srootdpass.c_str(), "r");
-   if (!fp1) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error opening %s", srootdpass.c_str());
-      return auth;
-   }
-   FILE *fp2 = fopen(srootdconf.c_str(), "r");
-   if (!fp2) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error opening %s", srootdconf.c_str());
-      if (fp1)
-         fclose(fp1);
-      return auth;
-   }
-
-   struct t_pw *tpw = t_openpw(fp1);
-   if (!tpw) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: unable to open password file %s",
-                srootdpass.c_str());
-      fclose(fp1);
-      fclose(fp2);
-      return auth;
-   }
-
-   struct t_conf *tcnf = t_openconf(fp2);
-   if (!tcnf) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: unable to open configuration file %s",
-                srootdconf.c_str());
-      t_closepw(tpw);
-      fclose(fp1);
-      fclose(fp2);
-      return auth;
-   }
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
-   struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
-
-   if (tcnf)
-      t_closeconf(tcnf);
-   if (tpw)
-      t_closepw(tpw);
-   if (fp2)
-      fclose(fp2);
-   if (fp1)
-      fclose(fp1);
-
-   if (!ts) {
-      NetSend(kErrNoUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user %s not found SRP password file", gUser);
-      return auth;
-   }
-
-   char hexbuf[MAXHEXPARAMLEN];
-
-   // send n to client
-   NetSend(t_tob64(hexbuf, (char *) ts->n.data, ts->n.len), kROOTD_SRPN);
-   // send g to client
-   NetSend(t_tob64(hexbuf, (char *) ts->g.data, ts->g.len), kROOTD_SRPG);
-   // send salt to client
-   NetSend(t_tob64(hexbuf, (char *) ts->s.data, ts->s.len),
-           kROOTD_SRPSALT);
-
-   struct t_num *B = t_servergenexp(ts);
-
-   // receive A from client
-   EMessageTypes kind;
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error receiving A from client");
-      return auth;
-   }
-   if (kind != kROOTD_SRPA) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: expected kROOTD_SRPA message");
-      return auth;
-   }
-
-   unsigned char buf[MAXPARAMLEN];
-   struct t_num A;
-   A.data = buf;
-   A.len = t_fromb64((char *) A.data, hexbuf);
-
-   // send B to client
-   NetSend(t_tob64(hexbuf, (char *) B->data, B->len), kROOTD_SRPB);
-
-   t_servergetkey(ts, &A);
-
-   // receive response from client
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error receiving response from client");
-      return auth;
-   }
-   if (kind != kROOTD_SRPRESPONSE) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: expected kROOTD_SRPRESPONSE message");
-      return auth;
-   }
-
-   unsigned char cbuf[20];
-   t_fromhex((char *) cbuf, hexbuf);
-
-   if (!t_serververify(ts, cbuf)) {
-
-      // authentication successful
-      if (gDebug > 0)
-         ErrorInfo("RpdSRPUser: user %s authenticated", gUser);
-      auth = 1;
-      gSec = 1;
-
-      if (gClientProtocol > 8) {
-
-         char line[kMAXPATHLEN];
-         if ((gReUseAllow & gAUTH_SRP_MSK) && gReUseRequired) {
-
-            // Ask for the RSA key
-            NetSend(gRSAKey, kROOTD_RSAKEY);
-
-            // Receive the key securely
-            if (RpdRecvClientRSAKey()) {
-               ErrorInfo
-                   ("RpdSRPAuth: could not import a valid key"
-                    " - switch off reuse for this session");
-               gReUseRequired = 0;
-            }
-
-            // Set an entry in the auth tab file for later (re)use, if required ...
-            int offset = -1;
-            char *token = 0;
-            if (gReUseRequired) {
-               SPrintf(line, kMAXPATHLEN, "1 1 %d %d %s %s",
-                       gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-               offset = RpdUpdateAuthTab(1, line, &token);
-            }
-            // Comunicate login user name to client
-            SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-            NetSend(strlen(line), kROOTD_SRPUSER);   // Send message length first
-            NetSend(line, kMESS_STRING);
-
-            if (gReUseRequired && offset > -1) {
-               // Send Token
-               if (RpdSecureSend(token) == -1) {
-                  ErrorInfo("RpdSRPUser: problems secure-sending token"
-                            " - may result in corrupted token");
-               }
-               if (token) delete[] token;
-            }
-            gOffSet = offset;
-
-         } else {
-            // Comunicate login user name to client
-            SPrintf(line, kMAXPATHLEN, "%s -1", gUser);
-            NetSend(strlen(line), kROOTD_SRPUSER);   // Send message length first
-            NetSend(line, kMESS_STRING);
-         }
-
-      }
-
-   } else {
-      if (gClientProtocol > 8) {
-         NetSend(kErrBadPasswd, kROOTD_ERR);
-         ErrorInfo("RpdSRPUser: authentication failed for user %s", gUser);
-         return auth;
-      }
-   }
-
-   t_serverclose(ts);
-
-#else
-   NetSend(0, kROOTD_SRPUSER);
-#endif
-   return auth;
+   ::Error("RpdSRPUser", "SRP no longer supported by ROOT");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3665,9 +2281,6 @@ int RpdPass(const char *pass, int errheq)
    struct spwd *spw;
 #endif
    int afs_auth = 0;
-#ifdef R__AFS
-   char *reason;
-#endif
 
    if (gDebug > 2)
       ErrorInfo("RpdPass: Enter (pass length: %d)", (int)strlen(pass));
@@ -3731,18 +2344,6 @@ int RpdPass(const char *pass, int errheq)
       return auth;
    }
 
-#ifdef R__AFS
-   void *tok = GetAFSToken(gUser, passwd, 0, -1, &reason);
-   afs_auth = (tok) ? 1 : 0;
-   // We do not need the token anymore
-   DeleteAFSToken(tok);
-   if (!afs_auth) {
-      if (gDebug > 0)
-         ErrorInfo("RpdPass: AFS login failed for user %s: %s",
-                    gUser, reason);
-      // try conventional login...
-#endif
-
 #ifdef R__SHADOWPW
       // System V Rel 4 style shadow passwords
       if ((spw = getspnam(gUser)) == 0) {
@@ -3786,11 +2387,6 @@ int RpdPass(const char *pass, int errheq)
       }
       if (gDebug > 2)
          ErrorInfo("RpdPass: valid password for user %s", gUser);
-#ifdef R__AFS
-   } else                            // afs_auth
-      if (gDebug > 2)
-         ErrorInfo("RpdPass: AFS login successful for user %s", gUser);
-#endif
 
    authok:
    auth = afs_auth ? 5 : 1;
@@ -3858,393 +2454,30 @@ int RpdPass(const char *pass, int errheq)
 
 int RpdGlobusInit()
 {
-#ifdef R__GLBS
-   // Now we open the certificates and we check if we are able to
-   // autheticate the client. In the affirmative case we initialize
-   // our credentials and we send our subject name to the client ...
-   // NB: we look first for a specific certificate for ROOT (default
-   // location under /etc/grid-security/root); if this is does not
-   // work we try to open the host certificate, which however may
-   // require super-user privileges; finally we check if valid proxies
-   // (for the user who started the server) are available.
-   char *subject_name = 0;
-   int certRc = GlbsToolCheckCert(&subject_name);
-   if (certRc)
-      certRc = GlbsToolCheckProxy(&subject_name);
-   if (certRc) {
-      ErrorInfo("RpdGlobusInit: no valid server credentials found: globus disabled");
-      gHaveGlobus = 0;
-      return 1;
-   } else {
-
-      // Save the subject name
-      gGlobusSubjName = subject_name;
-      delete [] subject_name;
-
-      // Inquire Globus credentials:
-      // This is looking to file X509_USER_CERT for valid a X509 cert (default
-      // /etc/grid-security/hostcert.pem) and to dir X509_CERT_DIR for trusted CAs
-      // (default /etc/grid-security/certificates).
-      OM_uint32 majStat = 0;
-      OM_uint32 minStat = 0;
-      if ((majStat =
-           globus_gss_assist_acquire_cred(&minStat, GSS_C_ACCEPT,
-                                          &gGlbCredHandle)) !=
-          GSS_S_COMPLETE) {
-         GlbsToolError("RpdGlobusInit: gss_assist_acquire_cred", majStat,
-                       minStat, 0);
-         if (getuid() > 0)
-            ErrorInfo("RpdGlobusInit: non-root: make sure you have"
-                      " initialized (manually) your proxies");
-         return 1;
-      }
-   }
-#endif
-   // Done
-   return 0;
+   ::Error("RpdGlobusInit", "Globus is no longer supported by ROOT");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Authenticate via Globus.
 
-int RpdGlobusAuth(const char *sstr)
+int RpdGlobusAuth(const char *)
 {
-   int auth = 0;
-
-#ifndef R__GLBS
-
-   if (sstr) { }  // use sstr
-   NetSend(0, kROOTD_GLOBUS);
-   return auth;
-
-#else
-
-   if (!gHaveGlobus) {
-      // No valid credentials
-      if (sstr) { }  // use sstr
-      return auth;
-   }
-
-   OM_uint32 MajStat = 0;
-   OM_uint32 MinStat = 0;
-   OM_uint32 GssRetFlags = 0;
-   gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
-   gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
-   int GlbTokenStatus = 0;
-   char *GlbClientName;
-   FILE *FILE_SockFd;
-   const char *gridmap_default = "/etc/grid-security/grid-mapfile";
-   EMessageTypes kind;
-   int lSubj, offset = -1;
-   char *user = 0;
-   int ulen = 0;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: contacted by host: %s", gOpenHost.c_str());
-
-   // Tell the remote client that we may accept Globus credentials ...
-   NetSend(1, kROOTD_GLOBUS);
-
-   // Decode subject string
-   char Subj[kMAXPATHLEN];
-   int opt;
-   char dumm[20];
-   sscanf(sstr, "%d %d %d %d %4095s %19s", &gRemPid, &offset, &opt, &lSubj, Subj, dumm);
-
-   Subj[lSubj] = '\0';
-   gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-   if (gRSASSLKey) {
-      // Determine type of RSA key required
-      gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-   } else
-      gRSAKey = 1;
-#else
-   gRSAKey = 1;
-#endif
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: gRemPid: %d, Subj: %s (%d %d)", gRemPid,
-                Subj, lSubj, strlen(Subj));
-
-   if (gClientProtocol < 17) {
-      // GlbClientName will be determined from the security context ...
-      // Now wait for client to communicate the issuer name of the certificate ...
-      char *answer = new char[20];
-      NetRecv(answer, (int) sizeof(answer), kind);
-      if (kind != kMESS_STRING) {
-         Error(gErr, kErrAuthNotOK,
-                "RpdGlobusAuth: client_issuer_name:received unexpected"
-                " type of message (%d)",kind);
-         if (answer) delete[] answer;
-         return auth;
-      }
-      int client_issuer_name_len = atoi(answer);
-      if (answer) delete[] answer;
-      char *client_issuer_name = new char[client_issuer_name_len + 1];
-      NetRecv(client_issuer_name, client_issuer_name_len, kind);
-      if (kind != kMESS_STRING) {
-         Error(gErr, kErrAuthNotOK,
-               "RpdGlobusAuth: client_issuer_name:received unexpected"
-               " type of message (%d)",kind);
-         if (client_issuer_name) delete[] client_issuer_name;
-         return auth;
-      }
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
-                   client_issuer_name);
-   }
-
-   // Send our subject to the clients: it is needed to start
-   // the handshake
-   int sjlen = gGlobusSubjName.length() + 1;
-   int bsnd = NetSend(sjlen, kROOTD_GLOBUS);
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, 2 * sizeof(sjlen));
-   bsnd = NetSend(gGlobusSubjName.c_str(), sjlen, kMESS_STRING);
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, sjlen);
-
-   // We need to associate a FILE* stream with the socket
-   // It will automatically closed when the socket will be closed ...
-   FILE_SockFd = fdopen(NetGetSockFd(), "w+");
-
-   // Now we are ready to start negotiating with the Client
-   if ((MajStat =
-        globus_gss_assist_accept_sec_context(&MinStat, &GlbContextHandle,
-                                             gGlbCredHandle, &GlbClientName,
-                                             &GssRetFlags, 0,
-                                             &GlbTokenStatus,
-                                             &GlbDelCredHandle,
-                                             globus_gss_assist_token_get_fd,
-                                             (void *) FILE_SockFd,
-                                             globus_gss_assist_token_send_fd,
-                                             (void *) FILE_SockFd)) !=
-       GSS_S_COMPLETE) {
-      GlbsToolError("RpdGlobusAuth: gss_assist_accept_sec_context",
-                    MajStat, MinStat, GlbTokenStatus);
-      return auth;
-   } else {
-      auth = 1;
-      gSec = 3;
-      if (gDebug > 0)
-         ErrorInfo("RpdGlobusAuth: user: %s \n authenticated",
-                   GlbClientName);
-   }
-
-   // Check if there might be the need of credentials ...
-   if (gService == kPROOFD) {
-      // Check that we got delegation to autheticate the slaves
-      if (GssRetFlags | GSS_C_DELEG_FLAG) {
-         if (gDebug > 2)
-            ErrorInfo("RpdGlobusAuth: Pointer to del cred is %p", GlbDelCredHandle);
-      } else {
-         Error(gErr, kErrAuthNotOK,
-               "RpdGlobusAuth: did not get delegated credentials (RetFlags: 0x%x)",
-               GssRetFlags);
-         return auth;
-      }
-      // Now we have to export these delegated credentials to a shared memory segment
-      // for later use in 'proofserv' ...
-      //   credential= (gss_buffer_t)malloc(sizeof(gss_buffer_desc));
-      gss_buffer_t credential = new gss_buffer_desc;
-      if ((MajStat =
-           gss_export_cred(&MinStat, GlbDelCredHandle, 0, 0,
-                           credential)) != GSS_S_COMPLETE) {
-         GlbsToolError("RpdGlobusAuth: gss_export_cred", MajStat, MinStat,
-                       0);
-         return auth;
-      } else if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: credentials prepared for export");
-
-      // Now store it in shm for later use in proofserv ...
-      int rc;
-      if ((rc = GlbsToolStoreToShm(credential, &gShmIdCred))) {
-         ErrorInfo
-             ("RpdGlobusAuth: credentials not correctly stored in shm (rc: %d)",
-              rc);
-      }
-      if (gDebug > 2)
-         ErrorInfo
-             ("RpdGlobusAuth: credentials stored in shared memory segment %d",
-              gShmIdCred);
-
-      delete credential;
-   } else {
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: no need for delegated credentials (%s)",
-                   gServName[gService].c_str());
-   }
-
-   // For Now we set the gUser to the certificate owner using the gridmap file ...
-   // Should be understood if this is really necessary ...
-   if (getenv("GRIDMAP") == 0) {
-      // The installation did not specify a special location for the gridmap file
-      // We assume the usual default ...
-      setenv("GRIDMAP", gridmap_default, 1);
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: gridmap: using default file (%s)",
-                   gridmap_default);
-   } else if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: gridmap: using file %s",
-                getenv("GRIDMAP"));
-
-   // Get local login name for the subject ...
-   char AnonUser[10] = "rootd";
-   if (globus_gss_assist_gridmap(GlbClientName, &user)) {
-      if (gDebug > 2)
-         ErrorInfo
-             ("RpdGlobusAuth: unable to get local username from gridmap: using: %s",
-              AnonUser);
-      user = strdup(AnonUser);
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: user: %s", user);
-   }
-   if (!strcmp(user, "anonymous"))
-      user = strdup(AnonUser);
-   if (!strcmp(user, AnonUser))
-      gAnon = 1;
-
-   // No reuse for anonymous users
-   gReUseRequired = (gAnon == 1) ? 0 : gReUseRequired;
-
-   // Fill gUser and free allocated memory
-   ulen = strlen(user);
-   strncpy(gUser, user, ulen + 1);
-
-   char line[kMAXPATHLEN];
-   if ((gReUseAllow & gAUTH_GLB_MSK) && gReUseRequired) {
-
-      // Ask for the RSA key
-      NetSend(gRSAKey, kROOTD_RSAKEY);
-
-      // Receive the key securely
-      if (RpdRecvClientRSAKey()) {
-         ErrorInfo
-             ("RpdGlobusAuth: could not import a valid key"
-              " - switch off reuse for this session");
-         gReUseRequired = 0;
-      }
-
-      // Store security context and related info for later use ...
-      offset = -1;
-      char *token = 0;
-      if (gReUseRequired) {
-         int ShmId = GlbsToolStoreContext(GlbContextHandle, user);
-         if (ShmId > 0) {
-            SPrintf(line, kMAXPATHLEN, "3 1 %d %d %s %s %d %s",
-                    gRSAKey, gRemPid, gOpenHost.c_str(),
-                    user, ShmId, GlbClientName);
-            offset = RpdUpdateAuthTab(1, line, &token);
-         } else if (gDebug > 0)
-            ErrorInfo
-                ("RpdGlobusAuth: unable to export context to shm for later use");
-      }
-      // Comunicate login user name to client (and token)
-      SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-      NetSend(strlen(line), kROOTD_GLOBUS);   // Send message length first
-      NetSend(line, kMESS_STRING);
-
-      if (gReUseRequired && offset > -1) {
-         // Send Token
-         if (RpdSecureSend(token) == -1) {
-            ErrorInfo("RpdGlobusAuth: problems secure-sending token"
-                      " - may result in corrupted token");
-         }
-         if (token) delete[] token;
-      }
-      gOffSet = offset;
-   } else {
-      // Comunicate login user name to client (and token)
-      SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-      NetSend(strlen(line), kROOTD_GLOBUS);   // Send message length first
-      NetSend(line, kMESS_STRING);
-   }
-
-   // and free allocated memory
-   free(user);
-   free(GlbClientName);
-
-   if (gDebug > 0)
-      ErrorInfo("RpdGlobusAuth: client mapped to local user %s ", gUser);
-
-   return auth;
-
-#endif
+   ::Error("RpdGlobusInit", "Globus is no longer supported by ROOT");
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if user and group id specified in the request exist in the
-/// passwd file. If they do then grant access. Very insecure: to be used
-/// with care.
+/// RFIO protocol (no longer supported by ROOT)
 
-int RpdRfioAuth(const char *sstr)
+int RpdRfioAuth(const char *)
 {
-   int auth = 0;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdRfioAuth: analyzing ... %s", sstr);
-
-   if (!*sstr) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdRfioAuth: subject string is empty");
-      return auth;
-   }
-   // Decode subject string
-   unsigned int uid, gid;
-   sscanf(sstr, "%u %u", &uid, &gid);
-
-   // Now inquire passwd ...
-   struct passwd *pw;
-   if ((pw = getpwuid((uid_t) uid)) == 0) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdRfioAuth: uid %u not found", uid);
-      return auth;
-   }
-   // Check if authorized
-   char cuid[20];
-   SPrintf(cuid, 20, "%u", uid);
-   if (gUserIgnLen[5] > 0 && strstr(gUserIgnore[5], cuid) != 0) {
-      NetSend(kErrNotAllowed, kROOTD_ERR);
-      ErrorInfo
-          ("RpdRfioAuth: user (%u,%s) not authorized to use (uid:gid) method",
-           uid, pw->pw_name);
-      return auth;
-   }
-   if (gUserAlwLen[5] > 0 && strstr(gUserAllow[5], cuid) == 0) {
-      NetSend(kErrNotAllowed, kROOTD_ERR);
-      ErrorInfo
-          ("RpdRfioAuth: user (%u,%s) not authorized to use (uid:gid) method",
-           uid, pw->pw_name);
-      return auth;
-   }
-
-   // Now check group id ...
-   if (gid != (unsigned int) pw->pw_gid) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo
-          ("RpdRfioAuth: group id does not match (remote:%u,local:%u)",
-           gid, (unsigned int) pw->pw_gid);
-      return auth;
-   }
-   // Set username ....
-   strlcpy(gUser, pw->pw_name, sizeof(gUser));
-
-
-   // Notify, if required ...
-   if (gDebug > 0)
-      ErrorInfo("RpdRfioAuth: user %s authenticated (uid:%u, gid:%u)",
-                gUser, uid, gid);
-
-   // Set Auth flag
-   auth = 1;
-   gSec = 5;
-
-   return auth;
+   ::Error("RpdRfioAuth", "RfioAuth no longer supported by ROOT");
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Terminate correctly by cleaning up the auth table (and shared
-/// memories in case of Globus) and closing the file.
+/// Terminate correctly by cleaning up the auth table and closing the file.
 /// Called upon receipt of a kROOTD_CLEANUP and on SIGPIPE.
 
 void RpdAuthCleanup(const char *sstr, int opt)
@@ -4318,40 +2551,14 @@ void RpdDefaultAuthAllow()
    gNumAllow++;
    gNumLeft++;
 
-   // SSH
-   gAllowMeth[gNumAllow] = 4;
-   gNumAllow++;
-   gNumLeft++;
-
-   // SRP
-#ifdef R__SRP
-   gAllowMeth[gNumAllow] = 1;
-   gNumAllow++;
-   gNumLeft++;
-#else
-   // Don't have this method
+   // No SRP method
    gHaveMeth[1] = 0;
-#endif
 
-   // Kerberos
-#ifdef R__KRB5
-   gAllowMeth[gNumAllow] = 2;
-   gNumAllow++;
-   gNumLeft++;
-#else
-   // Don't have this method
+   // No Kerberos method
    gHaveMeth[2] = 0;
-#endif
 
-   // Globus
-#ifdef R__GLBS
-   gAllowMeth[gNumAllow] = 3;
-   gNumAllow++;
-   gNumLeft++;
-#else
-   // Don't have this method
+   // No Globus method
    gHaveMeth[3] = 0;
-#endif
 
    if (gDebug > 2) {
       int i;
@@ -4416,123 +2623,6 @@ int RpdCheckDaemon(const char *daemon)
       ErrorInfo("RpdCheckDaemon: problems executing cmd ...");
    }
    return cnt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Tries to connect to sshd daemon on its standard port (22)
-/// Used if RpdCheckDaemon returns a negative result
-
-int RpdCheckSshd(int opt)
-{
-   if (gDebug > 2)
-      ErrorInfo("RpdCheckSshd: Enter ... ");
-
-   int rc = 0;
-   if (opt == 0) {
-
-      //
-      // Check netstat output ...
-      //
-
-      // build check string
-      char cs[20];
-      SPrintf(cs, 20, ":%d",gSshdPort);
-
-      // Run 'netstat' to check listening processes
-      char cmd[kMAXPATHLEN] = { 0 };
-      SPrintf(cmd, kMAXPATHLEN,
-           "netstat -apn 2>/dev/null | grep LISTEN | grep -v LISTENING");
-      FILE *fp= popen(cmd,"r");
-      if (fp != 0) {
-         while (fgets(cmd, sizeof(cmd), fp) != 0) {
-            if (gDebug > 3)
-               ErrorInfo("RpdCheckSshd: read: %s",cmd);
-            if (strstr(cmd,cs)) {
-               rc = 1;
-               break;
-            }
-         }
-         pclose(fp);
-      } else {
-         ErrorInfo("RpdCheckSshd: Problems executing 'netstat' ...");
-      }
-
-      if (gDebug > 2 && rc) {
-         ErrorInfo("RpdCheckSshd: %s: %s %d", "diagnostics report",
-                   "something is listening on port", gSshdPort);
-      }
-
-      if (!rc) {
-         ErrorInfo("RpdCheckSshd: nothing seem to listening on port %d",
-                   gSshdPort);
-      }
-
-   } else if (opt == 1) {
-
-      //
-      // Open a socket on port gSshdPort ...
-      //
-
-      // First get local host address
-      struct hostent *h = gethostbyname("localhost");
-      if (h == 0) {
-         // Make further attempt with HOSTNAME
-         if (getenv("HOSTNAME") == 0) {
-            ErrorInfo("RpdCheckSshd: unable to resolve local host name");
-            return 0;
-         } else {
-            h = gethostbyname(getenv("HOSTNAME"));
-            if (h == 0) {
-               ErrorInfo
-                   ("RpdCheckSshd: local host name is unknown to gethostbyname: '%s'",
-                    getenv("HOSTNAME"));
-               return 0;
-            }
-         }
-      }
-
-      // Fill relevant sockaddr_in structure
-      struct sockaddr_in servAddr;
-      servAddr.sin_zero[0] = 0;
-      servAddr.sin_family = h->h_addrtype;
-      memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0],
-             h->h_length);
-      servAddr.sin_port = htons(gSshdPort);
-
-      // create AF_INET socket
-      int sd = socket(AF_INET, SOCK_STREAM, 0);
-      if (sd < 0) {
-         ErrorInfo("RpdCheckSshd: cannot open new AF_INET socket (errno:%d) ",
-                   errno);
-         return 0;
-      }
-
-      /* bind any port number */
-      struct sockaddr_in localAddr;
-      localAddr.sin_zero[0] = 0;
-      localAddr.sin_family = AF_INET;
-      localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-      localAddr.sin_port = htons(0);
-      if (bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr)) < 0) {
-         ErrorInfo("RpdCheckSshd: cannot bind to local port %u", gSshdPort);
-         close(sd);
-         return 0;
-      }
-      // connect to server
-      if (connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
-         ErrorInfo("RpdCheckSshd: cannot connect to local port %u",
-                   gSshdPort);
-         close(sd);
-         return 0;
-      }
-      close(sd);
-      // Sshd successfully contacted
-      if (gDebug > 2)
-         ErrorInfo("RpdCheckSshd: success!");
-      rc = 1;
-   }
-
-   return rc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4665,9 +2755,6 @@ int RpdUser(const char *sstr)
          errrdp = (rcsp == -2) ? 3 : 0;
 
       if (!passw[0] || !strcmp(passw, "x")) {
-#ifdef R__AFS
-         gSaltRequired = 0;
-#else
 
 #ifdef R__SHADOWPW
          struct spwd *spw = 0;
@@ -4694,7 +2781,6 @@ int RpdUser(const char *sstr)
                  user);
             return auth;
          }
-#endif
       }
    }
    // Ok: Save username and go to next steps
@@ -4749,13 +2835,14 @@ int RpdUser(const char *sstr)
                   strncpy(salt, passw, lenS);
                   salt[lenS] = 0;
                }
+
                if (gDebug > 2)
                   ErrorInfo("RpdUser: salt: '%s' ",salt);
 
                // We add the random tag here
                if (gClientProtocol > 11) {
-                  strncpy(&salt[lenS],ctag,10);
-                  salt[lenS+10] = 0;
+                  strncat(salt, ctag, sizeof(salt) - sizeof(ctag) - 1);
+                  salt[sizeof(salt) - 1] = '\0';
                }
 
                // Send it over encrypted
@@ -4901,18 +2988,6 @@ int RpdGuessClientProt(const char *buf, EMessageTypes kind)
       char usr[64], rest[256];
       int ns = sscanf(buf, "%63s %255s", usr, rest);
       if (ns == 1)
-         proto = 8;
-   }
-   // SRP authentication
-   if (kind == kROOTD_SRPUSER) {
-      char usr[64], rest[256];
-      int ns = sscanf(buf, "%63s %255s", usr, rest);
-      if (ns == 1)
-         proto = 8;
-   }
-   // Kerberos authentication
-   if (kind == kROOTD_KRB5) {
-      if (!buf[0])
          proto = 8;
    }
 
@@ -5194,15 +3269,13 @@ int RpdSecureSend(char *str)
    char buftmp[kMAXSECBUF];
    char buflen[20];
 
-   int slen = strlen(str) + 1;
-
    int ttmp = 0;
    int nsen = -1;
 
    if (gRSAKey == 1) {
-      strncpy(buftmp, str, std::min( slen, kMAXSECBUF));
-      buftmp[slen] = 0;
-      ttmp = rsa_encode(buftmp, slen, gRSA_n, gRSA_d);
+      strncpy(buftmp, str, sizeof(buftmp) - 1);
+      buftmp[kMAXSECBUF - 1] = '\0';
+      ttmp = rsa_encode(buftmp, strlen(buftmp) + 1, gRSA_n, gRSA_d);
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
       ttmp = strlen(str);
@@ -5763,8 +3836,7 @@ int RpdAuthenticate()
          }
 
          // Then check if a previous authentication exists and is valid
-         // ReUse does not apply for RFIO
-         if (kind != kROOTD_RFIO && (auth = RpdReUseAuth(buf, kind)))
+         if ((auth = RpdReUseAuth(buf, kind)))
             goto next;
       }
 
@@ -5775,23 +3847,8 @@ int RpdAuthenticate()
          case kROOTD_USER:
             auth = RpdUser(buf);
             break;
-         case kROOTD_SRPUSER:
-            auth = RpdSRPUser(buf);
-            break;
          case kROOTD_PASS:
             auth = RpdPass(buf);
-            break;
-         case kROOTD_KRB5:
-            auth = RpdKrb5Auth(buf);
-            break;
-         case kROOTD_GLOBUS:
-            auth = RpdGlobusAuth(buf);
-            break;
-         case kROOTD_SSH:
-            auth = RpdSshAuth(buf);
-            break;
-         case kROOTD_RFIO:
-            auth = RpdRfioAuth(buf);
             break;
          case kROOTD_CLEANUP:
             RpdAuthCleanup(buf,1);
@@ -5800,7 +3857,6 @@ int RpdAuthenticate()
          case kROOTD_BYE:
             RpdFreeKeys();
             return auth;
-            break;
          default:
             Error(gErr,-1,"RpdAuthenticate: received bad opcode %d", kind);
             return auth;
@@ -5809,11 +3865,7 @@ int RpdAuthenticate()
       if (gClientProtocol > 8) {
 
          // If failure prepare or continue negotiation
-         // Don't do this if this was a SSH notification failure
-         // because in such a case it was already done in the
-         // appropriate daemon child
-         int doneg = (gAuthProtocol != -1 || kind == kROOTD_PASS) &&
-                     (gRemPid > 0 || kind != kROOTD_SSH);
+         int doneg = (gAuthProtocol != -1 || kind == kROOTD_PASS);
          if (gDebug > 2 && doneg)
             ErrorInfo("RpdAuthenticate: kind:%d meth:%d auth:%d gNumLeft:%d",
                       kind, gAuthProtocol, auth, gNumLeft);
@@ -5885,14 +3937,13 @@ int RpdProtocol(int ServType)
       return -1;
    }
 
-   // if kind is {kROOTD_PROTOCOL, kROOTD_CLEANUP, kROOTD_SSH}
+   // if kind is {kROOTD_PROTOCOL, kROOTD_CLEANUP}
    // receive the rest
    kind = (EMessageTypes) ntohl(lbuf[1]);
    int len = ntohl(lbuf[0]);
    if (gDebug > 1)
       ErrorInfo("RpdProtocol: kind: %d %d",kind,len);
-   if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP ||
-       kind == kROOTD_SSH) {
+   if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP) {
       // Receive the rest
       char *buf = 0;
       len -= sizeof(int);
@@ -6039,14 +4090,6 @@ int RpdProtocol(int ServType)
             }
             done = 1;
             break;
-         case kROOTD_SSH:
-            // Failure notification ...
-            RpdSshAuth(proto);
-            NetSend(kErrAuthNotOK, kROOTD_ERR);
-            ErrorInfo("RpdProtocol: SSH failure notified");
-            rc = -2;
-            done = 1;
-            break;
          default:
             ErrorInfo("RpdProtocol: received bad option (%d)",kind);
             rc = -1;
@@ -6080,30 +4123,6 @@ int RpdLogin(int ServType, int auth)
    }
 
    if (getuid() == 0) {
-
-#ifdef R__GLBS
-      if (ServType == 2) {
-         // We need to change the ownership of the shared memory segments used
-         // for credential export to allow proofserv to destroy them
-         struct shmid_ds shm_ds;
-         if (gShmIdCred > 0) {
-            if (shmctl(gShmIdCred, IPC_STAT, &shm_ds) == -1) {
-               ErrorInfo("RpdLogin: can't get info about shared memory"
-                         " segment %d (errno: %d)",gShmIdCred,GetErrno());
-               return -1;
-            }
-            shm_ds.shm_perm.uid = pw->pw_uid;
-            shm_ds.shm_perm.gid = pw->pw_gid;
-            if (shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1) {
-               ErrorInfo("RpdLogin: can't change ownership of shared"
-                         " memory segment %d (errno: %d)",
-                         gShmIdCred,GetErrno());
-               return -1;
-            }
-         }
-      }
-#endif
-      //
       // Anonymous users are confined to their corner
       if (gAnon) {
          // We need to do it before chroot, otherwise it does not work
@@ -6436,13 +4455,12 @@ int RpdSetUid(int uid)
 /// Change defaults job control options.
 
 void RpdInit(EService serv, int pid, int sproto, unsigned int options,
-             int rumsk, int sshp, const char *tmpd, const char *asrpp, int login)
+             int rumsk, int, const char *tmpd, const char * /* asrpp */, int login)
 {
    gService        = serv;
    gParentId       = pid;
    gServerProtocol = sproto;
    gReUseAllow     = rumsk;
-   gSshdPort       = sshp;
    gDoLogin        = login;
 
    // Parse options
@@ -6461,18 +4479,9 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
    gRpdKeyRoot.append(ItoA(getuid()));
    gRpdKeyRoot.append("_");
 
-   if (asrpp && strlen(asrpp))
-      gAltSRPPass  = asrpp;
-
-#ifdef R__GLBS
-   // Init globus
-   if (RpdGlobusInit() != 0)
-      ErrorInfo("RpdInit: failure initializing globus authentication");
-#endif
-
    if (gDebug > 0) {
-      ErrorInfo("RpdInit: gService= %s, gSysLog= %d, gSshdPort= %d",
-                 gServName[gService].c_str(), gSysLog, gSshdPort);
+      ErrorInfo("RpdInit: gService= %s, gSysLog= %d",
+                 gServName[gService].c_str(), gSysLog);
       ErrorInfo("RpdInit: gParentId= %d", gParentId);
       ErrorInfo("RpdInit: gRequireAuth= %d, gCheckHostEquiv= %d",
                  gRequireAuth, gCheckHostsEquiv);
@@ -6481,11 +4490,6 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
       ErrorInfo("RpdInit: gDoLogin= %d", gDoLogin);
       if (tmpd)
          ErrorInfo("RpdInit: gTmpDir= %s", gTmpDir.c_str());
-      if (asrpp)
-         ErrorInfo("RpdInit: gAltSRPPass= %s", gAltSRPPass.c_str());
-#ifdef R__GLBS
-      ErrorInfo("RpdInit: gHaveGlobus: %d", (int) gHaveGlobus);
-#endif
    }
 }
 
@@ -6554,17 +4558,6 @@ void RpdSetErrorHandler(ErrorHandler_t err, ErrorHandler_t sys, ErrorHandler_t f
    gErrSys   = sys;
    gErrFatal = fatal;
 }
-
-#ifdef R__GLBS
-////////////////////////////////////////////////////////////////////////////////
-/// Returns shared memory id
-
-int RpdGetShmIdCred()
-{
-   return gShmIdCred;
-}
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve specific ROOT password from $HOME/fpw, if any.

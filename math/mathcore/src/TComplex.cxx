@@ -16,8 +16,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TComplex.h"
-#include "Riostream.h"
-
+#include <iostream>
+#include <sstream>
 
 ClassImp(TComplex);
 
@@ -50,4 +50,13 @@ std::istream& operator>>(std::istream& in, TComplex& c)
 {
    in >> c.fRe >> c.fIm;
    return in;
+}
+
+namespace cling {
+std::string printValue(TComplex *c)
+{
+   std::stringstream s;
+   s << *c;
+   return s.str();
+}
 }

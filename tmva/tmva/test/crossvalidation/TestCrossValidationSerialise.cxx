@@ -140,7 +140,7 @@ void TestContex::setUpCrossValidation(TString jobname, TMVA::Types::EMVA methodT
 
    fCrossEvaluate = new TMVA::CrossValidation(
       jobname, dataloader, &fOutputFile,
-      "!V:Silent:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])");
+      "!V:Silent:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitType=Deterministic:SplitExpr=int([EventNumber])%int([NumFolds])");
 
    fCrossEvaluate->BookMethod(methodType, methodName, methodOptions);
    std::cout << "Done setting cross validation up" << std::endl;
@@ -207,7 +207,7 @@ void TestContex::verifyApplicationPhase()
 
    for (UInt_t iEvent = 0; iEvent < fEvaluationResults.size(); ++iEvent) {
 
-      if (not TMath::AreEqualAbs(fEvaluationResults[iEvent], fApplicationResults[iEvent], 1e-5)) {
+      if (!TMath::AreEqualAbs(fEvaluationResults[iEvent], fApplicationResults[iEvent], 1e-5)) {
          std::cout << "eval:appl[" << iEvent << "] -- " << fEvaluationResults[iEvent] << ":"
                    << fApplicationResults[iEvent] << std::endl;
          throw std::runtime_error("Output not equal!");

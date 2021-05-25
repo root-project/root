@@ -34,6 +34,7 @@
 #include "TGeoArb8.h"
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoTessellated.h"
 #include "TGeoPhysicalNode.h"
 
 Bool_t comments = kTRUE;
@@ -233,6 +234,7 @@ void geodemo ()
    bar->AddButton("Tube        ","tube()","A tube with inner and outer radius");
    bar->AddButton("Tube segment","tubeseg()","A tube segment");
    bar->AddButton("Twisted trap","gtra()","A twisted trapezoid");
+   bar->AddButton("Tessellated ","tessellated()","A tessellated shape");
    bar->AddButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
    bar->AddButton("Un-aligned","align()","Some alignment operation");
    bar->AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
@@ -1624,7 +1626,118 @@ void xtru()
    pt->Draw();
    c->cd(1);
 }
+//______________________________________________________________________________
+void tessellated()
+{
+   // Create a [triacontahedron solid](https://en.wikipedia.org/wiki/Rhombic_triacontahedron)
+   gROOT->GetListOfCanvases()->Delete();
+   TCanvas *c = new TCanvas("tessellated shape", "A tessellated shape", 700,1000);
+   if (comments) {
+      c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
+      c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
+   }
+   if (gGeoManager) delete gGeoManager;
+   new TGeoManager("tessellated", "tessellated");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,10,10,10);
+   gGeoManager->SetTopVolume(top);
+   TGeoTessellated *tsl = new TGeoTessellated("triaconthaedron", 30);
+   const Double_t sqrt5 = TMath::Sqrt(5.);
+   std::vector<Tessellated::Vertex_t> vert;
+   vert.reserve(120);
+   vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 1, -1);
+   vert.emplace_back(1, 1, -1); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5));
+   vert.emplace_back(1, 1, -1); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0.5 * (-1 + sqrt5),  0.5 * (1 + sqrt5), 0); vert.emplace_back(0.5 * (1 + sqrt5), 1, 0);
+   vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), 1);
+   vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(-1, 1, -1); vert.emplace_back(0.5 * (-1 - sqrt5), 1, 0);
+   vert.emplace_back(1, 1, -1); vert.emplace_back(0.5 * (1 + sqrt5), 1, 0); vert.emplace_back(0.5 * (1 + sqrt5), 0, 0.5 * (1 - sqrt5)); vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5));
+   vert.emplace_back(0.5 * (1 + sqrt5), 0, 0.5 * (1 - sqrt5)); vert.emplace_back(0.5 * (1 + sqrt5), -1, 0); vert.emplace_back(1, -1, -1); vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5));
+   vert.emplace_back(1, -1, -1); vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1); vert.emplace_back(0, 0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5));
+   vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(0, 0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5));
+   vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0.5 * (1 + sqrt5), 1, 0); vert.emplace_back(1, 1, 1); vert.emplace_back(0, 0.5 * (1 + sqrt5), 1);
+   vert.emplace_back(0.5 * (1 + sqrt5), 1, 0); vert.emplace_back(1, 1, 1); vert.emplace_back(1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(0.5 * (1 + sqrt5), 0, 0.5 * (-1 + sqrt5));
+   vert.emplace_back(0.5 * (1 + sqrt5), 0, 0.5 * (1 - sqrt5)); vert.emplace_back(0.5 * (1 + sqrt5), 1, 0); vert.emplace_back(0.5 * (1 + sqrt5), 0, 0.5 * (-1 + sqrt5)); vert.emplace_back(0.5 * (1 + sqrt5), -1, 0);
+   vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), 1); vert.emplace_back(-1, 1, 1); vert.emplace_back(0.5 * (-1 - sqrt5), 1, 0);
+   vert.emplace_back(0, 0.5 * (1 + sqrt5), 1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (1 + sqrt5)); vert.emplace_back(-1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(-1, 1, 1);
+   vert.emplace_back(1, 1, 1); vert.emplace_back(0, 0.5 * (1 + sqrt5), 1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (1 + sqrt5)); vert.emplace_back(1, 0, 0.5 * (1 + sqrt5));
+   vert.emplace_back(0, 0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5)); vert.emplace_back(-1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (1 + sqrt5)); vert.emplace_back(1, 0, 0.5 * (1 + sqrt5));
+   vert.emplace_back(0, 0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5)); vert.emplace_back(1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(1, -1, 1); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1);
+   vert.emplace_back(0.5 * (1 + sqrt5), 0, 0.5 * (-1 + sqrt5)); vert.emplace_back(0.5 * (1 + sqrt5), -1, 0); vert.emplace_back(1, -1, 1); vert.emplace_back(1, 0, 0.5 * (1 + sqrt5));
+   vert.emplace_back(-1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(-1, 1, 1); vert.emplace_back(0.5 * (-1 - sqrt5), 1, 0); vert.emplace_back(0.5 * (-1 - sqrt5), 0, 0.5 * (-1 + sqrt5));
+   vert.emplace_back(-1, -1, 1); vert.emplace_back(-1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(0.5 * (-1 - sqrt5), 0, 0.5 * (-1 + sqrt5)); vert.emplace_back(0.5 * (-1 - sqrt5), -1, 0);
+   vert.emplace_back(0, 0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5)); vert.emplace_back(-1, 0, 0.5 * (1 + sqrt5)); vert.emplace_back(-1, -1, 1); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1);
+   vert.emplace_back(0.5 * (-1 - sqrt5), -1, 0); vert.emplace_back(0.5 * (-1 - sqrt5), 0, 0.5 * (1 - sqrt5)); vert.emplace_back(0.5 * (-1 - sqrt5), 1, 0); vert.emplace_back(0.5 * (-1 - sqrt5), 0, 0.5 * (-1 + sqrt5));
+   vert.emplace_back(0.5 * (-1 - sqrt5), -1, 0); vert.emplace_back(0.5 * (-1 - sqrt5), 0, 0.5 * (1 - sqrt5)); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, -1, -1);
+   vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1); vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5), 0); vert.emplace_back(0.5 * (-1 - sqrt5), -1, 0); vert.emplace_back(-1, -1, -1);
+   vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5), 0); vert.emplace_back(0.5 * (-1 - sqrt5), -1, 0); vert.emplace_back(-1, -1, 1); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1);
+   vert.emplace_back(-1, 1, -1); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(0.5 * (-1 - sqrt5), 0, 0.5 * (1 - sqrt5)); vert.emplace_back(0.5 * (-1 - sqrt5), 1, 0);
+   vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1); vert.emplace_back(0, 0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, -1, -1);
+   vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1); vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5), 0); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0);
+   vert.emplace_back(1, -1, -1); vert.emplace_back(0.5 * (1 + sqrt5), -1, 0); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0); vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1);
+   vert.emplace_back(0.5 * (1 + sqrt5), -1, 0); vert.emplace_back(1, -1, 1); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0);
 
+   tsl->AddFacet(vert[0], vert[1], vert[2], vert[3]);
+   tsl->AddFacet(vert[4], vert[7], vert[6], vert[5]);
+   tsl->AddFacet(vert[8], vert[9], vert[10], vert[11]);
+   tsl->AddFacet(vert[12], vert[15], vert[14], vert[13]);
+   tsl->AddFacet(vert[16], vert[17], vert[18], vert[19]);
+   tsl->AddFacet(vert[20], vert[21], vert[22], vert[23]);
+   tsl->AddFacet(vert[24], vert[25], vert[26], vert[27]);
+   tsl->AddFacet(vert[28], vert[29], vert[30], vert[31]);
+   tsl->AddFacet(vert[32], vert[35], vert[34], vert[33]);
+   tsl->AddFacet(vert[36], vert[39], vert[38], vert[37]);
+   tsl->AddFacet(vert[40], vert[41], vert[42], vert[43]);
+   tsl->AddFacet(vert[44], vert[45], vert[46], vert[47]);
+   tsl->AddFacet(vert[48], vert[51], vert[50], vert[49]);
+   tsl->AddFacet(vert[52], vert[55], vert[54], vert[53]);
+   tsl->AddFacet(vert[56], vert[57], vert[58], vert[59]);
+   tsl->AddFacet(vert[60], vert[63], vert[62], vert[61]);
+   tsl->AddFacet(vert[64], vert[67], vert[66], vert[65]);
+   tsl->AddFacet(vert[68], vert[71], vert[70], vert[69]);
+   tsl->AddFacet(vert[72], vert[73], vert[74], vert[75]);
+   tsl->AddFacet(vert[76], vert[77], vert[78], vert[79]);
+   tsl->AddFacet(vert[80], vert[81], vert[82], vert[83]);
+   tsl->AddFacet(vert[84], vert[87], vert[86], vert[85]);
+   tsl->AddFacet(vert[88], vert[89], vert[90], vert[91]);
+   tsl->AddFacet(vert[92], vert[93], vert[94], vert[95]);
+   tsl->AddFacet(vert[96], vert[99], vert[98], vert[97]);
+   tsl->AddFacet(vert[100], vert[101], vert[102], vert[103]);
+   tsl->AddFacet(vert[104], vert[107], vert[106], vert[105]);
+   tsl->AddFacet(vert[108], vert[111], vert[110], vert[109]);
+   tsl->AddFacet(vert[112], vert[113], vert[114], vert[115]);
+   tsl->AddFacet(vert[116], vert[117], vert[118], vert[119]);
+
+   TGeoVolume *vol = new TGeoVolume("TRIACONTHAEDRON", tsl, med);
+   vol->SetLineColor(randomColor());
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   top->Draw();
+   MakePicture();
+   if (!comments) return;
+   c->cd(2);
+   TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
+   pt->SetLineColor(1);
+   TText *text = pt->AddText("TGeoTessellated - Tessellated shape class");
+   text->SetTextColor(2);
+   AddText(pt,"fNfacets",tsl->GetNfacets(),"number of facets");
+   AddText(pt,"fNvertices",tsl->GetNvertices(),"number of vertices");
+   pt->AddText("----- A tessellated shape is defined by the number of facets");
+   pt->AddText("-----    facets can be added using AddFacet");
+   pt->AddText("----- Create with:    TGeoTessellated *tsl = new TGeoTessellated(nfacets);");
+   pt->AddText(" ");
+   pt->SetAllWith("-----","color",2);
+   pt->SetAllWith("-----","font",72);
+   pt->SetAllWith("-----","size",0.04);
+   pt->SetTextAlign(12);
+   pt->SetTextSize(0.044);
+   pt->Draw();
+   c->cd(1);
+}
 //______________________________________________________________________________
 void composite()
 {

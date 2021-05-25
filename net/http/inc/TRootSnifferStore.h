@@ -23,14 +23,13 @@ class TFolder;
 
 class TRootSnifferStore : public TObject {
 protected:
-   void *fResPtr;           ///<! pointer on found item
-   TClass *fResClass;       ///<! class of found item
-   TDataMember *fResMember; ///<! datamember pointer of found item
-   Int_t fResNumChilds;     ///<! count of found childs, -1 by default
-   Int_t fResRestrict;      ///<! restriction for result, 0-default, 1-readonly, 2-full
+   void *fResPtr{nullptr};           ///<! pointer on found item
+   TClass *fResClass{nullptr};       ///<! class of found item
+   TDataMember *fResMember{nullptr}; ///<! datamember pointer of found item
+   Int_t fResNumChilds{-1};          ///<! count of found childs, -1 by default
+   Int_t fResRestrict{0};            ///<! restriction for result, 0-default, 1-readonly, 2-full
 public:
-   TRootSnifferStore();
-   virtual ~TRootSnifferStore();
+   virtual ~TRootSnifferStore() = default;
 
    virtual void CreateNode(Int_t, const char *) {}
    virtual void SetField(Int_t, const char *, const char *, Bool_t) {}
@@ -55,24 +54,22 @@ public:
 
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
-   TString *fBuf;   ///<! output buffer
-   Bool_t fCompact; ///<! produce compact xml code
+   TString &fBuf;           ///<! output buffer
+   Bool_t fCompact{kFALSE}; ///<! produce compact xml code
 
 public:
-   TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(&_buf), fCompact(_compact)
+   explicit TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(_buf), fCompact(_compact)
    {
    }
 
-   virtual ~TRootSnifferStoreXml() {}
+   void CreateNode(Int_t lvl, const char *nodename) final;
+   void SetField(Int_t lvl, const char *field, const char *value, Bool_t) final;
+   void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t) final;
+   void CloseNode(Int_t lvl, Int_t numchilds) final;
 
-   virtual void CreateNode(Int_t lvl, const char *nodename);
-   virtual void SetField(Int_t lvl, const char *field, const char *value, Bool_t);
-   virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t);
-   virtual void CloseNode(Int_t lvl, Int_t numchilds);
+   Bool_t IsXml() const final { return kTRUE; }
 
-   virtual Bool_t IsXml() const { return kTRUE; }
-
-   ClassDef(TRootSnifferStoreXml, 0) // xml results store of objects sniffer
+   ClassDefOverride(TRootSnifferStoreXml, 0) // xml results store of objects sniffer
 };
 
 // ========================================================================
@@ -81,20 +78,19 @@ public:
 
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
-   TString *fBuf;   ///<! output buffer
-   Bool_t fCompact; ///<! produce compact json code
+   TString &fBuf;           ///<! output buffer
+   Bool_t fCompact{kFALSE}; ///<! produce compact json code
 public:
-   TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(&_buf), fCompact(_compact)
+   explicit TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(_buf), fCompact(_compact)
    {
    }
-   virtual ~TRootSnifferStoreJson() {}
 
-   virtual void CreateNode(Int_t lvl, const char *nodename);
-   virtual void SetField(Int_t lvl, const char *field, const char *value, Bool_t with_quotes);
-   virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t nfld);
-   virtual void CloseNode(Int_t lvl, Int_t numchilds);
+   void CreateNode(Int_t lvl, const char *nodename) final;
+   void SetField(Int_t lvl, const char *field, const char *value, Bool_t with_quotes) final;
+   void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t nfld) final;
+   void CloseNode(Int_t lvl, Int_t numchilds) final;
 
-   ClassDef(TRootSnifferStoreJson, 0) // json results store of objects sniffer
+   ClassDefOverride(TRootSnifferStoreJson, 0) // json results store of objects sniffer
 };
 
 #endif

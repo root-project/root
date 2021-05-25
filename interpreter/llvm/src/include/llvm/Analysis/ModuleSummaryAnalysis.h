@@ -1,9 +1,8 @@
 //===- ModuleSummaryAnalysis.h - Module summary index builder ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -14,13 +13,17 @@
 #ifndef LLVM_ANALYSIS_MODULESUMMARYANALYSIS_H
 #define LLVM_ANALYSIS_MODULESUMMARYANALYSIS_H
 
-#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/IR/ModuleSummaryIndex.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
+#include <functional>
 
 namespace llvm {
+
 class BlockFrequencyInfo;
+class Function;
+class Module;
 class ProfileSummaryInfo;
 
 /// Direct function to compute a \c ModuleSummaryIndex from a given module.
@@ -38,10 +41,11 @@ ModuleSummaryIndex buildModuleSummaryIndex(
 class ModuleSummaryIndexAnalysis
     : public AnalysisInfoMixin<ModuleSummaryIndexAnalysis> {
   friend AnalysisInfoMixin<ModuleSummaryIndexAnalysis>;
+
   static AnalysisKey Key;
 
 public:
-  typedef ModuleSummaryIndex Result;
+  using Result = ModuleSummaryIndex;
 
   Result run(Module &M, ModuleAnalysisManager &AM);
 };
@@ -70,6 +74,7 @@ public:
 // object for the module, to be written to bitcode or LLVM assembly.
 //
 ModulePass *createModuleSummaryIndexWrapperPass();
-}
 
-#endif
+} // end namespace llvm
+
+#endif // LLVM_ANALYSIS_MODULESUMMARYANALYSIS_H

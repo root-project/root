@@ -32,91 +32,81 @@
 #include "TGFileDialog.h"
 #include "TGMsgBox.h"
 #include "TSystem.h"
-#include "TApplication.h"
 #include "TRootHelpDialog.h"
 #include "TGListTree.h"
 #include "TImage.h"
-#include "TTimer.h"
 #include "TGTextEdit.h"
 #include "TGTab.h"
 #include "TGListBox.h"
 #include "TGComboBox.h"
 #include "TGProgressBar.h"
+#include "TVirtualX.h"
 
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TRootGuiBuilder
-//
-//
-//  ************************************************
-//                ROOT GUI Builder principles
-//  ************************************************
-//
-//  With the GUI builder, we try to make the next step from WYSIWYG
-//  to embedded editing concept - WYSIWYE ("what you see is what you edit").
-//  The ROOT GUI Builder allows modifying real GUI objects.
-//  For example, one can edit the existing GUI application created by
-//  $ROOTSYS/tutorials/gui/guitest.C.
-//  GUI components can be added to a design area from a widget palette,
-//  or can be borrowed from another application.
-//  One can drag and and drop TCanvas's menu bar into the application.
-//  GUI objects can be resized and dragged, copied and pasted.
-//  ROOT GUI Builder allows changing the layout, snap to grid, change object's
-//  layout order via the GUI Builder toolbar, or by options in the right-click
-//  context menus.
-//  A final design can be immediatly tested and used, or saved as a C++ macro.
-//  For example, it's possible to rearrange buttons in control bar,
-//  add separators etc. and continue to use a new fancy control bar in the
-//  application.
-//
-//  ************************************************
-//
-//  The following is a short description of the GUI Builder actions and key shortcuts:
-//
-//   o Press Ctrl-Double-Click to start/stop edit mode
-//   o Press Double-Click to activate quick edit action (defined in root.mimes)
-//
-//                 Selection, grabbing, dropping
-//       ************************************************
-//    It is possible to select, drag any frame and drop it to any frame
-//
-//   o Click left mouse button or Ctrl-Click to select an object to edit.
-//   o Press right mouse button to activate context menu
-//   o Multiple selection (grabbing):
-//      - draw lasso and press Return key
-//      - press Shift key and draw lasso
-//   o Dropping:
-//      - select frame and press Ctrl-Return key
-//   o Changing layout order:
-//      - select frame and use arrow keys to change layout order
-//   o Alignment:
-//      - draw lasso and press arrow keys (or Shift-Arrow key) to align frames
-//
-//                    Key shortcuts
-//       ************************************************
-//   o Return    - grab selected frames
-//   o Ctrl-Return - drop frames
-//   o Del       - delete selected frame
-//   o Shift-Del - crop action
-//   o Ctrl-X    - cut action
-//   o Ctrl-C    - copy action
-//   o Ctrl-V    - paste frame into the last clicked position
-//   o Ctrl-L    - compact
-//   o Ctrl-B    - enable/disable layout
-//   o Ctrl-H    - switch horizontal-vertical layout
-//   o Ctrl-G    - switch on/off grid
-//   o Ctrl-S    - save action
-//   o Ctrl-O    - open and execute a ROOT macro file.  GUI components created
-//                 after macro execution will be emebedded to currently edited
-//                 design area.
-//   o Ctrl-N    - create new main frame
-//
-//Begin_Html
-/*
-<img src="gif/RootGuiBuilder.gif">
+/** \class TRootGuiBuilder
+    \ingroup guibuilder
+
+### %ROOT GUI Builder principles
+
+ With the GUI builder, we try to make the next step from WYSIWYG
+ to embedded editing concept - WYSIWYE ("what you see is what you edit").
+ The ROOT GUI Builder allows modifying real GUI objects.
+ For example, one can edit the existing GUI application created by
+ $ROOTSYS/tutorials/gui/guitest.C.
+ GUI components can be added to a design area from a widget palette,
+ or can be borrowed from another application.
+ One can drag and and drop TCanvas's menu bar into the application.
+ GUI objects can be resized and dragged, copied and pasted.
+ ROOT GUI Builder allows changing the layout, snap to grid, change object's
+ layout order via the GUI Builder toolbar, or by options in the right-click
+ context menus.
+ A final design can be immediatly tested and used, or saved as a C++ macro.
+ For example, it's possible to rearrange buttons in control bar,
+ add separators etc. and continue to use a new fancy control bar in the
+ application.
+
+
+ The following is a short description of the GUI Builder actions and key shortcuts:
+
+  - Press Ctrl-Double-Click to start/stop edit mode
+  - Press Double-Click to activate quick edit action (defined in root.mimes)
+
+### Selection, grabbing, dropping
+
+   It is possible to select, drag any frame and drop it to any frame
+
+  - Click left mouse button or Ctrl-Click to select an object to edit.
+  - Press right mouse button to activate context menu
+  - Multiple selection (grabbing):
+     - draw lasso and press Return key
+     - press Shift key and draw lasso
+  - Dropping:
+     - select frame and press Ctrl-Return key
+  - Changing layout order:
+     - select frame and use arrow keys to change layout order
+  - Alignment:
+     - draw lasso and press arrow keys (or Shift-Arrow key) to align frames
+
+### Key shortcuts
+
+  - Return    - grab selected frames
+  - Ctrl-Return - drop frames
+  - Del       - delete selected frame
+  - Shift-Del - crop action
+  - Ctrl-X    - cut action
+  - Ctrl-C    - copy action
+  - Ctrl-V    - paste frame into the last clicked position
+  - Ctrl-L    - compact
+  - Ctrl-B    - enable/disable layout
+  - Ctrl-H    - switch horizontal-vertical layout
+  - Ctrl-G    - switch on/off grid
+  - Ctrl-S    - save action
+  - Ctrl-O    - open and execute a ROOT macro file.  GUI components created
+                after macro execution will be emebedded to currently edited
+                design area.
+  - Ctrl-N    - create new main frame
+
 */
-//End_Html
 
 
 const char gHelpBuilder[] = "\
@@ -360,10 +350,10 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
       case kMenuPopup:
       case kMenuLabel:
       case kMenuEntry:
-         if ((entry->GetStatus() & kMenuActiveMask) && 
+         if ((entry->GetStatus() & kMenuActiveMask) &&
              entry->GetType() != kMenuLabel) {
             if (entry->GetStatus() & kMenuEnableMask) {
-               gVirtualX->FillRectangle(fId, 
+               gVirtualX->FillRectangle(fId,
                               TRootGuiBuilder::GetPopupHlghtGC()->GetGC(),
                               entry->GetEx()+1, entry->GetEy(),
                               fMenuWidth-6, h - 1);
@@ -392,19 +382,19 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             }
 
             entry->GetLabel()->Draw(fId,
-                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC : 
+                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC :
                             GetShadowGC()(), tx, ty);
             if (entry->GetShortcut())
                entry->GetShortcut()->Draw(fId,
-                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC : 
+                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC :
                            GetShadowGC()(), fMenuWidth - tw, ty);
          } else {
             if ( entry->GetType() != kMenuLabel) {
-               gVirtualX->FillRectangle(fId, 
+               gVirtualX->FillRectangle(fId,
                            TRootGuiBuilder::GetBgndGC()->GetGC(),
                            entry->GetEx()+1, entry->GetEy()-1, tx-4, h);
 
-               gVirtualX->FillRectangle(fId, 
+               gVirtualX->FillRectangle(fId,
                            TRootGuiBuilder::GetPopupBgndGC()->GetGC(),
                            tx-1, entry->GetEy()-1, fMenuWidth-tx-1, h);
             } else { // we need some special background for labels
@@ -1558,7 +1548,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    TString fname;
 
    fi.fFileTypes = gSaveMacroTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    root->SetEditable(kFALSE);
@@ -1626,7 +1616,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    root->SetEditable(kFALSE);
 
    fi.fFileTypes = gSaveMacroTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
 
    new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);

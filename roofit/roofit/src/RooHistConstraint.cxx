@@ -5,9 +5,16 @@
  *****************************************************************************/
 
 /** \class RooHistConstraint
- \ingroup Roofit
-
-**/
+ * \ingroup Roofit
+ * The RooHistConstraint implements constraint terms for a binned PDF with statistical uncertainties.
+ * Following the Barlow-Beeston method, it adds Poisson constraints for each bin that
+ * constrain the statistical uncertainty of the template histogram.
+ *
+ * It can therefore be used to estimate the Monte Carlo uncertainty of a fit.
+ *
+ * Check also the tutorial rf709_BarlowBeeston.C
+ *
+ */
 
 #include "Riostream.h"
 
@@ -24,12 +31,16 @@ using namespace std;
 ClassImp(RooHistConstraint);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-RooHistConstraint::RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, Int_t threshold) :
+/// Create a new RooHistConstraint.
+/// \param[in] name Name of the PDF. This is used to identify it in a likelihood model.
+/// \param[in] title Title for plotting etc.
+/// \param[in] phfSet Set of parametrised histogram functions (RooParamHistFunc).
+/// \param[in] threshold Threshold (bin content) up to which statistcal uncertainties are taken into account.
+RooHistConstraint::RooHistConstraint(const char *name, const char *title,
+    const RooArgSet& phfSet, Int_t threshold) :
   RooAbsPdf(name,title),
   _gamma("gamma","gamma",this),
   _nominal("nominal","nominal",this),
-  _nominalErr("nominalErr","nominalErr",this),
   _relParam(kTRUE)
 {
   // Implementing constraint on sum of RooParamHists
@@ -45,28 +56,30 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
 
     if (!phf) {
       coutE(InputArguments) << "RooHistConstraint::ctor(" << GetName()
-             << ") ERROR: input object must be a RooParamHistFunc" << endl ;
-      throw std::string("RoohistConstraint::ctor ERROR incongruent input arguments") ;
+                 << ") ERROR: input object must be a RooParamHistFunc" << endl ;
+      throw std::string("RooHistConstraint::ctor ERROR incongruent input arguments") ;
     }
 
     // Now populate nominal with parameters
     RooArgSet allVars ;
     for (Int_t i=0 ; i<phf->_dh.numEntries() ; i++) {
       phf->_dh.get(i) ;
-      if (phf->_dh.weight()<threshold) {
-   const char* vname = Form("%s_nominal_bin_%i",GetName(),i) ;
-   RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
-   var->setVal(phf->_dh.weight()) ;
-   var->setConstant(kTRUE) ;
-   allVars.add(*var) ;
-   _nominal.add(*var) ;
-   RooRealVar* gam = (RooRealVar*) phf->_p.at(i) ;
-   if (var->getVal()>0) {
-     gam->setConstant(kFALSE) ;
-   }
-   _gamma.add(*gam) ;
+      if (phf->_dh.weight()<threshold && phf->_dh.weight() != 0.) {
+        const char* vname = Form("%s_nominal_bin_%i",GetName(),i) ;
+        RooRealVar* var = new RooRealVar(vname,vname,0,1.E30) ;
+        var->setVal(phf->_dh.weight()) ;
+        var->setConstant(true);
+        allVars.add(*var) ;
+        _nominal.add(*var) ;
+
+        RooRealVar* gam = (RooRealVar*) phf->_p.at(i) ;
+        if (var->getVal()>0) {
+          gam->setConstant(false);
+        }
+        _gamma.add(*gam) ;
       }
     }
+
     addOwnedComponents(allVars) ;
 
     return ;
@@ -74,37 +87,37 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
 
 
 
-  RooFIter phiter = phfSet.fwdIterator() ;
-  RooAbsArg* arg ;
   Int_t nbins(-1) ;
   vector<RooParamHistFunc*> phvec ;
   RooArgSet gammaSet ;
   string bin0_name ;
-  while((arg=phiter.next())) {
+  for (const auto arg : phfSet) {
 
     RooParamHistFunc* phfComp = dynamic_cast<RooParamHistFunc*>(arg) ;
     if (phfComp) {
       phvec.push_back(phfComp) ;
       if (nbins==-1) {
-   nbins = phfComp->_p.getSize() ;
-   bin0_name = phfComp->_p.at(0)->GetName() ;
-   gammaSet.add(phfComp->_p) ;
+        nbins = phfComp->_p.getSize() ;
+        bin0_name = phfComp->_p.at(0)->GetName() ;
+        gammaSet.add(phfComp->_p) ;
       } else {
-   if (phfComp->_p.getSize()!=nbins) {
-     coutE(InputArguments) << "RooHistConstraint::ctor(" << GetName()
-            << ") ERROR: incongruent input arguments: all input RooParamHistFuncs should have same #bins" << endl ;
-     throw std::string("RoohistConstraint::ctor ERROR incongruent input arguments") ;
-   }
-   if (bin0_name != phfComp->_p.at(0)->GetName()) {
-     coutE(InputArguments) << "RooHistConstraint::ctor(" << GetName()
-            << ") ERROR: incongruent input arguments: all input RooParamHistFuncs should have the same bin parameters" << endl ;
-     throw std::string("RoohistConstraint::ctor ERROR incongruent input arguments") ;
-   }
+        if (phfComp->_p.getSize()!=nbins) {
+          coutE(InputArguments) << "RooHistConstraint::ctor(" << GetName()
+                << ") ERROR: incongruent input arguments: all input RooParamHistFuncs should have same #bins" << endl ;
+          throw std::string("RooHistConstraint::ctor ERROR incongruent input arguments") ;
+        }
+        if (bin0_name != phfComp->_p.at(0)->GetName()) {
+          coutE(InputArguments) << "RooHistConstraint::ctor(" << GetName()
+                << ") ERROR: incongruent input arguments: all input RooParamHistFuncs should have the same bin parameters.\n"
+                << "Previously found " << bin0_name << ", now found " << phfComp->_p.at(0)->GetName() << ".\n"
+                << "Check that the right RooParamHistFuncs have been passed to this RooHistConstraint." << std::endl;
+          throw std::string("RooHistConstraint::ctor ERROR incongruent input arguments") ;
+        }
 
       }
     } else {
       coutW(InputArguments) << "RooHistConstraint::ctor(" << GetName()
-             << ") WARNING: ignoring input argument " << arg->GetName() << " which is not of type RooParamHistFunc" << endl;
+                 << ") WARNING: ignoring input argument " << arg->GetName() << " which is not of type RooParamHistFunc" << endl;
     }
   }
 
@@ -115,18 +128,18 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
   for (Int_t i=0 ; i<nbins ; i++) {
 
     Double_t sumVal(0) ;
-    for (vector<RooParamHistFunc*>::iterator iter = phvec.begin() ; iter != phvec.end() ; ++iter) {
-      sumVal += (*iter)->getNominal(i) ;
+    for (const auto phfunc : phvec) {
+      sumVal += phfunc->getNominal(i);
     }
 
-    if (sumVal<threshold) {
+    if (sumVal<threshold && sumVal != 0.) {
 
       const char* vname = Form("%s_nominal_bin_%i",GetName(),i) ;
       RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
 
       Double_t sumVal2(0) ;
       for (vector<RooParamHistFunc*>::iterator iter = phvec.begin() ; iter != phvec.end() ; ++iter) {
-   sumVal2 += (*iter)->getNominal(i) ;
+        sumVal2 += (*iter)->getNominal(i) ;
       }
       var->setVal(sumVal2) ;
       var->setConstant(kTRUE) ;
@@ -136,14 +149,14 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
 
       Double_t sumErr2(0) ;
       for (vector<RooParamHistFunc*>::iterator iter = phvec.begin() ; iter != phvec.end() ; ++iter) {
-   sumErr2 += pow((*iter)->getNominalError(i),2) ;
+        sumErr2 += pow((*iter)->getNominalError(i),2) ;
       }
       vare->setVal(sqrt(sumErr2)) ;
       vare->setConstant(kTRUE) ;
 
       allVars.add(RooArgSet(*var,*vare)) ;
       _nominal.add(*var) ;
-      _nominalErr.add(*vare) ;
+      //      _nominalErr.add(*vare) ;
 
       ((RooRealVar*)_gamma.at(i))->setConstant(kFALSE) ;
 
@@ -158,7 +171,6 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
    RooAbsPdf(other,name),
    _gamma("gamma",this,other._gamma),
    _nominal("nominal",this,other._nominal),
-   _nominalErr("nominalErr",this,other._nominalErr),
    _relParam(other._relParam)
  {
  }
@@ -167,69 +179,46 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
 
  Double_t RooHistConstraint::evaluate() const
  {
-   Double_t prod(1) ;
-   RooFIter niter = _nominal.fwdIterator() ;
-   RooFIter giter = _gamma.fwdIterator() ;
-   RooAbsReal *gam, *nom ;
-   while ((gam = (RooAbsReal*) giter.next())) {
-     nom = (RooAbsReal*) niter.next() ;
-     Double_t gamVal = gam->getVal() ;
-     if (_relParam) gamVal *= nom->getVal() ;
-     Double_t pois = TMath::Poisson(nom->getVal(),gamVal) ;
-     prod *= pois ;
+   double prod(1);
+
+   for (unsigned int i=0; i < _nominal.size(); ++i) {
+     const auto& gamma = static_cast<const RooAbsReal&>(_gamma[i]);
+     const auto& nominal = static_cast<const RooAbsReal&>(_nominal[i]);
+
+     double gamVal = gamma.getVal();
+     if (_relParam)
+       gamVal *= nominal.getVal();
+
+     const double pois = TMath::Poisson(nominal.getVal(),gamVal);
+     prod *= pois;
    }
-   return prod ;
+
+   return prod;
  }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooHistConstraint::getLogVal(const RooArgSet* /*set*/) const
 {
-   Double_t sum(0) ;
-   RooFIter niter = _nominal.fwdIterator() ;
-   RooFIter giter = _gamma.fwdIterator() ;
-   RooAbsReal *gamv, *nomv ;
-   while ((gamv = (RooAbsReal*) giter.next())) {
-     nomv = (RooAbsReal*) niter.next() ;
-     Double_t gam = gamv->getVal() ;
-     Int_t    nom = (Int_t) nomv->getVal() ;
-     if (_relParam) gam *= nom ;
+   double sum = 0.;
+   for (unsigned int i=0; i < _nominal.size(); ++i) {
+     const auto& gamma = static_cast<const RooAbsReal&>(_gamma[i]);
+     const auto& nominal = static_cast<const RooAbsReal&>(_nominal[i]);
+     double gam = gamma.getVal();
+     Int_t  nom = (Int_t) nominal.getVal();
+
+     if (_relParam)
+       gam *= nom;
+
      if (gam>0) {
-       Double_t logPoisson = nom*log(gam) - gam - logSum(nom) ;
+       const double logPoisson = nom * log(gam) - gam - std::lgamma(nom+1);
        sum += logPoisson ;
      } else if (nom>0) {
-       cout << "ERROR gam=0 and nom>0" << endl ;
+       cerr << "ERROR in RooHistConstraint: gam=0 and nom>0" << endl ;
      }
    }
+
    return sum ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooHistConstraint::logSum(Int_t i) const
-{
-  static Double_t* _lut = 0 ;
-  if (!_lut) {
-    _lut = new Double_t[5000] ;
-    for (Int_t ii=0 ; ii<5000 ; ii++) _lut[ii] = 0 ;
-
-    for (Int_t j=1 ; j<=5000 ; j++) {
-      Double_t logj = log((Double_t)j) ;
-      for (Int_t ii=j ; ii<=5000 ; ii++) {
-   _lut[ii-1] += logj ;
-      }
-    }
-  }
-
-  if (i<5000) {
-    return _lut[i-1] ;
-  } else {
-    Double_t ret = _lut[4999] ;
-    cout << "logSum i=" << i << endl ;
-    for (Int_t j=5000 ; j<=i ; j++) {
-      ret += log((Double_t)j) ;
-    }
-    return ret ;
-  }
-
-}

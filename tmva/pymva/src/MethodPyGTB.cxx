@@ -39,16 +39,21 @@
 #include "TMVA/Timer.h"
 #include "TMVA/VariableTransformBase.h"
 
-#include "Riostream.h"
-#include "TMath.h"
 #include "TMatrix.h"
-#include "TMatrixD.h"
-#include "TVectorD.h"
-
-#include <iomanip>
-#include <fstream>
 
 using namespace TMVA;
+
+namespace TMVA {
+namespace Internal {
+class PyGILRAII {
+   PyGILState_STATE m_GILState;
+
+public:
+   PyGILRAII() : m_GILState(PyGILState_Ensure()) {}
+   ~PyGILRAII() { PyGILState_Release(m_GILState); }
+};
+} // namespace Internal
+} // namespace TMVA
 
 REGISTER_METHOD(PyGTB)
 
@@ -308,6 +313,7 @@ void MethodPyGTB::ProcessOptions()
 //_______________________________________________________________________
 void  MethodPyGTB::Init()
 {
+   TMVA::Internal::PyGILRAII raii;
    _import_array(); //require to use numpy arrays
 
    // Check options and load them to local python namespace
@@ -328,16 +334,16 @@ void MethodPyGTB::Train()
    npy_intp dimsData[2];
    dimsData[0] = fNrowsTraining;
    dimsData[1] = fNvars;
-   fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
+   PyArrayObject * fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainData", (PyObject*)fTrainData);
    float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
    npy_intp dimsClasses = (npy_intp) fNrowsTraining;
-   fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyArrayObject * fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataClasses", (PyObject*)fTrainDataClasses);
    float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
 
-   fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyArrayObject * fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataWeights", (PyObject*)fTrainDataWeights);
    float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
 

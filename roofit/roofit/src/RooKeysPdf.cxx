@@ -20,10 +20,10 @@
 
 Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
 of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
-each contributing 1/N to the total integral of the p.d.f.
+each contributing 1/N to the total integral of the p.d.f..
 If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
 local density of events, i.e. narrow for regions with high event density to preserve details and
-wide for regions with log event density to promote smoothness. The details of the general algorithm
+wide for regions with low event density to promote smoothness. The details of the general algorithm
 are described in the following paper:
 
 Cranmer KS, Kernel Estimation in High-Energy Physics.
@@ -35,9 +35,9 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
 #include <limits>
 #include <algorithm>
 #include <cmath>
-#include "Riostream.h"
+#include <iostream>
 #include "TMath.h"
-
+#include "snprintf.h"
 #include "RooKeysPdf.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"

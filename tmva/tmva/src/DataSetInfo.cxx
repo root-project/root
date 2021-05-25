@@ -34,16 +34,11 @@ Class that contains all the data information.
 #include <vector>
 
 #include "TEventList.h"
-#include "TFile.h"
-#include "TH1.h"
 #include "TH2.h"
-#include "TProfile.h"
 #include "TRandom3.h"
 #include "TMatrixF.h"
 #include "TVectorF.h"
-#include "TMath.h"
 #include "TROOT.h"
-#include "TObjString.h"
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
@@ -235,6 +230,29 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const VariableInfo& varInfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// add an  array of variables identified by an expression corresponding to an array entry in the tree
+
+void TMVA::DataSetInfo::AddVariablesArray(const TString &expression, Int_t size, const TString &title, const TString &unit,
+                                                   Double_t min, Double_t max, char varType, Bool_t normalized,
+                                                   void *external)
+{
+   TString regexpr = expression; // remove possible blanks
+   regexpr.ReplaceAll(" ", "");
+   fVariables.reserve(fVariables.size() + size);
+   for (int i = 0; i < size; ++i) {
+      TString newTitle = title + TString::Format("[%d]", i);
+
+      fVariables.emplace_back(regexpr, newTitle, unit, fVariables.size() + 1, varType, external, min, max, normalized);
+      // set corresponding bit indicating is a variable from an array
+      fVariables.back().SetBit(kIsArrayVariable);
+      TString newVarName = fVariables.back().GetInternalName() + TString::Format("[%d]", i);
+      fVariables.back().SetInternalName(newVarName);
+   }
+   fVarArrays[regexpr] = size;
+   fNeedsRebuilding = kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// add a variable (can be a complex expression) to the set of
 /// variables used in the MV analysis
 
@@ -376,7 +394,7 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 {
    std::vector<TString> vNames;
    std::vector<TMVA::VariableInfo>::const_iterator viIt = GetVariableInfos().begin();
-   for(;viIt != GetVariableInfos().end(); ++viIt) vNames.push_back( (*viIt).GetExpression() );
+   for(;viIt != GetVariableInfos().end(); ++viIt) vNames.push_back( (*viIt).GetInternalName() );
 
    return vNames;
 }
@@ -549,4 +567,3 @@ Double_t TMVA::DataSetInfo::GetTestingSumBackgrWeights (){
    if (fTestingSumBackgrWeights<0) Log() << kFATAL << Form("Dataset[%s] : ",fName.Data()) << " asking for the sum of testing backgr event weights which is not initialized yet" << Endl;
    return fTestingSumBackgrWeights ;
 }
-

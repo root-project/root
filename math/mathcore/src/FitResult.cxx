@@ -98,13 +98,13 @@ FitResult::FitResult(const FitConfig & fconfig) :
 }
 
 void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig, const std::shared_ptr<IModelFunction> & func,
-                     bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) 
+                     bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls )
 {
    // Fill the FitResult after minimization using result from Minimizers
 
    // minimizer must exist
    assert(min);
-   
+
    fValid = isValid;
    fNFree= min->NFree();
    fNCalls = min->NCalls();
@@ -114,31 +114,21 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    fEdm = min->Edm();
 
    fMinimizer= min;
-   fFitFunc = func; 
+   fFitFunc = func;
 
-
-
-   // set minimizer type
-   fMinimType = fconfig.MinimizerType();
-
-   // append algorithm name for minimizer that support it
-   if ( (fMinimType.find("Fumili") == std::string::npos) &&
-        (fMinimType.find("GSLMultiFit") == std::string::npos)
-      ) {
-      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType();
-   }
+   fMinimType = fconfig.MinimizerName();
 
    // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
    if (fNCalls == 0) fNCalls = ncalls;
-   
+
    const unsigned int npar = min->NDim();
    if (npar == 0) return;
-   
+
    if (min->X() )
       fParams = std::vector<double>(min->X(), min->X() + npar);
    else {
       // case minimizer does not provide minimum values (it failed) take from configuration
-      fParams.resize(npar); 
+      fParams.resize(npar);
       for (unsigned int i = 0; i < npar; ++i ) {
          fParams[i] = ( fconfig.ParSettings(i).Value() );
       }
@@ -157,15 +147,16 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    }
    else {
       // when no fFitFunc is present take parameters from FitConfig
-      fParNames.reserve( npar );
+      fParNames.resize( npar );
       for (unsigned int i = 0; i < npar; ++i ) {
-         fParNames.push_back( fconfig.ParSettings(i).Name() );
+         fParNames[i] = fconfig.ParSettings(i).Name();
       }
    }
 
 
    // check for fixed or limited parameters
    unsigned int nfree = 0;
+   if (!fParamBounds.empty()) fParamBounds.clear();
    for (unsigned int ipar = 0; ipar < npar; ++ipar) {
       const ParameterSettings & par = fconfig.ParSettings(ipar);
       if (par.IsFixed() ) fFixedParams[ipar] = true;
@@ -197,6 +188,10 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // fill error matrix
    // if minimizer provides error provides also error matrix
+   // clear in case of re-filling an existing result
+   if (!fCovMatrix.empty()) fCovMatrix.clear();
+   if (!fGlobalCC.empty())  fGlobalCC.clear();
+
    if (min->Errors() != 0) {
 
       fErrors = std::vector<double>(min->Errors(), min->Errors() + npar ) ;
@@ -208,18 +203,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
             for (unsigned int j = 0; j <= i; ++j)
                fCovMatrix.push_back(min->CovMatrix(i,j) );
       }
-
-      // minos errors
-      if (fValid && fconfig.MinosErrors()) {
-         const std::vector<unsigned int> & ipars = fconfig.MinosParams();
-         unsigned int n = (ipars.size() > 0) ? ipars.size() : npar;
-         for (unsigned int i = 0; i < n; ++i) {
-          double elow, eup;
-          unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
-          bool ret = min->GetMinosError(index, elow, eup);
-          if (ret) SetMinosError(index, elow, eup);
-         }
-      }
+      // minos errors are set separetly when calling Fitter::CalculateMinosErrors()
 
       // globalCC
       fGlobalCC.reserve(npar);
@@ -270,7 +254,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
    fChi2 = rhs.fChi2;
    fMinimizer = rhs.fMinimizer;
    fObjFunc = rhs.fObjFunc;
-   fFitFunc = rhs.fFitFunc; 
+   fFitFunc = rhs.fFitFunc;
 
    fFixedParams = rhs.fFixedParams;
    fBoundParams = rhs.fBoundParams;
@@ -288,11 +272,14 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
 }
 
-bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool isValid, unsigned int ncalls) {
+bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const ROOT::Fit::FitConfig & fconfig, bool isValid, unsigned int ncalls) {
    // update fit result with new status from minimizer
    // ncalls if it is not zero is used instead of value from minimizer
 
-   fMinimizer = min; 
+   fMinimizer = min;
+
+   // in case minimizer changes
+   fMinimType = fconfig.MinimizerName();
 
    const unsigned int npar = fParams.size();
    if (min->NDim() != npar ) {
@@ -486,7 +473,10 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       else {
          if (fErrors.size() != 0)
             os << "   +/-   " << std::left << std::setw(nn) << fErrors[i] << std::right;
-         if (IsParameterBound(i) )
+         if (HasMinosError(i))
+            os << "  " << std::left  << std::setw(nn) << LowerError(i) << " +" << std::setw(nn) << UpperError(i)
+               << " (Minos) ";
+         if (IsParameterBound(i))
             os << " \t (limited)";
       }
       os << std::endl;
@@ -570,15 +560,15 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
       return;
    }
    assert(fFitFunc);
-   
+
    // use student quantile in case of normalized errors
    double corrFactor = 1;
    if (fChi2 <= 0 || fNdf == 0) norm = false;
    if (norm)
       corrFactor = TMath::StudentQuantile(0.5 + cl/2, fNdf) * std::sqrt( fChi2/fNdf );
    else
-      // value to go up in chi2 (1: 1 sigma error(CL=0.683) , 4: 2 sigma errors
-      corrFactor = ROOT::Math::chisquared_quantile(cl, 1);
+      // correction to apply to the errors given a CL different than 1 sigma (cl=0.683)
+      corrFactor = ROOT::Math::normal_quantile(0.5 + cl/2, 1);
 
 
 
@@ -599,16 +589,22 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
       }
 
       // calculate gradient of fitted function w.r.t the parameters
-
-      // check first if fFitFunction provides parameter gradient or not
-
-      // does not provide gradient
-      // t.b.d : skip calculation for fixed parameters
       ROOT::Math::RichardsonDerivator d;
       for (unsigned int ipar = 0; ipar < npar; ++ipar) {
-         ROOT::Math::OneDimParamFunctionAdapter<const ROOT::Math::IParamMultiFunction &> fadapter(*fFitFunc,&xpoint.front(),&fParams.front(),ipar);
-         d.SetFunction(fadapter);
-         grad[ipar] = d(fParams[ipar] ); // evaluate df/dp
+         if (!IsParameterFixed(ipar)) {
+            ROOT::Math::OneDimParamFunctionAdapter<const ROOT::Math::IParamMultiFunction &> fadapter(*fFitFunc,&xpoint.front(),&fParams.front(),ipar);
+            d.SetFunction(fadapter);
+            // compute step size as a small fraction of the error
+            // (see numerical recipes in C 5.7.8)   1.E-5 is ~ (eps)^1/3
+            if ( fErrors[ipar] > 0 )
+               d.SetStepSize( std::max( fErrors[ipar]*1.E-5, 1.E-15) );
+            else
+               d.SetStepSize( std::min(std::max(fParams[ipar]*1.E-5, 1.E-15), 0.0001 ) );
+
+            grad[ipar] = d(fParams[ipar] ); // evaluate df/dp
+         }
+         else
+            grad[ipar] = 0.;  // for fixed parameters
       }
 
       // multiply covariance matrix with gradient
@@ -648,22 +644,22 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
    // implement confidence intervals using stored data sets (if can be retrieved from objective function)
    // it works only in case of chi2 or binned likelihood fits
     const BinData * data = FittedBinData();
-    std::vector<double> result; 
+    std::vector<double> result;
     if (data) {
        result.resize(data->NPoints() );
-       GetConfidenceIntervals(*data, result.data(), cl, norm);      
+       GetConfidenceIntervals(*data, result.data(), cl, norm);
     }
     else {
       MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without the fit bin data");
     }
-    return result; 
+    return result;
 }
 
 // const BinData * GetFitBinData() const {
 //    // return a pointer to the binned data used in the fit
 //    // works only for chi2 or binned likelihood fits
 //    // thus when the objective function stored is a Chi2Func or a PoissonLikelihood
-//    ROOT::Math::IMultiGenFunction * f = fObjFunc->get(); 
+//    ROOT::Math::IMultiGenFunction * f = fObjFunc->get();
 //    Chi2Function * chi2func = dynamic_cast<Chi2Function*>(f);
 //    if (chi2func) return &(chi2func->Data());
 //    PoissonLLFunction * pllfunc = dynamic_cast<PoissonLLFunction*>(f);
@@ -677,12 +673,60 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
 // }
 
 const BinData * FitResult::FittedBinData() const {
-   return dynamic_cast<const BinData*> ( fFitData.get() ); 
-} 
-      
+   return dynamic_cast<const BinData*> ( fFitData.get() );
+}
 
-     
+////////////////////////////////////////////////////////////////////////////////
+///  Scan parameter ipar between value of xmin and xmax
+///  A array for x and y points should be provided
+
+bool FitResult::Scan(unsigned int ipar, unsigned int &npoints, double *pntsx, double *pntsy, double xmin, double xmax)
+{
+   if (!pntsx || !pntsy || !npoints)
+      return false;
+
+   if (!fMinimizer) {
+      MATH_ERROR_MSG("FitResult::Scan", "Minimizer is not available - cannot Scan");
+      return false;
+   }
+
+   return fMinimizer->Scan(ipar, npoints, pntsx, pntsy, xmin, xmax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 2D contour around the minimum for the parameter ipar and jpar
+/// if a minimum does not exist or is invalid it will return false
+/// A array for x and y points should be provided
+/// Pass optionally the confidence level, default is 0.683
+/// it is assumed that ErrorDef() defines the right error definition
+/// (i.e 1 sigma error for one parameter). If not the confidence level are scaled to new level
+
+bool FitResult::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoints, double *pntsx, double *pntsy, double confLevel)
+{
+   if (!pntsx || !pntsy || !npoints)
+      return false;
+
+   if (!fMinimizer) {
+      MATH_ERROR_MSG("FitResult::Contour", "Minimizer is not available - cannot produce Contour");
+      return false;
+   }
+
+   // get error level used for fitting
+   double upScale = fMinimizer->ErrorDef();
+
+   double upVal = TMath::ChisquareQuantile(confLevel, 2); // 2 is number of parameter we do the contour
+
+   // set required error definition in minimizer
+   fMinimizer->SetErrorDef(upScale * upVal);
+
+   bool ret = fMinimizer->Contour(ipar, jpar, npoints, pntsx, pntsy);
+
+   // restore the error level used for fitting
+   fMinimizer->SetErrorDef(upScale);
+
+   return ret;
+}
+
    } // end namespace Fit
 
 } // end namespace ROOT
-

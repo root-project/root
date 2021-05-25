@@ -23,7 +23,7 @@ Wikipedia and several sources refer to the Gamma distribution as
 G(\mu,\alpha,\beta) = \beta^\alpha \mu^{(\alpha-1)} \frac{e^{(-\beta \mu)}}{\Gamma(\alpha)}
 \f]
 
-Below is the correspondance:
+Below is the correspondence:
 
 | Wikipedia       | This Implementation      |
 |-----------------|--------------------------|
@@ -43,28 +43,16 @@ Also note, that in this case it is equivalent to
 RooPoison(N,mu) and treating the function as a PDF in mu.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooGamma.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
+
 #include "RooRandom.h"
-#include "RooMath.h"
+#include "RooHelpers.h"
+#include "RooBatchCompute.h"
 
-#include <iostream>
 #include "TMath.h"
-
-#include <Math/SpecFuncMathCore.h>
-#include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
-#include "TError.h"
-
-using namespace std;
+#include <cmath>
 
 ClassImp(RooGamma);
 
@@ -79,6 +67,7 @@ RooGamma::RooGamma(const char *name, const char *title,
   beta("beta","Width",this,_beta),
   mu("mu","Para",this,_mu)
 {
+  RooHelpers::checkRangeOfParameters(this, {&_gamma, &_beta}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,9 +82,13 @@ RooGamma::RooGamma(const RooGamma& other, const char* name) :
 
 Double_t RooGamma::evaluate() const
 {
-  Double_t arg= x ;
-  Double_t ret = TMath::GammaDist(arg, gamma, mu, beta) ;
-  return ret ;
+  return TMath::GammaDist(x, gamma, mu, beta) ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Gamma PDF.  
+RooSpan<double> RooGamma::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeGamma(this, evalData, x->getValues(evalData, normSet), gamma->getValues(evalData, normSet), beta->getValues(evalData, normSet), mu->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,3 +163,5 @@ void RooGamma::generateEvent(Int_t code)
 
   return;
 }
+
+

@@ -4,10 +4,14 @@
 
 #include "gtest/gtest.h"
 
+#include <stdexcept>
+#include <typeinfo>
+#include <vector>
+
 namespace RDFInt = ROOT::Internal::RDF;
 
 // Thanks clang-format...
-TEST(RDataFrameUtils, DeduceAllPODsFromTmpColumns)
+TEST(RDataFrameUtils, DeduceAllPODsFromDefines)
 {
    ROOT::RDataFrame tdf(1);
    auto d = tdf.Define("char_tmp", []() { return char(0); })
@@ -72,8 +76,7 @@ TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
-                                                                     /*custom=*/false);
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*define=*/nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
@@ -100,91 +103,24 @@ TEST(RDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
-                                                                     /*custom=*/false);
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*define=*/nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
-/* //- TODO
-TEST(RDataFrameUtils, CheckNonExistingCustomColumnNullTree)
-{
-   // CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-   //                   const ColumnNames_t &dataSourceColumns)
-   RDFInt::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
-}
-
-TEST(RDataFrameUtils, CheckExistingCustomColumnNullTree)
-{
-   int ret = 1;
-   try {
-      RDFInt::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-}
-
-TEST(RDataFrameUtils, CheckExistingCustomColumn)
-{
-   int i;
-   TTree t("t", "t");
-   t.Branch("a", &i);
-
-   int ret = 1;
-   try {
-      RDFInt::CheckCustomColumn("a", &t, {"b"}, {});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-}
-
-TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
-{
-   int i;
-   TTree t("t", "t");
-   t.Branch("a", &i);
-
-   int ret = 1;
-   try {
-      RDFInt::CheckCustomColumn("c", &t, {"b"}, {"c"});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
-}*/
 
 TEST(RDataFrameUtils, CheckTypesAndPars)
 {
-   int ret = 1;
-   try {
-      RDFInt::CheckTypesAndPars(5, 4);
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(RDFInt::CheckTypesAndPars(5, 4));
 }
 
 TEST(RDataFrameUtils, SelectColumnsNNamesDiffersRequiredNames)
 {
-   int ret = 1;
-   try {
-      RDFInt::SelectColumns(3, {"a", "b"}, {});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(RDFInt::SelectColumns(3, {"a", "b"}, {}));
 }
 
 TEST(RDataFrameUtils, SelectColumnsTooFewRequiredNames)
 {
-   int ret = 1;
-   try {
-      RDFInt::SelectColumns(3, {}, {"bla"});
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret);
+   EXPECT_ANY_THROW(RDFInt::SelectColumns(3, {}, {"bla"}));
 }
 
 TEST(RDataFrameUtils, SelectColumnsCheckNames)
@@ -257,4 +193,34 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
 
    auto ncols = RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::GetBranchNames(t1), {}, {});
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
+}
+
+TEST(RDataFrameUtils, IsDataContainer)
+{
+   static_assert(RDFInt::IsDataContainer<std::vector<int>>::value, "");
+   static_assert(RDFInt::IsDataContainer<ROOT::RVec<int>>::value, "");
+   static_assert(RDFInt::IsDataContainer<std::vector<bool>>::value, "");
+   static_assert(RDFInt::IsDataContainer<ROOT::RVec<bool>>::value, "");
+   static_assert(RDFInt::IsDataContainer<std::tuple<int, int>>::value == false, "");
+   static_assert(RDFInt::IsDataContainer<std::string>::value == false, "");
+}
+
+TEST(RDataFrameUtils, ValueType)
+{
+   static_assert(std::is_same<RDFInt::ValueType<std::vector<float>>::value_type, float>::value, "");
+   static_assert(std::is_same<RDFInt::ValueType<ROOT::RVec<float>>::value_type, float>::value, "");
+   static_assert(std::is_same<RDFInt::ValueType<std::string>::value_type, char>::value, "");
+   static_assert(std::is_same<RDFInt::ValueType<float>::value_type, float>::value, "");
+   struct Foo {};
+   static_assert(std::is_same<RDFInt::ValueType<Foo>::value_type, Foo>::value, "");
+}
+
+TEST(RDataFrameUtils, TypeName2TypeID)
+{
+   EXPECT_EQ(typeid(float), RDFInt::TypeName2TypeID("float"));
+   EXPECT_EQ(typeid(std::vector<float>), RDFInt::TypeName2TypeID("std::vector<float>"));
+   EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
+   EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
+   // TODO(jblomer): Ideally, we would want the next one not to throw an exception
+   EXPECT_THROW(RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"), std::runtime_error);
 }

@@ -24,9 +24,10 @@
 
 #include "Rtypes.h"
 
-class TFitResult;
-
 #include <memory>
+#include <string>
+
+class TFitResult;
 
 class TFitResultPtr {
 public:
@@ -45,7 +46,7 @@ public:
 
    TFitResult* operator->() const;
 
-   TFitResult* Get() const; 
+   TFitResult* Get() const;
 
    TFitResultPtr& operator= (const TFitResultPtr& rhs);
 
@@ -53,8 +54,8 @@ public:
 
 private:
 
-   int fStatus;                            // fit status code
-   std::shared_ptr<TFitResult>  fPointer;  //! Smart Pointer to TFitResult class
+   int fStatus;                            ///< fit status code
+   std::shared_ptr<TFitResult>  fPointer;  ///<! Smart Pointer to TFitResult class
 
    ClassDef(TFitResultPtr,2)  //indirection to TFitResult
 };

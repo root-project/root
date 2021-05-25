@@ -19,7 +19,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TAuthenticate.h"
-#include "TEnv.h"
 #include "TError.h"
 #include "THostAuth.h"
 #include "TRootAuth.h"
@@ -53,20 +52,7 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
       }
    }
 
-   // Find out if we are a PROOF master
    Bool_t isPROOF = (s->GetServType() == (Int_t)TSocket::kPROOFD);
-   Bool_t isMASTER = kFALSE;
-   if (isPROOF) {
-      // Master by default
-      isMASTER = kTRUE;
-      // Parse option
-      TString opt(TUrl(s->GetUrl()).GetOptions());
-      if (!strncasecmp(opt.Data()+1, "C", 1)) {
-         isMASTER = kFALSE;
-      }
-   }
-
-   // Find out whether we are a proof serv
    Bool_t isPROOFserv = (opts[0] == 'P') ? kTRUE : kFALSE;
 
    // Build the protocol string for TAuthenticate
@@ -82,37 +68,6 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
    // Init authentication
    TAuthenticate *auth =
       new TAuthenticate(s, host, proto, user);
-
-   // If PROOF client and trasmission of the SRP password is
-   // requested make sure that ReUse is switched on to get and
-   // send also the Public Key
-   // Masters do this automatically upon reception of valid info
-   // (see TSlave.cxx)
-   if (isMASTER && !isPROOFserv) {
-      if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
-         Int_t kSRP = TAuthenticate::kSRP;
-         TString detsSRP(auth->GetHostAuth()->GetDetails(kSRP));
-         Int_t pos = detsSRP.Index("ru:0");
-         if (pos > -1) {
-            detsSRP.ReplaceAll("ru:0",4,"ru:1",4);
-            auth->GetHostAuth()->SetDetails(kSRP,detsSRP);
-         } else {
-            TSubString ss = detsSRP.SubString("ru:no",TString::kIgnoreCase);
-            if (!ss.IsNull()) {
-               detsSRP.ReplaceAll(ss.Data(),5,"ru:1",4);
-               auth->GetHostAuth()->SetDetails(kSRP,detsSRP);
-            }
-         }
-      }
-   }
-
-   // No control on credential forwarding in case of SSH authentication;
-   // switched it off on PROOF servers, unless the user knows what they
-   // are doing
-   if (isPROOFserv) {
-      if (!(gEnv->GetValue("ProofServ.UseSSH",0)))
-         auth->GetHostAuth()->RemoveMethod(TAuthenticate::kSSH);
-   }
 
    // Attempt authentication
    if (!auth->Authenticate()) {

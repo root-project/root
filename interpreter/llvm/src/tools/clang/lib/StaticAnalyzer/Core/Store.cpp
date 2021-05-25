@@ -1,9 +1,8 @@
-//== Store.cpp - Interface for maps from Locations to Values ----*- C++ -*--==//
+//===- Store.cpp - Interface for maps from Locations to Values ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,18 +11,37 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/StaticAnalyzer/Core/PathSensitive/Store.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/CharUnits.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclObjC.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/BasicValueFactory.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/MemRegion.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/SValBuilder.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/SVals.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/StoreRef.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/SymExpr.h"
+#include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/ErrorHandling.h"
+#include <cassert>
+#include <cstdint>
 
 using namespace clang;
 using namespace ento;
 
 StoreManager::StoreManager(ProgramStateManager &stateMgr)
-  : svalBuilder(stateMgr.getSValBuilder()), StateMgr(stateMgr),
-    MRMgr(svalBuilder.getRegionManager()), Ctx(stateMgr.getContext()) {}
+    : svalBuilder(stateMgr.getSValBuilder()), StateMgr(stateMgr),
+      MRMgr(svalBuilder.getRegionManager()), Ctx(stateMgr.getContext()) {}
 
 StoreRef StoreManager::enterStackFrame(Store OldStore,
                                        const CallEvent &Call,
@@ -33,11 +51,8 @@ StoreRef StoreManager::enterStackFrame(Store OldStore,
   SmallVector<CallEvent::FrameBindingTy, 16> InitialBindings;
   Call.getInitialStackFrameContents(LCtx, InitialBindings);
 
-  for (CallEvent::BindingsTy::iterator I = InitialBindings.begin(),
-                                       E = InitialBindings.end();
-       I != E; ++I) {
-    Store = Bind(Store.getStore(), I->first, I->second);
-  }
+  for (const auto &I : InitialBindings)
+    Store = Bind(Store.getStore(), I.first, I.second);
 
   return Store;
 }
@@ -49,10 +64,6 @@ const ElementRegion *StoreManager::MakeElementRegion(const SubRegion *Base,
   return MRMgr.getElementRegion(EleTy, idx, Base, svalBuilder.getContext());
 }
 
-StoreRef StoreManager::BindDefault(Store store, const MemRegion *R, SVal V) {
-  return StoreRef(store, *this);
-}
-
 const ElementRegion *StoreManager::GetElementZeroRegion(const SubRegion *R,
                                                         QualType T) {
   NonLoc idx = svalBuilder.makeZeroArrayIndex();
@@ -61,7 +72,6 @@ const ElementRegion *StoreManager::GetElementZeroRegion(const SubRegion *R,
 }
 
 const MemRegion *StoreManager::castRegion(const MemRegion *R, QualType CastToTy) {
-
   ASTContext &Ctx = StateMgr.getContext();
 
   // Handle casts to Objective-C objects.
@@ -77,7 +87,7 @@ const MemRegion *StoreManager::castRegion(const MemRegion *R, QualType CastToTy)
       return R;
 
     // We don't know what to make of it.  Return a NULL region, which
-    // will be interpretted as UnknownVal.
+    // will be interpreted as UnknownVal.
     return nullptr;
   }
 
@@ -92,7 +102,7 @@ const MemRegion *StoreManager::castRegion(const MemRegion *R, QualType CastToTy)
 
   // Handle casts from compatible types.
   if (R->isBoundable())
-    if (const TypedValueRegion *TR = dyn_cast<TypedValueRegion>(R)) {
+    if (const auto *TR = dyn_cast<TypedValueRegion>(R)) {
       QualType ObjTy = Ctx.getCanonicalType(TR->getValueType());
       if (CanonPointeeTy == ObjTy)
         return R;
@@ -127,6 +137,7 @@ const MemRegion *StoreManager::castRegion(const MemRegion *R, QualType CastToTy)
     case MemRegion::VarRegionKind:
     case MemRegion::CXXTempObjectRegionKind:
     case MemRegion::CXXBaseObjectRegionKind:
+    case MemRegion::CXXDerivedObjectRegionKind:
       return MakeElementRegion(cast<SubRegion>(R), PointeeTy);
 
     case MemRegion::ElementRegionKind: {
@@ -164,7 +175,7 @@ const MemRegion *StoreManager::castRegion(const MemRegion *R, QualType CastToTy)
         // Edge case: we are at 0 bytes off the beginning of baseR.  We
         // check to see if type we are casting to is the same as the base
         // region.  If so, just return the base region.
-        if (const TypedValueRegion *TR = dyn_cast<TypedValueRegion>(baseR)) {
+        if (const auto *TR = dyn_cast<TypedValueRegion>(baseR)) {
           QualType ObjTy = Ctx.getCanonicalType(TR->getValueType());
           QualType CanonPointeeTy = Ctx.getCanonicalType(PointeeTy);
           if (CanonPointeeTy == ObjTy)
@@ -219,7 +230,7 @@ static bool regionMatchesCXXRecordType(SVal V, QualType Ty) {
   if (!MR)
     return true;
 
-  const TypedValueRegion *TVR = dyn_cast<TypedValueRegion>(MR);
+  const auto *TVR = dyn_cast<TypedValueRegion>(MR);
   if (!TVR)
     return true;
 
@@ -253,19 +264,16 @@ SVal StoreManager::evalDerivedToBase(SVal Derived, const CastExpr *Cast) {
 SVal StoreManager::evalDerivedToBase(SVal Derived, const CXXBasePath &Path) {
   // Walk through the path to create nested CXXBaseRegions.
   SVal Result = Derived;
-  for (CXXBasePath::const_iterator I = Path.begin(), E = Path.end();
-       I != E; ++I) {
-    Result = evalDerivedToBase(Result, I->Base->getType(),
-                               I->Base->isVirtual());
-  }
+  for (const auto &I : Path)
+    Result = evalDerivedToBase(Result, I.Base->getType(),
+                               I.Base->isVirtual());
   return Result;
 }
 
 SVal StoreManager::evalDerivedToBase(SVal Derived, QualType BaseType,
                                      bool IsVirtual) {
-  Optional<loc::MemRegionVal> DerivedRegVal =
-      Derived.getAs<loc::MemRegionVal>();
-  if (!DerivedRegVal)
+  const MemRegion *DerivedReg = Derived.getAsRegion();
+  if (!DerivedReg)
     return Derived;
 
   const CXXRecordDecl *BaseDecl = BaseType->getPointeeCXXRecordDecl();
@@ -273,8 +281,18 @@ SVal StoreManager::evalDerivedToBase(SVal Derived, QualType BaseType,
     BaseDecl = BaseType->getAsCXXRecordDecl();
   assert(BaseDecl && "not a C++ object?");
 
+  if (const auto *AlreadyDerivedReg =
+          dyn_cast<CXXDerivedObjectRegion>(DerivedReg)) {
+    if (const auto *SR =
+            dyn_cast<SymbolicRegion>(AlreadyDerivedReg->getSuperRegion()))
+      if (SR->getSymbol()->getType()->getPointeeCXXRecordDecl() == BaseDecl)
+        return loc::MemRegionVal(SR);
+
+    DerivedReg = AlreadyDerivedReg->getSuperRegion();
+  }
+
   const MemRegion *BaseReg = MRMgr.getCXXBaseObjectRegion(
-      BaseDecl, cast<SubRegion>(DerivedRegVal->getRegion()), IsVirtual);
+      BaseDecl, cast<SubRegion>(DerivedReg), IsVirtual);
 
   return loc::MemRegionVal(BaseReg);
 }
@@ -286,9 +304,9 @@ SVal StoreManager::evalDerivedToBase(SVal Derived, QualType BaseType,
 /// symbolic regions, where the dynamic type is merely bounded (and even then,
 /// only ostensibly!), but does not take advantage of any dynamic type info.
 static const CXXRecordDecl *getCXXRecordType(const MemRegion *MR) {
-  if (const TypedValueRegion *TVR = dyn_cast<TypedValueRegion>(MR))
+  if (const auto *TVR = dyn_cast<TypedValueRegion>(MR))
     return TVR->getValueType()->getAsCXXRecordDecl();
-  if (const SymbolicRegion *SR = dyn_cast<SymbolicRegion>(MR))
+  if (const auto *SR = dyn_cast<SymbolicRegion>(MR))
     return SR->getSymbol()->getType()->getPointeeCXXRecordDecl();
   return nullptr;
 }
@@ -327,7 +345,7 @@ SVal StoreManager::attemptDownCast(SVal Base, QualType TargetType,
         return evalDerivedToBase(loc::MemRegionVal(MR), Paths.front());
     }
 
-    if (const CXXBaseObjectRegion *BaseR = dyn_cast<CXXBaseObjectRegion>(MR)) {
+    if (const auto *BaseR = dyn_cast<CXXBaseObjectRegion>(MR)) {
       // Drill down the chain to get the derived classes.
       MR = BaseR->getSuperRegion();
       continue;
@@ -348,7 +366,7 @@ SVal StoreManager::attemptDownCast(SVal Base, QualType TargetType,
     const MemRegion *Uncasted = MR->StripCasts(/*IncludeBaseCasts=*/false);
     if (Uncasted == MR) {
       // We reached the bottom of the hierarchy and did not find the derived
-      // class. We we must be casting the base to derived, so the cast should
+      // class. We must be casting the base to derived, so the cast should
       // fail.
       break;
     }
@@ -356,32 +374,57 @@ SVal StoreManager::attemptDownCast(SVal Base, QualType TargetType,
     MR = Uncasted;
   }
 
+  // If we're casting a symbolic base pointer to a derived class, use
+  // CXXDerivedObjectRegion to represent the cast. If it's a pointer to an
+  // unrelated type, it must be a weird reinterpret_cast and we have to
+  // be fine with ElementRegion. TODO: Should we instead make
+  // Derived{TargetClass, Element{SourceClass, SR}}?
+  if (const auto *SR = dyn_cast<SymbolicRegion>(MR)) {
+    QualType T = SR->getSymbol()->getType();
+    const CXXRecordDecl *SourceClass = T->getPointeeCXXRecordDecl();
+    if (TargetClass && SourceClass && TargetClass->isDerivedFrom(SourceClass))
+      return loc::MemRegionVal(
+          MRMgr.getCXXDerivedObjectRegion(TargetClass, SR));
+    return loc::MemRegionVal(GetElementZeroRegion(SR, TargetType));
+  }
+
   // We failed if the region we ended up with has perfect type info.
   Failed = isa<TypedValueRegion>(MR);
   return UnknownVal();
 }
 
-
 /// CastRetrievedVal - Used by subclasses of StoreManager to implement
 ///  implicit casts that arise from loads from regions that are reinterpreted
 ///  as another region.
 SVal StoreManager::CastRetrievedVal(SVal V, const TypedValueRegion *R,
-                                    QualType castTy, bool performTestOnly) {
-
+                                    QualType castTy) {
   if (castTy.isNull() || V.isUnknownOrUndef())
     return V;
 
-  ASTContext &Ctx = svalBuilder.getContext();
-
-  if (performTestOnly) {
-    // Automatically translate references to pointers.
-    QualType T = R->getValueType();
-    if (const ReferenceType *RT = T->getAs<ReferenceType>())
-      T = Ctx.getPointerType(RT->getPointeeType());
-
-    assert(svalBuilder.getContext().hasSameUnqualifiedType(castTy, T));
-    return V;
+  // The dispatchCast() call below would convert the int into a float.
+  // What we want, however, is a bit-by-bit reinterpretation of the int
+  // as a float, which usually yields nothing garbage. For now skip casts
+  // from ints to floats.
+  // TODO: What other combinations of types are affected?
+  if (castTy->isFloatingType()) {
+    SymbolRef Sym = V.getAsSymbol();
+    if (Sym && !Sym->getType()->isFloatingType())
+      return UnknownVal();
   }
+
+  // When retrieving symbolic pointer and expecting a non-void pointer,
+  // wrap them into element regions of the expected type if necessary.
+  // SValBuilder::dispatchCast() doesn't do that, but it is necessary to
+  // make sure that the retrieved value makes sense, because there's no other
+  // cast in the AST that would tell us to cast it to the correct pointer type.
+  // We might need to do that for non-void pointers as well.
+  // FIXME: We really need a single good function to perform casts for us
+  // correctly every time we need it.
+  if (castTy->isPointerType() && !castTy->isVoidPointerType())
+    if (const auto *SR = dyn_cast_or_null<SymbolicRegion>(V.getAsRegion()))
+      if (SR->getSymbol()->getType().getCanonicalType() !=
+          castTy.getCanonicalType())
+        return loc::MemRegionVal(castRegion(SR, castTy));
 
   return svalBuilder.dispatchCast(V, castTy);
 }
@@ -421,7 +464,7 @@ SVal StoreManager::getLValueFieldOrIvar(const Decl *D, SVal Base) {
 
   // NOTE: We must have this check first because ObjCIvarDecl is a subclass
   // of FieldDecl.
-  if (const ObjCIvarDecl *ID = dyn_cast<ObjCIvarDecl>(D))
+  if (const auto *ID = dyn_cast<ObjCIvarDecl>(D))
     return loc::MemRegionVal(MRMgr.getObjCIvarRegion(ID, BaseR));
 
   return loc::MemRegionVal(MRMgr.getFieldRegion(cast<FieldDecl>(D), BaseR));
@@ -433,7 +476,6 @@ SVal StoreManager::getLValueIvar(const ObjCIvarDecl *decl, SVal base) {
 
 SVal StoreManager::getLValueElement(QualType elementType, NonLoc Offset,
                                     SVal Base) {
-
   // If the base is an unknown or undefined value, just return it back.
   // FIXME: For absolute pointer addresses, we just return that value back as
   //  well, although in reality we should return the offset added to that
@@ -441,17 +483,19 @@ SVal StoreManager::getLValueElement(QualType elementType, NonLoc Offset,
   if (Base.isUnknownOrUndef() || Base.getAs<loc::ConcreteInt>())
     return Base;
 
+  if (Base.getAs<loc::GotoLabel>())
+    return UnknownVal();
+
   const SubRegion *BaseRegion =
       Base.castAs<loc::MemRegionVal>().getRegionAs<SubRegion>();
 
   // Pointer of any type can be cast and used as array base.
-  const ElementRegion *ElemR = dyn_cast<ElementRegion>(BaseRegion);
+  const auto *ElemR = dyn_cast<ElementRegion>(BaseRegion);
 
   // Convert the offset to the appropriate size and signedness.
   Offset = svalBuilder.convertToArrayIndex(Offset).castAs<NonLoc>();
 
   if (!ElemR) {
-    //
     // If the base region is not an ElementRegion, create one.
     // This can happen in the following example:
     //
@@ -459,7 +503,6 @@ SVal StoreManager::getLValueElement(QualType elementType, NonLoc Offset,
     //   p[1] = 8;
     //
     //  Observe that 'p' binds to an AllocaRegion.
-    //
     return loc::MemRegionVal(MRMgr.getElementRegion(elementType, Offset,
                                                     BaseRegion, Ctx));
   }
@@ -496,7 +539,7 @@ SVal StoreManager::getLValueElement(QualType elementType, NonLoc Offset,
                                                   Ctx));
 }
 
-StoreManager::BindingsHandler::~BindingsHandler() {}
+StoreManager::BindingsHandler::~BindingsHandler() = default;
 
 bool StoreManager::FindUniqueBinding::HandleBinding(StoreManager& SMgr,
                                                     Store store,

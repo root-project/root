@@ -22,14 +22,15 @@ Bifurcated Gaussian p.d.f with different widths on left and right
 side of maximum value
 **/
 
-
-#include "Riostream.h"
-#include "TMath.h"
-#include <math.h>
-
 #include "RooBifurGauss.h"
+
 #include "RooAbsReal.h"
 #include "RooMath.h"
+#include "RooBatchCompute.h"
+
+#include "TMath.h"
+
+#include <cmath>
 
 using namespace std;
 
@@ -75,6 +76,12 @@ Double_t RooBifurGauss::evaluate() const {
   }
 
   return exp(coef*arg*arg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of BifurGauss distribution.  
+RooSpan<double> RooBifurGauss::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeBifurGauss(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigmaL->getValues(evalData, normSet), sigmaR->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

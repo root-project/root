@@ -117,6 +117,7 @@ public:
            Long64_t *GetTreeOffset() const { return fTreeOffset; }
            Int_t     GetTreeOffsetLen() const { return fTreeOffsetLen; }
    virtual Double_t  GetWeight() const;
+   virtual Bool_t    InPlaceClone(TDirectory *newdirectory, const char *options = "");
    virtual Int_t     LoadBaskets(Long64_t maxmemory);
    virtual Long64_t  LoadTree(Long64_t entry);
            void      Lookup(Bool_t force = kFALSE);
@@ -135,6 +136,7 @@ public:
    virtual void      ResetAfterMerge(TFileMergeInfo *);
    virtual void      ResetBranchAddress(TBranch *);
    virtual void      ResetBranchAddresses();
+   virtual void      SavePrimitive (std::ostream &out, Option_t *option="");
    virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
@@ -144,7 +146,7 @@ public:
      return TTree::SetBranchAddress<T>(bname, add, ptr);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   // This can only be used when the template overload resolution can distringuish between
+   // This can only be used when the template overload resolution can distinguish between
    // T* and T**
    template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
      return TTree::SetBranchAddress<T>(bname, add, ptr);

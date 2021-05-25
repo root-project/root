@@ -104,12 +104,9 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "TTree.h"
 #include "TLeaf.h"
 #include "TString.h"
-#include "TClass.h"
 #include "TH1D.h"
-#include "TKey.h"
 #include "TVector.h"
 #include "TXMLEngine.h"
 #include "TMath.h"
@@ -119,8 +116,6 @@
 #include <string>
 #include <vector>
 #include <fstream>
-
-#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -350,11 +345,7 @@ TString TMVA::Reader::GetMethodTypeFromFile( const TString& filename )
    TString fullMethodName("");
    if (filename.EndsWith(".xml")) {
       fin.close();
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,29,0)
       void* doc      = gTools().xmlengine().ParseFile(filename,gTools().xmlenginebuffersize());// the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
-#else
-      void* doc      = gTools().xmlengine().ParseFile(filename);
-#endif
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       gTools().ReadAttr(rootnode, "Method", fullMethodName);
       gTools().xmlengine().FreeDoc(doc);
@@ -437,8 +428,6 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
 
 TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr )
 {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00)
-
    // books MVA method from weightfile
    IMethod *im =
       ClassifierFactory::Instance().Create(Types::Instance().GetMethodName(methodType).Data(), DataInfo(), "");
@@ -470,12 +459,6 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* 
          << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
 
    return method;
-#else
-   Log() << kFATAL << "Method Reader::BookMVA(TMVA::Types::EMVA methodType = " << methodType
-         << ", const char* xmlstr = " << xmlstr
-         << " ) is not available for ROOT versions prior to 5.26/00." << Endl;
-   return 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,7 +594,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( const TString& m
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluates the regression MVA
 /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
-/// it is not again checked in each of these subsequent calls..
+/// it is not again checked in each of these subsequent calls.
 
 const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( MethodBase* method, Double_t /*aux*/ )
 {
@@ -677,7 +660,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( const TString& m
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluates the multiclass MVA
 /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
-/// it is not again checked in each of these subsequent calls..
+/// it is not again checked in each of these subsequent calls.
 
 const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( MethodBase* method, Double_t /*aux*/ )
 {

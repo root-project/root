@@ -27,6 +27,7 @@
 #ifndef TMVA_TEST_DNN_TEST_CNN_TEST_DL_MINIMIZER_H
 #define TMVA_TEST_DNN_TEST_CNN_TEST_DL_MINIMIZER_H
 
+#include <vector>
 #include "TMatrix.h"
 #include "TMVA/DNN/DLMinimizers.h"
 #include "TMVA/DNN/DeepNet.h"
@@ -104,10 +105,12 @@ auto testMinimization(typename Architecture_t::Scalar_t momentum, bool nestorov)
    // Initialize the tensor inputs
    TensorInput trainingInput(XTrain, YTrain, WTrain);
    TensorInput testInput(XTest, YTest, WTest);
+   std::vector<size_t> shape {batchSize, 1, 1, 1, 1};
 
-   DataLoader_t trainingData(trainingInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput,
+   DataLoader_t trainingData(trainingInput, nSamples, batchDepth, batchHeight, batchWidth, nOutput, shape,
                              nThreads);
-   DataLoader_t testingData(testInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput, nThreads);
+   DataLoader_t testingData(testInput,  nSamples, batchDepth, batchHeight, batchWidth, nOutput, shape,
+                             nThreads);
 
    // Initialize the vector of batches, one batch for one slave network
    std::vector<TTensorBatch<Architecture_t>> batches{};

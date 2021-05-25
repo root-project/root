@@ -11,8 +11,8 @@
 
 #include "TGeoCache.h"
 
-#include "Rtypes.h"
 #include "TGeoManager.h"
+#include "TGeoStateInfo.h"
 #include "TGeoMatrix.h"
 #include "TGeoVolume.h"
 #include "TObject.h"
@@ -132,6 +132,7 @@ void TGeoNodeCache::BuildIdArray()
    Int_t ifree  = 1;
    Int_t nodeid = 0;
    gGeoManager->GetTopNode()->FillIdArray(ifree, nodeid, fNodeIdArray);
+   gGeoManager->CdTop();
    fIdBranch[0] = 0;
 }
 
@@ -271,9 +272,9 @@ Int_t TGeoNodeCache::GetCurrentNodeId() const
 
 Int_t TGeoNodeCache::GetNodeId() const
 {
-   Long_t id=0;
+   Longptr_t id=0;
    for (Int_t level=0;level<fLevel+1; level++)
-      id += (Long_t)fNodeBranch[level];
+      id += (Longptr_t)fNodeBranch[level];
    return (Int_t)id;
 }
 

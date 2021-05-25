@@ -25,6 +25,7 @@
 #include <map>
 #include <list>
 #include <string>
+#include "ROOT/RMakeUnique.hxx"
 
 class TClass ;
 class RooAbsPdf ;
@@ -92,6 +93,9 @@ public:
   Bool_t loadSnapshot(const char* name) ;  
   const RooArgSet* getSnapshot(const char* name) const ;
 
+  // Retrieve list of parameter snapshots
+  RooLinkedList getSnapshots(){ return this->_snapshots; }
+
   void merge(const RooWorkspace& /*other*/) {} ;
 
   // Join p.d.f.s and datasets for simultaneous analysis
@@ -129,6 +133,15 @@ public:
   Bool_t cd(const char* path = 0) ;
 
   Bool_t writeToFile(const char* fileName, Bool_t recreate=kTRUE) ;
+
+  /// Make internal collection use an unordered_map for
+  /// faster searching. Important when large trees are
+  /// imported / or modified in the workspace.
+  /// Note that RooAbsCollection may eventually switch
+  /// this on by itself.
+  void useFindsWithHashLookup(bool flag) {
+    _allOwnedNodes.useHashMapForFind(flag);
+  }
 
   virtual void RecursiveRemove(TObject *obj);
 
@@ -220,13 +233,8 @@ public:
     virtual ~WSDir() { Clear("nodelete") ; } ; 
 
 
-#if ROOT_VERSION_CODE <= 332546
-    virtual void Add(TObject*) ;
-    virtual void Append(TObject*) ;
-#else 
     virtual void Add(TObject*,Bool_t) ; 
     virtual void Append(TObject*,Bool_t) ; 
-#endif 
 
   protected:
     friend class RooWorkspace ;
@@ -270,7 +278,7 @@ public:
 
     RooExpensiveObjectCache _eocache; // Cache for expensive objects
 
-    RooFactoryWSTool *_factory; //! Factory tool associated with workspace
+    std::unique_ptr<RooFactoryWSTool> _factory; //! Factory tool associated with workspace
 
     Bool_t _doExport;          //! Export contents of workspace to CINT?
     std::string _exportNSName; //! Name of CINT namespace to which contents are exported

@@ -13,7 +13,6 @@
 // Author    : Lorenzo.MONETA@cern.ch
 // Created by: moneta  at Thu Apr  8 10:26:22 2004
 
-
 #include "Minuit2/SqrtUpParameterTransformation.h"
 #include "Minuit2/MnMachinePrecision.h"
 
@@ -25,7 +24,7 @@ namespace ROOT {
 
     long double SqrtUpParameterTransformation::Int2ext(long double value, long double upper) const {
       // internal to external transformation
-      long double val = upper + 1. - sqrt( value*value + 1.);
+      long double val = upper + 1. - std::sqrt( value*value + 1.);
       return val;
     }
 
@@ -37,13 +36,13 @@ namespace ROOT {
       if (yy2 < 1.  )
         return 0;
       else
-        return sqrt( yy2 -1);
+        return std::sqrt( yy2 -1);
     }
 
 
     long double SqrtUpParameterTransformation::DInt2Ext(long double value, long double) const {
       // derivative of internal to external transofrmation :  d (Int2Ext ) / d Int
-      long double val = - value/( sqrt( value*value + 1.) );
+      long double val = - value/( std::sqrt( value*value + 1.) );
       return val;
     }
 
@@ -60,4 +59,4 @@ namespace ROOT {
 
   }  // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT

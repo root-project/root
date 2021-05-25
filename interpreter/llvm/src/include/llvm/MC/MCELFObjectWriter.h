@@ -1,9 +1,8 @@
 //===- llvm/MC/MCELFObjectWriter.h - ELF Object Writer ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,6 +11,8 @@
 
 #include "llvm/ADT/Triple.h"
 #include "llvm/BinaryFormat/ELF.h"
+#include "llvm/MC/MCObjectWriter.h"
+#include "llvm/MC/MCSectionELF.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cstdint>
@@ -50,24 +51,31 @@ struct ELFRelocationEntry {
   void dump() const { print(errs()); }
 };
 
-class MCELFObjectTargetWriter {
+class MCELFObjectTargetWriter : public MCObjectTargetWriter {
   const uint8_t OSABI;
+  const uint8_t ABIVersion;
   const uint16_t EMachine;
   const unsigned HasRelocationAddend : 1;
   const unsigned Is64Bit : 1;
-  const unsigned IsN64 : 1;
 
 protected:
   MCELFObjectTargetWriter(bool Is64Bit_, uint8_t OSABI_, uint16_t EMachine_,
-                          bool HasRelocationAddend, bool IsN64 = false);
+                          bool HasRelocationAddend_, uint8_t ABIVersion_ = 0);
 
 public:
   virtual ~MCELFObjectTargetWriter() = default;
+
+  virtual Triple::ObjectFormatType getFormat() const { return Triple::ELF; }
+  static bool classof(const MCObjectTargetWriter *W) {
+    return W->getFormat() == Triple::ELF;
+  }
 
   static uint8_t getOSABI(Triple::OSType OSType) {
     switch (OSType) {
       case Triple::CloudABI:
         return ELF::ELFOSABI_CLOUDABI;
+      case Triple::HermitCore:
+        return ELF::ELFOSABI_STANDALONE;
       case Triple::PS4:
       case Triple::FreeBSD:
         return ELF::ELFOSABI_FREEBSD;
@@ -85,13 +93,15 @@ public:
   virtual void sortRelocs(const MCAssembler &Asm,
                           std::vector<ELFRelocationEntry> &Relocs);
 
+  virtual void addTargetSectionFlags(MCContext &Ctx, MCSectionELF &Sec);
+
   /// \name Accessors
   /// @{
   uint8_t getOSABI() const { return OSABI; }
+  uint8_t getABIVersion() const { return ABIVersion; }
   uint16_t getEMachine() const { return EMachine; }
   bool hasRelocationAddend() const { return HasRelocationAddend; }
   bool is64Bit() const { return Is64Bit; }
-  bool isN64() const { return IsN64; }
   /// @}
 
   // Instead of changing everyone's API we pack the N64 Type fields
@@ -134,14 +144,19 @@ public:
   }
 };
 
-/// \brief Construct a new ELF writer instance.
+/// Construct a new ELF writer instance.
 ///
 /// \param MOTW - The target specific ELF writer subclass.
 /// \param OS - The stream to write to.
 /// \returns The constructed object writer.
-MCObjectWriter *createELFObjectWriter(MCELFObjectTargetWriter *MOTW,
-                                      raw_pwrite_stream &OS,
-                                      bool IsLittleEndian);
+std::unique_ptr<MCObjectWriter>
+createELFObjectWriter(std::unique_ptr<MCELFObjectTargetWriter> MOTW,
+                      raw_pwrite_stream &OS, bool IsLittleEndian);
+
+std::unique_ptr<MCObjectWriter>
+createELFDwoObjectWriter(std::unique_ptr<MCELFObjectTargetWriter> MOTW,
+                         raw_pwrite_stream &OS, raw_pwrite_stream &DwoOS,
+                         bool IsLittleEndian);
 
 } // end namespace llvm
 

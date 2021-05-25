@@ -1,16 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'SPECIAL PDFS' RooFit tutorial macro #706
-##
-## Histogram based p.d.f.s and functions
+## Special pdf's: histogram based pdfs and functions
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

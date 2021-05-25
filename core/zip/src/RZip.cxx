@@ -12,11 +12,12 @@
 #include "Bits.h"
 #include "ZipLZMA.h"
 #include "ZipLZ4.h"
+#include "ZipZSTD.h"
 
 #include "zlib.h"
 
-#include <stdio.h>
-#include <assert.h>
+#include <cstdio>
+#include <cassert>
 
 // The size of the ROOT block framing headers for compression:
 // - 3 bytes to identify the compression algorithm and version.
@@ -47,16 +48,18 @@ static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigne
   is done.  LZ4 typically has the worst compression ratios, but much faster decompression
   speeds - sometimes by an order of magnitude.
 */
-#ifdef R__HAS_DEFAULT_LZ4
-enum ROOT::ECompressionAlgorithm R__ZipMode = ROOT::ECompressionAlgorithm::kLZ4;
+#ifdef R__HAS_DEFAULT_ZSTD
+ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZSTD;
+#elif defined(R__HAS_DEFAULT_LZ4)
+ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kLZ4;
 #else
-enum ROOT::ECompressionAlgorithm R__ZipMode = ROOT::ECompressionAlgorithm::kZLIB;
+ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZLIB;
 #endif
 
 /* ===========================================================================
    Function to set the ZipMode
  */
-extern "C" void R__SetZipMode(enum ROOT::ECompressionAlgorithm mode)
+extern "C" void R__SetZipMode(ROOT::RCompressionSetting::EAlgorithm::EValues mode)
 {
    R__ZipMode = mode;
 }
@@ -66,14 +69,14 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
    return crc32(crc, buf, len);
 }
 
+/* int cxlevel;                      compression level */
 /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
 /* char *tgt, *src;                  source and target buffers */
 /* compressionAlgorithm 0 = use global setting */
 /*                      1 = zlib */
 /*                      2 = lzma */
 /*                      3 = old */
-void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::ECompressionAlgorithm compressionAlgorithm)
-     /* int cxlevel;                      compression level */
+void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
 {
 
   if (*srcsize < 1 + HDRSIZE + 1) {
@@ -86,29 +89,24 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     return;
   }
 
-  if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
+  if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
     compressionAlgorithm = R__ZipMode;
   }
 
   // The LZMA compression algorithm from the XZ package
-  if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kLZMA) {
+  if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kLZ4) {
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kZSTD) {
+     R__zipZSTD(cxlevel, srcsize, src, tgtsize, tgt, irep);
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kZLIB) {
-     R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else {
-     // 4 is for LZ4 (which is the default), LZ4 is also used for any illegal
+     // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
      // algorithm setting.  This was a poor historic choice, as poor code may result in
      // a surprising change in algorithm in a future version of ROOT.
-     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
+     R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
   }
 }
 
@@ -220,6 +218,8 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     }
 
     err = deflateEnd(&stream);
+    if (err != Z_OK)
+       printf("error %d in deflateEnd (zlib)\n",err);
 
     tgt[0] = 'Z';               /* Signature ZLib */
     tgt[1] = 'L';
@@ -236,13 +236,12 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     tgt[8] = (char)((l_in_size >> 16) & 0xff);
 
     *irep = stream.total_out + HDRSIZE;
-    return;
 }
 
 
 void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
    R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
-                           ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting);
+                           ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
 }
 
 /**
@@ -269,10 +268,15 @@ static int is_valid_header_lz4(unsigned char *src)
    return src[0] == 'L' && src[1] == '4';
 }
 
+static int is_valid_header_zstd(unsigned char *src)
+{
+   return src[0] == 'Z' && src[1] == 'S' && src[2] == '\1';
+}
+
 static int is_valid_header(unsigned char *src)
 {
    return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
-          is_valid_header_lz4(src);
+          is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
 int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
@@ -317,71 +321,72 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
 // age of the original code...
 void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 {
-  long isize;
-  uch  *ibufptr,*obufptr;
-  long  ibufcnt, obufcnt;
+   long isize;
+   uch *ibufptr, *obufptr;
+   long ibufcnt, obufcnt;
 
-  *irep = 0L;
+   *irep = 0L;
 
-  /*   C H E C K   H E A D E R   */
+   /*   C H E C K   H E A D E R   */
 
-  if (*srcsize < HDRSIZE) {
-    fprintf(stderr,"R__unzip: too small source\n");
-    return;
-  }
+   if (*srcsize < HDRSIZE) {
+      fprintf(stderr, "R__unzip: too small source\n");
+      return;
+   }
 
-  /*   C H E C K   H E A D E R   */
-  if (!is_valid_header(src)) {
-     fprintf(stderr, "Error R__unzip: error in header\n");
-     return;
-  }
+   /*   C H E C K   H E A D E R   */
+   if (!is_valid_header(src)) {
+      fprintf(stderr, "Error R__unzip: error in header\n");
+      return;
+   }
 
-  ibufptr = src + HDRSIZE;
-  ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
-  isize   = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
-  obufptr = tgt;
-  obufcnt = *tgtsize;
+   ibufptr = src + HDRSIZE;
+   ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
+   isize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+   obufptr = tgt;
+   obufcnt = *tgtsize;
 
-  if (obufcnt < isize) {
-    fprintf(stderr,"R__unzip: too small target\n");
-    return;
-  }
+   if (obufcnt < isize) {
+      fprintf(stderr, "R__unzip: too small target\n");
+      return;
+   }
 
-  if (ibufcnt + HDRSIZE != *srcsize) {
-    fprintf(stderr,"R__unzip: discrepancy in source length\n");
-    return;
-  }
+   if (ibufcnt + HDRSIZE != *srcsize) {
+      fprintf(stderr, "R__unzip: discrepancy in source length\n");
+      return;
+   }
 
-  /*   D E C O M P R E S S   D A T A  */
+   /* ZLIB and other standard compression algorithms */
+   if (is_valid_header_zlib(src)) {
+      R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_lzma(src)) {
+      R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_lz4(src)) {
+      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_zstd(src)) {
+      R__unzipZSTD(srcsize, src, tgtsize, tgt, irep);
+      return;
+   }
 
-  /* ZLIB and other standard compression algorithms */
-  if (is_valid_header_zlib(src)) {
-     R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
-     return;
-  } else if (is_valid_header_lzma(src)) {
-     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
-     return;
-  } else if (is_valid_header_lz4(src)) {
-     R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
-     return;
-  }
+   /* Old zlib format */
+   if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
+      fprintf(stderr, "R__unzip: error during decompression\n");
+      return;
+   }
 
-  /* Old zlib format */
-  if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
-    fprintf(stderr,"R__unzip: error during decompression\n");
-    return;
-  }
+   /* if (obufptr - tgt != isize) {
+     There are some rare cases when a few more bytes are required */
+   if (obufptr - tgt > *tgtsize) {
+      fprintf(stderr, "R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n", (long)(obufptr - tgt), isize,
+              *tgtsize);
+      *irep = obufptr - tgt;
+      return;
+   }
 
-  /* if (obufptr - tgt != isize) {
-    There are some rare cases when a few more bytes are required */
-  if (obufptr - tgt > *tgtsize) {
-    fprintf(stderr,"R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n",
-            (long)(obufptr - tgt),isize,*tgtsize);
-    *irep = obufptr - tgt;
-    return;
-  }
-
-  *irep = isize;
+   *irep = isize;
 }
 
 void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)

@@ -1,17 +1,17 @@
 // @(#)root/foam:$Id$
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
-//_________________________________________________________________________________
-//
-// Class TFoamCell  used in TFoam
-// ==============================
-// Objects of this class are hyper-rectangular cells organized in the binary tree.
-// Special algorithm for encoding relative positioning of the cells
-// allow to save total memory allocation needed for the system of cells.
-//
-//_________________________________________________________________________________
+/** \class TFoamCell
 
-#include "Riostream.h"
+Used by TFoam
+
+Objects of this class are hyper-rectangular cells organized in the binary tree.
+Special algorithm for encoding relative positioning of the cells
+allow to save total memory allocation needed for the system of cells.
+*/
+
+
+#include <iostream>
 #include "TFoamCell.h"
 #include "TFoamVect.h"
 
@@ -109,10 +109,6 @@ void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//              GETTERS/SETTERS
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
 /// Provides size and position of the cell
 /// These parameter are calculated by analyzing information in all parents
 /// cells up to the root cell. It takes time but saves memory.
@@ -139,7 +135,7 @@ void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
       }
       dCell=pCell;
    }//while
-}//GetHcub
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Provides size of the cell
@@ -166,7 +162,7 @@ void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
       }
       dCell=pCell;
    }//while
-}//GetHSize
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates volume of the cell using size params which are calculated
@@ -211,6 +207,3 @@ void TFoamCell::Print(Option_t *option) const
       std::cout <<"   Size= "; cellSize.Print("1"); std::cout<<","<< std::endl;
    }
 }
-///////////////////////////////////////////////////////////////////
-//        End of  class  TFoamCell                               //
-///////////////////////////////////////////////////////////////////

@@ -1,9 +1,8 @@
 //== SubEngine.h - Interface of the subengine of CoreEngine --------*- C++ -*-//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,8 +23,12 @@ class CFGElement;
 class LocationContext;
 class Stmt;
 
+namespace cross_tu {
+class CrossTranslationUnitContext;
+}
+
 namespace ento {
-  
+
 struct NodeBuilderContext;
 class AnalysisManager;
 class ExplodedNodeSet;
@@ -49,6 +52,9 @@ public:
 
   virtual AnalysisManager &getAnalysisManager() = 0;
 
+  virtual cross_tu::CrossTranslationUnitContext *
+  getCrossTranslationUnitContext() = 0;
+
   virtual ProgramStateManager &getStateManager() = 0;
 
   /// Called by CoreEngine. Used to generate new successor
@@ -65,7 +71,7 @@ public:
 
   /// Called by CoreEngine.  Used to generate successor
   ///  nodes by processing the 'effects' of a branch condition.
-  virtual void processBranch(const Stmt *Condition, const Stmt *Term,
+  virtual void processBranch(const Stmt *Condition,
                              NodeBuilderContext& BuilderCtx,
                              ExplodedNode *Pred,
                              ExplodedNodeSet &Dst,
@@ -126,7 +132,7 @@ public:
 
   /// processRegionChanges - Called by ProgramStateManager whenever a change is
   /// made to the store. Used to update checkers that track region values.
-  virtual ProgramStateRef 
+  virtual ProgramStateRef
   processRegionChanges(ProgramStateRef state,
                        const InvalidatedSymbols *invalidated,
                        ArrayRef<const MemRegion *> ExplicitRegions,
@@ -135,7 +141,7 @@ public:
                        const CallEvent *Call) = 0;
 
 
-  inline ProgramStateRef 
+  inline ProgramStateRef
   processRegionChange(ProgramStateRef state,
                       const MemRegion* MR,
                       const LocationContext *LCtx) {
@@ -149,17 +155,17 @@ public:
   notifyCheckersOfPointerEscape(ProgramStateRef State,
                            const InvalidatedSymbols *Invalidated,
                            ArrayRef<const MemRegion *> ExplicitRegions,
-                           ArrayRef<const MemRegion *> Regions,
                            const CallEvent *Call,
                            RegionAndSymbolInvalidationTraits &HTraits) = 0;
 
-  /// printState - Called by ProgramStateManager to print checker-specific data.
-  virtual void printState(raw_ostream &Out, ProgramStateRef State,
-                          const char *NL, const char *Sep) = 0;
+  /// printJson - Called by ProgramStateManager to print checker-specific data.
+  virtual void printJson(raw_ostream &Out, ProgramStateRef State,
+                         const LocationContext *LCtx, const char *NL,
+                         unsigned int Space, bool IsDot) const = 0;
 
   /// Called by CoreEngine when the analysis worklist is either empty or the
   //  maximum number of analysis steps have been reached.
-  virtual void processEndWorklist(bool hasWorkRemaining) = 0;
+  virtual void processEndWorklist() = 0;
 };
 
 } // end GR namespace

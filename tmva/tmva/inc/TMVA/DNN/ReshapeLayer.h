@@ -40,6 +40,7 @@ namespace DNN {
 template <typename Architecture_t>
 class TReshapeLayer : public VGeneralLayer<Architecture_t> {
 public:
+   using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
 
@@ -64,10 +65,10 @@ public:
    /*! The input must be in 3D tensor form with the different matrices
     *  corresponding to different events in the batch. It transforms the
     *  input matrices. */
-   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = false);
 
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                 std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward); 
+   //              Tensor_t &inp1, Tensor_t &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -130,38 +131,36 @@ TReshapeLayer<Architecture_t>::~TReshapeLayer()
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
-auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
+auto TReshapeLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/) -> void
 {
    if (fFlattening) {
-      size_t size = input.size();
-      size_t nRows = input[0].GetNrows();
-      size_t nCols = input[0].GetNcols();
-      Architecture_t::Flatten(this->GetOutputAt(0), input, size, nRows, nCols);
+    
+      Architecture_t::Flatten(this->GetOutput(), input);
+      
+      return;
    } else {
-      for (size_t i = 0; i < this->GetBatchSize(); i++) {
-         Architecture_t::Reshape(this->GetOutputAt(i), input[i]);
+     
+         Architecture_t::Deflatten(this->GetOutput(), input); //, out_size, nRows, nCols);
+         return;
       }
-   }
 }
-
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
-auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                             const std::vector<Matrix_t> & /*activations_backward*/,
-                                             std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
-                                             /*inp2*/) -> void
+auto TReshapeLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, const Tensor_t & 
+                                             /*activations_backward*/) -> void
+//                                             Tensor_t & /*inp1*/, Tensor_t &
+//                                             /*inp2*/) -> void
 {
+   size_t size = gradients_backward.GetSize();
    // in case of first layer size is zero - do nothing
-   if (gradients_backward.size() == 0) return; 
+   if (size == 0) return;
    if (fFlattening) {
-      size_t size = gradients_backward.size();
-      size_t nRows = gradients_backward[0].GetNrows();
-      size_t nCols = gradients_backward[0].GetNcols();
-      Architecture_t::Deflatten(gradients_backward, this->GetActivationGradientsAt(0), size, nRows, nCols);
+      // deflatten in backprop
+      Architecture_t::Deflatten(gradients_backward, this->GetActivationGradients());
+      return;
    } else {
-      for (size_t i = 0; i < this->GetBatchSize(); i++) {
-         Architecture_t::Reshape(gradients_backward[i], this->GetActivationGradientsAt(i));
-      }
+         Architecture_t::Flatten(gradients_backward, this->GetActivationGradients() );
+         return;
    }
 }
 
@@ -171,8 +170,8 @@ auto TReshapeLayer<Architecture_t>::Print() const -> void
 {
    std::cout << " RESHAPE Layer \t ";
    std::cout << "Input = ( " << this->GetInputDepth() << " , " <<  this->GetInputHeight() << " , " << this->GetInputWidth() << " ) ";
-   if (this->GetOutput().size() > 0) {
-      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+   if (this->GetOutput().GetSize() > 0) {
+      std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput().GetHSize() << " , " << this->GetOutput().GetWSize() << " ) ";
    }
    std::cout << std::endl;
 }

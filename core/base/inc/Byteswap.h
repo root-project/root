@@ -11,6 +11,14 @@
 #ifndef ROOT_Byteswap
 #define ROOT_Byteswap
 
+/* Originally (mid-1990s), this file contained copy/pasted assembler from RH6.0's
+ * version of <bits/byteswap.h>.  Hence, we keep a copy of the FSF copyright below.
+ * I believe all the original code has been excised, perhaps with exception of the
+ * R__bswap_constant_* functions.  To be on the safe side, we are keeping the
+ * copyright below.
+ *   -- Brian Bockelman, August 2018
+ */
+
 /* Copyright (C) 1997 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -31,33 +39,19 @@
 
 #if (defined(__linux) || defined(__APPLE__)) && \
     (defined(__i386__) || defined(__x86_64__)) && \
-    (defined(__GNUC__) && __GNUC__ >= 2)
+    (defined(__GNUC__))
 #ifndef R__USEASMSWAP
 #define R__USEASMSWAP
 #endif
 #endif
-
-/* Get the machine specific, optimized definitions.  */
-/* The following is copied from <bits/byteswap.h> (only from RH6.0 and above) */
 
 /* Swap bytes in 16 bit value.  */
 #define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
 #if defined R__USEASMSWAP
-# define R__bswap_16(x) \
-     (__extension__                                                           \
-      ({ unsigned short int __v;                                              \
-         if (__builtin_constant_p (x))                                        \
-           __v = R__bswap_constant_16 (x);                                    \
-         else                                                                 \
-           __asm__ __volatile__ ("rorw $8, %w0"                               \
-                                 : "=r" (__v)                                 \
-                                 : "0" ((unsigned short int) (x))             \
-                                 : "cc");                                     \
-         __v; }))
+# define R__bswap_16(x) __builtin_bswap16(x)
 #else
-/* This is better than nothing.  */
 # define R__bswap_16(x) R__bswap_constant_16 (x)
 #endif
 
@@ -68,55 +62,11 @@
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
 #if defined R__USEASMSWAP
-/* To swap the bytes in a word the i486 processors and up provide the
-   `bswap' opcode.  On i386 we have to use three instructions.  */
-# if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__ &&  \
-     !defined __pentium4__ && !defined __x86_64__
-#  define R__bswap_32(x) \
-     (__extension__                                                           \
-      ({ unsigned int __v;                                                    \
-         if (__builtin_constant_p (x))                                        \
-           __v = R__bswap_constant_32 (x);                                    \
-         else                                                                 \
-           __asm__ __volatile__ ("rorw $8, %w0;"                              \
-                                 "rorl $16, %0;"                              \
-                                 "rorw $8, %w0"                               \
-                                 : "=r" (__v)                                 \
-                                 : "0" ((unsigned int) (x))                   \
-                                 : "cc");                                     \
-         __v; }))
-# else
-#  define R__bswap_32(x) \
-     (__extension__                                                           \
-      ({ unsigned int __v;                                                    \
-         if (__builtin_constant_p (x))                                        \
-           __v = R__bswap_constant_32 (x);                                    \
-         else                                                                 \
-           __asm__ __volatile__ ("bswap %0"                                   \
-                                 : "=r" (__v)                                 \
-                                 : "0" ((unsigned int) (x)));                 \
-         __v; }))
-# endif
+# define R__bswap_32(x) __builtin_bswap32(x)
 #else
 # define R__bswap_32(x) R__bswap_constant_32 (x)
 #endif
 
-
-#if defined __GNUC__ && __GNUC__ >= 2
-/* Swap bytes in 64 bit value.  */
-# define R__bswap_64(x) \
-     (__extension__                                                           \
-      ({ union { __extension__ unsigned long long int __ll;                   \
-                 UInt_t __l[2]; } __w, __r;                                   \
-         __w.__ll = (x);                                                      \
-         __r.__l[0] = R__bswap_32 (__w.__l[1]);                               \
-         __r.__l[1] = R__bswap_32 (__w.__l[0]);                               \
-         __r.__ll; }))
-#endif /* bits/byteswap.h */
-
-
-/* The following definitions must all be macros since otherwise some
-   of the possible optimizations are not possible.  */
 
 /* Return a value with all bytes in the 16 bit argument swapped.  */
 #define Rbswap_16(x) R__bswap_16 (x)
@@ -124,9 +74,16 @@
 /* Return a value with all bytes in the 32 bit argument swapped.  */
 #define Rbswap_32(x) R__bswap_32 (x)
 
-#if defined __GNUC__ && __GNUC__ >= 2
 /* Return a value with all bytes in the 64 bit argument swapped.  */
-# define Rbswap_64(x) R__bswap_64 (x)
+
+/* For reasons that were lost to history, Rbswap_64 used to only
+ * be defined wherever GNUC was available.  To simplify the macro
+ * definitions, we extend this to wherever we can use the gcc-like
+ * builtins.
+ *    -- Brian Bockelman, August 2018
+ */
+#ifdef R__USEASMSWAP
+# define Rbswap_64(x) __builtin_bswap64(x)
 #endif
 
 #endif /* Byteswap.h */

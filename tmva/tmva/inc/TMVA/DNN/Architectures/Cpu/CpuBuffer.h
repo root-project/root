@@ -17,7 +17,7 @@
 #define TMVA_DNN_ARCHITECTURES_CPU_CPUBUFFER
 
 #include "TMVA/DNN/DataLoader.h"
-#include <vector>
+
 #include <memory>
 
 namespace TMVA
@@ -58,6 +58,7 @@ public:
 
    /** Construct buffer to hold \p size numbers of type \p AFloat.*/
     TCpuBuffer(size_t size);
+    TCpuBuffer() = default;
     TCpuBuffer(const TCpuBuffer  &) = default;
     TCpuBuffer(      TCpuBuffer &&) = default;
     TCpuBuffer & operator=(const TCpuBuffer  &) = default;
@@ -65,24 +66,45 @@ public:
 
     operator AFloat * () const {return (* fBuffer) + fOffset;}
 
-    /** Return subbuffer of siez \p start starting at element \p offset. */
-    TCpuBuffer GetSubBuffer(size_t offset, size_t start);
+    class FakeIteratorBegin{
+    private:
+      AFloat& fBeginRet;
+    public:
+      FakeIteratorBegin(AFloat& x): fBeginRet(x){}
+      AFloat& operator*()
+      {
+         return fBeginRet;
+      }
+    };
+    FakeIteratorBegin begin(){      
+      return FakeIteratorBegin(*((* fBuffer) + fOffset));
+   }
+
+
+
+    /** Return sub-buffer of size \p start starting at element \p offset. */
+    TCpuBuffer GetSubBuffer(size_t offset, size_t start) const;
 
     AFloat & operator[](size_t i)       {return (*fBuffer.get())[fOffset + i];}
     AFloat   operator[](size_t i) const {return (*fBuffer.get())[fOffset + i];}
 
     /** Copy data from another buffer. No real copying is performed, only the
      *  data pointers are swapped. */
-    void CopyFrom(TCpuBuffer &);
+    void CopyFrom(const TCpuBuffer &);
     /** Copy data to another buffer. No real copying is performed, only the
      *  data pointers are swapped. */
-    void CopyTo(TCpuBuffer &);
+    void CopyTo(TCpuBuffer &) const;
+
+    /**
+     * copy pointer from an external
+     */
 
     size_t GetSize() const {return fSize;}
+
+    size_t GetUseCount() const { return fBuffer.use_count(); }
 };
 
 } // namespace DNN
 } // namespace TMVA
 
 #endif
-

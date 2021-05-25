@@ -39,6 +39,7 @@ public:
    virtual Style_t  GetLabelFont()   const {return fLabelFont;}
    virtual Float_t  GetLabelOffset() const {return fLabelOffset;}
    virtual Float_t  GetLabelSize()   const {return fLabelSize;}
+   virtual Int_t    GetMaxDigits()   const {return (Int_t)(fNdivisions/1000000);}
    virtual Float_t  GetTitleOffset() const {return fTitleOffset;}
    virtual Float_t  GetTitleSize()   const {return fTitleSize;}
    virtual Float_t  GetTickLength()  const {return fTickLength;}

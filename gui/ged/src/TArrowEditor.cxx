@@ -23,12 +23,11 @@ enum EArrowWid {
    kARROW_SIZ
 };
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TArrowEditor
+    \ingroup ged
 
-/*
-<center><h2>Implements user interface for editing of arrow attributes:
-shape, size, angle.</h2></center>
-The picture below shows this interface.
+Implements user interface for editing of arrow attributes:
+shape, size, angle.
 */
 
 ////////////////////////////////////////////////////////////////////////////////

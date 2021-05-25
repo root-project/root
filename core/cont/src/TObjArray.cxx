@@ -50,6 +50,7 @@ set to the owner of its own content.
 #include "TObjArray.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TVirtualMutex.h"
 #include <stdlib.h>
 
@@ -236,7 +237,7 @@ void TObjArray::AddAtAndExpand(TObject *obj, Int_t idx)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    if (idx < fLowerBound) {
-      Error("AddAt", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("AddAt", "out of bounds at %d in %zx", idx, (size_t)this);
       return;
    }
    if (idx-fLowerBound >= fSize)
@@ -546,12 +547,27 @@ Int_t TObjArray::GetAbsLast() const
    if (fLast == -2) {
       for (Int_t i = fSize-1; i >= 0; i--)
          if (fCont[i]) {
+            R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
             ((TObjArray*)this)->fLast = i;
             return fLast;
          }
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
       ((TObjArray*)this)->fLast = -1;
    }
    return fLast;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of objects in array (i.e. number of non-empty slots).
+/// This is a thread-unsafe version of GetEntriesFast. Use it only if sure
+/// it will not be invoked concurrently.
+
+Int_t TObjArray::GetEntriesUnsafe() const
+{
+   if (R__unlikely(fLast == -2))
+      return GetEntriesFast();
+   else
+      return fLast + 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -641,7 +657,7 @@ TIterator *TObjArray::MakeIterator(Bool_t dir) const
 
 Bool_t TObjArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fSize, (Long_t)this);
+   Error(where, "index %d out of bounds (size: %d, this: 0x%zx)", i, fSize, (size_t)this);
    return kFALSE;
 }
 

@@ -31,8 +31,6 @@ Defined levels:
 - 3  detailed info for each step
 */
 
-ClassImp(TMCVerbose);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard constructor
 
@@ -251,6 +249,7 @@ void TMCVerbose::Stepping()
 
       // Step number
       //
+      // std::cout << "#" << std::setw(4) << gMC->StepNumber() << "  ";
       std::cout << "#" << std::setw(4) << fStepNumber++ << "  ";
 
       // Position
@@ -312,8 +311,17 @@ void TMCVerbose::PostTrack()
 
 void TMCVerbose::FinishPrimary()
 {
-   if (fLevel==2)
+   if (fLevel==1)
       std::cout << "--- Finish primary " << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// End of event info
+
+void TMCVerbose::EndOfEvent()
+{
+   if (fLevel>0)
+      std::cout << "--- End of event " << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,4 +332,3 @@ void TMCVerbose::FinishEvent()
    if (fLevel>0)
       std::cout << "--- Finish event " << std::endl;
 }
-

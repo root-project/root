@@ -58,15 +58,6 @@ void RooAbsCacheElement::printCompactTreeHook(std::ostream&, const char *, Int_t
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface for operation mode change calls
-
-void RooAbsCacheElement::operModeHook(RooAbsArg::OperMode) 
-{
-} 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Interface for cache optimization calls. The default implementation is to forward all these
 /// calls to all contained RooAbsArg objects as publicized through containedArg()
 
@@ -90,10 +81,7 @@ void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 void RooAbsCacheElement::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) 
 {
   RooArgList list = containedArgs(FindConstantNodes) ;
-  TIterator* iter = list.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {    
-    arg->findConstantNodes(obs,cacheList, processedNodes) ;
+  for (const auto arg : list) {
+    arg->findConstantNodes(obs, cacheList, processedNodes);
   }
-  delete iter ;
 }

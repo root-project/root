@@ -1,11 +1,21 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TFile.h"
+#include "TChain.h"
 #include "TTree.h"
 #include "gtest/gtest.h"
 
-// fixture that creates two files with two trees of 10 events each. One has branch `x`, the other branch `y`, both ints.
+#include <algorithm> // std::equal, std::sort
+#include <string>
+#include <vector>
+
+// fixture that creates 5 ROOT files:
+// - kFile1 contains `t` with branch `x` (few datapoints)
+// - kFile2 contains `t2` with branch `y` (few datapoints)
+// - kFile3 contains `t3` with branch `arr` (few datapoints, array branch)
+// - kFile{4,5} are the same as kFile{1,2} but with more events
 class RDFAndFriends : public ::testing::Test {
 protected:
    constexpr static auto kFile1 = "test_tdfandfriends.root";
@@ -48,7 +58,7 @@ protected:
 TEST_F(RDFAndFriends, FriendByFile)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -61,9 +71,9 @@ TEST_F(RDFAndFriends, FriendByFile)
 TEST_F(RDFAndFriends, FriendByPointer)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    TFile f2(kFile2);
-   TTree *t2 = static_cast<TTree *>(f2.Get("t2"));
+   auto t2 = f2.Get<TTree>("t2");
    t1->AddFriend(t2);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -76,7 +86,7 @@ TEST_F(RDFAndFriends, FriendByPointer)
 TEST_F(RDFAndFriends, FriendArrayByFile)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t3", kFile3);
    ROOT::RDataFrame d(*t1);
 
@@ -95,9 +105,9 @@ TEST_F(RDFAndFriends, FriendArrayByFile)
 TEST_F(RDFAndFriends, FriendArrayByPointer)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    TFile f3(kFile3);
-   TTree *t3 = static_cast<TTree *>(f3.Get("t3"));
+   auto t3 = f3.Get<TTree>("t3");
    t1->AddFriend(t3);
    ROOT::RDataFrame d(*t1);
 
@@ -116,7 +126,7 @@ TEST_F(RDFAndFriends, FriendArrayByPointer)
 TEST_F(RDFAndFriends, QualifiedBranchName)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -129,7 +139,7 @@ TEST_F(RDFAndFriends, QualifiedBranchName)
 TEST_F(RDFAndFriends, FromDefine)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
 
@@ -140,12 +150,51 @@ TEST_F(RDFAndFriends, FromDefine)
 TEST_F(RDFAndFriends, FromJittedDefine)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
 
    auto m = d.Define("yy", "y * y").Mean("yy");
    EXPECT_DOUBLE_EQ(*m, 4.);
+}
+
+// make sure we also Snapshot the branches in friend trees...
+TEST_F(RDFAndFriends, Snapshot) {
+   const auto outfile = "RDFAndFriends_Snapshot.root";
+
+   TFile f1(kFile1);
+   auto t1 = f1.Get<TTree>("t");
+   t1->AddFriend("t2", kFile2);
+
+   auto outdf = ROOT::RDataFrame(*t1).Snapshot("t", outfile);
+
+   auto outCols = outdf->GetColumnNames();
+   std::sort(outCols.begin(), outCols.end());
+   const std::vector<std::string> expected = {"x", "y"};
+   EXPECT_EQ(outCols, expected);
+
+   gSystem->Unlink(outfile);
+}
+
+// ...even if they have the same name as a branch in the main tree
+// this tests #7181
+TEST_F(RDFAndFriends, SnapshotWithSameNames) {
+   const auto outfile = "RDFAndFriends_SnapshotWithSameNames.root";
+
+   TFile f1(kFile1);
+   auto t1 = f1.Get<TTree>("t");
+   TFile f2(kFile1); // we open the same file twice
+   auto t2 = f2.Get<TTree>("t");
+   t1->AddFriend(t2, "t2");
+
+   auto outdf = ROOT::RDataFrame(*t1).Snapshot("t", outfile);
+
+   auto outCols = outdf->GetColumnNames();
+   std::sort(outCols.begin(), outCols.end());
+   const std::vector<std::string> expected = {"t2_x", "x"};
+   EXPECT_EQ(outCols, expected);
+
+   gSystem->Unlink(outfile);
 }
 
 // NOW MT!-------------
@@ -156,7 +205,7 @@ TEST_F(RDFAndFriends, FriendMT)
    ROOT::EnableImplicitMT(4u);
 
    TFile f1(kFile4);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile5);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -171,9 +220,9 @@ TEST_F(RDFAndFriends, FriendAliasMT)
 {
    ROOT::EnableImplicitMT(4u);
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    TFile f2(kFile4);
-   TTree *t2 = static_cast<TTree *>(f2.Get("t"));
+   auto t2 = f2.Get<TTree>("t");
    t1->AddFriend(t2, "myfriend");
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -207,6 +256,101 @@ TEST_F(RDFAndFriends, FriendChainMT)
    EXPECT_EQ(*x, 1);
    EXPECT_EQ(*y, 5);
    ROOT::DisableImplicitMT();
+}
+
+// ROOT-9559
+void FillIndexedFriend(const char *mainfile, const char *auxfile)
+{
+   // Start by creating main Tree
+   TFile f(mainfile, "RECREATE");
+   TTree mainTree("mainTree", "mainTree");
+   int idx;
+   mainTree.Branch("idx", &idx);
+   int x;
+   mainTree.Branch("x", &x);
+
+   idx = 1;
+   x = 1;
+   mainTree.Fill();
+   idx = 1;
+   x = 2;
+   mainTree.Fill();
+   idx = 1;
+   x = 3;
+   mainTree.Fill();
+   idx = 2;
+   x = 4;
+   mainTree.Fill();
+   idx = 2;
+   x = 5;
+   mainTree.Fill();
+   mainTree.Write();
+   f.Close();
+
+   // And aux tree
+   TFile f2(auxfile, "RECREATE");
+   TTree auxTree("auxTree", "auxTree");
+   auxTree.Branch("idx", &idx);
+   int y;
+   auxTree.Branch("y", &y);
+   idx = 2;
+   y = 5;
+   auxTree.Fill();
+   idx = 1;
+   y = 7;
+   auxTree.Fill();
+   auxTree.Write();
+   f2.Close();
+}
+
+TEST(RDFAndFriendsNoFixture, IndexedFriend)
+{
+   auto mainFile = "IndexedFriend_main.root";
+   auto auxFile = "IndexedFriend_aux.root";
+   FillIndexedFriend(mainFile, auxFile);
+
+   TChain mainChain("mainTree", "mainTree");
+   mainChain.Add(mainFile);
+   TChain auxChain("auxTree", "auxTree");
+   auxChain.Add(auxFile);
+
+   auxChain.BuildIndex("idx");
+   mainChain.AddFriend(&auxChain);
+
+   auto df = ROOT::RDataFrame(mainChain);
+   auto x = df.Take<int>("x");
+   auto y = df.Take<int>("auxTree.y");
+
+   std::vector<int> refx{{1,2,3,4,5}};
+   EXPECT_TRUE(std::equal(x->begin(), x->end(), refx.begin()));
+   std::vector<int> refy{{7,7,7,5,5}};
+   EXPECT_TRUE(std::equal(y->begin(), y->end(), refy.begin()));
+
+   gSystem->Unlink(mainFile);
+   gSystem->Unlink(auxFile);
+}
+
+// Test for https://github.com/root-project/root/issues/6741
+TEST(RDFAndFriendsNoFixture, AutomaticFriendsLoad)
+{
+   const auto fname = "rdf_automaticfriendsloadtest.root";
+   {
+      // write a TTree and its friend to the same file
+      TFile f(fname, "recreate");
+      TTree t1("t1", "t1");
+      TTree t2("t2", "t2");
+      int x = 42;
+      t2.Branch("x", &x);
+      t1.Fill();
+      t2.Fill();
+      t1.AddFriend(&t2);
+      t1.Write();
+      t2.Write();
+      f.Close();
+   }
+   EXPECT_EQ(ROOT::RDataFrame("t1", fname).Max<int>("t2.x").GetValue(), 42);
+
+   gSystem->Unlink(fname);
 }
 
 #endif // R__USE_IMT

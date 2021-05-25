@@ -83,8 +83,6 @@ the implementation of **`TVirtualX`**.
 
 ![](pictures/02000201.jpg)
 
-The **`TGQt`** interface is currently still under development.
-
 ## A Simple Example
 
 
@@ -1161,7 +1159,7 @@ processor->Connect("Evaluated(Float_t, Float_t)", "TH1F", hist,
 ...
 Long_t args[2];
 args[0]=(Long_t)processor->GetValue(1);
-args[0]=(Long_t)processor->GetValue(2);
+args[1]=(Long_t)processor->GetValue(2);
 ...
 processor->Emit("Evaluated(Float_t, Float_t)", args);
 ...
@@ -1221,11 +1219,33 @@ place. It is possible to pass a parameter by value to a slot method in
 the following way:
 
 ``` {.cpp}
-Connect(myButton, "Pressed()","TH1",hist, "SetMaximum(=123) ");
-Connect(myButton, "Pressed()","TH1",hist, "Draw(="LEGO")");
+Connect(myButton, "Pressed()", "TH1", hist, "SetMaximum(=123) ");
+Connect(myButton, "Pressed()", "TH1", hist, "Draw(=\"LEGO\")");
 ```
 
 As you see the parameter's value is preceded by the equation symbol (=).
+Please note that this method of passing arguments by value works only
+if the signal has less arguments than the slot.
+If the signal method has the same number of arguments, then the slot
+argument will be overwritten with the signal argument. In the
+example below, the Draw option would be overwritten in the first line
+by the emitted signal argument. The second line would be ok, the
+argument passed by value would not be overwritten.
+
+``` {.cpp}
+Connect(myComboBox, "Selected(const char*)", "TTree", myTree, "Draw(=\"x\")");
+Connect(myComboBox, "Selected(const char*)", "TTree", myTree, "Draw(const char*, =\" y==1 \")");
+```
+
+In addition, if the signal and slot arguments differ in argument type,
+passing arguments by value leads to undefined behaviour and illegal
+memory access, as the signal argument will be casted to another data
+type. In the example below, if Selected emits Int_t = 1, then ChangeText
+will try to read a TString at address 0x1.
+
+``` {.cpp}
+Connect(myComboBox, "Selected(Int_t)", "TGTextButton", myButton, "ChangeText(=\"Hello\")");
+```
 
 You have the possibility to destroy a signal/slot connection by using
 `Disconnect()` methods. There are three ways to do this:
@@ -2816,7 +2836,7 @@ return kNone;
 ```
 
 `Atom_t HandleDNDposition(Int_t x,Int_t y,Atom_t action,Int_t xroot,
-Int_t yroot)-` this
+Int_t yroot)` - this
 method should be used to handle the drag position in widget coordinates
 (`x,y`) or in root coordinates (`xroot,yroot`).
 
@@ -2830,7 +2850,7 @@ if (pad) {
 return action;
 ```
 
-`Bool_t HandleDNDdrop(`TDNDdata *data`) - this is the place where the
+`Bool_t HandleDNDdrop(TDNDdata *data)` - this is the place where the
 widget actually receives the data. First, check the data format (see
 description of **`TDNDData`** - Drag and Drop data class) and then use
 it accordingly. In the case of ROOT object, here is an example of how to

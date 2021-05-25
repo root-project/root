@@ -9,158 +9,157 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//
-// TMultiLayerPerceptron
-//
-// This class describes a neural network.
-// There are facilities to train the network and use the output.
-//
-// The input layer is made of inactive neurons (returning the
-// optionaly normalized input) and output neurons are linear.
-// The type of hidden neurons is free, the default being sigmoids.
-// (One should still try to pass normalized inputs, e.g. between [0.,1])
-//
-// The basic input is a TTree and two (training and test) TEventLists.
-// Input and output neurons are assigned a value computed for each event
-// with the same possibilities as for TTree::Draw().
-// Events may be weighted individualy or via TTree::SetWeight().
-// 6 learning methods are available: kStochastic, kBatch,
-// kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
-//
-// This implementation, written by C. Delaere, is *inspired* from
-// the mlpfit package from J.Schwindling et al. with some extensions:
-//   * the algorithms are globally the same
-//   * in TMultilayerPerceptron, there is no limitation on the number of
-//     layers/neurons, while MLPFIT was limited to 2 hidden layers
-//   * TMultilayerPerceptron allows you to save the network in a root file, and
-//     provides more export functionalities
-//   * TMultilayerPerceptron gives more flexibility regarding the normalization of
-//     inputs/outputs
-//   * TMultilayerPerceptron provides, thanks to Andrea Bocci, the possibility to
-//     use cross-entropy errors, which allows to train a network for pattern
-//     classification based on Bayesian posterior probability.
-//
-///////////////////////////////////////////////////////////////////////////
-//BEGIN_HTML <!--
-/* -->
-<UL>
-        <LI><P><A NAME="intro"></A><FONT COLOR="#5c8526">
-        <FONT SIZE=4 STYLE="font-size: 15pt">Introduction</FONT></FONT></P>
-</UL>
-<P>Neural Networks are more and more used in various fields for data
+/** \class TMultiLayerPerceptron
+
+
+This class describes a neural network.
+There are facilities to train the network and use the output.
+
+The input layer is made of inactive neurons (returning the
+optionally normalized input) and output neurons are linear.
+The type of hidden neurons is free, the default being sigmoids.
+(One should still try to pass normalized inputs, e.g. between [0.,1])
+
+The basic input is a TTree and two (training and test) TEventLists.
+Input and output neurons are assigned a value computed for each event
+with the same possibilities as for TTree::Draw().
+Events may be weighted individually or via TTree::SetWeight().
+6 learning methods are available: kStochastic, kBatch,
+kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
+
+This implementation, written by C. Delaere, is *inspired* from
+the mlpfit package from J.Schwindling et al. with some extensions:
+
+  - the algorithms are globally the same
+  - in TMultilayerPerceptron, there is no limitation on the number of
+    layers/neurons, while MLPFIT was limited to 2 hidden layers
+  - TMultilayerPerceptron allows you to save the network in a root file, and
+    provides more export functionalities
+  - TMultilayerPerceptron gives more flexibility regarding the normalization of
+    inputs/outputs
+  - TMultilayerPerceptron provides, thanks to Andrea Bocci, the possibility to
+    use cross-entropy errors, which allows to train a network for pattern
+    classification based on Bayesian posterior probability.
+
+### Introduction
+
+Neural Networks are more and more used in various fields for data
 analysis and classification, both for research and commercial
-institutions. Some randomly chosen examples are:</P>
-<UL>
-        <LI><P>image analysis</P>
-        <LI><P>financial movements predictions and analysis</P>
-        <LI><P>sales forecast and product shipping optimisation</P>
-        <LI><P>in particles physics: mainly for classification tasks (signal
-        over background discrimination)</P>
-</UL>
-<P>More than 50% of neural networks are multilayer perceptrons. This
+institutions. Some randomly chosen examples are:
+
+  - image analysis
+  - financial movements predictions and analysis
+  - sales forecast and product shipping optimisation
+  - in particles physics: mainly for classification tasks (signal
+        over background discrimination)
+
+More than 50% of neural networks are multilayer perceptrons. This
 implementation of multilayer perceptrons is inspired from the
 <A HREF="http://schwind.home.cern.ch/schwind/MLPfit.html">MLPfit
-package</A> originaly written by Jerome Schwindling. MLPfit remains
+package</A> originally written by Jerome Schwindling. MLPfit remains
 one of the fastest tool for neural networks studies, and this ROOT
 add-on will not try to compete on that. A clear and flexible Object
 Oriented implementation has been chosen over a faster but more
 difficult to maintain code. Nevertheless, the time penalty does not
-exceed a factor 2.</P>
-<UL>
-        <LI><P><A NAME="mlp"></A><FONT COLOR="#5c8526">
-        <FONT SIZE=4 STYLE="font-size: 15pt">The
-        MLP</FONT></FONT></P>
-</UL>
-<P>The multilayer perceptron is a simple feed-forward network with
-the following structure:</P>
-<P ALIGN=CENTER><IMG SRC="gif/mlp.png" NAME="MLP"
-ALIGN=MIDDLE WIDTH=333 HEIGHT=358 BORDER=0>
-</P>
-<P>It is made of neurons characterized by a bias and weighted links
+exceed a factor 2.
+
+### The MLP
+
+The multilayer perceptron is a simple feed-forward network with
+the following structure:
+
+\image html mlp.png
+
+It is made of neurons characterized by a bias and weighted links
 between them (let's call those links synapses). The input neurons
 receive the inputs, normalize them and forward them to the first
 hidden layer.
-</P>
-<P>Each neuron in any subsequent layer first computes a linear
+
+Each neuron in any subsequent layer first computes a linear
 combination of the outputs of the previous layer. The output of the
 neuron is then function of that combination with <I>f</I> being
 linear for output neurons or a sigmoid for hidden layers. This is
-useful because of two theorems:</P>
-<OL>
-        <LI><P>A linear combination of sigmoids can approximate any
-        continuous function.</P>
-        <LI><P>Trained with output = 1 for the signal and 0 for the
+useful because of two theorems:
+
+  1. A linear combination of sigmoids can approximate any
+        continuous function.
+  2. Trained with output = 1 for the signal and 0 for the
         background, the approximated function of inputs X is the probability
-        of signal, knowing X.</P>
-</OL>
-<UL>
-        <LI><P><A NAME="lmet"></A><FONT COLOR="#5c8526">
-        <FONT SIZE=4 STYLE="font-size: 15pt">Learning
-        methods</FONT></FONT></P>
-</UL>
-<P>The aim of all learning methods is to minimize the total error on
+        of signal, knowing X.
+
+### Learning methods
+
+The aim of all learning methods is to minimize the total error on
 a set of weighted examples. The error is defined as the sum in
-quadrature, devided by two, of the error on each individual output
-neuron.</P>
-<P>In all methods implemented, one needs to compute
+quadrature, divided by two, of the error on each individual output
+neuron.
+In all methods implemented, one needs to compute
 the first derivative of that error with respect to the weights.
-Exploiting the well-known properties of the derivative, especialy the
-derivative of compound functions, one can write:</P>
-<UL>
-        <LI><P>for a neuton: product of the local derivative with the
-        weighted sum on the outputs of the derivatives.</P>
-        <LI><P>for a synapse: product of the input with the local derivative
-        of the output neuron.</P>
-</UL>
-<P>This computation is called back-propagation of the errors. A
-loop over all examples is called an epoch.</P>
-<P>Six learning methods are implemented.</P>
-<P><FONT COLOR="#006b6b"><I>Stochastic minimization</I>:</FONT> This
+Exploiting the well-known properties of the derivative, especially the
+derivative of compound functions, one can write:
+
+  - for a neuron: product of the local derivative with the
+        weighted sum on the outputs of the derivatives.
+  - for a synapse: product of the input with the local derivative
+        of the output neuron.
+
+This computation is called back-propagation of the errors. A
+loop over all examples is called an epoch.
+Six learning methods are implemented.
+
+#### Stochastic minimization:
+
 is the most trivial learning method. This is the Robbins-Monro
 stochastic approximation applied to multilayer perceptrons. The
-weights are updated after each example according to the formula:</P>
-<P ALIGN=CENTER>$w_{ij}(t+1) = w_{ij}(t) + \Delta w_{ij}(t)$
-</P>
-<P ALIGN=CENTER>with
-</P>
-<P ALIGN=CENTER>$\Delta w_{ij}(t) = - \eta(\d e_p / \d w_{ij} +
-\delta) + \epsilon \Deltaw_{ij}(t-1)$</P>
-<P>The parameters for this method are Eta, EtaDecay, Delta and
-Epsilon.</P>
-<P><FONT COLOR="#006b6b"><I>Steepest descent with fixed step size
-(batch learning)</I>:</FONT> It is the same as the stochastic
+weights are updated after each example according to the formula:
+\f$w_{ij}(t+1) = w_{ij}(t) + \Delta w_{ij}(t)\f$
+
+with
+
+\f$\Delta w_{ij}(t) = - \eta(d e_p / d w_{ij} + \delta) + \epsilon \Delta w_{ij}(t-1)\f$
+
+The parameters for this method are Eta, EtaDecay, Delta and
+Epsilon.
+
+#### Steepest descent with fixed step size (batch learning):
+
+It is the same as the stochastic
 minimization, but the weights are updated after considering all the
 examples, with the total derivative dEdw. The parameters for this
-method are Eta, EtaDecay, Delta and Epsilon.</P>
-<P><FONT COLOR="#006b6b"><I>Steepest descent algorithm</I>: </FONT>Weights
-are set to the minimum along the line defined by the gradient. The
+method are Eta, EtaDecay, Delta and Epsilon.
+
+#### Steepest descent algorithm:
+
+Weights are set to the minimum along the line defined by the gradient. The
 only parameter for this method is Tau. Lower tau = higher precision =
-slower search. A value Tau = 3 seems reasonable.</P>
-<P><FONT COLOR="#006b6b"><I>Conjugate gradients with the
-Polak-Ribiere updating formula</I>: </FONT>Weights are set to the
-minimum along the line defined by the conjugate gradient. Parameters
+slower search. A value Tau = 3 seems reasonable.
+
+#### Conjugate gradients with the Polak-Ribiere updating formula:
+
+Weights are set to the minimum along the line defined by the conjugate gradient.
+Parameters are Tau and Reset, which defines the epochs where the direction is
+reset to the steepest descent.
+
+#### Conjugate gradients with the Fletcher-Reeves updating formula:
+
+Weights are set to the minimum along the line defined by the conjugate gradient. Parameters
 are Tau and Reset, which defines the epochs where the direction is
-reset to the steepes descent.</P>
-<P><FONT COLOR="#006b6b"><I>Conjugate gradients with the
-Fletcher-Reeves updating formula</I>: </FONT>Weights are set to the
-minimum along the line defined by the conjugate gradient. Parameters
-are Tau and Reset, which defines the epochs where the direction is
-reset to the steepes descent.</P>
-<P><FONT COLOR="#006b6b"><I>Broyden, Fletcher, Goldfarb, Shanno
-(BFGS) method</I>:</FONT> Implies the computation of a NxN matrix
+reset to the steepest descent.
+
+#### Broyden, Fletcher, Goldfarb, Shanno (BFGS) method:
+
+ Implies the computation of a NxN matrix
 computation, but seems more powerful at least for less than 300
 weights. Parameters are Tau and Reset, which defines the epochs where
-the direction is reset to the steepes descent.</P>
-<UL>
-        <LI><P><A NAME="use"></A><FONT COLOR="#5c8526">
-        <FONT SIZE=4 STYLE="font-size: 15pt">How
-        to use it...</FONT></FONT></P></LI>
-</UL>
-<P><FONT SIZE=3>TMLP is build from 3 classes: TNeuron, TSynapse and
+the direction is reset to the steepest descent.
+
+### How to use it...
+
+TMLP is build from 3 classes: TNeuron, TSynapse and
 TMultiLayerPerceptron. Only TMultiLayerPerceptron should be used
-explicitly by the user.</FONT></P>
-<P><FONT SIZE=3>TMultiLayerPerceptron will take examples from a TTree
+explicitly by the user.
+
+TMultiLayerPerceptron will take examples from a TTree
 given in the constructor. The network is described by a simple
 string: The input/output layers are defined by giving the expression for
 each neuron, separated by comas. Hidden layers are just described
@@ -171,52 +170,64 @@ Input and outputs are taken from the TTree given as second argument.
 Expressions are evaluated as for TTree::Draw(), arrays are expended in
 distinct neurons, one for each index.
 This can only be done for fixed-size arrays.
-If the formula ends with &quot;!&quot;, softmax functions are used for the output layer.
-One defines the training and test datasets by TEventLists.</FONT></P>
-<P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
-<U><FONT COLOR="#ff0000">Example</FONT></U><SPAN STYLE="text-decoration: none">:
-</SPAN>TMultiLayerPerceptron(&quot;x,y:10:5:f&quot;,inputTree);</SPAN></FONT></P>
-<P><FONT SIZE=3>Both the TTree and the TEventLists can be defined in
+If the formula ends with "!", softmax functions are used for the output layer.
+One defines the training and test datasets by TEventLists.
+
+Example:
+~~~ {.cpp}
+TMultiLayerPerceptron("x,y:10:5:f",inputTree);
+~~~
+
+Both the TTree and the TEventLists can be defined in
 the constructor, or later with the suited setter method. The lists
 used for training and test can be defined either explicitly, or via
 a string containing the formula to be used to define them, exactly as
-for a TCut.</FONT></P>
-<P><FONT SIZE=3>The learning method is defined using the
-TMultiLayerPerceptron::SetLearningMethod() . Learning methods are :</FONT></P>
-<P><FONT SIZE=3>TMultiLayerPerceptron::kStochastic, <BR>
-TMultiLayerPerceptron::kBatch,<BR>
-TMultiLayerPerceptron::kSteepestDescent,<BR>
-TMultiLayerPerceptron::kRibierePolak,<BR>
-TMultiLayerPerceptron::kFletcherReeves,<BR>
-TMultiLayerPerceptron::kBFGS<BR></FONT></P>
-<P>A weight can be assigned to events, either in the constructor, either
+for a TCut.
+
+The learning method is defined using the TMultiLayerPerceptron::SetLearningMethod() .
+Learning methods are :
+
+  - TMultiLayerPerceptron::kStochastic,
+  - TMultiLayerPerceptron::kBatch,
+  - TMultiLayerPerceptron::kSteepestDescent,
+  - TMultiLayerPerceptron::kRibierePolak,
+  - TMultiLayerPerceptron::kFletcherReeves,
+  - TMultiLayerPerceptron::kBFGS
+
+A weight can be assigned to events, either in the constructor, either
 with TMultiLayerPerceptron::SetEventWeight(). In addition, the TTree weight
-is taken into account.</P>
-<P><FONT SIZE=3>Finally, one starts the training with
+is taken into account.
+
+Finally, one starts the training with
 TMultiLayerPerceptron::Train(Int_t nepoch, Option_t* options). The
 first argument is the number of epochs while option is a string that
-can contain: &quot;text&quot; (simple text output) , &quot;graph&quot;
-(evoluting graphical training curves), &quot;update=X&quot; (step for
-the text/graph output update) or &quot;+&quot; (will skip the
+can contain: "text" (simple text output) , "graph"
+(evoluting graphical training curves), "update=X" (step for
+the text/graph output update) or "+" (will skip the
 randomisation and start from the previous values). All combinations
-are available. </FONT></P>
-<P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
-<U><FONT COLOR="#ff0000">Example</FONT></U>:
-net.Train(100,&quot;text, graph, update=10&quot;).</SPAN></FONT></P>
-<P><FONT SIZE=3>When the neural net is trained, it can be used
+are available.
+
+Example:
+~~~ {.cpp}
+net.Train(100,"text, graph, update=10");
+~~~
+
+When the neural net is trained, it can be used
 directly ( TMultiLayerPerceptron::Evaluate() ) or exported to a
-standalone C++ code ( TMultiLayerPerceptron::Export() ).</FONT></P>
-<P><FONT SIZE=3>Finaly, note that even if this implementation is inspired from the mlpfit code,
+standalone C++ code ( TMultiLayerPerceptron::Export() ).
+
+Finally, note that even if this implementation is inspired from the mlpfit code,
 the feature lists are not exactly matching:
-<UL>
-        <LI><P>mlpfit hybrid learning method is not implemented</P></LI>
-        <LI><P>output neurons can be normalized, this is not the case for mlpfit</P></LI>
-        <LI><P>the neural net is exported in C++, FORTRAN or PYTHON</P></LI>
-        <LI><P>the drawResult() method allows a fast check of the learning procedure</P></LI>
-</UL>
-In addition, the paw version of mlpfit had additional limitations on the number of neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerceptron.
-<!-- */
-// -->END_HTML
+
+  - mlpfit hybrid learning method is not implemented
+  - output neurons can be normalized, this is not the case for mlpfit
+  - the neural net is exported in C++, FORTRAN or PYTHON
+  - the drawResult() method allows a fast check of the learning procedure
+
+In addition, the paw version of mlpfit had additional limitations on the number of
+neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerceptron.
+*/
+
 
 #include "TMultiLayerPerceptron.h"
 #include "TSynapse.h"
@@ -234,7 +245,8 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TMultiGraph.h"
 #include "TDirectory.h"
 #include "TSystem.h"
-#include "Riostream.h"
+#include <iostream>
+#include <fstream>
 #include "TMath.h"
 #include "TTreeFormula.h"
 #include "TTreeFormulaManager.h"
@@ -242,7 +254,7 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TLine.h"
 #include "TText.h"
 #include "TObjString.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 ClassImp(TMultiLayerPerceptron);
 
@@ -287,12 +299,16 @@ TMultiLayerPerceptron::TMultiLayerPerceptron()
 /// the branch names separated by comas.
 /// Hidden layers are just described by the number of neurons.
 /// The layers are separated by colons.
+///
 /// Ex: "x,y:10:5:f"
+///
 /// The output can be prepended by '@' if the variable has to be
 /// normalized.
 /// The output can be followed by '!' to use Softmax neurons for the
 /// output layer only.
+///
 /// Ex: "x,y:10:5:c1,c2,c3!"
+///
 /// Input and outputs are taken from the TTree given as second argument.
 /// training and test are the two TEventLists defining events
 /// to be used during the neural net training.
@@ -345,12 +361,16 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
 /// the branch names separated by comas.
 /// Hidden layers are just described by the number of neurons.
 /// The layers are separated by colons.
+///
 /// Ex: "x,y:10:5:f"
+///
 /// The output can be prepended by '@' if the variable has to be
 /// normalized.
 /// The output can be followed by '!' to use Softmax neurons for the
 /// output layer only.
+///
 /// Ex: "x,y:10:5:c1,c2,c3!"
+///
 /// Input and outputs are taken from the TTree given as second argument.
 /// training and test are the two TEventLists defining events
 /// to be used during the neural net training.
@@ -404,16 +424,22 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
 /// the branch names separated by comas.
 /// Hidden layers are just described by the number of neurons.
 /// The layers are separated by colons.
+///
 /// Ex: "x,y:10:5:f"
+///
 /// The output can be prepended by '@' if the variable has to be
 /// normalized.
 /// The output can be followed by '!' to use Softmax neurons for the
 /// output layer only.
+///
 /// Ex: "x,y:10:5:c1,c2,c3!"
+///
 /// Input and outputs are taken from the TTree given as second argument.
 /// training and test are two cuts (see TTreeFormula) defining events
 /// to be used during the neural net training and testing.
+///
 /// Example: "Entry$%2", "(Entry$+1)%2".
+///
 /// Both the TTree and the cut can be defined in the constructor,
 /// or later with the suited setter method.
 
@@ -470,16 +496,22 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
 /// the branch names separated by comas.
 /// Hidden layers are just described by the number of neurons.
 /// The layers are separated by colons.
+///
 /// Ex: "x,y:10:5:f"
+///
 /// The output can be prepended by '@' if the variable has to be
 /// normalized.
 /// The output can be followed by '!' to use Softmax neurons for the
 /// output layer only.
+///
 /// Ex: "x,y:10:5:c1,c2,c3!"
+///
 /// Input and outputs are taken from the TTree given as second argument.
 /// training and test are two cuts (see TTreeFormula) defining events
 /// to be used during the neural net training and testing.
+///
 /// Example: "Entry$%2", "(Entry$+1)%2".
+///
 /// Both the TTree and the cut can be defined in the constructor,
 /// or later with the suited setter method.
 
@@ -997,7 +1029,7 @@ Double_t TMultiLayerPerceptron::GetError(Int_t event) const
 {
    GetEntry(event);
    Double_t error = 0;
-   // look at 1st output neruon to determine type and error function
+   // look at 1st output neuron to determine type and error function
    Int_t nEntries = fLastLayer.GetEntriesFast();
    if (nEntries == 0) return 0.0;
    switch (fOutType) {
@@ -1224,7 +1256,7 @@ void TMultiLayerPerceptron::AttachData()
    Int_t maxop, maxpar, maxconst;
    ROOT::v5::TFormula::GetMaxima(maxop, maxpar, maxconst);
    ROOT::v5::TFormula::SetMaxima(10, 10, 10);
-   
+
    //first layer
    const TString input = TString(fStructure(0, fStructure.First(':')));
    const TObjArray *inpL = input.Tokenize(", ");
@@ -1286,9 +1318,9 @@ void TMultiLayerPerceptron::ExpandStructure()
    for (i = 0; i<nneurons; i++) {
       const TString name = ((TObjString *)inpL->At(i))->GetString();
       TTreeFormula f("sizeTestFormula",name,fData);
-      // Variable size arrays are unrelialable
+      // Variable size arrays are unreliable
       if(f.GetMultiplicity()==1 && f.GetNdata()>1) {
-         Warning("TMultiLayerPerceptron::ExpandStructure()","Variable size arrays cannot be used to build implicitely an input layer. The index 0 will be assumed.");
+         Warning("TMultiLayerPerceptron::ExpandStructure()","Variable size arrays cannot be used to build implicitly an input layer. The index 0 will be assumed.");
       }
       // Check if we are coping with an array... then expand
       // The array operator used is {}. It is detected in TNeuron, and
@@ -1315,7 +1347,7 @@ void TMultiLayerPerceptron::ExpandStructure()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Instanciates the network from the description
+/// Instantiates the network from the description
 
 void TMultiLayerPerceptron::BuildNetwork()
 {
@@ -1344,7 +1376,7 @@ void TMultiLayerPerceptron::BuildNetwork()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Instanciates the neurons in input
+/// Instantiates the neurons in input
 /// Inputs are normalised and the type is set to kOff
 /// (simple forward of the formula value)
 
@@ -1426,7 +1458,7 @@ void TMultiLayerPerceptron::BuildOneHiddenLayer(const TString& sNumNodes, Int_t&
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Builds the output layer
-/// Neurons are linear combinations of input, by defaul.
+/// Neurons are linear combinations of input, by default.
 /// If the structure ends with "!", neurons are set up for classification,
 /// ie. with a sigmoid (1 neuron) or softmax (more neurons) activation function.
 
@@ -1682,7 +1714,7 @@ Double_t TMultiLayerPerceptron::Evaluate(Int_t index, Double_t *params) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Exports the NN as a function for any non-ROOT-dependant code
 /// Supported languages are: only C++ , FORTRAN and Python (yet)
-/// This feature is also usefull if you want to plot the NN as
+/// This feature is also useful if you want to plot the NN as
 /// a function (TF1 or TF2).
 
 void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) const
@@ -2076,11 +2108,14 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Shuffle the Int_t index[n] in input.
+///
 /// Input:
-///   index: the array to shuffle
-///   n: the size of the array
+///  - index: the array to shuffle
+///  - n: the size of the array
+///
 /// Output:
-///   index: the shuffled indexes
+///  - index: the shuffled indexes
+///
 /// This method is used for stochastic training
 
 void TMultiLayerPerceptron::Shuffle(Int_t * index, Int_t n) const
@@ -2318,8 +2353,10 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the search direction to conjugate gradient direction
 /// beta should be:
-///  ||g_{(t+1)}||^2 / ||g_{(t)}||^2                   (Fletcher-Reeves)
-///  g_{(t+1)} (g_{(t+1)}-g_{(t)}) / ||g_{(t)}||^2     (Ribiere-Polak)
+///
+///  \f$||g_{(t+1)}||^2 / ||g_{(t)}||^2\f$                   (Fletcher-Reeves)
+///
+///  \f$g_{(t+1)} (g_{(t+1)}-g_{(t)}) / ||g_{(t)}||^2\f$     (Ribiere-Polak)
 
 void TMultiLayerPerceptron::ConjugateGradientsDir(Double_t * dir, Double_t beta)
 {
@@ -2369,7 +2406,7 @@ bool TMultiLayerPerceptron::GetBFGSH(TMatrixD & bfgsh, TMatrixD & gamma, TMatrix
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the gamma (g_{(t+1)}-g_{(t)}) and delta (w_{(t+1)}-w_{(t)}) vectors
+/// Sets the gamma \f$(g_{(t+1)}-g_{(t)})\f$ and delta \f$(w_{(t+1)}-w_{(t)})\f$ vectors
 /// Gamma is computed here, so ComputeDEDw cannot have been called before,
 /// and delta is a direct translation of buffer into a TMatrixD.
 
@@ -2464,7 +2501,7 @@ void TMultiLayerPerceptron::BFGSDir(TMatrixD & bfgsh, Double_t * dir)
 /// Draws the network structure.
 /// Neurons are depicted by a blue disk, and synapses by
 /// lines connecting neurons.
-/// The line width is proportionnal to the weight.
+/// The line width is proportional to the weight.
 
 void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
 {

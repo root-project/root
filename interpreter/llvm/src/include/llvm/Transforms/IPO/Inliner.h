@@ -1,9 +1,8 @@
 //===- Inliner.h - Inliner pass and infrastructure --------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,15 +13,15 @@
 #include "llvm/Analysis/CallGraphSCCPass.h"
 #include "llvm/Analysis/InlineCost.h"
 #include "llvm/Analysis/LazyCallGraph.h"
-#include "llvm/Analysis/TargetTransformInfo.h"
+#include "llvm/IR/CallSite.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Transforms/Utils/ImportedFunctionsInliningStatistics.h"
+#include <utility>
 
 namespace llvm {
+
 class AssumptionCacheTracker;
-class CallSite;
-class DataLayout;
-class InlineCost;
-class OptimizationRemarkEmitter;
+class CallGraph;
 class ProfileSummaryInfo;
 
 /// This class contains all of the helper code which is used to perform the
@@ -44,6 +43,7 @@ struct LegacyInlinerBase : public CallGraphSCCPass {
   bool runOnSCC(CallGraphSCC &SCC) override;
 
   using llvm::Pass::doFinalization;
+
   /// Remove now-dead linkonce functions at the end of processing to avoid
   /// breaking the SCC traversal.
   bool doFinalization(CallGraph &CG) override;
@@ -69,7 +69,7 @@ struct LegacyInlinerBase : public CallGraphSCCPass {
 
 private:
   // Insert @llvm.lifetime intrinsics.
-  bool InsertLifetime;
+  bool InsertLifetime = true;
 
 protected:
   AssumptionCacheTracker *ACT;
@@ -95,14 +95,19 @@ class InlinerPass : public PassInfoMixin<InlinerPass> {
 public:
   InlinerPass(InlineParams Params = getInlineParams())
       : Params(std::move(Params)) {}
+  ~InlinerPass();
+  InlinerPass(InlinerPass &&Arg)
+      : Params(std::move(Arg.Params)),
+        ImportedFunctionsStats(std::move(Arg.ImportedFunctionsStats)) {}
 
   PreservedAnalyses run(LazyCallGraph::SCC &C, CGSCCAnalysisManager &AM,
                         LazyCallGraph &CG, CGSCCUpdateResult &UR);
 
 private:
   InlineParams Params;
+  std::unique_ptr<ImportedFunctionsInliningStatistics> ImportedFunctionsStats;
 };
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_TRANSFORMS_IPO_INLINER_H

@@ -19,28 +19,42 @@
 \class RooMCStudy
 \ingroup Roofitcore
 
-RooMCStudy is a help class to facilitate Monte Carlo studies
+RooMCStudy is a helper class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF 
-to multiple toy Monte Carlo sets generated from the same PDF 
-or another PDF.
-Given a fit PDF and a generator PDF, RooMCStudy can produce
-large numbers of toyMC samples and/or fit these samples
-and acculumate the final parameters of each fit in a dataset.
+to multiple toy Monte Carlo sets. These may be generated from either same PDF
+or from a different PDF with similar parameters.
+
+Given a fit and a generator PDF (they might be identical), RooMCStudy can produce
+toyMC samples and/or fit these.
+It accumulates the post-fit parameters of each iteration in a dataset. These can be
+retrieved using fitParams() or fitParDataSet(). This dataset additionally contains the
+variables
+- NLL: The value of the negative log-likelihood for each run.
+- ngen: The number of events generated for each run.
+
 Additional plotting routines simplify the task of plotting
-the distribution of the minimized likelihood, each parameters fitted value, 
+the distribution of the minimized likelihood, the fitted parameter values,
 fitted error and pull distribution.
-Class RooMCStudy provides the option to insert add-in modules
-that modify the generate and fit cycle and allow to perform
+
+RooMCStudy provides the option to insert add-in modules
+that modify the generate-and-fit cycle and allow to perform
 extra steps in the cycle. Output of these modules can be stored
 alongside the fit results in the aggregate results dataset.
-These study modules should derive from classs RooAbsMCStudyModel
+These study modules should derive from the class RooAbsMCStudyModule.
 
+Check the RooFit tutorials
+- rf801_mcstudy.C
+- rf802_mcstudy_addons.C
+- rf803_mcstudy_addons2.C
+- rf804_mcstudy_constr.C
+for usage examples.
 **/
 
 
 
 #include "RooFit.h"
-#include "Riostream.h"
+#include "snprintf.h"
+#include <iostream>
 
 #include "RooMCStudy.h"
 #include "RooAbsMCStudyModule.h"
@@ -69,44 +83,39 @@ ClassImp(RooMCStudy);
   ;
 
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
+fitting the PDF to data and accumulating the fit statistics.
 
+\param[in] model The PDF to be studied
+\param[in] observables The variables of the PDF to be considered observables
+\param[in] argX Arguments from the table below
+
+<table>
+<tr><th> Optional arguments <th>
+<tr><td> Silence()                         <td> Suppress all RooFit messages during running below PROGRESS level
+<tr><td> FitModel(const RooAbsPdf&)        <td> The PDF for fitting if it is different from the PDF for generating.
+<tr><td> ConditionalObservables(const RooArgSet& set)  <td> The set of observables that the PDF should _not_ be normalized over
+<tr><td> Binned(Bool_t flag)               <td> Bin the dataset before fitting it. Speeds up fitting of large data samples
+<tr><td> FitOptions(const char*)           <td> Classic fit options, provided for backward compatibility
+<tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo().
+                                                `Save()` is especially interesting to be able to retrieve fit results of each run using fitResult().
+<tr><td> Verbose(Bool_t flag)              <td> Activate informational messages in event generation phase
+<tr><td> Extended(Bool_t flag)             <td> Determine number of events for each sample anew from a Poisson distribution
+<tr><td> Constrain(const RooArgSet& pars)  <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
+<tr><td> ExternalConstraints(const RooArgSet& ) <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
+<tr><td> ProtoData(const RooDataSet&, Bool_t randOrder)
+         <td> Prototype data for the event generation. If the randOrder flag is set, the order of the dataset will be re-randomized for each generation
+              cycle to protect against systematic biases if the number of generated events does not exactly match the number of events in the prototype dataset
+              at the cost of reduced precision with mu equal to the specified number of events
+</table>
+*/
 RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
    		       const RooCmdArg& arg1, const RooCmdArg& arg2,
    		       const RooCmdArg& arg3,const RooCmdArg& arg4,const RooCmdArg& arg5,
    		       const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) : TNamed("mcstudy","mcstudy")
 
 {
-  // Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
-  // fitting the PDF to that data and accumulating the fit statistics.
-  //
-  // The constructor accepts the following arguments
-  //
-  // model       -- The PDF to be studied
-  // observables -- The variables of the PDF to be considered the observables
-  //
-  // Silence()                         -- Suppress all RooFit messages during running below PROGRESS level
-  // FitModel(const RooAbsPdf&)        -- The PDF for fitting, if it is different from the PDF for generating
-  // ConditionalObservables
-  //           (const RooArgSet& set)  -- The set of observables that the PDF should _not_ be normalized over
-  // Binned(Bool_t flag)               -- Bin the dataset before fitting it. Speeds up fitting of large data samples
-  // FitOptions(const char*)           -- Classic fit options, provided for backward compatibility
-  // FitOptions(....)                  -- Options to be used for fitting. All named arguments inside FitOptions()
-  //                                                   are passed to RooAbsPdf::fitTo();
-  // Verbose(Bool_t flag)              -- Activate informational messages in event generation phase
-  // Extended(Bool_t flag)             -- Determine number of events for each sample anew from a Poisson distribution
-  // Constrain(const RooArgSet& pars)  -- Apply internal constraints on given parameters in fit and sample constrained parameter
-  //                                      values from constraint p.d.f for each toy.
-  // ExternalConstraints(const RooArgSet& ) -- Apply internal constraints on given parameters in fit and sample constrained parameter
-  //                                      values from constraint p.d.f for each toy.
-  // ProtoData(const RooDataSet&, 
-  //                 Bool_t randOrder) -- Prototype data for the event generation. If the randOrder flag is
-  //                                      set, the order of the dataset will be re-randomized for each generation
-  //                                      cycle to protect against systematic biases if the number of generated
-  //                                      events does not exactly match the number of events in the prototype dataset
-  //                                      at the cost of reduced precision
-  //                                      with mu equal to the specified number of events
-
   // Stuff all arguments in a list
   RooLinkedList cmdList;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
@@ -303,8 +312,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// OBSOLETE, RETAINED FOR BACKWARD COMPATIBILY. PLEASE
-/// USE CONSTRUCTOR WITH NAMED ARGUMENTS
+/// \deprecated PLEASE USE CONSTRUCTOR WITH NAMED ARGUMENTS. RETAINED FOR BACKWARD COMPATIBILY.
 ///
 /// Constructor with a generator and fit model. Both models may point
 /// to the same object. The 'dependents' set of variables is generated 
@@ -410,7 +418,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
 
 RooMCStudy::~RooMCStudy() 
 {  
@@ -535,7 +542,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 	  delete[] newOrder ;
 	}
 
-	cout << "RooMCStudy: now generating " << nEvt << " events" << endl ;
+	coutP(Generation) << "RooMCStudy: now generating " << nEvt << " events" << endl ;
 	
 	// Actual generation of events
 	if (nEvt>0) {
@@ -645,7 +652,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 /// If keepGenData is set, all generated data sets will be kept in memory and can be accessed
 /// later via genData().
 ///
-/// Data sets will be written out is ascii form if the pattern string is supplied.
+/// Data sets will be written out in ascii form if the pattern string is supplied.
 /// The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
 /// and should contain one integer field that encodes the sample serial number.
 ///
@@ -902,24 +909,29 @@ Bool_t RooMCStudy::addFitResult(const RooFitResult& fr)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the pulls for all fit parameters in
-/// the fit results data set, and add them to that dataset
+/// the fit results data set, and add them to that dataset.
 
 void RooMCStudy::calcPulls() 
 {
-  TIterator* iter = _fitParams->createIterator()  ;
-  RooRealVar* par ;
-  while((par=(RooRealVar*)iter->Next())) {
-    
-    RooErrorVar* err = par->errorVar() ;
-    _fitParData->addColumn(*err) ;
-    delete err ;
-    
+  for (auto it = _fitParams->begin(); it != _fitParams->end(); ++it) {
+    const auto par = static_cast<RooRealVar*>(*it);
+    RooErrorVar* err = par->errorVar();
+    _fitParData->addColumn(*err);
+    delete err;
+
     TString name(par->GetName()), title(par->GetTitle()) ;
     name.Append("pull") ;
-    title.Append(" Pull") ;    
+    title.Append(" Pull") ;
+
+    if (!par->hasError(false)) {
+      coutW(Generation) << "Fit parameter '" << par->GetName() << "' does not have an error."
+          " A pull distribution cannot be generated. This might be caused by the parameter being constant or"
+          " because the fits were not run." << std::endl;
+      continue;
+    }
 
     // First look in fitParDataset to see if per-experiment generated value has been stored
-    RooAbsReal* genParOrig = (RooAbsReal*) _fitParData->get()->find(Form("%s_gen",par->GetName())) ;    
+    auto genParOrig = static_cast<RooAbsReal*>(_fitParData->get()->find(Form("%s_gen",par->GetName())));
     if (genParOrig && _perExptGenParams) {
 
       RooPullVar pull(name,title,*par,*genParOrig) ;
@@ -927,32 +939,45 @@ void RooMCStudy::calcPulls()
 
     } else {
       // If not use fixed generator value
-      genParOrig = (RooAbsReal*)_genInitParams->find(par->GetName()) ;
-      
-      if (genParOrig) {
-	RooAbsReal* genPar = (RooAbsReal*) genParOrig->Clone("truth") ;
-	RooPullVar pull(name,title,*par,*genPar) ;
-	
-	_fitParData->addColumn(pull,kFALSE) ;
-	delete genPar ;
-	
+      genParOrig = static_cast<RooAbsReal*>(_genInitParams->find(par->GetName()));
+
+      if (!genParOrig) {
+        std::size_t index = it - _fitParams->begin();
+        genParOrig = index < _genInitParams->size() ?
+            static_cast<RooAbsReal*>((*_genInitParams)[index]) :
+            nullptr;
+
+        if (genParOrig) {
+          coutW(Generation) << "The fit parameter '" << par->GetName() << "' is not in the model that was used to generate toy data. "
+              "The parameter '" << genParOrig->GetName() << "'=" << genParOrig->getVal() << " was found at the same position in the generator model."
+              " It will be used to compute pulls."
+              "\nIf this is not desired, the parameters of the generator model need to be renamed or reordered." << std::endl;
+        }
       }
 
-    }
+      if (genParOrig) {
+        std::unique_ptr<RooAbsReal> genPar(static_cast<RooAbsReal*>(genParOrig->Clone("truth")));
+        RooPullVar pull(name,title,*par,*genPar);
 
+        _fitParData->addColumn(pull,kFALSE) ;
+      } else {
+        coutE(Generation) << "Cannot generate pull distribution for the fit parameter '" << par->GetName() << "'."
+            "\nNo similar parameter was found in the set of parameters that were used to generate toy data." << std::endl;
+      }
+    }
   }
-  delete iter ;
-  
 }
 
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a RooDataSet the resulting fit parameters of each toy cycle.
+/// Return a RooDataSet containing the post-fit parameters of each toy cycle.
 /// This dataset also contains any additional output that was generated
-/// by study modules that were added to this RooMCStudy
-
+/// by study modules that were added to this RooMCStudy.
+/// By default, the two following variables are added (apart from fit parameters):
+/// - NLL: The value of the negative log-likelihood for each run.
+/// - ngen: Number of events generated for each run.
 const RooDataSet& RooMCStudy::fitParDataSet()
 {
   if (_canAddFitResults) {
@@ -987,8 +1012,10 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the RooFitResult object of the fit to given sample 
-
+/// Return the RooFitResult of the fit with the given run number.
+///
+/// \note Fit results are not saved by default. This requires passing `FitOptions(Save(), ...)`
+/// to the constructor.
 const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 {
   // Check if sampleNum is in range
@@ -1054,12 +1081,13 @@ RooPlot* RooMCStudy::plotParamOn(RooPlot* frame, const RooCmdArg& arg1, const Ro
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the fitted value of the given parameter on a newly created frame.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
-///
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// </table>
 /// If no frame specifications are given, the AutoRange() feature will be used to set the range
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
 
@@ -1082,15 +1110,8 @@ RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the fitted value of the given parameter on a newly created frame.
-///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
-///
-/// If no frame specifications are given, the AutoRange() feature will be used to set the range
-/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+/// \copydetails RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+/// const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 
 RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
    			       const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
@@ -1115,13 +1136,15 @@ RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, c
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the -log(L) values on a newly created frame.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// </table>
 ///
-/// If no frame specifications are given, the AutoRange() feature will be used to set the range
+/// If no frame specifications are given, the AutoRange() feature will be used to set the range.
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
 
 RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
@@ -1137,14 +1160,16 @@ RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the fit errors for the specified parameter on a newly created frame.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// </table>
 ///
-/// If no frame specifications are given, the AutoRange() feature will be used to set the range
-/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+/// If no frame specifications are given, the AutoRange() feature will be used to set a default range.
+/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options.
 
 RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1168,17 +1193,26 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of pull values for the specified parameter on a newly created frame. If asymmetric
-/// errors are calculated in the fit (by MINOS) those will be used in the pull calculation
+/// errors are calculated in the fit (by MINOS) those will be used in the pull calculation.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
-/// FitGauss(Bool_t flag)            -- Add a gaussian fit to the frame
+/// If the parameters of the models for generation and fit differ, simple heuristics are used to find the
+/// corresponding parameters:
+/// - Parameters have the same name: They will be used to compute pulls.
+/// - Parameters have different names: The position of the fit parameter in the set of fit parameters will be
+///   computed. The parameter at the same position in the set of generator parameters will be used.
 ///
-/// If no frame specifications are given, the AutoSymRange() feature will be used to set the range
-/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+/// Further options:
+/// <table>
+/// <tr><th> Arguments <th> Effect
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// <tr><td> FitGauss(Bool_t flag)            <td> Add a gaussian fit to the frame
+/// </table>
+///
+/// If no frame specifications are given, the AutoSymRange() feature will be used to set a default range.
+/// Any other named argument is passed to the RooAbsData::plotOn(). See that function for allowed options.
 
 RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1210,7 +1244,12 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
 
     // Pass stripped command list to plotOn()
     pc.stripCmdList(cmdList,"FitGauss") ;
-    _fitParData->plotOn(frame,cmdList) ;
+    const bool success = _fitParData->plotOn(frame,cmdList) ;
+
+    if (!success) {
+      coutF(Plotting) << "No pull distribution for the parameter '" << param.GetName() << "'. Check logs for errors." << std::endl;
+      return frame;
+    }
 
     // Add Gaussian fit if requested
     if (fitGauss) {
@@ -1224,7 +1263,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
       pullGauss.paramOn(frame,_fitParData) ;
     }
   }
-  return frame ; ;
+  return frame;
 }
 
 
@@ -1327,6 +1366,12 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi
 /// set, an unbinned ML fit of the distribution to a Gaussian p.d.f
 /// is performed. The fit result is overlaid on the returned RooPlot
 /// and a box with the fitted mean and sigma is added.
+///
+/// If the parameters of the models for generation and fit differ, simple heuristics are used to find the
+/// corresponding parameters:
+/// - Parameters have the same name: They will be used to compute pulls.
+/// - Parameters have different names: The position of the fit parameter in the set of fit parameters will be
+///   computed. The parameter at the same position in the set of generator parameters will be used.
 
 RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins, Bool_t fitGauss) 
 {
@@ -1342,7 +1387,12 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
   pvar.setBins(nbins) ;
 
   RooPlot* frame = pvar.frame() ;
-  _fitParData->plotOn(frame) ;
+  const bool success = _fitParData->plotOn(frame);
+
+  if (!success) {
+    coutF(Plotting) << "No pull distribution for the parameter '" << param.GetName() << "'. Check logs for errors." << std::endl;
+    return frame;
+  }
 
   if (fitGauss) {
     RooRealVar pullMean("pullMean","Mean of pull",0,lo,hi) ;
@@ -1350,7 +1400,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
     RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
 			    "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
 			    RooArgSet(pvar,pullMean,pullSigma)) ;
-    pullGauss.fitTo(*_fitParData,"mh") ;
+    pullGauss.fitTo(*_fitParData,RooFit::Minos(0),RooFit::PrintLevel(-1)) ;
     pullGauss.plotOn(frame) ;
     pullGauss.paramOn(frame,_fitParData) ;
   }

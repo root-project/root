@@ -16,6 +16,7 @@
 
 #include "TMinuit.h"
 #include "TROOT.h"
+#include "TList.h"
 
 #include "TGraph.h" // needed for scan
 #include "TError.h"
@@ -24,7 +25,6 @@
 
 #include "ThreadLocalStorage.h"
 
-#include <iostream>
 #include <cassert>
 #include <algorithm>
 #include <functional>
@@ -804,7 +804,7 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    }
 
 
-   // syntax of MINOS is MINOS [maxcalls] [parno]
+   // syntax of MINOS command is:  MINOS [maxcalls] [parno]
    // if parno = 0 all parameters are done
    arglist[0] = MaxFunctionCalls();
    arglist[1] = i+1;  // par number starts from 1 in TMInuit
@@ -815,7 +815,7 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // check also the status from fCstatu
    if (isValid && fMinuit->fCstatu != "SUCCESSFUL") {
       if (fMinuit->fCstatu == "FAILURE" ) {
-         // in this case MINOS failed on all prameter, so it is not valid !
+         // in this case MINOS failed on all parameters, so it is not valid !
          ierr = 5;
          isValid = false;
       }
@@ -824,8 +824,13 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    }
 
    fStatus += 10*ierr;
+   fMinosStatus = ierr; 
 
    fMinosRun = true;
+
+   // retrieve parameters in case a new minimum has been found
+   if (fMinuit->fCstatu == "SUCCESSFUL")
+      RetrieveParams();
 
    double errParab = 0;
    double gcor = 0;
@@ -988,7 +993,7 @@ bool TMinuitMinimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 
    if (nstep == 0) return false;
    arglist[0] = ipar+1;  // TMinuit starts from 1
-   arglist[1] = nstep+2; // TMinuit deletes two points
+   arglist[1] = nstep;  //+2; // TMinuit deletes two points
    int nargs = 2;
    if (xmax > xmin ) {
       arglist[2] = xmin;
@@ -1070,14 +1075,13 @@ bool TMinuitMinimizer::SetDebug(bool on) {
    int ierr = 0;
    double arglist[1];
    arglist[0] = 1;
-   if (on) 
+   if (on)
       fMinuit->mnexcm("SET DEBUG",arglist,1,ierr);
    else
       fMinuit->mnexcm("SET NODEBUG",arglist,1,ierr);
 
-   return (ierr == 0); 
+   return (ierr == 0);
 }
 //    } // end namespace Fit
 
 // } // end namespace ROOT
-

@@ -1,9 +1,8 @@
 //===- ArchiveWriter.cpp - ar File Format implementation --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -27,6 +26,8 @@
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <map>
+
 #if !defined(_MSC_VER) && !defined(__MINGW32__)
 #include <unistd.h>
 #else
@@ -47,7 +48,6 @@ NewArchiveMember::getOldMember(const object::Archive::Child &OldMember,
     return BufOrErr.takeError();
 
   NewArchiveMember M;
-  assert(M.IsNew == false);
   M.Buf = MemoryBuffer::getMemBuffer(*BufOrErr, false);
   M.MemberName = M.Buf->getBufferIdentifier();
   if (!Deterministic) {
@@ -74,10 +74,11 @@ NewArchiveMember::getOldMember(const object::Archive::Child &OldMember,
 Expected<NewArchiveMember> NewArchiveMember::getFile(StringRef FileName,
                                                      bool Deterministic) {
   sys::fs::file_status Status;
-  int FD;
-  if (auto EC = sys::fs::openFileForRead(FileName, FD))
-    return errorCodeToError(EC);
-  assert(FD != -1);
+  auto FDOrErr = sys::fs::openNativeFileForRead(FileName);
+  if (!FDOrErr)
+    return FDOrErr.takeError();
+  sys::fs::file_t FD = *FDOrErr;
+  assert(FD != sys::fs::kInvalidFile);
 
   if (auto EC = sys::fs::status(FD, Status))
     return errorCodeToError(EC);
@@ -93,11 +94,10 @@ Expected<NewArchiveMember> NewArchiveMember::getFile(StringRef FileName,
   if (!MemberBufferOrErr)
     return errorCodeToError(MemberBufferOrErr.getError());
 
-  if (close(FD) != 0)
-    return errorCodeToError(std::error_code(errno, std::generic_category()));
+  if (auto EC = sys::fs::closeFile(FD))
+    return errorCodeToError(EC);
 
   NewArchiveMember M;
-  M.IsNew = true;
   M.Buf = std::move(*MemberBufferOrErr);
   M.MemberName = M.Buf->getBufferIdentifier();
   if (!Deterministic) {
@@ -111,57 +111,57 @@ Expected<NewArchiveMember> NewArchiveMember::getFile(StringRef FileName,
 }
 
 template <typename T>
-static void printWithSpacePadding(raw_fd_ostream &OS, T Data, unsigned Size,
-                                  bool MayTruncate = false) {
+static void printWithSpacePadding(raw_ostream &OS, T Data, unsigned Size) {
   uint64_t OldPos = OS.tell();
   OS << Data;
   unsigned SizeSoFar = OS.tell() - OldPos;
-  if (Size > SizeSoFar) {
-    OS.indent(Size - SizeSoFar);
-  } else if (Size < SizeSoFar) {
-    assert(MayTruncate && "Data doesn't fit in Size");
-    // Some of the data this is used for (like UID) can be larger than the
-    // space available in the archive format. Truncate in that case.
-    OS.seek(OldPos + Size);
-  }
+  assert(SizeSoFar <= Size && "Data doesn't fit in Size");
+  OS.indent(Size - SizeSoFar);
+}
+
+static bool isDarwin(object::Archive::Kind Kind) {
+  return Kind == object::Archive::K_DARWIN ||
+         Kind == object::Archive::K_DARWIN64;
 }
 
 static bool isBSDLike(object::Archive::Kind Kind) {
   switch (Kind) {
   case object::Archive::K_GNU:
+  case object::Archive::K_GNU64:
     return false;
   case object::Archive::K_BSD:
   case object::Archive::K_DARWIN:
-    return true;
-  case object::Archive::K_MIPS64:
   case object::Archive::K_DARWIN64:
+    return true;
   case object::Archive::K_COFF:
     break;
   }
   llvm_unreachable("not supported for writting");
 }
 
-static void print32(raw_ostream &Out, object::Archive::Kind Kind,
-                    uint32_t Val) {
-  if (isBSDLike(Kind))
-    support::endian::Writer<support::little>(Out).write(Val);
-  else
-    support::endian::Writer<support::big>(Out).write(Val);
+template <class T>
+static void print(raw_ostream &Out, object::Archive::Kind Kind, T Val) {
+  support::endian::write(Out, Val,
+                         isBSDLike(Kind) ? support::little : support::big);
 }
 
 static void printRestOfMemberHeader(
-    raw_fd_ostream &Out, const sys::TimePoint<std::chrono::seconds> &ModTime,
+    raw_ostream &Out, const sys::TimePoint<std::chrono::seconds> &ModTime,
     unsigned UID, unsigned GID, unsigned Perms, unsigned Size) {
   printWithSpacePadding(Out, sys::toTimeT(ModTime), 12);
-  printWithSpacePadding(Out, UID, 6, true);
-  printWithSpacePadding(Out, GID, 6, true);
+
+  // The format has only 6 chars for uid and gid. Truncate if the provided
+  // values don't fit.
+  printWithSpacePadding(Out, UID % 1000000, 6);
+  printWithSpacePadding(Out, GID % 1000000, 6);
+
   printWithSpacePadding(Out, format("%o", Perms), 8);
   printWithSpacePadding(Out, Size, 10);
   Out << "`\n";
 }
 
 static void
-printGNUSmallMemberHeader(raw_fd_ostream &Out, StringRef Name,
+printGNUSmallMemberHeader(raw_ostream &Out, StringRef Name,
                           const sys::TimePoint<std::chrono::seconds> &ModTime,
                           unsigned UID, unsigned GID, unsigned Perms,
                           unsigned Size) {
@@ -170,11 +170,11 @@ printGNUSmallMemberHeader(raw_fd_ostream &Out, StringRef Name,
 }
 
 static void
-printBSDMemberHeader(raw_fd_ostream &Out, StringRef Name,
+printBSDMemberHeader(raw_ostream &Out, uint64_t Pos, StringRef Name,
                      const sys::TimePoint<std::chrono::seconds> &ModTime,
                      unsigned UID, unsigned GID, unsigned Perms,
                      unsigned Size) {
-  uint64_t PosAfterHeader = Out.tell() + 60 + Name.size();
+  uint64_t PosAfterHeader = Pos + 60 + Name.size();
   // Pad so that even 64 bit object files are aligned.
   unsigned Pad = OffsetToAlignment(PosAfterHeader, 8);
   unsigned NameWithPadding = Name.size() + Pad;
@@ -182,7 +182,6 @@ printBSDMemberHeader(raw_fd_ostream &Out, StringRef Name,
   printRestOfMemberHeader(Out, ModTime, UID, GID, Perms,
                           NameWithPadding + Size);
   Out << Name;
-  assert(PosAfterHeader == Out.tell());
   while (Pad--)
     Out.write(uint8_t(0));
 }
@@ -191,85 +190,67 @@ static bool useStringTable(bool Thin, StringRef Name) {
   return Thin || Name.size() >= 16 || Name.contains('/');
 }
 
+static bool is64BitKind(object::Archive::Kind Kind) {
+  switch (Kind) {
+  case object::Archive::K_GNU:
+  case object::Archive::K_BSD:
+  case object::Archive::K_DARWIN:
+  case object::Archive::K_COFF:
+    return false;
+  case object::Archive::K_DARWIN64:
+  case object::Archive::K_GNU64:
+    return true;
+  }
+  llvm_unreachable("not supported for writting");
+}
+
 static void
-printMemberHeader(raw_fd_ostream &Out, object::Archive::Kind Kind, bool Thin,
-                  StringRef Name,
-                  std::vector<unsigned>::iterator &StringMapIndexIter,
-                  const sys::TimePoint<std::chrono::seconds> &ModTime,
-                  unsigned UID, unsigned GID, unsigned Perms, unsigned Size) {
+printMemberHeader(raw_ostream &Out, uint64_t Pos, raw_ostream &StringTable,
+                  StringMap<uint64_t> &MemberNames, object::Archive::Kind Kind,
+                  bool Thin, const NewArchiveMember &M,
+                  sys::TimePoint<std::chrono::seconds> ModTime, unsigned Size) {
   if (isBSDLike(Kind))
-    return printBSDMemberHeader(Out, Name, ModTime, UID, GID, Perms, Size);
-  if (!useStringTable(Thin, Name))
-    return printGNUSmallMemberHeader(Out, Name, ModTime, UID, GID, Perms, Size);
+    return printBSDMemberHeader(Out, Pos, M.MemberName, ModTime, M.UID, M.GID,
+                                M.Perms, Size);
+  if (!useStringTable(Thin, M.MemberName))
+    return printGNUSmallMemberHeader(Out, M.MemberName, ModTime, M.UID, M.GID,
+                                     M.Perms, Size);
   Out << '/';
-  printWithSpacePadding(Out, *StringMapIndexIter++, 15);
-  printRestOfMemberHeader(Out, ModTime, UID, GID, Perms, Size);
-}
-
-// Compute the relative path from From to To.
-static std::string computeRelativePath(StringRef From, StringRef To) {
-  if (sys::path::is_absolute(From) || sys::path::is_absolute(To))
-    return To;
-
-  StringRef DirFrom = sys::path::parent_path(From);
-  auto FromI = sys::path::begin(DirFrom);
-  auto ToI = sys::path::begin(To);
-  while (*FromI == *ToI) {
-    ++FromI;
-    ++ToI;
-  }
-
-  SmallString<128> Relative;
-  for (auto FromE = sys::path::end(DirFrom); FromI != FromE; ++FromI)
-    sys::path::append(Relative, "..");
-
-  for (auto ToE = sys::path::end(To); ToI != ToE; ++ToI)
-    sys::path::append(Relative, *ToI);
-
-#ifdef LLVM_ON_WIN32
-  // Replace backslashes with slashes so that the path is portable between *nix
-  // and Windows.
-  std::replace(Relative.begin(), Relative.end(), '\\', '/');
-#endif
-
-  return Relative.str();
-}
-
-static void writeStringTable(raw_fd_ostream &Out, StringRef ArcName,
-                             ArrayRef<NewArchiveMember> Members,
-                             std::vector<unsigned> &StringMapIndexes,
-                             bool Thin) {
-  unsigned StartOffset = 0;
-  for (const NewArchiveMember &M : Members) {
-    StringRef Path = M.Buf->getBufferIdentifier();
-    StringRef Name = M.MemberName;
-    if (!useStringTable(Thin, Name))
-      continue;
-    if (StartOffset == 0) {
-      printWithSpacePadding(Out, "//", 58);
-      Out << "`\n";
-      StartOffset = Out.tell();
+  uint64_t NamePos;
+  if (Thin) {
+    NamePos = StringTable.tell();
+    StringTable << M.MemberName << "/\n";
+  } else {
+    auto Insertion = MemberNames.insert({M.MemberName, uint64_t(0)});
+    if (Insertion.second) {
+      Insertion.first->second = StringTable.tell();
+      StringTable << M.MemberName << "/\n";
     }
-    StringMapIndexes.push_back(Out.tell() - StartOffset);
-
-    if (Thin) {
-      if (M.IsNew)
-        Out << computeRelativePath(ArcName, Path);
-      else
-        Out << M.Buf->getBufferIdentifier();
-    } else
-      Out << Name;
-
-    Out << "/\n";
+    NamePos = Insertion.first->second;
   }
-  if (StartOffset == 0)
-    return;
-  if (Out.tell() % 2)
-    Out << '\n';
-  int Pos = Out.tell();
-  Out.seek(StartOffset - 12);
-  printWithSpacePadding(Out, Pos - StartOffset, 10);
-  Out.seek(Pos);
+  printWithSpacePadding(Out, NamePos, 15);
+  printRestOfMemberHeader(Out, ModTime, M.UID, M.GID, M.Perms, Size);
+}
+
+namespace {
+struct MemberData {
+  std::vector<unsigned> Symbols;
+  std::string Header;
+  StringRef Data;
+  StringRef Padding;
+};
+} // namespace
+
+static MemberData computeStringTable(StringRef Names) {
+  unsigned Size = Names.size();
+  unsigned Pad = OffsetToAlignment(Size, 2);
+  std::string Header;
+  raw_string_ostream Out(Header);
+  printWithSpacePadding(Out, "//", 48);
+  printWithSpacePadding(Out, Size + Pad, 10);
+  Out << "`\n";
+  Out.flush();
+  return {{}, std::move(Header), Names, Pad ? "\n" : ""};
 }
 
 static sys::TimePoint<std::chrono::seconds> now(bool Deterministic) {
@@ -280,177 +261,356 @@ static sys::TimePoint<std::chrono::seconds> now(bool Deterministic) {
   return sys::TimePoint<seconds>();
 }
 
-// Returns the offset of the first reference to a member offset.
-static ErrorOr<unsigned>
-writeSymbolTable(raw_fd_ostream &Out, object::Archive::Kind Kind,
-                 ArrayRef<NewArchiveMember> Members,
-                 std::vector<unsigned> &MemberOffsetRefs, bool Deterministic) {
-  unsigned HeaderStartOffset = 0;
-  unsigned BodyStartOffset = 0;
-  SmallString<128> NameBuf;
-  raw_svector_ostream NameOS(NameBuf);
+static bool isArchiveSymbol(const object::BasicSymbolRef &S) {
+  uint32_t Symflags = S.getFlags();
+  if (Symflags & object::SymbolRef::SF_FormatSpecific)
+    return false;
+  if (!(Symflags & object::SymbolRef::SF_Global))
+    return false;
+  if (Symflags & object::SymbolRef::SF_Undefined)
+    return false;
+  return true;
+}
+
+static void printNBits(raw_ostream &Out, object::Archive::Kind Kind,
+                       uint64_t Val) {
+  if (is64BitKind(Kind))
+    print<uint64_t>(Out, Kind, Val);
+  else
+    print<uint32_t>(Out, Kind, Val);
+}
+
+static void writeSymbolTable(raw_ostream &Out, object::Archive::Kind Kind,
+                             bool Deterministic, ArrayRef<MemberData> Members,
+                             StringRef StringTable) {
+  // We don't write a symbol table on an archive with no members -- except on
+  // Darwin, where the linker will abort unless the archive has a symbol table.
+  if (StringTable.empty() && !isDarwin(Kind))
+    return;
+
+  unsigned NumSyms = 0;
+  for (const MemberData &M : Members)
+    NumSyms += M.Symbols.size();
+
+  unsigned Size = 0;
+  unsigned OffsetSize = is64BitKind(Kind) ? sizeof(uint64_t) : sizeof(uint32_t);
+
+  Size += OffsetSize; // Number of entries
+  if (isBSDLike(Kind))
+    Size += NumSyms * OffsetSize * 2; // Table
+  else
+    Size += NumSyms * OffsetSize; // Table
+  if (isBSDLike(Kind))
+    Size += OffsetSize; // byte count
+  Size += StringTable.size();
+  // ld64 expects the members to be 8-byte aligned for 64-bit content and at
+  // least 4-byte aligned for 32-bit content.  Opt for the larger encoding
+  // uniformly.
+  // We do this for all bsd formats because it simplifies aligning members.
+  unsigned Alignment = isBSDLike(Kind) ? 8 : 2;
+  unsigned Pad = OffsetToAlignment(Size, Alignment);
+  Size += Pad;
+
+  if (isBSDLike(Kind)) {
+    const char *Name = is64BitKind(Kind) ? "__.SYMDEF_64" : "__.SYMDEF";
+    printBSDMemberHeader(Out, Out.tell(), Name, now(Deterministic), 0, 0, 0,
+                         Size);
+  } else {
+    const char *Name = is64BitKind(Kind) ? "/SYM64" : "";
+    printGNUSmallMemberHeader(Out, Name, now(Deterministic), 0, 0, 0, Size);
+  }
+
+  uint64_t Pos = Out.tell() + Size;
+
+  if (isBSDLike(Kind))
+    printNBits(Out, Kind, NumSyms * 2 * OffsetSize);
+  else
+    printNBits(Out, Kind, NumSyms);
+
+  for (const MemberData &M : Members) {
+    for (unsigned StringOffset : M.Symbols) {
+      if (isBSDLike(Kind))
+        printNBits(Out, Kind, StringOffset);
+      printNBits(Out, Kind, Pos); // member offset
+    }
+    Pos += M.Header.size() + M.Data.size() + M.Padding.size();
+  }
+
+  if (isBSDLike(Kind))
+    // byte count of the string table
+    printNBits(Out, Kind, StringTable.size());
+  Out << StringTable;
+
+  while (Pad--)
+    Out.write(uint8_t(0));
+}
+
+static Expected<std::vector<unsigned>>
+getSymbols(MemoryBufferRef Buf, raw_ostream &SymNames, bool &HasObject) {
+  std::vector<unsigned> Ret;
+
+  // In the scenario when LLVMContext is populated SymbolicFile will contain a
+  // reference to it, thus SymbolicFile should be destroyed first.
   LLVMContext Context;
-  for (unsigned MemberNum = 0, N = Members.size(); MemberNum < N; ++MemberNum) {
-    MemoryBufferRef MemberBuffer = Members[MemberNum].Buf->getMemBufferRef();
-    Expected<std::unique_ptr<object::SymbolicFile>> ObjOrErr =
-        object::SymbolicFile::createSymbolicFile(
-            MemberBuffer, llvm::file_magic::unknown, &Context);
+  std::unique_ptr<object::SymbolicFile> Obj;
+  if (identify_magic(Buf.getBuffer()) == file_magic::bitcode) {
+    auto ObjOrErr = object::SymbolicFile::createSymbolicFile(
+        Buf, file_magic::bitcode, &Context);
     if (!ObjOrErr) {
       // FIXME: check only for "not an object file" errors.
       consumeError(ObjOrErr.takeError());
-      continue;
+      return Ret;
     }
-    object::SymbolicFile &Obj = *ObjOrErr.get();
-
-    if (!HeaderStartOffset) {
-      HeaderStartOffset = Out.tell();
-      if (isBSDLike(Kind))
-        printBSDMemberHeader(Out, "__.SYMDEF", now(Deterministic), 0, 0, 0, 0);
-      else
-        printGNUSmallMemberHeader(Out, "", now(Deterministic), 0, 0, 0, 0);
-      BodyStartOffset = Out.tell();
-      print32(Out, Kind, 0); // number of entries or bytes
+    Obj = std::move(*ObjOrErr);
+  } else {
+    auto ObjOrErr = object::SymbolicFile::createSymbolicFile(Buf);
+    if (!ObjOrErr) {
+      // FIXME: check only for "not an object file" errors.
+      consumeError(ObjOrErr.takeError());
+      return Ret;
     }
-
-    for (const object::BasicSymbolRef &S : Obj.symbols()) {
-      uint32_t Symflags = S.getFlags();
-      if (Symflags & object::SymbolRef::SF_FormatSpecific)
-        continue;
-      if (!(Symflags & object::SymbolRef::SF_Global))
-        continue;
-      if (Symflags & object::SymbolRef::SF_Undefined &&
-          !(Symflags & object::SymbolRef::SF_Indirect))
-        continue;
-
-      unsigned NameOffset = NameOS.tell();
-      if (auto EC = S.printName(NameOS))
-        return EC;
-      NameOS << '\0';
-      MemberOffsetRefs.push_back(MemberNum);
-      if (isBSDLike(Kind))
-        print32(Out, Kind, NameOffset);
-      print32(Out, Kind, 0); // member offset
-    }
+    Obj = std::move(*ObjOrErr);
   }
 
-  if (HeaderStartOffset == 0)
-    return 0;
-
-  // ld64 prefers the cctools type archive which pads its string table to a
-  // boundary of sizeof(int32_t).
-  if (isBSDLike(Kind))
-    for (unsigned P = OffsetToAlignment(NameOS.tell(), sizeof(int32_t)); P--;)
-      NameOS << '\0';
-
-  StringRef StringTable = NameOS.str();
-  if (isBSDLike(Kind))
-    print32(Out, Kind, StringTable.size()); // byte count of the string table
-  Out << StringTable;
-  // If there are no symbols, emit an empty symbol table, to satisfy Solaris
-  // tools, older versions of which expect a symbol table in a non-empty
-  // archive, regardless of whether there are any symbols in it.
-  if (StringTable.size() == 0)
-    print32(Out, Kind, 0);
-
-  // ld64 requires the next member header to start at an offset that is
-  // 4 bytes aligned.
-  unsigned Pad = OffsetToAlignment(Out.tell(), 4);
-  while (Pad--)
-    Out.write(uint8_t(0));
-
-  // Patch up the size of the symbol table now that we know how big it is.
-  unsigned Pos = Out.tell();
-  const unsigned MemberHeaderSize = 60;
-  Out.seek(HeaderStartOffset + 48); // offset of the size field.
-  printWithSpacePadding(Out, Pos - MemberHeaderSize - HeaderStartOffset, 10);
-
-  // Patch up the number of symbols.
-  Out.seek(BodyStartOffset);
-  unsigned NumSyms = MemberOffsetRefs.size();
-  if (isBSDLike(Kind))
-    print32(Out, Kind, NumSyms * 8);
-  else
-    print32(Out, Kind, NumSyms);
-
-  Out.seek(Pos);
-  return BodyStartOffset + 4;
+  HasObject = true;
+  for (const object::BasicSymbolRef &S : Obj->symbols()) {
+    if (!isArchiveSymbol(S))
+      continue;
+    Ret.push_back(SymNames.tell());
+    if (Error E = S.printName(SymNames))
+      return std::move(E);
+    SymNames << '\0';
+  }
+  return Ret;
 }
 
-std::pair<StringRef, std::error_code>
-llvm::writeArchive(StringRef ArcName,
-                   std::vector<NewArchiveMember> &NewMembers,
-                   bool WriteSymtab, object::Archive::Kind Kind,
-                   bool Deterministic, bool Thin,
-                   std::unique_ptr<MemoryBuffer> OldArchiveBuf) {
-  assert((!Thin || !isBSDLike(Kind)) && "Only the gnu format has a thin mode");
-  SmallString<128> TmpArchive;
-  int TmpArchiveFD;
-  if (auto EC = sys::fs::createUniqueFile(ArcName + ".temp-archive-%%%%%%%.a",
-                                          TmpArchiveFD, TmpArchive))
-    return std::make_pair(ArcName, EC);
+static Expected<std::vector<MemberData>>
+computeMemberData(raw_ostream &StringTable, raw_ostream &SymNames,
+                  object::Archive::Kind Kind, bool Thin, bool Deterministic,
+                  ArrayRef<NewArchiveMember> NewMembers) {
+  static char PaddingData[8] = {'\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n'};
 
-  tool_output_file Output(TmpArchive, TmpArchiveFD);
-  raw_fd_ostream &Out = Output.os();
-  if (Thin)
-    Out << "!<thin>\n";
-  else
-    Out << "!<arch>\n";
+  // This ignores the symbol table, but we only need the value mod 8 and the
+  // symbol table is aligned to be a multiple of 8 bytes
+  uint64_t Pos = 0;
 
-  std::vector<unsigned> MemberOffsetRefs;
+  std::vector<MemberData> Ret;
+  bool HasObject = false;
 
-  unsigned MemberReferenceOffset = 0;
-  if (WriteSymtab) {
-    ErrorOr<unsigned> MemberReferenceOffsetOrErr = writeSymbolTable(
-        Out, Kind, NewMembers, MemberOffsetRefs, Deterministic);
-    if (auto EC = MemberReferenceOffsetOrErr.getError())
-      return std::make_pair(ArcName, EC);
-    MemberReferenceOffset = MemberReferenceOffsetOrErr.get();
+  // Deduplicate long member names in the string table and reuse earlier name
+  // offsets. This especially saves space for COFF Import libraries where all
+  // members have the same name.
+  StringMap<uint64_t> MemberNames;
+
+  // UniqueTimestamps is a special case to improve debugging on Darwin:
+  //
+  // The Darwin linker does not link debug info into the final
+  // binary. Instead, it emits entries of type N_OSO in in the output
+  // binary's symbol table, containing references to the linked-in
+  // object files. Using that reference, the debugger can read the
+  // debug data directly from the object files. Alternatively, an
+  // invocation of 'dsymutil' will link the debug data from the object
+  // files into a dSYM bundle, which can be loaded by the debugger,
+  // instead of the object files.
+  //
+  // For an object file, the N_OSO entries contain the absolute path
+  // path to the file, and the file's timestamp. For an object
+  // included in an archive, the path is formatted like
+  // "/absolute/path/to/archive.a(member.o)", and the timestamp is the
+  // archive member's timestamp, rather than the archive's timestamp.
+  //
+  // However, this doesn't always uniquely identify an object within
+  // an archive -- an archive file can have multiple entries with the
+  // same filename. (This will happen commonly if the original object
+  // files started in different directories.) The only way they get
+  // distinguished, then, is via the timestamp. But this process is
+  // unable to find the correct object file in the archive when there
+  // are two files of the same name and timestamp.
+  //
+  // Additionally, timestamp==0 is treated specially, and causes the
+  // timestamp to be ignored as a match criteria.
+  //
+  // That will "usually" work out okay when creating an archive not in
+  // deterministic timestamp mode, because the objects will probably
+  // have been created at different timestamps.
+  //
+  // To ameliorate this problem, in deterministic archive mode (which
+  // is the default), on Darwin we will emit a unique non-zero
+  // timestamp for each entry with a duplicated name. This is still
+  // deterministic: the only thing affecting that timestamp is the
+  // order of the files in the resultant archive.
+  //
+  // See also the functions that handle the lookup:
+  // in lldb: ObjectContainerBSDArchive::Archive::FindObject()
+  // in llvm/tools/dsymutil: BinaryHolder::GetArchiveMemberBuffers().
+  bool UniqueTimestamps = Deterministic && isDarwin(Kind);
+  std::map<StringRef, unsigned> FilenameCount;
+  if (UniqueTimestamps) {
+    for (const NewArchiveMember &M : NewMembers)
+      FilenameCount[M.MemberName]++;
+    for (auto &Entry : FilenameCount)
+      Entry.second = Entry.second > 1 ? 1 : 0;
   }
 
-  std::vector<unsigned> StringMapIndexes;
-  if (!isBSDLike(Kind))
-    writeStringTable(Out, ArcName, NewMembers, StringMapIndexes, Thin);
-
-  std::vector<unsigned>::iterator StringMapIndexIter = StringMapIndexes.begin();
-  std::vector<unsigned> MemberOffset;
   for (const NewArchiveMember &M : NewMembers) {
-    MemoryBufferRef File = M.Buf->getMemBufferRef();
-    unsigned Padding = 0;
+    std::string Header;
+    raw_string_ostream Out(Header);
 
-    unsigned Pos = Out.tell();
-    MemberOffset.push_back(Pos);
+    MemoryBufferRef Buf = M.Buf->getMemBufferRef();
+    StringRef Data = Thin ? "" : Buf.getBuffer();
 
     // ld64 expects the members to be 8-byte aligned for 64-bit content and at
     // least 4-byte aligned for 32-bit content.  Opt for the larger encoding
     // uniformly.  This matches the behaviour with cctools and ensures that ld64
     // is happy with archives that we generate.
-    if (Kind == object::Archive::K_DARWIN)
-      Padding = OffsetToAlignment(M.Buf->getBufferSize(), 8);
+    unsigned MemberPadding =
+        isDarwin(Kind) ? OffsetToAlignment(Data.size(), 8) : 0;
+    unsigned TailPadding = OffsetToAlignment(Data.size() + MemberPadding, 2);
+    StringRef Padding = StringRef(PaddingData, MemberPadding + TailPadding);
 
-    printMemberHeader(Out, Kind, Thin, M.MemberName, StringMapIndexIter,
-                      M.ModTime, M.UID, M.GID, M.Perms,
-                      M.Buf->getBufferSize() + Padding);
+    sys::TimePoint<std::chrono::seconds> ModTime;
+    if (UniqueTimestamps)
+      // Increment timestamp for each file of a given name.
+      ModTime = sys::toTimePoint(FilenameCount[M.MemberName]++);
+    else
+      ModTime = M.ModTime;
+    printMemberHeader(Out, Pos, StringTable, MemberNames, Kind, Thin, M,
+                      ModTime, Buf.getBufferSize() + MemberPadding);
+    Out.flush();
 
-    if (!Thin)
-      Out << File.getBuffer();
+    Expected<std::vector<unsigned>> Symbols =
+        getSymbols(Buf, SymNames, HasObject);
+    if (auto E = Symbols.takeError())
+      return std::move(E);
 
-    while (Padding--)
-      Out << '\n';
-    if (Out.tell() % 2)
-      Out << '\n';
+    Pos += Header.size() + Data.size() + Padding.size();
+    Ret.push_back({std::move(*Symbols), std::move(Header), Data, Padding});
   }
+  // If there are no symbols, emit an empty symbol table, to satisfy Solaris
+  // tools, older versions of which expect a symbol table in a non-empty
+  // archive, regardless of whether there are any symbols in it.
+  if (HasObject && SymNames.tell() == 0)
+    SymNames << '\0' << '\0' << '\0';
+  return Ret;
+}
 
-  if (MemberReferenceOffset) {
-    Out.seek(MemberReferenceOffset);
-    for (unsigned MemberNum : MemberOffsetRefs) {
-      if (isBSDLike(Kind))
-        Out.seek(Out.tell() + 4); // skip over the string offset
-      print32(Out, Kind, MemberOffset[MemberNum]);
+namespace llvm {
+
+static ErrorOr<SmallString<128>> canonicalizePath(StringRef P) {
+  SmallString<128> Ret = P;
+  std::error_code Err = sys::fs::make_absolute(Ret);
+  if (Err)
+    return Err;
+  sys::path::remove_dots(Ret, /*removedotdot*/ true);
+  return Ret;
+}
+
+// Compute the relative path from From to To.
+Expected<std::string> computeArchiveRelativePath(StringRef From, StringRef To) {
+  ErrorOr<SmallString<128>> PathToOrErr = canonicalizePath(To);
+  ErrorOr<SmallString<128>> DirFromOrErr = canonicalizePath(From);
+  if (!PathToOrErr || !DirFromOrErr)
+    return errorCodeToError(std::error_code(errno, std::generic_category()));
+
+  const SmallString<128> &PathTo = *PathToOrErr;
+  const SmallString<128> &DirFrom = sys::path::parent_path(*DirFromOrErr);
+
+  // Can't construct a relative path between different roots
+  if (sys::path::root_name(PathTo) != sys::path::root_name(DirFrom))
+    return sys::path::convert_to_slash(PathTo);
+
+  // Skip common prefixes
+  auto FromTo =
+      std::mismatch(sys::path::begin(DirFrom), sys::path::end(DirFrom),
+                    sys::path::begin(PathTo));
+  auto FromI = FromTo.first;
+  auto ToI = FromTo.second;
+
+  // Construct relative path
+  SmallString<128> Relative;
+  for (auto FromE = sys::path::end(DirFrom); FromI != FromE; ++FromI)
+    sys::path::append(Relative, sys::path::Style::posix, "..");
+
+  for (auto ToE = sys::path::end(PathTo); ToI != ToE; ++ToI)
+    sys::path::append(Relative, sys::path::Style::posix, *ToI);
+
+  return Relative.str();
+}
+
+Error writeArchive(StringRef ArcName, ArrayRef<NewArchiveMember> NewMembers,
+                   bool WriteSymtab, object::Archive::Kind Kind,
+                   bool Deterministic, bool Thin,
+                   std::unique_ptr<MemoryBuffer> OldArchiveBuf) {
+  assert((!Thin || !isBSDLike(Kind)) && "Only the gnu format has a thin mode");
+
+  SmallString<0> SymNamesBuf;
+  raw_svector_ostream SymNames(SymNamesBuf);
+  SmallString<0> StringTableBuf;
+  raw_svector_ostream StringTable(StringTableBuf);
+
+  Expected<std::vector<MemberData>> DataOrErr = computeMemberData(
+      StringTable, SymNames, Kind, Thin, Deterministic, NewMembers);
+  if (Error E = DataOrErr.takeError())
+    return E;
+  std::vector<MemberData> &Data = *DataOrErr;
+
+  if (!StringTableBuf.empty())
+    Data.insert(Data.begin(), computeStringTable(StringTableBuf));
+
+  // We would like to detect if we need to switch to a 64-bit symbol table.
+  if (WriteSymtab) {
+    uint64_t MaxOffset = 0;
+    uint64_t LastOffset = MaxOffset;
+    for (const auto &M : Data) {
+      // Record the start of the member's offset
+      LastOffset = MaxOffset;
+      // Account for the size of each part associated with the member.
+      MaxOffset += M.Header.size() + M.Data.size() + M.Padding.size();
+      // We assume 32-bit symbols to see if 32-bit symbols are possible or not.
+      MaxOffset += M.Symbols.size() * 4;
+    }
+
+    // The SYM64 format is used when an archive's member offsets are larger than
+    // 32-bits can hold. The need for this shift in format is detected by
+    // writeArchive. To test this we need to generate a file with a member that
+    // has an offset larger than 32-bits but this demands a very slow test. To
+    // speed the test up we use this environment variable to pretend like the
+    // cutoff happens before 32-bits and instead happens at some much smaller
+    // value.
+    const char *Sym64Env = std::getenv("SYM64_THRESHOLD");
+    int Sym64Threshold = 32;
+    if (Sym64Env)
+      StringRef(Sym64Env).getAsInteger(10, Sym64Threshold);
+
+    // If LastOffset isn't going to fit in a 32-bit varible we need to switch
+    // to 64-bit. Note that the file can be larger than 4GB as long as the last
+    // member starts before the 4GB offset.
+    if (LastOffset >= (1ULL << Sym64Threshold)) {
+      if (Kind == object::Archive::K_DARWIN)
+        Kind = object::Archive::K_DARWIN64;
+      else
+        Kind = object::Archive::K_GNU64;
     }
   }
 
-  Output.keep();
-  Out.close();
+  Expected<sys::fs::TempFile> Temp =
+      sys::fs::TempFile::create(ArcName + ".temp-archive-%%%%%%%.a");
+  if (!Temp)
+    return Temp.takeError();
+
+  raw_fd_ostream Out(Temp->FD, false);
+  if (Thin)
+    Out << "!<thin>\n";
+  else
+    Out << "!<arch>\n";
+
+  if (WriteSymtab)
+    writeSymbolTable(Out, Kind, Deterministic, Data, SymNamesBuf);
+
+  for (const MemberData &M : Data)
+    Out << M.Header << M.Data << M.Padding;
+
+  Out.flush();
 
   // At this point, we no longer need whatever backing memory
   // was used to generate the NewMembers. On Windows, this buffer
@@ -464,6 +624,7 @@ llvm::writeArchive(StringRef ArcName,
   // closed before we attempt to rename.
   OldArchiveBuf.reset();
 
-  sys::fs::rename(TmpArchive, ArcName);
-  return std::make_pair("", std::error_code());
+  return Temp->keep(ArcName);
 }
+
+} // namespace llvm

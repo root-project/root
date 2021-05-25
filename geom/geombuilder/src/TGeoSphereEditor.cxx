@@ -25,10 +25,8 @@ Editor for a TGeoSphere.
 #include "TGeoSphere.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TView.h"
-#include "TGTab.h"
-#include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
@@ -350,7 +348,6 @@ void TGeoSphereEditor::DoRmax()
    }
    if (rmax < rmin+1.e-10) {
       rmax = rmin + 0.1;
-      if (rmin < 0.) rmin = 0.;
       fERmax->SetNumber(rmax);
    }
    DoModified();

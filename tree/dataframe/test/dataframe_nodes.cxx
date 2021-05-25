@@ -1,18 +1,15 @@
+#include "ROOTUnitTestSupport.h"
+
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RSlotStack.hxx>
+#include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
 #include <mutex>
 #include <thread>
+#include <stdexcept> // std::runtime_error
 
 #include "gtest/gtest.h"
-
-TEST(RDataFrameNodes, RSlotStackCheckSameThreadSameSlot)
-{
-   unsigned int n(7);
-   ROOT::Internal::RDF::RSlotStack s(n);
-   EXPECT_EQ(s.GetSlot(), s.GetSlot());
-}
 
 #ifndef NDEBUG
 
@@ -32,7 +29,7 @@ TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
          t.join();
    };
 
-   EXPECT_DEATH(theTest(), "RSlotStack assumes that a value can be always obtained.");
+   EXPECT_DEATH(theTest(), "Trying to pop a slot from an empty stack!");
 }
 
 TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
@@ -42,7 +39,7 @@ TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
       s.ReturnSlot(0);
    };
 
-   EXPECT_DEATH(theTest(), "RSlotStack has a reference count relative to an index which will become negative");
+   EXPECT_DEATH(theTest(), "Trying to put back a slot to a full stack!");
 }
 
 #endif
@@ -53,18 +50,11 @@ TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
    ASSERT_EQ(&lm, lm.GetLoopManagerUnchecked());
 }
 
-TEST(RDataFrameNodes, RLoopManagerJit)
+TEST(RDataFrameNodes, RLoopManagerJitWrongCode)
 {
    ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
-   lm.ToJit("souble d = 3.14");
-   int ret(1);
-   try {
-      testing::internal::CaptureStderr();
-      lm.Run();
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret) << "Bogus C++ code was jitted and nothing was detected!";
+   lm.ToJitExec("souble d = 3.14");
+   EXPECT_THROW(lm.Run(), std::runtime_error) << "Bogus C++ code was jitted and nothing was detected!";
 }
 
 TEST(RDataFrameNodes, DoubleEvtLoop)
@@ -85,11 +75,32 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
    // even though TTreeReader::SetEntry() was called, which switched the tree again. Did you mean to call
    // TTreeReader::SetLocalEntry()?
 
-   testing::internal::CaptureStdout();
-   *tdf.Count();
-   auto output = testing::internal::GetCapturedStdout();
-   EXPECT_STREQ("", output.c_str()) << "An error was printed: " << output << std::endl;
+   ROOT_EXPECT_NODIAG(*tdf.Count());
 
    for (auto &f : files)
       gSystem->Unlink(f.c_str());
+}
+
+// ROOT-9736
+TEST(RDataFrameNodes, InheritanceOfDefines)
+{
+   ROOT::RDataFrame df(1);
+   const auto nBinsExpected = 42;
+   // Read the TH1F as a TH1
+   df.Define("b", [&]() { return TH1F("b", "b", nBinsExpected, 0, 1); })
+      .Foreach([&](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
+
+   const auto ofileName = "InheritanceOfDefines.root";
+
+   const auto val = 42.;
+   auto createStat = [&val]() {
+      TStatistic t;
+      t.Fill(val);
+      return t;
+   };
+
+   // Read as TObject from disk a TStatistics object
+   auto checkStat = [&val](TObject &o) { EXPECT_EQ(val, ((TStatistic *)&o)->GetMean()); };
+   ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
+   gSystem->Unlink(ofileName);
 }

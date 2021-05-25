@@ -1,6 +1,8 @@
 llvm-link - LLVM bitcode linker
 ===============================
 
+.. program:: llvm-link
+
 SYNOPSIS
 --------
 
@@ -52,5 +54,3 @@ EXIT STATUS
 
 If :program:`llvm-link` succeeds, it will exit with 0.  Otherwise, if an error
 occurs, it will exit with a non-zero value.
-
-

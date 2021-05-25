@@ -17,6 +17,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 class RooMinuit ;
 
@@ -40,7 +41,7 @@ public:
     BarlowCache() : hasStatUncert(false), gamma(NULL), 
 		    observables(NULL), bin_center(NULL), 
 		    tau(NULL), nom_pois_mean(NULL),
-		    sumPdf(NULL),  nData(-1) {}
+		    sumPdf(NULL),  nData(-1), binVolume(0) {}
     bool hasStatUncert;
     RooRealVar* gamma;
     RooArgSet* observables;

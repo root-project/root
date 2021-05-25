@@ -11,6 +11,7 @@
 #ifndef ROOT_RDFRANGE
 #define ROOT_RDFRANGE
 
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "RtypesCore.h"
 
@@ -43,6 +44,9 @@ public:
 
    RRange(const RRange &) = delete;
    RRange &operator=(const RRange &) = delete;
+   // must call Deregister here, before fPrevDataFrame is destroyed,
+   // otherwise if fPrevDataFrame is fLoopManager we get a use after delete
+   ~RRange() { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final
@@ -111,7 +115,10 @@ public:
       }
       thisNode->SetPrevNode(prevNode);
 
-      // If there have been some defines before it, this node won't detect them.
+      // If there have been some defines between the last Filter and this Range node we won't detect them:
+      // Ranges don't keep track of Defines (they have no RBookedDefines data member).
+      // Let's pretend that the Defines of this node are the same as the node above, so that in the graph
+      // the Defines will just appear below the Range instead (no functional change).
       thisNode->AddDefinedColumns(prevColumns);
 
       return thisNode;

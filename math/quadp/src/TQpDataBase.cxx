@@ -42,21 +42,21 @@
 
 #include "TQpDataBase.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQpDataBase                                                          //
-//                                                                      //
-// Data for the general QP formulation                                  //
-//                                                                      //
-// The Data class stores the data defining the problem and provides     //
-// methods for performing the operations with this data required by     //
-// the interior-point algorithms. These operations include assembling   //
-// the linear systems (5) or (7), performing matrix-vector operations   //
-// with the data, calculating norms of the data, reading input into the //
-// data structure from various sources, generating random problem       //
-// instances, and printing the data.                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TQpDataBase
+///
+/// Data for the general QP formulation
+///
+/// The Data class stores the data defining the problem and provides
+/// methods for performing the operations with this data required by
+/// the interior-point algorithms. These operations include assembling
+/// the linear systems (5) or (7), performing matrix-vector operations
+/// with the data, calculating norms of the data, reading input into the
+/// data structure from various sources, generating random problem
+/// instances, and printing the data.
+///
+////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TQpDataBase);
 

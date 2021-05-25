@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 project(xxhash C)
 
 unset(xxHash_FOUND CACHE)
@@ -17,9 +23,8 @@ set(xxHash_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 set(xxHash_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
 add_library(xxhash STATIC xxhash.h xxhash.c)
-set_property(TARGET xxhash PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(xxhash PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
 target_include_directories(xxhash INTERFACE $<BUILD_INTERFACE:${xxHash_INCLUDE_DIR}>)
-target_compile_options(xxhash PRIVATE -fvisibility=hidden)
 
 add_library(xxHash::xxHash ALIAS xxhash)
 

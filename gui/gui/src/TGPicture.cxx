@@ -20,16 +20,18 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGPicture & TGPicturePool                                            //
-//                                                                      //
-// The TGPicture class implements pictures and icons used in the        //
-// different GUI elements and widgets. The TGPicturePool class          //
-// implements a TGPicture cache. TGPictures are created, managed and    //
-// destroyed by the TGPicturePool.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGPicture
+    \ingroup guiwidgets
+
+
+The TGPicture class implements pictures and icons used in the
+different GUI elements and widgets. The TGPicturePool class
+implements a TGPicture cache. TGPictures are created, managed and
+destroyed by the TGPicturePool.
+
+*/
+
 
 #include "TGPicture.h"
 #include "TGResourcePool.h"
@@ -39,9 +41,9 @@
 #include "TVirtualX.h"
 #include "TImage.h"
 #include "TROOT.h"
-#include <stdlib.h>
+#include <cstdlib>
 
-TGGC *TGSelectedPicture::fgSelectedGC = 0;
+TGGC *TGSelectedPicture::fgSelectedGC = nullptr;
 
 ClassImp(TGPicture);
 ClassImp(TGSelectedPicture);
@@ -88,9 +90,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    ext.ToLower();
 
    if (ext.Length()) { // ".xpm", ".gif" etc
-      char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
-      pname = pxname;
-      delete [] pxname;
+      pname = gSystem->UnixPathName(pname);
+      gSystem->ExpandPathName(pname);
    }
 
    TGPicture *pic = (TGPicture *)fPicList->FindObject(pname);
@@ -146,9 +147,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    ext.ToLower();
 
    if (ext.Length()) { // ".xpm", ".gif" etc
-      char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
-      pname = pxname;
-      delete [] pxname;
+      pname = gSystem->UnixPathName(pname);
+      gSystem->ExpandPathName(pname);
    }
 
    const char *hname = TGPicture::HashName(pname, new_width, new_height);

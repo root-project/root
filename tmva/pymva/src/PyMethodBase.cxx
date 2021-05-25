@@ -20,15 +20,24 @@
 #include "TMVA/Results.h"
 #include "TMVA/Timer.h"
 
-#include <TApplication.h>
-
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-#include <fstream>
-#include <wchar.h>
+#include <cwchar>
 
 using namespace TMVA;
+
+namespace TMVA {
+namespace Internal {
+class PyGILRAII {
+   PyGILState_STATE m_GILState;
+
+public:
+   PyGILRAII() : m_GILState(PyGILState_Ensure()) {}
+   ~PyGILRAII() { PyGILState_Release(m_GILState); }
+};
+} // namespace Internal
+} // namespace TMVA
 
 ClassImp(PyMethodBase);
 
@@ -45,21 +54,12 @@ PyObject *PyMethodBase::fPickleLoads = NULL;
 PyObject *PyMethodBase::fMain = NULL;
 PyObject *PyMethodBase::fGlobalNS = NULL;
 
-class PyGILRAII {
-   PyGILState_STATE m_GILState;
-public:
-   PyGILRAII():m_GILState(PyGILState_Ensure()){}
-   ~PyGILRAII(){PyGILState_Release(m_GILState);}
-};
-
 ///////////////////////////////////////////////////////////////////////////////
 
-PyMethodBase::PyMethodBase(const TString &jobName,
-                           Types::EMVA methodType,
-                           const TString &methodTitle,
-                           DataSetInfo &dsi,
-                           const TString &theOption ): MethodBase(jobName, methodType, methodTitle, dsi, theOption),
-   fClassifier(NULL)
+PyMethodBase::PyMethodBase(const TString &jobName, Types::EMVA methodType, const TString &methodTitle, DataSetInfo &dsi,
+                           const TString &theOption)
+   : MethodBase(jobName, methodType, methodTitle, dsi, theOption),
+      fClassifier(NULL)
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -131,8 +131,7 @@ void PyMethodBase::PyInitialize()
       Py_Initialize();
    }
 
-    PyGILRAII thePyGILRAII;
-
+   TMVA::Internal::PyGILRAII raii;
    if (!pyIsInitialized) {
       _import_array();
    }

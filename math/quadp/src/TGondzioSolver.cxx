@@ -40,17 +40,17 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGondzioSolver                                                       //
-//                                                                      //
-// Derived class of TQpSolverBase implementing Gondzio-correction       //
-// version of Mehrotra's original predictor-corrector algorithm.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TGondzioSolver
+///
+/// Derived class of TQpSolverBase implementing Gondzio-correction
+/// version of Mehrotra's original predictor-corrector algorithm.
+///
+////////////////////////////////////////////////////////////////////////////////
 
 
-#include "Riostream.h"
+#include <iostream>
 #include "TMath.h"
 #include "TGondzioSolver.h"
 #include "TQpLinSolverDens.h"

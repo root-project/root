@@ -246,7 +246,7 @@ In our example we will assume that the remote server's name is
 `cloud-gw-213.to.infn.it`: substitute it with your remote endpoint.
 
 First, check that you have your Grid certificate and private key
-installed both in your browser and in the `~/.globus` directory of your
+installed both in your browser and in the home directory of your
 client.
 
 Point your browser to `https://cloud-gw-213.to.infn.it/auth/`: you'll

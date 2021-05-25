@@ -20,26 +20,27 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListTree and TGListTreeItem                                        //
-//                                                                      //
-// A list tree is a widget that can contain a number of items           //
-// arranged in a tree structure. The items are represented by small     //
-// folder icons that can be either open or closed.                      //
-//                                                                      //
-// The TGListTree is user callable. The TGListTreeItem is a service     //
-// class of the list tree.                                              //
-//                                                                      //
-// A list tree can generate the following events:                       //
-// kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).        //
-// kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+/** \class TGListTree
+    \ingroup guiwidgets
 
-#include "TROOT.h"
+A list tree is a widget that can contain a number of items
+arranged in a tree structure. The items are represented by small
+folder icons that can be either open or closed.
+
+The TGListTree is user callable. The TGListTreeItem is a service
+class of the list tree.
+
+A list tree can generate the following events:
+  - kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).
+  - kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).
+
+*/
+
+
+#include <cstdlib>
+#include <iostream>
+
 #include "TClass.h"
 #include "TGListTree.h"
 #include "TGPicture.h"
@@ -57,20 +58,22 @@
 #include "TObjString.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
 #include "RConfigure.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 Pixel_t          TGListTree::fgGrayPixel = 0;
-const TGFont    *TGListTree::fgDefaultFont = 0;
-TGGC            *TGListTree::fgActiveGC = 0;
-TGGC            *TGListTree::fgDrawGC = 0;
-TGGC            *TGListTree::fgLineGC = 0;
-TGGC            *TGListTree::fgHighlightGC = 0;
-TGGC            *TGListTree::fgColorGC = 0;
-const TGPicture *TGListTree::fgOpenPic = 0;
-const TGPicture *TGListTree::fgClosedPic = 0;
-const TGPicture *TGListTree::fgCheckedPic = 0;
-const TGPicture *TGListTree::fgUncheckedPic = 0;
+const TGFont    *TGListTree::fgDefaultFont = nullptr;
+TGGC            *TGListTree::fgActiveGC = nullptr;
+TGGC            *TGListTree::fgDrawGC = nullptr;
+TGGC            *TGListTree::fgLineGC = nullptr;
+TGGC            *TGListTree::fgHighlightGC = nullptr;
+TGGC            *TGListTree::fgColorGC = nullptr;
+const TGPicture *TGListTree::fgOpenPic = nullptr;
+const TGPicture *TGListTree::fgClosedPic = nullptr;
+const TGPicture *TGListTree::fgCheckedPic = nullptr;
+const TGPicture *TGListTree::fgUncheckedPic = nullptr;
 
 
 ClassImp(TGListTreeItem);
@@ -535,7 +538,7 @@ void TGListTree::HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Higlight item children.
+/// Highlight item children.
 
 void TGListTree::HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw)
 {
@@ -1235,7 +1238,6 @@ void TGListTree::LineUp(Bool_t /*select*/)
    Int_t height = 0;
    if (!fCurrent) return;
 
-   TGDimension dim = GetPageDimension();
    TGPosition pos = GetPagePosition();
    const TGPicture *pic1 = fCurrent->GetPicture();
    if (pic1) height = pic1->GetHeight() + fVspacing;
@@ -1480,7 +1482,7 @@ Int_t TGListTree::DrawChildren(Handle_t id, TGListTreeItem *item,
 void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
                           Int_t *xroot, UInt_t *retwidth, UInt_t *retheight)
 {
-   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, xline, yline, xc;
+   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, yline, xc;
    Int_t  xpic2 = 0;
    UInt_t height;
    const TGPicture *pic1 = item->GetPicture();
@@ -1489,22 +1491,15 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    // Compute the height of this line
    height = FontHeight();
 
-   xline = 0;
    xpic1 = x;
    xtext = x + fHspacing + (Int_t)item->GetPicWidth();
    if (pic2) {
       if (pic2->GetHeight() > height) {
-         ytext = y + (Int_t)((pic2->GetHeight() - height) >> 1);
          height = pic2->GetHeight();
-      } else {
-         ytext = y;
       }
       if (pic1) xpic2 = xpic1 + pic1->GetWidth() + 1;
       else xpic2 = xpic1 + 1;
       xtext += pic2->GetWidth();
-   } else {
-      ypic1 = y;
-      xline = 0;
    }
    if (pic1) {
       if (pic1->GetHeight() > height) {
@@ -1521,12 +1516,10 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
       xbranch = xpic1 + (Int_t)(pic1->GetWidth() >> 1);
       ybranch = ypic1 + (Int_t)pic1->GetHeight();
       yline = ypic1 + (Int_t)(pic1->GetHeight() >> 1);
-      if (xline == 0) xline = xpic1;
    } else {
-      if (xline == 0) xline = xpic1;
       ypic1 = ytext = y;
       xbranch = xpic1 + (Int_t)(item->GetPicWidth() >> 1);
-      yline = ybranch = ypic1 + (Int_t)(height >> 1);
+      ybranch = ypic1 + (Int_t)(height >> 1);
       yline = ypic1 + (Int_t)(height >> 1);
    }
 
@@ -2342,6 +2335,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
       if (curvol) {
          TNamed *drive = (TNamed *)curvol->At(0);
          item = FindChildByName(0, TString::Format("%s\\", drive->GetName()));
+         delete curvol;
       }
    }
    TGListTreeItem *diritem = 0;
@@ -2683,10 +2677,10 @@ void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
 
 void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t n)
 {
-   static const TGPicture *oldopen=0;
-   static const TGPicture *oldclose=0;
-   static const TGPicture *oldcheck=0;
-   static const TGPicture *olduncheck=0;
+   static const TGPicture *oldopen = nullptr;
+   static const TGPicture *oldclose = nullptr;
+   static const TGPicture *oldcheck = nullptr;
+   static const TGPicture *olduncheck = nullptr;
    static Bool_t makecheck = kTRUE;
    static Bool_t makeuncheck = kTRUE;
    static Color_t oldcolor = -1;
@@ -2706,15 +2700,15 @@ void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t
 
    if (oldopen != fOpenPic) {
       oldopen = fOpenPic;
-      out << "   popen = gClient->GetPicture(" << quote
-          << gSystem->ExpandPathName(gSystem->UnixPathName(fOpenPic->GetName()))
-          << quote << ");" << std::endl;
+      TString picname = gSystem->UnixPathName(fOpenPic->GetName());
+      gSystem->ExpandPathName(picname);
+      out << "   popen = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
    }
    if (oldclose != fClosedPic) {
       oldclose = fClosedPic;
-      out << "   pclose = gClient->GetPicture(" << quote
-          << gSystem->ExpandPathName(gSystem->UnixPathName(fClosedPic->GetName()))
-          << quote << ");" << std::endl;
+      TString picname = gSystem->UnixPathName(fClosedPic->GetName());
+      gSystem->ExpandPathName(picname);
+      out << "   pclose = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
    }
    out << "   item" << s.Data() << "->SetPictures(popen, pclose);" << std::endl;
    if (HasCheckBox()) {
@@ -2729,15 +2723,15 @@ void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t
       out << "   item" << s.Data() << "->CheckItem();" << std::endl;
       if (fCheckedPic && oldcheck != fCheckedPic) {
          oldcheck = fCheckedPic;
-         out << "   pcheck = gClient->GetPicture(" << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(fCheckedPic->GetName()))
-             << quote << ");" << std::endl;
+         TString picname = gSystem->UnixPathName(fCheckedPic->GetName());
+         gSystem->ExpandPathName(picname);
+         out << "   pcheck = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
       }
       if (fUncheckedPic && olduncheck != fUncheckedPic) {
          olduncheck = fUncheckedPic;
-         out << "   puncheck = gClient->GetPicture(" << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(fUncheckedPic->GetName()))
-             << quote << ");" << std::endl;
+         TString picname = gSystem->UnixPathName(fUncheckedPic->GetName());
+         gSystem->ExpandPathName(picname);
+         out << "   puncheck = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
       }
       out << "   item" << s.Data() << "->SetCheckBoxPictures(pcheck, puncheck);" << std::endl;
       out << "   item" << s.Data() << "->SetCheckBox(kTRUE);" << std::endl;

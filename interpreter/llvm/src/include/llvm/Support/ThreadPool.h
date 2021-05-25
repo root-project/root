@@ -1,9 +1,8 @@
 //===-- llvm/Support/ThreadPool.h - A ThreadPool implementation -*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,6 +13,7 @@
 #ifndef LLVM_SUPPORT_THREAD_POOL_H
 #define LLVM_SUPPORT_THREAD_POOL_H
 
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/thread.h"
 
 #include <future>
@@ -38,8 +38,8 @@ public:
   using TaskTy = std::function<void()>;
   using PackagedTaskTy = std::packaged_task<void()>;
 
-  /// Construct a pool with the number of core available on the system (or
-  /// whatever the value returned by std::thread::hardware_concurrency() is).
+  /// Construct a pool with the number of threads found by
+  /// hardware_concurrency().
   ThreadPool();
 
   /// Construct a pool of \p ThreadCount threads

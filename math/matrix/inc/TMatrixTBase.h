@@ -65,14 +65,15 @@
 //                                                                      //
 //======================================================================//
 
-#include <limits>
-
-#include "TNamed.h"
+#include "TError.h"
+#include "TObject.h"
+#include "TMathBase.h"
 #include "TMatrixFBasefwd.h"
 #include "TMatrixDBasefwd.h"
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
-#include "TError.h"
+
+#include <limits>
 
 template<class Element> class TVectorT;
 template<class Element> class TElementActionT;
@@ -203,7 +204,7 @@ public:
    ClassDef(TMatrixTBase,5) // Matrix base class (template)
 };
 
-#ifndef __CINT__
+#ifndef __CLING__
 // When building with -fmodules, it instantiates all pending instantiations,
 // instead of delaying them until the end of the translation unit.
 // We 'got away with' probably because the use and the definition of the
@@ -212,7 +213,7 @@ public:
 // In case we are building with -fmodules, we need to forward declare the
 // specialization in order to compile the dictionary G__Matrix.cxx.
 template <> TClass *TMatrixTBase<double>::Class();
-#endif // __CINT__
+#endif // __CLING__
 
 
 template<class Element> Element TMatrixTBase<Element>::SetTol(Element newTol)
@@ -222,6 +223,8 @@ template<class Element> Element TMatrixTBase<Element>::SetTol(Element newTol)
       fTol = newTol;
    return oldTol;
 }
+
+inline namespace TMatrixTAutoloadOps {
 
 template<class Element> Bool_t  operator==   (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
 template<class Element> Element E2Norm       (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
@@ -245,4 +248,5 @@ template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> 
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
                                                                            { return VerifyMatrixIdentity(m1,m2,1,Element(0.)); }
 
+} // inline namespace TMatrixTAutoloadOps
 #endif

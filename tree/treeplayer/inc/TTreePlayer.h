@@ -27,37 +27,35 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TTree.h"
-#include "TSelectorDraw.h"
 #include "TVirtualTreePlayer.h"
 
+#include "TSelectorDraw.h"
+#include "TTree.h"
 
 class TVirtualIndex;
 
 class TTreePlayer : public TVirtualTreePlayer {
 
 private:
-   TTreePlayer(const TTreePlayer &);
-   TTreePlayer& operator=(const TTreePlayer &);
+   TTreePlayer(const TTreePlayer &) = delete;
+   TTreePlayer& operator=(const TTreePlayer &) = delete;
 
 protected:
-   TTree         *fTree;            //!  Pointer to current Tree
-   Bool_t         fScanRedirect;    //  Switch to redirect TTree::Scan output to a file
-   const char    *fScanFileName;    //  Name of the file where Scan is redirected
-   Int_t          fDimension;       //  Dimension of the current expression
-   Long64_t       fSelectedRows;    //  Number of selected entries
-   TH1           *fHistogram;       //! Pointer to histogram used for the projection
-   TSelectorDraw *fSelector;        //! Pointer to current selector
-   TSelector     *fSelectorFromFile;//! Pointer to a user defined selector created by this TTreePlayer object
-   TClass        *fSelectorClass;   //! Pointer to the actual class of the TSelectorFromFile
-   TList         *fInput;           //! input list to the selector
-   TList         *fFormulaList;     //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
-   TSelector     *fSelectorUpdate;  //! Set to the selector address when it's entry list needs to be updated by the UpdateFormulaLeaves function
+   TTree         *fTree;            ///<! Pointer to current Tree
+   Bool_t         fScanRedirect;    ///<  Switch to redirect TTree::Scan output to a file
+   const char    *fScanFileName;    ///<  Name of the file where Scan is redirected
+   Int_t          fDimension;       ///<  Dimension of the current expression
+   Long64_t       fSelectedRows;    ///<  Number of selected entries
+   TH1           *fHistogram;       ///<! Pointer to histogram used for the projection
+   TSelectorDraw *fSelector;        ///<! Pointer to current selector
+   TSelector     *fSelectorFromFile;///<! Pointer to a user defined selector created by this TTreePlayer object
+   TClass        *fSelectorClass;   ///<! Pointer to the actual class of the TSelectorFromFile
+   TList         *fInput;           ///<! input list to the selector
+   TList         *fFormulaList;     ///<! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
+   TSelector     *fSelectorUpdate;  ///<! Set to the selector address when it's entry list needs to be updated by the UpdateFormulaLeaves function
 
 protected:
    const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
-   void           TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject *obj, Option_t *option);
-   void           TakeEstimate(Int_t nfill, Int_t &npoints, Int_t action, TObject *obj, Option_t *option);
    void           DeleteSelectorFromFile();
 
 public:
@@ -81,27 +79,27 @@ public:
    const char       *GetScanFileName() const {return fScanFileName;}
    TTreeFormula     *GetSelect() const    {return fSelector->GetSelect();}
    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
-   TSelector        *GetSelector() const {return fSelector;}
-   TSelector        *GetSelectorFromFile() const {return fSelectorFromFile;}
-   // See TSelectorDraw::GetVar
+   virtual TSelector *GetSelector() const {return fSelector;}
+   virtual TSelector *GetSelectorFromFile() const {return fSelectorFromFile;}
+   /// See TSelectorDraw::GetVar
    TTreeFormula     *GetVar(Int_t i) const {return fSelector->GetVar(i);};
-   // See TSelectorDraw::GetVar
+   /// See TSelectorDraw::GetVar
    TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
-   // See TSelectorDraw::GetVar
+   /// See TSelectorDraw::GetVar
    TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
-   // See TSelectorDraw::GetVar
+   /// See TSelectorDraw::GetVar
    TTreeFormula     *GetVar3() const {return fSelector->GetVar3();}
-   // See TSelectorDraw::GetVar
+   /// See TSelectorDraw::GetVar
    TTreeFormula     *GetVar4() const {return fSelector->GetVar4();}
-   // See TSelectorDraw::GetVal
+   /// See TSelectorDraw::GetVal
    virtual Double_t *GetVal(Int_t i) const {return fSelector->GetVal(i);};
-   // See TSelectorDraw::GetVal
+   /// See TSelectorDraw::GetVal
    virtual Double_t *GetV1() const   {return fSelector->GetV1();}
-   // See TSelectorDraw::GetVal
+   /// See TSelectorDraw::GetVal
    virtual Double_t *GetV2() const   {return fSelector->GetV2();}
-   // See TSelectorDraw::GetVal
+   /// See TSelectorDraw::GetVal
    virtual Double_t *GetV3() const   {return fSelector->GetV3();}
-   // See TSelectorDraw::GetVal
+   /// See TSelectorDraw::GetVal
    virtual Double_t *GetV4() const   {return fSelector->GetV4();}
    virtual Double_t *GetW() const    {return fSelector->GetW();}
    virtual Int_t     MakeClass(const char *classname, Option_t *option);

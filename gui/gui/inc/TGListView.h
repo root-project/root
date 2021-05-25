@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,24 +12,6 @@
 #ifndef ROOT_TGListView
 #define ROOT_TGListView
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListView, TGLVContainer and TGLVEntry                              //
-//                                                                      //
-// A list view is a widget that can contain a number of items           //
-// arranged in a grid or list. The items can be represented either      //
-// by a string or by an icon.                                           //
-//                                                                      //
-// The TGListView is user callable. The other classes are service       //
-// classes of the list view.                                            //
-//                                                                      //
-// A list view can generate the following events:                       //
-// kC_CONTAINER, kCT_SELCHANGED, total items, selected items.           //
-// kC_CONTAINER, kCT_ITEMCLICK, which button, location (y<<16|x).       //
-// kC_CONTAINER, kCT_ITEMDBLCLICK, which button, location (y<<16|x).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGCanvas.h"
 #include "TGWidget.h"
@@ -54,28 +36,28 @@ class TGHeaderFrame;
 class TGLVEntry : public TGFrame {
 
 private:
-   TGLVEntry(const TGLVEntry&); // Not implemented
-   TGLVEntry& operator=(const TGLVEntry&); // Not implemented
+   TGLVEntry(const TGLVEntry&) = delete;
+   TGLVEntry& operator=(const TGLVEntry&) = delete;
 
 protected:
-   TGString           *fItemName;    // name of item
-   TGString          **fSubnames;    // sub names of item (details)
-   Int_t              *fCpos;        // position of sub names
-   Int_t              *fJmode;       // alignment for sub names
-   Int_t              *fCtw;         // width of sub names
-   UInt_t              fTWidth;      // width of name
-   UInt_t              fTHeight;     // height of name
-   Bool_t              fActive;      // true if item is active
-   Bool_t              fChecked;     // true if item is checked
-   EListViewMode       fViewMode;    // list view viewing mode
-   const TGPicture    *fBigPic;      // big icon
-   const TGPicture    *fSmallPic;    // small icon
-   const TGPicture    *fCurrent;     // current icon
-   const TGPicture    *fCheckMark;   // checkmark
-   TGSelectedPicture  *fSelPic;      // selected icon
-   GContext_t          fNormGC;      // drawing graphics context
-   FontStruct_t        fFontStruct;  // text font
-   void               *fUserData;    // pointer to user data structure
+   TGString           *fItemName;    ///< name of item
+   TGString          **fSubnames;    ///< sub names of item (details)
+   Int_t              *fCpos;        ///< position of sub names
+   Int_t              *fJmode;       ///< alignment for sub names
+   Int_t              *fCtw;         ///< width of sub names
+   UInt_t              fTWidth;      ///< width of name
+   UInt_t              fTHeight;     ///< height of name
+   Bool_t              fActive;      ///< true if item is active
+   Bool_t              fChecked;     ///< true if item is checked
+   EListViewMode       fViewMode;    ///< list view viewing mode
+   const TGPicture    *fBigPic;      ///< big icon
+   const TGPicture    *fSmallPic;    ///< small icon
+   const TGPicture    *fCurrent;     ///< current icon
+   const TGPicture    *fCheckMark;   ///< checkmark
+   TGSelectedPicture  *fSelPic;      ///< selected icon
+   GContext_t          fNormGC;      ///< drawing graphics context
+   FontStruct_t        fFontStruct;  ///< text font
+   void               *fUserData;    ///< pointer to user data structure
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -86,15 +68,15 @@ protected:
    static const TGGC   &GetDefaultGC();
 
 public:
-   TGLVEntry(const TGWindow *p = 0,
-             const TGPicture *bigpic = 0, const TGPicture *smallpic = 0,
-             TGString *name = 0, TGString **subnames = 0,
+   TGLVEntry(const TGWindow *p = nullptr,
+             const TGPicture *bigpic = nullptr, const TGPicture *smallpic = nullptr,
+             TGString *name = nullptr, TGString **subnames = nullptr,
              EListViewMode ViewMode = kLVDetails,
              UInt_t options = kChildFrame,
              Pixel_t back = GetWhitePixel());
 
    TGLVEntry(const TGLVContainer *p,
-             const TString& name, const TString& cname, TGString **subnames = 0,
+             const TString& name, const TString& cname, TGString **subnames = nullptr,
              UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
 
    virtual ~TGLVEntry();
@@ -133,23 +115,23 @@ public:
 class TGListView : public TGCanvas {
 
 private:
-   TGListView(const TGListView&); // Not implemented
-   TGListView& operator=(const TGListView&); // Not implemented
+   TGListView(const TGListView&) = delete;
+   TGListView& operator=(const TGListView&) = delete;
 
 protected:
-   Int_t                 fNColumns;      // number of columns
-   Int_t                *fColumns;       // column width
-   Int_t                *fJmode;         // column text alignment
-   EListViewMode         fViewMode;      // view mode if list view widget
-   TGDimension           fMaxSize;       // maximum item size
-   TGTextButton        **fColHeader;     // column headers for in detailed mode
-   TString              *fColNames;      // column titles for in detailed mode
-   TGVFileSplitter     **fSplitHeader;   // column splitters
-   GContext_t            fNormGC;        // drawing graphics context
-   FontStruct_t          fFontStruct;    // text font
-   TGHeaderFrame        *fHeader;        // frame used as container for column headers
-   Bool_t                fJustChanged;   // Indicate whether the view mode was just changed to Detail
-   UInt_t                fMinColumnSize; // Minimun column size
+   Int_t                 fNColumns;      ///< number of columns
+   Int_t                *fColumns;       ///< column width
+   Int_t                *fJmode;         ///< column text alignment
+   EListViewMode         fViewMode;      ///< view mode if list view widget
+   TGDimension           fMaxSize;       ///< maximum item size
+   TGTextButton        **fColHeader;     ///< column headers for in detailed mode
+   TString              *fColNames;      ///< column titles for in detailed mode
+   TGVFileSplitter     **fSplitHeader;   ///< column splitters
+   GContext_t            fNormGC;        ///< drawing graphics context
+   FontStruct_t          fFontStruct;    ///< text font
+   TGHeaderFrame        *fHeader;        ///< frame used as container for column headers
+   Bool_t                fJustChanged;   ///< Indicate whether the view mode was just changed to Detail
+   UInt_t                fMinColumnSize; ///< Minimun column size
 
    static const TGFont  *fgDefaultFont;
    static TGGC          *fgDefaultGC;
@@ -196,17 +178,17 @@ public:
 class TGLVContainer : public TGContainer {
 
 private:
-   TGLVContainer(const TGLVContainer&); // Not implemented
-   TGLVContainer& operator=(const TGLVContainer&); // Not implemented
+   TGLVContainer(const TGLVContainer&) = delete;
+   TGLVContainer& operator=(const TGLVContainer&) = delete;
 
 protected:
-   TGLayoutHints     *fItemLayout;    // item layout hints
-   EListViewMode      fViewMode;      // list view viewing mode
-   Int_t             *fCpos;          // position of sub names
-   Int_t             *fJmode;         // alignment of sub names
-   Bool_t             fMultiSelect;   // true = multiple file selection
-   TGListView        *fListView;      // listview which contains this container
-   TGLVEntry         *fLastActive;    // last active item
+   TGLayoutHints     *fItemLayout;    ///< item layout hints
+   EListViewMode      fViewMode;      ///< list view viewing mode
+   Int_t             *fCpos;          ///< position of sub names
+   Int_t             *fJmode;         ///< alignment of sub names
+   Bool_t             fMultiSelect;   ///< true = multiple file selection
+   TGListView        *fListView;      ///< listview which contains this container
+   TGLVEntry         *fLastActive;    ///< last active item
 
    virtual void ActivateItem(TGFrameElement* el);
    virtual void DeActivateItem(TGFrameElement* el);
@@ -224,8 +206,7 @@ public:
 
    virtual void AddItem(TGLVEntry *item)
                   { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); fTotal++; }
-   virtual void SelectEntry(TGLVEntry *item)
-                  { ActivateItem(item->GetFrameElement()); }
+   virtual void SelectEntry(TGLVEntry *item);
 
    virtual void  SetListView(TGListView *lv) { fListView = lv; }
    virtual void  RemoveItemWithData(void *userData);

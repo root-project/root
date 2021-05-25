@@ -1,9 +1,8 @@
 //===-- arcmt-test.cpp - ARC Migration Tool testbed -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -130,7 +129,7 @@ static bool checkForMigration(StringRef resourcesPath,
     return true;
   }
 
-  if (!CI.getLangOpts()->ObjC1)
+  if (!CI.getLangOpts()->ObjC)
     return false;
 
   arcmt::checkForManualIssues(CI, CI.getFrontendOpts().Inputs[0],
@@ -170,7 +169,7 @@ static bool performTransformations(StringRef resourcesPath,
     return true;
   }
 
-  if (!origCI.getLangOpts()->ObjC1)
+  if (!origCI.getLangOpts()->ObjC)
     return false;
 
   MigrationProcess migration(origCI, std::make_shared<PCHContainerOperations>(),

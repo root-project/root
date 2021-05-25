@@ -13,7 +13,7 @@
 #define ROOT_TObject
 
 
-#include "RConfigure.h"
+// #include "RConfigure.h"  // included via Rtypes.h
 #include "Rtypes.h"
 #include "TStorage.h"
 #include "TVersionCheck.h"
@@ -40,8 +40,8 @@ private:
    UInt_t         fUniqueID;   ///< object unique identifier
    UInt_t         fBits;       ///< bit field status word
 
-   static Long_t  fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
-   static Bool_t  fgObjectStat;  ///< if true keep track of objects in TObjectTable
+   static Longptr_t fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
+   static Bool_t    fgObjectStat;  ///< if true keep track of objects in TObjectTable
 
    static void AddToTObjectTable(TObject *);
 
@@ -86,8 +86,23 @@ public:
    enum {
       kSingleKey     = BIT(0),        ///< write collection with single key
       kOverwrite     = BIT(1),        ///< overwrite existing object with same name
-      kWriteDelete   = BIT(2)         ///< write object, then delete previous key with same name
+      kWriteDelete   = BIT(2),        ///< write object, then delete previous key with same name
    };
+
+protected:
+   enum { // DeprectatedWriteOptions
+      ///< Used to request that the class specific implementation of `TObject::Write`
+      ///< just prepare the objects to be ready to be written but do not actually write
+      ///< them into the TBuffer. This is just for example by TBufferMerger to request
+      ///< that the TTree inside the file calls `TTree::FlushBaskets` (outside of the merging lock)
+      ///< and TBufferMerger will later ask for the write (inside the merging lock).
+      ///< To take advantage of this feature the class needs to overload `TObject::Write`
+      ///< and use this enum value accordingly.  (See `TTree::Write` and `TObject::Write`)
+      ///< Do not use, this feature will be migrate to the Merge function (See TClass and TTree::Merge)
+      kOnlyPrepStep  = BIT(3)
+   };
+
+public:
 
    TObject();
    TObject(const TObject &object);
@@ -205,7 +220,7 @@ public:
    void     Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const;
 
    //---- static functions
-   static Long_t    GetDtorOnly();
+   static Longptr_t GetDtorOnly();
    static void      SetDtorOnly(void *obj);
    static Bool_t    GetObjectStat();
    static void      SetObjectStat(Bool_t stat);
@@ -227,7 +242,7 @@ inline TObject::TObject() : fBits(kNotDeleted) // Need to leave fUniqueID unset
 {
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   if (TStorage::FilledByObjectAlloc(&fUniqueID)) fBits |= kIsOnHeap;
+   TStorage::UpdateIsOnHeap(fUniqueID, fBits);
 
    fUniqueID = 0;
 
@@ -247,10 +262,7 @@ inline TObject::TObject(const TObject &obj)
 
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   if (TStorage::FilledByObjectAlloc(&fUniqueID))
-      fBits |= kIsOnHeap;
-   else
-      fBits &= ~kIsOnHeap;
+   TStorage::UpdateIsOnHeap(fUniqueID, fBits);
 
    fBits &= ~kIsReferenced;
    fBits &= ~kCanDelete;

@@ -2,14 +2,14 @@
 
 
 To fit a histogram you can use the Fit Panel on a visible histogram
-via the context menu, or you can use the **`TH1`**`::Fit` method. The
+via the context menu, or you can use the `TH1::Fit` method. The
 Fit Panel, which is limited, is best for prototyping. The histogram
 needs to be drawn in a pad before the Fit Panel is invoked. The method
 `TH1::Fit` is more powerful and is used in scripts and programs.
 
 ## The Fit Method
 
-The Fit method is implemented in ROOT for the histogram classes `TH1`,
+The Fit method is implemented in ROOT for the histogram classes **`TH1`**,
 the sparse histogram classes, `THnSparse`, the graph classes, `TGraph`,
 `TGraph2D` and `TMultiGraph` for fitting a collection of Graphs with the same function.
 
@@ -80,7 +80,7 @@ Note that in case of pre-defined functions some default initial values and limit
     `polN` functions are fitted by the linear fitter.
 
 -   `*goption: `The third parameter is the graphics option that is the
-    same as in the **`TH1`**`::Draw` (see the chapter Draw Options).
+    same as in the `TH1::Draw` (see the chapter Draw Options).
 
 -   `xxmin`, `xxmax:`Thee fourth and fifth parameters specify the
     range over which to apply the fit.
@@ -91,7 +91,7 @@ is drawn in the current pad.
 
 ### The TGraph::Fit Method
 
-The signature for fitting a TGraph is exactly the same as for the `TH1`. Only some options apply only for fitting histograms,
+The signature for fitting a TGraph is exactly the same as for the **`TH1`**. Only some options apply only for fitting histograms,
 these are the options "`L`", "`WL`" and "`I`".
 These options apply instead only for `TGraph::Fit`, the rest of options (appart from "`L`", "`WL`" and "`I`" are the same)
 
@@ -105,13 +105,13 @@ These options apply instead only for `TGraph::Fit`, the rest of options (appart 
 
 ## The `TF1` function class
 
-Here we will show how to create the `TF1` class that is used for fitting histograms and graphs.
+Here we will show how to create the **`TF1`** class that is used for fitting histograms and graphs.
 
 ### Fit with a Predefined Function
 
 
 To fit a histogram with a predefined function, simply pass the name of
-the function in the first parameter of **`TH1`**`::Fit`. For example,
+the function in the first parameter of `TH1::Fit`. For example,
 this line fits histogram object `hist` with a Gaussian.
 
 ``` {.cpp}
@@ -145,7 +145,7 @@ been adapted from the `CERNLIB` routine `G110 denlan` (see `TMath::Landau`).
 
 
 You can create a **`TF1`** object and use it in the call the
-**`TH1`**`::Fit`. The parameter in to the `Fit` method is the NAME of
+`TH1::Fit`. The parameter in to the `Fit` method is the NAME of
 the **`TF1`** object. There are three ways to create a **`TF1`**.
 
 -   Using C++ expression using x with a fixed set of operators and
@@ -200,7 +200,7 @@ root[] f1->SetParameters(10,5);
 ```
 
 This sets parameter 0 to 10 and parameter 1 to 5. We can now draw the
-`TF1:`
+**`TF1`**:
 
 ``` {.cpp}
 root[] f1->Draw()
@@ -247,7 +247,7 @@ the function.
 Now we use the function:
 
 ``` {.cpp}
-   // this function used fitf to fit a histogram
+   // this function uses fitf to fit a histogram
    void fitexample() {
 
       // open a file and get a histogram
@@ -270,8 +270,8 @@ Now we use the function:
 ```
 
 
-You can create a TF1 also from a  C++ function object (functor) with parameters
-A TF1 can be created from any C++ class implementing this member function:
+You can create a **`TF1`** also from a  C++ function object (functor) with parameters
+A **`TF1`** can be created from any C++ class implementing this member function:
 
 ```{.cpp}
 double operator()(double *x, double *p)
@@ -291,14 +291,14 @@ class  MyFunctionObject {
 };
 ```
 
-and then use it to create the `TF1`:
+and then use it to create the **`TF1`**:
 
 ```{.cpp}
    MyFunctionObject fobj(....);       // create the function object
    TF1 * f = new TF1("f",fobj,xmin,xmax,npar);    // create TF1 class with n-parameters and range [xmin,xmax]
 ```
 
-If using C++11, one can create a `TF1` also from a C++ `lambda` function:
+If using C++11, one can create a **`TF1`** also from a C++ `lambda` function:
 
 ```{.cpp}
 // create TF1 class with 2 parameters and range [xmin,xmax] using a lambda
@@ -390,7 +390,7 @@ new **`TF1`**. Each is 'derived' from the canned function `gaus`.
 ![Fitting a histogram with several Gaussian
 functions](pictures/03000062.png)
 
-First, four TF1 objects are created - one for each sub-range:
+First, four **`TF1`** objects are created - one for each sub-range:
 
 ``` {.cpp}
    g1 = new TF1("m1","gaus",85,95);
@@ -544,7 +544,7 @@ and eventually the covariance and correlation matrix).
 ### Associated Function
 
 
-One or more objects (typically a **`TF1`**\*) can be added to the list
+One or more objects (typically a **`TF1\*`**) can be added to the list
 of functions (`fFunctions`) associated to each histogram. A call to
 `TH1::Fit` adds the fitted function to this list. Given a histogram
 `h`, one can retrieve the associated function with:
@@ -558,7 +558,7 @@ of functions (`fFunctions`) associated to each histogram. A call to
 
 If the histogram (or graph) is made persistent, the list of associated
 functions is also persistent. Retrieve a pointer to the function with
-the **`TH1`**::GetFunction()` method. Then you can retrieve the fit
+the `TH1::GetFunction()` method. Then you can retrieve the fit
 parameters from the function (**`TF1`**) with calls such as:
 
 ``` {.cpp}
@@ -830,7 +830,7 @@ fitting vectors of data points (e.g. from a `TTree`).
 
 #### Using Binned data
 
-Let's suppose we have an histogram, represented as a `TH1` type object (it can be one or multi-dimensional). The following shows how to create and
+Let's suppose we have an histogram, represented as a **`TH1`** type object (it can be one or multi-dimensional). The following shows how to create and
 fill a `ROOT:Fit::BinData` object.
 
 ``` {.cpp}
@@ -905,7 +905,7 @@ For creating un-binned data sets, a  `ROOT::Fit::UnBinData` object, one has two 
    inside. In this case the data cannot be selected according to a specified range. All the data points will be included in the fit.
 
 The `ROOT::Fit::UnBinData` class supports also weighted data. In addition to the data points (coordinates), which can be of arbitrary `k` dimensions, the class can be constructed from a vector of
-weights. This is an example of taking data from an histogram buffer of a `TH1` object:
+weights. This is an example of taking data from an histogram buffer of a **`TH1`** object:
 
 ``` {.cpp}
 	double * buffer = histogram->GetBuffer();
@@ -940,13 +940,13 @@ the independent variables **`X`** are the bin center coordinates and `Y` is the 
 The model function needs to be expressed as function of some unknown parameters. The fitting will find the best parameter value to describe
 the observed data.
 
-We can use the ROOT `TF1` class, the parametric function class, to describe the model function. However the `ROOT::Fit::Fitter` class, to be independent of the ROOT *`Hist`* library,
+We can use the ROOT **`TF1`** class, the parametric function class, to describe the model function. However the `ROOT::Fit::Fitter` class, to be independent of the ROOT *`Hist`* library,
 takes as input a more general parametric function object, the interface (abstract) class `ROOT::Math::IParametricFunctionMultiDim`, which describe a generic one or multi-dimensional function
 with parameters. This interface extends the abstract class `ROOT::Math::IBaseFunctionMultiDim`, with methods to set/retrieve parameter values and to evaluate the function given the
 independent vector of values **`X`** and vector of parameters `P`.
 More information about the different `ROOT::Math` function interfaces is available in the Mathematical Library chapter.
 
-An end-user can convert a `TF1` object in a `ROOT::Math::IParametricFunctionMultiDim`, using the wrapper class `ROOT::Math::WrapperMultiTF1`:
+An end-user can convert a **`TF1`** object in a `ROOT::Math::IParametricFunctionMultiDim`, using the wrapper class `ROOT::Math::WrapperMultiTF1`:
 
 ``` {.cpp}
     TF1 * f1 = new TF1("f1","gaus");
@@ -955,7 +955,7 @@ An end-user can convert a `TF1` object in a `ROOT::Math::IParametricFunctionMult
     fitter.SetFunction( fitFunction, false);
 ```
 
-When creating the wrapper, the parameter values stored in `TF1` will be copied in the `ROOT::Math::WrappedMultiTF1` object.
+When creating the wrapper, the parameter values stored in **`TF1`** will be copied in the `ROOT::Math::WrappedMultiTF1` object.
 The function object representing the model function is given to the `ROOT::Fitter` class using the `Fitter::SetFunction` method.
 
 The user has also the possibility to provide a function object, which implements the derivatives of the function with respect
@@ -1099,13 +1099,13 @@ data). As above the user can select an extended likelihood fit by passing the op
 #### Customised Fit methods
 
 Above we described the pre-defined methods used for fitting. A user can also implement its own fitting methods, thus its version of the chi-square or likelihood function he wants to minimize.
-In this cas, the user does not really need to build as input a `ROOT::Fit` data set and model function as we described before. He can implements its own version of the method function using on its own
+In this case, the user does not really need to build as input a `ROOT::Fit` data set and model function as we described before. He can implements its own version of the method function using on its own
 data set objects and functions.
 
 In this case `ROOT::Fit::Fitter::SetFCN` is used to set the method function  and `ROOT::Fit::FitFCN` is used for fitting. The method function can be passed also in `ROOT::Fit::FitFCN`, but in this
 case a previously defined fitting configuration is used.
 
-The possible type of method functions that can be bassed in `ROOT::Fit::Fitter::SetFCN` are:
+The possible type of method functions that are based in `ROOT::Fit::Fitter::SetFCN` are:
 
 * A generic functor object implementing `operator()(const double * p)` where **`p`** is the parameter vectors. In this case one needs to pass the number of parameters,
   the function object and optionally a vector of initial parameter values. Other optional parameter include the size of the data sets and a flag specifying if it is a chi2 (least-square fit).
@@ -1161,7 +1161,7 @@ computes the lower/upper band values of the model function at the given data poi
 covariance or correlation matrix as a `TMatrixDSym` object. In addition `TFitResult` derives from `TNamed` and can be conveniently
 stored in a file.
 
-When fitting an histogram ( a `TH1` object) or a graph (a `TGraph` object) it is possible to return a `TFitResult` via the `TFitResultPtr` object,
+When fitting an histogram ( a **`TH1`** object) or a graph (a `TGraph` object) it is possible to return a `TFitResult` via the `TFitResultPtr` object,
 which behaves as a smart pointer to a `TFitResult`.
 `TFitResultPtr`  is the return object by `TH1::Fit` or `TGraph::Fit`.
 By default the TFitResultPtr contains only the status of the fit and can be obtained by an automatic conversion of the TFitResultPtr to an integer.

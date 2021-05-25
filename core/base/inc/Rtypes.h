@@ -21,18 +21,25 @@
 
 
 #include "RtypesCore.h"
-#include "DllImport.h"
+// #include "DllImport.h" // included via RtypesCore.h, not used here
 
-#include "snprintf.h"   // part of stdio.h on systems that have it
+#ifndef R__LESS_INCLUDES
+#include <cstdio>
+#include "strtok.h"     // provides R__STRTOK_R with <cstring> include
 #include "strlcpy.h"    // part of string.h on systems that have it
+#include "snprintf.h"   // part of stdio.h on systems that have it
+#include <type_traits>
+#endif
 
-#include <atomic>
-#include <stdio.h>
-#include <string.h>
 #include <typeinfo>
+#include <atomic>
 
+#ifndef __CLING__
+// __attribute__ is not supported on Windows, but it is internally needed by Cling
+// for autoloading and Clad rely on __attribute__((annotate("D")))
 #if defined(R__WIN32)
 #define __attribute__(unused)
+#endif
 #endif
 
 //---- forward declared class types --------------------------------------------
@@ -49,7 +56,7 @@ class TString;
 
 //Moved from TSystem.
 enum ESysConstants {
-   kMAXSIGNALS       = 15,
+   kMAXSIGNALS       = 16,
    kMAXPATHLEN       = 8192,
    kBUFFERSIZE       = 8192,
    kItimerResolution = 10      // interval-timer resolution in ms
@@ -80,10 +87,6 @@ typedef TClass* (*DictFuncPtr_t)();  //pointer to dictionary function
 #define CLRBIT(n,i)  ((n) &= ~BIT(i))
 #define TESTBIT(n,i) ((Bool_t)(((n) & BIT(i)) != 0))
 
-
-//---- debug global ------------------------------------------------------------
-
-R__EXTERN Int_t gDebug;
 
 
 //---- ClassDef macros ---------------------------------------------------------
@@ -190,6 +193,7 @@ namespace ROOT {
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 
 #include "TIsAProxy.h"
+#include <string>
 
 namespace ROOT { namespace Internal {
 
@@ -263,7 +267,8 @@ class ClassDefGenerateInitInstanceLocalInjector:
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
-private:                                                                                                        \
+private:          \
+   static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified class version number is not an integer.");                                                        \
    virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                                            \
    {                                                                                                            \
       static std::atomic<UChar_t> recurseBlocker(0);                                                            \
@@ -317,28 +322,28 @@ public: \
    static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
    virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
 
-#define ClassDef(name,id) \
-   _ClassDefOutline_(name,id,virtual,)   \
+#define ClassDef(name,id)                            \
+   _ClassDefOutline_(name,id,virtual,)               \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefOverride(name,id) \
-   _ClassDefOutline_(name,id,,override)   \
+#define ClassDefOverride(name,id)                    \
+   _ClassDefOutline_(name,id,,override)              \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefNV(name,id) \
-   _ClassDefOutline_(name,id,,) \
+#define ClassDefNV(name,id)                          \
+   _ClassDefOutline_(name,id,,)                      \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefInline(name,id) \
-   _ClassDefInline_(name,id,virtual,)                   \
+#define ClassDefInline(name,id)                      \
+   _ClassDefInline_(name,id,virtual,)                \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefInlineOverride(name,id)                       \
-   _ClassDefInline_(name,id,,override)                        \
+#define ClassDefInlineOverride(name,id)              \
+   _ClassDefInline_(name,id,,override)               \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefInlineNV(name,id) \
-   _ClassDefInline_(name,id,,)                         \
+#define ClassDefInlineNV(name,id)                    \
+   _ClassDefInline_(name,id,,)                       \
    static int DeclFileLine() { return __LINE__; }
 
 //#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
@@ -362,7 +367,7 @@ public: \
 
 #define NamespaceImpUnique(name,key) \
    namespace name { \
-      namespace ROOT { \
+      namespace ROOTDict { \
          ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
          namespace { \
             static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
@@ -383,12 +388,12 @@ public: \
 // This ClassDefT is stricly redundant and is kept only for
 // backward compatibility.
 
-#define ClassDefT(name,id) \
-   _ClassDefOutline_(name,id,virtual,) \
+#define ClassDefT(name,id)                          \
+   _ClassDefOutline_(name,id,virtual,)              \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefTNV(name,id) \
-   _ClassDefOutline_(name,id,virtual,) \
+#define ClassDefTNV(name,id)                        \
+   _ClassDefOutline_(name,id,virtual,)              \
    static int DeclFileLine() { return __LINE__; }
 
 
@@ -467,6 +472,13 @@ namespace ROOT {                                                     \
 # define R__LOAD_LIBRARY(LIBRARY)
 # define R__ADD_INCLUDE_PATH(PATH)
 # define R__ADD_LIBRARY_PATH(PATH)
+#endif
+
+// Convenience macros to disable cling pointer check.
+#ifdef __CLING__
+# define R__CLING_PTRCHECK(ONOFF) __attribute__((annotate("__cling__ptrcheck(" #ONOFF ")")))
+#else
+# define R__CLING_PTRCHECK(ONOFF)
 #endif
 
 #endif

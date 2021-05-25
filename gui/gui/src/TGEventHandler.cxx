@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGEventHandler                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGEventHandler
+    \ingroup guiwidgets
+*/
+
 
 #include "TGEventHandler.h"
 #include "TGWindow.h"
+#include "TVirtualX.h"
 
 ClassImp(TGEventHandler);
 

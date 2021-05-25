@@ -3,7 +3,6 @@
 
 
 #include "TH1.h"
-#include "TH2.h"
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
@@ -28,8 +27,8 @@
 
 #include "TList.h"
 #include "TMath.h"
+#include "TROOT.h"
 
-#include "TClass.h"
 #include "TVirtualPad.h" // for gPad
 
 #include "TBackCompFitter.h"
@@ -235,7 +234,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    // if option grad is specified use gradient
    if ( (linear || fitOption.Gradient) )
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1));
-#ifdef R__HAS_VECCORE      
+#ifdef R__HAS_VECCORE
    else if(f1->IsVectorized())
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*f1)));
 #endif
@@ -244,6 +243,8 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
    // error normalization in case of zero error in the data
    if (fitdata->GetErrorType() == ROOT::Fit::BinData::kNoError) fitConfig.SetNormErrors(true);
+   // error normalization also in case of W or WW options (weights = 1)
+   if (fitdata->Opt().fErrors1)  fitConfig.SetNormErrors(true);
    // normalize errors also in case you are fitting a Ndim histo with a N-1 function
    if (int(fitdata->NDim())  == hdim -1 ) fitConfig.SetNormErrors(true);
 
@@ -362,10 +363,12 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       fitConfig.SetWeightCorrection(weight);
       bool extended = ((fitOption.Like & 4 ) != 4 );
       //if (!extended) Info("HFitImpl","Do a not -extended binned fit");
-      fitok = fitter->LikelihoodFit(*fitdata, extended, fitOption.ExecPolicy);
+
+      // pass fitdata as a shared pointer so ownership is shared with Fitter and FitResult class
+      fitok = fitter->LikelihoodFit(fitdata, extended, fitOption.ExecPolicy);
    }
    else{ // standard least square fit
-      fitok = fitter->Fit(*fitdata, fitOption.ExecPolicy);
+      fitok = fitter->Fit(fitdata, fitOption.ExecPolicy);
    }
    if ( !fitok  && !fitOption.Quiet )
       Warning("Fit","Abnormal termination of minimization.");
@@ -655,7 +658,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
          funcList->Add(fnew3);
       }
       else {
-         fnew2 = dynamic_cast<TF3*>(f1);
+         fnew3 = dynamic_cast<TF3*>(f1);
          R__ASSERT(fnew3);
       }
       fnew3->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
@@ -682,7 +685,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    //   - Decode list of options into fitOption (used by both TGraph and TH1)
    //  works for both histograms and graph depending on the enum FitObjectType defined in HFit
    if(ROOT::IsImplicitMTEnabled()) {
-      fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
+      fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
    }
 
    if (option == 0) return;
@@ -712,12 +715,12 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       // }
 
       if (opt.Contains("SERIAL")) {
-         fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kSequential;
          opt.ReplaceAll("SERIAL","");
       }
 
       if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
+         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
          opt.ReplaceAll("MULTITHREAD","");
       }
 
@@ -777,6 +780,10 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1 (for chi2 fit)
    }
 
+   if (fitOption.PChi2 && fitOption.W1) {
+      Warning("FitOptionsMake", "Ignore option W or WW when used together with option P (Pearson chi2)");
+      fitOption.W1 = 0; // with Pearson chi2 W option is ignored
+   }
 
    if (opt.Contains("E")) fitOption.Errors  = 1;
    if (opt.Contains("R")) fitOption.Range   = 1;
@@ -1028,7 +1035,7 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, bool 
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
-   if (usePL) opt.fUseEmpty=true; 
+   if (usePL) opt.fUseEmpty=true;
    ROOT::Fit::DataRange range;
    // get range of function
    if (useRange) HFit::GetFunctionRange(f1,range);

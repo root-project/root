@@ -3,12 +3,12 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#include "gzguts.h"
-#ifdef _WIN32
-#include <io.h>
-#else
+#ifndef _WIN32
+#include <fcntl.h>
 #include <unistd.h>
 #endif
+
+#include "gzguts.h"
 
 /* Local functions */
 local int gz_init OF((gz_statep));

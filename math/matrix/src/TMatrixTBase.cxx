@@ -11,220 +11,24 @@
 
 /** \class TMatrixTBase
     \ingroup Matrix
-    \brief Linear Algebra Package
 
- ### Linear Algebra Package
+    TMatrixTBase
 
- The present package implements all the basic algorithms dealing
- with vectors, matrices, matrix columns, rows, diagonals, etc.
- In addition eigen-Vector analysis and several matrix decomposition
- have been added (LU,QRH,Cholesky,Bunch-Kaufman and SVD) .
- The decompositions are used in matrix inversion, equation solving.
+    Template of base class in the linear algebra package.
 
- For a dense matrix, elements are arranged in memory in a ROW-wise
- fashion . For (n x m) matrices where n*m <=kSizeMax (=25 currently)
- storage space is available on the stack, thus avoiding expensive
- allocation/deallocation of heap space . However, this introduces of
- course kSizeMax overhead for each matrix object . If this is an
- issue recompile with a new appropriate value (>=0) for kSizeMax
+    See \ref MatrixPage for the documentation of the linear algebra package.
 
- Sparse matrices are also stored in row-wise fashion but additional
- row/column information is stored, see TMatrixTSparse source for
- additional details .
-
- Another way to assign and store matrix data is through Use
- see for instance stressLinear.cxx file .
-
- Unless otherwise specified, matrix and vector indices always start
- with 0, spanning up to the specified limit-1. However, there are
- constructors to which one can specify aribtrary lower and upper
- bounds, e.g. TMatrixD m(1,10,1,5) defines a matrix that ranges
- from 1..10, 1..5 (a(1,1)..a(10,5)).
-
- The present package provides all facilities to completely AVOID
- returning matrices. Use "TMatrixD A(TMatrixD::kTransposed,B);"
- and other fancy constructors as much as possible. If one really needs
- to return a matrix, return a TMatrixTLazy object instead. The
- conversion is completely transparent to the end user, e.g.
- "TMatrixT m = THaarMatrixT(5);" and _is_ efficient.
-
- Since TMatrixT et al. are fully integrated in ROOT, they of course
- can be stored in a ROOT database.
-
- For usage examples see $ROOTSYS/test/stressLinear.cxx
-
- ### Acknowledgements
-
- 1. Oleg E. Kiselyov
-    First implementations were based on the his code . We have diverged
-    quite a bit since then but the ideas/code for lazy matrix and
-    "nested function" are 100% his .
-    You can see him and his code in action at http://okmij.org/ftp
- 2. Chris R. Birchenhall,
-    We adapted his idea of the implementation for the decomposition
-    classes instead of our messy installation of matrix inversion
-    His installation of matrix condition number, using an iterative
-    scheme using the Hage algorithm is worth looking at !
-    Chris has a nice writeup (matdoc.ps) on his matrix classes at
-    ftp://ftp.mcc.ac.uk/pub/matclass/
- 3. Mark Fischler and Steven Haywood of CLHEP
-    They did the slave labor of spelling out all sub-determinants
-    for Cramer inversion  of (4x4),(5x5) and (6x6) matrices
-    The stack storage for small matrices was also taken from them
- 4. Roldan Pozo of TNT (http://math.nist.gov/tnt/)
-    He converted the EISPACK routines for the eigen-vector analysis to
-    C++ . We started with his implementation
- 5. Siegmund Brandt (http://siux00.physik.uni-siegen.de/~brandt/datan
-    We adapted his (very-well) documented SVD routines
-
-### How to efficiently use this package
-
-#### 1. Never return complex objects (matrices or vectors)
-   Danger: For example, when the following snippet:
-~~~
-   TMatrixD foo(int n)
-   {
-     TMatrixD foom(n,n); fill_in(foom); return foom;
-   }
-   TMatrixD m = foo(5);
-~~~
-   runs, it constructs matrix foo:foom, copies it onto stack as a
-   return value and destroys foo:foom. Return value (a matrix)
-   from foo() is then copied over to m (via a copy constructor),
-   and the return value is destroyed. So, the matrix constructor is
-   called 3 times and the destructor 2 times. For big matrices,
-   the cost of multiple constructing/copying/destroying of objects
-   may be very large. *Some* optimized compilers can cut down on 1
-   copying/destroying, but still it leaves at least two calls to
-   the constructor. Note, TMatrixDLazy (see below) can construct
-   TMatrixD m "inplace", with only a _single_ call to the
-   constructor.
-
-#### 2. Use "two-address instructions"
-~~~
-   "void TMatrixD::operator += (const TMatrixD &B);"
-~~~
-    as much as possible.
-    That is, to add two matrices, it's much more efficient to write
-~~~
-   A += B;
-~~~
-    than
-~~~
-   TMatrixD C = A + B;
-~~~
-   (if both operand should be preserved,
-     TMatrixD C = A; C += B;
-   is still better).
-
-#### 3. Use glorified constructors when returning of an object seems inevitable:
-~~~
-   "TMatrixD A(TMatrixD::kTransposed,B);"
-   "TMatrixD C(A,TMatrixD::kTransposeMult,B);"
-~~~
-
-  like in the following snippet (from $ROOTSYS/test/vmatrix.cxx)
-  that verifies that for an orthogonal matrix T, T'T = TT' = E.
-
-~~~
-   TMatrixD haar = THaarMatrixD(5);
-   TMatrixD unit(TMatrixD::kUnit,haar);
-   TMatrixD haar_t(TMatrixD::kTransposed,haar);
-   TMatrixD hth(haar,TMatrixD::kTransposeMult,haar);
-   TMatrixD hht(haar,TMatrixD::kMult,haar_t);
-   TMatrixD hht1 = haar; hht1 *= haar_t;
-   VerifyMatrixIdentity(unit,hth);
-   VerifyMatrixIdentity(unit,hht);
-   VerifyMatrixIdentity(unit,hht1);
-~~~
-
-#### 4. Accessing row/col/diagonal of a matrix without much fuss
-   (and without moving a lot of stuff around):
-
-~~~
-   TMatrixD m(n,n); TVectorD v(n); TMatrixDDiag(m) += 4;
-   v = TMatrixDRow(m,0);
-   TMatrixDColumn m1(m,1); m1(2) = 3; // the same as m(2,1)=3;
-~~~
-   Note, constructing of, say, TMatrixDDiag does *not* involve any
-   copying of any elements of the source matrix.
-
-#### 5. It's possible (and encouraged) to use "nested" functions
-   For example, creating of a Hilbert matrix can be done as follows:
-
-~~~
-   void foo(const TMatrixD &m)
-   {
-    TMatrixD m1(TMatrixD::kZero,m);
-    struct MakeHilbert : public TElementPosActionD {
-       void Operation(Double_t &element)
-          { element = 1./(fI+fJ-1); }
-    };
-    m1.Apply(MakeHilbert());
-   }
-~~~
-
-   of course, using a special method THilbertMatrixD() is
-   still more optimal, but not by a whole lot. And that's right,
-   class MakeHilbert is declared *within* a function and local to
-   that function. It means one can define another MakeHilbert class
-   (within another function or outside of any function, that is, in
-   the global scope), and it still will be OK. Note, this currently
-   is not yet supported by the interpreter CINT.
-
-   Another example is applying of a simple function to each matrix element:
-
-~~~
-   void foo(TMatrixD &m,TMatrixD &m1)
-   {
-    typedef  double (*dfunc_t)(double);
-    class ApplyFunction : public TElementActionD {
-       dfunc_t fFunc;
-       void Operation(Double_t &element)
-            { element=fFunc(element); }
-     public:
-       ApplyFunction(dfunc_t func):fFunc(func) {}
-    };
-    ApplyFunction x(TMath::Sin);
-    m.Apply(x);
-   }
-~~~
-
-   Validation code $ROOTSYS/test/vmatrix.cxx and vvector.cxx contain
-   a few more examples of that kind.
-
-#### 6. Lazy matrices:
-   instead of returning an object return a "recipe"
-   how to make it. The full matrix would be rolled out only when
-   and where it's needed:
-~~~
-   TMatrixD haar = THaarMatrixD(5);
-~~~
-   THaarMatrixD() is a *class*, not a simple function. However
-   similar this looks to a returning of an object (see note #1
-   above), it's dramatically different. THaarMatrixD() constructs a
-   TMatrixDLazy, an object of just a few bytes long. A special
-   "TMatrixD(const TMatrixDLazy &recipe)" constructor follows the
-   recipe and makes the matrix haar() right in place. No matrix
-   element is moved whatsoever!
-
+    Matrix properties are stored here, however the data storage is part
+    of the derived classes
 */
-
-////////////////////////////////////////////////////////////////////////////////
-///
-/// TMatrixTBase
-///
-/// Template of base class in the linear algebra package
-///
-///  matrix properties are stored here, however the data storage is part
-///  of the derived classes
 
 #include "TMatrixTBase.h"
 #include "TVectorT.h"
+#include "TBuffer.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TMath.h"
-#include <limits.h>
+#include "snprintf.h"
+#include <climits>
 
 Int_t gMatrixCheck = 1;
 
@@ -1048,7 +852,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::Randomize(Element alpha,Element be
 /// Check to see if two matrices are identical.
 
 template<class Element>
-Bool_t operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
+Bool_t TMatrixTAutoloadOps::operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
    if (!AreCompatible(m1,m2)) return kFALSE;
    return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
@@ -1059,7 +863,7 @@ Bool_t operator==(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m
 /// Square of the Euclidian norm of the difference between two matrices.
 
 template<class Element>
-Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
+Element TMatrixTAutoloadOps::E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
    if (gMatrixCheck && !AreCompatible(m1,m2)) {
       ::Error("E2Norm","matrices not compatible");
@@ -1081,7 +885,7 @@ Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 /// Check that matrice sm1 and m2 areboth valid and have identical shapes .
 
 template<class Element1,class Element2>
-Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose)
+Bool_t TMatrixTAutoloadOps::AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose)
 {
    if (!m1.IsValid()) {
       if (verbose)
@@ -1108,7 +912,7 @@ Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element
 /// Compare two matrices and print out the result of the comparison.
 
 template<class Element>
-void Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
+void TMatrixTAutoloadOps::Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
    if (!AreCompatible(m1,m2)) {
       Error("Compare(const TMatrixTBase<Element> &,const TMatrixTBase<Element> &)","matrices are incompatible");
@@ -1162,7 +966,7 @@ void Compare(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 /// Validate that all elements of matrix have value val within maxDevAllow.
 
 template<class Element>
-Bool_t VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbose,Element maxDevAllow)
+Bool_t TMatrixTAutoloadOps::VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbose,Element maxDevAllow)
 {
    R__ASSERT(m.IsValid());
 
@@ -1205,7 +1009,7 @@ Bool_t VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbos
 /// Verify that elements of the two matrices are equal within MaxDevAllow .
 
 template<class Element>
-Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose,
+Bool_t TMatrixTAutoloadOps::VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose,
                             Element maxDevAllow)
 {
    if (!AreCompatible(m1,m2,verbose))
@@ -1287,30 +1091,30 @@ Element & TMatrixTBase<Element>::NaNValue()
 
 template class TMatrixTBase<Float_t>;
 
-template Bool_t   operator==          <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Float_t  E2Norm              <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Bool_t   AreCompatible<Float_t,Float_t>
+template Bool_t   TMatrixTAutoloadOps::operator==          <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Float_t  TMatrixTAutoloadOps::E2Norm              <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Float_t,Float_t>
                                                (const TMatrixFBase &m1,const TMatrixFBase &m2,Int_t verbose);
-template Bool_t   AreCompatible<Float_t,Double_t>
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Float_t,Double_t>
                                                (const TMatrixFBase &m1,const TMatrixDBase &m2,Int_t verbose);
-template void     Compare             <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Bool_t   VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val,Int_t verbose,Float_t maxDevAllow);
-template Bool_t   VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val);
-template Bool_t   VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2,
+template void     TMatrixTAutoloadOps::Compare             <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val,Int_t verbose,Float_t maxDevAllow);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2,
                                                 Int_t verbose,Float_t maxDevAllowN);
-template Bool_t   VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
 
 template class TMatrixTBase<Double_t>;
 
-template Bool_t   operator==          <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Double_t E2Norm              <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Bool_t   AreCompatible<Double_t,Double_t>
+template Bool_t   TMatrixTAutoloadOps::operator==          <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Double_t TMatrixTAutoloadOps::E2Norm              <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Double_t,Double_t>
                                                (const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose);
-template Bool_t   AreCompatible<Double_t,Float_t>
+template Bool_t   TMatrixTAutoloadOps::AreCompatible<Double_t,Float_t>
                                                (const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose);
-template void     Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val,Int_t verbose,Double_t maxDevAllow);
-template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val);
-template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,
+template void     TMatrixTAutoloadOps::Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val,Int_t verbose,Double_t maxDevAllow);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,
                                                  Int_t verbose,Double_t maxDevAllow);
-template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   TMatrixTAutoloadOps::VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);

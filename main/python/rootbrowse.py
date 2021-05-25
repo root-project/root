@@ -27,16 +27,16 @@ def get_argparse():
 	parser = cmdLineUtils.getParserSingleFile(description, EPILOG)
 	parser.prog = 'rootbrowse'
 	return parser
-	
-	
+
+
 def execute():
 	parser = get_argparse()
-	
+
 	# Put arguments in shape
 	args = cmdLineUtils.getArgs(parser)
 
 	# Process rootBrowse
 	return cmdLineUtils.rootBrowse(args.FILE)
-	
+
 if __name__ == "__main__":
 	sys.exit(execute())

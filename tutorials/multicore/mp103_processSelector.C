@@ -8,16 +8,21 @@
 ///
 /// \authors Anda Chelba, Gerardo Ganis
 
+#include "ROOT/RMakeUnique.hxx"
 #include "TString.h"
 #include "TROOT.h"
 #include "TChain.h"
+#include "TBranch.h"
 #include "TFileCollection.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "ROOT/TTreeProcessorMP.hxx"
 
-const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root", "http://root.cern.ch/files/h1/dstarp1a.root",
-                     "http://root.cern.ch/files/h1/dstarp1b.root", "http://root.cern.ch/files/h1/dstarp2.root"};
+const auto file0 = "http://root.cern.ch/files/h1/dstarmb.root";
+const std::vector<std::string> files = {file0,
+                                        "http://root.cern.ch/files/h1/dstarp1a.root",
+                                        "http://root.cern.ch/files/h1/dstarp1b.root",
+                                        "http://root.cern.ch/files/h1/dstarp2.root"};
 
 int mp103_processSelector()
 {
@@ -28,7 +33,7 @@ int mp103_processSelector()
    TString selectorPath = gROOT->GetTutorialDir();
    selectorPath += "/tree/h1analysis.C+";
    std::cout << "selector used is: " << selectorPath << "\n";
-   TSelector *sel = TSelector::GetSelector(selectorPath);
+   auto sel = TSelector::GetSelector(selectorPath);
 
 // The following code generates a crash when Davix is used for HTTP
 // Davix does not seem fork-safe; the problem has been reported to the
@@ -37,8 +42,8 @@ int mp103_processSelector()
 //
 // #define __reproduce_davix
 #if defined(__reproduce_davix)
-   TFile *fp = TFile::Open(fh1[0]);
-   TTree *tree = (TTree *)fp->Get("h42");
+   auto fp = std::make_unique<TTree>(TFile::Open(file0));
+   auto tree = fp->Get<TTree>("h42");
 #endif
 
    ROOT::TTreeProcessorMP pool(3);
@@ -52,17 +57,15 @@ int mp103_processSelector()
 
    // TTreeProcessorMP::Process with single file name and tree name
    // Note: we have less files than workers here
-   out = pool.Process(fh1[0], *sel, "h42");
+   out = pool.Process(file0, *sel, "h42");
    sel->GetOutputList()->Delete();
 
    // Prepare datasets: vector of files, TFileCollection
    TChain ch;
    TFileCollection fc;
-   std::vector<std::string> files;
-   for (int i = 0; i < 4; i++) {
-      files.push_back(fh1[i]);
-      fc.Add(new TFileInfo(fh1[i]));
-      ch.Add(fh1[i]);
+   for (auto &&file : files) {
+      fc.Add(new TFileInfo(file.c_str()));
+      ch.Add(file.c_str());
    }
 
    // TTreeProcessorMP::Process with vector of files and tree name

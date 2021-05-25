@@ -7,8 +7,6 @@
 
 #include "gtest/gtest.h"
 
-#include <fstream>
-
 TEST(TTreeReaderArray, Vector)
 {
    TTree *tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
@@ -145,4 +143,129 @@ TEST(TTreeReaderArray, BoolCollections)
    checkRV(rva, va_ref1, "variable size array of bools ev 1");
 
    gSystem->Unlink(fileName);
+}
+
+TEST(TTreeReaderArray, Double32_t)
+{
+   TTree t("t", "t");
+
+   int n;
+   Double32_t arr[64];
+   t.Branch("n", &n);
+   t.Branch("arr", arr, "arr[n]/d[0,0,10]");
+   t.Branch("arr2", arr, "arr2[n]/D");
+   std::vector<int> sizes{20, 30};
+   float globalIndex = 1.f;
+   for (auto ievt : {0, 1}) {
+      n = sizes[ievt];
+      for (auto inumb = 0; inumb < n; ++inumb) {
+         arr[inumb] = 1024 * globalIndex++;
+      }
+      t.Fill();
+   }
+   TTreeReader r(&t);
+   TTreeReaderArray<double> arrra(r, "arr");
+   TTreeReaderArray<double> arr2ra(r, "arr2");
+   while (r.Next()) {
+      const auto arr_size = arrra.GetSize();
+      EXPECT_EQ(arr_size, arr2ra.GetSize()) << "The size of the collections differ!";
+      for (auto i = 0U; i < arr_size; ++i) {
+         EXPECT_DOUBLE_EQ(arrra[i], arr2ra[i]) << "The content of the element at index " << i
+                                               << " in the collections differs!";
+      }
+   }
+}
+
+TEST(TTreeReaderArray, Float16_t)
+{
+   TTree t("t", "t");
+
+   int n;
+   Float16_t arr[64];
+   t.Branch("n", &n);
+   t.Branch("arr", arr, "arr[n]/f[0,0,10]");
+   t.Branch("arr2", arr, "arr2[n]/F");
+   std::vector<int> sizes{20, 30};
+   float globalIndex = 1.f;
+   for (auto ievt : {0, 1}) {
+      n = sizes[ievt];
+      for (auto inumb = 0; inumb < n; ++inumb) {
+         arr[inumb] = 1024 * globalIndex++;
+      }
+      t.Fill();
+   }
+   TTreeReader r(&t);
+   TTreeReaderArray<float> arrra(r, "arr");
+   TTreeReaderArray<float> arr2ra(r, "arr2");
+   while (r.Next()) {
+      const auto arr_size = arrra.GetSize();
+      EXPECT_EQ(arr_size, arr2ra.GetSize()) << "The size of the collections differ!";
+      for (auto i = 0U; i < arr_size; ++i) {
+         EXPECT_FLOAT_EQ(arrra[i], arr2ra[i]) << "The content of the element at index " << i
+                                              << " in the collections differs!";
+      }
+   }
+}
+
+TEST(TTreeReaderArray, ROOT10397)
+{
+   TTree t("t", "t");
+   float x[10];
+   int n;
+   struct {
+      int n = 10;
+      float z[10];
+   } z;
+   t.Branch("n", &n, "n/I");
+   t.Branch("x", &x, "y[n]/F");
+   t.Branch("z", &z, "n/I:z[n]/F");
+   for (int i = 7; i < 10; i++) {
+      n = i;
+      for (int j = 0; j < n; j++) {
+         x[j] = j;
+      }
+      z.n = 13 - i;
+      for (int j = 0; j < 10; ++j)
+         z.z[j] = z.n;
+      t.Fill();
+   };
+
+   TTreeReader r(&t);
+   TTreeReaderArray<float> xr(r, "x.y");
+   TTreeReaderArray<float> zr(r, "z.z");
+   r.Next();
+   EXPECT_EQ(xr.GetSize(), 7);
+   EXPECT_EQ(zr.GetSize(), 13 - 7);
+}
+
+TEST(TTreeReaderArray, LongIntArray)
+{
+   const auto fname = "TTreeReaderArrayLongIntArray.root";
+   {
+      TFile f(fname, "recreate");
+      long int G[3] = {std::numeric_limits<long int>::min(), 42, std::numeric_limits<long int>::max()};
+      int size = 2;
+      unsigned long int *g = new unsigned long int[size];
+      g[0] = 42;
+      g[1] = std::numeric_limits<unsigned long int>::max();
+      TTree t("t", "t");
+      t.Branch("G", G, "G[3]/G");
+      t.Branch("n", &size);
+      t.Branch("g", g, "g[n]/g");
+      t.Fill();
+      t.Write();
+   }
+
+   TFile f(fname);
+   TTreeReader r("t", &f);
+   TTreeReaderArray<long int> rG(r, "G");
+   TTreeReaderArray<unsigned long int> rg(r, "g");
+   EXPECT_TRUE(r.Next());
+   ASSERT_EQ(rG.GetSize(), 3);
+   EXPECT_EQ(rG[0], std::numeric_limits<long int>::min());
+   EXPECT_EQ(rG[1], 42);
+   ASSERT_EQ(rg.GetSize(), 2);
+   EXPECT_EQ(rg[0], 42);
+   EXPECT_EQ(rg[1], std::numeric_limits<unsigned long int>::max());
+   EXPECT_FALSE(r.Next());
 }

@@ -103,7 +103,7 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100
    return data;
 }
 
-int TMVACrossValidation()
+int TMVACrossValidation(bool useRandomSplitting = false)
 {
    // This loads the library
    TMVA::Tools::Instance();
@@ -135,6 +135,15 @@ int TMVACrossValidation()
    // Spectator used for split
    dataloader->AddSpectator("eventID", 'I');
 
+   // NOTE: Currently TMVA treats all input variables, spectators etc as
+   //       floats. Thus, if the absolute value of the input is too large
+   //       there can be precision loss. This can especially be a problem for
+   //       cross validation with large event numbers.
+   //       A workaround is to define your splitting variable as:
+   //           `dataloader->AddSpectator("eventID := eventID % 4096", 'I');`
+   //       where 4096 should be a number much larger than the number of folds
+   //       you intend to run with.
+
    // Attaches the trees so they can be read from
    dataloader->AddSignalTree(sigTree, 1.0);
    dataloader->AddBackgroundTree(bkgTree, 1.0);
@@ -157,9 +166,16 @@ int TMVACrossValidation()
    // This sets up a CrossValidation class (which wraps a TMVA::Factory
    // internally) for 2-fold cross validation.
    //
+   // The split type can be "Random", "RandomStratified" or "Deterministic".
+   // For the last option, check the comment below. Random splitting randomises
+   // the order of events and distributes events as evenly as possible.
+   // RandomStratified applies the same logic but distributes events within a
+   // class as evenly as possible over the folds.
+   //
    UInt_t numFolds = 2;
    TString analysisType = "Classification";
-   TString splitExpr = "";
+   
+   TString splitType = (useRandomSplitting) ? "Random" : "Deterministic";
 
    //
    // One can also use a custom splitting function for producing the folds.
@@ -174,18 +190,21 @@ int TMVACrossValidation()
    // a technique that can simplify statistical analysis.
    // 
    // If you want to run TMVACrossValidationApplication, make sure you have 
-   // run this tutorial with the below line uncommented first.
+   // run this tutorial with Deterministic splitting type, i.e.
+   // with the option useRandomSPlitting = false
    // 
 
-   // TString splitExpr = "int(fabs([eventID]))%int([NumFolds])";
+   TString splitExpr = (!useRandomSplitting) ? "int(fabs([eventID]))%int([NumFolds])" : "";
 
    TString cvOptions = Form("!V"
                             ":!Silent"
                             ":ModelPersistence"
                             ":AnalysisType=%s"
+                            ":SplitType=%s"
                             ":NumFolds=%i"
                             ":SplitExpr=%s",
-                            analysisType.Data(), numFolds, splitExpr.Data());
+                            analysisType.Data(), splitType.Data(), numFolds,
+                            splitExpr.Data());
 
    TMVA::CrossValidation cv{"TMVACrossValidation", dataloader, outputFile, cvOptions};
 
@@ -246,6 +265,11 @@ int TMVACrossValidation()
    // Launch the GUI for the root macros
    //
    if (!gROOT->IsBatch()) {
+      // Draw cv-specific graphs
+      cv.GetResults()[0].DrawAvgROCCurve(kTRUE, "Avg ROC for BDTG");
+      cv.GetResults()[0].DrawAvgROCCurve(kTRUE, "Avg ROC for Fisher");
+
+      // You can also use the classical gui
       TMVA::TMVAGui(outfileName);
    }
 

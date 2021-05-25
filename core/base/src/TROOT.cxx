@@ -66,15 +66,15 @@ of a main program creating an interactive version is shown below:
 ~~~
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
+#include <ROOT/TErrorDefaultHandler.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
 #include "RVersion.h"
 #include "RGitCommit.h"
-
 #include <string>
 #include <map>
-#include <stdlib.h>
+#include <cstdlib>
 #ifdef WIN32
 #include <io.h>
 #include "Windows4Root.h"
@@ -113,13 +113,13 @@ FARPROC dlsym(void *library, const char *function_name)
 #include <dlfcn.h>
 #endif
 
-#include "Riostream.h"
+#include <iostream>
+#include "ROOT/FoundationUtils.hxx"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassGenerator.h"
 #include "TDataType.h"
-#include "TDatime.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
 #include "TClassTable.h"
@@ -142,10 +142,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TQObject.h"
 #include "TProcessUUID.h"
 #include "TPluginManager.h"
-#include "TMap.h"
-#include "TObjString.h"
 #include "TVirtualMutex.h"
-#include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnumsWithLock.h"
@@ -154,9 +151,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TFunctionTemplate.h"
 #include "ThreadLocalStorage.h"
 #include "TVirtualRWMutex.h"
-
-#include <string>
-namespace std {} using namespace std;
+#include "TVirtualX.h"
 
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)
@@ -171,11 +166,11 @@ namespace std {} using namespace std;
 
 extern "C" void R__SetZipMode(int);
 
-static DestroyInterpreter_t *gDestroyInterpreter = 0;
-static void *gInterpreterLib = 0;
+static DestroyInterpreter_t *gDestroyInterpreter = nullptr;
+static void *gInterpreterLib = nullptr;
 
 // Mutex for protection of concurrent gROOT access
-TVirtualMutex* gROOTMutex = 0;
+TVirtualMutex* gROOTMutex = nullptr;
 ROOT::TVirtualRWMutex *ROOT::gCoreMutex = nullptr;
 
 // For accessing TThread::Tsd indirectly.
@@ -331,11 +326,13 @@ namespace Internal {
       // and we can still allocate the TROOT object's memory
       // statically.
       //
-      char fHolder[sizeof(TROOT)];
+      union {
+         TROOT fObj;
+         char fHolder[sizeof(TROOT)];
+      };
    public:
-      TROOTAllocator() {
-         new(&(fHolder[0])) TROOT("root", "The ROOT of EVERYTHING");
-      }
+      TROOTAllocator(): fObj("root", "The ROOT of EVERYTHING")
+      {}
 
       ~TROOTAllocator() {
          if (gROOTLocal) {
@@ -416,8 +413,6 @@ namespace Internal {
    void EnableParBranchProcessing()
    {
 #ifdef R__USE_IMT
-      if (!IsImplicitMTEnabled())
-         EnableImplicitMT();
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParBranchProcessing");
       if (sym)
          sym();
@@ -446,55 +441,6 @@ namespace Internal {
    {
 #ifdef R__USE_IMT
       static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
-      if (sym)
-         return sym();
-      else
-         return kFALSE;
-#else
-      return kFALSE;
-#endif
-   }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Globally enables the parallel tree processing, which is a case of
-   /// implicit multi-threading in ROOT, activating the required locks.
-   /// This IMT use case, implemented in TTreeProcessor::Process, receives a user
-   /// function and applies it to subranges of the tree, which correspond to its
-   /// clusters. Hence, for every cluster, a task is spawned to potentially
-   /// process it in parallel with the other clusters.
-   void EnableParTreeProcessing()
-   {
-#ifdef R__USE_IMT
-      if (!IsImplicitMTEnabled())
-         EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParTreeProcessing");
-      if (sym)
-         sym();
-#else
-      ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
-#endif
-   }
-
-   //////////////////////////////////////////////////////////////////////////////
-   /// Globally disables the IMT use case of parallel branch processing,
-   /// deactivating the corresponding locks.
-   void DisableParTreeProcessing()
-   {
-#ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParTreeProcessing");
-      if (sym)
-         sym();
-#else
-      ::Warning("DisableParTreeProcessing", "Cannot disable parallel tree processing, please build ROOT with -Dimt=ON");
-#endif
-   }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Returns true if parallel tree processing is enabled.
-   Bool_t IsParTreeProcessingEnabled()
-   {
-#ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -539,6 +485,9 @@ namespace Internal {
    /// In addition, gDirectory, gFile and gPad become a thread-local variable.
    /// In all threads, gDirectory defaults to gROOT, a singleton which supports thread-safe insertion and deletion of contents.
    /// gFile and gPad default to nullptr, as it is for single-thread programs.
+   ///
+   /// The ROOT graphics subsystem is not made thread-safe by this method. In particular drawing or printing different
+   /// canvases from different threads (and analogous operations such as invoking `Draw` on a `TObject`) is not thread-safe.
    ///
    /// Note that there is no `DisableThreadSafety()`. ROOT's thread-safety features cannot be disabled once activated.
    // clang-format on
@@ -610,11 +559,11 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Returns the size of the pool used for implicit multi-threading.
-   UInt_t GetImplicitMTPoolSize()
+   /// Returns the size of ROOT's thread pool
+   UInt_t GetThreadPoolSize()
    {
 #ifdef R__USE_IMT
-      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetImplicitMTPoolSize");
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_MT_GetThreadPoolSize");
       if (sym)
          return sym();
       else
@@ -624,7 +573,13 @@ namespace Internal {
 #endif
    }
 
-}
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns the size of the pool used for implicit multi-threading.
+   UInt_t GetImplicitMTPoolSize()
+   {
+      return GetThreadPoolSize();
+   }
+} // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 
@@ -645,7 +600,7 @@ TROOT::TROOT() : TDirectory(),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
      fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
      fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
+     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
      fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
@@ -679,7 +634,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
      fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
      fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
+     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
      fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
@@ -727,7 +682,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    gRootDir = GetRootSys().Data();
 
-   TDirectory::Build();
+   TDirectory::BuildDirectory(nullptr, nullptr);
 
    // Initialize interface to CINT C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCling fails
@@ -756,12 +711,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
       // initialize plugin manager early
       fPluginManager->LoadHandlersFromEnv(gEnv);
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-      if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
-         TEnv plugins(".plugins-ios");
-         fPluginManager->LoadHandlersFromEnv(&plugins);
-      }
-#endif
    }
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
@@ -838,7 +787,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
-   fReadingObject = kFALSE;
    fInterrupt     = kFALSE;
    fEscape        = kFALSE;
    fMustClean     = kTRUE;
@@ -926,14 +874,15 @@ TROOT::~TROOT()
 
       // ATTENTION!!! Order is important!
 
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fBrowsables);
 
       // FIXME: Causes rootcling to deadlock, debug and uncomment
       // SafeDelete(fRootFolder);
 
+#ifdef R__COMPLETE_MEM_TERMINATION
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
+
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
@@ -950,9 +899,7 @@ TROOT::~TROOT()
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
-#endif
       fColors->Delete();     SafeDelete(fColors);
       fStyles->Delete();     SafeDelete(fStyles);
 
@@ -996,6 +943,9 @@ TROOT::~TROOT()
       gSystem->CleanCompiledMacros();
 
       // Cleanup system class
+      ROOT::Internal::SetErrorSystemMsgHandler(ROOT::Internal::ErrorSystemMsgHandlerFunc_t());
+      SetErrorHandler(ROOT::Internal::MinimalErrorHandler);
+      ROOT::Internal::ReleaseDefaultErrorHandler();
       delete gSystem;
 
       // ROOT-6022:
@@ -1017,12 +967,23 @@ TROOT::~TROOT()
       // checking the completeness of the termination deletion.
 
       // TODO: Should we do more cleanup here than just call delete?
-      // Segfaults rootcling in some cases, debug and uncomment
-      // delete fInterpreter;
+      // Segfaults rootcling in some cases, debug and uncomment:
+      //
+      //    delete fInterpreter;
+
+      // We cannot delete fCleanups because of the logic in atexit which needs it.
+      SafeDelete(fCleanups);
 #endif
 
-#ifdef R__COMPLETE_MEM_TERMINATION
-      SafeDelete(fCleanups);
+#ifdef _MSC_VER
+      // usedToIdentifyRootClingByDlSym is available when TROOT is part of rootcling.
+      if (dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+         // deleting the interpreter makes things crash at exit in some cases
+         delete fInterpreter;
+      }
+#else
+      // deleting the interpreter makes things crash at exit in some cases
+      delete fInterpreter;
 #endif
 
       // Prints memory stats
@@ -1175,7 +1136,7 @@ void TROOT::CloseFiles()
          fSockets->SetBit(kMustCleanup);
       }
       CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
-      Long_t offset = 0;
+      Longptr_t offset = 0;
       TClass *socketClass = TClass::GetClass("TSocket");
       gInterpreter->CallFunc_SetFuncProto(socketCloser, socketClass->GetClassInfo(), "Close", "", &offset);
       if (gInterpreter->CallFunc_IsValid(socketCloser)) {
@@ -1201,7 +1162,7 @@ void TROOT::CloseFiles()
                fClosedObjects->AddLast(socket);
             } else {
                // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
-               Long_t other_offset;
+               Longptr_t other_offset;
                CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
                gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA()->GetClassInfo(), "Close", "", &other_offset);
                if (gInterpreter->CallFunc_IsValid(otherCloser)) {
@@ -1263,6 +1224,12 @@ void TROOT::EndOfProcessCleanups()
    fCanvases->Delete("slow");
    fColors->Delete();
    fStyles->Delete();
+
+   TQObject::BlockAllSignals(kTRUE);
+
+   if (gInterpreter) {
+      gInterpreter->ShutDown();
+   }
 }
 
 
@@ -1612,7 +1579,7 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 
 TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 {
-   if (addr == 0 || ((Long_t)addr) == -1) return 0;
+   if (addr == 0 || ((Longptr_t)addr) == -1) return 0;
 
    TInterpreter::DeclId_t decl = gInterpreter->GetDataMemberAtAddr(addr);
    if (decl) {
@@ -1762,18 +1729,19 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    if (!fGlobals) {
+      fGlobals = new TListOfDataMembers(nullptr, TDictionary::EMemberSelection::kAlsoUsingDecls);
       // We add to the list the "funcky-fake" globals.
-      fGlobals = new TListOfDataMembers(0);
-      fGlobals->Add(new TGlobalMappedFunction("gROOT", "TROOT*",
-                                              (TGlobalMappedFunction::GlobalFunc_t)&ROOT::GetROOT));
-      fGlobals->Add(new TGlobalMappedFunction("gPad", "TVirtualPad*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualPad::Pad));
-      fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TInterpreter::Instance));
-      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TVirtualX*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
-      fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
+
+      // provide special functor for gROOT, while ROOT::GetROOT() does not return reference
+      TGlobalMappedFunction::MakeFunctor("gROOT", "TROOT*", ROOT::GetROOT, [] {
+         ROOT::GetROOT();
+         return (void *)&ROOT::Internal::gROOTLocal;
+      });
+
+      TGlobalMappedFunction::MakeFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad);
+      TGlobalMappedFunction::MakeFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance);
+      TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
+
       // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);
@@ -1843,6 +1811,21 @@ TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
    return fTypes;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of classes.
+
+Int_t TROOT::GetNclasses() const
+{
+   return fClasses->GetSize();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of types.
+
+Int_t TROOT::GetNtypes() const
+{
+   return fTypes->GetSize();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute command when system has been idle for idleTimeInSec seconds.
@@ -1959,6 +1942,9 @@ void TROOT::InitSystem()
       // read default files
       gEnv = new TEnv(".rootrc");
 
+      ROOT::Internal::SetErrorSystemMsgHandler([](){ return gSystem->GetError(); });
+      SetErrorHandler(DefaultErrorHandler);
+
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
       if (!gEnv->GetValue("Root.ErrorHandlers", 1))
@@ -2031,22 +2017,6 @@ void TROOT::InitInterpreter()
    // rootcling.
    if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")
        && !dlsym(RTLD_DEFAULT, "usedToIdentifyStaticRoot")) {
-      // Make sure no llvm symbols are visible before loading libCling. If they
-      // exist libCling will use those and not ours, causing havoc in the
-      // interpreter. Look for an extern "C" symbol to avoid mangling; look for a
-      // symbol from llvm because clang builds on top, so users would likely
-      // have also their own llvm symbols when providing their own clang.
-      void *LLVMEnablePrettyStackTraceAddr = 0;
-      // Can't use gSystem->DynFindSymbol() because that iterates over all *known*
-      // libraries which is not the same!
-      LLVMEnablePrettyStackTraceAddr = dlsym(RTLD_DEFAULT, "LLVMEnablePrettyStackTrace");
-      // FIXME: When we configure with -Dclingtest=On we intentionally export the symbols. Silence this error.
-      if (LLVMEnablePrettyStackTraceAddr) {
-         Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
-               "This will cause problems; please hide them or dlopen() them "
-               "after the call to TROOT::InitInterpreter()!");
-      }
-
       char *libRIO = gSystem->DynamicPathName("libRIO");
       void *libRIOHandle = dlopen(libRIO, RTLD_NOW|RTLD_GLOBAL);
       delete [] libRIO;
@@ -2133,14 +2103,6 @@ void TROOT::InitInterpreter()
    GetModuleHeaderInfoBuffer().clear();
 
    fInterpreter->Initialize();
-
-   // Read the rules before enabling the auto loading to not inadvertently
-   // load the libraries for the classes concerned even-though the user is
-   // *not* using them.
-   TClass::ReadRules(); // Read the default customization rules ...
-
-   // Enable autoloading
-   fInterpreter->EnableAutoLoading();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2301,9 +2263,9 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 /// If padUpdate is true (default) update the current pad.
 /// Returns the macro return value.
 
-Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
+Longptr_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
 {
-   Long_t result = 0;
+   Longptr_t result = 0;
 
    if (fInterpreter) {
       TString aclicMode;
@@ -2353,9 +2315,9 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 /// The possible error codes are defined by TInterpreter::EErrorCode. In
 /// particular, error will equal to TInterpreter::kProcessing until the
 /// CINT interpreted thread has finished executing the line.
-/// Returns the result of the command, cast to a Long_t.
+/// Returns the result of the command, cast to a Longptr_t.
 
-Long_t TROOT::ProcessLine(const char *line, Int_t *error)
+Longptr_t TROOT::ProcessLine(const char *line, Int_t *error)
 {
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
@@ -2373,9 +2335,9 @@ Long_t TROOT::ProcessLine(const char *line, Int_t *error)
 /// the line). On non-Win32 platforms there is no difference between
 /// ProcessLine() and ProcessLineSync().
 /// The possible error codes are defined by TInterpreter::EErrorCode.
-/// Returns the result of the command, cast to a Long_t.
+/// Returns the result of the command, cast to a Longptr_t.
 
-Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
+Longptr_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 {
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
@@ -2392,7 +2354,7 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 /// In all other cases use TROOT::ProcessLine().
 /// The possible error codes are defined by TInterpreter::EErrorCode.
 
-Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
+Longptr_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 {
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
@@ -2400,7 +2362,7 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    if (!fApplication.load())
       TApplication::CreateApplication();
 
-   Long_t result = 0;
+   Longptr_t result = 0;
 
    if (fInterpreter) {
       TInterpreter::EErrorCode *code = (TInterpreter::EErrorCode*)error;
@@ -2595,7 +2557,7 @@ void TROOT::RegisterModule(const char* modulename,
    atexit(CallCloseFiles);
 
    // Now register with TCling.
-   if (gCling) {
+   if (TROOT::Initialized()) {
       gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode, triggerFunc,
                              fwdDeclsArgToSkip, classesHeaders, false, hasCxxModule);
    } else {
@@ -2790,16 +2752,17 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The input parameter `webdisplay` defines where web graphics should be rendered.
+/// \brief Specify where web graphics shall be rendered
 ///
-/// if `webdisplay` may contains:
+/// The input parameter `webdisplay` defines where web graphics is rendered.
+/// `webdisplay` parameter may contain:
 ///
-///  - "off": turns off the web display and come back to normal graphics in
+///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.
-///  - "batch":  turns the web display in batch mode. It can be prepend with an
-///    other string which will be considered as the new current web display
-///  - "nobatch": turns the web display in interactive mode. It can be prepend with an
-///    other string which will be considered as the new current web display
+///  - "batch": turns the web display in batch mode. It can be prepended with
+///    another string which is considered as the new current web display.
+///  - "nobatch": turns the web display in interactive mode. It can be
+///    prepended with another string which is considered as the new current web display.
 ///
 /// If the option "off" is not set, this method turns the normal graphics to
 /// "Batch" to avoid the loading of local graphics libraries.
@@ -2814,7 +2777,6 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       fIsWebDisplay = kFALSE;
       fIsWebDisplayBatch = kFALSE;
       fWebDisplay = "";
-      gROOT->SetBatch(kFALSE);
    } else {
       fIsWebDisplay = kTRUE;
       if (!strncmp(wd, "batch", 5)) {
@@ -2827,7 +2789,6 @@ void TROOT::SetWebDisplay(const char *webdisplay)
          fIsWebDisplayBatch = kFALSE;
       }
       fWebDisplay = wd;
-      gROOT->SetBatch(kTRUE);
    }
 }
 
@@ -2845,6 +2806,13 @@ Int_t TROOT::IncreaseDirLevel()
 void TROOT::IndentLevel()
 {
    for (int i = 0; i < fgDirLevel; i++) std::cout.put(' ');
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize ROOT explicitly.
+
+void TROOT::Initialize() {
+   (void) gROOT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2897,8 +2865,22 @@ Int_t TROOT::RootVersionCode()
 {
    return ROOT_VERSION_CODE;
 }
+////////////////////////////////////////////////////////////////////////////////
+/// Provide command line arguments to the interpreter construction.
+/// These arguments are added to the existing flags (e.g. `-DNDEBUG`).
+/// They are evaluated once per process, at the time where TROOT (and thus
+/// TInterpreter) is constructed.
+/// Returns the new flags.
+
+const std::vector<std::string> &TROOT::AddExtraInterpreterArgs(const std::vector<std::string> &args) {
+   static std::vector<std::string> sArgs = {};
+   sArgs.insert(sArgs.begin(), args.begin(), args.end());
+   return sArgs;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
+/// INTERNAL function!
+/// Used by rootcling to inject interpreter arguments through a C-interface layer.
 
 const char**& TROOT::GetExtraInterpreterArgs() {
    static const char** extraInterpArgs = 0;
@@ -2918,21 +2900,10 @@ static Bool_t IgnorePrefix() {
 /// Get the rootsys directory in the installation. Static utility function.
 
 const TString& TROOT::GetRootSys() {
-#ifdef ROOTPREFIX
-   if (IgnorePrefix()) {
-#endif
-      static TString rootsys;
-      if (rootsys.IsNull())
-         rootsys = gSystem->UnixPathName(gSystem->Getenv("ROOTSYS"));
-      if (rootsys.IsNull())
-         rootsys = gRootDir;
-      return rootsys;
-#ifdef ROOTPREFIX
-   } else {
-      const static TString rootsys = ROOTPREFIX;
-      return rootsys;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString rootsys = ROOT::FoundationUtils::GetRootSys();
+   return rootsys;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2981,42 +2952,20 @@ const TString& TROOT::GetLibDir() {
 /// Get the include directory in the installation. Static utility function.
 
 const TString& TROOT::GetIncludeDir() {
-#ifdef ROOTINCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootincdir;
-      if (rootincdir.IsNull()) {
-         rootincdir = "include";
-         gSystem->PrependPathName(GetRootSys(), rootincdir);
-      }
-      return rootincdir;
-#ifdef ROOTINCDIR
-   } else {
-      const static TString rootincdir = ROOTINCDIR;
-      return rootincdir;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString includedir = ROOT::FoundationUtils::GetIncludeDir();
+   return includedir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the sysconfig directory in the installation. Static utility function.
 
 const TString& TROOT::GetEtcDir() {
-#ifdef ROOTETCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootetcdir;
-      if (rootetcdir.IsNull()) {
-         rootetcdir = "etc";
-         gSystem->PrependPathName(GetRootSys(), rootetcdir);
-      }
-      return rootetcdir;
-#ifdef ROOTETCDIR
-   } else {
-      const static TString rootetcdir = ROOTETCDIR;
-      return rootetcdir;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString etcdir = ROOT::FoundationUtils::GetEtcDir();
+   return etcdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3091,6 +3040,17 @@ const TString& TROOT::GetTutorialDir() {
       return roottutdir;
    }
 #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Shut down ROOT.
+
+void TROOT::ShutDown()
+{
+   if (gROOT)
+      gROOT->EndOfProcessCleanups();
+   else if (gInterpreter)
+      gInterpreter->ShutDown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

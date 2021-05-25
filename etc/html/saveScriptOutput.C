@@ -26,7 +26,7 @@ int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled)
    };
 
    TString pwd(gSystem->pwd());
-   if (!gSystem->cd(gSystem->DirName(script)))
+   if (!gSystem->cd(gSystem->GetDirName(script)))
       return kScriptDirNotFound;
    Int_t err = 0;
    TString cmd(".x ");

@@ -1,9 +1,8 @@
 //===-- X86InstrInfo.h - X86 Instruction Information ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,84 +16,69 @@
 #include "MCTargetDesc/X86BaseInfo.h"
 #include "X86InstrFMA3Info.h"
 #include "X86RegisterInfo.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/Target/TargetInstrInfo.h"
+#include "llvm/CodeGen/ISDOpcodes.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
+#include <vector>
 
 #define GET_INSTRINFO_HEADER
 #include "X86GenInstrInfo.inc"
 
 namespace llvm {
-  class MachineInstrBuilder;
-  class X86RegisterInfo;
-  class X86Subtarget;
+class MachineInstrBuilder;
+class X86RegisterInfo;
+class X86Subtarget;
 
 namespace X86 {
-  // X86 specific condition code. These correspond to X86_*_COND in
-  // X86InstrInfo.td. They must be kept in synch.
-enum CondCode {
-  COND_A = 0,
-  COND_AE = 1,
-  COND_B = 2,
-  COND_BE = 3,
-  COND_E = 4,
-  COND_G = 5,
-  COND_GE = 6,
-  COND_L = 7,
-  COND_LE = 8,
-  COND_NE = 9,
-  COND_NO = 10,
-  COND_NP = 11,
-  COND_NS = 12,
-  COND_O = 13,
-  COND_P = 14,
-  COND_S = 15,
-  LAST_VALID_COND = COND_S,
 
-  // Artificial condition codes. These are used by AnalyzeBranch
-  // to indicate a block terminated with two conditional branches that together
-  // form a compound condition. They occur in code using FCMP_OEQ or FCMP_UNE,
-  // which can't be represented on x86 with a single condition. These
-  // are never used in MachineInstrs and are inverses of one another.
-  COND_NE_OR_P,
-  COND_E_AND_NP,
-
-  COND_INVALID
+enum AsmComments {
+  // For instr that was compressed from EVEX to VEX.
+  AC_EVEX_2_VEX = MachineInstr::TAsmComments
 };
 
-// Turn condition code into conditional branch opcode.
-unsigned GetCondBranchFromCond(CondCode CC);
-
-/// \brief Return a pair of condition code for the given predicate and whether
+/// Return a pair of condition code for the given predicate and whether
 /// the instruction operands should be swaped to match the condition code.
 std::pair<CondCode, bool> getX86ConditionCode(CmpInst::Predicate Predicate);
 
-/// \brief Return a set opcode for the given condition and whether it has
-/// a memory operand.
-unsigned getSETFromCond(CondCode CC, bool HasMemoryOperand = false);
+/// Return a setcc opcode based on whether it has a memory operand.
+unsigned getSETOpc(bool HasMemoryOperand = false);
 
-/// \brief Return a cmov opcode for the given condition, register size in
-/// bytes, and operand type.
-unsigned getCMovFromCond(CondCode CC, unsigned RegBytes,
-                         bool HasMemoryOperand = false);
+/// Return a cmov opcode for the given register size in bytes, and operand type.
+unsigned getCMovOpcode(unsigned RegBytes, bool HasMemoryOperand = false);
 
-// Turn CMov opcode into condition code.
-CondCode getCondFromCMovOpc(unsigned Opc);
+// Turn jCC instruction into condition code.
+CondCode getCondFromBranch(const MachineInstr &MI);
+
+// Turn setCC instruction into condition code.
+CondCode getCondFromSETCC(const MachineInstr &MI);
+
+// Turn CMov instruction into condition code.
+CondCode getCondFromCMov(const MachineInstr &MI);
 
 /// GetOppositeBranchCondition - Return the inverse of the specified cond,
 /// e.g. turning COND_E to COND_NE.
 CondCode GetOppositeBranchCondition(CondCode CC);
-}  // end namespace X86;
 
+/// Get the VPCMP immediate for the given condition.
+unsigned getVPCMPImmForCond(ISD::CondCode CC);
+
+/// Get the VPCMP immediate if the opcodes are swapped.
+unsigned getSwappedVPCMPImm(unsigned Imm);
+
+/// Get the VPCOM immediate if the opcodes are swapped.
+unsigned getSwappedVPCOMImm(unsigned Imm);
+
+} // namespace X86
 
 /// isGlobalStubReference - Return true if the specified TargetFlag operand is
 /// a reference to a stub for a global, not the global itself.
 inline static bool isGlobalStubReference(unsigned char TargetFlag) {
   switch (TargetFlag) {
-  case X86II::MO_DLLIMPORT: // dllimport stub.
-  case X86II::MO_GOTPCREL:  // rip-relative GOT reference.
-  case X86II::MO_GOT:       // normal GOT reference.
-  case X86II::MO_DARWIN_NONLAZY_PIC_BASE:        // Normal $non_lazy_ptr ref.
-  case X86II::MO_DARWIN_NONLAZY:                 // Normal $non_lazy_ptr ref.
+  case X86II::MO_DLLIMPORT:               // dllimport stub.
+  case X86II::MO_GOTPCREL:                // rip-relative GOT reference.
+  case X86II::MO_GOT:                     // normal GOT reference.
+  case X86II::MO_DARWIN_NONLAZY_PIC_BASE: // Normal $non_lazy_ptr ref.
+  case X86II::MO_DARWIN_NONLAZY:          // Normal $non_lazy_ptr ref.
+  case X86II::MO_COFFSTUB:                // COFF .refptr stub.
     return true;
   default:
     return false;
@@ -106,11 +90,11 @@ inline static bool isGlobalStubReference(unsigned char TargetFlag) {
 /// is true, the addressing mode has the PIC base register added in (e.g. EBX).
 inline static bool isGlobalRelativeToPICBase(unsigned char TargetFlag) {
   switch (TargetFlag) {
-  case X86II::MO_GOTOFF:                         // isPICStyleGOT: local global.
-  case X86II::MO_GOT:                            // isPICStyleGOT: other global.
-  case X86II::MO_PIC_BASE_OFFSET:                // Darwin local global.
-  case X86II::MO_DARWIN_NONLAZY_PIC_BASE:        // Darwin/32 external global.
-  case X86II::MO_TLVP:                           // ??? Pretty sure..
+  case X86II::MO_GOTOFF:                  // isPICStyleGOT: local global.
+  case X86II::MO_GOT:                     // isPICStyleGOT: other global.
+  case X86II::MO_PIC_BASE_OFFSET:         // Darwin local global.
+  case X86II::MO_DARWIN_NONLAZY_PIC_BASE: // Darwin/32 external global.
+  case X86II::MO_TLVP:                    // ??? Pretty sure..
     return true;
   default:
     return false;
@@ -118,9 +102,8 @@ inline static bool isGlobalRelativeToPICBase(unsigned char TargetFlag) {
 }
 
 inline static bool isScale(const MachineOperand &MO) {
-  return MO.isImm() &&
-    (MO.getImm() == 1 || MO.getImm() == 2 ||
-     MO.getImm() == 4 || MO.getImm() == 8);
+  return MO.isImm() && (MO.getImm() == 1 || MO.getImm() == 2 ||
+                        MO.getImm() == 4 || MO.getImm() == 8);
 }
 
 inline static bool isLeaMem(const MachineInstr &MI, unsigned Op) {
@@ -146,28 +129,6 @@ inline static bool isMem(const MachineInstr &MI, unsigned Op) {
 class X86InstrInfo final : public X86GenInstrInfo {
   X86Subtarget &Subtarget;
   const X86RegisterInfo RI;
-
-  /// RegOp2MemOpTable3Addr, RegOp2MemOpTable0, RegOp2MemOpTable1,
-  /// RegOp2MemOpTable2, RegOp2MemOpTable3 - Load / store folding opcode maps.
-  ///
-  typedef DenseMap<unsigned,
-                   std::pair<uint16_t, uint16_t> > RegOp2MemOpTableType;
-  RegOp2MemOpTableType RegOp2MemOpTable2Addr;
-  RegOp2MemOpTableType RegOp2MemOpTable0;
-  RegOp2MemOpTableType RegOp2MemOpTable1;
-  RegOp2MemOpTableType RegOp2MemOpTable2;
-  RegOp2MemOpTableType RegOp2MemOpTable3;
-  RegOp2MemOpTableType RegOp2MemOpTable4;
-
-  /// MemOp2RegOpTable - Load / store unfolding opcode map.
-  ///
-  typedef DenseMap<unsigned,
-                   std::pair<uint16_t, uint16_t> > MemOp2RegOpTableType;
-  MemOp2RegOpTableType MemOp2RegOpTable;
-
-  static void AddTableEntry(RegOp2MemOpTableType &R2MTable,
-                            MemOp2RegOpTableType &M2RTable,
-                            uint16_t RegOp, uint16_t MemOp, uint16_t Flags);
 
   virtual void anchor();
 
@@ -216,12 +177,14 @@ public:
   /// true, then it's expected the pre-extension value is available as a subreg
   /// of the result register. This also returns the sub-register index in
   /// SubIdx.
-  bool isCoalescableExtInstr(const MachineInstr &MI,
-                             unsigned &SrcReg, unsigned &DstReg,
-                             unsigned &SubIdx) const override;
+  bool isCoalescableExtInstr(const MachineInstr &MI, unsigned &SrcReg,
+                             unsigned &DstReg, unsigned &SubIdx) const override;
 
   unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
+  unsigned isLoadFromStackSlot(const MachineInstr &MI,
+                               int &FrameIndex,
+                               unsigned &MemBytes) const override;
   /// isLoadFromStackSlotPostFE - Check for post-frame ptr elimination
   /// stack locations as well.  This uses a heuristic so it isn't
   /// reliable for correctness.
@@ -230,6 +193,9 @@ public:
 
   unsigned isStoreToStackSlot(const MachineInstr &MI,
                               int &FrameIndex) const override;
+  unsigned isStoreToStackSlot(const MachineInstr &MI,
+                              int &FrameIndex,
+                              unsigned &MemBytes) const override;
   /// isStoreToStackSlotPostFE - Check for post-frame ptr elimination
   /// stack locations as well.  This uses a heuristic so it isn't
   /// reliable for correctness.
@@ -253,8 +219,8 @@ public:
   /// operand to the LEA instruction.
   bool classifyLEAReg(MachineInstr &MI, const MachineOperand &Src,
                       unsigned LEAOpcode, bool AllowSP, unsigned &NewSrc,
-                      bool &isKill, bool &isUndef,
-                      MachineOperand &ImplicitOp, LiveVariables *LV) const;
+                      bool &isKill, MachineOperand &ImplicitOp,
+                      LiveVariables *LV) const;
 
   /// convertToThreeAddress - This method must be implemented by targets that
   /// set the M_CONVERTIBLE_TO_3_ADDR flag.  When this flag is set, the target
@@ -288,35 +254,6 @@ public:
   bool findCommutedOpIndices(MachineInstr &MI, unsigned &SrcOpIdx1,
                              unsigned &SrcOpIdx2) const override;
 
-  /// Returns true if the routine could find two commutable operands
-  /// in the given FMA instruction \p MI. Otherwise, returns false.
-  ///
-  /// \p SrcOpIdx1 and \p SrcOpIdx2 are INPUT and OUTPUT arguments.
-  /// The output indices of the commuted operands are returned in these
-  /// arguments. Also, the input values of these arguments may be preset either
-  /// to indices of operands that must be commuted or be equal to a special
-  /// value 'CommuteAnyOperandIndex' which means that the corresponding
-  /// operand index is not set and this method is free to pick any of
-  /// available commutable operands.
-  /// The parameter \p FMA3Group keeps the reference to the group of relative
-  /// FMA3 opcodes including register/memory forms of 132/213/231 opcodes.
-  ///
-  /// For example, calling this method this way:
-  ///     unsigned Idx1 = 1, Idx2 = CommuteAnyOperandIndex;
-  ///     findFMA3CommutedOpIndices(MI, Idx1, Idx2, FMA3Group);
-  /// can be interpreted as a query asking if the operand #1 can be swapped
-  /// with any other available operand (e.g. operand #2, operand #3, etc.).
-  ///
-  /// The returned FMA opcode may differ from the opcode in the given MI.
-  /// For example, commuting the operands #1 and #3 in the following FMA
-  ///     FMA213 #1, #2, #3
-  /// results into instruction with adjusted opcode:
-  ///     FMA231 #3, #2, #1
-  bool findFMA3CommutedOpIndices(const MachineInstr &MI,
-                                 unsigned &SrcOpIdx1,
-                                 unsigned &SrcOpIdx2,
-                                 const X86InstrFMA3Group &FMA3Group) const;
-
   /// Returns an adjusted FMA opcode that must be used in FMA instruction that
   /// performs the same computations as the given \p MI but which has the
   /// operands \p SrcOpIdx1 and \p SrcOpIdx2 commuted.
@@ -332,10 +269,10 @@ public:
   ///     FMA213 #1, #2, #3
   /// results into instruction with adjusted opcode:
   ///     FMA231 #3, #2, #1
-  unsigned getFMA3OpcodeToCommuteOperands(const MachineInstr &MI,
-                                          unsigned SrcOpIdx1,
-                                          unsigned SrcOpIdx2,
-                                          const X86InstrFMA3Group &FMA3Group) const;
+  unsigned
+  getFMA3OpcodeToCommuteOperands(const MachineInstr &MI, unsigned SrcOpIdx1,
+                                 unsigned SrcOpIdx2,
+                                 const X86InstrFMA3Group &FMA3Group) const;
 
   // Branch analysis.
   bool isUnpredicatedTerminator(const MachineInstr &MI) const override;
@@ -351,9 +288,10 @@ public:
                      SmallVectorImpl<MachineOperand> &Cond,
                      bool AllowModify) const override;
 
-  bool getMemOpBaseRegImmOfs(MachineInstr &LdSt, unsigned &BaseReg,
-                             int64_t &Offset,
-                             const TargetRegisterInfo *TRI) const override;
+  bool getMemOperandWithOffset(const MachineInstr &LdSt,
+                               const MachineOperand *&BaseOp,
+                               int64_t &Offset,
+                               const TargetRegisterInfo *TRI) const override;
   bool analyzeBranchPredicate(MachineBasicBlock &MBB,
                               TargetInstrInfo::MachineBranchPredicate &MBP,
                               bool AllowModify = false) const override;
@@ -364,8 +302,8 @@ public:
                         MachineBasicBlock *FBB, ArrayRef<MachineOperand> Cond,
                         const DebugLoc &DL,
                         int *BytesAdded = nullptr) const override;
-  bool canInsertSelect(const MachineBasicBlock&, ArrayRef<MachineOperand> Cond,
-                       unsigned, unsigned, int&, int&, int&) const override;
+  bool canInsertSelect(const MachineBasicBlock &, ArrayRef<MachineOperand> Cond,
+                       unsigned, unsigned, int &, int &, int &) const override;
   void insertSelect(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
                     const DebugLoc &DL, unsigned DstReg,
                     ArrayRef<MachineOperand> Cond, unsigned TrueReg,
@@ -374,30 +312,27 @@ public:
                    const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,
                    bool KillSrc) const override;
   void storeRegToStackSlot(MachineBasicBlock &MBB,
-                           MachineBasicBlock::iterator MI,
-                           unsigned SrcReg, bool isKill, int FrameIndex,
+                           MachineBasicBlock::iterator MI, unsigned SrcReg,
+                           bool isKill, int FrameIndex,
                            const TargetRegisterClass *RC,
                            const TargetRegisterInfo *TRI) const override;
 
   void storeRegToAddr(MachineFunction &MF, unsigned SrcReg, bool isKill,
                       SmallVectorImpl<MachineOperand> &Addr,
                       const TargetRegisterClass *RC,
-                      MachineInstr::mmo_iterator MMOBegin,
-                      MachineInstr::mmo_iterator MMOEnd,
-                      SmallVectorImpl<MachineInstr*> &NewMIs) const;
+                      ArrayRef<MachineMemOperand *> MMOs,
+                      SmallVectorImpl<MachineInstr *> &NewMIs) const;
 
   void loadRegFromStackSlot(MachineBasicBlock &MBB,
-                            MachineBasicBlock::iterator MI,
-                            unsigned DestReg, int FrameIndex,
-                            const TargetRegisterClass *RC,
+                            MachineBasicBlock::iterator MI, unsigned DestReg,
+                            int FrameIndex, const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 
   void loadRegFromAddr(MachineFunction &MF, unsigned DestReg,
                        SmallVectorImpl<MachineOperand> &Addr,
                        const TargetRegisterClass *RC,
-                       MachineInstr::mmo_iterator MMOBegin,
-                       MachineInstr::mmo_iterator MMOEnd,
-                       SmallVectorImpl<MachineInstr*> &NewMIs) const;
+                       ArrayRef<MachineMemOperand *> MMOs,
+                       SmallVectorImpl<MachineInstr *> &NewMIs) const;
 
   bool expandPostRAPseudo(MachineInstr &MI) const override;
 
@@ -415,7 +350,8 @@ public:
   foldMemoryOperandImpl(MachineFunction &MF, MachineInstr &MI,
                         ArrayRef<unsigned> Ops,
                         MachineBasicBlock::iterator InsertPt, int FrameIndex,
-                        LiveIntervals *LIS = nullptr) const override;
+                        LiveIntervals *LIS = nullptr,
+                        VirtRegMap *VRM = nullptr) const override;
 
   /// foldMemoryOperand - Same as the previous version except it allows folding
   /// of any load and store from / to any address, not just from a specific
@@ -434,7 +370,7 @@ public:
                       SmallVectorImpl<MachineInstr *> &NewMIs) const override;
 
   bool unfoldMemoryOperand(SelectionDAG &DAG, SDNode *N,
-                           SmallVectorImpl<SDNode*> &NewNodes) const override;
+                           SmallVectorImpl<SDNode *> &NewNodes) const override;
 
   /// getOpcodeAfterMemoryUnfold - Returns the opcode of the would be new
   /// instruction after load / store are unfolded from an instruction of the
@@ -442,9 +378,9 @@ public:
   /// possible. If LoadRegIndex is non-null, it is filled in with the operand
   /// index of the operand which will hold the register holding the loaded
   /// value.
-  unsigned getOpcodeAfterMemoryUnfold(unsigned Opc,
-                              bool UnfoldLoad, bool UnfoldStore,
-                              unsigned *LoadRegIndex = nullptr) const override;
+  unsigned
+  getOpcodeAfterMemoryUnfold(unsigned Opc, bool UnfoldLoad, bool UnfoldStore,
+                             unsigned *LoadRegIndex = nullptr) const override;
 
   /// areLoadsFromSameBasePtr - This is used by the pre-regalloc scheduler
   /// to determine if two loads are loading from the same base address. It
@@ -455,15 +391,15 @@ public:
                                int64_t &Offset2) const override;
 
   /// shouldScheduleLoadsNear - This is a used by the pre-regalloc scheduler to
-  /// determine (in conjunction with areLoadsFromSameBasePtr) if two loads should
-  /// be scheduled togther. On some targets if two loads are loading from
+  /// determine (in conjunction with areLoadsFromSameBasePtr) if two loads
+  /// should be scheduled togther. On some targets if two loads are loading from
   /// addresses in the same cache line, it's better if they are scheduled
   /// together. This function takes two integers that represent the load offsets
   /// from the common base address. It returns true if it decides it's desirable
   /// to schedule the two loads together. "NumLoads" is the number of loads that
   /// have already been scheduled after Load1.
-  bool shouldScheduleLoadsNear(SDNode *Load1, SDNode *Load2,
-                               int64_t Offset1, int64_t Offset2,
+  bool shouldScheduleLoadsNear(SDNode *Load1, SDNode *Load2, int64_t Offset1,
+                               int64_t Offset2,
                                unsigned NumLoads) const override;
 
   void getNoop(MCInst &NopInst) const override;
@@ -480,7 +416,10 @@ public:
   /// conservative. If it cannot definitely determine the safety after visiting
   /// a few instructions in each direction it assumes it's not safe.
   bool isSafeToClobberEFLAGS(MachineBasicBlock &MBB,
-                             MachineBasicBlock::iterator I) const;
+                             MachineBasicBlock::iterator I) const {
+    return MBB.computeRegisterLiveness(&RI, X86::EFLAGS, I, 4) ==
+           MachineBasicBlock::LQR_Dead;
+  }
 
   /// True if MI has a condition code def, e.g. EFLAGS, that is
   /// not marked dead.
@@ -495,7 +434,11 @@ public:
   std::pair<uint16_t, uint16_t>
   getExecutionDomain(const MachineInstr &MI) const override;
 
+  uint16_t getExecutionDomainCustom(const MachineInstr &MI) const;
+
   void setExecutionDomain(MachineInstr &MI, unsigned Domain) const override;
+
+  bool setExecutionDomainCustom(MachineInstr &MI, unsigned Domain) const;
 
   unsigned
   getPartialRegUpdateClearance(const MachineInstr &MI, unsigned OpNum,
@@ -520,9 +463,7 @@ public:
                              const MachineInstr &UseMI,
                              unsigned UseIdx) const override;
 
-  bool useMachineCombiner() const override {
-    return true;
-  }
+  bool useMachineCombiner() const override { return true; }
 
   bool isAssociativeAndCommutative(const MachineInstr &Inst) const override;
 
@@ -566,28 +507,26 @@ public:
   ArrayRef<std::pair<unsigned, const char *>>
   getSerializableDirectMachineOperandTargetFlags() const override;
 
-  unsigned getOutliningBenefit(size_t SequenceSize,
-                               size_t Occurrences,
-                               bool CanBeTailCall) const override;
+  virtual outliner::OutlinedFunction getOutliningCandidateInfo(
+      std::vector<outliner::Candidate> &RepeatedSequenceLocs) const override;
 
-  bool isFunctionSafeToOutlineFrom(MachineFunction &MF) const override;
+  bool isFunctionSafeToOutlineFrom(MachineFunction &MF,
+                                   bool OutlineFromLinkOnceODRs) const override;
 
-  llvm::X86GenInstrInfo::MachineOutlinerInstrType
-  getOutliningType(MachineInstr &MI) const override;
+  outliner::InstrType
+  getOutliningType(MachineBasicBlock::iterator &MIT, unsigned Flags) const override;
 
-  void insertOutlinerEpilogue(MachineBasicBlock &MBB,
-                              MachineFunction &MF,
-                              bool IsTailCall) const override;
-
-  void insertOutlinerPrologue(MachineBasicBlock &MBB,
-                              MachineFunction &MF,
-                              bool isTailCall) const override;
+  void buildOutlinedFrame(MachineBasicBlock &MBB, MachineFunction &MF,
+                          const outliner::OutlinedFunction &OF) const override;
 
   MachineBasicBlock::iterator
   insertOutlinedCall(Module &M, MachineBasicBlock &MBB,
-                     MachineBasicBlock::iterator &It,
-                     MachineFunction &MF,
-                     bool IsTailCall) const override;
+                     MachineBasicBlock::iterator &It, MachineFunction &MF,
+                     const outliner::Candidate &C) const override;
+
+#define GET_INSTRINFO_HELPER_DECLS
+#include "X86GenInstrInfo.inc"
+
 protected:
   /// Commutes the operands in the given instruction by changing the operands
   /// order and/or changing the instruction's opcode and/or the immediate value
@@ -604,11 +543,21 @@ protected:
                                        unsigned CommuteOpIdx1,
                                        unsigned CommuteOpIdx2) const override;
 
+  /// If the specific machine instruction is a instruction that moves/copies
+  /// value from one register to another register return true along with
+  /// @Source machine operand and @Destination machine operand.
+  bool isCopyInstrImpl(const MachineInstr &MI, const MachineOperand *&Source,
+                       const MachineOperand *&Destination) const override;
+
 private:
+  /// This is a helper for convertToThreeAddress for 8 and 16-bit instructions.
+  /// We use 32-bit LEA to form 3-address code by promoting to a 32-bit
+  /// super-register and then truncating back down to a 8/16-bit sub-register.
   MachineInstr *convertToThreeAddressWithLEA(unsigned MIOpc,
                                              MachineFunction::iterator &MFI,
                                              MachineInstr &MI,
-                                             LiveVariables *LV) const;
+                                             LiveVariables *LV,
+                                             bool Is8BitOp) const;
 
   /// Handles memory folding for special case instructions, for instance those
   /// requiring custom manipulation of the address.
@@ -638,11 +587,14 @@ private:
   ///     findThreeSrcCommutedOpIndices(MI, Op1, Op2);
   /// can be interpreted as a query asking to find an operand that would be
   /// commutable with the operand#1.
+  ///
+  /// If IsIntrinsic is set, operand 1 will be ignored for commuting.
   bool findThreeSrcCommutedOpIndices(const MachineInstr &MI,
                                      unsigned &SrcOpIdx1,
-                                     unsigned &SrcOpIdx2) const;
+                                     unsigned &SrcOpIdx2,
+                                     bool IsIntrinsic = false) const;
 };
 
-} // End llvm namespace
+} // namespace llvm
 
 #endif

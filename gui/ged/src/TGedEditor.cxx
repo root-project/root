@@ -10,59 +10,55 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedEditor                                                           //
-//                                                                      //
-// The main class of ROOT graphics editor. It manages the appearance    //
-// of objects editors according to the selected object in the canvas    //
-// (an object became selected after the user click on it using the      //
-// left-mouse button).                                                  //
-//                                                                      //
-// Every object editor provides an object specific GUI and follows a    //
-// simple naming convention: it has as a name the object class name     //
-// concatinated with 'Editor' (e.g. for TGraph objects the object       //
-// editor is TGraphEditor).                                             //
-//                                                                      //
-// The ROOT graphics editor can be activated by selecting 'Editor'      //
-// from the View canvas menu, or SetLine/Fill/Text/MarkerAttributes     //
-// from the context menu. The algorithm in use is simple: according to  //
-// the selected object <obj> in the canvas it looks for a class name    //
-// <obj>Editor. If a class with this name exists, the editor verifies   //
-// that this class derives from the base editor class TGedFrame.        //
-// It makes an instance of the object editor, scans all object base     //
-// classes searching the corresponding object editors and makes an      //
-// instance of the base class editor too. Once the object editor is in  //
-// place, it sets the user interface elements according to the object   //
-// state and is ready for interactions. When a new object of a          //
-// different class is selected, a new object editor is loaded in the    //
-// editor frame. The old one is cached in memory for potential reuse.   //
-//                                                                      //
-// Any created canvas will be shown with the editor if you have a       //
-// .rootrc file in your working directory containing the the line:      //
-// Canvas.ShowEditor:      true                                         //
-//                                                                      //
-// An created object can be set as selected in a macro by:              //
-// canvas->Selected(parent_pad_of_object, object, 1);                   //
-// The first parameter can be the canvas itself or the pad containing   //
-// 'object'.                                                            //
-//                                                                      //
-// Begin_Html                                                           //
-/*
-<img src="gif/TGedEditor.gif">
+/* \class TGedEditor
+    \ingroup ged
+
+The main class of ROOT graphics editor. It manages the appearance
+of objects editors according to the selected object in the canvas
+(an object became selected after the user click on it using the
+left-mouse button).
+
+Every object editor provides an object specific GUI and follows a
+simple naming convention: it has as a name the object class name
+concatenated with 'Editor' (e.g. for TGraph objects the object
+editor is TGraphEditor).
+
+The ROOT graphics editor can be activated by selecting 'Editor'
+from the View canvas menu, or SetLine/Fill/Text/MarkerAttributes
+from the context menu. The algorithm in use is simple: according to
+the selected object <obj> in the canvas it looks for a class name
+<obj>Editor. If a class with this name exists, the editor verifies
+that this class derives from the base editor class TGedFrame.
+It makes an instance of the object editor, scans all object base
+classes searching the corresponding object editors and makes an
+instance of the base class editor too. Once the object editor is in
+place, it sets the user interface elements according to the object
+state and is ready for interactions. When a new object of a
+different class is selected, a new object editor is loaded in the
+editor frame. The old one is cached in memory for potential reuse.
+
+Any created canvas will be shown with the editor if you have a
+.rootrc file in your working directory containing the the line:
+Canvas.ShowEditor:      true
+
+An created object can be set as selected in a macro by:
+canvas->Selected(parent_pad_of_object, object, 1);
+The first parameter can be the canvas itself or the pad containing
+'object'.
+
 */
-//End_Html
-//////////////////////////////////////////////////////////////////////////
+
 
 #include "TGedEditor.h"
 #include "TCanvas.h"
 #include "TGCanvas.h"
 #include "TGTab.h"
 #include "TGedFrame.h"
-#include "TGLabel.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBaseClass.h"
+#include "TVirtualX.h"
+
 
 class TGedTabInfo : public TObject {
    // Helper class for managing visibility and order of created tabs.
@@ -366,7 +362,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t fo
       if (fModel == 0 || fModel->IsA() != fClass) {
          ReinitWorkspace();
          mapTabs = kTRUE;
-         // add Sytle tab to list of visible tabs
+         // add Style tab to list of visible tabs
          fVisibleTabs.Add(fCreatedTabs.First());
          if (fModel) {
             fClass = fModel->IsA();
@@ -438,7 +434,7 @@ void TGedEditor::Show()
       UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
       UInt_t cy = (UInt_t)fCanvas->GetWindowTopY();
       if (!ch)
-         cy = cy + 20;      // embeded canvas protection
+         cy = cy + 20;      // embedded canvas protection
 
       Int_t gedx = 0, gedy = 0;
 

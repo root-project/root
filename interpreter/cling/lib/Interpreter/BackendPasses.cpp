@@ -21,11 +21,12 @@
 #include "llvm/Transforms/IPO/Inliner.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Utils.h"
 
 //#include "clang/Basic/LangOptions.h"
 //#include "clang/Basic/TargetOptions.h"
-#include "clang/Frontend/CodeGenOptions.h"
 #include "clang/Basic/CharInfo.h"
+#include "clang/Basic/CodeGenOptions.h"
 
 using namespace cling;
 using namespace clang;
@@ -174,13 +175,13 @@ void BackendPasses::CreatePasses(llvm::Module& M, int OptLevel)
   // At O0 and O1 we only run the always inliner which is more efficient. At
   // higher optimization levels we run the normal inliner.
   // See also call to `CGOpts.setInlining()` in CIFactory!
-  if (m_CGOpts.OptimizationLevel <= 1) {
-    bool InsertLifetimeIntrinsics = m_CGOpts.OptimizationLevel != 0;
+  if (PMBuilder.OptLevel <= 1) {
+    bool InsertLifetimeIntrinsics = PMBuilder.OptLevel != 0;
     PMBuilder.Inliner = createAlwaysInlinerLegacyPass(InsertLifetimeIntrinsics);
   } else {
-    PMBuilder.Inliner = createFunctionInliningPass(m_CGOpts.OptimizationLevel,
-                                                   m_CGOpts.OptimizeSize,
-            (!m_CGOpts.SampleProfileFile.empty() && m_CGOpts.EmitSummaryIndex));
+    PMBuilder.Inliner = createFunctionInliningPass(OptLevel,
+                                                   PMBuilder.SizeLevel,
+            (!m_CGOpts.SampleProfileFile.empty() && m_CGOpts.PrepareForThinLTO));
   }
 
   // Set up the per-module pass manager.
@@ -190,7 +191,7 @@ void BackendPasses::CreatePasses(llvm::Module& M, int OptLevel)
   // The function __cuda_module_ctor and __cuda_module_dtor will just generated,
   // if a CUDA fatbinary file exist. Without file path there is no need for the
   // function pass.
-  if(!m_CGOpts.CudaGpuBinaryFileNames.empty())
+  if(!m_CGOpts.CudaGpuBinaryFileName.empty())
     m_MPM[OptLevel]->add(new UniqueCUDAStructorName());
   m_MPM[OptLevel]->add(createTargetTransformInfoWrapperPass(
                                                    m_TM.getTargetIRAnalysis()));

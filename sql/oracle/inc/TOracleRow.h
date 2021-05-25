@@ -14,30 +14,27 @@
 
 #include "TSQLRow.h"
 
-#if !defined(__CINT__)
-#include <occi.h>
-#ifdef CONST
-#undef CONST
-#endif
-#else
-namespace oracle { namespace occi {
-class ResultSet;
-class MetaData;
-   }}
-#endif
+#include <vector>
+
+namespace oracle {
+namespace occi {
+   class ResultSet;
+   struct MetaData;
+}
+}
 
 class TOracleRow : public TSQLRow {
 
 private:
-   oracle::occi::ResultSet *fResult;      // current result set
-   std::vector<oracle::occi::MetaData> *fFieldInfo;   // metadata for columns
-   Int_t                    fFieldCount;
-   char                   **fFieldsBuffer;
+   oracle::occi::ResultSet *fResult{nullptr};      // current result set
+   std::vector<oracle::occi::MetaData> *fFieldInfo{nullptr};   // metadata for columns
+   Int_t                    fFieldCount{0};
+   char                   **fFieldsBuffer{nullptr};
 
    Bool_t  IsValid(Int_t field);
 
-   TOracleRow(const TOracleRow&);            // Not implemented.
-   TOracleRow &operator=(const TOracleRow&); // Not implemented.
+   TOracleRow(const TOracleRow &) = delete;
+   TOracleRow &operator=(const TOracleRow &) = delete;
 
 protected:
    void        GetRowData();
@@ -47,11 +44,11 @@ public:
               std::vector<oracle::occi::MetaData> *fieldMetaData);
    ~TOracleRow();
 
-   void        Close(Option_t *opt="");
-   ULong_t     GetFieldLength(Int_t field);
-   const char *GetField(Int_t field);
+   void        Close(Option_t *opt="") final;
+   ULong_t     GetFieldLength(Int_t field) final;
+   const char *GetField(Int_t field) final;
 
-   ClassDef(TOracleRow,0)  // One row of Oracle query result
+   ClassDefOverride(TOracleRow,0)  // One row of Oracle query result
 };
 
 #endif

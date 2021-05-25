@@ -36,22 +36,20 @@ Object          | function
 
 #include "RooFit.h"
 #include "RooUnitTest.h"
-#include "TROOT.h"
+#include "TDirectory.h"
 #include "TClass.h"
-#include "TSystem.h"
 #include "RooHist.h"
 #include "RooMsgService.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
 #include "RooRandom.h"
-#include <math.h>
+#include <cmath>
 
 ClassImp(RooUnitTest);
-;
 
 using namespace std;
 
-TDirectory* RooUnitTest::gMemDir = 0 ;
+TDirectory* RooUnitTest::gMemDir = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,6 +349,7 @@ Bool_t RooUnitTest::runCompTests()
 
       if (!iter2->first->isIdentical(*bmark,fptol(),fctol())) {
 	cout << "RooUnitTest ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName()
+	     << " from result " << iter2->second
 	     <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << endl ;
 	ret = kFALSE ;
       }
@@ -434,9 +433,13 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (!iter4->first->isIdentical(*bmark)) {
-	cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName()
-	     <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
-	ret = kFALSE ;
+        cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName()
+	         <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
+        if (_verb) {
+          iter4->first->Print("V");
+          bmark->Print("V");
+        }
+        ret = false;
       }
 
       // Delete RooTable when comparison is finished to avoid noise in leak checking

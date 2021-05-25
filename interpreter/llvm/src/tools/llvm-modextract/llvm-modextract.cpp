@@ -1,9 +1,8 @@
 //===-- llvm-modextract.cpp - LLVM module extractor utility ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -54,8 +53,8 @@ int main(int argc, char **argv) {
   }
 
   std::error_code EC;
-  std::unique_ptr<tool_output_file> Out(
-      new tool_output_file(OutputFilename, EC, sys::fs::F_None));
+  std::unique_ptr<ToolOutputFile> Out(
+      new ToolOutputFile(OutputFilename, EC, sys::fs::F_None));
   ExitOnErr(errorCodeToError(EC));
 
   if (BinaryExtract) {
@@ -70,7 +69,7 @@ int main(int argc, char **argv) {
   }
 
   std::unique_ptr<Module> M = ExitOnErr(Ms[ModuleIndex].parseModule(Context));
-  WriteBitcodeToFile(M.get(), Out->os());
+  WriteBitcodeToFile(*M, Out->os());
 
   Out->keep();
   return 0;

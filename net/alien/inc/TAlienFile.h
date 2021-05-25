@@ -52,7 +52,7 @@ private:
 public:
    TAlienFile() : TXNetFile(), fLfn(), fAuthz(), fGUID(), fUrl(), fPfn(), fSE(), fImage(0), fNreplicas(0), fOpenedAt(0), fElapsed(0) { }
    TAlienFile(const char *purl, Option_t *option = "",
-              const char *ftitle = "", Int_t compress = 1,
+              const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
               Bool_t parallelopen = kFALSE, const char *lurl = 0,
               const char *authz = 0);
    virtual ~TAlienFile();
@@ -80,7 +80,7 @@ protected:
 
 public:
    static TAlienFile *Open(const char *lfn, const Option_t *option = "",
-                           const char *title = "", Int_t compress = 1,
+                           const char *title = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                            Bool_t parallelopen = kFALSE);
    static TString     SUrl(const char *lfn);
 

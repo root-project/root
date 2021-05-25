@@ -71,6 +71,7 @@ enum EProperty {
    kIsAbstract      = 0x00000040,
    kIsVirtual       = 0x00000080,
    kIsPureVirtual   = 0x00000100,
+   kIsUnionMember   = 0x00000100,
    kIsPublic        = 0x00000200,
    kIsProtected     = 0x00000400,
    kIsPrivate       = 0x00000800,
@@ -81,16 +82,21 @@ enum EProperty {
    kIsReference     = 0x00010000,
    kIsDirectInherit = 0x00020000,
    kIsCCompiled     = 0x00040000,
-   kIsCPPCompiled   = 0x00080000,
-   kIsCompiled      = 0x000C0000,
+   kIsCPPCompiled   = kIsCCompiled,
+   kIsCompiled      = kIsCCompiled,
+   // 0x00080000 is available
    kIsConstant      = 0x00100000,
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
+   kIsScopedEnum    = 0x00800000,
+   // 0x01000000 is available
+   kIsConstexpr     = 0x02000000,
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
-   kIsUsingVariable = 0x20000000,
+   kIsUsing         = 0x20000000,
    kIsDefinedInStd  = 0x40000000
+   // 0x80000000 is available
 };
 
 enum EFunctionProperty {
@@ -105,6 +111,7 @@ enum EFunctionProperty {
    kIsPrivate       = 0x00000800,
    kIsStatic        = 0x00004000,
    kIsDefault       = 0x00008000,
+   kIsConstexpr     = 0x02000000
    kIsExplicit      = 0x04000000,
    kIsConstMethod   = 0x10000000,
 */
@@ -120,7 +127,9 @@ enum EFunctionProperty {
    kIsConstructor = 0x00000001,
    kIsConversion  = 0x00000002,
    kIsDestructor  = 0x00000004,
-   kIsOperator    = 0x00000008
+   kIsOperator    = 0x00000008,
+   kIsInlined     = 0x00000010,
+   kIsTemplateSpec= 0x00000020
 };
 
 enum EClassProperty {
@@ -201,6 +210,15 @@ public:
       kUnorderedMultimap = ROOT::kSTLunorderedmultimap,
       kBitset            = ROOT::kSTLbitset
    };
+
+   /// Kinds of members to include in lists.
+   enum class EMemberSelection {
+      kNoUsingDecls,
+      kOnlyUsingDecls,
+      kAlsoUsingDecls
+   };
+   static bool WantsRegularMembers(EMemberSelection sel) { return sel != EMemberSelection::kOnlyUsingDecls; }
+   static bool WantsUsingDecls(EMemberSelection sel) { return sel != EMemberSelection::kNoUsingDecls; }
 
    typedef const void *DeclId_t;
    ClassDef(TDictionary,2)  //Interface to dictionary

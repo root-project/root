@@ -89,22 +89,22 @@
       wrapped <tt>Type*</tt> which you can then dump.</li>
       <li>For <a href="http://lldb.llvm.org"> <tt>LLDB</tt></a> users there are
       data formatters for clang data structures in
-      <a href="http://llvm.org/svn/llvm-project/cfe/trunk/utils/ClangDataFormat.py">
-      <tt>utils/ClangDataFormat.py</tt></a>.</li>
+      <a href="https://github.com/llvm/llvm-project/blob/master/clang/utils/ClangDataFormat.py">
+      <tt>clang/utils/ClangDataFormat.py</tt></a>.</li>
     </ul>
 
   <!--=====================================================================-->
   <h3 id="debuggingVisualStudio">Debugging using Visual Studio</h3>
   <!--=====================================================================-->
 
-  <p>The files 
-    <a href="http://llvm.org/svn/llvm-project/llvm/trunk/utils/LLVMVisualizers/llvm.natvis">
-      <tt>utils/LLVMVisualizers/llvm.natvis</tt></a> and 
-    <a href="http://llvm.org/svn/llvm-project/cfe/trunk/utils/ClangVisualizers/clang.natvis">
-      <tt>utils/ClangVisualizers/clang.natvis</tt></a> provide debugger visualizers 
+  <p>The files
+    <a href="https://github.com/llvm/llvm-project/blob/master/llvm/utils/LLVMVisualizers/llvm.natvis">
+      <tt>llvm/utils/LLVMVisualizers/llvm.natvis</tt></a> and
+    <a href="https://github.com/llvm/llvm-project/blob/master/clang/utils/ClangVisualizers/clang.natvis">
+      <tt>clang/utils/ClangVisualizers/clang.natvis</tt></a> provide debugger visualizers
       that make debugging of more complex data types much easier.</p>
-  <p>For Visual Studio 2013 only, put the files into 
-    <tt>%USERPROFILE%\Documents\Visual Studio 2013\Visualizers</tt> or 
+  <p>For Visual Studio 2013 only, put the files into
+    <tt>%USERPROFILE%\Documents\Visual Studio 2013\Visualizers</tt> or
     create a symbolic link so they update automatically.</p>
   <p>For later versions of Visual Studio, no installation is required.
     Note also that later versions of Visual Studio also display better visualizations.</p>
@@ -180,7 +180,7 @@
   <p>Note that the test runner is based on
   Python, which must be installed.  Find Python at:
   <a href="http://www.python.org/download/">http://www.python.org/download/</a>.
-  Download the latest stable version (2.6.2 at the time of this writing).</p>
+  Download the latest stable version.</p>
 
   <p>The GnuWin32 tools are also necessary for running the tests.
   Get them from <a href="http://getgnuwin32.sourceforge.net/">
@@ -246,9 +246,9 @@
   <p>For example:</p>
 
   <pre>
-  python C:\Tool\llvm\utils\lit\lit.py -sv
+  python C:\Tools\llvm\utils\lit\lit.py -sv
   --param=build_mode=Win32 --param=build_config=Debug
-  --param=clang_site_config=c:\Tools\build\tools\clang\test\lit.site.cfg
+  --param=clang_site_config=C:\Tools\build\tools\clang\test\lit.site.cfg
   C:\Tools\llvm\tools\clang\test\Sema\wchar.c
 </pre>
 
@@ -276,9 +276,8 @@ Testing Time: 81.52s
   <!--=====================================================================-->
 
   <p>To return changes to the Clang team, unless you have checkin
-  privileges, the preferred way is to send patch files to the
-  cfe-commits mailing list, with an explanation of what the patch is
-  for.  clang follows <a
+  privileges, the preferred way is to send patch files
+  <a href="https://llvm.org/docs/Contributing.html#how-to-submit-a-patch">using LLVM's Phabricator</a> with an explanation of what the patch is for. Clang follows <a
   href="http://llvm.org/docs/DeveloperPolicy.html">LLVM's developer policy</a>.
   If your patch requires a wider discussion (for example, because it is an
   architectural change), you can use the cfe-dev mailing list.</p>
@@ -298,6 +297,8 @@ Testing Time: 81.52s
 
   <p>Note that the paths embedded in the patch depend on where you run it,
   so changing directory to the llvm/tools/clang directory is recommended.</p>
+
+  <p>It is also possible to <a href="https://llvm.org/docs/GettingStarted.html#sending-patches-with-git">use git to contribute</a> to Clang.</p>
 
   <!--=====================================================================-->
   <h2 id="irgen">LLVM IR Generation</h2>

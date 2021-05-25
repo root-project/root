@@ -12,10 +12,8 @@
 #define ROOT_TMVA_OptionMap
 
 #include <sstream>
-#include<iostream>
-#include<map>
-
-#include <TNamed.h>
+#include <map>
+#include <string>
 
 #include "TMVA/MsgLogger.h"
 
@@ -101,16 +99,6 @@ namespace TMVA {
            OptionMap(const Char_t *options,const TString name="Option"):fName(name),fLogger(name.Data()),fBinder(fOptMap,""){
                ParseOption(options);
            }
-           OptionMap(const OptionMap &obj):fBinder(obj.fBinder)
-           {
-               fName   = obj.fName;
-               fLogger = obj.fLogger;
-               fOptMap = obj.fOptMap;
-           }
-//            OptionMap(const Char_t *options,const TString name="Option"):fName(name),fLogger(name.Data()),fBinder(fOptMap,"")
-//            {
-//              ParseOption(options);
-//            }
 
            virtual ~OptionMap(){}
 

@@ -36,7 +36,9 @@ enum class EActivationFunction
    kTanh     = 3,
    kSymmRelu = 4,
    kSoftSign = 5,
-   kGauss    = 6
+   kGauss    = 6,
+   kFastTanh = 7
+
 };
 
 /*! Enum that represents output functions */
@@ -91,9 +93,9 @@ enum class EOptimizer {
 //______________________________________________________________________________
 
 /*! Apply the given activation function to each value in the given
-*  matrix A. */
+*  tensor A. */
 template<typename Architecture_t>
-inline void evaluate(typename Architecture_t::Matrix_t &A,
+inline void evaluate(typename Architecture_t::Tensor_t &A,
                     EActivationFunction f)
 {
     switch(f)
@@ -111,17 +113,18 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
         break;
     case EActivationFunction::kGauss    :  Architecture_t::Gauss(A);
         break;
+    case EActivationFunction::kFastTanh :  Architecture_t::FastTanh(A);
+        break;
     }
 }
 
-
 /*! Compute the first partial derivative of the activation function for
-*  the values given in matrix A and write the results into B. */
+*  the values given in tensor A and write the results into B. */
 //______________________________________________________________________________
 template<typename Architecture_t>
-inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
+inline void evaluateDerivative(typename Architecture_t::Tensor_t & B,
                                 EActivationFunction f,
-                                const typename Architecture_t::Matrix_t & A)
+                                const typename Architecture_t::Tensor_t & A)
 {
     switch(f)
     {
@@ -139,16 +142,35 @@ inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
         break;
     case EActivationFunction::kGauss    : Architecture_t::GaussDerivative(B, A);
         break;
+    case EActivationFunction::kFastTanh : Architecture_t::FastTanhDerivative(B, A);
+        break;
     }
 }
 
+// matrix version of the function (for backward comp.)
+template<typename Architecture_t>
+inline void evaluateMatrix( typename Architecture_t::Matrix_t &A,
+                        EActivationFunction f)
+{
+    typename Architecture_t::Tensor_t t(A);
+    evaluate<Architecture_t>(t,f);
+}
+
+template<typename Architecture_t>
+inline void evaluateDerivativeMatrix( typename Architecture_t::Matrix_t &B,
+                        EActivationFunction f,
+                        const typename Architecture_t::Matrix_t & A)
+{
+    typename Architecture_t::Tensor_t t(B);
+    evaluateDerivative<Architecture_t>(t,f, typename Architecture_t::Tensor_t(A));
+}
 //______________________________________________________________________________
 //
 //  Output Functions
 //______________________________________________________________________________
 
 /*! Apply the given output function to each value in the given
-*  matrix A. */
+*  tensor A. */
 template<typename Architecture_t>
 inline void evaluate(typename Architecture_t::Matrix_t &A,
                     EOutputFunction f,

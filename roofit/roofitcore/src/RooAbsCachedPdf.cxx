@@ -1,13 +1,13 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
-  * Copyright (c) 2000-2005, Regents of the University of California          * 
-  *                          and Stanford University. All rights reserved.    * 
-  *                                                                           * 
-  * Redistribution and use in source and binary forms,                        * 
-  * with or without modification, are permitted according to the terms        * 
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
-  *****************************************************************************/ 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
+  *                                                                           *
+  * Copyright (c) 2000-2005, Regents of the University of California          *
+  *                          and Stanford University. All rights reserved.    *
+  *                                                                           *
+  * Redistribution and use in source and binary forms,                        *
+  * with or without modification, are permitted according to the terms        *
+  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+  *****************************************************************************/
 
 /**
 \file RooAbsCachedPdf.cxx
@@ -28,13 +28,13 @@ by the user to getVal() and on which parameters need to be tracked
 for changes to trigger a refilling of the cache histogram.
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 using namespace std ;
 
 #include "RooFit.h"
 #include "TString.h"
-#include "RooAbsCachedPdf.h" 
-#include "RooAbsReal.h" 
+#include "RooAbsCachedPdf.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
@@ -43,7 +43,7 @@ using namespace std ;
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
-ClassImp(RooAbsCachedPdf); 
+ClassImp(RooAbsCachedPdf);
 
 
 
@@ -51,32 +51,32 @@ ClassImp(RooAbsCachedPdf);
 /// Constructor
 
 RooAbsCachedPdf::RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder) :
-  RooAbsPdf(name,title), 
+  RooAbsPdf(name,title),
   _cacheMgr(this,10),
   _ipOrder(ipOrder),
   _disableCache(kFALSE)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsCachedPdf::RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name) :  
-   RooAbsPdf(other,name), 
+RooAbsCachedPdf::RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name) :
+   RooAbsPdf(other,name),
    _cacheMgr(other._cacheMgr,this),
    _ipOrder(other._ipOrder),
    _disableCache(other._disableCache)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsCachedPdf::~RooAbsCachedPdf() 
+RooAbsCachedPdf::~RooAbsCachedPdf()
 {
 }
 
@@ -88,7 +88,7 @@ RooAbsCachedPdf::~RooAbsCachedPdf()
 /// rather than return value of evaluate() which is undefined
 /// for RooAbsCachedPdf
 
-Double_t RooAbsCachedPdf::getValV(const RooArgSet* nset) const 
+Double_t RooAbsCachedPdf::getValV(const RooArgSet* nset) const
 {
   if (_disableCache) {
     return RooAbsPdf::getValV(nset) ;
@@ -97,9 +97,9 @@ Double_t RooAbsCachedPdf::getValV(const RooArgSet* nset) const
   // Calculate current unnormalized value of object
   PdfCacheElem* cache = getCache(nset) ;
 
-  Double_t value = cache->pdf()->getVal(nset) ;  
+  Double_t value = cache->pdf()->getVal(nset) ;
 
-  _value = value ;    
+  _value = value ;
   return _value ;
 }
 
@@ -108,7 +108,7 @@ Double_t RooAbsCachedPdf::getValV(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to RooHistPdf cache pdf for given choice of observables
 
-RooAbsPdf* RooAbsCachedPdf::getCachePdf(const RooArgSet* nset) const 
+RooAbsPdf* RooAbsCachedPdf::getCachePdf(const RooArgSet* nset) const
 {
   PdfCacheElem* cache = getCache(nset) ;
 
@@ -123,7 +123,7 @@ RooAbsPdf* RooAbsCachedPdf::getCachePdf(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to RooDataHist cache histogram for given choice of observables
 
-RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const 
+RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const
 {
   PdfCacheElem* cache = getCache(nset) ;
 
@@ -138,9 +138,9 @@ RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark all bins of given cache as unitialized (value -1)
 
-void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const 
+void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const
 {
-  cache.hist()->setAllWeights(-1) ;  
+  cache.hist()->setAllWeights(-1) ;
 }
 
 
@@ -149,7 +149,7 @@ void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const
 /// Retrieve cache object associated with given choice of observables. If cache object
 /// does not exist, create and fill and register it on the fly. If recalculate=false
 /// recalculation of cache contents of existing caches that are marked dirty due to
-/// dependent parameter changes is suppressed. 
+/// dependent parameter changes is suppressed.
 
 RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, Bool_t recalculate) const
 {
@@ -160,36 +160,36 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   // Check if we have a cache histogram in the global expensive object cache
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE) && (recalculate || !cache->pdf()->haveUnitNorm()) ) {
-      cxcoutD(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf " 
-		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << endl ;     
-      fillCacheObject(*cache) ;  
+      cxcoutD(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf "
+		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << endl ;
+      fillCacheObject(*cache) ;
       cache->pdf()->setValueDirty() ;
     }
     return cache ;
   }
 
   // Create and fill cache
-  cache = createCache(nset) ; 
+  cache = createCache(nset) ;
 
-  // Check if we have contents registered already in global expensive object cache 
+  // Check if we have contents registered already in global expensive object cache
   RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
 
-  if (htmp) {    
+  if (htmp) {
 
     cache->hist()->reset() ;
     cache->hist()->add(*htmp) ;
 
   } else {
 
-    fillCacheObject(*cache) ;  
+    fillCacheObject(*cache) ;
 
     RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
     eoclone->removeSelfFromDir() ;
     expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
-    
-  } 
 
-  
+  }
+
+
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
 
@@ -199,7 +199,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
     ccoutI(Caching) << " from preexisting content." ;
   }
   ccoutI(Caching) << endl ;
-  
+
   return cache ;
 }
 
@@ -211,8 +211,8 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 /// RooHistPdf pdf that represents is shape and RooChangeTracker meta
 /// object that tracks changes in listed dependent parameter of cache.
 
-RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nsetIn) : 
-  _pdf(0), _paramTracker(0), _hist(0), _norm(0) 
+RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nsetIn) :
+  _pdf(0), _paramTracker(0), _hist(0), _norm(0)
 {
   // Create cache object itself -- Default implementation is a RooHistPdf
   RooArgSet* nset2 = self.actualObservables(nsetIn?*nsetIn:RooArgSet()) ;
@@ -245,7 +245,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
     pdfObs.add(po) ;
     if (po.isFundamental()) {
       pdfFinalObs.add(po) ;
-    } else {      
+    } else {
       RooArgSet* tmp = po.getVariables() ;
       pdfFinalObs.add(*tmp) ;
       delete tmp ;
@@ -257,6 +257,12 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   TString pdfname = self.inputBaseName() ;
   pdfname.Append("_CACHE") ;
   pdfname.Append(self.cacheNameSuffix(pdfFinalObs)) ;
+  // add a different name when cache is built in case nsetIn is not an empty list
+  if (nsetIn && nsetIn->getSize() > 0) {
+     pdfname.Append("_NORM");
+     for (auto *arg : *nsetIn)
+        pdfname.Append(TString::Format("_%s", arg->GetName()));
+  }
   _pdf = new RooHistPdf(pdfname,pdfname,pdfObs,orderedObs,*_hist,self.getInterpolationOrder()) ;
   if (nsetIn) {
     _nset.addClone(*nsetIn) ;
@@ -266,7 +272,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
 
   RooArgSet* params = self.actualParameters(pdfFinalObs) ;
   params->remove(pdfFinalObs,kTRUE,kTRUE) ;
-  
+
   string name= Form("%s_CACHEPARAMS",_pdf->GetName()) ;
   _paramTracker = new RooChangeTracker(name.c_str(),name.c_str(),*params,kTRUE) ;
   _paramTracker->hasChanged(kTRUE) ; // clear dirty flag as cache is up-to-date upon creation
@@ -287,10 +293,10 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct string with unique suffix for cache objects based on 
+/// Construct string with unique suffix for cache objects based on
 /// observable names that define cache configuration
 
-TString RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const 
+TString RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
 {
   TString name ;
   name.Append("_Obs[") ;
@@ -307,7 +313,7 @@ TString RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
       name.Append(arg->GetName()) ;
     }
     delete iter ;
-  } 
+  }
 
   name.Append("]") ;
   const char* payloadUS = payloadUniqueSuffix() ;
@@ -323,7 +329,7 @@ TString RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
 /// Change the interpolation order that is used in RooHistPdf cache
 /// representation smoothing the RooDataHist shapes.
 
-void RooAbsCachedPdf::setInterpolationOrder(Int_t order) 
+void RooAbsCachedPdf::setInterpolationOrder(Int_t order)
 {
   _ipOrder = order ;
 
@@ -341,7 +347,7 @@ void RooAbsCachedPdf::setInterpolationOrder(Int_t order)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns all RooAbsArg objects contained in the cache element
 
-RooArgList RooAbsCachedPdf::PdfCacheElem::containedArgs(Action) 
+RooArgList RooAbsCachedPdf::PdfCacheElem::containedArgs(Action)
 {
   RooArgList ret(*_pdf) ;
   ret.add(*_paramTracker) ;
@@ -354,7 +360,7 @@ RooArgList RooAbsCachedPdf::PdfCacheElem::containedArgs(Action)
 ////////////////////////////////////////////////////////////////////////////////
 /// Cache element destructor
 
-RooAbsCachedPdf::PdfCacheElem::~PdfCacheElem() 
+RooAbsCachedPdf::PdfCacheElem::~PdfCacheElem()
 {
   if (_norm) {
     delete _norm ;
@@ -375,7 +381,7 @@ RooAbsCachedPdf::PdfCacheElem::~PdfCacheElem()
 ////////////////////////////////////////////////////////////////////////////////
 /// Print contents of cache when printing self as part of object tree
 
-void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
+void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem)
 {
   if (curElem==0) {
     os << indent << "--- RooAbsCachedPdf begin cache ---" << endl ;
@@ -389,7 +395,7 @@ void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char
     os << Form("[%d] Norm ",curElem) ;
     _norm->printStream(os,kName|kArgs,kSingleLine) ;
   }
-  
+
   if (curElem==maxElem) {
     os << indent << "--- RooAbsCachedPdf end cache --- " << endl ;
   }
@@ -401,7 +407,7 @@ void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char
 /// Force RooRealIntegral to offer all our actual observable for internal
 /// integration
 
-Bool_t RooAbsCachedPdf::forceAnalyticalInt(const RooAbsArg& dep) const 
+Bool_t RooAbsCachedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 {
   RooArgSet* actObs = actualObservables(dep) ;
   Bool_t ret = (actObs->getSize()>0) ;
@@ -416,7 +422,7 @@ Bool_t RooAbsCachedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 /// is forwarded to RooHistPdf cache p.d.f of cache that is used for
 /// given choice of observables
 
-Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const 
+Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const
 {
   if (allVars.getSize()==0) {
     return 0 ;
@@ -442,8 +448,8 @@ Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   codeList[1] = cache->pdf()->haveUnitNorm() ? 1 : 0 ;
   Int_t masterCode = _anaReg.store(codeList,all,ana,nrm)+1 ; // takes ownership of all sets
 
-  
-  // Mark all observables as internally integrated 
+
+  // Mark all observables as internally integrated
   if (cache->pdf()->haveUnitNorm()) {
     analVars.add(allVars,kTRUE) ;
   }
@@ -459,14 +465,14 @@ Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 /// given choice of observables
 
 Double_t RooAbsCachedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
-{  
+{
   if (code==0) {
-    return getVal(normSet) ; 
-  }  
+    return getVal(normSet) ;
+  }
 
   RooArgSet *allVars(0),*anaVars(0),*normSet2(0),*dummy(0) ;
   const std::vector<Int_t> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
-  
+
   PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,kFALSE) ;
   Double_t ret = cache->pdf()->analyticalIntegralWN(codeList[0],normSet,rangeName) ;
 
@@ -480,11 +486,6 @@ Double_t RooAbsCachedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* norm
     }
     delete iter ;
   }
-  
+
   return ret ;
 }
-
-
-
-
-

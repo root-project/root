@@ -26,7 +26,6 @@ few other, which can not be converted to SQL (yet).
 
 #include "TBufferSQL2.h"
 
-#include "TObjArray.h"
 #include "TROOT.h"
 #include "TDataType.h"
 #include "TClass.h"
@@ -34,13 +33,14 @@ few other, which can not be converted to SQL (yet).
 #include "TMap.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "Riostream.h"
-#include <stdlib.h>
-#include <string>
 #include "TStreamerInfoActions.h"
+#include "snprintf.h"
+
+#include <iostream>
+#include <cstdlib>
+#include <string>
 
 #include "TSQLServer.h"
 #include "TSQLResult.h"
@@ -57,8 +57,8 @@ ClassImp(TBufferSQL2);
 
 TBufferSQL2::TBufferSQL2()
    : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(nullptr),
-     fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
+     fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
+     fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
 }
 
@@ -69,8 +69,8 @@ TBufferSQL2::TBufferSQL2()
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
    : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(nullptr),
-     fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
+     fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
+     fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
    fSQL = file;
    if (file) {
@@ -1868,7 +1868,7 @@ void TBufferSQL2::ReadCharP(Char_t *c)
 {
    const char *buf = SqlReadCharStarValue();
    if (buf)
-      strcpy(c, buf);
+      strcpy(c, buf);  // NOLINT unfortunately, we do not know size of target buffer
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1890,7 +1890,7 @@ void TBufferSQL2::ReadTString(TString &s)
          else
             nbig = nwh;
 
-         char *data = new char[nbig];
+         char *data = new char[nbig+1];
          data[nbig] = 0;
          ReadFastArray(data, nbig);
          s = data;

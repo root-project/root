@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// H1 analysis example expressed in terms of TTreeReader
+///
+/// \macro_code
+///
+/// \author Anders Eie, 2013
+
 #include "h1analysisTreeReader.h"
 #include "TStyle.h"
 #include "TCanvas.h"

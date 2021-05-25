@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT net/auth package
 # @author Pere Mato, CERN
@@ -21,13 +27,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
     src/TRootSecContext.cxx
   LINKDEF
     LinkDefRoot.h
-  LIBRARIES
-    ${CRYPTLIBS} rsa
   DEPENDENCIES
     Net
     RIO
 )
 
-if(ssl)
-  target_link_libraries(RootAuth PUBLIC ${OPENSSL_LIBRARIES})
-endif()
+target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:Linux>:crypt>)

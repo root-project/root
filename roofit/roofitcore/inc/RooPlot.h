@@ -16,10 +16,12 @@
 #ifndef ROO_PLOT
 #define ROO_PLOT
 
-#include <float.h>
 #include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
+
+#include <memory>
+#include <float.h>
 
 class TH1 ;
 
@@ -37,6 +39,7 @@ class TAttText;
 class TClass ;
 class TAxis;
 class TBrowser ;
+class TLegend;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
@@ -49,6 +52,9 @@ public:
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   virtual ~RooPlot();
+
+  static RooPlot* frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
+  static RooPlot* frameWithLabels(const RooAbsRealLValue &var);
 
   RooPlot* emptyClone(const char* name) ;
 
@@ -111,6 +117,7 @@ public:
   void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", Bool_t invisible=kFALSE, Bool_t refreshNorm=kFALSE);
   void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
   void addTH1(TH1 *hist, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
+  std::unique_ptr<TLegend> BuildLegend() const;
 
   void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
 
@@ -130,8 +137,10 @@ public:
 
   // data member get/set methods
   inline RooAbsRealLValue *getPlotVar() const { return _plotVarClone; }
+  ///Return the number of events in the fit range
   inline Double_t getFitRangeNEvt() const { return _normNumEvts; }
   Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const ;
+  ///Return the bin width that is being used to normalise the PDF
   inline Double_t getFitRangeBinW() const { return _normBinWidth; }
   inline Double_t getPadFactor() const { return _padFactor; }
   inline void setPadFactor(Double_t factor) { if(factor >= 0) _padFactor= factor; }
@@ -163,17 +172,37 @@ public:
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
 
+  ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=0)
   Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; } 
   Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
-  RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=kFALSE) const ;
-  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=false) const 
+  RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=true) const ;
+  ///Uses residHist() and sets normalize=true
+  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=true) const 
     { return residHist(histname,pdfname,true,useAverage); }
 
   void Browse(TBrowser *b) ;
 
+  /// \copydoc AddDirectoryStatus()
   static Bool_t addDirectoryStatus() ;
+  /// \copydoc AddDirectory()
   static Bool_t setAddDirectoryStatus(Bool_t flag) ;
+
+  /// Configure whether new instances of RooPlot will add themselves to `gDirectory`.
+  /// Like TH1::AddDirectory().
+  static void AddDirectory(Bool_t add=kTRUE) {
+    setAddDirectoryStatus(add);
+  }
+  /// Query whether new instances of RooPlot will add themselves to `gDirectory`.
+  /// When a file has been opened before a RooPlot instance is created,
+  /// this instance will be associated to the file. Closing the file will e.g.
+  /// write the instance to the file, and then delete it.
+  /// Like TH1::AddDirectoryStatus().
+  static Bool_t AddDirectoryStatus() {
+    return addDirectoryStatus();
+  }
+
+  void SetDirectory(TDirectory *dir);
 
 protected:
 
@@ -209,8 +238,6 @@ protected:
   const RooPlotable* _normObj ;    //! Pointer to normalization object ;
   Double_t _normNumEvts;     // Number of events in histogram (for normalization)
   Double_t _normBinWidth;    // Histogram bin width (for normalization)
-
-  TIterator *_iterator;      //! non-persistent
 
   Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)

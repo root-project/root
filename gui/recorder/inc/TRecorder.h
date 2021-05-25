@@ -12,113 +12,7 @@
 #ifndef ROOT_TRecorder
 #define ROOT_TRecorder
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  ROOT EVENT RECORDING SYSTEM                                         //
-// ==================================================================   //
-//                                                                      //
-//  TRecorder class provides interface for recording and replaying      //
-//  events in ROOT.                                                     //
-//  Recorded events are:                                                //
-//  - Commands typed by user in commandline ('new TCanvas')             //
-//  - GUI events (mouse movement, button clicks, ...)                   //
-//                                                                      //
-//  All the recorded events from one session are stored in one TFile    //
-//  and can be replayed again anytime.                                  //
-//                                                                      //
-//  Recording                                                           //
-//  ==================================================================  //
-//                                                                      //
-//  1] To start recording                                               //
-//                                                                      //
-//    TRecorder r(const char *filename, "NEW")                          //
-//    TRecorder r(const char *filename, "RECREATE")                     //
-//                                                                      //
-//    or:                                                               //
-//                                                                      //
-//    TRecorder *recorder = new TRecorder;                              //
-//    recorder->Start(const char *filename, ...)                        //
-//                                                                      //
-//    -filename      Name of ROOT file in which to save                 //
-//                   recorded events.                                   //
-//                                                                      //
-//  2] To stop recording                                                //
-//                                                                      //
-//    recorder->Stop()                                                  //
-//                                                                      //
-//                                                                      //
-//  IMPORTANT:                                                          //
-//  State capturing is part of recording. It means that if you want to  //
-//  record events for some object (window), creation of this object     //
-//  must be also recorded.                                              //
-//                                                                      //
-//    Example:                                                          //
-//    --------                                                          //
-//    t = new TRecorder();          // Create a new recorder            //
-//    t->Start("logfile.root");     // ! Start recording first          //
-//                                                                      //
-//    c = new TCanvas();            // ! Then, create an object         //
-//    c->Dump();                    // Work with that object            //
-//                                                                      //
-//    t->Stop();                    // Stop recording                   //
-//                                                                      //
-//  It is strongly recommended to start recording with empty ROOT       //
-//  environment, at least with no previously created ROOT GUI.          //
-//  This ensures that only events for well known windows are stored.    //
-//  Events for windows, which were not created during recording,        //
-//  cannot be replayed.                                                 //
-//                                                                      //
-//  Replaying                                                           //
-//  =================================================================== //
-//                                                                      //
-//  1] To start replaying                                               //
-//                                                                      //
-//    TRecorder r(const char *filename)                                 //
-//    TRecorder r(const char *filename, "READ")                         //
-//                                                                      //
-//    or:                                                               //
-//                                                                      //
-//    TRecorder *recorder = new TRecorder;                              //
-//    recorder->Replay(const char *filename,                            //
-//                      Bool_t showMouseCursor = kTRUE);                //
-//                                                                      //
-//    -filename         A name of file with recorded events             //
-//                      previously created with TRecorder::Start        //
-//                                                                      //
-//    -showMouseCursor  If kTRUE, mouse cursor is replayed as well.     //
-//                      In that case it is not recommended to use mouse //
-//                      during replaying.                               //
-//                                                                      //
-//  In general, it is not recommended to use mouse to change positions  //
-//  and states of ROOT windows during replaying.                        //
-//                                                                      //
-//  IMPORTANT:                                                          //
-//  The state of ROOT environment before replaying of some events       //
-//  must be exactly the same as before recording them.                  //
-//  Therefore it is strongly recommended to start both recording        //
-//  and replaying with empty ROOT environment.                          //
-//                                                                      //
-//  2] To pause replaying                                               //
-//                                                                      //
-//    recorder->Pause()                                                 //
-//                                                                      //
-//    Replaying is stopped until recorder->Resume() is called.          //
-//                                                                      //
-//                                                                      //
-//  3] To resume paused replaying                                       //
-//                                                                      //
-//    recorder->Resume()                                                //
-//                                                                      //
-//    Resumes previously stopped replaying.                             //
-//                                                                      //
-//                                                                      //
-//  4] To stop replaying before its end                                 //
-//                                                                      //
-//    recorder->Stop()                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TApplication.h"
 #include "TError.h"
 #include "TTimer.h"
@@ -127,7 +21,8 @@
 #include "TCanvas.h"
 #include "THashList.h"
 
-#include <time.h>
+#include <ctime>
+#include <iostream>
 
 class TMutex;
 class TTree;
@@ -137,17 +32,18 @@ class TGCheckButton;
 class TGLabel;
 class TRecorderState;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecEvent                                                           //
-//                                                                      //
-//  Abstract class that defines interface for a class storing           //
-//  information about 1 ROOT event.                                     //
-//  Time of event is stored and this event can be replayed.             //
-//  Classes TRecCmdEvent and TRecGuiEvent implements this interface     //
-//  for command line and GUI events respectively.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRecEvent
+    \ingroup guirecorder
+
+Abstract class that defines interface for a class storing
+information about 1 ROOT event.
+Time of event is stored and this event can be replayed.
+Classes TRecCmdEvent and TRecGuiEvent implements this interface
+for command line and GUI events respectively.
+
+*/
+
 
 class TRecEvent : public TObject
 {
@@ -181,15 +77,16 @@ public:
    ClassDef(TRecEvent,1) // Abstract class. Defines basic interface for storing information about ROOT events
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecCmdEvent                                                        //
-//                                                                      //
-//  Class used for storing information about 1 commandline event.       //
-//  It means 1 command typed in by user in the commandline,             //
-//  e.g 'new TCanvas'.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRecCmdEvent
+    \ingroup guirecorder
+
+Class used for storing information about 1 commandline event.
+It means 1 command typed in by user in the commandline,
+e.g 'new TCanvas'.
+
+*/
+
 
 class TRecCmdEvent : public TRecEvent
 {
@@ -225,14 +122,17 @@ public:
    ClassDef(TRecCmdEvent,1) // Class stores information about 1 commandline event (= 1 command typed by user in commandline)
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecExtraEvent                                                      //
-//                                                                      //
-//  Class used for storing information about 1 extra event.             //
-//  It means 1 TPaveLabel or 1 TLatex event produced in the Canvas      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+
+/** class TRecExtraEvent
+    \ingroup guirecorder
+
+Class used for storing information about 1 extra event.
+It means 1 TPaveLabel or 1 TLatex event produced in the Canvas
+
+*/
+
+
 class TRecExtraEvent : public TRecEvent
 {
 private:
@@ -267,14 +167,15 @@ public:
    ClassDef(TRecExtraEvent,1) // Class stores information about extra events
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecGuiEvent                                                        //
-//                                                                      //
-//  Class used for storing information about 1 GUI event in ROOT.       //
-//  For list of possible GUI events see EGEventType.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** class TRecGuiEvent
+    \ingroup guirecorder
+
+Class used for storing information about 1 GUI event in ROOT.
+For list of possible GUI events see EGEventType.
+
+*/
+
 
 class TRecGuiEvent : public TRecEvent
 {
@@ -330,19 +231,20 @@ public:
    ClassDef(TRecGuiEvent,1) // Class stores information about 1 GUI event in ROOT
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecWinPair                                                         //
-//                                                                      //
-//  Class used for storing of window IDs mapping.                       //
-//  Remapping of window IDs is needed for replaying events.             //
-//  - ID of original window is stored in fKey.                          //
-//  - ID of a new window is stored in fValue.                           //
-//                                                                      //
-//  Whenever an event is replayed, its referenced window ID is changed  //
-//  from original to a new one according to the appropriate mapping.    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class  TRecWinPair
+    \ingroup guirecorder
+
+Class used for storing of window IDs mapping.
+Remapping of window IDs is needed for replaying events.
+  - ID of original window is stored in fKey.
+  - ID of a new window is stored in fValue.
+
+Whenever an event is replayed, its referenced window ID is changed
+from original to a new one according to the appropriate mapping.
+
+*/
+
 
 class TRecWinPair : public TObject
 {
@@ -359,66 +261,7 @@ public:
    ClassDef(TRecWinPair,1) // Class used for storing of window IDs mapping. Needed for replaying events.
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecorder                                                           //
-//                                                                      //
-//  Class provides direct recorder/replayer interface for a user.       //
-//  See 'ROOT EVENT RECORDING SYSTEM' for more information about usage. //
-//                                                                      //
-//  Implementation uses C++ design pattern State. Functionality of      //
-//  recorder is divided into 4 classes according to the current         //
-//  state of recorder.                                                  //
-//                                                                      //
-//  Internally, there is a pointer to TRecorderState object.            //
-//  This object changes whenever state of recorder is changed.          //
-//  States of recorder are the following:                               //
-//                                                                      //
-//  - INACTIVE  Implemented in TRecorderInactive class.                 //
-//              Default state after TRecorder object is created.        //
-//                                                                      //
-//  - RECORDING Implemented in TRecorderRecording class.                //
-//                                                                      //
-//  - REPLAYING Implemented in TRecorderReplaying class.                //
-//                                                                      //
-//  - PAUSED    Implemented in TRecorderPause class.                    //
-//              Pause of replaying.                                     //
-//                                                                      //
-//  Every command for TRecorder is just passed                          //
-//  to TRecordeState object.                                            //
-//  Depending on the current state of recorder, this command is passed  //
-//  to some of the above mentioned classes and if valid, handled there. //
-//                                                                      //
-//  [TRecorder.JPG]                                                     //
-//                                                                      //
-//  Switching between states is not possible from outside. States are   //
-//  switched directly by state objects via:                             //
-//                                                                      //
-//  ChangeState(TRecorderState* newstate, Bool_t deletePreviousState);  //
-//                                                                      //
-//  When recorder is switched to a new state, the old state object is   //
-//  typically deleted. The only exception is switching from REPLAYING   //
-//  state to PAUSED state. The previous state (REPLAYING) is not        //
-//  deleted in order to be used again after TRecorder::Resume call.     //
-//                                                                      //
-//  STATE TRANSITIONS:                                                  //
-//  ------------------                                                  //
-//                                                                      //
-//  INACTIVE  -> RECORDING via TRecorder::Start (Starts recording)      //
-//  RECORDING -> INACTIVE  via TRecorder::Stop  (Stops recording)       //
-//                                                                      //
-//  INACTIVE  -> REPLAYING via TRecorder::Replay     (Starts replaying) //
-//  REPLAYING -> INACTIVE  via TRecorder::ReplayStop (Stops replaying)  //
-//                                                                      //
-//  REPLAYING -> PAUSED    via TRecorder::Pause  (Pause replaying)      //
-//  PAUSED    -> REPLAYING via TRecorder::Resume (Resumes replaying)    //
-//                                                                      //
-//  PAUSED    -> INACTIVE  via TRecorder::ReplayStop (Stops paused      //
-//                                                    replaying)        //
-//                                                                      //
-// [TRecorderStates.JPG]                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 class TRecorder : public TObject
 {
 private:
@@ -498,10 +341,8 @@ public:
    ClassDef(TRecorder,2) // Class provides direct recorder/replayer interface for a user.
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecorderState                                                      //
-//                                                                      //
+/** \class TRecorderState                                                      //
+    \ingroup guirecorder
 //  Abstract class that defines interface for a state of recorder.      //
 //  Inherited classes are:                                              //
 //  - TRecorderInactive                                                 //
@@ -511,8 +352,10 @@ public:
 //                                                                      //
 //  See TRecorder for more information about creating, using,           //
 //  changing and deleting states.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+*/
+
+
 class TRecorderState
 {
 protected:
@@ -538,17 +381,16 @@ public:
    ClassDef(TRecorderState, 0) // Abstract class that defines interface for a state of recorder
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecorderReplaying                                                  //
-//                                                                      //
-//  Represents state of TRecorder when replaying previously recorded    //
-//  events.                                                             //
-//                                                                      //
-//  Not intended to be used by a user directly.                         //
-//  [Replaying.JPG]                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRecorderReplaying
+    \ingroup guirecorder
+Represents state of TRecorder when replaying previously recorded
+events.
+
+Not intended to be used by a user directly.
+
+*/
+
+
 class TRecorderReplaying : public TRecorderState
 {
 private:
@@ -632,15 +474,15 @@ public:
    ClassDef(TRecorderReplaying, 0) // Represents state of TRecorder when replaying
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecorderRecording                                                  //
-//                                                                      //
-//  Represents state of TRecorder when recording events.                //
-//                                                                      //
-//  Not intended to be used by a user directly.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRecorderRecording
+    \ingroup guirecorder
+Represents state of TRecorder when recording events.
+
+Not intended to be used by a user directly.
+
+*/
+
+
 class TRecorderRecording: public TRecorderState
 {
 private:
@@ -706,16 +548,17 @@ public:
    ClassDef(TRecorderRecording, 0) // Represents state of TRecorder when recording events
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecorderInactive                                                   //
-//                                                                      //
-//  Represents state of TRecorder just after its creation.              //
-//  Nor recording neither replaying is being executed in this state.    //
-//                                                                      //
-//  Not intended to be used by a user directly.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRecorderInactive
+    \ingroup guirecorder
+
+Represents state of TRecorder just after its creation.
+Nor recording neither replaying is being executed in this state.
+
+Not intended to be used by a user directly.
+
+*/
+
+
 class TRecorderInactive : public TRecorderState
 {
 
@@ -742,18 +585,19 @@ public:
    ClassDef(TRecorderInactive, 0) // Represents state of TRecorder after its creation
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRecorderPaused                                                     //
-//                                                                      //
-//  Represents state of TRecorder when replaying was paused             //
-//  by a user.                                                          //
-//  The paused replaying is remembered and after Resume call can        //
-//  be continued again.                                                 //
-//                                                                      //
-//  Not intended to be used by a user directly.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRecorderPaused
+    \ingroup guirecorder
+
+Represents state of TRecorder when replaying was paused
+by a user.
+The paused replaying is remembered and after Resume call can
+be continued again.
+
+Not intended to be used by a user directly.
+
+*/
+
+
 class TRecorderPaused: public TRecorderState
 {
 private:
@@ -775,13 +619,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGRecorder                                                          //
-//                                                                      //
-//  Provides GUI for TRecorder class.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGRecorder
+    \ingroup guirecorder
+
+Provides GUI for TRecorder class.
+
+*/
+
 class TGRecorder : public TGMainFrame
 {
 private:

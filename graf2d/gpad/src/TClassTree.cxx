@@ -12,22 +12,24 @@
 #include "RConfigure.h"
 
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClassTree.h"
 #include "TClassTable.h"
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "TRealData.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TPaveClass.h"
 #include "TArrow.h"
-#include "TText.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "Riostream.h"
+#include "strlcpy.h"
+#include "snprintf.h"
+
+#include <fstream>
 #include <algorithm>
 
 const Int_t kIsClassTree = BIT(7);
@@ -44,7 +46,6 @@ const Int_t kIsaPointer  = BIT(20);
 const Int_t kIsBasic     = BIT(21);
 
 static Float_t gXsize, gYsize, gDx, gDy, gLabdx, gLabdy, gDxx, gCsize;
-static Int_t *gNtsons, *gNsons;
 
 ClassImp(TClassTree);
 
@@ -464,8 +465,8 @@ void TClassTree::Paint(Option_t *)
    Int_t nch      = strlen(GetClasses());
    if (nch == 0) return;
    char *classes  = new char[nch+1];
-   gNsons   = new Int_t[fNclasses];
-   gNtsons  = new Int_t[fNclasses];
+   fNsons.resize(fNclasses, 0);
+   fNtsons.resize(fNclasses, 0);
    strlcpy(classes,GetClasses(),nch+1);
    Int_t i,j;
    char *derived;
@@ -517,7 +518,7 @@ void TClassTree::Paint(Option_t *)
    }
     //mark base classes of referenced classes
    for (i=0;i<fNclasses;i++) {
-      gNsons[i] = gNtsons[i] = 0;
+      fNsons[i] = fNtsons[i] = 0;
    }
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
@@ -535,7 +536,7 @@ void TClassTree::Paint(Option_t *)
       j = fParents[i];
       if (j >=0 ) {
          fCparent[i] = j;
-         gNsons[j]++;
+         fNsons[j]++;
       }
    }
     //compute total number of sons for each node
@@ -543,14 +544,14 @@ void TClassTree::Paint(Option_t *)
    Int_t icl,ip;
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
-      if (gNsons[i] != 0) continue;
+      if (fNsons[i] != 0) continue;
       icl = i;
       Int_t nlevel = 1;
       while (fCparent[icl] >= 0) {
          nlevel++;
          if (nlevel > maxlev) maxlev = nlevel;
          ip = fCparent[icl];
-         gNtsons[ip]++;
+         fNtsons[ip]++;
          icl = ip;
       }
    }
@@ -561,7 +562,7 @@ void TClassTree::Paint(Option_t *)
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
       if (fCparent[i] < 0) {
-         ndiv += gNtsons[i]+1;
+         ndiv += fNtsons[i]+1;
          nmore++;
       }
    }
@@ -595,10 +596,10 @@ void TClassTree::Paint(Option_t *)
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
       if (fCparent[i] < 0) {
-         y -= gDy+0.5*gNtsons[i]*gDy;
+         y -= gDy+0.5*fNtsons[i]*gDy;
          if (!fCnames[i]->CompareTo("TObject")) y += ymore;
          PaintClass(i,xleft,y);
-         y -= 0.5*gNtsons[i]*gDy;
+         y -= 0.5*fNtsons[i]*gDy;
       }
    }
 
@@ -624,8 +625,8 @@ void TClassTree::Paint(Option_t *)
 
    //cleanup
    delete [] classes;
-   delete [] gNsons;
-   delete [] gNtsons;
+   fNsons.clear();
+   fNtsons.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -634,7 +635,7 @@ void TClassTree::Paint(Option_t *)
 void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 {
    Float_t u[2],yu=0,yl=0;
-   Int_t ns = gNsons[iclass];
+   Int_t ns = fNsons[iclass];
    u[0] = xleft;
    u[1] = u[0]+gDxx;
    if(ns != 0) u[1] = u[0]+gDx;
@@ -653,16 +654,16 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
    if (ns == 0) return;
 
    // drawing sons
-   y +=  0.5*gNtsons[iclass]*gDy;
+   y +=  0.5*fNtsons[iclass]*gDy;
    Int_t first =0;
    for (Int_t i=0;i<fNclasses;i++) {
       if(fCparent[i] != iclass) continue;
-      if (gNtsons[i] > 1) y -= 0.5*gNtsons[i]*gDy;
+      if (fNtsons[i] > 1) y -= 0.5*fNtsons[i]*gDy;
       else               y -= 0.5*gDy;
       if (!first) {first=1; yu = y;}
       PaintClass(i,u[1],y);
       yl = y;
-      if (gNtsons[i] > 1) y -= 0.5*gNtsons[i]*gDy;
+      if (fNtsons[i] > 1) y -= 0.5*fNtsons[i]*gDy;
       else               y -= 0.5*gDy;
    }
    if (ns == 1) return;
@@ -847,6 +848,7 @@ void TClassTree::ScanClasses(Int_t iclass)
       }
    }
    delete [] cname;
+   delete [] sourceName;
    sourceFile.close();
 }
 

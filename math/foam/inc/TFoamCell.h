@@ -4,14 +4,6 @@
 #ifndef ROOT_TFoamCell
 #define ROOT_TFoamCell
 
-////////////////////////////////////////////////////////////////////////////////////
-// Class TFoamCell  used in TFoam                                                 //
-//                                                                                //
-// Objects of this class are hyperrectangular cells organized in the binary tree. //
-// Special algoritm for encoding relalive positioning of the cells                //
-// saves total memory allocation needed for the system of cells.                  //
-////////////////////////////////////////////////////////////////////////////////////
-
 #include "TRef.h"
 
 class TFoamVect;
@@ -20,27 +12,25 @@ class TFoamVect;
 class TFoamCell : public TObject {
    //   static, the same for all cells!
 private:
-   Short_t  fDim;                   // Dimension of the vector space
+   Short_t  fDim;                   ///< Dimension of the vector space
    //   MEMBERS
 private:
    //--- linked tree organization ---
-   Int_t    fSerial;                // Serial number
-   Int_t    fStatus;                // Status (active, inactive)
-   TRef     fParent;                // Pointer to parent cell
-   TRef     fDaught0;               // Pointer to daughter 1
-   TRef     fDaught1;               // Pointer to daughter 2
+   Int_t    fSerial;                ///< Serial number
+   Int_t    fStatus;                ///< Status (active, inactive)
+   TRef     fParent;                ///< Pointer to parent cell
+   TRef     fDaught0;               ///< Pointer to daughter 1
+   TRef     fDaught1;               ///< Pointer to daughter 2
    //--- M.C. sampling and choice of the best edge ---
 private:
-   Double_t fXdiv;                  // Factor for division
-   Int_t    fBest;                  // Best Edge for division
+   Double_t fXdiv;                  ///< Factor for division
+   Int_t    fBest;                  ///< Best Edge for division
    //--- Integrals of all kinds ---
-   Double_t fVolume;                // Cartesian Volume of cell
-   Double_t fIntegral;              // Integral over cell (estimate from exploration)
-   Double_t fDrive;                 // Driver  integral, only for cell build-up
-   Double_t fPrimary;               // Primary integral, only for MC generation
-   //////////////////////////////////////////////////////////////////////////////////////
-   //                           METHODS                                                //
-   //////////////////////////////////////////////////////////////////////////////////////
+   Double_t fVolume;                ///< Cartesian Volume of cell
+   Double_t fIntegral;              ///< Integral over cell (estimate from exploration)
+   Double_t fDrive;                 ///< Driver  integral, only for cell build-up
+   Double_t fPrimary;               ///< Primary integral, only for MC generation
+
 public:
    TFoamCell();                          // Default Constructor for ROOT streamers
    TFoamCell(Int_t);                     // User Constructor
@@ -76,8 +66,7 @@ public:
    Int_t     GetSerial() const { return fSerial;}         // Get serial number
    //--- other ---
    void Print(Option_t *option) const ;                   // Prints cell content
-   ////////////////////////////////////////////////////////////////////////////
+
    ClassDef(TFoamCell,1)  //Single cell of FOAM
 };
-/////////////////////////////////////////////////////////////////////////////
 #endif

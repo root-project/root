@@ -377,14 +377,15 @@ To define an assembly one should just input a name, then start adding other
 volumes (or volume assemblies) as content.
 */
 
-#include "Riostream.h"
+#include <fstream>
+#include <iomanip>
+
 #include "TString.h"
+#include "TBuffer.h"
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "TH2F.h"
-#include "TPad.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TEnv.h"
 #include "TMap.h"
 #include "TFile.h"
@@ -493,59 +494,6 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fFWExtension = 0;
    if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
-  TNamed(gv),
-  TGeoAtt(gv),
-  TAttLine(gv),
-  TAttFill(gv),
-  TAtt3D(gv),
-  fNodes(gv.fNodes),
-  fShape(gv.fShape),
-  fMedium(gv.fMedium),
-  fFinder(gv.fFinder),
-  fVoxels(gv.fVoxels),
-  fGeoManager(gv.fGeoManager),
-  fField(gv.fField),
-  fOption(gv.fOption),
-  fNumber(gv.fNumber),
-  fNtotal(gv.fNtotal),
-  fRefCount(0),
-  fUserExtension(gv.fUserExtension->Grab()),
-  fFWExtension(gv.fFWExtension->Grab())
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv)
-{
-   if(this!=&gv) {
-      TNamed::operator=(gv);
-      TGeoAtt::operator=(gv);
-      TAttLine::operator=(gv);
-      TAttFill::operator=(gv);
-      TAtt3D::operator=(gv);
-      fNodes=gv.fNodes;
-      fShape=gv.fShape;
-      fMedium=gv.fMedium;
-      fFinder=gv.fFinder;
-      fVoxels=gv.fVoxels;
-      fGeoManager=gv.fGeoManager;
-      fField=gv.fField;
-      fOption=gv.fOption;
-      fNumber=gv.fNumber;
-      fRefCount = 0;
-      fNtotal=gv.fNtotal;
-      fUserExtension=gv.fUserExtension->Grab();
-      fFWExtension=gv.fFWExtension->Grab();
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1729,7 +1677,7 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 char *TGeoVolume::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("p%s_%lx", GetName(), (ULong_t)this);
+   name = TString::Format("p%s_%zx", GetName(), (size_t)this);
    return (char*)name.Data();
 }
 
@@ -1768,6 +1716,7 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    TGeoVolume *vol = new TGeoVolume(GetName(), fShape, fMedium);
    Int_t i;
    // copy volume attributes
+   vol->SetTitle(GetTitle());
    vol->SetLineColor(GetLineColor());
    vol->SetLineStyle(GetLineStyle());
    vol->SetLineWidth(GetLineWidth());
@@ -1912,7 +1861,7 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
    // Reflect the shape (if any) and connect it.
    if (fShape) {
       TGeoShape *reflected_shape =
-         TGeoScaledShape::MakeScaledShape("", fShape, new TGeoScale(1.,1.,-1.));
+         TGeoScaledShape::MakeScaledShape(fShape->GetName(), fShape, new TGeoScale(1.,1.,-1.));
       vol->SetShape(reflected_shape);
    }
    // Reflect the daughters.
@@ -2457,41 +2406,6 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMedium *med)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoVolumeMulti::TGeoVolumeMulti(const TGeoVolumeMulti& vm) :
-  TGeoVolume(vm),
-  fVolumes(vm.fVolumes),
-  fDivision(vm.fDivision),
-  fNumed(vm.fNumed),
-  fNdiv(vm.fNdiv),
-  fAxis(vm.fAxis),
-  fStart(vm.fStart),
-  fStep(vm.fStep),
-  fAttSet(vm.fAttSet)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoVolumeMulti& TGeoVolumeMulti::operator=(const TGeoVolumeMulti& vm)
-{
-   if(this!=&vm) {
-      TGeoVolume::operator=(vm);
-      fVolumes=vm.fVolumes;
-      fDivision=vm.fDivision;
-      fNumed=vm.fNumed;
-      fNdiv=vm.fNdiv;
-      fAxis=vm.fAxis;
-      fStart=vm.fStart;
-      fStep=vm.fStep;
-      fAttSet=vm.fAttSet;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoVolumeMulti::~TGeoVolumeMulti()
@@ -2939,6 +2853,7 @@ TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
    vol->SetOption(fOption);
    vol->SetNumber(fNumber);
    vol->SetNtotal(fNtotal);
+   vol->SetTitle(GetTitle());
    return vol;
 }
 

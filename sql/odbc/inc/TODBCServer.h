@@ -50,29 +50,29 @@ public:
    static TList* GetDataSources();
    static void PrintDataSources();
 
-   void        Close(Option_t *opt="");
-   TSQLResult *Query(const char *sql);
-   Bool_t      Exec(const char* sql);
-   TSQLStatement *Statement(const char *sql, Int_t = 100);
-   Bool_t      HasStatement() const { return kTRUE; }
-   Int_t       SelectDataBase(const char *dbname);
-   TSQLResult *GetDataBases(const char *wild = 0);
-   TSQLResult *GetTables(const char *dbname, const char *wild = 0);
-   TList      *GetTablesList(const char* wild = 0);
-   TSQLTableInfo* GetTableInfo(const char* tablename);
-   TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0);
-   Int_t       GetMaxIdentifierLength();
-   Int_t       CreateDataBase(const char *dbname);
-   Int_t       DropDataBase(const char *dbname);
-   Int_t       Reload();
-   Int_t       Shutdown();
-   const char *ServerInfo();
+   void        Close(Option_t *opt="") final;
+   TSQLResult *Query(const char *sql) final;
+   Bool_t      Exec(const char* sql) final;
+   TSQLStatement *Statement(const char *sql, Int_t = 100) final;
+   Bool_t      HasStatement() const final { return kTRUE; }
+   Int_t       SelectDataBase(const char *dbname) final;
+   TSQLResult *GetDataBases(const char *wild = nullptr) final;
+   TSQLResult *GetTables(const char *dbname, const char *wild = nullptr) final;
+   TList      *GetTablesList(const char* wild = nullptr) final;
+   TSQLTableInfo* GetTableInfo(const char* tablename) final;
+   TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = nullptr) final;
+   Int_t       GetMaxIdentifierLength() final;
+   Int_t       CreateDataBase(const char *dbname) final;
+   Int_t       DropDataBase(const char *dbname) final;
+   Int_t       Reload() final;
+   Int_t       Shutdown() final;
+   const char *ServerInfo() final;
 
-   Bool_t      StartTransaction();
-   Bool_t      Commit();
-   Bool_t      Rollback();
+   Bool_t      StartTransaction() final;
+   Bool_t      Commit() final;
+   Bool_t      Rollback() final;
 
-   ClassDef(TODBCServer,0)  // Connection to MySQL server
+   ClassDefOverride(TODBCServer,0)  // Connection to MySQL server
 };
 
 #endif

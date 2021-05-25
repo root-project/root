@@ -28,11 +28,15 @@
 
 using namespace TMVA::DNN;
 
+bool debug = false;
+// TODO pass as function params
+size_t tbatchSize = 2, timeSteps = 1, inputSize = 4, outputSize = 3;
+
 /*! Compute the loss of the net as a function of the weight at index (i,j) in
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
+auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Tensor_t & X,
                          const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                          size_t k, size_t i, size_t j, typename Architecture::Scalar_t dx) ->
    typename Architecture::Scalar_t
@@ -40,7 +44,11 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Archi
     using Scalar_t = typename Architecture::Scalar_t;
 
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) += dx;
+    if (debug) std::cout << "evaluate loss for weights " << i << "," << j << " dx= " << dx << " " << net.GetLayerAt(l)->GetWeightsAt(k)(i,j) << std::endl;
+
     Scalar_t res = net.Loss(X, Y, W, false, false);
+    if (debug) std::cout << "new loss is " << res << std::endl;
+
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) -= dx;
     return res;
 }
@@ -49,7 +57,7 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Archi
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
+auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tensor_t & X,
                        const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                        size_t k, size_t i, typename Architecture::Scalar_t dx) -> typename Architecture::Scalar_t
 {
@@ -60,9 +68,6 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Archite
     net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) -= dx;
     return res;
 }
-   
-// TODO pass as function params
-size_t tbatchSize = 2, timeSteps = 1, inputSize = 2, outputSize = 2;
 
 /*! Generate a random net, perform forward and backward propagation and check
  *  the weight gradients using numerical differentiation. Returns the maximum
@@ -74,6 +79,7 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
 {
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    using Net_t = TDeepNet<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
@@ -84,15 +90,19 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Tensor_t X( timeSteps, tbatchSize, inputSize); // T x B x D
    Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
-   randomBatch(X[0]);
-   randomMatrix(Y);
+
+   randomBatch(X);
+   //randomMatrix(Y);
    fillMatrix(weights, 1.0);
+   fillMatrix(Y, 0.0);
 
    net.Forward(X);
    net.Backward(X, Y, weights);
+
+   Architecture::PrintTensor(X);
 
    Scalar_t maximum_error = 0.0;
 
@@ -141,22 +151,25 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
 {
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    using Net_t    = TDeepNet<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
    // Random net.
    Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
-             EInitialization::kGauss);
+             EInitialization::kGauss);   // use kIdentity for debugging
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
-   net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
+   net.AddDenseLayer(outputSize, EActivationFunction::kRelu);
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Tensor_t X(timeSteps, tbatchSize, inputSize); // T x B x D
    Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
    // Random training data.
-   randomBatch(X[0]);
+   randomBatch(X);
    randomMatrix(Y);
    fillMatrix(weights, 1.0);
+
+   if (debug) Architecture::PrintTensor(X,"input X");
 
    net.Forward(X);
    net.Backward(X, Y, weights);
@@ -174,7 +187,8 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
       auto & W     = layer->GetWeightsAt(0);
       auto & dW    = layer->GetWeightGradientsAt(0);
 
-      for (size_t i = 0; i < layer->GetWidth(); i++) {
+      for (size_t i = 0; i
+              < layer->GetWidth(); i++) {
          for (size_t j = 0; j < layer->GetInputWidth(); j++) {
             // Avoid running into the non-derivable point at 0.0.
             if (std::abs(W(i,j)) > dx) {
@@ -183,6 +197,8 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
                };
                Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
                Scalar_t dy_ref = dW(i,j);
+
+               if (debug) std::cout << "weight grad " << i << "," << j << " FD = " << dy << " BP = " << dy_ref << std::endl;
 
                // Compute the relative error if dy != 0.
                Scalar_t error;
@@ -217,24 +233,37 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
 {
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    using Net_t    = TDeepNet<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
+
    Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
-             EInitialization::kGauss);
+             EInitialization::kGauss);  // use kIdentity for debugging
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
-   net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
+   // test fails if using VDT and tanh
+   net.AddDenseLayer(outputSize, EActivationFunction::kSigmoid);  // careful kTanh gives some numerical issues in finite difference when using VDT
 
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Tensor_t X(timeSteps, tbatchSize, inputSize); // T x B x D
    Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
-   net.Initialize();
-   // Random training data.
-   randomBatch(X[0]);
-   randomMatrix(Y);
-   fillMatrix(weights, 1.0);
 
-   net.Forward(X);
+   net.Initialize();
+
+   randomBatch(X);
+   //randomMatrix(Y);
+   fillMatrix(weights, 1.0);
+   fillMatrix(Y, 0.0);
+
+   if (debug) Architecture::PrintTensor(X,"input X");
+
+   double loss = net.Loss(X, Y, weights, false, false);
+
+   if (debug) std::cout << "net loss " << loss << std::endl;
+   //net.Forward(X);
+
+   Architecture::PrintTensor(net.GetLayerAt(0)->GetOutput(),"output  tensor");
+
    net.Backward(X, Y, weights);
 
    Scalar_t maximum_error = 0.0;
@@ -258,6 +287,8 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
             };
             Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
             Scalar_t dy_ref = W(i,j);
+
+            if (debug) std::cout << "weight grad " << i << "," << j << " FD = " << dy << " BP = " << dy_ref << std::endl;
 
             // Compute the relative error if dy != 0.
             Scalar_t error;
@@ -291,6 +322,7 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
    using Net_t    = TDeepNet<Architecture>;
    using Scalar_t   = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
    Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
@@ -299,13 +331,13 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Tensor_t X(timeSteps, tbatchSize, inputSize); // T x B x D
    Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
    // Random training data.
-   randomBatch(X[0]);
+   randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(weights, 1.0);
+   //- for debugging : fillMatrix(weights, 1.0);
 
    net.Forward(X);
    net.Backward(X, Y, weights);

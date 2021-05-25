@@ -14,15 +14,16 @@
 Implement TBuffer for a SQL backend.
 */
 
-#include <stdio.h>
-#include "Riostream.h"
 #include "TError.h"
 
 #include "TBasketSQL.h"
 #include "TBufferSQL.h"
 #include "TSQLResult.h"
 #include "TSQLRow.h"
-#include <stdlib.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
 ClassImp(TBufferSQL);
 
@@ -297,7 +298,8 @@ void TBufferSQL::ReadCharP(Char_t *str)
 
 void TBufferSQL::ReadTString(TString   &s)
 {
-   TBufferFile::ReadTString(s);
+   s = (*fRowPtr)->GetField(*fIter);
+   if (fIter != fColumnVec->end()) ++fIter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,8 +307,12 @@ void TBufferSQL::ReadTString(TString   &s)
 
 void TBufferSQL::WriteTString(const TString   &s)
 {
-   TBufferFile::WriteTString(s);
+   (*fInsertQuery) += s;
+   (*fInsertQuery) += ",";
+   if (fIter != fColumnVec->end()) ++fIter;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a std::string
@@ -587,7 +593,7 @@ void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
 
 void TBufferSQL::WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)
 {
-   Fatal("riteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)","Not implemented yet");
+   Fatal("WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)","Not implemented yet");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

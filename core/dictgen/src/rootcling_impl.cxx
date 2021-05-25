@@ -1,185 +1,31 @@
 // Authors: Axel Naumann, Philippe Canal, Danilo Piparo
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-const char *shortHelp =
-   "Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
-   "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n";
-
-// Write the help as a big string to have only one version of the documentation
-const char *rootClingHelp =
-   "This program generates the dictionaries needed for performing I/O of        \n"
-   "classes. Rootcling can be used with an invocation like this one:            \n"
-   "                                                                            \n"
-   " rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
-   "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n"
-   "                                                                            \n"
-   "IMPORTANT:                                                                  \n"
-   "1) LinkDef.h must be the last argument on the rootcling command line.       \n"
-   "2) Note that the LinkDef file name must contain the string:                 \n"
-   "   LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h.                  \n"
-   "                                                                            \n"
-   "Before specifying the first header file one can also add include            \n"
-   "file directories to be searched and preprocessor defines, like:             \n"
-   "  -I$MYPROJECT/include -DDebug=1                                            \n"
-   "                                                                            \n"
-   "NOTA BENE: the dictionaries that will be used within the same project must  \n"
-   "have unique names.                                                          \n"
-   "                                                                            \n"
-   "Options:                                                                    \n"
-   "                                                                            \n"
-   " -f\tOverwrite an existing output file.                                     \n"
-   "  The output file must have the .cxx, .C, .cpp, .cc or .cp extension.       \n"
-   "                                                                            \n"
-   " -v\tThe verbose flags have the following meaning:                          \n"
-   "  -v   Display all messages                                                 \n"
-   "  -v0  Display no messages at all.                                          \n"
-   "  -v1  Display only error messages.                                         \n"
-   "  -v2  Display error and warning messages (default).                        \n"
-   "  -v3  Display error, warning and note messages.                            \n"
-   "  -v4  Display all messages                                                 \n"
-   "                                                                            \n"
-   " -m\tSpecify absolute or relative path Clang pcm file to be loaded.         \n"
-   "  The pcm file (module) produced by this invocation of rootcling will       \n"
-   "  not include any of the declarations already included in the pcm           \n"
-   "  files loaded via -m.  There can be more than one -m.                      \n"
-   "                                                                            \n"
-   " -rmf\tRootmap file name.                                                   \n"
-   "  Name of the rootmap file. In order to be picked up by ROOT it must have   \n"
-   "  .rootmap extension.                                                       \n"
-   "                                                                            \n"
-   " -rml\tRootmap library name.                                                \n"
-   "  Specify the name of the library which contains the autoload keys. This    \n"
-   "  switch can be specified multiple times to autoload several libraries in   \n"
-   "  presence of a particular key.                                             \n"
-   "                                                                            \n"
-   " -split\tSplit the dictionary.                                              \n"
-   "  Split the dictionary in two, putting the ClassDef functions in a separate \n"
-   "  file.                                                                     \n"
-   "                                                                            \n"
-   " -s\tTarget library name.                                                   \n"
-   "  The flag -s must be followed by the name of the library that will         \n"
-   "  contain the object file corresponding to the dictionary produced by       \n"
-   "  this invocation of rootcling.                                             \n"
-   "  The name takes priority over the one specified for the rootmapfile.       \n"
-   "  The name influences the name of the created pcm:                          \n"
-   "   1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm    \n"
-   "   2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm      \n"
-   "      Any \"liblib\" occurence is transformed in the expected \"lib\".      \n"
-   "   3) If this is specified in conjunction with --multiDict, the output is   \n"
-   "      libTARGETLIBRARY_DICTIONARY_rdict.pcm                                 \n"
-   "                                                                            \n"
-   " -multiDict\tEnable support for multiple pcms in one library.               \n"
-   "  Needs the -s flag. See its documentation.                                 \n"
-   "                                                                            \n"
-   " -inlineInputHeader\tAdd the argument header to the code of the dictionary. \n"
-   "  This allows the header to be inlined within the dictionary.               \n"
-   "                                                                            \n"
-   " -interpreteronly\tNo IO information in the dictionary.                     \n"
-   "                                                                            \n"
-   " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
-   "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n"
-   "                                                                            \n"
-   " -excludePath\tSpecify a path to be excluded from the include paths         \n"
-   "  specified for building this dictionary.                                   \n"
-   "                                                                            \n"
-   " --lib-list-prefix\t Specify libraries needed by the header files parsed.   \n"
-   "  This feature is used by ACliC (the automatic library generator).          \n"
-   "  Rootcling will read the content of xxx.in for a list of rootmap files (see\n"
-   "  rlibmap). Rootcling will read these files and use them to deduce a list of\n"
-   "  libraries that are needed to properly link and load this dictionary. This \n"
-   "  list of libraries is saved in the first line of the file xxx.out; the     \n"
-   "  remaining lines contains the list of classes for which this run of        \n"
-   "  rootcling produced a dictionary.                                          \n"
-   "                                                                            \n"
-   "The options -p, -c, -l, -cint, -reflex and -gccxml are deprecated and       \n"
-   "currently ignored.                                                          \n"
-   "                                                                            \n"
-   "The (optional) file LinkDef.h looks like:                                   \n"
-   "                                                                            \n"
-   "#ifdef __CLING__                                                            \n"
-   "                                                                            \n"
-   "#pragma link off all globals;                                               \n"
-   "#pragma link off all classes;                                               \n"
-   "#pragma link off all functions;                                             \n"
-   "                                                                            \n"
-   "#pragma link C++ class TAxis;                                               \n"
-   "#pragma link C++ class TAttAxis-;                                           \n"
-   "#pragma link C++ class TArrayC-!;                                           \n"
-   "#pragma link C++ class AliEvent+;                                           \n"
-   "                                                                            \n"
-   "#pragma link C++ function StrDup;                                           \n"
-   "#pragma link C++ function operator+(const TString&,const TString&);         \n"
-   "                                                                            \n"
-   "#pragma link C++ global gROOT;                                              \n"
-   "#pragma link C++ global gEnv;                                               \n"
-   "                                                                            \n"
-   "#pragma link C++ enum EMessageTypes;                                        \n"
-   "                                                                            \n"
-   "#endif                                                                      \n"
-   "                                                                            \n"
-   "This file tells rootcling which classes will be persisted on disk and what  \n"
-   "entities will trigger automatic load of the shared library which contains   \n"
-   "it. A trailing - in the class name tells rootcling to not generate the      \n"
-   "Streamer() method. This is necessary for those classes that need a          \n"
-   "customized Streamer() method. A trailing ! in the class name tells rootcling\n"
-   "to not generate the operator>>(TBuffer &b, MyClass *&obj) function. This is \n"
-   "necessary to be able to write pointers to objects of classes not inheriting \n"
-   "from TObject. See for an example the source of the TArrayF class.           \n"
-   "If the class contains a ClassDef macro, a trailing + in the class           \n"
-   "name tells rootcling to generate an automatic Streamer(), i.e. a            \n"
-   "streamer that let ROOT do automatic schema evolution. Otherwise, a          \n"
-   "trailing + in the class name tells rootcling to generate a ShowMember       \n"
-   "function and a Shadow Class. The + option is mutually exclusive with        \n"
-   "the - option. For legacy reasons it is not yet the default.                 \n"
-   "When the linkdef file is not specified a default version exporting          \n"
-   "the classes with the names equal to the include files minus the .h          \n"
-   "is generated.                                                               \n"
-   "                                                                            \n"
-   "The default constructor used by the ROOT I/O can be customized by           \n"
-   "using the rootcling pragma:                                                 \n"
-   "   #pragma link C++ ioctortype UserClass;                                   \n"
-   "For example, with this pragma and a class named MyClass,                    \n"
-   "this method will called the first of the following 3                        \n"
-   "constructors which exists and is public:                                    \n"
-   "   MyClass(UserClass*);                                                     \n"
-   "   MyClass(TRootIOCtor*);                                                   \n"
-   "   MyClass(); // Or a constructor with all its arguments defaulted.         \n"
-   "                                                                            \n"
-   "When more than one pragma ioctortype is used, the first seen has            \n"
-   "priority.  For example with:                                                \n"
-   "   #pragma link C++ ioctortype UserClass1;                                  \n"
-   "   #pragma link C++ ioctortype UserClass2;                                  \n"
-   "                                                                            \n"
-   "ROOT considers the constructors in this order:                              \n"
-   "   MyClass(UserClass1*);                                                    \n"
-   "   MyClass(UserClass2*);                                                    \n"
-   "   MyClass(TRootIOCtor*);                                                   \n"
-   "   MyClass(); // Or a constructor with all its arguments defaulted.         \n";
-
-
 #include "rootcling_impl.h"
+#include "rootclingCommandLineOptionsHelp.h"
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
+#include "snprintf.h"
 
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <stdio.h>
+#include <cstdio>
 
 #include <errno.h>
 #include <string>
 #include <list>
-#include <vector>
 #include <sstream>
 #include <map>
 #include <fstream>
@@ -205,7 +51,6 @@ const char *rootClingHelp =
 #endif
 
 #ifdef __APPLE__
-#include <libgen.h> // Needed for basename
 #include <mach-o/dyld.h>
 #endif
 
@@ -220,9 +65,7 @@ const char *rootClingHelp =
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
-#include "clang/AST/Mangle.h"
 #include "clang/Basic/Diagnostic.h"
-#include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
@@ -234,8 +77,12 @@ const char *rootClingHelp =
 #include "clang/Serialization/ASTWriter.h"
 #include "cling/Utils/AST.h"
 
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/ADT/StringRef.h"
+
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Signals.h"
 
 #include "RtypesCore.h"
 #include "TModuleGenerator.h"
@@ -259,7 +106,6 @@ const std::string gLibraryExtension(".so");  // no dylib for the moment
 const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 
 #ifdef __APPLE__
-#include <libgen.h> // Needed for basename
 #include <mach-o/dyld.h>
 #endif
 
@@ -274,15 +120,6 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 bool gBuildingROOT = false;
 const ROOT::Internal::RootCling::DriverConfig* gDriverConfig = nullptr;
 
-namespace {
-   // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
-   template <typename T> struct IsPointerTClassCopy {
-      enum { kVal = 0 };
-   };
-   template <typename T> struct IsPointerTClassCopy<T*> {
-      enum { kVal = 1 };
-   };
-}
 
 // Maybe too ugly? let's see how it performs.
 using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
@@ -290,12 +127,23 @@ using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
 using namespace ROOT;
 using namespace TClassEdit;
 
-namespace std {}
 using namespace std;
 
 namespace genreflex {
    bool verbose = false;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
+
+ // FIXME: We should remove after removal of r flag.
+static llvm::cl::opt<bool>
+gOptIgnoreExistingDict("r",
+               llvm::cl::desc("Deprecated. Similar to -f but it ignores the dictionary generation. \
+When -r is present rootcling becomes a tool to generate rootmaps (and capability files)."),
+               llvm::cl::Hidden,
+               llvm::cl::cat(gRootclingOptions));
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -330,42 +178,6 @@ static void EmitEnums(const std::vector<const clang::EnumDecl *> &enumvec)
             || clang::isa<clang::LinkageSpecDecl>(en->getDeclContext())
             || clang::isa<clang::NamespaceDecl>(en->getDeclContext()))
          gDriverConfig->fAddEnumToROOTFile(en->getQualifiedNameAsString().c_str());
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-static void GetCurrentDirectory(std::string &output)
-{
-   char fixedLength[1024];
-   char *currWorkDir = fixedLength;
-   size_t len = 1024;
-   char *result = currWorkDir;
-
-   do {
-      if (result == 0) {
-         len = 2 * len;
-         if (fixedLength != currWorkDir) {
-            delete [] currWorkDir;
-         }
-         currWorkDir = new char[len];
-      }
-#ifdef WIN32
-      result = ::_getcwd(currWorkDir, len);
-#else
-      result = getcwd(currWorkDir, len);
-#endif
-   } while (result == 0 && errno == ERANGE);
-
-   output = currWorkDir;
-   output += '/';
-#ifdef WIN32
-   // convert backslashes into forward slashes
-   std::replace(output.begin(), output.end(), '\\', '/');
-#endif
-
-   if (fixedLength != currWorkDir) {
-      delete [] currWorkDir;
    }
 }
 
@@ -406,35 +218,6 @@ const char *GetExePath()
   return exepath.c_str();
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert to path relative to $PWD
-/// If that's not what the caller wants, she should pass -I to rootcling and a
-/// different relative path to the header files.
-
-static std::string GetRelocatableHeaderName(const std::string &header, const std::string &currentDirectory)
-{
-   std::string result(header);
-
-   const char *currWorkDir = currentDirectory.c_str();
-   size_t lenCurrWorkDir = strlen(currWorkDir);
-   if (result.substr(0, lenCurrWorkDir) == currWorkDir) {
-      // Convert to path relative to $PWD.
-      // If that's not what the caller wants, she should pass -I to rootcling and a
-      // different relative path to the header files.
-      result.erase(0, lenCurrWorkDir);
-   }
-   if (gBuildingROOT) {
-      // For ROOT, convert module directories like core/base/inc/ to include/
-      int posInc = result.find("/inc/");
-      if (posInc != -1) {
-         result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
-      }
-   }
-   return result;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char *name,
@@ -445,9 +228,8 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char *name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void AnnotateFieldDecl(clang::FieldDecl &decl,
-                       const std::list<VariableSelectionRule> &fieldSelRules,
-                       bool isGenreflex)
+static void AnnotateFieldDecl(clang::FieldDecl &decl,
+                              const std::list<VariableSelectionRule> &fieldSelRules)
 {
    using namespace ROOT::TMetaUtils;
    // See if in the VariableSelectionRules there are attributes and names with
@@ -596,7 +378,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             if (isClassDefMacro) {
                CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
             } else if (!isGenreflex) {
-               // Here we check if we are in presence of a selction file so that
+               // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
@@ -611,7 +393,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
             if (FieldDecl *fieldDecl  = dyn_cast<FieldDecl>(*I)) {
-               AnnotateFieldDecl(*fieldDecl, fieldSelRules, isGenreflex);
+               AnnotateFieldDecl(*fieldDecl, fieldSelRules);
             }
          } // End presence of XML selection file
       }
@@ -622,6 +404,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
 size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
 {
+   if (!arrayType)
+      return 0;
    llvm::APInt len = arrayType->getSize();
    while (const clang::ConstantArrayType *subArrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual())) {
       len *= subArrayType->getSize();
@@ -719,11 +503,14 @@ void SetRootSys()
          if (s) *s = 0;
       } else {
          // There was no slashes at all let now change ROOTSYS
+         delete [] ep;
          return;
       }
 
-      if (!gBuildingROOT)
+      if (!gBuildingROOT) {
+         delete [] ep;
          return; // don't mess with user's ROOTSYS.
+      }
 
       int ncha = strlen(ep) + 10;
       char *env = new char[ncha];
@@ -739,6 +526,7 @@ void SetRootSys()
       }
 
       putenv(env);
+      // intentionally not call delete [] env, while GLIBC keep use pointer
       delete [] ep;
    }
 }
@@ -772,9 +560,19 @@ string gLibsNeeded;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RecordDeclCallback(const char *c)
+void RecordDeclCallback(const clang::RecordDecl* recordDecl)
 {
-   string need(gAutoloads[c]);
+   std::string need;
+   if (recordDecl->hasOwningModule()) {
+      clang::Module *M = recordDecl->getOwningModule()->getTopLevelModule();
+      need = "lib" + M->Name + gLibraryExtension;
+   } else {
+      std::string qual_name;
+      RScanner::GetDeclQualName(recordDecl, qual_name);
+
+      need = gAutoloads[qual_name];
+   }
+
    if (need.length() && gLibsNeeded.find(need) == string::npos) {
       gLibsNeeded += " " + need;
    }
@@ -912,8 +710,8 @@ void LoadLibraryMap(const std::string &fileListName, map<string, string> &autolo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the specificed operator (what) has been properly declared if the user has
-/// resquested a custom version.
+/// Check if the specified operator (what) has been properly declared if the user has
+/// requested a custom version.
 
 bool CheckInputOperator(const char *what,
                         const char *proto,
@@ -963,7 +761,7 @@ bool CheckInputOperator(const char *what,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the operator>> has been properly declared if the user has
-/// resquested a custom version.
+/// requested a custom version.
 
 bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
 {
@@ -1062,11 +860,10 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()), 0);
    Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
 
-   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+   if (!clxx || clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
    if (!tmplt_specialization) return 0;
-
 
    string stlType(ROOT::TMetaUtils::ShortTypeName(mTypename.c_str()));
    string stlName;
@@ -1417,8 +1214,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
 
    // Trigger autoloading if dictionary is split
    if (autoLoad)
-      dictStream << "   gInterpreter->EnableAutoLoading();\n"
-                 << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
+      dictStream << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
    dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetClass();" << std::endl
                  << "   return fgIsA;\n"
@@ -1466,7 +1262,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       nesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream,cl);
    }
 
-   dictStream << "   namespace ROOT {" << std::endl;
+   dictStream << "   namespace ROOTDict {" << std::endl;
 
 #if !defined(R__AIX)
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
@@ -1536,7 +1332,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GrabIndex returns a static string (so use it or copy it immediatly, do not
+/// GrabIndex returns a static string (so use it or copy it immediately, do not
 /// call GrabIndex twice in the same expression) containing the size of the
 /// array data member.
 /// In case of error, or if the size is not specified, GrabIndex returns 0.
@@ -1886,7 +1682,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   dictStream << "[R__i];" << std::endl;
                } else if (type.getTypePtr()->isPointerType()) {
                   // This is always good. However, in case of a pointer
-                  // to an object that is guarenteed to be there and not
+                  // to an object that is guaranteed to be there and not
                   // being referenced by other objects we could use
                   //     xx->Streamer(b);
                   // Optimize this with control statement in title.
@@ -2036,7 +1832,7 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
+void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
                      std::string &code_for_parser)
 {
    code_for_parser += "#ifdef __CINT__\n\n";
@@ -2044,22 +1840,22 @@ void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
    code_for_parser += "#pragma link off all classes;\n";
    code_for_parser += "#pragma link off all functions;\n\n";
 
-   for (int i = firstInputFile; i < *argc; i++) {
-      char *s, trail[3];
-      int   nostr = 0, noinp = 0, bcnt = 0, l = strlen(argv[i]) - 1;
+   for (std::string& arg : InputFiles) {
+      char trail[3];
+      int nostr = 0, noinp = 0, bcnt = 0, l = arg.length() - 1;
       for (int j = 0; j < 3; j++) {
-         if (argv[i][l] == '-') {
-            argv[i][l] = '\0';
+         if (arg[l] == '-') {
+            arg[l] = '\0';
             nostr = 1;
             l--;
          }
-         if (argv[i][l] == '!') {
-            argv[i][l] = '\0';
+         if (arg[l] == '!') {
+            arg[l] = '\0';
             noinp = 1;
             l--;
          }
-         if (argv[i][l] == '+') {
-            argv[i][l] = '\0';
+         if (arg[l] == '+') {
+            arg[l] = '\0';
             bcnt = 1;
             l--;
          }
@@ -2074,23 +1870,17 @@ void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
          if (nostr)
             ROOT::TMetaUtils::Error(0, "option + mutual exclusive with -\n");
       }
-      char *cls = strrchr(argv[i], '/');
-      if (!cls) cls = strrchr(argv[i], '\\');
-      if (cls)
-         cls++;
-      else
-         cls = argv[i];
-      if ((s = strrchr(cls, '.'))) * s = '\0';
+      llvm::SmallString<256> filestem = llvm::sys::path::filename(arg);
+      llvm::sys::path::replace_extension(filestem, "");
+
       code_for_parser += "#pragma link C++ class ";
-      code_for_parser += cls;
+      code_for_parser += filestem.str().str();
       if (nostr || noinp || bcnt)
          code_for_parser += trail;
       code_for_parser += ";\n";
-      if (s) *s = '.';
    }
 
    code_for_parser += "\n#endif\n";
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2177,15 +1967,15 @@ static bool InjectModuleUtilHeader(const char *argv0,
       // This will duplicate the -D,-U from clingArgs - but as they are surrounded
       // by #ifndef there is no problem here.
       modGen.WriteUmbrellaHeader(out);
+      if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
+         const std::string &hdrName
+            = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
+         ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
+                                 hdrName.c_str());
+         return false;
+      }
    } else {
       modGen.WriteContentHeader(out);
-   }
-   if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
-      const std::string &hdrName
-         = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
-      ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
-                              hdrName.c_str());
-      return false;
    }
    return true;
 }
@@ -2195,14 +1985,15 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// respecting the given isysroot.
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
-/// Returns true if the AST was succesfully written.
-static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
+/// Returns true if the AST was successfully written.
+static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compilerInstance,
+                     llvm::StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
-   clang::ASTWriter writer(stream, buffer, compilerInstance->getPCMCache(), /*Extensions=*/{});
+   clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
                                          /*RemoveFileOnSignal=*/false, /*InFile*/ "",
@@ -2222,15 +2013,13 @@ static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
 
    // Make sure it hits disk now.
    out->flush();
-   bool deleteOutputFile = compilerInstance->getDiagnostics().hasErrorOccurred();
-   compilerInstance->clearOutputFiles(deleteOutputFile);
 
    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generates a PCH from the given ModuleGenerator and CompilerInstance.
-/// Returns true iff the PCH was succesfully generated.
+/// Returns true iff the PCH was successfully generated.
 static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *compilerInstance,
                             const std::string &currentDirectory)
 {
@@ -2260,75 +2049,6 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
    return result == cling::Interpreter::CompilationResult::kSuccess;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns true iff a given module (and its submodules) contains all headers
-/// needed by the given ModuleGenerator.
-/// The names of all header files that are needed by the ModuleGenerator but are
-/// not in the given module will be inserted into the MissingHeader variable.
-/// Returns true iff the PCH was succesfully generated.
-static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
-                                  std::vector<std::string> &missingHeaders)
-{
-   // Now we collect all header files from the previously collected modules.
-   std::set<std::string> moduleHeaders;
-   ROOT::TMetaUtils::foreachHeaderInModule(
-      *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
-
-   // Go through the list of headers that are required by the ModuleGenerator
-   // and check for each header if it's in one of the modules we loaded.
-   // If not, make sure we fail at the end and mark the header as missing.
-   bool foundAllHeaders = true;
-   for (const std::string &header : modGen.GetHeaders()) {
-      if (moduleHeaders.find(header) == moduleHeaders.end()) {
-         missingHeaders.push_back(header);
-         foundAllHeaders = false;
-      }
-   }
-   return foundAllHeaders;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check moduleName validity from modulemap. Check if this module is defined or not.
-static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
-                           StringRef LinkdefPath, const std::string &moduleName)
-{
-   clang::CompilerInstance *CI = interpreter.getCI();
-   clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
-   headerSearch.loadTopLevelSystemModules();
-
-   // Actually lookup the module on the computed module name.
-   clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
-
-   // Inform the user and abort if we can't find a module with a given name.
-   if (!module) {
-      ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't find module with name '%s' in modulemap!\n",
-                              moduleName.c_str());
-      return false;
-   }
-
-   // Check if the loaded module covers all headers that were specified
-   // by the user on the command line. This is an integrity check to
-   // ensure that our used module map is
-   std::vector<std::string> missingHeaders;
-   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
-      // FIXME: Upgrade this to an error once modules are stable.
-      std::stringstream msgStream;
-      msgStream << "warning: Couldn't find the following specified headers in "
-                << "the module " << module->Name << ":\n";
-      for (auto &H : missingHeaders) {
-         msgStream << "  " << H << "\n";
-      }
-      std::string warningMessage = msgStream.str();
-      ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
-      // We include the missing headers to fix the module for the user.
-      if (!IncludeHeaders(missingHeaders, interpreter)) {
-         ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
-                                 module->Name.c_str());
-      }
-   }
-
-   return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2394,6 +2114,10 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
    clingArgs.push_back(platformDefines);
 # endif
 #endif
+#ifdef _WIN64
+   snprintf(platformDefines, 64, "-DG__WIN64=%ld", (long)_WIN64);
+   clingArgs.push_back(platformDefines);
+#endif
 #ifdef _MSC_VER
    snprintf(platformDefines, 64, "-DG__MSC_VER=%ld", (long)_MSC_VER);
    clingArgs.push_back(platformDefines);
@@ -2432,65 +2156,6 @@ bool HasPath(const std::string &name)
    std::string dictLocation;
    ExtractFilePath(name, dictLocation);
    return !dictLocation.empty();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// A set of rules are applied in order to transform the name for the rootmap
-/// file
-/// * "::" becomes "@@"
-/// * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
-/// * "*const" becomes "*-const"
-/// * "short int" becomes "short"
-/// * "long int" becomes "long"
-/// * "long long" becomes "long-long"
-/// * "long double" becomes "long-double"
-/// * " " becomes ""
-/// * ">>" becomes ">->" except for "operator>>"
-
-void ManipForRootmap(std::string &name)
-{
-   using namespace ROOT::TMetaUtils;
-
-   // * "::" becomes "@@"
-   ReplaceAll(name, "::", "@@");
-
-
-   // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
-   // We do it in 2 steps: trim the spaces and replace
-   // 1
-   name.erase(name.find_last_not_of(" \n\r\t") + 1);
-   // 2
-   ReplaceAll(name, "const ", "const-");
-   ReplaceAll(name, "signed ", "signed-");
-
-   // * "*const" becomes "*-const"
-   ReplaceAll(name, "*const", "*-const");
-
-   // * "short int" becomes "short"
-   ReplaceAll(name, "short int", "short");
-
-   // * "long int" becomes "long"
-   ReplaceAll(name, "long int", "long");
-
-   // * "long long" becomes "long-long"
-   ReplaceAll(name, "long long", "long-long");
-
-   // * "long double" becomes "long-double"
-   ReplaceAll(name, "long double", "long-double");
-
-   // * " " becomes ""
-   ReplaceAll(name, " ", "");
-   // But this is could be more efficient
-   //name.erase(std::remove_if(name.begin(), name.end(), isspace), name.end());
-
-   // * ">>" becomes ">->" except for "operator>>"
-   // We replace blindly and recursively and then roll back for operator>->
-   // in other words "Better to Say Sorry than to Ask Permission"
-   while (name.find(">>") != std::string::npos) {
-      ReplaceAll(name, ">>", ">->");
-   }
-   ReplaceAll(name, "operator>->", "operator>>");
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2816,7 +2481,13 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
       if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)) {
          fwdDeclaration = "";
          retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl, interpreter, fwdDeclaration);
-         if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+         if (retCode == 0) {
+            std::string fwdDeclarationTemplateSpec;
+            retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(*rDecl, interpreter, fwdDeclarationTemplateSpec, normalizedName);
+            fwdDeclaration += '\n' + fwdDeclarationTemplateSpec;
+         }
+         if (retCode == 0)
+            ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
       }
 
 
@@ -2855,65 +2526,23 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
             classesListForRootmap.push_back(outerMostClassName);
          } else {
             classesListForRootmap.push_back(normalizedName);
-            if (reqName != nullptr && 0 != strcmp(reqName, "") && reqName != normalizedName) {
+            if (reqName && reqName[0] && reqName != normalizedName) {
                classesListForRootmap.push_back(reqName);
             }
 
-            // Also register typeinfo::name(), unless we have pseudo-strong typedefs:
-            if (normalizedName.find("Double32_t") == std::string::npos
-                && normalizedName.find("Float16_t") == std::string::npos) {
-               std::unique_ptr<clang::MangleContext> mangleCtx(rDecl->getASTContext().createMangleContext());
-               std::string mangledName;
-               {
-                  llvm::raw_string_ostream sstr(mangledName);
-                  if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
-                     mangleCtx->mangleCXXRTTI(clang::QualType(TD->getTypeForDecl(), 0), sstr);
-                  }
-               }
-               if (!mangledName.empty()) {
-                  int errDemangle = 0;
-#ifdef WIN32
-                  if (mangledName[0] == '\01')
-                     mangledName.erase(0, 1);
-                  char *demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
-                  if (!errDemangle && demangledTIName) {
-                     static const char typeinfoNameFor[] = " `RTTI Type Descriptor'";
-                     if (strstr(demangledTIName, typeinfoNameFor)) {
-                        std::string demangledName = demangledTIName;
-                        demangledName.erase(demangledName.end() - strlen(typeinfoNameFor), demangledName.end());
-                        if (demangledName.compare(0, 6, "class ") == 0)
-                           demangledName.erase(0, 6);
-                        else if (demangledName.compare(0, 7, "struct ") == 0)
-                           demangledName.erase(0, 7);
-#else
-                  char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
-                  if (!errDemangle && demangledTIName) {
-                     static const char typeinfoNameFor[] = "typeinfo for ";
-                     if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
-                        std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
-#endif
-                        // See the operations in TCling::AutoLoad(type_info)
-                        TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
-                        splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
+            // Also register typeinfo::name(), unless we have pseudo-strong typedefs.
+            // GetDemangledTypeInfo() checks for Double32_t etc already and returns an empty string.
+            std::string demangledName = selClass.GetDemangledTypeInfo();
+            if (!demangledName.empty()) {
+               // See the operations in TCling::AutoLoad(type_info)
+               TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
+               splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
 
-                        if (demangledName != normalizedName && (!reqName || demangledName != reqName)) {
-                           classesListForRootmap.push_back(demangledName);
-                        } // if demangledName != other name
-                     } else {
-#ifdef WIN32
-                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not contain `RTTI Type Descriptor'\n",
-                                                demangledTIName);
-#else
-                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not start with 'typeinfo for'\n",
-                                                demangledTIName);
-#endif
-                     } // if demangled type_info starts with "typeinfo for "
-                  } // if demangling worked
-                  free(demangledTIName);
-               } // if mangling worked
-            } // if no pseudo-strong typedef involved
+               if (demangledName != normalizedName && (!reqName || demangledName != reqName)) {
+                  // if demangledName != other name
+                  classesListForRootmap.push_back(demangledName);
+               }
+            }
          }
       }
    }
@@ -2980,24 +2609,26 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
    if (!gDriverConfig->fCloseStreamerInfoROOTFile)
       return 0;
 
-   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                           "#include \"TFile.h\"\n"
-                           "#include \"TObjArray.h\"\n"
-                           "#include \"TVirtualArray.h\"\n"
-                           "#include \"TStreamerElement.h\"\n"
-                           "#include \"TProtoClass.h\"\n"
-                           "#include \"TBaseClass.h\"\n"
-                           "#include \"TListOfDataMembers.h\"\n"
-                           "#include \"TListOfEnums.h\"\n"
-                           "#include \"TListOfEnumsWithLock.h\"\n"
-                           "#include \"TDataMember.h\"\n"
-                           "#include \"TEnum.h\"\n"
-                           "#include \"TEnumConstant.h\"\n"
-                           "#include \"TDictAttributeMap.h\"\n"
-                           "#include \"TMessageHandler.h\"\n"
-                           "#include \"TArray.h\"\n"
-                           "#include \"TRefArray.h\"\n"
-                           "#include \"root_std_complex.h\"\n");
+   if (interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+                             "#include \"TFile.h\"\n"
+                             "#include \"TObjArray.h\"\n"
+                             "#include \"TVirtualArray.h\"\n"
+                             "#include \"TStreamerElement.h\"\n"
+                             "#include \"TProtoClass.h\"\n"
+                             "#include \"TBaseClass.h\"\n"
+                             "#include \"TListOfDataMembers.h\"\n"
+                             "#include \"TListOfEnums.h\"\n"
+                             "#include \"TListOfEnumsWithLock.h\"\n"
+                             "#include \"TDataMember.h\"\n"
+                             "#include \"TEnum.h\"\n"
+                             "#include \"TEnumConstant.h\"\n"
+                             "#include \"TDictAttributeMap.h\"\n"
+                             "#include \"TMessageHandler.h\"\n"
+                             "#include \"TArray.h\"\n"
+                             "#include \"TRefArray.h\"\n"
+                             "#include \"root_std_complex.h\"\n")
+       != cling::Interpreter::kSuccess)
+       return 1;
    if (!gDriverConfig->fCloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
@@ -3035,7 +2666,9 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // SELECTION LOOP
    for (auto const & ns : scan.fSelectedNamespaces) {
-      WriteNamespaceInit(ns, interp, dictStream);
+      if (!gOptIgnoreExistingDict) {
+         WriteNamespaceInit(ns, interp, dictStream);
+      }
       auto nsName = ns.GetNamespaceDecl()->getQualifiedNameAsString();
       if (nsName.find("(anonymous)") == std::string::npos)
          EmitStreamerInfo(nsName.c_str());
@@ -3063,12 +2696,25 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (CRD) {
          ROOT::TMetaUtils::Info(0, "Generating code for class %s\n", selClass.GetNormalizedName());
-         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template arguement */)) {
+         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template argument */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+         } else if (CRD->getName() == "RVec") {
+            static const clang::DeclContext *vecOpsDC = nullptr;
+            if (!vecOpsDC)
+               vecOpsDC = llvm::dyn_cast<clang::DeclContext>(
+                  interp.getLookupHelper().findScope("ROOT::VecOps", cling::LookupHelper::NoDiagnostics));
+            if (vecOpsDC && vecOpsDC->Equals(CRD->getDeclContext())) {
+               // Register the collections
+               // coverity[fun_call_w_exception] - that's just fine.
+               Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+            }
          } else {
-            ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+            if (!gOptIgnoreExistingDict) {
+               ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
+                                                needsCollectionProxy);
+            }
             EmitStreamerInfo(selClass.GetNormalizedName());
          }
       }
@@ -3087,7 +2733,7 @@ int GenerateFullDict(std::ostream &dictStream,
          continue;
       }
       const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
-      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass, "Class_Name", interp)) {
+      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass, "Class_Name", interp) && !gOptIgnoreExistingDict) {
          WriteClassFunctions(cxxdecl, dictStream, isSplit);
       }
    }
@@ -3105,24 +2751,30 @@ int GenerateFullDict(std::ostream &dictStream,
       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
 
       if (!ROOT::TMetaUtils::IsSTLContainer(selClass)) {
-         ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+         if (!gOptIgnoreExistingDict) {
+            ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
+                                             needsCollectionProxy);
+         }
          EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
    // Loop to write all the ClassCode
-   for (auto const & selClass : scan.fSelectedClasses) {
-      ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
-                                       selClass,
-                                       interp,
-                                       normCtxt,
-                                       dictStream,
-                                       ctorTypes,
-                                       isGenreflex);
-   }
+   if (!gOptIgnoreExistingDict) {
+      for (auto const &selClass : scan.fSelectedClasses) {
+          ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
+                                           selClass,
+                                           interp,
+                                           normCtxt,
+                                           dictStream,
+                                           ctorTypes,
+                                           isGenreflex);
+      }
 
-   // Loop on the registered collections internally
-   // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+      // Loop on the registered collections internally
+      // coverity[fun_call_w_exception] - that's just fine.
+      ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy,
+                                                      EmitStreamerInfo);
+   }
 
    if (!gDriverConfig->fBuildingROOTStage1) {
       EmitTypedefs(scan.fSelectedTypedefs);
@@ -3142,6 +2794,9 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
 {
    dictStream  << "// Do NOT change. Changes will be lost next time file is generated\n\n"
                << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
+
+               // We do not want deprecation warnings to fire in dictionaries
+               << "#define R__NO_DEPRECATION" << std::endl
 
                // Now that CINT is not longer there to write the header file,
                // write one and include in there a few things for backward
@@ -3173,10 +2828,14 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include \"TCollectionProxyInfo.h\"\n"
                << "/*******************************************************************/\n\n"
                << "#include \"TDataMember.h\"\n\n"; // To set their transiency
-#ifndef R__SOLARIS
-   dictStream  << "// Since CINT ignores the std namespace, we need to do so in this file.\n"
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void AddNamespaceSTDdeclaration(std::ostream &dictStream)
+{
+   dictStream  << "// The generated code does not explicitly qualify STL entities\n"
                << "namespace std {} using namespace std;\n\n";
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3346,21 +3005,21 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 /// For example
 /// -Wno-deprecated-declarations --> #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-void CheckForMinusW(const char *arg,
-                    std::list<std::string> &diagnosticPragmas)
+static void CheckForMinusW(std::string arg,
+                           std::list<std::string> &diagnosticPragmas)
 {
    static const std::string pattern("-Wno-");
 
-   std::string localArg(arg);
-   if (localArg.find(pattern) != 0) return;
-   if (localArg == "-Wno-noexcept-type") {
+   if (arg.find(pattern) != 0)
+      return;
+   if (arg == "-Wno-noexcept-type") {
       // GCC7 warning not supported by clang 3.9
       return;
    }
 
-   ROOT::TMetaUtils::ReplaceAll(localArg, pattern, "#pragma clang diagnostic ignored \"-W");
-   localArg += "\"";
-   diagnosticPragmas.push_back(localArg);
+   ROOT::TMetaUtils::ReplaceAll(arg, pattern, "#pragma clang diagnostic ignored \"-W");
+   arg += "\"";
+   diagnosticPragmas.push_back(arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3620,8 +3279,8 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate the fwd declarations of the selected entities
 
-std::string GenerateFwdDeclString(const RScanner &scan,
-                                  const cling::Interpreter &interp)
+static std::string GenerateFwdDeclString(const RScanner &scan,
+                                         const cling::Interpreter &interp)
 {
    std::string newFwdDeclString;
 
@@ -3664,10 +3323,16 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //    for (auto* VAR: scan.fSelectedVariables)
 //       selectedDecls.push_back(VAR);
 
+   std::string fwdDeclLogs;
+
    // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
    // TModuleGenerator to be able to make the diagnostics more telling in presence
    // of an issue ROOT-6752.
-   fwdDeclString += Decls2FwdDecls(selectedDecls,IsLinkdefFile,interp);
+   fwdDeclString += Decls2FwdDecls(selectedDecls,IsLinkdefFile,interp, genreflex::verbose ? &fwdDeclLogs : nullptr);
+
+   if (genreflex::verbose && !fwdDeclLogs.empty())
+      std::cout << "Logs from forward decl printer: \n"
+         << fwdDeclLogs;
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
@@ -3698,7 +3363,7 @@ const std::string GenerateStringFromHeadersForClasses(const HeadersDeclsMap_t &h
 
    if (genreflex::verbose)
       std::cout << "Class-headers Mapping:\n";
-   std::string headersClassesMapString = "static const char* classesHeaders[]={\n";
+   std::string headersClassesMapString = "";
    for (auto const & classHeaders : headersClassesMap) {
       if (genreflex::verbose)
          std::cout << " o " << classHeaders.first << " --> ";
@@ -3716,7 +3381,7 @@ const std::string GenerateStringFromHeadersForClasses(const HeadersDeclsMap_t &h
          std::cout << std::endl;
       headersClassesMapString += ", \"@\",\n";
    }
-   headersClassesMapString += "nullptr};\n";
+   headersClassesMapString += "nullptr";
    return headersClassesMapString;
 }
 
@@ -3725,26 +3390,6 @@ const std::string GenerateStringFromHeadersForClasses(const HeadersDeclsMap_t &h
 bool IsImplementationName(const std::string &filename)
 {
    return !ROOT::TMetaUtils::IsHeaderName(filename);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns >0 if argument is to be ignored.
-/// If 1, just skip that argument. If 2, that argument takes a parameter
-/// "-arg param" thus skip both.
-
-int ShouldIgnoreClingArgument(const std::string& argument)
-{
-   auto vetos = {"-pipe", "-fPIC", "-fpic",
-                 "-fno-plt", "--save-temps" };
-
-   for (auto veto : vetos) {
-      if (argument == veto) return 1;
-   }
-
-   if (ROOT::TMetaUtils::BeginsWith(argument, "--gcc-toolchain="))
-      return 1;
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3828,7 +3473,8 @@ public:
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                                    llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
                                    const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/)
+                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
+                                   clang::SrcMgr::CharacteristicKind /*FileType*/)
    {
       if (isLocked) return;
       if (IsAngled) return;
@@ -3850,13 +3496,40 @@ public:
          }
       }
    }
+
+   // rootcling pre-includes things such as Rtypes.h. This means that ACLiC can
+   // call rootcling asking it to create a module for a file with no #includes
+   // but relying on things from Rtypes.h such as the ClassDef macro.
+   //
+   // When rootcling starts building a module, it becomes resilient to the
+   // outside environment and pre-included files have no effect. This hook
+   // informs rootcling when a new submodule is being built so that it can
+   // make Core.Rtypes.h visible.
+   virtual void EnteredSubmodule(clang::Module* M,
+                                 clang::SourceLocation ImportLoc,
+                                 bool ForPragma) {
+      assert(M);
+      using namespace clang;
+      if (llvm::StringRef(M->Name).endswith("ACLiC_dict")) {
+         Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
+         HeaderSearch& HS = PP.getHeaderSearchInfo();
+         // FIXME: Reduce to Core.Rtypes.h.
+         Module* CoreModule = HS.lookupModule("Core", /*AllowSearch*/false);
+         assert(M && "Must have module Core");
+         PP.makeModuleVisible(CoreModule, ImportLoc);
+      }
+   }
 };
 
-static bool FileExists(const char *file)
-{
-   struct stat buf;
-   return (stat(file, &buf) == 0);
-}
+static llvm::cl::list<std::string>
+gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
+                     llvm::cl::Hidden,
+                     llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
+                     llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptDictionaryFileName(llvm::cl::Positional, llvm::cl::Required,
+                      llvm::cl::desc("<output dictionary file>"),
+                      llvm::cl::cat(gRootclingOptions));
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
@@ -3912,21 +3585,27 @@ public:
          }
       }
 
-      // Skip the diag only if we build a ROOT system module or a system module. We still print the diag
-      // when building a non-system module as we will print an error below and the
-      // user should see the detailed default clang diagnostic.
-      bool isROOTSystemModuleDiag = module && llvm::StringRef(moduleName).startswith("ROOT_");
-      bool isSystemModuleDiag = module && module && module->IsSystem;
-      if (!isROOTSystemModuleDiag && !isSystemModuleDiag)
+      // A dictionary module could build implicitly a set of implicit modules.
+      // For example, the Core module builds libc.pcm and std.pcm implicitly.
+      // Those modules do not require I/O information and it is okay to build
+      // them as part of another module.
+      // However, we can build a module which requires I/O implictly which is
+      // an error because rootcling is not able to generate the corresponding
+      // dictionary.
+      // If we build a I/O requiring module implicitly we should display
+      // an error unless the -mByproduct was specified.
+      bool isByproductModule
+         = module && std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end();
+      if (!isByproductModule)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
-      if (ID == remark_module_build && !isROOTSystemModuleDiag && !isSystemModuleDiag) {
+      if (ID == remark_module_build && !isByproductModule) {
          ROOT::TMetaUtils::Error(0,
-                                 "Had to build non-system module %s implicitly. You first need to\n"
-                                 "generate the dictionary for %s or mark the C++ module as a system\n"
-                                 "module if you provided your own system modulemap file:\n"
-                                 "%s [system] { ... }\n",
-                                 moduleName.c_str(), moduleName.c_str(), moduleName.c_str());
+                                 "Building module '%s' implicitly. If '%s' requires a \n"
+                                 "dictionary please specify build dependency: '%s' depends on '%s'.\n"
+                                 "Otherwise, specify '-mByproduct %s' to disable this diagnostic.\n",
+                                 moduleName.c_str(), moduleName.c_str(), gOptDictionaryFileName.c_str(),
+                                 moduleName.c_str(), moduleName.c_str());
       }
    }
 
@@ -3958,133 +3637,338 @@ public:
    virtual bool IncludeInDiagnosticCounts() const override { return fChild->IncludeInDiagnosticCounts(); }
 };
 
+static void MaybeSuppressWin32CrashDialogs() {
+#if defined(_WIN32) && defined(_MSC_VER)
+   // Suppress error dialogs to avoid hangs on build nodes.
+   // One can use an environment variable (Cling_GuiOnAssert) to enable
+   // the error dialogs.
+   const char *EnablePopups = getenv("Cling_GuiOnAssert");
+   if (EnablePopups == nullptr || EnablePopups[0] == '0') {
+      ::_set_error_mode(_OUT_TO_STDERR);
+      _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+      _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+      _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+      _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+      _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+      _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+   }
+#endif
+}
+
+static llvm::cl::opt<bool> gOptForce("f", llvm::cl::desc("Overwrite <file>s."),
+                                    llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool> gOptRootBuild("rootbuild", llvm::cl::desc("If we are building ROOT."),
+                                        llvm::cl::Hidden,
+                                        llvm::cl::cat(gRootclingOptions));
+enum VerboseLevel {
+   v = ROOT::TMetaUtils::kError,
+   v0 = ROOT::TMetaUtils::kFatal,
+   v1 = v,
+   v2 = ROOT::TMetaUtils::kWarning,
+   v3 = ROOT::TMetaUtils::kNote,
+   v4 = ROOT::TMetaUtils::kInfo
+};
+static llvm::cl::opt<VerboseLevel>
+gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
+                llvm::cl::values(clEnumVal(v, "Show errors."),
+                                 clEnumVal(v0, "Show only fatal errors."),
+                                 clEnumVal(v1, "Show errors (the same as -v)."),
+                                 clEnumVal(v2, "Show warnings (default)."),
+                                 clEnumVal(v3, "Show notes."),
+                                 clEnumVal(v4, "Show information.")),
+                llvm::cl::init(v2),
+                llvm::cl::cat(gRootclingOptions));
+
+static llvm::cl::opt<bool>
+gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+        llvm::cl::Hidden,
+        llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptReflex("reflex", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+          llvm::cl::Hidden,
+          llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptGccXml("gccxml", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+          llvm::cl::Hidden,
+          llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptLibListPrefix("lib-list-prefix",
+                 llvm::cl::desc("An ACLiC feature which exports the list of dependent libraries."),
+                 llvm::cl::Hidden,
+                 llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptGeneratePCH("generate-pch",
+               llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
+               llvm::cl::Hidden,
+               llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptC("c", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+     llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptP("p", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+     llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptRootmapLibNames("rml", llvm::cl::ZeroOrMore,
+                   llvm::cl::desc("Generate rootmap file."),
+                   llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptRootMapFileName("rmf",
+                   llvm::cl::desc("Generate a rootmap file with the specified name."),
+                   llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptCxxModule("cxxmodule",
+             llvm::cl::desc("Generate a C++ module."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptModuleMapFiles("moduleMapFile",
+                   llvm::cl::desc("Specify a C++ modulemap file."),
+                   llvm::cl::cat(gRootclingOptions));
+// FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
+static llvm::cl::opt<bool>
+gOptUmbrellaInput("umbrellaHeader",
+                  llvm::cl::desc("A single header including all headers instead of specifying them on the command line."),
+                  llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptMultiDict("multiDict",
+             llvm::cl::desc("If this library has multiple separate LinkDef files."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptNoGlobalUsingStd("noGlobalUsingStd",
+             llvm::cl::desc("Do not declare {using namespace std} in dictionary global scope."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptInterpreterOnly("interpreteronly",
+                   llvm::cl::desc("Generate minimal dictionary for interactivity (without IO information)."),
+                   llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptSplit("split",
+         llvm::cl::desc("Split the dictionary into two parts: one containing the IO (ClassDef)\
+information and another the interactivity support."),
+         llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptNoDictSelection("noDictSelection",
+                   llvm::cl::Hidden,
+                   llvm::cl::desc("Do not run the selection rules. Useful when in -onepcm mode."),
+                   llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptSharedLibFileName("s",
+                     llvm::cl::desc("The path to the library of the built dictionary."),
+                     llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptModuleDependencies("m",
+                      llvm::cl::desc("The list of dependent modules of the dictionary."),
+                      llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptExcludePaths("excludePath", llvm::cl::ZeroOrMore,
+                llvm::cl::desc("Do not store the <path> in the dictionary."),
+                llvm::cl::cat(gRootclingOptions));
+// FIXME: This does not seem to work. We have one use of -inlineInputHeader in
+// ROOT and it does not produce the expected result.
+static llvm::cl::opt<bool>
+gOptInlineInput("inlineInputHeader",
+               llvm::cl::desc("Does not generate #include <header> but expands the header content."),
+               llvm::cl::cat(gRootclingOptions));
+// FIXME: This is totally the wrong concept. We should not expose an interface
+// to be able to tell which component is in the pch and which needs extra
+// scaffolding for interactive use. Moreover, some of the ROOT components are
+// partially in the pch and this option makes it impossible to express that.
+// We should be able to get the list of headers in the pch early and scan
+// through them.
+static llvm::cl::opt<bool>
+gOptWriteEmptyRootPCM("writeEmptyRootPCM",
+                     llvm::cl::Hidden,
+                     llvm::cl::desc("Does not include the header files as it assumes they exist in the pch."),
+                     llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptCheckSelectionSyntax("selSyntaxOnly",
+                        llvm::cl::desc("Check the selection syntax only."),
+                        llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptFailOnWarnings("failOnWarnings",
+                  llvm::cl::desc("Fail if there are warnings."),
+                  llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
+gOptNoIncludePaths("noIncludePaths",
+                  llvm::cl::desc("Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH."),
+                  llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptISysRoot("isysroot", llvm::cl::Prefix, llvm::cl::Hidden,
+            llvm::cl::desc("Specify an isysroot."),
+            llvm::cl::cat(gRootclingOptions),
+            llvm::cl::init("-"));
+static llvm::cl::list<std::string>
+gOptIncludePaths("I", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+                llvm::cl::desc("Specify an include path."),
+                llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptPPDefines("D", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+             llvm::cl::desc("Specify defined macros."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptPPUndefines("U", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+             llvm::cl::desc("Specify undefined macros."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+          llvm::cl::desc("Specify compiler diagnostics options."),
+          llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::OneOrMore,
+                         llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
+                         llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
+gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
+         llvm::cl::desc("Consumes all unrecognized options."),
+         llvm::cl::cat(gRootclingOptions));
+
+static llvm::cl::SubCommand
+gBareClingSubcommand("bare-cling", "Call directly cling and exit.");
+
+static llvm::cl::list<std::string>
+gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
+                  llvm::cl::desc("Consumes options and sends them to cling."),
+                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gBareClingSubcommand));
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true iff a given module (and its submodules) contains all headers
+/// needed by the given ModuleGenerator.
+/// The names of all header files that are needed by the ModuleGenerator but are
+/// not in the given module will be inserted into the MissingHeader variable.
+/// Returns true iff the PCH was successfully generated.
+static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
+                                  std::vector<std::string> &missingHeaders)
+{
+   // Now we collect all header files from the previously collected modules.
+   std::vector<clang::Module::Header> moduleHeaders;
+   ROOT::TMetaUtils::foreachHeaderInModule(*module,
+      [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.push_back(h); });
+
+   bool foundAllHeaders = true;
+
+   // Go through the list of headers that are required by the ModuleGenerator
+   // and check for each header if it's in one of the modules we loaded.
+   // If not, make sure we fail at the end and mark the header as missing.
+   for (const std::string &header : modGen.GetHeaders()) {
+      bool headerFound = false;
+      for (const clang::Module::Header &moduleHeader : moduleHeaders) {
+         if (header == moduleHeader.NameAsWritten) {
+            headerFound = true;
+            break;
+         }
+      }
+      if (!headerFound) {
+         missingHeaders.push_back(header);
+         foundAllHeaders = false;
+      }
+   }
+   return foundAllHeaders;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check moduleName validity from modulemap. Check if this module is defined or not.
+static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
+                             llvm::StringRef LinkdefPath, const std::string &moduleName)
+{
+   clang::CompilerInstance *CI = interpreter.getCI();
+   clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
+   headerSearch.loadTopLevelSystemModules();
+
+   // Actually lookup the module on the computed module name.
+   clang::Module *module = headerSearch.lookupModule(llvm::StringRef(moduleName));
+
+   // Inform the user and abort if we can't find a module with a given name.
+   if (!module) {
+      ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't find module with name '%s' in modulemap!\n",
+                              moduleName.c_str());
+      return false;
+   }
+
+   // Check if the loaded module covers all headers that were specified
+   // by the user on the command line. This is an integrity check to
+   // ensure that our used module map is
+   std::vector<std::string> missingHeaders;
+   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
+      // FIXME: Upgrade this to an error once modules are stable.
+      std::stringstream msgStream;
+      msgStream << "warning: Couldn't find in "
+                << module->PresumedModuleMapFile
+                << " the following specified headers in "
+                << "the module " << module->Name << ":\n";
+      for (auto &H : missingHeaders) {
+         msgStream << "  " << H << "\n";
+      }
+      std::string warningMessage = msgStream.str();
+
+      bool maybeUmbrella = modGen.GetHeaders().size() == 1;
+      // We may have an umbrella and forgot to add the flag. Downgrade the
+      // warning into an information message.
+      // FIXME: We should open the umbrella, extract the set of header files
+      // and check if they exist in the modulemap.
+      // FIXME: We should also check if the header files are specified in the
+      // modulemap file as they appeared in the rootcling invocation, i.e.
+      // if we passed rootcling ... -I/some/path somedir/some/header, the
+      // modulemap should contain module M { header "somedir/some/header" }
+      // This way we will make sure the module is properly activated.
+      if (!gOptUmbrellaInput && maybeUmbrella) {
+         ROOT::TMetaUtils::Info("CheckModuleValid, %s. You can silence this message by adding %s to the invocation.",
+                                warningMessage.c_str(),
+                                gOptUmbrellaInput.ArgStr.data());
+         return true;
+      }
+
+      ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
+      // We include the missing headers to fix the module for the user.
+      if (!IncludeHeaders(missingHeaders, interpreter)) {
+         ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
+                                 module->Name.c_str());
+      }
+   }
+
+   return true;
+}
+
+static llvm::StringRef GetModuleNameFromRdictName(llvm::StringRef rdictName)
+{
+   // Try to get the module name in the modulemap based on the filepath.
+   llvm::StringRef moduleName = llvm::sys::path::filename(rdictName);
+   moduleName.consume_front("lib");
+   moduleName.consume_back(".pcm");
+   moduleName.consume_back("_rdict");
+   return moduleName;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int RootClingMain(int argc,
               char **argv,
-              bool isDeep = false,
               bool isGenreflex = false)
 {
-   if (argc < 2) {
-      fprintf(stderr,
-              shortHelp,
-              argv[0]);
-      fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
-      return 1;
-   }
+   // Define Options aliasses
+   auto &opts = llvm::cl::getRegisteredOptions();
+   auto &optHelp = *opts["help"];
+   llvm::cl::alias optHelpAlias1("h",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(optHelp));
+   llvm::cl::alias optHelpAlias2("?",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(optHelp));
 
-   std::string dictname;
-   std::string dictpathname;
-   int ic, force = 0, onepcm = 0;
-   bool ignoreExistingDict = false;
-   bool requestAllSymbols = isDeep;
+   // Copied from cling driver.
+   // FIXME: Uncomment once we fix ROOT's teardown order.
+   //llvm::llvm_shutdown_obj shutdownTrigger;
 
-   std::string currentDirectory;
-   GetCurrentDirectory(currentDirectory);
+   const char *executableFileName = argv[0];
 
-   ic = 1;
-   if (!gDriverConfig->fBuildingROOTStage1) {
-      if (strcmp("-rootbuild", argv[ic]) == 0) {
-         // running rootcling for ROOT itself.
-         gBuildingROOT = true;
-         ic++;
-      }
-   }
-
-   // Set the default verbosity
-   ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kWarning;
-
-   if (!strcmp(argv[ic], "-v")) {
-      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // The default is kError
-      ic++;
-   } else if (!strcmp(argv[ic], "-v0")) {
-      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kFatal; // Explicitly remove all messages
-      ic++;
-   } else if (!strcmp(argv[ic], "-v1")) {
-      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // Only error message (default)
-      ic++;
-   } else if (!strcmp(argv[ic], "-v2")) {
-      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kWarning; // error and warning message
-      ic++;
-   } else if (!strcmp(argv[ic], "-v3")) {
-      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote; // error, warning and note
-      ic++;
-   } else if (!strcmp(argv[ic], "-v4")) {
-      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
-      genreflex::verbose = true;
-      ic++;
-   }
-   if (ic < argc) {
-      if (!strcmp(argv[ic], "-cint")) {
-         // Flag is ignored, should warn of deprecation.
-         ic++;
-      } else if (!strcmp(argv[ic], "-reflex")) {
-         // Flag is ignored, should warn of deprecation.
-         ic++;
-      } else if (!strcmp(argv[ic], "-gccxml")) {
-         // Flag is ignored, should warn of deprecation.
-         ic++;
-      }
-   }
-
-   const char *libprefixOption = "--lib-list-prefix=";
-   std::string liblistPrefix;
-
-   while (ic < argc && strncmp(argv[ic], "-", 1) == 0
-          && strcmp(argv[ic], "-f") != 0  && strcmp(argv[ic], "-r") != 0)  {
-      if (!strcmp(argv[ic], "-l")) {
-         ic++;
-      } else if (!strcmp(argv[ic], "-1")) {
-         onepcm = 1;
-         ic++;
-      } else if (!strncmp(argv[ic], libprefixOption, strlen(libprefixOption))) {
-
-         liblistPrefix = argv[ic] + strlen(libprefixOption);
-
-         string filein = liblistPrefix + ".in";
-         FILE *fp;
-         if ((fp = fopen(filein.c_str(), "r")) == 0) {
-            ROOT::TMetaUtils::Error(0, "%s: The input list file %s does not exist\n", argv[0], filein.c_str());
-            return 1;
-         }
-         fclose(fp);
-
-         ic++;
-      } else {
-         break;
-      }
-   }
-
-   if (ic < argc && !strcmp(argv[ic], "-f")) {
-      force = 1;
-      ic++;
-   } else if (ic < argc && !strcmp(argv[ic], "-r")) {
-      ignoreExistingDict = true;
-      ic++;
-   } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
-      fprintf(stderr, "%s\n", rootClingHelp);
-      return 1;
-   } else if (ic < argc && !strncmp(argv[ic], "-", 1)) {
-      fprintf(stderr, shortHelp,
-              argv[0]);
-      fprintf(stderr, "Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
-              "and must be before the -f flags\n");
-      fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
-      return 1;
-   } else {
-      force = 0;
-   }
-
-   if (argc == ic) { // Something wrong here
-      ROOT::TMetaUtils::Error(0, "Insufficient number of arguments!\n");
-      fprintf(stderr, "%s\n", shortHelp);
-      return 1;
-   }
+   llvm::sys::PrintStackTraceOnErrorSignal(executableFileName);
+   llvm::PrettyStackTraceProgram X(argc, argv);
+   MaybeSuppressWin32CrashDialogs();
 
 #if defined(R__WIN32) && !defined(R__WINGCC)
+   // FIXME: This is terrible hack allocating and changing the argument set.
+   // We should remove it and use standard llvm facilities to convert the paths.
    // cygwin's make is presenting us some cygwin paths even though
    // we are windows native. Convert them as good as we can.
-   for (int iic = ic; iic < argc; ++iic) {
+   for (int iic = 1 /* ignore binary file name in argv[0] */; iic < argc; ++iic) {
       std::string iiarg(argv[iic]);
       if (FromCygToNativePath(iiarg)) {
          size_t len = iiarg.length();
@@ -4096,242 +3980,162 @@ int RootClingMain(int argc,
    }
 #endif
 
-   // Store the temp files
-   tempFileNamesCatalog tmpCatalog;
+   // Hide options from llvm which we got from static initialization of libCling.
+   llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
 
-   if (ic < argc && IsImplementationName(argv[ic])) {
+   llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
+
+   std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
+   if (gBareClingSubcommand) {
+      std::vector<const char *> clingArgsC;
+      clingArgsC.push_back(executableFileName);
+      // Help cling finds its runtime (RuntimeUniverse.h and such).
+      clingArgsC.push_back("-I");
+      clingArgsC.push_back(gDriverConfig->fTROOT__GetEtcDir());
+
+      //clingArgsC.push_back("-resource-dir");
+      //clingArgsC.push_back(llvmResourceDir.c_str());
+
+      for (const std::string& Opt : gOptBareClingSink)
+         clingArgsC.push_back(Opt.c_str());
+
+      auto interp = llvm::make_unique<cling::Interpreter>(clingArgsC.size(),
+                                                          &clingArgsC[0],
+                                                          llvmResourceDir.c_str());
+      // FIXME: Diagnose when we have misspelled a flag. Currently we show no
+      // diagnostic and report exit as success.
+      return interp->getDiagnostics().hasFatalErrorOccurred();
+   }
+
+   std::string dictname;
+
+   if (!gDriverConfig->fBuildingROOTStage1) {
+      if (gOptRootBuild) {
+         // running rootcling as part of the ROOT build for ROOT libraries.
+         gBuildingROOT = true;
+      }
+   }
+
+   if (!gOptModuleMapFiles.empty() && !gOptCxxModule) {
+      ROOT::TMetaUtils::Error("", "Option %s can be used only when option %s is specified.\n",
+                              gOptModuleMapFiles.ArgStr.str().c_str(),
+                              gOptCxxModule.ArgStr.str().c_str());
+      std::cout << "\n";
+      llvm::cl::PrintHelpMessage();
+      return 1;
+   }
+
+   // Set the default verbosity
+   ROOT::TMetaUtils::GetErrorIgnoreLevel() = gOptVerboseLevel;
+   if (gOptVerboseLevel == v4)
+      genreflex::verbose = true;
+
+   if (gOptReflex)
+      isGenreflex = true;
+
+   if (!gOptLibListPrefix.empty()) {
+      string filein = gOptLibListPrefix + ".in";
       FILE *fp;
-      if (!ignoreExistingDict && (fp = fopen(argv[ic], "r")) != 0) {
+      if ((fp = fopen(filein.c_str(), "r")) == 0) {
+         ROOT::TMetaUtils::Error(0, "%s: The input list file %s does not exist\n", executableFileName, filein.c_str());
+         return 1;
+      }
+      fclose(fp);
+   }
+
+   if (IsImplementationName(gOptDictionaryFileName)) {
+      FILE *fp;
+      if (!gOptIgnoreExistingDict && (fp = fopen(gOptDictionaryFileName.c_str(), "r")) != 0) {
          fclose(fp);
-         if (!force) {
-            ROOT::TMetaUtils::Error(0, "%s: output file %s already exists\n", argv[0], argv[ic]);
+         if (!gOptForce) {
+            ROOT::TMetaUtils::Error(0, "%s: output file %s already exists\n", executableFileName, gOptDictionaryFileName.c_str());
             return 1;
          }
       }
 
       // remove possible pathname to get the dictionary name
-      if (strlen(argv[ic]) > (PATH_MAX - 1)) {
+      if (gOptDictionaryFileName.size() > (PATH_MAX - 1)) {
          ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
-                                 (PATH_MAX - 1), argv[ic]);
+                                 (PATH_MAX - 1), gOptDictionaryFileName.c_str());
          return 1;
       }
 
-      dictpathname = argv[ic];
-      dictname = llvm::sys::path::filename(dictpathname);
-      ic++;
-
-   } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
-      fprintf(stderr, "%s\n", rootClingHelp);
-      return 1;
-   } else {
-      ic = 1;
-      if (force) ic = 2;
+      dictname = llvm::sys::path::filename(gOptDictionaryFileName);
    }
 
-   if (force && dictname.empty()) {
+   if (gOptForce && dictname.empty()) {
       ROOT::TMetaUtils::Error(0, "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
-      fprintf(stderr, "%s\n", shortHelp);
+      llvm::cl::PrintHelpMessage();
       return 1;
    }
 
    std::vector<std::string> clingArgs;
-   clingArgs.push_back(argv[0]);
+   clingArgs.push_back(executableFileName);
    clingArgs.push_back("-iquote.");
 
-   // Is this needed at all or just historical?
-   if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
-      // Tell cling (for parsing pragma) that std::vector's iterator is a class
-      clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
-   }
-
-   if (ic < argc && !strcmp(argv[ic], "-c")) {
-      // Simply ignore the -c options.
-      ic++;
-   }
-
-   std::vector<std::string> baseModules;
-   std::string sharedLibraryPathName;
-   std::vector<std::string> rootmapLibNames;
-   std::string rootmapFileName;
-   std::vector<std::string> excludePaths;
-
-   bool inlineInputHeader = false;
-   bool interpreteronly = false;
-   bool doSplit = false;
-   bool dictSelection = true;
-   bool multiDict = false;
-   bool writeEmptyRootPCM = false;
-   bool selSyntaxOnly = false;
-   bool noIncludePaths = false;
-   bool cxxmodule = getenv("ROOT_MODULES") != nullptr;
+   bool dictSelection = !gOptNoDictSelection;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
    std::list<std::string> diagnosticPragmas = {"#pragma clang diagnostic ignored \"-Wdeprecated-declarations\""};
 
-   int nextStart = 0;
-   while (ic < argc) {
-      if (*argv[ic] == '-' || *argv[ic] == '+') {
+   if (gOptFailOnWarnings) {
+      using namespace ROOT::TMetaUtils;
+      // If warnings are disabled with the current verbosity settings, lower
+      // it so that the user sees the warning that caused the failure.
+      if (GetErrorIgnoreLevel() > kWarning)
+         GetErrorIgnoreLevel() = kWarning;
+      GetWarningsAreErrors() = true;
+   }
 
-         if (strcmp("-rml", argv[ic]) == 0 && (ic + 1) < argc) {
-            // name of the lib for the rootmap
-            rootmapLibNames.push_back(argv[ic + 1]);
-            ic += 2;
-            continue;
-         }
-
-         if (strcmp("-rmf", argv[ic]) == 0 && (ic + 1) < argc) {
-            // name for the rootmap file
-            rootmapFileName = argv[ic + 1];
-            ic += 2;
-            continue;
-         }
-
-         if (strcmp("-cxxmodule", argv[ic]) == 0) {
-            cxxmodule = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-multiDict", argv[ic]) == 0) {
-            // Generate a pcm name which contains the libname and the dict name
-            multiDict = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-interpreteronly", argv[ic]) == 0) {
-            // Generate dictionaries only for the interpreter
-            interpreteronly = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-split", argv[ic]) == 0) {
-            // Split the dict
-            doSplit = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-noDictSelection", argv[ic]) == 0) {
-            // Disable selection
-            dictSelection = false;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-s", argv[ic]) == 0 && (ic + 1) < argc) {
-            // Target shared library name
-            sharedLibraryPathName = argv[ic + 1];
-            ic += 2;
-            continue;
-         }
-
-
-         if (strcmp("-m", argv[ic]) == 0 && (ic + 1) < argc) {
-            // precompiled modules
-            baseModules.push_back(argv[ic + 1]);
-            ic += 2;
-            continue;
-         }
-
-         if (strcmp("-excludePath", argv[ic]) == 0 && (ic + 1) < argc) {
-            // Path to be excluded from the ones rememberd by the dictionary
-            excludePaths.push_back(argv[ic + 1]);
-            ic += 2;
-            continue;
-         }
-         if (strcmp("+P", argv[ic]) == 0 ||
-               strcmp("+V", argv[ic]) == 0 ||
-               strcmp("+STUB", argv[ic]) == 0) {
-            // Ignore CINT arguments.
-            continue;
-         }
-
-         if (strcmp("-inlineInputHeader", argv[ic]) == 0) {
-            // inline the input header
-            inlineInputHeader = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-writeEmptyRootPCM", argv[ic]) == 0) {
-            // inline the input header
-            writeEmptyRootPCM = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-selSyntaxOnly", argv[ic]) == 0) {
-            // validate the selection grammar w/o creating the dictionary
-            selSyntaxOnly = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-failOnWarnings", argv[ic]) == 0) {
-            using namespace ROOT::TMetaUtils;
-            // Fail on Warnings and Errors
-            // If warnings are disabled with the current verbosity settings, lower
-            // it so that the user sees the warning that caused the failure.
-            if (GetErrorIgnoreLevel() > kWarning)
-               GetErrorIgnoreLevel() = kWarning;
-            GetWarningsAreErrors() = true;
-            ic += 1;
-            continue;
-         }
-
-         if (strcmp("-noIncludePaths", argv[ic]) == 0) {
-            noIncludePaths = true;
-            ic += 1;
-            continue;
-         }
-
-         if ((ic + 1) < argc && strcmp("-isysroot", argv[ic]) == 0) {
-            clingArgs.push_back(argv[ic++]);
-            clingArgs.push_back(argv[ic++]);
-            continue;
-         }
-
-         if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
-            ic += skip;
-            continue;
-         } else {
-            // filter out even more undesirable options
-            if (strcmp("-p", argv[ic])) {
-               CheckForMinusW(argv[ic], diagnosticPragmas);
-               clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
-            }
-         }
-      } else if (nextStart == 0) {
-         nextStart = ic;
+   if (gOptISysRoot != "-") {
+      if (gOptISysRoot.empty()) {
+        ROOT::TMetaUtils::Error("", "isysroot specified without a value.\n");
+        return 1;
       }
-      ic++;
+      clingArgs.push_back(gOptISysRoot.ArgStr);
+      clingArgs.push_back(gOptISysRoot.ValueStr);
    }
 
    // Check if we have a multi dict request but no target library
-   if (multiDict && sharedLibraryPathName.empty()) {
+   if (gOptMultiDict && gOptSharedLibFileName.empty()) {
       ROOT::TMetaUtils::Error("", "Multidict requested but no target library. Please specify one with the -s argument.\n");
       return 1;
    }
 
-   ic = nextStart;
-   clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir()));
+   for (const std::string &PPDefine : gOptPPDefines)
+      clingArgs.push_back(std::string("-D") + PPDefine);
+
+   for (const std::string &PPUndefine : gOptPPUndefines)
+      clingArgs.push_back(std::string("-U") + PPUndefine);
+
+   for (const std::string &IncludePath : gOptIncludePaths)
+      clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
+
+   for (const std::string &WDiag : gOptWDiags) {
+      const std::string FullWDiag = std::string("-W") + WDiag;
+      // Suppress warning when compiling the dictionary, eg. gcc G__xxx.cxx
+      CheckForMinusW(FullWDiag, diagnosticPragmas);
+      // Suppress warning when compiling the input headers by cling.
+      clingArgs.push_back(FullWDiag);
+   }
+
+   std::string includeDir = llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir());
+   clingArgs.push_back(std::string("-I") + includeDir);
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
       auto thisArg = clingArgs[parg];
       auto isInclude = ROOT::TMetaUtils::BeginsWith(thisArg,"-I");
       if (thisArg == "-c" ||
-          (noIncludePaths && isInclude)) continue;
+          (gOptNoIncludePaths && isInclude)) continue;
       // We now check if the include directories are not excluded
       if (isInclude) {
          unsigned int offset = 2; // -I is two characters. Now account for spaces
          char c = thisArg[offset];
          while (c == ' ') c = thisArg[++offset];
-         auto excludePathsEnd = excludePaths.end();
-         auto excludePathPos = std::find_if(excludePaths.begin(),
+         auto excludePathsEnd = gOptExcludePaths.end();
+         auto excludePathPos = std::find_if(gOptExcludePaths.begin(),
                                             excludePathsEnd,
                                             [&](const std::string& path){
                                                return ROOT::TMetaUtils::BeginsWith(&thisArg[offset], path);});
@@ -4343,9 +4147,22 @@ int RootClingMain(int argc,
    // cling-only arguments
    clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetEtcDir()));
    // We do not want __ROOTCLING__ in the pch!
-   if (!onepcm) {
+   if (!gOptGeneratePCH) {
       clingArgs.push_back("-D__ROOTCLING__");
    }
+#ifdef R__MACOSX
+   clingArgs.push_back("-DSYSTEM_TYPE_macosx");
+#elif defined(R__WIN32)
+   clingArgs.push_back("-DSYSTEM_TYPE_winnt");
+
+   // Prevent the following #error: The C++ Standard Library forbids macroizing keywords.
+   clingArgs.push_back("-D_XKEYCHECK_H");
+   // Tell windows.h not to #define min and max, it clashes with numerical_limits.
+   clingArgs.push_back("-DNOMINMAX");
+#else // assume UNIX
+   clingArgs.push_back("-DSYSTEM_TYPE_unix");
+#endif
+
    clingArgs.push_back("-fsyntax-only");
 #ifndef R__WIN32
    clingArgs.push_back("-fPIC");
@@ -4362,48 +4179,86 @@ int RootClingMain(int argc,
    // FIXME: This line is from TModuleGenerator, but we can't reuse this code
    // at this point because TModuleGenerator needs a CompilerInstance (and we
    // currently create the arguments for creating said CompilerInstance).
-   bool isPCH = (dictpathname == "allDict.cxx");
+   bool isPCH = (gOptDictionaryFileName.getValue() == "allDict.cxx");
    std::string outputFile;
    // Data is in 'outputFile', therefore in the same scope.
-   StringRef moduleName;
+   llvm::StringRef moduleName;
    std::string vfsArg;
    // Adding -fmodules to the args will break lexing with __CINT__ defined,
    // and we actually do lex with __CINT__ and reuse this variable later,
    // we have to copy it now.
    auto clingArgsInterpreter = clingArgs;
 
-   if (sharedLibraryPathName.empty()) {
-      sharedLibraryPathName = dictpathname;
+   if (gOptSharedLibFileName.empty()) {
+      gOptSharedLibFileName = gOptDictionaryFileName.getValue();
    }
 
-   if (!isPCH && cxxmodule) {
+   if (!isPCH && gOptCxxModule) {
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
+      clingArgsInterpreter.push_back("-fno-implicit-module-maps");
+
+      for (const std::string &modulemap : gOptModuleMapFiles)
+         clingArgsInterpreter.push_back("-fmodule-map-file=" + modulemap);
+
+      clingArgsInterpreter.push_back("-fmodule-map-file=" +
+                                     std::string(gDriverConfig->fTROOT__GetIncludeDir()) +
+                                     "/module.modulemap");
+      std::string ModuleMapCWD = ROOT::FoundationUtils::GetCurrentDir() + "/module.modulemap";
+      if (llvm::sys::fs::exists(ModuleMapCWD))
+         clingArgsInterpreter.push_back("-fmodule-map-file=" + ModuleMapCWD);
 
       // Specify the module name that we can lookup the module in the modulemap.
-      outputFile = llvm::sys::path::stem(sharedLibraryPathName).str();
+      outputFile = llvm::sys::path::stem(gOptSharedLibFileName).str();
       // Try to get the module name in the modulemap based on the filepath.
-      moduleName = llvm::sys::path::filename(outputFile);
-      moduleName.consume_front("lib");
-      moduleName.consume_back("_rdict.pcm");
+      moduleName = GetModuleNameFromRdictName(outputFile);
 
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
 
-      std::string vfsPath = std::string(gDriverConfig->fTROOT__GetIncludeDir()) + "/modulemap.overlay.yaml";
-      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
-      // generate it.
-      if (FileExists(vfsPath.c_str())) {
-         vfsArg = "-ivfsoverlay" + vfsPath;
-         clingArgsInterpreter.push_back(vfsArg.c_str());
+      std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
+      // FIXME: This is a horrible workaround to fix the incremental builds.
+      // The enumerated modules are built by clang impicitly based on #include of
+      // a header which is contained within that module. The build system has
+      // no way to track dependencies on them and trigger a rebuild.
+      // A possible solution can be to disable completely the implicit build of
+      // modules and each module to be built by rootcling. We need to teach
+      // rootcling how to build modules with no IO support.
+      if (moduleName == "Core") {
+         assert(gDriverConfig->fBuildingROOTStage1);
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "_Builtin_intrinsics.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "_Builtin_stddef_max_align_t.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime_Extra.pcm").str().c_str());
+#ifdef R__WIN32
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "vcruntime.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "services.pcm").str().c_str());
+#endif
+
+#ifdef R__MACOSX
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "Darwin.pcm").str().c_str());
+#else
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "libc.pcm").str().c_str());
+#endif
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "std.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "boost.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "tinyxml2.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Config.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_Stage1_NoRTTI.pcm").str().c_str());
+      } else if (moduleName == "MathCore") {
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "Vc.pcm").str().c_str());
       }
 
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
-      clingArgsInterpreter.push_back("-fmodules-cache-path=" +
-                                     llvm::sys::path::parent_path(sharedLibraryPathName).str());
+      clingArgsInterpreter.push_back("-fmodules-cache-path=" + moduleCachePath);
    }
+
+   if (gOptVerboseLevel == v4)
+      clingArgsInterpreter.push_back("-v");
 
    // Convert arguments to a C array and check if they are sane
    std::vector<const char *> clingArgsC;
@@ -4416,37 +4271,32 @@ int RootClingMain(int argc,
       clingArgsC.push_back(clingArg.c_str());
    }
 
-#ifdef R__EXTERN_LLVMDIR
-   std::string resourceDir = R__EXTERN_LLVMDIR;
-#else
-   std::string resourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
-#endif
 
    std::unique_ptr<cling::Interpreter> owningInterpPtr;
    cling::Interpreter* interpPtr = nullptr;
 
    std::list<std::string> filesIncludedByLinkdef;
-   if (!gDriverConfig->fBuildingROOTStage1) {
-      // Pass the interpreter arguments to TCling's interpreter:
-      clingArgsC.push_back("-resource-dir");
-      clingArgsC.push_back(resourceDir.c_str());
-      clingArgsC.push_back(0); // signal end of array
-      const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
-      extraArgs = &clingArgsC[1]; // skip binary name
-      interpPtr = gDriverConfig->fTCling__GetInterpreter();
-      if (!isGenreflex && !onepcm) {
-         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(interpPtr, filesIncludedByLinkdef));
-         interpPtr->setCallbacks(std::move(callBacks));
-      }
-   } else {
+   if (gDriverConfig->fBuildingROOTStage1) {
 #ifdef R__FAST_MATH
       // Same setting as in TCling.cxx.
       clingArgsC.push_back("-ffast-math");
 #endif
 
       owningInterpPtr.reset(new cling::Interpreter(clingArgsC.size(), &clingArgsC[0],
-                                                   resourceDir.c_str()));
+                                                   llvmResourceDir.c_str()));
       interpPtr = owningInterpPtr.get();
+   } else {
+      // Pass the interpreter arguments to TCling's interpreter:
+      clingArgsC.push_back("-resource-dir");
+      clingArgsC.push_back(llvmResourceDir.c_str());
+      clingArgsC.push_back(0); // signal end of array
+      const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
+      extraArgs = &clingArgsC[1]; // skip binary name
+      interpPtr = gDriverConfig->fTCling__GetInterpreter();
+      if (!isGenreflex && !gOptGeneratePCH) {
+         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(interpPtr, filesIncludedByLinkdef));
+         interpPtr->setCallbacks(std::move(callBacks));
+      }
    }
    cling::Interpreter &interp = *interpPtr;
    clang::CompilerInstance *CI = interp.getCI();
@@ -4496,144 +4346,127 @@ int RootClingMain(int argc,
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
-   if (isGenreflex) {
-      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
-         // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
-         return 1;
+
+   if (gOptCxxModule) {
+      for (llvm::StringRef DepMod : gOptModuleDependencies) {
+         if (DepMod.endswith("_rdict.pcm")) {
+            ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpath>]%s.pcm\n",
+                                      DepMod.data(),
+                                      GetModuleNameFromRdictName(DepMod).str().data());
+         }
+         DepMod = GetModuleNameFromRdictName(DepMod);
+         // We might deserialize.
+         cling::Interpreter::PushTransactionRAII RAII(&interp);
+         if (!interp.loadModule(DepMod, /*complain*/false)) {
+            ROOT::TMetaUtils::Error(0, "Module '%s' failed to load.\n",
+                                    DepMod.data());
+         }
       }
-   } else {
-      // rootcling
-      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
-            // CINT uses to define a few header implicitly, we need to do it explicitly.
-            || interp.declare("#include <assert.h>\n"
-                              "#include <stdlib.h>\n"
-                              "#include <stddef.h>\n"
-                              "#include <string.h>\n"
-                             ) != cling::Interpreter::kSuccess
-            || interp.declare("#include \"Rtypes.h\"\n"
-                              "#include \"TClingRuntime.h\"\n"
-                              "#include \"TObject.h\""
-                             ) != cling::Interpreter::kSuccess
+   }
+
+   if (!isGenreflex) { // rootcling
+      // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
+      if (interp.declare("#include <assert.h>\n"
+                         "#include \"Rtypes.h\"\n"
+                         "#include \"TObject.h\"") != cling::Interpreter::kSuccess
          ) {
          // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+         ROOT::TMetaUtils::Error(0, "Error loading the default rootcling header files.\n");
          return 1;
       }
    }
 
-   // For the list of 'opaque' typedef to also include string, we have to include it now.
-   interp.declare("#include <string>");
+   if (interp.declare("#include <string>\n" // For the list of 'opaque' typedef to also include string.
+                      "#include <RtypesCore.h>\n" // For initializing TNormalizedCtxt.
+                      "namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+      ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+      return 1;
+   }
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0, 0);
+   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0, 0, nullptr);
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");
    clingArgs.push_back("-D__MAKECINT__");
-#ifdef R__WIN32
-   // Prevent the following #error: The C++ Standard Library forbids macroizing keywords.
-   clingArgs.push_back("-D_XKEYCHECK_H");
-#endif
 
    AddPlatformDefines(clingArgs);
+
+   std::string currentDirectory = ROOT::FoundationUtils::GetCurrentDir();
 
    std::string interpPragmaSource;
    std::string includeForSource;
    std::string interpreterDeclarations;
-   string esc_arg;
-   int firstInputFile = 0;
-   int linkdefLoc = 0;
-   for (int i = ic; i < argc; i++) {
-      if (strcmp("-m", argv[i]) == 0 && (i + 1) < argc) {
-         // precompiled modules
-         baseModules.push_back(argv[ic + 1]);
-         ++i;
-         continue;
-      }
-      if (!firstInputFile && *argv[i] != '-' && *argv[i] != '+') {
-         firstInputFile = i;
-      }
-      if (IsSelectionFile(argv[i])) {
-         linkdefLoc = i;
-         if (i != argc - 1) {
-            ROOT::TMetaUtils::Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
+   std::string linkdef;
+
+   for (size_t i = 0, e = gOptDictionaryHeaderFiles.size(); i < e; ++i) {
+      const std::string& optHeaderFileName = gOptDictionaryHeaderFiles[i];
+      bool isSelectionFile = IsSelectionFile(optHeaderFileName.c_str());
+
+      if (isSelectionFile) {
+         if (i == e - 1) {
+            linkdef = optHeaderFileName;
+         } else { // if the linkdef was not last, issue an error.
+            ROOT::TMetaUtils::Error(0, "%s: %s must be last file on command line\n",
+                                    executableFileName, optHeaderFileName.c_str());
             return 1;
          }
       }
-      if (!strcmp(argv[i], "-c")) {
-         // Simply ignore the -c options.
-         // ROOT::TMetaUtils::Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
-         // return 1;
+
+      // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+      std::string fullheader(optHeaderFileName);
+      // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
+      // use directly argv.
+      if (fullheader[fullheader.length() - 1] == '+') {
+         fullheader.erase(fullheader.length() - 1);
       }
-      if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
-         i += (skip - 1); // for-loop takes care of the extra 1.
-         continue;
-      } else {
-         // filter out undesirable options
+      std::string header(
+         isSelectionFile ? fullheader : ROOT::FoundationUtils::MakePathRelative(fullheader, currentDirectory, gBuildingROOT));
 
-         if (*argv[i] != '-' && *argv[i] != '+') {
-            // Looks like a file
-
-            bool isSelectionFile = IsSelectionFile(argv[i]);
-
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            std::string fullheader(argv[i]);
-            // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
-            // use directly argv.
-            if (fullheader[fullheader.length() - 1] == '+') {
-               fullheader.erase(fullheader.length() - 1);
-            }
-            std::string header(isSelectionFile ? fullheader : GetRelocatableHeaderName(fullheader, currentDirectory));
-
-            interpPragmaSource += std::string("#include \"") + header + "\"\n";
-            if (!isSelectionFile) {
-               // In order to not have to add the equivelent to -I${PWD} to the
-               // command line, include the complete file name, even if it is a
-               // full pathname, when we write it down in the dictionary.
-               // Note: have -I${PWD} means in that (at least in the case of
-               // ACLiC) we inadvertently pick local file that have the same
-               // name as system header (e.g. new or list) and -iquote has not
-               // equivalent on some platforms.
-               includeForSource += std::string("#include \"") + fullheader + "\"\n";
-               pcmArgs.push_back(header);
-            } else if (!IsSelectionXml(argv[i])) {
-               interpreterDeclarations += std::string("#include \"") + header + "\"\n";
-            }
-         }
+      interpPragmaSource += std::string("#include \"") + header + "\"\n";
+      if (!isSelectionFile) {
+         // In order to not have to add the equivalent to -I${PWD} to the
+         // command line, include the complete file name, even if it is a
+         // full pathname, when we write it down in the dictionary.
+         // Note: have -I${PWD} means in that (at least in the case of
+         // ACLiC) we inadvertently pick local file that have the same
+         // name as system header (e.g. new or list) and -iquote has not
+         // equivalent on some platforms.
+         includeForSource += std::string("#include \"") + fullheader + "\"\n";
+         pcmArgs.push_back(header);
+      } else if (!IsSelectionXml(optHeaderFileName.c_str())) {
+         interpreterDeclarations += std::string("#include \"") + header + "\"\n";
       }
    }
 
-   if (gDriverConfig->fAddAncestorPCMROOTFile) {
-      for (const auto & baseModule : baseModules)
-         gDriverConfig->fAddAncestorPCMROOTFile(baseModule.c_str());
-   }
-
-   if (!firstInputFile) {
-      ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
-      return 1;
+   if (gOptUmbrellaInput) {
+      bool hasSelectionFile = !linkdef.empty();
+      unsigned expectedHeaderFilesSize = 1 + hasSelectionFile;
+      if (gOptDictionaryHeaderFiles.size() > expectedHeaderFilesSize)
+         ROOT::TMetaUtils::Error(0, "Option %s used but more than one header file specified.\n",
+                                 gOptUmbrellaInput.ArgStr.data());
    }
 
    // We have a multiDict request. This implies generating a pcm which is of the form
    // dictName_libname_rdict.pcm
-   if (multiDict) {
+   if (gOptMultiDict) {
 
-      std::string newName = llvm::sys::path::parent_path(sharedLibraryPathName).str();
+      std::string newName = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
       if (!newName.empty())
          newName += gPathSeparator;
-      newName += llvm::sys::path::stem(sharedLibraryPathName);
+      newName += llvm::sys::path::stem(gOptSharedLibFileName);
       newName += "_";
-      newName += llvm::sys::path::stem(dictpathname);
-      newName += llvm::sys::path::extension(sharedLibraryPathName);
-      sharedLibraryPathName = newName;
+      newName += llvm::sys::path::stem(gOptDictionaryFileName);
+      newName += llvm::sys::path::extension(gOptSharedLibFileName);
+      gOptSharedLibFileName = newName;
    }
 
    // Until the module are actually enabled in ROOT, we need to register
    // the 'current' directory to make it relocatable (i.e. have a way
    // to find the headers).
-   if (!gBuildingROOT && !noIncludePaths){
+   if (!gBuildingROOT && !gOptNoIncludePaths){
       string incCurDir = "-I";
       incCurDir += currentDirectory;
       pcmArgs.push_back(incCurDir);
@@ -4646,7 +4479,10 @@ int RootClingMain(int argc,
       std::copy(diagnosticPragmas.begin(),
                 diagnosticPragmas.end(),
                 std::ostream_iterator<std::string>(res, delim));
-      interp.declare(res.str());
+      if (interp.declare(res.str()) != cling::Interpreter::kSuccess) {
+         ROOT::TMetaUtils::Error(0, "Failed to parse -Wno-xyz flags as pragmas:\n%s", res.str().c_str());
+         return 1;
+      }
    }
 
    class IgnoringPragmaHandler: public clang::PragmaNamespace {
@@ -4654,7 +4490,7 @@ int RootClingMain(int argc,
       IgnoringPragmaHandler(const char* pragma):
          clang::PragmaNamespace(pragma) {}
       void HandlePragma(clang::Preprocessor &PP,
-                        clang::PragmaIntroducerKind Introducer,
+                        clang::PragmaIntroducer Introducer,
                         clang::Token &tok) {
          PP.DiscardUntilEndOfDirective();
       }
@@ -4669,18 +4505,18 @@ int RootClingMain(int argc,
 
    if (!interpreterDeclarations.empty() &&
        interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
-      ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
+      ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", executableFileName);
       return 1;
    }
 
 
    TModuleGenerator modGen(interp.getCI(),
-                           inlineInputHeader,
-                           sharedLibraryPathName,
-                           writeEmptyRootPCM);
+                           gOptInlineInput,
+                           gOptSharedLibFileName,
+                           gOptWriteEmptyRootPCM);
 
    if (!gDriverConfig->fBuildingROOTStage1 && !filesIncludedByLinkdef.empty()) {
-      pcmArgs.push_back(argv[linkdefLoc]);
+      pcmArgs.push_back(linkdef);
    }
 
    modGen.ParseArgs(pcmArgs);
@@ -4693,75 +4529,94 @@ int RootClingMain(int argc,
       std::stringstream definesUndefinesStr;
       modGen.WritePPDefines(definesUndefinesStr);
       modGen.WritePPUndefines(definesUndefinesStr);
-      if (!definesUndefinesStr.str().empty())
-         interp.declare(definesUndefinesStr.str());
+      if (!definesUndefinesStr.str().empty()) {
+         if (interp.declare(definesUndefinesStr.str()) != cling::Interpreter::kSuccess) {
+            ROOT::TMetaUtils::Error(0, "Failed to parse -D, -U flags as preprocessor directives:\n%s", definesUndefinesStr.str().c_str());
+            return 1;
+         }
+      }
    }
 
-   if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
-         || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
+   if (!InjectModuleUtilHeader(executableFileName, modGen, interp, true)
+         || !InjectModuleUtilHeader(executableFileName, modGen, interp, false)) {
       return 1;
    }
 
-   if (!linkdefLoc) {
+   if (linkdef.empty()) {
       // Generate autolinkdef
-      GenerateLinkdef(&argc, argv, firstInputFile, interpPragmaSource);
+      GenerateLinkdef(gOptDictionaryHeaderFiles, interpPragmaSource);
    }
 
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
-   string main_dictname(dictpathname);
-   std::ostream *dictStreamPtr = NULL;
-   if (!ignoreExistingDict) {
-      if (!dictpathname.empty()) {
-         tmpCatalog.addFileName(dictpathname);
-         fileout.open(dictpathname.c_str());
-         dictStreamPtr = &fileout;
-         if (!(*dictStreamPtr)) {
+   string main_dictname(gOptDictionaryFileName.getValue());
+   std::ostream *splitDictStream = nullptr;
+   std::unique_ptr<std::ostream> splitDeleter(nullptr);
+   // Store the temp files
+   tempFileNamesCatalog tmpCatalog;
+   if (!gOptIgnoreExistingDict) {
+      if (!gOptDictionaryFileName.empty()) {
+         tmpCatalog.addFileName(gOptDictionaryFileName.getValue());
+         fileout.open(gOptDictionaryFileName.c_str());
+         if (!fileout) {
             ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-                                    dictpathname.c_str());
+                                    gOptDictionaryFileName.c_str());
             return 1;
          }
-      } else {
-         dictStreamPtr = &std::cout;
       }
-   } else {
-      fileout.open("/dev/null");
-      dictStreamPtr = &fileout;
    }
 
-   // Now generate a second stream for the split dictionary if it is necessary
-   std::ostream *splitDictStreamPtr = doSplit ? CreateStreamPtrForSplitDict(dictpathname, tmpCatalog) : dictStreamPtr;
-   std::ostream &dictStream = *dictStreamPtr;
-   std::ostream &splitDictStream = *splitDictStreamPtr;
+   std::ostream &dictStream = (!gOptIgnoreExistingDict && !gOptDictionaryFileName.empty()) ? fileout : std::cout;
+   bool isACLiC = gOptDictionaryFileName.getValue().find("_ACLiC_dict") != std::string::npos;
 
-   size_t dh = main_dictname.rfind('.');
-   if (dh != std::string::npos) {
-      main_dictname.erase(dh);
+   if (!gOptIgnoreExistingDict) {
+      // Now generate a second stream for the split dictionary if it is necessary
+      if (gOptSplit) {
+         splitDictStream = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
+         splitDeleter.reset(splitDictStream);
+      } else {
+         splitDictStream = &dictStream;
+      }
+
+      size_t dh = main_dictname.rfind('.');
+      if (dh != std::string::npos) {
+         main_dictname.erase(dh);
+      }
+      // Need to replace all the characters not allowed in a symbol ...
+      std::string main_dictname_copy(main_dictname);
+      TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
+
+      CreateDictHeader(dictStream, main_dictname);
+      if (gOptSplit)
+         CreateDictHeader(*splitDictStream, main_dictname);
+
+      if (!gOptNoGlobalUsingStd) {
+         // ACLiC'ed macros might rely on `using namespace std` in front of user headers
+         if (isACLiC) {
+            AddNamespaceSTDdeclaration(dictStream);
+            if (gOptSplit) {
+               AddNamespaceSTDdeclaration(*splitDictStream);
+            }
+         }
+      }
    }
-   // Need to replace all the characters not allowed in a symbol ...
-   std::string main_dictname_copy(main_dictname);
-   TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
-
-   CreateDictHeader(dictStream, main_dictname);
-   if (doSplit)
-      CreateDictHeader(splitDictStream, main_dictname);
 
    //---------------------------------------------------------------------------
    // Parse the linkdef or selection.xml file.
    /////////////////////////////////////////////////////////////////////////////
 
    string linkdefFilename;
-   if (!linkdefLoc) {
+   if (linkdef.empty()) {
       linkdefFilename = "in memory";
    } else {
-      bool found = Which(interp, argv[linkdefLoc], linkdefFilename);
+      bool found = Which(interp, linkdef.c_str(), linkdefFilename);
       if (!found) {
-         ROOT::TMetaUtils::Error(0, "%s: cannot open linkdef file %s\n", argv[0], argv[linkdefLoc]);
+         ROOT::TMetaUtils::Error(0, "%s: cannot open linkdef file %s\n", executableFileName, linkdef.c_str());
          return 1;
       }
    }
 
-   // Exclude string not to re-generatre the dictionary
+   // Exclude string not to re-generate the dictionary
    std::vector<std::pair<std::string, std::string>> namesForExclusion;
    if (!gBuildingROOT) {
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name, "std::string"));
@@ -4776,16 +4631,16 @@ int RootClingMain(int argc,
 
    // Select using DictSelection
    const unsigned int selRulesInitialSize = selectionRules.Size();
-   if (dictSelection && !onepcm)
-      DictSelectionReader dictSelReader(interp, selectionRules, CI->getASTContext(), normCtxt);
+   if (dictSelection && !gOptGeneratePCH)
+      ROOT::Internal::DictSelectionReader dictSelReader(interp, selectionRules, CI->getASTContext(), normCtxt);
 
    bool dictSelRulesPresent = selectionRules.Size() > selRulesInitialSize;
 
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
-   if (requestAllSymbols && !isSelXML) {
-      selectionRules.SetDeep(true);
-   } else if (!linkdefLoc) {
+   int rootclingRetCode(0);
+
+   if (linkdef.empty()) {
       // There is no linkdef file, we added the 'default' #pragma to
       // interpPragmaSource.
 
@@ -4793,8 +4648,9 @@ int RootClingMain(int argc,
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       resourceDir.c_str())) {
+                       llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
+         rootclingRetCode += 1;
       } else {
          ROOT::TMetaUtils::Info(0, "#pragma successfully parsed.\n");
       }
@@ -4803,6 +4659,7 @@ int RootClingMain(int argc,
          ROOT::TMetaUtils::Error(0, "Error loading the #pragma extra_include.\n");
          return 1;
       }
+
    } else if (isSelXML) {
 
       selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
@@ -4839,8 +4696,9 @@ int RootClingMain(int argc,
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       resourceDir.c_str())) {
+                       llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
+         rootclingRetCode += 1;
       } else {
          ROOT::TMetaUtils::Info(0, "Linkdef file successfully parsed.\n");
       }
@@ -4849,6 +4707,7 @@ int RootClingMain(int argc,
          ROOT::TMetaUtils::Error(0, "Error loading the #pragma extra_include.\n");
          return 1;
       }
+
    } else {
 
       ROOT::TMetaUtils::Error(0, "Unrecognized selection file: %s\n", linkdefFilename.c_str());
@@ -4866,14 +4725,14 @@ int RootClingMain(int argc,
    }
 
    // If we want to validate the selection only, we just quit.
-   if (selSyntaxOnly)
+   if (gOptCheckSelectionSyntax)
       return 0;
 
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
    /////////////////////////////////////////////////////////////////////////////
 
-   if (!ROOT::gReadRules.empty() || !ROOT::gReadRawRules.empty()) {
+   if ((!ROOT::gReadRules.empty() || !ROOT::gReadRawRules.empty()) && !gOptIgnoreExistingDict) {
       dictStream << "#include \"TBuffer.h\"\n"
                  << "#include \"TVirtualObject.h\"\n"
                  << "#include <vector>\n"
@@ -4900,7 +4759,7 @@ int RootClingMain(int argc,
 
    // Select the type of scan
    auto scanType = RScanner::EScanType::kNormal;
-   if (onepcm)
+   if (gOptGeneratePCH)
       scanType = RScanner::EScanType::kOnePCM;
    if (dictSelection)
       scanType = RScanner::EScanType::kTwoPasses;
@@ -4912,13 +4771,9 @@ int RootClingMain(int argc,
                  scannerVerbLevel);
 
    // If needed initialize the autoloading hook
-   if (liblistPrefix.length()) {
-      LoadLibraryMap(liblistPrefix + ".in", gAutoloads);
+   if (!gOptLibListPrefix.empty()) {
+      LoadLibraryMap(gOptLibListPrefix + ".in", gAutoloads);
       scan.SetRecordDeclCallback(RecordDeclCallback);
-   }
-
-   if (requestAllSymbols) {
-      selectionRules.SetDeep(true);
    }
 
    scan.Scan(CI->getASTContext());
@@ -4929,15 +4784,13 @@ int RootClingMain(int argc,
       selectionRules.PrintSelectionRules();
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() != ROOT::TMetaUtils::kFatal &&
-         !onepcm &&
+         !gOptGeneratePCH &&
          !dictSelRulesPresent &&
          !selectionRules.AreAllSelectionRulesUsed()) {
       ROOT::TMetaUtils::Warning(0, "Not all selection rules are used!\n");
    }
 
-   int rootclingRetCode(0);
-
-   if (!onepcm){
+   if (!gOptGeneratePCH){
       rootclingRetCode += CheckForUnsupportedClasses(scan.fSelectedClasses);
       if (rootclingRetCode) return rootclingRetCode;
    }
@@ -4973,10 +4826,21 @@ int RootClingMain(int argc,
       }
    }
 
-   if (!onepcm) {
-      GenerateNecessaryIncludes(dictStream, includeForSource, extraIncludes);
-      if (doSplit) {
-         GenerateNecessaryIncludes(splitDictStream, includeForSource, extraIncludes);
+   if (!gOptGeneratePCH) {
+      if (!gOptIgnoreExistingDict) {
+         GenerateNecessaryIncludes(dictStream, includeForSource, extraIncludes);
+         if (gOptSplit) {
+            GenerateNecessaryIncludes(*splitDictStream, includeForSource, extraIncludes);
+         }
+      }
+      if (!gOptNoGlobalUsingStd) {
+         // ACLiC'ed macros might have relied on `using namespace std` in front of user headers
+         if (!isACLiC) {
+            AddNamespaceSTDdeclaration(dictStream);
+            if (gOptSplit) {
+               AddNamespaceSTDdeclaration(*splitDictStream);
+            }
+         }
       }
       if (gDriverConfig->fInitializeStreamerInfoROOTFile) {
          gDriverConfig->fInitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
@@ -4985,16 +4849,23 @@ int RootClingMain(int argc,
       // The order of addition to the list of constructor type
       // is significant.  The list is sorted by with the highest
       // priority first.
-      if (!interpreteronly) {
-         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
-         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("__void__", interp)); // ROOT-7723
-         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
+      if (!gOptInterpreterOnly) {
+         constructorTypes.emplace_back("TRootIOCtor", interp);
+         constructorTypes.emplace_back("__void__", interp); // ROOT-7723
+         constructorTypes.emplace_back("", interp);
+      }
+   }
+   if (!gOptIgnoreExistingDict && gOptNoGlobalUsingStd) {
+      AddNamespaceSTDdeclaration(dictStream);
+
+      if (gOptSplit && splitDictStream) {
+         AddNamespaceSTDdeclaration(*splitDictStream);
       }
    }
 
-   if (onepcm) {
+   if (gOptGeneratePCH) {
       AnnotateAllDeclsForPCH(interp, scan);
-   } else if (interpreteronly) {
+   } else if (gOptInterpreterOnly) {
       rootclingRetCode += CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
       // Negate as true is 1 and true is returned in case of success.
@@ -5002,26 +4873,24 @@ int RootClingMain(int argc,
          rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
       }
    } else {
-      rootclingRetCode += GenerateFullDict(splitDictStream,
+      rootclingRetCode += GenerateFullDict(*splitDictStream,
                                  interp,
                                  scan,
                                  constructorTypes,
-                                 doSplit,
+                                 gOptSplit,
                                  isGenreflex,
-                                 writeEmptyRootPCM);
+                                 gOptWriteEmptyRootPCM);
    }
 
    if (rootclingRetCode != 0) {
       return rootclingRetCode;
    }
 
-   if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
-
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    HeadersDeclsMap_t headersClassesMap;
    HeadersDeclsMap_t headersDeclsMap;
-   if (!ignoreExistingDict) {
+   if (!gOptIgnoreExistingDict) {
       const std::string fwdDeclnArgsToKeepString(GetFwdDeclnArgsToKeepString(normCtxt, interp));
 
       ExtractHeadersForDecls(scan.fSelectedClasses,
@@ -5035,51 +4904,51 @@ int RootClingMain(int argc,
 
       std::string detectedUmbrella;
       for (auto & arg : pcmArgs) {
-         if (inlineInputHeader && !ROOT::TMetaUtils::IsLinkdefFile(arg.c_str()) && ROOT::TMetaUtils::IsHeaderName(arg)) {
+         if (gOptInlineInput && !ROOT::TMetaUtils::IsLinkdefFile(arg.c_str()) && ROOT::TMetaUtils::IsHeaderName(arg)) {
             detectedUmbrella = arg;
             break;
          }
       }
 
-      if (writeEmptyRootPCM){
+      if (gOptWriteEmptyRootPCM){
          headersDeclsMap.clear();
       }
 
 
-      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
-                                                                                      detectedUmbrella,
-                                                                                      true);
+      std::string headersClassesMapString = "\"\"";
       std::string fwdDeclsString = "\"\"";
-      if (!gDriverConfig->fBuildingROOTStage1) {
-         if (writeEmptyRootPCM) {
-            fwdDeclsString = "nullptr";
-         } else {
-            fwdDeclsString = GenerateFwdDeclString(scan, interp);
+      if (!gOptCxxModule) {
+         headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
+                                                                       detectedUmbrella,
+                                                                       true);
+         if (!gDriverConfig->fBuildingROOTStage1) {
+            if (!gOptWriteEmptyRootPCM)
+               fwdDeclsString = GenerateFwdDeclString(scan, interp);
          }
       }
-
-      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString);
+      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
+                                     extraIncludes, gOptCxxModule);
       // If we just want to inline the input header, we don't need
       // to generate any files.
-      if (!inlineInputHeader) {
+      if (!gOptInlineInput) {
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (cxxmodule) {
-            if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
+         } else if (gOptCxxModule) {
+            if (!CheckModuleValid(modGen, llvmResourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
       }
    }
 
 
-   if (liblistPrefix.length()) {
-      string liblist_filename = liblistPrefix + ".out";
+   if (!gOptLibListPrefix.empty()) {
+      string liblist_filename = gOptLibListPrefix + ".out";
 
       ofstream outputfile(liblist_filename.c_str(), ios::out);
       if (!outputfile) {
          ROOT::TMetaUtils::Error(0, "%s: Unable to open output lib file %s\n",
-                                 argv[0], liblist_filename.c_str());
+                                 executableFileName, liblist_filename.c_str());
       } else {
          const size_t endStr = gLibsNeeded.find_last_not_of(" \t");
          outputfile << gLibsNeeded.substr(0, endStr + 1) << endl;
@@ -5099,15 +4968,15 @@ int RootClingMain(int argc,
    if (0 != rootclingRetCode) return rootclingRetCode;
 
    // Create the rootmap file
-   std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(),
-                                rootmapLibNames.end(),
+   std::string rootmapLibName = std::accumulate(gOptRootmapLibNames.begin(),
+                                gOptRootmapLibNames.end(),
                                 std::string(),
    [](const std::string & a, const std::string & b) -> std::string {
       if (a.empty()) return b;
       else return a + " " + b;
    });
 
-   bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
+   bool rootMapNeeded = !gOptRootMapFileName.empty() || !rootmapLibName.empty();
 
    std::list<std::string> classesNames;
    std::list<std::string> classesNamesForRootmap;
@@ -5138,29 +5007,25 @@ int RootClingMain(int argc,
 
       ExtractSelectedNamespaces(scan, nsNames);
 
-      AdjustRootMapNames(rootmapFileName,
+      AdjustRootMapNames(gOptRootMapFileName,
                          rootmapLibName);
 
       ROOT::TMetaUtils::Info(0, "Rootmap file name %s and lib name(s) \"%s\"\n",
-                             rootmapFileName.c_str(),
+                             gOptRootMapFileName.c_str(),
                              rootmapLibName.c_str());
 
-      tmpCatalog.addFileName(rootmapFileName);
+      tmpCatalog.addFileName(gOptRootMapFileName);
       std::unordered_set<std::string> headersToIgnore;
-      if (inlineInputHeader) {
-         for (int index = 0; index < argc; ++index) {
-            if (*argv[index] != '-' && ROOT::TMetaUtils::IsHeaderName(argv[index])) {
-               headersToIgnore.insert(argv[index]);
-            }
-         }
-      }
+      if (gOptInlineInput)
+         for (const std::string& optHeaderFileName : gOptDictionaryHeaderFiles)
+            headersToIgnore.insert(optHeaderFileName.c_str());
 
       std::list<std::string> typedefsRootmapLines;
       rootclingRetCode += ExtractAutoloadKeys(typedefsRootmapLines,
                                               scan.fSelectedTypedefs,
                                               interp);
 
-      rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
+      rootclingRetCode += CreateNewRootMapFile(gOptRootMapFileName,
                                           rootmapLibName,
                                           classesDefsList,
                                           classesNamesForRootmap,
@@ -5183,11 +5048,21 @@ int RootClingMain(int argc,
    {
       cling::Interpreter::PushTransactionRAII RAII(&interp);
       CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());
-      CI->clearOutputFiles(CI->getDiagnostics().hasErrorOccurred());
    }
 
-   // Before returning, rename the files
-   rootclingRetCode += tmpCatalog.commit();
+   // Add the warnings
+   rootclingRetCode += ROOT::TMetaUtils::GetNumberOfErrors();
+
+   // make sure the file is closed before committing
+   fileout.close();
+
+   // Before returning, rename the files if no errors occurred
+   // otherwise clean them to avoid remnants (see ROOT-10015)
+   if(rootclingRetCode == 0) {
+      rootclingRetCode += tmpCatalog.commit();
+   } else {
+      tmpCatalog.clean();
+   }
 
    return rootclingRetCode;
 
@@ -5220,10 +5095,10 @@ namespace genreflex {
 
    unsigned int extractArgs(int argc, char **argv, std::vector<std::string> &args)
    {
-      // loop on argv, spot strings which are not preceeded by something
+      // loop on argv, spot strings which are not preceded by something
       unsigned int argvCounter = 0;
       for (int i = 1; i < argc; ++i) {
-         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
+         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceding element starts with -, this is a value for an option
                !ROOT::TMetaUtils::BeginsWith(argv[i], "-")) { // and the element itself is not an option
             args.push_back(argv[i]);
             argvCounter++;
@@ -5337,10 +5212,11 @@ namespace genreflex {
                        const std::string &rootmapLibName,
                        bool interpreteronly,
                        bool doSplit,
-                       bool isDeep,
+                       bool isCxxmodule,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
                        bool noIncludePaths,
+                       bool noGlobalUsingStd,
                        const std::vector<std::string> &headersNames,
                        bool failOnWarnings,
                        const std::string &ofilename)
@@ -5353,6 +5229,9 @@ namespace genreflex {
       argvVector.push_back(string2charptr(verbosity));
       argvVector.push_back(string2charptr("-f"));
       argvVector.push_back(string2charptr(ofilename));
+
+      if (isCxxmodule)
+         argvVector.push_back(string2charptr("-cxxmodule"));
 
       // Extract the path to the dictionary
       std::string dictLocation;
@@ -5411,6 +5290,10 @@ namespace genreflex {
       if (multiDict)
          argvVector.push_back(string2charptr("-multiDict"));
 
+      // Don't declare "using namespace std"
+      if (noGlobalUsingStd)
+         argvVector.push_back(string2charptr("-noGlobalUsingStd"));
+
 
       AddToArgVectorSplit(argvVector, pcmsNames, "-m");
 
@@ -5457,8 +5340,7 @@ namespace genreflex {
       char **argv =  & (argvVector[0]);
       int rootclingReturnCode = RootClingMain(argc,
                                               argv,
-                                              isDeep,
-                                              true);
+                                              /*isGenReflex=*/true);
 
       for (int i = 0; i < argc; i++)
          delete [] argvVector[i];
@@ -5484,10 +5366,11 @@ namespace genreflex {
                            const std::string &rootmapLibName,
                            bool interpreteronly,
                            bool doSplit,
-                           bool isDeep,
+                           bool isCxxmodule,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
                            bool noIncludePaths,
+                           bool noGlobalUsingStd,
                            const std::vector<std::string> &headersNames,
                            bool failOnWarnings,
                            const std::string &outputDirName_const = "")
@@ -5520,10 +5403,11 @@ namespace genreflex {
                                           rootmapLibName,
                                           interpreteronly,
                                           doSplit,
-                                          isDeep,
+                                          isCxxmodule,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
                                           noIncludePaths,
+                                          noGlobalUsingStd,
                                           namesSingleton,
                                           failOnWarnings,
                                           ofilenameFullPath);
@@ -5588,7 +5472,7 @@ bool IsGoodLibraryName(const std::string &name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Translate the aruments of genreflex into rootcling ones and forward them
+/// Translate the arguments of genreflex into rootcling ones and forward them
 /// to the RootCling function.
 /// These are two typical genreflex and rootcling commandlines
 /// 1) genreflex header1.h [header2.h ...] [options] [preprocessor options]
@@ -5615,7 +5499,6 @@ bool IsGoodLibraryName(const std::string &name)
 /// --pool, --dataonly
 /// --interpreteronly
 /// --gccxml{path,opt,post}
-/// --reflex
 ///
 ///
 /// Exceptions
@@ -5631,6 +5514,7 @@ int GenReflexMain(int argc, char **argv)
                        OFILENAME,
                        TARGETLIB,
                        MULTIDICT,
+                       NOGLOBALUSINGSTD,
                        SELECTIONFILENAME,
                        ROOTMAP,
                        ROOTMAPLIB,
@@ -5640,6 +5524,7 @@ int GenReflexMain(int argc, char **argv)
                        VERBOSE,
                        QUIET,
                        SILENT,
+                       CXXMODULE,
                        WRITEEMPTYROOTPCM,
                        HELP,
                        FAILONWARNINGS,
@@ -5790,6 +5675,16 @@ int GenReflexMain(int argc, char **argv)
          "      library (needs target library switch. See its documentation).\n"
       },
 
+
+      {
+         NOGLOBALUSINGSTD,
+         NOTYPE ,
+         "" , "noGlobalUsingStd" ,
+         ROOT::option::FullArg::None,
+         "--noGlobalUsingStd\tDo not declare {using namespace std} in the dictionary global scope\n"
+         "      All header files must have sumbols from std:: namespace fully qualified\n"
+      },
+
       {
          SELECTIONFILENAME,
          STRING ,
@@ -5842,15 +5737,6 @@ int GenReflexMain(int argc, char **argv)
       },
 
       {
-         DEEP,  // Not active. Will be removed for 6.2
-         NOTYPE ,
-         "" , "deep",
-         ROOT::option::Arg::None,
-         ""
-      },
-      //"--deep\tGenerate dictionaries for all dependent classes (ignored).\n"
-
-      {
          VERBOSE,
          NOTYPE ,
          "-v" , "verbose",
@@ -5889,6 +5775,15 @@ int GenReflexMain(int argc, char **argv)
          ROOT::option::Arg::None,
          "--writeEmptyPCM\tWrite an empty ROOT pcm.\n"
       },
+
+      {
+         CXXMODULE,
+         NOTYPE ,
+         "" , "cxxmodule",
+         ROOT::option::Arg::None,
+         "--cxxmodule\tGenerates a PCM for C++ Modules.\n"
+      },
+
 
       {
          HELP,
@@ -5987,8 +5882,8 @@ int GenReflexMain(int argc, char **argv)
    ROOT::option::Stats  stats(genreflexUsageDescriptor,  argc, argv);
    std::vector<ROOT::option::Option> options(stats.options_max);// non POD var size arrays are not C++!
    std::vector<ROOT::option::Option> buffer(stats.buffer_max);
-   // The 4 is the minimum size of the abbreviation lenght.
-   // For example, --selction_file can be abbreviated with --sele at least.
+   // The 4 is the minimum size of the abbreviation length.
+   // For example, --selection_file can be abbreviated with --sele at least.
 
    ROOT::option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
 
@@ -6011,6 +5906,8 @@ int GenReflexMain(int argc, char **argv)
 
    ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote;
 
+   if (options[DEEP])
+      ROOT::TMetaUtils::Warning(0, "--deep has no effect. Please remove the deprecated flag!\n");
    // The verbosity: debug wins over quiet
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
    std::string verbosityOption("-v2");
@@ -6061,8 +5958,13 @@ int GenReflexMain(int argc, char **argv)
       }
    }
 
+   bool isCxxmodule = options[CXXMODULE];
+
    bool multidict = false;
    if (options[MULTIDICT]) multidict = true;
+
+   bool noGlobalUsingStd = false;
+   if (options[NOGLOBALUSINGSTD]) noGlobalUsingStd = true;
 
    if (multidict && targetLibName.empty()) {
       ROOT::TMetaUtils::Error("",
@@ -6133,9 +6035,6 @@ int GenReflexMain(int argc, char **argv)
    int returnValue = 0;
    std::string ofileName(options[OFILENAME] ? options[OFILENAME].arg : "");
 
-   // Now check if the --deep option was selected
-   bool isDeep = false; //options[DEEP];
-
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
    if (!ofileName.empty() && !llvm::sys::fs::is_directory(ofileName)) {
@@ -6152,10 +6051,11 @@ int GenReflexMain(int argc, char **argv)
                                     rootmapLibName,
                                     interpreteronly,
                                     doSplit,
-                                    isDeep,
+                                    isCxxmodule,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
                                     noIncludePaths,
+                                    noGlobalUsingStd,
                                     headersNames,
                                     failOnWarnings,
                                     ofileName);
@@ -6174,10 +6074,11 @@ int GenReflexMain(int argc, char **argv)
                                         rootmapLibName,
                                         interpreteronly,
                                         doSplit,
-                                        isDeep,
+                                        isCxxmodule,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
                                         noIncludePaths,
+                                        noGlobalUsingStd,
                                         headersNames,
                                         failOnWarnings,
                                         ofileName);
@@ -6207,18 +6108,14 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
 
    int retVal = 0;
 
-   if (std::string::npos != exeName.find("rootcling")) {
-      retVal = RootClingMain(argc, argv);
-   } else if (std::string::npos != exeName.find("genreflex")) {
+   if (std::string::npos != exeName.find("genreflex"))
       retVal = GenReflexMain(argc, argv);
-   } else { //default
+   else // rootcling or default
       retVal = RootClingMain(argc, argv);
-   }
 
    gDriverConfig = nullptr;
 
-   auto nerrors = ROOT::TMetaUtils::GetNumberOfErrors();
-   if (nerrors > 0){
+   if (ROOT::TMetaUtils::GetNumberOfErrors()){
       ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
       return 1;
    }

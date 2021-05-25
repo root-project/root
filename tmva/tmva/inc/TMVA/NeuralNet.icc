@@ -5,7 +5,9 @@
 #error "Do not use NeuralNet.icc directly. #include \"NeuralNet.h\" instead."
 #endif // TMVA_NEURAL_NET
 #pragma once
+#ifndef _MSC_VER
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 #include "Math/Util.h"
 
@@ -931,7 +933,7 @@ template <typename LAYERDATA>
  * \param minimizer the minimizer to be used (e.g. SGD)
  * \param weights the weight container with all the synapse weights
  * \param itPatternBegin begin of the pattern container
- * \parama itPatternEnd the end of the pattern container
+ * \param itPatternEnd the end of the pattern container
  * \param settings the settings for this training (e.g. multithreading or not, regularization, etc.)
  * \param dropContainer the data for dropping-out nodes (regularization technique)
  */

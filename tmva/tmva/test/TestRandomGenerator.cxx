@@ -69,7 +69,7 @@ void test_discard(int n)
    rng2.discard(n);
 
    for (int i = 0; i < 10; ++i) {
-      if (not(dist(rng1) == dist(rng2))) {
+      if (!(dist(rng1) == dist(rng2))) {
          throw std::runtime_error("");
       }
    }

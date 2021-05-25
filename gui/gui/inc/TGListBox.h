@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,41 +13,21 @@
 #define ROOT_TGListBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListBox, TGLBContainer, TGLBEntry and TGTextLBEntry                //
-//                                                                      //
-// A listbox is a box, possibly with scrollbar, containing entries.     //
-// Currently entries are simple text strings (TGTextLBEntry).           //
-// A TGListBox looks a lot like a TGCanvas. It has a TGViewPort         //
-// containing a TGLBContainer which contains the entries and it also    //
-// has a vertical scrollbar which becomes visible if there are more     //
-// items than fit in the visible part of the container.                 //
-//                                                                      //
-// The TGListBox is user callable. The other classes are service        //
-// classes of the listbox.                                              //
-//                                                                      //
-// Selecting an item in the listbox will generate the event:            //
-// kC_COMMAND, kCM_LISTBOX, listbox id, item id.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGCanvas.h"
 #include "TGScrollBar.h"
-#include "TList.h"
 
 class TGListBox;
+class TList;
 
+/** \class TGLBEntry
+    \ingroup guiwidgets
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBEntry                                                            //
-//                                                                      //
-// Basic listbox entries. Listbox entries are created by a TGListBox    //
-// and not by the user.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+Basic listbox entries. Listbox entries are created by a TGListBox
+and not by the user.
+
+*/
+
 
 class TGLBEntry : public TGFrame {
 
@@ -73,13 +53,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextLBEntry                                                        //
-//                                                                      //
-// Text string listbox entries.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTextLBEntry
+    \ingroup guiwidgets
+
+Text string listbox entries.
+
+*/
+
 
 class TGTextLBEntry : public TGLBEntry {
 
@@ -97,14 +77,14 @@ protected:
    static TGGC         *fgDefaultGC;
 
 private:
-   TGTextLBEntry(const TGTextLBEntry &);            // not implemented
-   TGTextLBEntry &operator=(const TGTextLBEntry &); // not implemented
+   TGTextLBEntry(const TGTextLBEntry &) = delete;
+   TGTextLBEntry &operator=(const TGTextLBEntry &) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTextLBEntry(const TGWindow *p = 0, TGString *s = 0, Int_t id = -1,
+   TGTextLBEntry(const TGWindow *p = nullptr, TGString *s = nullptr, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame,
@@ -130,20 +110,20 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLineLBEntry                                                        //
-//                                                                      //
-// Line style & width listbox entry.                                    //
-// Line example and width number                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLineLBEntry
+    \ingroup guiwidgets
+
+Line style & width listbox entry.
+Line example and width number
+
+*/
+
 
 class TGLineLBEntry : public TGTextLBEntry {
 
 private:
-   TGLineLBEntry(const TGLineLBEntry&);  // Not implemented
-   TGLineLBEntry operator=(const TGLineLBEntry&);  // Not implemented
+   TGLineLBEntry(const TGLineLBEntry&) = delete;
+   TGLineLBEntry operator=(const TGLineLBEntry&) = delete;
 
 protected:
    UInt_t      fLineWidth;       // line width
@@ -154,7 +134,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGLineLBEntry(const TGWindow *p = 0, Int_t id = -1, const char *str = 0,
+   TGLineLBEntry(const TGWindow *p = nullptr, Int_t id = -1, const char *str = nullptr,
                      UInt_t w = 0, Style_t s = 0,
                      UInt_t options = kHorizontalFrame,
                      Pixel_t back = GetWhitePixel());
@@ -173,19 +153,19 @@ public:
    ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGIconLBEntry                                                        //
-//                                                                      //
-// Icon + text listbox entry.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGIconLBEntry
+    \ingroup guiwidgets
+
+Icon + text listbox entry.
+
+*/
+
 
 class TGIconLBEntry : public TGTextLBEntry {
 
 private:
-   TGIconLBEntry(const TGIconLBEntry&);  // Not implemented
-   TGIconLBEntry operator=(const TGIconLBEntry&);  // Not implemented
+   TGIconLBEntry(const TGIconLBEntry&) = delete;
+   TGIconLBEntry operator=(const TGIconLBEntry&) = delete;
 
 protected:
    const TGPicture *fPicture;    // icon
@@ -193,8 +173,8 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGIconLBEntry(const TGWindow *p = 0, Int_t id = -1, const char *str = 0,
-                 const TGPicture *pic = 0,
+   TGIconLBEntry(const TGWindow *p = nullptr, Int_t id = -1, const char *str = nullptr,
+                 const TGPicture *pic = nullptr,
                  UInt_t w = 0, Style_t s = 0,
                  UInt_t options = kHorizontalFrame,
                  Pixel_t back = GetWhitePixel());
@@ -203,7 +183,7 @@ public:
    virtual TGDimension GetDefaultSize() const
                   { return TGDimension(fTWidth, fTHeight+1); }
    const TGPicture *GetPicture() const { return fPicture; }
-   virtual void  SetPicture(const TGPicture *pic = 0);
+   virtual void  SetPicture(const TGPicture *pic = nullptr);
 
    virtual void  Update(TGLBEntry *e);
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
@@ -211,22 +191,22 @@ public:
    ClassDef(TGIconLBEntry, 0)  // Icon + text listbox entry
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBContainer                                                        //
-//                                                                      //
-// A Composite frame that contains a list of TGLBEnties.                //
-// A TGLBContainer is created by the TGListBox and not by the user.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLBContainer
+    \ingroup guiwidgets
+
+A Composite frame that contains a list of TGLBEnties.
+A TGLBContainer is created by the TGListBox and not by the user.
+
+*/
+
 
 class TGLBContainer : public TGContainer {
 
 friend class TGListBox;
 
 private:
-   TGLBContainer(const TGLBContainer&);  // Not implemented
-   TGLBContainer operator=(const TGLBContainer&);  // Not implemented
+   TGLBContainer(const TGLBContainer&) = delete;
+   TGLBContainer operator=(const TGLBContainer&) = delete;
 
 protected:
    TGLBEntry      *fLastActive;    // last active listbox entry in single selection listbox
@@ -239,7 +219,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGLBContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGLBContainer(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                  UInt_t options = kSunkenFrame,
                  Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGLBContainer();
@@ -278,33 +258,33 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListBox                                                            //
-//                                                                      //
-// A TGListBox widget.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGListBox
+    \ingroup guiwidgets
+
+A TGListBox widget.
+
+*/
+
 
 class TGListBox : public TGCompositeFrame, public TGWidget {
 
 private:
-   TGListBox(const TGListBox&);  // Not implemented
-   TGListBox operator=(const TGListBox&);  // Not implemented
+   TGListBox(const TGListBox&) = delete;
+   TGListBox operator=(const TGListBox&) = delete;
 
 protected:
-   UInt_t           fItemVsize;       // maximum height of single entry
-   Bool_t           fIntegralHeight;  // true if height should be multiple of fItemVsize
-   TGLBContainer   *fLbc;             // listbox container
-   TGViewPort      *fVport;           // listbox viewport (see TGCanvas.h)
-   TGVScrollBar    *fVScrollbar;      // vertical scrollbar
+   UInt_t           fItemVsize;       ///< maximum height of single entry
+   Bool_t           fIntegralHeight;  ///< true if height should be multiple of fItemVsize
+   TGLBContainer   *fLbc;             ///< listbox container
+   TGViewPort      *fVport;           ///< listbox viewport (see TGCanvas.h)
+   TGVScrollBar    *fVScrollbar;      ///< vertical scrollbar
 
    void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
 
    virtual void InitListBox();
 
 public:
-   TGListBox(const TGWindow *p = 0, Int_t id = -1,
+   TGListBox(const TGWindow *p = nullptr, Int_t id = -1,
              UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetWhitePixel());
    virtual ~TGListBox();

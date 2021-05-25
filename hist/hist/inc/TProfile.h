@@ -33,18 +33,19 @@ class TProfile : public TH1D {
 
 public:
    friend class TProfileHelper;
+   friend class TH1Merger;
 
 protected:
-    TArrayD     fBinEntries;      //number of entries per bin
-    EErrorType  fErrorMode;       //Option to compute errors
-    Double_t    fYmin;            //Lower limit in Y (if set)
-    Double_t    fYmax;            //Upper limit in Y (if set)
-    Bool_t      fScaling;         //!True when TProfile::Scale is called
-    Double_t    fTsumwy;          //Total Sum of weight*Y
-    Double_t    fTsumwy2;         //Total Sum of weight*Y*Y
-    TArrayD     fBinSumw2;        //Array of sum of squares of weights per bin
+   TArrayD fBinEntries;   ///< number of entries per bin
+   EErrorType fErrorMode; ///< Option to compute errors
+   Double_t fYmin;        ///< Lower limit in Y (if set)
+   Double_t fYmax;        ///< Upper limit in Y (if set)
+   Bool_t fScaling;       ///<! True when TProfile::Scale is called
+   Double_t fTsumwy;      ///< Total Sum of weight*Y
+   Double_t fTsumwy2;     ///< Total Sum of weight*Y*Y
+   TArrayD fBinSumw2;     ///< Array of sum of squares of weights per bin
 
-static Bool_t   fgApproximate;    //bin error approximation option
+   static Bool_t fgApproximate; ///< bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t w);
@@ -81,6 +82,7 @@ public:
    TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Option_t *option="");
    TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Double_t ylow,Double_t yup, Option_t *option="");
    TProfile(const TProfile &profile);
+   TProfile &operator=(const TProfile &profile);
    virtual ~TProfile();
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
@@ -133,8 +135,7 @@ public:
    virtual void     SetErrorOption(Option_t *option=""); // *MENU*
    virtual void     Sumw2(Bool_t flag = kTRUE);
 
-   ClassDef(TProfile,6)  //Profile histogram class
+   ClassDef(TProfile,7)  //Profile histogram class
 };
 
 #endif
-

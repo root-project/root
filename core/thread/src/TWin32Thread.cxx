@@ -18,6 +18,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TWin32Thread.h"
+
+#include "TThread.h"
+
 #include <process.h>
 #include <errno.h>
 
@@ -37,7 +40,7 @@ Int_t TWin32Thread::Run(TThread *th)
       ::CloseHandle(hHandle);
       th->fHandle = 0L;
    } else
-      th->fHandle = (Long_t)hHandle;
+      th->fHandle = (Longptr_t)hHandle;
 
    th->fId = dwThreadId;
 
@@ -108,7 +111,7 @@ Int_t TWin32Thread::CleanUpPop(void **main,Int_t exe)
 
 Int_t TWin32Thread::CleanUp(void **main)
 {
-   fprintf(stderr," CleanUp %lx\n",(ULong_t)*main);
+   fprintf(stderr," CleanUp %zx\n",(size_t)*main);
    while(!CleanUpPop(main,1)) { }
    return 0;
 }

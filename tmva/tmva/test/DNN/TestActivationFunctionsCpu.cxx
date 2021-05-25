@@ -15,6 +15,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include  "RConfigure.h"
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "Utility.h"
 #include "TestActivationFunctions.h"
@@ -37,54 +38,77 @@ int main()
    if (error > 1e-10)
        return 1;
 
+#if 0   // disable now (uses TReference)
    error = testIdentityDerivative<TCpu<Scalar_t>>(10);
    std::cout << "Testing identity activation derivative: ";
    std::cout << "maximum relative error = " << error << std::endl;
    if (error > 1e-10)
        return 1;
+#endif
 
    // ReLU.
 
    error = testRelu<TCpu<Scalar_t>>(10);
    std::cout << "Testing ReLU activation:                ";
    std::cout << "maximum relative error = " << error << std::endl;
-   if (error > 1e-10)
+   if (error > 1e-10) {
+       std::cout << "Error - RELU activation test failed" << std::endl;
        return 1;
+   }
 
    error = testReluDerivative<TCpu<Scalar_t>>(10);
    std::cout << "Testing ReLU activation derivative:     ";
    std::cout << "maximum relative error = " << error << std::endl;
-   if (error > 1e-10)
+   if (error > 1e-10) { 
+       std::cout << "Error - RELU derivative activation test failed" << std::endl;
        return 1;
-
+   }
    // Sigmoid.
 
    error = testSigmoid<TCpu<Scalar_t>>(10);
    std::cout << "Testing Sigmoid activation:             ";
    std::cout << "maximum relative error = " << error << std::endl;
-   if (error > 1e-10)
+   if (error > 1e-10) { 
+       std::cout << "Error - SIGMOID activation test failed" << std::endl;
        return 1;
+   }
 
    error = testSigmoidDerivative<TCpu<Scalar_t>>(10);
    std::cout << "Testing Sigmoid activation derivative:  ";
    std::cout << "maximum relative error = " << error << std::endl;
-   if (error > 1e-10)
+   if (error > 1e-10) { 
+       std::cout << "Error - SIGMOID derivative activation test failed" << std::endl;
        return 1;
-
+   } 
+ 
    // TanH.
 
    error = testTanh<TCpu<Scalar_t>>(10);
    std::cout << "Testing TanH activation:                   ";
    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-   if (error > 1e-10)
+#ifdef R__HAS_VDT   // error is larger when using fast tanh from vdt
+    if (error > 1e-6) 
+#else
+    if (error > 1e-10)
+#endif
+    { 
+       std::cout << "Error - TANH activation test failed" << std::endl;
        return 1;
+    }    
 
    error = testTanhDerivative<TCpu<Scalar_t>>(10);
    std::cout << "Testing TanH activation derivative:        ";
    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-   if (error > 1e-10)
+#ifdef R__HAS_VDT   // error is larger when using fast tanh from vdt
+    if (error > 1e-3) 
+#else
+    if (error > 1e-10)
+#endif
+  { 
+       std::cout << "Error - TANH derivative activation test failed" << std::endl;
        return 1;
-
+   } 
+ 
    // Symmetric ReLU.
 
    error = testSymmetricRelu<TCpu<Scalar_t>>(10);

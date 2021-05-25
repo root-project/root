@@ -74,9 +74,6 @@ WINRTDEBUG     := @winrtdebug@
 CTORSINITARRAY := @ctorsinitarray@
 CXXMKDEPFLAGS  := @cxxmkdepflags@
 
-GLBPATCHFLAGS  := @glbpatchcflags@
-EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@
-
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
 INCDIR         := @incdir@
@@ -89,16 +86,13 @@ MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
 DOCDIR         := @docdir@
-TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
-ACLOCALDIR     := @aclocaldir@
 
 BUILDX11       := @buildx11@
 X11INCDIR      := $(filter-out /usr/include, @x11incdir@)
 X11LIBDIR      := @x11libdir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
-XFTLIB         := @enable_xft@
 
 BUILDCOCOA     := @buildcocoa@
 MACOSXVERS     := @macosxvers@
@@ -110,8 +104,6 @@ CXX11          := @c++11@
 CXX14          := @c++14@
 CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
-
-EXPLICITLINK   := @explicitlink@
 
 ENABLETHREAD   := @enable_thread@
 OSTHREADFLAG   := @threadflag@
@@ -154,11 +146,6 @@ GL2PSLIBDIR    := @gl2pslibdir@
 GL2PSLIB       := @gl2pslib@
 GL2PSINCDIR    := $(filter-out /usr/include, @gl2psincdir@)
 
-BUILDLDAP      := @buildldap@
-LDAPLIBDIR     := @ldaplibdir@
-LDAPCLILIB     := @ldaplib@
-LDAPINCDIR     := $(filter-out /usr/include, @ldapincdir@)
-
 BUILDMYSQL     := @buildmysql@
 MYSQLLIBDIR    := @mysqllibdir@
 MYSQLCLILIB    := @mysqllib@
@@ -179,40 +166,10 @@ SQLITELIBDIR    := @sqlitelibdir@
 SQLITECLILIB    := @sqlitelib@
 SQLITEINCDIR    := $(filter-out /usr/include, @sqliteincdir@)
 
-BUILDSAPDB     := @buildsapdb@
-SAPDBLIBDIR    := @sapdblibdir@
-SAPDBCLILIB    := @sapdblib@
-SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
-
 BUILDODBC      := @buildodbc@
 ODBCLIBDIR     := @odbclibdir@
 ODBCCLILIB     := @odbclib@
 ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
-
-BUILDGEOCAD    := @buildgeocad@
-OCCLIBDIR      := @occlibdir@
-OCCLIB         := @occlib@
-OCCINCDIR      := $(filter-out /usr/include, @occincdir@)
-
-BUILDQT        := @buildqt@
-BUILDQTGSI     := @buildqtgsi@
-QTLIBDIR       := @qtlibdir@
-QTLIB          := @qtlib@
-QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
-QTVERS	       := @qtvers@
-QTMOCEXE       := @qtmocexe@
-
-BUILDRFIO      := @buildrfio@
-SHIFTLIBDIR    := @shiftlibdir@
-SHIFTLIB       := @shiftlib@
-SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
-SHIFTCFLAGS    := @shiftcflags@
-
-BUILDCASTOR    := @buildcastor@
-CASTORLIBDIR   := @castorlibdir@
-CASTORCLILIB   := @castorlib@
-CASTORINCDIR   := $(filter-out /usr/include, @castorincdir@)
-CASTORCFLAGS   := @castorcflags@
 
 BUILDDAVIX      := @builddavix@
 DAVIXLIBDIR     := @davixlibdir@
@@ -247,27 +204,7 @@ GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
-BUILDGLITE     := @buildglite@
-GLITELIBDIR    := @glitelibdir@
-GAWLIB         := @glitelib@
-GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
-
 BUILDMEMSTAT   := @buildmemstat@
-
-BUILDBONJOUR   := @buildbonjour@
-DNSSDLIBDIR    := @dnssdlibdir@
-DNSSDLIB       := @dnssdlib@
-DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
-
-BUILDCHIRP     := @buildchirp@
-CHIRPLIBDIR    := @chirplibdir@
-CHIRPCLILIB    := @chirplib@
-CHIRPINCDIR    := $(filter-out /usr/include, @chirpincdir@)
-
-BUILDHDFS      := @buildhdfs@
-HDFSLIBDIR     := @hdfslibdir@
-HDFSCLILIB     := @hdfslib@
-HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
 
 BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
@@ -339,42 +276,8 @@ BUILDNETXNG    := @buildnetxng@
 BUILDXPROOFD   := @buildxproofd@
 BUILDXRDCLT    := @buildxrdclt@
 
-SRPLIBDIR      := @srplibdir@
-SRPLIB         := @srplib@
-SRPINCDIR      := $(filter-out /usr/include, @srpincdir@)
-
-BUILDSRPUTIL   := @buildsrputil@
-SRPUTILLIBDIR  := @srputillibdir@
-SRPUTILLIB     := @srputillib@
-SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
-
-AFSLIB         := @afslib@
-AFSLIBDIR      := @afslibdir@
-AFSINCDIR      := @afsincdir@
-AFSEXTRACFLAGS := @afsextracflags@
-AFSSHARED      := @afsshared@
-
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
-
-BUILDKRB5      := @buildkrb5@
-KRB5LIB        := @krb5lib@
-KRB5LIBDIR     := @krb5libdir@
-KRB5INCDIR     := $(filter-out /usr/include, @krb5incdir@)
-KRB5INIT       := @krb5init@
-
-COMERRLIB      := @comerrlib@
-COMERRLIBDIR   := @comerrlibdir@
-
-RESOLVLIB      := @resolvlib@
-
-CRYPTOLIB      := @cryptolib@
-CRYPTOLIBDIR   := @cryptolibdir@
-
-BUILDGLOBUS    := @buildglobus@
-GLOBUSLIB      := @globuslib@
-GLOBUSLIBDIR   := @globuslibdir@
-GLOBUSINCDIR   := $(filter-out /usr/include, @globusincdir@)
 
 BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
@@ -427,13 +330,10 @@ BUILDTABLE     := @buildtable@
 
 BUILDTMVA      := @buildtmva@
 
-BUILDAFDSMGRD  := @buildafdsmgrd@
-AFDSMGRDAPMON  := @afdsmgrdapmon@
-
 BUILDHTTP      := @buildhttp@
-USEFASCGI      := @usefastcgi@
+USEFASTCGI     := @usefastcgi@
 FASTCGIINCDIR  := @fastcgiincdir@
-ifeq ($(USEFASCGI), no)
+ifeq ($(USEFASTCGI), no)
 FASTCGIFLAGS   := -DHTTP_WITHOUT_FASTCGI
 endif
 

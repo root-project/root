@@ -8,20 +8,26 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-/**
-  \defgroup proof PROOF
 
-  Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees. 
+/**
+\defgroup proof PROOF
+
+Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees.
+
+\deprecated
+We keep PROOF for those who still need it for legacy use cases.
+PROOF is not developed anymore and receiving only limited support.
+%ROOT has since a few years moved to RDataFrame and related products as multi-core/multi-processing engines.
 
 */
 
 /**
-  \defgroup proofkernel PROOF kernel Libraries
-  \ingroup proof
+\defgroup proofkernel PROOF kernel Libraries
+\ingroup proof
 
-  The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
-  the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
-  and handling of results. 
+The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
+the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
+and handling of results.
 
 */
 
@@ -61,7 +67,6 @@ messages to all workers, it collects results, etc.
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
-#include "TFunction.h"
 #include "TFTP.h"
 #include "THashList.h"
 #include "TInterpreter.h"
@@ -69,8 +74,6 @@ messages to all workers, it collects results, etc.
 #include "TMap.h"
 #include "TMath.h"
 #include "TMessage.h"
-#include "TMethodArg.h"
-#include "TMethodCall.h"
 #include "TMonitor.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -660,16 +663,20 @@ TProof::~TProof()
    if (TestBit(TProof::kIsClient)) {
       // iterate over all packages
       TList *epl = fPackMgr->GetListOfEnabled();
-      TIter nxp(epl);
-      while (TObjString *pck = (TObjString *)(nxp())) {
-         FileStat_t stat;
-         if (gSystem->GetPathInfo(pck->String(), stat) == 0) {
-            // check if symlink, if so unlink
-            // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
-            // existing file or to a directory, but if fIsLink is true the symlink exists
-            if (stat.fIsLink)
-               gSystem->Unlink(pck->String());
+      if (epl) {
+         TIter nxp(epl);
+         while (TObjString *pck = (TObjString *)(nxp())) {
+            FileStat_t stat;
+            if (gSystem->GetPathInfo(pck->String(), stat) == 0) {
+               // check if symlink, if so unlink
+               // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
+               // existing file or to a directory, but if fIsLink is true the symlink exists
+               if (stat.fIsLink)
+                  gSystem->Unlink(pck->String());
+            }
          }
+         epl->Delete();
+         delete epl;
       }
    }
 
@@ -699,9 +706,14 @@ TProof::~TProof()
    SafeDelete(fRecvMessages);
    SafeDelete(fInputData);
    SafeDelete(fRunningDSets);
+   SafeDelete(fEnabledPackagesOnCluster);
    if (fWrksOutputReady) {
       fWrksOutputReady->SetOwner(kFALSE);
       delete fWrksOutputReady;
+   }
+   if (fQueries) {
+      fQueries->Delete();
+      delete fQueries;
    }
 
    // remove file with redirected logs
@@ -1013,7 +1025,7 @@ Int_t TProof::GetSandbox(TString &sb, Bool_t assert, const char *rc)
    if (sb == ".") {
       sb = gSystem->pwd();
    } else if (sb == "..") {
-      sb = gSystem->DirName(gSystem->pwd());
+      sb = gSystem->GetDirName(gSystem->pwd());
    }
    gSystem->ExpandPathName(sb);
 
@@ -1511,10 +1523,11 @@ Int_t TProof::AddWorkers(TList *workerList)
 
 void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
 {
+   TList *server_packs = gProofServ ? gProofServ->GetEnabledPackages() : nullptr;
    // Packages
-   TList *packs = gProofServ ? gProofServ->GetEnabledPackages() : GetEnabledPackages();
+   TList *packs = server_packs ? server_packs : GetEnabledPackages();
    if (packs && packs->GetSize() > 0) {
-      TIter nxp(packs);      
+      TIter nxp(packs);
       TPair *pck = 0;
       while ((pck = (TPair *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
@@ -1532,6 +1545,11 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
                EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
          }
       }
+   }
+
+   if (server_packs) {
+      server_packs->Delete();
+      delete server_packs;
    }
 
    // Loaded macros
@@ -1776,7 +1794,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
 void TProof::Close(Option_t *opt)
 {
    {  std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
-   
+
       fValid = kFALSE;
       if (fSlaves) {
          if (fIntHandler)
@@ -2802,6 +2820,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
                                                         xs->GetInetAddress().GetPort());
                }
             }
+            delete al;
          }
       }
 
@@ -2828,19 +2847,23 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
+            TList *al = mon->GetListOfActives();
             PDB(kCollect, 2)
                Info("Collect","#%04d: deactivating %p (active: %d, %p)", collectId,
                               s, mon->GetActive(),
-                              mon->GetListOfActives()->First());
+                              al->First());
+            delete al;
          } else if (rc == 2) {
             // This end message was for the saved monitor
             // Deactivate it if we are done with it
             if (savedMonitor) {
                savedMonitor->DeActivate(s);
+               TList *al = mon->GetListOfActives();
                PDB(kCollect, 2)
                   Info("Collect","save monitor: deactivating %p (active: %d, %p)",
                                  s, savedMonitor->GetActive(),
-                                 savedMonitor->GetListOfActives()->First());
+                                 al->First());
+               delete al;
             }
          }
 
@@ -2911,6 +2934,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
                                                   xs->GetInetAddress().GetPort());
          }
       }
+      delete al;
       mon->DeActivateAll();
    }
 
@@ -3422,12 +3446,12 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
       case kPROOF_OUTPUTLIST:
          {
             // We start measuring the merging time
-            fPlayer->SetMerging();
 
             PDB(kGlobal,2)
                Info("HandleInputMessage","%s: kPROOF_OUTPUTLIST: enter", sl->GetOrdinal());
             TList *out = 0;
             if (fPlayer) {
+               fPlayer->SetMerging();
                if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
                   out = (TList *) mess->ReadObject(TList::Class());
                } else {
@@ -4999,10 +5023,10 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
       // Output file
       if (!outfile.IsNull()) {
          if (!outfile.BeginsWith("master:")) {
-            if (gSystem->AccessPathName(gSystem->DirName(outfile.Data()), kWritePermission)) {
+            if (gSystem->AccessPathName(gSystem->GetDirName(outfile.Data()), kWritePermission)) {
                Warning("HandleOutputOptions",
                      "directory '%s' for the output file does not exists or is not writable:"
-                     " saving to master", gSystem->DirName(outfile.Data()));
+                     " saving to master", gSystem->GetDirName(outfile.Data()).Data());
                outfile.Form("master:%s", gSystem->BaseName(outfile.Data()));
             } else {
                if (!IsLite()) {
@@ -7228,7 +7252,7 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
       nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
       nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
-   if (gProofServ) gProofServ->SendAsynMessage(s);   
+   if (gProofServ) gProofServ->SendAsynMessage(s);
    Info("GoMoreParallel", "%s", s.Data());
 
    return nTotalWorkers;
@@ -8268,7 +8292,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    }
   if (gDebug > 0)
       Info("EnablePackage", "using check version option: %d", chkveropt);
-   
+
    if (BuildPackage(pac, opt, chkveropt, workers) == -1)
       return -1;
 
@@ -8572,7 +8596,7 @@ void TProof::AssertMacroPath(const char *macro)
 {
    static TString macrop(gROOT->GetMacroPath());
    if (macro && strlen(macro) > 0) {
-      TString dirn(gSystem->DirName(macro));
+      TString dirn = gSystem->GetDirName(macro);
       if (!macrop.Contains(dirn)) {
          macrop += TString::Format("%s:", dirn.Data());
          gROOT->SetMacroPath(macrop);
@@ -8660,7 +8684,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
             }
             // Create the additional include statement
             if (!notOnClient) {
-               TString dirn(gSystem->DirName(fn));
+               TString dirn = gSystem->GetDirName(fn);
                if (addincs.IsNull()) {
                   addincs.Form("-I%s", dirn.Data());
                } else if (!addincs.Contains(dirn)) {
@@ -8725,7 +8749,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 
          // Update the macro path
          TString mp(TROOT::GetMacroPath());
-         TString np(gSystem->DirName(macro));
+         TString np = gSystem->GetDirName(macro);
          if (!np.IsNull()) {
             np += ":";
             if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
@@ -11368,14 +11392,14 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
    }
    if (gDebug > 0)
       Info("ModifyWorkerLists", "ord: '%s' (add: %d, save: %d)", ord, add, save);
-   
+
    Int_t nwc = 0;
    Bool_t restoring = !strcmp(ord, "restore") ? kTRUE : kFALSE;
    if (IsEndMaster()) {
       if (restoring) {
          // We are asked to restore the previous settings
          nwc = RestoreActiveList();
-      } else { 
+      } else {
          if (save) SaveActiveList();
       }
    }
@@ -11796,8 +11820,7 @@ void TProof::SaveWorkerInfo()
    }
 
    // Create or truncate the file first
-   TString fnwrk = TString::Format("%s/.workers",
-                                   gSystem->DirName(gProofServ->GetSessionDir()));
+   TString fnwrk = gSystem->GetDirName(gProofServ->GetSessionDir())+"/.workers";
    FILE *fwrk = fopen(fnwrk.Data(),"w");
    if (!fwrk) {
       Error("SaveWorkerInfo",

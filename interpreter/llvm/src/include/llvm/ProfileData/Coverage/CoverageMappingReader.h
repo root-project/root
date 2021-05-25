@@ -1,9 +1,8 @@
 //===- CoverageMappingReader.h - Code coverage mapping reader ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -32,7 +31,7 @@ namespace coverage {
 
 class CoverageMappingReader;
 
-/// \brief Coverage mapping information for a single function.
+/// Coverage mapping information for a single function.
 struct CoverageMappingRecord {
   StringRef FunctionName;
   uint64_t FunctionHash;
@@ -41,19 +40,27 @@ struct CoverageMappingRecord {
   ArrayRef<CounterMappingRegion> MappingRegions;
 };
 
-/// \brief A file format agnostic iterator over coverage mapping data.
+/// A file format agnostic iterator over coverage mapping data.
 class CoverageMappingIterator
     : public std::iterator<std::input_iterator_tag, CoverageMappingRecord> {
-  CoverageMappingReader *Reader = nullptr;
+  CoverageMappingReader *Reader;
   CoverageMappingRecord Record;
+  coveragemap_error ReadErr;
 
   void increment();
 
 public:
-  CoverageMappingIterator() = default;
+  CoverageMappingIterator()
+      : Reader(nullptr), Record(), ReadErr(coveragemap_error::success) {}
 
-  CoverageMappingIterator(CoverageMappingReader *Reader) : Reader(Reader) {
+  CoverageMappingIterator(CoverageMappingReader *Reader)
+      : Reader(Reader), Record(), ReadErr(coveragemap_error::success) {
     increment();
+  }
+
+  ~CoverageMappingIterator() {
+    if (ReadErr != coveragemap_error::success)
+      llvm_unreachable("Unexpected error in coverage mapping iterator");
   }
 
   CoverageMappingIterator &operator++() {
@@ -66,8 +73,22 @@ public:
   bool operator!=(const CoverageMappingIterator &RHS) {
     return Reader != RHS.Reader;
   }
-  CoverageMappingRecord &operator*() { return Record; }
-  CoverageMappingRecord *operator->() { return &Record; }
+  Expected<CoverageMappingRecord &> operator*() {
+    if (ReadErr != coveragemap_error::success) {
+      auto E = make_error<CoverageMapError>(ReadErr);
+      ReadErr = coveragemap_error::success;
+      return std::move(E);
+    }
+    return Record;
+  }
+  Expected<CoverageMappingRecord *> operator->() {
+    if (ReadErr != coveragemap_error::success) {
+      auto E = make_error<CoverageMapError>(ReadErr);
+      ReadErr = coveragemap_error::success;
+      return std::move(E);
+    }
+    return &Record;
+  }
 };
 
 class CoverageMappingReader {
@@ -79,7 +100,7 @@ public:
   CoverageMappingIterator end() { return CoverageMappingIterator(); }
 };
 
-/// \brief Base class for the raw coverage mapping and filenames data readers.
+/// Base class for the raw coverage mapping and filenames data readers.
 class RawCoverageReader {
 protected:
   StringRef Data;
@@ -92,7 +113,7 @@ protected:
   Error readString(StringRef &Result);
 };
 
-/// \brief Reader for the raw coverage filenames.
+/// Reader for the raw coverage filenames.
 class RawCoverageFilenamesReader : public RawCoverageReader {
   std::vector<StringRef> &Filenames;
 
@@ -106,7 +127,7 @@ public:
   Error read();
 };
 
-/// \brief Checks if the given coverage mapping data is exported for
+/// Checks if the given coverage mapping data is exported for
 /// an unused function.
 class RawCoverageMappingDummyChecker : public RawCoverageReader {
 public:
@@ -116,7 +137,7 @@ public:
   Expected<bool> isDummy();
 };
 
-/// \brief Reader for the raw coverage mapping data.
+/// Reader for the raw coverage mapping data.
 class RawCoverageMappingReader : public RawCoverageReader {
   ArrayRef<StringRef> TranslationUnitFilenames;
   std::vector<StringRef> &Filenames;
@@ -147,7 +168,7 @@ private:
                              unsigned InferredFileID, size_t NumFileIDs);
 };
 
-/// \brief Reader for the coverage mapping data that is emitted by the
+/// Reader for the coverage mapping data that is emitted by the
 /// frontend and stored in an object file.
 class BinaryCoverageReader : public CoverageMappingReader {
 public:
@@ -182,9 +203,15 @@ public:
   BinaryCoverageReader(const BinaryCoverageReader &) = delete;
   BinaryCoverageReader &operator=(const BinaryCoverageReader &) = delete;
 
+  static Expected<std::vector<std::unique_ptr<BinaryCoverageReader>>>
+  create(MemoryBufferRef ObjectBuffer, StringRef Arch,
+         SmallVectorImpl<std::unique_ptr<MemoryBuffer>> &ObjectFileBuffers);
+
   static Expected<std::unique_ptr<BinaryCoverageReader>>
-  create(std::unique_ptr<MemoryBuffer> &ObjectBuffer,
-         StringRef Arch);
+  createCoverageReaderFromBuffer(StringRef Coverage,
+                                 InstrProfSymtab &&ProfileNames,
+                                 uint8_t BytesInAddress,
+                                 support::endianness Endian);
 
   Error readNextRecord(CoverageMappingRecord &Record) override;
 };

@@ -15,46 +15,42 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooArgList is a container object that can hold multiple RooAbsArg objects.
-// The container has list semantics which means that:
-//
-//  - Contained objects are ordered, The iterator 
-//    follows the object insertion order.
-//
-//  - Objects can be retrieved by name and index
-//
-//  - Multiple objects with the same name are allowed
-//
-// Ownership of contents. 
-//
-// Unowned objects are inserted with the add() method. Owned objects
-// are added with addOwned() or addClone(). A RooArgSet either owns all 
-// of it contents, or none, which is determined by the first <add>
-// call. Once an ownership status is selected, inappropriate <add> calls
-// will return error status. Clearing the list via removeAll() resets the 
-// ownership status. Arguments supplied in the constructor are always added 
-// as unowned elements.
-//
-//
+/// \class RooArgList
+/// RooArgList is a container object that can hold multiple RooAbsArg objects.
+/// The container has list semantics which means that:
+///
+///  - Contained objects are ordered, The iterator
+///    follows the object insertion order.
+///
+///  - Objects can be retrieved by name and index
+///
+///  - Multiple objects with the same name are allowed
+///
+/// Ownership of contents.
+///
+/// Unowned objects are inserted with the add() method. Owned objects
+/// are added with addOwned() or addClone(). A RooArgSet either owns all
+/// of it contents, or none, which is determined by the first <add>
+/// call. Once an ownership status is selected, inappropriate <add> calls
+/// will return error status. Clearing the list via removeAll() resets the
+/// ownership status. Arguments supplied in the constructor are always added
+/// as unowned elements.
+///
+///
 
-#include "Riostream.h"
-#include <iomanip>
-#include "TClass.h"
 #include "RooArgList.h"
-#include "RooErrorHandler.h"
+
 #include "RooStreamParser.h"
-#include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooStringVar.h"
 #include "RooTrace.h"
 #include "RooMsgService.h"
+
+#include <stdexcept>
 
 using namespace std;
 
 ClassImp(RooArgList);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,139 +84,6 @@ RooArgList::RooArgList(const char *name) :
 {
   TRACE_CREATE
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for list containing 1 initial object
-
-RooArgList::RooArgList(const RooAbsArg& var1,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 2 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 3 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 4 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 5 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1,
-		     const RooAbsArg& var2, const RooAbsArg& var3,
-		     const RooAbsArg& var4, const RooAbsArg& var5,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 6 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 7 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 8 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 9 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const RooAbsArg& var9, const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
-  TRACE_CREATE
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,27 +132,6 @@ RooArgList::~RooArgList()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Element in slot 'idx' must already exist, otherwise
-/// code will abort. 
-///
-/// When used as lvalue in assignment operations, the element contained in
-/// the list will not be changed, only the value of the existing element!
-
-RooAbsArg& RooArgList::operator[](Int_t idx) const 
-{     
-  RooAbsArg* arg = at(idx) ;
-  if (!arg) {
-    coutE(InputArguments) << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
-			  << idx << " out of range (0," << getSize() << ")" << endl ;
-    RooErrorHandler::softAbort() ;
-  }
-  return *arg ; 
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the contents of the argset in ASCII form to given stream.
 /// 
@@ -304,13 +146,10 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
     return ;
   }
 
-  TIterator *iterat= createIterator();
-  RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-      next->writeToStream(os,kTRUE) ;
-      os << " " ;
+  for (const auto obj : _list) {
+    obj->writeToStream(os,kTRUE);
+    os << " " ;
   }
-  delete iterat;  
   os << endl ;
 }
 
@@ -330,16 +169,13 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     return kTRUE ;
   }    
 
-  TIterator *iterat= createIterator();
   RooStreamParser parser(is) ;
-  RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+  for (auto next : _list) {
     if (!next->getAttribute("Dynamic")) {
       if (next->readFromStream(is,kTRUE,verbose)) {
-	parser.zapToEnd() ;
-	
-	delete iterat ;
-	return kTRUE ;
+        parser.zapToEnd() ;
+
+        return kTRUE ;
       }	
     } else {
     }
@@ -352,8 +188,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 			    << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
     }
   }
-  
-  delete iterat;    
+
   return kFALSE ;  
 }
 

@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 project(ZLIB C)
 
 set(ZLIB_PUBLIC_HEADERS
@@ -8,6 +14,18 @@ set(ZLIB_PUBLIC_HEADERS
 set(ZLIB_PRIVATE_HEADERS
     crc32.h
     deflate.h
+    gzguts.h
+    inffast.h
+    inffixed.h
+    inflate.h
+    inftrees.h
+    trees.h
+    zutil.h
+)
+
+set(ZLIBCF_PRIVATE_HEADERS
+    crc32.h
+    deflate_cf.h
     gzguts.h
     inffast.h
     inffixed.h
@@ -35,6 +53,24 @@ set(ZLIB_SOURCES
     zutil.c
 )
 
+set(ZLIBCF_SOURCES
+    adler32_cf.c
+    compress.c
+    crc32_cf.c
+    deflate_cf.c
+    gzclose.c
+    gzlib.c
+    gzread.c
+    gzwrite.c
+    inflate.c
+    infback.c
+    inftrees.c
+    inffast.c
+    trees_cf.c
+    uncompr.c
+    zutil.c
+)
+
 unset(ZLIB_FOUND CACHE)
 unset(ZLIB_FOUND PARENT_SCOPE)
 set(ZLIB_FOUND TRUE CACHE BOOL "" FORCE)
@@ -57,10 +93,36 @@ set(ZLIB_VERSION_STRING ${ZLIB_VERSION_STRING} CACHE INTERNAL "")
 set(ZLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 set(ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_library(ZLIB STATIC ${ZLIB_PUBLIC_HEADERS} ${ZLIB_PRIVATE_HEADERS} ${ZLIB_SOURCES})
-set_property(TARGET ZLIB PROPERTY POSITION_INDEPENDENT_CODE ON) 
+if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64|aarch64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
+   # Calling helper to avoid using old unsupported binutils (e.g. with SL6)
+   # macro is returning extra ${ROOT_DEFINITIONS} used after in ZLIB-CF
+   root_check_assembler()
+   # Calling helper to avoid using old unsupported binutils (e.g. with Centos7
+   # and native gcc compiler 4.8.5)
+   # Macros are returning bools SSE_SUPPORT & AVX2_SUPPORT
+   root_check_sse41()
+   root_check_avx2()
+   if(SSE_SUPPORT OR AVX2_SUPPORT)
+      set(ZLIB_CF TRUE CACHE INTERNAL "")
+   endif()
+endif()
+
+if(ZLIB_CF)
+   add_library(ZLIB STATIC ${ZLIB_PUBLIC_HEADERS} ${ZLIBCF_PRIVATE_HEADERS} ${ZLIBCF_SOURCES})
+else()
+   add_library(ZLIB STATIC ${ZLIB_PUBLIC_HEADERS} ${ZLIB_PRIVATE_HEADERS} ${ZLIB_SOURCES})
+endif()
+
+set_target_properties(ZLIB PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
 target_include_directories(ZLIB INTERFACE $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}>)
-target_compile_options(ZLIB PRIVATE -fvisibility=hidden)
+
+if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
+   target_compile_options(ZLIB PRIVATE -Wno-unused-function -O3 -mpclmul -Wno-attribute-alias ${ROOT_DEFINITIONS})
+else()
+   if(NOT MSVC)
+      target_compile_options(ZLIB PRIVATE -O3)
+   endif()
+endif()
 
 add_library(ZLIB::ZLIB ALIAS ZLIB)
 

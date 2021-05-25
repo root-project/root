@@ -13,9 +13,10 @@
 #include "TH2Poly.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
-#include "TClass.h"
+#include "Riostream.h"
 #include "TList.h"
 #include "TMath.h"
+#include <cassert>
 
 ClassImp(TH2Poly);
 
@@ -207,6 +208,8 @@ TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 
    fNcells++;
    Int_t ibin = fNcells - kNOverflow;
+   // if structure fsumw2 is created extend it
+   if (fSumw2.fN) fSumw2.Set(fNcells);
    return new TH2PolyBin(poly, ibin);
 }
 
@@ -326,28 +329,22 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
       GetStats(s1);
       h1->GetStats(s2);
    }
+   //   get number of entries now because afterwards UpdateBinContent will change it
+   Double_t entries = TMath::Abs( GetEntries() + c1 * h1->GetEntries() );
+
 
    // Perform the Add.
    Double_t factor = 1;
    if (h1p->GetNormFactor() != 0)
       factor = h1p->GetNormFactor() / h1p->GetSumOfWeights();
    for (bin = 0; bin < fNcells; bin++) {
-      Double_t y = h1p->RetrieveBinContent(bin) + c1 * h1p->RetrieveBinContent(bin);
+      Double_t y = this->RetrieveBinContent(bin) + c1 * h1p->RetrieveBinContent(bin);
       UpdateBinContent(bin, y);
       if (fSumw2.fN) {
          Double_t esq = factor * factor * h1p->GetBinErrorSqUnchecked(bin);
          fSumw2.fArray[bin] += c1 * c1 * factor * factor * esq;
       }
    }
-   // for (bin = 1; bin <= GetNumberOfBins(); bin++) {
-   //    thisBin = (TH2PolyBin *)fBins->At(bin - 1);
-   //    h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
-   //    thisBin->SetContent(thisBin->GetContent() + c1 * h1pBin->GetContent());
-   //    if (fSumw2.fN) {
-   //       Double_t e1 = factor * h1p->GetBinError(bin);
-   //       fSumw2.fArray[bin] += c1 * c1 * e1 * e1;
-   //    }
-   // }
 
    // update statistics (do here to avoid changes by SetBinContent)
    if (resetStats)  {
@@ -359,27 +356,9 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
          else        s1[i] += c1 * s2[i];
       }
       PutStats(s1);
-      SetEntries(std::abs(GetEntries() + c1 * h1->GetEntries()));
+      SetEntries(entries);
    }
    return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this + c1*f1.
-
-Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
-{
-   Warning("Add","Not implement for TH2Poly");
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this histogram by the addition of h1 and h2.
-
-Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
-{
-   Warning("Add","Not implement for TH2Poly");
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -523,6 +502,7 @@ void TH2Poly::ClearBinContents()
 
    // Clears the statistics
    fTsumw   = 0;
+   fTsumw2  = 0;
    fTsumwx  = 0;
    fTsumwx2 = 0;
    fTsumwy  = 0;
@@ -617,7 +597,18 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y)
 
 Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 {
+   // see GetBinCOntent for definition of overflow bins
+   // in case of weighted events store weight square in fSumw2.fArray
+   // but with this indexing:
+   // fSumw2.fArray[0:kNOverflow-1] : sum of weight squares for the overflow bins
+   // fSumw2.fArray[kNOverflow:fNcells] : sum of weight squares for the standard bins
+   // where fNcells = kNOverflow + Number of bins. kNOverflow=9
+
    if (fNcells <= kNOverflow) return 0;
+
+   // create sum of weight square array if weights are different than 1
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW) )  Sumw2();
+
    Int_t overflow = 0;
    if      (y > fYaxis.GetXmax()) overflow += -1;
    else if (y > fYaxis.GetXmin()) overflow += -4;
@@ -661,11 +652,15 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 
          // Statistics
          fTsumw   = fTsumw + w;
+         fTsumw2  = fTsumw2 + w*w;
          fTsumwx  = fTsumwx + w*x;
          fTsumwx2 = fTsumwx2 + w*x*x;
          fTsumwy  = fTsumwy + w*y;
          fTsumwy2 = fTsumwy2 + w*y*y;
-         if (fSumw2.fN) fSumw2.fArray[bi] += w*w;
+         if (fSumw2.fN) {
+            assert(bi < fSumw2.fN);
+            fSumw2.fArray[bi] += w*w;
+         }
          fEntries++;
 
          SetBinContentChanged(kTRUE);
@@ -732,23 +727,27 @@ Double_t TH2Poly::Integral(Option_t* option) const
    TString opt = option;
    opt.ToLower();
 
+   Double_t w;
+   Double_t integral = 0.;
+
+   TIter next(fBins);
+   TObject *obj;
+   TH2PolyBin *bin;
    if ((opt.Contains("width")) || (opt.Contains("area"))) {
-      Double_t w;
-      Double_t integral = 0.;
-
-      TIter    next(fBins);
-      TObject *obj;
-      TH2PolyBin *bin;
-      while ((obj=next())) {
-         bin       = (TH2PolyBin*) obj;
-         w         = bin->GetArea();
-         integral += w*(bin->GetContent());
+      while ((obj = next())) {
+         bin = (TH2PolyBin *)obj;
+         w = bin->GetArea();
+         integral += w * (bin->GetContent());
       }
-
-      return integral;
    } else {
-      return fTsumw;
+      // need to recompute integral in case SetBinContent was called.
+      // fTsumw cannot be used since it is not updated in that case
+      while ((obj = next())) {
+         bin = (TH2PolyBin *)obj;
+         integral += (bin->GetContent());
+      }
    }
+   return integral;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -775,19 +774,47 @@ Double_t TH2Poly::GetBinContent(Int_t bin) const
 /// If the sum of squares of weights has been defined (via Sumw2),
 /// this function returns the sqrt(sum of w2).
 /// otherwise it returns the sqrt(contents) for this bin.
+/// Bins are in range [1:nbins] and for bin < 0 in range [-9:-1] it returns errors for overflow bins.
+/// See also TH2Poly::GetBinContent
 
 Double_t TH2Poly::GetBinError(Int_t bin) const
 {
    if (bin == 0 || bin > GetNumberOfBins() || bin < - kNOverflow) return 0;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
+   // in case of weighted events the sum of the weights are stored in a different way than
+   // a normal histogram
+   // fSumw2.fArray[0:kNOverflow-1] : sum of weight squares for the overflow bins (
+   // fSumw2.fArray[kNOverflow:fNcells] : sum of weight squares for the standard bins
+   //  fNcells = kNOverflow (9) + Number of bins
    if (fSumw2.fN) {
-      Int_t binIndex = (bin < 0) ? bin+kNOverflow-1 : -(bin+1);
+      Int_t binIndex = (bin > 0) ? bin+kNOverflow-1 : -(bin+1);
       Double_t err2 = fSumw2.fArray[binIndex];
       return TMath::Sqrt(err2);
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the bin Error.
+/// Re-implementation for TH2Poly given the different bin indexing in the
+/// stored squared error array.
+/// See also notes in TH1::SetBinError
+///
+/// Bins are in range [1:nbins] and for bin < 0 in the range [-9:-1] the  errors is set for the overflow bins
+
+
+void TH2Poly::SetBinError(Int_t bin, Double_t error)
+{
+   if (bin == 0 || bin > GetNumberOfBins() || bin < - kNOverflow) return;
+   if (!fSumw2.fN) Sumw2();
+   SetBinErrorOption(kNormal);
+   // see comment in GetBinError for special convention of bin index in fSumw2 array
+   Int_t binIndex = (bin > 0) ? bin+kNOverflow-1 : -(bin+1);
+   fSumw2.fArray[binIndex] = error * error;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the bin name.
@@ -974,6 +1001,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    // Statistics
    fEntries = 0;   // The total number of entries
    fTsumw   = 0.;  // Total amount of content in the histogram
+   fTsumw2  = 0.;  // Sum square of the weights
    fTsumwx  = 0.;  // Weighted sum of x coordinates
    fTsumwx2 = 0.;  // Weighted sum of the squares of x coordinates
    fTsumwy2 = 0.;  // Weighted sum of the squares of y coordinates
@@ -1257,7 +1285,9 @@ void TH2Poly::SetBinContent(Int_t bin, Double_t content)
    }
    else
       fOverflow[-bin - 1] = content;
+
    SetBinContentChanged(kTRUE);
+   fEntries++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1528,4 +1558,69 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
    }
 
    return in;
+}
+
+////////////////////////////////////////////////////////////////////////
+/// RE-implement dummy functions to avoid users calling the
+/// corresponding implementations in TH1 or TH2
+//////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this + c1*f1. NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
+{
+   Error("Add","Not implement for TH2Poly");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace contents of this histogram by the addition of h1 and h2. NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
+{
+   Error("Add","Not implement for TH2Poly");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this / c1*f1. NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Divide(TF1 *, Double_t)
+{
+   Error("Divide","Not implement for TH2Poly");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+Bool_t TH2Poly::Multiply(TF1 *, Double_t)
+{
+   Error("Multiply","Not implement for TH2Poly");
+   return kFALSE;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+Double_t TH2Poly::ComputeIntegral(Bool_t )
+{
+   Error("ComputeIntegral","Not implement for TH2Poly");
+   return TMath::QuietNaN();
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+TH1 * TH2Poly::FFT(TH1*, Option_t * )
+{
+   Error("FFT","Not implement for TH2Poly");
+   return nullptr;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+TH1 * TH2Poly::GetAsymmetry(TH1* , Double_t,  Double_t)
+{
+   Error("GetAsymmetry","Not implement for TH2Poly");
+   return nullptr;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+Double_t TH2Poly::Interpolate(Double_t, Double_t)
+{
+   Error("Interpolate","Not implement for TH2Poly");
+   return TMath::QuietNaN();
 }

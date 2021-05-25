@@ -3,9 +3,8 @@
 #      This files describe the names of the hosts for which
 #      the allowed authentication methods are not the default ones
 #      as specified in system.rootrc (if any).
-#      This file is used by the 'rootd', 'proofd' and 'sockd' daemons
-#      ('sockd' indicates servers run from ROOT interactive sessions
-#       via teh TServerSocket class).
+#      This file is used by servers run from ROOT interactive sessions
+#      via the TServerSocket class.
 #
 #      If existing, $HOME/.rootdaemonrc has priority over
 #      $ROOTSYS/etc/system.rootdaemonrc
@@ -16,9 +15,6 @@
 #    - hosts can specified either with their name (eg. pcepsft43),
 #      their FQDN (eg, pcepsft43.cern.ch) or their IP address
 #      (eg 137.138.99.73).
-#
-#    - host names can be followed by :rootd, :proofd or :sockd to define
-#      directives applying only to the given service
 #
 #    - directives applying to all host can be specified either by
 #      'default' or '*'
@@ -48,52 +44,27 @@
 #        Method                           short name   code
 #
 #        UsrPwd                            usrpwd       0
-#        SRP                               srp          1
-#        Kerberos                          krb5         2
-#        Globus                            globus       3
-#        SSH                               ssh          4
-#        UidGid                            uidgid       5   (insecure)
 #
 #     (The insecure method is intended to speed up access within a cluster
 #     protected by other means from outside attacks; should not be used for
 #     inter-cluster or inter-domain authentication).
 #     Methods non specified explicitly are not accepted.
-#     For the insecure method it is possible to give access only to a
-#     specific list of users by specifying the usernames after the method
-#     separated by colons (:) example:
-#
-#        uidgid:user1:user2:user3
-#
-#     will allow uidgid access only to users user1, user2 and user3.
-#     This is useful to give easy access to data servers.
-#
-#     It is also possible to deny access to a user by using a '-' in front of
-#     the name:
-#
-#        uidgid:-user4
 #
 #   - Lines ending with '\' are followed by additional information for the
 #     host on the next line; the name of the host should not be repeated.
 #
-# Example of allowing machines in the cern.ch domain to authenticate
-# using SSH (as preferred method) followed by the Globus and UsrPwd methods;
-# in this case, attempts to use SRP, Kerberos or UidGid methods will be
-# rejected; however, the accepted methods will be communicated to the client
-# and an automatic retry is attempted if the client can use any of them
-# (negotiation).
+# Example of allowing machines in the cern.ch domain to authenticate.
+# The accepted methods will be communicated to the client and an automatic
+# retry is attempted if the client can use any of them (negotiation).
 #
 # Valid examples:
 #
 # default              none
-# default              ssh 0 uidgid
-# 137.138.             4 0
-# pceple19.cern.ch     4 1 3 2 5 0
-# lxplus*.cern.ch      4 1 globus 0:qwerty:uytre 5
-# pcep*.cern.ch:rootd  4 1 5:qwerty 
-#
+# lxplus*.cern.ch      0:qwerty:uytre 2
+
 # Everything allowed from the local host (for testing)
 #
-127.0.0.1            4 0 3 1 2 5
+127.0.0.1            0 2
 #
 # secure methods allowed by default
-default usrpwd ssh @havesrp@ @havekrb5@ @haveglobus@ 
+default usrpwd

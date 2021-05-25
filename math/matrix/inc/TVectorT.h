@@ -68,7 +68,7 @@ public:
 #ifndef __CINT__
    TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...);
 #endif
-   virtual ~TVectorT() { Clear(); }
+   virtual ~TVectorT() { TVectorT::Clear(); }
 
    inline          Int_t     GetLwb       () const { return fRowLwb; }
    inline          Int_t     GetUpb       () const { return fNrows+fRowLwb-1; }
@@ -236,6 +236,7 @@ template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
 
    return fElements[aind];
 }
+inline namespace TMatrixTAutoloadOps {
 
 template<class Element> Bool_t              operator==  (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
 template<class Element> TVectorT<Element>   operator+   (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
@@ -293,5 +294,5 @@ template<class Element> Bool_t VerifyVectorIdentity (const TVectorT <Element>  &
                                                      { return VerifyVectorIdentity(m1,m2,verbose,Element(0.0)); }
 template<class Element> Bool_t VerifyVectorIdentity (const TVectorT <Element>  &m1,const TVectorT <Element> &m2)
                                                      { return VerifyVectorIdentity(m1,m2,1,Element(0.0)); }
-
+} // inline namespace TMatrixTAutoloadOps
 #endif

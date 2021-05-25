@@ -1,0 +1,83 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
+          controllerName="rootui5.browser.controller.Browser"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:t="sap.ui.table"
+          xmlns:core="sap.ui.core"
+          xmlns:l="sap.ui.layout"
+          xmlns:tnt="sap.tnt">
+  <Page showSubHeader="false" showHeader="false" showFooter="false">
+    <content>
+      <tnt:ToolHeader asyncMode="true" height="40px" >
+        <Button id="burgerMenu" icon="sap-icon://menu2" type="Transparent" tooltip="Hide/show browser" press="onFullScreen"/>
+        <Image height="35px" src="rootui5sys/browser/logo.png"/>
+        <Text text="ROOT 7" wrapping="false" />
+        <ToolbarSpacer/>
+        <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+        <Button icon="sap-icon://log" type="Transparent" tooltip="Logoff" press="onQuitRootPress"/>
+      </tnt:ToolHeader>
+
+      <ScrollContainer height="calc(100% - 40px)">
+        <SplitApp id="SplitAppBrowser" defaultTransitionNameDetail="slide" defaultTransitionNameMaster="slide">
+
+          <masterPages>
+            <Page id="masterPage" showFooter="true" navButtonPress="onNavBack" showNavButton="false">
+              <customHeader>
+                <Toolbar width="100%">
+                  <SearchField placeholder="Filter" liveChange="onSearch" />
+                  <Button icon="sap-icon://synchronize" press="onRealoadPress" tooltip="Refresh browser content"/>
+                  <Button id="expandMaster" icon="sap-icon://open-command-field" tooltip="Expand/shrink" press="onExpandMaster"/>
+                </Toolbar>
+              </customHeader>
+              <content>
+                <tnt:ToolHeader asyncMode="true" height="40px">
+                  <l:VerticalLayout width="100%">
+                    <l:content>
+                      <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan"/>
+                    </l:content>
+                  </l:VerticalLayout>
+                </tnt:ToolHeader>
+
+                <ScrollContainer height="calc(100% - 40px)">
+                  <t:TreeTable
+                          id="treeTable"
+                          columnHeaderVisible="true"
+                          editable="false"
+                          enableSelectAll="false"
+                          selectionBehavior="RowOnly"
+                          selectionMode="Single"
+                          visibleRowCountMode="Auto"
+                          showColumnVisibilityMenu="true"
+                          rows="{/nodes}" >
+                    <t:layoutData>
+                      <FlexItemData growFactor="1"/>
+                    </t:layoutData>
+                  </t:TreeTable>
+                </ScrollContainer>
+              </content>
+            </Page>
+          </masterPages>
+
+          <detailPages>
+            <l:Splitter orientation="Vertical">
+              <Page title="Javascript ROOT Browser" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+                <TabContainer id="tabContainer" showAddNewButton="true" addNewButtonPress="handlePressAddTab" itemSelect="tabSelectItem" itemClose="handleTabClose"/>
+              </Page>
+              <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+                <layoutData><l:SplitterLayoutData size="20%" /></layoutData>
+                <Input id="terminal-input" type="Text" placeholder="Enter command ..." submit="onTerminalSubmit" suggestionItems="{/hist}" showSuggestion="true">
+                  <suggestionItems>
+                    <core:Item text="{name}" />
+                  </suggestionItems>
+                </Input>
+                <TextArea editable="false" id="output_log" class="output_log" width="100%" height="calc(100% - 38px)"/>
+              </Page>
+            </l:Splitter>
+          </detailPages>
+
+        </SplitApp>
+      </ScrollContainer>
+    </content>
+  </Page>
+
+</mvc:View>

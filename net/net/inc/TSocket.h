@@ -24,6 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TSystem.h"
+#include "Compression.h"
 #include "TNamed.h"
 #include "TBits.h"
 #include "TInetAddress.h"
@@ -32,27 +34,6 @@
 #include "TSecContext.h"
 #include "TTimeStamp.h"
 #include "TVirtualMutex.h"
-
-enum ESockOptions {
-   kSendBuffer,        // size of send buffer
-   kRecvBuffer,        // size of receive buffer
-   kOobInline,         // OOB message inline
-   kKeepAlive,         // keep socket alive
-   kReuseAddr,         // allow reuse of local portion of address 5-tuple
-   kNoDelay,           // send without delay
-   kNoBlock,           // non-blocking I/O
-   kProcessGroup,      // socket process group (used for SIGURG and SIGIO)
-   kAtMark,            // are we at out-of-band mark (read only)
-   kBytesToRead        // get number of bytes to read, FIONREAD (read only)
-};
-
-enum ESendRecvOptions {
-   kDefault,           // default option (= 0)
-   kOob,               // send or receive out-of-band data
-   kPeek,              // peek at incoming message (receive only)
-   kDontBlock          // send/recv as much data as possible without blocking
-};
-
 
 class TMessage;
 class THostAuth;
@@ -99,7 +80,7 @@ protected:
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
-   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
+   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal),
                fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
                fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
                fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
@@ -163,9 +144,9 @@ public:
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
-   void                  SetCompressionAlgorithm(Int_t algorithm=0);
-   void                  SetCompressionLevel(Int_t level=4);
-   void                  SetCompressionSettings(Int_t settings=4);
+   void                  SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void                  SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
+   void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }

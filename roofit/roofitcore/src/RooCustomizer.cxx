@@ -14,111 +14,154 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// RooCustomizer is a factory class to produce clones
-// of a prototype composite PDF object with the same structure but
-// different leaf servers (parameters or dependents)
-//
-// RooCustomizer supports two kinds of modifications:
-// 
-// -> replace(leaf_arg,repl_arg) 
-// replaces each occurence of leaf_arg with repl_arg in the composite pdf.
-//
-// -> split(split_arg)
-// is used when building multiple clones of the same prototype. Each
-// occurrence of split_arg is replaceed with a clone of split_arg
-// named split_arg_[MCstate], where [MCstate] is the name of the
-// 'master category state' that indexes the clones to be built.
-//
-//
-// [Example]
-//
-// Splitting is particularly useful when building simultaneous fits to
-// subsets of the data sample with different background properties.
-// In such a case, the user builds a single prototype PDF representing
-// the structure of the signal and background and splits the dataset
-// into categories with different background properties. Using
-// RooCustomizer a PDF for each subfit can be constructed from the
-// prototype that has same structure and signal parameters, but
-// different instances of the background parameters: e.g.
-//
-//     ...
-//     RooExponential bg("bg","background",x,alpha) ;
-//     RooGaussian sig("sig","signal",x,mean,sigma) ;
-//     RooAddPdf pdf("pdf","pdf",sig,bg,sigfrac) ;
-//
-//     RooDataSet data("data","dataset",RooArgSet(x,runblock),...)
-//
-//     RooCategory runblock("runblock","run block") ;
-//     runblock.defineType("run1") ;
-//     runblock.defineType("run2") ;
-//
-//     RooArgSet splitLeafs
-//     RooCustomizer cust(pdf,runblock,splitLeafs)
-//     cust.split(alpha,runblock)
-//
-//     RooAbsPdf* pdf_run1 = cust.build("run1") ;
-//     RooAbsPdf* pdf_run2 = cust.build("run2") ;
-//
-//     RooSimultaneous simpdf("simpdf","simpdf",RooArgSet(*pdf_run1,*pdf_run2)) 
-//
-// If the master category state is a super category, leafs may be split
-// by any subset of that master category. E.g. if the master category
-// is 'A x B', leafs may be split by A, B or AxB.
-//
-// In addition to replacing leaf nodes, RooCustomizer clones all branch
-// nodes that depend directly or indirectly on modified leaf nodes, so
-// that the input pdf is untouched by each build operation.
-//
-// The customizer owns all the branch nodes including the returned top
-// level node, so the customizer should live as longs as the cloned
-// composites are needed.
-//
-// Any leaf nodes that are created by the customizer will be put into
-// the leaf list that is passed into the customizers constructor (splitLeafs in
-// the above example. The list owner is responsible for deleting these leaf
-// nodes after the customizer is deleted.
-//
-//
-// [Advanced techniques]
-//
-// By default the customizer clones the prototype leaf node when splitting a leaf,
-// but the user can feed pre-defined split leafs in leaf list. These leafs
-// must have the name <split_leaf>_<splitcat_label> to be picked up. The list
-// of pre-supplied leafs may be partial, any missing split leafs will be auto
-// generated.
-//
-// Another common construction is to have two prototype PDFs, each to be customized
-// by a separate customizer instance, that share parameters. To ensure that
-// the customized clones also share their respective split leafs, i.e.
-//
-//   PDF1(x,y;A) and PDF2(z,A)   ---> PDF1_run1(x,y,A_run1) and PDF2_run1(x,y,A_run1)
-//                                    PDF1_run2(x,y,A_run2) and PDF2_run2(x,y,A_run2)
-//
-// feed the same split leaf list into both customizers. In that case the second customizer
-// will pick up the split leafs instantiated by the first customizer and the link between
-// the two PDFs is retained
-//
-//
+/**
+ * \class RooCustomizer
+ *
+ * RooCustomizer is a factory class to produce clones
+ * of a prototype composite PDF object with the same structure but
+ * different leaf servers (parameters or dependents).
+ *
+ * RooCustomizer supports two kinds of modifications:
+ *
+ * - replaceArg(leaf_arg, repl_arg):
+ * Replaces each occurence of leaf_arg with repl_arg in the composite pdf.
+ *
+ * - splitArg(split_arg):
+ * Build multiple clones of the same prototype. Each
+ * occurrence of split_arg is replaced with a clone of split_arg
+ * named split_arg_[MCstate], where [MCstate] is the name of the
+ * 'master category state' that indexes the clones to be built.
+ *
+ *
+ * ### Example: Change the decay constant of an exponential for each run
+ *
+ * Splitting is particularly useful when building simultaneous fits to
+ * subsets of the data sample with different background properties.
+ * In such a case, the user builds a single prototype PDF representing
+ * the structure of the signal and background and splits the dataset
+ * into categories with different background properties. Using
+ * RooCustomizer a PDF for each subfit can be constructed from the
+ * prototype that has same structure and signal parameters, but
+ * different instances of the background parameters: e.g.
+ * ```
+ *     ...
+ *     RooExponential bg("bg","background",x,alpha) ;
+ *     RooGaussian sig("sig","signal",x,mean,sigma) ;
+ *     RooAddPdf pdf("pdf","pdf",sig,bg,sigfrac) ;
+ *
+ *     RooDataSet data("data","dataset",RooArgSet(x,runblock),...)
+ *
+ *     RooCategory runblock("runblock","run block") ;
+ *     runblock.defineType("run1") ;
+ *     runblock.defineType("run2") ;
+ *
+ *     RooArgSet splitLeafs;
+ *     RooCustomizer cust(pdf,runblock,splitLeafs);
+ *     cust.splitArg(alpha,runblock);
+ *
+ *     RooAbsPdf* pdf_run1 = cust.build("run1") ;
+ *     RooAbsPdf* pdf_run2 = cust.build("run2") ;
+ *
+ *     RooSimultaneous simpdf("simpdf","simpdf",RooArgSet(*pdf_run1,*pdf_run2))
+ * ```
+ * If the master category state is a super category, leafs may be split
+ * by any subset of that master category. E.g. if the master category
+ * is 'A x B', leafs may be split by A, B or AxB.
+ *
+ * In addition to replacing leaf nodes, RooCustomizer clones all branch
+ * nodes that depend directly or indirectly on modified leaf nodes, so
+ * that the input pdf is untouched by each build operation.
+ *
+ * The customizer owns all the branch nodes including the returned top
+ * level node, so the customizer should live as longs as the cloned
+ * composites are needed.
+ *
+ * Any leaf nodes that are created by the customizer will be put into
+ * the leaf list that is passed into the customizers constructor (splitLeafs in
+ * the above example. The list owner is responsible for deleting these leaf
+ * nodes after the customizer is deleted.
+ *
+ *
+ * ## Advanced techniques
+ *
+ * ### Reuse nodes to customise a different PDF
+ * By default, the customizer clones the prototype leaf node when splitting a leaf,
+ * but the user can feed pre-defined split leafs in leaf list. These leafs
+ * must have the name <split_leaf>_<splitcat_label> to be picked up. The list
+ * of pre-supplied leafs may be partial, any missing split leafs will be auto
+ * generated.
+ *
+ * Another common construction is to have two prototype PDFs, each to be customized
+ * by a separate customizer instance, that share parameters. To ensure that
+ * the customized clones also share their respective split leafs, i.e.
+ * ```
+ *   PDF1(x,y, A) and PDF2(z, A) ---> PDF1_run1(x,y, A_run1) and PDF2_run1(x,y, A_run1)
+ *                                    PDF1_run2(x,y, A_run2) and PDF2_run2(x,y, A_run2)
+ * ```
+ * feed the same split leaf list into both customizers. In that case, the second customizer
+ * will pick up the split leafs instantiated by the first customizer and the link between
+ * the two PDFs is retained.
+ *
+ * ### Customising with pre-defined leafs
+ * If leaf nodes are provided in the sets, the customiser will use them. This is a complete
+ * example that customises the `yield` parameter, and splits (automatically clones) the
+ * mean of the Gaussian. This is a short version of the tutorial rf514_RooCustomizer.C.
+ * ```
+ *  RooRealVar E("Energy","Energy",0,3000);
+ *
+ *  RooRealVar meanG("meanG","meanG", peak[1]);
+ *  RooRealVar fwhm("fwhm", "fwhm", 5/(2*Sqrt(2*Log(2))));
+ *  RooGaussian gauss("gauss", "gauss", E, meanG, fwhm);
+ *
+ *  RooPolynomial linear("linear","linear",E,RooArgList());
+ *
+ *  RooRealVar yieldSig("yieldSig", "yieldSig", 1, 0, 1.E4);
+ *  RooRealVar yieldBkg("yieldBkg", "yieldBkg", 1, 0, 1.E4);
+ *
+ *  RooAddPdf model("model","model",
+ *      RooArgList(gauss,linear),
+ *      RooArgList(yieldSig, yieldBkg));
+ *
+ *  RooCategory sample("sample","sample");
+ *  sample.defineType("BBG1m2T");
+ *  sample.defineType("BBG2m2T");
+ *
+ *
+ *  RooArgSet customisedLeafs;
+ *  RooArgSet allLeafs;
+ *
+ *  RooRealVar mass("M", "M", 1, 0, 12000);
+ *  RooFormulaVar yield1("yieldSig_BBG1m2T","sigy1","M/3.360779",mass);
+ *  RooFormulaVar yield2("yieldSig_BBG2m2T","sigy2","M/2",mass);
+ *  allLeafs.add(yield1);
+ *  allLeafs.add(yield2);
+ *
+ *
+ *  RooCustomizer cust(model, sample, customisedLeafs, &allLeafs);
+ *  cust.splitArg(yieldSig, sample);
+ *  cust.splitArg(meanG, sample);
+ *
+ *  auto pdf1 = cust.build("BBG1m2T");
+ *  auto pdf2 = cust.build("BBG2m2T");
+ * ```
+*/
 
 
-#include "RooFit.h"
+#include "RooCustomizer.h"
 
-#include "TClass.h"
-#include "TStopwatch.h"
-
-#include "RooAbsCategoryLValue.h" 
+#include "RooAbsCategoryLValue.h"
 #include "RooAbsCategory.h"
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
+#include "RooHelpers.h"
 
-#include "RooCustomizer.h"
+#include <iostream>
+#include "strtok.h"
+#include "strlcpy.h"
 
-#include "Riostream.h"
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
@@ -127,25 +170,6 @@
 
 #ifndef _WIN32
 #include <strings.h>
-#else
-static char *strtok_r(char *s1, const char *s2, char **lasts)
-{
-  char *ret;
-  
-  if (s1 == NULL)
-    s1 = *lasts;
-  while(*s1 && strchr(s2, *s1))
-    ++s1;
-  if(*s1 == '\0')
-    return NULL;
-  ret = s1;
-  while(*s1 && !strchr(s2, *s1))
-    ++s1;
-  if(*s1)
-    *s1++ = '\0';
-  *lasts = s1;
-  return ret;
-}
 #endif
 
 
@@ -154,10 +178,11 @@ using namespace std;
 ClassImp(RooCustomizer); 
 ;
 
+namespace {
 
 static Int_t init();
 
-static Int_t dummy = init() ;
+Int_t dummy = init() ;
 
 static Int_t init()
 {
@@ -167,17 +192,32 @@ static Int_t init()
   return 0 ;
 }
 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with a prototype and masterCat index category.
-/// Customizers created by this constructor offer offer both the
-/// replaceArg() and splitArg() functionality. All nodes created in
-/// the customization process are added to the splitLeafs set.
-/// If the customizer is owning, the splitLeafs set will become
-/// owner of all created objects by the customizer
+/// Customizers created by this constructor offer both the
+/// replaceArg() and splitArg() functionality.
+/// \param[in] pdf Proto PDF to be customised.
+/// \param[in] masterCat Category to be used for splitting.
+/// \param[in,out] splitLeafs All nodes created in
+/// the customisation process are added to this set.
+/// The user can provide nodes that are *taken*
+/// from the set if they have a name that matches `<parameterNameToBeReplaced>_<category>`.
+/// \note The set needs to own its contents if they are user-provided.
+/// Use *e.g.*
+/// ```
+///  RooArgSet customisedLeafs;
+///  auto yield1 = new RooFormulaVar("yieldSig_BBG1m2T","sigy1","M/3.360779",mass);
+///  customisedLeafs.addOwned(*yield1);
+/// ```
+/// \param[in,out] splitLeafsAll All leafs that are used when customising are collected here.
+/// If this set already contains leaves, they will be used for customising if the names match
+/// as above.
 /// 
 
-RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
+RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat,
+    RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(kFALSE),
   _owning(kTRUE),
@@ -189,11 +229,7 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
   _cloneNodeListAll(splitLeafsAll),
   _cloneNodeListOwned(&splitLeafs)
 {
-  _masterBranchList.setHashTableSize(1000) ;
-  _masterLeafList.setHashTableSize(1000) ;
-
   _cloneBranchList = &_internalCloneBranchList ;
-  _cloneBranchList->setHashTableSize(1000) ;
 
   initialize() ;
 }
@@ -218,11 +254,7 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _cloneNodeListAll(0),
   _cloneNodeListOwned(0)
 {
-  _masterBranchList.setHashTableSize(1000) ;
-  _masterLeafList.setHashTableSize(1000) ;
-
   _cloneBranchList = &_internalCloneBranchList ;
-  _cloneBranchList->setHashTableSize(1000) ;
 
   initialize() ;
 }
@@ -237,9 +269,6 @@ void RooCustomizer::initialize()
 {
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
   _masterPdf->branchNodeServerList(&_masterBranchList) ;
-
-  _masterLeafListIter = _masterLeafList.createIterator() ;
-  _masterBranchListIter = _masterBranchList.createIterator() ;
 }
 
 
@@ -249,8 +278,6 @@ void RooCustomizer::initialize()
 
 RooCustomizer::~RooCustomizer() 
 {
-  delete _masterLeafListIter ;
-  delete _masterBranchListIter ;
 
 }
 
@@ -272,12 +299,10 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
 			  << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
     return ;
   }
-  TIterator* iter = set.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())){
+
+  for (auto arg : set) {
     splitArg(*arg,splitCat) ;
   }
-  delete iter ;
 }
 
 
@@ -328,10 +353,10 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Build a clone of the prototype executing all registered 'replace' rules
-/// If verbose is set a message is printed for each leaf or branch node
+/// Build a clone of the prototype executing all registered 'replace' rules.
+/// If verbose is set, a message is printed for each leaf or branch node
 /// modification. The returned head node owns all cloned branch nodes
-/// that were created in the cloning proces
+/// that were created in the cloning process.
 
 RooAbsArg* RooCustomizer::build(Bool_t verbose) 
 {
@@ -400,22 +425,12 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   RooArgSet masterReplacementNodes("masterReplacementNodes") ;
   RooArgSet clonedMasterNodes("clonedMasterNodes") ;
 
-  masterNodesToBeSplit.setHashTableSize(1000) ;
-  masterNodesToBeReplaced.setHashTableSize(1000) ;
-  masterReplacementNodes.setHashTableSize(1000) ;
-  clonedMasterNodes.setHashTableSize(1000) ;
-
-  _masterLeafListIter->Reset() ;
-  RooAbsArg* node ;
 
   RooArgSet nodeList(_masterLeafList) ;
-  nodeList.setHashTableSize(1000) ;
-
   nodeList.add(_masterBranchList) ;
-  TIterator* nIter = nodeList.createIterator() ;
 
   //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
-  while((node=(RooAbsArg*)nIter->Next())) {
+  for (auto node : nodeList) {
     RooAbsArg* theSplitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
     if (theSplitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(theSplitArg)) ;
@@ -427,7 +442,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       TString newName(node->GetName()) ;
       if (masterCatState) {
 	newName.Append("_") ;
-	newName.Append(splitCat->getLabel()) ;	
+	newName.Append(splitCat->getCurrentLabel()) ;	
       }
 
       // Check if this node instance already exists
@@ -461,7 +476,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
 	TString newTitle(node->GetTitle()) ;
 	newTitle.Append(" (") ;
-	newTitle.Append(splitCat->getLabel()) ;
+	newTitle.Append(splitCat->getCurrentLabel()) ;
 	newTitle.Append(")") ;
       
 	// Create a new clone
@@ -510,14 +525,10 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       masterReplacementNodes.add(*substArg) ;
     }
   }
-  delete nIter ;
 
   // Find branches that are affected by splitting and must be cloned
   RooArgSet masterBranchesToBeCloned("masterBranchesToBeCloned") ;
-  masterBranchesToBeCloned.setHashTableSize(1000) ;
-  _masterBranchListIter->Reset() ;
-  RooAbsArg* branch ;
-  while((branch=(RooAbsArg*)_masterBranchListIter->Next())) {
+  for (auto branch : _masterBranchList) {
     
     // If branch is split itself, don't handle here
     if (masterNodesToBeSplit.find(branch->GetName())) {
@@ -551,9 +562,8 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   // Clone branches, changes their names 
   RooAbsArg* cloneTopPdf = 0;
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
-  clonedMasterBranches.setHashTableSize(1000) ;
-  TIterator* iter = masterBranchesToBeCloned.createIterator() ;
-  while((branch=(RooAbsArg*)iter->Next())) {
+
+  for (auto branch : masterBranchesToBeCloned) {
     TString newName(branch->GetName()) ;
     if (masterCatState) {
       newName.Append("_") ;
@@ -576,7 +586,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
     // Save pointer to clone of top-level pdf
     if (branch==_masterPdf) cloneTopPdf=(RooAbsArg*)clone ;
   }
-  delete iter ;
+
   if (_owning) {
     _cloneBranchList->addOwned(clonedMasterBranches) ;
   } else {
@@ -584,15 +594,13 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
     
   // Reconnect cloned branches to each other and to cloned nodess
-  iter = clonedMasterBranches.createIterator() ;
-  while((branch=(RooAbsArg*)iter->Next())) {
+  for (auto branch : clonedMasterBranches) {
     branch->redirectServers(clonedMasterBranches,kFALSE,kTRUE) ;
     branch->redirectServers(clonedMasterNodes,kFALSE,kTRUE) ;
     branch->redirectServers(masterReplacementNodes,kFALSE,kTRUE) ;
   }
-  delete iter ;  
 
-  return cloneTopPdf?cloneTopPdf:_masterPdf ;
+  return cloneTopPdf ? cloneTopPdf : _masterPdf ;
 }
 
 
@@ -672,7 +680,7 @@ void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verb
 void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet) 
 {
   _cloneBranchList = &cloneBranchSet ;
-  _cloneBranchList->setHashTableSize(1000) ;
+  _cloneBranchList->useHashMapForFind(true);
 }
 
 
@@ -726,11 +734,11 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
 	char buf2[1024] ;
 	strlcpy(buf2,sep2+1,1024) ;
 	char* saveptr ;
-	char* tok = strtok_r(buf2,",)",&saveptr) ;
+	char* tok = R__STRTOK_R(buf2,",)",&saveptr) ;
 	while(tok) {
 	  //cout << "$REMOVE is restricted to " << tok << endl ;
 	  subst->setAttribute(Form("REMOVE_FROM_%s",tok)) ;
-	  tok = strtok_r(0,",)",&saveptr) ;
+	  tok = R__STRTOK_R(0,",)",&saveptr) ;
 	}
       } else {
 	// Otherwise mark as universal removal node
@@ -763,9 +771,10 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
   if (instanceName) {
     // Set the desired name of the top level node
     targ->SetName(instanceName) ;
-    ft.ws().import(cust.cloneBranchList(),RooFit::Silence(),RooFit::NoRecursion(kTRUE)) ;
+    // Now import everything. What we didn't touch gets recycled, everything else was cloned here:
+    ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RecycleConflictNodes(true),    RooFit::NoRecursion(false));
   } else {
-    ft.ws().import(cust.cloneBranchList(),RooFit::Silence(),RooFit::RenameConflictNodes("orig",1),RooFit::NoRecursion(kTRUE)) ;    
+    ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RenameConflictNodes("orig",1), RooFit::NoRecursion(true));
   }
 
   return string(instanceName?instanceName:targ->GetName()) ;

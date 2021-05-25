@@ -55,6 +55,23 @@ namespace std {
 
 #endif // ifdef else R__HAS_STD_STRING_VIEW
 
+#ifndef R__HAS_OP_EQUAL_PLUS_STRING_VIEW
+
+#include <string>
+
+namespace std {
+inline namespace __ROOT {
+
+inline std::string &operator+=(std::string &left, std::string_view right)
+{
+   return left.append(right.data(), right.size());
+}
+
+} // namespace __ROOT
+} // namespace std
+
+#endif // ifndef R__HAS_OP_EQUAL_PLUS_STRING_VIEW
+
 namespace ROOT {
 namespace Internal {
     class TStringView {

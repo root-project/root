@@ -18,10 +18,10 @@
 #include "RooAbsReal.h"
 #include "RooHistPdf.h"
 #include "TVirtualFFT.h"
-class RooRealVar ;
 
-#include <map>
- 
+class RooRealVar;
+
+///PDF for the numerical (FFT) convolution of two PDFs.
 class RooFFTConvPdf : public RooAbsCachedPdf {
 public:
 
@@ -107,7 +107,7 @@ protected:
   virtual PdfCacheElem* createCache(const RooArgSet* nset) const ;
   virtual TString histNameSuffix() const ;
 
-  // mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
+  // mutable std:: map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
   Double_t _bufFrac ; // Sampling buffer size as fraction of domain size 
   BufStrat _bufStrat ; // Strategy to fill the buffer
 
@@ -121,6 +121,8 @@ protected:
   RooSetProxy  _cacheObs ; // Non-convolution observables that are also cached
 
 private:
+
+  void prepareFFTBinning(RooRealVar& convVar) const;
 
   ClassDef(RooFFTConvPdf,1) // Convolution operator p.d.f based on numeric Fourier transforms
 };

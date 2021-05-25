@@ -25,6 +25,7 @@
 #include "TStreamerElement.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRef.h"
+#include "TError.h"
 #include <algorithm>
 
 ClassImp(TVirtualBranchBrowsable);
@@ -51,7 +52,7 @@ Note that these helper objects are cached (in TBranch::fBrowsables);
 already created (and thus cached) browsables will still appear in the
 browser even after unregistering the corresponding generator.
 
-You can implement your own browsable objects and thier generator; see
+You can implement your own browsable objects and their generator; see
 e.g. the simple TCollectionPropertyBrowsable. Note that you will have
 to register your generator just like any other, and that you should
 implement the following methods for your own class, mainly for
@@ -80,10 +81,10 @@ Bool_t TVirtualBranchBrowsable::fgGeneratorsSet=kFALSE;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor setting all members according to parameters.
 
-TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch* branch, TClass* type,
+TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch *branch, TClass *type,
                                                  Bool_t typeIsPointer,
-                                                 const TVirtualBranchBrowsable* parent /*=0*/):
-fBranch(branch), fParent(parent), fLeaves(0), fClass(type), fTypeIsPointer(typeIsPointer)
+                                                 const TVirtualBranchBrowsable *parent /*=0*/):
+fBranch(branch), fParent(parent), fLeaves(nullptr), fClass(type), fTypeIsPointer(typeIsPointer)
 {
    if (!fgGeneratorsSet) RegisterDefaultGenerators();
    if (!branch)
@@ -217,7 +218,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       && branchNonCost->GetListOfLeaves()->GetEntriesFast()==1) {
       // load first entry of the branch. Yes, this is bad, and might have
       // unexpected side effects for the user, esp as already looking at
-      // (and not just drawing) a branch triggeres it.
+      // (and not just drawing) a branch triggers it.
       // To prove just how ugly it is, we'll also have to const_cast the
       // branch...
       if (branch->GetReadEntry()==-1) branchNonCost->GetEntry(0);
@@ -236,7 +237,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       && branchNonCost->GetListOfLeaves()->GetEntriesFast()==1) {
       // load first entry of the branch. Yes, this is bad, and might have
       // unexpected side effects for the user, esp as already looking at
-      // (and not just drawing) a branch triggeres it.
+      // (and not just drawing) a branch triggers it.
       // To prove just how ugly it is, we'll also have to const_cast the
       // branch...
 
@@ -340,7 +341,7 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const
 void TVirtualBranchBrowsable::RegisterDefaultGenerators()
 {
    if (fgGeneratorsSet) return;
-   // can't call RegisterGenerator - would be recusive infite loop
+   // can't call RegisterGenerator - This would be lead to an infinite recursion.
    fgGenerators.push_back(&TMethodBrowsable::GetBrowsables);
    fgGenerators.push_back(&TNonSplitBrowsable::GetBrowsables);
    fgGenerators.push_back(&TCollectionPropertyBrowsable::GetBrowsables);
@@ -837,7 +838,7 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
            ||(clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()!=0
               && clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()->GetValueClass()==0)
             )) {
-         // If the contained type is not a class, we need an explitcit handle to get to the data.
+         // If the contained type is not a class, we need an explicit handle to get to the data.
          cpb = new TCollectionPropertyBrowsable("values", "values in the container",
                                                 scope, branch, parent);
          li.Add(cpb);
@@ -890,7 +891,7 @@ ClassImp(TCollectionMethodBrowsable);
 ///
 /// TCollectionMethodBrowsable extends TCollectionPropertyBrowsable by showing
 /// all methods of the collection itself. If none are available - e.g. for STL
-/// classes like std::list, a TVirtualBranchBrowsable object is reated instead.
+/// classes like std::list, a TVirtualBranchBrowsable object is created instead.
 /// The methods' names will have a "@" prepended, to distinguish them from the
 /// contained elements' methods.
 ///
@@ -903,7 +904,7 @@ ClassImp(TCollectionMethodBrowsable);
 ///   TCollectionPropertyBrowsable::Unregister();
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Contructor, see TMethodBrowsable's constructor.
+/// Constructor, see TMethodBrowsable's constructor.
 /// Prepends "@" to the name to make this method work on the container.
 
 TCollectionMethodBrowsable::TCollectionMethodBrowsable(const TBranch* branch, TMethod* m,
@@ -937,7 +938,7 @@ Int_t TCollectionMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch
 
    // if we have no methods, and if the class has a collection proxy, just add
    // the corresponding TCollectionPropertyBrowsable instead.
-   // But only do that if TCollectionPropertyBrowsable is not generatated anyway
+   // But only do that if TCollectionPropertyBrowsable is not generated anyway
    // - we don't need two of them.
    if (!listMethods.GetSize() && clContainer->GetCollectionProxy()) {
       std::list<MethodCreateListOfBrowsables_t>& listGenerators=GetRegisteredGenerators();

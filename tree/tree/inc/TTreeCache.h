@@ -22,15 +22,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFileCacheRead.h"
-#include "TObjArray.h"
 
-#include <cstdint>
-#include <memory>
-#include <utility>
 #include <vector>
 
 class TTree;
 class TBranch;
+class TObjArray;
 
 class TTreeCache : public TFileCacheRead {
 
@@ -67,6 +64,8 @@ protected:
    EPrefillType fPrefillType;         ///<  Whether a pre-filling is enabled (and if applicable which type)
    static Int_t fgLearnEntries;       ///<  number of entries used for learning mode
    Bool_t       fAutoCreated{kFALSE}; ///<! true if cache was automatically created
+
+   Bool_t       fLearnPrefilling{kFALSE}; ///<! true if we are in the process of executing LearnPrefill
 
    // These members hold cached data for missed branches when miss optimization
    // is enabled.  Pointers are only initialized if the miss cache is enabled.
@@ -153,6 +152,7 @@ public:
    virtual Bool_t       IsLearning() const {return fIsLearning;}
 
    virtual Bool_t       FillBuffer();
+   virtual Int_t        LearnBranch(TBranch *b, Bool_t subgbranches = kFALSE);
    virtual void         LearnPrefill();
 
    virtual void         Print(Option_t *option="") const;

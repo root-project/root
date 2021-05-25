@@ -210,14 +210,14 @@ A generic singleton matrix representing a identity transformation
    NOTE: identified by the global variable gGeoIdentity.
 */
 
-#include "Riostream.h"
+#include <iostream>
 #include "TObjArray.h"
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TMath.h"
 
-TGeoIdentity *gGeoIdentity = 0;
+TGeoIdentity *gGeoIdentity = nullptr;
 const Int_t kN3 = 3*sizeof(Double_t);
 const Int_t kN9 = 9*sizeof(Double_t);
 
@@ -893,7 +893,7 @@ TGeoRotation::TGeoRotation(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default rotation constructor with Euler angles. Phi is the rotation angle about
-/// Z axis  and is done first, theta is the rotation about new Y and is done
+/// Z axis  and is done first, theta is the rotation about new X and is done
 /// second, psi is the rotation angle about new Z and is done third. All angles are in
 /// degrees.
 
@@ -1230,7 +1230,10 @@ void TGeoRotation::SetRotation(const TGeoMatrix &other)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set matrix elements according to Euler angles
+/// Set matrix elements according to Euler angles. Phi is the rotation angle about
+/// Z axis  and is done first, theta is the rotation about new X and is done
+/// second, psi is the rotation angle about new Z and is done third. All angles are in
+/// degrees.
 
 void TGeoRotation::SetAngles(Double_t phi, Double_t theta, Double_t psi)
 {

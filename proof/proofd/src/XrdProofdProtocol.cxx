@@ -306,23 +306,10 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    if ((dlen = lp->Peek(hsbuff,sizeof(hsdata),fgReadWait)) != sizeof(hsdata)) {
       if (dlen <= 0) lp->setEtext("Match: handshake not received");
       if (dlen == 12) {
-         // Check if it is a request to open a file via 'rootd'
+         // Check if it is a request to open a file via 'rootd', unsupported
          hsdata.first = ntohl(hsdata.first);
          if (hsdata.first == 8) {
-            if (strlen(fgMgr->RootdExe()) > 0) {
-               if (fgMgr->IsRootdAllowed((const char *)lp->Host())) {
-                  TRACE(ALL, "matched rootd protocol on link: executing "<<fgMgr->RootdExe());
-                  XrdOucString em;
-                  if (StartRootd(lp, em) != 0) {
-                     emsg = "rootd: failed to start daemon: ";
-                     emsg += em;
-                  }
-               } else {
-                  XPDFORM(emsg, "rootd-file serving not authorized for host '%s'", lp->Host());
-               }
-            } else {
-               emsg = "rootd-file serving not enabled";
-            }
+            emsg = "rootd-file serving not supported any-longer";
          }
          if (emsg.length() > 0) {
             lp->setEtext(emsg.c_str());
@@ -384,105 +371,6 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
    // We are done
    return xp;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Transfer the connection to a rootd daemon to serve a file access request
-/// Return 0 on success, -1 on failure
-
-int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
-{
-   XPDLOC(ALL, "Protocol::StartRootd")
-
-   const char *prog = fgMgr->RootdExe();
-   const char **progArg = fgMgr->RootdArgs();
-
-   if (fgMgr->RootdFork()) {
-
-      // Start rootd using fork()
-
-      pid_t pid;
-      if ((pid = fgMgr->Sched()->Fork(lp->Name()))) {
-         if (pid < 0) {
-            emsg = "rootd fork failed";
-            return -1;
-         }
-         return 0;
-      }
-      // In the child ...
-
-      // Restablish standard error for the program we will exec
-      dup2(fStdErrFD, STDERR_FILENO);
-      close(fStdErrFD);
-
-      // Force stdin/out to point to the socket FD (this will also bypass the
-      // close on exec setting for the socket)
-      dup2(lp->FDnum(), STDIN_FILENO);
-      dup2(lp->FDnum(), STDOUT_FILENO);
-
-      // Do the exec
-      execv((const char *)prog, (char * const *)progArg);
-      TRACE(XERR, "rootd: Oops! Exec(" <<prog <<") failed; errno: " <<errno);
-      _exit(17);
-
-   } else {
-
-      // Start rootd using system + proofexecv
-
-      // ROOT version
-      XrdROOT *roo = fgMgr->ROOTMgr()->DefaultVersion();
-      if (!roo) {
-         emsg = "ROOT version undefined!";
-         return -1;
-      }
-      // The path to the executable
-      XrdOucString pexe;
-      XPDFORM(pexe, "%s/proofexecv", roo->BinDir());
-      if (access(pexe.c_str(), X_OK) != 0) {
-         XPDFORM(emsg, "path '%s' does not exist or is not executable (errno: %d)",
-                     pexe.c_str(), (int)errno);
-         return -1;
-      }
-
-      // Start the proofexecv
-      XrdOucString cmd, exp;
-      XPDFORM(cmd, "export ROOTBINDIR=\"%s\"; %s 20 0 %s %s", roo->BinDir(),
-                  pexe.c_str(), fgMgr->RootdUnixSrv()->path(), prog);
-      int n = 1;
-      while (progArg[n] != 0) {
-         cmd += " "; cmd += progArg[n]; n++;
-      }
-      cmd += " &";
-      TRACE(HDBG, cmd);
-      if (system(cmd.c_str()) == -1) {
-         XPDFORM(emsg, "failure from 'system' (errno: %d)", (int)errno);
-         return -1;
-      }
-
-      // Accept a connection from the second server
-      int err = 0;
-      rpdunix *uconn = fgMgr->RootdUnixSrv()->accept(-1, &err);
-      if (!uconn || !uconn->isvalid(0)) {
-         XPDFORM(emsg, "failure accepting callback (errno: %d)", -err);
-         if (uconn) delete uconn;
-         return -1;
-      }
-      TRACE(HDBG, "proofexecv connected!");
-
-      int rcc = 0;
-      // Transfer the open descriptor to be used in rootd
-      int fd = dup(lp->FDnum());
-      if (fd < 0 || (rcc = uconn->senddesc(fd)) != 0) {
-         XPDFORM(emsg, "failure sending descriptor '%d' (original: %d); (errno: %d)", fd, lp->FDnum(), -rcc);
-         if (uconn) delete uconn;
-         return -1;
-      }
-      // Close the connection to the parent
-      delete uconn;
-   }
-
-   // Done
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -28,7 +28,7 @@ class TH1;
 class THLimitsFinder : public TObject {
 
 protected:
-   static THLimitsFinder *fgLimitsFinder;   //!Pointer to hist limits finder
+   static THLimitsFinder *fgLimitsFinder;   ///<! Pointer to hist limits finder
 
 public:
    THLimitsFinder();

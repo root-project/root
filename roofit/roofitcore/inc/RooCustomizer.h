@@ -17,14 +17,17 @@
 #ifndef ROO_PDF_CUSTOMIZER
 #define ROO_PDF_CUSTOMIZER
 
-#include "Rtypes.h"
 #include "TList.h"
 #include "TNamed.h"
 #include "TString.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
 #include "RooFactoryWSTool.h"
-class RooAbsCategoryLValue ; 
+
+#include <vector>
+#include <string>
+
+class RooAbsCategoryLValue ;
 class RooAbsCategory ;
 class RooAbsArg ;
 class RooAbsPdf ;
@@ -100,9 +103,6 @@ protected:
   // Master nodes are not owned
   RooAbsArg* _masterPdf ;             // Pointer to input p.d.f
   RooAbsCategoryLValue* _masterCat ;  // Pointer to input master category
-
-  TIterator* _masterLeafListIter ;    // Iterator over leaf list
-  TIterator* _masterBranchListIter ;  // Iterator over branch list
 
   RooArgSet  _masterBranchList ;      // List of branch nodes
   RooArgSet  _masterLeafList ;        // List of leaf nodes

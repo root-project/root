@@ -7,16 +7,13 @@
 
 #define __XSGUI_CXX
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
-#include <TROOT.h>
-#include <TGraph.h>
 #include <TFrame.h>
-#include <TCanvas.h>
-#include <TSystem.h>
 #include <TApplication.h>
-#include <Riostream.h>
+#include <snprintf.h>
 
 #include "XSGui.h"
 #include "XSVarious.h"
@@ -166,7 +163,7 @@ XSGui::ProcessMenuMessage( Long_t param )
          static TString dir(".");
          TGFileInfo fi;
          fi.fFileTypes = filetypes;
-         fi.fIniDir    = StrDup(dir);
+         fi.SetIniDir(dir);
          new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
          dir = fi.fIniDir;
       }

@@ -1,9 +1,8 @@
 //===- llvm/CallingConv.h - LLVM Calling Conventions ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -26,7 +25,7 @@ namespace CallingConv {
 
   /// A set of enums which specify the assigned numeric values for known llvm
   /// calling conventions.
-  /// @brief LLVM Calling Convention Representation
+  /// LLVM Calling Convention Representation
   enum {
     /// C - The default llvm calling convention, compatible with C.  This
     /// convention is the only calling convention that supports varargs calls.
@@ -139,11 +138,11 @@ namespace CallingConv {
     /// Intel_OCL_BI - Calling conventions for Intel OpenCL built-ins
     Intel_OCL_BI = 77,
 
-    /// \brief The C convention as specified in the x86-64 supplement to the
+    /// The C convention as specified in the x86-64 supplement to the
     /// System V ABI, used on most non-Windows systems.
     X86_64_SysV = 78,
 
-    /// \brief The C convention as implemented on Windows/x86-64 and
+    /// The C convention as implemented on Windows/x86-64 and
     /// AArch64. This convention differs from the more common
     /// \c X86_64_SysV convention in a number of ways, most notably in
     /// that XMM registers used to pass arguments are shadowed by GPRs,
@@ -153,17 +152,17 @@ namespace CallingConv {
     /// registers to variadic functions.
     Win64 = 79,
 
-    /// \brief MSVC calling convention that passes vectors and vector aggregates
+    /// MSVC calling convention that passes vectors and vector aggregates
     /// in SSE registers.
     X86_VectorCall = 80,
 
-    /// \brief Calling convention used by HipHop Virtual Machine (HHVM) to
+    /// Calling convention used by HipHop Virtual Machine (HHVM) to
     /// perform calls to and from translation cache, and for calling PHP
     /// functions.
     /// HHVM calling convention supports tail/sibling call elimination.
     HHVM = 81,
 
-    /// \brief HHVM calling convention for invoking C/C++ helpers.
+    /// HHVM calling convention for invoking C/C++ helpers.
     HHVM_C = 82,
 
     /// X86_INTR - x86 hardware interrupt context. Callee may take one or two
@@ -183,16 +182,18 @@ namespace CallingConv {
     /// which have an "optimized" convention to preserve registers.
     AVR_BUILTIN = 86,
 
-    /// Calling convention used for Mesa vertex shaders.
+    /// Calling convention used for Mesa vertex shaders, or AMDPAL last shader
+    /// stage before rasterization (vertex shader if tessellation and geometry
+    /// are not in use, or otherwise copy shader if one is needed).
     AMDGPU_VS = 87,
 
-    /// Calling convention used for Mesa geometry shaders.
+    /// Calling convention used for Mesa/AMDPAL geometry shaders.
     AMDGPU_GS = 88,
 
-    /// Calling convention used for Mesa pixel shaders.
+    /// Calling convention used for Mesa/AMDPAL pixel shaders.
     AMDGPU_PS = 89,
 
-    /// Calling convention used for Mesa compute shaders.
+    /// Calling convention used for Mesa/AMDPAL compute shaders.
     AMDGPU_CS = 90,
 
     /// Calling convention for AMDGPU code object kernels.
@@ -201,13 +202,25 @@ namespace CallingConv {
     /// Register calling convention used for parameters transfer optimization
     X86_RegCall = 92,
 
-    /// Calling convention used for Mesa hull shaders. (= tessellation control
-    /// shaders)
+    /// Calling convention used for Mesa/AMDPAL hull shaders (= tessellation
+    /// control shaders).
     AMDGPU_HS = 93,
 
     /// Calling convention used for special MSP430 rtlib functions
     /// which have an "optimized" convention using additional registers.
     MSP430_BUILTIN = 94,
+
+    /// Calling convention used for AMDPAL vertex shader if tessellation is in
+    /// use.
+    AMDGPU_LS = 95,
+
+    /// Calling convention used for AMDPAL shader stage before geometry shader
+    /// if geometry is in use. So either the domain (= tessellation evaluation)
+    /// shader if tessellation is in use, or otherwise the vertex shader.
+    AMDGPU_ES = 96,
+
+    // Calling convention between AArch64 Advanced SIMD functions
+    AArch64_VectorCall = 97,
 
     /// The highest possible calling convention ID. Must be some 2^k - 1.
     MaxID = 1023

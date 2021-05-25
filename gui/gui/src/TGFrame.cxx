@@ -20,47 +20,62 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFrame, TGCompositeFrame, TGVerticalFrame, TGHorizontalFrame,       //
-// TGMainFrame, TGTransientFrame and TGGroupFrame                       //
-//                                                                      //
-// The frame classes describe the different "dressed" GUI windows.      //
-//                                                                      //
-// The TGFrame class is a subclasses of TGWindow, and is used as base   //
-// class for some simple widgets (buttons, labels, etc.).               //
-// It provides:                                                         //
-//  - position & dimension fields                                       //
-//  - an 'options' attribute (see constant above)                       //
-//  - a generic event handler                                           //
-//  - a generic layout mechanism                                        //
-//  - a generic border                                                  //
-//                                                                      //
-// The TGCompositeFrame class is the base class for composite widgets   //
-// (menu bars, list boxes, etc.).                                       //
-// It provides:                                                         //
-//  - a layout manager                                                  //
-//  - a frame container (TList *)                                       //
-//                                                                      //
-// The TGVerticalFrame and TGHorizontalFrame are composite frame that   //
-// layout their children in vertical or horizontal way.                 //
-//                                                                      //
-// The TGMainFrame class defines top level windows that interact with   //
-// the system Window Manager.                                           //
-//                                                                      //
-// The TGTransientFrame class defines transient windows that typically  //
-// are used for dialogs windows.                                        //
-//                                                                      //
-// The TGGroupFrame is a composite frame with a border and a title.     //
-// It is typically used to group a number of logically related widgets  //
-// visually together.                                                   //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/tgcompositeframe_classtree.gif">
+
+/** \class The TGFrame
+    \ingroup guiwidgets
+
+A subclasses of TGWindow, and is used as base
+class for some simple widgets (buttons, labels, etc.).
+It provides:
+ - position & dimension fields
+ - an 'options' attribute (see constant above)
+ - a generic event handler
+ - a generic layout mechanism
+ - a generic border
+
+
+\class TGCompositeFrame
+\ingroup guiwidgets
+
+The base class for composite widgets
+(menu bars, list boxes, etc.).
+It provides:
+ - a layout manager
+ - a frame container (TList *)
+
+
+\class TGVerticalFrame
+\ingroup guiwidgets
+A composite frame that layout their children in vertical  way.
+
+
+\class TGHorizontalFrame
+\ingroup guiwidgets
+A composite frame that layout their children in  horizontal way.
+
+
+\class TGMainFrame
+\ingroup guiwidgets
+Defines top level windows that interact with the system Window Manager.
+
+
+\class TGTransientFrame
+\ingroup guiwidgets
+Defines transient windows that typically are used for dialogs windows.
+
+
+\class TGGroupFrame
+\ingroup guiwidgets
+A composite frame with a border and a title.
+It is typically used to group a number of logically related widgets visually together.
+
+\class TGHeaderFrame
+\ingroup guiwidgets
+Horizontal Frame used to contain header buttons and splitters
+in a list view. Used to have resizable column headers.
+
 */
-//End_Html
-//////////////////////////////////////////////////////////////////////////
+
 
 #include "TError.h"
 #include "TGFrame.h"
@@ -69,14 +84,13 @@
 #include "TList.h"
 #include "TApplication.h"
 #include "TTimer.h"
-#include "Riostream.h"
 #include "TClass.h"
 
 #include "TObjString.h"
-#include "TObjArray.h"
 #include "TBits.h"
 #include "TColor.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "KeySymbols.h"
 #include "TGFileDialog.h"
 #include "TGMsgBox.h"
@@ -89,6 +103,10 @@
 #include "TGDNDManager.h"
 #include "TImage.h"
 #include "TObjectSpy.h"
+#include "TVirtualX.h"
+
+#include <iostream>
+#include <fstream>
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -96,11 +114,11 @@ Pixel_t     TGFrame::fgDefaultFrameBackground = 0;
 Pixel_t     TGFrame::fgDefaultSelectedBackground = 0;
 Pixel_t     TGFrame::fgWhitePixel = 0;
 Pixel_t     TGFrame::fgBlackPixel = 0;
-const TGGC *TGFrame::fgBlackGC = 0;
-const TGGC *TGFrame::fgWhiteGC = 0;
-const TGGC *TGFrame::fgHilightGC = 0;
-const TGGC *TGFrame::fgShadowGC = 0;
-const TGGC *TGFrame::fgBckgndGC = 0;
+const TGGC *TGFrame::fgBlackGC = nullptr;
+const TGGC *TGFrame::fgWhiteGC = nullptr;
+const TGGC *TGFrame::fgHilightGC = nullptr;
+const TGGC *TGFrame::fgShadowGC = nullptr;
+const TGGC *TGFrame::fgBckgndGC = nullptr;
 Time_t      TGFrame::fgLastClick = 0;
 UInt_t      TGFrame::fgLastButton = 0;
 Int_t       TGFrame::fgDbx = 0;
@@ -108,10 +126,10 @@ Int_t       TGFrame::fgDby = 0;
 Window_t    TGFrame::fgDbw = 0;
 UInt_t      TGFrame::fgUserColor = 0;
 
-const TGFont *TGGroupFrame::fgDefaultFont = 0;
-const TGGC   *TGGroupFrame::fgDefaultGC = 0;
+const TGFont *TGGroupFrame::fgDefaultFont = nullptr;
+const TGGC   *TGGroupFrame::fgDefaultGC = nullptr;
 
-TGLayoutHints *TGCompositeFrame::fgDefaultHints = 0;
+TGLayoutHints *TGCompositeFrame::fgDefaultHints = nullptr;
 
 static const char *gSaveMacroTypes[] = {
    "ROOT macros", "*.C",
@@ -1046,10 +1064,10 @@ void TGCompositeFrame::ChangeOptions(UInt_t options)
 ///    use Clean method in destructor ("custom deallocation").
 ///    Adding such component to GUI container which is using hierarchical
 ///    cleaning will produce seg. violation when container is deleted.
-///    The reason is double deletion: first whem Clean method is invoked,
+///    The reason is double deletion: first when Clean method is invoked,
 ///    then at "custom deallocation".
 ///    We are going to correct all ROOT code to make it to be
-///    consitent with hierarchical cleaning scheeme.
+///    consistent with hierarchical cleaning scheme.
 
 void TGCompositeFrame::SetCleanup(Int_t mode)
 {
@@ -1101,7 +1119,7 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
 
-   // in case of recusive cleanup, propagate cleanup setting to all
+   // in case of recursive cleanup, propagate cleanup setting to all
    // child composite frames
    if (fMustCleanup == kDeepCleanup)
       f->SetCleanup(kDeepCleanup);
@@ -1349,7 +1367,7 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
 
-      // the dragged frame cannot be droppped
+      // the dragged frame cannot be dropped
       if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
 
       //
@@ -1457,7 +1475,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
       fMWMInput    = kMWMInputModeless;
       gVirtualX->SetMWMHints(fId, fMWMValue, fMWMFuncs, fMWMInput);
    }
-   // if parent is editing/embedable add this frame to the parent
+   // if parent is editing/embeddable add this frame to the parent
    if (fClient->IsEditable() && (p == fClient->GetRoot())) {
       TGCompositeFrame *frame;
       if (p && p->InheritsFrom(TGCompositeFrame::Class())) {
@@ -1512,7 +1530,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
       TGFileInfo fi;
       TGMainFrame *main = (TGMainFrame*)GetMainFrame();
       fi.fFileTypes = gSaveMacroTypes;
-      fi.fIniDir    = StrDup(dir);
+      fi.SetIniDir(dir);
       fi.fOverwrite = overwr;
       new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
       if (!fi.fFilename) return kFALSE;
@@ -1961,15 +1979,17 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
 
       gVirtualX->TranslateCoordinates(fMain->GetId(), GetParent()->GetId(),
                                       x, y, ax, ay, wdummy);
-      if (ax < 10)
-         ax = 10;
-      else if (ax + fWidth + 10 > dw)
-         ax = dw - fWidth - 10;
+      if (!gVirtualX->InheritsFrom("TGWin32")) {
+         if (ax < 10)
+            ax = 10;
+         else if (ax + fWidth + 10 > dw)
+            ax = dw - fWidth - 10;
 
-      if (ay < 20)
-         ay = 20;
-      else if (ay + fHeight + 50 > dh)
-         ay = dh - fHeight - 50;
+         if (ay < 20)
+            ay = 20;
+         else if (ay + fHeight + 50 > dh)
+            ay = dh - fHeight - 50;
+      }
 
    } else if (croot) {
 
@@ -2256,7 +2276,7 @@ void TGGroupFrame::DrawBorder()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set or change title of the group frame. Titlte TGString is adopted
+/// Set or change title of the group frame. Title TGString is adopted
 /// by the TGGroupFrame.
 
 void TGGroupFrame::SetTitle(TGString *title)
@@ -2616,7 +2636,7 @@ TString TGMainFrame::GetMWMinpString() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Auxilary protected method  used to save subframes.
+/// Auxiliary protected method  used to save subframes.
 
 void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -2908,7 +2928,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    gListOfHiddenFrames->Clear();
 
-   // saivng slots
+   // saving slots
    TList *lSlots = new TList;
    lSlots->SetName("ListOfSlots");
    gROOT->GetListOfSpecials()->Add(lSlots);
@@ -2980,7 +3000,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    // needed in case the frame was resized
-   // otherwhice the frame became bigger showing all hidden widgets (layout algorithm)
+   // otherwise the frame became bigger showing all hidden widgets (layout algorithm)
    if (!usexy) out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<std::endl;
    out << "}  " << std::endl;
 
@@ -3285,7 +3305,7 @@ void TGGroupFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save the GUI tranzient frame widget in a C++ macro file.
+/// Save the GUI transient frame widget in a C++ macro file.
 
 void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 {
@@ -3424,7 +3444,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    gListOfHiddenFrames->Clear();
 
-   // saivng slots
+   // saving slots
    TList *lSlots = new TList;
    lSlots->SetName("ListOfSlots");
    gROOT->GetListOfSpecials()->Add(lSlots);

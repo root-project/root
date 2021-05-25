@@ -10,13 +10,12 @@
  *************************************************************************/
 
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoHype.h"
-#include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
@@ -269,12 +268,11 @@ Double_t TGeoHype::DistFromOutside(const Double_t *point, const Double_t *dir, I
    // find distance to shape
    // Do Z
    Double_t xi, yi, zi;
-   Double_t sz = TGeoShape::Big();
    if (TMath::Abs(point[2])>=fDz) {
       // We might find Z plane crossing
       if ((point[2]*dir[2]) < 0) {
          // Compute distance to Z (always positive)
-         sz = (TMath::Abs(point[2])-fDz)/TMath::Abs(dir[2]);
+         Double_t sz = (TMath::Abs(point[2])-fDz)/TMath::Abs(dir[2]);
          // Extrapolate
          xi = point[0]+sz*dir[0];
          yi = point[1]+sz*dir[1];
@@ -422,17 +420,16 @@ void TGeoHype::GetBoundingCylinder(Double_t *param) const
 
 TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
-   Double_t dz;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
+   Double_t dz = fDz;
    Double_t zmin,zmax;
-   dz = fDz;
-   if (fDz<0) {
+   if (fDz < 0) {
       mother->GetAxisRange(3,zmin,zmax);
-      if (zmax<0) return 0;
-      dz=zmax;
+      if (zmax<0) return nullptr;
+      dz = zmax;
    } else {
       Error("GetMakeRuntimeShape", "Shape %s does not have negative Z range", GetName());
-      return 0;
+      return nullptr;
    }
    TGeoShape *hype = new TGeoHype(GetName(), dz, fRmax, fStOut, fRmin, fStIn);
    return hype;

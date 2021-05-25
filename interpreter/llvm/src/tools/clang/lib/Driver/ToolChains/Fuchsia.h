@@ -1,9 +1,8 @@
 //===--- Fuchsia.h - Fuchsia ToolChain Implementations ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -42,11 +41,16 @@ public:
 
   bool HasNativeLLVMSupport() const override { return true; }
   bool IsIntegratedAssemblerDefault() const override { return true; }
+  bool IsMathErrnoDefault() const override { return false; }
+  bool useRelaxRelocations() const override { return true; };
   RuntimeLibType GetDefaultRuntimeLibType() const override {
     return ToolChain::RLT_CompilerRT;
   }
   CXXStdlibType GetDefaultCXXStdlibType() const override {
     return ToolChain::CST_Libcxx;
+  }
+  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override {
+    return true;
   }
   bool isPICDefault() const override { return false; }
   bool isPIEDefault() const override { return true; }
@@ -55,10 +59,15 @@ public:
     return llvm::DebuggerKind::GDB;
   }
 
+  unsigned GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
+    return 2; // SSPStrong
+  }
+
   std::string ComputeEffectiveClangTriple(const llvm::opt::ArgList &Args,
                                           types::ID InputType) const override;
 
   SanitizerMask getSupportedSanitizers() const override;
+  SanitizerMask getDefaultSanitizers() const override;
 
   RuntimeLibType
   GetRuntimeLibType(const llvm::opt::ArgList &Args) const override;
@@ -78,7 +87,7 @@ public:
                            llvm::opt::ArgStringList &CmdArgs) const override;
 
   const char *getDefaultLinker() const override {
-    return "lld";
+    return "ld.lld";
   }
 
 protected:

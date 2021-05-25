@@ -1,14 +1,13 @@
 //===--- WhitespaceManager.h - Format C++ code ------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief WhitespaceManager class manages whitespace around tokens and their
+/// WhitespaceManager class manages whitespace around tokens and their
 /// replacements.
 ///
 //===----------------------------------------------------------------------===//
@@ -24,7 +23,7 @@
 namespace clang {
 namespace format {
 
-/// \brief Manages the whitespaces around tokens and their replacements.
+/// Manages the whitespaces around tokens and their replacements.
 ///
 /// This includes special handling for certain constructs, e.g. the alignment of
 /// trailing line comments.
@@ -41,7 +40,9 @@ public:
                     bool UseCRLF)
       : SourceMgr(SourceMgr), Style(Style), UseCRLF(UseCRLF) {}
 
-  /// \brief Replaces the whitespace in front of \p Tok. Only call once for
+  bool useCRLF() const { return UseCRLF; }
+
+  /// Replaces the whitespace in front of \p Tok. Only call once for
   /// each \c AnnotatedToken.
   ///
   /// \p StartOfTokenColumn is the column at which the token will start after
@@ -51,13 +52,15 @@ public:
                          unsigned StartOfTokenColumn,
                          bool InPPDirective = false);
 
-  /// \brief Adds information about an unchangeable token's whitespace.
+  /// Adds information about an unchangeable token's whitespace.
   ///
   /// Needs to be called for every token for which \c replaceWhitespace
   /// was not called.
   void addUntouchableToken(const FormatToken &Tok, bool InPPDirective);
 
-  /// \brief Inserts or replaces whitespace in the middle of a token.
+  llvm::Error addReplacement(const tooling::Replacement &Replacement);
+
+  /// Inserts or replaces whitespace in the middle of a token.
   ///
   /// Inserts \p PreviousPostfix, \p Newlines, \p Spaces and \p CurrentPrefix
   /// (in this order) at \p Offset inside \p Tok, replacing \p ReplaceChars
@@ -77,13 +80,13 @@ public:
                                 StringRef CurrentPrefix, bool InPPDirective,
                                 unsigned Newlines, int Spaces);
 
-  /// \brief Returns all the \c Replacements created during formatting.
+  /// Returns all the \c Replacements created during formatting.
   const tooling::Replacements &generateReplacements();
 
-  /// \brief Represents a change before a token, a break inside a token,
+  /// Represents a change before a token, a break inside a token,
   /// or the layout of an unchanged token (or whitespace within).
   struct Change {
-    /// \brief Functor to sort changes in original source order.
+    /// Functor to sort changes in original source order.
     class IsBeforeInFile {
     public:
       IsBeforeInFile(const SourceManager &SourceMgr) : SourceMgr(SourceMgr) {}
@@ -93,7 +96,7 @@ public:
       const SourceManager &SourceMgr;
     };
 
-    /// \brief Creates a \c Change.
+    /// Creates a \c Change.
     ///
     /// The generated \c Change will replace the characters at
     /// \p OriginalWhitespaceRange with a concatenation of
@@ -163,40 +166,43 @@ public:
   };
 
 private:
-  /// \brief Calculate \c IsTrailingComment, \c TokenLength for the last tokens
+  /// Calculate \c IsTrailingComment, \c TokenLength for the last tokens
   /// or token parts in a line and \c PreviousEndOfTokenColumn and
   /// \c EscapedNewlineColumn for the first tokens or token parts in a line.
   void calculateLineBreakInformation();
 
-  /// \brief Align consecutive assignments over all \c Changes.
+  /// \brief Align consecutive C/C++ preprocessor macros over all \c Changes.
+  void alignConsecutiveMacros();
+
+  /// Align consecutive assignments over all \c Changes.
   void alignConsecutiveAssignments();
 
-  /// \brief Align consecutive declarations over all \c Changes.
+  /// Align consecutive declarations over all \c Changes.
   void alignConsecutiveDeclarations();
 
-  /// \brief Align trailing comments over all \c Changes.
+  /// Align trailing comments over all \c Changes.
   void alignTrailingComments();
 
-  /// \brief Align trailing comments from change \p Start to change \p End at
+  /// Align trailing comments from change \p Start to change \p End at
   /// the specified \p Column.
   void alignTrailingComments(unsigned Start, unsigned End, unsigned Column);
 
-  /// \brief Align escaped newlines over all \c Changes.
+  /// Align escaped newlines over all \c Changes.
   void alignEscapedNewlines();
 
-  /// \brief Align escaped newlines from change \p Start to change \p End at
+  /// Align escaped newlines from change \p Start to change \p End at
   /// the specified \p Column.
   void alignEscapedNewlines(unsigned Start, unsigned End, unsigned Column);
 
-  /// \brief Fill \c Replaces with the replacements for all effective changes.
+  /// Fill \c Replaces with the replacements for all effective changes.
   void generateChanges();
 
-  /// \brief Stores \p Text as the replacement for the whitespace in \p Range.
+  /// Stores \p Text as the replacement for the whitespace in \p Range.
   void storeReplacement(SourceRange Range, StringRef Text);
   void appendNewlineText(std::string &Text, unsigned Newlines);
-  void appendNewlineText(std::string &Text, unsigned Newlines,
-                         unsigned PreviousEndOfTokenColumn,
-                         unsigned EscapedNewlineColumn);
+  void appendEscapedNewlineText(std::string &Text, unsigned Newlines,
+                                unsigned PreviousEndOfTokenColumn,
+                                unsigned EscapedNewlineColumn);
   void appendIndentText(std::string &Text, unsigned IndentLevel,
                         unsigned Spaces, unsigned WhitespaceStartColumn);
 

@@ -18,10 +18,10 @@ It keeps track of a list of plugin handlers. A plugin handler knows which plugin
 library to load to get a specific class that is used to extend the
 functionality of a specific base class and how to create an object
 of this class. For example, to extend the base class TFile to be
-able to read RFIO files one needs to load the plugin library
-libRFIO.so which defines the TRFIOFile class. This loading should
-be triggered when a given URI contains a regular expression defined
-by the handler.
+able to read SQLite files one needs to load the plugin library
+libRSQLite.so which defines the TRSQLiteServer class. This loading
+should be triggered when a given URI contains a regular expression
+defined by the handler.
 
 Plugin handlers can be defined via macros in a list of plugin
 directories. With $ROOTSYS/etc/plugins the default top plugin
@@ -30,14 +30,11 @@ directories can be specified by adding them to the end of the list.
 Macros for identical plugin handlers in later directories will
 override previous ones (the inverse of normal search path behavior).
 The macros must have names like `<BaseClass>/PX0_<PluginClass>.C`,
-e.g.:
-
-   TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
-to allow easy sorting and grouping. If the BaseClass is in a
-namespace the directory must have the name NameSpace@@BaseClass as
-: is a reserved pathname character on some operating systems.
-Macros not beginning with 'P' and ending with ".C" are ignored.
-These macros typically look like:
+e.g. TSQLServer/P20_TMySQLServer.C, to allow easy sorting and grouping.
+If the BaseClass is in a namespace the directory must have the name
+NameSpace@@BaseClass as `:` is a reserved pathname character on some
+operating systems. Macros not beginning with 'P' and ending with ".C"
+are ignored. These macros typically look like:
 ~~~ {.cpp}
   void P10_TDCacheFile()
   {
@@ -49,7 +46,6 @@ Plugin handlers can also be defined via resources in the .rootrc
 file. Although now deprecated this method still works for backward
 compatibility, e.g.:
 ~~~ {.cpp}
-  Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"
   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"
   +Plugin.TSQLServer: ^pgsql:  TPgSQLServer PgSQL  "<constructor>"
   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"
@@ -68,9 +64,9 @@ For the default plugins see $ROOTSYS/etc/system.rootrc.
 
 Plugin handlers can also be registered at run time, e.g.:
 ~~~ {.cpp}
-  gPluginMgr->AddHandler("TSQLServer", "^sapdb:",
-                         "TSapDBServer", "SapDB",
-            "TSapDBServer(const char*,const char*, const char*)");
+  gPluginMgr->AddHandler("TSQLServer", "^sqlite:",
+                         "TSQLiteServer", "RSQLite",
+            "TSQLiteServer(const char*,const char*,const char*)");
 ~~~
 A list of currently defined handlers can be printed using:
 ~~~ {.cpp}
@@ -83,14 +79,12 @@ TFile, TSQLServer, TGrid, etc. functionality.
 */
 
 #include "TPluginManager.h"
-#include "Varargs.h"
 #include "TEnv.h"
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "TSortedList.h"
 #include "THashList.h"
 #include "THashTable.h"
-#include "Varargs.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TMethod.h"
@@ -100,6 +94,7 @@ TFile, TSQLServer, TGrid, etc. functionality.
 #include "TVirtualMutex.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "ThreadLocalStorage.h"
 
 #include <memory>
@@ -347,7 +342,6 @@ TPluginManager::~TPluginManager()
 ////////////////////////////////////////////////////////////////////////////////
 /// Load plugin handlers specified in config file, like:
 /// ~~~ {.cpp}
-///    Plugin.TFile:       ^rfio:    TRFIOFile      RFIO  "TRFIOFile(...)"
 ///    Plugin.TSQLServer:  ^mysql:   TMySQLServer   MySQL "TMySQLServer(...)"
 ///    +Plugin.TSQLServer: ^pgsql:   TPgSQLServer   PgSQL "TPgSQLServer(...)"
 /// ~~~
@@ -372,7 +366,7 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
             char *v = StrDup(val);
             s += 7;
             while (1) {
-               TString regexp = strtok(!cnt ? v : 0, "; ");
+               TString regexp = strtok(!cnt ? v : 0, "; "); // this method does not need to be reentrant
                if (regexp.IsNull()) break;
                TString clss   = strtok(0, "; ");
                if (clss.IsNull()) break;
@@ -418,7 +412,7 @@ void TPluginManager::LoadHandlerMacros(const char *path)
       while ((s = (TObjString*)next())) {
          if (gDebug > 1)
             Info("LoadHandlerMacros", "   plugin macro: %s", s->String().Data());
-         Long_t res;
+         Longptr_t res;
          if ((res = gROOT->Macro(s->String(), 0, kFALSE)) < 0) {
             Error("LoadHandlerMacros", "pluging macro %s returned %ld",
                   s->String().Data(), res);
@@ -432,8 +426,7 @@ void TPluginManager::LoadHandlerMacros(const char *path)
 /// Load plugin handlers specified via macros in a list of plugin
 /// directories. The `$ROOTSYS/etc/plugins` is the default top plugin directory
 /// specified in `$ROOTSYS/etc/system.rootrc`. The macros must have names
-/// like `<BaseClass>/PX0_<PluginClass>.C`, e.g.:
-///    `TFile/P10_TRFIOFile.C`, `TSQLServer/P20_TMySQLServer.C`, etc.
+/// like `<BaseClass>/PX0_<PluginClass>.C`, e.g. //`TSQLServer/P20_TMySQLServer.C`,
 /// to allow easy sorting and grouping. If the BaseClass is in a namespace
 /// the directory must have the name NameSpace@@BaseClass as : is a reserved
 /// pathname character on some operating systems. Macros not beginning with

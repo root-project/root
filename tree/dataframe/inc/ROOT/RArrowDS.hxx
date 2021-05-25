@@ -1,3 +1,11 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_RARROWTDS
 #define ROOT_RARROWTDS
 
@@ -41,7 +49,7 @@ public:
    void InitSlot(unsigned int slot, ULong64_t firstEntry) override;
    void SetNSlots(unsigned int nSlots) override;
    void Initialise() override;
-   std::string GetDataSourceType() override;
+   std::string GetLabel() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

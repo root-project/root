@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #205
-## Options for plotting components of composite p.d.f.s.
+## Addition and convolution: options for plotting components of composite pdfs.
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -26,23 +24,23 @@ sigma2 = ROOT.RooRealVar("sigma2", "width of gaussians", 1)
 sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
-# Sum the signal components into a composite signal p.d.f.
+# Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar(
     "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
 sig = ROOT.RooAddPdf(
     "sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
 
-# Build Chebychev polynomial p.d.f.
+# Build Chebychev polynomial pdf
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
 bkg1 = ROOT.RooChebychev("bkg1", "Background 1",
-                            x, ROOT.RooArgList(a0, a1))
+                         x, ROOT.RooArgList(a0, a1))
 
 # Build expontential pdf
 alpha = ROOT.RooRealVar("alpha", "alpha", -1)
 bkg2 = ROOT.RooExponential("bkg2", "Background 2", x, alpha)
 
-# Sum the background components into a composite background p.d.f.
+# Sum the background components into a composite background pdf
 bkg1frac = ROOT.RooRealVar(
     "sig1frac", "fraction of component 1 in background", 0.2, 0., 1.)
 bkg = ROOT.RooAddPdf(
@@ -86,7 +84,7 @@ model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg2), ROOT.RooFit.LineStyle(
 # (e.g bkg is component of 'model' and 'sig2' is component 'sig')
 ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
 model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg_sig2),
-                ROOT.RooFit.LineStyle(ROOT.kDotted))
+             ROOT.RooFit.LineStyle(ROOT.kDotted))
 
 # Make component by name/regexp
 # ------------------------------------------------------------
@@ -96,18 +94,34 @@ model.plotOn(xframe2, ROOT.RooFit.Components(
     "bkg"), ROOT.RooFit.LineColor(ROOT.kCyan))
 
 # Plot multiple background components specified by name
-model.plotOn(xframe2, ROOT.RooFit.Components("bkg1,sig2"), ROOT.RooFit.LineStyle(
-    ROOT.kDotted), ROOT.RooFit.LineColor(ROOT.kCyan))
+model.plotOn(
+    xframe2,
+    ROOT.RooFit.Components("bkg1,sig2"),
+    ROOT.RooFit.LineStyle(
+        ROOT.kDotted),
+    ROOT.RooFit.LineColor(
+        ROOT.kCyan))
 
 # Plot multiple background components specified by regular expression on
 # name
-model.plotOn(xframe2, ROOT.RooFit.Components(
-    "sig*"), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kCyan))
+model.plotOn(
+    xframe2,
+    ROOT.RooFit.Components("sig*"),
+    ROOT.RooFit.LineStyle(
+        ROOT.kDashed),
+    ROOT.RooFit.LineColor(
+        ROOT.kCyan))
 
 # Plot multiple background components specified by multiple regular
 # expressions on name
-model.plotOn(xframe2, ROOT.RooFit.Components("bkg1,sig*"), ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kYellow), ROOT.RooFit.Invisible())
+model.plotOn(
+    xframe2,
+    ROOT.RooFit.Components("bkg1,sig*"),
+    ROOT.RooFit.LineStyle(
+        ROOT.kDashed),
+    ROOT.RooFit.LineColor(
+        ROOT.kYellow),
+    ROOT.RooFit.Invisible())
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf205_compplot", "rf205_compplot", 800, 400)

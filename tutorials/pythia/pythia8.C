@@ -8,11 +8,6 @@
 ///  root > .x pythia8.C
 /// ~~~
 ///
-/// Note that before executing this script, for some Pythia8 builds:
-///
-///  - the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
-///  - the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
-///
 /// \macro_code
 ///
 /// \author Andreas Morsch
@@ -39,6 +34,14 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
    TClonesArray* particles = new TClonesArray("TParticle", 1000);
 // Create pythia8 object
    TPythia8* pythia8 = new TPythia8();
+
+#if PYTHIA_VERSION_INTEGER == 8235
+   // Pythia 8.235 is known to cause crashes:
+   printf("ABORTING PYTHIA8 TUTORIAL!\n");
+   printf("The version of Pythia you use is known to case crashes due to memory errors.\n");
+   printf("They have been reported to the authors; the Pythia versions 8.1... are known to work.\n");
+   return;
+#endif
 
 // Configure
    pythia8->ReadString("HardQCD:all = on");

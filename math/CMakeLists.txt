@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 add_subdirectory(mathcore)
 if(mathmore)
   add_subdirectory(mathmore)
@@ -9,7 +15,9 @@ if(minuit2)
 endif()
 add_subdirectory(fumili)
 add_subdirectory(physics)
-add_subdirectory(mlp)
+if(mlp)
+   add_subdirectory(mlp)
+endif(mlp)
 add_subdirectory(quadp)
 add_subdirectory(foam)
 add_subdirectory(smatrix)

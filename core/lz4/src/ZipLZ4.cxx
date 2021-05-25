@@ -10,7 +10,7 @@
 
 #include "ZipLZ4.h"
 
-#include "ROOT/RConfig.h"
+#include "ROOT/RConfig.hxx"
 
 #include <cinttypes>
 #include <cstdint>
@@ -117,7 +117,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
       fprintf(
          stderr,
          "R__unzipLZ4: Buffer corruption error!  Calculated checksum %llu; checksum calculated in the file was %llu.\n",
-         checksumResult, checksumFromFile);
+         (unsigned long long) checksumResult, (unsigned long long) checksumFromFile);
       return;
    }
    int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, *tgtsize);

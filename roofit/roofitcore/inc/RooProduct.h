@@ -18,15 +18,12 @@
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 
-#include <vector>
-#include <utility>
-
+#include <list>
 
 class RooRealVar;
-class RooArgList ;
+class RooArgList;
 
 
 class RooProduct : public RooAbsReal {

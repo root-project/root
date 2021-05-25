@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT rootfit/histfactory package
 # @author Pere Mato, CERN
@@ -58,8 +64,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/Systematics.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
-  BUILTINS
-    GSL
   DEPENDENCIES
     RooFit
     RooFitCore
@@ -68,19 +72,34 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     Hist
     Matrix
     MathCore
-    Minuit
-    Foam
     Graf
     Gpad
     RooStats
     XMLParser
 )
 
-ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
-                LIBRARIES HistFactory RooFit RooFitCore Tree RIO Matrix Hist
-                   ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore Graf Gpad
-                   Minuit Foam RooStats XMLParser
-                BUILTINS GSL)
+# For recent clang, this can facilitate auto-vectorisation.
+# In RooFit, the errno side effect is not needed, anyway:
+if(NOT MSVC)
+  target_compile_options(HistFactory PUBLIC -fno-math-errno)
+endif()
+
+ROOT_EXECUTABLE(hist2workspace
+  MakeModelAndMeasurements.cxx
+  hist2workspace.cxx
+  LIBRARIES
+    HistFactory
+    RooStats
+    RooFit
+    RooFitCore
+    RIO
+)
+
+#---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
+generateHeader(hist2workspace
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
+  ${CMAKE_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
+)
 
 file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
@@ -88,3 +107,5 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ
                 DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

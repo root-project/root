@@ -57,15 +57,15 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 {
   switch(type) {
   case SingleSided:
-    _basisExp = declareBasis("exp(-@0/@1)",RooArgList(tau,dm)) ;
+    _basisExp = declareBasis("exp(-@0/@1)",RooArgList(tau)) ;
     _basisCos = declareBasis("exp(-@0/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
     break ;
   case Flipped:
-    _basisExp = declareBasis("exp(@0/@1)",RooArgList(tau,dm)) ;
+    _basisExp = declareBasis("exp(@0/@1)",RooArgList(tau)) ;
     _basisCos = declareBasis("exp(@0/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
     break ;
   case DoubleSided:
-    _basisExp = declareBasis("exp(-abs(@0)/@1)",RooArgList(tau,dm)) ;
+    _basisExp = declareBasis("exp(-abs(@0)/@1)",RooArgList(tau)) ;
     _basisCos = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
     break ;
   }

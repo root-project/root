@@ -40,18 +40,25 @@ the Clang C++ compiler, not CINT.
 
 #include <string>
 
+TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo* mi) : TClingDeclInfo(mi->GetTargetFunctionDecl()), fInterp(interp), fIdx(-1) {}
+
 bool TClingMethodArgInfo::IsValid() const
 {
-   if (!fMethodInfo || !fMethodInfo->IsValid()) {
+   // Calling the base class implementation is unsafe because we override the
+   // GetDecl which it forwads to. That implementation depends on fIdx which is
+   // used to determine validity.
+   if (!fDecl)
       return false;
-   }
-   int numParams = static_cast<int>(fMethodInfo->GetMethodDecl()->getNumParams());
+
+   auto FD = llvm::cast_or_null<clang::FunctionDecl>(TClingDeclInfo::GetDecl());
+   int numParams = static_cast<int>(FD->getNumParams());
    return (fIdx > -1) && (fIdx < numParams);
 }
 
 int TClingMethodArgInfo::Next()
 {
    ++fIdx;
+   fNameCache.clear(); // invalidate the cache.
    return IsValid();
 }
 
@@ -61,43 +68,13 @@ long TClingMethodArgInfo::Property() const
       return 0L;
    }
    long property = 0L;
-   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
+   const clang::ParmVarDecl *pvd = GetDecl();
    if (pvd->hasDefaultArg() || pvd->hasInheritedDefaultArg()) {
       property |= kIsDefault;
    }
    clang::QualType qt = pvd->getOriginalType().getCanonicalType();
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   while (1) {
-      if (qt->isArrayType()) {
-         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
-         continue;
-      }
-      else if (qt->isReferenceType()) {
-         property |= kIsReference;
-         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isPointerType()) {
-         property |= kIsPointer;
-         if (qt.isConstQualified()) {
-            property |= kIsConstPointer;
-         }
-         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isMemberPointerType()) {
-         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
-         continue;
-      }
-      break;
-   }
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   return property;
+
+   return TClingDeclInfo::Property(property, qt);
 }
 
 const char *TClingMethodArgInfo::DefaultValue() const
@@ -105,13 +82,12 @@ const char *TClingMethodArgInfo::DefaultValue() const
    if (!IsValid()) {
       return 0;
    }
-   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
+   const clang::ParmVarDecl *pvd = GetDecl();
    // Instantiate default arg if needed
    if (pvd->hasUninstantiatedDefaultArg()) {
       // Could deserialize / create instantiated decls.
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
-
+      auto fd = llvm::cast_or_null<clang::FunctionDecl>(TClingDeclInfo::GetDecl());
       fInterp->getSema().BuildCXXDefaultArgExpr(clang::SourceLocation(),
                                                 const_cast<clang::FunctionDecl*>(fd),
                                                 const_cast<clang::ParmVarDecl*>(pvd));
@@ -152,23 +128,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
       }
       out.flush();
    }
-   return buf.c_str();
-}
-
-const char *TClingMethodArgInfo::Name() const
-{
-   if (!IsValid()) {
-      return 0;
-   }
-   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
-   TTHREAD_TLS_DECL( std::string, buf);
-   buf.clear();
-   clang::PrintingPolicy policy(pvd->getASTContext().getPrintingPolicy());
-   llvm::raw_string_ostream stream(buf);
-   pvd->getNameForDiagnostic(stream, policy, /*Qualified=*/true);
-   stream.flush();
-   return buf.c_str();
+   return buf.c_str(); // NOLINT
 }
 
 const TClingTypeInfo *TClingMethodArgInfo::Type() const
@@ -177,8 +137,7 @@ const TClingTypeInfo *TClingMethodArgInfo::Type() const
    if (!IsValid()) {
       return &ti;
    }
-   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
+   const clang::ParmVarDecl *pvd = GetDecl();
    clang::QualType qt = pvd->getOriginalType();
    ti.Init(qt);
    return &ti;

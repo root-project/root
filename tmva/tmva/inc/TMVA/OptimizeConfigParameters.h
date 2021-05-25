@@ -19,18 +19,15 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://ttmva.sourceforge.net/LICENSE)                                         *
  **********************************************************************************/
-#include <map>
 
 #ifndef ROOT_TMVA_OptimizeConfigParameters
 #define ROOT_TMVA_OptimizeConfigParameters
-
 
 #include "Rtypes.h"
 
 #include "TString.h"
 
 #include "TMVA/MethodBase.h"
-
 
 #include "TMVA/Interval.h"
 
@@ -40,6 +37,11 @@
 
 #include "TH1.h"
 
+#include <map>
+#include <vector>
+
+class TestOptimizeConfigParameters;
+
 namespace TMVA {
 
    class MethodBase;
@@ -47,6 +49,7 @@ namespace TMVA {
    class OptimizeConfigParameters : public IFitterTarget  {
 
    public:
+      friend TestOptimizeConfigParameters;
 
       //default constructor
       OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval*> tuneParameters, TString fomType="Separation", TString optimizationType = "GA");

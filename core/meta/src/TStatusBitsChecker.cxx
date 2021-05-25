@@ -68,6 +68,7 @@ Error in <TStatusBitsChecker>:    Bit  13 used in TObject as kInvalidObject
 #include "TError.h"
 
 #include <cmath>
+#include <set>
 
 namespace ROOT {
 namespace Detail {
@@ -149,7 +150,7 @@ void TStatusBitsChecker::Registry::RegisterBits(TClass &classRef /* = false */)
 
          if (bit < 24) {
             bool need = true;
-            for (auto reg : fRegister[bit]) {
+            for (auto &reg : fRegister[bit]) {
                if (reg.fOwner == &classRef) {
                   // We have a duplicate declared in the same class
                   // let's accept this as an alias.
@@ -183,8 +184,8 @@ bool TStatusBitsChecker::Registry::Check(TClass &classRef, bool verbose /* = fal
    RegisterBits(classRef);
 
    if (verbose) {
-      for (auto cursor : fRegister) {
-         for (auto constant : cursor.second) {
+      for (auto &cursor : fRegister) {
+         for (auto &constant : cursor.second) {
             Printf("Bit %3d declared in %s as %s", cursor.first, constant.fOwner->GetName(),
                    constant.fConstantName.c_str());
          }
@@ -193,9 +194,9 @@ bool TStatusBitsChecker::Registry::Check(TClass &classRef, bool verbose /* = fal
 
    bool issuedHeader = false;
    bool result = true;
-   for (auto cursor : fRegister) {
+   for (auto &cursor : fRegister) {
       unsigned int nDuplicate = 0;
-      for (auto constant : cursor.second) {
+      for (auto &constant : cursor.second) {
          if (!constant.fIntentionalDup)
             ++nDuplicate;
       }
@@ -204,7 +205,7 @@ bool TStatusBitsChecker::Registry::Check(TClass &classRef, bool verbose /* = fal
             Error("TStatusBitsChecker", "In %s class hierarchy, there are duplicates bits:", classRef.GetName());
             issuedHeader = true;
          }
-         for (auto constant : cursor.second) {
+         for (auto &constant : cursor.second) {
             if (!constant.fIntentionalDup) {
                Error("TStatusBitsChecker", "   Bit %3d used in %s as %s", cursor.first, constant.fOwner->GetName(),
                      constant.fConstantName.c_str());

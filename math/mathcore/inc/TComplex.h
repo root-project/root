@@ -21,6 +21,7 @@
 #include "TMath.h"
 
 #include "Rtypes.h"
+#include <string>
 
 
 class TComplex {
@@ -183,5 +184,9 @@ public:
 
    ClassDef(TComplex,1)  //Complex Class
 };
+
+namespace cling {
+std::string printValue(TComplex *c);
+}
 
 #endif

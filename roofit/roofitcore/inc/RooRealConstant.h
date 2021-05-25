@@ -20,7 +20,6 @@
 
 class RooAbsReal ;
 class RooArgList ;
-class TIterator ;
 #include "RooConstVar.h"
 
 class RooRealConstant {
@@ -30,16 +29,11 @@ public:
   virtual ~RooRealConstant() {} ;
   static RooConstVar& value(Double_t value) ;
 
-  static void cleanup() ;
-
   static RooConstVar& removalDummy() ;
 
 protected:
 
-  static void init() ;
-
-  static RooArgList* _constDB ;    // List of already instantiated constants
-  static TIterator* _constDBIter ; // Iterator over constants list
+  static RooArgList& constDB();
 
   ClassDef(RooRealConstant,0) // RooRealVar constants factory
 };

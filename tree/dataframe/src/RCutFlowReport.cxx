@@ -19,12 +19,14 @@ namespace RDF {
 
 void RCutFlowReport::Print()
 {
+   const auto allEntries = fCutInfos.empty() ? 0ULL : fCutInfos.begin()->GetAll();
    for (auto &&ci : fCutInfos) {
-      auto &name = ci.GetName();
-      auto pass = ci.GetPass();
-      auto all = ci.GetAll();
-      auto eff = ci.GetEff();
-      Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", name.c_str(), pass, all, eff);
+      const auto &name = ci.GetName();
+      const auto pass = ci.GetPass();
+      const auto all = ci.GetAll();
+      const auto eff = ci.GetEff();
+      const auto cumulativeEff = 100.f * float(pass) / float(allEntries);
+      Printf("%-10s: pass=%-10lld all=%-10lld -- eff=%3.2f %% cumulative eff=%3.2f %%", name.c_str(), pass, all, eff, cumulativeEff);
    }
 }
 const TCutInfo &RCutFlowReport::operator[](std::string_view cutName)

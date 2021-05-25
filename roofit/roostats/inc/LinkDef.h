@@ -132,5 +132,5 @@
 #pragma extra_include "Math/Minimizer.h";
 #pragma extra_include "RooFunctor.h";
 #pragma extra_include "TGraphErrors.h";
-
+#pragma extra_include "RooLagrangianMorphFunc.h";
 #endif

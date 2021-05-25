@@ -97,7 +97,7 @@ struct AnyCollectionStreamer : public TGenCollectionStreamer  {
    virtual ~AnyCollectionStreamer() {  }
 };
 
-// Forward declaration in the event of later seperation
+// Forward declaration in the event of later separation
 typedef TGenCollectionStreamer TGenMapStreamer;
 
 #endif

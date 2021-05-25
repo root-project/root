@@ -27,8 +27,7 @@
 
 class TVirtualMCStack;
 
-class TMCVerbose : public TObject
-{
+class TMCVerbose : public TObject {
 public:
    TMCVerbose(Int_t level);
    TMCVerbose();
@@ -51,10 +50,14 @@ public:
    virtual void Stepping();
    virtual void PostTrack();
    virtual void FinishPrimary();
+   virtual void EndOfEvent();
    virtual void FinishEvent();
 
    // set methods
-   void  SetLevel(Int_t level);
+   void SetLevel(Int_t level);
+
+   // get methods
+   Int_t GetLevel() const;
 
 private:
    // methods
@@ -63,16 +66,22 @@ private:
    void PrintStepHeader() const;
 
    // data members
-   Int_t  fLevel;      ///< Verbose level
-   Int_t  fStepNumber; ///< Current step number
+   Int_t fLevel;      ///< Verbose level
+   Int_t fStepNumber; ///< Current step number
 
-   ClassDef(TMCVerbose,1)  //Verbose class for MC application
+   ClassDef(TMCVerbose, 1) // Verbose class for MC application
 };
 
 // inline functions
 
-inline void  TMCVerbose::SetLevel(Int_t level)
-{ fLevel = level; }
+inline void TMCVerbose::SetLevel(Int_t level)
+{
+   fLevel = level;
+}
 
-#endif //ROOT_TMCVerbose
+inline Int_t TMCVerbose::GetLevel() const
+{
+   return fLevel;
+}
 
+#endif // ROOT_TMCVerbose

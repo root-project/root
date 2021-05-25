@@ -1,3 +1,11 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RRootDS.hxx>
 #include <ROOT/TSeq.hxx>
@@ -11,6 +19,8 @@
 #include <vector>
 
 namespace ROOT {
+
+namespace Internal {
 
 namespace RDF {
 
@@ -64,9 +74,8 @@ std::string RRootDS::GetTypeName(std::string_view colName) const
    }
    // TODO: we need to factor out the routine for the branch alone...
    // Maybe a cache for the names?
-   auto typeName =
-      ROOT::Internal::RDF::ColumnName2ColumnTypeName(std::string(colName), /*nsID=*/0, &fModelChain, /*ds=*/nullptr,
-                                                     /*isCustomCol=*/false);
+   auto typeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(std::string(colName), &fModelChain, /*ds=*/nullptr,
+                                                                  /*define=*/nullptr);
    // We may not have yet loaded the library where the dictionary of this type is
    TClass::GetClass(typeName.c_str());
    return typeName;
@@ -155,17 +164,18 @@ void RRootDS::Initialise()
    fEntryRanges.back().second += reminder;
 }
 
-std::string RRootDS::GetDataSourceType()
+std::string RRootDS::GetLabel()
 {
    return "Root";
 }
 
 RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
 {
-   ROOT::RDataFrame tdf(std::make_unique<RRootDS>(treeName, fileNameGlob));
-   return tdf;
+   return ROOT::RDataFrame(treeName, fileNameGlob);
 }
 
 } // ns RDF
+
+} // ns Internal
 
 } // ns ROOT

@@ -18,10 +18,13 @@
 
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/Architectures/Cuda.h"
+#ifdef R__HAS_CUDNN
+#include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
 #include "TMVA/DNN/Architectures/Cuda/CudaBuffers.h"
 
 #include "cuda_runtime.h"
-#include <iostream>
+#include <algorithm>
 
 namespace TMVA {
 namespace DNN {
@@ -49,7 +52,7 @@ TCudaHostBuffer<AFloat>::TCudaHostBuffer(size_t size) : fOffset(0), fSize(size),
 template <typename AFloat>
 TCudaHostBuffer<AFloat>::operator AFloat *() const
 {
-   return *fHostPointer + fOffset;
+   return (fHostPointer) ? *fHostPointer + fOffset : nullptr;
 }
 
 //______________________________________________________________________________
@@ -60,6 +63,13 @@ TCudaHostBuffer<AFloat> TCudaHostBuffer<AFloat>::GetSubBuffer(size_t offset, siz
    buffer.fOffset = offset;
    buffer.fSize = size;
    return buffer;
+}
+
+//______________________________________________________________________________
+template <typename AFloat>
+void TCudaHostBuffer<AFloat>::SetConstVal(const AFloat constVal)
+{
+   std::fill(*fHostPointer, *fHostPointer+fSize, constVal);
 }
 
 //
@@ -116,7 +126,7 @@ TCudaDeviceBuffer<AFloat> TCudaDeviceBuffer<AFloat>::GetSubBuffer(size_t offset,
 template <typename AFloat>
 TCudaDeviceBuffer<AFloat>::operator AFloat *() const
 {
-   return *fDevicePointer + fOffset;
+   return (fDevicePointer) ? *fDevicePointer + fOffset : nullptr;
 }
 
 //______________________________________________________________________________
@@ -131,7 +141,7 @@ void TCudaDeviceBuffer<AFloat>::CopyFrom(const TCudaHostBuffer<AFloat> &buffer) 
 template <typename AFloat>
 void TCudaDeviceBuffer<AFloat>::CopyTo(const TCudaHostBuffer<AFloat> &buffer) const
 {
-   cudaMemcpyAsync(*this, buffer, fSize * sizeof(AFloat), cudaMemcpyDeviceToHost, fComputeStream);
+   cudaMemcpyAsync(buffer, *this, fSize * sizeof(AFloat), cudaMemcpyDeviceToHost, fComputeStream);
    buffer.fComputeStream = fComputeStream;
 }
 
@@ -366,15 +376,26 @@ void TTensorDataLoader<TensorInput, TCuda<float>>::CopyTensorInput(TCudaHostBuff
 {
    const std::vector<TMatrixT<Double_t>> &inputTensor = std::get<0>(fData);
 
-   for (size_t i = 0; i < fBatchSize; i++) {
-      size_t sampleIndex = *sampleIterator;
-      for (size_t j = 0; j < fBatchHeight; j++) {
-         for (size_t k = 0; k < fBatchWidth; k++) {
-            size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
-            buffer[bufferIndex] = static_cast<float>(inputTensor[sampleIndex](j, k));
+   if (fBatchDepth == 1) {
+      for (size_t i = 0; i < fBatchHeight; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchWidth; j++) {
+            size_t bufferIndex = j * fBatchHeight + i;
+            buffer[bufferIndex] = static_cast<float>(inputTensor[0](sampleIndex, j));
          }
+         sampleIterator++;
       }
-      sampleIterator++;
+   } else {
+      for (size_t i = 0; i < fBatchDepth; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchHeight; j++) {
+            for (size_t k = 0; k < fBatchWidth; k++) {
+               size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
+               buffer[bufferIndex] = static_cast<float>(inputTensor[sampleIndex](j, k));
+            }
+         }
+         sampleIterator++;
+      }
    }
 }
 
@@ -426,7 +447,7 @@ void TTensorDataLoader<TMVAInput_t, TCuda<float>>::CopyTensorInput(TCudaHostBuff
          sampleIterator++;
       }
    } else if (fBatchDepth == fBatchSize) {
-      // batchDepth is batch size 
+      // batchDepth is batch size
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
          Event * event = std::get<0>(fData)[sampleIndex];
@@ -441,8 +462,9 @@ void TTensorDataLoader<TMVAInput_t, TCuda<float>>::CopyTensorInput(TCudaHostBuff
       }
    }
    else {
+      std::cout  << fBatchDepth << fBatchSize << fBatchHeight << std::endl;
       Error("TTensorDataLoader","Inconsistency between batch depth and batch size");
-      R__ASSERT(0); 
+      R__ASSERT(0);
    }
 }
 //______________________________________________________________________________
@@ -474,7 +496,7 @@ void TTensorDataLoader<TMVAInput_t, TCuda<float>>::CopyTensorOutput(TCudaHostBuf
                }
             }
          } else {
-            buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
+            buffer[bufferIndex] = static_cast<Float_t>(event->GetTarget(j));
          }
       }
    }
@@ -494,26 +516,37 @@ void TTensorDataLoader<TMVAInput_t, TCuda<float>>::CopyTensorWeights(TCudaHostBu
 
 //______________________________________________________________________________
 template <>
-void TTensorDataLoader<TensorInput, TCuda<double>>::CopyTensorInput(TCudaHostBuffer<double> &buffer,
+void TTensorDataLoader<TensorInput, TCuda<Double_t>>::CopyTensorInput(TCudaHostBuffer<double> &buffer,
                                                                     IndexIterator_t sampleIterator)
 {
    const std::vector<TMatrixT<Double_t>> &inputTensor = std::get<0>(fData);
 
-   for (size_t i = 0; i < fBatchSize; i++) {
-      size_t sampleIndex = *sampleIterator;
-      for (size_t j = 0; j < fBatchHeight; j++) {
-         for (size_t k = 0; k < fBatchWidth; k++) {
-            size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
-            buffer[bufferIndex] = inputTensor[sampleIndex](j, k);
+   if (fBatchDepth == 1) {
+      for (size_t i = 0; i < fBatchHeight; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchWidth; j++) {
+            size_t bufferIndex = j * fBatchHeight + i;
+            buffer[bufferIndex] = static_cast<float>(inputTensor[0](sampleIndex, j));
          }
+         sampleIterator++;
       }
-      sampleIterator++;
+   } else {
+      for (size_t i = 0; i < fBatchDepth; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchHeight; j++) {
+            for (size_t k = 0; k < fBatchWidth; k++) {
+               size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
+               buffer[bufferIndex] = static_cast<float>(inputTensor[sampleIndex](j, k));
+            }
+         }
+         sampleIterator++;
+      }
    }
 }
 
 //______________________________________________________________________________
 template <>
-void TTensorDataLoader<TensorInput, TCuda<double>>::CopyTensorOutput(TCudaHostBuffer<double> &buffer,
+void TTensorDataLoader<TensorInput, TCuda<Double_t>>::CopyTensorOutput(TCudaHostBuffer<double> &buffer,
                                                                      IndexIterator_t sampleIterator)
 {
    const TMatrixT<Double_t> &outputMatrix = std::get<1>(fData);
@@ -531,19 +564,20 @@ void TTensorDataLoader<TensorInput, TCuda<double>>::CopyTensorOutput(TCudaHostBu
 
 //______________________________________________________________________________
 template <>
-void TTensorDataLoader<TensorInput, TCuda<double>>::CopyTensorWeights(TCudaHostBuffer<double> &buffer,
+void TTensorDataLoader<TensorInput, TCuda<Double_t>>::CopyTensorWeights(TCudaHostBuffer<double> &buffer,
                                                                       IndexIterator_t sampleIterator)
 {
    const TMatrixT<Double_t> &weightMatrix = std::get<2>(fData);
+
    for (size_t i = 0; i < fBatchSize; i++) {
-      buffer[i] = static_cast<double>(weightMatrix(*sampleIterator, 0));
+      buffer[i] = weightMatrix(*sampleIterator, 0);
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
 template <>
-void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorInput(TCudaHostBuffer<double> &buffer,
+void TTensorDataLoader<TMVAInput_t, TCuda<Double_t>>::CopyTensorInput(TCudaHostBuffer<double> &buffer,
                                                                     IndexIterator_t sampleIterator)
 {
    // one event, one  example in the batch
@@ -559,7 +593,7 @@ void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorInput(TCudaHostBuf
          sampleIterator++;
       }
    } else if (fBatchDepth == fBatchSize) {
-      // batchDepth is batch size 
+      // batchDepth is batch size
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
          Event * event = std::get<0>(fData)[sampleIndex];
@@ -574,14 +608,15 @@ void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorInput(TCudaHostBuf
       }
    }
    else {
+      std::cout  << fBatchDepth << fBatchSize << fBatchHeight << std::endl;
       Error("TTensorDataLoader","Inconsistency between batch depth and batch size");
-      R__ASSERT(0); 
+      R__ASSERT(0);
    }
 }
 
 //______________________________________________________________________________
 template <>
-void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorOutput(TCudaHostBuffer<double> &buffer,
+void TTensorDataLoader<TMVAInput_t, TCuda<Double_t>>::CopyTensorOutput(TCudaHostBuffer<double> &buffer,
                                                                      IndexIterator_t sampleIterator)
 {
    const DataSetInfo &info = std::get<1>(fData);
@@ -608,7 +643,7 @@ void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorOutput(TCudaHostBu
                }
             }
          } else {
-            buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
+            buffer[bufferIndex] = static_cast<Double_t>(event->GetTarget(j));
          }
       }
    }
@@ -616,7 +651,7 @@ void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorOutput(TCudaHostBu
 
 //______________________________________________________________________________
 template <>
-void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorWeights(TCudaHostBuffer<double> &buffer,
+void TTensorDataLoader<TMVAInput_t, TCuda<Double_t>>::CopyTensorWeights(TCudaHostBuffer<double> &buffer,
                                                                       IndexIterator_t sampleIterator)
 {
    for (size_t i = 0; i < fBatchSize; i++) {
@@ -626,6 +661,96 @@ void TTensorDataLoader<TMVAInput_t, TCuda<double>>::CopyTensorWeights(TCudaHostB
    }
 }
 
+#if 0
+//______________________________________________________________________________
+template <>
+TTensorBatch<TCuda<float> > TTensorDataLoader<TensorInput, TCuda<float> >::GetTensorBatch()
+{
+   // After copying the data to the device, wrap the device buffer in the respective
+   // architectures matrix type
+   DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
+
+   std::vector<Matrix_t> inputTensor(std::get<0>(DeviceBuffers), fBatchSize, )
+   size_t jump = fBatchHeight * fBatchWidth;
+   for (size_t i = 0; i < fBatchSize; i++) {
+      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   }
+   Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+   Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+
+   fBatchIndex++;
+   return TTensorBatch<TCuda<float>>(inputTensor, outputMatrix, weightMatrix);
+}
+
+//______________________________________________________________________________
+template <>
+TTensorBatch<TCuda<double> > TTensorDataLoader<TensorInput, TCuda<double> >::GetTensorBatch()
+{
+   // After copying the data to the device, wrap the device buffer in the respective
+   // architectures matrix type
+   DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
+
+   std::vector<Matrix_t> inputTensor;
+   size_t jump = fBatchHeight * fBatchWidth;
+   for (size_t i = 0; i < fBatchSize; i++) {
+      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   }
+   Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+   Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+
+   fBatchIndex++;
+   return TTensorBatch<TCuda<double>>(inputTensor, outputMatrix, weightMatrix);
+}
+
+//______________________________________________________________________________
+template <>
+TTensorBatch<TCuda<float> > TTensorDataLoader<TMVAInput_t, TCuda<float> >::GetTensorBatch()
+{
+   // After copying the data to the device, wrap the device buffer in the respective
+   // architectures matrix type
+   DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
+
+   std::vector<Matrix_t> inputTensor;
+   size_t jump = fBatchHeight * fBatchWidth;
+   for (size_t i = 0; i < fBatchSize; i++) {
+      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   }
+   Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+   Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+
+   fBatchIndex++;
+   return TTensorBatch<TCuda<float>>(inputTensor, outputMatrix, weightMatrix);
+}
+
+//______________________________________________________________________________
+template <>
+TTensorBatch<TCuda<double> > TTensorDataLoader<TMVAInput_t, TCuda<double> >::GetTensorBatch()
+{
+   // After copying the data to the device, wrap the device buffer in the respective
+   // architectures matrix type
+   DeviceBufferTuple DeviceBuffers = CopyTensorBatches();
+
+   std::vector<Matrix_t> inputTensor;
+   size_t jump = fBatchHeight * fBatchWidth;
+   for (size_t i = 0; i < fBatchSize; i++) {
+      DeviceBuffer_t subInputDeviceBuffer = std::get<0>(DeviceBuffers).GetSubBuffer(i * jump, jump);
+      inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
+   }
+   Matrix_t outputMatrix(std::get<1>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+   Matrix_t weightMatrix(std::get<2>(DeviceBuffers), fBatchSize, fNOutputFeatures);
+
+   fBatchIndex++;
+   return TTensorBatch<TCuda<double>>(inputTensor, outputMatrix, weightMatrix);
+}
+#endif
+
+
+// see file Cudnn/TensorDataLoader.cxx for Cudnn definitions
+
+//______________________________________________________________________________
 // Explicit Instantiations.
 
 template class TCudaDeviceBuffer<float>;
@@ -638,6 +763,12 @@ template class TDataLoader<MatrixInput_t, TCuda<float>>;
 template class TDataLoader<TMVAInput_t, TCuda<float>>;
 template class TDataLoader<MatrixInput_t, TCuda<double>>;
 template class TDataLoader<TMVAInput_t, TCuda<double>>;
+
+template class TTensorDataLoader<TensorInput, TCuda<float> >;
+template class TTensorDataLoader<TMVAInput_t, TCuda<float> >;
+template class TTensorDataLoader<TensorInput, TCuda<double >>;
+template class TTensorDataLoader<TMVAInput_t, TCuda<double> >;
+
 
 } // TMVA
 } // DNN

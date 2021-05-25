@@ -11,6 +11,7 @@
 #ifndef HISTFACTORY_HISTREF_H
 #define HISTFACTORY_HISTREF_H
 
+#include <memory>
 
 class TH1; 
 
@@ -26,43 +27,52 @@ class HistRef {
 public:
 
 
-   // constructor - use gives away ownerhip of the given pointer
-   HistRef(TH1 * h = 0) : fHist(h) {}
+   /// constructor - use gives away ownerhip of the given pointer
+   HistRef(TH1 * h = nullptr) : fHist(h) {}
 
    HistRef( const HistRef& other ) : 
-   fHist(0) { 
-      if (other.fHist) fHist = CopyObject(other.fHist); 
+   fHist() {
+      if (other.fHist) fHist.reset(CopyObject(other.fHist.get()));
    }
 
-   ~HistRef() { 
-      DeleteObject(fHist); 
-   }
+   HistRef(HistRef&& other) :
+   fHist(std::move(other.fHist)) {}
+
+   ~HistRef() {}
  
-   // assignment operator (delete previous contained histogram)
+   /// assignment operator (delete previous contained histogram)
    HistRef & operator= (const HistRef & other) { 
       if (this == &other) return *this; 
-      DeleteObject(fHist); 
-      fHist = CopyObject(other.fHist);
+
+      fHist.reset(CopyObject(other.fHist.get()));
       return *this;
    }
 
-   TH1 * GetObject() const { return fHist; }
-
-   // set the object - user gives away the ownerhisp 
-   void SetObject(TH1 *h)  { 
-      DeleteObject(fHist);
-      fHist = h;
+   HistRef& operator=(HistRef&& other) {
+     fHist = std::move(other.fHist);
+     return *this;
    }
 
-   // operator= passing an object pointer :  user gives away its ownerhisp 
+   TH1 * GetObject() const { return fHist.get(); }
+
+   /// set the object - user gives away the ownerhisp 
+   void SetObject(TH1 *h)  { 
+      fHist.reset(h);
+   }
+
+   /// operator= passing an object pointer :  user gives away its ownerhisp 
    void operator= (TH1 * h) { SetObject(h); } 
 
-   static TH1 * CopyObject(TH1 * h); 
-   static void  DeleteObject(TH1 * h); 
+   /// Release ownership of object.
+   TH1* ReleaseObject() {
+     return fHist.release();
+   }
+
    
-protected: 
-   
-   TH1 * fHist;   // pointer to contained histogram 
+
+private:
+   static TH1 * CopyObject(const TH1 * h);
+   std::unique_ptr<TH1> fHist;   // pointer to contained histogram
 };
 
 }

@@ -18,7 +18,6 @@
 #include "TDataType.h"
 #include "TDocInfo.h"
 #include "TDocParser.h"
-#include "TEnv.h"
 #include "TError.h"
 #include "THtml.h"
 #include "TMethod.h"
@@ -961,7 +960,6 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
          if (delim == '<') delim = '>';
          ++pos;
          line.erase(0, pos);
-         pos = 0;
          pos = line.find(delim);
          if (pos == std::string::npos) continue;
          line.erase(pos);

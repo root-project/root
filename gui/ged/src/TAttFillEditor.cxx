@@ -9,27 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttFillEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing fill attributes.                         //                                             //
-//             color and fill style                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TAttFillEditor.gif">
+
+/** \class  TAttFillEditor
+    \ingroup ged
+
+Implements GUI for editing fill attributes.
+         color and fill style
+
 */
-//End_Html
 
 #include "TAttFillEditor.h"
 #include "TGedPatternSelect.h"
 #include "TGColorSelect.h"
 #include "TColor.h"
 #include "TGLabel.h"
+#include "TGSlider.h"
 #include "TGNumberEntry.h"
-#include "TPad.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 

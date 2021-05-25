@@ -21,12 +21,14 @@ namespace Internal {
 
    class TFriendProxy {
    protected:
-      TBranchProxyDirector fDirector; // contain pointer to TTree and entry to be read
-      Int_t  fIndex; // Index of this tree in the list of friends
+      TBranchProxyDirector fDirector; ///< Contain pointer to TTree and entry to be read
+      Int_t  fIndex;                  ///< Index of this tree in the list of friends
 
    public:
       TFriendProxy();
       TFriendProxy(TBranchProxyDirector *director, TTree *main, Int_t index);
+
+      TBranchProxyDirector *GetDirector() { return &fDirector; }
 
       Long64_t GetReadEntry() const;
       void     ResetReadEntry();

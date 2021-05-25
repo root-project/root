@@ -14,23 +14,23 @@
 
 #include "TSQLRow.h"
 
-struct sqlite3_stmt;
+class sqlite3_stmt;
 
 class TSQLiteRow : public TSQLRow {
 
 private:
-   sqlite3_stmt *fResult;       // current result set
+   sqlite3_stmt *fResult{nullptr};       ///<! current result set
    Bool_t        IsValid(Int_t field);
 
 public:
    TSQLiteRow(void *result, ULong_t rowHandle);
    ~TSQLiteRow();
 
-   void        Close(Option_t *opt="");
-   ULong_t     GetFieldLength(Int_t field);
-   const char *GetField(Int_t field);
+   void        Close(Option_t *opt="") final;
+   ULong_t     GetFieldLength(Int_t field) final;
+   const char *GetField(Int_t field) final;
 
-   ClassDef(TSQLiteRow,0)  // One row of SQLite query result
+   ClassDefOverride(TSQLiteRow,0)  // One row of SQLite query result
 };
 
 #endif

@@ -12,17 +12,16 @@
 #ifndef ROOT_TGDMLParse
 #define ROOT_TGDMLParse
 
-#include "TGeoMatrix.h"
-
-#include "TXMLEngine.h"
-
-#include "TGeoVolume.h"
-
 #include "TFormula.h"
+#include "TXMLEngine.h"
+#include "TGeoMatrix.h"
+#include "TGeoVolume.h"
+#include "TGeoElement.h"
 
 #include <map>
-#include <vector>
 #include <iostream>
+
+class TGDMLMatrix;
 
 /*************************************************************************
  * TGDMLRefl - helper class for the import of GDML to ROOT.              *
@@ -35,7 +34,7 @@ public:
 
       fNameS = "";
       fSolid = "";
-      fMatrix = 0;
+      fMatrix = nullptr;
    }
 
    virtual ~TGDMLRefl() {}
@@ -103,19 +102,11 @@ public:
    TXMLEngine* fFileEngine[20]; //array of dom object pointers
    const char* fStartFile; //name of originating file
    const char* fCurrentFile; //current file name being parsed
+   std::string fDefault_lunit = "mm";
+   std::string fDefault_aunit = "rad";
 
-   TGDMLParse() { //constructor
-      fWorldName = "";
-      fWorld = 0;
-      fVolID = 0;
-      fFILENO = 0;
-      for (Int_t i=0; i<20; i++) fFileEngine[i] = 0;
-      fStartFile = 0;
-      fCurrentFile = 0;
-   }
-
-   virtual ~TGDMLParse() { //destructor
-   }
+   TGDMLParse();
+   virtual ~TGDMLParse() {}
 
    static TGeoVolume* StartGDML(const char* filename) {
       TGDMLParse* parser = new TGDMLParse;
@@ -133,21 +124,23 @@ private:
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
    double            Value(const char *svalue) const;
+   void              DefineConstants();
 
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  QuantityProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  MatrixProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
    //'materials' section
-  XMLNodePointer_t  IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
-  XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn, Bool_t hasIsotopes, Bool_t hasIsotopesExtended);
-  //XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
-  XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr,  int z);
-  //XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
+   XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn, Bool_t hasIsotopes, Bool_t hasIsotopesExtended);
+   XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr,  int z);
 
    //'solids' section
+   XMLNodePointer_t  OpticalSurfaceProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int num);
    XMLNodePointer_t  Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
@@ -169,12 +162,15 @@ private:
    XMLNodePointer_t  Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Reflection(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
-   XMLNodePointer_t  Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr); //not really implemented: just approximation to a TGeoBBox
+   XMLNodePointer_t  Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  Tessellated(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
    //'structure' section
    XMLNodePointer_t  VolProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    XMLNodePointer_t  AssProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    XMLNodePointer_t  UsrProcess(TXMLEngine* gdml, XMLNodePointer_t node);
+   XMLNodePointer_t  SkinSurfaceProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  BorderSurfaceProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    Int_t             SetAxis(const char* axisString); //Set Axis for Division
 
    //'setup' section
@@ -191,6 +187,8 @@ private:
 
    typedef TGDMMapHelper<TGeoShape> SolMap;
    typedef TGDMMapHelper<TGeoVolume> VolMap;
+   typedef TGDMMapHelper<TGeoNode> PvolMap;
+   typedef TGDMMapHelper<TGDMLMatrix> MatrixMap;
    typedef TGDMMapHelper<TGDMLRefl> ReflSolidMap;
    typedef TGDMMapHelper<const char> FileMap;
    typedef std::map<std::string, std::string> ReflectionsMap;
@@ -208,11 +206,13 @@ private:
    MixMap fmixmap;                //!Map containing mixture names and the TGeoMixture for it
    SolMap fsolmap;                //!Map containing solid names and the TGeoShape for it
    VolMap fvolmap;                //!Map containing volume names and the TGeoVolume for it
+   PvolMap fpvolmap;              //!Map containing placed volume names and the TGeoNode for it
    ReflectionsMap freflectmap;    //!Map containing reflection names and the Solid name ir references to
    ReflSolidMap freflsolidmap;    //!Map containing reflection names and the TGDMLRefl for it - containing refl matrix
    ReflVolMap freflvolmap;        //!Map containing reflected volume names and the solid ref for it
    FileMap ffilemap;              //!Map containing files parsed during entire parsing, with their world volume name
-   ConstMap fconsts;               //!Map containing values of constants declared in the file
+   ConstMap fconsts;              //!Map containing values of constants declared in the file
+   MatrixMap fmatrices;           //!Map containing matrices defined in the GDML file
 
    ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
 };

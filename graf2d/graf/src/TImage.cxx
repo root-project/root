@@ -12,7 +12,6 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
-#include "TApplication.h"
 #include "TSystem.h"
 
 ClassImp(TImage);
@@ -102,6 +101,15 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
       return kAnimGif;
 
    return kUnknown;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// List this image with its attributes.
+
+void TImage::ls(Option_t *) const
+{
+   TROOT::IndentLevel();
+   printf("TImage: \"%s\"\n", GetName() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

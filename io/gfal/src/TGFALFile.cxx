@@ -30,7 +30,7 @@ software components:
 The GFAL library hides these interactions and presents a Posix
 interface for the I/O operations. The currently supported protocols
 are: file for local access, dcap, gsidcap and kdcap (dCache access
-protocol) and rfio (CASTOR access protocol).
+protocol).
 
 ### File naming convention
 A file name can be a Logical File Name (LFN), a Grid Unique
@@ -39,12 +39,12 @@ name (TURL):
   - an LFN starts with lfn. Example: \a lfn:baud/testgfal15
   - a GUID starts with guid. Example: \a guid:2cd59291-7ae7-4778-af6d-b1f423719441
   - an SURL starts with srm://. Example: \a srm://wacdr002d.cern.ch:8443/castor/cern.ch/user/b/baud/testgfal15
-  - a TURL starts with a protocol name. Example: \a rfio:///castor/cern.ch/user/b/baud/testgfal15
+  - a TURL starts with a protocol name. Example: \a gfal:/lfn/user/r/rdm/galice.root
 Note that for the TGFALFile plugin to work, all these pathnames
 should be prepended by gfal:.
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "TROOT.h"
 #include "TUrl.h"
 

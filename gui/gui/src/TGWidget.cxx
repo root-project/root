@@ -20,15 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWidget                                                             //
-//                                                                      //
-// The widget base class. It is light weight (all inline service        //
-// methods) and is typically used as mixin class (via multiple          //
-// inheritance), see for example TGButton.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGWidget
+    \ingroup guiwidgets
+
+The widget base class. It is light weight (all inline service
+methods) and is typically used as mixin class (via multiple
+inheritance), see for example TGButton.
+
+*/
+
 
 #include "TGWidget.h"
 

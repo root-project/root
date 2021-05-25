@@ -53,7 +53,7 @@
 using namespace cling;
 
 // Implements the CValuePrinter interface.
-extern "C" void cling_PrintValue(void * /*cling::Value**/ V) {
+extern "C" void cling_PrintValue(void * /*cling::Value* V*/) {
   //Value* value = (Value*)V;
 
   //std::string typeStr = printTypeInternal(*value);
@@ -109,6 +109,19 @@ static std::string printDeclType(const clang::QualType& QT,
 static std::string printQualType(clang::ASTContext& Ctx, clang::QualType QT) {
   using namespace clang;
   const QualType QTNonRef = QT.getNonReferenceType();
+
+  PrintingPolicy Policy(Ctx.getPrintingPolicy());
+  // DefinitionShadower: do not prepend `__cling_N5xxx::` to qualified names
+  Policy.SuppressUnwrittenScope = true;
+  class LocalPrintingPolicyRAII {
+  public:
+    LocalPrintingPolicyRAII(ASTContext& Ctx, PrintingPolicy& PPol)
+      : Context(Ctx), Policy(Ctx.getPrintingPolicy()) { Context.setPrintingPolicy(PPol); }
+    ~LocalPrintingPolicyRAII() { Context.setPrintingPolicy(Policy); }
+  private:
+    ASTContext& Context;
+    PrintingPolicy Policy;
+  } RAII(Ctx, Policy);
 
   std::string ValueTyStr("(");
   if (const TagType *TTy = dyn_cast<TagType>(QTNonRef))
@@ -297,7 +310,9 @@ namespace cling {
     if (IsValid) {
       // If we're gonnd do this, better make sure the end is valid too
       // FIXME: getpagesize() & GetSystemInfo().dwPageSize might be better
+#if !defined(PAGE_SIZE)
       enum { PAGE_SIZE = 1024 };
+#endif
       while (!(IsValid = utils::isAddressValid(End)) && N > 1024) {
         N -= PAGE_SIZE;
         End = Start + N;
@@ -416,7 +431,7 @@ namespace cling {
 #else // !LLVM_UTF8
 
   template <class T> struct CharTraits { typedef T value_type; };
-#if defined(LLVM_ON_WIN32) // Likely only to be needed when _MSC_VER < 19??
+#if defined(_WIN32) // Likely only to be needed when _MSC_VER < 19??
   template <> struct CharTraits<char16_t> { typedef unsigned short value_type; };
   template <> struct CharTraits<char32_t> { typedef unsigned int value_type; };
 #endif
@@ -466,9 +481,9 @@ namespace cling {
                   sizeof(wchar_t) == sizeof(char32_t), "Bad wchar_t size");
 
     if (sizeof(wchar_t) == sizeof(char32_t))
-      return toUTF8(reinterpret_cast<const char32_t * const>(Str), N, Prefix);
+      return toUTF8(reinterpret_cast<const char32_t *>(Str), N, Prefix);
 
-    return toUTF8(reinterpret_cast<const char16_t * const>(Str), N, Prefix);
+    return toUTF8(reinterpret_cast<const char16_t *>(Str), N, Prefix);
   }
 
   template <>
@@ -611,8 +626,8 @@ static const char* BuildAndEmitVPWrapperBody(cling::Interpreter &Interp,
   if (RetStmt.isInvalid())
     return "ERROR in cling's callPrintValue(): cannot build return expression";
 
-  auto *Body = new (Ctx) clang::CompoundStmt(noSrcLoc);
-  Body->setStmts(Ctx, {RetStmt.get()});
+  auto *Body
+    = clang::CompoundStmt::Create(Ctx, {RetStmt.get()}, noSrcLoc, noSrcLoc);
   WrapperFD->setBody(Body);
   auto &Consumer = Interp.getCI()->getASTConsumer();
   Consumer.HandleTopLevelDecl(clang::DeclGroupRef(WrapperFD));
@@ -691,7 +706,7 @@ executePrintValue(const Value& V, const T& val) {
 
 template <typename T> static
 typename std::enable_if<HasExplicitPrintValue<const T>::value, std::string>::type
-executePrintValue(const Value& V, const T& val) {
+executePrintValue(const Value& /*V*/, const T& val) {
   return printValue(&val);
 }
 
@@ -721,17 +736,16 @@ static std::string printEnumValue(const Value &V) {
   return enumString.str();
 }
 
-static std::string printFunctionValue(const Value &V, const void *ptr, clang::QualType Ty) {
+static std::string printFunctionValue(const Value &V, const void *ptr,
+                                      clang::QualType Ty) {
   cling::largestream o;
   o << "Function @" << ptr;
 
-  // If a function is the first thing printed in a session,
-  // getLastTransaction() will point to the transaction that loaded the
-  // ValuePrinter, and won't have a wrapper FD.
-  // Even if it did have one it wouldn't be the one that was requested to print.
-
   Interpreter &Interp = *const_cast<Interpreter *>(V.getInterpreter());
-  const Transaction *T = Interp.getLastTransaction();
+  const Transaction *T = Interp.getLastWrapperTransaction();
+  if (!T)
+    return o.str();
+
   if (clang::FunctionDecl *WrapperFD = T->getWrapperFD()) {
     clang::ASTContext &C = V.getASTContext();
     const clang::FunctionDecl *FD = nullptr;
@@ -766,7 +780,7 @@ static std::string printFunctionValue(const Value &V, const void *ptr, clang::Qu
       if (SRange.isValid()) {
         clang::SourceManager &SM = C.getSourceManager();
         clang::SourceLocation LocBegin = SRange.getBegin();
-        LocBegin = SM.getExpansionRange(LocBegin).first;
+        LocBegin = SM.getExpansionRange(LocBegin).getBegin();
         o << "  at " << SM.getFilename(LocBegin);
         unsigned LineNo = SM.getSpellingLineNumber(LocBegin, &Invalid);
         if (!Invalid)
@@ -776,7 +790,7 @@ static std::string printFunctionValue(const Value &V, const void *ptr, clang::Qu
         cBegin = SM.getCharacterData(LocBegin, &Invalid);
         if (!Invalid) {
           clang::SourceLocation LocEnd = SRange.getEnd();
-          LocEnd = SM.getExpansionRange(LocEnd).second;
+          LocEnd = SM.getExpansionRange(LocEnd).getEnd();
           cEnd = SM.getCharacterData(LocEnd, &Invalid);
           if (Invalid)
             cBegin = 0;

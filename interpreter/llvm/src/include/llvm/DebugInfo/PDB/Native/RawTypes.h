@@ -1,9 +1,8 @@
 //===- RawTypes.h -----------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -21,6 +20,20 @@ struct SectionOffset {
   support::ulittle32_t Off;
   support::ulittle16_t Isect;
   char Padding[2];
+};
+
+/// Header of the hash tables found in the globals and publics sections.
+/// Based on GSIHashHdr in
+/// https://github.com/Microsoft/microsoft-pdb/blob/master/PDB/dbi/gsi.h
+struct GSIHashHeader {
+  enum : unsigned {
+    HdrSignature = ~0U,
+    HdrVersion = 0xeffe0000 + 19990810,
+  };
+  support::ulittle32_t VerSignature;
+  support::ulittle32_t VerHdr;
+  support::ulittle32_t HrSize;
+  support::ulittle32_t NumBuckets;
 };
 
 // This is HRFile.
@@ -98,6 +111,8 @@ struct DbiBuildNo {
 
   static const uint16_t BuildMajorMask = 0x7F00;
   static const uint16_t BuildMajorShift = 8;
+
+  static const uint16_t NewVersionFormatMask = 0x8000;
 };
 
 /// The fixed size header that appears at the beginning of the DBI Stream.
@@ -161,19 +176,7 @@ struct DbiStreamHeader {
 };
 static_assert(sizeof(DbiStreamHeader) == 64, "Invalid DbiStreamHeader size!");
 
-struct SectionContribEntry {
-  support::ulittle16_t Section;
-  char Padding1[2];
-  support::little32_t Offset;
-  support::little32_t Size;
-  support::ulittle32_t Characteristics;
-  support::ulittle16_t ModuleIndex;
-  char Padding2[2];
-  support::ulittle32_t DataCrc;
-  support::ulittle32_t RelocCrc;
-};
-
-/// The header preceeding the File Info Substream of the DBI stream.
+/// The header preceding the File Info Substream of the DBI stream.
 struct FileInfoSubstreamHeader {
   /// Total # of modules, should match number of records in the ModuleInfo
   /// substream.
@@ -204,7 +207,7 @@ struct ModInfoFlags {
   static const uint16_t TypeServerIndexShift = 8;
 };
 
-/// The header preceeding each entry in the Module Info substream of the DBI
+/// The header preceding each entry in the Module Info substream of the DBI
 /// stream.  Corresponds to the type MODI in the reference implementation.
 struct ModuleInfoHeader {
   /// Currently opened module. This field is a pointer in the reference
@@ -214,7 +217,7 @@ struct ModuleInfoHeader {
   support::ulittle32_t Mod;
 
   /// First section contribution of this module.
-  SectionContribEntry SC;
+  SectionContrib SC;
 
   /// See ModInfoFlags definition.
   support::ulittle16_t Flags;
@@ -269,7 +272,7 @@ struct PublicsStreamHeader {
   support::ulittle32_t NumSections;
 };
 
-// The header preceeding the global TPI stream.
+// The header preceding the global TPI stream.
 // This corresponds to `HDR` in PDB/dbi/tpi.h.
 struct TpiStreamHeader {
   struct EmbeddedBuf {
@@ -297,7 +300,7 @@ struct TpiStreamHeader {
 const uint32_t MinTpiHashBuckets = 0x1000;
 const uint32_t MaxTpiHashBuckets = 0x40000;
 
-/// The header preceeding the global PDB Stream (Stream 1)
+/// The header preceding the global PDB Stream (Stream 1)
 struct InfoStreamHeader {
   support::ulittle32_t Version;
   support::ulittle32_t Signature;
@@ -305,7 +308,7 @@ struct InfoStreamHeader {
   codeview::GUID Guid;
 };
 
-/// The header preceeding the /names stream.
+/// The header preceding the /names stream.
 struct PDBStringTableHeader {
   support::ulittle32_t Signature;   // PDBStringTableSignature
   support::ulittle32_t HashVersion; // 1 or 2
@@ -313,6 +316,32 @@ struct PDBStringTableHeader {
 };
 
 const uint32_t PDBStringTableSignature = 0xEFFEEFFE;
+
+/// The header preceding the /src/headerblock stream.
+struct SrcHeaderBlockHeader {
+  support::ulittle32_t Version; // PdbRaw_SrcHeaderBlockVer enumeration.
+  support::ulittle32_t Size;    // Size of entire stream.
+  uint64_t FileTime;            // Time stamp (Windows FILETIME format).
+  support::ulittle32_t Age;     // Age
+  uint8_t Padding[44];          // Pad to 64 bytes.
+};
+static_assert(sizeof(SrcHeaderBlockHeader) == 64, "Incorrect struct size!");
+
+/// A single file record entry within the /src/headerblock stream.
+struct SrcHeaderBlockEntry {
+  support::ulittle32_t Size;     // Record Length.
+  support::ulittle32_t Version;  // PdbRaw_SrcHeaderBlockVer enumeration.
+  support::ulittle32_t CRC;      // CRC of the original file contents.
+  support::ulittle32_t FileSize; // Size of original source file.
+  support::ulittle32_t FileNI;   // String table index of file name.
+  support::ulittle32_t ObjNI;    // String table index of object name.
+  support::ulittle32_t VFileNI;  // String table index of virtual file name.
+  uint8_t Compression;           // PDB_SourceCompression enumeration.
+  uint8_t IsVirtual;             // Is this a virtual file (injected)?
+  short Padding;                 // Pad to 4 bytes.
+  char Reserved[8];
+};
+static_assert(sizeof(SrcHeaderBlockEntry) == 40, "Incorrect struct size!");
 
 } // namespace pdb
 } // namespace llvm

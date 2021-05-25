@@ -2,7 +2,7 @@
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,7 +15,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-#include <assert.h>
+#include <cassert>
 
 /** \class TViewer3DPad
 \ingroup gpad
@@ -166,14 +166,16 @@ Int_t TViewer3DPad::AddObject(UInt_t /*placedID*/, const TBuffer3D & buffer, Boo
 Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addChildren*/)
 {
    return kTRUE;
-};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TViewer3DPad::CloseComposite()
-{};
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/)
-{};
+{
+}

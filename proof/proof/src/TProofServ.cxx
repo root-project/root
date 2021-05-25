@@ -20,7 +20,7 @@ master server.
 */
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "Riostream.h"
 
 #ifdef WIN32
@@ -78,6 +78,7 @@ using namespace std;
 #include "TQueryResultManager.h"
 #include "TRegexp.h"
 #include "TROOT.h"
+#include "TObjArray.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
@@ -97,16 +98,12 @@ using namespace std;
 #include "TParameter.h"
 #include "TMap.h"
 #include "TSortedList.h"
-#include "TParameter.h"
 #include "TFileCollection.h"
 #include "TLockFile.h"
 #include "TDataSetManagerFile.h"
 #include "TProofProgressStatus.h"
 #include "TServerSocket.h"
 #include "TMonitor.h"
-#include "TFunction.h"
-#include "TMethodArg.h"
-#include "TMethodCall.h"
 #include "TProofOutputFile.h"
 #include "TSelector.h"
 #include "TPackMgr.h"
@@ -726,7 +723,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
          } else if (logmx.EndsWith("M")) {
             xf = 1024*1024;
             logmx.Remove(TString::kTrailing, 'M');
-         } if (logmx.EndsWith("G")) {
+         } else if (logmx.EndsWith("G")) {
             xf = 1024*1024*1024;
             logmx.Remove(TString::kTrailing, 'G');
          }
@@ -1049,10 +1046,10 @@ Int_t TProofServ::CatMotd()
 
    // get last modification time of the file ~/proof/.prooflast
    lastname = TString(GetWorkDir()) + "/.prooflast";
-   char *last = gSystem->ExpandPathName(lastname.Data());
+   gSystem->ExpandPathName(lastname);
    Long64_t size;
    Long_t id, flags, modtime, lasttime = 0;
-   if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
+   if (gSystem->GetPathInfo(lastname.Data(), &id, &size, &flags, &lasttime) == 1)
       lasttime = 0;
 
    // show motd at least once per day
@@ -1081,10 +1078,9 @@ Int_t TProofServ::CatMotd()
    }
 
    if (lasttime)
-      gSystem->Unlink(last);
-   Int_t fd = creat(last, 0600);
+      gSystem->Unlink(lastname.Data());
+   Int_t fd = creat(lastname.Data(), 0600);
    if (fd >= 0) close(fd);
-   delete [] last;
 
    return 0;
 }
@@ -1513,7 +1509,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                ProcessLine(str);
                if (hasfn) {
                   gSystem->ChangeDirectory(ocwd);
-                  fCacheLock->Unlock();                 
+                  fCacheLock->Unlock();
                }
             }
 
@@ -1900,7 +1896,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   TList* workerList = new TList();
                   EQueryAction retVal = GetWorkers(workerList, pc);
                   if (retVal != TProofServ::kQueryStop && retVal != TProofServ::kQueryEnqueued) {
-                     if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+                     Int_t ret = fProof->AddWorkers(workerList);
+                     if (ret < 0) {
                         Error("HandleSocketInput:kPROOF_GETSLAVEINFO",
                               "adding a list of worker nodes returned: %d", ret);
                      }
@@ -2323,6 +2320,7 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
       PDB(kSubmerger, 2) Info("AcceptResults", "closing socket");
       delete ((TSocket*)(sockets->At(i)));
    }
+   delete sockets;
 
    fMergingMonitor->RemoveAll();
    SafeDelete(fMergingMonitor);
@@ -2909,9 +2907,7 @@ Int_t TProofServ::Setup()
    }
 
    // Goto to the main PROOF working directory
-   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-   fWorkDir = workdir;
-   delete [] workdir;
+   gSystem->ExpandPathName(fWorkDir);
    if (gProofDebugLevel > 0)
       Info("Setup", "working directory set to %s", fWorkDir.Data());
 
@@ -2979,7 +2975,7 @@ Int_t TProofServ::SetupCommon()
          TString compiler = COMPILER;
          if (compiler.Index("is ") != kNPOS)
             compiler.Remove(0, compiler.Index("is ") + 3);
-         compiler = gSystem->DirName(compiler);
+         compiler = gSystem->GetDirName(compiler);
          if (icomp == 1) {
             if (!bindir.IsNull()) bindir += ":";
             bindir += compiler;
@@ -3894,12 +3890,15 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
             // change to an asynchronous query
             enqueued = kTRUE;
             Info("HandleProcess", "query %d enqueued", pq->GetSeqNum());
-         } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
-            Error("HandleProcess", "Adding a list of worker nodes returned: %d",
-                  ret);
-            // To terminate collection
-            if (sync) SendLogFile();
-            return;
+         } else {
+            Int_t ret = fProof->AddWorkers(workerList);
+            if (ret < 0) {
+               Error("HandleProcess", "Adding a list of worker nodes returned: %d",
+                     ret);
+               // To terminate collection
+               if (sync) SendLogFile();
+               return;
+            }
          }
       } else {
          EQueryAction retVal = GetWorkers(0, pc);
@@ -6697,11 +6696,11 @@ Int_t TProofServ::Fork()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace <ord>, <user>, <u>, <group>, <stag>, <qnum>, <file>, <rver> and
-/// <build> placeholders in fname.
-/// Here, <rver> is the root version in integer form, e.g. 53403, and <build> a
-/// string includign version, architecture and compiler version, e.g.
-/// '53403_linuxx8664gcc_gcc46' .
+/// Replace \<ord\>, \<user\>, \<u\>, \<group\>, \<stag\>, \<qnum\>, \<file\>,
+/// \<rver\> and \<build\> placeholders in fname.
+/// Here, \<rver\> is the root version in integer form, e.g. 53403, and
+/// \<build\> a string includign version, architecture and compiler version,
+/// e.g. '53403_linuxx8664gcc_gcc46' .
 
 void TProofServ::ResolveKeywords(TString &fname, const char *path)
 {

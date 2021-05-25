@@ -26,24 +26,34 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Compression.h"
 #include "ROOT/TIOFeatures.hxx"
 #include "TArrayD.h"
 #include "TArrayI.h"
 #include "TAttFill.h"
 #include "TAttLine.h"
 #include "TAttMarker.h"
-#include "TBranch.h"
-#include "TBuffer.h"
 #include "TClass.h"
 #include "TDataType.h"
 #include "TDirectory.h"
 #include "TObjArray.h"
 #include "TVirtualTreePlayer.h"
 
-#include <atomic>
-
-
+#ifdef R__LESS_INCLUDES
 class TBranch;
+class TList;
+#else
+#include "TBranch.h"
+// #include "TBuffer.h"
+#include "TList.h"
+#endif
+
+#include <array>
+#include <atomic>
+#include <vector>
+#include <utility>
+
+class TBuffer;
 class TBrowser;
 class TFile;
 class TLeaf;
@@ -52,7 +62,6 @@ class TTreeFormula;
 class TPolyMarker;
 class TEventList;
 class TEntryList;
-class TList;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -116,6 +125,7 @@ protected:
    TArrayI        fIndex;                 ///<  Index of sorted values
    TVirtualIndex *fTreeIndex;             ///<  Pointer to the tree Index (if any)
    TList         *fFriends;               ///<  pointer to list of friend elements
+   TList         *fExternalFriends;       ///<! List of TFriendsElement pointing to us and need to be notified of LoadTree.  Content not owned.
    TVirtualPerfStats *fPerfStats;         ///<! pointer to the current perf stats object
    TList         *fUserInfo;              ///<  pointer to a list of user objects associated to this Tree
    TVirtualTreePlayer *fPlayer;           ///<! Pointer to current Tree player
@@ -158,6 +168,7 @@ protected:
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpRef(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImpArr(const char* branchname, EDataType datatype, std::size_t N, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
    virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, Bool_t isptrptr, Int_t bufsize, Int_t splitlevel);
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
@@ -166,7 +177,6 @@ protected:
 
    Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE) const;
    char             GetNewlineValue(std::istream &inputStream);
-   TTreeCache      *GetReadCache(TFile *file, Bool_t create = kFALSE);
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
    Int_t            SetCacheSizeAux(Bool_t autocache = kTRUE, Long64_t cacheSize = 0);
@@ -226,16 +236,25 @@ public:
       kMatchConversionCollection = 2,
       kMakeClass = 3,
       kVoidPtr = 4,
-      kNoCheck = 5
+      kNoCheck = 5,
+      kNeedEnableDecomposedObj = BIT(29),   // DecomposedObj is the newer name of MakeClass mode
+      kNeedDisableDecomposedObj = BIT(30),
+      kDecomposedObjMask = kNeedEnableDecomposedObj | kNeedDisableDecomposedObj
    };
 
    // TTree status bits
    enum EStatusBits {
       kForceRead = BIT(11),
       kCircular = BIT(12),
-      kOnlyFlushAtCluster = BIT(14) // If set, the branch's buffers will grow until an event cluster boundary is hit,
-      // guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
-      // memory bounds in the case of extremely large events.
+      /// If set, the branch's buffers will grow until an event cluster boundary is hit,
+      /// guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
+      /// memory bounds in the case of extremely large events.
+      kOnlyFlushAtCluster = BIT(14),
+      /// If set, signals that this TTree is the output of the processing of another TTree, and
+      /// the entries are reshuffled w.r.t. to the original TTree. As a safety measure, a TTree
+      /// with this bit set cannot add friends nor can be added as a friend. If you know what
+      /// you are doing, you can manually unset this bit with `ResetBit(EStatusBits::kEntriesReshuffled)`.
+      kEntriesReshuffled = BIT(19) // bits 15-18 are used by TChain
    };
 
    // Split level modifier
@@ -313,6 +332,42 @@ public:
 #endif
    void AddAllocationCount(UInt_t count) { fAllocationCount += count; }
    virtual Long64_t        AutoSave(Option_t* option = "");
+
+   /// Add a new branch, and infer the data type from the type of `obj` being passed.
+   ///
+   /// \note This and the next overload should cover most cases for creating a branch. Try to use these two whenever
+   /// possible, unless e.g. type conversions are needed.
+   ///
+   /// \param[in] name Name of the branch to be created.
+   /// \param[in] obj Address of the object to be added. Make sure to pass a pointer to the actual type/class that
+   /// should be stored in the tree (no pointers to base classes). When calling Fill(), the current value of the type/object will be saved.
+   /// \param[in] bufsize The buffer size in bytes for this branch. When the buffer is full, it is compressed and written to disc.
+   /// The default value of 32000 bytes and should be ok for most simple types. Larger buffers (e.g. 256000) if your Tree is not split and each entry is large (Megabytes).
+   /// A small value for bufsize is beneficial if entries in the Tree are accessed randomly and the Tree is in split mode.
+   /// \param[in] splitlevel If T is a class or struct and splitlevel > 0, the members of the object are serialised as separate branches.
+   /// \return Pointer to the TBranch that was created. The branch is owned by the tree.
+   template <class T> TBranch *Branch(const char* name, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   {
+      return BranchImpRef(name, TClass::GetClass<T>(), TDataType::GetType(typeid(T)), obj, bufsize, splitlevel);
+   }
+
+   /// Add a new branch, and infer the data type from the array `addobj` being passed.
+   ///
+   /// \note This and the previous overload should cover most cases for creating a branch. Try to use these two whenever
+   /// possible, unless e.g. type conversions are needed.
+   ///
+   /// \param[in] name Name of the branch to be created.
+   /// \param[in] addobj Array of the objects to be added. When calling Fill(), the current value of the type/object will be saved.
+   /// \param[in] bufsize he buffer size in bytes for this branch. When the buffer is full, it is compressed and written to disc.
+   /// The default value of 32000 bytes and should be ok for most simple types. Larger buffers (e.g. 256000) if your Tree is not split and each entry is large (Megabytes).
+   /// A small value for bufsize is beneficial if entries in the Tree are accessed randomly and the Tree is in split mode.
+   /// \param[in] splitlevel If T is a class or struct and splitlevel > 0, the members of the object are serialised as separate branches.
+   /// \return Pointer to the TBranch that was created. The branch is owned by the tree.
+   template <class T> TBranch *Branch(const char* name, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   {
+      return BranchImp(name, TClass::GetClass<T>(), addobj, bufsize, splitlevel);
+   }
+
    virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual Int_t           Branch(const char* folder, Int_t bufsize = 32000, Int_t splitlevel = 99);
@@ -332,28 +387,27 @@ public:
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)(Long_t)address,leaflist,bufsize);
    }
-#if !defined(__CINT__)
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
-#endif
    template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImpRed for details. Here we __ignore
-      return BranchImpRef(name, classname, TBuffer::GetClass(typeid(T)), obj, bufsize, splitlevel);
+      return BranchImpRef(name, classname, TClass::GetClass<T>(), obj, bufsize, splitlevel);
    }
    template <class T> TBranch *Branch(const char* name, const char* classname, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImp for details
-      return BranchImp(name, classname, TBuffer::GetClass(typeid(T)), addobj, bufsize, splitlevel);
+      return BranchImp(name, classname, TClass::GetClass<T>(), addobj, bufsize, splitlevel);
    }
-   template <class T> TBranch *Branch(const char* name, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   template <typename T, std::size_t N> TBranch *Branch(const char* name, std::array<T, N> *obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
-      // See BranchImp for details
-      return BranchImp(name, TBuffer::GetClass(typeid(T)), addobj, bufsize, splitlevel);
-   }
-   template <class T> TBranch *Branch(const char* name, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
-   {
-      // See BranchImp for details
-      return BranchImpRef(name, TBuffer::GetClass(typeid(T)), TDataType::GetType(typeid(T)), obj, bufsize, splitlevel);
+      TClass *cl = TClass::GetClass<T>();
+      if (cl) {
+         TClass *arrCl = TClass::GetClass<std::array<T, N>>();
+         Error("Branch","std::array of objects not yet supported as top level branch object (the class is %s)",
+               arrCl ? arrCl->GetName() : cl->GetName());
+         return nullptr;
+      }
+      return BranchImpArr(name, TDataType::GetType(typeid(T)), N, obj, bufsize, splitlevel);
    }
    virtual TBranch        *Bronch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
@@ -364,7 +418,7 @@ public:
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
-   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "");
+   virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "", Bool_t needCopyAddresses = false);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
    virtual void            DirectoryAutoAdd(TDirectory *);
@@ -445,6 +499,8 @@ public:
    TVirtualTreePlayer     *GetPlayer();
    virtual Int_t           GetPacketSize() const { return fPacketSize; }
    virtual TVirtualPerfStats *GetPerfStats() const { return fPerfStats; }
+           TTreeCache     *GetReadCache(TFile *file) const;
+           TTreeCache     *GetReadCache(TFile *file, Bool_t create);
    virtual Long64_t        GetReadEntry()  const { return fReadEntry; }
    virtual Long64_t        GetReadEvent()  const { return fReadEntry; }
    virtual Int_t           GetScanField()  const { return fScanField; }
@@ -484,6 +540,7 @@ public:
    virtual Long64_t        GetZipBytes() const { return fZipBytes; }
    virtual void            IncrementTotalBuffers(Int_t nbytes) { fTotalBuffers += nbytes; }
    Bool_t                  IsFolder() const { return kTRUE; }
+   virtual Bool_t          InPlaceClone(TDirectory *newdirectory, const char *options = "");
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
    virtual Long64_t        LoadTree(Long64_t entry);
    virtual Long64_t        LoadTreeFriend(Long64_t entry, TTree* T);
@@ -501,20 +558,16 @@ public:
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual void            PrintCacheStats(Option_t* option = "") const;
    virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-#if defined(__CINT__)
-#if defined(R__MANUAL_DICT)
-   virtual Long64_t        Process(void* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
-#endif
-#else
    virtual Long64_t        Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
-#endif
    virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
    virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
-   virtual void            RecursiveRemove(TObject *obj);
+   virtual void            RegisterExternalFriend(TFriendElement *);
+   virtual void            RemoveExternalFriend(TFriendElement *);
    virtual void            RemoveFriend(TTree*);
+   virtual void            RecursiveRemove(TObject *obj);
    virtual void            Reset(Option_t* option = "");
    virtual void            ResetAfterMerge(TFileMergeInfo *);
    virtual void            ResetBranchAddress(TBranch *);
@@ -524,13 +577,11 @@ public:
    virtual void            SetAutoSave(Long64_t autos = -300000000);
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
-#if !defined(__CINT__)
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
-#endif
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
-      TClass *cl = TClass::GetClass(typeid(T));
+      TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
       if (cl==0) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,true);
@@ -539,7 +590,7 @@ public:
    // This can only be used when the template overload resolution can distinguish between
    // T* and T**
    template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
-      TClass *cl = TClass::GetClass(typeid(T));
+      TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
       if (cl==0) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,false);

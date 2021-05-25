@@ -3,7 +3,7 @@
 /// \notebook -js
 /// Draw arrows.
 ///
-/// \macro_image
+/// \macro_image (js)
 /// \macro_code
 ///
 /// \author Rene Brun

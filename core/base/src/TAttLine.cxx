@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TAttLine.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -17,6 +16,7 @@
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
 #include <cmath>
+#include <iostream>
 
 ClassImp(TAttLine);
 using std::sqrt;
@@ -63,9 +63,9 @@ itself remains fully opaque.
 histo->SetLineColorAlpha(kBlue, 0.35);
 ~~~
 
-The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
+The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 
 
 ## <a name="L2"></a> Line Width
@@ -115,6 +115,14 @@ Begin_Macro
 }
 End_Macro
 
+Some line styles can be accessed via the following enum:
+
+~~~ {.cpp}
+   kSolid      = 1
+   kDashed     = 2
+   kDotted     = 3
+   kDashDotted = 4
+~~~
 
 Additional line styles can be defined using `TStyle::SetLineStyleString`.
 For example the line style number 11 can be defined as follow:

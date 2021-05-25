@@ -54,11 +54,10 @@ within x3d produces incorrect end-faces
 
 #include "TGeoXtru.h"
 
-#include "Riostream.h"
-#include "TVirtualPad.h"
+#include <iostream>
+
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TClass.h"
 #include "TMath.h"
 
 #include "TVirtualGeoPainter.h"
@@ -226,46 +225,6 @@ TGeoXtru::TGeoXtru(Double_t *param)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    SetDimensions(param);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
-  TGeoBBox(xt),
-  fNvert(0),
-  fNz(0),
-  fZcurrent(0),
-  fX(0),
-  fY(0),
-  fZ(0),
-  fScale(0),
-  fX0(0),
-  fY0(0),
-  fThreadData(0),
-  fThreadSize(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
-{
-   if(this!=&xt) {
-      TGeoBBox::operator=(xt);
-      fNvert=0;
-      fNz=0;
-      fZcurrent=0;
-      fX=0;
-      fY=0;
-      fZ=0;
-      fScale=0;
-      fX0=0;
-      fY0=0;
-      fThreadSize=0;
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -596,7 +555,6 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t stepmax = step;
    if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
    Double_t snext = 0.;
-   Double_t dist = TGeoShape::Big();
    Int_t i, iv;
    Double_t pt[3];
    memcpy(pt,point,3*sizeof(Double_t));
@@ -634,7 +592,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
    }
    // Check if the bounding box is missed by the track
    if (!TGeoBBox::Contains(pt)) {
-      dist = TGeoBBox::DistFromOutside(pt,dir,3);
+      Double_t dist = TGeoBBox::DistFromOutside(pt,dir,3);
       if (dist>stepmax) return TGeoShape::Big();
       if (dist>1E-6) dist-=1E-6; // decrease snext to make sure we do not cross the xtru
       else dist = 0;
@@ -654,7 +612,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       // loop lateral planes to see if we cross something
       xtru->SetIz(iz);
       for (iv=0; iv<fNvert; iv++) {
-         dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
+         Double_t dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
          if (dist<stepmax) {
             xtru->SetSeg(iv);
             if (convex) return (snext+dist);
@@ -672,7 +630,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       xtru->SetIz(iz);
       if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) xtru->SetIz(-1);
       for (iv=0; iv<fNvert; iv++) {
-         dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
+         Double_t dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
          if (dist<stepmax) {
             // HIT
             xtru->SetSeg(iv);
@@ -915,8 +873,7 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
    Int_t c = GetBasicColor();
 
    Int_t i,j;
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
+   Int_t indx = 0, indx2, k;
    for (i=0; i<nz; i++) {
       // loop Z planes
       indx2 = i*nvert;
@@ -977,11 +934,9 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
 {
    ThreadData_t& td = GetThreadData();
-   Double_t safz = TGeoShape::Big();
-   Double_t saf1, saf2;
+   Double_t saf1, saf2, safz, safe;
    Bool_t in1, in2;
    Int_t iseg;
-   Double_t safe = TGeoShape::Big();
    // segment-break case
    if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) {
       safz = TMath::Abs(point[2]-fZ[iz]);

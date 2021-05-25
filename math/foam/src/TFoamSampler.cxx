@@ -71,20 +71,14 @@ private:
 
 };
 
-
+/** \class TFoamSampler
+   class implementing  the ROOT::Math::DistSampler interface using FOAM
+   for sampling arbitrary distributions.
+*/
 
 ClassImp(TFoamSampler);
 
 
-////////////////////////////////////////////////////////////////////////////////
-
-/**
-   TFoamSampler class
-   class implementing  the ROOT::Math::DistSampler interface using FOAM
-   for sampling arbitrary distributions.
-
-
-*/
 TFoamSampler::TFoamSampler() : ROOT::Math::DistSampler(),
 //    fOneDim(false)
 //    fDiscrete(false),

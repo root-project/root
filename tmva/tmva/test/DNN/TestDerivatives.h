@@ -21,6 +21,8 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <vector>
+
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
 #include "Utility.h"
@@ -49,22 +51,27 @@ template<typename Architecture, typename F, typename dF>
 {
    using Scalar_t   = typename Architecture::Scalar_t;
    using Matrix_t   = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
 
    Scalar_t maximum_error = 0.0;
 
    for (size_t i = 0; i < 100; i++)
    {
-      Matrix_t X(10,10), Y(10,10);
-      randomMatrix(Y);
+      Matrix_t mX(10,10), mY(10,10);
+      randomMatrix(mY);
+      
+      Tensor_t X(mX,2); 
+      Tensor_t Y(mY,2); 
 
       df(X, Y);
       Scalar_t dy = X(0,0);
 
-      copyMatrix(X, Y);
+      // copy from 
+      Architecture::Copy(X, Y);
       X(0,0) += dx;
       f(X);
       Scalar_t y1 = X(0,0);
-      copyMatrix(X, Y);
+      Architecture::Copy(X, Y);
       X(0,0) -= dx;
       f(X);
       Scalar_t y0 = X(0,0);
@@ -80,11 +87,12 @@ template<typename Architecture, typename F, typename dF>
  *  error. Prints the result for each function to the stdout. */
 //______________________________________________________________________________
 template<typename Architecture>
-auto testActivationFunctionDerivatives()
+auto testActivationFunctionDerivatives(bool useFastTanh = false)
     -> typename Architecture::Scalar_t
 {
    using Scalar_t   = typename Architecture::Scalar_t;
-   using Matrix_t = typename Architecture::Matrix_t;
+   //using Matrix_t = typename Architecture::Matrix_t;
+   using Tensor_t = typename Architecture::Tensor_t;
 
    // Test only differentiable activation functions.
    std::vector<EActivationFunction> EActivationFunctions
@@ -99,13 +107,16 @@ auto testActivationFunctionDerivatives()
 
    for (auto & af : EActivationFunctions)
    {
-      auto f = [&af](Matrix_t &X) { evaluate<Architecture>(X, af); };
-      auto df = [& af](Matrix_t &X, const Matrix_t &Y)
+      auto f = [&af](Tensor_t &X) { evaluate<Architecture>(X, af); };
+      auto df = [& af](Tensor_t &X, const Tensor_t &Y)
       {
          evaluateDerivative<Architecture>(X, af, Y);
       };
 
       auto h = std::sqrt(std::numeric_limits<Scalar_t>::epsilon());
+      // in case of tanh and using VDT h (derivative step size  must be much larger)
+      if (useFastTanh && af == EActivationFunction::kTanh ) h = 1.E-3; 
+
       error = testDerivatives<Architecture>(f, df, h);
 
       std::cout << "Testing " << static_cast<int>(af) << ": ";

@@ -1,9 +1,8 @@
-//===-- llvm/CodeGen/DwarfExpression.h - Dwarf Compile Unit ---*- C++ -*--===//
+//===- llvm/CodeGen/DwarfExpression.h - Dwarf Compile Unit ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,21 +13,29 @@
 #ifndef LLVM_LIB_CODEGEN_ASMPRINTER_DWARFEXPRESSION_H
 #define LLVM_LIB_CODEGEN_ASMPRINTER_DWARFEXPRESSION_H
 
-#include "llvm/IR/DebugInfo.h"
-#include "llvm/Support/DataTypes.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/None.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/DebugInfoMetadata.h"
+#include <cassert>
+#include <cstdint>
+#include <iterator>
 
 namespace llvm {
 
 class AsmPrinter;
+class APInt;
 class ByteStreamer;
-class TargetRegisterInfo;
-class DwarfUnit;
+class DwarfCompileUnit;
 class DIELoc;
+class TargetRegisterInfo;
 
 /// Holds a DIExpression and keeps track of how many operands have been consumed
 /// so far.
 class DIExpressionCursor {
   DIExpression::expr_op_iterator Start, End;
+
 public:
   DIExpressionCursor(const DIExpression *Expr) {
     if (!Expr) {
@@ -42,8 +49,7 @@ public:
   DIExpressionCursor(ArrayRef<uint64_t> Expr)
       : Start(Expr.begin()), End(Expr.end()) {}
 
-  DIExpressionCursor(const DIExpressionCursor &C)
-      : Start(C.Start), End(C.End) {}
+  DIExpressionCursor(const DIExpressionCursor &) = default;
 
   /// Consume one operation.
   Optional<DIExpression::ExprOperand> take() {
@@ -73,8 +79,10 @@ public:
 
     return *Next;
   }
+
   /// Determine whether there are any operations left in this expression.
   operator bool() const { return Start != End; }
+
   DIExpression::expr_op_iterator begin() const { return Start; }
   DIExpression::expr_op_iterator end() const { return End; }
 
@@ -96,23 +104,56 @@ protected:
     const char *Comment;
   };
 
+  DwarfCompileUnit &CU;
+
   /// The register location, if any.
   SmallVector<Register, 2> DwarfRegs;
 
   /// Current Fragment Offset in Bits.
   uint64_t OffsetInBits = 0;
-  unsigned DwarfVersion;
 
-  /// Sometimes we need to add a DW_OP_bit_piece to describe a subregister. 
-  unsigned SubRegisterSizeInBits = 0;
-  unsigned SubRegisterOffsetInBits = 0;
+  /// Sometimes we need to add a DW_OP_bit_piece to describe a subregister.
+  unsigned SubRegisterSizeInBits : 16;
+  unsigned SubRegisterOffsetInBits : 16;
 
   /// The kind of location description being produced.
-  enum { Unknown = 0, Register, Memory, Implicit } LocationKind = Unknown;
+  enum { Unknown = 0, Register, Memory, Implicit };
 
+  /// The flags of location description being produced.
+  enum { EntryValue = 1 };
+
+  unsigned LocationKind : 3;
+  unsigned LocationFlags : 2;
+  unsigned DwarfVersion : 4;
+
+public:
+  bool isUnknownLocation() const {
+    return LocationKind == Unknown;
+  }
+
+  bool isMemoryLocation() const {
+    return LocationKind == Memory;
+  }
+
+  bool isRegisterLocation() const {
+    return LocationKind == Register;
+  }
+
+  bool isImplicitLocation() const {
+    return LocationKind == Implicit;
+  }
+
+  bool isEntryValue() const {
+    return LocationFlags & EntryValue;
+  }
+
+  Optional<uint8_t> TagOffset;
+
+protected:
   /// Push a DW_OP_piece / DW_OP_bit_piece for emitting later, if one is needed
   /// to represent a subregister.
   void setSubRegisterPiece(unsigned SizeInBits, unsigned OffsetInBits) {
+    assert(SizeInBits < 65536 && OffsetInBits < 65536);
     SubRegisterSizeInBits = SizeInBits;
     SubRegisterOffsetInBits = OffsetInBits;
   }
@@ -122,10 +163,20 @@ protected:
 
   /// Output a dwarf operand and an optional assembler comment.
   virtual void emitOp(uint8_t Op, const char *Comment = nullptr) = 0;
+
   /// Emit a raw signed value.
   virtual void emitSigned(int64_t Value) = 0;
+
   /// Emit a raw unsigned value.
   virtual void emitUnsigned(uint64_t Value) = 0;
+
+  virtual void emitData1(uint8_t Value) = 0;
+
+  virtual void emitBaseTypeRef(uint64_t Idx) = 0;
+
+  /// Emit a normalized unsigned constant.
+  void emitConstu(uint64_t Value);
+
   /// Return whether the given machine register is the frame register in the
   /// current function.
   virtual bool isFrameRegister(const TargetRegisterInfo &TRI, unsigned MachineReg) = 0;
@@ -133,8 +184,10 @@ protected:
   /// Emit a DW_OP_reg operation. Note that this is only legal inside a DWARF
   /// register location description.
   void addReg(int DwarfReg, const char *Comment = nullptr);
+
   /// Emit a DW_OP_breg operation.
   void addBReg(int DwarfReg, int Offset);
+
   /// Emit DW_OP_fbreg <Offset>.
   void addFBReg(int Offset);
 
@@ -156,7 +209,6 @@ protected:
   bool addMachineReg(const TargetRegisterInfo &TRI, unsigned MachineReg,
                      unsigned MaxSize = ~1U);
 
-
   /// Emit a DW_OP_piece or DW_OP_bit_piece operation for a variable fragment.
   /// \param OffsetInBits    This is an optional offset into the location that
   /// is at the top of the DWARF stack.
@@ -164,6 +216,7 @@ protected:
 
   /// Emit a shift-right dwarf operation.
   void addShr(unsigned ShiftBy);
+
   /// Emit a bitwise and dwarf operation.
   void addAnd(unsigned Mask);
 
@@ -173,7 +226,7 @@ protected:
   /// DW_OP_stack_value.  Unfortunately, DW_OP_stack_value was not available
   /// until DWARF 4, so we will continue to generate DW_OP_constu <const> for
   /// DWARF 2 and DWARF 3. Technically, this is incorrect since DW_OP_const
-  /// <const> actually describes a value at a constant addess, not a constant
+  /// <const> actually describes a value at a constant address, not a constant
   /// value.  However, in the past there was no better way to describe a
   /// constant value, so the producers and consumers started to rely on
   /// heuristics to disambiguate the value vs. location status of the
@@ -181,23 +234,34 @@ protected:
   void addStackValue();
 
   ~DwarfExpression() = default;
+
 public:
-  DwarfExpression(unsigned DwarfVersion) : DwarfVersion(DwarfVersion) {}
+  DwarfExpression(unsigned DwarfVersion, DwarfCompileUnit &CU)
+      : CU(CU), SubRegisterSizeInBits(0), SubRegisterOffsetInBits(0),
+        LocationKind(Unknown), LocationFlags(Unknown),
+        DwarfVersion(DwarfVersion) {}
 
   /// This needs to be called last to commit any pending changes.
   void finalize();
 
   /// Emit a signed constant.
   void addSignedConstant(int64_t Value);
+
   /// Emit an unsigned constant.
   void addUnsignedConstant(uint64_t Value);
+
   /// Emit an unsigned constant.
   void addUnsignedConstant(const APInt &Value);
 
   /// Lock this down to become a memory location description.
   void setMemoryLocationKind() {
-    assert(LocationKind == Unknown);
+    assert(isUnknownLocation());
     LocationKind = Memory;
+  }
+
+  /// Lock this down to become an entry value location.
+  void setEntryValueFlag() {
+    LocationFlags |= EntryValue;
   }
 
   /// Emit a machine register location. As an optimization this may also consume
@@ -213,6 +277,10 @@ public:
   bool addMachineRegExpression(const TargetRegisterInfo &TRI,
                                DIExpressionCursor &Expr, unsigned MachineReg,
                                unsigned FragmentOffsetInBits = 0);
+
+  /// Emit entry value dwarf operation.
+  void addEntryValueExpression(DIExpressionCursor &ExprCursor);
+
   /// Emit all remaining operations in the DIExpressionCursor.
   ///
   /// \param FragmentOffsetInBits     If this is one fragment out of multiple
@@ -224,6 +292,9 @@ public:
   /// If applicable, emit an empty DW_OP_piece / DW_OP_bit_piece to advance to
   /// the fragment described by \c Expr.
   void addFragmentOffset(const DIExpression *Expr);
+
+  void emitLegacySExt(unsigned FromBits);
+  void emitLegacyZExt(unsigned FromBits);
 };
 
 /// DwarfExpression implementation for .debug_loc entries.
@@ -233,31 +304,37 @@ class DebugLocDwarfExpression final : public DwarfExpression {
   void emitOp(uint8_t Op, const char *Comment = nullptr) override;
   void emitSigned(int64_t Value) override;
   void emitUnsigned(uint64_t Value) override;
+  void emitData1(uint8_t Value) override;
+  void emitBaseTypeRef(uint64_t Idx) override;
   bool isFrameRegister(const TargetRegisterInfo &TRI,
                        unsigned MachineReg) override;
+
 public:
-  DebugLocDwarfExpression(unsigned DwarfVersion, ByteStreamer &BS)
-      : DwarfExpression(DwarfVersion), BS(BS) {}
+  DebugLocDwarfExpression(unsigned DwarfVersion, ByteStreamer &BS, DwarfCompileUnit &CU)
+      : DwarfExpression(DwarfVersion, CU), BS(BS) {}
 };
 
 /// DwarfExpression implementation for singular DW_AT_location.
 class DIEDwarfExpression final : public DwarfExpression {
 const AsmPrinter &AP;
-  DwarfUnit &DU;
   DIELoc &DIE;
 
   void emitOp(uint8_t Op, const char *Comment = nullptr) override;
   void emitSigned(int64_t Value) override;
   void emitUnsigned(uint64_t Value) override;
+  void emitData1(uint8_t Value) override;
+  void emitBaseTypeRef(uint64_t Idx) override;
   bool isFrameRegister(const TargetRegisterInfo &TRI,
                        unsigned MachineReg) override;
 public:
-  DIEDwarfExpression(const AsmPrinter &AP, DwarfUnit &DU, DIELoc &DIE);
+  DIEDwarfExpression(const AsmPrinter &AP, DwarfCompileUnit &CU, DIELoc &DIE);
+
   DIELoc *finalize() {
     DwarfExpression::finalize();
     return &DIE;
   }
 };
-}
 
-#endif
+} // end namespace llvm
+
+#endif // LLVM_LIB_CODEGEN_ASMPRINTER_DWARFEXPRESSION_H

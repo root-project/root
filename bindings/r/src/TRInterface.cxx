@@ -1,5 +1,7 @@
+// Author: Omar Zapata  Omar.Zapata@cern.ch   2014
+
 /*************************************************************************
- * Copyright (C) 2013-2014, Omar Andres Zapata Mesa                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,8 +16,14 @@ extern "C"
 #include <stdio.h>
 #include <stdlib.h>
 }
-#include<TRint.h>
+#include <TRint.h>
+#include <TSystem.h>
 
+#if defined(HAS_X11)
+#include <X11/Xlib.h>
+#include "TROOT.h"
+#include "TEnv.h"
+#endif
 using namespace ROOT::R;
 ClassImp(TRInterface);
 
@@ -43,6 +51,15 @@ TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t lo
    statusEventLoop = kFALSE;
    std::string osname = Eval("Sys.info()['sysname']");
    //only for linux/mac windows is not supported by ROOT yet.
+#if defined(HAS_X11)
+   if (!gROOT->IsBatch()) {
+      if (gEnv->GetValue("X11.XInitThread", 1)) {
+         // Must be very first call before any X11 call !!
+         if (!XInitThreads())
+            Warning("OpenDisplay", "system has no X11 thread support");
+      }
+   }
+#endif
    if (osname == "Linux") {
       Execute("options(device='x11')");
    } else {

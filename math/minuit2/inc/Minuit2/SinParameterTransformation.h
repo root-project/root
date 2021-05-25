@@ -13,8 +13,7 @@
 
 namespace ROOT {
 
-  namespace Minuit2 {
-
+namespace Minuit2 {
 
     class MnMachinePrecision;
 
@@ -43,8 +42,8 @@ namespace ROOT {
 
     };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_SinParameterTransformation
+#endif // ROOT_Minuit2_SinParameterTransformation

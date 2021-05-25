@@ -88,30 +88,38 @@ void TCuda<AFloat>::AddRowWise(TCudaMatrix<AFloat> &Weights,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Backward(TCudaMatrix<AFloat> & activation_gradients_backward,
+void TCuda<AFloat>::Backward(TCudaTensor<AFloat> & activation_gradients_backward,
                              TCudaMatrix<AFloat> & weight_gradients,
                              TCudaMatrix<AFloat> & bias_gradients,
-                             TCudaMatrix<AFloat> & df,
-                             const TCudaMatrix<AFloat> & activation_gradients,
+                             const TCudaTensor<AFloat> & df,
+                             const TCudaTensor<AFloat> & activation_gradients,
                              const TCudaMatrix<AFloat> & weights,
-                             const TCudaMatrix<AFloat> & activation_backward)
+                             const TCudaTensor<AFloat> & activation_backward)
 {
    // Compute element-wise product.
-   TCuda<AFloat>::Hadamard(df, activation_gradients);
+   //Matrix_t df_m = df.GetMatrix();
+
+   // df  is the output of ActivationBackward
+   //TCuda<AFloat>::Hadamard(df, activation_gradients);
+   //TCuda<AFloat>::Hadamard(df_m, activation_gradients.GetMatrix());
+
+   Matrix_t df_m = df.GetMatrix();
 
    // Activation gradients.
-   if (activation_gradients_backward.GetNoElements() > 0) {
-      TCuda<AFloat>::Multiply(activation_gradients_backward, df, weights);
+   if (activation_gradients_backward.GetSize() > 0) {
+
+      Matrix_t  activation_gradients_backward_m = activation_gradients_backward.GetMatrix();
+      TCuda<AFloat>::Multiply(activation_gradients_backward_m, df_m, weights);
    }
 
    // Weight gradients.
    if (weight_gradients.GetNoElements() > 0) {
-      TCuda<AFloat>::TransposeMultiply(weight_gradients, df, activation_backward);
+      TCuda<AFloat>::TransposeMultiply(weight_gradients, df_m, activation_backward.GetMatrix());
    }
 
    // Bias gradients.
    if (bias_gradients.GetNoElements() > 0) {
-      TCuda<AFloat>::SumColumns(bias_gradients, df);
+      TCuda<AFloat>::SumColumns(bias_gradients, df_m);
    }
 
 }
@@ -129,12 +137,13 @@ void TCuda<AFloat>::Copy(TCudaMatrix<AFloat> & B,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Copy(std::vector<TCudaMatrix<AFloat>> & B,
-                             const std::vector<TCudaMatrix<AFloat>> & A)
+void TCuda<AFloat>::Copy(TCudaTensor<AFloat> & B,
+                             const TCudaTensor<AFloat> & A)
 {
-   for (size_t i = 0; i < B.size(); ++i) {
-      Copy(B[i], A[i]);
-   }
+   size_t n = B.GetSize();
+   //asssert (A.GetSize() >= B.GetSize());
+   cudaMemcpyAsync(B.GetDataPointer(), A.GetDataPointer(),
+      n * sizeof(AFloat), cudaMemcpyDeviceToDevice, 0);
 }
 
 //____________________________________________________________________________
@@ -210,55 +219,71 @@ void TCuda<AFloat>::RotateWeights(TCudaMatrix<AFloat> &A,
                                                                    filterHeight, filterWidth, numFilters);
 }
 
+#if 0
 template <typename AFloat>
-void TCuda<AFloat>::PrepareInternals(std::vector<TCudaMatrix<AFloat>> & inputPrime)
+void TCuda<AFloat>::PrepareInternals(TCudaTensor<AFloat> & /* inputPrime */ )
 {
-   for (size_t event = 0; event < inputPrime.size(); event++) {
-      cudaStream_t s;
-      cudaStreamCreate(&s);
-      inputPrime[event].SetComputeStream(s);
-   }
+   // non think this is needed when using tensor
+   // for (size_t event = 0; event < inputPrime.size(); event++) {
+   //    cudaStream_t s;
+   //    cudaStreamCreate(&s);
+   //    inputPrime[event].SetComputeStream(s);
+   // }
 }
-
+#endif
 
 template <typename AFloat>
-void TCuda<AFloat>::ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
-                                     std::vector<TCudaMatrix<AFloat>> & derivatives,
-                                     const std::vector<TCudaMatrix<AFloat>> &input,
+void TCuda<AFloat>::ConvLayerForward(TCudaTensor<AFloat> & output,
+                                     TCudaTensor<AFloat> & inputActivationFunc,
+                                     const TCudaTensor<AFloat> &input,
                                      const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
                                      const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
-                                     std::vector<TCudaMatrix<AFloat>> & inputPrime)
+                                     TCudaTensor<AFloat> & inputPrime,
+                                     const ConvDescriptors_t & /*descriptors*/,
+                                     ConvWorkspace_t & /*workspace*/)
 {
    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
 
-   for(size_t event = 0; event < input.size(); event++) {
-      cudaStream_t s = inputPrime[event].GetComputeStream();
-      output[event].SetComputeStream(s);
-      derivatives[event].SetComputeStream(s);
-   }
+   // for(size_t event = 0; event < input.size(); event++) {
+   //    cudaStream_t s = inputPrime[event].GetComputeStream();
+   //    output[event].SetComputeStream(s);
+   //    derivatives[event].SetComputeStream(s);
+   // }
 
-   for(size_t event = 0; event < input.size(); event++) {
-      Im2col(inputPrime[event], input[event], params.inputHeight, params.inputWidth, params.filterHeight, params.filterWidth,
+   for(size_t event = 0; event < input.GetFirstSize(); event++) {
+      Matrix_t inputPrime_m = inputPrime.At(event).GetMatrix();
+      Matrix_t output_m = output.At(event).GetMatrix();
+
+      Im2col(inputPrime_m, input.At(event).GetMatrix(), params.inputHeight, params.inputWidth, params.filterHeight, params.filterWidth,
              params.strideRows, params.strideCols, params.paddingHeight, params.paddingWidth);
 
-      MultiplyTranspose(output[event], weights, inputPrime[event]);
-      AddConvBiases(output[event], biases);
-
-      evaluateDerivative<TCuda<AFloat>>(derivatives[event], activFunc, output[event]);
-      evaluate<TCuda<AFloat>>(output[event], activFunc);
+      MultiplyTranspose(output_m, weights, inputPrime_m);
+      AddConvBiases(output_m, biases);
    }
+
+   //evaluateDerivative<TCuda<AFloat>>(derivatives, activFunc, output);
+   //evaluate<TCuda<AFloat>>(output, activFunc);
+
+   // save output of convolution before activation function evaluation
+   Copy(inputActivationFunc, output);
+   ActivationFunctionForward(output, activFunc, ActivationDescriptor_t() );
+
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
+void TCuda<AFloat>::ConvLayerBackward(TCudaTensor<AFloat> & activationGradientsBackward,
                                       TCudaMatrix<AFloat> & weightGradients,
                                       TCudaMatrix<AFloat> & biasGradients,
-                                      std::vector<TCudaMatrix<AFloat>> & df,
-                                      const std::vector<TCudaMatrix<AFloat>> & activationGradients,
+                                      TCudaTensor<AFloat> & inputActivationFunc,
+                                      TCudaTensor<AFloat> & activationGradients,
                                       const TCudaMatrix<AFloat> & weights,
-                                      const std::vector<TCudaMatrix<AFloat>> & activationBackward,
+                                      const TCudaTensor<AFloat> & activationBackward,
+                                      const Tensor_t & outputTensor,
+                                      EActivationFunction activFunc,
+                                      const ConvDescriptors_t & /*descriptors*/,
+                                      ConvWorkspace_t & /*workspace*/,
                                       size_t batchSize,
                                       size_t inputHeight,
                                       size_t inputWidth,
@@ -270,31 +295,37 @@ void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activat
                                       size_t filterWidth,
                                       size_t nLocalViews)
 {
-    for (size_t i = 0; i < batchSize; i++) {
-        // Compute element-wise product.
-        Hadamard(df[i], activationGradients[i]);
-    }
 
-    // Calculate the activation gradients of the previous layer
-    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
+   // Compute activation backward
+  //Tensor_t df = activationGradients;   // this is a shallow copy
+   Tensor_t df(activationGradients.GetShape() );
+   ActivationFunctionBackward(df, outputTensor, activationGradients, inputActivationFunc,
+                              activFunc, ActivationDescriptor_t() );
+
+
+   //Hadamard(df, activationGradients);
+
+
+   // Calculate the activation gradients of the previous layer
+   CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
                                      height, width, filterDepth, filterHeight, filterWidth);
 
 
-    // Calculate the weight gradients
-    CalculateConvWeightGradients(weightGradients, df, activationBackward, batchSize, inputHeight, inputWidth, depth,
+   // Calculate the weight gradients
+   CalculateConvWeightGradients(weightGradients, df, activationBackward, batchSize, inputHeight, inputWidth, depth,
                                  height, width, filterDepth, filterHeight, filterWidth, nLocalViews);
 
-    // Calculate the bias gradients
-    CalculateConvBiasGradients(biasGradients, df, batchSize, depth, nLocalViews);
+   // Calculate the bias gradients
+   CalculateConvBiasGradients(biasGradients, df, batchSize, depth, nLocalViews);
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvActivationGradients(
-                                    std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
-                                    std::vector<TCudaMatrix<AFloat>> & df,
+                                    TCudaTensor<AFloat> & activationGradientsBackward,
+                                    const TCudaTensor<AFloat> & df,
                                     const TCudaMatrix<AFloat> & weights,
-                                    size_t /* batchSize */,
+                                    size_t batchSize,
                                     size_t inputHeight,
                                     size_t inputWidth,
                                     size_t depth,
@@ -304,7 +335,7 @@ void TCuda<AFloat>::CalculateConvActivationGradients(
                                     size_t filterHeight,
                                     size_t filterWidth)
 {
-   if (activationGradientsBackward.size() == 0) return;
+   if (activationGradientsBackward.GetSize() == 0) return;
 
    TCudaMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
@@ -321,21 +352,23 @@ void TCuda<AFloat>::CalculateConvActivationGradients(
    size_t tempStrideRows = 1;
    size_t tempStrideCols = 1;
 
+   R__ASSERT( df.GetFirstSize() ==  batchSize);
    // Convolution.
    TCudaMatrix<AFloat> dfPrime(tempNLocalViews, tempNLocalViewPixels);
-   for(size_t event = 0; event < df.size(); event++) {
-      Im2col(dfPrime, df[event], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
+   for(size_t event = 0; event < batchSize; event++) {
+      Im2col(dfPrime, df.At(event).GetMatrix(), height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
              tempZeroPaddingHeight, tempZeroPaddingWidth);
 
-      MultiplyTranspose(activationGradientsBackward[event], rotWeights, dfPrime);
+      TCudaMatrix<AFloat> agb_m = activationGradientsBackward.At(event).GetMatrix();
+      MultiplyTranspose(agb_m, rotWeights, dfPrime);
    }
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGradients,
-                                                 std::vector<TCudaMatrix<AFloat>> & df,
-                                                 const std::vector<TCudaMatrix<AFloat>> & activationsBackward,
+                                                 const TCudaTensor<AFloat> & df,
+                                                 const TCudaTensor<AFloat> & activationsBackward,
                                                  size_t batchSize,
                                                  size_t inputHeight,
                                                  size_t inputWidth,
@@ -353,6 +386,10 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGra
     const size_t filterSize = filterHeight * filterWidth;
     const size_t nLocalViewPixels = filterDepth * filterSize;
     R__ASSERT( weightGradients.GetNcols() == nLocalViewPixels);
+    R__ASSERT( weightGradients.GetNrows() == depth);
+    R__ASSERT( df.GetFirstSize() ==  batchSize);
+
+
 
     const size_t tempStrideRows = 1;
     const size_t tempStrideCols = 1;
@@ -361,52 +398,23 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGra
     const size_t tempZeroPaddingHeight = (height - inputHeight + filterHeight - 1) / 2;
     const size_t tempZeroPaddingWidth = (width - inputWidth + filterWidth - 1) / 2;
 
-    std::vector< TCudaMatrix<AFloat> > vres;
-    for (size_t i = 0; i < batchSize; i++) {
-        vres.emplace_back(depth, nLocalViewPixels);
-    }
-
     // Convolution.
     TCudaMatrix<AFloat> activationsPrime(nLocalViews, nLocalViewPixels);
-    for(size_t event = 0; event < df.size(); event++) {
-        Im2col(activationsPrime, activationsBackward[event], inputHeight, inputWidth, filterHeight, filterWidth,
+    TCudaMatrix<AFloat> resPrime(depth, nLocalViewPixels);
+    for(size_t event = 0; event < batchSize; event++) {
+        Im2col(activationsPrime, activationsBackward.At(event).GetMatrix(), inputHeight, inputWidth, filterHeight, filterWidth,
                tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
 
-        Multiply(vres[event], df[event], activationsPrime);
+        Multiply(resPrime, df.At(event).GetMatrix(), activationsPrime);
+
+        TCuda<AFloat>::ScaleAdd(weightGradients, resPrime, 1.0);
     }
-
-    dim3 blockDims = TDevice::BlockDims2D();
-    dim3 gridDims  = TDevice::GridDims2D(weightGradients);
-    cudaStream_t s = weightGradients.GetComputeStream();
-
-    // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
-    //
-    // Attention: While `TCudaMatrix.GetDataPointer() returns a pointer to device memory,
-    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
-    //            we need to manually copy these pointers to the device prior to invoking the kernel.
-
-    const AFloat ** dB; // device pointer to device pointers.
-    const AFloat ** hB = new const AFloat * [batchSize]; // host pointer to device pointers.
-
-    cudaMalloc(&dB, sizeof(AFloat *) * batchSize);
-    for(size_t i = 0; i < batchSize; ++i) {
-        hB[i] = vres[i].GetDataPointer();
-    }
-
-    cudaMemcpy(dB, hB, sizeof(AFloat *) * batchSize, cudaMemcpyHostToDevice);
-
-    // Launch the kernel using our device pointers.
-    ::TMVA::DNN::Cuda::UpdateWeights<<<gridDims, blockDims>>>(weightGradients.GetDataPointer(), dB, batchSize,
-                                                              depth, nLocalViewPixels);
-
-    delete [] hB;
-    cudaFree(dB); 
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvBiasGradients(TCudaMatrix<AFloat> & biasGradients,
-                                               std::vector<TCudaMatrix<AFloat>> & df,
+                                               const TCudaTensor<AFloat> & df,
                                                size_t batchSize,
                                                size_t /* depth */,
                                                size_t /* nLocalViews */)
@@ -414,7 +422,7 @@ void TCuda<AFloat>::CalculateConvBiasGradients(TCudaMatrix<AFloat> & biasGradien
     biasGradients.Zero();
     TCudaMatrix<AFloat> temp(biasGradients.GetNrows(), biasGradients.GetNcols());
     for (size_t event = 0; event < batchSize; event++) {
-        TCuda<AFloat>::SumRows(temp, df[event]);
+        TCuda<AFloat>::SumRows(temp, df.At(event).GetMatrix());
         TCuda<AFloat>::ScaleAdd(biasGradients, temp);
     }
 }
@@ -457,9 +465,11 @@ void TCuda<AFloat>::AddConvBiases(TCudaMatrix<AFloat> &output,
 /// The slicing process is the same as in a convolutional layer, however padding is set to 0.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
-                               TCudaMatrix<AFloat> &B,
-                               const TCudaMatrix<AFloat> &C,
+void TCuda<AFloat>::Downsample(TCudaTensor<AFloat> &A,
+                               TCudaTensor<AFloat> &B,
+                               const TCudaTensor<AFloat> &C,
+                               const PoolingDescriptors_t & /*descriptors*/,
+                               PoolingWorkspace_t & /*workspace*/,
                                size_t imgHeight,
                                size_t imgWidth,
                                size_t fltHeight,
@@ -467,21 +477,32 @@ void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
                                size_t strideRows,
                                size_t strideCols)
 {
-   size_t depth = C.GetNrows();
+   size_t depth = C.GetCSize();
+   size_t bsize = C.GetFirstSize();
 
    dim3 blockDims = TDevice::BlockDims2D();
-   dim3 gridDims  = TDevice::GridDims2D(A);
+   dim3 gridDims  = TDevice::GridDims2D( A.GetHSize(), A.GetWSize() );
    cudaStream_t s = A.GetComputeStream();
-   ::TMVA::DNN::Cuda::Downsample<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(),
-                                                                C.GetDataPointer(), depth, imgHeight, imgWidth,
-                                                                fltHeight, fltWidth, strideRows, strideCols);
-}
 
+   for(size_t event = 0; event < bsize; event++) {
+      // need to implement tensor kernel
+      // ::TMVA::DNN::Cuda::Downsample<<<gridDims, blockDims, 0, s>>>(mA.GetDataPointer(), mB.GetDataPointer(),
+      //                                                           mC.GetDataPointer(), depth, imgHeight, imgWidth,
+      //                                                           fltHeight, fltWidth, strideRows, strideCols);
+      ::TMVA::DNN::Cuda::Downsample<<<gridDims, blockDims, 0, s>>>(A.GetDataPointerAt(event), B.GetDataPointerAt(event),
+                                                                 C.GetDataPointerAt(event), depth, imgHeight, imgWidth,
+                                                                 fltHeight, fltWidth, strideRows, strideCols);
+   }
+}
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::MaxPoolLayerBackward(TCudaMatrix<AFloat> & activationGradientsBackward,
-                                         const TCudaMatrix<AFloat> & activationGradients,
-                                         const TCudaMatrix<AFloat> & indexMatrix,
+void TCuda<AFloat>::MaxPoolLayerBackward(TCudaTensor<AFloat> & activationGradientsBackward,
+                                         const TCudaTensor<AFloat> & activationGradients,
+                                         const TCudaTensor<AFloat> & indexMatrix,
+                                         const Tensor_t & /*inputActivation*/,
+                                         const Tensor_t & /*outputTensor*/,
+                                         const PoolingDescriptors_t & /*descriptors*/,
+                                         PoolingWorkspace_t & /*workspace*/,
                                          size_t imgHeight,
                                          size_t imgWidth,
                                          size_t fltHeight,
@@ -490,17 +511,23 @@ void TCuda<AFloat>::MaxPoolLayerBackward(TCudaMatrix<AFloat> & activationGradien
                                          size_t strideCols,
                                          size_t /* nLocalViews */)
 {
-   size_t depth = activationGradientsBackward.GetNrows();
+   size_t depth = activationGradientsBackward.GetCSize();
+   size_t bsize = activationGradients.GetFirstSize();
 
    dim3 blockDims = TDevice::BlockDims2D();
-   dim3 gridDims  = TDevice::GridDims2D(activationGradientsBackward);
+   // activationGradientsBackward.GetHSize() should be equal to depth
+   dim3 gridDims  = TDevice::GridDims2D(activationGradientsBackward.GetHSize(),
+                    activationGradientsBackward.GetWSize());
    cudaStream_t s = activationGradientsBackward.GetComputeStream();
 
-   ::TMVA::DNN::Cuda::MaxPoolBackward<<<gridDims, blockDims, 0, s>>>(activationGradientsBackward.GetDataPointer(),
-                                                                     activationGradients.GetDataPointer(),
-                                                                     indexMatrix.GetDataPointer(),
+   for(size_t event = 0; event < bsize; event++) {
+
+      ::TMVA::DNN::Cuda::MaxPoolBackward<<<gridDims, blockDims, 0, s>>>(activationGradientsBackward.GetDataPointerAt(event),
+                                                                     activationGradients.GetDataPointerAt(event),
+                                                                     indexMatrix.GetDataPointerAt(event),
                                                                      depth, imgHeight, imgWidth, fltHeight, fltWidth,
                                                                      strideRows, strideCols);
+   }
 }
 
 //____________________________________________________________________________
@@ -515,28 +542,33 @@ void TCuda<AFloat>::Reshape(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B
                                                         A.GetNrows(), A.GetNcols(), B.GetNrows(), B.GetNcols());
 }
 
+
 //______________________________________________________________________________
 template <typename AReal>
-void TCuda<AReal>::Rearrange(std::vector<TCudaMatrix<AReal>> &out, const std::vector<TCudaMatrix<AReal>> &in)
+void TCuda<AReal>::Rearrange(TCudaTensor<AReal> &out, const TCudaTensor<AReal> &in)
 {
    // B x T x D out --- T x B x D in*/
-   size_t B = out.size();
-   size_t T = out[0].GetNrows();
-   size_t D = out[0].GetNcols();
-   if ((T != in.size()) || (B != in[0].GetNrows()) 
-       || (D != in[0].GetNcols())) {
-      std::cout << "Incompatible Dimensions\n"
-         << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() 
-         << " --> " << B << "x" << T << "x" << D << "\n";
-      return;
-   }
-   for (size_t i = 0; i < B; ++i) {
-      for (size_t j = 0; j < T; ++j) {
-         for (size_t k = 0; k < D; ++k) {
-            out[i](j, k) = in[j](i, k);
-         }
-      }
-   }
+
+   // need to implement (usa CPu impl). Needs by RNN
+   out = in;
+
+   // size_t B = out.size();
+   // size_t T = out[0].GetNrows();
+   // size_t D = out[0].GetNcols();
+   // if ((T != in.size()) || (B != in[0].GetNrows())
+   //     || (D != in[0].GetNcols())) {
+   //    std::cout << "Incompatible Dimensions\n"
+   //       << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols()
+   //       << " --> " << B << "x" << T << "x" << D << "\n";
+   //    return;
+   // }
+   // for (size_t i = 0; i < B; ++i) {
+   //    for (size_t j = 0; j < T; ++j) {
+   //       for (size_t k = 0; k < D; ++k) {
+   //          out[i](j, k) = in[j](i, k);
+   //       }
+   //    }
+   // }
    return;
 }
 
@@ -557,14 +589,18 @@ void TCuda<AReal>::Rearrange(std::vector<TCudaMatrix<AReal>> &out, const std::ve
 /// thread per output element.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
-                            const std::vector<TCudaMatrix<AFloat>> &B,
-                            size_t size,
-                            size_t nRows,
-                            size_t nCols)
+void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
+                            const TCudaTensor<AFloat> &B)
 {
+   // flatten B: ( B x C x HW ) in ( 1, B , CHW)
+   size_t nDepth    = B.GetFirstSize();   // B size
+   size_t nRows = B.GetCSize();      // C size
+   size_t nCols = B.GetWSize();      // HW size
+   if (B.GetNDim()==4) nCols *= B.GetHSize();
+   assert(B.GetNDim() <= 4);
+
    dim3 blockDims = TDevice::BlockDims2D();
-   dim3 gridDims  = TDevice::GridDims2D(A);
+   dim3 gridDims  = TDevice::GridDims2D(A.GetHSize(), A.GetWSize());
    cudaStream_t s = A.GetComputeStream();
 
    // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
@@ -573,21 +609,45 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
    //            we need to manually copy these pointers to the device prior to invoking the kernel.
 
-   const AFloat ** dB; // device pointer to device pointers.S
-   const AFloat ** hB = new const AFloat * [size]; // host pointer to device pointers.
+   // const AFloat ** dB; // device pointer to device pointers.S
+   // const AFloat ** hB = new const AFloat * [size]; // host pointer to device pointers.
 
-   cudaMalloc(&dB, sizeof(AFloat *) * size);
-   for(size_t i = 0; i < size; ++i) {
-      hB[i] = B[i].GetDataPointer();
-   }
+   // cudaMalloc(&dB, sizeof(AFloat *) * size);
+   // for(size_t i = 0; i < size; ++i) {
+   //    hB[i] = B[i].GetDataPointer();
+   // }
 
-   cudaMemcpy(dB, hB, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
+   // cudaMemcpy(dB, hB, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
+   //std::cout << "flatten from : " << nDepth << " , " << nRows << " , " << nCols << std::endl;
 
+
+   // for (size_t i = 0; i < size; i++) {
+   //    for (size_t j = 0; j < nRows; j++) {
+   //       for (size_t k = 0; k < nCols; k++) {
+   //          A( 0, i, j * nCols + k) = B(i, j, k);
+   //       }
+   //    }
+   // }
+
+   //PrintTensor(A, "manual reshape");
+
+   // to be fixed !!!
    // Launch the kernel using our device pointers.
-   ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), dB, size, nRows, nCols);
 
-   delete [] hB; 
-   cudaFree(dB); 
+
+   // for columnwise tensor (B x HW X C) -> flatten in (CHW x B ) 
+   if (B.GetLayout() == GetTensorLayout() )
+      ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+   else
+      // in case of Row wise tensor (Cudnn) input is B x C x H x W --> CHW x B
+      // no need to traspose C with respect to HW
+      ::TMVA::DNN::Cuda::FlattenRM<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+
+   //PrintTensor(A, "kernel reshape");
+
+
+   // delete [] hB;
+   // cudaFree(dB);
 }
 
 //____________________________________________________________________________
@@ -607,15 +667,21 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
 /// thread per input element.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> &A,
-                              const TCudaMatrix<AFloat> &B,
-                              size_t size,
-                              size_t nRows,
-                              size_t nCols)
+void TCuda<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
+                              const TCudaTensor<AFloat> &B)
 {
+   size_t nDepth = A.GetFirstSize();   // B size
+   size_t nRows = A.GetCSize();      // C size
+   size_t nCols = A.GetWSize();      // HW size
+   if (A.GetNDim()==4) nCols *= A.GetHSize();
+   assert(A.GetNDim() <= 4);
+
+
     dim3 blockDims = TDevice::BlockDims2D();
-    dim3 gridDims  = TDevice::GridDims2D(B);
+    dim3 gridDims  = TDevice::GridDims2D(B.GetHSize(), B.GetWSize());
     cudaStream_t s = B.GetComputeStream();
+
+    //std::cout << "Deflatten to " << size << " , " << nRows << "  " << nCols << std::endl;
 
     // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
     //
@@ -623,22 +689,75 @@ void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> &A,
     //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
     //            we need to manually copy these pointers to the device prior to invoking the kernel.
 
-    AFloat ** dA; // device pointer to device pointers.
-    AFloat ** hA = new AFloat * [size]; // host pointer to device pointers.
+   //  AFloat ** dA; // device pointer to device pointers.
+   //  AFloat ** hA = new AFloat * [size]; // host pointer to device pointers.
 
-    cudaMalloc(&dA, sizeof(AFloat *) * size);
+   //  cudaMalloc(&dA, sizeof(AFloat *) * size);
 
-    for(size_t i = 0; i < size; ++i) {
-        hA[i] = A[i].GetDataPointer();
-    }
+   //  for(size_t i = 0; i < size; ++i) {
+   //      hA[i] = A[i].GetDataPointer();
+   //  }
 
-    cudaMemcpy(dA, hA, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
+   //  cudaMemcpy(dA, hA, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
 
     // Launch the kernel using our device pointers.
-    ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(dA, B.GetDataPointer(), size, nRows, nCols);
+   // for columnwise output tensor (B x HW X C) -> de-flatten transposing C and HW 
+    if (A.GetLayout() == GetTensorLayout() )
+      ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+   else
+      // case of deflatting in a row-wise tensor
+      ::TMVA::DNN::Cuda::DeflattenRM<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+   
+   // assert (  B.GetFirstSize() == 1);
+   // assert (  B.GetHSize() == size);
+   // assert (  B.GetWSize() == nRows*nCols);
+   // for (size_t i = 0; i < (size_t)size; i++) {
+   //    for (size_t j = 0; j < (size_t)nRows; j++) {
+   //       for (size_t k = 0; k < (size_t)nCols; k++) {
+   //             A(i, j, k) = B(0, i, j * nCols + k);
+   //       }
+   //    }
+   // }
 
-    cudaFree(dA); 
-    delete [] hA; 
+
+   //  cudaFree(dA);
+   //  delete [] hA;
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCuda<AFloat>::BatchNormLayerForwardTraining(int , const Tensor_t &x, Tensor_t &y, Matrix_t &,
+                                                   Matrix_t &, Matrix_t &, Matrix_t &, Matrix_t &,
+                                                   Matrix_t &, Matrix_t &,
+                                                   Scalar_t , Scalar_t, Scalar_t,
+                                                   const TensorDescriptor_t &)
+
+{
+   // Bnorm not yet implmented for Cuda
+   // just copy output =input
+   Copy(y, x);
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCuda<AFloat>::BatchNormLayerForwardInference(int, const Tensor_t &x, Matrix_t &, Matrix_t &,
+                                                    Tensor_t &y, const Matrix_t &,
+                                                    const Matrix_t &, Scalar_t ,
+                                                    const TensorDescriptor_t &)
+
+{
+   Copy(y, x);
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCuda<AFloat>::BatchNormLayerBackward(int /* axis */, const Tensor_t &/* x */, const Tensor_t &dy, Tensor_t &dx,
+                                            Matrix_t &/* gamma */, //  Matrix_t &beta, (not needed)
+                                            Matrix_t &/* dgamma */, Matrix_t &/* dbeta */, const Matrix_t &/* mean */,
+                                            const Matrix_t &/* variance */, const Matrix_t &/* iVariance */, Scalar_t /* epsilon */,
+                                            const TensorDescriptor_t &/* bnParDescriptor */)
+{
+   Copy(dx, dy);
 }
 
 } // namespace DNN

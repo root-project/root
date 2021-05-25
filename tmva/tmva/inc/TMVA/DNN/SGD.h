@@ -30,6 +30,7 @@
 #include "TMatrix.h"
 #include "TMVA/DNN/Optimizer.h"
 #include "TMVA/DNN/Functions.h"
+#include <vector>
 
 namespace TMVA {
 namespace DNN {
@@ -91,29 +92,22 @@ TSGD<Architecture_t, Layer_t, DeepNet_t>::TSGD(Scalar_t learningRate, DeepNet_t 
    fPastBiasGradients.resize(layersNSlices);
 
    for (size_t i = 0; i < layersNSlices; i++) {
-      size_t weightsNSlices = (layers[i]->GetWeights()).size();
-
+      
+      Architecture_t::CreateWeightTensors( fPastWeightGradients[i], layers[i]->GetWeights()); 
+      size_t weightsNSlices = fPastWeightGradients[i].size();
       for (size_t j = 0; j < weightsNSlices; j++) {
-         Matrix_t &currentWeights = layers[i]->GetWeightsAt(j);
-         size_t weightsNRows = currentWeights.GetNrows();
-         size_t weightsNCols = currentWeights.GetNcols();
-
-         fPastWeightGradients[i].emplace_back(weightsNRows, weightsNCols);
          initialize<Architecture_t>(fPastWeightGradients[i][j], EInitialization::kZero);
       }
 
-      size_t biasesNSlices = (layers[i]->GetBiases()).size();
-
+      Architecture_t::CreateWeightTensors( fPastBiasGradients[i], layers[i]->GetBiases()); 
+      size_t biasesNSlices = fPastBiasGradients[i].size();
       for (size_t j = 0; j < biasesNSlices; j++) {
-         Matrix_t &currentBiases = layers[i]->GetBiasesAt(j);
-         size_t biasesNRows = currentBiases.GetNrows();
-         size_t biasesNCols = currentBiases.GetNcols();
-
-         fPastBiasGradients[i].emplace_back(biasesNRows, biasesNCols);
          initialize<Architecture_t>(fPastBiasGradients[i][j], EInitialization::kZero);
       }
    }
 }
+
+
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
@@ -122,14 +116,12 @@ auto TSGD<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIndex, 
 {
    // accumulating the current layer past weight gradients to include the current weight gradients.
    // Vt = momentum * Vt-1 + currentGradients
+
    std::vector<Matrix_t> &currentLayerPastWeightGradients = this->GetPastWeightGradientsAt(layerIndex);
+
    for (size_t k = 0; k < currentLayerPastWeightGradients.size(); k++) {
-      Matrix_t accumulation(currentLayerPastWeightGradients[k].GetNrows(),
-                            currentLayerPastWeightGradients[k].GetNcols());
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Architecture_t::ScaleAdd(accumulation, currentLayerPastWeightGradients[k], this->GetMomentum());
-      Architecture_t::ScaleAdd(accumulation, weightGradients[k], 1.0);
-      Architecture_t::Copy(currentLayerPastWeightGradients[k], accumulation);
+      Architecture_t::ConstMult(currentLayerPastWeightGradients[k], this->GetMomentum());
+      Architecture_t::ScaleAdd(currentLayerPastWeightGradients[k], weightGradients[k], 1.0);
    }
 
    // updating the weights.
@@ -146,13 +138,12 @@ auto TSGD<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerIndex, s
 {
    // accumulating the current layer past bias gradients to include the current bias gradients.
    // Vt = momentum * Vt-1 + currentGradients
+
    std::vector<Matrix_t> &currentLayerPastBiasGradients = this->GetPastBiasGradientsAt(layerIndex);
+
    for (size_t k = 0; k < currentLayerPastBiasGradients.size(); k++) {
-      Matrix_t accumulation(currentLayerPastBiasGradients[k].GetNrows(), currentLayerPastBiasGradients[k].GetNcols());
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Architecture_t::ScaleAdd(accumulation, currentLayerPastBiasGradients[k], this->GetMomentum());
-      Architecture_t::ScaleAdd(accumulation, biasGradients[k], 1.0);
-      Architecture_t::Copy(currentLayerPastBiasGradients[k], accumulation);
+      Architecture_t::ConstMult(currentLayerPastBiasGradients[k], this->GetMomentum());
+      Architecture_t::ScaleAdd(currentLayerPastBiasGradients[k], biasGradients[k], 1.0);
    }
 
    // updating the biases

@@ -1,7 +1,17 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT tree/tree package
 # @author Pere Mato, CERN
 ############################################################################
+
+if (imt)
+  list(APPEND TREE_EXTRA_DEPENDENCIES Imt)
+endif(imt)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Tree
   HEADERS
@@ -29,11 +39,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     TLeafB.h
     TLeafC.h
     TLeafD.h
+    TLeafD32.h
     TLeafElement.h
     TLeafF.h
+    TLeafF16.h
     TLeaf.h
     TLeafI.h
     TLeafL.h
+    TLeafG.h
     TLeafObject.h
     TLeafO.h
     TLeafS.h
@@ -53,8 +66,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     TTreeSQL.h
     TVirtualIndex.h
     TVirtualTreePlayer.h
+    ROOT/InternalTreeUtils.hxx
     ROOT/TIOFeatures.hxx
   SOURCES
+    src/InternalTreeUtils.cxx
     src/TBasket.cxx
     src/TBasketSQL.cxx
     src/TBranchBrowsable.cxx
@@ -80,10 +95,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     src/TLeafC.cxx
     src/TLeaf.cxx
     src/TLeafD.cxx
+    src/TLeafD32.cxx
     src/TLeafElement.cxx
     src/TLeafF.cxx
+    src/TLeafF16.cxx
     src/TLeafI.cxx
     src/TLeafL.cxx
+    src/TLeafG.cxx
     src/TLeafObject.cxx
     src/TLeafO.cxx
     src/TLeafS.cxx
@@ -106,9 +124,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
-    Imt
+    ${TREE_EXTRA_DEPENDENCIES}
     Net
     RIO
+    MathCore
+  LIBRARIES
+    ${ROOT_ATOMIC_LIBS}
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

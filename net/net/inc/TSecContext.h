@@ -38,7 +38,7 @@ class TSecContext : public TObject {
 friend class TRootSecContext;
 
 private:
-   void        *fContext;             // Krb5, Globus: ptr to specific sec context
+   void        *fContext;             // ptr to specific sec context
    TList       *fCleanup;             // Points to list with info for remote cleanup
    TDatime      fExpDate;             // Expiring date (one sec precision)
    TString      fHost;                // Remote host name
@@ -98,8 +98,7 @@ public:
 // TSecContextCleanup
 //
 // When the context is destroyed the remote authentication table
-// should be updated; also, for globus, remote shared memory segments
-// should be destroyed; for this we need to open a socket to a remote
+// should be updated; for this we need to open a socket to a remote
 // service; we keep track here of port and type of socket needed by
 // the remote service used in connection with this security context.
 // The last used is the first in the list.
@@ -128,7 +127,7 @@ public:
 //
 // TPwdCtx
 //
-// To store associated passwd for UsrPwd and SRP methods
+// To store associated passwd for UsrPwd method
 //
 class TPwdCtx {
 

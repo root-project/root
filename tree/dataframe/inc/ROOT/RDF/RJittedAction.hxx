@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,6 +12,7 @@
 #define ROOT_RJITTEDACTION
 
 #include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "RtypesCore.h"
 
 #include <memory>
@@ -19,14 +20,14 @@
 class TTreeReader;
 
 namespace ROOT {
-
-// fwd decl
 namespace Detail {
 namespace RDF {
-class RLoopManager;
-} // ns RDF
-} // ns Detail
+class RMergeableValueBase;
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
 
+namespace ROOT {
 namespace Internal {
 namespace RDF {
 
@@ -41,6 +42,7 @@ private:
 
 public:
    RJittedAction(RLoopManager &lm);
+   ~RJittedAction() { fLoopManager->Deregister(this); }
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
@@ -53,9 +55,11 @@ public:
    void *PartialUpdate(unsigned int slot) final;
    bool HasRun() const final;
    void SetHasRun() final;
-   void ClearValueReaders(unsigned int slot) final;
 
    std::shared_ptr<GraphDrawing::GraphNode> GetGraph();
+
+   // Helper for RMergeableValue
+   std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> GetMergeableValue() const final;
 };
 
 } // ns RDF

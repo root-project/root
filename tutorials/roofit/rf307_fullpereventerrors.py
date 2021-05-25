@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #307
-## Complete example with use of full p.d.f. with per-event errors
+## Multidimensional models: usage of full pdf with per-event errors
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -30,12 +28,12 @@ gm = ROOT.RooGaussModel(
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
 decay_gm = ROOT.RooDecay("decay_gm", "decay", dt,
-                            tau, gm, ROOT.RooDecay.DoubleSided)
+                         tau, gm, ROOT.RooDecay.DoubleSided)
 
 # Construct empirical pdf for per-event error
 # -----------------------------------------------------------------
 
-# Use landau p.d.f to get empirical distribution with long tail
+# Use landau pdf to get empirical distribution with long tail
 pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(
     1), ROOT.RooFit.RooConst(0.25))
 expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
@@ -50,8 +48,13 @@ pdfErr = ROOT.RooHistPdf(
 
 # Construct production of conditional decay_dm(dt|dterr) with empirical
 # pdfErr(dterr)
-model = ROOT.RooProdPdf("model", "model", ROOT.RooArgSet(
-    pdfErr), ROOT.RooFit.Conditional(ROOT.RooArgSet(decay_gm), ROOT.RooArgSet(dt)))
+model = ROOT.RooProdPdf(
+    "model",
+    "model",
+    ROOT.RooArgSet(pdfErr),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(decay_gm),
+        ROOT.RooArgSet(dt)))
 
 # (Alternatively you could also use the landau shape pdfDtErr)
 # ROOT.RooProdPdf model("model", "model",pdfDtErr,
@@ -61,7 +64,7 @@ model = ROOT.RooProdPdf("model", "model", ROOT.RooArgSet(
 # ------------------------------------------------------------------
 
 # Specify external dataset with dterr values to use model_dm as
-# conditional p.d.f.
+# conditional pdf
 data = model.generate(ROOT.RooArgSet(dt, dterr), 10000)
 
 # Fit conditional decay_dm(dt|dterr)
@@ -73,7 +76,7 @@ model.fitTo(data)
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
 
-# Make two-dimensional plot of conditional p.d.f in (dt,dterr)
+# Make two-dimensional plot of conditional pdf in (dt,dterr)
 hh_model = model.createHistogram("hh_model", dt, ROOT.RooFit.Binning(
     50), ROOT.RooFit.YVar(dterr, ROOT.RooFit.Binning(50)))
 hh_model.SetLineColor(ROOT.kBlue)
@@ -85,7 +88,7 @@ model.plotOn(frame)
 
 # Draw all frames on canvas
 c = ROOT.TCanvas("rf307_fullpereventerrors",
-                    "rf307_fullpereventerrors", 800, 400)
+                 "rf307_fullpereventerrors", 800, 400)
 c.Divide(2)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.20)

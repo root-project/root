@@ -65,12 +65,13 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TLeaf.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
+#include "TVirtualX.h"
 #include "TH1.h"
 #include "TBox.h"
 #include "TKey.h"
 #include "TRegexp.h"
 #include "TSystem.h"
+#include "strlcpy.h"
 
 ClassImp(TFileDrawMap);
 
@@ -294,13 +295,16 @@ void TFileDrawMap::DrawObject()
    if (cbasket) {
       *cbasket = 0;
       char *cbranch = (char*)strstr(info,", branch=");
-      if (!cbranch) return;
+      if (!cbranch) { delete [] info; return; }
       *cbranch = 0;
       cbranch += 9;
       TTree *tree = (TTree*)fFile->Get(info);
       if (tree) tree->Draw(cbranch);
+      delete [] info;
       return;
    }
+
+   delete [] info;
 
    // other objects
    TObject *obj = GetObject();
@@ -348,10 +352,15 @@ TObject *TFileDrawMap::GetObject()
    char *info = new char[fName.Length()+1];
    strlcpy(info,fName.Data(),fName.Length()+1);
    char *colon = strstr(info,"::");
-   if (!colon) return 0;
+   if (!colon) {
+      delete [] info;
+      return nullptr;
+   }
    colon--;
    *colon = 0;
-   return fFile->Get(info);
+   auto res = fFile->Get(info);
+   delete [] info;
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +371,7 @@ TObject *TFileDrawMap::GetObject()
 char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 {
    // Thread safety: this solution is not elegant, but given the action performed
-   // by the method, this construct can be considered nonproblematic.
+   // by the method, this construct can be considered non-problematic.
    static TString info;
    GetObjectInfoDir(fFile, px, py, info);
    return (char*)info.Data();

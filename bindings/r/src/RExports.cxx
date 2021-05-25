@@ -1,5 +1,7 @@
+// Author: Omar Zapata  Omar.Zapata@cern.ch   2014
+
 /*************************************************************************
- * Copyright (C) 2013-2014, Omar Andres Zapata Mesa                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +13,11 @@
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
 
-Rcpp::internal::NamedPlaceHolder ROOT::R::Label;
+namespace ROOT {
+   namespace R {
+     const Rcpp::internal::NamedPlaceHolder &Label(Rcpp::_);
+   }
+}
 
 namespace Rcpp {
 //TVectorT

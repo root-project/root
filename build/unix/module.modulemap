@@ -14,7 +14,9 @@ module ROOT_Foundation_C  {
 module ROOT_Config  {
   // These headers are supposed to be only textually expanded for each TU.
   module "RVersion.h" { textual header "RVersion.h" export * }
-  module "RConfig.h" { textual header "RConfig.h" export * }
+  module "RConfig.h" { header "RConfig.h" export * }
+  module "ROOT/RConfig.h" { header "ROOT/RConfig.h" export * }
+  module "ROOT/RConfig.hxx" { textual header "ROOT/RConfig.hxx" export * }
   module "RConfigure.h" { textual header "RConfigure.h" export * }
   // FIXME: There is little benefit in keeping DllImport as a separate header.
   // The majority of its uses already include Rtypes.h which includes DllImport.

@@ -15,6 +15,7 @@
 #include "TMatrixTBase.h"
 #include "TMatrixTUtils.h"
 
+#include <cstring>
 
 #ifdef CBLAS
 #include <vecLib/vBLAS.h>
@@ -82,7 +83,7 @@ public:
    TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT      <Element> &b);
    TMatrixTSparse(const TMatrixT      <Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b);
 
-   virtual ~TMatrixTSparse() { Clear(); }
+   virtual ~TMatrixTSparse() { TMatrixTSparse::Clear(); }
 
    virtual const Element *GetMatrixArray  () const;
    virtual       Element *GetMatrixArray  ();

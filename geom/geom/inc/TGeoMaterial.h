@@ -12,15 +12,20 @@
 #ifndef ROOT_TGeoMaterial
 #define ROOT_TGeoMaterial
 
-#include "TNamed.h"
+#include <TNamed.h>
+#include <TAttFill.h>
+#include <TList.h>
 
-#include "TAttFill.h"
-
+#ifdef R__LESS_INCLUDES
+class TGeoElement;
+class TGeoElementTable;
+#else
 #include "TGeoElement.h"
-
+#endif
 
 // forward declarations
 class TGeoExtension;
+class TGDMLMatrix;
 
 // Some units used in G4
 static const Double_t STP_temperature = 273.15;     // [K]
@@ -54,6 +59,8 @@ protected:
    TObject                 *fShader;     // shader with optical properties
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
    TGeoElement             *fElement;    // pointer to element composing the material
+   TList                    fProperties; // user-defined properties
+   TList                    fConstProperties; // user-defined constant properties
    TGeoExtension           *fUserExtension;  //! Transient user-defined extension to materials
    TGeoExtension           *fFWExtension;    //! Transient framework-defined extension to materials
 
@@ -80,13 +87,28 @@ public:
    virtual TGeoMaterial    *DecayMaterial(Double_t time, Double_t precision=0.001);
    virtual void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001);
    // getters & setters
+   bool                     AddProperty(const char *property, const char *ref);
+   bool                     AddConstProperty(const char *property, const char *ref);
+   Int_t                    GetNproperties() const { return fProperties.GetSize(); }
+   Int_t                    GetNconstProperties() const { return fConstProperties.GetSize(); }
+   const char              *GetPropertyRef(const char *property) const;
+   const char              *GetPropertyRef(Int_t i) const { return (fProperties.At(i) ? fProperties.At(i)->GetTitle() : nullptr); }
+   Double_t                 GetConstProperty(const char *property, Bool_t *error = nullptr) const;
+   Double_t                 GetConstProperty(Int_t i, Bool_t *error = nullptr) const;
+   const char              *GetConstPropertyRef(const char *property) const;
+   const char              *GetConstPropertyRef(Int_t i) const { return (fConstProperties.At(i) ? fConstProperties.At(i)->GetTitle() : nullptr); }
+   TList const             &GetProperties() const { return fProperties; }
+   TList const             &GetConstProperties() const { return fConstProperties; }
+   TGDMLMatrix*             GetProperty(const char* name)  const;
+   TGDMLMatrix*             GetProperty(Int_t i)  const;
    virtual Int_t            GetByteCount() const {return sizeof(*this);}
    virtual Double_t         GetA() const       {return fA;}
    virtual Double_t         GetZ()  const      {return fZ;}
    virtual Int_t            GetDefaultColor() const;
    virtual Double_t         GetDensity() const {return fDensity;}
    virtual Int_t            GetNelements() const {return 1;}
-   virtual TGeoElement     *GetElement(Int_t i=0) const;
+   TGeoElement             *GetElement() const;
+   virtual TGeoElement     *GetElement(Int_t i) const;
    virtual void             GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t i=0);
    TGeoElement             *GetBaseElement() const {return fElement;}
    char                    *GetPointerName() const;
@@ -125,7 +147,7 @@ public:
 
 
 
-   ClassDef(TGeoMaterial, 5)              // base material class
+   ClassDef(TGeoMaterial, 7)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };
@@ -143,8 +165,8 @@ protected :
    Double_t                *fVecNbOfAtomsPerVolume; //[fNelements] array of numbers of atoms per unit volume
    TObjArray               *fElements;   // array of elements composing the mixture
 // methods
-   TGeoMixture(const TGeoMixture&); // Not implemented
-   TGeoMixture& operator=(const TGeoMixture&); // Not implemented
+   TGeoMixture(const TGeoMixture&) = delete;
+   TGeoMixture& operator=(const TGeoMixture&) = delete;
    void                     AverageProperties();
 
 public:

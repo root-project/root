@@ -19,7 +19,9 @@ Buffer base class used for serializing objects.
 #include "TClass.h"
 #include "TProcessID.h"
 
-const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
+constexpr Int_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
+constexpr Int_t kMaxBufferSize  = 0x7FFFFFFE;  // largest possible size.
+
 
 ClassImp(TBuffer);
 
@@ -70,6 +72,8 @@ TBuffer::TBuffer(EMode mode)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 {
+   if (bufsiz < 0)
+      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
@@ -99,6 +103,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
+   if (bufsiz < 0)
+      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
@@ -116,7 +122,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
       if (fBufSize < kMinimalSize) {
          fBufSize = kMinimalSize;
       }
-      fBuffer = new char[fBufSize+kExtraSpace];
+      fBuffer = new char[(Long64_t)fBufSize+kExtraSpace];
    }
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
@@ -151,11 +157,17 @@ TBuffer::~TBuffer()
 
 void TBuffer::AutoExpand(Int_t size_needed)
 {
+   if (size_needed < 0) {
+      Fatal("AutoExpand","Request to expand to a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", size_needed, kMaxBufferSize);
+   }
    if (size_needed > fBufSize) {
-      if (size_needed > 2*fBufSize) {
+      Long64_t doubling = 2LLU * fBufSize;
+      if (doubling > kMaxBufferSize)
+         doubling = kMaxBufferSize;
+      if (size_needed > doubling) {
          Expand(size_needed);
       } else {
-         Expand(2*fBufSize);
+         Expand(doubling);
       }
    }
 }
@@ -214,6 +226,15 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
    if ( (l > newsize) && copy ) {
       newsize = l;
    }
+   const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
+
+   if ( ((Long64_t)newsize+extraspace) > kMaxBufferSize) {
+      if (l < kMaxBufferSize) {
+         newsize = kMaxBufferSize - extraspace;
+      } else {
+         Fatal("Expand","Requested size (%d) is too large (max is %d).", newsize, kMaxBufferSize);
+      }
+   }
    if ( (fMode&kWrite)!=0 ) {
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
                               copy ? fBufSize+kExtraSpace : 0);
@@ -227,7 +248,7 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
       } else if (fReAllocFunc == R__NoReAllocChar) {
          Fatal("Expand","Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.");
       } else {
-         Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%lx.", (Long_t)fReAllocFunc);
+         Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%zx.", (size_t)fReAllocFunc);
       }
    }
    fBufSize = newsize;
@@ -364,3 +385,43 @@ TVirtualArray *TBuffer::PopDataCache()
    return val;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Byte-swap N primitive-elements in the buffer.
+/// Bulk API relies on this function.
+
+Bool_t TBuffer::ByteSwapBuffer(Long64_t n, EDataType type)
+{
+   char *input_buf = GetCurrent();
+   if ((type == EDataType::kShort_t) || (type == EDataType::kUShort_t)) {
+#ifdef R__BYTESWAP
+      Short_t *buf __attribute__((aligned(8))) = reinterpret_cast<Short_t*>(input_buf);
+      for (int idx=0; idx<n; idx++) {
+         Short_t tmp = *reinterpret_cast<Short_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
+      }
+#endif
+   } else if ((type == EDataType::kFloat_t) || (type == EDataType::kInt_t) || (type == EDataType::kUInt_t)) {
+#ifdef R__BYTESWAP
+      Float_t *buf __attribute__((aligned(8))) = reinterpret_cast<Float_t*>(input_buf);
+      for (int idx=0; idx<n; idx++) {
+         Float_t tmp = *reinterpret_cast<Float_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
+      }
+#endif
+   } else if ((type == EDataType::kDouble_t) || (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
+#ifdef R__BYTESWAP
+      Double_t *buf __attribute__((aligned(8))) = reinterpret_cast<Double_t*>(input_buf);
+      for (int idx=0; idx<n; idx++) {
+         Double_t tmp = *reinterpret_cast<Double_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char*>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
+      }
+#endif
+   } else {
+      return false;
+   }
+
+   return true;
+}

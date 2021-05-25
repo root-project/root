@@ -9,32 +9,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TFFTComplex
-// One of the interface classes to the FFTW package, can be used directly
-// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
-// Computes complex input/output discrete Fourier transforms (DFT)
-// in one or more dimensions. For the detailed information on the computed
-// transforms please refer to the FFTW manual, chapter "What FFTW really computes".
-//
-// How to use it:
-// 1) Create an instance of TFFTComplex - this will allocate input and output
-//    arrays (unless an in-place transform is specified)
-// 2) Run the Init() function with the desired flags and settings
-// 3) Set the data (via SetPoints(), SetPoint() or SetPointComplex() functions)
-// 4) Run the Transform() function
-// 5) Get the output (via GetPoints(), GetPoint() or GetPointComplex() functions)
-// 6) Repeat steps 3)-5) as needed
-//
-// For a transform of the same size, but with different flags or sign, rerun the Init()
-// function and continue with steps 3)-5)
-// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
-//          before running the Init() function
-//       2) FFTW computes unnormalized transform, so doing a transform followed by
-//          its inverse will lead to the original array scaled by the transform size
-//
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFFTComplex
+///
+/// One of the interface classes to the FFTW package, can be used directly
+/// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
+/// Computes complex input/output discrete Fourier transforms (DFT)
+/// in one or more dimensions. For the detailed information on the computed
+/// transforms please refer to the FFTW manual, chapter "What FFTW really computes".
+///
+/// How to use it:
+///
+/// 1. Create an instance of TFFTComplex - this will allocate input and output
+///    arrays (unless an in-place transform is specified)
+/// 2. Run the Init() function with the desired flags and settings
+/// 3. Set the data (via SetPoints(), SetPoint() or SetPointComplex() functions)
+/// 4. Run the Transform() function
+/// 5. Get the output (via GetPoints(), GetPoint() or GetPointComplex() functions)
+/// 6. Repeat steps 3)-5) as needed
+///
+/// For a transform of the same size, but with different flags or sign, rerun the Init()
+/// function and continue with steps 3)-5)
+///
+/// NOTE:
+///       1. running Init() function will overwrite the input array! Don't set any data
+///          before running the Init() function
+///       2. FFTW computes unnormalized transform, so doing a transform followed by
+///          its inverse will lead to the original array scaled by the transform size
+///
+////////////////////////////////////////////////////////////////////////////////
 
 #include "TFFTComplex.h"
 #include "fftw3.h"
@@ -121,13 +124,15 @@ TFFTComplex::~TFFTComplex()
 ///       so don't set any points, before running this function!!!!!
 ///
 ///2nd parameter: +1
+///
 ///Argument kind is dummy and doesn't need to be specified
+///
 ///Possible flag_options:
-///"ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
+/// - "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
 ///   performance
-///"M" (from "measure") - some time spend in finding the optimal way to do the transform
-///"P" (from "patient") - more time spend in finding the optimal way to do the transform
-///"EX" (from "exhaustive") - the most optimal way is found
+/// - "M" (from "measure") - some time spend in finding the optimal way to do the transform
+/// - "P" (from "patient") - more time spend in finding the optimal way to do the transform
+/// - "EX" (from "exhaustive") - the most optimal way is found
 ///This option should be chosen depending on how many transforms of the same size and
 ///type are going to be done. Planning is only done once, for the first transform of this
 ///size and type.
@@ -305,10 +310,10 @@ void TFFTComplex::SetPointsComplex(const Double_t *re_data, const Double_t *im_d
 
 ////////////////////////////////////////////////////////////////////////////////
 ///allowed options:
-///"ES" - FFTW_ESTIMATE
-///"M" - FFTW_MEASURE
-///"P" - FFTW_PATIENT
-///"EX" - FFTW_EXHAUSTIVE
+/// - "ES" - FFTW_ESTIMATE
+/// - "M" - FFTW_MEASURE
+/// - "P" - FFTW_PATIENT
+/// - "EX" - FFTW_EXHAUSTIVE
 
 UInt_t TFFTComplex::MapFlag(Option_t *flag)
 {

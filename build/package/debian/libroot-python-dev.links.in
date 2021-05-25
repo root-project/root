@@ -1,9 +1,0 @@
-@prefix@/lib/root/@libvers@/libPyROOT.so    @pythondir@/libPyROOT.so
-@prefix@/lib/root/@libvers@/ROOT.py         /usr/share/python-support/root/ROOT.py
-@prefix@/lib/root/@libvers@/GDMLROOT.py     /usr/share/python-support/root/GDMLROOT.py	    
-@prefix@/lib/root/@libvers@/ROOTBinding.py  /usr/share/python-support/root/ROOTBinding.py  
-@prefix@/lib/root/@libvers@/ROOTGDML.py	    /usr/share/python-support/root/ROOTGDML.py	    
-@prefix@/lib/root/@libvers@/ROOTwriter.py   /usr/share/python-support/root/ROOTwriter.py   
-@prefix@/lib/root/@libvers@/processes.py    /usr/share/python-support/root/processes.py    
-@prefix@/lib/root/@libvers@/units.py	    /usr/share/python-support/root/units.py	    
-@prefix@/lib/root/@libvers@/writer.py       /usr/share/python-support/root/writer.py       

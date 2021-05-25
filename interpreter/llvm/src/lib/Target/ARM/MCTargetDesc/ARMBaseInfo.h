@@ -1,9 +1,8 @@
 //===-- ARMBaseInfo.h - Top level definitions for ARM -------- --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,72 +18,9 @@
 
 #include "ARMMCTargetDesc.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "Utils/ARMBaseInfo.h"
 
 namespace llvm {
-
-// Enums corresponding to ARM condition codes
-namespace ARMCC {
-  // The CondCodes constants map directly to the 4-bit encoding of the
-  // condition field for predicated instructions.
-  enum CondCodes { // Meaning (integer)          Meaning (floating-point)
-    EQ,            // Equal                      Equal
-    NE,            // Not equal                  Not equal, or unordered
-    HS,            // Carry set                  >, ==, or unordered
-    LO,            // Carry clear                Less than
-    MI,            // Minus, negative            Less than
-    PL,            // Plus, positive or zero     >, ==, or unordered
-    VS,            // Overflow                   Unordered
-    VC,            // No overflow                Not unordered
-    HI,            // Unsigned higher            Greater than, or unordered
-    LS,            // Unsigned lower or same     Less than or equal
-    GE,            // Greater than or equal      Greater than or equal
-    LT,            // Less than                  Less than, or unordered
-    GT,            // Greater than               Greater than
-    LE,            // Less than or equal         <, ==, or unordered
-    AL             // Always (unconditional)     Always (unconditional)
-  };
-
-  inline static CondCodes getOppositeCondition(CondCodes CC) {
-    switch (CC) {
-    default: llvm_unreachable("Unknown condition code");
-    case EQ: return NE;
-    case NE: return EQ;
-    case HS: return LO;
-    case LO: return HS;
-    case MI: return PL;
-    case PL: return MI;
-    case VS: return VC;
-    case VC: return VS;
-    case HI: return LS;
-    case LS: return HI;
-    case GE: return LT;
-    case LT: return GE;
-    case GT: return LE;
-    case LE: return GT;
-    }
-  }
-} // namespace ARMCC
-
-inline static const char *ARMCondCodeToString(ARMCC::CondCodes CC) {
-  switch (CC) {
-  case ARMCC::EQ:  return "eq";
-  case ARMCC::NE:  return "ne";
-  case ARMCC::HS:  return "hs";
-  case ARMCC::LO:  return "lo";
-  case ARMCC::MI:  return "mi";
-  case ARMCC::PL:  return "pl";
-  case ARMCC::VS:  return "vs";
-  case ARMCC::VC:  return "vc";
-  case ARMCC::HI:  return "hi";
-  case ARMCC::LS:  return "ls";
-  case ARMCC::GE:  return "ge";
-  case ARMCC::LT:  return "lt";
-  case ARMCC::GT:  return "gt";
-  case ARMCC::LE:  return "le";
-  case ARMCC::AL:  return "al";
-  }
-  llvm_unreachable("Unknown condition code");
-}
 
 namespace ARM_PROC {
   enum IMod {
@@ -160,6 +96,20 @@ namespace ARM_MB {
     }
   }
 } // namespace ARM_MB
+
+namespace ARM_TSB {
+  enum TraceSyncBOpt {
+    CSYNC = 0
+  };
+
+  inline static const char *TraceSyncBOptToString(unsigned val) {
+    switch (val) {
+    default:
+      llvm_unreachable("Unknown trace synchronization barrier operation");
+      case CSYNC: return "csync";
+    }
+  }
+} // namespace ARM_TSB
 
 namespace ARM_ISB {
   enum InstSyncBOpt {
@@ -249,7 +199,12 @@ namespace ARMII {
     AddrModeT2_so   = 13,
     AddrModeT2_pc   = 14, // +/- i12 for pc relative data
     AddrModeT2_i8s4 = 15, // i8 * 4
-    AddrMode_i12    = 16
+    AddrMode_i12    = 16,
+    AddrMode5FP16   = 17,  // i8 * 2
+    AddrModeT2_ldrex = 18, // i8 * 4, with unscaled offset in MCInst
+    AddrModeT2_i7s4 = 19, // i7 * 4
+    AddrModeT2_i7s2 = 20, // i7 * 2
+    AddrModeT2_i7   = 21, // i7 * 1
   };
 
   inline static const char *AddrModeToString(AddrMode addrmode) {
@@ -260,6 +215,7 @@ namespace ARMII {
     case AddrMode3:       return "AddrMode3";
     case AddrMode4:       return "AddrMode4";
     case AddrMode5:       return "AddrMode5";
+    case AddrMode5FP16:   return "AddrMode5FP16";
     case AddrMode6:       return "AddrMode6";
     case AddrModeT1_1:    return "AddrModeT1_1";
     case AddrModeT1_2:    return "AddrModeT1_2";
@@ -271,6 +227,10 @@ namespace ARMII {
     case AddrModeT2_pc:   return "AddrModeT2_pc";
     case AddrModeT2_i8s4: return "AddrModeT2_i8s4";
     case AddrMode_i12:    return "AddrMode_i12";
+    case AddrModeT2_ldrex:return "AddrModeT2_ldrex";
+    case AddrModeT2_i7s4: return "AddrModeT2_i7s4";
+    case AddrModeT2_i7s2: return "AddrModeT2_i7s2";
+    case AddrModeT2_i7:   return "AddrModeT2_i7";
     }
   }
 
@@ -291,7 +251,15 @@ namespace ARMII {
 
     /// MO_OPTION_MASK - Most flags are mutually exclusive; this mask selects
     /// just that part of the flag set.
-    MO_OPTION_MASK = 0x0f,
+    MO_OPTION_MASK = 0x3,
+
+    /// MO_COFFSTUB - On a symbol operand "FOO", this indicates that the
+    /// reference is actually to the ".refptrp.FOO" symbol.  This is used for
+    /// stub symbols on windows.
+    MO_COFFSTUB = 0x4,
+
+    /// MO_GOT - On a symbol operand, this represents a GOT relative relocation.
+    MO_GOT = 0x8,
 
     /// MO_SBREL - On a symbol operand, this represents a static base relative
     /// relocation. Used in movw and movt instructions.
@@ -406,6 +374,7 @@ namespace ARMII {
     NVExtFrm      = 39 << FormShift,
     NVMulSLFrm    = 40 << FormShift,
     NVTBLFrm      = 41 << FormShift,
+    N3RegCplxFrm  = 43 << FormShift,
 
     //===------------------------------------------------------------------===//
     // Misc flags.
@@ -422,16 +391,17 @@ namespace ARMII {
     // instruction. Used by the parser to determine whether to require the 'S'
     // suffix on the mnemonic (when not in an IT block) or preclude it (when
     // in an IT block).
-    ThumbArithFlagSetting = 1 << 18,
+    ThumbArithFlagSetting = 1 << 19,
 
     //===------------------------------------------------------------------===//
     // Code domain.
     DomainShift   = 15,
-    DomainMask    = 7 << DomainShift,
+    DomainMask    = 15 << DomainShift,
     DomainGeneral = 0 << DomainShift,
     DomainVFP     = 1 << DomainShift,
     DomainNEON    = 2 << DomainShift,
     DomainNEONA8  = 4 << DomainShift,
+    DomainMVE     = 8 << DomainShift,
 
     //===------------------------------------------------------------------===//
     // Field shifts - such shifts are used to set field while generating

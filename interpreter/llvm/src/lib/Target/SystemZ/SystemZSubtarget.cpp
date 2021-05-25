@@ -1,9 +1,8 @@
 //===-- SystemZSubtarget.cpp - SystemZ subtarget information --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -18,6 +17,11 @@ using namespace llvm;
 #define GET_SUBTARGETINFO_TARGET_DESC
 #define GET_SUBTARGETINFO_CTOR
 #include "SystemZGenSubtargetInfo.inc"
+
+static cl::opt<bool> UseSubRegLiveness(
+    "systemz-subreg-liveness",
+    cl::desc("Enable subregister liveness tracking for SystemZ (experimental)"),
+    cl::Hidden);
 
 // Pin the vtable to this file.
 void SystemZSubtarget::anchor() {}
@@ -51,8 +55,16 @@ SystemZSubtarget::SystemZSubtarget(const Triple &TT, const std::string &CPU,
       HasMessageSecurityAssist7(false), HasMessageSecurityAssist8(false),
       HasVectorEnhancements1(false), HasVectorPackedDecimal(false),
       HasInsertReferenceBitsMultiple(false),
+      HasMiscellaneousExtensions3(false), HasMessageSecurityAssist9(false),
+      HasVectorEnhancements2(false), HasVectorPackedDecimalEnhancement(false),
+      HasEnhancedSort(false), HasDeflateConversion(false),
       TargetTriple(TT), InstrInfo(initializeSubtargetDependencies(CPU, FS)),
       TLInfo(TM, *this), TSInfo(), FrameLowering() {}
+
+
+bool SystemZSubtarget::enableSubRegLiveness() const {
+  return UseSubRegLiveness;
+}
 
 bool SystemZSubtarget::isPC32DBLSymbol(const GlobalValue *GV,
                                        CodeModel::Model CM) const {

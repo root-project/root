@@ -27,6 +27,7 @@
 #include "TAttMarker.h"
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
+#include "TFitResultPtr.h"
 
 class TBrowser;
 class TAxis;
@@ -35,8 +36,7 @@ class TH1F;
 class TCollection;
 class TF1;
 class TSpline;
-
-#include "TFitResultPtr.h"
+class TList;
 
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -67,11 +67,11 @@ protected:
 public:
    // TGraph status bits
    enum EStatusBits {
-      kClipFrame     = BIT(10),  ///< clip to the frame boundary
+      kClipFrame     = BIT(10),  ///< Clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
-      kNotEditable   = BIT(18),  ///< bit set if graph is non editable
-      kIsSortedX     = BIT(19),  ///< graph is sorted in X points
-      kIsHighlight   = BIT(20)   ///< bit set if graph is highlight
+      kNotEditable   = BIT(18),  ///< Bit set if graph is non editable
+      kIsSortedX     = BIT(19),  ///< Graph is sorted in X points
+      kIsHighlight   = BIT(20)   ///< Bit set if graph is highlight
    };
 
    TGraph();
@@ -88,6 +88,7 @@ public:
    TGraph(const char *filename, const char *format="%lg %lg", Option_t *option="");
    virtual ~TGraph();
 
+   virtual void          AddPoint(Double_t x, Double_t y) { SetPoint(fNpoints, x, y); } ///< Append a new point to the graph.
    virtual void          Apply(TF1 *f);
    virtual void          Browse(TBrowser *b);
    virtual Double_t      Chisquare(TF1 *f1, Option_t *option="") const;
@@ -100,9 +101,9 @@ public:
    virtual void          Draw(Option_t *chopt="");
    virtual void          DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option="");
    virtual void          DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
-   virtual void          DrawGraph(Int_t n, const Double_t *x=0, const Double_t *y=0, Option_t *option="");
+   virtual void          DrawGraph(Int_t n, const Double_t *x=nullptr, const Double_t *y=nullptr, Option_t *option="");
    virtual void          DrawPanel(); // *MENU*
-   virtual Double_t      Eval(Double_t x, TSpline *spline=0, Option_t *option="") const;
+   virtual Double_t      Eval(Double_t x, TSpline *spline=nullptr, Option_t *option="") const;
    virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void          Expand(Int_t newsize);
    virtual void          Expand(Int_t newsize, Int_t step);
@@ -129,21 +130,24 @@ public:
    virtual Double_t      GetErrorYlow(Int_t bin)  const;
    Double_t             *GetX()  const {return fX;}
    Double_t             *GetY()  const {return fY;}
-   virtual Double_t     *GetEX() const {return 0;}
-   virtual Double_t     *GetEY() const {return 0;}
-   virtual Double_t     *GetEXhigh() const {return 0;}
-   virtual Double_t     *GetEXlow()  const {return 0;}
-   virtual Double_t     *GetEYhigh() const {return 0;}
-   virtual Double_t     *GetEYlow()  const {return 0;}
-   virtual Double_t     *GetEXlowd()  const {return 0;}
-   virtual Double_t     *GetEXhighd() const {return 0;}
-   virtual Double_t     *GetEYlowd()  const {return 0;}
-   virtual Double_t     *GetEYhighd() const {return 0;}
+   virtual Double_t     *GetEX() const {return nullptr;}
+   virtual Double_t     *GetEY() const {return nullptr;}
+   virtual Double_t     *GetEXhigh() const {return nullptr;}
+   virtual Double_t     *GetEXlow()  const {return nullptr;}
+   virtual Double_t     *GetEYhigh() const {return nullptr;}
+   virtual Double_t     *GetEYlow()  const {return nullptr;}
+   virtual Double_t     *GetEXlowd()  const {return nullptr;}
+   virtual Double_t     *GetEXhighd() const {return nullptr;}
+   virtual Double_t     *GetEYlowd()  const {return nullptr;}
+   virtual Double_t     *GetEYhighd() const {return nullptr;}
    Double_t              GetMaximum()  const {return fMaximum;}
    Double_t              GetMinimum()  const {return fMinimum;}
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
+   virtual char         *GetObjectInfo(Int_t px, Int_t py) const;
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y) const;
+   virtual Double_t      GetPointX(Int_t i) const;
+   virtual Double_t      GetPointY(Int_t i) const;
 
    virtual void          InitExpo(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitGaus(Double_t xmin=0, Double_t xmax=0);
@@ -157,6 +161,7 @@ public:
    virtual void          LeastSquareFit(Int_t m, Double_t *a, Double_t xmin=0, Double_t xmax=0);
    virtual void          LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         Merge(TCollection* list);
+   virtual void          MovePoints(Double_t dx, Double_t dy, Bool_t logx = kFALSE, Bool_t logy = kFALSE);
    virtual void          Paint(Option_t *chopt="");
    void                  PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
@@ -173,6 +178,8 @@ public:
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
+   virtual void          SetPointX(Int_t i, Double_t x);
+   virtual void          SetPointY(Int_t i, Double_t y);
    virtual void          SetName(const char *name=""); // *MENU*
    virtual void          SetNameTitle(const char *name="", const char *title="");
    virtual void          SetTitle(const char *title="");    // *MENU*
@@ -183,9 +190,5 @@ public:
 
    ClassDef(TGraph,4)  //Graph graphics class
 };
-
-inline Double_t **TGraph::Allocate(Int_t newsize) {
-   return AllocateArrays(2, newsize);
-}
 
 #endif

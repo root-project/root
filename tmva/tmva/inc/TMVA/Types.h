@@ -42,7 +42,7 @@
 #include <atomic>
 #endif
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 #include "TString.h"
 
@@ -103,6 +103,7 @@ namespace TMVA {
          kPyAdaBoost     ,
          kPyGTB          ,
          kPyKeras        ,
+         kPyTorch        ,
          kC50            ,
          kRSNNS          ,
          kRSVM           ,
@@ -170,7 +171,7 @@ namespace TMVA {
    private:
 
       Types();
-#if __cplusplus > 199711L
+#if __cplusplus > 199711L && !defined _MSC_VER
       static std::atomic<Types*> fgTypesPtr;
 #else
       static Types* fgTypesPtr;

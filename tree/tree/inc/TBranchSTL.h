@@ -9,15 +9,15 @@
 #define ROOT_TBranchSTL
 
 #include "TBranch.h"
-#include "TTree.h"
-#include "TVirtualCollectionProxy.h"
-#include "TBrowser.h"
-#include "TBranchObject.h"
-#include "TBranchElement.h"
 #include "TIndArray.h"
+
 #include <map>
 #include <vector>
-#include <utility>
+
+class TTree;
+class TVirtualCollectionProxy;
+class TStreamerInfo;
+class TBranchElement;
 
 class TBranchSTL: public TBranch {
    public:
@@ -43,11 +43,10 @@ class TBranchSTL: public TBranch {
 
    private:
 
-   void ReadLeavesImpl( TBuffer& b );
-   void FillLeavesImpl( TBuffer& b );
-   virtual Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *);
+      void ReadLeavesImpl( TBuffer& b );
+      void FillLeavesImpl( TBuffer& b );
+      virtual Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
-#ifndef __CINT__
       struct ElementBranchHelper_t
       {
          ElementBranchHelper_t():
@@ -64,7 +63,6 @@ class TBranchSTL: public TBranch {
       typedef std::map<TClass*, ElementBranchHelper_t> BranchMap_t;
       BranchMap_t fBranchMap;                           ///<! Branch map
       std::vector<ElementBranchHelper_t> fBranchVector; ///<! Branch vector
-#endif // __CINT__
 
       TVirtualCollectionProxy* fCollProxy;    ///<! Collection proxy
       TBranch*                 fParent;       ///<! Parent of this branch

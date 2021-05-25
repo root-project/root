@@ -24,25 +24,15 @@
 #pragma create TClass string;
 #pragma link C++ class std::vector<string>;
 #pragma link C++ operator std::vector<string>;
-#ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class std::vector<string>::iterator;
 #pragma link C++ class std::vector<string>::const_iterator;
 #pragma link C++ class std::vector<string>::reverse_iterator;
-#pragma link C++ operator std::vector<string>::iterator;
-#pragma link C++ operator std::vector<string>::const_iterator;
-#pragma link C++ operator std::vector<string>::reverse_iterator;
-#endif
 
 #pragma link C++ class std::vector<TString>;
 #pragma link C++ operators std::vector<TString>;
-#ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class std::vector<TString>::iterator;
 #pragma link C++ class std::vector<TString>::const_iterator;
 #pragma link C++ class std::vector<TString>::reverse_iterator;
-#pragma link C++ operator std::vector<TString>::iterator;
-#pragma link C++ operator std::vector<TString>::const_iterator;
-#pragma link C++ operator std::vector<TString>::reverse_iterator;
-#endif
 
 #include <vector>
 
@@ -107,6 +97,7 @@
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
 #pragma link C++ class TNamed+;
+#pragma link C++ class TNotifyLinkBase+;
 #pragma link C++ class TObjString+;
 #pragma link C++ class TObject-;
 #pragma link C++ class TRemoteObject-;

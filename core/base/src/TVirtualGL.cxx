@@ -14,21 +14,19 @@ use the classes using OpenGL.
 */
 
 #include "TVirtualGL.h"
-#include "TROOT.h"
 #include "TGlobal.h"
 
 
 ClassImp(TGLManager);
 
-TGLManager * (*gPtr2GLManager)() = 0;
+TGLManager * (*gPtr2GLManager)() = nullptr;
 
 namespace {
 static struct AddPseudoGlobals {
 AddPseudoGlobals() {
   // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gGLManager", "TVirtualGL*",
-                                 (TGlobalMappedFunction::GlobalFunc_t) &TGLManager::Instance));
+   TGlobalMappedFunction::MakeFunctor("gGLManager", "TVirtualGL*", TGLManager::Instance);
 }
 } gAddPseudoGlobals;
 }
@@ -44,7 +42,7 @@ TGLManager::TGLManager() : TNamed("gGLManager", "")
 
 TGLManager *&TGLManager::Instance()
 {
-   static TGLManager *instance = 0;
+   static TGLManager *instance = nullptr;
 
    if(gPtr2GLManager) {
       instance = gPtr2GLManager();

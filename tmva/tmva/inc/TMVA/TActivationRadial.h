@@ -32,7 +32,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TFormula.h"
 #include "TString.h"
 
 #include "TMVA/TActivation.h"
@@ -42,9 +41,8 @@ namespace TMVA {
    class TActivationRadial : public TActivation {
     
    public:
-
-      TActivationRadial();
-      ~TActivationRadial();
+      TActivationRadial() {}
+      ~TActivationRadial() {}
 
       // evaluate the activation function
       Double_t Eval(Double_t arg);
@@ -65,9 +63,6 @@ namespace TMVA {
       virtual void MakeFunction(std::ostream& fout, const TString& fncName);
 
    private:
-
-      TFormula* fEqn;                // equation of radial basis function
-      TFormula* fEqnDerivative;      // equation of derivative
 
       ClassDef(TActivationRadial,0);  // Radial basis activation function for TNeuron
    };

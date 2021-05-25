@@ -9,111 +9,62 @@
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  ROOT EVENT RECORDING SYSTEM                                         //
-// ==================================================================   //
-//                                                                      //
-//  TRecorder class provides interface for recording and replaying      //
-//  events in ROOT.                                                     //
-//  Recorded events are:                                                //
-//  - Commands typed by user in commandline ('new TCanvas')             //
-//  - GUI events (mouse movement, button clicks, ...)                   //
-//                                                                      //
-//  All the recorded events from one session are stored in one TFile    //
-//  and can be replayed again anytime.                                  //
-//                                                                      //
-//  Recording                                                           //
-//  ==================================================================  //
-//                                                                      //
-//  1] To start recording                                               //
-//                                                                      //
-//    TRecorder r(const char *filename, "NEW")                          //
-//    TRecorder r(const char *filename, "RECREATE")                     //
-//                                                                      //
-//    or:                                                               //
-//                                                                      //
-//    TRecorder *recorder = new TRecorder;                              //
-//    recorder->Start(const char *filename, ...)                        //
-//                                                                      //
-//    -filename      Name of ROOT file in which to save                 //
-//                   recorded events.                                   //
-//                                                                      //
-//  2] To stop recording                                                //
-//                                                                      //
-//    recorder->Stop()                                                  //
-//                                                                      //
-//                                                                      //
-//  IMPORTANT:                                                          //
-//  State capturing is part of recording. It means that if you want to  //
-//  record events for some object (window), creation of this object     //
-//  must be also recorded.                                              //
-//                                                                      //
-//    Example:                                                          //
-//    --------                                                          //
-//    t = new TRecorder();          // Create a new recorder            //
-//    t->Start("logfile.root");     // ! Start recording first          //
-//                                                                      //
-//    c = new TCanvas();            // ! Then, create an object         //
-//    c->Dump();                    // Work with that object            //
-//                                                                      //
-//    t->Stop();                    // Stop recording                   //
-//                                                                      //
-//  It is strongly recommended to start recording with empty ROOT       //
-//  environment, at least with no previously created ROOT GUI.          //
-//  This ensures that only events for well known windows are stored.    //
-//  Events for windows, which were not created during recording,        //
-//  cannot be replayed.                                                 //
-//                                                                      //
-//  Replaying                                                           //
-//  =================================================================== //
-//                                                                      //
-//  1] To start replaying                                               //
-//                                                                      //
-//    TRecorder r(const char *filename)                                 //
-//    TRecorder r(const char *filename, "READ")                         //
-//                                                                      //
-//    or:                                                               //
-//                                                                      //
-//    TRecorder *recorder = new TRecorder;                              //
-//    recorder->Replay(const char *filename,                            //
-//                      Bool_t showMouseCursor = kTRUE);                //
-//                                                                      //
-//    -filename         A name of file with recorded events             //
-//                      previously created with TRecorder::Start        //
-//                                                                      //
-//    -showMouseCursor  If kTRUE, mouse cursor is replayed as well.     //
-//                      In that case it is not recommended to use mouse //
-//                      during replaying.                               //
-//                                                                      //
-//  In general, it is not recommended to use mouse to change positions  //
-//  and states of ROOT windows during replaying.                        //
-//                                                                      //
-//  IMPORTANT:                                                          //
-//  The state of ROOT environment before replaying of some events       //
-//  must be exactly the same as before recording them.                  //
-//  Therefore it is strongly recommended to start both recording        //
-//  and replaying with empty ROOT environment.                          //
-//                                                                      //
-//  2] To pause replaying                                               //
-//                                                                      //
-//    recorder->Pause()                                                 //
-//                                                                      //
-//    Replaying is stopped until recorder->Resume() is called.          //
-//                                                                      //
-//                                                                      //
-//  3] To resume paused replaying                                       //
-//                                                                      //
-//    recorder->Resume()                                                //
-//                                                                      //
-//    Resumes previously stopped replaying.                             //
-//                                                                      //
-//                                                                      //
-//  4] To stop replaying before its end                                 //
-//                                                                      //
-//    recorder->Stop()                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRecorder
+    \ingroup guirecorder
+
+Class provides direct recorder/replayer interface for a user.
+See 'ROOT EVENT RECORDING SYSTEM' for more information about usage.
+
+Implementation uses C++ design pattern State. Functionality of
+recorder is divided into 4 classes according to the current
+state of recorder.
+
+Internally, there is a pointer to TRecorderState object.
+This object changes whenever state of recorder is changed.
+States of recorder are the following:
+
+  - INACTIVE  Implemented in TRecorderInactive class.
+            Default state after TRecorder object is created.
+
+  - RECORDING Implemented in TRecorderRecording class.
+
+  - REPLAYING Implemented in TRecorderReplaying class.
+
+  - PAUSED    Implemented in TRecorderPause class.
+              Pause of replaying.
+
+Every command for TRecorder is just passed
+to TRecordeState object.
+Depending on the current state of recorder, this command is passed
+to some of the above mentioned classes and if valid, handled there.
+
+
+Switching between states is not possible from outside. States are
+switched directly by state objects via:
+
+ChangeState(TRecorderState* newstate, Bool_t deletePreviousState);
+
+When recorder is switched to a new state, the old state object is
+typically deleted. The only exception is switching from REPLAYING
+state to PAUSED state. The previous state (REPLAYING) is not
+deleted in order to be used again after TRecorder::Resume call.
+
+### STATE TRANSITIONS:
+
+  - INACTIVE  -> RECORDING via TRecorder::Start (Starts recording)
+  - RECORDING -> INACTIVE  via TRecorder::Stop  (Stops recording)
+
+  - INACTIVE  -> REPLAYING via TRecorder::Replay     (Starts replaying)
+  - REPLAYING -> INACTIVE  via TRecorder::ReplayStop (Stops replaying)
+
+  - REPLAYING -> PAUSED    via TRecorder::Pause  (Pause replaying)
+  - PAUSED    -> REPLAYING via TRecorder::Resume (Resumes replaying)
+
+  - PAUSED    -> INACTIVE  via TRecorder::ReplayStop (Stops paused replaying)
+
+*/
+
 
 #include "TRecorder.h"
 
@@ -134,6 +85,9 @@
 #include "TVirtualDragManager.h"
 #include "TGPicture.h"
 #include "KeySymbols.h"
+#include "TVirtualX.h"
+
+#include <iomanip>
 
 // Names of ROOT GUI events. Used for listing event logs.
 const char *kRecEventNames[] = {
@@ -165,7 +119,7 @@ const char *kCmdEventTree   = "CmdEvents";   // Name of TTree with commandline e
 const char *kGuiEventTree   = "GuiEvents";   // Name of TTree with GUI events
 const char *kWindowsTree    = "WindowsTree"; // Name of TTree with window IDs
 const char *kExtraEventTree = "ExtraEvents"; // Name of TTree with extra events (PaveLabels and Texts)
-const char *kBranchName     = "MainBranch";  // Name of the main branch in all TTress
+const char *kBranchName     = "MainBranch";  // Name of the main branch in all TTrees
 
 ClassImp(TRecorder);
 
@@ -304,7 +258,7 @@ void TRecorder::Resume()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Cancells replaying
+/// Cancels replaying
 
 void TRecorder::ReplayStop()
 {
@@ -397,7 +351,7 @@ TRecorderReplaying::TRecorderReplaying(const char *filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Closes all signal-slot connections
-/// Frees all memory allocated in contructor.
+/// Frees all memory allocated in constructor.
 
 TRecorderReplaying::~TRecorderReplaying()
 {
@@ -811,7 +765,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
       // We have the new window to send this event to
       if (RemapWindowReferences())
          fGuiTreeCounter++;
-      // We do not have it yet (waiting for registraion)
+      // We do not have it yet (waiting for registration)
       else
          fNextEvent = 0;
    }
@@ -865,7 +819,7 @@ Bool_t TRecorderReplaying::CanOverlap()
 /// If fTimer times out too early and the previous event has not been yet
 /// replayed, it is usually postponed in order
 /// to keep events execution in the right order.
-/// The excpetions are determined by TRecorderReplaying::CanOverlap()
+/// The exceptions are determined by TRecorderReplaying::CanOverlap()
 ///
 
 void TRecorderReplaying::ReplayRealtime()
@@ -1161,7 +1115,7 @@ void TRecorderInactive::PrevCanvases(const char *filename, Option_t *option)
    ClassImp(TRecorderPaused);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Rememeber the recorder state that is paused
+/// Remember the recorder state that is paused
 
 TRecorderPaused::TRecorderPaused(TRecorderReplaying *state)
 {
@@ -1187,7 +1141,7 @@ void TRecorderPaused::ReplayStop(TRecorder *r)
 {
    delete fReplayingState;
 
-   Info("TRecorderReplaying::ReplayStop", "Reaplying cancelled");
+   Info("TRecorderReplaying::ReplayStop", "Replaying cancelled");
    r->ChangeState(new TRecorderInactive());
 }
 
@@ -1716,7 +1670,7 @@ Bool_t TRecorderRecording::IsFiltered(Window_t id)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets type of kConfigureNotify event to one of EConfigureNotify
 ///
-/// On Linux paremeters of GUI event kConfigureNotify are different
+/// On Linux parameters of GUI event kConfigureNotify are different
 /// than parameters of the same event executed on Windows.
 /// Therefore we need to distinguish [on Linux], if the event is movement
 /// or resize event.

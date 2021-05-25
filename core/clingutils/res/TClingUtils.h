@@ -18,11 +18,24 @@
 #include <set>
 #include <string>
 #include <unordered_set>
+#include <vector>
+#include <list>
+#include <map>
+#include <utility>
 
-//#include <atomic>
-#include <stdlib.h>
+#include <cstdlib>
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
 
 #include "clang/Basic/Module.h"
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace llvm {
    class StringRef;
@@ -78,7 +91,10 @@ namespace cling {
 #include "Varargs.h"
 
 namespace ROOT {
-   namespace TMetaUtils {
+namespace TMetaUtils {
+
+///\returns the resolved normalized absolute path possibly resolving symlinks.
+std::string GetRealPath(const std::string &path);
 
 // Forward Declarations --------------------------------------------------------
 class AnnotatedRecordDecl;
@@ -151,6 +167,7 @@ private:
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
    AutoParse_t         fAutoParse;
+   bool               *fInterpreterIsShuttingDownPtr;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
@@ -158,6 +175,7 @@ public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
                       ExistingTypeCheck_t existingTypeCheck,
                       AutoParse_t autoParse,
+                      bool *shuttingDownPtr,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
@@ -165,16 +183,20 @@ public:
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
    virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
-   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
+   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true);
+   virtual void ShuttingDownSignal();
 };
 
 //______________________________________________________________________________
 class AnnotatedRecordDecl {
 private:
+   static std::string BuildDemangledTypeInfo(const clang::RecordDecl *rDecl,
+                                             const std::string &normalizedName);
    long fRuleIndex;
    const clang::RecordDecl* fDecl;
    std::string fRequestedName;
    std::string fNormalizedName;
+   std::string fDemangledTypeInfo;
    bool fRequestStreamerInfo;
    bool fRequestNoStreamer;
    bool fRequestNoInputOperator;
@@ -245,6 +267,7 @@ public:
 
    const char *GetRequestedName() const { return fRequestedName.c_str(); }
    const char *GetNormalizedName() const { return fNormalizedName.c_str(); }
+   const std::string &GetDemangledTypeInfo() const { return fDemangledTypeInfo; }
    bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
    bool RequestStreamerInfo() const {
       // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT
@@ -333,10 +356,16 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
 //______________________________________________________________________________
 llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
 
-enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
+enum class EIOCtorCategory : short { kAbsent, kDefault, kIOPtrType, kIORefType };
 
 //______________________________________________________________________________
 EIOCtorCategory CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&, const cling::Interpreter& interp);
+
+//______________________________________________________________________________
+bool CheckDefaultConstructor(const clang::CXXRecordDecl*, const cling::Interpreter& interp);
+
+//______________________________________________________________________________
+EIOCtorCategory CheckIOConstructor(const clang::CXXRecordDecl*, const char *, const clang::CXXRecordDecl *, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
@@ -390,7 +419,7 @@ bool hasOpaqueTypedef(const AnnotatedRecordDecl &cl, const cling::Interpreter &i
 bool HasResetAfterMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
-bool NeedDestructor(clang::CXXRecordDecl const*);
+bool NeedDestructor(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
 bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
@@ -826,7 +855,7 @@ namespace AST2SourceTools {
 //______________________________________________________________________________
 const std::string Decls2FwdDecls(const std::vector<const clang::Decl*> &decls,
                                  bool (*ignoreFiles)(const clang::PresumedLoc&) ,
-                                 const cling::Interpreter& interp);
+                                 const cling::Interpreter& interp, std::string *logs);
 
 //______________________________________________________________________________
 int PrepareArgsForFwdDecl(std::string& templateArgs,
@@ -849,6 +878,12 @@ int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
 int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
                         const cling::Interpreter& interpreter,
                         std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclIfTmplSpec(const clang::RecordDecl& recordDecl,
+                      const cling::Interpreter& interpreter,
+                      std::string& defString,
+                      const std::string &normalizedName);
 //______________________________________________________________________________
 int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString, const clang::PrintingPolicy& pp);
 

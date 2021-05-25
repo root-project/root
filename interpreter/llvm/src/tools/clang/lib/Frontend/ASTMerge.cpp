@@ -1,15 +1,15 @@
-//===-- ASTMerge.cpp - AST Merging Frontent Action --------------*- C++ -*-===//
+//===-- ASTMerge.cpp - AST Merging Frontend Action --------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDiagnostic.h"
 #include "clang/AST/ASTImporter.h"
+#include "clang/AST/ASTImporterSharedState.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
@@ -38,6 +38,8 @@ void ASTMergeAction::ExecuteAction() {
                                        &CI.getASTContext());
   IntrusiveRefCntPtr<DiagnosticIDs>
       DiagIDs(CI.getDiagnostics().getDiagnosticIDs());
+  auto SharedState = std::make_shared<ASTImporterSharedState>(
+      *CI.getASTContext().getTranslationUnitDecl());
   for (unsigned I = 0, N = ASTFiles.size(); I != N; ++I) {
     IntrusiveRefCntPtr<DiagnosticsEngine>
         Diags(new DiagnosticsEngine(DiagIDs, &CI.getDiagnosticOpts(),
@@ -51,11 +53,9 @@ void ASTMergeAction::ExecuteAction() {
     if (!Unit)
       continue;
 
-    ASTImporter Importer(CI.getASTContext(), 
-                         CI.getFileManager(),
-                         Unit->getASTContext(), 
-                         Unit->getFileManager(),
-                         /*MinimalImport=*/false);
+    ASTImporter Importer(CI.getASTContext(), CI.getFileManager(),
+                         Unit->getASTContext(), Unit->getFileManager(),
+                         /*MinimalImport=*/false, SharedState);
 
     TranslationUnitDecl *TU = Unit->getASTContext().getTranslationUnitDecl();
     for (auto *D : TU->decls()) {
@@ -64,12 +64,14 @@ void ASTMergeAction::ExecuteAction() {
         if (IdentifierInfo *II = ND->getIdentifier())
           if (II->isStr("__va_list_tag") || II->isStr("__builtin_va_list"))
             continue;
-      
-      Decl *ToD = Importer.Import(D);
-    
-      if (ToD) {
-        DeclGroupRef DGR(ToD);
+
+      llvm::Expected<Decl *> ToDOrError = Importer.Import(D);
+
+      if (ToDOrError) {
+        DeclGroupRef DGR(*ToDOrError);
         CI.getASTConsumer().HandleTopLevelDecl(DGR);
+      } else {
+        llvm::consumeError(ToDOrError.takeError());
       }
     }
   }
@@ -88,7 +90,7 @@ ASTMergeAction::ASTMergeAction(std::unique_ptr<FrontendAction> adaptedAction,
   assert(AdaptedAction && "ASTMergeAction needs an action to adapt");
 }
 
-ASTMergeAction::~ASTMergeAction() { 
+ASTMergeAction::~ASTMergeAction() {
 }
 
 bool ASTMergeAction::usesPreprocessorOnly() const {

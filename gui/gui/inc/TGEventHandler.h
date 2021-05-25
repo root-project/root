@@ -2,7 +2,7 @@
 // Author: Bertrand Bellenot   29/01/2008
 
 /*************************************************************************
- * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,11 +12,6 @@
 #ifndef ROOT_TGEventHandler
 #define ROOT_TGEventHandler
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGEventHandler                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
 #include "TQObject.h"
@@ -28,10 +23,10 @@ class TGEventHandler : public TNamed, public TQObject {
 
 private:
 
-   TGEventHandler(const TGEventHandler&); // Not implemented
-   TGEventHandler& operator=(const TGEventHandler&); // Not implemented
+   TGEventHandler(const TGEventHandler&) = delete;
+   TGEventHandler& operator=(const TGEventHandler&) = delete;
 
-   Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
+   Bool_t   fIsActive;    ///< kTRUE if handler is active, kFALSE if not active
    TGWindow *fWindow;
    TObject  *fObject;
 
@@ -39,7 +34,7 @@ private:
 
 public:
    TGEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="") :
-      TNamed(name, title), fIsActive(kTRUE), fWindow(w), fObject(obj) { };
+      TNamed(name, title), fIsActive(kTRUE), fWindow(w), fObject(obj) { }
    virtual ~TGEventHandler() { }
 
    void           Activate() { fIsActive = kTRUE; }

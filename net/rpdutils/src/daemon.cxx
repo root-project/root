@@ -28,8 +28,8 @@
 #  include <fcntl.h>
 #endif
 
-#ifdef __linux__
-#define linux
+#if defined(__linux__) && !defined(linux)
+# define linux
 #endif
 
 #ifdef SIGTSTP
@@ -38,7 +38,7 @@
 #include <sys/wait.h>
 #endif
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #ifndef NOFILE
 #   define NOFILE 0

@@ -2,7 +2,7 @@
 // Author: Matevz Tadel 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -21,15 +21,15 @@ class TGSplitter;
 class  TGFrameElementPack : public TGFrameElement
 {
 private:
-   TGFrameElementPack(const TGFrameElementPack&);            // Not implemented
-   TGFrameElementPack& operator=(const TGFrameElementPack&); // Not implemented
+   TGFrameElementPack(const TGFrameElementPack&) = delete;
+   TGFrameElementPack& operator=(const TGFrameElementPack&) = delete;
 
 public:
-   Float_t fWeight;               // relative weight
-   TGFrameElementPack* fSplitFE; //! cached varaible for optimisation
+   Float_t fWeight;              ///< relative weight
+   TGFrameElementPack* fSplitFE; ///<! cached variable for optimisation
 
-   TGFrameElementPack(TGFrame *frame, TGLayoutHints* lh = 0, Float_t weight = 1):
-      TGFrameElement(frame, lh), fWeight(weight), fSplitFE(0) { }
+   TGFrameElementPack(TGFrame *frame, TGLayoutHints* lh = nullptr, Float_t weight = 1):
+      TGFrameElement(frame, lh), fWeight(weight), fSplitFE(nullptr) { }
 
    ClassDef(TGFrameElementPack, 0); // Class used in TGPack.
 };
@@ -39,18 +39,18 @@ public:
 class TGPack : public TGCompositeFrame
 {
 private:
-   TGPack(const TGPack&);            // Not implemented
-   TGPack& operator=(const TGPack&); // Not implemented
+   TGPack(const TGPack&) = delete;
+   TGPack& operator=(const TGPack&) = delete;
 
 protected:
    Bool_t         fVertical;
    Bool_t         fUseSplitters;
    Int_t          fSplitterLen;
 
-   Int_t          fDragOverflow;  //!
+   Int_t          fDragOverflow;  ///<!
 
-   Float_t        fWeightSum;     // total sum of sub  frame weights
-   Int_t          fNVisible;      //  number of visible frames
+   Float_t        fWeightSum;     ///< total sum of sub  frame weights
+   Int_t          fNVisible;      ///<  number of visible frames
 
    Int_t          GetFrameLength(const TGFrame* f) const { return fVertical ? f->GetHeight() : f->GetWidth(); }
    Int_t          GetLength()                      const { return GetFrameLength(this); }
@@ -65,12 +65,12 @@ protected:
    void           ResizeExistingFrames();
    void           RefitFramesToPack();
 
-   void           AddFrameInternal(TGFrame *f, TGLayoutHints* l = 0, Float_t weight = 1);
+   void           AddFrameInternal(TGFrame *f, TGLayoutHints* l = nullptr, Float_t weight = 1);
    void           RemoveFrameInternal(TGFrame *f);
 
 
 public:
-   TGPack(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0,
+   TGPack(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0,
           Pixel_t back = GetDefaultFrameBackground());
    TGPack(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGPack();

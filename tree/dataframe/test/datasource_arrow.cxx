@@ -1,6 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RArrowDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TROOT.h>
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -10,7 +11,7 @@
 #include <arrow/memory_pool.h>
 #include <arrow/record_batch.h>
 #include <arrow/table.h>
-#include <arrow/test-util.h>
+#include <arrow/testing/gtest_util.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -27,6 +28,16 @@ std::shared_ptr<Schema> exampleSchema()
 {
    return schema({field("Name", arrow::utf8()), field("Age", arrow::int64()), field("Height", arrow::float64()),
                   field("Married", arrow::boolean()), field("Babies", arrow::uint32())});
+}
+
+template <typename T>
+std::shared_ptr<T> makeColumn(std::shared_ptr<Field>, std::shared_ptr<arrow::Array> array) {
+  return std::make_shared<T>(field, array);
+}
+
+template <>
+std::shared_ptr<arrow::ChunkedArray> makeColumn<arrow::ChunkedArray>(std::shared_ptr<Field>, std::shared_ptr<arrow::Array> array) {
+  return std::make_shared<arrow::ChunkedArray>(array);
 }
 
 std::shared_ptr<Table> createTestTable()
@@ -48,10 +59,14 @@ std::shared_ptr<Table> createTestTable()
    arrow::ArrayFromVector<BooleanType, bool>(marriageStatus, &arrays_[3]);
    arrow::ArrayFromVector<UInt32Type, unsigned int>(babies, &arrays_[4]);
 
-   std::vector<std::shared_ptr<Column>> columns_ = {
-      std::make_shared<Column>(schema_->field(0), arrays_[0]), std::make_shared<Column>(schema_->field(1), arrays_[1]),
-      std::make_shared<Column>(schema_->field(2), arrays_[2]), std::make_shared<Column>(schema_->field(3), arrays_[3]),
-      std::make_shared<Column>(schema_->field(4), arrays_[4])};
+   using ColumnType = typename decltype(std::declval<arrow::Table>().column(0))::element_type;
+
+   std::vector<std::shared_ptr<ColumnType>> columns_ = {
+      makeColumn<ColumnType>(schema_->field(0), arrays_[0]),
+      makeColumn<ColumnType>(schema_->field(1), arrays_[1]),
+      makeColumn<ColumnType>(schema_->field(2), arrays_[2]),
+      makeColumn<ColumnType>(schema_->field(3), arrays_[3]),
+      makeColumn<ColumnType>(schema_->field(4), arrays_[4])};
 
    auto table_ = Table::Make(schema_, columns_);
    return table_;
@@ -76,7 +91,7 @@ TEST(RArrowDS, ColTypeNames)
    EXPECT_STREQ("Long64_t", tds.GetTypeName("Age").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("Height").c_str());
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
-   EXPECT_STREQ("ULong_t", tds.GetTypeName("Babies").c_str());
+   EXPECT_STREQ("UInt_t", tds.GetTypeName("Babies").c_str());
 }
 
 TEST(RArrowDS, EntryRanges)
@@ -103,18 +118,23 @@ TEST(RArrowDS, ColumnReaders)
 
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<Long64_t>("Age");
+   auto valsAge = tds.GetColumnReaders<Long64_t>("Age");
+   auto valsBabies = tds.GetColumnReaders<unsigned int>("Babies");
+
    tds.Initialise();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
-   std::vector<Long64_t> ages = {64, 50, 40, 30, 2, 0};
+   std::vector<Long64_t> RefsAge = {64, 50, 40, 30, 2, 0};
+   std::vector<unsigned int> RefsBabies = {1, 0, 2, 3, 4, 21};
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
-      ASSERT_LT(slot, vals.size());
+      ASSERT_LT(slot, valsAge.size());
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = **vals[slot];
-         EXPECT_EQ(ages[i], val);
+         auto valAge = **valsAge[slot];
+         EXPECT_EQ(RefsAge[i], valAge);
+         auto valBabies = **valsBabies[slot];
+         EXPECT_EQ(RefsBabies[i], valBabies);
       }
       slot++;
    }

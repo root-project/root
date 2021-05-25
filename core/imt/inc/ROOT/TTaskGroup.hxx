@@ -28,9 +28,9 @@ class TTaskGroup {
    is executing.
    */
 private:
-   using TaskContainerPtr_t = void *; /// Shield completely from implementation
-   TaskContainerPtr_t fTaskContainer{nullptr};
+   void *fTaskContainer{nullptr};
    std::atomic<bool> fCanRun{true};
+   void ExecuteInIsolation(const std::function<void(void)> &operation);
 
 public:
    TTaskGroup();
@@ -43,7 +43,7 @@ public:
    void Run(const std::function<void(void)> &closure);
    void Wait();
 };
-}
-}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

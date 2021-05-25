@@ -31,19 +31,19 @@ class TODBCResult : public TSQLResult {
 
 protected:
    SQLHSTMT    fHstmt;
-   Int_t       fFieldCount;
+   Int_t       fFieldCount{0};
    TString     fNameBuffer;
 
 public:
    TODBCResult(SQLHSTMT stmt);
    virtual ~TODBCResult();
 
-   void        Close(Option_t *opt="");
-   Int_t       GetFieldCount() { return fFieldCount; }
-   const char *GetFieldName(Int_t field);
-   TSQLRow    *Next();
+   void        Close(Option_t *opt="") final;
+   Int_t       GetFieldCount() final { return fFieldCount; }
+   const char *GetFieldName(Int_t field) final;
+   TSQLRow    *Next() final;
 
-   ClassDef(TODBCResult,0)  // ODBC query result
+   ClassDefOverride(TODBCResult,0)  // ODBC query result
 };
 
 #endif

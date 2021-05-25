@@ -39,14 +39,13 @@ Begin_Macro(source)
 End_Macro
 */
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoTube.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoTorus.h"
-#include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
@@ -295,15 +294,13 @@ Double_t TGeoTorus::DistFromInside(const Double_t *point, const Double_t *dir, I
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
-   Double_t snext = TGeoShape::Big();
-   Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
-   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
+   Bool_t hasphi = (fDphi < 360);
+   Bool_t hasrmin = (fRmin > 0);
    Double_t dout = ToBoundary(point,dir,fRmax,kTRUE);
 //   Double_t dax = Daxis(point,dir,dout);
    Double_t din = (hasrmin)?ToBoundary(point,dir,fRmin,kTRUE):TGeoShape::Big();
-   snext = TMath::Min(dout,din);
+   Double_t snext = TMath::Min(dout,din);
    if (snext>1E10) return TGeoShape::Tolerance();
-   Double_t dphi = TGeoShape::Big();
    if (hasphi) {
       // Torus segment case.
       Double_t c1,s1,c2,s2,cm,sm,cdfi;
@@ -317,7 +314,7 @@ Double_t TGeoTorus::DistFromInside(const Double_t *point, const Double_t *dir, I
       cm=TMath::Cos(fio);
       sm=TMath::Sin(fio);
       cdfi = TMath::Cos(0.5*(phi2-phi1));
-      dphi = TGeoTubeSeg::DistFromInsideS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
+      Double_t dphi = TGeoTubeSeg::DistFromInsideS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
       Double_t daxis = Daxis(point,dir,dphi);
       if (daxis>=fRmin+1.E-8 && daxis<=fRmax-1.E-8) snext=TMath::Min(snext,dphi);
    }
@@ -570,12 +567,12 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D &buff) const
 {
    Int_t i, j;
    Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t nbPnts = n*(n-1);
+   // Int_t nbPnts = n*(n-1);
    Int_t indx, indp, startcap=0;
    Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
    Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
-   if (hasrmin) nbPnts *= 2;
-   else if (hasphi) nbPnts += 2;
+   // if (hasrmin) nbPnts *= 2;
+   // else if (hasphi) nbPnts += 2;
    Int_t c = GetBasicColor();
 
    indp = n*(n-1); // start index for points on inner surface
@@ -739,13 +736,12 @@ Double_t TGeoTorus::Safety(const Double_t *point, Bool_t in) const
    }
 
    Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1, fPhi1+fDphi);
-   Double_t safe = TGeoShape::Big();
    if (in) {
-      safe = TMath::Min(saf[0], saf[1]);
+      Double_t safe = TMath::Min(saf[0], saf[1]);
       return TMath::Min(safe, safphi);
    }
    for (i=0; i<2; i++) saf[i]=-saf[i];
-   safe = TMath::Max(saf[0], saf[1]);
+   Double_t safe = TMath::Max(saf[0], saf[1]);
    return TMath::Max(safe, safphi);
 }
 
@@ -1063,7 +1059,6 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
 Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t r, Bool_t in) const
 {
    // Compute coefficients of the quartic
-   Double_t s = TGeoShape::Big();
    Double_t tol = TGeoShape::Tolerance();
    Double_t r0sq  = pt[0]*pt[0]+pt[1]*pt[1]+pt[2]*pt[2];
    Double_t rdotn = pt[0]*dir[0]+pt[1]*dir[1]+pt[2]*dir[2];
@@ -1123,7 +1118,7 @@ Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t
       } else {
          if (ndotd>0) continue;
       }
-      s = x[i];
+      Double_t s = x[i];
       Double_t eps = TGeoShape::Big();
       Double_t delta = s*s*s*s + a*s*s*s + b*s*s + c*s + d;
       Double_t eps0 = -delta/(4.*s*s*s + 3.*a*s*s + 2.*b*s + c);

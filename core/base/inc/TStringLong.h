@@ -12,7 +12,6 @@
 #ifndef ROOT_TStringLong
 #define ROOT_TStringLong
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TStringLong                                                          //
@@ -50,6 +49,6 @@ public:
    virtual Int_t    Sizeof() const;
 
    ClassDef(TStringLong,1)  //Long string class (more than 255 chars)
-};
+} R__ALWAYS_SUGGEST_ALTERNATIVE("TString");
 
 #endif

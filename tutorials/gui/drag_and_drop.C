@@ -3,7 +3,7 @@
 /// This tutorial illustrates how to use drag and drop within ROOT.
 /// Select a list tree item with a mouse press, drag it (move the mouse while keeping the mouse button pressed)
 /// and release the mouse button in any pad inside the canvas or in the top list tree item ("Base").
-/// When the button is released, the selected data is "dropped" at that location, 
+/// When the button is released, the selected data is "dropped" at that location,
 /// displaying the object in the canvas or adding (copying) it in the list tree.
 ///
 /// \macro_code
@@ -199,7 +199,7 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    item->SetDNDSource(kTRUE);
 
    TString rootsys(gSystem->UnixPathName(gSystem->Getenv("ROOTSYS")));
-#ifdef G__WIN32
+#ifdef R__WIN32
    // remove the drive letter (e.g. "C:/") from $ROOTSYS, if any
    if (rootsys[1] == ':' && rootsys[2] == '/')
       rootsys.Remove(0, 3);
@@ -365,7 +365,7 @@ void DNDMainFrame::HandleMenu(Int_t menu_id)
    static TString dir(".");
    TGFileInfo fi;
    fi.fFileTypes = dnd_types;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
 
    switch (menu_id) {
       case M_FILE_EXIT:

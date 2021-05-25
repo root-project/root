@@ -17,7 +17,7 @@
 #include "Minuit2/MnPrint.h"
 
 namespace ROOT {
-  namespace Minuit2 {
+namespace Minuit2 {
 
 
     FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameters& par) const {
@@ -40,9 +40,8 @@ namespace ROOT {
         }
       }
 
-#ifdef DEBUG
-      std::cout << "User given gradient in Minuit2" << v << std::endl;
-#endif
+      MnPrint print("AnalyticalGradientCalculator");
+      print.Debug("User given gradient in Minuit2", v);
 
       // check for 2nd derivative and step-size from the external gradient
       // function and use them if present

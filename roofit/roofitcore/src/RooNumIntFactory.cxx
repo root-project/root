@@ -29,6 +29,7 @@ the preference of the caller as encoded in the configuration object.
 **/
 
 #include "TClass.h"
+#include "TSystem.h"
 #include "Riostream.h"
 
 #include "RooFit.h"
@@ -46,30 +47,22 @@ the preference of the caller as encoded in the configuration object.
 #include "RooSegmentedIntegrator2D.h"
 #include "RooImproperIntegrator1D.h"
 #include "RooMCIntegrator.h"
-#include "RooGaussKronrodIntegrator1D.h"
-#include "RooAdaptiveGaussKronrodIntegrator1D.h"
+//#include "RooGaussKronrodIntegrator1D.h"
+//#include "RooAdaptiveGaussKronrodIntegrator1D.h"
 #include "RooAdaptiveIntegratorND.h"
-#include "RooSentinel.h"
 
 #include "RooMsgService.h"
 
 using namespace std ;
 
-ClassImp(RooNumIntFactory);
-;
-
-RooNumIntFactory* RooNumIntFactory::_instance = 0 ;
+ClassImp(RooNumIntFactory)
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor. Register all known integrators by calling
+/// Register all known integrators by calling
 /// their static registration functions
-
-RooNumIntFactory::RooNumIntFactory()
-{
-  _instance = this ;
-
+void RooNumIntFactory::init() {
   RooBinIntegrator::registerIntegrator(*this) ;
   RooIntegrator1D::registerIntegrator(*this) ;
   RooIntegrator2D::registerIntegrator(*this) ;
@@ -77,39 +70,24 @@ RooNumIntFactory::RooNumIntFactory()
   RooSegmentedIntegrator2D::registerIntegrator(*this) ;
   RooImproperIntegrator1D::registerIntegrator(*this) ;
   RooMCIntegrator::registerIntegrator(*this) ;
-  RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(*this) ;
-  RooGaussKronrodIntegrator1D::registerIntegrator(*this) ;  
+  // GSL integrator is now in RooFitMore and it register itself
+  //RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(*this) ;
+  //RooGaussKronrodIntegrator1D::registerIntegrator(*this) ;  
   RooAdaptiveIntegratorND::registerIntegrator(*this) ;
 
   RooNumIntConfig::defaultConfig().method1D().setLabel("RooIntegrator1D") ;
   RooNumIntConfig::defaultConfig().method1DOpen().setLabel("RooImproperIntegrator1D") ;
   RooNumIntConfig::defaultConfig().method2D().setLabel("RooAdaptiveIntegratorND") ;
   RooNumIntConfig::defaultConfig().methodND().setLabel("RooAdaptiveIntegratorND") ;
-  
+
+  //if GSL is available load (and register GSL integrator)
+#ifdef R__HAS_MATHMORE
+  int iret = gSystem->Load("libRooFitMore");
+  if (iret < 0) {
+     oocoutE((TObject*)nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not beavailable ! " << std::endl;
+  }
+#endif
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNumIntFactory::~RooNumIntFactory()
-{
-  std::map<std::string,pair<RooAbsIntegrator*,std::string> >::iterator iter = _map.begin() ;
-  while (iter != _map.end()) {
-    delete iter->second.first ;
-    ++iter ;
-  }  
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other) : TObject(other)
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,23 +95,18 @@ RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other) : TObject(othe
 
 RooNumIntFactory& RooNumIntFactory::instance()
 {
-  if (_instance==0) {
-    new RooNumIntFactory ;
-    RooSentinel::activate() ;
-  } 
-  return *_instance ;
-}
+  static unique_ptr<RooNumIntFactory> instance;
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup routine called by atexit() handler installed by RooSentinel
-
-void RooNumIntFactory::cleanup()
-{
-  if (_instance) {
-    delete _instance ;
-    _instance = 0 ;
+  if (!instance) {
+    // This is needed to break a deadlock. During init(),
+    // other functions may call back to this one here. So we need to construct first,
+    // and ensure that we can return an instance while we are waiting for init()
+    // to finish.
+    instance.reset(new RooNumIntFactory);
+    instance->init();
   }
+
+  return *instance;
 }
 
 
@@ -152,8 +125,8 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
     return kTRUE ;
   }
 
-  // Add to factory 
-  _map[name.Data()] = std::pair<RooAbsIntegrator*,std::string>(proto,depName) ;
+  // Add to factory
+  _map[name.Data()] = std::make_pair(unique_ptr<RooAbsIntegrator>(proto), std::string(depName));
 
   // Add default config to master config
   RooNumIntConfig::defaultConfig().addConfigSection(proto,defConfig) ;
@@ -166,13 +139,11 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
 ////////////////////////////////////////////////////////////////////////////////
 /// Return prototype integrator with given (class) name
 
-const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) 
+const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) const
 {
-  if (_map.count(name)==0) {
-    return 0 ;
-  } 
+  auto item = _map.find(name);
   
-  return _map[name].first ;
+  return item == _map.end() ? nullptr : item->second.first.get();
 }
 
 
@@ -180,13 +151,11 @@ const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get list of class names of integrators needed by integrator named 'name'
 
-const char* RooNumIntFactory::getDepIntegratorName(const char* name) 
+const char* RooNumIntFactory::getDepIntegratorName(const char* name) const
 {
-  if (_map.count(name)==0) {
-    return 0 ;
-  }
+  auto item = _map.find(name);
 
-  return _map[name].second.c_str() ;
+  return item == _map.end() ? nullptr : item->second.second.c_str();
 }
 
 
@@ -200,7 +169,7 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name)
 /// the number of dimensions, the nature of the limits (open ended vs closed) and the user
 /// preference stated in 'config'
 
-RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, Bool_t isBinned) 
+RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, Bool_t isBinned) const
 {
   // First determine dimensionality and domain of integrand  
   Int_t ndim = ndimPreset>0 ? ndimPreset : ((Int_t)func.getDimension()) ;
@@ -218,15 +187,15 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
   TString method ;
   switch(ndim) {
   case 1:
-    method = openEnded ? config.method1DOpen().getLabel() : config.method1D().getLabel() ;
+    method = openEnded ? config.method1DOpen().getCurrentLabel() : config.method1D().getCurrentLabel() ;
     break ;
 
   case 2:
-    method = openEnded ? config.method2DOpen().getLabel() : config.method2D().getLabel() ;
+    method = openEnded ? config.method2DOpen().getCurrentLabel() : config.method2D().getCurrentLabel() ;
     break ;
 
   default:
-    method = openEnded ? config.methodNDOpen().getLabel() : config.methodND().getLabel() ;
+    method = openEnded ? config.methodNDOpen().getCurrentLabel() : config.methodND().getCurrentLabel() ;
     break ;
   }
 

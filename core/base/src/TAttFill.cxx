@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TAttFill.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -61,9 +61,10 @@ itself remains fully opaque.
 histo->SetFillColorAlpha(kBlue, 0.35);
 ~~~
 
-The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
-in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
+The transparency is available on all platforms when the flag
+`OpenGL.CanvasPreferGL` is set to `1` in `$ROOTSYS/etc/system.rootrc`, or on Mac
+with the Cocoa backend.
+On the file output it is visible with PDF, PNG, Gif, JPEG, SVG, TeX... but not PostScript.
 
 ### The ROOT Color Wheel.
 The wheel contains the recommended 216 colors to be used in web applications.

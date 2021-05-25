@@ -68,7 +68,7 @@ profile the cost of each layer of the stack, and the driver has a number of
 options for performance analysis. Many detailed benchmarks can be found online.</p>
 
 <p>Compile time performance is important, but when using clang as an API, often
-memory use is even moreso: the less memory the code takes the more code you can
+memory use is even more so: the less memory the code takes the more code you can
 fit into memory at a time (useful for whole program analysis tools, for
 example).</p>
 
@@ -95,8 +95,11 @@ and making the wording as clear as possible.</p>
 GCC and Clang diagnostic:</p>
 
 <pre>
-  $ <b>gcc-4.2 -fsyntax-only t.c</b>
-  t.c:7: error: invalid operands to binary + (have 'int' and 'struct A')
+  $ <b>gcc-4.9 -fsyntax-only t.c</b>
+  t.c: In function 'int f(int, int)':
+  t.c:7:39: error: invalid operands to binary + (have 'int' and 'struct A')
+     return y + func(y ? ((SomeA.X + 40) + SomeA) / 42 + SomeA.X : SomeA.X);
+                                         ^
   $ <b>clang -fsyntax-only t.c</b>
   t.c:7:39: error: invalid operands to binary expression ('int' and 'struct A')
   <span style="color:darkgreen">  return y + func(y ? ((SomeA.X + 40) + SomeA) / 42 + SomeA.X : SomeA.X);</span>

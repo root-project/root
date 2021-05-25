@@ -207,7 +207,7 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t*
    Double_t* dwmat = CreateDoubleArray(wmat, TMath::Abs(nlmat));
 
    Mixture(kmat, name, da, dz, dens, nlmat, dwmat);
-   for (Int_t i=0; i<nlmat; i++) {
+   for (Int_t i=0; i< TMath::Abs(nlmat); i++) {
       a[i] = da[i]; z[i] = dz[i]; wmat[i] = dwmat[i];
    }
 
@@ -980,7 +980,7 @@ Bool_t TGeoMCGeometry::GetShape(const TString &volumePath,TString &shapeType,
 /// - Inputs:
 ///   - TString& volumeName  The volume name
 /// - Outputs:
-///   - TSrting   &name       Material name
+///   - TString   &name       Material name
 ///   - Int_t     &imat       Material index number
 ///   - Double_t  &a          Average Atomic mass of material
 ///   - Double_t  &z          Average Atomic number of material

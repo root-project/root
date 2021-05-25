@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # Try to find Graphviz.
 # This will define:
 # GRAPHVIZ_FOUND - system has Graphviz
@@ -16,7 +22,7 @@ set(GRAPHVIZ_LIBRARIES ${GRAPHVIZ_gvc_LIBRARY} ${GRAPHVIZ_graph_LIBRARY} ${GRAPH
 
 # handle the QUIETLY and REQUIRED arguments and set GRAPHVIZ_FOUND to TRUE if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(GRAPHVIZ DEFAULT_MSG GRAPHVIZ_INCLUDE_DIR
+find_package_handle_standard_args(Graphviz DEFAULT_MSG GRAPHVIZ_INCLUDE_DIR
                                                        GRAPHVIZ_cdt_LIBRARY
                                                        GRAPHVIZ_gvc_LIBRARY
                                                        GRAPHVIZ_graph_LIBRARY

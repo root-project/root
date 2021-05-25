@@ -18,7 +18,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -28,14 +29,17 @@
 #include "TException.h"
 #include "Demangle.h"
 #include "TEnv.h"
-#include "TSocket.h"
 #include "Getline.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TObjString.h"
-#include "Riostream.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #include "TObjArray.h"
+#include "snprintf.h"
+#include "strlcpy.h"
+#include <iostream>
+#include <fstream>
 #include <map>
 #include <algorithm>
 #include <atomic>
@@ -66,11 +70,6 @@
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
-#endif
-#if defined(R__LINUX) || defined(R__HURD)
-#   ifndef SIGSYS
-#      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
-#   endif
 #endif
 #if defined(R__MACOSX)
 #   include <mach-o/dyld.h>
@@ -281,7 +280,7 @@ struct TUtmpContent {
    STRUCT_UTMP *fUtmpContents;
    UInt_t       fEntries; // Number of entries in utmp file.
 
-   TUtmpContent() : fUtmpContents(0), fEntries(0) {}
+   TUtmpContent() : fUtmpContents(nullptr), fEntries(0) {}
    ~TUtmpContent() { free(fUtmpContents); }
 
    STRUCT_UTMP *SearchUtmpEntry(const char *tty)
@@ -296,7 +295,7 @@ struct TUtmpContent {
             return ue;
          ue++;
       }
-      return 0;
+      return nullptr;
    }
 
    int ReadUtmpFile()
@@ -469,8 +468,8 @@ static void SetRootSys()
          if (!gSystem->Getenv("ROOTSYS"))
             ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
       } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+         TString rs = gSystem->GetDirName(respath);
+         gSystem->Setenv("ROOTSYS", gSystem->GetDirName(rs.Data()).Data());
       }
    }
 #ifdef ROOTPREFIX
@@ -505,19 +504,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 #ifdef ROOTPREFIX
    if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
 #endif
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-   // first loaded is the app so set ROOTSYS to app bundle
-   if (i == 1) {
-      char respath[kMAXPATHLEN];
-      if (!realpath(lib, respath)) {
-         if (!gSystem->Getenv("ROOTSYS"))
-            ::SysError("TUnixSystem::DylibAdded", "error getting realpath of %s", gSystem->BaseName(lib));
-      } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", rs);
-      }
-   }
-#else
    if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
        lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
       char respath[kMAXPATHLEN];
@@ -525,11 +511,10 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
          if (!gSystem->Getenv("ROOTSYS"))
             ::SysError("TUnixSystem::DylibAdded", "error getting realpath of libCore, please set ROOTSYS in the shell");
       } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+         TString rs = gSystem->GetDirName(respath);
+         gSystem->Setenv("ROOTSYS", gSystem->GetDirName(rs.Data()).Data());
       }
    }
-#endif
 #ifdef ROOTPREFIX
    }
 #endif
@@ -538,8 +523,15 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
    // explicitly linked against the executable. Additional dylibs
    // come when they are explicitly linked against loaded so's, currently
    // we are not interested in these
-   if (lib.EndsWith("/libSystem.B.dylib"))
+   if (lib.EndsWith("/libSystem.B.dylib")) {
       gotFirstSo = kTRUE;
+      if (linkedDylibs.IsNull()) {
+         // TSystem::GetLibraries() assumes that an empty GetLinkedLibraries()
+         // means failure to extract the linked libraries. Signal "we did
+         // manage, but it's empty" by returning a single space.
+         linkedDylibs = ' ';
+      }
+   }
 
    // add all libs loaded before libSystem.B.dylib
    if (!gotFirstSo && (lib.EndsWith(".dylib") || lib.EndsWith(".so"))) {
@@ -604,6 +596,7 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigBus,                   SigHandler);
    UnixSignal(kSigSegmentationViolation, SigHandler);
    UnixSignal(kSigIllegalInstruction,    SigHandler);
+   UnixSignal(kSigAbort,                 SigHandler);
    UnixSignal(kSigSystem,                SigHandler);
    UnixSignal(kSigAlarm,                 SigHandler);
    UnixSignal(kSigUrgent,                SigHandler);
@@ -620,7 +613,7 @@ Bool_t TUnixSystem::Init()
 #endif
 
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   gRootDir = "/usr/local/root";
+   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    return kFALSE;
 }
@@ -693,7 +686,7 @@ void TUnixSystem::SetDisplay()
                char hbuf[NI_MAXHOST + 4];
                if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
                   assert( strlen(hbuf) < NI_MAXHOST );
-                  strcat(hbuf, ":0.0");
+                  strlcat(hbuf, ":0.0", sizeof(hbuf));
                   Setenv("DISPLAY", hbuf);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           hbuf);
@@ -702,6 +695,13 @@ void TUnixSystem::SetDisplay()
 #endif
          }
       }
+#ifndef R__HAS_COCOA
+      if (!gROOT->IsBatch() && !getenv("DISPLAY")) {
+         Error("SetDisplay", "Can't figure out DISPLAY, set it manually\n"
+            "In case you run a remote ssh session, restart your ssh session with:\n"
+            "=========>  ssh -Y");
+      }
+#endif
    }
 }
 
@@ -771,7 +771,7 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
 
 TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 {
-   if (!h) return 0;
+   if (!h) return nullptr;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -816,7 +816,7 @@ void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   if (!h) return 0;
+   if (!h) return nullptr;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -1393,7 +1393,7 @@ const char *TUnixSystem::GetDirEntry(void *dirp)
    if (dirp)
       return UnixGetdirentry(dirp);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1500,10 +1500,10 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
 
    if (fd == -1) {
       SysError("TempFileName", "%s", base.Data());
-      return 0;
+      return nullptr;
    } else {
       FILE *fp = fdopen(fd, "w+");
-      if (fp == 0)
+      if (!fp)
          SysError("TempFileName", "converting filedescriptor (%d)", fd);
       return fp;
    }
@@ -1523,7 +1523,8 @@ const char *TUnixSystem::PrependPathName(const char *dir, TString& name)
       return name.Data();
    }
 
-   if (!dir || !dir[0]) dir = "/";
+   if (!dir || !dir[0])
+      dir = "/";
    else if (dir[strlen(dir) - 1] != '/')
       name.Prepend('/');
    name.Prepend(dir);
@@ -1845,7 +1846,7 @@ char *TUnixSystem::ExpandPathName(const char *path)
 {
    TString patbuf = path;
    if (ExpandPathName(patbuf))
-      return 0;
+      return nullptr;
    return StrDup(patbuf.Data());
 }
 
@@ -1911,10 +1912,10 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       if (show != "")
          Printf("%s <not found>", show.Data());
       wfil = "";
-      return 0;
+      return nullptr;
    }
 
-   if (search == 0)
+   if (!search)
       search = ".";
 
    TString apwd(gSystem->WorkingDirectory());
@@ -1956,7 +1957,7 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
    if (show != "")
       Printf("%s <not found>", show.Data());
    wfil = "";
-   return 0;
+   return nullptr;
 }
 
 //---- Users & Groups ----------------------------------------------------------
@@ -2038,7 +2039,7 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
       gUserInfo[uid] = *ug;
       return ug;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2068,7 +2069,7 @@ UserGroup_t *TUnixSystem::GetGroupInfo(Int_t gid)
       gr->fGroup = grp->gr_name;
       return gr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2150,11 +2151,7 @@ void TUnixSystem::Exit(int code, Bool_t mode)
 {
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
-   if (gROOT) {
-      gROOT->EndOfProcessCleanups();
-   } else if (gInterpreter) {
-      gInterpreter->ResetGlobals();
-   }
+   TROOT::ShutDown();
 
    if (mode)
       ::exit(code);
@@ -2167,6 +2164,7 @@ void TUnixSystem::Exit(int code, Bool_t mode)
 
 void TUnixSystem::Abort(int)
 {
+   IgnoreSignal(kSigAbort);
    ::abort();
 }
 
@@ -2830,12 +2828,12 @@ const char *TUnixSystem::GetLinkedLibraries()
       return linkedLibs;
 
    if (once)
-      return 0;
+      return nullptr;
 
 #if !defined(R__MACOSX)
    const char *exe = GetExePath();
    if (!exe || !*exe)
-      return 0;
+      return nullptr;
 #endif
 
 #if defined(R__MACOSX)
@@ -2871,8 +2869,8 @@ const char *TUnixSystem::GetLinkedLibraries()
       char* longerexe = new char[lenexe + 5];
       strlcpy(longerexe, exe,lenexe+5);
       strlcat(longerexe, ".exe",lenexe+5);
-      delete [] exe;
-      exe = longerexe;
+      exe = longerexe;  // memory leak
+      #error "unsupported platform, fix memory leak to use it"
    }
    TRegexp sovers = "\\.so\\.[0-9]+";
 #else
@@ -2922,7 +2920,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    once = kTRUE;
 
    if (linkedLibs.IsNull())
-      return 0;
+      return nullptr;
 
    return linkedLibs;
 }
@@ -2982,7 +2980,7 @@ void TUnixSystem::AddTimer(TTimer *ti)
 
 TTimer *TUnixSystem::RemoveTimer(TTimer *ti)
 {
-   if (!ti) return 0;
+   if (!ti) return nullptr;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -3598,6 +3596,7 @@ static struct Signalmap_t {
    { SIGSYS,   0, 0, "bad argument to system call" },
    { SIGPIPE,  0, 0, "write on a pipe with no one to read it" },
    { SIGILL,   0, 0, "illegal instruction" },
+   { SIGABRT,  0, 0, "abort" },
    { SIGQUIT,  0, 0, "quit" },
    { SIGINT,   0, 0, "interrupt" },
    { SIGWINCH, 0, 0, "window size change" },
@@ -3639,16 +3638,23 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    case kSigBus:
    case kSigSegmentationViolation:
    case kSigIllegalInstruction:
+   case kSigAbort:
    case kSigFloatingException:
-      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
-      StackTrace();
-      if (gApplication)
-         //sig is ESignal, should it be mapped to the correct signal number?
-         gApplication->HandleException(sig);
-      else
-         //map to the real signal code + set the
-         //high order bit to indicate a signal (?)
-         Exit(gSignalMap[sig].fCode + 0x80);
+      if (gExceptionHandler)
+         gExceptionHandler->HandleException(sig);
+      else {
+         if (sig == kSigAbort)
+            return;
+         Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
+         StackTrace();
+         if (gApplication)
+            //sig is ESignal, should it be mapped to the correct signal number?
+            gApplication->HandleException(sig);
+         else
+            //map to the real signal code + set the
+            //high order bit to indicate a signal (?)
+            Exit(gSignalMap[sig].fCode + 0x80);
+      }
       break;
    case kSigSystem:
    case kSigPipe:
@@ -3930,17 +3936,17 @@ const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *m
       if (mydir[0])
          return mydir;
       pw = getpwuid(getuid());
-      if (pw && pw->pw_dir) {
-         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
+      if (gSystem->Getenv("HOME")) {
+         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
          mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
-      } else if (gSystem->Getenv("HOME")) {
-         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
+      } else if (pw && pw->pw_dir) {
+         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
          mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3963,10 +3969,10 @@ void *TUnixSystem::UnixOpendir(const char *dir)
    const char *edir = StripOffProto(dir, "file:");
 
    if (stat(edir, &finfo) < 0)
-      return 0;
+      return nullptr;
 
    if (!S_ISDIR(finfo.st_mode))
-      return 0;
+      return nullptr;
 
    return (void*) opendir(edir);
 }
@@ -3994,13 +4000,13 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
    if (dirp) {
       for (;;) {
          dp = readdir(dirp);
-         if (dp == 0)
-            return 0;
+         if (!dp)
+            return nullptr;
          if (REAL_DIR_ENTRY(dp))
             return dp->d_name;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 //---- files -------------------------------------------------------------------
@@ -4237,7 +4243,7 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Open socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -4449,7 +4455,7 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Create socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -4584,6 +4590,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       dynpath = newpath;
    } else if (reset || !initialized) {
       initialized = kTRUE;
+      dynpath = gSystem->Getenv("ROOT_LIBRARY_PATH");
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
@@ -4603,10 +4610,15 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 #else
       ldpath = gSystem->Getenv("LD_LIBRARY_PATH");
 #endif
-      if (ldpath.IsNull())
-         dynpath = rdynpath;
-      else {
-         dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
+      if (!ldpath.IsNull()) {
+         if (!dynpath.IsNull())
+            dynpath += ":";
+         dynpath += ldpath;
+      }
+      if (!rdynpath.IsNull()) {
+         if (!dynpath.IsNull())
+            dynpath += ":";
+         dynpath += rdynpath;
       }
       if (!dynpath.Contains(TROOT::GetLibDir())) {
          dynpath += ":"; dynpath += TROOT::GetLibDir();
@@ -4711,7 +4723,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
       if (!quiet)
          Error("FindDynamicLibrary",
                "%s does not exist in %s", searchFor.Data(), GetDynamicPath());
-      return 0;
+      return nullptr;
    }
    static const char* exts[] = {
       ".so", ".dll", ".dylib", ".sl", ".dl", ".a", 0 };
@@ -4731,7 +4743,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
             "%s[.so | .dll | .dylib | .sl | .dl | .a] does not exist in %s",
             searchFor.Data(), GetDynamicPath());
 
-   return 0;
+   return nullptr;
 }
 
 //---- System, CPU and Memory info ---------------------------------------------

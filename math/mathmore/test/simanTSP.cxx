@@ -257,7 +257,7 @@ void simanTSP(bool debug = true) {
    p.step_size = 1; // not used
    p.k = 1;
    p.t_initial = 5000;
-   p.mu = 1.01;
+   p.mu_t = 1.01;
    p.t_min = 0.5;
 
    // set the parameters

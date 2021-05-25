@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include "TestActivationFunctions.h"
+#include "RConfigure.h"
 
 using namespace TMVA::DNN;
 
@@ -73,14 +74,22 @@ int main()
     error = testTanh<TReference<Scalar_t>>(10);
     std::cout << "Testing TanH activation:                   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+#ifdef R__HAS_VDT   // error is larger when using fast tanh from vdt
+    std::cout << "error is " << error << std::endl;
+    if (error > 1e-6) return 1;
+#else
+    std::cout << "no vdt: error is " << error << std::endl;
+    if (error > 1e-10) return 1;
+#endif
 
     error = testTanhDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing TanH activation derivative:        ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+#ifdef R__HAS_VDT   // error is larger when using fast tanh from vdt
+    if (error > 1e-4) return 1; 
+#else
+    if (error > 1e-10) return 1; 
+#endif
 
     // Symmetric ReLU.
 

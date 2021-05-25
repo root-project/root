@@ -224,7 +224,7 @@ namespace ROOT {
 //___________________________________________________________________________________________________________________________
 
       double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
-                                   ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                   ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
       {
          // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
          // the actual number of used points
@@ -257,10 +257,15 @@ namespace ROOT {
    if (isWeighted)   std::cout << "Weighted data set - sumw =  " << data.SumOfContent() << "  sumw2 = " << data.SumOfError2() << std::endl;
 #endif
 
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval( func, 0, useBinIntegral, igType);
 #else
-   IntegralEvaluator<> igEval( func, p, useBinIntegral);
+   IntegralEvaluator<> igEval( func, p, useBinIntegral, igType);
 #endif
    double maxResValue = std::numeric_limits<double>::max() /n;
    double wrefVolume = 1.0;
@@ -286,17 +291,18 @@ namespace ROOT {
       double binVolume = 1.0;
       if (useBinVolume) {
          unsigned int ndim = data.NDim();
-         const double * x2 = data.BinUpEdge(i);
          xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto xx = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j]- xx);
-            xc[j] = 0.5*(x2[j]+ xx);
+            double xx = *data.GetCoordComponent(i, j);
+            double x2 = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2 - xx);
+            xc[j] = 0.5*(x2 + xx);
          }
          x = xc.data();
          // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
       } else if(data.NDim() > 1) {
+         // multi-dim case (no bin volume)
          xc.resize(data.NDim());
          xc[0] = *x1;
          for (unsigned int j = 1; j < data.NDim(); ++j)
@@ -317,14 +323,16 @@ namespace ROOT {
       else {
          // calculate integral normalized by bin volume
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval( x, data.BinUpEdge(i)) ;
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
+         fval = igEval(x, x2.data());
       }
       // normalize result if requested according to bin volume
       if (useBinVolume) fval *= binVolume;
 
       // expected errors
       if (useExpErrors) {
-         double invWeight  = 1.0; 
+         double invWeight  = 1.0;
          if (isWeighted) {
             // we need first to check if a weight factor needs to be applied
             // weight = sumw2/sumw = error**2/content
@@ -334,7 +342,7 @@ namespace ROOT {
             invWeight = data.SumOfContent()/ data.SumOfError2();
             //if (invError > 0) invWeight = y * invError * invError;
          }
-         
+
          //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
          // compute expected error  as f(x) / weight
          double invError2 = (fval > 0) ? invWeight / fval : 0.0;
@@ -376,20 +384,20 @@ namespace ROOT {
   (void)nChunks;
 
   // If IMT is disabled, force the execution policy to the serial case
-  if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
      Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                      "to ROOT::Fit::ExecutionPolicy::kSerial.");
-     executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                      "to ROOT::EExecutionPolicy::kSequential.");
+     executionPolicy = ROOT::EExecutionPolicy::kSequential;
   }
 #endif
 
   double res{};
-  if(executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial){
+  if(executionPolicy == ROOT::EExecutionPolicy::kSequential){
     for (unsigned int i=0; i<n; ++i) {
       res += mapFunction(i);
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  } else if(executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
     ROOT::TThreadExecutor pool;
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -398,7 +406,7 @@ namespace ROOT {
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
    return res;
@@ -636,7 +644,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 }
 
 void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                   unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                   unsigned int &nPoints, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can
@@ -669,7 +677,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
    }
 
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
+   IntegralEvaluator<> igEval(func, p, useBinIntegral,igType);
 
    unsigned int npar = func.NPar();
    unsigned initialNPoints = data.Size();
@@ -695,13 +708,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       unsigned int ndim = data.NDim();
       double binVolume = 1;
       if (useBinVolume) {
-         const double *x2 = data.BinUpEdge(i);
-
          xc.resize(ndim);
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto x1_j = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j] - x1_j);
-            xc[j] = 0.5 * (x2[j] + x1_j);
+            double x1_j = *data.GetCoordComponent(i, j);
+            double x2_j = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2_j - x1_j);
+            xc[j] = 0.5 * (x2_j + x1_j);
          }
 
          x = xc.data();
@@ -722,11 +734,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
          fval = func(x, p);
          func.ParameterGradient(x, p, &gradFunc[0]);
       } else {
-         auto x2 = data.BinUpEdge(i);
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
          // calculate normalized integral and gradient (divided by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval(x, x2);
-         CalculateGradientIntegral(func, x, x2, p, &gradFunc[0]);
+         fval = igEval(x, x2.data());
+         CalculateGradientIntegral(func, x, x2.data(), p, &gradFunc[0]);
       }
       if (useBinVolume)
          fval *= binVolume;
@@ -786,14 +799,14 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       Warning("FitUtil::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                               "to ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::EExecutionPolicy::kSequential;
    }
 #endif
 
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kSequential) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -801,7 +814,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   else if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       ROOT::TThreadExecutor pool;
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
@@ -897,7 +910,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
 
 double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
                              int iWeight, bool extended, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                             ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the LogLikelihood
 
@@ -1023,17 +1036,17 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
   (void)nChunks;
 
   // If IMT is disabled, force the execution policy to the serial case
-  if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
      Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                      "to ROOT::Fit::ExecutionPolicy::kSerial.");
-     executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                      "to ROOT::EExecutionPolicy::kSequential.");
+     executionPolicy = ROOT::EExecutionPolicy::kSequential;
   }
 #endif
 
   double logl{};
   double sumW{};
   double sumW2{};
-  if(executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial){
+  if(executionPolicy == ROOT::EExecutionPolicy::kSequential){
     for (unsigned int i=0; i<n; ++i) {
       auto resArray = mapFunction(i);
       logl+=resArray.logvalue;
@@ -1041,7 +1054,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
       sumW2+=resArray.weight2;
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  } else if(executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
     ROOT::TThreadExecutor pool;
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -1053,7 +1066,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
   if (extended) {
@@ -1105,7 +1118,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 
    }
 
-#ifdef DEBUG  
+#ifdef DEBUG
    std::cout << "Evaluated log L for parameters (";
    for (unsigned int ip = 0; ip < func.NPar(); ++ip)
       std::cout << " " << p[ip];
@@ -1116,7 +1129,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 }
 
 void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
-                                   unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                   unsigned int &, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the log likelihood function
 
@@ -1130,7 +1143,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
    (const_cast<IGradModelFunction &>(func)).SetParameters(p);
 
-#ifdef DEBUG  
+#ifdef DEBUG
     std::cout << "\n===> Evaluate Gradient for parameters ";
          for (unsigned int ip = 0; ip < npar; ++ip)
             std::cout << "  " << p[ip];
@@ -1151,14 +1164,14 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
          xc.resize(data.NDim() );
          for (unsigned int j = 0; j < data.NDim(); ++j)
             xc[j] = *data.GetCoordComponent(i, j);
-         x = xc.data(); 
+         x = xc.data();
       } else {
          x = data.GetCoordComponent(i, 0);
       }
 
       double fval = func(x, p);
       func.ParameterGradient(x, p, &gradFunc[0]);
-      
+
 #ifdef DEBUG
       {
          R__LOCKGUARD(gROOTMutex);
@@ -1203,14 +1216,14 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       Warning("FitUtil::EvaluateLogLGradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                               "to ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::EExecutionPolicy::kSequential;
    }
 #endif
 
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kSequential) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -1218,21 +1231,16 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   else if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       ROOT::TThreadExecutor pool;
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
-
-   // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-   //    ROOT::TProcessExecutor pool;
-   //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-   // }
    else {
       Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
-                                             "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
-                                             "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+                                             "ROOT::EExecutionPolicy::kSequential (default)\n "
+                                             "ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT
@@ -1274,10 +1282,10 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    if (useBinVolume) {
       unsigned int ndim = data.NDim();
       xc.resize(ndim);
-      x2 = data.BinUpEdge(i);
       for (unsigned int j = 0; j < ndim; ++j) {
-         binVolume *= std::abs( x2[j]-x1[j] );
-         xc[j] = 0.5*(x2[j]+ x1[j]);
+         double x2j = data.GetBinUpEdgeComponent(i, j);
+         binVolume *= std::abs( x2j-x1[j] );
+         xc[j] = 0.5*(x2j+ x1[j]);
       }
       // normalize the bin volume using a reference value
       binVolume /= data.RefVolume();
@@ -1290,8 +1298,9 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    }
    else {
       // calculate integral normalized (divided by bin volume)
-      x2 =  data.BinUpEdge(i);
-      fval = igEval( x1, x2 ) ;
+      std::vector<double> vx2(data.NDim());
+      data.GetBinUpEdgeCoordinates(i, vx2.data());
+      fval = igEval( x1, vx2.data() ) ;
    }
    if (useBinVolume) fval *= binVolume;
 
@@ -1361,7 +1370,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 }
 
 double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
-                                    bool extended, unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy,
+                                    bool extended, unsigned int &nPoints, ROOT::EExecutionPolicy executionPolicy,
                                     unsigned nChunks)
 {
    // evaluate the Poisson Log Likelihood
@@ -1402,6 +1411,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
    }
 
+//#define DEBUG
 #ifdef DEBUG
    std::cout << "Evaluate PoissonLogL for params = [ ";
    for (unsigned int j = 0; j < func.NPar(); ++j) std::cout << p[j] << " , ";
@@ -1409,10 +1419,16 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
              << useBinVolume << " useW2 " << useW2 << " wrefVolume = " << wrefVolume << std::endl;
 #endif
 
+
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval(func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval(func, 0, useBinIntegral, igType);
 #else
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   IntegralEvaluator<> igEval(func, p, useBinIntegral, igType);
 #endif
 
    auto mapFunction = [&](const unsigned i) {
@@ -1426,12 +1442,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 
       if (useBinVolume) {
          unsigned int ndim = data.NDim();
-         const double *x2 = data.BinUpEdge(i);
          xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto xx = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j] - xx);
-            xc[j] = 0.5 * (x2[j] + xx);
+            double xx = *data.GetCoordComponent(i, j);
+            double x2 = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2 - xx);
+            xc[j] = 0.5 * (x2 + xx);
          }
          x = xc.data();
          // normalize the bin volume using a reference value
@@ -1456,7 +1472,9 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval(x, data.BinUpEdge(i));
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
+         fval = igEval(x, x2.data());
       }
       if (useBinVolume) fval *= binVolume;
 
@@ -1470,7 +1488,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          std::cout << "]  ";
          if (fitOpt.fIntegral) {
             std::cout << "x2 = [ ";
-            for (unsigned int j = 0; j < func.NDim(); ++j) std::cout << data.BinUpEdge(i)[j] << " , ";
+            for (unsigned int j = 0; j < func.NDim(); ++j) std::cout << data.GetBinUpEdgeComponent(i, j) << " , ";
             std::cout << "] ";
          }
          std::cout << "  y = " << y << " fval = " << fval << std::endl;
@@ -1489,7 +1507,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          // can apply correction only when y is not zero otherwise weight is undefined
          // (in case of weighted likelihood I don't care about the constant term due to
          // the saturated model)
- 
+
          // use for the empty bins the global weight
          double weight = 1.0;
          if (y != 0) {
@@ -1516,6 +1534,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
             nloglike += y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
          }
       }
+#ifdef DEBUG
+      {
+         R__LOCKGUARD(gROOTMutex);
+         std::cout << " nll = " << nloglike << std::endl;
+      }
+#endif
       return nloglike;
    };
 
@@ -1527,20 +1551,20 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    (void)nChunks;
 
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       Warning("FitUtil::EvaluatePoissonLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                              "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                              "to ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::EExecutionPolicy::kSequential;
    }
 #endif
 
    double res{};
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kSequential) {
       for (unsigned int i = 0; i < n; ++i) {
          res += mapFunction(i);
       }
 #ifdef R__USE_IMT
-   } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   } else if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       ROOT::TThreadExecutor pool;
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -1550,7 +1574,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL",
-            "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+            "Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
 
 #ifdef DEBUG
@@ -1561,7 +1585,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 }
 
 void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                          unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                          unsigned int &, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the Poisson log likelihood function
 
@@ -1573,7 +1597,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 #ifdef USE_PARAMCACHE
    (const_cast<IGradModelFunction &>(func)).SetParameters(p);
 #endif
-   
+
    const DataOptions &fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
@@ -1582,7 +1606,13 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    if (useBinVolume && fitOpt.fNormBinVolume)
       wrefVolume /= data.RefVolume();
 
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
+
+   IntegralEvaluator<> igEval(func, p, useBinIntegral, igType);
 
    unsigned int npar = func.NPar();
    unsigned initialNPoints = data.Size();
@@ -1606,13 +1636,14 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       unsigned ndim = data.NDim();
       double binVolume = 1.0;
       if (useBinVolume) {
-         const double *x2 = data.BinUpEdge(i);
 
          xc.resize(ndim);
+
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto x1_j = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j] - x1_j);
-            xc[j] = 0.5 * (x2[j] + x1_j);
+            double x1_j = *data.GetCoordComponent(i, j);
+            double x2_j = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2_j - x1_j);
+            xc[j] = 0.5 * (x2_j + x1_j);
          }
 
          x = xc.data();
@@ -1635,9 +1666,10 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         auto x2 = data.BinUpEdge(i);
-         fval = igEval(x, x2);
-         CalculateGradientIntegral(func, x, x2, p, &gradFunc[0]);
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
+         fval = igEval(x, x2.data());
+         CalculateGradientIntegral(func, x, x2.data(), p, &gradFunc[0]);
       }
       if (useBinVolume)
          fval *= binVolume;
@@ -1695,15 +1727,15 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       Warning("FitUtil::EvaluatePoissonLogLGradient",
               "Multithread execution policy requires IMT, which is disabled. Changing "
-              "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+              "to ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::EExecutionPolicy::kSequential;
    }
 #endif
 
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::EExecutionPolicy::kSequential) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -1711,7 +1743,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   else if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       ROOT::TThreadExecutor pool;
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
@@ -1740,12 +1772,12 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    for (unsigned int ii = 0; ii< npar; ++ii) std::cout << grad[ii] << "   ";
    std::cout << "\n";
 #endif
-   
+
 }
 
 
 unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
-      auto ncpu  = ROOT::GetImplicitMTPoolSize();
+      auto ncpu  = ROOT::GetThreadPoolSize();
       if (nEvents/ncpu < 1000) return ncpu;
       return nEvents/1000;
       //return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula

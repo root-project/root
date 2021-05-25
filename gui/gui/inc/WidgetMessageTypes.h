@@ -13,20 +13,18 @@
 
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// WidgetMessageTypes                                                   //
-//                                                                      //
-// System predefined widget message types. Message types are constants  //
-// that indicate which widget sent the message and by which widget      //
-// function (sub-message). Make sure your own message types don't clash //
-// whith the ones defined in this file. ROOT reserves all message ids   //
-// between 0 - 1000. User defined messages should be in the range       //
-// 1001 - 10000. Sub-messages must always be in the range 1-255.        //
-// To use MK_MSG() just cast your message id's to an EWidgetMessageType.//
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+///
+/// WidgetMessageTypes
+///
+/// System predefined widget message types. Message types are constants
+/// that indicate which widget sent the message and by which widget
+/// function (sub-message). Make sure your own message types don't clash
+/// with the ones defined in this file. ROOT reserves all message ids
+/// between 0 - 1000. User defined messages should be in the range
+/// 1001 - 10000. Sub-messages must always be in the range 1-255.
+/// To use MK_MSG() just cast your message id's to an EWidgetMessageType.
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 
 enum EWidgetMessageTypes {

@@ -29,7 +29,7 @@ Example:
 
 Assume a TTree object T and:
 ~~~ {.cpp}
-    Root > T.Draw("abs(fMomemtum)%fEtot")
+    Root > T.Draw("abs(fMomemtum):fEtot")
 ~~~
 the TCutG members fVarX, fVary will be set to:
 ~~~ {.cpp}
@@ -70,7 +70,7 @@ corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
 ~~~
 Example of use of a TCutG in TTree::Draw:
 ~~~ {.cpp}
-    tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
+    tree.Draw("x:y","mycutg && z>0 && sqrt(x)>1")
 ~~~
 A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
 TGraph. Being a TGraph the drawing options and behavior relatives to graphs apply.
@@ -80,16 +80,16 @@ See in particular "Graphs in logarithmic scale".
 A Graphical cut may be saved to a file via TCutG::Write.
 */
 
-#include <string.h>
+#include <cstring>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCutG.h"
+#include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TH2.h"
-#include "TClass.h"
-#include "TMath.h"
+#include "strlcpy.h"
 
 ClassImp(TCutG);
 
@@ -110,8 +110,8 @@ TCutG::TCutG(const TCutG &cutg)
 {
    fVarX    = cutg.fVarX;
    fVarY    = cutg.fVarY;
-   fObjectX = cutg.fObjectX;
-   fObjectY = cutg.fObjectY;
+   fObjectX = cutg.fObjectX ? cutg.fObjectX->Clone() : nullptr;
+   fObjectY = cutg.fObjectY ? cutg.fObjectY->Clone() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,8 +257,8 @@ TCutG &TCutG::operator=(const TCutG &rhs)
       TGraph::operator=(rhs);
       delete fObjectX;
       delete fObjectY;
-      fObjectX = rhs.fObjectX->Clone();
-      fObjectY = rhs.fObjectY->Clone();
+      fObjectX = rhs.fObjectX ? rhs.fObjectX->Clone() : nullptr;
+      fObjectY = rhs.fObjectY ? rhs.fObjectY->Clone() : nullptr;
    }
    return *this;
 }

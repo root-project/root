@@ -42,18 +42,18 @@
 
 #include "TQpProbBase.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQpProbBase                                                          //
-//                                                                      //
-// default general problem formulation:                                 //
-//                                                                      //
-//  minimize    c' x + ( 1/2 ) x' * Q x        ;                        //
-//  subject to                      A x  = b   ;                        //
-//                          clo <=  C x <= cup ;                        //
-//                          xlo <=    x <= xup ;                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TQpProbBase
+///
+/// default general problem formulation:
+///
+///              minimize    c' x + ( 1/2 ) x' * Q x        ;
+///              subject to                      A x  = b   ;
+///                                      clo <=  C x <= cup ;
+///                                      xlo <=    x <= xup ;
+///
+////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TQpProbBase);
 

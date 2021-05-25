@@ -1,9 +1,8 @@
 //===- Loads.cpp - Local load analysis ------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -72,7 +71,7 @@ static bool isDereferenceableAndAlignedPointer(
                         V->getPointerDereferenceableBytes(DL, CheckForNonNull));
   if (KnownDerefBytes.getBoolValue()) {
     if (KnownDerefBytes.uge(Size))
-      if (!CheckForNonNull || isKnownNonNullAt(V, CtxI, DT))
+      if (!CheckForNonNull || isKnownNonZero(V, DL, 0, nullptr, CtxI, DT))
         return isAligned(V, Align, DL);
   }
 
@@ -80,7 +79,7 @@ static bool isDereferenceableAndAlignedPointer(
   if (const GEPOperator *GEP = dyn_cast<GEPOperator>(V)) {
     const Value *Base = GEP->getPointerOperand();
 
-    APInt Offset(DL.getPointerTypeSizeInBits(GEP->getType()), 0);
+    APInt Offset(DL.getIndexTypeSizeInBits(GEP->getType()), 0);
     if (!GEP->accumulateConstantOffset(DL, Offset) || Offset.isNegative() ||
         !Offset.urem(APInt(Offset.getBitWidth(), Align)).isMinValue())
       return false;
@@ -107,9 +106,9 @@ static bool isDereferenceableAndAlignedPointer(
     return isDereferenceableAndAlignedPointer(ASC->getOperand(0), Align, Size,
                                               DL, CtxI, DT, Visited);
 
-  if (auto CS = ImmutableCallSite(V))
-    if (const Value *RV = CS.getReturnedArgOperand())
-      return isDereferenceableAndAlignedPointer(RV, Align, Size, DL, CtxI, DT,
+  if (const auto *Call = dyn_cast<CallBase>(V))
+    if (auto *RP = getArgumentAliasingToReturnedPointer(Call))
+      return isDereferenceableAndAlignedPointer(RP, Align, Size, DL, CtxI, DT,
                                                 Visited);
 
   // If we don't know, assume the worst.
@@ -126,7 +125,8 @@ bool llvm::isDereferenceableAndAlignedPointer(const Value *V, unsigned Align,
                                               Visited);
 }
 
-bool llvm::isDereferenceableAndAlignedPointer(const Value *V, unsigned Align,
+bool llvm::isDereferenceableAndAlignedPointer(const Value *V, Type *Ty,
+                                              unsigned Align,
                                               const DataLayout &DL,
                                               const Instruction *CtxI,
                                               const DominatorTree *DT) {
@@ -134,8 +134,6 @@ bool llvm::isDereferenceableAndAlignedPointer(const Value *V, unsigned Align,
   // attribute, we know exactly how many bytes are dereferenceable. If we can
   // determine the exact offset to the attributed variable, we can use that
   // information here.
-  Type *VTy = V->getType();
-  Type *Ty = VTy->getPointerElementType();
 
   // Require ABI alignment for loads without alignment specification
   if (Align == 0)
@@ -146,17 +144,19 @@ bool llvm::isDereferenceableAndAlignedPointer(const Value *V, unsigned Align,
 
   SmallPtrSet<const Value *, 32> Visited;
   return ::isDereferenceableAndAlignedPointer(
-      V, Align, APInt(DL.getTypeSizeInBits(VTy), DL.getTypeStoreSize(Ty)), DL,
-      CtxI, DT, Visited);
+      V, Align,
+      APInt(DL.getIndexTypeSizeInBits(V->getType()), DL.getTypeStoreSize(Ty)),
+      DL, CtxI, DT, Visited);
 }
 
-bool llvm::isDereferenceablePointer(const Value *V, const DataLayout &DL,
+bool llvm::isDereferenceablePointer(const Value *V, Type *Ty,
+                                    const DataLayout &DL,
                                     const Instruction *CtxI,
                                     const DominatorTree *DT) {
-  return isDereferenceableAndAlignedPointer(V, 1, DL, CtxI, DT);
+  return isDereferenceableAndAlignedPointer(V, Ty, 1, DL, CtxI, DT);
 }
 
-/// \brief Test if A and B will obviously have the same value.
+/// Test if A and B will obviously have the same value.
 ///
 /// This includes recognizing that %t0 and %t1 will have the same
 /// value in code like this:
@@ -187,7 +187,7 @@ static bool AreEquivalentAddressValues(const Value *A, const Value *B) {
   return false;
 }
 
-/// \brief Check if executing a load of this pointer value cannot trap.
+/// Check if executing a load of this pointer value cannot trap.
 ///
 /// If DT and ScanFrom are specified this method performs context-sensitive
 /// analysis and returns true if it is safe to load immediately before ScanFrom.
@@ -198,7 +198,7 @@ static bool AreEquivalentAddressValues(const Value *A, const Value *B) {
 ///
 /// This uses the pointee type to determine how many bytes need to be safe to
 /// load from the pointer.
-bool llvm::isSafeToLoadUnconditionally(Value *V, unsigned Align,
+bool llvm::isSafeToLoadUnconditionally(Value *V, unsigned Align, APInt &Size,
                                        const DataLayout &DL,
                                        Instruction *ScanFrom,
                                        const DominatorTree *DT) {
@@ -209,7 +209,7 @@ bool llvm::isSafeToLoadUnconditionally(Value *V, unsigned Align,
 
   // If DT is not specified we can't make context-sensitive query
   const Instruction* CtxI = DT ? ScanFrom : nullptr;
-  if (isDereferenceableAndAlignedPointer(V, Align, DL, CtxI, DT))
+  if (isDereferenceableAndAlignedPointer(V, Align, Size, DL, CtxI, DT))
     return true;
 
   int64_t ByteOffset = 0;
@@ -281,9 +281,17 @@ bool llvm::isSafeToLoadUnconditionally(Value *V, unsigned Align,
     Value *AccessedPtr;
     unsigned AccessedAlign;
     if (LoadInst *LI = dyn_cast<LoadInst>(BBI)) {
+      // Ignore volatile loads. The execution of a volatile load cannot
+      // be used to prove an address is backed by regular memory; it can,
+      // for example, point to an MMIO register.
+      if (LI->isVolatile())
+        continue;
       AccessedPtr = LI->getPointerOperand();
       AccessedAlign = LI->getAlignment();
     } else if (StoreInst *SI = dyn_cast<StoreInst>(BBI)) {
+      // Ignore volatile stores (see comment for loads).
+      if (SI->isVolatile())
+        continue;
       AccessedPtr = SI->getPointerOperand();
       AccessedAlign = SI->getAlignment();
     } else
@@ -306,7 +314,15 @@ bool llvm::isSafeToLoadUnconditionally(Value *V, unsigned Align,
   return false;
 }
 
-/// DefMaxInstsToScan - the default number of maximum instructions
+bool llvm::isSafeToLoadUnconditionally(Value *V, Type *Ty, unsigned Align,
+                                       const DataLayout &DL,
+                                       Instruction *ScanFrom,
+                                       const DominatorTree *DT) {
+  APInt Size(DL.getIndexTypeSizeInBits(V->getType()), DL.getTypeStoreSize(Ty));
+  return isSafeToLoadUnconditionally(V, Align, Size, DL, ScanFrom, DT);
+}
+
+  /// DefMaxInstsToScan - the default number of maximum instructions
 /// to scan in the block, used by FindAvailableLoadedValue().
 /// FindAvailableLoadedValue() was introduced in r60148, to improve jump
 /// threading in part by eliminating partially redundant loads.
@@ -345,7 +361,7 @@ Value *llvm::FindAvailablePtrLoadStore(Value *Ptr, Type *AccessTy,
   const DataLayout &DL = ScanBB->getModule()->getDataLayout();
 
   // Try to get the store size for the type.
-  uint64_t AccessSize = DL.getTypeStoreSize(AccessTy);
+  auto AccessSize = LocationSize::precise(DL.getTypeStoreSize(AccessTy));
 
   Value *StrippedPtr = Ptr->stripPointerCasts();
 
@@ -414,7 +430,7 @@ Value *llvm::FindAvailablePtrLoadStore(Value *Ptr, Type *AccessTy,
 
       // If we have alias analysis and it says the store won't modify the loaded
       // value, ignore the store.
-      if (AA && (AA->getModRefInfo(SI, StrippedPtr, AccessSize) & MRI_Mod) == 0)
+      if (AA && !isModSet(AA->getModRefInfo(SI, StrippedPtr, AccessSize)))
         continue;
 
       // Otherwise the store that may or may not alias the pointer, bail out.
@@ -426,8 +442,7 @@ Value *llvm::FindAvailablePtrLoadStore(Value *Ptr, Type *AccessTy,
     if (Inst->mayWriteToMemory()) {
       // If alias analysis claims that it really won't modify the load,
       // ignore it.
-      if (AA &&
-          (AA->getModRefInfo(Inst, StrippedPtr, AccessSize) & MRI_Mod) == 0)
+      if (AA && !isModSet(AA->getModRefInfo(Inst, StrippedPtr, AccessSize)))
         continue;
 
       // May modify the pointer, bail out.

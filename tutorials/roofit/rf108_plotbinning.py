@@ -1,21 +1,19 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #108
-## Plotting unbinned data with alternate and variable binnings
+## Basic functionality: plotting unbinned data with alternate and variable binnings
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
 # Set up model
 # ---------------------
 
-# Build a B decay p.d.f with mixing
+# Build a B decay pdf with mixing
 dt = ROOT.RooRealVar("dt", "dt", -20, 20)
 dm = ROOT.RooRealVar("dm", "dm", 0.472)
 tau = ROOT.RooRealVar("tau", "tau", 1.547)
@@ -37,7 +35,7 @@ gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct Bdecay (x) gauss
 bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav,
-                            tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+                         tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
 
 # Sample data from model
 # --------------------------------------------
@@ -62,7 +60,7 @@ tbins.addUniform(15, 0, 15)
 
 # Make plot with specified binning
 dtframe = dt.frame(ROOT.RooFit.Range(-15, 15),
-                    ROOT.RooFit.Title("dt distribution with custom binning"))
+                   ROOT.RooFit.Title("dt distribution with custom binning"))
 data.plotOn(dtframe, ROOT.RooFit.Binning(tbins))
 bmix.plotOn(dtframe)
 
@@ -95,7 +93,7 @@ aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title(
 data.plotOn(aframe, ROOT.RooFit.Asymmetry(
     mixState), ROOT.RooFit.Binning(abins))
 
-# Plot corresponding property of p.d.f
+# Plot corresponding property of pdf
 bmix.plotOn(aframe, ROOT.RooFit.Asymmetry(mixState))
 
 # Adjust vertical range of plot to sensible values for an asymmetry

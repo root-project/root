@@ -39,26 +39,17 @@ using namespace clang;
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fTitle("")
 {
    Init(name);
 }
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const clang::TypedefNameDecl *TdefD)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(TdefD),
-     fTitle("")
+   : TClingDeclInfo(TdefD), fInterp(interp), fFirstTime(true), fDescend(false), fTitle("")
 {
    // Initialize with a clang::TypedefDecl.
    // fIter is invalid; cannot call Next().
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get the current typedef declaration.
-
-const clang::Decl *TClingTypedefInfo::GetDecl() const
-{
-   return fDecl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,18 +97,12 @@ void TClingTypedefInfo::Init(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if the current iterator position is valid.
-
-bool TClingTypedefInfo::IsValid() const
-{
-   return fDecl;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Increment the iterator, return true if new position is valid.
 
 int TClingTypedefInfo::InternalNext()
 {
+   fNameCache.clear(); // invalidate the cache.
+
    if (!*fIter) {
       // Iterator is already invalid.
       if (fFirstTime && fDecl) {
@@ -202,40 +187,7 @@ long TClingTypedefInfo::Property() const
    property |= kIsTypedef;
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    clang::QualType qt = td->getUnderlyingType().getCanonicalType();
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   while (1) {
-      if (qt->isArrayType()) {
-         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
-         continue;
-      }
-      else if (qt->isReferenceType()) {
-         property |= kIsReference;
-         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isPointerType()) {
-         property |= kIsPointer;
-         if (qt.isConstQualified()) {
-            property |= kIsConstPointer;
-         }
-         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isMemberPointerType()) {
-         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
-         continue;
-      }
-      break;
-   }
-   if (qt->isBuiltinType()) {
-      property |= kIsFundamental;
-   }
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   return property;
+   return TClingDeclInfo::Property(property, qt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +200,8 @@ int TClingTypedefInfo::Size() const
    }
    clang::ASTContext &context = fDecl->getASTContext();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
+   if (!td)
+      return 0; // should never happens
    clang::QualType qt = td->getUnderlyingType();
    if (qt->isDependentType()) {
       // The underlying type is dependent on a template parameter,
@@ -283,6 +237,8 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    TTHREAD_TLS_DECL( std::string, truename);
    truename.clear();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
+   if (!td)
+      return "(badcast)";
    clang::QualType underlyingType = td->getUnderlyingType();
    if (underlyingType->isBooleanType()) {
       return "bool";
@@ -290,7 +246,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
    ROOT::TMetaUtils::GetNormalizedName(truename, ctxt.getTypedefType(td), *fInterp, normCtxt);
 
-   return truename.c_str();
+   return truename.c_str();  // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -301,13 +257,13 @@ const char *TClingTypedefInfo::Name() const
    if (!IsValid()) {
       return "(unknown)";
    }
-   // Note: This must be static because we return a pointer to the internals.
-   TTHREAD_TLS_DECL( std::string, fullname);
-   fullname.clear();
-   const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
-   const clang::ASTContext &ctxt = fDecl->getASTContext();
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fullname,ctxt.getTypedefType(td),*fInterp);
-   return fullname.c_str();
+   if (!fNameCache.empty())
+     return fNameCache.c_str();
+
+   const clang::TypedefNameDecl *td = llvm::cast<clang::TypedefNameDecl>(fDecl);
+   const clang::ASTContext &ctxt = td->getASTContext();
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fNameCache, ctxt.getTypedefType(td), *fInterp);
+   return fNameCache.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

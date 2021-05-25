@@ -82,7 +82,7 @@ ClassImp(TMySQLServer);
 
 TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
 {
-   fMySQL = 0;
+   fMySQL = nullptr;
    fInfo = "MySQL";
 
    TUrl url(db);
@@ -102,7 +102,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    }
 
    const char* dbase = url.GetFile();
-   if (dbase!=0)
+   if (dbase)
       if (*dbase=='/') dbase++; //skip leading "/" if appears
 
    fMySQL = new MYSQL;
@@ -341,7 +341,7 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
 {
    CheckConnect("GetTables", 0);
 
-   if (SelectDataBase(dbname) != 0) return 0;
+   if (SelectDataBase(dbname) != 0) return nullptr;
 
    MYSQL_RES *res = mysql_list_tables(fMySQL, wild);
 
@@ -364,15 +364,15 @@ TList* TMySQLServer::GetTablesList(const char* wild)
 
    MYSQL_ROW row = mysql_fetch_row(res);
 
-   TList* lst = 0;
+   TList *lst = nullptr;
 
    while (row!=0) {
       CheckErrNo("GetTablesList", kFALSE, lst);
 
-      const char* tablename = row[0];
+      const char *tablename = row[0];
 
-      if (tablename!=0) {
-         if (lst==0) {
+      if (tablename) {
+         if (!lst) {
             lst = new TList();
             lst->SetOwner(kTRUE);
          }
@@ -395,7 +395,7 @@ TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
 {
    CheckConnect("GetTableInfo", 0);
 
-   if ((tablename==0) || (*tablename==0)) return 0;
+   if (!tablename || (*tablename==0)) return nullptr;
 
    TString sql;
    sql.Form("SELECT * FROM `%s` LIMIT 1", tablename);
@@ -413,16 +413,16 @@ TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
    sql.Form("SHOW COLUMNS FROM `%s`", tablename);
    TSQLResult* showres = Query(sql.Data());
 
-   if (showres==0) {
+   if (!showres) {
       mysql_free_result(res);
-      return 0;
+      return nullptr;
    }
 
-   TList* lst = 0;
+   TList *lst = nullptr;
 
    unsigned int nfield = 0;
 
-   TSQLRow* row = 0;
+   TSQLRow* row = nullptr;
 
    while ((row = showres->Next()) != 0) {
       const char* column_name = row->GetField(0);
@@ -431,7 +431,7 @@ TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
       if ((nfield>=numfields) ||
           (strcmp(column_name, fields[nfield].name)!=0))
       {
-         SetError(-1,"missmatch in column names","GetTableInfo");
+         SetError(-1,"mismatch in column names","GetTableInfo");
          break;
       }
 
@@ -591,7 +591,7 @@ TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
 {
    CheckConnect("GetColumns", 0);
 
-   if (SelectDataBase(dbname) != 0) return 0;
+   if (SelectDataBase(dbname) != 0) return nullptr;
 
    TString sql;
    if (wild)
@@ -707,14 +707,14 @@ TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
 #if MYSQL_VERSION_ID < 40100
    ClearError();
    SetError(-1, "Statement class does not supported by MySQL version < 4.1", "Statement");
-   return 0;
+   return nullptr;
 #else
 
    CheckConnect("Statement", 0);
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
-      return 0;
+      return nullptr;
    }
 
    MYSQL_STMT *stmt = mysql_stmt_init(fMySQL);
@@ -724,7 +724,7 @@ TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
    if (mysql_stmt_prepare(stmt, sql, strlen(sql))) {
       SetError(mysql_errno(fMySQL), mysql_error(fMySQL), "Statement");
       mysql_stmt_close(stmt);
-      return 0;
+      return nullptr;
    }
 
    return new TMySQLStatement(stmt, fErrorOut);

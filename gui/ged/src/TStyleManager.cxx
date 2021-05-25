@@ -9,111 +9,101 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStyleManager                                                       //
-//                                                                      //
-//  This class provides a Graphical User Interface to manage styles     //
-//       in ROOT. It allows the user to edit styles, import / export    //
-//       them to macros, apply a style on the selected object or on     //
-//       all canvases, change gStyle.                                   //
-//                                                                      //
-//  Activate the style manager by selecting Edit menu / Style...        //
-//      in the canvas window.                                           //
-//                                                                      //
-//  The Style Manager interface is composed of two parts:               //
-//  - the top level interface that manages a list of styles;            //
-//  - the style editor, which deals with the current style settings.    //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/StyleManager.gif">
+
+/** \class TStyleManager
+    \ingroup ged
+
+ This class provides a Graphical User Interface to manage styles
+      in ROOT. It allows the user to edit styles, import / export
+      them to macros, apply a style on the selected object or on
+      all canvases, change gStyle.
+
+ Activate the style manager by selecting Edit menu / Style...
+     in the canvas window.
+
+ The Style Manager interface is composed of two parts:
+ - the top level interface that manages a list of styles;
+ - the style editor, which deals with the current style settings.
+
+
+The combo box 'Available Styles' contains the list of available
+styles for the current ROOT session and shows the currently
+selected one. The field on the right shows the setting of the gStyle.
+You can set the global variable gStyle to the selected style by
+clicking on the button in the middle.
+The group frame 'Apply on' displays information for the currently
+selected canvas and object in the ROOT session. This selection might
+be changed by clicking on another object with the middle mouse
+button. You have a choice to apply a style on the selected object or
+on all available canvases.
+WARNING: You cannot undo the changes after applying the style! If
+you are not sure of that action, it may be better to see a preview
+of what you are going to apply.
+If the check button 'Preview' is selected, a preview of the selected
+canvas according to the selected style will be shown. The selection
+of the next check button 'Run Time Preview' will apply updates of
+the preview any time a value of the selected style is changed. For
+drawings that take a time it is better to disable this option.
+
+Create a new style:
+A new style can be created via the Style menu/New... or the toolbar.
+A clone of the selected style will be used as a base of the new
+style. All its values can be modified via the style editor later.
+The dialog that appears will ask for the name and description of the
+new style.
+
+Import a style (from a macro):
+A style macro can be imported at any time. The new imported style in
+the ROOT session will become the selected one.
+
+Import a style (from a canvas):
+You can do that selecting the Style menu/Import from.../Canvas or
+the corresponding Tool bar button. A new style will be created in the
+ROOT session and will become the selected one. This style is a clone
+of the gStyle with modified values as they are set in the currently
+selected canvas. You can import a style from any canvas and apply it
+later on some objects.
+
+Export a style (in a C++ macro file):
+To store a style longer than for the current ROOT session you can
+save it in a C++ macro file. This can be done via the menu or the
+tool bar button. There is a naming convention for the style macros:
+the name must be 'Style_*.C', where * can be replaced by anything
+you want.
+
+Delete a style:
+The selected style can be deleted from the list when you use the
+Style menu/Delete or the corresponding tool bar button. The selected
+style is removed from the list of all available styles for the
+current ROOT session. WARRNING: it will be lost if you didn't saved
+it in a C++ macro file before its deletion. Also, you cannot delete
+the selected style if it is set to gStyle. A message 'Can not delete
+gStyle' will be displayed on the CINT prompt.
+
+Editor's buttons:
+Open / close the style editor:
+The button 'Edit >>' opens the style editor and its label changes to
+'Close <<'. For all details of what can be changed and how please see
+the provided Help.
+
+Reset a style (to a previously saved state):
+When the editor is opened, the 'Reset' button allows you to reset
+the values of the selected style for editing. Doing that you cancel
+all changes made since the last time you saved that style in a macro.
+If the selected style is one of the five ROOT styles (Plain, Bold,
+Video, Pub or  Default), it will be recreated.
+
+Update the preview:
+The button 'Update Preview' is available when a preview is shown and
+the run time option is not selected. This button allows you to
+refresh the preview any time you want to see how the style you edit
+looks like.
+
+Help button:
+Provides a help of the currently selected tab.
+
 */
-//End_Html
-//                                                                      //
-// The combo box 'Available Styles' contains the list of available      //
-// styles for the current ROOT session and shows the currently          //
-// selected one. The field on the right shows the setting of the gStyle.//
-// You can set the global variable gStyle to the selected style by      //
-// clicking on the button in the middle.                                //
-// The group frame 'Apply on' displays information for the currently    //
-// selected canvas and object in the ROOT session. This selection might //
-// be changed by clicking on another object with the middle mouse       //
-// button. You have a choice to apply a style on the selected object or //
-// on all available canvases.                                           //
-// WARNING: You cannot undo the changes after applying the style! If    //
-// you are not sure of that action, it may be better to see a preview   //
-// of what you are going to apply.                                      //
-// If the check button 'Preview' is selected, a preview of the selected //
-// canvas according to the selected style will be shown. The selection  //
-// of the next check button 'Run Time Preview' will apply updates of    //
-// the preview any time a value of the selected style is changed. For   //
-// drawings that take a time it is better to disable this option.       //
-//                                                                      //
-// Create a new style:                                                  //
-// A new style can be created via the Style menu/New... or the toolbar. //
-// A clone of the selected style will be used as a base of the new      //
-// style. All its values can be modified via the style editor later.    //
-// The dialog that appears will ask for the name and description of the //
-// new style.                                                           //
-//                                                                      //
-// Import a style (from a macro):                                       //
-// A style macro can be imported at any time. The new imported style in //
-// the ROOT session will become the selected one.                       //
-//                                                                      //
-// Import a style (from a canvas):                                      //
-// You can do that selecting the Style menu/Import from.../Canvas or    //
-// the corresponding Tool bar button. A new style will be created in the//
-// ROOT session and will become the selected one. This style is a clone //
-// of the gStyle with modified values as they are set in the currently  //
-// selected canvas. You can import a style from any canvas and apply it //
-// later on some objects.                                               //
-//                                                                      //
-// Export a style (in a C++ macro file):                                //
-// To store a style longer than for the current ROOT session you can    //
-// save it in a C++ macro file. This can be done via the menu or the    //
-// tool bar button. There is a naming convention for the style macros:  //
-// the name must be 'Style_*.C', where * can be replaced by anything    //
-// you want.                                                            //
-//                                                                      //
-// Delete a style:                                                      //
-// The selected style can be deleted from the list when you use the     //
-// Style menu/Delete or the corresponding tool bar button. The selected //
-// style is removed from the list of all available styles for the       //
-// current ROOT session. WARRNING: it will be lost if you didn't saved  //
-// it in a C++ macro file before its deletion. Also, you cannot delete  //
-// the selected style if it is set to gStyle. A message 'Can not delete //
-// gStyle' will be displayed on the CINT prompt.                        //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/StyleEditor.gif">
-*/
-//End_Html
-//                                                                      //
-// Editor's buttons:                                                    //
-// Open / close the style editor:                                       //
-// The button 'Edit >>' opens the style editor and its label changes to //
-// 'Close <<'. For all details of what can be changed and how please see//
-// the provided Help.                                                   //
-//                                                                      //
-// Reset a style (to a previously saved state):                         //
-// When the editor is opened, the 'Reset' button allows you to reset    //
-// the values of the selected style for editing. Doing that you cancel  //
-// all changes made since the last time you saved that style in a macro.//
-// If the selected style is one of the five ROOT styles (Plain, Bold,   //
-// Video, Pub or  Default), it will be recreated.                       //
-//                                                                      //
-// Update the preview:                                                  //
-// The button 'Update Preview' is available when a preview is shown and //
-// the run time option is not selected. This button allows you to       //
-// refresh the preview any time you want to see how the style you edit  //
-// looks like.                                                          //
-//                                                                      //
-// Help button:                                                         //
-// Provides a help of the currently selected tab.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 #include "TStyleManager.h"
 #include "TStyleDialog.h"
@@ -130,23 +120,23 @@
 #include <TGedMarkerSelect.h>
 #include <TGedPatternSelect.h>
 #include <TGFileDialog.h>
-#include <TGFrame.h>
 #include <TGLabel.h>
 #include <TGLayout.h>
 #include <TGMenu.h>
-#include <TGMsgBox.h>
 #include <TGNumberEntry.h>
 #include <TGResourcePool.h>
 #include <TGStatusBar.h>
 #include <TGTab.h>
 #include <TGToolBar.h>
 #include <TROOT.h>
+#include <snprintf.h>
 #include <TRootHelpDialog.h>
 #include <TStyle.h>
 #include <TSystem.h>
 #include <TVirtualPad.h>
+#include <TVirtualX.h>
 
-TStyleManager *TStyleManager::fgStyleManager = 0;
+TStyleManager *TStyleManager::fgStyleManager = nullptr;
 
 ClassImp(TStyleManager);
 
@@ -918,7 +908,7 @@ void TStyleManager::DoExport()
    char* tmpFileName;
    const char* tmpBaseName;
    do {
-      fCurMacro->fFilename = StrDup(newName.Data());
+      fCurMacro->SetFilename(newName.Data());
 
       // Open a dialog to ask the user to choose an output file.
       new TGFileDialog(gClient->GetRoot(), this, kFDSave, fCurMacro);
@@ -931,7 +921,7 @@ void TStyleManager::DoExport()
    if (tmpBaseName != 0) {
       // Export the style.
       fCurSelStyle->SaveSource(gSystem->UnixPathName(tmpFileName));
-      fCurMacro->fFilename = StrDup(tmpBaseName);
+      fCurMacro->SetFilename(tmpBaseName);
       fStyleChanged = kFALSE;
    }
 
@@ -1013,7 +1003,7 @@ void TStyleManager::DoImportCanvas()
       CreateMacro();
       TString newName;
       newName.Form("Style_%s.C", fCurSelStyle->GetName());
-      fCurMacro->fFilename = StrDup(newName.Data());
+      fCurMacro->SetFilename(newName.Data());
       fCurSelStyle->SaveSource(gSystem->UnixPathName(fCurMacro->fFilename));
    } else {
       BuildList(fCurSelStyle);
@@ -1027,10 +1017,9 @@ void TStyleManager::CreateMacro()
 {
    if (fCurMacro) delete fCurMacro;
    fCurMacro = new TGFileInfo();
-   TString dir(".");
    fCurMacro->fFileTypes = kFiletypes;
-   fCurMacro->fIniDir    = StrDup(dir);
-   fCurMacro->fFilename  = 0;
+   fCurMacro->SetIniDir(".");
+   fCurMacro->SetFilename(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1433,7 +1422,6 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          delta = fCurSelStyle->GetTimeOffset() - 788918400;
          year = 1995;
          month = 1;
-         day = 1;
          while (delta < 0) {
             year--;
             if (year % 4) oneYearInSecs = 3600 * 24 * 365;
@@ -4336,12 +4324,12 @@ void TStyleManager::DoImportMacro(Bool_t create)
       if (!create) {
          TString newName;
          newName.Form("Style_%s.C", fCurSelStyle->GetName());
-         fCurMacro->fFilename = StrDup(newName.Data());
+         fCurMacro->SetFilename(newName.Data());
       }
       new TGFileDialog(gClient->GetRoot(), this, kFDOpen, fCurMacro);
-      if (fCurMacro->fFilename != 0) {
+      if (fCurMacro->fFilename) {
          gROOT->ProcessLine(Form(".x %s", fCurMacro->fFilename));
-         fCurMacro->fFilename = StrDup(gSystem->BaseName(fCurMacro->fFilename));
+         fCurMacro->SetFilename(gSystem->BaseName(fCurMacro->fFilename));
       }
    }
 
@@ -4420,7 +4408,8 @@ void TStyleManager::DoPreview(Bool_t b)
             TQObject::Connect("TCanvas", "Closed()", "TStyleManager", this, "DoSelectNoCanvas()");
          }
       }
-      fPreviewWindow->Connect("CloseWindow()", "TStyleManager", this, "DoPreviewClosed()");
+      if (fPreviewWindow)
+         fPreviewWindow->Connect("CloseWindow()", "TStyleManager", this, "DoPreviewClosed()");
       fPreviewRealTime->SetEnabled(kTRUE);
       if (fRealTimePreview) {
          fPreviewRealTime->SetState(kButtonDown, kFALSE);

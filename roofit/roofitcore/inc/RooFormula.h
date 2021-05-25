@@ -16,42 +16,53 @@
 #ifndef ROO_FORMULA
 #define ROO_FORMULA
 
-#include "Rtypes.h"
-#include "v5/TFormula.h"
-#include "RooAbsReal.h"
-#include "RooArgSet.h"
 #include "RooPrintable.h"
-#include "RooLinkedList.h"
-#include <vector>
+#include "RooArgList.h"
+#include "RooArgSet.h"
+#include "TFormula.h"
+#include "RooSpan.h"
 
-class RooFormula : public ROOT::v5::TFormula, public RooPrintable {
+#include <memory>
+#include <vector>
+#include <string>
+
+namespace RooBatchCompute {
+  struct RunContext;
+}
+class RooAbsReal;
+
+class RooFormula : public TNamed, public RooPrintable {
 public:
   // Constructors etc.
   RooFormula() ;
-  RooFormula(const char* name, const char* formula, const RooArgList& varList);
-  RooFormula(const RooFormula& other, const char* name=0) ;
-  virtual TObject* Clone(const char* newName=0) const { return new RooFormula(*this,newName) ; }
-  virtual ~RooFormula();
+  RooFormula(const char* name, const char* formula, const RooArgList& varList, bool checkVariables = true);
+  RooFormula(const RooFormula& other, const char* name=0);
+  virtual TObject* Clone(const char* newName = nullptr) const {return new RooFormula(*this, newName);}
 	
-  // Dependent management
-  RooArgSet& actualDependents() const ;
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Return list of arguments which are used in the formula.
+  RooArgSet actualDependents() const {return usedVariables();}
   Bool_t changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll, Bool_t nameChange) ;
 
-  inline RooAbsArg* getParameter(const char* name) const { 
-    // Return pointer to parameter with given name
-    return (RooAbsArg*) _useList.FindObject(name) ; 
-  }
-  inline RooAbsArg* getParameter(Int_t index) const { 
-    // Return pointer to parameter at given index
-    return (RooAbsArg*) _origList.At(index) ; 
+  /// Return pointer to the parameter with given name.
+  /// \return Parameter if in use, nullptr if not in use.
+  RooAbsArg* getParameter(const char* name) const {
+    return usedVariables().find(name);
   }
 
-  // Function value accessor
-  inline Bool_t ok() { return _isOK ; }
-  Double_t eval(const RooArgSet* nset=0) ;
+  /// Return pointer to parameter at given index. This returns
+  /// irrespective of whether the parameter is in use.
+  RooAbsArg* getParameter(Int_t index) const {
+    return _origList.at(index);
+  }
 
-  // Debugging
-  void dump() ;
+  Bool_t ok() const { return _tFormula != nullptr; }
+  /// Evalute all parameters/observables, and then evaluate formula.
+  Double_t eval(const RooArgSet* nset=0) const;
+  RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
+
+  /// DEBUG: Dump state information
+  void dump() const;
   Bool_t reCompile(const char* newFormula) ;
 
 
@@ -62,31 +73,27 @@ public:
   virtual void printArgs(std::ostream& os) const ;
   void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  virtual void Print(Option_t *options= 0) const {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-protected:
-  
-  RooFormula& operator=(const RooFormula& other) ;
-  void initCopy(const RooFormula& other) ;
+  std::string formulaString() const {
+    return _tFormula ? _tFormula->GetTitle() : "";
+  }
 
-  // Interface to ROOT::v5::TFormula engine
-  Int_t DefinedVariable(TString &name, int& action) ; // ROOT 4
-  Int_t DefinedVariable(TString &name) ; // ROOT 3
-  Double_t DefinedValue(Int_t code) ;
+private:
+  RooFormula& operator=(const RooFormula& other);
+  std::string processFormula(std::string origFormula) const;
+  RooArgList  usedVariables() const;
+  std::string reconstructFormula(std::string internalRepr) const;
+  void installFormulaOrThrow(const std::string& formulaa);
 
-  RooArgSet* _nset ;
-  mutable Bool_t    _isOK ;     // Is internal state OK?
-  RooLinkedList     _origList ; //! Original list of dependents
-  std::vector<Bool_t> _useIsCat;//! Is given slot in _useList a category?
-  RooLinkedList _useList ;      //! List of actual dependents 
-  mutable RooArgSet _actual;    //! Set of actual dependents
-  RooLinkedList _labelList ;    //  List of label names for category objects  
-  mutable Bool_t    _compiled ; //  Flag set if formula is compiled
+  RooArgList _origList; //! Original list of dependents
+  std::vector<bool> _isCategory; //! Whether an element of the _origList is a category.
+  std::unique_ptr<TFormula> _tFormula; //! The formula used to compute values
 
-  ClassDef(RooFormula,1)     // ROOT::v5::TFormula derived class interfacing with RooAbsArg objects
+  ClassDef(RooFormula,0)
 };
 
 #endif

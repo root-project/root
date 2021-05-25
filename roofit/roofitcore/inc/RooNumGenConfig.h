@@ -53,11 +53,7 @@ public:
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
   
 
-  static void cleanup() ;
-
 protected:
-
-  static RooNumGenConfig* _default ;
   
   RooCategory _method1D        ; // Selects integration method for 1D p.d.f.s
   RooCategory _method1DCat     ; // Selects integration method for 1D  p.d.f.s with categories

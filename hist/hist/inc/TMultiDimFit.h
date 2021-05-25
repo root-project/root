@@ -7,10 +7,10 @@
 #include "TNamed.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "TList.h"
 #include "TVirtualFitter.h"
 
 class TBrowser;
+class TList;
 
 class TMultiDimFit : public TNamed {
 
@@ -25,85 +25,85 @@ private:
    static TMultiDimFit* fgInstance; // Static instance
 protected:
 
-   TVectorD     fQuantity;             // Training sample, dependent quantity
-   TVectorD     fSqError;              // Training sample, error in quantity
-   Double_t     fMeanQuantity;         // Mean of dependent quantity
-   Double_t     fMaxQuantity;          // Max value of dependent quantity
-   Double_t     fMinQuantity;          // Min value of dependent quantity
-   Double_t     fSumSqQuantity;        // SumSquare of dependent quantity
-   Double_t     fSumSqAvgQuantity;     // Sum of squares away from mean
+   TVectorD     fQuantity;             ///< Training sample, dependent quantity
+   TVectorD     fSqError;              ///< Training sample, error in quantity
+   Double_t     fMeanQuantity;         ///< Mean of dependent quantity
+   Double_t     fMaxQuantity;          ///< Max value of dependent quantity
+   Double_t     fMinQuantity;          ///< Min value of dependent quantity
+   Double_t     fSumSqQuantity;        ///< SumSquare of dependent quantity
+   Double_t     fSumSqAvgQuantity;     ///< Sum of squares away from mean
 
-   TVectorD     fVariables;            // Training sample, independent variables
-   Int_t        fNVariables;           // Number of independent variables
-   TVectorD     fMeanVariables;        // mean value of independent variables
-   TVectorD     fMaxVariables;         // max value of independent variables
-   TVectorD     fMinVariables;         // min value of independent variables
+   TVectorD     fVariables;            ///< Training sample, independent variables
+   Int_t        fNVariables;           ///< Number of independent variables
+   TVectorD     fMeanVariables;        ///< mean value of independent variables
+   TVectorD     fMaxVariables;         ///< max value of independent variables
+   TVectorD     fMinVariables;         ///< min value of independent variables
 
-   Int_t        fSampleSize;           // Size of training sample
+   Int_t        fSampleSize;           ///< Size of training sample
 
-   TVectorD     fTestQuantity;         // Test sample, dependent quantity
-   TVectorD     fTestSqError;          // Test sample, Error in quantity
-   TVectorD     fTestVariables;        // Test sample, independent variables
+   TVectorD     fTestQuantity;         ///< Test sample, dependent quantity
+   TVectorD     fTestSqError;          ///< Test sample, Error in quantity
+   TVectorD     fTestVariables;        ///< Test sample, independent variables
 
-   Int_t        fTestSampleSize;       // Size of test sample
+   Int_t        fTestSampleSize;       ///< Size of test sample
 
-   Double_t     fMinAngle;             // Min angle for acepting new function
-   Double_t     fMaxAngle;             // Max angle for acepting new function
-   Int_t        fMaxTerms;             // Max terms expected in final expr.
-   Double_t     fMinRelativeError;     // Min relative error accepted
-   Int_t       *fMaxPowers;            // [fNVariables] maximum powers
-   Double_t     fPowerLimit;           // Control parameter
-
-
-   TMatrixD     fFunctions;            // Functions evaluated over sample
-   Int_t        fMaxFunctions;         // max number of functions
-   Int_t       *fFunctionCodes;        // [fMaxFunctions] acceptance code
-   Int_t        fMaxStudy;             // max functions to study
-   Int_t        fMaxFuncNV;            // fMaxFunctions*fNVariables
-
-   TMatrixD     fOrthFunctions;        // As above, but orthogonalised
-   TVectorD     fOrthFunctionNorms;    // Norm of the evaluated functions
+   Double_t     fMinAngle;             ///< Min angle for accepting new function
+   Double_t     fMaxAngle;             ///< Max angle for accepting new function
+   Int_t        fMaxTerms;             ///< Max terms expected in final expr.
+   Double_t     fMinRelativeError;     ///< Min relative error accepted
+   Int_t       *fMaxPowers;            ///<[fNVariables] maximum powers
+   Double_t     fPowerLimit;           ///< Control parameter
 
 
-   Int_t       *fMaxPowersFinal;       // [fNVariables] maximum powers from fit;
-   Int_t       *fPowers;               // [fMaxFuncNV] where fMaxFuncNV = fMaxFunctions*fNVariables
-   Int_t       *fPowerIndex;           // [fMaxTerms] Index of accepted powers
+   TMatrixD     fFunctions;            ///< Functions evaluated over sample
+   Int_t        fMaxFunctions;         ///< max number of functions
+   Int_t       *fFunctionCodes;        ///<[fMaxFunctions] acceptance code
+   Int_t        fMaxStudy;             ///< max functions to study
+   Int_t        fMaxFuncNV;            ///< fMaxFunctions*fNVariables
 
-   TVectorD     fResiduals;            // Vector of the final residuals
-   Double_t     fMaxResidual;          // Max redsidual value
-   Double_t     fMinResidual;          // Min redsidual value
-   Int_t        fMaxResidualRow;       // Row giving max residual
-   Int_t        fMinResidualRow;       // Row giving min residual
-   Double_t     fSumSqResidual;        // Sum of Square residuals
+   TMatrixD     fOrthFunctions;        ///< As above, but orthogonalised
+   TVectorD     fOrthFunctionNorms;    ///< Norm of the evaluated functions
 
-   Int_t        fNCoefficients;        // Dimension of model coefficients
-   TVectorD     fOrthCoefficients;     // The model coefficients
-   TMatrixD     fOrthCurvatureMatrix;  // Model matrix
-   TVectorD     fCoefficients;         // Vector of the final coefficients
-   TVectorD     fCoefficientsRMS;      // Vector of RMS of coefficients
-   Double_t     fRMS;                  // Root mean square of fit
-   Double_t     fChi2;                 // Chi square of fit
-   Int_t        fParameterisationCode; // Exit code of parameterisation
 
-   Double_t     fError;                // Error from parameterization
-   Double_t     fTestError;            // Error from test
-   Double_t     fPrecision;            // Relative precision of param
-   Double_t     fTestPrecision;        // Relative precision of test
-   Double_t     fCorrelationCoeff;     // Multi Correlation coefficient
-   TMatrixD     fCorrelationMatrix;    // Correlation matrix
-   Double_t     fTestCorrelationCoeff; // Multi Correlation coefficient
+   Int_t       *fMaxPowersFinal;       ///<[fNVariables] maximum powers from fit;
+   Int_t       *fPowers;               ///<[fMaxFuncNV] where fMaxFuncNV = fMaxFunctions*fNVariables
+   Int_t       *fPowerIndex;           ///<[fMaxTerms] Index of accepted powers
 
-   TList*       fHistograms;           // List of histograms
-   Byte_t       fHistogramMask;        // Bit pattern of hisograms used
-   Int_t        fBinVarX;              // Number of bin in independent variables
-   Int_t        fBinVarY;              // Number of bin in dependent variables
+   TVectorD     fResiduals;            ///< Vector of the final residuals
+   Double_t     fMaxResidual;          ///< Max residual value
+   Double_t     fMinResidual;          ///< Min residual value
+   Int_t        fMaxResidualRow;       ///< Row giving max residual
+   Int_t        fMinResidualRow;       ///< Row giving min residual
+   Double_t     fSumSqResidual;        ///< Sum of Square residuals
+
+   Int_t        fNCoefficients;        ///< Dimension of model coefficients
+   TVectorD     fOrthCoefficients;     ///< The model coefficients
+   TMatrixD     fOrthCurvatureMatrix;  ///< Model matrix
+   TVectorD     fCoefficients;         ///< Vector of the final coefficients
+   TVectorD     fCoefficientsRMS;      ///< Vector of RMS of coefficients
+   Double_t     fRMS;                  ///< Root mean square of fit
+   Double_t     fChi2;                 ///< Chi square of fit
+   Int_t        fParameterisationCode; ///< Exit code of parameterisation
+
+   Double_t     fError;                ///< Error from parametrization
+   Double_t     fTestError;            ///< Error from test
+   Double_t     fPrecision;            ///< Relative precision of param
+   Double_t     fTestPrecision;        ///< Relative precision of test
+   Double_t     fCorrelationCoeff;     ///< Multi Correlation coefficient
+   TMatrixD     fCorrelationMatrix;    ///< Correlation matrix
+   Double_t     fTestCorrelationCoeff; ///< Multi Correlation coefficient
+
+   TList*       fHistograms;           ///< List of histograms
+   Byte_t       fHistogramMask;        ///< Bit pattern of histograms used
+   Int_t        fBinVarX;              ///< Number of bin in independent variables
+   Int_t        fBinVarY;              ///< Number of bin in dependent variables
 
    TVirtualFitter* fFitter;            //! Fit object (MINUIT)
 
-   EMDFPolyType fPolyType;             // Type of polynomials to use
-   Bool_t       fShowCorrelation;      // print correlation matrix
-   Bool_t       fIsUserFunction;       // Flag for user defined function
-   Bool_t       fIsVerbose;            //
+   EMDFPolyType fPolyType;             ///< Type of polynomials to use
+   Bool_t       fShowCorrelation;      ///< print correlation matrix
+   Bool_t       fIsUserFunction;       ///< Flag for user defined function
+   Bool_t       fIsVerbose;            ///
 
    virtual Double_t EvalFactor(Int_t p, Double_t x) const;
    virtual Double_t EvalControl(const Int_t *powers) const;

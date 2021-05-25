@@ -22,6 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Compression.h"
 #include "TBufferFile.h"
 #include "MessageTypes.h"
 #include "TBits.h"
@@ -38,15 +39,15 @@ friend class TPSocket;
 friend class TXSocket;
 
 private:
-   TList   *fInfos;       //List of TStreamerInfo used in WriteObject
-   TBits    fBitsPIDs;    //Array of bits to mark the TProcessIDs uids written to the message
-   UInt_t   fWhat;        //Message type
-   TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
-   Int_t    fCompress;    //Compression level and algorithm
-   char    *fBufComp;     //Compressed buffer
-   char    *fBufCompCur;  //Current position in compressed buffer
-   char    *fCompPos;     //Position of fBufCur when message was compressed
-   Bool_t   fEvolution;   //True if support for schema evolution required
+   TList   *fInfos{nullptr};      // List of TStreamerInfo used in WriteObject
+   TBits    fBitsPIDs;            // Array of bits to mark the TProcessIDs uids written to the message
+   UInt_t   fWhat{0};             // Message type
+   TClass  *fClass{nullptr};      // If message is kMESS_OBJECT pointer to object's class
+   Int_t    fCompress{0};         // Compression level and algorithm
+   char    *fBufComp{nullptr};    // Compressed buffer
+   char    *fBufCompCur{nullptr}; // Current position in compressed buffer
+   char    *fCompPos{nullptr};    // Position of fBufCur when message was compressed
+   Bool_t   fEvolution{kFALSE};   // True if support for schema evolution required
 
    static Bool_t fgEvolution;  //True if global support for schema evolution required
 
@@ -65,11 +66,11 @@ public:
    TMessage(UInt_t what = kMESS_ANY, Int_t bufsiz = TBuffer::kInitialSize);
    virtual ~TMessage();
 
-   void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
+   void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) override;
    void     Forward();
    TClass  *GetClass() const { return fClass;}
-   void     TagStreamerInfo(TVirtualStreamerInfo* info);
-   void     Reset();
+   void     TagStreamerInfo(TVirtualStreamerInfo* info) override;
+   void     Reset() override;
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
    UInt_t   What() const { return fWhat; }
    void     SetWhat(UInt_t what);
@@ -80,19 +81,19 @@ public:
    Int_t    GetCompressionAlgorithm() const;
    Int_t    GetCompressionLevel() const;
    Int_t    GetCompressionSettings() const;
-   void     SetCompressionAlgorithm(Int_t algorithm=0);
-   void     SetCompressionLevel(Int_t level=4);
-   void     SetCompressionSettings(Int_t settings=4);
+   void     SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void     SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
+   void     SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    Int_t    Compress();
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
    Int_t    CompLength() const { return (Int_t)(fBufCompCur - fBufComp); }
-   UShort_t WriteProcessID(TProcessID *pid);
+   UShort_t WriteProcessID(TProcessID *pid) override;
 
    static void   EnableSchemaEvolutionForAll(Bool_t enable = kTRUE);
    static Bool_t UsesSchemaEvolutionForAll();
 
-   ClassDef(TMessage,0)  // Message buffer class
+   ClassDefOverride(TMessage,0)  // Message buffer class
 };
 
 //______________________________________________________________________________

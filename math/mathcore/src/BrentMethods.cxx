@@ -15,6 +15,7 @@
 #include <cmath>
 #include <algorithm>
 
+#include "Math/Util.h"
 #include "Math/Error.h"
 
 #include <iostream>
@@ -29,11 +30,9 @@ namespace BrentMethods {
    //   Grid search implementation, used to bracket the minimum and later
    //   use Brent's method with the bracketed interval
    //   The step of the search is set to (xmax-xmin)/npx
-   //   type: 0-returns MinimumX
-   //         1-returns Minimum
-   //         2-returns MaximumX
-   //         3-returns Maximum
-   //         4-returns X corresponding to fy
+   //   type: 0,1 returns MinimumX
+   //         2,3 returns MaximumX
+   //         4-returns best X corresponding to fy
 
    if (logStep) {
       xmin = std::log(xmin);
@@ -45,13 +44,24 @@ namespace BrentMethods {
    double dx = (xmax-xmin)/(npx-1);
    double xxmin = (logStep) ? std::exp(xmin) : xmin;
    double yymin;
+   double xmiddle = 0;
+   // found an interval containing root (for type=4).
+   //  For type !=4 an interval is always found
+   bool foundInterval = (type != 4); 
    if (type < 2)
       yymin = (*function)(xxmin);
    else if (type < 4)
       yymin = -(*function)(xxmin);
-   else
-      yymin = std::fabs((*function)(xxmin)-fy);
+   else { 
+      yymin = (*function)(xxmin)-fy;
 
+      // case root is at the interval boundaries
+      if (yymin==0) {
+         xmin = xxmin; 
+         xmax = xxmin; 
+         return xxmin; 
+      }
+   }
    for (int i=1; i<=npx-1; i++) {
       double x = xmin + i*dx;
       if (logStep) x = std::exp(x);
@@ -61,25 +71,62 @@ namespace BrentMethods {
       else if (type < 4)
          y = -(*function)(x);
       else
-         y = std::fabs((*function)(x)-fy);
-      if (y < yymin) {
+         y = (*function)(x)-fy;
+      
+      if ( type < 4 && y < yymin) {
+         xxmin = x;
+         yymin = y;
+      }
+      // when looking for root break at first instance
+      if (type == 4 ) {
+         // if root is at interval boundaries
+         if (y == 0) {
+            xmin = x;
+            xmax = x;
+            xmiddle = x;
+            foundInterval = true;
+            break; 
+         }
+         // found good interval if sign product is negative or equal zero to
+         if (std::copysign(1.,y)*std::copysign(1.,yymin) < 0 ) {
+            xmin = xxmin; // previous value
+            xmax = x;  // current value
+            xmiddle = 0.5*(xmax+xmin);
+            foundInterval = true; 
+            break; 
+         }
+         // continue bracketing
          xxmin = x;
          yymin = y;
       }
    }
-
-   if (logStep) {
-      xmin = std::exp(xmin);
-      xmax = std::exp(xmax);
+   
+   if (type < 4 ) {
+      if (logStep) {
+         xmin = std::exp(xmin);
+         xmax = std::exp(xmax);
+      }
+      xmin = std::max(xmin,xxmin-dx);
+      xmax = std::min(xmax,xxmin+dx);
+      xmiddle = std::min(xxmin,xmax);
+   } 
+   
+   //std::cout << "bracketing result " << xmin << "  " << xmax  << "middle value " <<  xmiddle << std::endl;
+   if (!foundInterval) {
+      MATH_INFO_MSG("BrentMethods::MinimStep", "Grid search failed to find a root in the  interval ");
+      std::string msg = "xmin = ";
+      msg += ROOT::Math::Util::ToString(xmin);
+      msg += std::string(" xmax = ");
+      msg += ROOT::Math::Util::ToString(xmax);
+      msg += std::string(" npts = ");
+      msg += ROOT::Math::Util::ToString(npx);
+      MATH_INFO_MSG("BrentMethods::MinimStep", msg.c_str());
+      xmin = 1;
+      xmax = 0; 
    }
 
-
-   xmin = std::max(xmin,xxmin-dx);
-   xmax = std::min(xmax,xxmin+dx);
-
-   return std::min(xxmin, xmax);
+   return xmiddle;
 }
-
    double MinimBrent(const IGenFunction* function, int type, double &xmin, double &xmax, double xmiddle, double fy,  bool &ok, int &niter, double epsabs, double epsrel, int itermax)
 {
    //Finds a minimum of a function, if the function is unimodal  between xmin and xmax

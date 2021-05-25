@@ -26,7 +26,6 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 
 #include "TMath.h"
 #include "Riostream.h"
-#include "Riostream.h"
 #include "RooGaussModel.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
@@ -39,7 +38,7 @@ ClassImp(RooGaussModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn,
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooResolutionModel(name,title,xIn),
   _flatSFInt(kFALSE),
@@ -53,7 +52,7 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn,
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma,
               RooAbsReal& _msSF) :
   RooResolutionModel(name,title,xIn),
@@ -68,7 +67,7 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn,
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma,
               RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) :
   RooResolutionModel(name,title,xIn),

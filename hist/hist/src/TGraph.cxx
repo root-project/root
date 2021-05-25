@@ -9,18 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TEnv.h"
 #include "TGraph.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TFrame.h"
-#include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
 #include "TRandom.h"
@@ -29,12 +26,16 @@
 #include "TVirtualPad.h"
 #include "TVirtualGraphPainter.h"
 #include "TBrowser.h"
-#include "TClass.h"
 #include "TSystem.h"
 #include "TPluginManager.h"
-#include <stdlib.h>
+#include "strtok.h"
+
+#include <cstdlib>
 #include <string>
 #include <cassert>
+#include <iostream>
+#include <fstream>
+#include <cstring>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -48,7 +49,7 @@ ClassImp(TGraph);
 
 /** \class TGraph
     \ingroup Hist
-A Graph is a graphics object made of two arrays X and Y with npoints each.
+A TGraph is an object made of two arrays X and Y with npoints each.
 The TGraph painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
 
@@ -164,12 +165,16 @@ TGraph::TGraph(const TGraph &gr)
    fMaxSize = gr.fMaxSize;
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
-   if (gr.fHistogram) fHistogram = (TH1F*)gr.fHistogram->Clone();
-   else fHistogram = 0;
+   if (gr.fHistogram) {
+      fHistogram = (TH1F*)gr.fHistogram->Clone();
+      fHistogram->SetDirectory(nullptr);
+   } else {
+      fHistogram = nullptr;
+   }
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
    if (!fMaxSize) {
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    } else {
       fX = new Double_t[fMaxSize];
@@ -215,15 +220,19 @@ TGraph& TGraph::operator=(const TGraph &gr)
       else fFunctions = new TList;
 
       if (fHistogram) delete fHistogram;
-      if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
-      else fHistogram = 0;
+      if (gr.fHistogram) {
+         fHistogram = new TH1F(*(gr.fHistogram));
+         fHistogram->SetDirectory(nullptr);
+      } else {
+         fHistogram = nullptr;
+      }
 
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
       if (fX) delete [] fX;
       if (fY) delete [] fY;
       if (!fMaxSize) {
-         fX = fY = 0;
+         fX = fY = nullptr;
          return *this;
       } else {
          fX = new Double_t[fMaxSize];
@@ -369,17 +378,22 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor reading input from filename.
-/// filename is assumed to contain at least two columns of numbers.
-/// the string format is by default "%%lg %%lg".
-/// this is a standard c formatting for scanf. If columns of numbers should be
-/// skipped, a "%*lg" or "%*s" for each column can be added,
-/// e.g. "%%lg %%*lg %%lg" would read x-values from the first and y-values from
-/// the third column.
-/// For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
-/// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-/// e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
-/// used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
-/// Note in that case, the instantiation is about 2 times slower.
+///
+/// `filename` is assumed to contain at least two columns of numbers.
+/// the string format is by default `"%lg %lg"`.
+/// This is a standard c formatting for `scanf()`.
+///
+/// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
+/// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
+/// y-values from the third column.
+///
+/// For files separated by a specific delimiter different from ' ' and '\t' (e.g.
+/// ';' in csv files) you can avoid using `%*s` to bypass this delimiter by explicitly
+/// specify the `option` argument,
+/// e.g. option=`" \t,;"` for columns of figures separated by any of these characters
+/// (' ', '\t', ',', ';')
+/// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
+/// Note in that case, the instantiation is about two times slower.
 
 TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    : TNamed("Graph", filename), TAttLine(), TAttFill(0, 1000), TAttMarker()
@@ -456,12 +470,14 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       Int_t value_idx = 0 ;
 
       // Looping
+      char *rest;
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
-            token = strtok(const_cast<char*>(line.c_str()), option) ;
+            //token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, rest);
+            token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
             while (token != NULL && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
@@ -474,7 +490,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = strtok(NULL, option) ; //next token
+               token = R__STRTOK_R(NULL, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 2) {
@@ -518,9 +534,17 @@ TGraph::~TGraph()
          delete obj;
       }
       delete fFunctions;
-      fFunctions = 0; //to avoid accessing a deleted object in RecursiveRemove
+      fFunctions = nullptr; //to avoid accessing a deleted object in RecursiveRemove
    }
    delete fHistogram;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate internal data structures for `newsize` points.
+
+Double_t **TGraph::Allocate(Int_t newsize)
+{
+   return AllocateArrays(2, newsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +631,7 @@ Double_t TGraph::Chisquare(TF1 *func, Option_t * option) const
 
 Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
 {
-   Double_t xl, yl, xr, yr;
+   Double_t xl = 0, yl = 0, xr = 0, yr = 0;
    gr->GetPoint(left, xl, yl);
    gr->GetPoint(right, xr, yr);
    return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
@@ -718,7 +742,7 @@ Bool_t TGraph::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
 
 Bool_t TGraph::CtorAllocate()
 {
-   fHistogram = 0;
+   fHistogram = nullptr;
    fMaximum = -1111;
    fMinimum = -1111;
    SetBit(kClipFrame);
@@ -726,8 +750,8 @@ Bool_t TGraph::CtorAllocate()
    if (fNpoints <= 0) {
       fNpoints = 0;
       fMaxSize   = 0;
-      fX         = 0;
-      fY         = 0;
+      fX         = nullptr;
+      fY         = nullptr;
       return kFALSE;
    } else {
       fMaxSize   = fNpoints;
@@ -981,7 +1005,6 @@ void TGraph::Expand(Int_t newsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// If graph capacity is less than newsize points then make array sizes
 /// equal to least multiple of step to contain newsize points.
-/// Returns kTRUE if size was altered
 
 void TGraph::Expand(Int_t newsize, Int_t step)
 {
@@ -1051,15 +1074,14 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 {
    char *linear;
    linear = (char*) strstr(fname, "++");
-   TF1 *f1 = 0;
-   if (linear)
-      f1 = new TF1(fname, fname, xmin, xmax);
-   else {
-      f1 = (TF1*)gROOT->GetFunction(fname);
-      if (!f1) {
-         Printf("Unknown function: %s", fname);
-         return -1;
-      }
+   if (linear) {
+      TF1 f1(fname, fname, xmin, xmax);
+      return Fit(&f1, option, "", xmin, xmax);
+   }
+   TF1 * f1 = (TF1*)gROOT->GetFunction(fname);
+   if (!f1) {
+      Printf("Unknown function: %s", fname);
+      return -1;
    }
    return Fit(f1, option, "", xmin, xmax);
 }
@@ -1075,7 +1097,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///
 /// option | description
 /// -------|------------
-/// "W" | Set all weights to 1; ignore error bars
+/// "W" | Ignore all point errors when fitting a TGraphErrors or TGraphAsymmErrors
 /// "U" | Use a User specified fitting algorithm (via SetFCN)
 /// "Q" | Quiet mode (minimum printing)
 /// "V" | Verbose mode (default is between Q and V)
@@ -1088,7 +1110,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 /// "+" | Add this new fitted function to the list of fitted functions (by default, any previous function is deleted)
 /// "C" | In case of linear fitting, do not calculate the chisquare (saves time)
 /// "F" | If fitting a polN, use the minuit fitter
-/// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the coordinate
+/// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the X coordinates
 /// "ROB" | In case of linear fitting, compute the LTS regression coefficients (robust (resistant) regression), using the default fraction of good points "ROB=0.x" - compute the LTS regression coefficients, using 0.x as a fraction of good points
 /// "S" |  The result of the fit is returned in the TFitResultPtr (see below Access to the Fit Result)
 ///
@@ -1456,7 +1478,7 @@ Double_t TGraph::GetErrorYlow(Int_t) const
 
 TF1 *TGraph::GetFunction(const char *name) const
 {
-   if (!fFunctions) return 0;
+   if (!fFunctions) return nullptr;
    return (TF1*)fFunctions->FindObject(name);
 }
 
@@ -1479,7 +1501,7 @@ TH1F *TGraph::GetHistogram() const
    // therefore they might be too strict and cut some points. In that case the
    // fHistogram limits should be recomputed ie: the existing fHistogram
    // should not be returned.
-   TH1F *historg = 0;
+   TH1F *historg = nullptr;
    if (fHistogram) {
       if (!TestBit(kResetHisto)) {
          if (gPad && gPad->GetLogx()) {
@@ -1532,13 +1554,18 @@ TH1F *TGraph::GetHistogram() const
    if (fNpoints > npt) npt = fNpoints;
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
-   ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
-   if (!fHistogram) return 0;
+   // do not add the histogram to gDirectory
+   // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+   // will avoid that histogram is added in the global directory
+   {
+      TDirectory::TContext ctx(nullptr);
+      ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
+   }
+   if (!fHistogram) return nullptr;
    fHistogram->SetMinimum(minimum);
    fHistogram->SetBit(TH1::kNoStats);
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum, maximum);
-   fHistogram->SetDirectory(0);
    // Restore the axis attributes if needed
    if (historg) {
       fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());
@@ -1579,11 +1606,32 @@ TH1F *TGraph::GetHistogram() const
 
 Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 {
-   if (i < 0 || i >= fNpoints) return -1;
-   if (!fX || !fY) return -1;
+   if (i < 0 || i >= fNpoints || !fX || !fY) return -1;
    x = fX[i];
    y = fY[i];
    return i;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get x value for point i.
+
+Double_t TGraph::GetPointX(Int_t i) const
+{
+   if (i < 0 || i >= fNpoints || !fX)
+      return -1.;
+
+   return fX[i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get y value for point i.
+
+Double_t TGraph::GetPointY(Int_t i) const
+{
+   if (i < 0 || i >= fNpoints || !fY)
+      return -1.;
+
+   return fY[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1604,6 +1652,38 @@ TAxis *TGraph::GetYaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation to get information on point of graph at cursor position
+/// Adapted from class TH1
+
+char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
+{
+   // localize point
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i = 0; i < fNpoints; i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+
+      if (dpx * dpx + dpy * dpy < 25) {
+         ipoint = i;
+         break;
+      }
+   }
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+
+   if (ipoint == -2)
+      return Form("x=%g, y=%g", x, y);
+
+   Double_t xval = fX[ipoint];
+   Double_t yval = fY[ipoint];
+
+   return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1735,14 +1815,19 @@ Int_t TGraph::InsertPoint()
 
 void TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)
 {
-   if (ipoint <= 0) {
-      Error("TGraph", "Inserted point index should be > 0");
+   if (ipoint < 0) {
+      Error("TGraph", "Inserted point index should be >= 0");
       return;
    }
 
-   if (ipoint > fNpoints-1) {
-      Error("TGraph", "Inserted point index should be <= %d", fNpoints-1);
+   if (ipoint > fNpoints) {
+      Error("TGraph", "Inserted point index should be <= %d", fNpoints);
       return;
+   }
+
+   if (ipoint == fNpoints) {
+       SetPoint(ipoint, x, y);
+       return;
    }
 
    Double_t **ps = ExpandAndCopy(fNpoints + 1, ipoint);
@@ -1829,9 +1914,9 @@ Int_t TGraph::IsInside(Double_t x, Double_t y) const
 /// Least squares polynomial fitting without weights.
 ///
 /// \param [in] m     number of parameters
-/// \param [in] ma     array of parameters
-/// \param [in] mfirst 1st point number to fit (default =0)
-/// \param [in] mlast  last point number to fit (default=fNpoints-1)
+/// \param [in] a     array of parameters
+/// \param [in] xmin  1st point number to fit (default =0)
+/// \param [in] xmax  last point number to fit (default=fNpoints-1)
 ///
 /// based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
 
@@ -2007,7 +2092,8 @@ void TGraph::RecursiveRemove(TObject *obj)
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
-   if (fHistogram == obj) fHistogram = 0;
+   if (fHistogram == obj)
+      fHistogram = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2217,6 +2303,22 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set x value for point i.
+
+void TGraph::SetPointX(Int_t i, Double_t x)
+{
+    SetPoint(i, x, GetPointY(i));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set y value for point i.
+
+void TGraph::SetPointY(Int_t i, Double_t y)
+{
+    SetPoint(i, GetPointX(i), y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set graph name.
 void TGraph::SetName(const char *name)
 {
@@ -2225,12 +2327,30 @@ void TGraph::SetName(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set graph title.
+/// Change (i.e. set) the title
+///
+/// if title is in the form `stringt;stringx;stringy;stringz`
+/// the graph title is set to `stringt`, the x axis title to `stringx`,
+/// the y axis title to `stringy`, and the z axis title to `stringz`.
+///
+/// To insert the character `;` in one of the titles, one should use `#;`
+/// or `#semicolon`.
 
 void TGraph::SetTitle(const char* title)
 {
    fTitle = title;
-   if (fHistogram) fHistogram->SetTitle(title);
+   fTitle.ReplaceAll("#;",2,"#semicolon",10);
+   Int_t p = fTitle.Index(";");
+
+   if (p>0) {
+      if (!fHistogram) GetHistogram();
+      fHistogram->SetTitle(title);
+      Int_t n = fTitle.Length()-p;
+      if (p>0) fTitle.Remove(p,n);
+      fTitle.ReplaceAll("#semicolon",10,"#;",2);
+   } else {
+      if (fHistogram) fHistogram->SetTitle(title);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2323,7 +2443,7 @@ void TGraph::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          b.ReadClassBuffer(TGraph::Class(), this, R__v, R__s, R__c);
-         if (fHistogram) fHistogram->SetDirectory(0);
+         if (fHistogram) fHistogram->SetDirectory(nullptr);
          TIter next(fFunctions);
          TObject *obj;
          while ((obj = next())) {
@@ -2361,7 +2481,7 @@ void TGraph::Streamer(TBuffer &b)
       }
       b >> fFunctions;
       b >> fHistogram;
-      if (fHistogram) fHistogram->SetDirectory(0);
+      if (fHistogram) fHistogram->SetDirectory(nullptr);
       if (R__v < 2) {
          Float_t mi, ma;
          b >> mi;
@@ -2437,7 +2557,7 @@ void TGraph::UseCurrentStyle()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds all graphs from the collection to this graph.
-/// Returns the total number of poins in the result or -1 in case of an error.
+/// Returns the total number of points in the result or -1 in case of an error.
 
 Int_t TGraph::Merge(TCollection* li)
 {
@@ -2453,18 +2573,45 @@ Int_t TGraph::Merge(TCollection* li)
    }
    return GetN();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  protected function to perform the merge operation of a graph
 
 Bool_t TGraph::DoMerge(const TGraph* g)
 {
-   Double_t x, y;
+   Double_t x = 0, y = 0;
    for (Int_t i = 0 ; i < g->GetN(); i++) {
       g->GetPoint(i, x, y);
       SetPoint(GetN(), x, y);
    }
    return kTRUE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move all graph points on specified values dx,dy
+/// If log argument specified, calculation done in logarithmic scale like:
+///  new_value = exp( log(old_value) + delta );
+
+void TGraph::MovePoints(Double_t dx, Double_t dy, Bool_t logx, Bool_t logy)
+{
+   Double_t x = 0, y = 0;
+   for (Int_t i = 0 ; i < GetN(); i++) {
+      GetPoint(i, x, y);
+      if (!logx) {
+         x += dx;
+      } else if (x > 0) {
+         x = TMath::Exp(TMath::Log(x) + dx);
+      }
+      if (!logy) {
+         y += dy;
+      } else if (y > 0) {
+         y = TMath::Exp(TMath::Log(y) + dy);
+      }
+      SetPoint(i, x, y);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Find zero of a continuous function.
 /// This function finds a real zero of the continuous real

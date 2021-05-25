@@ -91,10 +91,12 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
 ////////////////////////////////////////////////////////////////////////////////
 /// destructors - delete objects contained in the list
 
-SamplingDistPlot::~SamplingDistPlot() {
+SamplingDistPlot::~SamplingDistPlot() 
+{
    fItems.Delete();
    fOtherItems.Delete();
    if (fRooPlot) delete fRooPlot;
+   if (fIterator) delete fIterator;
 }
 
 
@@ -311,9 +313,9 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
 
    bool dirStatus = RooPlot::addDirectoryStatus();
    // make the RooPlot managed by this class
-   if (dirStatus) RooPlot::setAddDirectoryStatus(false);
+   RooPlot::setAddDirectoryStatus(false);
    fRooPlot = xaxis.frame();
-   if (dirStatus) RooPlot::setAddDirectoryStatus(true);
+   RooPlot::setAddDirectoryStatus(dirStatus);
    if (!fRooPlot) {
      oocoutE(this,InputArguments) << "invalid variable to plot" << std::endl;
      return;

@@ -16,16 +16,6 @@
 
 class TNeuron;
 
-//____________________________________________________________________
-//
-// TSynapse
-//
-// This is a simple weighted bidirectionnal connection between
-// two neurons.
-// A network is built connecting two neurons by a synapse.
-// In addition to the value, the synapse can return the DeDw
-//
-//____________________________________________________________________
 
 class TSynapse : public TObject {
  public:
@@ -44,12 +34,12 @@ class TSynapse : public TObject {
    Double_t GetDEDw() const { return fDEDw; }
 
  private:
-   TNeuron* fpre;         // the neuron before the synapse
-   TNeuron* fpost;        // the neuron after the synapse
-   Double_t fweight;      // the weight of the synapse
-   Double_t fDEDw;        //! the derivative of the total error wrt the synapse weight
+   TNeuron* fpre;         ///< the neuron before the synapse
+   TNeuron* fpost;        ///< the neuron after the synapse
+   Double_t fweight;      ///< the weight of the synapse
+   Double_t fDEDw;        ///<! the derivative of the total error wrt the synapse weight
 
-   ClassDef(TSynapse, 1)  // simple weighted bidirectionnal connection between 2 neurons
+   ClassDef(TSynapse, 1)  ///< simple weighted bidirectional connection between 2 neurons
 };
 
 #endif

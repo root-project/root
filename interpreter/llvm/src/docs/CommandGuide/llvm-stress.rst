@@ -1,6 +1,8 @@
 llvm-stress - generate random .ll files
 =======================================
 
+.. program:: llvm-stress
+
 SYNOPSIS
 --------
 
@@ -31,4 +33,3 @@ EXIT STATUS
 -----------
 
 :program:`llvm-stress` returns 0.
-

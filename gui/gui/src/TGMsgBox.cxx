@@ -20,21 +20,24 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMsgBox                                                              //
-//                                                                      //
-// A message dialog box.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TMsgBox
+    \ingroup guiwidgets
+
+A message dialog box.
+
+*/
+
 
 #include "TGMsgBox.h"
 #include "TGButton.h"
 #include "TGIcon.h"
 #include "TGLabel.h"
+#include "TGPicture.h"
 #include "TList.h"
 #include "KeySymbols.h"
-
+#include "TVirtualX.h"
+#include "strlcpy.h"
 
 ClassImp(TGMsgBox);
 
@@ -62,7 +65,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
 ///              It might take any of the following values:
 ///              kMBIconStop, kMBIconQuestion,
 ///              kMBIconExclamation, kMBIconAsterisk
-///     buttons: Buttons to be shown at the botton of the dialgo window.
+///     buttons: Buttons to be shown at the botton of the dialog window.
 ///              Look at EMsgBoxButton for the different possible values.
 ///    ret_code: It will hold the value of the button pressed when the
 ///              dialog is closed

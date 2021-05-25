@@ -23,13 +23,13 @@
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/ROCCurve.h"
-#include "TMVA/tmvaglob.h"
 #include "TMVA/Types.h"
 
 #include "TSystem.h"
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TGraph.h"
+#include "TLegend.h"
 #include "TMath.h"
 
 #include "ROOT/RMakeUnique.hxx"
@@ -94,6 +94,40 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
    return fROCCurves.get();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Generates a multigraph that contains an average ROC Curve.
+///
+/// \note You own the returned pointer.
+///
+/// \param[in] numSamples Number of samples used for generating the average ROC
+///                       Curve. Avg. curve will be evaluated only at these
+///                       points (using interpolation if necessary).
+///
+
+TGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples) const
+{
+   // `numSamples * increment` should equal 1.0!
+   Double_t increment = 1.0 / (numSamples-1);
+   std::vector<Double_t> x(numSamples), y(numSamples);
+
+   TList *rocCurveList = fROCCurves.get()->GetListOfGraphs();
+
+   for(UInt_t iSample = 0; iSample < numSamples; iSample++) {
+      Double_t xPoint = iSample * increment;
+      Double_t rocSum = 0;
+
+      for(Int_t iGraph = 0; iGraph < rocCurveList->GetSize(); iGraph++) {
+        TGraph *foldROC = static_cast<TGraph *>(rocCurveList->At(iGraph));
+        rocSum += foldROC->Eval(xPoint);
+      }
+
+      x[iSample] = xPoint;
+      y[iSample] = rocSum/rocCurveList->GetSize();
+   }
+
+   return new TGraph(numSamples, &x[0], &y[0]);
+}
+
 //_______________________________________________________________________
 Float_t TMVA::CrossValidationResult::GetROCAverage() const
 {
@@ -149,6 +183,64 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
    return c;
 }
 
+//
+TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(Bool_t drawFolds, TString title) const
+{
+   // note this function will create memory leak for the TMultiGraph
+   // but it needs to be kept alive in order to display the canvas
+   TMultiGraph *rocs = new TMultiGraph();
+
+   // Potentially add the folds
+   if (drawFolds) {
+      for (auto foldRocObj : *(*fROCCurves).GetListOfGraphs()) {
+         TGraph * foldRocGraph = dynamic_cast<TGraph *>(foldRocObj->Clone());
+         foldRocGraph->SetLineColor(1);
+         foldRocGraph->SetLineWidth(1);
+         rocs->Add(foldRocGraph);
+      }
+   }
+
+   // Add the average roc curve
+   TGraph *avgRocGraph = GetAvgROCCurve(100);
+   avgRocGraph->SetTitle("Avg ROC Curve");
+   avgRocGraph->SetLineColor(2);
+   avgRocGraph->SetLineWidth(3);
+   rocs->Add(avgRocGraph);
+
+   // Draw
+   TCanvas *c = new TCanvas();
+
+   if (title != "") {
+      title = "Cross Validation Average ROC Curve";
+   }
+
+   rocs->SetName("cv_rocs");
+   rocs->SetTitle(title);
+   rocs->GetXaxis()->SetTitle("Signal Efficiency");
+   rocs->GetYaxis()->SetTitle("Background Rejection");
+   rocs->DrawClone("AL");
+
+   // Build legend
+   TLegend *leg = new TLegend();
+   TList *ROCCurveList = rocs->GetListOfGraphs();
+
+   if (drawFolds) {
+      Int_t nCurves = ROCCurveList->GetSize();
+      leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(nCurves-1)),
+                    "Avg ROC Curve", "l");
+      leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(0)),
+                    "Fold ROC Curves", "l");
+      leg->Draw();
+   } else {
+      c->BuildLegend();
+   }
+
+   // Draw Canvas
+   c->SetTitle("Cross Validation Average ROC Curve");
+   c->Draw();
+   return c;
+}
+
 /**
 * \class TMVA::CrossValidation
 * \ingroup TMVA
@@ -188,7 +280,8 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
                                        TString options)
    : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
-     fAnalysisTypeStr("auto"),
+     fAnalysisTypeStr("Auto"),
+     fSplitTypeStr("Random"),
      fCorrelations(kFALSE),
      fCvFactoryOptions(""),
      fDrawProgressBar(kFALSE),
@@ -257,6 +350,12 @@ void TMVA::CrossValidation::InitOptions()
    AddPreDefVal(TString("Auto"));
 
    // Options specific to CE
+   DeclareOptionRef(fSplitTypeStr, "SplitType",
+                    "Set the split type (Deterministic, Random, RandomStratified) (default: Random)");
+   AddPreDefVal(TString("Deterministic"));
+   AddPreDefVal(TString("Random"));
+   AddPreDefVal(TString("RandomStratified"));
+
    DeclareOptionRef(fSplitExprString, "SplitExpr", "The expression used to assign events to folds");
    DeclareOptionRef(fNumFolds, "NumFolds", "Number of folds to generate");
    DeclareOptionRef(fNumWorkerProcs, "NumWorkerProcs",
@@ -281,6 +380,10 @@ void TMVA::CrossValidation::InitOptions()
 void TMVA::CrossValidation::ParseOptions()
 {
    this->Envelope::ParseOptions();
+
+   if (fSplitTypeStr != "Deterministic" && fSplitExprString != "") {
+      Log() << kFATAL << "SplitExpr can only be used with Deterministic Splitting" << Endl;
+   }
 
    // Factory options
    fAnalysisTypeStr.ToLower();
@@ -308,7 +411,8 @@ void TMVA::CrossValidation::ParseOptions()
    fCvFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
    fOutputFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
 
-   if (not fDrawProgressBar) {
+   if (!fDrawProgressBar) {
+      fCvFactoryOptions += "!DrawProgressBar:";
       fOutputFactoryOptions += "!DrawProgressBar:";
    }
 
@@ -318,30 +422,28 @@ void TMVA::CrossValidation::ParseOptions()
    }
 
    if (fCorrelations) {
-      // fCvFactoryOptions += "Correlations:";
+      fCvFactoryOptions += "Correlations:";
       fOutputFactoryOptions += "Correlations:";
    } else {
-      // fCvFactoryOptions += "!Correlations:";
+      fCvFactoryOptions += "!Correlations:";
       fOutputFactoryOptions += "!Correlations:";
    }
 
    if (fROC) {
-      // fCvFactoryOptions += "ROC:";
+      fCvFactoryOptions += "ROC:";
       fOutputFactoryOptions += "ROC:";
    } else {
-      // fCvFactoryOptions += "!ROC:";
+      fCvFactoryOptions += "!ROC:";
       fOutputFactoryOptions += "!ROC:";
    }
 
    if (fSilent) {
-      // fCvFactoryOptions += Form("Silent:");
+      fCvFactoryOptions += Form("Silent:");
       fOutputFactoryOptions += Form("Silent:");
    }
 
-   fCvFactoryOptions += "!Correlations:!ROC:!Color:!DrawProgressBar:Silent";
-
    // CE specific options
-   if (fFoldFileOutput and fOutputFile == nullptr) {
+   if (fFoldFileOutput && fOutputFile == nullptr) {
       Log() << kFATAL << "No output file given, cannot generate per fold output." << Endl;
    }
 
@@ -358,7 +460,14 @@ void TMVA::CrossValidation::ParseOptions()
       fFactory = std::make_unique<TMVA::Factory>(fJobName, fOutputFile, fOutputFactoryOptions);
    }
 
-   fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
+   if(fSplitTypeStr == "Random"){
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString, kFALSE));
+   } else if(fSplitTypeStr == "RandomStratified"){
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString, kTRUE));
+   } else {
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+   }
+
 }
 
 //_______________________________________________________________________
@@ -407,10 +516,10 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    // Only used if fFoldOutputFile == true
    TFile *foldOutputFile = nullptr;
 
-   if (fFoldFileOutput and fOutputFile != nullptr) {
-      TString path = std::string("") + gSystem->DirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
-      std::cout << "PATH: " << path << std::endl;
+   if (fFoldFileOutput && fOutputFile != nullptr) {
+      TString path = gSystem->GetDirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
       foldOutputFile = TFile::Open(path, "RECREATE");
+      Log() << kINFO << "Creating fold output at:" << path << Endl;
       fFoldFactory = std::make_unique<TMVA::Factory>(fJobName, foldOutputFile, fCvFactoryOptions);
    }
 
@@ -428,7 +537,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    TMVA::CrossValidationFoldResult result(iFold);
 
    // Results for aggregation (ROC integral, efficiencies etc.)
-   if (fAnalysisType == Types::kClassification or fAnalysisType == Types::kMulticlass) {
+   if (fAnalysisType == Types::kClassification || fAnalysisType == Types::kMulticlass) {
       result.fROCIntegral = fFoldFactory->GetROCIntegral(fDataLoader->GetName(), foldTitle);
 
       TGraph *gr = fFoldFactory->GetROCCurve(fDataLoader->GetName(), foldTitle, true);
@@ -455,7 +564,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    }
 
    // Per-fold file output
-   if (fFoldFileOutput and foldOutputFile != nullptr) {
+   if (fFoldFileOutput && foldOutputFile != nullptr) {
       foldOutputFile->Close();
    }
 
@@ -496,7 +605,12 @@ void TMVA::CrossValidation::Evaluate()
       }
 
       TMVA::MsgLogger::EnableOutput();
-      Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
+      Log() << kINFO << Endl;
+      Log() << kINFO << Endl;
+      Log() << kINFO << "========================================" << Endl;
+      Log() << kINFO << "Processing folds for method " << methodTitle << Endl;
+      Log() << kINFO << "========================================" << Endl;
+      Log() << kINFO << Endl;
 
       // Process K folds
       auto nWorkers = fNumWorkerProcs;
@@ -510,6 +624,7 @@ void TMVA::CrossValidation::Evaluate()
             result.Fill(fold_result);
          }
       } else {
+#ifndef _MSC_VER
          ROOT::TProcessExecutor workers(nWorkers);
          std::vector<CrossValidationFoldResult> result_vector;
 
@@ -522,6 +637,7 @@ void TMVA::CrossValidation::Evaluate()
          for (auto && fold_result : result_vector) {
             result.Fill(fold_result);
          }
+#endif
       }
 
       fResults.push_back(result);
@@ -543,6 +659,13 @@ void TMVA::CrossValidation::Evaluate()
 
       method->fEventToFoldMapping = fSplit->fEventToFoldMapping;
    }
+
+   Log() << kINFO << Endl;
+   Log() << kINFO << Endl;
+   Log() << kINFO << "========================================" << Endl;
+   Log() << kINFO << "Folds processed for all methods, evaluating." << Endl;
+   Log() << kINFO << "========================================" << Endl;
+   Log() << kINFO << Endl;
 
    // Recombination of data (making sure there is data in training and testing trees).
    fDataLoader->RecombineKFoldDataSet(*fSplit);

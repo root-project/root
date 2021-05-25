@@ -30,37 +30,37 @@ class THashList;
 class TAxis : public TNamed, public TAttAxis {
 
 private:
-   Int_t        fNbins;          //Number of bins
-   Double_t     fXmin;           //low edge of first bin
-   Double_t     fXmax;           //upper edge of last bin
-   TArrayD      fXbins;          //Bin edges array in X
-   Int_t        fFirst;          //first bin to display
-   Int_t        fLast;           //last bin to display
-   UShort_t     fBits2;          //second bit status word
-   Bool_t       fTimeDisplay;    //on/off displaying time values instead of numerics
-   TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
-   TObject     *fParent;         //!Object owning this axis
-   THashList   *fLabels;         //List of labels
-   TList       *fModLabs;        //List of modified labels
+   Int_t        fNbins;         ///<  Number of bins
+   Double_t     fXmin;          ///<  Low edge of first bin
+   Double_t     fXmax;          ///<  Upper edge of last bin
+   TArrayD      fXbins;         ///<  Bin edges array in X
+   Int_t        fFirst;         ///<  First bin to display
+   Int_t        fLast;          ///<  Last bin to display
+   UShort_t     fBits2;         ///<  Second bit status word
+   Bool_t       fTimeDisplay;   ///<  On/off displaying time values instead of numerics
+   TString      fTimeFormat;    ///<  Date&time format, ex: 09/12/99 12:34:00
+   TObject     *fParent;        ///<! Object owning this axis
+   THashList   *fLabels;        ///<  List of labels
+   TList       *fModLabs;       ///<  List of modified labels
 
-   // TAxis extra status bits (stored in fBits2)
+   /// TAxis extra status bits (stored in fBits2)
    enum {
-      kAlphanumeric = BIT(0),   // axis is alphanumeric
-      kCanExtend = BIT(1),      // axis can be extended
-      kNotAlpha = BIT(2)    // axis is forced to be not alphanumeric
+      kAlphanumeric = BIT(0),   ///< Axis is alphanumeric
+      kCanExtend = BIT(1),      ///< Axis can be extended
+      kNotAlpha = BIT(2)        ///< Axis is forced to be not alphanumeric
    };
 
    Bool_t       HasBinWithoutLabel() const;
 
 public:
-   // TAxis status bits
+   /// TAxis status bits
    enum EStatusBits {
       kDecimals      = BIT(7),
       kTickPlus      = BIT(9),
       kTickMinus     = BIT(10),
       kAxisRange     = BIT(11),
       kCenterTitle   = BIT(12),
-      kCenterLabels  = BIT(14), //bit 13 is used by TObject
+      kCenterLabels  = BIT(14), ///< Bit 13 is used by TObject
       kRotateTitle   = BIT(15),
       kPalette       = BIT(16),
       kNoExponent    = BIT(17),
@@ -81,7 +81,7 @@ public:
 
    Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  }
    Bool_t     CanBeAlphanumeric() { return !(fBits2 & kNotAlpha); }
-   Bool_t     IsAlphanumeric() { return fBits2 & kAlphanumeric; }
+   Bool_t     IsAlphanumeric() const { return fBits2 & kAlphanumeric; }
    void       SetAlphanumeric(Bool_t alphanumeric = kTRUE);
    void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
    void       SetNoAlphanumeric(Bool_t noalpha = kTRUE) {
@@ -169,7 +169,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Center axis labels. If center = kTRUE axis labels will be centered
-/// (hori axes only) on the bin center default is to center on the primary tick marks
+/// (horizontal axes only) on the bin center. Default is to center on the primary tick marks
 /// This option does not make sense if there are more bins than tick marks
 
 inline void TAxis::CenterLabels(Bool_t center)
@@ -227,4 +227,3 @@ inline void TAxis::SetNoExponent(Bool_t noExponent)
 
 
 #endif
-

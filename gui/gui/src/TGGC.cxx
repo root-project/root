@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGGC and TGGCPool                                                    //
-//                                                                      //
-// Encapsulate a graphics context used in the low level graphics.       //
-// TGGCPool provides a pool of graphics contexts.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGGC
+    \ingroup guiwidgets
+
+Encapsulate a graphics context used in the low level graphics.
+TGGCPool provides a pool of graphics contexts.
+
+*/
+
 
 #include "TGClient.h"
 #include "TGGC.h"
@@ -24,8 +25,9 @@
 #include "THashTable.h"
 #include "TColor.h"
 #include "TROOT.h"
-#include "Riostream.h"
-#include <string.h>
+
+#include <iostream>
+#include <cstring>
 
 
 ClassImp(TGGC);
@@ -48,7 +50,7 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
                               fValues.fDashLen);
       }
    } else {
-      memset(&fValues, 0, sizeof(GCValues_t));
+      fValues = {};
       fContext = 0;
    }
    SetRefCount(1);
@@ -62,7 +64,7 @@ TGGC::TGGC(GCValues_t *values)
    fContext = 0;
    // case of default ctor at program startup before gClient exists
    if (!values) {
-      memset(&fValues, 0, sizeof(GCValues_t));
+      fValues = {};
       fContext = 0;
       SetRefCount(1);
       return;

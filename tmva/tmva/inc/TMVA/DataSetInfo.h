@@ -36,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <iosfwd>
+#include <vector>
+#include <map>
 
 #include "TObject.h"
 #include "TString.h"
@@ -61,6 +63,8 @@ namespace TMVA {
 
    public:
 
+      enum { kIsArrayVariable = BIT(15) };
+
       DataSetInfo(const TString& name = "Default");
       virtual ~DataSetInfo();
 
@@ -77,6 +81,11 @@ namespace TMVA {
                                      Double_t min = 0, Double_t max = 0, char varType='F', 
                                      Bool_t normalized = kTRUE, void* external = 0 );
       VariableInfo&     AddVariable( const VariableInfo& varInfo );
+
+      // NEW: add an array of variables (e.g. for image data)
+      void AddVariablesArray(const TString &expression, Int_t size, const TString &title = "", const TString &unit = "",
+                             Double_t min = 0, Double_t max = 0, char type = 'F', Bool_t normalized = kTRUE,
+                             void *external = 0 );
 
       VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit, 
                                      Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
@@ -96,25 +105,35 @@ namespace TMVA {
       VariableInfo&                    GetVariableInfo( Int_t i ) { return fVariables.at(i); }
       const VariableInfo&              GetVariableInfo( Int_t i ) const { return fVariables.at(i); }
 
-      std::vector<VariableInfo>&       GetTargetInfos()         { return fTargets; }
-      const std::vector<VariableInfo>& GetTargetInfos() const   { return fTargets; }
-      VariableInfo&                    GetTargetInfo( Int_t i ) { return fTargets.at(i); }
-      const VariableInfo&              GetTargetInfo( Int_t i ) const { return fTargets.at(i); }
+      Int_t GetVarArraySize(const TString &expression) const { 
+         auto element = fVarArrays.find(expression);
+         return (element != fVarArrays.end()) ? element->second : -1;
+       }
+       Bool_t IsVariableFromArray(Int_t i) const { return GetVariableInfo(i).TestBit(DataSetInfo::kIsArrayVariable);  }
 
-      std::vector<VariableInfo>&       GetSpectatorInfos()         { return fSpectators; }
-      const std::vector<VariableInfo>& GetSpectatorInfos() const   { return fSpectators; }
-      VariableInfo&                    GetSpectatorInfo( Int_t i ) { return fSpectators.at(i); }
-      const VariableInfo&              GetSpectatorInfo( Int_t i ) const { return fSpectators.at(i); }
+       std::vector<VariableInfo> &GetTargetInfos()
+       {
+          return fTargets;
+       }
+       const std::vector<VariableInfo> &GetTargetInfos() const { return fTargets; }
+       VariableInfo &GetTargetInfo(Int_t i) { return fTargets.at(i); }
+       const VariableInfo &GetTargetInfo(Int_t i) const { return fTargets.at(i); }
 
+       std::vector<VariableInfo> &GetSpectatorInfos() { return fSpectators; }
+       const std::vector<VariableInfo> &GetSpectatorInfos() const { return fSpectators; }
+       VariableInfo &GetSpectatorInfo(Int_t i) { return fSpectators.at(i); }
+       const VariableInfo &GetSpectatorInfo(Int_t i) const { return fSpectators.at(i); }
 
-      UInt_t                           GetNVariables()    const { return fVariables.size(); }
-      UInt_t                           GetNTargets()      const { return fTargets.size(); }
-      UInt_t                           GetNSpectators(bool all=kTRUE)   const;
+       UInt_t GetNVariables() const { return fVariables.size(); }
+       UInt_t GetNTargets() const { return fTargets.size(); }
+       UInt_t GetNSpectators(bool all = kTRUE) const;
 
-      const TString&                   GetNormalization() const { return fNormalization; }
-      void                             SetNormalization( const TString& norm )   { fNormalization = norm; }
+       const TString &GetNormalization() const { return fNormalization; }
+       void SetNormalization(const TString &norm) { fNormalization = norm; }
 
-      void SetTrainingSumSignalWeights(Double_t trainingSumSignalWeights){fTrainingSumSignalWeights = trainingSumSignalWeights;}
+       void SetTrainingSumSignalWeights(Double_t trainingSumSignalWeights)
+       {
+          fTrainingSumSignalWeights = trainingSumSignalWeights;}
       void SetTrainingSumBackgrWeights(Double_t trainingSumBackgrWeights){fTrainingSumBackgrWeights = trainingSumBackgrWeights;}
       void SetTestingSumSignalWeights (Double_t testingSumSignalWeights ){fTestingSumSignalWeights  = testingSumSignalWeights ;}
       void SetTestingSumBackgrWeights (Double_t testingSumBackgrWeights ){fTestingSumBackgrWeights  = testingSumBackgrWeights ;}
@@ -192,6 +211,9 @@ namespace TMVA {
       std::vector<VariableInfo>  fVariables;         // list of variable expressions/internal names
       std::vector<VariableInfo>  fTargets;           // list of targets expressions/internal names
       std::vector<VariableInfo>  fSpectators;        // list of spectators expressions/internal names
+
+      // variable arrays
+      std::map<TString, int> fVarArrays;
 
       // the classes
       mutable std::vector<ClassInfo*> fClasses;      // name and other infos of the classes

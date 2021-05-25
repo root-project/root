@@ -20,143 +20,136 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGTextEditor                                                        //
-//                                                                      //
-//  A simple text editor that uses the TGTextEdit widget.               //
-//  It provides all functionalities of TGTextEdit as copy, paste, cut,  //
-//  search, go to a given line number. In addition, it provides the     //
-//  possibilities for compiling, executing or interrupting a running    //
-//  macro.                                                              //
-//                                                                      //
-//  This class can be used in following ways:                           //
-//  - with file name as argument:                                       //
-//    new TGTextEditor("hsimple.C");                                    //
-//  - with a TMacro* as argument:                                       //
-//    TMacro *macro = new TMacro("hsimple.C");                          //
-//    new TGTextEditor(macro);                                          //
-//                                                                      //
-//  Basic Features:                                                     //
-//                                                                      //
-//  New Document                                                        //
-//                                                                      //
-//  To create a new blank document, select File menu / New, or click    //
-//  the New toolbar button. It will create a new instance of            //
-//  TGTextEditor.                                                       //
-//                                                                      //
-//  Open/Save File                                                      //
-//                                                                      //
-//  To open a file, select File menu / Open or click on the Open        //
-//  toolbar button. This will bring up the standard File Dialog for     //
-//  opening files.                                                      //
-//  If the current document has not been saved yet, you will be asked   //
-//  either to save or abandon the changes.                              //
-//  To save the file using the same name, select File menu / Save or    //
-//  the toolbar Save button. To change the file name use File menu /    //
-//  Save As... or corresponding SaveAs button on the toolbar.           //
-//                                                                      //
-//  Text Selection                                                      //
-//                                                                      //
-//  You can move the cursor by simply clicking on the desired location  //
-//  with the left mouse button. To highlight some text, press the mouse //
-//  and drag the mouse while holding the left button pressed.           //
-//  To select a word, double-click on it;                               //
-//  to select the text line - triple-click on it;                       //
-//  to select all  do quadruple-click.                                  //
-//                                                                      //
-//  Cut, Copy, Paste                                                    //
-//                                                                      //
-//  After selecting some text, you can cut or copy it to the clipboard. //
-//  A subsequent paste operation will insert the contents of the        //
-//  clipboard at the current cursor location.                           //
-//                                                                      //
-//  Text Search                                                         //
-//                                                                      //
-//  The editor uses a standard Search dialog. You can specify a forward //
-//  or backward search direction starting from the current cursor       //
-//  location according to the selection made of a case sensitive mode   //
-//  or not. The last search can be repeated by pressing F3.             //
-//                                                                      //
-//  Text Font                                                           //
-//                                                                      //
-//  You can change the text font by selecting Edit menu / Set Font.     //
-//  The Font Dialog pops up and shows the Name, Style, and Size of any  //
-//  available font. The selected font sample is shown in the preview    //
-//  area.                                                               //
-//                                                                      //
-//  Executing Macros                                                    //
-//                                                                      //
-//  You can execute the currently loaded macro in the editor by         //
-//  selecting Tools menu / Execute Macro; by clicking on the            //
-//  corresponding toolbar button, or by using Ctrl+F5 accelerator keys. //
-//  This is identical to the command ".x macro.C" in the root prompt    //
-//  command line.                                                       //
-//                                                                      //
-//  Compiling Macros                                                    //
-//                                                                      //
-//  The currently loaded macro can be compiled with ACLiC if you select //
-//  Tools menu / Compile Macro; by clicking on the corresponding        //
-//  toolbar button, or by using Ctrl+F7 accelerator keys.               //
-//  This is identical to the command ".L macro.C++" in the root prompt  //
-//  command line.                                                       //
-//                                                                      //
-//  Interrupting a Running Macro                                        //
-//                                                                      //
-//  You can interrupt a running macro by selecting the Tools menu /     //
-//  Interrupt; by clicking on the corresponding toolbar button, or by   //
-//  using Shift+F5 accelerator keys.                                    //
-//                                                                      //
-//  Interface to CINT Interpreter                                       //
-//                                                                      //
-//  Any command entered in the Command combo box will be passed to      //
-//  the CINT interpreter. This combo box will keep the commands history //
-//  and will allow you to re-execute the same commands during an editor //
-//  session.                                                            //
-//                                                                      //
-//  Keyboard Bindings                                                   //
-//                                                                      //
-//  The following table lists the keyboard shortcuts and accelerator    //
-//  keys.                                                               //
-//                                                                      //
-//  Key:              Action:                                           //
-//  ====              =======                                           //
-//                                                                      //
-//  Up                Move cursor up.                                   //
-//  Shift+Up          Move cursor up and extend selection.              //
-//  Down              Move cursor down.                                 //
-//  Shift+Down        Move cursor down and extend selection.            //
-//  Left              Move cursor left.                                 //
-//  Shift+Left        Move cursor left and extend selection.            //
-//  Right             Move cursor right.                                //
-//  Shift+Right       Move cursor right and extend selection.           //
-//  Home              Move cursor to begin of line.                     //
-//  Shift+Home        Move cursor to begin of line and extend selection.//
-//  Ctrl+Home         Move cursor to top of page.                       //
-//  End               Move cursor to end of line.                       //
-//  Shift+End         Move cursor to end of line and extend selection.  //
-//  Ctrl+End          Move cursor to end of page.                       //
-//  PgUp              Move cursor up one page.                          //
-//  Shift+PgUp        Move cursor up one page and extend selection.     //
-//  PgDn              Move cursor down one page.                        //
-//  Shift+PgDn        Move cursor down one page and extend selection.   //
-//  Delete            Delete character after cursor, or text selection. //
-//  BackSpace         Delete character before cursor, or text selection.//
-//  Ctrl+B            Move cursor left.                                 //
-//  Ctrl+D            Delete character after cursor, or text selection. //
-//  Ctrl+E            Move cursor to end of line.                       //
-//  Ctrl+H            Delete character before cursor, or text selection.//
-//  Ctrl+K            Delete characters from current position to the    //
-//                    end of line.                                      //
-//  Ctrl+U            Delete current line.                              //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/TGTextEditor.gif">
+
+/** \class  TGTextEditor
+    \ingroup guiwidgets
+
+ A simple text editor that uses the TGTextEdit widget.
+ It provides all functionalities of TGTextEdit as copy, paste, cut,
+ search, go to a given line number. In addition, it provides the
+ possibilities for compiling, executing or interrupting a running
+ macro.
+
+ This class can be used in following ways:
+ - with file name as argument:
+   new TGTextEditor("hsimple.C");
+ - with a TMacro* as argument:
+   TMacro *macro = new TMacro("hsimple.C");
+   new TGTextEditor(macro);
+
+### Basic Features:
+
+#### New Document
+
+ To create a new blank document, select File menu / New, or click
+ the New toolbar button. It will create a new instance of
+ TGTextEditor.
+
+#### Open/Save File
+
+ To open a file, select File menu / Open or click on the Open
+ toolbar button. This will bring up the standard File Dialog for
+ opening files.
+ If the current document has not been saved yet, you will be asked
+ either to save or abandon the changes.
+ To save the file using the same name, select File menu / Save or
+ the toolbar Save button. To change the file name use File menu /
+ Save As... or corresponding SaveAs button on the toolbar.
+
+#### Text Selection
+
+ You can move the cursor by simply clicking on the desired location
+ with the left mouse button. To highlight some text, press the mouse
+ and drag the mouse while holding the left button pressed.
+ To select a word, double-click on it;
+ to select the text line - triple-click on it;
+ to select all  do quadruple-click.
+
+#### Cut, Copy, Paste
+
+ After selecting some text, you can cut or copy it to the clipboard.
+ A subsequent paste operation will insert the contents of the
+ clipboard at the current cursor location.
+
+#### Text Search
+
+ The editor uses a standard Search dialog. You can specify a forward
+ or backward search direction starting from the current cursor
+ location according to the selection made of a case sensitive mode
+ or not. The last search can be repeated by pressing F3.
+
+#### Text Font
+
+ You can change the text font by selecting Edit menu / Set Font.
+ The Font Dialog pops up and shows the Name, Style, and Size of any
+ available font. The selected font sample is shown in the preview
+ area.
+
+#### Executing Macros
+
+ You can execute the currently loaded macro in the editor by
+ selecting Tools menu / Execute Macro; by clicking on the
+ corresponding toolbar button, or by using Ctrl+F5 accelerator keys.
+ This is identical to the command ".x macro.C" in the root prompt
+ command line.
+
+#### Compiling Macros
+
+ The currently loaded macro can be compiled with ACLiC if you select
+ Tools menu / Compile Macro; by clicking on the corresponding
+ toolbar button, or by using Ctrl+F7 accelerator keys.
+ This is identical to the command ".L macro.C++" in the root prompt
+ command line.
+
+#### Interrupting a Running Macro
+
+ You can interrupt a running macro by selecting the Tools menu /
+ Interrupt; by clicking on the corresponding toolbar button, or by
+ using Shift+F5 accelerator keys.
+
+#### Interface to CINT Interpreter
+
+ Any command entered in the Command combo box will be passed to
+ the CINT interpreter. This combo box will keep the commands history
+ and will allow you to re-execute the same commands during an editor
+ session.
+
+#### Keyboard Bindings
+
+ The following table lists the keyboard shortcuts and accelerator
+ keys.
+
+| Key:          |     Action     |
+|---------------|----------------|
+| Up            | Move cursor up. |
+| Shift+Up      | Move cursor up and extend selection. |
+| Down          | Move cursor down. |
+| Shift+Down    | Move cursor down and extend selection. |
+| Left          | Move cursor left. |
+| Shift+Left    | Move cursor left and extend selection. |
+| Right         | Move cursor right. |
+| Shift+Right   | Move cursor right and extend selection. |
+| Home          | Move cursor to begin of line. |
+| Shift+Home    | Move cursor to begin of line and extend selection. |
+| Ctrl+Home     | Move cursor to top of page. |
+| End           | Move cursor to end of line. |
+| Shift+End     | Move cursor to end of line and extend selection. |
+| Ctrl+End      | Move cursor to end of page. |
+| PgUp          | Move cursor up one page. |
+| Shift+PgUp    | Move cursor up one page and extend selection. |
+| PgDn          | Move cursor down one page. |
+| Shift+PgDn    | Move cursor down one page and extend selection. |
+| Delete        | Delete character after cursor, or text selection. |
+| BackSpace     | Delete character before cursor, or text selection. |
+| Ctrl+B        | Move cursor left. |
+| Ctrl+D        | Delete character after cursor, or text selection. |
+| Ctrl+E        | Move cursor to end of line. |
+| Ctrl+H        | Delete character before cursor, or text selection. |
+| Ctrl+K        | Delete characters from current position to the end of line. |
+| Ctrl+U        | Delete current line. |
+
+
 */
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 
 #include "TROOT.h"
@@ -169,7 +162,6 @@
 #include "TGFontDialog.h"
 #include "TGTextEdit.h"
 #include "TGMenu.h"
-#include "TGButton.h"
 #include "TGStatusBar.h"
 #include "KeySymbols.h"
 #include "TGToolBar.h"
@@ -182,6 +174,7 @@
 #include "TObjString.h"
 #include "TRootHelpDialog.h"
 #include "HelpText.h"
+#include "TVirtualX.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -584,7 +577,7 @@ Bool_t TGTextEditor::SaveFileAs()
    static Bool_t overwr = kFALSE;
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
    new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
    gSystem->ChangeDirectory(workdir.Data());
@@ -823,7 +816,7 @@ void TGTextEditor::ExecuteMacro()
    TString savdir = gSystem->WorkingDirectory();
    TString tmpfile = gSystem->BaseName(fFilename.Data());
    tmpfile += "_exec";
-   gSystem->ChangeDirectory(gSystem->DirName(fFilename.Data()));
+   gSystem->ChangeDirectory(gSystem->GetDirName(fFilename.Data()).Data());
    fTextEdit->SaveFile(tmpfile.Data(), kFALSE);
    gROOT->SetExecutingMacro(kTRUE);
    gROOT->Macro(tmpfile.Data());

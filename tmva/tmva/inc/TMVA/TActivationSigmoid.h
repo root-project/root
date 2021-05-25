@@ -32,7 +32,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TFormula.h"
 #include "TString.h"
 
 #include "TMVA/TActivation.h"
@@ -42,9 +41,8 @@ namespace TMVA {
    class TActivationSigmoid : public TActivation {
     
    public:
-
-      TActivationSigmoid();
-      ~TActivationSigmoid();
+      TActivationSigmoid() {}
+      ~TActivationSigmoid() {}
 
       // evaluate the activation function
       Double_t Eval(Double_t arg);
@@ -65,9 +63,6 @@ namespace TMVA {
       virtual void MakeFunction(std::ostream& fout, const TString& fncName);
 
    private:
-
-      TFormula* fEqn;                // equation of sigmoid
-      TFormula* fEqnDerivative;      // equation of sigmoid derivative
 
       ClassDef(TActivationSigmoid,0); // Sigmoid activation function for TNeuron
    };

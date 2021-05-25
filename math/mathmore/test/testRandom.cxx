@@ -4,6 +4,7 @@
 #include "TRandom1.h"
 #include "TRandom2.h"
 #include "TRandom3.h"
+#include "TRandomGen.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -117,6 +118,12 @@ void printName( const TRandom2 & r) {
 void printName( const TRandom3 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
+// specialization for TRandomGen
+template<class Engine>
+void printName(const TRandomGen<Engine> &r) {
+   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
+}
+
 
 template <class R>
 void generate( R & r, bool array=true) {
@@ -181,8 +188,12 @@ int main() {
   Random<GSLRngRand>       r7;
   Random<GSLRngRanMar>     r8;
   Random<GSLRngMinStd>     r9;
-  RandomStd                r10;
+  Random<GSLRngMixMax>     r10;
 
+  // std engine
+  RandomStd                sr0; 
+
+  // ROOT engine
   TRandom                  tr0;
   TRandom1                 tr1;
   TRandom1                 tr1a(0,0);
@@ -192,7 +203,9 @@ int main() {
   TRandom1                 tr1e(0,4);
   TRandom2                 tr2;
   TRandom3                 tr3;
-
+  TRandomMixMax            tr4;
+  TRandomMixMax17          tr5;
+  TRandomMixMax256         tr6;
 
   generate(tr0);
   generate(tr1);
@@ -203,8 +216,11 @@ int main() {
   generate(tr1e);
   generate(tr2);
   generate(tr3);
+  generate(tr4);
+  generate(tr5);
+  generate(tr6);
 
-  generate(r10);
+  generate(sr0);
 
   generate(r1);
   generate(r2);
@@ -219,7 +235,7 @@ int main() {
   generate(r7);
   generate(r8);
   generate(r9);
-
+  generate(r10);
 
 #ifdef HAVE_CLHEP
   RanluxEngine             e1(1,3);

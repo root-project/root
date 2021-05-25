@@ -52,7 +52,7 @@ def get_argparse():
 
 def execute():
 	parser = get_argparse()
-	
+
 	# Put arguments in shape
 	sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
 

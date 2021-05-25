@@ -9,25 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
 
-#include "Riostream.h"
 #include "TEfficiency.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TArrow.h"
-#include "TBox.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TVector.h"
 #include "TVectorD.h"
-#include "TClass.h"
 #include "TSystem.h"
 #include "Math/QuantFuncMathCore.h"
+#include "strtok.h"
+
+#include <cstring>
+#include <iostream>
+#include <fstream>
+
 
 ClassImp(TGraphAsymmErrors);
 
@@ -37,12 +39,12 @@ TGraph with asymmetric error bars.
 
 The TGraphAsymmErrors painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
-<p>
+
 The picture below gives an example:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","A Simple Graph with asymmetric error bars",200,10,700,500);
+   auto c1 = new TCanvas("c1","A Simple Graph with asymmetric error bars",200,10,700,500);
    c1->SetFillColor(42);
    c1->SetGrid();
    c1->GetFrame()->SetFillColor(21);
@@ -54,12 +56,11 @@ Begin_Macro(source)
    Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
    Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
    Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
-   gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
+   auto gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
    gr->SetTitle("TGraphAsymmErrors Example");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
-   return c1;
 }
 End_Macro
 */
@@ -93,7 +94,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphAsymmErrors assignment operator
+/// TGraphAsymmErrors assignment operator.
 
 TGraphAsymmErrors& TGraphAsymmErrors::operator=(const TGraphAsymmErrors &gr)
 {
@@ -305,7 +306,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
    std::ifstream infile(fname.Data());
    if (!infile.good()) {
       MakeZombie();
-      Error("TGraphErrors", "Cannot open file: %s, TGraphErrors is Zombie", filename);
+      Error("TGraphAsymmErrors", "Cannot open file: %s, TGraphAsymmErrors is Zombie", filename);
       fNpoints = 0;
       return;
    }
@@ -379,12 +380,13 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
       Int_t value_idx = 0 ;
 
       // Looping
+      char *rest;
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
-            token = strtok(const_cast<char*>(line.c_str()), option) ;
+            token = R__STRTOK_R(const_cast<char*>(line.c_str()), option, &rest) ;
             while (token != NULL && value_idx < ntokensToBeSaved) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
@@ -397,7 +399,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
                      value_idx++ ;
                   }
                }
-               token = strtok(NULL, option) ; //next token
+               token = R__STRTOK_R(NULL, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4
@@ -438,16 +440,23 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
    if(fEYhigh) delete [] fEYhigh;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate internal data structures for `size` points.
+
+Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
+   return AllocateArrays(6, size);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Apply a function to all data points `y = f(x,y)`
+/// Apply a function to all data points \f$ y = f(x,y) \f$
 ///
-/// Errors are calculated as `eyh = f(x,y+eyh)-f(x,y)` and
-/// `eyl = f(x,y)-f(x,y-eyl)`
+/// Errors are calculated as \f$ eyh = f(x,y+eyh)-f(x,y) \f$ and
+/// \f$ eyl = f(x,y)-f(x,y-eyl) \f$
 ///
 /// Special treatment has to be applied for the functions where the
 /// role of "up" and "down" is reversed.
-/// function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+///
+/// Function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
 
 void TGraphAsymmErrors::Apply(TF1 *f)
 {
@@ -556,7 +565,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// - shortest: use shortest interval (done by default if mode is set)
 /// - central: use central interval (done by default if mode is NOT set)
 /// - pois: interpret histograms as poisson ratio instead of efficiency
-/// - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0
+/// - e0    : plot efficiency and interval for bins where total=0
 ///           (default is to skip them)
 ///
 /// Note:
@@ -663,112 +672,108 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("cl=","");
    }
 
-   //normal approximation
-   if(option.Contains("n")) {
-      option.ReplaceAll("n","");
+   // look for statistic options
+   // check first Bayesian case
+   // bayesian with prior
+   Bool_t usePosteriorMode = false;
+   Bool_t useShortestInterval = false;
+   if (option.Contains("b(")) {
+      Double_t a = 0;
+      Double_t b = 0;
+      sscanf(strstr(option.Data(), "b("), "b(%lf,%lf)", &a, &b);
+      if (a > 0)
+         alpha = a;
+      else
+         Warning("Divide", "given shape parameter for alpha %.2lf is invalid", a);
+      if (b > 0)
+         beta = b;
+      else
+         Warning("Divide", "given shape parameter for beta %.2lf is invalid", b);
+      option.ReplaceAll("b(", "");
+      bIsBayesian = true;
+
+      // look for specific bayesian options
+
+      // use posterior mode
+
+      if (option.Contains("mode")) {
+         usePosteriorMode = true;
+         option.ReplaceAll("mode", "");
+      }
+      if (option.Contains("sh") || (usePosteriorMode && !option.Contains("cen"))) {
+         useShortestInterval = true;
+      }
+   }
+   // normal approximation
+   else if (option.Contains("n")) {
+      option.ReplaceAll("n", "");
       pBound = &TEfficiency::Normal;
    }
-
-   //clopper pearson interval
-   if(option.Contains("cp")) {
-      option.ReplaceAll("cp","");
+   // clopper pearson interval
+   else if (option.Contains("cp")) {
+      option.ReplaceAll("cp", "");
       pBound = &TEfficiency::ClopperPearson;
    }
-
-   //wilson interval
-   if(option.Contains("w")) {
-      option.ReplaceAll("w","");
+   // wilson interval
+   else if (option.Contains("w")) {
+      option.ReplaceAll("w", "");
       pBound = &TEfficiency::Wilson;
    }
-
-   //agresti coull interval
-   if(option.Contains("ac")) {
-      option.ReplaceAll("ac","");
+   // agresti coull interval
+   else if (option.Contains("ac")) {
+      option.ReplaceAll("ac", "");
       pBound = &TEfficiency::AgrestiCoull;
    }
    // Feldman-Cousins interval
-   if(option.Contains("fc")) {
-      option.ReplaceAll("fc","");
+   else if (option.Contains("fc")) {
+      option.ReplaceAll("fc", "");
       pBound = &TEfficiency::FeldmanCousins;
    }
    // mid-P Lancaster interval
-   if(option.Contains("midp")) {
-      option.ReplaceAll("midp","");
+   else if (option.Contains("midp")) {
+      option.ReplaceAll("midp", "");
       pBound = &TEfficiency::MidPInterval;
-   }
-
-   //bayesian with prior
-   if(option.Contains("b(")) {
-      Double_t a = 0;
-      Double_t b = 0;
-      sscanf(strstr(option.Data(),"b("),"b(%lf,%lf)",&a,&b);
-      if(a > 0)
-         alpha = a;
-      else
-         Warning("Divide","given shape parameter for alpha %.2lf is invalid",a);
-      if(b > 0)
-         beta = b;
-      else
-         Warning("Divide","given shape parameter for beta %.2lf is invalid",b);
-      option.ReplaceAll("b(","");
-      bIsBayesian = true;
-   }
-
-   // use posterior mode
-   Bool_t usePosteriorMode = false;
-   if(bIsBayesian && option.Contains("mode") ) {
-      usePosteriorMode = true;
-      option.ReplaceAll("mode","");
-   }
-
-   Bool_t plot0Bins = false;
-   if(option.Contains("e0") ) {
-      plot0Bins = true;
-      option.ReplaceAll("e0","");
-   }
-
-   Bool_t useShortestInterval = false;
-   if (bIsBayesian && ( option.Contains("sh") || (usePosteriorMode && !option.Contains("cen") ) ) ) {
-      useShortestInterval = true;
    }
 
    // interpret as Poisson ratio
    Bool_t bPoissonRatio = false;
-   if(option.Contains("pois") ) {
+   if (option.Contains("pois")) {
       bPoissonRatio = true;
-      option.ReplaceAll("pois","");
+      option.ReplaceAll("pois", "");
+   }
+   Bool_t plot0Bins = false;
+   if (option.Contains("e0")) {
+      plot0Bins = true;
+      option.ReplaceAll("e0", "");
    }
 
    // weights works only in case of Normal approximation or Bayesian for binomial interval
    // in case of Poisson ratio we can use weights by rescaling the obtained results using the effective entries
-   if ( ( bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal ) {
-      Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
-      Info("Divide","Using now the Normal approximation for weighted histograms");
+   if ((bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal) {
+      Warning("Divide", "Histograms have weights: only Normal or Bayesian error calculation is supported");
+      Info("Divide", "Using now the Normal approximation for weighted histograms");
    }
 
-   if(bPoissonRatio)
-   {
-     if(pass->GetDimension() != total->GetDimension()) {
-       Error("Divide","passed histograms are not of the same dimension");
-       return;
-     }
+   if (bPoissonRatio) {
+      if (pass->GetDimension() != total->GetDimension()) {
+         Error("Divide", "passed histograms are not of the same dimension");
+         return;
+      }
 
-     if(!TEfficiency::CheckBinning(*pass,*total)) {
-       Error("Divide","passed histograms are not consistent");
-       return;
-     }
-   }
-   else
-   {
-     //check consistency of histograms, allowing weights
-     if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
-       Error("Divide","passed histograms are not consistent");
-       return;
-     }
+      if (!TEfficiency::CheckBinning(*pass, *total)) {
+         Error("Divide", "passed histograms are not consistent");
+         return;
+      }
+   } else {
+      // check consistency of histograms, allowing weights
+      if (!TEfficiency::CheckConsistency(*pass, *total, "w")) {
+         Error("Divide", "passed histograms are not consistent");
+         return;
+      }
    }
 
-   //Set the graph to have a number of points equal to the number of histogram
-   //bins
+   // Set the graph to have a number of points equal to the number of histogram
+   // bins
    Int_t nbins = pass->GetNbinsX();
    Set(nbins);
 
@@ -792,68 +797,67 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       upper = 0;
 
       // special case in case of weights we have to consider the sum of weights and the sum of weight squares
-       if(bEffective) {
-          tw =  total->GetBinContent(b);
-          tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
-          pw =  pass->GetBinContent(b);
-          pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
+      if (bEffective) {
+         tw = total->GetBinContent(b);
+         tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
+         pw = pass->GetBinContent(b);
+         pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
 
-          if(bPoissonRatio)
-          {
-             // tw += pw;
-             // tw2 += pw2;
-             // compute ratio on the effective entries ( p and t)
-             // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
-             // we use then the overall weight of the full histogram
-             if (pw == 0 && pw2 == 0)
-                p = 0;
-             else
-                p = (pw*pw)/pw2;
+         if (bPoissonRatio) {
+            // tw += pw;
+            // tw2 += pw2;
+            // compute ratio on the effective entries ( p and t)
+            // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
+            // we use then the overall weight of the full histogram
+            if (pw == 0 && pw2 == 0)
+               p = 0;
+            else
+               p = (pw * pw) / pw2;
 
-             if (tw == 0 && tw2 == 0)
-                t = 0;
-             else
-                t = (tw*tw)/tw2;
+            if (tw == 0 && tw2 == 0)
+               t = 0;
+            else
+               t = (tw * tw) / tw2;
 
-             if (pw > 0 && tw > 0)
-                // this is the ratio of the two bin weights ( pw/p  / t/tw )
-                wratio = (pw*t)/(p * tw);
-             else if (pw == 0 && tw > 0)
-                // case p histogram has zero  compute the weights from all the histogram
-                // weight of histogram - sumw2/sumw
-                wratio = (psumw2 * t) /(psumw * tw );
-             else if (tw == 0 && pw > 0)
-                // case t histogram has zero  compute the weights from all the histogram
-                // weight of histogram - sumw2/sumw
-                wratio = (pw * tsumw) /(p * tsumw2 );
-             else if (p > 0)
-                wratio = pw/p; //not sure if needed
-             else {
-                // case both pw and tw are zero - we skip these bins
-                if (!plot0Bins) continue; // skip bins with total <= 0
-             }
+            if (pw > 0 && tw > 0)
+               // this is the ratio of the two bin weights ( pw/p  / t/tw )
+               wratio = (pw * t) / (p * tw);
+            else if (pw == 0 && tw > 0)
+               // case p histogram has zero  compute the weights from all the histogram
+               // weight of histogram - sumw2/sumw
+               wratio = (psumw2 * t) / (psumw * tw);
+            else if (tw == 0 && pw > 0)
+               // case t histogram has zero  compute the weights from all the histogram
+               // weight of histogram - sumw2/sumw
+               wratio = (pw * tsumw) / (p * tsumw2);
+            else if (p > 0)
+               wratio = pw / p; // not sure if needed
+            else {
+               // case both pw and tw are zero - we skip these bins
+               if (!plot0Bins) continue; // skip bins with total <= 0
+            }
 
-             t += p;
-             //std::cout << p << "   " << t << "  " << wratio << std::endl;
-          }
-          else
-             if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+            t += p;
+            // std::cout << p << "   " << t << "  " << wratio << std::endl;
+         } else if (tw <= 0 && !plot0Bins)
+            continue; // skip bins with total <= 0
 
-          // in the case of weights have the formula only for
-          // the normal and  bayesian statistics (see below)
+         // in the case of weights have the formula only for
+         // the normal and  bayesian statistics (see below)
 
-       }
+      }
 
-       //use bin contents
-       else {
-          t = int( total->GetBinContent(b) + 0.5);
-          p = int(pass->GetBinContent(b) + 0.5);
+      // use bin contents
+      else {
+         t = std::round(total->GetBinContent(b));
+         p = std::round(pass->GetBinContent(b));
 
-          if(bPoissonRatio) t += p;
+         if (bPoissonRatio)
+            t += p;
 
-          if (!t && !plot0Bins) continue; // skip bins with total = 0
-       }
-
+         if (t == 0.0 && !plot0Bins)
+            continue; // skip bins with total = 0
+      }
 
       //using bayesian statistics
       if(bIsBayesian) {
@@ -914,7 +918,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
          }
          else {
             // when not using weights (all cases) or in case of  Poisson ratio with weights
-            if(t)
+            if(t != 0.0)
                eff = ((Double_t)p)/t;
 
             low = pBound(t,p,conf,false);
@@ -962,7 +966,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute Range
+/// Compute Range.
 
 void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
@@ -1017,8 +1021,8 @@ void TGraphAsymmErrors::CopyAndRelease(Double_t **newarrays,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy errors from fE*** to arrays[***]
-/// or to f*** Copy points.
+/// Copy errors from `fE***` to `arrays[***]`
+/// or to `f***` Copy points.
 
 Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
                                      Int_t ibegin, Int_t iend, Int_t obegin)
@@ -1044,7 +1048,7 @@ Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Should be called from ctors after fNpoints has been set
+/// Should be called from ctors after `fNpoints` has been set.
 /// Note: This function should be called only from the constructor
 /// since it does not delete previously existing arrays
 
@@ -1062,7 +1066,7 @@ Bool_t TGraphAsymmErrors::CtorAllocate(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  protected function to perform the merge operation of a graph with asymmetric errors
+/// Protected function to perform the merge operation of a graph with asymmetric errors.
 
 Bool_t TGraphAsymmErrors::DoMerge(const TGraph *g)
 {
@@ -1089,7 +1093,7 @@ Bool_t TGraphAsymmErrors::DoMerge(const TGraph *g)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set zero values for point arrays in the range [begin, end)
+/// Set zero values for point arrays in the range `[begin, end]`
 
 void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
                                  Bool_t from_ctor)
@@ -1181,7 +1185,7 @@ Double_t TGraphAsymmErrors::GetErrorYlow(Int_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds all graphs with asymmetric errors from the collection to this graph.
-/// Returns the total number of poins in the result or -1 in case of an error.
+/// Returns the total number of points in the result or -1 in case of an error.
 
 Int_t TGraphAsymmErrors::Merge(TCollection* li)
 {
@@ -1226,7 +1230,7 @@ void TGraphAsymmErrors::Print(Option_t *) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1357,7 +1361,7 @@ void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Doubl
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set EXlow for point i
+/// Set EXlow for point `i`.
 
 void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
 {
@@ -1371,7 +1375,7 @@ void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set EXhigh for point i
+/// Set EXhigh for point `i`.
 
 void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
 {
@@ -1385,7 +1389,7 @@ void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set EYlow for point i
+/// Set EYlow for point `i`.
 
 void TGraphAsymmErrors::SetPointEYlow(Int_t i, Double_t eyl)
 {
@@ -1399,7 +1403,7 @@ void TGraphAsymmErrors::SetPointEYlow(Int_t i, Double_t eyl)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set EYhigh for point i
+/// Set EYhigh for point `i`.
 
 void TGraphAsymmErrors::SetPointEYhigh(Int_t i, Double_t eyh)
 {

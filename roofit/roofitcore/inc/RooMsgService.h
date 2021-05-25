@@ -16,7 +16,6 @@
 #ifndef ROO_MSG_SERVICE
 #define ROO_MSG_SERVICE
 
-#include <assert.h>
 #include "TObject.h"
 #include <string>
 #include <vector>
@@ -34,6 +33,7 @@ class RooWorkspace ;
 #define coutE(a) RooMsgService::instance().log(this,RooFit::ERROR,RooFit::a) 
 #define coutF(a) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a) 
 
+// Skip the message prefix
 #define ccoutD(a) RooMsgService::instance().log(this,RooFit::DEBUG,RooFit::a,kTRUE) 
 #define ccoutI(a) RooMsgService::instance().log(this,RooFit::INFO,RooFit::a,kTRUE) 
 #define ccoutP(a) RooMsgService::instance().log(this,RooFit::PROGRESS,RooFit::a,kTRUE) 
@@ -41,12 +41,14 @@ class RooWorkspace ;
 #define ccoutE(a) RooMsgService::instance().log(this,RooFit::ERROR,RooFit::a,kTRUE) 
 #define ccoutF(a) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a,kTRUE) 
 
+// Message from given object instead of "this"
 #define oocoutI(o,a) RooMsgService::instance().log(o,RooFit::INFO,RooFit::a) 
 #define oocoutP(o,a) RooMsgService::instance().log(o,RooFit::PROGRESS,RooFit::a) 
 #define oocoutW(o,a) RooMsgService::instance().log(o,RooFit::WARNING,RooFit::a) 
 #define oocoutE(o,a) RooMsgService::instance().log(o,RooFit::ERROR,RooFit::a) 
 #define oocoutF(o,a) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a) 
 
+// Message from given object instead of "this" and skip message prefix
 #define ooccoutD(o,a) RooMsgService::instance().log(o,RooFit::DEBUG,RooFit::a,kTRUE) 
 #define ooccoutI(o,a) RooMsgService::instance().log(o,RooFit::INFO,RooFit::a,kTRUE) 
 #define ooccoutP(o,a) RooMsgService::instance().log(o,RooFit::PROGRESS,RooFit::a,kTRUE) 
@@ -84,22 +86,22 @@ class RooWorkspace ;
 #define ccxcoutI(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::INFO)) RooMsgService::instance().log(this,RooFit::INFO,RooFit::a,kTRUE) 
 #define oocxcoutI(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::INFO)) RooMsgService::instance().log(o,RooFit::INFO,RooFit::a) 
 #define ooccxcoutI(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::INFO)) RooMsgService::instance().log(o,RooFit::INFO,RooFit::a,kTRUE) 
-#define cxcoutP(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(this,RooFit::INFO,RooFit::a) 
-#define ccxcoutP(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(this,RooFit::INFO,RooFit::a,kTRUE) 
-#define oocxcoutP(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(o,RooFit::INFO,RooFit::a) 
-#define ooccxcoutP(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(o,RooFit::INFO,RooFit::a,kTRUE) 
+#define cxcoutP(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(this,RooFit::PROGRESS,RooFit::a)
+#define ccxcoutP(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(this,RooFit::PROGRESS,RooFit::a,kTRUE)
+#define oocxcoutP(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(o,RooFit::PROGRESS,RooFit::a)
+#define ooccxcoutP(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::PROGRESS)) RooMsgService::instance().log(o,RooFit::PROGRESS,RooFit::a,kTRUE)
 #define cxcoutW(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::WARNING)) RooMsgService::instance().log(this,RooFit::WARNING,RooFit::a) 
 #define ccxcoutW(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::WARNING)) RooMsgService::instance().log(this,RooFit::WARNING,RooFit::a,kTRUE) 
 #define oocxcoutW(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::WARNING)) RooMsgService::instance().log(o,RooFit::WARNING,RooFit::a) 
 #define ooccxcoutW(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::WARNING)) RooMsgService::instance().log(o,RooFit::WARNING,RooFit::a,kTRUE) 
 #define cxcoutE(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::ERROR)) RooMsgService::instance().log(this,RooFit::ERROR,RooFit::a) 
 #define ccxcoutE(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::ERROR)) RooMsgService::instance().log(this,RooFit::ERROR,RooFit::a,kTRUE) 
-#define oocxcoutE(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::ERROR)) RooMsgService::instance().log(to,RooFit::ERROR,RooFit::a) 
+#define oocxcoutE(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::ERROR)) RooMsgService::instance().log(o,RooFit::ERROR,RooFit::a)
 #define ooccxcoutE(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::ERROR)) RooMsgService::instance().log(o,RooFit::ERROR,RooFit::a,kTRUE) 
 #define cxcoutF(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a) 
 #define ccxcoutF(a) if (RooMsgService::instance().isActive(this,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(this,RooFit::FATAL,RooFit::a,kTRUE) 
 #define oocxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a) 
-#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a,kTRUE) 
+#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,RooFit::a,RooFit::FATAL)) RooMsgService::instance().log(o,RooFit::FATAL,RooFit::a,kTRUE)
 
 class RooMsgService : public TObject {
 public:
@@ -140,7 +142,7 @@ public:
   } ;
 
   // Access to instance
-  static RooMsgService& instance() ;
+  static RooMsgService& instance();
   static Bool_t anyDebug() ;
 
   // User interface -- Add or delete reporting streams ;
@@ -153,7 +155,7 @@ public:
   void setStreamStatus(Int_t id, Bool_t active) ;
   Bool_t getStreamStatus(Int_t id) const ;
 
-  void reset() { cleanup() ; }
+  void reset();
 
   void setGlobalKillBelow(RooFit::MsgLevel level) { _globMinLevel = level ; }
   RooFit::MsgLevel globalKillBelow() const { return _globMinLevel ; }
@@ -170,8 +172,6 @@ public:
   static Int_t _debugCount ;
   std::map<int,std::string> _levelNames ;
   std::map<int,std::string> _topicNames ;
-
-  static void cleanup() ;
 
   // Print level support for RooFit-related messages that are not routed through RooMsgService (such as Minuit printouts)
   Bool_t silentMode() const { return _silentMode ; }  
@@ -209,15 +209,11 @@ protected:
   RooMsgService() ;
   RooMsgService(const RooMsgService&) ;
 
-  static RooMsgService* _instance ;
-
   RooWorkspace* _debugWorkspace ;
 
   Int_t _debugCode ;
   
   ClassDef(RooMsgService,0) // RooFit Message Service Singleton class
 };
-
-extern RooMsgService* gMsgService ;
 
 #endif

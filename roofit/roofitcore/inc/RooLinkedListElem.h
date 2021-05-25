@@ -85,8 +85,8 @@ protected:
   friend class RooLinkedList ;
   friend class RooLinkedListImplDetails::Pool;
   friend class RooLinkedListImplDetails::Chunk;
-  friend class RooLinkedListIter ;
-  friend class RooFIter ;
+  friend class RooLinkedListIterImpl ;
+  friend class RooFIterForLinkedList ;
   RooLinkedListElem* _prev ; // Link to previous element in list
   RooLinkedListElem* _next ; // Link to next element in list
   TObject*   _arg ;          // Link to contents

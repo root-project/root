@@ -30,14 +30,16 @@
 //
 // ********************************************************************
 
-//doxygen tag
-/**
-   @defgroup MatrixFunctions Matrix Template Functions
-   @ingroup SMatrixGroup
 
-   These function apply to matrices (and also Matrix expression) and can return a
-   matrix expression of a particular defined type, like in the matrix multiplication or
-   a vector, like in the matrix-vector product or a scalar like in the Similarity vector-matrix product.
+/**
+\defgroup MatrixFunctions Matrix Template Functions
+\ingroup SMatrixGroup
+
+These function apply to matrices (and also Matrix expression) and can return a
+matrix expression of a particular defined type, like in the matrix multiplication or
+a vector, like in the matrix-vector product or a scalar like in the Similarity
+vector-matrix product.
+
 */
 
 #include "Math/BinaryOpPolicy.h"
@@ -437,7 +439,7 @@ public:
   ///
   ~MatrixMulOp() {}
 
-  /// calc $\sum_{j} a_{ik} * b_{kj}$
+  /// calc \f$\sum_{j} a_{ik} * b_{kj}\f$
   inline typename MatrixA::value_type apply(unsigned int i) const {
     return meta_matrix_dot<D-1>::f(lhs_, rhs_, i);
   }
@@ -924,8 +926,8 @@ inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
 // TensorProd (SVector x SVector)
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
-inline SMatrix<T,D1,D2>  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
-  SMatrix<T,D1,D2> tmp;
+inline SMatrix<T,D1,D2,MatRepStd<T, D1, D2>> TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T, D1, D2>> tmp;
   for (unsigned int i=0; i< D1; ++i)
     for (unsigned int j=0; j< D2; ++j) {
       tmp(i,j) = lhs[i]*rhs[j];
@@ -936,9 +938,9 @@ inline SMatrix<T,D1,D2>  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2
 //==============================================================================
 // TensorProd (VecExpr x SVector)
 //==============================================================================
- template <class T, unsigned int D1, unsigned int D2, class A>
-inline SMatrix<T,D1,D2>  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,D2>& rhs) {
-  SMatrix<T,D1,D2> tmp;
+template <class T, unsigned int D1, unsigned int D2, class A>
+inline SMatrix<T,D1,D2,MatRepStd<T, D1, D2>>  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,D2>& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T, D1, D2>> tmp;
   for (unsigned int i=0; i< D1; ++i)
     for (unsigned int j=0; j< D2; ++j)
       tmp(i,j) = lhs.apply(i) * rhs.apply(j);
@@ -948,9 +950,9 @@ inline SMatrix<T,D1,D2>  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,
 //==============================================================================
 // TensorProd (SVector x VecExpr)
 //==============================================================================
- template <class T, unsigned int D1, unsigned int D2, class A>
-inline SMatrix<T,D1,D2> TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D2>& rhs) {
-  SMatrix<T,D1,D2> tmp;
+template <class T, unsigned int D1, unsigned int D2, class A>
+inline SMatrix<T,D1,D2, MatRepStd<T, D1, D2>> TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D2>& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T, D1, D2>> tmp;
   for (unsigned int i=0; i< D1; ++i)
     for (unsigned int j=0; j< D2; ++j)
       tmp(i,j) = lhs.apply(i) * rhs.apply(j);
@@ -962,9 +964,9 @@ inline SMatrix<T,D1,D2> TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D
 // TensorProd (VecExpr x VecExpr)
 //==============================================================================
 
- template <class T, unsigned int D1, unsigned int D2, class A, class B>
-inline SMatrix<T,D1,D2  > TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B,T,D2>& rhs) {
-  SMatrix<T,D1,D2> tmp;
+template <class T, unsigned int D1, unsigned int D2, class A, class B>
+inline SMatrix<T,D1,D2,MatRepStd<T, D1, D2>> TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B,T,D2>& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T, D1, D2>> tmp;
   for (unsigned int i=0; i< D1; ++i)
     for (unsigned int j=0; j< D2; ++j)
       tmp(i,j) = lhs.apply(i) * rhs.apply(j);

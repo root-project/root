@@ -21,109 +21,113 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Compression.h"
 #include "TDirectory.h"
+#include "TDatime.h"
+#include "TList.h"
 
-class TList;
-class TBrowser;
 class TKey;
 class TFile;
 
 class TDirectoryFile : public TDirectory {
 
 protected:
-   Bool_t      fModified;        ///< True if directory has been modified
-   Bool_t      fWritable;        ///< True if directory is writable
-   TDatime     fDatimeC;         ///< Date and time when directory is created
-   TDatime     fDatimeM;         ///< Date and time of last modification
-   Int_t       fNbytesKeys;      ///< Number of bytes for the keys
-   Int_t       fNbytesName;      ///< Number of bytes in TNamed at creation time
-   Int_t       fBufferSize;      ///< Default buffer size to create new TKeys
-   Long64_t    fSeekDir;         ///< Location of directory on file
-   Long64_t    fSeekParent;      ///< Location of parent directory on file
-   Long64_t    fSeekKeys;        ///< Location of Keys record on file
-   TFile      *fFile;            ///< Pointer to current file in memory
-   TList      *fKeys;            ///< Pointer to keys list in memory
+   Bool_t      fModified{kFALSE};        ///< True if directory has been modified
+   Bool_t      fWritable{kFALSE};        ///< True if directory is writable
+   TDatime     fDatimeC;                 ///< Date and time when directory is created
+   TDatime     fDatimeM;                 ///< Date and time of last modification
+   Int_t       fNbytesKeys{0};           ///< Number of bytes for the keys
+   Int_t       fNbytesName{0};           ///< Number of bytes in TNamed at creation time
+   Int_t       fBufferSize{0};           ///< Default buffer size to create new TKeys
+   Long64_t    fSeekDir{0};              ///< Location of directory on file
+   Long64_t    fSeekParent{0};           ///< Location of parent directory on file
+   Long64_t    fSeekKeys{0};             ///< Location of Keys record on file
+   TFile      *fFile{nullptr};           ///< Pointer to current file in memory
+   TList      *fKeys{nullptr};           ///< Pointer to keys list in memory
 
-   virtual void         CleanTargets();
-   void Init(TClass *cl = 0);
+   void        CleanTargets();
+   void        InitDirectoryFile(TClass *cl = nullptr);
+   void        BuildDirectoryFile(TFile* motherFile, TDirectory* motherDir);
 
 private:
-   TDirectoryFile(const TDirectoryFile &directory);  //Directories cannot be copied
-   void operator=(const TDirectoryFile &); //Directories cannot be copied
+   TDirectoryFile(const TDirectoryFile &directory) = delete;  //Directories cannot be copied
+   void operator=(const TDirectoryFile &) = delete; //Directories cannot be copied
 
 public:
    // TDirectory status bits
-   enum { kCloseDirectory = BIT(7) };
+   enum EStatusBits { kCloseDirectory = BIT(7) }; // Unused in ROOT, never set. Maybe only in external code.
 
    TDirectoryFile();
-   TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
+   TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
    virtual ~TDirectoryFile();
-   virtual void        Append(TObject *obj, Bool_t replace = kFALSE);
-           void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
-           Int_t       AppendKey(TKey *key);
-   virtual void        Browse(TBrowser *b);
-           void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
-   virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
-   virtual void        Close(Option_t *option="");
-   virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      cd(const char *path = 0);
-   virtual void        Delete(const char *namecycle="");
-   virtual void        FillBuffer(char *&buffer);
-   virtual TKey       *FindKey(const char *keyname) const;
-   virtual TKey       *FindKeyAny(const char *keyname) const;
-   virtual TObject    *FindObjectAny(const char *name) const;
-   virtual TObject    *FindObjectAnyFile(const char *name) const;
-   virtual TObject    *Get(const char *namecycle);
-   virtual TDirectory *GetDirectory(const char *apath, Bool_t printError = false, const char *funcname = "GetDirectory");
-   template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
-      {
-         ptr = (T*)GetObjectChecked(namecycle,TBuffer::GetClass(typeid(T)));
-      }
-   virtual void       *GetObjectChecked(const char *namecycle, const char* classname);
-   virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
-   virtual void       *GetObjectUnchecked(const char *namecycle);
-   virtual Int_t       GetBufferSize() const;
-   const TDatime      &GetCreationDate() const { return fDatimeC; }
-   virtual TFile      *GetFile() const { return fFile; }
-   virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
-   virtual TList      *GetListOfKeys() const { return fKeys; }
-   const TDatime      &GetModificationDate() const { return fDatimeM; }
-   virtual Int_t       GetNbytesKeys() const { return fNbytesKeys; }
-   virtual Int_t       GetNkeys() const { return fKeys->GetSize(); }
-   virtual Long64_t    GetSeekDir() const { return fSeekDir; }
-   virtual Long64_t    GetSeekParent() const { return fSeekParent; }
-   virtual Long64_t    GetSeekKeys() const { return fSeekKeys; }
-   Bool_t              IsModified() const { return fModified; }
-   Bool_t              IsWritable() const { return fWritable; }
-   virtual void        ls(Option_t *option="") const;
-   virtual TDirectory *mkdir(const char *name, const char *title="");
-   virtual TFile      *OpenFile(const char *name, Option_t *option= "",
-                            const char *ftitle = "", Int_t compress = 1,
-                            Int_t netopt = 0);
-   virtual void        Purge(Short_t nkeep=1);
-   virtual void        ReadAll(Option_t *option="");
-   virtual Int_t       ReadKeys(Bool_t forceRead=kTRUE);
-   virtual Int_t       ReadTObject(TObject *obj, const char *keyname);
-   virtual void        ResetAfterMerge(TFileMergeInfo *);
-   virtual void        rmdir(const char *name);
-   virtual void        Save();
-   virtual void        SaveSelf(Bool_t force = kFALSE);
-   virtual Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="") const;
-   virtual void        SetBufferSize(Int_t bufsize);
-   void                SetModified() {fModified = kTRUE;}
-   void                SetSeekDir(Long64_t v) { fSeekDir = v; }
-   virtual void        SetTRefAction(TObject *ref, TObject *parent);
-   void                SetWritable(Bool_t writable=kTRUE);
-   virtual Int_t       Sizeof() const;
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0) const ;
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="", Int_t bufsize=0);
-   virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Int_t bufsize=0);
-   virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Int_t bufsize=0);
-   virtual void        WriteDirHeader();
-   virtual void        WriteKeys();
 
-   ClassDef(TDirectoryFile,5)  //Describe directory structure in a ROOT file
+          void        Append(TObject *obj, Bool_t replace = kFALSE) override;
+          void        Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj,replace); }
+          Int_t       AppendKey(TKey *key) override;
+          void        Browse(TBrowser *b) override;
+          void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) override { BuildDirectoryFile(motherFile, motherDir); }
+          TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE) override;
+          void        Close(Option_t *option="") override;
+          void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
+          Bool_t      cd(const char *path = nullptr) override;
+          void        Delete(const char *namecycle="") override;
+          void        FillBuffer(char *&buffer) override;
+          TKey       *FindKey(const char *keyname) const override;
+          TKey       *FindKeyAny(const char *keyname) const override;
+          TObject    *FindObjectAny(const char *name) const override;
+          TObject    *FindObjectAnyFile(const char *name) const override;
+          TObject    *Get(const char *namecycle) override;
+   /// See documentation of TDirectoryFile::Get(const char *namecycle)
+   template <class T> inline T* Get(const char* namecycle)
+   {
+      return TDirectory::Get<T>(namecycle);
+   }
+           TDirectory *GetDirectory(const char *apath, Bool_t printError = false, const char *funcname = "GetDirectory") override;
+           void       *GetObjectChecked(const char *namecycle, const char* classname) override;
+           void       *GetObjectChecked(const char *namecycle, const TClass* cl) override;
+           void       *GetObjectUnchecked(const char *namecycle) override;
+           Int_t       GetBufferSize() const override;
+   const TDatime      &GetCreationDate() const { return fDatimeC; }
+           TFile      *GetFile() const override { return fFile; }
+           TKey       *GetKey(const char *name, Short_t cycle=9999) const override;
+           TList      *GetListOfKeys() const override { return fKeys; }
+   const TDatime      &GetModificationDate() const { return fDatimeM; }
+           Int_t       GetNbytesKeys() const override { return fNbytesKeys; }
+           Int_t       GetNkeys() const override { return fKeys->GetSize(); }
+           Long64_t    GetSeekDir() const override { return fSeekDir; }
+           Long64_t    GetSeekParent() const override { return fSeekParent; }
+           Long64_t    GetSeekKeys() const override { return fSeekKeys; }
+           Bool_t      IsModified() const override { return fModified; }
+           Bool_t      IsWritable() const override { return fWritable; }
+           void        ls(Option_t *option="") const override;
+           TDirectory *mkdir(const char *name, const char *title="", Bool_t returnExistingDirectory = kFALSE) override;
+           TFile      *OpenFile(const char *name, Option_t *option= "",
+                            const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                            Int_t netopt = 0) override;
+           void        Purge(Short_t nkeep=1) override;
+           void        ReadAll(Option_t *option="") override;
+           Int_t       ReadKeys(Bool_t forceRead=kTRUE) override;
+           Int_t       ReadTObject(TObject *obj, const char *keyname) override;
+   virtual void        ResetAfterMerge(TFileMergeInfo *);
+           void        rmdir(const char *name) override;
+           void        Save() override;
+           void        SaveSelf(Bool_t force = kFALSE) override;
+           Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="") const override;
+           void        SetBufferSize(Int_t bufsize) override;
+           void        SetModified() override {fModified = kTRUE;}
+           void        SetSeekDir(Long64_t v) override { fSeekDir = v; }
+           void        SetTRefAction(TObject *ref, TObject *parent) override;
+           void        SetWritable(Bool_t writable=kTRUE) override;
+           Int_t       Sizeof() const override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
+           Int_t       WriteTObject(const TObject *obj, const char *name=nullptr, Option_t *option="", Int_t bufsize=0) override;
+           Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Int_t bufsize=0) override;
+           Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Int_t bufsize=0) override;
+           void        WriteDirHeader() override;
+           void        WriteKeys() override;
+
+   ClassDefOverride(TDirectoryFile,5)  //Describe directory structure in a ROOT file
 };
 
 #endif

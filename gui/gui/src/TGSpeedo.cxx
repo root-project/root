@@ -9,37 +9,34 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSpeedo                                                             //
-//                                                                      //
-// TGSpeedo is a widget looking like a speedometer, with a needle,      //
-// a counter and a small odometer window.                               //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/speedometer.gif">
+
+/** \class TGSpeedo
+    \ingroup guiwidgets
+
+TGSpeedo is a widget looking like a speedometer, with a needle,
+a counter and a small odometer window.
+
+Three thresholds are configurable, with their glowing color
+A peak mark can be enabled, allowing to keep track of the highest
+value displayed. The mark can be reset by right-clicking on the
+widget.
+
+Two signals are available:
+  - OdoClicked(): when user click on the small odometer window
+  - LedClicked(): when user click on the small led near the counter
+
 */
-//End_Html                                                              //
-//                                                                      //
-// Three thresholds are configurable, with their glowing color          //
-// A peak mark can be enabled, allowing to keep track of the highest    //
-// value displayed. The mark can be reset by right-clicking on the      //
-// widget.                                                              //
-// Two signals are available:                                           //
-//    OdoClicked(): when user click on the small odometer window        //
-//    LedClicked(): when user click on the small led near the counter   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 #include "TSystem.h"
-#include "TGClient.h"
 #include "TGResourcePool.h"
 #include "TImage.h"
-#include "TEnv.h"
 #include "TMath.h"
+#include "TVirtualX.h"
+#include "snprintf.h"
 
 #include "TGSpeedo.h"
+#include <numeric>
 
 
 ClassImp(TGSpeedo);
@@ -71,6 +68,8 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    fImage = TImage::Open(fPicName);
    if (!fImage || !fImage->IsValid())
       Error("TGSpeedo::Build", "%s not found", fPicName.Data());
+   fBufferCount = 0;
+   fBufferSize = 0;
    Build();
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
@@ -108,6 +107,8 @@ TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
    fImage = TImage::Open(fPicName);
    if (!fImage || !fImage->IsValid())
       Error("TGSpeedo::Build", "%s not found", fPicName.Data());
+   fBufferCount = 0;
+   fBufferSize = 0;
    Build();
    AddInput(kButtonPressMask | kButtonReleaseMask);
 }
@@ -225,6 +226,16 @@ TGDimension TGSpeedo::GetDefaultSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute and return the mean of the circular buffer content.
+
+Float_t TGSpeedo::GetMean()
+{
+   if ((fBufferSize == 0) || (fBuffer.size() == 0))
+      return fMeanVal;
+   return std::accumulate(fBuffer.begin(), fBuffer.end(), 0.0f) / fBuffer.size();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Make speedo glowing.
 
 void TGSpeedo::Glow(EGlowColor col)
@@ -298,6 +309,23 @@ Bool_t TGSpeedo::HandleButton(Event_t *event)
       }
    }
    return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the circular buffer size (used for the automatic mean calculation).
+/// SetMeanValue is ignored if SetBufferSize is called with a greater-than-zero
+/// argument. The mean value is then automatically calculated by using the sum
+/// of values contained in the buffer divided by their count.
+/// To disable automatic mean calculation, simply call SetBufferSize with a zero
+/// argument
+
+void TGSpeedo::SetBufferSize(Int_t size)
+{
+   if (size < 0) size = 0;
+   fBufferSize = size;
+   fBuffer.clear();
+   fBuffer.reserve(fBufferSize);
+   fBufferCount = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,6 +414,16 @@ void TGSpeedo::SetScaleValue(Float_t val)
    }
    if (fValue > fPeakVal)
       fPeakVal = fValue;
+
+   if (fBufferSize > 0) {
+      if ((Int_t)fBuffer.size() < (fBufferCount + 1))
+         fBuffer.push_back(fValue);
+      else
+         fBuffer[fBufferCount % fBufferSize] = fValue;
+      ++fBufferCount;
+      if (fBufferCount == fBufferSize)
+         fBufferCount = 0;
+   }
 
    fAngle = fAngleMin + (fValue / ((fScaleMax - fScaleMin) /
            (fAngleMax - fAngleMin)));
@@ -480,7 +518,9 @@ void TGSpeedo::DrawNeedle()
    Translate(80.0, angle, &xpk0, &ypk0);
    Translate(67.0, angle, &xpk1, &ypk1);
 
-   // compute x/y position of the peak mark
+   fMeanVal = GetMean();
+
+   // compute x/y position of the mean mark
    angle = fAngleMin + (fMeanVal / ((fScaleMax - fScaleMin) /
           (fAngleMax - fAngleMin)));
    Translate(80.0, angle, &xmn0, &ymn0);

@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %built_cling -Xclang -verify 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -Xclang -verify 2>&1 | FileCheck %s
 // Make sure we are correctly parsing the arguments for CIFactory::createCI
 
 #include "cling/Interpreter/InvocationOptions.h"
@@ -36,7 +36,9 @@ COpts.NoBuiltinInc
 // CHECK-NEXT: (unsigned int) 1
 COpts.NoCXXInc
 // CHECK-NEXT: (unsigned int) 0
-COpts.CUDA
+COpts.CUDAHost
+// CHECK-NEXT: (unsigned int) 0
+COpts.CUDADevice
 // CHECK-NEXT: (unsigned int) 0
 
 COpts.DefaultLanguage()
@@ -67,8 +69,10 @@ IOpts.CompilerOpts.NoBuiltinInc
 // CHECK-NEXT: (unsigned int) 0
 IOpts.CompilerOpts.NoCXXInc
 // CHECK-NEXT: (unsigned int) 1
-IOpts.CompilerOpts.CUDA
+IOpts.CompilerOpts.CUDAHost
 // CHECK-NEXT: (unsigned int) 1
+IOpts.CompilerOpts.CUDADevice
+// CHECK-NEXT: (unsigned int) 0
 
 // if the language is cuda, it should set automatically the c++ standard
 IOpts.CompilerOpts.DefaultLanguage()
@@ -79,6 +83,19 @@ IOpts.CompilerOpts.Remaining
 
 // Windows translates -nostdinc++ to -nostdinc++. Ignore that fact for the test.
 // CHECK-NEXT: {{.*}} { "progname", "-xcuda", "FileToExecuteA", "-isysroot", "APAth", {{.*}}, "-v", "FileToExecuteB" }
+
+// this flag allows to compile ptx code with the interpreter instance
+// CUDAHost and CUDADevice must not be true at the same time
+// --cuda-device-only implies -xcuda
+argv[10] = "--cuda-device-only";
+
+cling::InvocationOptions IOpts2(argc, argv);
+
+IOpts2.CompilerOpts.CUDAHost
+// CHECK-NEXT: (unsigned int) 0
+
+IOpts2.CompilerOpts.CUDADevice
+// CHECK-NEXT: (unsigned int) 1
 
 // expected-no-diagnostics
 .q

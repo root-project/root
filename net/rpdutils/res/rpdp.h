@@ -87,9 +87,6 @@ int  RpdGetAuthProtocol();
 const char *RpdGetKeyRoot();
 int  RpdGetClientProtocol();
 int  RpdGetOffSet();
-#ifdef R__GLBS
-int  RpdGetShmIdCred();
-#endif
 int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
@@ -191,39 +188,5 @@ int  SshToolGetAuth(int, const char *);
 int  SshToolNotifyFailure(const char *);
 
 } // namespace ROOT
-
-//
-// Globus stuff ...
-//
-#ifdef R__GLBS
-#define HAVE_MEMMOVE 1
-extern "C" {
-#ifdef IOV_MAX
-#undef IOV_MAX
-#endif
-#ifdef R__GLBS22
-   #include <globus_gsi_credential.h>
-#else
-   #include <sslutils.h>
-#endif
-   #include <globus_gss_assist.h>
-   #include <openssl/x509.h>
-   #include <openssl/pem.h>
-   #include <sys/ipc.h>
-   #include <sys/shm.h>
-}
-// Globus Utility Function prototypes ...
-namespace ROOT {
-
-void  GlbsToolError(const char *, int, int, int);
-int   GlbsToolCheckCert(char **);
-int   GlbsToolCheckContext(int);
-int   GlbsToolCheckProxy(char **);
-int   GlbsToolStoreContext(gss_ctx_id_t, char *);
-int   GlbsToolStoreToShm(gss_buffer_t, int *);
-char *GlbsToolExpand(char *);
-
-} // namespace ROOT
-#endif  // Globus ...
 
 #endif

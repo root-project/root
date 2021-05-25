@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %built_cling -fno-rtti 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -fno-rtti 2>&1 | FileCheck %s
 // Test lookupFunctionArgs()
 .rawInput
 #include "cling/Interpreter/Interpreter.h"
@@ -1325,6 +1325,32 @@ func_B_k_template->print(cling::outs());
 //CHECK-NEXT: template <class T> void B_k(T v) {
 //CHECK-NEXT:     T x = v;
 //CHECK-NEXT: }
+
+.rawInput
+ // CHECK-NEXT: Using raw input
+struct MyKlass { int f(); template <class T> float f(T); };
+namespace MyNamespaze { int f(); template <class T> float f(T); };
+int global_tmpltcheck_f();
+template <class T> float global_tmpltcheck_f(T);
+.rawInput
+ // CHECK-NEXT: Not using raw input
+
+const clang::Decl* class_MyKlass = lookup.findScope("MyKlass", diags);
+const clang::FunctionDecl* func_MyKlass_f_double = lookup.findAnyFunction(class_MyKlass, "f<double>", diags, /*objectIsConst*/false);
+dumpDecl("func_MyKlass_f_double", func_MyKlass_f_double);
+//CHECK-NEXT: func_MyKlass_f_double: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK-NEXT: func_MyKlass_f_double name: MyKlass::f<double>
+
+const clang::Decl* namespace_MyNamespaze = lookup.findScope("MyNamespaze", diags);
+const clang::FunctionDecl* func_MyNamespaze_f_double = lookup.findAnyFunction(namespace_MyNamespaze, "f<double>", diags, /*objectIsConst*/false);
+dumpDecl("func_MyNamespaze_f_double", func_MyNamespaze_f_double);
+//CHECK-NEXT: func_MyNamespaze_f_double: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK-NEXT: func_MyNamespaze_f_double name: MyNamespaze::f<double>
+
+const clang::FunctionDecl* func_global_tmpltcheck_f_double = lookup.findAnyFunction(G, "global_tmpltcheck_f<double>", diags, /*objectIsConst*/false);
+dumpDecl("func_global_tmpltcheck_f_double", func_global_tmpltcheck_f_double);
+//CHECK-NEXT: func_global_tmpltcheck_f_double: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK-NEXT: func_global_tmpltcheck_f_double name: global_tmpltcheck_f<double>
 
 //
 //  One final check to make sure we are at the right line in the output.

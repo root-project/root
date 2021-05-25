@@ -82,8 +82,8 @@ protected:
    Pythia8::Pythia        *fPythia;                //! The pythia8 instance
    Int_t                   fNumberOfParticles;     //! Number of particles
 public:
-   TPythia8();
-   TPythia8(const char *xmlDir);
+   TPythia8(bool printBanner = true);
+   TPythia8(const char *xmlDir, bool printBanner = true);
    virtual ~TPythia8();
    static TPythia8        *Instance();
    Pythia8::Pythia        *Pythia8() {return fPythia;}

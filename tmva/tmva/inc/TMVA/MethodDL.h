@@ -43,18 +43,28 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 
-#ifdef R__HAS_TMVACPU
+//#ifdef R__HAS_TMVACPU
 #include "TMVA/DNN/Architectures/Cpu.h"
-#endif
+//#endif
 
+#if 0
 #ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
+#ifdef R__HAS_CUDNN
+#include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
+#endif
 #endif
 
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DeepNet.h"
 
 #include <vector>
+#include <map>
+
+#ifdef R__HAS_TMVAGPU
+//#define USE_GPU_INFERENCE
+#endif
 
 namespace TMVA {
 
@@ -63,13 +73,15 @@ struct TTrainingSettings {
    size_t batchSize;
    size_t testInterval;
    size_t convergenceSteps;
-   size_t maxEpochs; 
+   size_t maxEpochs;
    DNN::ERegularization regularization;
    DNN::EOptimizer optimizer;
+   TString optimizerName;
    Double_t learningRate;
    Double_t momentum;
    Double_t weightDecay;
    std::vector<Double_t> dropoutProbabilities;
+   std::map<TString,double> optimizerParams;
    bool multithreading;
 };
 
@@ -79,24 +91,23 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
-// #ifdef R__HAS_TMVAGPU
-//    using ArchitectureImpl_t = TMVA::DNN::TCuda<Double_t>;
-// #else
-// do not use arch GPU for evaluation. It is too slow for batch size=1   
-#ifdef R__HAS_TMVACPU
-   using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
-#else
-   using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
-#endif  
-//#endif
-   using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
-   using MatrixImpl_t = typename ArchitectureImpl_t::Matrix_t;
-   using ScalarImpl_t =  typename ArchitectureImpl_t::Scalar_t;
 
-   std::vector<MatrixImpl_t> fXInput;  // input tensor used to evaluate fNet
-   std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
-   std::unique_ptr<DeepNetImpl_t> fNet;
-   
+// #ifdef R__HAS_TMVAGPU
+// #ifdef R__HAS_CUDNN
+//    using ArchitectureImpl_t = TMVA::DNN::TCudnn<Float_t>;
+// #else
+//   using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
+// #endif
+// #else
+// do not use arch GPU for evaluation. It is too slow for batch size=1
+   using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
+// #endif
+
+   using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
+   using MatrixImpl_t =  typename ArchitectureImpl_t::Matrix_t;
+   using TensorImpl_t =  typename ArchitectureImpl_t::Tensor_t;
+   using ScalarImpl_t =  typename ArchitectureImpl_t::Scalar_t;
+   using HostBufferImpl_t = typename ArchitectureImpl_t::HostBuffer_t;
 
    /*! The option handling methods */
    void DeclareOptions();
@@ -135,12 +146,15 @@ private:
                           TString delim);
 
    template <typename Architecture_t, typename Layer_t>
-   void ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                      std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
+   void ParseBatchNormLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                          std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                          TString delim);
 
+   enum ERecurrentLayerType { kLayerRNN = 0, kLayerLSTM = 1, kLayerGRU = 2 };
    template <typename Architecture_t, typename Layer_t>
-   void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+   void ParseRecurrentLayer(ERecurrentLayerType type, DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
+
 
    /// train of deep neural network using the defined architecture
    template <typename Architecture_t>
@@ -149,22 +163,27 @@ private:
    /// perform prediction of the deep neural network
    /// using batches (called by GetMvaValues)
    template <typename Architecture_t>
-   std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress); 
+   std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress);
 
-   
-   size_t fInputDepth;  ///< The depth of the input.
-   size_t fInputHeight; ///< The height of the input.
-   size_t fInputWidth;  ///< The width of the input.
+   /// parce the validation string and return the number of event data used for validation
+   UInt_t GetNumValidationSamples();
 
+   // cudnn implementation needs this format
+   /** Contains the batch size (no. of images in the batch), input depth (no. channels)
+    *  and furhter input dimensios of the data (image height, width ...)*/
+   std::vector<size_t> fInputShape;
+
+   // The size of the batch, i.e. the number of images that are contained in the batch, is either set to be the depth
+   // or the height of the batch
    size_t fBatchDepth;  ///< The depth of the batch used to train the deep net.
    size_t fBatchHeight; ///< The height of the batch used to train the deep net.
    size_t fBatchWidth;  ///< The width of the batch used to train the deep net.
-   
+
    size_t fRandomSeed;  ///<The random seed used to initialize the weights and shuffling batches (default is zero)
 
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
-   DNN::ELossFunction fLossFunction;           ///< The loss function
+   DNN::ELossFunction   fLossFunction;         ///< The loss function
 
    TString fInputLayoutString;          ///< The string defining the layout of the input
    TString fBatchLayoutString;          ///< The string defining the layout of the batch
@@ -173,11 +192,18 @@ private:
    TString fTrainingStrategyString;     ///< The string defining the training strategy
    TString fWeightInitializationString; ///< The string defining the weight initialization method
    TString fArchitectureString;         ///< The string defining the architecure: CPU or GPU
+   TString fNumValidationString;        ///< The string defining the number (or percentage) of training data used for validation
    bool fResume;
    bool fBuildNet;                     ///< Flag to control whether to build fNet, the stored network used for the evaluation
 
    KeyValueVector_t fSettings;                       ///< Map for the training strategy
    std::vector<TTrainingSettings> fTrainingSettings; ///< The vector defining each training strategy
+
+   TensorImpl_t fXInput;                 // input tensor used to evaluate fNet
+   HostBufferImpl_t fXInputBuffer;        // input hist buffer corresponding to X (needed for GPU implementation)
+   std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
+   std::unique_ptr<DeepNetImpl_t> fNet;
+
 
    ClassDef(MethodDL, 0);
 
@@ -185,7 +211,7 @@ protected:
    // provide a help message
    void GetHelpMessage() const;
 
-   virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress); 
+   virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress);
 
 
 public:
@@ -209,6 +235,8 @@ public:
    void Train();
 
    Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
+   virtual const std::vector<Float_t>& GetRegressionValues();
+   virtual const std::vector<Float_t>& GetMulticlassValues();
 
    /*! Methods for writing and reading weights */
    using MethodBase::ReadWeightsFromStream;
@@ -220,55 +248,60 @@ public:
    const Ranking *CreateRanking();
 
    /* Getters */
-   size_t GetInputDepth() const { return fInputDepth; }
-   size_t GetInputHeight() const { return fInputHeight; }
-   size_t GetInputWidth() const { return fInputWidth; }
+   size_t GetInputDepth()  const { return fInputShape[1]; }   //< no. of channels for an image
+   size_t GetInputHeight() const { return fInputShape[2]; }
+   size_t GetInputWidth()  const { return fInputShape[3]; }
+   size_t GetInputDim()    const { return fInputShape.size() - 2; }
+   std::vector<size_t> GetInputShape() const { return fInputShape; }
 
-   size_t GetBatchDepth() const { return fBatchDepth; }
+   size_t GetBatchSize()   const { return fInputShape[0]; }
+   size_t GetBatchDepth()  const { return fBatchDepth; }
    size_t GetBatchHeight() const { return fBatchHeight; }
-   size_t GetBatchWidth() const { return fBatchWidth; }
+   size_t GetBatchWidth()  const { return fBatchWidth; }
 
    const DeepNetImpl_t & GetDeepNet() const { return *fNet; }
 
    DNN::EInitialization GetWeightInitialization() const { return fWeightInitialization; }
-   DNN::EOutputFunction GetOutputFunction() const { return fOutputFunction; }
-   DNN::ELossFunction GetLossFunction() const { return fLossFunction; }
+   DNN::EOutputFunction GetOutputFunction()       const { return fOutputFunction; }
+   DNN::ELossFunction GetLossFunction()           const { return fLossFunction; }
 
-   TString GetInputLayoutString() const { return fInputLayoutString; }
-   TString GetBatchLayoutString() const { return fBatchLayoutString; }
-   TString GetLayoutString() const { return fLayoutString; }
-   TString GetErrorStrategyString() const { return fErrorStrategy; }
-   TString GetTrainingStrategyString() const { return fTrainingStrategyString; }
+   TString GetInputLayoutString()          const { return fInputLayoutString; }
+   TString GetBatchLayoutString()          const { return fBatchLayoutString; }
+   TString GetLayoutString()               const { return fLayoutString; }
+   TString GetErrorStrategyString()        const { return fErrorStrategy; }
+   TString GetTrainingStrategyString()     const { return fTrainingStrategyString; }
    TString GetWeightInitializationString() const { return fWeightInitializationString; }
-   TString GetArchitectureString() const { return fArchitectureString; }
+   TString GetArchitectureString()         const { return fArchitectureString; }
 
    const std::vector<TTrainingSettings> &GetTrainingSettings() const { return fTrainingSettings; }
-   std::vector<TTrainingSettings> &GetTrainingSettings() { return fTrainingSettings; }
-   const KeyValueVector_t &GetKeyValueSettings() const { return fSettings; }
-   KeyValueVector_t &GetKeyValueSettings() { return fSettings; }
+   std::vector<TTrainingSettings>       &GetTrainingSettings()       { return fTrainingSettings; }
+   const KeyValueVector_t               &GetKeyValueSettings() const { return fSettings; }
+   KeyValueVector_t                     &GetKeyValueSettings()       { return fSettings; }
 
    /** Setters */
-   void SetInputDepth(size_t inputDepth) { fInputDepth = inputDepth; }
-   void SetInputHeight(size_t inputHeight) { fInputHeight = inputHeight; }
-   void SetInputWidth(size_t inputWidth) { fInputWidth = inputWidth; }
+   void SetInputDepth (int inputDepth)  { fInputShape[1] = inputDepth; }
+   void SetInputHeight(int inputHeight) { fInputShape[2] = inputHeight; }
+   void SetInputWidth (int inputWidth)  { fInputShape[3] = inputWidth; }
+   void SetInputShape (std::vector<size_t> inputShape) { fInputShape = std::move(inputShape); }
 
-   void SetBatchDepth(size_t batchDepth) { fBatchDepth = batchDepth; }
-   void SetBatchHeight(size_t batchHeight) { fBatchHeight = batchHeight; }
-   void SetBatchWidth(size_t batchWidth) { fBatchWidth = batchWidth; }
+   void SetBatchSize  (size_t batchSize)   { fInputShape[0] = batchSize; }
+   void SetBatchDepth (size_t batchDepth)  { fBatchDepth    = batchDepth; }
+   void SetBatchHeight(size_t batchHeight) { fBatchHeight   = batchHeight; }
+   void SetBatchWidth (size_t batchWidth)  { fBatchWidth    = batchWidth; }
 
    void SetWeightInitialization(DNN::EInitialization weightInitialization)
    {
       fWeightInitialization = weightInitialization;
    }
-   void SetOutputFunction(DNN::EOutputFunction outputFunction) { fOutputFunction = outputFunction; }
-   void SetErrorStrategyString(TString errorStrategy) { fErrorStrategy = errorStrategy; }
-   void SetTrainingStrategyString(TString trainingStrategyString) { fTrainingStrategyString = trainingStrategyString; }
+   void SetOutputFunction            (DNN::EOutputFunction outputFunction) { fOutputFunction = outputFunction; }
+   void SetErrorStrategyString       (TString errorStrategy)               { fErrorStrategy = errorStrategy; }
+   void SetTrainingStrategyString    (TString trainingStrategyString)      { fTrainingStrategyString = trainingStrategyString; }
    void SetWeightInitializationString(TString weightInitializationString)
    {
       fWeightInitializationString = weightInitializationString;
    }
-   void SetArchitectureString(TString architectureString) { fArchitectureString = architectureString; }
-   void SetLayoutString(TString layoutString) { fLayoutString = layoutString; }
+   void SetArchitectureString        (TString architectureString)          { fArchitectureString = architectureString; }
+   void SetLayoutString              (TString layoutString)                { fLayoutString = layoutString; }
 };
 
 } // namespace TMVA

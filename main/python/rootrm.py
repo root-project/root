@@ -18,7 +18,7 @@ EPILOG = """Examples:
   Remove the object 'hist' from the ROOT file 'example.root'
 
 - rootrm example.root:dir/hist
-  Remove the object 'hist' from the direcory 'dir' inside the ROOT file 'example.root'
+  Remove the object 'hist' from the directory 'dir' inside the ROOT file 'example.root'
 
 - rootrm example.root
   Remove the ROOT file 'example.root'

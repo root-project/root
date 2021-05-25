@@ -13,16 +13,14 @@
 // Author    : Lorenzo.MONETA@cern.ch
 // Created by: moneta  at Thu Apr  8 10:26:22 2004
 
-
 #ifndef ROOT_Minuit2_SqrtLowParameterTransformation
 #define ROOT_Minuit2_SqrtLowParameterTransformation
 
 namespace ROOT {
 
-  namespace Minuit2 {
+namespace Minuit2 {
 
     class MnMachinePrecision;
-
 
 /**
  * Transformation from external to internal Parameter based on  sqrt(1 + x**2)
@@ -53,8 +51,8 @@ namespace ROOT {
     private:
     };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
 #endif

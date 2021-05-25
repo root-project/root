@@ -21,17 +21,17 @@
 #include "TG3DLine.h"
 #include "TSystem.h"
 #include "TGFrame.h"
-#include "TGLabel.h"
 #include "TGMenu.h"
-#include "TGButton.h"
 #include "TGSplitter.h"
-#include "TColor.h"
+#include "TGButton.h"
+#include "snprintf.h"
 
 #include "TVirtualPad.h"
 #include "TGedEditor.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TString.h"
 #include "TGFileDialog.h"
+#include "TVirtualX.h"
 
 #include "TGLOutput.h"
 #include "TGLFormat.h"
@@ -46,11 +46,9 @@
 #include "TWin32SplashThread.h"
 #endif
 
-#include "TGLPhysicalShape.h"
 #include "TGLWidget.h"
 #include "TGLSAViewer.h"
 #include "TGLSAFrame.h"
-#include "TGLOutput.h"
 #include "TGLEventHandler.h"
 
 
@@ -755,7 +753,7 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             {
                TGFileInfo fi;
                fi.fFileTypes   = gGLSaveAsTypes;
-               fi.fIniDir      = StrDup(fDirName);
+               fi.SetIniDir(fDirName);
                fi.fFileTypeIdx = fTypeIdx;
                fi.fOverwrite   = fOverwrite;
                new TGFileDialog(gClient->GetDefaultRoot(), fFrame, kFDSave, &fi);

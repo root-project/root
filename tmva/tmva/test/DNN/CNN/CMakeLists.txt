@@ -1,17 +1,21 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building TMVA/DNN/CNN tests.
 # @author Vladimir Ilievski
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
 
-set(Libraries Core MathCore Matrix TMVA)
+set(Libraries TMVA)
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 
-set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
 
 CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
 target_link_libraries(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
@@ -29,6 +33,10 @@ CUDA_ADD_EXECUTABLE(testConvLayerCuda TestConvLayerCuda.cxx)
 target_link_libraries(testConvLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCuda COMMAND testConvLayerCuda)
 
+CUDA_ADD_EXECUTABLE(testForwardPassCuda TestForwardPassCuda.cxx)
+target_link_libraries(testForwardPassCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ForwardCuda COMMAND testForwardPassCuda)
+
 CUDA_ADD_EXECUTABLE(testRotateWeightsCuda TestRotateWeightsCuda.cxx)
 target_link_libraries(testRotateWeightsCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotateWeightsCuda COMMAND testRotateWeightsCuda)
@@ -37,11 +45,37 @@ CUDA_ADD_EXECUTABLE(testConvBackpropagationCuda TestConvBackpropagationCuda.cxx)
 target_link_libraries(testConvBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-ConvBackpropagationCuda COMMAND testConvBackpropagationCuda)
 
-include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+if (tmva-cudnn)
 
-else()
-include_directories(${ROOT_INCLUDE_DIRS})
+CUDA_ADD_EXECUTABLE(testForwardPassCudnn TestForwardPassCudnn.cxx)
+target_link_libraries(testForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ForwardCudnn COMMAND testForwardPassCudnn)
+
+CUDA_ADD_EXECUTABLE(testConvBackpropagationCudnn TestConvBackpropagationCudnn.cxx)
+target_link_libraries(testConvBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvBackpropagationCudnn COMMAND testConvBackpropagationCudnn)
+
+CUDA_ADD_EXECUTABLE(testConvLayerCudnn TestConvLayerCudnn.cxx)
+target_link_libraries(testConvLayerCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCudnn COMMAND testConvLayerCudnn)
+
+CUDA_ADD_EXECUTABLE(testPoolingLayerCudnn TestPoolingLayerCudnn.cxx)
+target_link_libraries(testPoolingLayerCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCudnn COMMAND testPoolingLayerCudnn)
+
+# test mixed architecture Cudnn Cpu
+CUDA_ADD_EXECUTABLE(testMixedArchitectures TestMixedArchitectures.cxx)
+target_link_libraries(testMixedArchitectures ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-MixedArchitectures COMMAND testMixedArchitectures)
+
 endif()
+
+include_directories(${CUDA_INCLUDE_DIRS})
+
+endif()
+
+#-- -test of reference architecture
+if (Test_Reference)
 
 ROOT_EXECUTABLE(testIm2Col TestIm2Col.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col COMMAND testIm2Col)
@@ -55,7 +89,7 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape COMMAND testReshape)
 ROOT_EXECUTABLE(testRotWeights TestRotateWeights.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
 
-#-- features not implemeted in ref architectures 
+#-- features not implemeted in ref architectures
 #ROOT_EXECUTABLE(testForwardPass TestForwardPass.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-CNN-Forward COMMAND testForwardPass)
 
@@ -71,10 +105,10 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
 #ROOT_EXECUTABLE(testTensorDataLoader TestTensorDataLoader.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader COMMAND testTensorDataLoader)
 
+endif()
+
 #--- CPU tests. ----------------------------
 if ((BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
-
-include_directories(${TBB_INCLUDE_DIRS})
 
 ROOT_EXECUTABLE(testIm2ColCpu TestIm2ColCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col-CPU COMMAND testIm2ColCpu)
@@ -100,17 +134,17 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Pred-CPU COMMAND testConvNetPredCpu)
 ROOT_EXECUTABLE(testReshapeCpu TestReshapeCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape-CPU COMMAND testReshapeCpu)
 
-#-- need to be fixed 
+#-- need to be fixed
 #ROOT_EXECUTABLE(testTensorDataLoaderCpu TestTensorDataLoaderCpu.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader-CPU COMMAND testTensorDataLoaderCpu)
 
-ROOT_EXECUTABLE(testDLMinimizationCpu TestMinimizationCpu.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization-CPU COMMAND testDLMinimizationCpu)
+#ROOT_EXECUTABLE(testDLMinimizationCpu TestMinimizationCpu.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization-CPU COMMAND testDLMinimizationCpu)
 
 ROOT_EXECUTABLE(testConvBackpropagationCpu TestConvBackpropagation.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation-CPU COMMAND testConvBackpropagationCpu)
 
-ROOT_EXECUTABLE(testMethodDLCNNCpu TestMethodDLCNN.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL-CPU COMMAND testMethodDLCNNCpu)
+ROOT_EXECUTABLE(testMethodDLCNN TestMethodDLCNN.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL COMMAND testMethodDLCNN)
 
 endif ()

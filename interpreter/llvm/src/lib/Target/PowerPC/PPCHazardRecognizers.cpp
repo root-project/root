@@ -1,9 +1,8 @@
 //===-- PPCHazardRecognizers.cpp - PowerPC Hazard Recognizer Impls --------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,9 +11,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "PPCHazardRecognizers.h"
-#include "PPC.h"
 #include "PPCInstrInfo.h"
-#include "PPCTargetMachine.h"
+#include "PPCSubtarget.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -50,7 +48,7 @@ bool PPCDispatchGroupSBHazardRecognizer::isLoadAfterStore(SUnit *SU) {
         return true;
   }
 
-  return false; 
+  return false;
 }
 
 bool PPCDispatchGroupSBHazardRecognizer::isBCTRAfterSet(SUnit *SU) {
@@ -76,7 +74,7 @@ bool PPCDispatchGroupSBHazardRecognizer::isBCTRAfterSet(SUnit *SU) {
         return true;
   }
 
-  return false; 
+  return false;
 }
 
 // FIXME: Remove this when we don't need this:
@@ -103,7 +101,7 @@ bool PPCDispatchGroupSBHazardRecognizer::mustComeFirst(const MCInstrDesc *MCID,
   case PPC::Sched::IIC_LdStLHA:
   case PPC::Sched::IIC_LdStLHAU:
   case PPC::Sched::IIC_LdStLWA:
-  case PPC::Sched::IIC_LdStSTDU:
+  case PPC::Sched::IIC_LdStSTU:
   case PPC::Sched::IIC_LdStSTFDU:
     NSlots = 2;
     break;
@@ -112,7 +110,7 @@ bool PPCDispatchGroupSBHazardRecognizer::mustComeFirst(const MCInstrDesc *MCID,
   case PPC::Sched::IIC_LdStLHAUX:
   case PPC::Sched::IIC_LdStLWARX:
   case PPC::Sched::IIC_LdStLDARX:
-  case PPC::Sched::IIC_LdStSTDUX:
+  case PPC::Sched::IIC_LdStSTUX:
   case PPC::Sched::IIC_LdStSTDCX:
   case PPC::Sched::IIC_LdStSTWCX:
   case PPC::Sched::IIC_BrMCRX: // mtcr
@@ -180,9 +178,8 @@ void PPCDispatchGroupSBHazardRecognizer::EmitInstruction(SUnit *SU) {
       CurGroup.clear();
       CurSlots = CurBranches = 0;
     } else {
-      DEBUG(dbgs() << "**** Adding to dispatch group: SU(" <<
-                      SU->NodeNum << "): ");
-      DEBUG(DAG->dumpNode(SU));
+      LLVM_DEBUG(dbgs() << "**** Adding to dispatch group: ");
+      LLVM_DEBUG(DAG->dumpNode(*SU));
 
       unsigned NSlots;
       bool MustBeFirst = mustComeFirst(MCID, NSlots);
@@ -268,7 +265,7 @@ PPCHazardRecognizer970::PPCHazardRecognizer970(const ScheduleDAG &DAG)
 }
 
 void PPCHazardRecognizer970::EndDispatchGroup() {
-  DEBUG(errs() << "=== Start of dispatch group\n");
+  LLVM_DEBUG(errs() << "=== Start of dispatch group\n");
   NumIssued = 0;
 
   // Structural hazard info.
@@ -330,7 +327,7 @@ getHazardType(SUnit *SU, int Stalls) {
 
   MachineInstr *MI = SU->getInstr();
 
-  if (MI->isDebugValue())
+  if (MI->isDebugInstr())
     return NoHazard;
 
   unsigned Opcode = MI->getOpcode();
@@ -388,7 +385,7 @@ getHazardType(SUnit *SU, int Stalls) {
 void PPCHazardRecognizer970::EmitInstruction(SUnit *SU) {
   MachineInstr *MI = SU->getInstr();
 
-  if (MI->isDebugValue())
+  if (MI->isDebugInstr())
     return;
 
   unsigned Opcode = MI->getOpcode();

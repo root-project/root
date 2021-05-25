@@ -28,12 +28,12 @@ an URL. The supported url format is:
 #include "TEnv.h"
 #include "TSystem.h"
 #include "TMap.h"
-#include "TVirtualMutex.h"
+#include "TROOT.h"
 
-TObjArray *TUrl::fgSpecialProtocols = 0;
-THashList *TUrl::fgHostFQDNs = 0;
+#include <atomic>
 
-TVirtualMutex *gURLMutex = 0; // local mutex
+TObjArray *TUrl::fgSpecialProtocols = nullptr;
+THashList *TUrl::fgHostFQDNs = nullptr;
 
 #ifdef R__COMPLETE_MEM_TERMINATION
 namespace {
@@ -109,7 +109,8 @@ TUrl::~TUrl()
 
 void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 {
-   fOptionsMap = 0;
+   delete fOptionsMap;
+   fOptionsMap = nullptr;
 
    if (!url || !url[0]) {
       fPort = -1;
@@ -140,7 +141,7 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 tryfile:
    u = u0;
 
-   // Handle special protocol cases: "file:", "rfio:", etc.
+   // Handle special protocol cases: "file:", etc.
    for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
       TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
       TString s1 = os->GetString();
@@ -160,7 +161,7 @@ tryfile:
             else
                l = 0;  // leave namespace prefix as part of file name
          } else {
-            // case with protocol, like: rfio:machine:/data/file.root
+            // case with protocol, like: file:/data/file.root
             fProtocol = s1(0, l-1);
          }
          if (!strncmp(u+l, "//", 2))
@@ -354,7 +355,7 @@ TUrl::TUrl(const TUrl &url) : TObject(url)
    fPort       = url.fPort;
    fFileOA     = url.fFileOA;
    fHostFQ     = url.fHostFQ;
-   fOptionsMap = 0;
+   fOptionsMap = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +376,8 @@ TUrl &TUrl::operator=(const TUrl &rhs)
       fPort       = rhs.fPort;
       fFileOA     = rhs.fFileOA;
       fHostFQ     = rhs.fHostFQ;
-      fOptionsMap = 0;
+      delete fOptionsMap;
+      fOptionsMap = nullptr;
    }
    return *this;
 }
@@ -392,7 +394,7 @@ const char *TUrl::GetUrl(Bool_t withDeflt) const
       fUrl = "";
 
    if (IsValid() && fUrl == "") {
-      // Handle special protocol cases: file:, rfio:, etc.
+      // Handle special protocol cases: file:, etc.
       for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
          TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
          TString &s = os->String();
@@ -477,7 +479,7 @@ const char *TUrl::GetHostFQDN() const
             fHostFQ = adr.GetHostName();
          } else
             fHostFQ = "-";
-         R__LOCKGUARD2(gURLMutex);
+         R__LOCKGUARD(gROOTMutex);
          if (!fgHostFQDNs) {
             fgHostFQDNs = new THashList;
             fgHostFQDNs->SetOwner();
@@ -566,14 +568,14 @@ void TUrl::Print(Option_t *) const
 /// Read the list of special protocols from the rootrc files.
 /// These protocols will be parsed in a protocol and a file part,
 /// no host or other info will be determined. This is typically
-/// used for legacy file descriptions like: rfio:host:/path/file.root.
+/// used for legacy file descriptions like: file:/path/file.root.
 
 TObjArray *TUrl::GetSpecialProtocols()
 {
-   static Bool_t usedEnv = kFALSE;
+   static std::atomic_bool usedEnv = ATOMIC_VAR_INIT(false);
 
    if (!gEnv) {
-      R__LOCKGUARD2(gURLMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (!fgSpecialProtocols)
          fgSpecialProtocols = new TObjArray;
       if (fgSpecialProtocols->GetEntriesFast() == 0)
@@ -584,15 +586,19 @@ TObjArray *TUrl::GetSpecialProtocols()
    if (usedEnv)
       return fgSpecialProtocols;
 
-   R__LOCKGUARD2(gURLMutex);
+   R__LOCKGUARD(gROOTMutex);
+
+   // Some other thread might have set it up in the meantime.
+   if (usedEnv)
+      return fgSpecialProtocols;
+
    if (fgSpecialProtocols)
       fgSpecialProtocols->Delete();
 
    if (!fgSpecialProtocols)
       fgSpecialProtocols = new TObjArray;
 
-   const char *protos = gEnv->GetValue("Url.Special", "file: rfio: hpss: castor: dcache: dcap:");
-   usedEnv = kTRUE;
+   const char *protos = gEnv->GetValue("Url.Special", "file: hpss: dcache: dcap:");
 
    if (protos) {
       Int_t cnt = 0;
@@ -608,6 +614,7 @@ TObjArray *TUrl::GetSpecialProtocols()
       }
       delete [] p;
    }
+   usedEnv = true;
    return fgSpecialProtocols;
 }
 
@@ -620,21 +627,24 @@ void TUrl::ParseOptions() const
    if (fOptionsMap) return;
 
    TString urloptions = GetOptions();
+   if (urloptions.IsNull())
+      return;
+
    TObjArray *objOptions = urloptions.Tokenize("&");
-   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+   for (Int_t n = 0; n < objOptions->GetEntriesFast(); n++) {
       TString loption = ((TObjString *) objOptions->At(n))->GetName();
       TObjArray *objTags = loption.Tokenize("=");
       if (!fOptionsMap) {
          fOptionsMap = new TMap;
          fOptionsMap->SetOwnerKeyValue();
       }
-      if (objTags->GetEntries() == 2) {
+      if (objTags->GetEntriesFast() == 2) {
          TString key = ((TObjString *) objTags->At(0))->GetName();
          TString value = ((TObjString *) objTags->At(1))->GetName();
          fOptionsMap->Add(new TObjString(key), new TObjString(value));
       } else {
          TString key = ((TObjString *) objTags->At(0))->GetName();
-         fOptionsMap->Add(new TObjString(key), 0);
+         fOptionsMap->Add(new TObjString(key), nullptr);
       }
       delete objTags;
    }
@@ -648,10 +658,10 @@ void TUrl::ParseOptions() const
 
 const char *TUrl::GetValueFromOptions(const char *key) const
 {
-   if (!key) return 0;
+   if (!key) return nullptr;
    ParseOptions();
-   TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
-   return (option ? ((TObjString*)fOptionsMap->GetValue(key))->GetName(): 0);
+   TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : nullptr;
+   return option ? option->GetName() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,8 +672,8 @@ Int_t TUrl::GetIntValueFromOptions(const char *key) const
 {
    if (!key) return -1;
    ParseOptions();
-   TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
-   return (option ? (atoi(((TObjString*)fOptionsMap->GetValue(key))->GetName())) : -1);
+   TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : nullptr;
+   return option ? atoi(option->GetName()) : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -674,9 +684,7 @@ Bool_t TUrl::HasOption(const char *key) const
    if (!key) return kFALSE;
    ParseOptions();
 
-   if (fOptionsMap && fOptionsMap->FindObject(key))
-      return kTRUE;
-   return kFALSE;
+   return fOptionsMap && fOptionsMap->FindObject(key);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

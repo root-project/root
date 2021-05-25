@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #203
-## Fitting and plotting in sub ranges
+## Addition and convolution: fitting and plotting in sub ranges
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT
@@ -31,13 +29,13 @@ f = ROOT.RooRealVar("f", "f", 0., 1.)
 model = ROOT.RooAddPdf(
     "model", "model", ROOT.RooArgList(gx, px), ROOT.RooArgList(f))
 
-# Generated 10000 events in (x,y) from p.d.f. model
+# Generated 10000 events in (x,y) from pdf model
 modelData = model.generate(ROOT.RooArgSet(x), 10000)
 
 # Fit full range
 # ---------------------------
 
-# Fit p.d.f to all data
+# Fit pdf to all data
 r_full = model.fitTo(modelData, ROOT.RooFit.Save(ROOT.kTRUE))
 
 # Fit partial range
@@ -46,7 +44,7 @@ r_full = model.fitTo(modelData, ROOT.RooFit.Save(ROOT.kTRUE))
 # Define "signal" range in x as [-3,3]
 x.setRange("signal", -3, 3)
 
-# Fit p.d.f only to data in "signal" range
+# Fit pdf only to data in "signal" range
 r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
     ROOT.kTRUE), ROOT.RooFit.Range("signal"))
 
@@ -56,8 +54,10 @@ r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
 # Make plot frame in x and add data and fitted model
 frame = x.frame(ROOT.RooFit.Title("Fitting a sub range"))
 modelData.plotOn(frame)
-model.plotOn(frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))  # Add shape in full ranged dashed
+model.plotOn(
+    frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
+        ROOT.kDashed), ROOT.RooFit.LineColor(
+            ROOT.kRed)) # Add shape in full ranged dashed
 model.plotOn(frame)  # By default only fitted range is shown
 
 # Print fit results

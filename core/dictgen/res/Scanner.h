@@ -16,6 +16,10 @@
 #define ROOT__RSCANNER_H__
 
 #include <stack>
+#include <vector>
+#include <string>
+#include <map>
+#include <set>
 
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTContext.h"
@@ -70,7 +74,7 @@ public:
    typedef std::vector<const clang::FunctionDecl*> FunctionColl_t;
    typedef std::vector<const clang::VarDecl*> VariableColl_t;
    typedef std::vector<const clang::EnumDecl*> EnumColl_t;
-   typedef void (*DeclCallback)(const char *type);
+   typedef void (*DeclCallback)(const clang::RecordDecl*);
    typedef std::map<const clang::Decl*,const BaseSelectionRule*> DeclsSelRulesMap_t;
 
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
@@ -112,7 +116,7 @@ public:
 
    // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
    bool GetDeclName(clang::Decl* D, std::string& name) const;
-   bool GetDeclQualName(const clang::Decl* D, std::string& qual_name) const;
+   static bool GetDeclQualName(const clang::Decl* D, std::string& qual_name);
    bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
 
    static const char* fgClangDeclKey; // property key used for CLang declaration objects

@@ -1,10 +1,10 @@
-set(ROOT_PLATFORM win32)
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
 
-#---Global variables for Win32 platform-------------------------------------------------
-set(SYSLIBS advapi32.lib)
-set(XLIBS)
-set(CILIBS)
-set(CRYPTLIBS)
+set(ROOT_PLATFORM win32)
 
 #----Check the compiler that is used-----------------------------------------------------
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -15,79 +15,59 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
-  set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-  set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-
-
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
   # Select flags.
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-Ofast -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-  set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3")
-  set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -ftest-coverage -fprofile-arcs")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
-  set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-Ofast -DNDEBUG")
-  set(CMAKE_C_FLAGS_DEBUG            "-g")
-  set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
-  set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
-
-
-  #---Set Linker flags----------------------------------------------------------------------
-  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
-  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
-
-  # Settings for cint
-  set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")
-  set(CXXOUT "-o ")
-
-  set(EXEEXT "")
-  set(SOEXT "so")
-
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g"           CACHE STRING "Flags for release build with debug info" FORCE)
+  set(CMAKE_CXX_FLAGS_RELEASE        "-O2"              CACHE STRING "Flags for release build" FORCE)
+  set(CMAKE_CXX_FLAGS_DEBUG          "-g"               CACHE STRING "Flags for a debug build" FORCE)
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g"           CACHE STRING "Flags for release build with debug info" FORCE)
+  set(CMAKE_C_FLAGS_RELEASE          "-O2"              CACHE STRING "Flags for release build" FORCE)
+  set(CMAKE_C_FLAGS_DEBUG            "-g"               CACHE STRING "Flags for a debug build" FORCE)
 elseif(MSVC)
-
-  set(ROOT_ARCHITECTURE win32)
+  if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+    set(ARCH -D_WIN64)
+    set(ROOT_ARCHITECTURE win64)
+  else()
+    set(ROOT_ARCHITECTURE win32)
+  endif()
 
   math(EXPR VC_MAJOR "${MSVC_VERSION} / 100")
   math(EXPR VC_MINOR "${MSVC_VERSION} % 100")
 
   if(winrtdebug)
-    set(BLDCXXFLAGS "-MDd -GR")
+    set(BLDCXXFLAGS "-Zc:__cplusplus -MDd -GR")
     set(BLDCFLAGS   "-MDd")
   else()
-    set(BLDCXXFLAGS "-MD -GR")
+    set(BLDCXXFLAGS "-Zc:__cplusplus -MD -GR")
     set(BLDCFLAGS   "-MD")
   endif()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    set(CMAKE_CXX_FLAGS "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h ${BLDCXXFLAGS} -EHsc- -W3 -wd4141 -wd4291 -wd4244 -wd4049 -D_WIN32 -D_XKEYCHECK_H -D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS")
-    set(CMAKE_C_FLAGS   "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h ${BLDCFLAGS} -EHsc- -W3 -D_WIN32 -D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER -DNOMINMAX")
-    install(FILES ${CMAKE_SOURCE_DIR}/build/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-    install(FILES ${CMAKE_SOURCE_DIR}/build/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+    set(CMAKE_CXX_FLAGS "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h ${BLDCXXFLAGS} -EHsc- -W3 -wd4141 -wd4291 -wd4244 -wd4049 -D_WIN32 ${ARCH} -D_XKEYCHECK_H -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS")
+    set(CMAKE_C_FLAGS   "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h ${BLDCFLAGS} -EHsc- -W3 -D_WIN32 ${ARCH} -DNOMINMAX")
+    if(win_broken_tests)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__ENABLE_BROKEN_WIN_TESTS")
+    endif()
   else()
-    set(CMAKE_CXX_FLAGS "-nologo -FIw32pragma.h -FIsehmap.h ${BLDCXXFLAGS} -EHsc- -W3 -wd4244 -D_WIN32")
-    set(CMAKE_C_FLAGS   "-nologo -FIw32pragma.h -FIsehmap.h ${BLDCFLAGS} -EHsc- -W3 -D_WIN32")
+    set(CMAKE_CXX_FLAGS "-nologo -FIw32pragma.h -FIsehmap.h ${BLDCXXFLAGS} -EHsc- -W3 -wd4244 -D_WIN32 ${ARCH}")
+    set(CMAKE_C_FLAGS   "-nologo -FIw32pragma.h -FIsehmap.h ${BLDCFLAGS} -EHsc- -W3 -D_WIN32 ${ARCH}")
   endif()
 
   #---Select compiler flags----------------------------------------------------------------
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -Z7")
   set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O2")
   set(CMAKE_CXX_FLAGS_DEBUG          "-Od -Z7")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7")
   set(CMAKE_C_FLAGS_RELEASE          "-O2")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-O2")
   set(CMAKE_C_FLAGS_DEBUG            "-Od -Z7")
 
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
 
-  set(SOEXT dll)
-  set(EXEEXT exe)
+  string(TIMESTAMP CURRENT_YEAR "%Y")
+  set(ROOT_RC_SCRIPT ${CMAKE_BINARY_DIR}/etc/root.rc)
 
   foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
@@ -95,9 +75,6 @@ elseif(MSVC)
     set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
   endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
 else()
   message(FATAL_ERROR "There is no setup for compiler '${CMAKE_CXX_COMPILER}' on this Windows system up to now. Stop cmake at this point.")
 endif()
-
-

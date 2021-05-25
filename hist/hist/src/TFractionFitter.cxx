@@ -77,10 +77,12 @@ is also provided to simplify this.
 ## Setting parameter values
 The function
 
-    TVirtualFitter* vFit = fit->GetFitter();
+    ROOT::Fit::Fitter* fitter = fit->GetFitter();
 
-is provided for direct access to the TVirtualFitter object. This allows to
-set and fix parameter values, and set step sizes directly.
+is provided for direct access to the ROOT::Fit::Fitter object. This allows to
+set and fix parameter values, limits and set step sizes directly via
+
+    fitter->Config().ParSettings(parameter #).Set(const std::string &name, double value, double step, double lower, double upper);
 
 ## Restricting the fit range
 The fit range can be restricted through
@@ -142,7 +144,6 @@ a new TFractionFitter object).
 Any serious inconsistency results in an error.
 */
 
-#include "Riostream.h"
 #include "TH1.h"
 #include "TMath.h"
 #include "TClass.h"
@@ -210,6 +211,8 @@ fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
       // Histogram containing template prediction
       TString s = Form("Prediction for MC sample %i",par);
       TH1* pred = (TH1*) ((TH1*)MCs->At(par))->Clone(s);
+      // TFractionFitter manages these histograms
+      pred->SetDirectory(0);
       pred->SetTitle(s);
       fAji.Add(pred);
    }
@@ -255,7 +258,7 @@ TFractionFitter::~TFractionFitter() {
    if (fFractionFitter) delete fFractionFitter;
    delete[] fIntegralMCs;
    delete[] fFractions;
-   if (fPlot) delete fPlot; 
+   if (fPlot) delete fPlot;
    fAji.Delete();
 }
 
@@ -612,8 +615,8 @@ void TFractionFitter::GetResult(Int_t parm, Double_t& value, Double_t& error) co
 /// uncertainties are taken into account).
 /// Note that the name of this histogram will simply be the same as that of the
 /// "data" histogram, prefixed with the string "Fraction fit to hist: ".
-/// Note also that the histogram is managed by the TFractionFitter class, so the returned pointer will be invalid if 
-/// the class is deleted 
+/// Note also that the histogram is managed by the TFractionFitter class, so the returned pointer will be invalid if
+/// the class is deleted
 
 TH1* TFractionFitter::GetPlot() {
    if (! fFitDone) {
@@ -691,6 +694,8 @@ void TFractionFitter::ComputeFCN(Double_t& f, const Double_t* xx, Int_t flag)
    if (flag == 3) {
       TString ts = "Fraction fit to hist: "; ts += fData->GetName();
       fPlot = (TH1*) fData->Clone(ts.Data());
+      // plot histogram is managed by TFractionFitter
+      fPlot->SetDirectory(0);
       fPlot->Reset();
    }
    // likelihood computation
@@ -950,8 +955,8 @@ void TFractionFitter::ComputeChisquareLambda()
 /// Return the adjusted MC template (Aji) for template (parm).
 /// Note that the (Aji) times fractions only sum to the total prediction
 /// of the fit if all weights are 1.
-/// Note also that the histogram is managed by the TFractionFitter class, so the returned pointer will be invalid if 
-/// the class is deleted 
+/// Note also that the histogram is managed by the TFractionFitter class, so the returned pointer will be invalid if
+/// the class is deleted
 
 TH1* TFractionFitter::GetMCPrediction(Int_t parm) const
 {

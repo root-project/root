@@ -11,16 +11,17 @@
 #include "TLatex.h"
 #include "TMacro.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
-#include "TStyle.h"
 #include "TSystem.h"
 #include "TVirtualPad.h"
 #include "TVirtualMutex.h"
+#include "TVirtualX.h"
 #include <typeinfo>
 #include <fstream>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 //______________________________________________________________________________
 //
@@ -214,7 +215,7 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set result to the HTML code that was passed in via AddLine().
-/// Prepend a closing </pre>, append an opening <pre>
+/// Prepend a closing \</pre\>, append an opening \<pre\>
 
 Bool_t TDocHtmlDirective::GetResult(TString& result)
 {
@@ -371,9 +372,9 @@ TString TDocMacroDirective::CreateSubprocessInputFile() {
    const char* pathDelimiter = ":"; // use ":" even on windows
    TObjArray* arrDirs(macroPath.Tokenize(pathDelimiter));
    TIter iDir(arrDirs);
-   TObjString* osDir = 0;
+   TObjString* osDir = nullptr;
    macroPath = "";
-   TString filenameDirPart(gSystem->DirName(filename));
+   TString filenameDirPart = gSystem->GetDirName(filename);
    filenameDirPart.Prepend('/'); // as dir delimiter, not as root dir
    while ((osDir = (TObjString*)iDir())) {
       if (osDir->String().EndsWith("\\"))
@@ -696,9 +697,10 @@ void TDocLatexDirective::CreateLatex(const char* filename)
          split = new TObjArray();
          split->SetOwner();
       }
-      if (!fSeparator.Length())
-         split->Add(new TObjString(str));
-      else {
+      if (!fSeparator.Length()) {
+         if (split)
+            split->Add(new TObjString(str));
+      } else {
          if (fSepIsRegexp)
             split = regexp.MatchS(str);
          else {

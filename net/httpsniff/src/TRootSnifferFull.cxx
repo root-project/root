@@ -19,12 +19,10 @@
 #include "TKey.h"
 #include "TList.h"
 #include "TMemFile.h"
-#include "TStreamerInfo.h"
 #include "TBufferFile.h"
 #include "TBufferJSON.h"
 #include "TBufferXML.h"
 #include "TROOT.h"
-#include "TTimer.h"
 #include "TFolder.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -34,21 +32,13 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
-#include "TRealData.h"
-#include "TDataMember.h"
-#include "TDataType.h"
-#include "TBaseClass.h"
-#include "TObjString.h"
 #include "TUrl.h"
 #include "TImage.h"
-#include "RZip.h"
-#include "RVersion.h"
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
 
 #include <stdlib.h>
-#include <vector>
 #include <string.h>
 
 //////////////////////////////////////////////////////////////////////////
@@ -427,7 +417,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
       memcpy((void *)res.data(), png_buffer, size);
    }
 
-   delete[] png_buffer;
+   free(png_buffer);
    delete im;
 
    return !res.empty();
@@ -563,9 +553,11 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
          // very special case - function requires list of options after method=argument
 
          const char *pos = strstr(options.c_str(), "method=");
-         if (!pos || (strlen(pos) < strlen(method_name) + 8))
+         if (!pos || (strlen(pos) < strlen(method_name) + 7))
             return debug != nullptr;
-         call_args.Form("\"%s\"", pos + strlen(method_name) + 8);
+         const char *rest_url = pos + strlen(method_name) + 7;
+         if (*rest_url == '&') ++rest_url;
+         call_args.Form("\"%s\"", rest_url);
          break;
       }
 

@@ -67,9 +67,10 @@ namespace utils {
   bool Analyze::IsWrapper(const FunctionDecl* ND) {
     if (!ND)
       return false;
+    if (!ND->getDeclName().isIdentifier())
+      return false;
 
-    return StringRef(ND->getNameAsString())
-      .startswith(Synthesize::UniquePrefix);
+    return ND->getName().startswith(Synthesize::UniquePrefix);
   }
 
   void Analyze::maybeMangleDeclName(const GlobalDecl& GD,
@@ -101,7 +102,7 @@ namespace utils {
       //Dtor_Deleting, // Deleting dtor
       //Dtor_Complete, // Complete object dtor
       //Dtor_Base      // Base object dtor
-#if defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
       // MicrosoftMangle.cpp:954 calls llvm_unreachable when mangling Dtor_Comdat
       if (GD.getDtorType() == Dtor_Comdat) {
         if (const IdentifierInfo* II = D->getIdentifier())
@@ -162,14 +163,14 @@ namespace utils {
               QualType VDTy = VD->getType().getNonReferenceType();
               // Get the location of the place we will insert.
               SourceLocation Loc
-                = newBody[indexOfLastExpr]->getLocEnd().getLocWithOffset(1);
-              Expr* DRE = S->BuildDeclRefExpr(VD, VDTy,VK_LValue, Loc).get();
+                = newBody[indexOfLastExpr]->getEndLoc().getLocWithOffset(1);
+              DeclRefExpr* DRE = S->BuildDeclRefExpr(VD, VDTy,VK_LValue, Loc);
               assert(DRE && "Cannot be null");
               indexOfLastExpr++;
               newBody.insert(newBody.begin() + indexOfLastExpr, DRE);
 
               // Attach the new body (note: it does dealloc/alloc of all nodes)
-              CS->setStmts(S->getASTContext(), newBody);
+              CS->replaceStmts(S->getASTContext(), newBody);
               if (FoundAt)
                 *FoundAt = indexOfLastExpr;
               return DRE;
@@ -356,15 +357,15 @@ namespace utils {
         // Ignore inline namespace;
         NS = dyn_cast_or_null<NamespaceDecl>(NS->getDeclContext());
       }
-      if (NS->getDeclName())
+      if (NS && NS->getDeclName())
         return TypeName::CreateNestedNameSpecifier(Ctx, NS);
-      return 0; // no starting '::', no anonymous
+      return nullptr; // no starting '::', no anonymous
     } else if (const TagDecl* TD = dyn_cast<TagDecl>(DC)) {
       return TypeName::CreateNestedNameSpecifier(Ctx, TD, FullyQualify);
     } else if (const TypedefNameDecl* TDD = dyn_cast<TypedefNameDecl>(DC)) {
       return TypeName::CreateNestedNameSpecifier(Ctx, TDD, FullyQualify);
     }
-    return 0; // no starting '::'
+    return nullptr; // no starting '::'
   }
 
   static
@@ -394,8 +395,8 @@ namespace utils {
     } else if (const NamespaceDecl* NS = scope->getAsNamespace()) {
       return TypeName::CreateNestedNameSpecifier(Ctx, NS);
     } else if (const NamespaceAliasDecl* alias = scope->getAsNamespaceAlias()) {
-      const NamespaceDecl* NS = alias->getNamespace()->getCanonicalDecl();
-      return TypeName::CreateNestedNameSpecifier(Ctx, NS);
+      const NamespaceDecl* CanonNS = alias->getNamespace()->getCanonicalDecl();
+      return TypeName::CreateNestedNameSpecifier(Ctx, CanonNS);
     }
 
     return scope;
@@ -1454,7 +1455,7 @@ namespace utils {
   NamedDecl* Lookup::Named(Sema* S, const clang::DeclarationName& Name,
                            const DeclContext* Within) {
     LookupResult R(*S, Name, SourceLocation(), Sema::LookupOrdinaryName,
-                   Sema::ForRedeclaration);
+                   Sema::ForVisibleRedeclaration);
     Lookup::Named(S, R, Within);
     return LookupResult2Decl<clang::NamedDecl>(R);
   }
@@ -1473,7 +1474,7 @@ namespace utils {
   TagDecl* Lookup::Tag(Sema* S, const clang::DeclarationName& Name,
                        const DeclContext* Within) {
     LookupResult R(*S, Name, SourceLocation(), Sema::LookupTagName,
-                   Sema::ForRedeclaration);
+                   Sema::ForVisibleRedeclaration);
     Lookup::Named(S, R, Within);
     return LookupResult2Decl<clang::TagDecl>(R);
   }
@@ -1524,6 +1525,10 @@ namespace utils {
           //    vector<_Tp,_Alloc>::size_type
           // Make the situation is 'useable' but looking a bit odd by
           // picking a random instance as the declaring context.
+          // FIXME: We should not use the iterators here to check if we are in
+          // a template specialization. clTempl != cxxdecl already tell us that
+          // is the case. It seems that we rely on a side-effect from triggering
+          // deserializations to support 'some' use-case. See ROOT-9709.
           if (clTempl->spec_begin() != clTempl->spec_end()) {
             decl = *(clTempl->spec_begin());
             outer  = llvm::dyn_cast<NamedDecl>(decl);

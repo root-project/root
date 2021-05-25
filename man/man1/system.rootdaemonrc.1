@@ -38,9 +38,6 @@ lines starting with '#' are comment lines.
 hosts can specified either with their name (e.g. pcepsft43), their FQDN (e.g. pcepsft43.cern.ch) or their IP address (e.g. 137.138.99.73).
 .TP
 .B *
-host names can be followed by :rootd, :proofd or :sockd to define directives applying only to the given service; 'sockd' applies to servers run from interactive sessions (TServerSocket class)
-.TP
-.B *
 directives applying to all host can be specified either by 'default' or '*'
 .TP
 .B *
@@ -58,19 +55,9 @@ the information following the name or IP address indicates, in order of preferen
    Method                           nickname    code
 
    UsrPwd                            usrpwd       0
-   SRP                               srp          1
-   Kerberos                          krb5         2
-   Globus                            globus       3
-   SSH                               ssh          4
-   UidGid                            uidgid       5   (insecure)
 
-(The insecure method is intended to speed up access within a cluster protected by other means from outside attacks; should not be used for inter-cluster or inter-domain authentication). Methods non specified explicitly are not accepted. For the insecure method it is possible to give access only to a specific list of users by specifying the usernames after the method separated by colons (:) example:
+Methods not specified explicitly are not accepted.
 
-   uidgid:user1:user2:user3
-
-will allow uidgid access only to users user1, user2 and user3. This is useful to give easy access to data servers. It is also possible to deny access to a user by using a '-' in front of the name:
-
-   uidgid:-user4
 .TP
 .B *
 Lines ending with '\' are followed by additional information for the host on the next line; the name of the host should not be repeated.
@@ -83,27 +70,21 @@ Valid examples:
 All requests are denied unless specified by dedicated directives.
 
 .TP
-.B default              0 ssh
-Authentication mechanisms allowed by default are 'usrpwd' (code 0) and 'ssh'
+.B default              0
+Authentication mechanisms allowed by default are 'usrpwd' (code 0)
 
 .TP
-.B 137.138.             0 4
-Authentication mechanisms allowed from host in the domain 137.138. (cern.ch) are 'usrpwd' (code 0) and 'ssh'
+.B 137.138.             0
+Authentication mechanisms allowed from host in the domain 137.138. (cern.ch) are 'usrpwd' (code 0)
 
 .TP
-.B pceple19.cern.ch     4 1 3 2 5 0
-All mechanisms are accepted for requests coming from host pceple19.cern.ch .
+.B lxplus*.cern.ch      0:qwerty:uytre
+Requests from the lxplus cluster from users 'qwerty' and 'uytre' can authenticate using 'usrpwd'.
 
 .TP
-.B lxplus*.cern.ch      4 1 globus 0:qwerty:uytre
-Requests from the lxplus cluster can authenticate using 'ssh', 'srp' and 'globus'; users 'qwerty' and 'uytre' can also use 'usrpwd' .
+.B pcep*.cern.ch        0:-qwerty
+Requests from the pcep*.cern.ch nodes can authenticate using 'usrpwd' when accessing the 'rootd' daemon ; user 'qwerty' cannot use 'usrpwd'.
 
-.TP
-.B pcep*.cern.ch:rootd  0:-qwerty 4
-Requests from the pcep*.cern.ch nodes can authenticate using 'usrpwd' and 'ssh' when accessing the 'rootd' daemon ; user 'qwerty' can only use 'ssh'.
-
-.SH "SEE ALSO"
-\fIrootd\fR(1), \fIproofd\fR(1)
 .PP
 For more information on the \fBROOT\fR system, please refer to
 \fIhttp://root.cern.ch/\fR .

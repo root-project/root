@@ -26,9 +26,8 @@ class TView : public TObject, public TAttLine {
 
 public:
 
-   TView() {}
-   TView(const TView &);
-   virtual ~TView();
+   TView() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
+   virtual ~TView() = default;
 
    virtual void          DefinePerspectiveView() = 0;
    virtual void          AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2) = 0;

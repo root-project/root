@@ -158,6 +158,8 @@ public:
 
    /// assignment from a scalar (only for size 1 vector)
    SVector<T,D>& operator=(const T& a1);
+   /// assignment from another vector
+   SVector<T,D>& operator=(const SVector<T,D>& rhs);
    /// assignment  from Vector Expression
    template <class A>
    SVector<T,D>& operator=(const VecExpr<A,T,D>& rhs);
@@ -173,7 +175,7 @@ public:
    };
 
 
-   /// return dimension $D$
+   /// return dimension \f$D\f$
    inline static unsigned int Dim() { return D; }
    /// access the parse tree. Index starts from zero
    T apply(unsigned int i) const;

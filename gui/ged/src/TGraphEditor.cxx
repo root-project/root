@@ -10,37 +10,30 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGraphEditor                                                        //
-//                                                                      //
-//  Implements GUI for graph attributes.                                //
-//                                                                      //
-//  Title': set the title of the graph                                  //
-//  Change the Shape of the graph:                                      //
-//     'No Line'     = " ": just draw unconnected points                //
-//     'Simple Line' = "L":simple poly line between every point is drawn//
-//     'Smooth Line' = "C":smooth curve is drawn                        //
-//     'Bar Chart'   = "B": A bar chart is drawn at each point          //
-//     'Fill Area'   = "F": A fill area is drawn                        //
-//  Check box: 'Marker On/Off' Set Marker visible/invisible             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TGraphEditor.gif">
+/** \class  TGraphEditor
+    \ingroup ged
+
+Implements GUI for graph attributes.
+
+Title': set the title of the graph
+Change the Shape of the graph:
+ 'No Line'     = " ": just draw unconnected points
+ 'Simple Line' = "L":simple poly line between every point is drawn
+ 'Smooth Line' = "C":smooth curve is drawn
+ 'Bar Chart'   = "B": A bar chart is drawn at each point
+ 'Fill Area'   = "F": A fill area is drawn
+Check box: 'Marker On/Off' Set Marker visible/invisible
+
 */
-//End_Html
 
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"
 #include "TGraphEditor.h"
 #include "TGTextEntry.h"
-#include "TGToolTip.h"
-#include "TGLabel.h"
 #include "TGraph.h"
 #include "TVirtualPad.h"
 #include "TGraphErrors.h"
+#include "TVirtualX.h"
 
 ClassImp(TGraphEditor);
 

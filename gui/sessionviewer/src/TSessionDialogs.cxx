@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSessionDialogs                                                      //
-//                                                                      //
-// This file defines several dialogs that are used by TSessionViewer.   //
-// The following dialogs are available: TNewChainDlg and TNewQueryDlg.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TSessionDialogs
+    \ingroup sessionviewer
+
+This file defines several dialogs that are used by TSessionViewer.
+The following dialogs are available: TNewChainDlg and TNewQueryDlg.
+
+*/
+
 
 #include "TSessionDialogs.h"
 #include "TSessionViewer.h"
@@ -31,19 +32,18 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 #include "TGListView.h"
-#include "TGPicture.h"
 #include "TGFSContainer.h"
 #include "TGFileDialog.h"
 #include "TGListTree.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
-#include "TKey.h"
+#include "TObjString.h"
 #include "TGTableLayout.h"
-#include "TGFileDialog.h"
 #include "TProof.h"
 #include "TFileInfo.h"
 #include "TGMsgBox.h"
 #include "TRegexp.h"
+#include "TVirtualX.h"
 
 ClassImp(TNewChainDlg);
 ClassImp(TNewQueryDlg);
@@ -872,7 +872,7 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
                      new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                      10, 10, 5, 5));
    fLocationURL = new TGTextEntry(hFrame11, new TGTextBuffer(150));
-   fLocationURL->SetToolTipText("Enter location URL ( i.e \" root://lxplus//castor/cern.ch/user/n/name/*.root \" )");
+   fLocationURL->SetToolTipText("Enter location URL (i.e \"root://host//path/to/file.root\")");
    fLocationURL->Resize(210, fLocationURL->GetDefaultHeight());
    hFrame11->AddFrame(fLocationURL, new TGLayoutHints(kLHintsLeft |
                       kLHintsCenterY, 10, 10, 5, 5));
@@ -1078,7 +1078,7 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
       return;
    if (strstr(fileName,"*.")) {
       // wildcarding case
-      void *filesDir = gSystem->OpenDirectory(gSystem->DirName(fileName));
+      void *filesDir = gSystem->OpenDirectory(gSystem->GetDirName(fileName));
       const char* ent;
       TString filesExp(gSystem->BaseName(fileName));
       filesExp.ReplaceAll("*",".*");
@@ -1086,10 +1086,10 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
       while ((ent = gSystem->GetDirEntry(filesDir))) {
          TString entryString(ent);
          if (entryString.Index(rg) != kNPOS &&
-             gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(fileName),
+             gSystem->AccessPathName(Form("%s/%s", gSystem->GetDirName(fileName).Data(),
                 ent), kReadPermission) == kFALSE) {
             TString text = TString::Format("%s/%s",
-               gSystem->UnixPathName(gSystem->DirName(fileName)), ent);
+               gSystem->UnixPathName(gSystem->GetDirName(fileName)), ent);
             if (!fLVContainer->FindItem(text.Data())) {
                TGLVEntry *entry = new TGLVEntry(fLVContainer, text.Data(), text.Data());
                entry->SetPictures(gClient->GetPicture("rootdb_t.xpm"),
@@ -1123,7 +1123,7 @@ void TUploadDataSetDlg::AddFiles(TList *fileList)
    TIter next(fileList);
    while ((el = (TObjString *) next())) {
       TString fileName = TString::Format("%s/%s",
-                  gSystem->UnixPathName(gSystem->DirName(el->GetString())),
+                  gSystem->UnixPathName(gSystem->GetDirName(el->GetString())),
                   gSystem->BaseName(el->GetString()));
       // single file
       if (!fLVContainer->FindItem(fileName.Data())) {
@@ -1147,7 +1147,7 @@ void TUploadDataSetDlg::BrowseFiles()
 {
    TGFileInfo fi;
    fi.fFileTypes = gDatasetTypes;
-   fi.fFilename  = strdup("*.root");
+   fi.SetFilename("*.root");
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
    if (fi.fMultipleSelection && fi.fFileNamesList) {
       AddFiles(fi.fFileNamesList);
@@ -1216,17 +1216,20 @@ void TUploadDataSetDlg::UploadDataSet()
    const char *dsetName = fDSetName->GetText();
    const char *destination = fDestinationURL->GetText();
    UInt_t flags = 0;
-   TList *skippedFiles = new TList();
-   TList *datasetFiles = new TList();
 
    if (fUploading)
       return;
+
    if (!fViewer->GetActDesc()->fConnected ||
        !fViewer->GetActDesc()->fAttached ||
        !fViewer->GetActDesc()->fProof ||
        !fViewer->GetActDesc()->fProof->IsValid()) {
       return;
    }
+
+   TList *skippedFiles = new TList();
+   TList *datasetFiles = new TList();
+
    // Format upload flags with user selection
    if (fOverwriteDSet->IsOn())
       flags |= TProof::kOverwriteDataSet;

@@ -23,9 +23,16 @@ using namespace TMVA::DNN;
 int main()
 {
    std::cout << "Testing CUDA matrix arithmetic (double):" << std::endl;
+   TCudaTensor<Double_t> dummyD(1, 1);
 
-   Double_t error = testMultiplication<TCuda<Double_t>>(10);
+   double error = testMultiplication<TCuda<Double_t>>(10);
    std::cout << "Multiplication:              "
+             << "Max. rel. error: " << error << std::endl;
+   if (error > 1e-3)
+      return 1;
+
+   error = testHadamrdMultiplication<TCuda<Double_t>>(10);
+   std::cout << "Hadamrd Multiplication:      "
              << "Max. rel. error: " << error << std::endl;
    if (error > 1e-3)
       return 1;
@@ -67,6 +74,7 @@ int main()
       return 1;
 
    std::cout << std::endl << "Testing CUDA matrix arithmetic (float):" << std::endl;
+   TCudaTensor<Real_t> dummyS(1, 1);
 
    error = testMultiplication<TCuda<Real_t>>(10);
    std::cout << "Multiplication:              "

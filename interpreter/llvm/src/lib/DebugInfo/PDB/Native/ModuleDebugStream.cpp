@@ -1,9 +1,8 @@
 //===- ModuleDebugStream.cpp - PDB Module Info Stream Access --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -11,8 +10,11 @@
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/DebugInfo/CodeView/CodeView.h"
 #include "llvm/DebugInfo/CodeView/DebugChecksumsSubsection.h"
+#include "llvm/DebugInfo/CodeView/SymbolDeserializer.h"
 #include "llvm/DebugInfo/CodeView/SymbolRecord.h"
+#include "llvm/DebugInfo/CodeView/SymbolRecordHelpers.h"
 #include "llvm/DebugInfo/PDB/Native/DbiModuleDescriptor.h"
+#include "llvm/DebugInfo/PDB/Native/RawConstants.h"
 #include "llvm/DebugInfo/PDB/Native/RawError.h"
 #include "llvm/Support/BinaryStreamReader.h"
 #include "llvm/Support/BinaryStreamRef.h"
@@ -35,6 +37,17 @@ ModuleDebugStreamRef::~ModuleDebugStreamRef() = default;
 Error ModuleDebugStreamRef::reload() {
   BinaryStreamReader Reader(*Stream);
 
+  if (Mod.getModuleStreamIndex() != llvm::pdb::kInvalidStreamIndex) {
+    if (Error E = reloadSerialize(Reader))
+      return E;
+  }
+  if (Reader.bytesRemaining() > 0)
+    return make_error<RawError>(raw_error_code::corrupt_file,
+                                "Unexpected bytes in module stream.");
+  return Error::success();
+}
+
+Error ModuleDebugStreamRef::reloadSerialize(BinaryStreamReader &Reader) {
   uint32_t SymbolSize = Mod.getSymbolDebugInfoByteSize();
   uint32_t C11Size = Mod.getC11LineInfoByteSize();
   uint32_t C13Size = Mod.getC13LineInfoByteSize();
@@ -47,7 +60,8 @@ Error ModuleDebugStreamRef::reload() {
 
   if (auto EC = Reader.readInteger(Signature))
     return EC;
-  if (auto EC = Reader.readSubstream(SymbolsSubstream, SymbolSize - 4))
+  Reader.setOffset(0);
+  if (auto EC = Reader.readSubstream(SymbolsSubstream, SymbolSize))
     return EC;
   if (auto EC = Reader.readSubstream(C11LinesSubstream, C11Size))
     return EC;
@@ -55,8 +69,8 @@ Error ModuleDebugStreamRef::reload() {
     return EC;
 
   BinaryStreamReader SymbolReader(SymbolsSubstream.StreamData);
-  if (auto EC =
-          SymbolReader.readArray(SymbolArray, SymbolReader.bytesRemaining()))
+  if (auto EC = SymbolReader.readArray(
+          SymbolArray, SymbolReader.bytesRemaining(), sizeof(uint32_t)))
     return EC;
 
   BinaryStreamReader SubsectionsReader(C13LinesSubstream.StreamData);
@@ -69,11 +83,12 @@ Error ModuleDebugStreamRef::reload() {
     return EC;
   if (auto EC = Reader.readSubstream(GlobalRefsSubstream, GlobalRefsSize))
     return EC;
-  if (Reader.bytesRemaining() > 0)
-    return make_error<RawError>(raw_error_code::corrupt_file,
-                                "Unexpected bytes in module stream.");
-
   return Error::success();
+}
+
+const codeview::CVSymbolArray
+ModuleDebugStreamRef::getSymbolArrayForScope(uint32_t ScopeBegin) const {
+  return limitSymbolArrayToScope(SymbolArray, ScopeBegin);
 }
 
 BinarySubstreamRef ModuleDebugStreamRef::getSymbolsSubstream() const {
@@ -95,6 +110,12 @@ BinarySubstreamRef ModuleDebugStreamRef::getGlobalRefsSubstream() const {
 iterator_range<codeview::CVSymbolArray::Iterator>
 ModuleDebugStreamRef::symbols(bool *HadError) const {
   return make_range(SymbolArray.begin(HadError), SymbolArray.end());
+}
+
+CVSymbol ModuleDebugStreamRef::readSymbolAtOffset(uint32_t Offset) const {
+  auto Iter = SymbolArray.at(Offset);
+  assert(Iter != SymbolArray.end());
+  return *Iter;
 }
 
 iterator_range<ModuleDebugStreamRef::DebugSubsectionIterator>

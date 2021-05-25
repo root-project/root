@@ -1,15 +1,12 @@
 //===- MemDerefPrinter.cpp - Printer for isDereferenceablePointer ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ADT/SetVector.h"
 #include "llvm/Analysis/Loads.h"
-#include "llvm/Analysis/MemoryDependenceAnalysis.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/DataLayout.h"
@@ -56,9 +53,10 @@ bool MemDerefPrinter::runOnFunction(Function &F) {
   for (auto &I: instructions(F)) {
     if (LoadInst *LI = dyn_cast<LoadInst>(&I)) {
       Value *PO = LI->getPointerOperand();
-      if (isDereferenceablePointer(PO, DL))
+      if (isDereferenceablePointer(PO, LI->getType(), DL))
         Deref.push_back(PO);
-      if (isDereferenceableAndAlignedPointer(PO, LI->getAlignment(), DL))
+      if (isDereferenceableAndAlignedPointer(PO, LI->getType(),
+                                             LI->getAlignment(), DL))
         DerefAndAligned.insert(PO);
     }
   }

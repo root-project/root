@@ -168,7 +168,7 @@ struct GSLSimAnParams {
       // the following parameters are for the Boltzmann distribution */
       k = 1.0;
       t_initial =  0.002;
-      mu =  1.005;
+      mu_t =  1.005;
       t_min = 2.0E-6;
    }
 
@@ -179,7 +179,7 @@ struct GSLSimAnParams {
    /// parameters for the Boltzman distribution
    double k;
    double t_initial;
-   double mu;
+   double mu_t;
    double t_min;
 };
 
@@ -238,6 +238,7 @@ public:
 
    GSLSimAnParams & Params() { return fParams; }
    const GSLSimAnParams & Params() const { return fParams; }
+   void SetParams(const GSLSimAnParams & params) { fParams = params; }
 
 
 protected:

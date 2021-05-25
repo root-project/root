@@ -1,52 +1,90 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "ROOT/RDF/RDisplay.hxx"
 #include "TInterpreter.h"
 
 #include <iomanip>
+#include <limits>
 
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+
+/**
+ * \class ROOT::Internal::RDF::RDisplayElement
+ * \ingroup dataframe
+ * Helper class to let Display print compact tabular representations of the events
+ *
+ * This class is internal and not meant to be explicitly instantiated by the user.
+ * It is needed during printing to understand if a value can be
+ * skipped or must be printed. Each RDisplayElement represents a cell.
+ */
+
+////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// \param[in] representation The representation string
 RDisplayElement::RDisplayElement(const std::string &representation) : fRepresentation(representation)
 {
    SetPrint();
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Constructor assuming an empty representation to be printed
 RDisplayElement::RDisplayElement()
 {
    SetPrint();
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Flag this cell as to be printed
 void RDisplayElement::SetPrint()
 {
    fPrintingAction = PrintingAction::ToBePrinted;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Flag this cell as to be skipped
 void RDisplayElement::SetIgnore()
 {
    fPrintingAction = PrintingAction::ToBeIgnored;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Flag this cell to be replaced by "..."
 void RDisplayElement::SetDots()
 {
    fPrintingAction = PrintingAction::ToBeDotted;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Return if the cell has to be printed
 bool RDisplayElement::IsPrint() const
 {
    return fPrintingAction == PrintingAction::ToBePrinted;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Return if the cell has to be skipped
 bool RDisplayElement::IsIgnore() const
 {
    return fPrintingAction == PrintingAction::ToBeIgnored;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Return if the cell has to be replaced by "..."
 bool RDisplayElement::IsDot() const
 {
    return fPrintingAction == PrintingAction::ToBeDotted;
 }
 
-std::string RDisplayElement::GetRepresentation() const
+const std::string &RDisplayElement::GetRepresentation() const
 {
    return fRepresentation;
 }
@@ -60,12 +98,23 @@ bool RDisplayElement::IsEmpty() const
 } // namespace Internal
 
 namespace RDF {
+
+void RDisplay::EnsureCurrentColumnWidth(size_t w)
+{
+   // If the current element is wider than the widest element found, update the width
+   if (fWidths[fCurrentColumn] < w) {
+      if (w > std::numeric_limits<unsigned short>::max()) {
+         w = std::numeric_limits<unsigned short>::max();
+      }
+      fWidths[fCurrentColumn] = (unsigned short) w;
+   }
+}
+
 void RDisplay::AddToRow(const std::string &stringEle)
 {
    // If the current element is wider than the widest element found, update the width
-   if (fWidths[fCurrentColumn] < stringEle.length()) {
-      fWidths[fCurrentColumn] = stringEle.length();
-   }
+   EnsureCurrentColumnWidth(stringEle.length());
+
    // Save the element...
    fTable[fCurrentRow][fCurrentColumn] = DElement_t(stringEle);
 
@@ -84,18 +133,14 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
       auto element = DElement_t(stringEle);
 
       // Update the width if this element is the biggest found
-      if (fWidths[fCurrentColumn] < stringEle.length()) {
-         fWidths[fCurrentColumn] = stringEle.length();
-      }
+      EnsureCurrentColumnWidth(stringEle.length());
 
       if (index == 0 || index == collectionSize - 1) {
          // Do nothing, by default DisplayElement is printed
       } else if (index == 1) {
          element.SetDots();
          // Be sure the "..." fit
-         if (fWidths[fCurrentColumn] < 3) {
-            fWidths[fCurrentColumn] = 3;
-         }
+         EnsureCurrentColumnWidth(3);
       } else {
          // In the Print(), after the dots, all element will just be ignored except the last one.
          element.SetIgnore();
@@ -127,17 +172,7 @@ void RDisplay::MovePosition()
    }
 }
 
-void RDisplay::CallInterpreter(const std::string &code)
-{
-   TInterpreter::EErrorCode errorCode;
-   gInterpreter->Calc(code.c_str(), &errorCode);
-   if (TInterpreter::EErrorCode::kNoError != errorCode) {
-      std::string msg = "Cannot jit during Display call. Interpreter error code is " + std::to_string(errorCode) + ".";
-      throw std::runtime_error(msg);
-   }
-}
-
-RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, const int &entries)
+RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
      fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries)
 {
@@ -171,6 +206,10 @@ void RDisplay::Print() const
    std::vector<bool> hasPrintedNext(fNColumns,
                                     false); // Keeps track if the collection as already been shortened, allowing to skip
                                             // all elements until the next printable element.
+
+   if (columnsToPrint < fNColumns)
+      Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
+
    auto nrRows = fTable.size();
    for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
       auto &row = fTable[rowIndex];

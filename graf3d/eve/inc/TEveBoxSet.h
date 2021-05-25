@@ -32,7 +32,8 @@ public:
       kBT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
       kBT_AABoxFixedDim,   // axis-aligned box w/ fixed dimensions: specify (x,y,z)
       kBT_Cone,
-      kBT_EllipticCone
+      kBT_EllipticCone,
+      kBT_Hex
    };
 
    struct BFreeBox_t       : public DigitBase_t { Float_t fVertices[8][3]; };
@@ -46,6 +47,8 @@ public:
    struct BCone_t          : public DigitBase_t { TEveVector fPos, fDir; Float_t fR; };
 
    struct BEllipticCone_t  : public BCone_t     { Float_t fR2, fAngle; };
+
+   struct BHex_t           : public DigitBase_t { TEveVector fPos; Float_t fR, fAngle, fDepth; };
 
 protected:
    EBoxType_e        fBoxType;      // Type of rendered box.
@@ -73,6 +76,8 @@ public:
 
    void AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r);
    void AddEllipticCone(const TEveVector& pos, const TEveVector& dir, Float_t r, Float_t r2, Float_t angle=0);
+
+   void AddHex(const TEveVector& pos, Float_t r, Float_t angle, Float_t depth);
 
    virtual void ComputeBBox();
    // virtual void Paint(Option_t* option = "");

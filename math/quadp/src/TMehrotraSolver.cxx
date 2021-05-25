@@ -40,16 +40,16 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMehrotraSolver                                                      //
-//                                                                      //
-// Derived class of TQpSolverBase implementing the original Mehrotra    //
-// predictor-corrector algorithm                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TMehrotraSolver
+///
+/// Derived class of TQpSolverBase implementing the original Mehrotra
+/// predictor-corrector algorithm
+///
+////////////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
+#include <iostream>
 #include "TMath.h"
 #include "TMehrotraSolver.h"
 

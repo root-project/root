@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_tmva_envelope
+/// \notebook -nodraw
+
+/// \macro_output
+/// \macro_code
+
+
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"

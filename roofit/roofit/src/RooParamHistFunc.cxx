@@ -5,17 +5,29 @@
  *****************************************************************************/
 
 /** \class RooParamHistFunc
-    \ingroup Roofit
-
-*/
+ *  \ingroup Roofit
+ * A histogram function that assigns scale parameters to every bin. Instead of the bare bin contents,
+ * it therefore yields:
+ * \f[
+ *  \gamma_{i} * \mathrm{bin}_i
+ * \f]
+ *
+ * The \f$ \gamma_i \f$ can therefore be used to parametrise statistical uncertainties of the histogram
+ * template. In conjuction with a constraint term, this can be used to implement the Barlow-Beeston method.
+ * The constraint can be implemented using RooHistConstraint.
+ *
+ * See also the tutorial rf709_BarlowBeeston.C
+ */
 
 #include "Riostream.h"
 #include "RooParamHistFunc.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
+#include "RooHelpers.h"
 #include <math.h>
 #include "TMath.h"
+
 
 using namespace std ;
 
@@ -37,6 +49,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
   RooArgSet allVars ;
   for (Int_t i=0 ; i<_dh.numEntries() ; i++) {
     _dh.get(i) ;
+
     const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
     RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
     var->setVal(_relParam ? 1 : _dh.weight()) ;
@@ -233,28 +246,24 @@ Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 /// Implement analytical integrations by doing appropriate weighting from  component integrals
 /// functions to integrators of components
 
-Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const
+Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* rangeName) const
 {
+  // Supports only the scenario of integration over all dependents
   R__ASSERT(code==1) ;
 
-  RooFIter iter = _p.fwdIterator() ;
-  RooAbsReal* p ;
-  Double_t ret(0) ;
-  Int_t i(0) ;
-  while((p=(RooAbsReal*)iter.next())) {
-    Double_t bin = p->getVal() ;
-    if (_relParam) bin *= getNominal(i++) ;
-    ret += bin ;
+  // The logic for summing over the histogram is borrowed from RooHistPdf with some differences:
+  //
+  //  - a lambda function is used to inject the parameters for bin scaling into the RooDataHist::sum method
+  //
+  //  - for simplicity, there is no check for the possibility of full-range integration with another overload of
+  //    RooDataHist::sum
+  std::map<const RooAbsArg*, std::pair<double, double> > ranges;
+  for (const auto obs : _x) {
+    ranges[obs] = RooHelpers::getRangeOrBinningInterval(obs, rangeName);
   }
 
-  // WVE fix this!!! Assume uniform binning for now!
-  RooFIter xiter = _x.fwdIterator() ;
-  RooAbsArg* obs ;
-  Double_t binV(1) ;
-  while((obs=xiter.next())) {
-    RooRealVar* xx = (RooRealVar*) obs ;
-    binV *= (xx->getMax()-xx->getMin())/xx->numBins() ;
-  }
+  auto getBinScale = [&](int iBin){ return static_cast<const RooAbsReal&>(_p[iBin]).getVal(); };
 
-  return ret*binV ;
+  RooArgSet sliceSet{};
+  return const_cast<RooDataHist&>(_dh).sum(_x, sliceSet, true, false, ranges, getBinScale);
 }

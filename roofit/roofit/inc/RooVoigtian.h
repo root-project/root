@@ -47,12 +47,12 @@ protected:
   RooRealProxy sigma ;
 
   Double_t evaluate() const ;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
 private:
 
-  Double_t _invRootPi;
   Bool_t _doFast;
-  ClassDef(RooVoigtian,1) // Voigtian PDF (Gauss (x) BreitWigner)
+  ClassDef(RooVoigtian,2) // Voigtian PDF (Gauss (x) BreitWigner)
 };
 
 #endif

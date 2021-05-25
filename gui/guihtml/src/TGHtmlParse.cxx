@@ -33,14 +33,15 @@
 
 // A tokenizer that converts raw HTML into a linked list of HTML elements.
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <cctype>
 
 #include "TGHtml.h"
 #include "TGHtmlTokens.h"
-
+#include "strlcpy.h"
+#include "snprintf.h"
 
 //----------------------------------------------------------------------
 
@@ -772,7 +773,7 @@ int TGHtml::Tokenize()
          if (fIPlaintext == 0 || fIPlaintext == Html_TEXTAREA) {
             HtmlTranslateEscapes(tpElem->fZText);
          }
-         pElem->fCount = strlen(tpElem->fZText);
+         pElem->fCount = (Html_16_t) strlen(tpElem->fZText);
          n += i;
          inpCol += i;
 
@@ -1090,8 +1091,7 @@ void TGHtml::TokenizerAppend(const char *text)
    } else if (fNText + len >= fNAlloc) {
       fNAlloc += len + 100;
       char *tmp = new char[fNAlloc];
-      // coverity[secure_coding]
-      strcpy(tmp, fZText);
+      strlcpy(tmp, fZText, fNAlloc);
       delete[] fZText;
       fZText = tmp;
    }
@@ -1102,8 +1102,7 @@ void TGHtml::TokenizerAppend(const char *text)
       return;
    }
 
-   // coverity[secure_coding]
-   strcpy(&fZText[fNText], text);
+   strlcpy(&fZText[fNText], text, fNAlloc - fNText);
    fNText += len;
    fNComplete = Tokenize();
 }
@@ -1143,8 +1142,8 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
       if (pElem == 0) return 0;
       if (zArgs) {
          // coverity[secure_coding]
-         strcpy (((TGHtmlTextElement *)pElem)->fZText, zArgs);
-         pElem->fCount = strlen(zArgs);
+         strcpy (((TGHtmlTextElement *)pElem)->fZText, zArgs); // NOLINT
+         pElem->fCount = (Html_16_t) strlen(zArgs);
       }
    } else if (!strcmp(zType, "Space")) {
       pElem = new TGHtmlSpaceElement();
@@ -1385,7 +1384,7 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
                     ((TGHtmlMarkupElement *)p)->fArgv[j]);
          }
          // coverity[secure_coding]
-         strcat(zBuf, ">");
+         strlcat(zBuf, ">", sizeof(zBuf));
          break;
    }
    return zBuf;

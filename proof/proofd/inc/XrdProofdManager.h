@@ -96,12 +96,6 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *DataSetExp() const { return fDataSetExp.c_str(); }
    const char       *StageReqRepo() const { return fStageReqRepo.c_str(); }
 
-   const char       *RootdExe() const { return fRootdExe.c_str(); }
-   const char      **RootdArgs() const { return fRootdArgsPtrs; }
-   bool              IsRootdAllowed(const char *host);
-   rpdunixsrv       *RootdUnixSrv() const { return fRootdUnixSrv; }
-   bool              RootdFork() const { return fRootdFork; }
-
    bool              RemotePLite() const { return fRemotePLite; }
 
    std::list<XrdProofdDSInfo *> *DataSetSrcs() { return &fDataSetSrcs; }
@@ -151,14 +145,6 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdOucString      fDataDirUrlOpts; // String specifying URL type options for fDataDir
    XrdOucString      fDataSetExp;     // List of local dataset repositories to be asserted
    XrdOucString      fStageReqRepo;   // Directive for staging requests
-
-
-   XrdOucString      fRootdExe;       // Path to 'rootd' to be use for protocol 'rootd://'
-   std::list<XrdOucString> fRootdArgs;// Rootd arguments
-   const char      **fRootdArgsPtrs;  // Null terminated array of arguments to execv 'rootd'
-   std::list<XrdOucString> fRootdAllow;// Host allowed to open files via 'rootd'
-   rpdunixsrv       *fRootdUnixSrv;   // Unix socket for rootd callbacks
-   bool              fRootdFork;      // If true use fork to start rootd
 
    XrdProtocol      *fXrootd;         // Reference instance of XrdXrootdProtocol 
    XrdOucString      fXrootdLibPath;  // Path to 'xrootd' plug-in

@@ -19,41 +19,28 @@
 \class RooNameReg
 \ingroup Roofitcore
 
-RooNameReg is a registry for 'const char*' name. For each unique
+RooNameReg is a registry for `const char*` names. For each unique
 name (which is not necessarily a unique pointer in the C++ standard),
-a unique pointer to a TNamed object is return that can be used for
+a unique pointer to a TNamed object is returned that can be used for
 fast searches and comparisons.
 **/
 
-#include "RooFit.h"
-#include "RooSentinel.h"
+#include "RooNameReg.h"
 
-#include "RooNameReg.h"
-#include "RooNameReg.h"
+#include "RooFit.h"
+#include "ROOT/RMakeUnique.hxx"
 #include <iostream>
 using namespace std ;
 
-ClassImp(RooNameReg);
-;
 
-RooNameReg* RooNameReg::_instance = 0 ;
-
-
-RooNameReg::RooNameReg(Int_t hashSize) : TNamed("RooNameReg","RooFit Name Registry"), _htable(hashSize) {} 
+RooNameReg::RooNameReg() :
+    TNamed("RooNameReg","RooFit Name Registry")
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooNameReg::~RooNameReg()
-{
-  _list.Delete() ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
 {
 }
 
@@ -63,26 +50,9 @@ RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
 
 RooNameReg& RooNameReg::instance()
 {
-  if (_instance==0) {
-    _instance = new RooNameReg(100000) ;  // there's only one of these, so we can afford to make it large
-    RooSentinel::activate() ;
-  }
-  return *_instance ;
+  static RooNameReg instance;
+  return instance;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup function called by atexit() handler installed by RooSentinel
-/// to delete global objects on heap at end of program
-
-void RooNameReg::cleanup()
-{
-  if(_instance) {
-    delete _instance ;
-    _instance = 0 ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,18 +63,16 @@ const TNamed* RooNameReg::constPtr(const char* inStr)
   // Handle null pointer case explicitly
   if (inStr==0) return 0 ;
 
-//   cout << "RooNameReg::constPtr(inStr=" << inStr << ") _htable entries = " << _htable.entries() << endl ;
-
   // See if name is already registered ;
-  TNamed* t = (TNamed*) _htable.find(inStr) ;
-  if (t) return t ;
+  auto elm = _map.find(inStr) ;
+  if (elm != _map.end()) return elm->second.get();
 
   // If not, register now
-  t = new TNamed(inStr,inStr) ;
-  _htable.add(t) ;
-  _list.Add(t) ;
+  auto t = make_unique<TNamed>(inStr,inStr);
+  auto ret = t.get();
+  _map.emplace(std::string(inStr), std::move(t));
   
-  return t ;
+  return ret;
 }
 
 
@@ -146,6 +114,7 @@ const TNamed* RooNameReg::known(const char* inStr)
 {
   // Handle null pointer case explicitly
   if (inStr==0) return 0 ;
-  if (_instance==0) return 0;
-  return (const TNamed*) _instance->_htable.find(inStr) ;
+  RooNameReg& reg = instance();
+  const auto elm = reg._map.find(inStr);
+  return elm != reg._map.end() ? elm->second.get() : nullptr;
 }

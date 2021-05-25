@@ -100,8 +100,6 @@ void TCondor::Print(Option_t * opt) const
 
 TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 {
-//    TString reinitCmd = "KRB5CCNAME=FILE:/tmp/condor.$$ && /usr/krb5/bin/kinit -F -k -t /etc/cdfcaf.keytab cafuser/cdf/h2caf@FNAL.GOV";
-//    gSystem->Exec(reinitCmd.Data());
    Int_t port = 0;
 
    TString claimCmd = Form("condor_cod request -name %s -timeout 10 2>>%s/condor.proof.%d",
@@ -195,7 +193,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 
 TList *TCondor::GetVirtualMachines() const
 {
-   TString poolopt = fPool ? "" : Form("-pool %s", fPool.Data());
+   TString poolopt = fPool ? Form("-pool %s", fPool.Data()) : "";
    TString cmd = Form("condor_status %s -format \"%%s\\n\" Name", poolopt.Data());
 
    PDB(kCondor,2) Info("GetVirtualMachines","command: %s", cmd.Data());
@@ -254,6 +252,9 @@ TList *TCondor::Claim(Int_t n, const char *cmd)
          }
       }
    }
+
+   vms->Delete();
+   delete vms;
 
    return fClaims;
 }

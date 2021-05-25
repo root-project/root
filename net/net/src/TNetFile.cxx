@@ -19,7 +19,6 @@
 // standard URL format with protocol "root" or "roots". The following   //
 // are valid TNetFile URL's:                                            //
 //                                                                      //
-//    roots://hpsalo/files/aap.root                                     //
 //    root://hpbrun.cern.ch/root/hsimple.root                           //
 //    root://pcna49a:5151/~na49/data/run821.root                        //
 //    root://pcna49d.cern.ch:5050//v1/data/run810.root                  //
@@ -42,13 +41,6 @@
 // On machines with AFS rootd will authenticate using AFS (if it was    //
 // compiled with AFS support).                                          //
 //                                                                      //
-// If the protocol is specified as "roots" a secure authetication       //
-// method will be used. The secure method uses the SRP, Secure Remote   //
-// Passwords, package. SRP uses a so called "asymmetric key exchange    //
-// protocol" in which no passwords are ever send over the wire. This    //
-// protocol is safe against all known security attacks. For more see:   //
-// Begin_Html <a href=http://root.cern.ch/root/NetFile.html>NetFile</a> //
-// End_Html                                                             //
 // If the protocol is specified as "rootk" kerberos5 will be used for   //
 // authentication.                                                      //
 //                                                                      //
@@ -644,8 +636,7 @@ zombie:
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a NetFile object. A net file is the same as a TFile
 /// except that it is being accessed via a rootd server. The url
-/// argument must be of the form: root[s|k]://host.dom.ain/file.root.
-/// When protocol is "roots" try using SRP authentication.
+/// argument must be of the form: root[k]://host.dom.ain/file.root.
 /// When protocol is "rootk" try using kerberos5 authentication.
 /// If the file specified in the URL does not exist, is not accessable
 /// or can not be created the kZombie bit will be set in the TNetFile
@@ -701,9 +692,7 @@ void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
-   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
-   if (!create && !recreate && !update && !read) {
-      read    = kTRUE;
+   if (!create && !recreate && !update) {
       fOption = "READ";
    }
 
@@ -728,13 +717,11 @@ void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
    }
 
    if (recreate) {
-      recreate = kFALSE;
       create   = kTRUE;
       fOption  = "CREATE";
    }
 
    if (update && stat > 1) {
-      update = kFALSE;
       create = kTRUE;
       stat   = 1;
    }
@@ -992,8 +979,8 @@ Int_t TNetSystem::MakeDirectory(const char *dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open a directory via rfiod. Returns an opaque pointer to a dir
-/// structure. Returns 0 in case of error.
+/// Open a directory and return an opaque pointer to a dir structure.
+/// Returns nullptr in case of error.
 
 void *TNetSystem::OpenDirectory(const char *dir)
 {
@@ -1006,7 +993,7 @@ void *TNetSystem::OpenDirectory(const char *dir)
    }
 
    if (!fFTP || !fFTP->IsOpen())
-      return (void *)0;
+      return nullptr;
 
    if (fDir) {
       if (gDebug > 0)
@@ -1023,7 +1010,7 @@ void *TNetSystem::OpenDirectory(const char *dir)
       fDirp = (void *)&fDir;
       return fDirp;
    } else
-      return (void *)0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

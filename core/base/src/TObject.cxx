@@ -25,17 +25,20 @@ reserved as  global bits while bits 14 - 23 can be used in different
 class hierarchies (watch out for overlaps).
 */
 
-#include <string.h>
+#include <cstring>
 #if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
 #include <strings.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <sstream>
+#include <fstream>
+#include <iostream>
 
 #include "Varargs.h"
-#include "Riostream.h"
+#include "snprintf.h"
 #include "TObject.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TGuiFactory.h"
 #include "TMethod.h"
@@ -45,11 +48,10 @@ class hierarchies (watch out for overlaps).
 #include "TVirtualPad.h"
 #include "TInterpreter.h"
 #include "TMemberInspector.h"
-#include "TObjString.h"
 #include "TRefTable.h"
 #include "TProcessID.h"
 
-Long_t TObject::fgDtorOnly = 0;
+Longptr_t TObject::fgDtorOnly = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject);
@@ -146,8 +148,8 @@ TObject *TObject::Clone(const char *) const
    if (gDirectory) {
      return gDirectory->CloneObject(this);
    } else {
-     Fatal("Clone","No gDirectory set");
-     return 0;
+     // Some of the streamer (eg. roofit's) expect(ed?) a valid gDirectory during streaming.
+     return gROOT->CloneObject(this);
    }
 }
 
@@ -618,35 +620,35 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 
    //==============Save object as a C, ROOT independant, file===================
    if (filename && strstr(filename,".cc")) {
-      char *fname = 0;
+      TString fname;
       if (filename && strlen(filename) > 0) {
-         fname = (char*)filename;
+         fname = filename;
       } else {
-         fname = Form("%s.cc", GetName());
+         fname.Form("%s.cc", GetName());
       }
       std::ofstream out;
-      out.open(fname, std::ios::out);
+      out.open(fname.Data(), std::ios::out);
       if (!out.good ()) {
-         Error("SaveAs", "cannot open file: %s", fname);
+         Error("SaveAs", "cannot open file: %s", fname.Data());
          return;
       }
       ((TObject*)this)->SavePrimitive(out,"cc");
       out.close();
-      Info("SaveAs", "cc file: %s has been generated", fname);
+      Info("SaveAs", "cc file: %s has been generated", fname.Data());
       return;
    }
 
    //==============Save as a C++ CINT file======================================
-   char *fname = 0;
+   TString fname;
    if (filename && strlen(filename) > 0) {
-      fname = (char*)filename;
+      fname = filename;
    } else {
-      fname = Form("%s.C", GetName());
+      fname.Form("%s.C", GetName());
    }
    std::ofstream out;
-   out.open(fname, std::ios::out);
+   out.open(fname.Data(), std::ios::out);
    if (!out.good ()) {
-      Error("SaveAs", "cannot open file: %s", fname);
+      Error("SaveAs", "cannot open file: %s", fname.Data());
       return;
    }
    out <<"{"<<std::endl;
@@ -655,7 +657,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    ((TObject*)this)->SavePrimitive(out,option);
    out <<"}"<<std::endl;
    out.close();
-   Info("SaveAs", "C++ Macro file: %s has been generated", fname);
+   Info("SaveAs", "C++ Macro file: %s has been generated", fname.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,6 +753,14 @@ void TObject::UseCurrentStyle()
 ///  Using the kWriteDelete option a previous key with the same name is
 ///  deleted only after the new object has been written. This option
 ///  is safer than kOverwrite but it is slower.
+///  NOTE: Neither kOverwrite nor kWriteDelete reduces the size of a TFile--
+///  the space is simply freed up to be overwritten; in the case of a TTree,
+///  it is more complicated. If one opens a TTree, appends some entries,
+///  then writes it out, the behaviour is effectively the same. If, however,
+///  one creates a new TTree and writes it out in this way,
+///  only the metadata is replaced, effectively making the old data invisible
+///  without deleting it. TTree::Delete() can be used to mark all disk space
+///  occupied by a TTree as free before overwriting its metadata this way.
 ///  The kSingleKey option is only used by TCollection::Write() to write
 ///  a container with a single key instead of each object in the container
 ///  with its own key.
@@ -763,6 +773,9 @@ void TObject::UseCurrentStyle()
 
 Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 {
+   if (R__unlikely(option & kOnlyPrepStep))
+      return 0;
+
    TString opt = "";
    if (option & kSingleKey)   opt += "SingleKey";
    if (option & kOverwrite)   opt += "OverWrite";
@@ -966,7 +979,7 @@ void TObject::SetObjectStat(Bool_t stat)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return destructor only flag
 
-Long_t TObject::GetDtorOnly()
+Longptr_t TObject::GetDtorOnly()
 {
    return fgDtorOnly;
 }
@@ -976,7 +989,7 @@ Long_t TObject::GetDtorOnly()
 
 void TObject::SetDtorOnly(void *obj)
 {
-   fgDtorOnly = (Long_t) obj;
+   fgDtorOnly = (Longptr_t) obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -984,7 +997,7 @@ void TObject::SetDtorOnly(void *obj)
 
 void TObject::operator delete(void *ptr)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
@@ -995,7 +1008,7 @@ void TObject::operator delete(void *ptr)
 
 void TObject::operator delete[](void *ptr)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
@@ -1007,7 +1020,7 @@ void TObject::operator delete[](void *ptr)
 
 void TObject::operator delete(void *ptr, size_t size)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr, size);
    else
       fgDtorOnly = 0;
@@ -1018,7 +1031,7 @@ void TObject::operator delete(void *ptr, size_t size)
 
 void TObject::operator delete[](void *ptr, size_t size)
 {
-   if ((Long_t) ptr != fgDtorOnly)
+   if ((Longptr_t) ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr, size);
    else
       fgDtorOnly = 0;

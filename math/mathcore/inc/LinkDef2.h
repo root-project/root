@@ -22,14 +22,9 @@
 //#pragma link C++ class ROOT::Math;
 #endif
 
-#ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class std::vector<Double_t>::iterator;
 #pragma link C++ class std::vector<Double_t>::const_iterator;
 #pragma link C++ class std::vector<Double_t>::reverse_iterator;
-#pragma link C++ operators std::vector<Double_t>::iterator;
-#pragma link C++ operators std::vector<Double_t>::const_iterator;
-#pragma link C++ operators std::vector<Double_t>::reverse_iterator;
-#endif
 
 #pragma link C++ global gRandom;
 
@@ -63,6 +58,7 @@
 #pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<256,4>>+;
 #pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<17,0>>+;
 #pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<17,1>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::RanluxppEngine2048>+;
 #pragma link C++ class TRandomGen<ROOT::Math::StdEngine<std::mt19937_64>>+;
 #pragma link C++ class TRandomGen<ROOT::Math::StdEngine<std::ranlux48>>+;
 

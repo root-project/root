@@ -20,15 +20,16 @@
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"
 
-#include "TMatrixDSym.h"
-
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 
-#include <iostream>
 #include <fstream>
+#include <vector>
 
 #include <RooAbsMinimizerFcn.h>
+
+template<typename T> class TMatrixTSym;
+using TMatrixDSym = TMatrixTSym<double>;
 
 // forward declaration
 class RooMinimizer;

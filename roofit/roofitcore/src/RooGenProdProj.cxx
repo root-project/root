@@ -21,20 +21,18 @@
 
 
 RooGenProdProj is an auxiliary class for RooProdPdf that calculates
-a general normalized projection of a product of non-factorizing PDFs, e.g.
+a general normalised projection of a product of non-factorising PDFs, e.g.
+\f[
+ P_{x,xy} = \frac{\int ( P1 * P2 * \ldots) \mathrm{d}x}{\int ( P1 * P2 * \ldots ) \mathrm{d}x \mathrm{d}y}
+\f]
 
-           Int ( P1 * P2 * ....) dx
- P_x_xy = -------------------------------
-           Int (P1 * P2 * ... ) dx dy
-
-Partial integrals that factorize that can be calculated are calculated
-analytically. Remaining non-factorizing observables are integrated numerically.
+Partial integrals, which factorise and can be calculated, are calculated
+analytically. Remaining non-factorising observables are integrated numerically.
 **/
 
 
 #include "RooFit.h"
 
-#include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 
@@ -47,7 +45,7 @@ analytically. Remaining non-factorizing observables are integrated numerically.
 using namespace std;
 
 ClassImp(RooGenProdProj);
-;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,32 +163,32 @@ RooGenProdProj::~RooGenProdProj()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Utility function to create integral over observables intSet in range isetRangeName over product of p.d.fs in compSet.
+/// Utility function to create integral for product over certain observables.
+/// \param[in] name Name of integral to be created.
+/// \param[in] compSet All components of the product.
+/// \param[in] intSet Observables to be integrated.
+/// \param[out] saveSet All component objects needed to represent the product integral are added as owned members to saveSet.
+/// \note The set owns new components that are created for the integral.
+/// \param[in] isetRangeName Integral range.
+/// \param[in] doFactorize
+///
+/// \return A RooAbsReal object representing the requested integral. The object is owned by `saveSet`.
+///
 /// The integration is factorized into components as much as possible and done analytically as far as possible.
-/// All component object needed to represent product integral are added as owned members to saveSet.
-/// The return value is a RooAbsReal object representing the requested integral
-
 RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, 
 					 RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) 
 {
   RooArgSet anaIntSet, numIntSet ;
 
   // First determine subset of observables in intSet that are factorizable
-  TIterator* compIter = compSet.createIterator() ;
-  TIterator* intIter = intSet.createIterator() ;
-  RooAbsPdf* pdf ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)intIter->Next())) {
-    Int_t count(0) ;
-    compIter->Reset() ;
-    while((pdf=(RooAbsPdf*)compIter->Next())) {
-      if (pdf->dependsOn(*arg)) count++ ;
-    }
+  for (const auto arg : intSet) {
+    auto count = std::count_if(compSet.begin(), compSet.end(), [arg](const RooAbsArg* pdfAsArg){
+      auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
+      return (pdf->dependsOn(*arg));
+    });
 
-    if (count==0) {
-    } else if (count==1) {
+    if (count==1) {
       anaIntSet.add(*arg) ;
-    } else {
     }    
   }
 
@@ -198,35 +196,34 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
   
-  compIter->Reset() ;
-  while((pdf=(RooAbsPdf*)compIter->Next())) {
+  for (const auto pdfAsArg : compSet) {
+    auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
+
     if (doFactorize && pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
-	// Analytical integral, create integral object
-	RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
-	pai->setOperMode(_operMode) ;
-	
-	// Add to integral to product
-	prodSet.add(*pai) ;
-	
-	// Remove analytically integratable observables from numeric integration list
-	numIntSet.remove(anaSet) ;
-	
-	// Declare ownership of integral
-	saveSet.addOwned(*pai) ;
+        // Analytical integral, create integral object
+        RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
+        pai->setOperMode(_operMode) ;
+
+        // Add to integral to product
+        prodSet.add(*pai) ;
+
+        // Remove analytically integratable observables from numeric integration list
+        numIntSet.remove(anaSet) ;
+
+        // Declare ownership of integral
+        saveSet.addOwned(*pai) ;
       } else {
-	// Analytic integration of factorizable observable not possible, add straight pdf to product
-	prodSet.add(*pdf) ;
+        // Analytic integration of factorizable observable not possible, add straight pdf to product
+        prodSet.add(*pdf) ;
       }      
     } else {
       // Non-factorizable observables, add straight pdf to product
       prodSet.add(*pdf) ;
     }
   }
-
-  //cout << "RooGenProdProj::makeIntegral(" << GetName() << ") prodset = " << prodSet << endl ;
 
   // Create product of (partial) analytical integrals
   TString prodName ;
@@ -235,22 +232,29 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   } else {
     prodName = Form("%s_%s",GetName(),name) ;
   }
-  RooProduct* prod = new RooProduct(prodName,"product",prodSet) ;
+
+  // Create clones of the elements in prodSet. These need to be cloned
+  // because when caching optimisation lvl 2 is activated, pre-computed
+  // values are side-loaded into the elements.
+  // Those pre-cached values already contain normalisation constants, so
+  // the integral comes out wrongly. Therefore, we create here nodes that
+  // don't participate in any caching, which are used to compute integrals.
+  RooArgSet prodSetClone;
+  prodSet.snapshot(prodSetClone, false);
+  saveSet.addOwned(prodSetClone);
+  prodSetClone.releaseOwnership();
+
+  RooProduct* prod = new RooProduct(prodName, "product", prodSetClone);
   prod->setExpensiveObjectCache(expensiveObjectCache()) ;
   prod->setOperMode(_operMode) ;
 
-  // Declare owndership of product
-  saveSet.addOwned(*prod) ;
+  // Declare ownership of product
+  saveSet.addOwned(*prod);
 
   // Create integral performing remaining numeric integration over (partial) analytic product
   RooAbsReal* ret = prod->createIntegral(numIntSet,isetRangeName) ;
-//   cout << "verbose print of integral object" << endl ;
-//   ret->Print("v") ;
   ret->setOperMode(_operMode) ;
   saveSet.addOwned(*ret) ;
-
-  delete compIter ;
-  delete intIter ;
 
   // Caller owners returned master integral object
   return ret ;

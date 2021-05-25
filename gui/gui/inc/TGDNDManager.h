@@ -2,15 +2,15 @@
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TDNDManager
-#define ROOT_TDNDManager
+#ifndef ROOT_TGDNDManager
+#define ROOT_TGDNDManager
 
 #include "TGFrame.h"
 
@@ -18,7 +18,6 @@ class TGMainFrame;
 class TGDragWindow;
 class TTimer;
 
-//----------------------------------------------------------------------
 
 class TGDragWindow : public TGFrame {
 
@@ -28,9 +27,9 @@ protected:
 protected:
    virtual void DoRedraw();
 
-   Window_t fInput;                 // Input Window
-   Pixmap_t fPic, fMask;            // Pixmaps used as Window shape
-   UInt_t   fPw, fPh;               // Hot point coordinates (x and y)
+   Window_t fInput;                 ///< Input Window
+   Pixmap_t fPic, fMask;            ///< Pixmaps used as Window shape
+   UInt_t   fPw, fPh;               ///< Hot point coordinates (x and y)
 
 public:
    TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
@@ -53,64 +52,63 @@ public:
    ClassDef(TGDragWindow, 0) // Window used for dragging
 };
 
-//----------------------------------------------------------------------
 
-//_____________________________________________________________________________
-//
-// TDNDData
-//
-// Drag and drop data container.
-//_____________________________________________________________________________
+/** \class TDNDData
+    \ingroup guiwidgets
+
+Drag and drop data container.
+
+*/
+
 
 class TDNDData : public TObject {
 private:
-   TDNDData(const TDNDData&);            // Not implemented
-   TDNDData& operator=(const TDNDData&); // Not implemented
+   TDNDData(const TDNDData&) = delete;
+   TDNDData& operator=(const TDNDData&) = delete;
 
 public:
-   TDNDData(Atom_t dt = kNone, void *d = 0, Int_t len = 0, Atom_t act = kNone) :
+   TDNDData(Atom_t dt = kNone, void *d = nullptr, Int_t len = 0, Atom_t act = kNone) :
       fDataType(dt), fAction(act), fData(d), fDataLength(len) {}
    ~TDNDData() {}
 
-   Atom_t    fDataType;       // Data type description
-   Atom_t    fAction;         // Action description
-   void     *fData;           // Actual data
-   Int_t     fDataLength;     // Length of data
+   Atom_t    fDataType;       ///< Data type description
+   Atom_t    fAction;         ///< Action description
+   void     *fData;           ///< Actual data
+   Int_t     fDataLength;     ///< Length of data
 
    ClassDef(TDNDData, 0) // Drag and drop specific data
 };
 
-//----------------------------------------------------------------------
 
 class TGDNDManager : public TObject {
 
 private:
-   TGDNDManager(const TGDNDManager&);            // Not implemented
-   TGDNDManager& operator=(const TGDNDManager&); // Not implemented
+   TGDNDManager(const TGDNDManager&) = delete;
+   TGDNDManager& operator=(const TGDNDManager&) = delete;
 
 protected:
-   TGFrame       *fMain;                         // pointer on TGMainFrame
-   Atom_t         fVersion;                      // not really an Atom, but a long
-   Atom_t        *fTypelist, *fDraggerTypes;     // lists of DND types
-   Atom_t         fDropType;                     // drop type
-   Atom_t         fAcceptedAction, fLocalAction; // accepted and local actions
+   TGFrame       *fMain;                         ///< pointer on TGMainFrame
+   Atom_t         fVersion;                      ///< not really an Atom, but a long
+   Atom_t        *fTypelist, *fDraggerTypes;     ///< lists of DND types
+   Atom_t         fDropType;                     ///< drop type
+   Atom_t         fAcceptedAction, fLocalAction; ///< accepted and local actions
 
-   Bool_t         fDragging;                     // kTRUE while dragging
-   Bool_t         fDropAccepted;                 // kTRUE if drop accepted
-   Bool_t         fStatusPending;                // kTRUE if status is pending
-   Bool_t         fUseVersion;                   // kTRUE if DND version is used
-   Bool_t         fProxyOurs;                    // kTRUE if root proxy is ours
-   Window_t       fSource, fTarget;              // source and target windows
-   Bool_t         fTargetIsDNDAware;             // kTRUE if target is DND aware
-   UInt_t         fGrabEventMask;                // pointer grab event mask
-   TGFrame       *fLocalSource, *fLocalTarget;   // local source and target
+   Bool_t         fDragging;                     ///< kTRUE while dragging
+   Bool_t         fDropAccepted;                 ///< kTRUE if drop accepted
+   Bool_t         fStatusPending;                ///< kTRUE if status is pending
+   Bool_t         fUseVersion;                   ///< kTRUE if DND version is used
+   Bool_t         fProxyOurs;                    ///< kTRUE if root proxy is ours
+   Window_t       fSource, fTarget;              ///< source and target windows
+   Bool_t         fTargetIsDNDAware;             ///< kTRUE if target is DND aware
+   UInt_t         fGrabEventMask;                ///< pointer grab event mask
+   TGFrame       *fLocalSource, *fLocalTarget;   ///< local source and target
 
-   TTimer        *fDropTimeout;                  // drop timeout
-   TGDragWindow  *fDragWin;                      // drag window
+   TTimer        *fDropTimeout;                  ///< drop timeout
+   TGDragWindow  *fDragWin;                      ///< drag window
 
-   Pixmap_t       fPic, fMask;                   // pixmap used for the drag window
-   Int_t          fHotx, fHoty;                  // hot point coordinates
-   Cursor_t       fDNDNoDropCursor;              // no drop cursor type
+   Pixmap_t       fPic, fMask;                   ///< pixmap used for the drag window
+   Int_t          fHotx, fHoty;                  ///< hot point coordinates
+   Cursor_t       fDNDNoDropCursor;              ///< no drop cursor type
 
 protected:
    static Atom_t  fgDNDAware, fgDNDSelection, fgDNDProxy;
@@ -202,5 +200,5 @@ public:
 
 R__EXTERN TGDNDManager *gDNDManager; // global drag and drop manager
 
-#endif  // ROOT_TDNDManager
+#endif  // ROOT_TGDNDManager
 

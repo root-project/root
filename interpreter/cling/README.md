@@ -45,7 +45,7 @@ Our nightly binary snapshots can be found
 ### Building from Source with Cling Packaging Tool
 Cling's tree has a user-friendly, command-line utility written in Python called
 Cling Packaging Tool (CPT) which can build Cling from source and generate
-installer bundles for a wide range of platforms. CPT requires Python 2.7 or
+installer bundles for a wide range of platforms. CPT requires Python 3 or
 later.
 
 If you have Cling's source cloned locally, you can find the tool in
@@ -84,6 +84,29 @@ install Jupyter and cling's kernel by following the README.md in
 [tools/Jupyter](tools/Jupyter). Make sure cling is in your PATH when you start jupyter!
 
 
+Citing Cling
+------------
+```latex
+% Peer-Reviewed Publication
+%
+% 19th International Conference on Computing in High Energy and Nuclear Physics (CHEP)
+% 21-25 May, 2012, New York, USA
+%
+@inproceedings{Cling,
+  author = {Vassilev,V. and Canal,Ph. and Naumann,A. and Moneta,L. and Russo,P.},
+  title = {{Cling} -- The New Interactive Interpreter for {ROOT} 6}},
+  journal = {Journal of Physics: Conference Series},
+  year = 2012,
+  month = {dec},
+  volume = {396},
+  number = {5},
+  pages = {052071},
+  doi = {10.1088/1742-6596/396/5/052071},
+  url = {https://iopscience.iop.org/article/10.1088/1742-6596/396/5/052071/pdf},
+  publisher = {{IOP} Publishing}
+}
+```
+
 Developers' Corner
 ==================
 [Cling's latest doxygen documentation](http://cling.web.cern.ch/cling/doxygen/)
@@ -117,8 +140,10 @@ Our release steps to follow when cutting a new release:
   3. Add a new entry in the news section of our [website](www/news.html)
   4. Commit the changes.
   5. `git tag -a v0.x -m "Tagging release v0.x"`
-  6. Create a draft release in github and copy the contents of the release notes.
-  7. Wait for green builds.
-  8. Upload binaries to github (Travis should do this automatically).
-  9. Publish the tag and announce it on the mailing list.
-  10. Increment the current version and append `~dev`.
+  6. Tag `cling-patches` of `clang.git`:
+     `git tag -a cling-v0.x -m "Tagging clang for cling v0.x"`
+  7. Create a draft release in github and copy the contents of the release notes.
+  8. Wait for green builds.
+  9. Upload binaries to github (Travis should do this automatically).
+  10. Publish the tag and announce it on the mailing list.
+  11. Increment the current version and append `~dev`.

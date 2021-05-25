@@ -13,14 +13,13 @@
 
 
 /////////////////////////////////////////////////////////////////////////////////////
-// BEGIN_HTML
-// The class RooEffProd implements the product of a PDF with an efficiency function.
-// The normalization integral of the product is calculated numerically, but the
-// event generation is handled by a specialized generator context that implements
-// the event generation in a more efficient for cases where the PDF has an internal
-// generator that is smarter than accept reject. 
-// END_HTML
-//
+/// \class RooEffProd
+/// The class RooEffProd implements the product of a PDF with an efficiency function.
+/// The normalization integral of the product is calculated numerically, but the
+/// event generation is handled by a specialized generator context that implements
+/// the event generation in a more efficient for cases where the PDF has an internal
+/// generator that is smarter than accept reject.
+///
 
 #include "RooFit.h"
 #include "RooEffProd.h"
@@ -78,24 +77,13 @@ RooEffProd::~RooEffProd()
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return p.d.f. value normalized over given set of observables
-
-Double_t RooEffProd::getValV(const RooArgSet* set) const 
-{  
-  _nset = _fixedNset ? _fixedNset : set ;
-  return RooAbsPdf::getValV(set) ;
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return 'raw' unnormalized value of p.d.f
 
 Double_t RooEffProd::evaluate() const
 {
-  return eff()->getVal() * pdf()->getVal(_nset);
+  return eff()->getVal() * pdf()->getVal(_fixedNset ? _fixedNset : _normSet);
 }
 
 

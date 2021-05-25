@@ -1,16 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'SPECIAL PDFS' RooFit tutorial macro #707
-##
-## Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
+## Special pdf's: using non-parametric (multi-dimensional) kernel estimation pdfs
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -46,8 +42,9 @@ kest3 = ROOT.RooKeysPdf("kest1", "kest1", x, data1,
                         ROOT.RooKeysPdf.MirrorBoth, 2)
 
 # Plot kernel estimation pdfs with and without mirroring over data
-frame = x.frame(ROOT.RooFit.Title(
-    "Adaptive kernel estimation pdf with and w/o mirroring"), ROOT.RooFit.Bins(20))
+frame = x.frame(
+    ROOT.RooFit.Title("Adaptive kernel estimation pdf with and w/o mirroring"),
+    ROOT.RooFit.Bins(20))
 data1.plotOn(frame)
 kest1.plotOn(frame)
 kest2.plotOn(frame, ROOT.RooFit.LineStyle(
@@ -64,7 +61,8 @@ kest3.plotOn(frame2, ROOT.RooFit.LineColor(ROOT.kMagenta))
 
 # Construct a 2D toy pdf for sampleing
 y = ROOT.RooRealVar("y", "y", 0, 20)
-py = ROOT.RooPolynomial("py", "py", y, ROOT.RooArgList(ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(-0.0004)))
+py = ROOT.RooPolynomial("py", "py", y, ROOT.RooArgList(ROOT.RooFit.RooConst(
+    0.01), ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(-0.0004)))
 pxy = ROOT.RooProdPdf("pxy", "pxy", ROOT.RooArgList(p, py))
 data2 = pxy.generate(ROOT.RooArgSet(x, y), 1000)
 
@@ -76,11 +74,14 @@ kest4 = ROOT.RooNDKeysPdf("kest4", "kest4", ROOT.RooArgList(x, y), data2, "am")
 
 # Create 2D adaptive kernel estimation pdf with mirroring and double
 # bandwidth
-kest5 = ROOT.RooNDKeysPdf("kest5", "kest5", ROOT.RooArgList(x, y), data2, "am", 2)
+kest5 = ROOT.RooNDKeysPdf(
+    "kest5", "kest5", ROOT.RooArgList(
+        x, y), data2, "am", 2)
 
 # Create a histogram of the data
-hh_data = ROOT.RooAbsData.createHistogram(data2, "hh_data", x, ROOT.RooFit.Binning(
-    10), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(10)))
+hh_data = ROOT.RooAbsData.createHistogram(
+    data2, "hh_data", x, ROOT.RooFit.Binning(10), ROOT.RooFit.YVar(
+        y, ROOT.RooFit.Binning(10)))
 
 # Create histogram of the 2d kernel estimation pdfs
 hh_pdf = kest4.createHistogram("hh_pdf", x, ROOT.RooFit.Binning(
@@ -91,7 +92,7 @@ hh_pdf.SetLineColor(ROOT.kBlue)
 hh_pdf2.SetLineColor(ROOT.kMagenta)
 
 c = ROOT.TCanvas("rf707_kernelestimation",
-                    "rf707_kernelestimation", 800, 800)
+                 "rf707_kernelestimation", 800, 800)
 c.Divide(2, 2)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.15)

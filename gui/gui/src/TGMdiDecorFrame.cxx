@@ -30,20 +30,18 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiDecorFrame, TGMdiTitleBar, TGMdiButtons, TGMdiTitleIcon,        //
-// TGMdiWinResizer, TGMdiVerticalWinResizer, TGMdiHorizontalWinResizer, //
-// and TGMdiCornerWinResizer.                                           //
-//                                                                      //
-// This file contains all different MDI frame decoration classes.       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
+/** \class TGMdiDecorFrame
+    \ingroup guiwidgets
 
-#include "TROOT.h"
+This file contains all different MDI frame decoration classes.
+
+*/
+
+
+#include <cstdio>
+#include <cstdlib>
+
 #include "KeySymbols.h"
 #include "TGResourcePool.h"
 #include "TGDimension.h"
@@ -51,6 +49,8 @@
 #include "TGMdiFrame.h"
 #include "TGMdiDecorFrame.h"
 #include "TGMdiMainFrame.h"
+#include "TVirtualX.h"
+
 
 ClassImp(TGMdiDecorFrame);
 ClassImp(TGMdiTitleBar);

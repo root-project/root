@@ -20,37 +20,65 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListBox, TGLBContainer, TGLBEntry and TGTextLBEntry                //
-//                                                                      //
-// A listbox is a box, possibly with scrollbar, containing entries.     //
-// Currently entries are simple text strings (TGTextLBEntry).           //
-// A TGListBox looks a lot like a TGCanvas. It has a TGViewPort         //
-// containing a TGLBContainer which contains the entries and it also    //
-// has a vertical scrollbar which becomes visible if there are more     //
-// items than fit in the visible part of the container.                 //
-//                                                                      //
-// The TGListBox is user callable. The other classes are service        //
-// classes of the listbox.                                              //
-//                                                                      //
-// Selecting an item in the listbox will generate the event:            //
-// kC_COMMAND, kCM_LISTBOX, listbox id, item id.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGListBox
+   \ingroup guiwidgets
+
+A listbox is a box, possibly with scrollbar, containing entries.
+Currently entries are simple text strings (TGTextLBEntry).
+A TGListBox looks a lot like a TGCanvas. It has a TGViewPort
+containing a TGLBContainer which contains the entries and it also
+has a vertical scrollbar which becomes visible if there are more
+items than fit in the visible part of the container.
+
+The TGListBox is user callable. The other classes are service
+classes of the listbox.
+
+A listbox contains a container frame which is viewed through a
+viewport. If the container is larger than the viewport than a
+vertical scrollbar is added.
+
+Selecting an item in the listbox will generate the event:
+  - kC_COMMAND, kCM_LISTBOX, listbox id, item id.
+
+\class TGTextLBEntry
+\ingroup guiwidgets
+
+Text string listbox entries.
+A TGTextLBEntry is for TGListBox internal use.
+
+\class TGLineLBEntry
+\ingroup guiwidgets
+
+Line style and width listbox entries.
+
+\class TGIconLBEntry
+\ingroup guiwidgets
+
+Icon + text listbox entry.
+
+\class TGLBContainer
+\ingroup guiwidgets
+
+A Composite frame that contains a list of TGLBEnties.
+A TGLBContainer is for TGListBox internal use.
+
+*/
+
 
 #include "TGPicture.h"
 #include "TGListBox.h"
-#include "TGScrollBar.h"
 #include "TGResourcePool.h"
 #include "TSystem.h"
-#include "Riostream.h"
 #include "TMath.h"
-#include <stdlib.h>
+#include "TVirtualX.h"
+
+#include <cstdlib>
+#include <iostream>
 
 
-const TGFont *TGTextLBEntry::fgDefaultFont = 0;
-TGGC         *TGTextLBEntry::fgDefaultGC = 0;
+const TGFont *TGTextLBEntry::fgDefaultFont = nullptr;
+TGGC         *TGTextLBEntry::fgDefaultGC = nullptr;
 
 ClassImp(TGLBEntry);
 ClassImp(TGTextLBEntry);
@@ -91,15 +119,6 @@ void TGLBEntry::Toggle()
    DoRedraw();
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextLBEntry                                                        //
-//                                                                      //
-// Text string listbox entries.                                         //
-// A TGTextLBEntry is for TGListBox internal use.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a text listbox entry. The TGString is adopted.
@@ -203,13 +222,6 @@ const TGGC &TGTextLBEntry::GetDefaultGC()
    return *fgDefaultGC;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLineLBEntry                                                        //
-//                                                                      //
-// Line style and width listbox entries.                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the line style listbox entry.
@@ -319,7 +331,7 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set or change line witdh in an entry.
+/// Set or change line width in an entry.
 
 void TGLineLBEntry::SetLineWidth(Int_t width)
 {
@@ -353,13 +365,6 @@ void TGLineLBEntry::DoRedraw()
    if (fId) DrawCopy(fId, 0, 0);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGIconLBEntry                                                        //
-//                                                                      //
-// Icon + text listbox entry.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the icon & text listbox entry.
@@ -467,14 +472,6 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBContainer                                                        //
-//                                                                      //
-// A Composite frame that contains a list of TGLBEnties.                //
-// A TGLBContainer is for TGListBox internal use.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a listbox container.
@@ -672,7 +669,8 @@ void TGLBContainer::RemoveAll()
       e = (TGLBEntry *) el->fFrame;
       l = el->fLayout;
       if (fLastActive == e) fLastActive = 0;
-      e->DestroyWindow();
+      if (e)
+         e->DestroyWindow();
       fList->Remove(el);  // avoid calling RemoveFrame(e)
       delete el;          // item
       delete e;
@@ -1104,19 +1102,6 @@ Int_t TGLBContainer::GetPos(Int_t id)
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListBox                                                            //
-//                                                                      //
-// A listbox contains a container frame which is viewed through a       //
-// viewport. If the container is larger than the viewport than a        //
-// vertical scrollbar is added.                                         //
-//                                                                      //
-// Selecting an item in the listbox will generate the event:            //
-// kC_COMMAND, kCM_LISTBOX, listbox id, item id.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a listbox.
 
@@ -1240,7 +1225,7 @@ void TGListBox::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add entry with specified string and id to listbox sorted by increasing id.
-/// This sorting works proberly only if EntrySort functions are used to add
+/// This sorting works properly only if EntrySort functions are used to add
 /// entries without mixing them with other add or insert functions.  The id will be
 /// used in the event processing routine when the item is selected.
 /// The string will be adopted by the listbox.
@@ -1258,7 +1243,7 @@ void TGListBox::AddEntrySort(TGString *s, Int_t id)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add entry with specified string and id to listbox sorted by increasing id.
-/// This sorting works proberly only if EntrySort functions are used to add
+/// This sorting works properly only if EntrySort functions are used to add
 /// entries without mixing them with other add or insert functions. The id will be
 /// used in the event processing routine when the item is selected.
 
@@ -1269,7 +1254,7 @@ void TGListBox::AddEntrySort(const char *s, Int_t id)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add specified TGLBEntry and TGLayoutHints to listbox sorted by increasing id.
-/// This sorting works proberly only if EntrySort functions are used to add
+/// This sorting works properly only if EntrySort functions are used to add
 /// entries without mixing them with other add or insert functions. The
 /// entry and layout will be adopted and later deleted by the listbox.
 

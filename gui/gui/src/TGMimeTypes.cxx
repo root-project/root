@@ -20,21 +20,21 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMimeTypes and TGMime                                               //
-//                                                                      //
-// This class handles mime types, used by browsers to map file types    //
-// to applications and icons. TGMime is internally used by TGMimeType.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMimeTypes and TGMime
+    \ingroup guiwidgets
+
+This class handles mime types, used by browsers to map file types
+to applications and icons. TGMime is internally used by TGMimeType.
+
+*/
+
 
 #include "TGMimeTypes.h"
 #include "TOrdCollection.h"
 #include "TSystem.h"
 #include "TDatime.h"
 #include "TRegexp.h"
-
+#include "strlcpy.h"
 
 ClassImp(TGMimeTypes);
 

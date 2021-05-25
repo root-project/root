@@ -7,14 +7,14 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "MetaParser.h"
-
-#include "MetaLexer.h"
-#include "MetaSema.h"
+#include "cling/MetaProcessor/MetaParser.h"
+#include "cling/MetaProcessor/MetaSema.h"
+#include "cling/MetaProcessor/MetaLexer.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/Value.h"
+
 #include "cling/Utils/Output.h"
 #include "cling/Utils/Paths.h"
 
@@ -276,13 +276,44 @@ namespace cling {
     const Token& Tok = getCurTok();
     if (Tok.is(tok::ident) && (Tok.getIdent().equals("x")
                                || Tok.getIdent().equals("X"))) {
-      // There might be ArgList
-      consumeAnyStringToken(tok::l_paren);
-      llvm::StringRef file(getCurTok().getIdent());
       consumeToken();
-      // '(' to end of string:
+      skipWhitespace();
 
-      std::string args = getCurTok().getBufStart();
+      // There might be an ArgList:
+      int forward = 0;
+      std::string args;
+      llvm::StringRef file(getCurTok().getBufStart());
+      while (!lookAhead(forward).is(tok::eof))
+	++forward;
+
+      // Skip any trailing ';':
+      if (lookAhead(forward - 1).is(tok::semicolon))
+	--forward;
+
+      // Now track back to find the opening '('.
+      if (lookAhead(forward - 1).is(tok::r_paren)) {
+	// Trailing ')' - we interpret that as an argument.
+	--forward; // skip ')'
+	int nesting = 1;
+	while (--forward > 0 && nesting) {
+	  if (lookAhead(forward).is(tok::l_paren))
+	    --nesting;
+	  else if (lookAhead(forward).is(tok::r_paren))
+	    ++nesting;
+	}
+	if (forward == 0) {
+	  cling::errs() << "cling::MetaParser::isXCommand():"
+	    "error parsing argument in " << getCurTok().getBufStart() << '\n';
+	  // interpret everything as "the file"
+	} else {
+	  while (forward--)
+	    consumeToken();
+	  consumeToken(); // the forward-0 token.
+	  args = getCurTok().getBufStart();
+	  file = file.drop_back(args.length());
+	}
+      }
+
       if (args.empty())
         args = "()";
       actionResult = m_Actions->actOnxCommand(file, args, resultValue);

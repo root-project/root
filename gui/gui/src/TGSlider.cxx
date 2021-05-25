@@ -20,37 +20,54 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSlider, TGVSlider and TGHSlider                                    //
-//                                                                      //
-// Slider widgets allow easy selection of a range.                      //
-// Sliders can be either horizontal or vertical oriented and there is   //
-// a choice of two different slider types and three different types     //
-// of tick marks.                                                       //
-//                                                                      //
-// TGSlider is an abstract base class. Use the concrete TGVSlider and   //
-// TGHSlider.                                                           //
-//                                                                      //
-// Dragging the slider will generate the event:                         //
-// kC_VSLIDER, kSL_POS, slider id, position  (for vertical slider)      //
-// kC_HSLIDER, kSL_POS, slider id, position  (for horizontal slider)    //
-//                                                                      //
-// Pressing the mouse will generate the event:                          //
-// kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)           //
-// kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)         //
-//                                                                      //
-// Releasing the mouse will generate the event:                         //
-// kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)         //
-// kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGSlider
+    \ingroup guiwidgets
+
+Slider widgets allow easy selection of a range.
+Sliders can be either horizontal or vertical oriented and there is
+a choice of two different slider types and three different types
+of tick marks.
+
+TGSlider is an abstract base class. Use the concrete TGVSlider and
+TGHSlider.
+
+\class TGVSlider
+\ingroup guiwidgets
+Concrete class for vertical slider.
+
+Dragging the slider will generate the event:
+  - kC_VSLIDER, kSL_POS, slider id, position  (for vertical slider)
+
+Pressing the mouse will generate the event:
+  - kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)
+
+Releasing the mouse will generate the event:
+  - kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)
+
+\class TGHSlider
+\ingroup guiwidgets
+Concrete class for horizontal slider.
+
+Dragging the slider will generate the event:
+  - kC_HSLIDER, kSL_POS, slider id, position  (for horizontal slider)
+
+Pressing the mouse will generate the event:
+  - kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)
+
+Releasing the mouse will generate the event:
+  - kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)
+
+*/
+
 
 #include "TGSlider.h"
 #include "TGPicture.h"
 #include "TImage.h"
 #include "TEnv.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
+
+#include <iostream>
 
 ClassImp(TGSlider);
 ClassImp(TGVSlider);

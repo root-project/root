@@ -13,12 +13,13 @@
 #pragma optimize("",off)
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
@@ -27,14 +28,17 @@
 #include "TMath.h"
 #include "TObjString.h"
 #include "TObjArray.h"
-#include "TClass.h"
+#include "snprintf.h"
+
+Int_t TSVG::fgLineJoin = 0;
+Int_t TSVG::fgLineCap  = 0;
 
 ClassImp(TSVG);
 
 /** \class TSVG
 \ingroup PS
 
-Interface to SVG
+\brief Interface to SVG
 
 [SVG](http://www.w3.org/Graphics/SVG/Overview.htm8)
 (Scalable Vector Graphics) is a language for describing
@@ -115,6 +119,8 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    fLenBuffer = 0;
    fType      = abs(wtype);
+   SetLineJoin(gStyle->GetJoinLinePS());
+   SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
@@ -238,7 +244,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
          PrintFast(10,"\" height=\"");
          WriteReal(iy1-iy2, kFALSE);
          PrintFast(7,"\" fill=");
-         SetColor(5);
+         SetColorAlpha(5);
          PrintFast(2,"/>");
       }
    }
@@ -253,7 +259,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(7,"\" fill=");
-      SetColor(fFillColor);
+      SetColorAlpha(fFillColor);
       PrintFast(2,"/>");
    }
    if (fillis == 0) {
@@ -268,7 +274,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColor(fLineColor);
+      SetColorAlpha(fLineColor);
       PrintFast(2,"/>");
    }
 }
@@ -349,10 +355,14 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    if( idy ) MovePS(0,idy);
    PrintFast(8,"z\" fill=");
    if (mode == -1) {
-      SetColor(dark);
+      SetColorAlpha(dark);
    } else {
-      SetColor(light);
+      SetColorAlpha(light);
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 
    //- Draw bottom&right part of the box
@@ -413,10 +423,14 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    if( idy ) MovePS(0,idy);
    PrintFast(8,"z\" fill=");
    if (mode == -1) {
-      SetColor(light);
+      SetColorAlpha(light);
    } else {
-      SetColor(dark);
+      SetColorAlpha(dark);
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
@@ -567,14 +581,19 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
 void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
-   Int_t ms = abs(fMarkerStyle);
+   fMarkerStyle = TMath::Abs(fMarkerStyle);
+   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
-   if (ms >= 6 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms >= 6 && ms <= 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) msize = 0.01;
+   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
 
@@ -593,22 +612,22 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
    // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||//) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
-      PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
-      PrintStr("\" fill=");
-      SetColor(Int_t(fMarkerColor));
+      PrintStr("<g fill=");
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
+      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
+      if (fgLineJoin)
+         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      if (fgLineCap)
+         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -651,23 +670,23 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
@@ -692,23 +711,23 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
@@ -971,14 +990,19 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
 void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   Int_t ms = abs(fMarkerStyle);
+   fMarkerStyle = TMath::Abs(fMarkerStyle);
+   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
-   if (ms >= 6 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms >= 6 && ms <= 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) msize = 0.01;
+   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
 
@@ -997,22 +1021,22 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||//) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
-      PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
-      PrintStr("\" fill=");
-      SetColor(Int_t(fMarkerColor));
+      PrintStr("<g fill=");
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColor(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
+      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
+      if (fgLineJoin)
+         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      if (fgLineCap)
+         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1055,23 +1079,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
@@ -1096,23 +1120,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
@@ -1441,7 +1465,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    if (nn > 0 ) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(1,"z");
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColor(fLineColor);
+      SetColorAlpha(fLineColor);
       if(fLineWidth > 1.) {
          PrintFast(15," stroke-width=\"");
          WriteReal(fLineWidth, kFALSE);
@@ -1460,17 +1484,20 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          delete tokens;
          PrintFast(1,"\"");
       }
-      PrintFast(2,"/>");
    } else {
       PrintFast(8,"z\" fill=");
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
-         SetColor(fFillColor);
+         SetColorAlpha(fFillColor);
       } else {
-         SetColor(fFillColor);
+         SetColorAlpha(fFillColor);
       }
-      PrintFast(2,"/>");
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+   PrintFast(2,"/>");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1568,51 +1595,8 @@ void TSVG::NewPage()
 
 void TSVG::Range(Float_t xsize, Float_t ysize)
 {
-   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
-
    fXsize = xsize;
    fYsize = ysize;
-
-   xps = xsize;
-   yps = ysize;
-
-   if( xsize <= xps && ysize < yps) {
-      if ( xps > yps ) xymax = xps;
-      else             xymax = yps;
-      xncm  = xsize/xymax;
-      yncm  = ysize/xymax;
-      dxwn  = ((xps/xymax)-xncm)/2;
-      dywn  = ((yps/xymax)-yncm)/2;
-   } else {
-      if (xps/yps < 1) xwkwn = xps/yps;
-      else             xwkwn = 1;
-      if (yps/xps < 1) ywkwn = yps/xps;
-      else             ywkwn = 1;
-
-      if (xsize < ysize)  {
-         xncm = ywkwn*xsize/ysize;
-         yncm = ywkwn;
-         dxwn = (xwkwn-xncm)/2;
-         dywn = 0;
-         if( dxwn < 0) {
-            xncm = xwkwn;
-            dxwn = 0;
-            yncm = xwkwn*ysize/xsize;
-            dywn = (ywkwn-yncm)/2;
-         }
-      } else {
-         xncm = xwkwn;
-         yncm = xwkwn*ysize/xsize;
-         dxwn = 0;
-         dywn = (ywkwn-yncm)/2;
-         if( dywn < 0) {
-            yncm = ywkwn;
-            dywn = 0;
-            xncm = ywkwn*xsize/ysize;
-            dxwn = (xwkwn-xncm)/2;
-         }
-      }
-   }
    fRange = kTRUE;
 }
 
@@ -1622,7 +1606,6 @@ void TSVG::Range(Float_t xsize, Float_t ysize)
 void TSVG::SetFillColor( Color_t cindex )
 {
    fFillColor = cindex;
-   if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1631,6 +1614,54 @@ void TSVG::SetFillColor( Color_t cindex )
 void TSVG::SetLineColor( Color_t cindex )
 {
    fLineColor = cindex;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TSVG::fgLineJoin.
+/// This parameter determines the appearance of joining lines in a SVG
+/// output.
+/// It takes one argument which may be:
+///   - 0 (miter join)
+///   - 1 (round join)
+///   - 2 (bevel join)
+/// The default value is 0 (miter join).
+///
+/// \image html postscript_1.png
+///
+/// To change the line join behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetJoinLinePS(2); // Set the PS line join to bevel.
+/// ~~~
+
+void TSVG::SetLineJoin( Int_t linejoin )
+{
+   fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TSVG::fgLineCap.
+/// This parameter determines the appearance of line caps in a SVG
+/// output.
+/// It takes one argument which may be:
+///   - 0 (butt caps)
+///   - 1 (round caps)
+///   - 2 (projecting caps)
+/// The default value is 0 (butt caps).
+///
+/// \image html postscript_2.png
+///
+/// To change the line cap behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetCapLinePS(2); // Set the PS line cap to projecting.
+/// ~~~
+
+void TSVG::SetLineCap( Int_t linecap )
+{
+   fgLineCap = linecap;
+   if (fgLineCap<0) fgLineCap=0;
+   if (fgLineCap>2) fgLineCap=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1663,9 +1694,9 @@ void TSVG::SetMarkerColor( Color_t cindex )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set color with its color index
+/// Set RGBa color with its color index
 
-void TSVG::SetColor(Int_t color)
+void TSVG::SetColorAlpha(Int_t color)
 {
    if (color < 0) color = 0;
    TColor *col = gROOT->GetColor(color);
@@ -1673,6 +1704,20 @@ void TSVG::SetColor(Int_t color)
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
       Float_t a = col->GetAlpha();
       if (a<1.) PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
+   } else {
+      SetColor(1., 1., 1.);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set RGB (without alpha channel) color with its color index
+
+void TSVG::SetColor(Int_t color)
+{
+   if (color < 0) color = 0;
+   TColor *col = gROOT->GetColor(color);
+   if (col) {
+      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
    } else {
       SetColor(1., 1., 1.);
    }
@@ -1785,7 +1830,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       PrintFast(18," text-anchor=\"end\"");
    }
    PrintFast(6," fill=");
-   SetColor(Int_t(fTextColor));
+   SetColorAlpha(Int_t(fTextColor));
    PrintFast(12," font-size=\"");
    WriteReal(fontsize, kFALSE);
    PrintFast(15,"\" font-family=\"");

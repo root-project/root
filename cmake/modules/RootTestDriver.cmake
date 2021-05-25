@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 #-------------------------------------------------------------------------------
 #
 # RootCTestDriver.cmake
@@ -66,10 +72,9 @@ endif()
 
 #---Set environment --------------------------------------------------------------------------------
 if(ENV)
-  string(REPLACE "@" "=" _env ${ENV})
-  string(REPLACE "#" ";" _env ${_env})
+  string(REPLACE "#" ";" _env ${ENV})
   foreach(pair ${_env})
-    string(REPLACE "=" ";" pair ${pair})
+    string(REGEX REPLACE "^([^=]+)=(.*)$" "\\1;\\2" pair ${pair})
     list(GET pair 0 var)
     list(GET pair 1 val)
     set(ENV{${var}} ${val})
@@ -271,4 +276,3 @@ if(ERRREF)
     message(FATAL_ERROR "compare 'stderr' error: ${_rc}")
   endif()
 endif()
-

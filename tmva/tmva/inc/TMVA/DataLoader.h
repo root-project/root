@@ -28,19 +28,15 @@
 #ifndef ROOT_TMVA_DataLoader
 #define ROOT_TMVA_DataLoader
 
-
-#include <string>
 #include <vector>
-#include <map>
 #include "TCut.h"
 
-#include "TMVA/Factory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/Types.h"
 #include "TMVA/DataSet.h"
 
 class TFile;
 class TTree;
-class TDirectory;
 class TH2;
 
 namespace TMVA {
@@ -49,18 +45,12 @@ namespace TMVA {
    class DataInputHandler;
    class DataSetInfo;
    class DataSetManager;
-   class Envelope;
-   class MethodBase;
-   class IMethod;   
    class VariableTransformBase;
-   class VarTransformHandler;
 
    class DataLoader : public Configurable {
-      friend class Factory;
-      friend class Envelope;
    public:
 
-       DataLoader( TString thedlName="default");
+       DataLoader(TString thedlName="default");
 
       // default destructor
       virtual ~DataLoader();
@@ -125,11 +115,18 @@ namespace TMVA {
       void AddTree( TTree* tree, const TString& className, Double_t weight, const TCut& cut, const TString& treeType );
 
       // set input variable
-      void SetInputVariables  ( std::vector<TString>* theVariables ); // depreciated
+      void SetInputVariables  ( std::vector<TString>* theVariables ); // deprecated
+
       void AddVariable        ( const TString& expression, const TString& title, const TString& unit,
                                 char type='F', Double_t min = 0, Double_t max = 0 );
       void AddVariable        ( const TString& expression, char type='F',
                                 Double_t min = 0, Double_t max = 0 );
+
+      // NEW: add an array of variables (e.g. for image data) with the provided size
+      void AddVariablesArray(const TString &expression, int size, char type = 'F',
+                             Double_t min = 0, Double_t max = 0);
+
+
       void AddTarget          ( const TString& expression, const TString& title = "", const TString& unit = "",
                                 Double_t min = 0, Double_t max = 0 );
       void AddRegressionTarget( const TString& expression, const TString& title = "", const TString& unit = "",

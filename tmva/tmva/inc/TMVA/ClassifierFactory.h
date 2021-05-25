@@ -27,15 +27,15 @@
 #define ROOT_TMVA_ClassifierFactory
 
 /////////////////////////////////////////////////////////////////
-///
-/// Abstract ClassifierFactory template that handles arbitrary types
-/// 
-/// This template creates ClassifierFactory stores creator functors
-/// to template parameter class. ClassifierFactory is a singelton class
-/// which is explicitly deleted.
-///
-/// Source: Andrei Alexandrescu, Modern C++ Design
-///
+//
+// Abstract ClassifierFactory template that handles arbitrary types
+// 
+// This template creates ClassifierFactory stores creator functors
+// to template parameter class. ClassifierFactory is a singelton class
+// which is explicitly deleted.
+//
+// Source: Andrei Alexandrescu, Modern C++ Design
+//
 /////////////////////////////////////////////////////////////////
 
 // C++

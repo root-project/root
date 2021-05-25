@@ -10,27 +10,35 @@
 
 #include "TGTableContainer.h"
 #include "TGTableCell.h"
-#include "TGLayout.h"
 #include "TGWindow.h"
-#include "TGScrollBar.h"
 #include "TGTable.h"
+#include "TVirtualX.h"
 
 ClassImp(TGTableFrame);
 ClassImp(TGTableHeaderFrame);
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableFrame and TGTableHeaderFrame                                  //
-//                                                                      //
-// TGTableFrame contains a composite frame that uses a TGMatrixLayout   //
-// to Layout the frames it contains.                                    //
-//                                                                      //
-// TGTableHeaderFrame implements a frame used to display TGTableHeaders //
-// in a TGTable.                                                        //
-//                                                                      //
-// Both classes are for internal use in TGTable only.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+// TGTableFrame and TGTableHeaderFrame
+/** \class TGTableFrame
+    \ingroup guiwidgets
+
+TGTableFrame contains a composite frame that uses a TGMatrixLayout
+to Layout the frames it contains.
+
+Internal use in TGTable only.
+
+*/
+
+/** \class TGTableHeaderFrame
+    \ingroup guiwidgets
+
+TGTableHeaderFrame implements a frame used to display TGTableHeaders
+in a TGTable.
+
+Internal use in TGTable only.
+
+*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the container used to view TGTableCells. p.
@@ -110,7 +118,7 @@ void TGTableFrame::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGTableHeaderFrame constuctor.
+/// TGTableHeaderFrame constructor.
 
 TGTableHeaderFrame::TGTableHeaderFrame(const TGWindow *p, TGTable *table,
                                        UInt_t w, UInt_t h, EHeaderType type,

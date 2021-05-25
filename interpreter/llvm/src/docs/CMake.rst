@@ -12,8 +12,8 @@ Introduction
 does not build the project, it generates the files needed by your build tool
 (GNU make, Visual Studio, etc.) for building LLVM.
 
-If **you are a new contributor**, please start with the :doc:`GettingStarted` 
-page.  This page is geared for existing contributors moving from the 
+If **you are a new contributor**, please start with the :doc:`GettingStarted`
+page.  This page is geared for existing contributors moving from the
 legacy configure/make system.
 
 If you are really anxious about getting a functional LLVM build, go to the
@@ -224,6 +224,10 @@ LLVM-specific variables
   Generate build targets for the LLVM tools. Defaults to ON. You can use this
   option to disable the generation of build targets for the LLVM tools.
 
+**LLVM_INSTALL_BINUTILS_SYMLINKS**:BOOL
+  Install symlinks from the binutils tool names to the corresponding LLVM tools.
+  For example, ar will be symlinked to llvm-ar.
+
 **LLVM_BUILD_EXAMPLES**:BOOL
   Build LLVM examples. Defaults to OFF. Targets for building each example are
   generated in any case. See documentation for *LLVM_BUILD_TOOLS* above for more
@@ -246,17 +250,28 @@ LLVM-specific variables
   this option to disable the generation of build targets for the LLVM unit
   tests.
 
+**LLVM_BUILD_BENCHMARKS**:BOOL
+  Adds benchmarks to the list of default targets. Defaults to OFF.
+
+**LLVM_INCLUDE_BENCHMARKS**:BOOL
+  Generate build targets for the LLVM benchmarks. Defaults to ON.
+
 **LLVM_APPEND_VC_REV**:BOOL
   Embed version control revision info (svn revision number or Git revision id).
-  This is used among other things in the LLVM version string (stored in the
-  PACKAGE_VERSION macro). For this to work cmake must be invoked before the
-  build. Defaults to ON.
+  The version info is provided by the ``LLVM_REVISION`` macro in
+  ``llvm/include/llvm/Support/VCSRevision.h``. Developers using git who don't
+  need revision info can disable this option to avoid re-linking most binaries
+  after a branch switch. Defaults to ON.
 
 **LLVM_ENABLE_THREADS**:BOOL
   Build with threads support, if available. Defaults to ON.
 
-**LLVM_ENABLE_CXX1Y**:BOOL
-  Build in C++1y mode, if available. Defaults to OFF.
+**LLVM_ENABLE_UNWIND_TABLES**:BOOL
+  Enable unwind tables in the binary.  Disabling unwind tables can reduce the
+  size of the libraries.  Defaults to ON.
+
+**LLVM_CXX_STD**:STRING
+  Build with the specified C++ standard. Defaults to "c++11".
 
 **LLVM_ENABLE_ASSERTIONS**:BOOL
   Enables code assertions. Defaults to ON if and only if ``CMAKE_BUILD_TYPE``
@@ -269,6 +284,15 @@ LLVM-specific variables
 
 **LLVM_ENABLE_EXPENSIVE_CHECKS**:BOOL
   Enable additional time/memory expensive checking. Defaults to OFF.
+
+**LLVM_ENABLE_IDE**:BOOL
+  Tell the build system that an IDE is being used. This in turn disables the
+  creation of certain convenience build system targets, such as the various
+  ``install-*`` and ``check-*`` targets, since IDEs don't always deal well with
+  a large number of targets. This is usually autodetected, but it can be
+  configured manually to explicitly control the generation of those targets. One
+  scenario where a manual override may be desirable is when using Visual Studio
+  2017's CMake integration, which would not be detected as an IDE otherwise.
 
 **LLVM_ENABLE_PIC**:BOOL
   Add the ``-fPIC`` flag to the compiler command-line, if the compiler supports
@@ -365,6 +389,14 @@ LLVM-specific variables
 **LLVM_USE_INTEL_JITEVENTS**:BOOL
   Enable building support for Intel JIT Events API. Defaults to OFF.
 
+**LLVM_ENABLE_LIBPFM**:BOOL
+  Enable building with libpfm to support hardware counter measurements in LLVM
+  tools.
+  Defaults to ON.
+
+  **LLVM_USE_PERF**:BOOL
+  Enable building support for Perf (linux profiling tool) JIT support. Defaults to OFF.
+
 **LLVM_ENABLE_ZLIB**:BOOL
   Enable building with zlib to support compression/uncompression in LLVM tools.
   Defaults to ON.
@@ -404,10 +436,10 @@ LLVM-specific variables
 **LLVM_BUILD_DOCS**:BOOL
   Adds all *enabled* documentation targets (i.e. Doxgyen and Sphinx targets) as
   dependencies of the default build targets.  This results in all of the (enabled)
-  documentation targets being as part of a normal build.  If the ``install`` 
-  target is run then this also enables all built documentation targets to be 
-  installed. Defaults to OFF.  To enable a particular documentation target, see 
-  see LLVM_ENABLE_SPHINX and LLVM_ENABLE_DOXYGEN.  
+  documentation targets being as part of a normal build.  If the ``install``
+  target is run then this also enables all built documentation targets to be
+  installed. Defaults to OFF.  To enable a particular documentation target, see
+  see LLVM_ENABLE_SPHINX and LLVM_ENABLE_DOXYGEN.
 
 **LLVM_ENABLE_DOXYGEN**:BOOL
   Enables the generation of browsable HTML documentation using doxygen.
@@ -501,10 +533,10 @@ LLVM-specific variables
   `share/doc/llvm/ocaml-html`.
 
 **LLVM_CREATE_XCODE_TOOLCHAIN**:BOOL
-  OS X Only: If enabled CMake will generate a target named
+  macOS Only: If enabled CMake will generate a target named
   'install-xcode-toolchain'. This target will create a directory at
   $CMAKE_INSTALL_PREFIX/Toolchains containing an xctoolchain directory which can
-  be used to override the default system tools. 
+  be used to override the default system tools.
 
 **LLVM_BUILD_LLVM_DYLIB**:BOOL
   If enabled, the target for building the libLLVM shared library is added.
@@ -525,7 +557,7 @@ LLVM-specific variables
   library (ON) or as a static library (OFF). Its default value is OFF. On
   Windows, shared libraries may be used when building with MinGW, including
   mingw-w64, but not when building with the Microsoft toolchain.
- 
+
   .. note:: BUILD_SHARED_LIBS is only recommended for use by LLVM developers.
             If you want to build LLVM as a shared library, you should use the
             ``LLVM_BUILD_LLVM_DYLIB`` option.
@@ -540,6 +572,34 @@ LLVM-specific variables
   If enabled, all supported unordered llvm containers would be iterated in
   reverse order. This is useful for uncovering non-determinism caused by
   iteration of unordered containers.
+
+**LLVM_BUILD_INSTRUMENTED_COVERAGE**:BOOL
+  If enabled, `source-based code coverage
+  <http://clang.llvm.org/docs/SourceBasedCodeCoverage.html>`_ instrumentation
+  is enabled while building llvm.
+
+**LLVM_CCACHE_BUILD**:BOOL
+  If enabled and the ``ccache`` program is available, then LLVM will be
+  built using ``ccache`` to speed up rebuilds of LLVM and its components.
+  Defaults to OFF.  The size and location of the cache maintained
+  by ``ccache`` can be adjusted via the LLVM_CCACHE_MAXSIZE and LLVM_CCACHE_DIR
+  options, which are passed to the CCACHE_MAXSIZE and CCACHE_DIR environment
+  variables, respectively.
+
+**LLVM_FORCE_USE_OLD_TOOLCHAIN**:BOOL
+  If enabled, the compiler and standard library versions won't be checked. LLVM
+  may not compile at all, or might fail at runtime due to known bugs in these
+  toolchains.
+
+**LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN**:BOOL
+  If enabled, the compiler version check will only warn when using a toolchain
+  which is about to be deprecated, instead of emitting an error.
+
+**LLVM_USE_NEWPM**:BOOL
+  If enabled, use the experimental new pass manager.
+
+**LLVM_ENABLE_BINDINGS**:BOOL
+  If disabled, do not try to build the OCaml and go bindings.
 
 CMake Caches
 ============
@@ -576,8 +636,8 @@ A few notes about CMake Caches:
 For more information about some of the advanced build configurations supported
 via Cache files see :doc:`AdvancedBuilds`.
 
-Executing the test suite
-========================
+Executing the Tests
+===================
 
 Testing is performed when the *check-all* target is built. For instance, if you are
 using Makefiles, execute this command in the root of your build directory:
@@ -605,10 +665,10 @@ cross-compiling.
 Embedding LLVM in your project
 ==============================
 
-From LLVM 3.5 onwards both the CMake and autoconf/Makefile build systems export
-LLVM libraries as importable CMake targets. This means that clients of LLVM can
-now reliably use CMake to develop their own LLVM-based projects against an
-installed version of LLVM regardless of how it was built.
+From LLVM 3.5 onwards the CMake build system exports LLVM libraries as
+importable CMake targets. This means that clients of LLVM can now reliably use
+CMake to develop their own LLVM-based projects against an installed version of
+LLVM regardless of how it was built.
 
 Here is a simple example of a CMakeLists.txt file that imports the LLVM libraries
 and uses them to build a simple application ``simple-tool``.
@@ -742,7 +802,7 @@ Contents of ``<project dir>/<pass name>/CMakeLists.txt``:
 
 Note if you intend for this pass to be merged into the LLVM source tree at some
 point in the future it might make more sense to use LLVM's internal
-``add_llvm_loadable_module`` function instead by...
+``add_llvm_library`` function with the MODULE argument instead by...
 
 
 Adding the following to ``<project dir>/CMakeLists.txt`` (after
@@ -757,7 +817,7 @@ And then changing ``<project dir>/<pass name>/CMakeLists.txt`` to
 
 .. code-block:: cmake
 
-  add_llvm_loadable_module(LLVMPassname
+  add_llvm_library(LLVMPassname MODULE
     Pass.cpp
     )
 

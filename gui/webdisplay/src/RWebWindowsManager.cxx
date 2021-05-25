@@ -1,46 +1,59 @@
-/// \file RWebWindowsManager.cxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2017-10-16
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <s.linev@gsi.de>
+// Date: 2017-10-16
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RWebWindowsManager.hxx"
+#include <ROOT/RWebWindowsManager.hxx>
 
-#include <ROOT/TLogger.hxx>
+#include <ROOT/RLogger.hxx>
+#include <ROOT/RWebDisplayArgs.hxx>
+#include <ROOT/RWebDisplayHandle.hxx>
 
-#include "THttpServer.h"
 #include "RWebWindowWSHandler.hxx"
 
-#include "RConfigure.h"
+#include "THttpServer.h"
+
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TString.h"
 #include "TApplication.h"
 #include "TTimer.h"
-#include "TObjArray.h"
 #include "TROOT.h"
 #include "TEnv.h"
 
 #include <thread>
 #include <chrono>
 
-#if !defined(_MSC_VER)
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <spawn.h>
-#else
-#include <process.h>
-#endif
+using namespace ROOT::Experimental;
+
+
+
+///////////////////////////////////////////////////////////////
+/// Parse boolean gEnv variable which should be "yes" or "no"
+/// Returns -1 if not defined
+/// Returns true or false
+
+int RWebWindowWSHandler::GetBoolEnv(const std::string &name, int dflt)
+{
+   const char *undef = "<undefined>";
+   const char *value = gEnv->GetValue(name.c_str(), undef);
+   if (!value) return dflt;
+   std::string svalue = value;
+   if (svalue == undef) return dflt;
+
+   if (svalue == "yes") return 1;
+   if (svalue == "no") return 0;
+
+   R__LOG_ERROR(WebGUILog()) << name << " has to be yes or no";
+   return dflt;
+}
 
 
 /** \class ROOT::Experimental::RWebWindowsManager
@@ -58,9 +71,9 @@ Method RWebWindowsManager::Show() used to show window in specified location.
 /// Returns default window manager
 /// Used to display all standard ROOT elements like TCanvas or TFitPanel
 
-std::shared_ptr<ROOT::Experimental::RWebWindowsManager> &ROOT::Experimental::RWebWindowsManager::Instance()
+std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 {
-   static std::shared_ptr<RWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::RWebWindowsManager>();
+   static std::shared_ptr<RWebWindowsManager> sInstance = std::make_shared<RWebWindowsManager>();
    return sInstance;
 }
 
@@ -77,26 +90,44 @@ static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
 /// Main process recognized at the moment when library is loaded
+/// It supposed to be a thread where gApplication->Run() will be called
+/// If application runs in separate thread, one have to use AssignMainThrd() method
+/// to let RWebWindowsManager correctly recognize such situation
 
-bool ROOT::Experimental::RWebWindowsManager::IsMainThrd()
+bool RWebWindowsManager::IsMainThrd()
 {
    return std::this_thread::get_id() == gWebWinMainThrd;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Re-assigns main thread id
+/// Normally main thread id recognized at the moment when library is loaded
+/// It supposed to be a thread where gApplication->Run() will be called
+/// If application runs in separate thread, one have to call this method
+/// to let RWebWindowsManager correctly recognize such situation
+
+void RWebWindowsManager::AssignMainThrd()
+{
+   gWebWinMainThrd = std::this_thread::get_id();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-ROOT::Experimental::RWebWindowsManager::RWebWindowsManager() = default;
+RWebWindowsManager::RWebWindowsManager() = default;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager destructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
+RWebWindowsManager::~RWebWindowsManager()
 {
-   if (gApplication && fServer && !fServer->IsTerminated())
-      gApplication->Disconnect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
+   if (gApplication && fServer && !fServer->IsTerminated()) {
+      gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
+      fServer->SetTerminate();
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +158,16 @@ ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
 ///
+/// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
+/// One may decrease value to improve latency or increase to minimize CPU load
+///
+///      WebGui.HttpTimer: 10
+///
+/// To processing incoming http requests and websockets, THttpServer allocate 10 threads
+/// One have to increase this number if more simultaneous connections are expected:
+///
+///      WebGui.HttpThrds: 10
+///
 /// One also can configure usage of special thread of processing of http server requests
 ///
 ///      WebGui.HttpThrd: no
@@ -139,11 +180,35 @@ ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
 ///
 ///      WebGui.HttpWSTmout: 10000
 ///
+/// By default, THttpServer created in restricted mode which only allows websocket handlers
+/// and processes only very few other related http requests. For security reasons such mode
+/// should be always enabled. Only if it is really necessary to process all other kinds
+/// of HTTP requests, one could specify no for following parameter (default yes):
+///
+///      WebGui.WSOnly: yes
+///
+/// In some applications one may need to force longpoll websocket emulations from the beginning,
+/// for instance when clients connected via proxys. Although JSROOT should automatically fallback
+/// to longpoll engine, one can configure this directly (default no)
+///
+///      WebGui.WSLongpoll: no
+///
 /// Following parameter controls browser max-age caching parameter for files (default 3600)
 ///
 ///      WebGui.HttpMaxAge: 3600
+///
+/// One also can configure usage of FastCGI server for web windows:
+///
+///      WebGui.FastCgiPort: 4000
+///      WebGui.FastCgiThreads: 10
+///
+/// To be able start web browser for such windows, one can provide real URL of the
+/// web server which will connect with that FastCGI instance:
+///
+///      WebGui.FastCgiServer: https://your_apache_server.com/root_cgi_path
+///
 
-bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
+bool RWebWindowsManager::CreateServer(bool with_http)
 {
    // explicitly protect server creation
    std::lock_guard<std::recursive_mutex> grd(fMutex);
@@ -152,97 +217,130 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
 
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
-      const char *serv_thrd = gEnv->GetValue("WebGui.HttpThrd", "");
-      if (serv_thrd && strstr(serv_thrd, "yes"))
-         fUseHttpThrd = true;
-      else if (serv_thrd && strstr(serv_thrd, "no"))
-         fUseHttpThrd = false;
+      auto serv_thrd = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpThrd");
+      if (serv_thrd != -1)
+         fUseHttpThrd = serv_thrd != 0;
 
-      const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
-      if (send_thrds && *send_thrds) {
-         if (strstr(send_thrds, "yes"))
-            fUseSenderThreads = true;
-         else if (strstr(send_thrds, "no"))
-            fUseSenderThreads = false;
-         else
-            R__ERROR_HERE("WebDisplay") << "WebGui.SenderThrds has to be yes or no";
-      }
+      auto send_thrds = RWebWindowWSHandler::GetBoolEnv("WebGui.SenderThrds");
+      if (send_thrds != -1)
+         fUseSenderThreads = send_thrds != 0;
 
       if (IsUseHttpThread())
          fServer->CreateServerThread();
 
       if (gApplication)
          gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
+
+      fServer->SetWSOnly(RWebWindowWSHandler::GetBoolEnv("WebGui.WSOnly", 1) != 0);
+
+      // this is location where all ROOT UI5 sources are collected
+      // normally it is $ROOTSYS/ui5 or <prefix>/ui5 location
+      TString ui5dir = gSystem->Getenv("ROOTUI5SYS");
+      if (ui5dir.Length() == 0)
+         ui5dir = gEnv->GetValue("WebGui.RootUi5Path","");
+
+      if (ui5dir.Length() == 0)
+         ui5dir.Form("%s/ui5", TROOT::GetDataDir().Data());
+
+      if (gSystem->ExpandPathName(ui5dir)) {
+         R__LOG_ERROR(WebGUILog()) << "Path to ROOT ui5 sources " << ui5dir << " not found, set ROOTUI5SYS correctly";
+         ui5dir = ".";
+      }
+
+      fServer->AddLocation("rootui5sys/", ui5dir.Data());
    }
 
-   if (!with_http || !fAddr.empty())
+   if (!with_http || fServer->IsAnyEngine())
       return true;
 
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
+   int http_timer = gEnv->GetValue("WebGui.HttpTimer", 10);
+   int http_thrds = gEnv->GetValue("WebGui.HttpThreads", 10);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
+   int fcgi_port = gEnv->GetValue("WebGui.FastCgiPort", 0);
+   int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
+   const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
-   const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
+   bool assign_loopback = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 0) == 1;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
-   const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
+   bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
-   bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
-   bool use_secure = http_ssl && strstr(http_ssl, "yes");
    int ntry = 100;
 
-   if (http_port < 0) {
-      R__ERROR_HERE("WebDisplay") << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
+   if ((http_port < 0) && (fcgi_port <= 0)) {
+      R__LOG_ERROR(WebGUILog()) << "Not allowed to create HTTP server, check WebGui.HttpPort variable";
       return false;
    }
 
-   if (!http_port)
-      gRandom->SetSeed(0);
+   if ((http_timer > 0) && !IsUseHttpThread())
+      fServer->SetTimer(http_timer);
 
-   if (http_max - http_min < ntry)
-      ntry = http_max - http_min;
+   if (http_port < 0) {
+      ntry = 0;
+   } else {
+
+      if (http_port == 0)
+         gRandom->SetSeed(0);
+
+      if (http_max - http_min < ntry)
+         ntry = http_max - http_min;
+   }
+
+   if (fcgi_port > 0)
+      ntry++;
 
    while (ntry-- >= 0) {
-      if (!http_port) {
+      if ((http_port == 0) && (fcgi_port <= 0)) {
          if ((http_min <= 0) || (http_max <= http_min)) {
-            R__ERROR_HERE("WebDisplay") << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
+            R__LOG_ERROR(WebGUILog()) << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
             return false;
          }
 
          http_port = (int)(http_min + (http_max - http_min) * gRandom->Rndm(1));
       }
 
-      TString engine, url(use_secure ? "https://" : "http://");
-      engine.Form("%s:%d?websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_wstmout);
-      if (assign_loopback) {
-         engine.Append("&loopback");
-         url.Append("localhost");
-      } else if (http_bind && (strlen(http_bind) > 0)) {
-         engine.Append("&bind=");
-         engine.Append(http_bind);
-         url.Append(http_bind);
-      } else {
-         url.Append("localhost");
+      TString engine, url;
+
+      if (fcgi_port > 0) {
+         engine.Form("fastcgi:%d?thrds=%d", fcgi_port, fcgi_thrds);
+         if (!fServer->CreateEngine(engine)) return false;
+         if (fcgi_serv && (strlen(fcgi_serv) > 0)) fAddr = fcgi_serv;
+         if (http_port < 0) return true;
+         fcgi_port = 0;
+      } else if (http_port > 0) {
+         url = use_secure ? "https://" : "http://";
+         engine.Form("%s:%d?thrds=%d&websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_thrds, http_wstmout);
+         if (assign_loopback) {
+            engine.Append("&loopback");
+            url.Append("localhost");
+         } else if (http_bind && (strlen(http_bind) > 0)) {
+            engine.Append("&bind=");
+            engine.Append(http_bind);
+            url.Append(http_bind);
+         } else {
+            url.Append("localhost");
+         }
+
+         if (http_maxage >= 0)
+            engine.Append(TString::Format("&max_age=%d", http_maxage));
+
+         if (use_secure) {
+            engine.Append("&ssl_cert=");
+            engine.Append(ssl_cert);
+         }
+
+         if (fServer->CreateEngine(engine)) {
+            fAddr = url.Data();
+            fAddr.append(":");
+            fAddr.append(std::to_string(http_port));
+            return true;
+         }
+         http_port = 0;
       }
-
-      if (http_maxage >= 0)
-         engine.Append(TString::Format("&max_age=%d", http_maxage));
-
-      if (use_secure) {
-         engine.Append("&ssl_cert=");
-         engine.Append(ssl_cert);
-      }
-
-      if (fServer->CreateEngine(engine)) {
-         fAddr = url.Data();
-         fAddr.append(":");
-         fAddr.append(std::to_string(http_port));
-         return true;
-      }
-
-      http_port = 0;
    }
 
    return false;
@@ -252,27 +350,45 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
 /// Creates new window
 /// To show window, RWebWindow::Show() have to be called
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsManager::CreateWindow()
+std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
 {
 
    // we book manager mutex for a longer operation, locked again in server creation
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!CreateServer()) {
-      R__ERROR_HERE("WebDisplay") << "Cannot create server when creating window";
+      R__LOG_ERROR(WebGUILog()) << "Cannot create server when creating window";
       return nullptr;
    }
 
-   std::shared_ptr<ROOT::Experimental::RWebWindow> win = std::make_shared<ROOT::Experimental::RWebWindow>();
+   std::shared_ptr<RWebWindow> win = std::make_shared<RWebWindow>();
 
    if (!win) {
-      R__ERROR_HERE("WebDisplay") << "Fail to create RWebWindow instance";
+      R__LOG_ERROR(WebGUILog()) << "Fail to create RWebWindow instance";
       return nullptr;
    }
 
    double dflt_tmout = gEnv->GetValue("WebGui.OperationTmout", 50.);
 
    auto wshandler = win->CreateWSHandler(Instance(), ++fIdCnt, dflt_tmout);
+
+   if (gEnv->GetValue("WebGui.RecordData", 0) > 0) {
+      std::string fname, prefix;
+      if (fIdCnt > 1) {
+         prefix = std::string("f") + std::to_string(fIdCnt) + "_";
+         fname = std::string("protcol") + std::to_string(fIdCnt) + ".json";
+      } else {
+         fname = "protocol.json";
+      }
+      win->RecordData(fname, prefix);
+   }
+
+   if (IsUseHttpThread())
+      win->UseServerThreads();
+
+   const char *token = gEnv->GetValue("WebGui.ConnToken", "");
+   if (token && *token)
+      win->SetConnToken(token);
 
    fServer->RegisterWS(wshandler);
 
@@ -283,7 +399,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsM
 /// Release all references to specified window
 /// Called from RWebWindow destructor
 
-void ROOT::Experimental::RWebWindowsManager::Unregister(ROOT::Experimental::RWebWindow &win)
+void RWebWindowsManager::Unregister(RWebWindow &win)
 {
    if (win.fWSHandler)
       fServer->UnregisterWS(win.fWSHandler);
@@ -292,10 +408,10 @@ void ROOT::Experimental::RWebWindowsManager::Unregister(ROOT::Experimental::RWeb
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimental::RWebWindow &win, bool batch_mode, bool remote)
+std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 {
    if (!fServer) {
-      R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
+      R__LOG_ERROR(WebGUILog()) << "Server instance not exists when requesting window URL";
       return "";
    }
 
@@ -303,14 +419,11 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 
    addr.append(win.fWSHandler->GetName());
 
-   if (batch_mode)
-      addr.append("/?batch_mode");
-   else
-      addr.append("/");
+   addr.append("/");
 
    if (remote) {
       if (!CreateServer(true)) {
-         R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server when requesting URL";
+         R__LOG_ERROR(WebGUILog()) << "Fail to start real HTTP server when requesting URL";
          return "";
       }
 
@@ -321,33 +434,16 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// checks if provided executable exists
-
-void ROOT::Experimental::RWebWindowsManager::TestProg(TString &prog, const std::string &nexttry)
-{
-   if ((prog.Length()==0) && !nexttry.empty())
-      if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission))
-          prog = nexttry.c_str();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Show window in specified location
-/// Parameter "where" specifies that kind of window display should be used. Possible values:
+/// Show web window in specified location.
 ///
-///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
-///  firefox - use Mozilla Firefox browser, supports headless mode from v57
-///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
-///  browser - default system web-browser, no batch mode
-///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 WebEngine, local display, local communication
-///    local - either cef or qt5
-///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
-///            one could use following parameters:
-///                  $url - URL address of the widget
-///                $width - widget width
-///               $height - widget height
+/// \param user_args specifies where and how display web window
+///
+/// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
+/// See RWebDisplayArgs::SetBrowserKind() for all available options. Default value for the browser can be configured
+/// when starting root with --web argument like: "root --web=chrome"
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
+///
 ///  Following parameters can be configured in rootrc file:
 ///
 ///   WebGui.Chrome:  full path to Google Chrome executable
@@ -361,413 +457,91 @@ void ROOT::Experimental::RWebWindowsManager::TestProg(TString &prog, const std::
 ///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
+///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
+///   WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
+///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
+///   WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
+///   WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
+///   WebGui.openui5src:   alternative location for openui5 like https://openui5.hana.ondemand.com/
+///   WebGui.openui5libs:  list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
+///   WebGui.openui5theme:  openui5 theme like sap_belize (default) or sap_fiori_3
 ///
-///   Http-server related parameters documented in RWebWindowsManager::CreateServer() method
+///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
-unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWindow &win, bool batch_mode, const std::string &_where)
+unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &user_args)
 {
-
    // silently ignore regular Show() calls in batch mode
-   if (!batch_mode && gROOT->IsWebDisplayBatch())
+   if (!user_args.IsHeadless() && gROOT->IsWebDisplayBatch())
       return 0;
+
+   // for embedded window no any browser need to be started
+   if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
+      return 0;
+
+   // place here while involves conn mutex
+   auto token = win.GetConnToken();
 
    // we book manager mutex for a longer operation,
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!fServer) {
-      R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
+      R__LOG_ERROR(WebGUILog()) << "Server instance not exists to show window";
       return 0;
    }
 
    std::string key;
-   std::string rmdir;
    int ntry = 100000;
 
    do {
       key = std::to_string(gRandom->Integer(0x100000));
    } while ((--ntry > 0) && win.HasKey(key));
    if (ntry == 0) {
-      R__ERROR_HERE("WebDisplay") << "Fail to create unique key for the window";
+      R__LOG_ERROR(WebGUILog()) << "Fail to create unique key for the window";
       return 0;
    }
 
-   std::string addr = GetUrl(win, batch_mode, false);
-   if (addr.find("?") != std::string::npos)
-      addr.append("&key=");
-   else
-      addr.append("?key=");
-   addr.append(key);
+   RWebDisplayArgs args(user_args);
 
-   std::string where = _where;
-   if (where.empty())
-      where = gROOT->GetWebDisplay().Data();
-
-   enum { kCustom, kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kCustom;
-
-   if (where == "local")
-      kind = kLocal;
-   else if (where.empty() || (where == "native"))
-      kind = kNative;
-   else if (where == "firefox")
-      kind = kFirefox;
-   else if ((where == "chrome") || (where == "chromium"))
-      kind = kChrome;
-   else if (where == "cef")
-      kind = kCEF;
-   else if (where == "qt5")
-      kind = kQt5;
-   else
-      kind = kCustom; // all others kinds, normally name of alternative web browser
-
-#ifdef R__HAS_CEFWEB
-
-   const char *cef_path = gSystem->Getenv("CEF_PATH");
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && ((kind == kLocal) || (kind == kCEF))) {
-
-      Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
-
-      if (!symbol_cef) {
-         gSystem->Load("libROOTCefDisplay");
-         // TODO: make minimal C++ interface here
-         symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
-      }
-
-      if (symbol_cef) {
-
-         if (batch_mode) {
-            const char *displ = gSystem->Getenv("DISPLAY");
-            if (!displ || !*displ) {
-                R__ERROR_HERE("WebDisplay") << "To use CEF in batch mode DISPLAY variable should be set."
-                                               " See gui/cefdisplay/Readme.md for more info";
-                return 0;
-             }
-         }
-
-         typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
-         R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
-         FunctionCef3 func = (FunctionCef3)symbol_cef;
-         func(addr.c_str(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
-         return win.AddProcId(batch_mode, key, "cef");
-      }
-
-      if (kind == kCEF) {
-         R__ERROR_HERE("WebDisplay") << "CEF libraries not found";
-         return 0;
-      }
-   }
-#endif
-
-#ifdef R__HAS_QT5WEB
-
-   if ((kind == kLocal) || (kind == kQt5)) {
-      Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-
-      if (!symbol_qt5) {
-         gSystem->Load("libROOTQt5WebDisplay");
-         symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-      }
-      if (symbol_qt5) {
-         if (batch_mode) {
-            R__ERROR_HERE("WebDisplay") << "Qt5 does not support batch mode";
-            return 0;
-         }
-         typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
-         R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
-         FunctionQt5 func = (FunctionQt5)symbol_qt5;
-         func(addr.c_str(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
-         return win.AddProcId(batch_mode, key, "qt5");
-      }
-      if (kind == kQt5) {
-         R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
-         return 0;
-      }
-   }
-#endif
-
-   if ((kind == kLocal) || (kind == kQt5) || (kind == kCEF)) {
-      R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
+   if (args.IsHeadless() && !args.IsSupportHeadless()) {
+      R__LOG_ERROR(WebGUILog()) << "Cannot use batch mode with " << args.GetBrowserName();
       return 0;
    }
 
-#ifdef _MSC_VER
-   std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
-   size_t pos = ProgramFiles.find(" (x86)");
-   if (pos != std::string::npos)
-      ProgramFiles.erase(pos, 6);
-   std::string ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
-#endif
+   if (args.GetWidth() <= 0) args.SetWidth(win.GetWidth());
+   if (args.GetHeight() <= 0) args.SetHeight(win.GetHeight());
 
-   TString exec;
+   bool normal_http = !args.IsLocalDisplay();
+   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp",0) == 1))
+      normal_http = true;
 
-   std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
-   std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
-   TString prog;
-
-   if ((kind == kNative) || (kind == kChrome)) {
-      // see https://peter.sh/experiments/chromium-command-line-switches/
-
-      TestProg(prog, gEnv->GetValue("WebGui.Chrome", ""));
-
-#ifdef _MSC_VER
-      std::string fullpath;
-      if (!ProgramFiles.empty()){
-         fullpath = ProgramFiles + "\\Google\\Chrome\\Application\\chrome.exe";
-         TestProg(prog, fullpath);
-      }
-      if (!ProgramFilesx86.empty()) {
-         fullpath = ProgramFilesx86 + "\\Google\\Chrome\\Application\\chrome.exe";
-         TestProg(prog, fullpath);
-      }
-#endif
-#ifdef R__MACOSX
-      prog.ReplaceAll("%20"," ");
-      TestProg(prog, "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
-#endif
-#ifdef R__LINUX
-      TestProg(prog, "/usr/bin/chromium");
-      TestProg(prog, "/usr/bin/chromium-browser");
-      TestProg(prog, "/usr/bin/chrome-browser");
-#endif
-      if (prog.Length() > 0)
-         kind = kChrome;
-#ifdef _MSC_VER
-      if (batch_mode)
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $url");
-      else
-         exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
-#else
-      if (batch_mode)
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless $url");
-      else
-         exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
-#endif
+   std::string url = GetUrl(win, normal_http);
+   if (url.empty()) {
+      R__LOG_ERROR(WebGUILog()) << "Cannot create URL for the window";
+      return 0;
    }
-
-   if ((kind == kFirefox) || ((kind == kNative) && (kind != kChrome))) {
-      // to use firefox in batch mode at the same time as other firefox is running,
-      // one should use extra profile. This profile should be created first:
-      //    firefox -no-remote -CreateProfile root_batch
-      // And then in the start command one should add:
-      //    $prog -headless -no-remote -P root_batch -window-size=$width,$height $url
-      // By default, no profile is specified, but this requires that no firefox is running
-
-      TestProg(prog, gEnv->GetValue("WebGui.Firefox", ""));
-
-#ifdef _MSC_VER
-      std::string fullpath;
-      if (!ProgramFiles.empty()) {
-         fullpath = ProgramFiles + "\\Mozilla Firefox\\firefox.exe";
-         TestProg(prog, fullpath);
-      }
-      if (!ProgramFilesx86.empty()) {
-         fullpath = ProgramFilesx86 + "\\Mozilla Firefox\\firefox.exe";
-         TestProg(prog, fullpath);
-      }
-#endif
-#ifdef R__MACOSX
-      prog.ReplaceAll("%20"," ");
-      TestProg(prog, "/Applications/Firefox.app/Contents/MacOS/firefox");
-#endif
-#ifdef R__LINUX
-      TestProg(prog, "/usr/bin/firefox");
-#endif
-
-      if (prog.Length() > 0)
-         kind = kFirefox;
-
-#ifdef _MSC_VER
-      if (batch_mode)
-         // there is a problem when specifying the window size with wmic on windows:
-         // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
-      else
-         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $profile $url");
-#else
-      if (batch_mode)
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $profile $url");
-      else
-         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
-#endif
-
-      if ((kind == kFirefox) && (exec.Index("$profile") != kNPOS)) {
-         TString profile_arg;
-
-         const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile","");
-         const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath","");
-         Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", 0);
-         if (ff_profile && *ff_profile) {
-            profile_arg.Form("-P %s", ff_profile);
-         } else if (ff_profilepath && *ff_profilepath) {
-            profile_arg.Form("-profile %s", ff_profilepath);
-         } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile>=0))) {
-
-            gRandom->SetSeed(0);
-
-            TString rnd_profile = TString::Format("root_ff_profile_%d", gRandom->Integer(0x100000));
-            TString profile_dir = TString::Format("%s/%s", gSystem->TempDirectory(), rnd_profile.Data());
-
-            profile_arg.Form("-profile %s", profile_dir.Data());
-            if (!batch_mode) profile_arg.Prepend("-no-remote ");
-
-            gSystem->Exec(Form("%s %s -no-remote -CreateProfile \"%s %s\"", prog.Data(), (batch_mode ? "-headless" : ""), rnd_profile.Data(), profile_dir.Data()));
-
-            rmdir = std::string("$rmdir$") + profile_dir.Data();
-         }
-
-         exec.ReplaceAll("$profile", profile_arg.Data());
-      }
-   }
-
-   if ((kind != kFirefox) && (kind != kChrome)) {
-      if (where == "native") {
-         R__ERROR_HERE("WebDisplay") << "Neither firefox nor chrome are detected for native display";
-         return 0;
-      }
-
-      if (batch_mode) {
-         R__ERROR_HERE("WebDisplay") << "To use batch mode 'chrome' or 'firefox' should be configured as output";
-         return 0;
-      }
-
-      if (kind != kNative) {
-         if (where.find("$") != std::string::npos) {
-            exec = where.c_str();
-         } else {
-            exec = "$prog $url &";
-            prog = where.c_str();
-         }
-      } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
-         exec = "open \'$url\'";
-      } else if (gSystem->InheritsFrom("TWinNTSystem")) {
-         exec = "start $url";
-      } else {
-         exec = "xdg-open \'$url\' &";
-      }
-   }
-
-   if (!CreateServer(true)) {
-      R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
+   if (normal_http && fAddr.empty()) {
+      R__LOG_WARNING(WebGUILog()) << "Full URL cannot be produced for window " << url << " to start web browser";
       return 0;
    }
 
-   addr = fAddr + addr;
+   args.SetUrl(url);
 
-   exec.ReplaceAll("$url", addr.c_str());
-   exec.ReplaceAll("$width", swidth.c_str());
-   exec.ReplaceAll("$height", sheight.c_str());
+   args.AppendUrlOpt(std::string("key=") + key);
+   if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
+   if (!token.empty())
+      args.AppendUrlOpt(std::string("token=") + token);
 
-   if (exec.Index("fork:") == 0) {
-      exec.Remove(0, 5);
-#if !defined(_MSC_VER)
+   if (!normal_http)
+      args.SetHttpServer(GetServer());
 
-      std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
-      if (!args || (args->GetLast()<=0)) {
-         R__ERROR_HERE("WebDisplay") << "Fork instruction is empty";
-         return 0;
-      }
+   auto handle = RWebDisplayHandle::Display(args);
 
-      std::vector<char *> argv;
-      argv.push_back((char *) prog.Data());
-      for (Int_t n = 0; n <= args->GetLast(); ++n)
-         argv.push_back((char *)args->At(n)->GetName());
-      argv.push_back(nullptr);
-
-      R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << prog << " " << exec;
-
-      pid_t pid;
-      int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
-      if (status != 0) {
-         R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
-         return 0;
-      }
-
-      return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
-
-#else
-      std::string tmp;
-      char c;
-      int pid;
-      if (prog.Length()) {
-         exec.Prepend(Form("wmic process call create \"%s", prog.Data()));
-      } else {
-         R__ERROR_HERE("WebDisplay") << "No Web browser found in Program Files!";
-         return false;
-      }
-      exec.Append("\" | find \"ProcessId\" ");
-      TString process_id(gSystem->GetFromPipe(exec.Data()));
-      std::stringstream ss(process_id.Data());
-      ss >> tmp >> c >> pid;
-      return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
-#endif
+   if (!handle) {
+      R__LOG_ERROR(WebGUILog()) << "Cannot display window in " << args.GetBrowserName();
+      return 0;
    }
 
-#ifdef R__MACOSX
-   prog.ReplaceAll(" ", "\\ ");
-#endif
-
-#ifdef _MSC_VER
-   std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
-   std::vector<char *> argv;
-   if (prog.EndsWith("chrome.exe"))
-      argv.push_back("chrome.exe");
-   else if (prog.EndsWith("firefox.exe"))
-      argv.push_back("firefox.exe");
-   for (Int_t n = 1; n <= args->GetLast(); ++n)
-      argv.push_back((char *)args->At(n)->GetName());
-   argv.push_back(nullptr);
-#endif
-
-   exec.ReplaceAll("$prog", prog.Data());
-
-   unsigned connid = win.AddProcId(batch_mode, key, where + rmdir); // for now just application name
-
-   R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
-
-#ifdef _MSC_VER
-   _spawnv(_P_NOWAIT, prog.Data(), argv.data());
-#else
-   gSystem->Exec(exec);
-#endif
-
-   return connid;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-/// When window connection is closed, correspondent browser application may need to be halted
-/// Process id produced by the Show() method
-
-void ROOT::Experimental::RWebWindowsManager::HaltClient(const std::string &procid)
-{
-   std::string arg = procid;
-   std::string tmpdir;
-
-   auto pos = arg.find("$rmdir$");
-   if (pos != std::string::npos) {
-      tmpdir = arg.substr(pos+7);
-      arg.resize(pos);
-   }
-
-   // kill program first
-   if (arg.find("pid:") == 0) {
-
-      int pid = std::stoi(arg.substr(4));
-
-#if !defined(_MSC_VER)
-      if (pid>0) kill(pid, SIGKILL);
-#else
-      if (pid > 0) gSystem->Exec(TString::Format("taskkill /F /PID %d", pid));
-#endif
-   }
-
-   // delete temporary directory at the end
-   if (!tmpdir.empty()) {
-#if !defined(_MSC_VER)
-      gSystem->Exec(TString::Format("rm -rf %s", tmpdir.c_str()));
-#else
-      gSystem->Exec(TString::Format("rmdir /S /Q %s", tmpdir.c_str()));
-#endif
-   }
+   return win.AddDisplayHandle(args.IsHeadless(), key, handle);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -780,7 +554,7 @@ void ROOT::Experimental::RWebWindowsManager::HaltClient(const std::string &proci
 /// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 /// If parameter timed is true, timelimit (in seconds) defines how long to wait
 
-int ROOT::Experimental::RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
+int RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
    int res = 0;
    int cnt = 0;
@@ -815,12 +589,11 @@ int ROOT::Experimental::RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWa
 //////////////////////////////////////////////////////////////////////////
 /// Terminate http server and ROOT application
 
-void ROOT::Experimental::RWebWindowsManager::Terminate()
+void RWebWindowsManager::Terminate()
 {
    if (fServer)
       fServer->SetTerminate();
 
-   // use timer to avoid situation when calling object is deleted by terminate
    if (gApplication)
-      TTimer::SingleShot(100, "TApplication", gApplication, "Terminate()");
+      TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");
 }

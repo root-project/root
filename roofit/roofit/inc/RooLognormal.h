@@ -38,7 +38,8 @@ protected:
   RooRealProxy k ;
 
   Double_t evaluate() const ;
-
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  
 private:
 
   ClassDef(RooLognormal,1) // log-normal PDF

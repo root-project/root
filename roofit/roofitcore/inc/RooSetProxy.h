@@ -16,45 +16,48 @@
 #ifndef ROO_SET_PROXY
 #define ROO_SET_PROXY
 
-#include "TObject.h"
 #include "RooAbsProxy.h"
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
 
-class RooSetProxy : public RooArgSet, public RooAbsProxy  {
+class RooSetProxy final : public RooArgSet, public RooAbsProxy  {
 public:
 
-#ifdef USEMEMPOOL
+#ifdef USEMEMPOOLFORARGSET
   void* operator new (size_t bytes);
   void operator delete (void *ptr);
 #endif
 
   // Constructors, assignment etc.
-  RooSetProxy() { 
-    // coverity[UNINIT_CTOR]
-    _iter = createIterator() ; _owner = 0 ; 
-  } ;
+  RooSetProxy() :
+  _owner{nullptr},
+  _defValueServer{false},
+  _defShapeServer{false} { }
+
   RooSetProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) ;
   virtual ~RooSetProxy() ;
 
-  virtual const char* name() const { return GetName() ; }
+  virtual const char* name() const override { return GetName() ; }
 
   // List content management (modified for server hooks)
-  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::add(list,silent) ; }
+  using RooAbsCollection::add;
+  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) override;
   virtual Bool_t add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent) ;
-  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
-  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::addOwned(list,silent) ; }
-  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE) { RooAbsCollection::addClone(list,silent) ; }
-  virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
-  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
-  Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
-  virtual void removeAll() ;
 
-  virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const ;
+  using RooAbsCollection::addOwned;
+  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
+
+  using RooAbsCollection::addClone;
+  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) override;
+
+  virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) override;
+  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) override;
+  Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
+  virtual void removeAll() override;
+
+  virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const override;
 
   RooSetProxy& operator=(const RooArgSet& other) ;
   
@@ -63,11 +66,10 @@ protected:
   RooAbsArg* _owner ;
   Bool_t _defValueServer ;
   Bool_t _defShapeServer ;
-  TIterator* _iter ; //! do not persist
 
-  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
+  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) override;
 
-  ClassDef(RooSetProxy,1) // Proxy class for a RooArgSet
+  ClassDefOverride(RooSetProxy,1) // Proxy class for a RooArgSet
 };
 
 #endif

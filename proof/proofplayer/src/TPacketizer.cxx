@@ -47,7 +47,6 @@ the remote machine, the locality of the database files, etc.
 #include "TUrl.h"
 #include "TClass.h"
 #include "TMath.h"
-#include "TObjString.h"
 
 //
 // The following three utility classes manage the state of the
@@ -350,7 +349,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4) &&
            strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
       } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {
@@ -495,7 +493,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4) &&
            strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
       } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {

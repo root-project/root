@@ -1122,6 +1122,70 @@ void print_mask_info(ULong_t mask)
 }
 #endif
 
+@implementation XorDrawingView
+{
+    std::vector<ROOT::MacOSX::X11::Command *> xorOps;
+}
+
+- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives
+{
+    xorOps = primitives;
+}
+
+- (void) drawRect : (NSRect) dirtyRect
+{
+    [super drawRect:dirtyRect];
+    NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+    if (!nsContext)
+        return;
+
+    CGContextRef cgContext = nsContext.CGContext;
+    if (!cgContext)
+        return;
+
+    const Quartz::CGStateGuard ctxGuard(cgContext);
+
+    CGContextSetRGBStrokeColor(cgContext, 0., 0., 0., 1.);
+    CGContextSetLineWidth(cgContext, 1.);
+
+    for (auto *command : xorOps) {
+        command->Execute(cgContext);
+        delete command;
+    }
+
+    xorOps.clear();
+}
+
+@end
+
+@implementation XorDrawingWindow
+
+- (instancetype) init
+{
+    if (self = [super init])
+    {
+        self.styleMask = NSWindowStyleMaskBorderless; // No titlebar, buttons, etc.
+        self.opaque = NO;
+        self.hasShadow = NO;
+        self.backgroundColor = NSColor.clearColor; // No background.
+        self.ignoresMouseEvents = YES; // Lets mouse events pass through.
+        self.contentView = [[XorDrawingView alloc] init];
+    }
+    return self;
+}
+
+#pragma mark - suppress the normal window behavior.
+- (BOOL)canBecomeKeyWindow
+{
+    return NO;
+}
+- (BOOL)canBecomeMainWindow
+{
+    return NO;
+}
+
+@end
+
 
 @implementation QuartzWindow
 
@@ -1432,6 +1496,59 @@ void print_mask_info(ULong_t mask)
 
    return [fContentView readColorBits : area];
 }
+
+#pragma mark - XorDrawinWindow/View
+
+//______________________________________________________________________________
+- (void) addXorWindow
+{
+    if ([self findXorWindow])
+        return;
+
+    XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
+    [self adjustXorWindowGeometry:special];
+    [self addChildWindow : special ordered : NSWindowAbove];
+    [special release];
+}
+
+//______________________________________________________________________________
+- (void) adjustXorWindowGeometry
+{
+    if (auto win = [self findXorWindow])
+        [self adjustXorWindowGeometry:win];
+}
+
+//______________________________________________________________________________
+- (void) adjustXorWindowGeometry : (XorDrawingWindow *) win
+{
+    assert(win && "invalid (nil) parameter 'win'");
+    auto frame = self.contentView.frame;
+    frame = [self convertRectToScreen:frame];
+    [win setFrame:frame display:NO];
+}
+
+//______________________________________________________________________________
+- (void) removeXorWindow
+{
+    if (auto win = [self findXorWindow]) {
+        // For some reason, without ordeing out, the crosshair window's content stays
+        // in the parent's window. Thus we first have to order out the crosshair window.
+        [win orderOut:nil];
+        [self removeChildWindow : win];
+    }
+}
+
+//______________________________________________________________________________
+- (XorDrawingWindow *) findXorWindow
+{
+    auto children = [self childWindows];
+    for (NSWindow *child in children) {
+        if ([child isKindOfClass : XorDrawingWindow.class])
+            return (XorDrawingWindow *)child;
+    }
+    return nil;
+}
+
 
 #pragma mark - X11Window protocol's implementation.
 
@@ -2729,23 +2846,25 @@ void print_mask_info(ULong_t mask)
          if (fEventMask & kExposureMask) {
             if (ViewIsTextView(self)) {
                //Send Expose event, using child view (this is how it's done in GUI :( ).
+               [NSColor.whiteColor setFill];
+               NSRectFill(dirtyRect);
                NSView<X11Window> * const viewFrame = FrameForTextView(self);
                if (viewFrame)//Now we set fExposedRegion for TGView.
-                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, viewFrame.visibleRect);
             }
 
             if (ViewIsHtmlView(self)) {
                NSView<X11Window> *const viewFrame = FrameForHtmlView(self);
                if (viewFrame)
-                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, viewFrame.visibleRect);
             }
 
             //Ask ROOT's widget/window to draw itself.
             gClient->NeedRedraw(window, kTRUE);
 
-            if (!fSnapshotDraw && !ViewIsTextView(self) && !ViewIsHtmlView(self)) {
+            if (!fSnapshotDraw) {
                //If Cocoa repaints widget, cancel all ROOT's "outside of paint event"
-               //rendering into this widget ... Except it's a text view :)
+               //rendering into this widget.
                gClient->CancelRedraw(window);
                vx->GetCommandBuffer()->RemoveGraphicsOperationsForWindow(fID);
             }

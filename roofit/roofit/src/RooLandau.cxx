@@ -17,19 +17,17 @@
 /** \class RooLandau
     \ingroup Roofit
 
-Landau Distribution p.d.f
+Landau distribution p.d.f
+\image html RF_Landau.png "PDF of the Landau distribution."
 **/
 
-#include "TMath.h"
+#include "RooLandau.h"
+#include "RooHelpers.h"
 #include "RooFit.h"
-
-#include "RooLandau.h"
-#include "RooLandau.h"
 #include "RooRandom.h"
+#include "RooBatchCompute.h"
 
-#include "TError.h"
-
-using namespace std;
+#include "TMath.h"
 
 ClassImp(RooLandau);
 
@@ -41,6 +39,7 @@ RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbs
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma)
 {
+  RooHelpers::checkRangeOfParameters(this, {&_sigma}, 0.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +60,12 @@ Double_t RooLandau::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Landau distribution.  
+RooSpan<double> RooLandau::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeLandau(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
@@ -72,7 +77,7 @@ Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 
 void RooLandau::generateEvent(Int_t code)
 {
-  R__ASSERT(code==1) ;
+  assert(1 == code); (void)code;
   Double_t xgen ;
   while(1) {
     xgen = RooRandom::randomGenerator()->Landau(mean,sigma);

@@ -85,6 +85,7 @@ weighted histograms (because the likelihood computation will be incorrect).
 #include "Fit/Fitter.h"
 #include "TFitResult.h"
 #include "Math/Functor.h"
+#include "Math/WrappedMultiTF1.h"
 
 #include <limits>
 
@@ -248,18 +249,24 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
       Double_t plow, pup;
       f1->GetParLimits(i,plow,pup);
-      if (plow*pup != 0 && plow >= pup) { // this is a limitation - cannot fix a parameter to zero value
+      // when a parameter is fixed is having plow and pup equal to the value (if this is not zero)
+      // we handle special case when fixed parameter has zero value (in that case plow=1 and pup =1 )
+      if (plow >= pup && (plow==f1->GetParameter(i) || pup==f1->GetParameter(i) ||
+      ( f1->GetParameter(i) == 0 && plow==1. && pup == 1.) ) ) {
          parameters.back().Fix();
-      }
-      else if (plow < pup ) {
+         Info("Fit", "Fixing parameter %s to value %f", f1->GetParName(i), f1->GetParameter(i));
+      } else if (plow < pup) {
          parameters.back().SetLimits(plow,pup);
+         Info("Fit", "Setting limits for parameter %s to [%f,%f]", f1->GetParName(i), plow,pup);
       }
    }
 
    // fcn must be set after setting the parameters
    ROOT::Math::Functor fcnFunction(this, &TBinomialEfficiencyFitter::EvaluateFCN, npar);
-   fFitter->SetFCN(static_cast<ROOT::Math::IMultiGenFunction&>(fcnFunction));
 
+   // set also model function in fitter to have it in FitResult
+   // in this way one can compute for example the confidence intervals
+   fFitter->SetFCN(static_cast<ROOT::Math::IMultiGenFunction &>(fcnFunction), ROOT::Math::WrappedMultiTF1(*f1));
 
    // in case default value of 1.0 is used
    if (fFitter->Config().MinimizerOptions().ErrorDef() == 1.0 ) {
@@ -272,8 +279,6 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    else if (quiet) {
       fFitter->Config().MinimizerOptions().SetPrintLevel(0);
    }
-
-
 
    // perform the actual fit
 
@@ -448,4 +453,3 @@ void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
 
    fFunction->SetNumberFitPoints(npoints);
 }
-

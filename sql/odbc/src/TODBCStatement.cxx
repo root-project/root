@@ -22,10 +22,12 @@
 #include "TODBCStatement.h"
 #include "TODBCServer.h"
 #include "TDataType.h"
-#include "Riostream.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include <sqlext.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
 
 #define kSqlTime      123781
 #define kSqlDate      123782
@@ -115,7 +117,7 @@ void TODBCStatement::Close(Option_t *)
 
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
 
-   fHstmt=0;
+   fHstmt = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,7 +370,7 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
       fBuffer[n].fBroottype = 0;
       fBuffer[n].fBsqltype = 0;
       fBuffer[n].fBsqlctype = 0;
-      fBuffer[n].fBbuffer = 0;
+      fBuffer[n].fBbuffer = nullptr;
       fBuffer[n].fBelementsize = 0;
       fBuffer[n].fBlenarray = 0;
       fBuffer[n].fBstrbuffer = 0;
@@ -385,7 +387,7 @@ void TODBCStatement::FreeBuffers()
 {
    if (fBuffer==0) return;
    for (Int_t n=0;n<fNumBuffers;n++) {
-      if (fBuffer[n].fBbuffer!=0)
+      if (fBuffer[n].fBbuffer)
         free(fBuffer[n].fBbuffer);
       delete[] fBuffer[n].fBlenarray;
       delete[] fBuffer[n].fBstrbuffer;
@@ -394,10 +396,10 @@ void TODBCStatement::FreeBuffers()
 
    delete[] fStatusBuffer;
    delete[] fBuffer;
-   fBuffer = 0;
+   fBuffer = nullptr;
    fNumBuffers = 0;
    fBufferLength = 0;
-   fStatusBuffer = 0;
+   fStatusBuffer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

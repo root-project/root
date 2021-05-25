@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 #.rst:
 # Findlibuuid
 # -----------
@@ -66,5 +72,5 @@ if(NOT TARGET uuid::uuid)
   set_property(TARGET uuid::uuid PROPERTY INTERFACE_LINK_LIBRARIES "${UUID_LIBRARIES}")
 endif()
 
-find_package_handle_standard_args(uuid DEFAULT_MSG UUID_INCLUDE_DIR)
+find_package_handle_standard_args(libuuid DEFAULT_MSG UUID_INCLUDE_DIR)
 mark_as_advanced(UUID_INCLUDE_DIR UUID_LIBRARY)

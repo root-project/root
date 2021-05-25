@@ -56,7 +56,6 @@ matrix.
 For more details please read the misalignment section in the Users Guide.
 */
 
-#include "TClass.h"
 #include "TGeoManager.h"
 #include "TGeoVoxelFinder.h"
 #include "TGeoCache.h"
@@ -65,7 +64,6 @@ For more details please read the misalignment section in the Users Guide.
 #include "TGeoCompositeShape.h"
 #include "TGeoBoolNode.h"
 #include "TGeoVolume.h"
-#include "TVirtualGeoPainter.h"
 
 #include "TGeoPhysicalNode.h"
 
@@ -106,35 +104,6 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
    SetVisibleFull(kFALSE);
    SetIsVolAtt(kTRUE);
    SetAligned(kFALSE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
-  TNamed(gpn),
-  TAttLine(gpn),
-  fLevel(gpn.fLevel),
-  fMatrices(gpn.fMatrices),
-  fNodes(gpn.fNodes),
-  fMatrixOrig(gpn.fMatrixOrig)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
-{
-   if(this!=&gpn) {
-      TNamed::operator=(gpn);
-      TAttLine::operator=(gpn);
-      fLevel=gpn.fLevel;
-      fMatrices=gpn.fMatrices;
-      fNodes=gpn.fNodes;
-      fMatrixOrig=gpn.fMatrixOrig;
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,9 +148,9 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    }
    // Refresh the node since other Align calls may have altered the stored nodes
    Refresh();
-   TGeoNode *nnode = 0;
+   TGeoNode *nnode = nullptr;
    TGeoVolume *vm = GetVolume(0);
-   TGeoVolume *vd = 0;
+   TGeoVolume *vd = nullptr;
    Int_t i;
    if (!IsAligned()) {
       Int_t *id = new Int_t[fLevel];
@@ -236,6 +205,11 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    } else {
       nnode = GetNode();
    }
+   if (!node) {
+      Fatal("Align", "Cannot get node %s", GetName());
+      return kFALSE;
+   }
+
    // Now nnode is a cloned node of the one that need to be aligned
    TGeoNodeMatrix *aligned = (TGeoNodeMatrix*)nnode;
    vm = nnode->GetMotherVolume();

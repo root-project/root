@@ -1,7 +1,7 @@
 // Author: Olivier Couet 22/12/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,16 +9,9 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TTextEditor                                                         //
-//                                                                      //
-//  Editor for changing TText's and TLatex's attributes.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TTextEditor
 #define ROOT_TTextEditor
+
 #include "TGedFrame.h"
 
 class TText;
@@ -31,16 +24,16 @@ private:
    TText *fEditedText;
 
 protected:
-   TGTextEntry   *fText;  // Text
-   TGNumberEntry *fAngle; // Text's angle
-   TGNumberEntry *fSize;  // Text's angle
-   TGNumberEntry *fXpos;  // Text's X position
-   TGNumberEntry *fYpos;  // Text's Y position
+   TGTextEntry   *fText;  ///< Text
+   TGNumberEntry *fAngle; ///< Text's angle
+   TGNumberEntry *fSize;  ///< Text's angle
+   TGNumberEntry *fXpos;  ///< Text's X position
+   TGNumberEntry *fYpos;  ///< Text's Y position
 
    void ConnectSignals2Slots();
 
 public:
-   TTextEditor(const TGWindow *p = 0,
+   TTextEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());

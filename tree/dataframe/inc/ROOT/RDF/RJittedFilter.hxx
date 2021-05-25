@@ -13,6 +13,7 @@
 
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 
@@ -32,8 +33,6 @@ namespace RDF {
 
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
-class RLoopManager;
-
 /// A wrapper around a concrete RFilter, which forwards all calls to it
 /// RJittedFilter is the type of the node returned by jitted Filter calls: the concrete filter can be created and set
 /// at a later time, from jitted code.
@@ -42,6 +41,7 @@ class RJittedFilter final : public RFilterBase {
 
 public:
    RJittedFilter(RLoopManager *lm, std::string_view name);
+   ~RJittedFilter() { fLoopManager->Deregister(this); }
 
    void SetFilter(std::unique_ptr<RFilterBase> f);
 
@@ -55,10 +55,9 @@ public:
    void ResetChildrenCount() final;
    void TriggerChildrenCount() final;
    void ResetReportCount() final;
-   void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
    void AddFilterName(std::vector<std::string> &filters) final;
-   void ClearTask(unsigned int slot) final;
+   void FinaliseSlot(unsigned int slot) final;
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph();
 };
 

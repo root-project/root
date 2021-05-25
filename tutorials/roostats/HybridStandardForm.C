@@ -111,33 +111,35 @@ using namespace RooStats;
 
 class BinCountTestStat : public TestStatistic {
 public:
-  BinCountTestStat(void) : fColumnName("tmp") {}
-  BinCountTestStat(string columnName) : fColumnName(columnName) {}
+   BinCountTestStat(void) : fColumnName("tmp") {}
+   BinCountTestStat(string columnName) : fColumnName(columnName) {}
 
-  virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) {
-    // This is the main method in the interface
-    Double_t value = 0.0;
-    for(int i=0; i < data.numEntries(); i++) {
-      value += data.get(i)->getRealValue(fColumnName.c_str());
-    }
-    return value;
+   virtual Double_t Evaluate(RooAbsData &data, RooArgSet & /*nullPOI*/)
+   {
+      // This is the main method in the interface
+      Double_t value = 0.0;
+      for (int i = 0; i < data.numEntries(); i++) {
+         value += data.get(i)->getRealValue(fColumnName.c_str());
       }
-  virtual const TString GetVarName() const { return fColumnName; }
+      return value;
+   }
+   virtual const TString GetVarName() const { return fColumnName; }
 
 private:
-  string fColumnName;
+   string fColumnName;
 
 protected:
-  ClassDef(BinCountTestStat,1)
+   ClassDef(BinCountTestStat, 1)
 };
 
 ClassImp(BinCountTestStat)
 
-//-----------------------------
-// The Actual Tutorial Macro
-//-----------------------------
+   //-----------------------------
+   // The Actual Tutorial Macro
+   //-----------------------------
 
-void HybridStandardForm() {
+   void HybridStandardForm()
+{
 
    // This tutorial has 6 parts
    // Table of Contents
@@ -155,11 +157,10 @@ void HybridStandardForm() {
    // Part 5 takes about ~2 min with PROOF on 4 cores.
    // Of course, everything looks nicer with more toys, which takes longer.
 
-
    TStopwatch t;
    t.Start();
    TCanvas *c = new TCanvas;
-   c->Divide(2,2);
+   c->Divide(2, 2);
 
    //-----------------------------------------------------
    // P A R T   1  :  D I R E C T   I N T E G R A T I O N
@@ -167,13 +168,12 @@ void HybridStandardForm() {
    // Make model for prototype on/off problem
    // Pois(x | s+b) * Pois(y | tau b )
    // for Z_Gamma, use uniform prior on b.
-   RooWorkspace* w = new RooWorkspace("w");
-
+   RooWorkspace *w = new RooWorkspace("w");
 
    // replace the pdf in 'number counting form'
-   //w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
+   // w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
    // with one in standard form.  Now x is encoded in event count
-   w->factory("Uniform::f(m[0,1])");//m is a dummy discriminating variable
+   w->factory("Uniform::f(m[0,1])"); // m is a dummy discriminating variable
    w->factory("ExtendPdf::px(f,sum::splusb(s[0,0,100],b[100,0,300]))");
    w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
    w->factory("PROD::model(px,py)");
@@ -185,7 +185,7 @@ void HybridStandardForm() {
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
 
    // Use PROOF-lite on multi-core machines
-   ProofConfig* pc = NULL;
+   ProofConfig *pc = NULL;
    // uncomment below if you want to use PROOF
    pc = new ProofConfig(*w, 4, "workers=4", kFALSE); // machine with 4 cores
    //  pc = new ProofConfig(*w, 2, "workers=2", kFALSE); // machine with 2 cores
@@ -199,11 +199,14 @@ void HybridStandardForm() {
    // analytic Z_Bi
    double p_Bi = NumberCountingUtils::BinomialWithTauObsP(150, 100, 1);
    double Z_Bi = NumberCountingUtils::BinomialWithTauObsZ(150, 100, 1);
-   cout << "-----------------------------------------"<<endl;
+   cout << "-----------------------------------------" << endl;
    cout << "Part 3" << endl;
    std::cout << "Z_Bi p-value (analytic): " << p_Bi << std::endl;
    std::cout << "Z_Bi significance (analytic): " << Z_Bi << std::endl;
-   t.Stop();  t.Print(); t.Reset(); t.Start();
+   t.Stop();
+   t.Print();
+   t.Reset();
+   t.Start();
 
    //--------------------------------------------------------------
    // P A R T   4  :  U S I N G   H Y B R I D   C A L C U L A T O R
@@ -223,13 +226,13 @@ void HybridStandardForm() {
    // and y is treated as a separate measurement, which is used
    // to produce the prior that will be used in this calculation
    // to randomize the nuisance parameters.
-   w->defineSet("obs","m");
-   w->defineSet("poi","s");
+   w->defineSet("obs", "m");
+   w->defineSet("poi", "s");
 
    // create a toy dataset with the x=150
    //  RooDataSet *data = new RooDataSet("d", "d", *w->set("obs"));
    //  data->add(*w->set("obs"));
-   RooDataSet* data = w->pdf("px")->generate(*w->set("obs"),150);
+   RooDataSet *data = w->pdf("px")->generate(*w->set("obs"), 150);
 
    // Part 3a : Setup ModelConfigs
    //-------------------------------------------------------
@@ -238,7 +241,7 @@ void HybridStandardForm() {
    b_model.SetPdf(*w->pdf("px"));
    b_model.SetObservables(*w->set("obs"));
    b_model.SetParametersOfInterest(*w->set("poi"));
-   w->var("s")->setVal(0.0);  // important!
+   w->var("s")->setVal(0.0); // important!
    b_model.SetSnapshot(*w->set("poi"));
 
    // create the alternate (signal+background) ModelConfig with s=50
@@ -248,7 +251,6 @@ void HybridStandardForm() {
    sb_model.SetParametersOfInterest(*w->set("poi"));
    w->var("s")->setVal(50.0); // important!
    sb_model.SetSnapshot(*w->set("poi"));
-
 
    // Part 3b : Choose Test Statistic
    //--------------------------------------------------------------
@@ -304,11 +306,11 @@ void HybridStandardForm() {
    //-------------------------------------------------------
 
    HybridCalculator hc1(*data, sb_model, b_model);
-   ToyMCSampler *toymcs1 = (ToyMCSampler*)hc1.GetTestStatSampler();
+   ToyMCSampler *toymcs1 = (ToyMCSampler *)hc1.GetTestStatSampler();
    //  toymcs1->SetNEventsPerToy(1); // because the model is in number counting form
    toymcs1->SetTestStatistic(&eventCount); // set the test statistic
    //  toymcs1->SetGenerateBinned();
-   hc1.SetToys(30000,1000);
+   hc1.SetToys(30000, 1000);
    hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc1.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
@@ -331,13 +333,16 @@ void HybridStandardForm() {
    // Get the result
    HypoTestResult *r1 = hc1.GetHypoTest();
    RooMsgService::instance().setGlobalKillBelow(msglevel); // set it back
-   cout << "-----------------------------------------"<<endl;
+   cout << "-----------------------------------------" << endl;
    cout << "Part 4" << endl;
    r1->Print();
-   t.Stop();  t.Print(); t.Reset(); t.Start();
+   t.Stop();
+   t.Print();
+   t.Reset();
+   t.Start();
 
    c->cd(2);
-   HypoTestPlot *p1 = new HypoTestPlot(*r1,30); // 30 bins, TS is discrete
+   HypoTestPlot *p1 = new HypoTestPlot(*r1, 30); // 30 bins, TS is discrete
    p1->Draw();
 
    return; // keep the running time sort by default
@@ -349,17 +354,17 @@ void HybridStandardForm() {
    // when the value of b is fixed in the likelihood.  This is implemented
    // by the SimpleLikelihoodRatioTestStat
 
-   SimpleLikelihoodRatioTestStat slrts(*b_model.GetPdf(),*sb_model.GetPdf());
+   SimpleLikelihoodRatioTestStat slrts(*b_model.GetPdf(), *sb_model.GetPdf());
    slrts.SetNullParameters(*b_model.GetSnapshot());
    slrts.SetAltParameters(*sb_model.GetSnapshot());
 
    // HYBRID CALCULATOR
    HybridCalculator hc2(*data, sb_model, b_model);
-   ToyMCSampler *toymcs2 = (ToyMCSampler*)hc2.GetTestStatSampler();
+   ToyMCSampler *toymcs2 = (ToyMCSampler *)hc2.GetTestStatSampler();
    //  toymcs2->SetNEventsPerToy(1);
    toymcs2->SetTestStatistic(&slrts);
    //  toymcs2->SetGenerateBinned();
-   hc2.SetToys(20000,1000);
+   hc2.SetToys(20000, 1000);
    hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc2.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
@@ -374,20 +379,24 @@ void HybridStandardForm() {
    // ~~~
 
    // enable proof
-   if(pc) toymcs2->SetProofConfig(pc);
+   if (pc)
+      toymcs2->SetProofConfig(pc);
 
    // these lines save current msg level and then kill any messages below ERROR
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
    // Get the result
    HypoTestResult *r2 = hc2.GetHypoTest();
-   cout << "-----------------------------------------"<<endl;
+   cout << "-----------------------------------------" << endl;
    cout << "Part 5" << endl;
    r2->Print();
-   t.Stop();  t.Print(); t.Reset(); t.Start();
+   t.Stop();
+   t.Print();
+   t.Reset();
+   t.Start();
    RooMsgService::instance().setGlobalKillBelow(msglevel);
 
    c->cd(3);
-   HypoTestPlot *p2 = new HypoTestPlot(*r2,30); // 30 bins
+   HypoTestPlot *p2 = new HypoTestPlot(*r2, 30); // 30 bins
    p2->Draw();
 
    return; // so standard tutorial runs faster
@@ -427,7 +436,6 @@ void HybridStandardForm() {
    // - CL_s+b: 0.491 +/- 0.0158088
    // - CL_s: 0.491516 +/- 0.0158258
    // Real time 0:02:22, CP time 0.990
-
 
    //-------------------------------------------------------
    // Comparison

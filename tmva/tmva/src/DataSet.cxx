@@ -35,7 +35,6 @@ Class that contains all the data information
 #include <algorithm>
 #include <cstdlib>
 #include <stdexcept>
-#include <algorithm>
 
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/DataSet.h"
@@ -51,6 +50,7 @@ Class that contains all the data information
 #include "TMVA/VariableInfo.h"
 
 #include "TRandom3.h"
+#include "strlcpy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -649,11 +649,27 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // create all branches for the variables
    Int_t n = 0;
+   Int_t ivar_array = 0;
+   Int_t arraySize = -1; 
    for (std::vector<VariableInfo>::const_iterator itVars = fdsi->GetVariableInfos().begin();
         itVars != fdsi->GetVariableInfos().end(); ++itVars) {
 
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itVars).GetInternalName(), &varVals[n], (*itVars).GetInternalName()+TString("/F") );
+      if (!itVars->TestBit(DataSetInfo::kIsArrayVariable) ) 
+         tree->Branch( (*itVars).GetInternalName(), &varVals[n], (*itVars).GetInternalName()+TString("/F") );
+      else { 
+         // variable is an array
+         if (ivar_array == 0) {
+            TString name = (*itVars).GetInternalName();
+            name.ReplaceAll("[0]", "");
+            arraySize = fdsi->GetVarArraySize((*itVars).GetExpression());
+            tree->Branch(name, &varVals[n], name + TString::Format("[%d]/F", arraySize));
+            Log() << kDEBUG << "creating branch for array " << name << " with size " << arraySize << Endl;
+         }
+         ivar_array++; 
+         if (ivar_array == arraySize)
+            ivar_array = 0; 
+      }
       n++;
    }
    // create the branches for the targets

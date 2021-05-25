@@ -32,22 +32,23 @@ public:
   Sample();
   Sample(std::string Name);
   Sample(const Sample& other);
+  Sample& operator=(const Sample& other);
   /// constructor from name, file and path. Name of the histogram should not include the path
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
   ~Sample();
 
-  void Print(std::ostream& = std::cout);  
+  void Print(std::ostream& = std::cout) const;
   void PrintXML( std::ofstream& xml );
   void writeToFile( std::string FileName, std::string DirName );
 
-  TH1* GetHisto();
+  const TH1* GetHisto() const;
   // set histogram for this sample
   void SetHisto( TH1* histo ) { fhNominal = histo; fHistoName=histo->GetName(); }
-  void SetValue( Double_t Val );
+  void SetValue( Double_t Val ) ;
 
   // Some helper functions
-  /// Note that histogram name should not include the path of the histogram in the file.  
-  /// This has to be given separatly 
+  // Note that histogram name should not include the path of the histogram in the file.  
+  // This has to be given separatly 
 
   void ActivateStatError();
   void ActivateStatError( std::string HistoName, std::string InputFile, std::string HistoPath="" );
@@ -72,51 +73,60 @@ public:
   void AddShapeSys(    std::string Name, Constraint::Type ConstraintType, std::string HistoName, std::string HistoFile, std::string HistoPath="" );
   void AddShapeSys( const ShapeSys& Sys );
 
-  // defines whether the normalization scale with luminosity
+  /// defines whether the normalization scale with luminosity
   void SetNormalizeByTheory( bool norm ) { fNormalizeByTheory = norm; }
-  // does the normalization scale with luminosity
-  bool GetNormalizeByTheory() { return fNormalizeByTheory; }
+  /// does the normalization scale with luminosity
+  bool GetNormalizeByTheory() const { return fNormalizeByTheory; }
 
 
-  // get name of sample
-  std::string GetName() { return fName; }
-  // set name of sample
+  /// get name of sample
+  std::string GetName() const { return fName; }
+  /// set name of sample
   void SetName(const std::string& Name) { fName = Name; }
 
-  // get input ROOT file
-  std::string GetInputFile() { return fInputFile; }
-  // set input ROOT file
+  /// get input ROOT file
+  std::string GetInputFile() const { return fInputFile; }
+  /// set input ROOT file
   void SetInputFile(const std::string& InputFile) { fInputFile = InputFile; }
 
-  // get histogram name
-  std::string GetHistoName() { return fHistoName; }
-  // set histogram name
+  /// get histogram name
+  std::string GetHistoName() const { return fHistoName; }
+  /// set histogram name
   void SetHistoName(const std::string& HistoName) { fHistoName = HistoName; }
 
-  // get histogram path
-  std::string GetHistoPath() { return fHistoPath; }
-  // set histogram path
+  /// get histogram path
+  std::string GetHistoPath() const { return fHistoPath; }
+  /// set histogram path
   void SetHistoPath(const std::string& HistoPath) { fHistoPath = HistoPath; }
 
-  // get name of associated channel
-  std::string GetChannelName() { return fChannelName; }
-  // set name of associated channel
+  /// get name of associated channel
+  std::string GetChannelName() const { return fChannelName; }
+  /// set name of associated channel
   void SetChannelName(const std::string& ChannelName) { fChannelName = ChannelName; }
 
 
 
   std::vector< RooStats::HistFactory::OverallSys >& GetOverallSysList() { return fOverallSysList; }
   std::vector< RooStats::HistFactory::NormFactor >& GetNormFactorList() { return fNormFactorList; }
-
   std::vector< RooStats::HistFactory::HistoSys >&    GetHistoSysList() {    return fHistoSysList; }
   std::vector< RooStats::HistFactory::HistoFactor >& GetHistoFactorList() { return fHistoFactorList; }
-
   std::vector< RooStats::HistFactory::ShapeSys >&    GetShapeSysList() {    return fShapeSysList; }
   std::vector< RooStats::HistFactory::ShapeFactor >& GetShapeFactorList() { return fShapeFactorList; }
 
-  RooStats::HistFactory::StatError& GetStatError() { return fStatError; }
-  void SetStatError( RooStats::HistFactory::StatError Error ) { fStatError = Error; }
+  const std::vector< RooStats::HistFactory::OverallSys >& GetOverallSysList()   const { return fOverallSysList; }
+  const std::vector< RooStats::HistFactory::NormFactor >& GetNormFactorList()   const { return fNormFactorList; }
+  const std::vector< RooStats::HistFactory::HistoSys >&    GetHistoSysList()    const { return fHistoSysList; }
+  const std::vector< RooStats::HistFactory::HistoFactor >& GetHistoFactorList() const { return fHistoFactorList; }
+  const std::vector< RooStats::HistFactory::ShapeSys >&    GetShapeSysList()    const { return fShapeSysList; }
+  const std::vector< RooStats::HistFactory::ShapeFactor >& GetShapeFactorList() const { return fShapeFactorList; }
+  
 
+  bool HasStatError() const { return fStatErrorActivate; }  
+  RooStats::HistFactory::StatError& GetStatError() { return fStatError; }
+  const RooStats::HistFactory::StatError& GetStatError() const { return fStatError; }  
+  void SetStatError( RooStats::HistFactory::StatError Error ) {
+    fStatError = std::move(Error);
+  }
 
 protected:
 
@@ -125,7 +135,7 @@ protected:
   std::string fHistoName;
   std::string fHistoPath;
 
-  // The Name of the parent channel
+  /// The Name of the parent channel
   std::string fChannelName;
 
   //
@@ -142,14 +152,14 @@ protected:
   std::vector< RooStats::HistFactory::ShapeFactor > fShapeFactorList;
 
 
-  // Properties
+  /// Properties
   RooStats::HistFactory::StatError fStatError;
 
   bool fNormalizeByTheory;
   bool fStatErrorActivate;
 
 
-  // The Nominal Shape
+  /// The Nominal Shape
   HistRef fhNominal;
   TH1* fhCountingHist;
 

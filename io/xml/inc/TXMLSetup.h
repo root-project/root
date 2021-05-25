@@ -12,7 +12,7 @@
 #ifndef ROOT_TXMLSetup
 #define ROOT_TXMLSetup
 
-#include "TObject.h"
+#include "Rtypes.h"
 #include "TString.h"
 
 #ifdef Bool
@@ -83,10 +83,12 @@ class TXMLSetup {
 public:
    enum EXMLLayout { kSpecialized = 2, kGeneralized = 3 };
 
-   TXMLSetup();
+   TXMLSetup() = default;
    TXMLSetup(const char *opt);
    TXMLSetup(const TXMLSetup &src);
-   virtual ~TXMLSetup();
+   virtual ~TXMLSetup() = default;
+
+   TXMLSetup &operator=(const TXMLSetup &rhs);
 
    TString GetSetupAsString();
 
@@ -118,14 +120,14 @@ protected:
    Bool_t IsValidXmlSetup(const char *setupstr);
    Bool_t ReadSetupFromStr(const char *setupstr);
 
-   Int_t AtoI(const char *sbuf, Int_t def = 0, const char *errinfo = 0);
+   Int_t AtoI(const char *sbuf, Int_t def = 0, const char *errinfo = nullptr);
 
-   EXMLLayout fXmlLayout;
-   Bool_t fStoreStreamerInfos;
-   Bool_t fUseDtd;
-   Bool_t fUseNamespaces;
+   EXMLLayout fXmlLayout{kSpecialized};
+   Bool_t fStoreStreamerInfos{kTRUE};
+   Bool_t fUseDtd{kFALSE};
+   Bool_t fUseNamespaces{kFALSE};
 
-   Int_t fRefCounter; //!  counter , used to build id of xml references
+   Int_t fRefCounter{0}; //!  counter , used to build id of xml references
 
    TString fStrBuf; //!  buffer, used in XmlDefineClass() function
 

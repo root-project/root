@@ -14,6 +14,7 @@
 #define ROOT_RDF_HELPERS
 
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RResultHandle.hxx>
 #include <ROOT/RDF/GraphUtils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -101,35 +102,84 @@ auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N
 {
    return RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
 }
-template <typename Proxied, typename DataSource>
-class RInterface;
 
 // clang-format off
-/// Creates the dot representation of the graph.
-/// Won't work if the event loop has been executed
+/// Create a graphviz representation of the dataframe computation graph, return it as a string.
 /// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
-/// \param[in] filePath where to save the representation. If not specified, will be printed on standard output.
+///
+/// The output can be displayed with a command akin to `dot -Tpng output.dot > output.png && open output.png`.
+///
+/// Note that "hanging" Defines, i.e. Defines without downstream nodes, will not be displayed by SaveGraph as they are
+/// effectively optimized away from the computation graph.
+///
+/// Note that SaveGraph is not thread-safe and must not be called concurrently from different threads.
 // clang-format on
 template <typename NodeType>
-void SaveGraph(NodeType node, const std::string &dotFilePath = "")
+std::string SaveGraph(NodeType node)
+{
+   ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
+   return helper(node);
+}
+
+// clang-format off
+/// Create a graphviz representation of the dataframe computation graph, write it to the specified file.
+/// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
+/// \param[in] outputFile file where to save the representation.
+///
+/// The output can be displayed with a command akin to `dot -Tpng output.dot > output.png && open output.png`.
+///
+/// Note that "hanging" Defines, i.e. Defines without downstream nodes, will not be displayed by SaveGraph as they are
+/// effectively optimized away from the computation graph.
+///
+/// Note that SaveGraph is not thread-safe and must not be called concurrently from different threads.
+// clang-format on
+template <typename NodeType>
+void SaveGraph(NodeType node, const std::string &outputFile)
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
    std::string dotGraph = helper(node);
 
-   if (dotFilePath == "") {
-      // No file specified, print on standard output
-      std::cout << dotGraph << std::endl;
-      return;
-   }
-
-   std::ofstream out(dotFilePath);
+   std::ofstream out(outputFile);
    if (!out.is_open()) {
-      throw std::runtime_error("File path not valid");
+      throw std::runtime_error("Could not open output file \"" + outputFile  + "\"for reading");
    }
 
    out << dotGraph;
    out.close();
 }
+
+// clang-format off
+/// Cast a RDataFrame node to the common type ROOT::RDF::RNode
+/// \param[in] node Any node of a RDataFrame graph
+// clang-format on
+template <typename NodeType>
+RNode AsRNode(NodeType node)
+{
+   return node;
+}
+
+// clang-format off
+/// Trigger the event loop of multiple RDataFrames concurrently
+/// \param[in] handles A vector of RResultHandles
+///
+/// This function triggers the event loop of all computation graphs which relate to the
+/// given RResultHandles. The advantage compared to running the event loop implicitly by accessing the
+/// RResultPtr is that the event loops will run concurrently. Therefore, the overall
+/// computation of all results is generally more efficient.
+/// It should be noted that user-defined operations (e.g., Filters and Defines) of the different RDataFrame graphs are assumed to be safe to call concurrently.
+///
+/// ~~~{.cpp}
+/// ROOT::RDataFrame df1("tree1", "file1.root");
+/// auto r1 = df1.Histo1D("var1");
+///
+/// ROOT::RDataFrame df2("tree2", "file2.root");
+/// auto r2 = df2.Sum("var2");
+///
+/// // RResultPtr -> RResultHandle conversion is automatic
+/// ROOT::RDF::RunGraphs({r1, r2});
+/// ~~~
+// clang-format on
+void RunGraphs(std::vector<RResultHandle> handles);
 
 } // namespace RDF
 } // namespace ROOT

@@ -29,12 +29,11 @@ The parameters a and b are automatically computed from:
           |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
 */
 
-#include "Riostream.h"
+#include <iostream>
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoParaboloid.h"
-#include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
@@ -248,7 +247,6 @@ Double_t TGeoParaboloid::DistFromInside(const Double_t *point, const Double_t *d
 
 Double_t TGeoParaboloid::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-   Double_t snxt = TGeoShape::Big();
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kFALSE);
@@ -258,20 +256,20 @@ Double_t TGeoParaboloid::DistFromOutside(const Double_t *point, const Double_t *
    Double_t xnew, ynew, znew;
    if (point[2]<=-fDz) {
       if (dir[2]<=0) return TGeoShape::Big();
-      snxt = -(fDz+point[2])/dir[2];
+      Double_t snxt = -(fDz+point[2])/dir[2];
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
       ynew = point[1]+snxt*dir[1];
       if ((xnew*xnew+ynew*ynew) <= fRlo*fRlo) return snxt;
    } else if (point[2]>=fDz) {
       if (dir[2]>=0) return TGeoShape::Big();
-      snxt = (fDz-point[2])/dir[2];
+      Double_t snxt = (fDz-point[2])/dir[2];
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
       ynew = point[1]+snxt*dir[1];
       if ((xnew*xnew+ynew*ynew) <= fRhi*fRhi) return snxt;
    }
-   snxt = DistToParaboloid(point, dir, kFALSE);
+   Double_t snxt = DistToParaboloid(point, dir, kFALSE);
    if (snxt > 1E20) return snxt;
    znew = point[2]+snxt*dir[2];
    if (TMath::Abs(znew) <= fDz) return snxt;
@@ -426,7 +424,7 @@ Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
 {
    Double_t safz = fDz-TMath::Abs(point[2]);
    if (!in) safz = -safz;
-   Double_t safr = TGeoShape::Big();
+   Double_t safr;
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t z0 = fA*rsq+fB;
    Double_t r0sq = (point[2]-fB)/fA;

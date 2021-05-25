@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootCanvas                                                          //
-//                                                                      //
-// This class creates a main window with menubar, scrollbars and a      //
-// drawing area. The widgets used are the new native ROOT GUI widgets.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootCanvas
+    \ingroup guiwidgets
+
+This class creates a main window with menubar, scrollbars and a
+drawing area. The widgets used are the new native ROOT GUI widgets.
+
+*/
+
 
 #include "RConfigure.h"
 
@@ -34,7 +35,6 @@
 #include "TClass.h"
 #include "TSystem.h"
 #include "TCanvas.h"
-#include "TPadPainter.h"
 #include "TBrowser.h"
 #include "TClassTree.h"
 #include "TMarker.h"
@@ -46,7 +46,7 @@
 #include "TInterpreter.h"
 #include "TEnv.h"
 #include "TMath.h"
-#include "Riostream.h"
+#include <iostream>
 #include "TGDockableFrame.h"
 
 #include "TG3DLine.h"
@@ -54,7 +54,6 @@
 #include "TGToolTip.h"
 #include "TVirtualPadEditor.h"
 #include "TRootControlBar.h"
-#include "TGLabel.h"
 #include "TGuiBuilder.h"
 #include "TImage.h"
 #include "TError.h"
@@ -836,7 +835,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = gOpenTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.SetIniDir(dir);
                         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
@@ -861,7 +860,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            }
                         }
                         fi.fFileTypes   = gSaveAsTypes;
-                        fi.fIniDir      = StrDup(dir);
+                        fi.SetIniDir(dir);
                         fi.fFileTypeIdx = typeidx;
                         fi.fOverwrite = overwr;
                         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);

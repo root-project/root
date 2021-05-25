@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofProgressDialog                                                 //
-//                                                                      //
-// This class provides a query progress bar.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TProofProgressDialog
+    \ingroup sessionviewer
+
+This class provides a query progress bar.
+
+*/
+
 
 #include "TProofProgressDialog.h"
 #include "TProofProgressLog.h"
@@ -24,7 +25,6 @@
 #include "TError.h"
 #include "TGLabel.h"
 #include "TGButton.h"
-#include "TGTextBuffer.h"
 #include "TGTextEntry.h"
 #include "TGProgressBar.h"
 #include "TGSpeedo.h"
@@ -35,13 +35,14 @@
 #include "TGraph.h"
 #include "TNtuple.h"
 #include "TCanvas.h"
-#include "TColor.h"
 #include "TLine.h"
 #include "TAxis.h"
 #include "TPaveText.h"
 #include "TMath.h"
 #include "TH1F.h"
 #include "THLimitsFinder.h"
+#include "TVirtualX.h"
+
 
 #ifdef PPD_SRV_NEWER
 #undef PPD_SRV_NEWER
@@ -239,8 +240,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    // Stop, cancel and close buttons
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(fDialog, 60, 20);
 
-   UInt_t  nb1 = 0, width1 = 0, height1 = 0;
-
    fAsyn = new TGTextButton(hf3, "&Run in background");
    if (fProof->GetRemoteProtocol() >= 22 && fProof->IsSync()) {
       fAsyn->SetToolTipText("Continue running in the background (asynchronous mode), releasing the ROOT prompt");
@@ -250,30 +249,22 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    }
    fAsyn->Connect("Clicked()", "TProofProgressDialog", this, "DoAsyn()");
    hf3->AddFrame(fAsyn, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height1 = TMath::Max(height1, fAsyn->GetDefaultHeight());
-   width1  = TMath::Max(width1, fAsyn->GetDefaultWidth()); ++nb1;
 
    fStop = new TGTextButton(hf3, "&Stop");
    fStop->SetToolTipText("Stop processing, Terminate() will be executed");
    fStop->Connect("Clicked()", "TProofProgressDialog", this, "DoStop()");
    hf3->AddFrame(fStop, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height1 = TMath::Max(height1, fStop->GetDefaultHeight());
-   width1  = TMath::Max(width1, fStop->GetDefaultWidth()); ++nb1;
 
    fAbort = new TGTextButton(hf3, "&Cancel");
    fAbort->SetToolTipText("Cancel processing, Terminate() will NOT be executed");
    fAbort->Connect("Clicked()", "TProofProgressDialog", this, "DoAbort()");
    hf3->AddFrame(fAbort, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height1 = TMath::Max(height1, fAbort->GetDefaultHeight());
-   width1  = TMath::Max(width1, fAbort->GetDefaultWidth()); ++nb1;
 
    fClose = new TGTextButton(hf3, "&Close");
    fClose->SetToolTipText("Close this dialog");
    fClose->SetState(kButtonDisabled);
    fClose->Connect("Clicked()", "TProofProgressDialog", this, "DoClose()");
    hf3->AddFrame(fClose, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height1 = TMath::Max(height1, fClose->GetDefaultHeight());
-   width1  = TMath::Max(width1, fClose->GetDefaultWidth()); ++nb1;
 
    fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 5, 5));
 

@@ -10,8 +10,9 @@
 
 #include "rootcling_impl.h"
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
-#include <stdlib.h>
+#include <ROOT/RConfig.hxx>
+#include <cstdlib>
+#include <string>
 
 extern "C" {
    R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}

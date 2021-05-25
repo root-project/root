@@ -27,7 +27,6 @@ it is requested explicitly.
 #include "TDataType.h"
 #include "TVirtualMutex.h"
 
-#include "TEnum.h"
 #include "TClassTable.h"
 #include "TROOT.h"
 #include "TClass.h"

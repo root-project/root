@@ -32,24 +32,21 @@ namespace textinput {
     DWORD mode;
     SetIsTTY(::GetConsoleMode(::GetStdHandle(STD_INPUT_HANDLE), &mode) != 0);
 
-    fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-    bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
-    if (!isConsole) {
-      // Prevent redirection from stealing our console handle,
-      // simply open our own.
-      fOut = ::CreateFile(filename, GENERIC_READ | GENERIC_WRITE,
-        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL, NULL);
-      ::GetConsoleMode(fOut, &fOldMode);
-    } else {
-      // disable unicode (UTF-8) for the time being, since it causes
-      // problems on Windows 10
-      //::SetConsoleOutputCP(65001); // Force UTF-8 output
-    }
+    // Prevent redirection from stealing our console handle,
+    // simply open our own.
+    fOut = ::CreateFile(filename, GENERIC_READ | GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL, NULL);
+    ::GetConsoleMode(fOut, &fOldMode);
+    // disable unicode (UTF-8) for the time being, since it causes
+    // problems on Windows 10
+    //::SetConsoleOutputCP(65001); // Force UTF-8 output
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     ::GetConsoleScreenBufferInfo(fOut, &csbi);
     fDefaultAttributes = csbi.wAttributes;
     assert(fDefaultAttributes != 0 && "~TerminalDisplayWin broken");
+    // adding the ENABLE_VIRTUAL_TERMINAL_PROCESSING flag would enable the ANSI control
+    // character sequences (e.g. `\033[39m`), but then it breaks the WRAP_AT_EOL_OUTPUT
     fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
     HandleResizeEvent();
   }
@@ -126,7 +123,7 @@ namespace textinput {
   void
   TerminalDisplayWin::MoveInternal(Pos P) {
     if (IsTTY()) {
-      COORD C = {P.fCol, P.fLine + fStartLine};
+      COORD C = { (SHORT) P.fCol, (SHORT) (P.fLine + fStartLine) };
       ::SetConsoleCursorPosition(fOut, C);
     }
   }
@@ -169,7 +166,7 @@ namespace textinput {
   void
   TerminalDisplayWin::EraseToRight() {
     DWORD NumWritten;
-    COORD C = {fWritePos.fCol, fWritePos.fLine + fStartLine};
+    COORD C = { (SHORT) fWritePos.fCol, (SHORT) (fWritePos.fLine + fStartLine) };
     ::FillConsoleOutputCharacter(fOut, ' ', GetWidth() - C.X, C,
       &NumWritten);
     // It wraps, so move up and reset WritePos:
@@ -229,7 +226,7 @@ namespace textinput {
       FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
       (LPTSTR) &MsgBuf, 0, NULL);
 
-    printf("Error %d in textinput::TerminalDisplayWin %s: %s\n", Err, Where, MsgBuf);
+    printf("Error %d in textinput::TerminalDisplayWin %s: %s\n", Err, Where, (const char *) MsgBuf);
     LocalFree(MsgBuf);
   }
 

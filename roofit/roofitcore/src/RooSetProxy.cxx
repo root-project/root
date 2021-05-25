@@ -35,7 +35,6 @@ the serverRedirect changes.
 
 #include "Riostream.h"
 #include "RooSetProxy.h"
-#include "RooSetProxy.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 
@@ -45,7 +44,7 @@ ClassImp(RooSetProxy);
 ;
 
 
-#ifdef USEMEMPOOL
+#ifdef USEMEMPOOLFORARGSET
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload new operator must be implemented because it is overloaded
@@ -83,7 +82,6 @@ RooSetProxy::RooSetProxy(const char* inName, const char* /*desc*/, RooAbsArg* ow
 {
   //SetTitle(desc) ;
   _owner->registerProxy(*this) ;
-  _iter = createIterator() ;
 }
 
 
@@ -97,7 +95,6 @@ RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy
   _defShapeServer(other._defShapeServer)
 {
   _owner->registerProxy(*this) ;
-  _iter = createIterator() ;
 }
 
 
@@ -108,7 +105,6 @@ RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy
 RooSetProxy::~RooSetProxy()
 {
   if (_owner) _owner->unRegisterProxy(*this) ;
-  delete _iter ;
 }
 
 
@@ -269,24 +265,18 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
 {
   if (getSize()==0) {
     if (factoryInitMode) {
-      TIterator* iter = newServerList.createIterator() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
-	if (arg!=_owner) {
-	  add(*arg,kTRUE) ;
-	}
+      for (const auto arg : newServerList) {
+        if (arg!=_owner) {
+          add(*arg,kTRUE);
+        }
       }
-      delete iter ;
     } else {
       return kTRUE ;	
     }
   }
 
-  _iter->Reset() ;
-  RooAbsArg* arg ;
-  Bool_t error(kFALSE) ;
-  while ((arg=(RooAbsArg*)_iter->Next())) {
-    
+  Bool_t error(kFALSE);
+  for (const auto arg : _list) {
     RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
     if (newArg && newArg!=_owner) error |= !RooArgSet::replace(*arg,*newArg) ;
   }

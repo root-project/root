@@ -1,9 +1,26 @@
-############################################################################
-# CMakeLists.txt file for building ROOT gui/canvaspainter package
-############################################################################
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_GLOB_HEADERS(WebDisplay_headers inc/ROOT/R*.hxx)
+############################################################################
+# CMakeLists.txt file for building ROOT gui/webdisplay package
+############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
-                              HEADERS ${WebDisplay_headers}
-                              DEPENDENCIES RHTTP MathCore)
+    HEADERS 
+       ROOT/RWebDisplayArgs.hxx
+       ROOT/RWebDisplayHandle.hxx
+       ROOT/RWebWindow.hxx
+       ROOT/RWebWindowsManager.hxx
+    SOURCES
+       RWebDisplayArgs.cxx
+       RWebDisplayHandle.cxx
+       RWebWindow.cxx
+       RWebWindowsManager.cxx
+    DEPENDENCIES
+       Core 
+       RHTTP 
+       MathCore
+)

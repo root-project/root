@@ -20,23 +20,24 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListView, TGLVContainer and TGLVEntry                              //
-//                                                                      //
-// A list view is a widget that can contain a number of items           //
-// arranged in a grid or list. The items can be represented either      //
-// by a string or by an icon.                                           //
-//                                                                      //
-// The TGListView is user callable. The other classes are service       //
-// classes of the list view.                                            //
-//                                                                      //
-// A list view can generate the following events:                       //
-// kC_CONTAINER, kCT_SELCHANGED, total items, selected items.           //
-// kC_CONTAINER, kCT_ITEMCLICK, which button, location (y<<16|x).       //
-// kC_CONTAINER, kCT_ITEMDBLCLICK, which button, location (y<<16|x).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGListView
+    \ingroup guiwidgets
+
+A list view is a widget that can contain a number of items
+arranged in a grid or list. The items can be represented either
+by a string or by an icon.
+
+The TGListView is user callable. The other classes are service
+classes of the list view.
+
+A list view can generate the following events:
+  - kC_CONTAINER, kCT_SELCHANGED, total items, selected items.
+  - kC_CONTAINER, kCT_ITEMCLICK, which button, location (y<<16|x).
+  - kC_CONTAINER, kCT_ITEMDBLCLICK, which button, location (y<<16|x).
+
+*/
+
 
 #include "TGListView.h"
 #include "TGPicture.h"
@@ -47,13 +48,15 @@
 #include "TSystem.h"
 #include "TGMimeTypes.h"
 #include "TObjString.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
 
-const TGFont *TGLVEntry::fgDefaultFont = 0;
-TGGC         *TGLVEntry::fgDefaultGC = 0;
+#include <iostream>
 
-const TGFont *TGListView::fgDefaultFont = 0;
-TGGC         *TGListView::fgDefaultGC = 0;
+const TGFont *TGLVEntry::fgDefaultFont = nullptr;
+TGGC         *TGLVEntry::fgDefaultGC = nullptr;
+
+const TGFont *TGListView::fgDefaultFont = nullptr;
+TGGC         *TGListView::fgDefaultGC = nullptr;
 
 
 ClassImp(TGLVEntry);
@@ -82,9 +85,8 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    fSubnames = subnames;
    fUserData = 0;
 
-   fCpos  =
-   fJmode = 0;
-
+   fCpos  = fJmode = 0;
+   fCtw = nullptr;
    fActive = kFALSE;
 
    fFontStruct = GetDefaultFontStruct();
@@ -107,8 +109,6 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
       }
-   } else {
-      fCtw = 0;
    }
 
    fViewMode = (EListViewMode)-1;
@@ -146,8 +146,9 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
    fSubnames = subnames;
    fUserData = 0;
 
-   fCpos  =
-   fJmode = 0;
+   fCpos = fJmode = 0;
+
+   fCtw = nullptr;
 
    fActive = kFALSE;
 
@@ -169,8 +170,6 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
       }
-   } else {
-      fCtw = 0;
    }
 
    fViewMode = (EListViewMode)-1;
@@ -187,7 +186,11 @@ TGLVEntry::~TGLVEntry()
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
+      fSubnames = nullptr;
+   }
+   if (fCtw) {
       delete [] fCtw;
+      fCtw = nullptr;
    }
 }
 
@@ -202,11 +205,14 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
+   }
+   if (fCtw) {
       delete [] fCtw;
    }
 
    Int_t ncol = 0;
-   fSubnames = 0;
+   fSubnames = nullptr;
+   fCtw = nullptr;
 
    if (n12 && strlen(n12)) ncol=12;
    else if (n11 && strlen(n11)) ncol=11;
@@ -260,7 +266,7 @@ void TGLVEntry::Activate(Bool_t a)
       fSelPic = new TGSelectedPicture(gClient, fCurrent);
    } else {
       if (fSelPic) delete fSelPic;
-      fSelPic = 0;
+      fSelPic = nullptr;
    }
    DoRedraw();
 }
@@ -308,7 +314,7 @@ void TGLVEntry::SetPictures(const TGPicture *bigpic, const TGPicture *smallpic)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Redraw list view item.
-/// List view item is placed and layouted in the container frame,
+/// List view item is placed and laid out in the container frame,
 /// but is drawn in viewport.
 
 void TGLVEntry::DoRedraw()
@@ -356,8 +362,8 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
    }
-   // This if tries to print the elements with ... appened at the end if
-   // the widht of the string is longer than that of the column
+   // This if tries to print the elements with ... appended at the end if
+   // the width of the string is longer than that of the column
    if (fViewMode == kLVDetails && fSubnames && fCpos && fJmode && fCtw) {
       TString tmpString = *fItemName;
       Int_t ftmpWidth = gVirtualX->TextWidth(fFontStruct, tmpString,
@@ -845,7 +851,6 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
          total = selected = 0;
       }
 
-      select_frame = kFALSE;
       while ((el = (TGFrameElement *) next())) {
          select_frame = kFALSE;
 
@@ -915,6 +920,7 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get list of selected items in container.
+/// Returned TList object should be deleted by the user
 
 TList *TGLVContainer::GetSelectedEntries()
 {
@@ -932,6 +938,8 @@ TList *TGLVContainer::GetSelectedEntries()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get list of selected items in container.
+/// Returned TList object and its content should be deleted
+//   lst->Delete(); delete lst;
 
 TList *TGLVContainer::GetSelectedItems()
 {
@@ -1141,6 +1149,23 @@ TGDimension TGLVContainer::GetPageDimension() const
    ret.fWidth = fViewPort->GetWidth();
    ret.fHeight = fViewPort->GetHeight();
    return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Select the TGLVEntry given as argument and de-select the previous one if
+/// the container is not in multi-selection mode.
+
+void TGLVContainer::SelectEntry(TGLVEntry *item)
+{
+   // select (activate) the item passed as argument and deactivate the currently
+   // active one if not in multi-select mode
+
+   if ( !fMultiSelect ) {
+      TGFrameElement *old = fLastActiveEl;
+      if (old)
+         DeActivateItem(old);
+   }
+   ActivateItem(item->GetFrameElement());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

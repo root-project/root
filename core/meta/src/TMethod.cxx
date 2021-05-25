@@ -18,12 +18,14 @@
  TTree class.
 */
 
+#include "strtok.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "TClass.h"
+#include "TList.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
-#include "TROOT.h"
-#include "TApplication.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
 #include "TDataMember.h"
@@ -152,21 +154,22 @@ TDataMember *TMethod::FindDataMember()
       Int_t i;
 
       strlcpy(argstr,argstring,nchs+1);       //let's move it to "workspace"  copy
-      ptr2 = strtok(argstr,"{}");     //extract the data!
+      char *rest;
+      ptr2 = R__STRTOK_R(argstr, "{}", &rest); // extract the data!
       if (ptr2 == 0) {
          Fatal("FindDataMember","Internal error found '*ARGS=\"' but not \"{}\" in %s",GetCommentString());
          delete [] argstr;
          return 0;
       }
-      ptr2 = strtok((char*)0,"{}");
+      ptr2 = R__STRTOK_R((char *)0, "{}", &rest);
 
       //extract argument tokens//
       char *tokens[20];
       Int_t cnt       = 0;
       Int_t token_cnt = 0;
       do {
-         ptr1 = strtok((char*) (cnt++ ? 0:ptr2),",;"); //extract tokens
-                                                        // separated by , or ;
+         ptr1 = R__STRTOK_R((char *)(cnt++ ? 0 : ptr2), ",;", &rest); // extract tokens
+                                                                   // separated by , or ;
          if (ptr1) {
             Int_t nch = strlen(ptr1);
             tok = new char[nch+1];
@@ -177,15 +180,14 @@ TDataMember *TMethod::FindDataMember()
       } while (ptr1);
 
       //now let's  parse all argument tokens...
-      TClass     *cl = 0;
-      TMethodArg *a  = 0;
-      TMethodArg *ar = 0;
-      TDataMember *member = 0;
+      TClass     *cl = nullptr;
+      TMethodArg *a  = nullptr;
+      TMethodArg *ar = nullptr;
+      TDataMember *member = nullptr;
 
       for (i=0; i<token_cnt;i++) {
-         cnt = 0;
-         ptr1 = strtok(tokens[i],"=>");  //LeftHandedSide=methodarg
-         ptr2 = strtok((char*)0,"=>"); //RightHandedSide-points to datamember
+         ptr1 = R__STRTOK_R(tokens[i], "=>", &rest);         // LeftHandedSide=methodarg
+         ptr2 = R__STRTOK_R((char *) nullptr, "=>", &rest);  // RightHandedSide-points to datamember
 
          //find the MethodArg
          a      = 0;

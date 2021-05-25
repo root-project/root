@@ -97,7 +97,7 @@ class writer(object):
     def addCutTube(self, name, rmin, rmax, z, startphi, deltaphi, lowX, lowY, lowZ, highX, highY, highZ):
         self.solids[2].append(['cutTube',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                           'z':z, 'startphi':startphi, 'deltaphi':deltaphi,
-					  'lowX':lowX, 'lowY':lowY, 'lowZ':lowZ, 'highX':highX, 'highY':highY, 'highZ':highZ, 'lunit':'cm', 'aunit':'deg'},[]])
+                                          'lowX':lowX, 'lowY':lowY, 'lowZ':lowZ, 'highX':highX, 'highY':highY, 'highZ':highZ, 'lunit':'cm', 'aunit':'deg'},[]])
 
     def addPolycone(self, name, startphi, deltaphi, zplanes):
         zpls = []
@@ -117,14 +117,14 @@ class writer(object):
         self.solids[2].append(['polyhedra',{'name':name,
                                             'startphi':startphi, 'deltaphi':deltaphi,
                                             'numsides':numsides, 'lunit':'cm', 'aunit':'deg'}, zpls])
-					    
+                        
     def addXtrusion(self, name, vertices, sections):
         elems = []
-	for vertex in vertices:
-	    elems.append( ['twoDimVertex',{'x':vertex[0], 'y':vertex[1]},[]] )
-	for section in sections:
-	    elems.append( ['section',{'zOrder':section[0], 'zPosition':section[1], 'xOffset':section[2], 'yOffset':section[3], 'scalingFactor':section[4]},[]] )
-	self.solids[2].append(['xtru',{'name':name, 'lunit':'cm'}, elems])
+        for vertex in vertices:
+            elems.append( ['twoDimVertex',{'x':vertex[0], 'y':vertex[1]},[]] )
+        for section in sections:
+            elems.append( ['section',{'zOrder':section[0], 'zPosition':section[1], 'xOffset':section[2], 'yOffset':section[3], 'scalingFactor':section[4]},[]] )
+        self.solids[2].append(['xtru',{'name':name, 'lunit':'cm'}, elems])
 
     def addEltube(self, name, x, y, z):
         self.solids[2].append( ['eltube', {'name':name, 'dx':x, 'dy':y, 'dz':z, 'lunit':'cm'},[]] )
@@ -218,5 +218,3 @@ class writer(object):
 
         file.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
         writeElement(self.document,'')
-	
-

@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TSlider.h"
 #include "TSliderBox.h"
 
-#include <string.h>
+#include <cstring>
+#include <iostream>
 
 ClassImp(TSlider);
 
@@ -65,6 +65,7 @@ void xyslider()
 ~~~
 
 #### macro action.C
+
 ~~~ {.cpp}
 void action()
 {
@@ -119,6 +120,8 @@ TSlider::TSlider(): TPad()
 TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TPad(name,title,0.1,0.1,0.9,0.9,color,bordersize,bordermode)
 {
+   if (!gPad) return;
+
    Double_t x1pad = gPad->GetX1();
    Double_t x2pad = gPad->GetX2();
    Double_t y1pad = gPad->GetY1();

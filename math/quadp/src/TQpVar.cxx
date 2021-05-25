@@ -40,15 +40,16 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Class containing the variables for the general QP formulation         //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TQpVar
 
-#include "Riostream.h"
+Class containing the variables for the general QP formulation
+
+In terms of in our abstract problem formulation, these variables are
+the vectors x, y, z and s.
+*/
+
+#include <iostream>
 #include "TQpVar.h"
-#include "TMatrixD.h"
 
 ClassImp(TQpVar);
 

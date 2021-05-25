@@ -9,35 +9,30 @@
  *************************************************************************/
 
 #include "TGTableCell.h"
-#include "TClass.h"
 #include "TGWindow.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
-#include "TSystem.h"
-#include "TImage.h"
-#include "TEnv.h"
-#include "TGToolTip.h"
 #include "TGWidget.h"
-#include "TGPicture.h"
 #include "TGTable.h"
 #include "TRandom3.h"
+#include "TVirtualX.h"
 
 ClassImp(TGTableHeader);
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableHeader                                                        //
-//                                                                      //
-// TGTableHeader is the class that implements a header for a row or     //
-// column. Interactivity on a per column or row basis is implemented    //
-// using this header.                                                   //
-//                                                                      //
-// TGTableHeader is for internal use in TGTable only.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTableHeader
+    \ingroup guiwidgets
+
+TGTableHeader is the class that implements a header for a row or
+column. Interactivity on a per column or row basis is implemented
+using this header.
+
+TGTableHeader is for internal use in TGTable only.
+
+*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGTableHeader constuctor.
+/// TGTableHeader constructor.
 
 TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
                              UInt_t position, EHeaderType type, UInt_t width,
@@ -72,7 +67,7 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGTableHeader constuctor.
+/// TGTableHeader constructor.
 
 TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table,
                              const char *label, UInt_t position,

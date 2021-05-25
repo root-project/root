@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//
-// TMLPAnalyzer
-//
-// This utility class contains a set of tests usefull when developing
-// a neural network.
-// It allows you to check for unneeded variables, and to control
-// the network structure.
-//
-///////////////////////////////////////////////////////////////////////////
+/** \class TMLPAnalyzer
+
+This utility class contains a set of tests usefull when developing
+a neural network.
+It allows you to check for unneeded variables, and to control
+the network structure.
+
+*/
 
 #include "TROOT.h"
 #include "TSynapse.h"
@@ -32,13 +30,12 @@
 #include "TProfile.h"
 #include "THStack.h"
 #include "TLegend.h"
-#include "TPad.h"
-#include "TCanvas.h"
-#include "TGaxis.h"
+#include "TVirtualPad.h"
 #include "TRegexp.h"
 #include "TMath.h"
-#include "Riostream.h"
-#include <stdlib.h>
+#include "snprintf.h"
+#include <iostream>
+#include <cstdlib>
 
 ClassImp(TMLPAnalyzer);
 
@@ -166,7 +163,7 @@ void TMLPAnalyzer::CheckNetwork()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Collect information about what is usefull in the network.
+/// Collect information about what is useful in the network.
 /// This method has to be called first when analyzing a network.
 /// Fills the two analysis trees.
 
@@ -261,7 +258,7 @@ void TMLPAnalyzer::GatherInformations()
             params[i] -= 2*shift*rms[i];
             v2 = fNetwork->Evaluate(l,params);
             diff += (v1-v2)*(v1-v2);
-            // reset to original vealue
+            // reset to original value
             params[i] += shift*rms[i];
          }
          diff = TMath::Sqrt(diff);

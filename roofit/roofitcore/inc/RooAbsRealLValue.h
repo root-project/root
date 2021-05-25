@@ -17,7 +17,8 @@
 #define ROO_ABS_REAL_LVALUE
 
 #include <cmath>
-#include <float.h>
+#include <cfloat>
+#include <utility>
 #include "TString.h"
 
 #include "RooAbsReal.h"
@@ -33,13 +34,19 @@ public:
   inline RooAbsRealLValue() { }
   RooAbsRealLValue(const char *name, const char *title, const char *unit= "") ;
   RooAbsRealLValue(const RooAbsRealLValue& other, const char* name=0);
+  RooAbsRealLValue& operator=(const RooAbsRealLValue&) = default;
   virtual ~RooAbsRealLValue();
 
   // Parameter value and error accessors
+  /// Set the current value of the object. Needs to be overridden by implementations.
   virtual void setVal(Double_t value)=0;
+  /// Set the current value of the object. The rangeName is ignored.
+  /// Can be overridden by derived classes to e.g. check if the value fits in the given range.
+  virtual void setVal(Double_t value, const char* /*rangeName*/) {
+    return setVal(value) ;
+  }
   virtual RooAbsArg& operator=(const RooAbsReal& other) ;
   virtual RooAbsArg& operator=(Double_t newValue);
-  virtual RooAbsArg& operator=(Int_t ival) { return operator=((Double_t)ival) ; }
 
   // Implementation of RooAbsLValue
   virtual void setBin(Int_t ibin, const char* rangeName=0) ;
@@ -64,15 +71,34 @@ public:
 
   // Get fit range limits
 
+  /// Retrive binning configuration with given name or default binning.
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const = 0 ;
+  /// Retrive binning configuration with given name or default binning.
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) = 0 ;
+  /// Check if binning with given name has been defined.
   virtual Bool_t hasBinning(const char* name) const = 0 ;
   virtual Bool_t inRange(const char* name) const ;
+  /// Get number of bins of currently defined range.
+  /// \param name Optionally, request number of bins for range with given name.
   virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins(); }
+  /// Get miniminum of currently defined range.
+  /// \param name Optionally, request minimum of range with given name.
   virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound(); }
+  /// Get maximum of currently defined range.
+  /// \param name Optionally, request maximum of range with given name.
   virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound(); }
+  /// Get low and high bound of the variable.
+  /// \param name Optional range name. If not given, the default range will be used.
+  /// \return A pair with [lowerBound, upperBound]
+  std::pair<double, double> getRange(const char* name = 0) const {
+    const auto& binning = getBinning(name);
+    return {binning.lowBound(), binning.highBound()};
+  }
+  /// Check if variable has a lower bound.
   inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
+  /// Check if variable has an upper bound.
   inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
+  /// Check if variable has a binning with given name.
   virtual Bool_t hasRange(const char* name) const { return hasBinning(name) ; }
 
   // Jacobian term management
@@ -132,14 +158,8 @@ public:
 
 protected:
 
-  friend class RooRealBinding ;
-
   virtual void setValFast(Double_t value) { setVal(value) ; }
 
-  virtual void setVal(Double_t value, const char* /*rangeName*/) {
-    // Set object value to 'value'
-    return setVal(value) ;
-  }
   Bool_t fitRangeOKForPlotting() const ;
   void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
 

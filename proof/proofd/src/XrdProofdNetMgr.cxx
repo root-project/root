@@ -81,7 +81,6 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fNumLocalWrks = XrdProofdAux::GetNumCPUs();
    fWorkerUsrCfg = 0;
    fRequestTO = 30;
-   fBonjourEnabled = false;
 
    // Configuration directives
    RegisterDirectives();
@@ -95,7 +94,6 @@ void XrdProofdNetMgr::RegisterDirectives()
    Register("adminreqto", new XrdProofdDirective("adminreqto", this, &DoDirectiveClass));
    Register("resource", new XrdProofdDirective("resource", this, &DoDirectiveClass));
    Register("worker", new XrdProofdDirective("worker", this, &DoDirectiveClass));
-   Register("bonjour", new XrdProofdDirective("bonjour", this, &DoDirectiveClass));
    Register("localwrks", new XrdProofdDirective("localwrks", (void *)&fNumLocalWrks, &DoDirectiveInt));
 }
 
@@ -181,7 +179,7 @@ int XrdProofdNetMgr::Config(bool rcf)
             // Use default
             CreateDefaultPROOFcfg();
          }
-      } else if (fResourceType == kRTNone && fWorkers.size() <= 1 && !fBonjourEnabled) {
+      } else if (fResourceType == kRTNone && fWorkers.size() <= 1) {
          // Nothing defined: use default
          CreateDefaultPROOFcfg();
       }
@@ -221,29 +219,10 @@ int XrdProofdNetMgr::DoDirective(XrdProofdDirective *d,
       return DoDirectiveAdminReqTO(val, cfg, rcf);
    } else if (d->fName == "worker") {
       return DoDirectiveWorker(val, cfg, rcf);
-   } else if (d->fName == "bonjour") {
-      return DoDirectiveBonjour(val, cfg, rcf);
    }
 
    TRACE(XERR, "unknown directive: " << d->fName);
 
-   return -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int XrdProofdNetMgr::DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool)
-{
-   XPDLOC(NMGR, "NetMgr::DoDirectiveBonjour");
-
-   // Process 'bonjour' directive
-   TRACE(DBG, "processing Bonjour directive");
-
-   if (!val || !cfg)
-      // undefined inputs
-      return -1;
-
-   TRACE(XERR, "Bonjour support is disabled");
    return -1;
 }
 

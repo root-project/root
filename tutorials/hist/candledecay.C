@@ -10,10 +10,10 @@
 
 void candledecay()
 {
-   TCanvas *c1 = new TCanvas("c1","Candle Decay",800,600);
+   auto c1 = new TCanvas("c1","Candle Decay",800,600);
    c1->Divide(2,1);
-   TRandom *rng = new TRandom();
-   TH2I *h1 = new TH2I("h1","Decay",1000,0,1000,20,0,20);
+   auto rng = new TRandom();
+   auto h1 = new TH2I("h1","Decay",1000,0,1000,20,0,20);
 
    float myRand;
    for (int i = 0; i < 19; i++) {
@@ -32,7 +32,7 @@ void candledecay()
    c1->cd(1);
    h1->Draw("violiny(112000000)");
    c1->cd(2);
-   TH2I *h2 = (TH2I*)h1->Clone("h2");
+   auto h2 = (TH2I*)h1->Clone("h2");
    h2->SetBarWidth(0.8);
    h2->DrawCopy("candley2");
 }

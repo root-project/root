@@ -15,18 +15,15 @@ Oddly, this is hard to find in ROOT (except via relation to GammaDist).
 Here we also implement the analytic integral.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-#include "TMath.h"
 #include "RooChiSquarePdf.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
+#include "RooBatchCompute.h"
 
-#include "TError.h"
+#include "TMath.h"
 
+#include <cmath>
 using namespace std;
 
 ClassImp(RooChiSquarePdf);
@@ -66,6 +63,12 @@ Double_t RooChiSquarePdf::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of ChiSquare distribution.  
+RooSpan<double> RooChiSquarePdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeChiSquare(this, evalData, _x->getValues(evalData, normSet), _ndof->getValues(evalData, normSet));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// No analytical calculation available (yet) of integrals over subranges
 
 Int_t RooChiSquarePdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
@@ -82,7 +85,7 @@ Int_t RooChiSquarePdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& anal
 
 Double_t RooChiSquarePdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  R__ASSERT(code==1) ;
+  assert(1 == code); (void)code;
   Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
 
   // TMath::Prob needs ndof to be an integer, or it returns 0.

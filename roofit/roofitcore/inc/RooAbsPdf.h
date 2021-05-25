@@ -25,7 +25,6 @@
 class RooDataSet;
 class RooDataHist ;
 class RooArgSet ;
-class RooRealProxy ;
 class RooAbsGenContext ;
 class RooFitResult ;
 class RooExtendPdf ;
@@ -37,6 +36,9 @@ class TList ;
 class RooLinkedList ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
+namespace RooBatchCompute {
+struct RunContext;
+}
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -49,9 +51,15 @@ public:
   virtual ~RooAbsPdf();
 
   // Toy MC generation
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// See RooAbsPdf::generate(const RooArgSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+  /// \param[in] nEvents How many events to generate
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
                        const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) ;
+                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) {
+    return generate(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
+  }
   RooDataSet *generate(const RooArgSet &whatVars,  
                        const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
                        const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
@@ -84,24 +92,32 @@ public:
     ClassDef(GenSpec,0) // Generation specification
   } ;
 
+  ///Prepare GenSpec configuration object for efficient generation of multiple datasets from identical specification.
   GenSpec* prepareMultiGen(const RooArgSet &whatVars,  
 			   const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
 			   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
 			   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+  ///Generate according to GenSpec obtained from prepareMultiGen().
   RooDataSet* generate(GenSpec&) const ;
   
 
+  ////////////////////////////////////////////////////////////////////////////////
+  /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&)
+  /// \param[in] nEvents How many events to generate
   virtual RooDataHist *generateBinned(const RooArgSet &whatVars, Double_t nEvents, const RooCmdArg& arg1,
 			      const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-			      const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) ;
+			      const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) const {
+    return generateBinned(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5);
+  }
   virtual RooDataHist *generateBinned(const RooArgSet &whatVars,  
 			      const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
 			      const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-			      const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+			      const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) const;
   virtual RooDataHist *generateBinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData=kFALSE, Bool_t extended=kFALSE) const;
 
   virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
+  ///Helper calling plotOn(RooPlot*, RooLinkedList&) const
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
 			  const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
@@ -113,7 +129,7 @@ public:
   }
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
-
+  /// Add a box with parameter values (and errors) to the specified frame
   virtual RooPlot* paramOn(RooPlot* frame, 
                            const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(), 
                            const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), 
@@ -183,47 +199,52 @@ public:
   RooAbsReal* createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
-  virtual Bool_t traceEvalHook(Double_t value) const ;  
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
+      const RooArgSet* normSet = nullptr) const;
+  RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+
+  /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 
-    // Get p.d.f normalization term needed for observables 'nset'
     return getNorm(&nset) ; 
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
-  Bool_t traceEvalPdf(Double_t value) const ;
+private:
+  Bool_t traceEvalPdf(Double_t value) const;
+
+public:
 
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
+  /// Shows if a PDF is self-normalized, which means that no attempt is made to add a normalization term.
+  /// Always returns false, unless a PDF overrides this function.
   virtual Bool_t selfNormalized() const { 
-    // If true, p.d.f is taken as self-normalized and no attempt is made to add a normalization term
-    // This default implementation return false
     return kFALSE ; 
   }
 
   // Support for extended maximum likelihood, switched off by default
   enum ExtendMode { CanNotBeExtended, CanBeExtended, MustBeExtended } ;
-  virtual ExtendMode extendMode() const { 
-    // Returns ability of p.d.f to provided extended likelihood terms. Possible
-    // answers are CanNotBeExtended, CanBeExtended or MustBeExtended. This
-    // default implementation always return CanNotBeExtended
-    return CanNotBeExtended ; 
-  } 
-  inline Bool_t canBeExtended() const { 
-    // If true p.d.f can provide extended likelihood term
+  /// Returns ability of PDF to provide extended likelihood terms. Possible
+  /// answers are in the enumerator RooAbsPdf::ExtendMode.
+  /// This default implementation always returns CanNotBeExtended.
+  virtual ExtendMode extendMode() const { return CanNotBeExtended; }
+  /// If true, PDF can provide extended likelihood term.
+  inline Bool_t canBeExtended() const {
     return (extendMode() != CanNotBeExtended) ; 
   }
-  inline Bool_t mustBeExtended() const { 
-    // If true p.d.f must extended likelihood term
+  /// If true PDF must provide extended likelihood term.
+  inline Bool_t mustBeExtended() const {
     return (extendMode() == MustBeExtended) ; 
   }
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return expecteded number of p.d.fs to be used in calculated of extended likelihood
+  /// Return expected number of events to be used in calculation of extended likelihood.
+  virtual Double_t expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ; 
   }
 
@@ -235,9 +256,6 @@ public:
   static int verboseEval() ;
 
   virtual Double_t extendedTerm(Double_t observedEvents, const RooArgSet* nset=0) const ;
-
-  static void clearEvalError() ;
-  static Bool_t evalError() ;
 
   void setNormRange(const char* rangeName) ;
   const char* normRange() const { 
@@ -260,7 +278,7 @@ public:
   virtual RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0, 
 					   Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="") const ;
 
-protected:
+private:
 
   RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
 		       Double_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit=kFALSE, 
@@ -271,7 +289,9 @@ protected:
                            const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
 
+  void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
 
+protected:
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
   friend class RooEffGenContext ;
@@ -304,7 +324,6 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
-    void operModeHook(RooAbsArg::OperMode) ;
     virtual ~CacheElem() ; 
     virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
     RooAbsReal* _norm ;
@@ -330,14 +349,17 @@ protected:
 
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
 
-  static void raiseEvalError() ;
-
-  static Bool_t _evalError ;
-
   RooNumGenConfig* _specGeneratorConfig ; //! MC generator configuration specific for this object
   
   TString _normRange ; // Normalization range
-  static TString _normRangeOverride ;
+  static TString _normRangeOverride ; 
+
+private:
+  template<class Minimizer>
+  int calculateAsymptoticCorrectedCovMatrix(Minimizer& minimizer, RooAbsData const& data);
+
+  template<class Minimizer>
+  int calculateSumW2CorrectedCovMatrix(Minimizer& minimizer, RooAbsReal const& nll) const;
 
 public:
   Bool_t num_int_timing_flag() const;

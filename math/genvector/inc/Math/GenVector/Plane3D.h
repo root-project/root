@@ -117,20 +117,14 @@ public:
    }
 
    // compiler-generated copy ctor and dtor are fine.
+   Plane3D(const Plane3D &) = default;
 
    // ------ assignment ------
 
    /**
       Assignment operator from other Plane3D class
    */
-   Plane3D &operator=(const Plane3D &plane)
-   {
-      fA = plane.fA;
-      fB = plane.fB;
-      fC = plane.fC;
-      fD = plane.fD;
-      return *this;
-   }
+   Plane3D &operator=(const Plane3D &) = default;
 
    /**
       Return the a coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the

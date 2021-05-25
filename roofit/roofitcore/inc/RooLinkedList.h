@@ -16,14 +16,16 @@
 #ifndef ROO_LINKED_LIST
 #define ROO_LINKED_LIST
 
-#include <map>
-#include <list>
-
-#include "TNamed.h"
+#include "TObject.h"
 #include "RooLinkedListElem.h"
-#include "RooHashTable.h"
+#include "TString.h"
+
+#include <vector>
+#include <memory>
+#include <unordered_map>
+
 class RooLinkedListIter ;
-class RooFIter ;
+class RooFIter;
 class TIterator ;
 class RooAbsArg ;
 
@@ -61,11 +63,11 @@ public:
 
   virtual void Add(TObject* arg) { Add(arg,1) ; }
   virtual Bool_t Remove(TObject* arg) ;
-  TObject* At(Int_t index) const ;
+  TObject* At(int index) const ;
   Bool_t Replace(const TObject* oldArg, const TObject* newArg) ;
-  TIterator* MakeIterator(Bool_t dir=kTRUE) const ;
-  RooLinkedListIter iterator(Bool_t dir=kTRUE) const ;
-  RooFIter fwdIterator() const ; 
+  TIterator* MakeIterator(Bool_t forward = kTRUE) const ;
+  RooLinkedListIter iterator(Bool_t forward = kTRUE) const ;
+  RooFIter fwdIterator() const ;
 
   void Clear(Option_t *o=0) ;
   void Delete(Option_t *o=0) ;
@@ -101,8 +103,8 @@ protected:
   void deleteElement(RooLinkedListElem*) ;
 
 
-  friend class RooLinkedListIter ;
-  friend class RooFIter ;
+  friend class RooLinkedListIterImpl ;
+  friend class RooFIterForLinkedList ;
 
   virtual void Add(TObject* arg, Int_t refCount) ;
 
@@ -112,8 +114,11 @@ protected:
   Int_t _size ;                //  Current size of list
   RooLinkedListElem*  _first ; //! Link to first element of list
   RooLinkedListElem*  _last ;  //! Link to last element of list
-  RooHashTable*       _htableName ; //! Hash table by name 
-  RooHashTable*       _htableLink ; //! Hash table by link pointer
+
+  using HashTableByName = std::unordered_map<std::string,TObject const*>;
+  using HashTableByLink = std::unordered_map<TObject const*,TObject const*>;
+  std::unique_ptr<HashTableByName> _htableName; //! Hash table by name 
+  std::unique_ptr<HashTableByLink> _htableLink; //! Hash table by link pointer
 
   TString             _name ; 
   Bool_t              _useNptr ; //!
@@ -127,10 +132,9 @@ private:
   /// shared memory pool for allocation of RooLinkedListElems
   static Pool* _pool; //!
 
+  std::vector<RooLinkedListElem *> _at; //! index list for quick index through ::At
+
   ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
-
-
-
 
 #endif

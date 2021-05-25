@@ -28,17 +28,18 @@ class TProfile2D : public TH2D {
 
 public:
    friend class TProfileHelper;
+   friend class TH1Merger;
 
 protected:
-   TArrayD     fBinEntries;      //number of entries per bin
-   EErrorType  fErrorMode;       //Option to compute errors
-   Double_t    fZmin;            //Lower limit in Z (if set)
-   Double_t    fZmax;            //Upper limit in Z (if set)
-   Bool_t      fScaling;         //!True when TProfile2D::Scale is called
-   Double_t    fTsumwz;          //Total Sum of weight*Z
-   Double_t    fTsumwz2;         //Total Sum of weight*Z*Z
-   TArrayD     fBinSumw2;         //Array of sum of squares of weights per bin
-   static Bool_t   fgApproximate; //bin error approximation option
+   TArrayD     fBinEntries;       ///< Number of entries per bin
+   EErrorType  fErrorMode;        ///< Option to compute errors
+   Double_t    fZmin;             ///< Lower limit in Z (if set)
+   Double_t    fZmax;             ///< Upper limit in Z (if set)
+   Bool_t      fScaling;          ///<! True when TProfile2D::Scale is called
+   Double_t    fTsumwz;           ///< Total Sum of weight*Z
+   Double_t    fTsumwz2;          ///< Total Sum of weight*Z*Z
+   TArrayD     fBinSumw2;         ///< Array of sum of squares of weights per bin
+   static Bool_t   fgApproximate; ///< Bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t, Double_t, Double_t) {return -2;} //may not use
@@ -86,6 +87,7 @@ public:
    TProfile2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
    TProfile2D(const TProfile2D &profile);
+   TProfile2D &operator=(const TProfile2D &profile);
    virtual ~TProfile2D();
    virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
@@ -99,9 +101,9 @@ public:
    virtual Bool_t    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    virtual void      ExtendAxis(Double_t x, TAxis *axis);
    Int_t             Fill(Double_t x, Double_t y, Double_t z);
-   virtual Int_t     Fill(Double_t x, const char *namey, Double_t z);
-   virtual Int_t     Fill(const char *namex, Double_t y, Double_t z);
-   virtual Int_t     Fill(const char *namex, const char *namey, Double_t z);
+   virtual Int_t     Fill(Double_t x, const char *namey, Double_t z, Double_t w = 1.);
+   virtual Int_t     Fill(const char *namex, Double_t y, Double_t z, Double_t w = 1.);
+   virtual Int_t     Fill(const char *namex, const char *namey, Double_t z, Double_t w = 1.);
    virtual Int_t     Fill(Double_t x, Double_t y, Double_t z, Double_t w);
    virtual Double_t  GetBinContent(Int_t bin) const;
    virtual Double_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
@@ -143,7 +145,7 @@ public:
    virtual void      Sumw2(Bool_t flag = kTRUE);
    Double_t GetNumberOfBins() { return fBinEntries.GetSize(); }
 
-   ClassDef(TProfile2D,7)  //Profile2D histogram class
+   ClassDef(TProfile2D,8)  //Profile2D histogram class
 };
 
 #endif

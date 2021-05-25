@@ -11,6 +11,7 @@
 #define CLING_INTERPRETER_H
 
 #include "cling/Interpreter/InvocationOptions.h"
+#include "cling/Interpreter/RuntimeOptions.h"
 
 #include "llvm/ADT/StringRef.h"
 
@@ -40,16 +41,18 @@ namespace clang {
   class FunctionDecl;
   class GlobalDecl;
   class MacroInfo;
+  class Module;
+  class ModuleFileExtension;
   class NamedDecl;
   class Parser;
   class Preprocessor;
+  class PresumedLoc;
   class QualType;
   class RecordDecl;
   class Sema;
   class SourceLocation;
   class SourceManager;
   class Type;
-  class PresumedLoc;
 }
 
 namespace cling {
@@ -64,12 +67,13 @@ namespace cling {
   class ClangInternalState;
   class CompilationOptions;
   class DynamicLibraryManager;
+  class IncrementalCUDADeviceCompiler;
   class IncrementalExecutor;
   class IncrementalParser;
   class InterpreterCallbacks;
   class LookupHelper;
-  class Value;
   class Transaction;
+  class Value;
 
   ///\brief Class that implements the interpreter-like behavior. It manages the
   /// incremental compilation.
@@ -136,6 +140,10 @@ namespace cling {
       kNumExeResults
     };
 
+  public:
+    using ModuleFileExtensions =
+        std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
+
   private:
 
     ///\brief Interpreter invocation options.
@@ -181,6 +189,10 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Configuration bits that can be changed at runtime. This allows the
+    /// user to enable/disable specific interpreter extensions.
+    cling::runtime::RuntimeOptions m_RuntimeOptions;
+
     ///\brief Flag toggling the optimization level to be used.
     ///
     int m_OptLevel;
@@ -196,6 +208,11 @@ namespace cling {
     ///\brief Information about the last stored states through .storeState
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
+
+    ///\brief Cling's worker class implementing the compilation of CUDA device
+    /// code
+    ///
+    std::unique_ptr<IncrementalCUDADeviceCompiler> m_CUDACompiler;
 
     enum {
       kStdStringTransaction = 0, // Transaction known to contain std::string
@@ -282,9 +299,11 @@ namespace cling {
     ///\param[in] name - name of the function, used to find its Decl.
     ///\param[in] code - function definition, starting with 'extern "C"'.
     ///\param[in] withAccessControl - whether to enforce access restrictions.
+    ///\param[out] T - The cling::Transaction of the input
     const clang::FunctionDecl* DeclareCFunction(llvm::StringRef name,
                                                 llvm::StringRef code,
-                                                bool withAccessControl);
+                                                bool withAccessControl,
+                                                Transaction*& T);
 
     ///\brief Initialize runtime and C/C++ level overrides
     ///
@@ -297,11 +316,15 @@ namespace cling {
     Transaction* Initialize(bool NoRuntime, bool SyntaxOnly,
                             llvm::SmallVectorImpl<llvm::StringRef>& Globals);
 
+    ///\ Shut down the interpreter runtime.
+    ///
+    void ShutDown();
+
     ///\brief The target constructor to be called from both the delegating
     /// constructors. parentInterp might be nullptr.
     ///
-    Interpreter(int argc, const char* const *argv,
-                const char* llvmdir, bool noRuntime,
+    Interpreter(int argc, const char* const* argv, const char* llvmdir,
+                const ModuleFileExtensions& moduleExtensions, bool noRuntime,
                 const Interpreter* parentInterp);
 
   public:
@@ -312,9 +335,11 @@ namespace cling {
     ///\param[in] llvmdir - ???
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
-    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0,
-                bool noRuntime = false) :
-      Interpreter(argc, argv, llvmdir, noRuntime, nullptr) { }
+    Interpreter(int argc, const char* const* argv, const char* llvmdir = 0,
+                const ModuleFileExtensions& moduleExtensions = {},
+                bool noRuntime = false)
+        : Interpreter(argc, argv, llvmdir, moduleExtensions, noRuntime,
+                      nullptr) {}
 
     ///\brief Constructor for child Interpreter.
     ///\param[in] parentInterpreter - the  parent interpreter of this interpreter
@@ -323,8 +348,10 @@ namespace cling {
     ///\param[in] llvmdir - ???
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
-    Interpreter(const Interpreter &parentInterpreter,int argc, const char* const *argv,
-                const char* llvmdir = 0, bool noRuntime = true);
+    Interpreter(const Interpreter& parentInterpreter, int argc,
+                const char* const* argv, const char* llvmdir = 0,
+                const ModuleFileExtensions& moduleExtensions = {},
+                bool noRuntime = true);
 
     virtual ~Interpreter();
 
@@ -334,6 +361,9 @@ namespace cling {
 
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
+
+    const cling::runtime::RuntimeOptions& getRuntimeOptions() const { return m_RuntimeOptions; }
+    cling::runtime::RuntimeOptions& getRuntimeOptions() { return m_RuntimeOptions; }
 
     const llvm::LLVMContext* getLLVMContext() const {
       return m_LLVMContext.get();
@@ -477,16 +507,23 @@ namespace cling {
     ///
     CompilationResult parse(const std::string& input,
                             Transaction** T = 0) const;
+    /// Loads a C++ Module with a given name by synthesizing an Import decl.
+    /// This routine checks if there is a modulemap in the current directory
+    /// and loads it.
+    ///
+    /// This is useful when we start up the interpreter and programatically,
+    /// later generate a modulemap.
+    ///
+    ///\returns true if the module was loaded.
+    ///
+    bool loadModule(const std::string& moduleName, bool complain = true);
 
-    ///\brief Looks for a already generated PCM for the given header file and
-    /// loads it.
+    /// Loads a C++ Module with a given name by synthesizing an Import decl.
+    /// This routine checks if there is a modulemap in the current directory
+    /// and loads it.
     ///
-    ///\param[in] headerFile - The header file for which a module should be
-    ///                        loaded.
-    ///
-    ///\returns Whether the operation was fully successful.
-    ///
-    CompilationResult loadModuleForHeader(const std::string& headerFile);
+    ///\returns true if the module was loaded or already visible.
+    bool loadModule(clang::Module* M, bool complain = true);
 
     ///\brief Parses input line, which doesn't contain statements. Code
     /// generation needed to make the module functional.
@@ -656,6 +693,10 @@ namespace cling {
     clang::Sema& getSema() const;
     clang::DiagnosticsEngine& getDiagnostics() const;
 
+    IncrementalCUDADeviceCompiler* getCUDACompiler() const {
+      return m_CUDACompiler.get();
+    }
+
     ///\brief Create suitable default compilation options.
     CompilationOptions makeDefaultCompilationOpts() const;
 
@@ -694,6 +735,7 @@ namespace cling {
 
     const Transaction* getFirstTransaction() const;
     const Transaction* getLastTransaction() const;
+    const Transaction* getLastWrapperTransaction() const;
     const Transaction* getCurrentTransaction() const;
 
     ///\brief Returns the current or last Transaction.
@@ -767,7 +809,13 @@ namespace cling {
     ///
     void AddAtExitFunc(void (*Func) (void*), void* Arg);
 
-    void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
+    ///\brief Run once the list of registered atexit functions. This is useful
+    /// when an external process wants to control carefully the teardown because
+    /// the registered atexit functions require alive interpreter service.
+    ///
+    void runAtExitFuncs();
+
+    void GenerateAutoLoadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);
 
     void forwardDeclare(Transaction& T, clang::Preprocessor& P,

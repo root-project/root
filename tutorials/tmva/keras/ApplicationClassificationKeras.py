@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+## \file
+## \ingroup tutorial_tmva_keras
+## \notebook -nodraw
+## This tutorial shows how to apply a trained model to new data.
+##
+## \macro_code
+##
+## \date 2017
+## \author TMVA Team
 
 from ROOT import TMVA, TFile, TString
 from array import array
@@ -12,7 +21,7 @@ reader = TMVA.Reader("Color:!Silent")
 
 # Load data
 if not isfile('tmva_class_example.root'):
-    call(['curl', '-O', 'http://root.cern.ch/files/tmva_class_example.root'])
+    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_class_example.root'])
 
 data = TFile.Open('tmva_class_example.root')
 signal = data.Get('TreeS')

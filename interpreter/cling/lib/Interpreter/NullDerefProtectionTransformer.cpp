@@ -44,6 +44,14 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
     ///
     LookupResult* m_clingthrowIfInvalidPointerCache;
 
+    bool IsTransparentThis(Expr* E) {
+      if (llvm::isa<CXXThisExpr>(E))
+        return true;
+      if (auto ICE = dyn_cast<ImplicitCastExpr>(E))
+        return IsTransparentThis(ICE->getSubExpr());
+      return false;
+    }
+
   public:
     PointerCheckInjector(Interpreter& I)
       : m_Interp(I), m_Sema(I.getCI()->getSema()),
@@ -58,7 +66,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
       Expr* SubExpr = UnOp->getSubExpr();
       VisitStmt(SubExpr);
       if (UnOp->getOpcode() == UO_Deref
-          && !llvm::isa<clang::CXXThisExpr>(SubExpr)
+          && !IsTransparentThis(SubExpr)
           && SubExpr->getType().getTypePtr()->isPointerType())
           UnOp->setSubExpr(SynthesizeCheck(SubExpr));
       return true;
@@ -68,7 +76,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
       Expr* Base = ME->getBase();
       VisitStmt(Base);
       if (ME->isArrow()
-          && !llvm::isa<clang::CXXThisExpr>(Base)
+          && !IsTransparentThis(Base)
           && ME->getMemberDecl()->isCXXInstanceMember())
         ME->setBase(SynthesizeCheck(Base));
       return true;
@@ -86,7 +94,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
             // Get the argument with the nonnull attribute.
             Expr* Arg = CE->getArg(index);
             if (Arg->getType().getTypePtr()->isPointerType()
-                && !llvm::isa<clang::CXXThisExpr>(Arg))
+                && !IsTransparentThis(Arg))
               CE->setArg(index, SynthesizeCheck(Arg));
           }
         }
@@ -117,7 +125,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
       if(!m_clingthrowIfInvalidPointerCache)
         FindAndCacheRuntimeLookupResult();
 
-      SourceLocation Loc = Arg->getLocStart();
+      SourceLocation Loc = Arg->getBeginLoc();
       Expr* VoidSemaArg = utils::Synthesize::CStyleCastPtrExpr(&m_Sema,
                                                             m_Context.VoidPtrTy,
                                                             (uintptr_t)&m_Interp);
@@ -190,9 +198,8 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
              E = FDecl->specific_attr_end<NonNullAttr>(); I != E; ++I) {
 
         NonNullAttr *NonNull = *I;
-        for (NonNullAttr::args_iterator i = NonNull->args_begin(),
-               e = NonNull->args_end(); i != e; ++i) {
-          ArgIndexs.set(*i);
+        for (const auto &Idx : NonNull->args()) {
+          ArgIndexs.set(Idx.getASTIndex());
         }
       }
 
@@ -211,14 +218,33 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
       SourceLocation noLoc;
       m_clingthrowIfInvalidPointerCache = new LookupResult(m_Sema, Name, noLoc,
                                         Sema::LookupOrdinaryName,
-                                        Sema::ForRedeclaration);
+                                        Sema::ForVisibleRedeclaration);
       m_Sema.LookupQualifiedName(*m_clingthrowIfInvalidPointerCache,
                                  m_Context.getTranslationUnitDecl());
       assert(!m_clingthrowIfInvalidPointerCache->empty() &&
               "Lookup of cling_runtime_internal_throwIfInvalidPointer failed!");
     }
   };
-}
+
+  static bool hasPtrCheckDisabledInContext(const Decl* D) {
+    if (isa<TranslationUnitDecl>(D))
+      return false;
+    for (const auto *Ann : D->specific_attrs<AnnotateAttr>()) {
+      if (Ann->getAnnotation() == "__cling__ptrcheck(off)")
+        return true;
+      else if (Ann->getAnnotation() == "__cling__ptrcheck(on)")
+        return false;
+    }
+    const Decl* Parent = nullptr;
+    for (auto DC = D->getDeclContext(); !Parent; DC = DC->getParent())
+      Parent = dyn_cast<Decl>(DC);
+
+    assert(Parent && "Decl without context!");
+
+    return hasPtrCheckDisabledInContext(Parent);
+  }
+
+} // unnamed namespace
 
 namespace cling {
   NullDerefProtectionTransformer::NullDerefProtectionTransformer(Interpreter* I)
@@ -232,6 +258,9 @@ namespace cling {
     if (D->isFromASTFile())
       return false;
     if (D->isTemplateDecl())
+      return false;
+
+    if (hasPtrCheckDisabledInContext(D))
       return false;
 
     auto Loc = D->getLocation();

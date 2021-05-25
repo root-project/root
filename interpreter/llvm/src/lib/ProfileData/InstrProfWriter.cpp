@@ -1,9 +1,8 @@
 //===- InstrProfWriter.cpp - Instrumented profiling writer ----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -48,9 +47,10 @@ namespace llvm {
 // back patching.
 class ProfOStream {
 public:
-  ProfOStream(raw_fd_ostream &FD) : IsFDOStream(true), OS(FD), LE(FD) {}
+  ProfOStream(raw_fd_ostream &FD)
+      : IsFDOStream(true), OS(FD), LE(FD, support::little) {}
   ProfOStream(raw_string_ostream &STR)
-      : IsFDOStream(false), OS(STR), LE(STR) {}
+      : IsFDOStream(false), OS(STR), LE(STR, support::little) {}
 
   uint64_t tell() { return OS.tell(); }
   void write(uint64_t V) { LE.write<uint64_t>(V); }
@@ -85,7 +85,7 @@ public:
   // true. Otherwise, \c OS will be an raw_string_ostream.
   bool IsFDOStream;
   raw_ostream &OS;
-  support::endian::Writer<support::little> LE;
+  support::endian::Writer LE;
 };
 
 class InstrProfRecordWriterTrait {
@@ -101,6 +101,7 @@ public:
 
   support::endianness ValueProfDataEndianness = support::little;
   InstrProfSummaryBuilder *SummaryBuilder;
+  InstrProfSummaryBuilder *CSSummaryBuilder;
 
   InstrProfRecordWriterTrait() = default;
 
@@ -112,7 +113,7 @@ public:
   EmitKeyDataLength(raw_ostream &Out, key_type_ref K, data_type_ref V) {
     using namespace support;
 
-    endian::Writer<little> LE(Out);
+    endian::Writer LE(Out, little);
 
     offset_type N = K.size();
     LE.write<offset_type>(N);
@@ -139,10 +140,13 @@ public:
   void EmitData(raw_ostream &Out, key_type_ref, data_type_ref V, offset_type) {
     using namespace support;
 
-    endian::Writer<little> LE(Out);
+    endian::Writer LE(Out, little);
     for (const auto &ProfileData : *V) {
       const InstrProfRecord &ProfRecord = ProfileData.second;
-      SummaryBuilder->addRecord(ProfRecord);
+      if (NamedInstrProfRecord::hasCSFlagInHash(ProfileData.first))
+        CSSummaryBuilder->addRecord(ProfRecord);
+      else
+        SummaryBuilder->addRecord(ProfRecord);
 
       LE.write<uint64_t>(ProfileData.first); // Function hash
       LE.write<uint64_t>(ProfRecord.Counts.size());
@@ -181,6 +185,40 @@ void InstrProfWriter::addRecord(NamedInstrProfRecord &&I, uint64_t Weight,
   auto Name = I.Name;
   auto Hash = I.Hash;
   addRecord(Name, Hash, std::move(I), Weight, Warn);
+}
+
+void InstrProfWriter::overlapRecord(NamedInstrProfRecord &&Other,
+                                    OverlapStats &Overlap,
+                                    OverlapStats &FuncLevelOverlap,
+                                    const OverlapFuncFilters &FuncFilter) {
+  auto Name = Other.Name;
+  auto Hash = Other.Hash;
+  Other.accumuateCounts(FuncLevelOverlap.Test);
+  if (FunctionData.find(Name) == FunctionData.end()) {
+    Overlap.addOneUnique(FuncLevelOverlap.Test);
+    return;
+  }
+  if (FuncLevelOverlap.Test.CountSum < 1.0f) {
+    Overlap.Overlap.NumEntries += 1;
+    return;
+  }
+  auto &ProfileDataMap = FunctionData[Name];
+  bool NewFunc;
+  ProfilingData::iterator Where;
+  std::tie(Where, NewFunc) =
+      ProfileDataMap.insert(std::make_pair(Hash, InstrProfRecord()));
+  if (NewFunc) {
+    Overlap.addOneMismatch(FuncLevelOverlap.Test);
+    return;
+  }
+  InstrProfRecord &Dest = Where->second;
+
+  uint64_t ValueCutoff = FuncFilter.ValueCutoff;
+  if (!FuncFilter.NameFilter.empty() &&
+      Name.find(FuncFilter.NameFilter) != Name.npos)
+    ValueCutoff = 0;
+
+  Dest.overlap(Other, Overlap, FuncLevelOverlap, ValueCutoff);
 }
 
 void InstrProfWriter::addRecord(StringRef Name, uint64_t Hash,
@@ -253,6 +291,8 @@ void InstrProfWriter::writeImpl(ProfOStream &OS) {
 
   InstrProfSummaryBuilder ISB(ProfileSummaryBuilder::DefaultCutoffs);
   InfoObj->SummaryBuilder = &ISB;
+  InstrProfSummaryBuilder CSISB(ProfileSummaryBuilder::DefaultCutoffs);
+  InfoObj->CSSummaryBuilder = &CSISB;
 
   // Populate the hash table generator.
   for (const auto &I : FunctionData)
@@ -264,6 +304,10 @@ void InstrProfWriter::writeImpl(ProfOStream &OS) {
   Header.Version = IndexedInstrProf::ProfVersion::CurrentVersion;
   if (ProfileKind == PF_IRLevel)
     Header.Version |= VARIANT_MASK_IR_PROF;
+  if (ProfileKind == PF_IRLevelWithCS) {
+    Header.Version |= VARIANT_MASK_IR_PROF;
+    Header.Version |= VARIANT_MASK_CSIR_PROF;
+  }
   Header.Unused = 0;
   Header.HashType = static_cast<uint64_t>(IndexedInstrProf::HashType);
   Header.HashOffset = 0;
@@ -287,6 +331,14 @@ void InstrProfWriter::writeImpl(ProfOStream &OS) {
   uint64_t SummaryOffset = OS.tell();
   for (unsigned I = 0; I < SummarySize / sizeof(uint64_t); I++)
     OS.write(0);
+  uint64_t CSSummaryOffset = 0;
+  uint64_t CSSummarySize = 0;
+  if (ProfileKind == PF_IRLevelWithCS) {
+    CSSummaryOffset = OS.tell();
+    CSSummarySize = SummarySize / sizeof(uint64_t);
+    for (unsigned I = 0; I < CSSummarySize; I++)
+      OS.write(0);
+  }
 
   // Write the hash table.
   uint64_t HashTableStart = Generator.Emit(OS.OS, *InfoObj);
@@ -300,13 +352,25 @@ void InstrProfWriter::writeImpl(ProfOStream &OS) {
   setSummary(TheSummary.get(), *PS);
   InfoObj->SummaryBuilder = nullptr;
 
+  // For Context Sensitive summary.
+  std::unique_ptr<IndexedInstrProf::Summary> TheCSSummary = nullptr;
+  if (ProfileKind == PF_IRLevelWithCS) {
+    TheCSSummary = IndexedInstrProf::allocSummary(SummarySize);
+    std::unique_ptr<ProfileSummary> CSPS = CSISB.getSummary();
+    setSummary(TheCSSummary.get(), *CSPS);
+  }
+  InfoObj->CSSummaryBuilder = nullptr;
+
   // Now do the final patch:
   PatchItem PatchItems[] = {
       // Patch the Header.HashOffset field.
       {HashTableStartFieldOffset, &HashTableStart, 1},
       // Patch the summary data.
       {SummaryOffset, reinterpret_cast<uint64_t *>(TheSummary.get()),
-       (int)(SummarySize / sizeof(uint64_t))}};
+       (int)(SummarySize / sizeof(uint64_t))},
+      {CSSummaryOffset, reinterpret_cast<uint64_t *>(TheCSSummary.get()),
+       (int)CSSummarySize}};
+
   OS.patch(PatchItems, sizeof(PatchItems) / sizeof(*PatchItems));
 }
 
@@ -327,7 +391,7 @@ std::unique_ptr<MemoryBuffer> InstrProfWriter::writeBuffer() {
 }
 
 static const char *ValueProfKindStr[] = {
-#define VALUE_PROF_KIND(Enumerator, Value) #Enumerator,
+#define VALUE_PROF_KIND(Enumerator, Value, Descr) #Enumerator,
 #include "llvm/ProfileData/InstrProfData.inc"
 };
 
@@ -361,7 +425,8 @@ void InstrProfWriter::writeRecordInText(StringRef Name, uint64_t Hash,
       std::unique_ptr<InstrProfValueData[]> VD = Func.getValueForSite(VK, S);
       for (uint32_t I = 0; I < ND; I++) {
         if (VK == IPVK_IndirectCallTarget)
-          OS << Symtab.getFuncName(VD[I].Value) << ":" << VD[I].Count << "\n";
+          OS << Symtab.getFuncNameOrExternalSymbol(VD[I].Value) << ":"
+             << VD[I].Count << "\n";
         else
           OS << VD[I].Value << ":" << VD[I].Count << "\n";
       }
@@ -374,16 +439,33 @@ void InstrProfWriter::writeRecordInText(StringRef Name, uint64_t Hash,
 Error InstrProfWriter::writeText(raw_fd_ostream &OS) {
   if (ProfileKind == PF_IRLevel)
     OS << "# IR level Instrumentation Flag\n:ir\n";
+  else if (ProfileKind == PF_IRLevelWithCS)
+    OS << "# CSIR level Instrumentation Flag\n:csir\n";
   InstrProfSymtab Symtab;
-  for (const auto &I : FunctionData)
-    if (shouldEncodeData(I.getValue()))
+
+  using FuncPair = detail::DenseMapPair<uint64_t, InstrProfRecord>;
+  using RecordType = std::pair<StringRef, FuncPair>;
+  SmallVector<RecordType, 4> OrderedFuncData;
+
+  for (const auto &I : FunctionData) {
+    if (shouldEncodeData(I.getValue())) {
       if (Error E = Symtab.addFuncName(I.getKey()))
         return E;
-  Symtab.finalizeSymtab();
-
-  for (const auto &I : FunctionData)
-    if (shouldEncodeData(I.getValue()))
       for (const auto &Func : I.getValue())
-        writeRecordInText(I.getKey(), Func.first, Func.second, Symtab, OS);
+        OrderedFuncData.push_back(std::make_pair(I.getKey(), Func));
+    }
+  }
+
+  llvm::sort(OrderedFuncData, [](const RecordType &A, const RecordType &B) {
+    return std::tie(A.first, A.second.first) <
+           std::tie(B.first, B.second.first);
+  });
+
+  for (const auto &record : OrderedFuncData) {
+    const StringRef &Name = record.first;
+    const FuncPair &Func = record.second;
+    writeRecordInText(Name, Func.first, Func.second, Symtab, OS);
+  }
+
   return Error::success();
 }

@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,16 +12,6 @@
 #ifndef ROOT_TGCanvas
 #define ROOT_TGCanvas
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCanvas and TGViewPort and TGContainer                              //
-//                                                                      //
-// A TGCanvas is a frame containing two scrollbars (horizontal and      //
-// vertical) and a viewport. The viewport acts as the window through    //
-// which we look at the contents of the container frame.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -47,29 +37,29 @@ friend class TGContainerScrollTimer;
 friend class TGListView;
 
 protected:
-   TGViewPort        *fViewPort;      // container viewport
-   TGCanvas          *fCanvas;        // pointer to canvas
-   const TGWindow    *fMsgWindow;     // window handling container messages
-   TGFrameElement    *fLastActiveEl;  // last active item
-   Int_t              fXp, fYp;       // previous pointer position
-   Int_t              fX0, fY0;       // corner of rubber band box
-   Int_t              fXf, fYf;       // other corner of rubber band box
-   Bool_t             fDragging;      // true if in dragging mode
-   Int_t              fTotal;         // total items
-   Int_t              fSelected;      // number of selected items
-   TTimer            *fScrollTimer;   // autoscroll timer
-   Bool_t             fOnMouseOver;   // kTRUE when mouse pointer is over entry
-   Bool_t             fLastDir;       // direction of last search
-   Bool_t             fLastCase;      // case sensetivity of last search
-   Bool_t             fLastSubstring; // substring search option of last search
-   TString            fLastName;      // the name of object of last search
-   TTimer            *fKeyTimer;      // keyboard timer
-   TString            fKeyInput;      // keyboard input (buffer)
-   Bool_t             fKeyTimerActive;// kTRUE - keyboard timer is active
-   Bool_t             fScrolling;     // kTRUE - when scrolling is ON
+   TGViewPort        *fViewPort;      ///< container viewport
+   TGCanvas          *fCanvas;        ///< pointer to canvas
+   const TGWindow    *fMsgWindow;     ///< window handling container messages
+   TGFrameElement    *fLastActiveEl;  ///< last active item
+   Int_t              fXp, fYp;       ///< previous pointer position
+   Int_t              fX0, fY0;       ///< corner of rubber band box
+   Int_t              fXf, fYf;       ///< other corner of rubber band box
+   Bool_t             fDragging;      ///< true if in dragging mode
+   Int_t              fTotal;         ///< total items
+   Int_t              fSelected;      ///< number of selected items
+   TTimer            *fScrollTimer;   ///< autoscroll timer
+   Bool_t             fOnMouseOver;   ///< kTRUE when mouse pointer is over entry
+   Bool_t             fLastDir;       ///< direction of last search
+   Bool_t             fLastCase;      ///< case sensitivity of last search
+   Bool_t             fLastSubstring; ///< substring search option of last search
+   TString            fLastName;      ///< the name of object of last search
+   TTimer            *fKeyTimer;      ///< keyboard timer
+   TString            fKeyInput;      ///< keyboard input (buffer)
+   Bool_t             fKeyTimerActive;///< kTRUE - keyboard timer is active
+   Bool_t             fScrolling;     ///< kTRUE - when scrolling is ON
    Int_t              fXDND, fYDND;
    Bool_t             fBdown;
-   TGRectangle        fExposedRegion; // exposed area
+   TGRectangle        fExposedRegion; ///< exposed area
 
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
@@ -82,11 +72,11 @@ protected:
    virtual void RepeatSearch();
 
 private:
-   TGContainer(const TGContainer&);               // not implemented
-   TGContainer& operator=(const TGContainer&);    // not implemented
+   TGContainer(const TGContainer&) = delete;
+   TGContainer& operator=(const TGContainer&) = delete;
 
 public:
-   TGContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGContainer(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kSunkenFrame,
                Pixel_t back = GetDefaultFrameBackground());
    TGContainer(TGCanvas *p,UInt_t options = kSunkenFrame,
@@ -172,11 +162,11 @@ protected:
    TGFrame    *fContainer;   // container frame
 
 private:
-   TGViewPort(const TGViewPort&);             // not implemented
-   TGViewPort& operator=(const TGViewPort&);  // not implemented
+   TGViewPort(const TGViewPort&) = delete;
+   TGViewPort& operator=(const TGViewPort&) = delete;
 
 public:
-   TGViewPort(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGViewPort(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
 
@@ -202,14 +192,14 @@ public:
 class TGCanvas : public TGFrame {
 
 protected:
-   TGViewPort      *fVport;        // viewport through which we look at contents
-   TGHScrollBar    *fHScrollbar;   // horizontal scrollbar
-   TGVScrollBar    *fVScrollbar;   // vertical scrollbar
-   Int_t            fScrolling;    // flag which scrolling modes are allowed
+   TGViewPort      *fVport;        ///< viewport through which we look at contents
+   TGHScrollBar    *fHScrollbar;   ///< horizontal scrollbar
+   TGVScrollBar    *fVScrollbar;   ///< vertical scrollbar
+   Int_t            fScrolling;    ///< flag which scrolling modes are allowed
 
 private:
-   TGCanvas(const TGCanvas&);              // not implemented
-   TGCanvas& operator=(const TGCanvas&);   // not implemented
+   TGCanvas(const TGCanvas&) = delete;
+   TGCanvas& operator=(const TGCanvas&) = delete;
 
 public:
    enum { kCanvasNoScroll         = 0,
@@ -218,7 +208,7 @@ public:
           kCanvasScrollBoth       = (kCanvasScrollHorizontal | kCanvasScrollVertical)
    };
 
-   TGCanvas(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGCanvas(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
             UInt_t options = kSunkenFrame | kDoubleBorder,
             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGCanvas();

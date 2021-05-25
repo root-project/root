@@ -11,20 +11,20 @@
 #ifndef ROOT_TMVA_Envelope
 #define ROOT_TMVA_Envelope
 
-#include <sstream>
-#include<iostream>
 #include <memory>
+#include <vector>
 
+#include <TString.h>
 #include <TROOT.h>
 #include <TStopwatch.h>
 
+#ifndef _MSC_VER
 #include <TProcPool.h>
-#include <TStopwatch.h>
+#endif
 
 #include <TMVA/OptionMap.h>
 #include <TMVA/Config.h>
 #include <TMVA/Tools.h>
-#include <TMVA/DataLoader.h>
 #include <TMVA/DataLoader.h>
 
 /*! \class TMVA::Envelope
@@ -50,7 +50,9 @@ namespace TMVA {
          Bool_t fVerbose;                         //! flag for extra information
          TString fTransformations;                //! List of transformations to test
          Bool_t fSilentFile;                      //! if true dont produce file output
+#ifndef _MSC_VER
          TProcPool fWorkers;                      //! procpool object
+#endif
          UInt_t fJobs;                            //! number of jobs to run some high level algorithm in parallel
          TStopwatch fTimer;                       //! timer to measute the time.
 
@@ -93,19 +95,22 @@ namespace TMVA {
             Utility method to get TMVA::DataInputHandler reference from the DataLoader.
             \return TMVA::DataInputHandler reference.
           */
-          DataInputHandler &GetDataLoaderDataInput() { return *fDataLoader->fDataInputHandler; }
+          DataInputHandler &GetDataLoaderDataInput() { return fDataLoader->DataInput(); }
 
           /**
             Utility method to get TMVA::DataSetInfo reference from the DataLoader.
             \return TMVA::DataSetInfo reference.
           */
-          DataSetInfo &GetDataLoaderDataSetInfo() { return fDataLoader->DefaultDataSetInfo(); }
+          DataSetInfo &GetDataLoaderDataSetInfo() { return fDataLoader->GetDataSetInfo(); }
 
           /**
             Utility method to get TMVA::DataSetManager pointer from the DataLoader.
             \return TMVA::DataSetManager pointer.
           */
-          DataSetManager *GetDataLoaderDataSetManager() { return fDataLoader->fDataSetManager; }
+         DataSetManager *GetDataLoaderDataSetManager()
+         {
+            return fDataLoader->GetDataSetInfo().GetDataSetManager();
+         }
 
           /**
             Utility method to get base dir directory from current file.

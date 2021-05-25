@@ -156,7 +156,7 @@ Bool_t ProofAux::Process(Long64_t entry)
       // The output filename
       TString fnf(fnt);
       TString xf = gSystem->BaseName(fnf);
-      fnf = gSystem->DirName(fnf);
+      fnf = gSystem->GetDirName(fnf);
       if (xf.Contains("tree")) {
          xf.ReplaceAll("tree", "friend");
       } else {
@@ -251,7 +251,7 @@ Int_t ProofAux::GenerateTree(const char *fnt, Long64_t ent, TString &fn)
       // Insert data directory
       fn.Insert(0, TString::Format("%s/", gProofServ->GetDataDir()));
       // Make sure the directory exists
-      TString dir = gSystem->DirName(fn);
+      TString dir = gSystem->GetDirName(fn);
       if (gSystem->AccessPathName(dir, kWritePermission)) {
          if (gSystem->mkdir(dir, kTRUE) != 0) {
             Error("GenerateTree", "problems creating directory %s to store the file", dir.Data());
@@ -367,7 +367,7 @@ Int_t ProofAux::GenerateFriend(const char *fnt, const char *fnf)
       sameFile = kFALSE;
       openMain = "READ";
       // Make sure the directory exists
-      TString dir = gSystem->DirName(fout);
+      TString dir = gSystem->GetDirName(fout);
       if (gSystem->AccessPathName(dir, kWritePermission)) {
          if (gSystem->mkdir(dir, kTRUE) != 0) {
             Error("GenerateFriend", "problems creating directory %s to store the file", dir.Data());

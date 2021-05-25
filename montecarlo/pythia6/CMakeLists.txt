@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT montecarlo/pythia6 package
 # @author Pere Mato, CERN
@@ -5,9 +11,9 @@
 
 if(pythia6_nolink)
   set(PYTHIA6_LIBRARIES)
-  if(ROOT_PLATFORM STREQUAL linux)
+  if(CMAKE_SYSTEM_NAME STREQUAL Linux)
     string(REGEX REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
-  elseif(ROOT_PLATFORM STREQUAL macosx)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
   endif()
 else()
@@ -34,5 +40,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia6
     EG
     Graf
     Physics
-    VMC
 )

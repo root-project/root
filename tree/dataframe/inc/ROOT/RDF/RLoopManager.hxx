@@ -12,7 +12,6 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/RDF/RNodeBase.hxx"
-#include "ROOT/RDF/NodesUtils.hxx"
 
 #include <functional>
 #include <map>
@@ -21,7 +20,9 @@
 #include <vector>
 
 // forward declarations
+class TTree;
 class TTreeReader;
+class TDirectory;
 
 namespace ROOT {
 namespace RDF {
@@ -31,6 +32,8 @@ class RDataSource;
 
 namespace Internal {
 namespace RDF {
+std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
+
 class RActionBase;
 class GraphNode;
 
@@ -42,18 +45,16 @@ class GraphCreatorHelper;
 
 namespace Detail {
 namespace RDF {
-using namespace ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
-class RCustomColumnBase;
 class RFilterBase;
 class RRangeBase;
+using ROOT::RDF::RDataSource;
+using ColumnNames_t = std::vector<std::string>;
 
 /// The head node of a RDF computation graph.
 /// This class is responsible of running the event loop.
 class RLoopManager : public RNodeBase {
-   friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
-   using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
    class TCallback {
@@ -108,18 +109,19 @@ class RLoopManager : public RNodeBase {
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   std::string fToJit;        ///< code that should be jitted and executed right before the event loop
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
    std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
-   /// A unique ID that identifies the computation graph that starts with this RLoopManager.
-   /// Used, for example, to jit objects in a namespace reserved for this computation graph
-   const unsigned int fID = GetNextID();
+   unsigned int fNRuns{0}; ///< Number of event loops run
 
-   std::vector<RCustomColumnBase *>
-      fCustomColumns; ///< The loopmanager tracks all columns created, without owning them.
+   /// Registry of per-slot value pointers for booked data-source columns
+   std::map<std::string, std::vector<void *>> fDSValuePtrMap;
 
+   /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
+   ColumnNames_t fValidBranchNames;
+
+   void CheckIndexedFriends();
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
@@ -132,7 +134,6 @@ class RLoopManager : public RNodeBase {
    void CleanUpNodes();
    void CleanUpTask(unsigned int slot);
    void EvalChildrenCounts();
-   unsigned int GetNextID() const;
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -141,7 +142,8 @@ public:
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
-   void BuildJittedNodes();
+   void JitDeclarations();
+   void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run();
    const ColumnNames_t &GetDefaultColumnNames() const;
@@ -157,36 +159,37 @@ public:
    void Deregister(RRangeBase *rangePtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
-   bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
-   void ToJit(const std::string &s) { fToJit.append(s); }
+   void ToJitExec(const std::string &) const;
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
-   unsigned int GetID() const { return fID; }
+   unsigned int GetNRuns() const { return fNRuns; }
+   bool HasDSValuePtrs(const std::string &col) const;
+   const std::map<std::string, std::vector<void *>> &GetDSValuePtrs() const { return fDSValuePtrMap; }
+   void AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs);
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) {}
    /// For each booked filter, returns either the name or "Unnamed Filter"
    std::vector<std::string> GetFiltersNames();
 
-   /// For all the actions, either booked or run
-   std::vector<RDFInternal::RActionBase *> GetAllActions();
+   /// Return all graph edges known to RLoopManager
+   /// This includes Filters and Ranges but not Defines.
+   std::vector<RNodeBase *> GetGraphEdges() const;
 
-   void RegisterCustomColumn(RCustomColumnBase *column) { fCustomColumns.push_back(column); }
-
-   void DeRegisterCustomColumn(RCustomColumnBase *column)
-   {
-      fCustomColumns.erase(std::remove(fCustomColumns.begin(), fCustomColumns.end(), column), fCustomColumns.end());
-   }
+   /// Return all actions, either booked or already run
+   std::vector<RDFInternal::RActionBase *> GetAllActions() const;
 
    std::vector<RDFInternal::RActionBase *> GetBookedActions() { return fBookedActions; }
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
+
+   const ColumnNames_t &GetBranchNames();
 };
 
 } // ns RDF

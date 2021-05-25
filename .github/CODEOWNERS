@@ -4,14 +4,13 @@
 # This should also help provide suggested reviewers for PRs.
 
 # For more information, see:
-# 
+#
 #   - https://github.com/blog/2392-introducing-code-owners
 
 # Coarse-grained ownership
 * @Axel-Naumann
 /bindings/ @etejedor
-/core/ @Axel-Naumann
-/core/ @pcanal
+/core/ @Axel-Naumann @pcanal
 /documentation/ @couet
 /fonts/ @bellenot
 /geom/ @agheata
@@ -24,35 +23,44 @@
 /interpreter/ @Axel-Naumann
 /interpreter/llvm/ @vgvassilev
 /io/ @pcanal
+/io/xml/ @pcanal @linev
 /main/ @pcanal
 /math/ @lmoneta
 /misc/ @Axel-Naumann
 /montecarlo/ @Axel-Naumann
 /net/ @gganis
 /proof/ @gganis
-/roofit/ @lmoneta
+/roofit/ @lmoneta @guitargeek @hageboeck
 /rootx/ @Axel-Naumann
-/sql/ @pcanal
-/tmva/ @lmoneta
+/sql/ @pcanal @linev
+/tmva/ @lmoneta @ashlaban @stwunsch @sitongan
 /tree/ @pcanal
 /tutorials/ @couet
-/tree/dataframe @dpiparo @bluehood
+/tree/dataframe @eguiraud
 
 # Projects that span over several code modules:
 /bindings/r/ @omazapa
-/core/base/ @pcanal
-/core/cont/ @pcanal
-/core/imt/ @dpiparo
-/core/lz4/ @pcanal
-/core/lzma/ @pcanal
-/core/multiproc/ @gganis
-/core/thread/ @pcanal
-/graf2d/qt/ @bellenot
+/core/imt/ @eguiraud
+/core/multiproc/ @eguiraud
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
-/net/http/ @linev
+/graf3d/eve7/ @osschar @linev
 
-/cmake/ @amadio
-*.cmake @amadio
-*/CMakeLists.txt @amadio
-CMakeLists.txt @amadio
+#different http/webgui components
+/net/http/ @linev
+/net/httpsniff/ @linev
+/tutorials/http/ @linev
+/js/ @linev
+/gui/webdisplay/ @linev
+/gui/cefdisplay/ @linev
+/gui/qt5webdisplay/ @linev
+/gui/webgui6/ @linev
+/gui/fitpanelv7/ @linev
+/gui/browserv7/ @bellenot @linev
+/gui/canvaspainter/ @Axel-Naumann @linev
+/ui5/ @linev
+
+/cmake/ @oshadura
+*.cmake @oshadura
+*/CMakeLists.txt @oshadura
+CMakeLists.txt @oshadura

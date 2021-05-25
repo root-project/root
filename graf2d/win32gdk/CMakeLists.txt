@@ -1,10 +1,19 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT graf2d/win32gdk package
 # @author Pere Mato, CERN
 ############################################################################
-include_directories(${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src 
-					${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/gdk
-					${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib)
+
+# use relative paths to avoid filtering in dictionary generator
+include_directories(${FREETYPE_INCLUDE_DIRS}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
+                    ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/gdk
+                    ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/glib)
 
 set(iconvlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/iconv-1.3.lib)
 set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll)
@@ -84,17 +93,32 @@ add_custom_target(GDKLIB DEPENDS ${gdklib})
 set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
-                              HEADERS TGWin32.h TGWin32GL.h
-                              SOURCES *.cxx *.c
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Cling Core Graf
-                              LIBRARIES ${FREETYPE_LIBRARIES} ${gdklib} ${gliblib} Glu32.lib Opengl32.lib
-                              BUILTINS FREETYPE)
+  HEADERS
+    TGWin32.h
+    TGWin32GL.h
+  SOURCES
+    src/gifdecode.c
+    src/gifencode.c
+    src/gifquantize.c
+    src/TGWin32.cxx
+    src/TGWin32GL.cxx
+    src/TGWin32ProxyBase.cxx
+    src/TGWin32VirtualGLProxy.cxx
+    src/TGWin32VirtualXProxy.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ${FREETYPE_LIBRARIES}
+    ${gdklib}
+    ${gliblib}
+    Glu32.lib
+    Opengl32.lib
+  DEPENDENCIES
+    Core
+    Graf
+  BUILTINS
+    FREETYPE
+)
 
 add_dependencies(Win32gdk GDKLIB glib)
-
-install(FILES  ${gdkdlla}
-			   ${glibdlla}
-			   ${iconvdlla}
-			   DESTINATION ${CMAKE_INSTALL_BINDIR})
-
+install(FILES ${gdkdlla} ${glibdlla} ${iconvdlla} DESTINATION ${CMAKE_INSTALL_BINDIR})

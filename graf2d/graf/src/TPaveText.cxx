@@ -9,11 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <iostream>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TBufferFile.h"
 #include "TROOT.h"
 #include "TStyle.h"
@@ -24,7 +25,7 @@
 #include "TLatex.h"
 #include "TError.h"
 #include "TColor.h"
-#include "TClass.h"
+#include "TLine.h"
 
 ClassImp(TPaveText);
 
@@ -341,8 +342,6 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
          linet = (TText*)line;
          ytext -= yspace;
          Double_t yl     = linet->GetY();
-         Short_t talign = linet->GetTextAlign();
-         if (talign == 0) talign = GetTextAlign();
          if (yl > 0 && yl <1) {
             ytext = fY1 + yl*dy;
          }

@@ -1,13 +1,22 @@
-/*****************************************************************************
-
- *****************************************************************************/
-
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// PiecewiseInterpolation 
-// END_HTML
-//
+/** \class PiecewiseInterpolation
+ * \ingroup HistFactory
+ * The PiecewiseInterpolation is a class that can morph distributions into each other, which
+ * is useful to estimate systematic uncertainties. Given a nominal distribution and one or
+ * more altered or distorted ones, it computes a new shape depending on the value of the nuisance
+ * parameters \f$ \alpha_i \f$:
+ * \f[
+ *   A = \sum_i \mathrm{Interpolate}(\mathrm{low}_i, \mathrm{nominal}, \mathrm{high}_i, \alpha_i).
+ * \f]
+ * If an \f$ \alpha_i \f$ is zero, the distribution is identical to the nominal distribution, at
+ * \f$ \pm 1 \f$ it is identical to the up/down distribution for that specific \f$ i \f$.
+ *
+ * The class supports several interpolation methods, which can be selected for each parameter separately
+ * using setInterpCode(). The default interpolation code is 4. This performs
+ * - \f$ |\alpha | > 1 \f$: Linear extrapolation.
+ * - \f$ |\alpha | < 1 \f$: Polynomial interpolation. A sixth-order polynomial is used. Its coefficients
+ * are chosen such that function, first, and second derivative at \f$ \alpha \pm 1 \f$ match the values
+ * that the extrapolation procedure uses.
+ */
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
@@ -20,8 +29,6 @@
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
@@ -47,7 +54,17 @@ PiecewiseInterpolation::PiecewiseInterpolation()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Construct a new interpolation. The value of the function will be
+/// \f[
+///   A = \sum_i \mathrm{Interpolate}(\mathrm{low}_i, \mathrm{nominal}, \mathrm{high}_i).
+/// \f]
+/// \param name Name of the object.
+/// \param title Title (for e.g. plotting)
+/// \param nominal Nominal value of the function.
+/// \param lowSet  Set of down variations.
+/// \param highSet Set of up variations.
+/// \param paramSet Parameters that control the interpolation.
+/// \param takeOwnership If true, the PiecewiseInterpolation object will take ownership of the arguments in the low, high and parameter sets.
 PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* title, const RooAbsReal& nominal,
 					       const RooArgList& lowSet, 
 					       const RooArgList& highSet,
@@ -61,12 +78,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   _positiveDefinite(false)
 
 {
-  // Constructor with two set of RooAbsReals. The value of the function will be
-  //
-  //  A = sum_i lowSet(i)*highSet(i) 
-  //
-  // If takeOwnership is true the PiecewiseInterpolation object will take ownership of the arguments in sumSet
-
   // KC: check both sizes
   if (lowSet.getSize() != highSet.getSize()) {
     coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
@@ -162,36 +173,27 @@ Double_t PiecewiseInterpolation::evaluate() const
   Double_t nominal = _nominal;
   Double_t sum(nominal) ;
 
-  RooAbsReal* param ;
-  RooAbsReal* high ;
-  RooAbsReal* low ;
-  int i=0;
-
-  RooFIter lowIter(_lowSet.fwdIterator()) ;
-  RooFIter highIter(_highSet.fwdIterator()) ;
-  RooFIter paramIter(_paramSet.fwdIterator()) ;
-
-  while((param=(RooAbsReal*)paramIter.next())) {
-    low = (RooAbsReal*)lowIter.next() ;
-    high = (RooAbsReal*)highIter.next() ;
-
+  for (unsigned int i=0; i < _paramSet.size(); ++i) {
+    auto param = static_cast<RooAbsReal*>(_paramSet.at(i));
+    auto low   = static_cast<RooAbsReal*>(_lowSet.at(i));
+    auto high  = static_cast<RooAbsReal*>(_highSet.at(i));
     Int_t icode = _interpCode[i] ;
 
     switch(icode) {
     case 0: {
       // piece-wise linear
       if(param->getVal()>0)
-	sum +=  param->getVal()*(high->getVal() - nominal );
+        sum +=  param->getVal()*(high->getVal() - nominal );
       else
-	sum += param->getVal()*(nominal - low->getVal());
+        sum += param->getVal()*(nominal - low->getVal());
       break ;
     }
     case 1: {
       // pice-wise log
       if(param->getVal()>=0)
-	sum *= pow(high->getVal()/nominal, +param->getVal());
+        sum *= pow(high->getVal()/nominal, +param->getVal());
       else
-	sum *= pow(low->getVal()/nominal,  -param->getVal());
+        sum *= pow(low->getVal()/nominal,  -param->getVal());
       break ;
     }
     case 2: {
@@ -200,11 +202,11 @@ Double_t PiecewiseInterpolation::evaluate() const
       double b = 0.5*(high->getVal()-low->getVal());
       double c = 0;
       if(param->getVal()>1 ){
-	sum += (2*a+b)*(param->getVal()-1)+high->getVal()-nominal;
+        sum += (2*a+b)*(param->getVal()-1)+high->getVal()-nominal;
       } else if(param->getVal()<-1 ) {
-	sum += -1*(2*a-b)*(param->getVal()+1)+low->getVal()-nominal;
+        sum += -1*(2*a-b)*(param->getVal()+1)+low->getVal()-nominal;
       } else {
-	sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
+        sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
       break ;
     }
@@ -214,16 +216,16 @@ Double_t PiecewiseInterpolation::evaluate() const
       double b = 0.5*(high->getVal()-low->getVal());
       double c = 0;
       if(param->getVal()>1 ){
-	sum += (2*a+b)*(param->getVal()-1)+high->getVal()-nominal;
+        sum += (2*a+b)*(param->getVal()-1)+high->getVal()-nominal;
       } else if(param->getVal()<-1 ) {
-	sum += -1*(2*a-b)*(param->getVal()+1)+low->getVal()-nominal;
+        sum += -1*(2*a-b)*(param->getVal()+1)+low->getVal()-nominal;
       } else {
-	sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
+        sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
       break ;
     }
     case 4: {
-      
+
       // WVE ****************************************************************
       // WVE *** THIS CODE IS CRITICAL TO HISTFACTORY FIT CPU PERFORMANCE ***
       // WVE *** Do not modify unless you know what you are doing...      ***
@@ -231,79 +233,77 @@ Double_t PiecewiseInterpolation::evaluate() const
 
       double x  = param->getVal();      
       if (x>1) {
-	sum += x*(high->getVal() - nominal );
+        sum += x*(high->getVal() - nominal );
       } else if (x<-1) {
-	sum += x*(nominal - low->getVal());
+        sum += x*(nominal - low->getVal());
       } else {
-	double eps_plus = high->getVal() - nominal;
-	double eps_minus = nominal - low->getVal();
-	double S = 0.5 * (eps_plus + eps_minus);
-	double A = 0.0625 * (eps_plus - eps_minus);
-	
-	//fcns+der+2nd_der are eq at bd
+        double eps_plus = high->getVal() - nominal;
+        double eps_minus = nominal - low->getVal();
+        double S = 0.5 * (eps_plus + eps_minus);
+        double A = 0.0625 * (eps_plus - eps_minus);
+
+        //fcns+der+2nd_der are eq at bd
 
         double val = nominal + x * (S + x * A * ( 15 + x * x * (-10 + x * x * 3  ) ) ); 
 
 
-	if (val < 0) val = 0;
-	sum += val-nominal;
+        if (val < 0) val = 0;
+        sum += val-nominal;
       }
       break ;
 
       // WVE ****************************************************************
     }
     case 5: {
-      
+
       double x0 = 1.0;//boundary;
       double x  = param->getVal();
 
       if (x > x0 || x < -x0)
       {
-	if(x>0)
-	  sum += x*(high->getVal() - nominal );
-	else
-	  sum += x*(nominal - low->getVal());
+        if(x>0)
+          sum += x*(high->getVal() - nominal );
+        else
+          sum += x*(nominal - low->getVal());
       }
       else if (nominal != 0)
       {
-	double eps_plus = high->getVal() - nominal;
-	double eps_minus = nominal - low->getVal();
-	double S = (eps_plus + eps_minus)/2;
-	double A = (eps_plus - eps_minus)/2;
+        double eps_plus = high->getVal() - nominal;
+        double eps_minus = nominal - low->getVal();
+        double S = (eps_plus + eps_minus)/2;
+        double A = (eps_plus - eps_minus)/2;
 
-	//fcns+der are eq at bd
-	double a = S;
-	double b = 3*A/(2*x0);
-	//double c = 0;
-	double d = -A/(2*x0*x0*x0);
+        //fcns+der are eq at bd
+        double a = S;
+        double b = 3*A/(2*x0);
+        //double c = 0;
+        double d = -A/(2*x0*x0*x0);
 
-	double val = nominal + a*x + b*pow(x, 2) + 0/*c*pow(x, 3)*/ + d*pow(x, 4);
-	if (val < 0) val = 0;
+        double val = nominal + a*x + b*pow(x, 2) + 0/*c*pow(x, 3)*/ + d*pow(x, 4);
+        if (val < 0) val = 0;
 
-	//cout << "Using interp code 5, val = " << val << endl;
+        //cout << "Using interp code 5, val = " << val << endl;
 
-	sum += val-nominal;
+        sum += val-nominal;
       }
       break ;
     }
     default: {
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName() 
-			    << " with unknown interpolation code" << icode << endl ;
+			        << " with unknown interpolation code" << icode << endl ;
       break ;
     }
     }
-    ++i;
   }
-  
+
   if(_positiveDefinite && (sum<0)){
-    sum = 1e-6;
     sum = 0;
     //     cout <<"sum < 0 forcing  positive definite"<<endl;
-     //     int code = 1;
-     //     RooArgSet* myset = new RooArgSet();
-     //     cout << "integral = " << analyticalIntegralWN(code, myset) << endl;
+    //     int code = 1;
+    //     RooArgSet* myset = new RooArgSet();
+    //     cout << "integral = " << analyticalIntegralWN(code, myset) << endl;
   } else if(sum<0){
-     cxcoutD(Tracing) <<"PiecewiseInterpolation::evaluate -  sum < 0, not forcing positive definite"<<endl;
+    cxcoutD(Tracing) <<"PiecewiseInterpolation::evaluate -  sum < 0, not forcing positive definite"<<endl;
   }
   return sum;
 

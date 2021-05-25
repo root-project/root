@@ -5,6 +5,7 @@
 ## adopt existing memory or allocate some.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date May 2018
 ## \author Danilo Piparo
@@ -38,7 +39,7 @@ print("%s and %s" %(v.data(), v2.data()))
 
 # Now, upon reallocation, the RVec stops adopting the memory and starts owning it. And yes,
 # a copy is triggered. Indeed internally the storage of the RVec is an std::vector. Moreover,
-# the interface of the TVec is very, very similar to the one of std::vector: you have already
+# the interface of the RVec is very, very similar to the one of std::vector: you have already
 # noticed it when the `data()` method was invoked, right?
 v2.resize(4)
 

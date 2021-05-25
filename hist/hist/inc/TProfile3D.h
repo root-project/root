@@ -28,17 +28,18 @@ class TProfile3D : public TH3D {
 
 public:
    friend class TProfileHelper;
+   friend class TH1Merger;
 
 protected:
-   TArrayD       fBinEntries;      //number of entries per bin
-   EErrorType    fErrorMode;       //Option to compute errors
-   Double_t      fTmin;            //Lower limit in T (if set)
-   Double_t      fTmax;            //Upper limit in T (if set)
-   Bool_t        fScaling;         //!True when TProfile3D::Scale is called
-   Double_t      fTsumwt;          //Total Sum of weight*T
-   Double_t      fTsumwt2;         //Total Sum of weight*T*T
-   TArrayD       fBinSumw2;        //Array of sum of squares of weights per bin
-   static Bool_t fgApproximate;    //bin error approximation option
+   TArrayD       fBinEntries;      ///< Number of entries per bin
+   EErrorType    fErrorMode;       ///< Option to compute errors
+   Double_t      fTmin;            ///< Lower limit in T (if set)
+   Double_t      fTmax;            ///< Upper limit in T (if set)
+   Bool_t        fScaling;         ///<! True when TProfile3D::Scale is called
+   Double_t      fTsumwt;          ///< Total Sum of weight*T
+   Double_t      fTsumwt2;         ///< Total Sum of weight*T*T
+   TArrayD       fBinSumw2;        ///< Array of sum of squares of weights per bin
+   static Bool_t fgApproximate;    ///< Bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t, Double_t, Double_t) {return -2;} //may not use
@@ -91,6 +92,7 @@ public:
                                                 ,Int_t nbinsy,const Double_t *ybins
                                                 ,Int_t nbinsz,const Double_t *zbins,Option_t *option="");
    TProfile3D(const TProfile3D &profile);
+   TProfile3D &operator=(const TProfile3D &profile);
    virtual ~TProfile3D();
    virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
@@ -121,6 +123,9 @@ public:
    virtual void      GetStats(Double_t *stats) const;
    virtual Double_t  GetTmin() const {return fTmin;}
    virtual Double_t  GetTmax() const {return fTmax;}
+   virtual void      LabelsDeflate(Option_t *axis="X");
+   virtual void      LabelsInflate(Option_t *axis="X");
+   virtual void      LabelsOption(Option_t *option="h", Option_t *axis="X");
    virtual Long64_t  Merge(TCollection *list);
    virtual Bool_t    Multiply(TF1 *h1, Double_t c1=1);
    virtual Bool_t    Multiply(const TH1 *h1);
@@ -142,7 +147,7 @@ public:
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2(Bool_t flag = kTRUE);
 
-   ClassDef(TProfile3D,7)  //Profile3D histogram class
+   ClassDef(TProfile3D,8)  //Profile3D histogram class
 };
 
 #endif

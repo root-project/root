@@ -21,19 +21,18 @@
 **************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGResourcePool                                                       //
-//                                                                      //
-// This class implements a pool for the default GUI resource set,       //
-// like GC's, colors, fonts, etc..                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGResourcePool
+    \ingroup guiwidgets
+
+This class implements a pool for the default GUI resource set,
+like GC's, colors, fonts, etc..
+
+*/
+
 
 #include "RConfigure.h"
 
 #include "TGResourcePool.h"
-#include "TGClient.h"
 #include "TGWindow.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -97,11 +96,8 @@ TGResourcePool::TGResourcePool(TGClient *client)
    TString mime_file = ".root.mimes";
    gSystem->PrependPathName(gSystem->HomeDirectory(), mime_file);
    mime_file = gEnv->GetValue("Gui.MimeTypeFile", mime_file.Data());
-   char *mf = gSystem->ExpandPathName(mime_file.Data());
-   if (mf) {
-      mime_file = mf;
-      delete [] mf;
-   }
+   gSystem->ExpandPathName(mime_file);
+
    if (gSystem->AccessPathName(mime_file, kReadPermission)) {
       mime_file = "root.mimes";
       gSystem->PrependPathName(TROOT::GetEtcDir(), mime_file);
@@ -172,7 +168,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
                 kGCFillStyle  | kGCGraphicsExposures;
    gval.fGraphicsExposures = kFALSE;
    gval.fFillStyle  = kFillSolid;
-   gval.fFont       = fDefaultFont->GetFontHandle();
+   gval.fFont       = fDefaultFont ? fDefaultFont->GetFontHandle() : FontH_t(0);
    gval.fBackground = fBackColor;
    gval.fForeground = fBlack;
    fBlackGC = fGCPool->GetGC(&gval, kTRUE);
@@ -199,7 +195,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    gval.fBackground = fSelBackColor;
    fSelGC = fGCPool->GetGC(&gval, kTRUE);
 
-   gval.fFont       = fDocPropFont->GetFontHandle();
+   gval.fFont       = fDocPropFont ? fDocPropFont->GetFontHandle() : FontH_t(0);
    gval.fForeground = fDocForeColor;
    gval.fBackground = fDocBackColor;
    fDocGC = fGCPool->GetGC(&gval, kTRUE);
@@ -207,7 +203,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    gval.fForeground = fDocBackColor;
    fDocbgndGC = fGCPool->GetGC(&gval, kTRUE);
 
-   gval.fFont       = fStatusFont->GetFontHandle();
+   gval.fFont       = fStatusFont ? fStatusFont->GetFontHandle() : FontH_t(0);
    gval.fForeground = fTipForeColor;
    gval.fBackground = fTipBackColor;
    fTipGC = fGCPool->GetGC(&gval, kTRUE);

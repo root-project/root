@@ -13,65 +13,58 @@
 
 #include "Minuit2/FCNBase.h"
 
+#include <vector>
+
 namespace ROOT {
 
-  namespace Minuit2 {
+namespace Minuit2 {
 
-    //________________________________________________________________________
-    /** Extension of the FCNBase for providing the analytical Gradient of the
-        function. The user-Gradient is checked at the beginning of the
-        minimization against the Minuit internal numerical Gradient in order to
-        spot problems in the analytical Gradient calculation. This can be turned
-        off by overriding CheckGradient() to make it return "false".
-        The size of the output Gradient vector must be equal to the size of the
-        input Parameter vector.
-        Minuit does a check of the user Gradient at the beginning, if this is not
-        wanted the method "CheckGradient()" has to be overridden to return
-        "false".
-     */
+//________________________________________________________________________
+/** Extension of the FCNBase for providing the analytical Gradient of the
+    function. The user-Gradient is checked at the beginning of the
+    minimization against the Minuit internal numerical Gradient in order to
+    spot problems in the analytical Gradient calculation. This can be turned
+    off by overriding CheckGradient() to make it return "false".
+    The size of the output Gradient vector must be equal to the size of the
+    input Parameter vector.
+    Minuit does a check of the user Gradient at the beginning, if this is not
+    wanted the method "CheckGradient()" has to be overridden to return
+    "false".
+  */
 
-    enum class GradientParameterSpace {
-      External, Internal
-    };
+enum class GradientParameterSpace {
+  External, Internal
+};
 
+class FCNGradientBase : public FCNBase {
 
-    class FCNGradientBase : public FCNBase {
+public:
+   virtual ~FCNGradientBase() {}
 
-    public:
+   virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
 
-      virtual ~FCNGradientBase() {}
+   virtual std::vector<double> G2ndDerivative(const std::vector<double> &) const = 0;
 
-      virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
+   virtual std::vector<double> GStepSize(const std::vector<double> &) const = 0;
 
-//      virtual std::vector<long double> Gradient(const std::vector<long double> &in) const {
-//        std::vector<double> in_double(in.begin(), in.end());
-//        auto out_double = Gradient(in_double);
-//        std::vector<long double> output(out_double.begin(), out_double.end());
-//        return output;
-//      };
+   virtual bool hasG2ndDerivative() const {
+      return false;
+   }
 
-      virtual std::vector<double> G2ndDerivative(const std::vector<double> &) const = 0;
+   virtual bool hasGStepSize() const {
+      return false;
+   }
 
-      virtual std::vector<double> GStepSize(const std::vector<double> &) const = 0;
+   virtual bool CheckGradient() const { return true; }
 
-      virtual bool hasG2ndDerivative() const {
-        return false;
-      }
+   virtual GradientParameterSpace gradParameterSpace() const {
+      return GradientParameterSpace::External;
+   };
 
-      virtual bool hasGStepSize() const {
-        return false;
-      }
+};
 
-      virtual bool CheckGradient() const { return true; }
+} // namespace Minuit2
 
-      virtual GradientParameterSpace gradParameterSpace() const {
-        return GradientParameterSpace::External;
-      };
+} // namespace ROOT
 
-    };
-
-  }  // namespace Minuit2
-
-}  // namespace ROOT
-
-#endif  // ROOT_Minuit2_FCNGradientBase
+#endif // ROOT_Minuit2_FCNGradientBase

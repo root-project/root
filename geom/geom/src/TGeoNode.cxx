@@ -68,7 +68,7 @@ painting a node on a pad will take the corresponding volume attributes.
 \image html geom_t_node.png
 */
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "TBrowser.h"
 #include "TObjArray.h"
@@ -121,41 +121,6 @@ TGeoNode::TGeoNode(const TGeoVolume *vol)
    fOverlaps     = 0;
    fUserExtension = 0;
    fFWExtension = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoNode::TGeoNode(const TGeoNode& gn) :
-  TNamed(gn),
-  TGeoAtt(gn),
-  fVolume(gn.fVolume),
-  fMother(gn.fMother),
-  fNumber(gn.fNumber),
-  fNovlp(gn.fNovlp),
-  fOverlaps(gn.fOverlaps),
-  fUserExtension(gn.fUserExtension->Grab()),
-  fFWExtension(gn.fFWExtension->Grab())
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoNode& TGeoNode::operator=(const TGeoNode& gn)
-{
-   if(this!=&gn) {
-      TNamed::operator=(gn);
-      TGeoAtt::operator=(gn);
-      fVolume=gn.fVolume;
-      fMother=gn.fMother;
-      fNumber=gn.fNumber;
-      fNovlp=gn.fNovlp;
-      fOverlaps=gn.fOverlaps;
-      fUserExtension=gn.fUserExtension->Grab();
-      fFWExtension=gn.fFWExtension->Grab();
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -670,6 +635,19 @@ Double_t TGeoNode::Safety(const Double_t *point, Bool_t in) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy content of lst of overlaps from source array
+
+void TGeoNode::CopyOverlaps(Int_t *src, Int_t novlp)
+{
+   Int_t *ovlps = nullptr;
+   if (src && (novlp > 0)) {
+      ovlps = new Int_t[novlp];
+      memcpy(ovlps, src, novlp*sizeof(Int_t));
+   }
+   SetOverlaps(ovlps, novlp);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// set the list of overlaps for this node (ovlp must be created with operator new)
 
 void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
@@ -726,27 +704,6 @@ TGeoNodeMatrix::TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix) 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy ctor.
-
-TGeoNodeMatrix::TGeoNodeMatrix(const TGeoNodeMatrix& gnm)
-               :TGeoNode(gnm),
-                fMatrix(gnm.fMatrix)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment.
-
-TGeoNodeMatrix& TGeoNodeMatrix::operator=(const TGeoNodeMatrix& gnm)
-{
-   if (this!=&gnm) {
-      TGeoNode::operator=(gnm);
-      fMatrix=gnm.fMatrix;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoNodeMatrix::~TGeoNodeMatrix()
@@ -786,20 +743,14 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {
    TGeoNodeMatrix *node = new TGeoNodeMatrix(fVolume, fMatrix);
    node->SetName(GetName());
+   node->SetTitle(GetTitle());
    // set the mother
    node->SetMotherVolume(fMother);
    // set the copy number
    node->SetNumber(fNumber);
    // copy overlaps
-   if (fNovlp>0) {
-      if (fOverlaps) {
-         Int_t *ovlps = new Int_t[fNovlp];
-         memcpy(ovlps, fOverlaps, fNovlp*sizeof(Int_t));
-         node->SetOverlaps(ovlps, fNovlp);
-      } else {
-         node->SetOverlaps(fOverlaps, fNovlp);
-      }
-   }
+   node->CopyOverlaps(fOverlaps, fNovlp);
+
    // copy VC
    if (IsVirtual()) node->SetVirtual();
    if (IsOverlapping()) node->SetOverlapping(); // <--- ADDED
@@ -850,31 +801,6 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offs
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoNodeOffset::TGeoNodeOffset(const TGeoNodeOffset& gno) :
-  TGeoNode(gno),
-  fOffset(gno.fOffset),
-  fIndex(gno.fIndex),
-  fFinder(gno.fFinder)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator
-
-TGeoNodeOffset& TGeoNodeOffset::operator=(const TGeoNodeOffset& gno)
-{
-   if(this!=&gno) {
-      TGeoNode::operator=(gno);
-      fOffset=gno.fOffset;
-      fIndex=gno.fIndex;
-      fFinder=gno.fFinder;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoNodeOffset::~TGeoNodeOffset()
@@ -896,6 +822,7 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
    TGeoNodeOffset *node = new TGeoNodeOffset(fVolume, GetIndex(), fOffset);
    node->SetName(GetName());
+   node->SetTitle(GetTitle());
    // set the mother
    node->SetMotherVolume(fMother);
    // set the copy number

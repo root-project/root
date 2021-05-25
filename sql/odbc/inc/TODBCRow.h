@@ -29,25 +29,25 @@ class TODBCRow : public TSQLRow {
 
 protected:
    SQLHSTMT   fHstmt;
-   Int_t      fFieldCount;
-   char      **fBuffer;
-   ULong_t    *fLengths;
+   Int_t      fFieldCount{0};
+   char      **fBuffer{nullptr};
+   ULong_t    *fLengths{nullptr};
 
    void        CopyFieldValue(Int_t field);
 
 private:
-   TODBCRow(const TODBCRow&);            // Not implemented.
-   TODBCRow &operator=(const TODBCRow&); // Not implemented.
+   TODBCRow(const TODBCRow&) = delete;
+   TODBCRow &operator=(const TODBCRow&) = delete;
 
 public:
    TODBCRow(SQLHSTMT stmt, Int_t fieldcount);
    virtual ~TODBCRow();
 
-   void        Close(Option_t *opt="");
-   ULong_t     GetFieldLength(Int_t field);
-   const char *GetField(Int_t field);
+   void        Close(Option_t *opt="") final;
+   ULong_t     GetFieldLength(Int_t field) final;
+   const char *GetField(Int_t field) final;
 
-   ClassDef(TODBCRow,0)  // One row of ODBC query result
+   ClassDefOverride(TODBCRow,0)  // One row of ODBC query result
 };
 
 #endif

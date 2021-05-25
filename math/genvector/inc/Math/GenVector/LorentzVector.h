@@ -25,25 +25,36 @@
 #include "Math/GenVector/GenVectorIO.h"
 
 #include <cmath>
+#include <string>
 
 namespace ROOT {
 
   namespace Math {
 
 //__________________________________________________________________________________________
-    /**
-        Class describing a generic LorentzVector in the 4D space-time,
-        using the specified coordinate system for the spatial vector part.
-        The metric used for the LorentzVector is (-,-,-,+).
-        In the case of LorentzVector we don't distinguish the concepts
-        of points and displacement vectors as in the 3D case,
-        since the main use case for 4D Vectors is to describe the kinematics of
-        relativistic particles. A LorentzVector behaves like a
-        DisplacementVector in 4D.  The Minkowski components could be viewed as
-        v and t, or for kinematic 4-vectors, as p and E.
+/** \ingroup GenVector
 
-     @ingroup GenVector
-    */
+Class describing a generic LorentzVector in the 4D space-time,
+using the specified coordinate system for the spatial vector part.
+The metric used for the LorentzVector is (-,-,-,+).
+In the case of LorentzVector we don't distinguish the concepts
+of points and displacement vectors as in the 3D case,
+since the main use case for 4D Vectors is to describe the kinematics of
+relativistic particles. A LorentzVector behaves like a
+DisplacementVector in 4D.  The Minkowski components could be viewed as
+v and t, or for kinematic 4-vectors, as p and E.
+
+ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVector template:
+- ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
+- ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
+- ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
+- ROOT::Math::PxPyPzEVector based on px,py,pz and E (energy) coordinates in double precision
+- ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
+- ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
+
+More details about the GenVector package can be found \ref GenVector "here".
+*/
+
     template< class CoordSystem >
     class LorentzVector {
 
@@ -171,18 +182,10 @@ namespace ROOT {
        /**
           Set internal data based on 4 Scalars at *begin to *end
        */
-//#ifdef NDEBUG
-          //this does not compile in CINT
-//        template< class IT >
-//        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
-// #endif
        template< class IT >
-#ifndef NDEBUG
        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT end  ) {
-#else
-       LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
-#endif
           IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
+          (void)end;
           assert (++begin==end);
           SetCoordinates (*a,*b,*c,*d);
           return *this;
@@ -204,12 +207,9 @@ namespace ROOT {
           get internal data into 4 Scalars at *begin to *end
        */
        template <class IT>
-#ifndef NDEBUG
        void GetCoordinates( IT begin, IT end ) const
-#else
-       void GetCoordinates( IT begin, IT /* end */ ) const
-#endif
        { IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
+       (void)end;
        assert (++begin==end);
        GetCoordinates (*a,*b,*c,*d);
        }
@@ -753,7 +753,18 @@ namespace ROOT {
 
 } // end namespace ROOT
 
+#include <sstream>
+namespace cling
+{
+template<typename CoordSystem>
+std::string printValue(const ROOT::Math::LorentzVector<CoordSystem> *v)
+{
+   std::stringstream s;
+   s << *v;
+   return s.str();
+}
 
+} // end namespace cling
 
 #endif
 

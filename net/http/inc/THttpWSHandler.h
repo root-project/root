@@ -55,6 +55,10 @@ protected:
    /// Method used to accept or reject root_batch_holder.js request
    virtual Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> &) { return kFALSE; }
 
+   /// Method called when default page content is prepared for use
+   /// By default no-cache header is provided
+   virtual void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) { arg->AddNoCacheHeader(); }
+
 public:
    virtual ~THttpWSHandler();
 
@@ -70,6 +74,9 @@ public:
    /// If not specified, default index.htm page will be shown
    /// Used by the webcanvas
    virtual TString GetDefaultPageContent() { return ""; }
+
+   /// If returns kTRUE, allows to serve files from subdirectories where page content is situated
+   virtual Bool_t CanServeFiles() const { return kFALSE; }
 
    /// Allow processing of WS requests in arbitrary thread
    virtual Bool_t AllowMTProcess() const { return kFALSE; }

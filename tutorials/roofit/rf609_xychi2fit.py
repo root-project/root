@@ -1,18 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #609
-##
-## Setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
+## Likelihood and minimization: setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
 ## values (and optionally err(X) values)
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 import math
@@ -50,7 +45,9 @@ for i in range(10):
 # Make fit function
 a = ROOT.RooRealVar("a", "a", 0.0, -10, 10)
 b = ROOT.RooRealVar("b", "b", 0.0, -100, 100)
-f = ROOT.RooPolyVar("f", "f", x, ROOT.RooArgList(b, a, ROOT.RooFit.RooConst(1)))
+f = ROOT.RooPolyVar(
+    "f", "f", x, ROOT.RooArgList(
+        b, a, ROOT.RooFit.RooConst(1)))
 
 # Plot dataset in X-Y interpretation
 frame = x.frame(ROOT.RooFit.Title(
@@ -69,7 +66,7 @@ f.chi2FitTo(dxy, ROOT.RooFit.YVar(y), ROOT.RooFit.Integrate(ROOT.kTRUE))
 
 # Overlay alternate fit result
 f.plotOn(frame, ROOT.RooFit.LineStyle(ROOT.kDashed),
-            ROOT.RooFit.LineColor(ROOT.kRed))
+         ROOT.RooFit.LineColor(ROOT.kRed))
 
 # Draw the plot on a canvas
 c = ROOT.TCanvas("rf609_xychi2fit", "rf609_xychi2fit", 600, 600)

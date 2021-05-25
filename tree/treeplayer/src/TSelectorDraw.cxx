@@ -35,6 +35,7 @@ A specialized TSelector for TTree::Draw.
 #include "TStyle.h"
 #include "TClass.h"
 #include "TColor.h"
+#include "strlcpy.h"
 
 ClassImp(TSelectorDraw);
 
@@ -198,16 +199,15 @@ void TSelectorDraw::Begin(TTree *tree)
    Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
 
    fObject  = 0;
-   char *hname = 0;
-   char *hnamealloc = 0;
+   char *hname = nullptr;
+   TString hnamealloc;
    i = 0;
    if (varexp0 && strlen(varexp0)) {
       for (UInt_t k = strlen(varexp0) - 1; k > 0; k--) {
          if (varexp0[k] == '>' && varexp0[k-1] == '>') {
             i = (int)(&(varexp0[k-1]) - varexp0);    //  length of varexp0 before ">>"
-            hnamealloc = new char[strlen(&(varexp0[k+1])) + 1];
-            hname = hnamealloc;
-            strcpy(hname, &(varexp0[k+1]));
+            hnamealloc = &(varexp0[k+1]);   // use TString to copy value of the
+            hname = (char *) hnamealloc.Data();
             break;
          }
       }
@@ -438,6 +438,7 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
+               delete[] varexp;
                return;
             }
             if (!evlist) {
@@ -907,7 +908,6 @@ void TSelectorDraw::Begin(TTree *tree)
       else            fAction = 6;
    }
    if (varexp) delete[] varexp;
-   if (hnamealloc) delete[] hnamealloc;
    for (i = 0; i < fValSize; ++i)
       fVarMultiple[i] = kFALSE;
    fSelectMultiple = kFALSE;
@@ -1660,6 +1660,7 @@ void TSelectorDraw::TakeEstimate()
                      // h2 will be deleted, the axis setting is delegated to only
                      // the TGraph.
                      h2 = 0;
+                     fObject = pm->GetHistogram();
                   }
                }
             }

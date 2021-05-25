@@ -19,7 +19,7 @@ Extensive documentation about Regular expressions in Perl can be
 found at : http://perldoc.perl.org/perlre.html
 */
 
-#include "Riostream.h"
+#include <iostream>
 #include "TPRegexp.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -399,7 +399,7 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
 {
    Int_t *offVec = new Int_t[3*nMaxMatch];
 
-   TString final;
+   TString fin;
    Int_t nrSubs = 0;
    Int_t offset = start;
    Int_t last = 0;
@@ -413,7 +413,6 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
                                 offVec, 3*nMaxMatch);
 
       if (nrMatch == PCRE_ERROR_NOMATCH) {
-         nrMatch = 0;
          break;
       } else if (nrMatch <= 0) {
          Error("Substitute", "pcre_exec error = %d", nrMatch);
@@ -422,15 +421,15 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
 
       // append anything previously unmatched, but not substituted
       if (last <= offVec[0]) {
-         final += s(last,offVec[0]-last);
+         fin += s(last,offVec[0]-last);
          last = offVec[1];
       }
 
       // replace stuff in s
       if (doDollarSubst) {
-         ReplaceSubs(s, final, replacePattern, offVec, nrMatch);
+         ReplaceSubs(s, fin, replacePattern, offVec, nrMatch);
       } else {
-         final += replacePattern;
+         fin += replacePattern;
       }
       ++nrSubs;
 
@@ -438,20 +437,19 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
       if (!(fPCREOpts & kPCRE_GLOBAL))
          break;
 
-      if (offVec[0] != offVec[1])
+      if (offVec[0] != offVec[1]) {
          offset = offVec[1];
-      else {
+      } else {
          // matched empty string
-         if (offVec[1] == s.Length())
-         break;
+         if (offVec[1] == s.Length()) break;
          offset = offVec[1]+1;
       }
    }
 
    delete [] offVec;
 
-   final += s(last,s.Length()-last);
-   s = final;
+   fin += s(last,s.Length()-last);
+   s = fin;
 
    return nrSubs;
 }

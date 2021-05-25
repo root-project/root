@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "TAttMarker.h"
-#include "TObjArray.h"
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TImage.h"
@@ -27,7 +26,6 @@
 #include "TGLPadPainter.h"
 #include "TGLIncludes.h"
 #include "TGLUtil.h"
-#include "TError.h"
 #include "TMath.h"
 
 namespace {
@@ -681,8 +679,11 @@ void TGLPadPainter::DrawPolyMarker()
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glColor4fv(rgba);
 
+   const Width_t w = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())));
+   glLineWidth(w > fLimits.GetMaxLineWidth() ? fLimits.GetMaxLineWidth() : !w ? 1.f : w);
+
    const TPoint *xy = &fPoly[0];
-   const Style_t markerStyle = gVirtualX->GetMarkerStyle();
+   const Style_t markerStyle = TAttMarker::GetMarkerStyleBase(gVirtualX->GetMarkerStyle());
    const UInt_t n = UInt_t(fPoly.size());
    switch (markerStyle) {
    case kDot:
@@ -801,6 +802,7 @@ void TGLPadPainter::DrawPolyMarker()
 
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
+   glLineWidth(1.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

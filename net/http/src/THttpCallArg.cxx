@@ -257,33 +257,13 @@ std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 /// Replace all occurrences of \param from by \param to in content
 /// Used only internally
 
-void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to)
+void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to, bool once)
 {
    std::size_t start_pos = 0;
    while((start_pos = fContent.find(from, start_pos)) != std::string::npos) {
       fContent.replace(start_pos, from.length(), to);
+      if (once) return;
       start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated use SetContent(std::string &&arg) signature instead
-/// set binary data, which will be returned as reply body
-/// Memory should be allocated with std::malloc().
-/// THttpCallArg take over ownership over specified memory.
-/// Memory will be released by calling std::free() function.
-
-void THttpCallArg::SetBinData(void *data, Long_t length)
-{
-   // string content must be cleared in any case
-   if (length <= 0) {
-      fContent.clear();
-   } else {
-      fContent.resize(length);
-      if (data) {
-         std::copy((const char *)data, (const char *)data + length, fContent.begin());
-         free(data);
-      }
    }
 }
 
@@ -375,16 +355,6 @@ std::string THttpCallArg::FillHttpHeader(const char *name)
                       GetContentType(), GetContentLength(), fHeader.Data()));
 
    return hdr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \depricated use FillHttpHeader with other signature
-/// Fills HTTP header, which can be send at the beggining of reply on the http request
-/// \param name is HTTP protocol name (default "HTTP/1.1")
-
-void THttpCallArg::FillHttpHeader(TString &hdr, const char *name)
-{
-    hdr = FillHttpHeader(name).c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

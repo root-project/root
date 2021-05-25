@@ -1,3 +1,0 @@
-libroot-quadp@libvers@: postinst-has-useless-call-to-ldconfig
-libroot-quadp@libvers@: postrm-has-useless-call-to-ldconfig
-

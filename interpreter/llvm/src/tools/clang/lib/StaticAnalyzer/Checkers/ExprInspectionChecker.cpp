@@ -1,17 +1,18 @@
 //==- ExprInspectionChecker.cpp - Used for regression tests ------*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
+#include "clang/StaticAnalyzer/Checkers/SValExplainer.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
+#include "clang/StaticAnalyzer/Core/IssueHash.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
-#include "clang/StaticAnalyzer/Checkers/SValExplainer.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ScopedPrinter.h"
 
@@ -41,6 +42,9 @@ class ExprInspectionChecker : public Checker<eval::Call, check::DeadSymbols,
   void analyzerExplain(const CallExpr *CE, CheckerContext &C) const;
   void analyzerPrintState(const CallExpr *CE, CheckerContext &C) const;
   void analyzerGetExtent(const CallExpr *CE, CheckerContext &C) const;
+  void analyzerHashDump(const CallExpr *CE, CheckerContext &C) const;
+  void analyzerDenote(const CallExpr *CE, CheckerContext &C) const;
+  void analyzerExpress(const CallExpr *CE, CheckerContext &C) const;
 
   typedef void (ExprInspectionChecker::*FnCheck)(const CallExpr *,
                                                  CheckerContext &C) const;
@@ -50,7 +54,7 @@ class ExprInspectionChecker : public Checker<eval::Call, check::DeadSymbols,
                           ExplodedNode *N) const;
 
 public:
-  bool evalCall(const CallExpr *CE, CheckerContext &C) const;
+  bool evalCall(const CallEvent &Call, CheckerContext &C) const;
   void checkDeadSymbols(SymbolReaper &SymReaper, CheckerContext &C) const;
   void checkEndAnalysis(ExplodedGraph &G, BugReporter &BR,
                         ExprEngine &Eng) const;
@@ -58,9 +62,14 @@ public:
 }
 
 REGISTER_SET_WITH_PROGRAMSTATE(MarkedSymbols, SymbolRef)
+REGISTER_MAP_WITH_PROGRAMSTATE(DenotedSymbols, SymbolRef, const StringLiteral *)
 
-bool ExprInspectionChecker::evalCall(const CallExpr *CE,
+bool ExprInspectionChecker::evalCall(const CallEvent &Call,
                                      CheckerContext &C) const {
+  const auto *CE = dyn_cast_or_null<CallExpr>(Call.getOriginExpr());
+  if (!CE)
+    return false;
+
   // These checks should have no effect on the surrounding environment
   // (globals should not be invalidated, etc), hence the use of evalCall.
   FnCheck Handler = llvm::StringSwitch<FnCheck>(C.getCalleeName(CE))
@@ -79,6 +88,9 @@ bool ExprInspectionChecker::evalCall(const CallExpr *CE,
           &ExprInspectionChecker::analyzerPrintState)
     .Case("clang_analyzer_numTimesReached",
           &ExprInspectionChecker::analyzerNumTimesReached)
+    .Case("clang_analyzer_hashDump", &ExprInspectionChecker::analyzerHashDump)
+    .Case("clang_analyzer_denote", &ExprInspectionChecker::analyzerDenote)
+    .Case("clang_analyzer_express", &ExprInspectionChecker::analyzerExpress)
     .Default(nullptr);
 
   if (!Handler)
@@ -146,7 +158,7 @@ void ExprInspectionChecker::analyzerEval(const CallExpr *CE,
 
   // A specific instantiation of an inlined function may have more constrained
   // values than can generally be assumed. Skip the check.
-  if (LC->getCurrentStackFrame()->getParent() != nullptr)
+  if (LC->getStackFrame()->getParent() != nullptr)
     return;
 
   reportBug(getArgumentValueString(CE, C), C);
@@ -175,7 +187,7 @@ void ExprInspectionChecker::analyzerCheckInlined(const CallExpr *CE,
   // when we are analyzing it as an inlined function. This means that
   // clang_analyzer_checkInlined(true) should always print TRUE, but
   // clang_analyzer_checkInlined(false) should never actually print anything.
-  if (LC->getCurrentStackFrame()->getParent() == nullptr)
+  if (LC->getStackFrame()->getParent() == nullptr)
     return;
 
   reportBug(getArgumentValueString(CE, C), C);
@@ -261,6 +273,13 @@ void ExprInspectionChecker::checkDeadSymbols(SymbolReaper &SymReaper,
       N = BugNode;
     State = State->remove<MarkedSymbols>(Sym);
   }
+
+  for (auto I : State->get<DenotedSymbols>()) {
+    SymbolRef Sym = I.first;
+    if (!SymReaper.isLive(Sym))
+      State = State->remove<DenotedSymbols>(Sym);
+  }
+
   C.addTransition(State, N);
 }
 
@@ -272,6 +291,7 @@ void ExprInspectionChecker::checkEndAnalysis(ExplodedGraph &G, BugReporter &BR,
 
     reportBug(llvm::to_string(NumTimesReached), BR, N);
   }
+  ReachedStats.clear();
 }
 
 void ExprInspectionChecker::analyzerCrash(const CallExpr *CE,
@@ -279,7 +299,121 @@ void ExprInspectionChecker::analyzerCrash(const CallExpr *CE,
   LLVM_BUILTIN_TRAP;
 }
 
+void ExprInspectionChecker::analyzerHashDump(const CallExpr *CE,
+                                             CheckerContext &C) const {
+  const LangOptions &Opts = C.getLangOpts();
+  const SourceManager &SM = C.getSourceManager();
+  FullSourceLoc FL(CE->getArg(0)->getBeginLoc(), SM);
+  std::string HashContent =
+      GetIssueString(SM, FL, getCheckName().getName(), "Category",
+                     C.getLocationContext()->getDecl(), Opts);
+
+  reportBug(HashContent, C);
+}
+
+void ExprInspectionChecker::analyzerDenote(const CallExpr *CE,
+                                           CheckerContext &C) const {
+  if (CE->getNumArgs() < 2) {
+    reportBug("clang_analyzer_denote() requires a symbol and a string literal",
+              C);
+    return;
+  }
+
+  SymbolRef Sym = C.getSVal(CE->getArg(0)).getAsSymbol();
+  if (!Sym) {
+    reportBug("Not a symbol", C);
+    return;
+  }
+
+  const auto *E = dyn_cast<StringLiteral>(CE->getArg(1)->IgnoreParenCasts());
+  if (!E) {
+    reportBug("Not a string literal", C);
+    return;
+  }
+
+  ProgramStateRef State = C.getState();
+
+  C.addTransition(C.getState()->set<DenotedSymbols>(Sym, E));
+}
+
+namespace {
+class SymbolExpressor
+    : public SymExprVisitor<SymbolExpressor, Optional<std::string>> {
+  ProgramStateRef State;
+
+public:
+  SymbolExpressor(ProgramStateRef State) : State(State) {}
+
+  Optional<std::string> lookup(const SymExpr *S) {
+    if (const StringLiteral *const *SLPtr = State->get<DenotedSymbols>(S)) {
+      const StringLiteral *SL = *SLPtr;
+      return std::string(SL->getBytes());
+    }
+    return None;
+  }
+
+  Optional<std::string> VisitSymExpr(const SymExpr *S) {
+    return lookup(S);
+  }
+
+  Optional<std::string> VisitSymIntExpr(const SymIntExpr *S) {
+    if (Optional<std::string> Str = lookup(S))
+      return Str;
+    if (Optional<std::string> Str = Visit(S->getLHS()))
+      return (*Str + " " + BinaryOperator::getOpcodeStr(S->getOpcode()) + " " +
+              std::to_string(S->getRHS().getLimitedValue()) +
+              (S->getRHS().isUnsigned() ? "U" : ""))
+          .str();
+    return None;
+  }
+
+  Optional<std::string> VisitSymSymExpr(const SymSymExpr *S) {
+    if (Optional<std::string> Str = lookup(S))
+      return Str;
+    if (Optional<std::string> Str1 = Visit(S->getLHS()))
+      if (Optional<std::string> Str2 = Visit(S->getRHS()))
+        return (*Str1 + " " + BinaryOperator::getOpcodeStr(S->getOpcode()) +
+                " " + *Str2).str();
+    return None;
+  }
+
+  Optional<std::string> VisitSymbolCast(const SymbolCast *S) {
+    if (Optional<std::string> Str = lookup(S))
+      return Str;
+    if (Optional<std::string> Str = Visit(S->getOperand()))
+      return (Twine("(") + S->getType().getAsString() + ")" + *Str).str();
+    return None;
+  }
+};
+} // namespace
+
+void ExprInspectionChecker::analyzerExpress(const CallExpr *CE,
+                                            CheckerContext &C) const {
+  if (CE->getNumArgs() == 0) {
+    reportBug("clang_analyzer_express() requires a symbol", C);
+    return;
+  }
+
+  SymbolRef Sym = C.getSVal(CE->getArg(0)).getAsSymbol();
+  if (!Sym) {
+    reportBug("Not a symbol", C);
+    return;
+  }
+
+  SymbolExpressor V(C.getState());
+  auto Str = V.Visit(Sym);
+  if (!Str) {
+    reportBug("Unable to express", C);
+    return;
+  }
+
+  reportBug(*Str, C);
+}
+
 void ento::registerExprInspectionChecker(CheckerManager &Mgr) {
   Mgr.registerChecker<ExprInspectionChecker>();
 }
 
+bool ento::shouldRegisterExprInspectionChecker(const LangOptions &LO) {
+  return true;
+}

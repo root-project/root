@@ -1,7 +1,7 @@
-Authentication to rootd/proofd servers
-======================================
+Authentication to ROOT servers (TServerSocket)
+==============================================
 
-The rootd/proofd daemon servers accept 6 methods of authentication, listed
+Servers based on TServerSocket accept 5 methods of authentication, listed
 in Table 1, together with their internal codes and short names.
 Method 5 (uidgid) is provided for fast access when security is not an issue.
 Method 0 is 'secured' by using a session public key, automatically
@@ -15,7 +15,6 @@ generated, which allows to avoid direct exchange of passwords.
  | SRP                 |  1   | srp        | SRP        |  Yes   | s   |
  | Kerberos V          |  2   | krb5       | Krb5       |  Yes   | k   |
  | Globus GSI          |  3   | globus     | Globus     |  Yes   | g   |
- | SSH                 |  4   | ssh        | SSH        |  Yes   | h   |
  | (uid,gid)           |  5   | uidgid     | UidGid     |  No    | ug  |
  +---------------------------------------------------------------------+
 
@@ -109,9 +108,6 @@ Client/Master authentication method.
            credentials; this is possible (and automatic) only if the
            client/master authentication was also Krb5/Globus.
 
- * SSH     to authenticate 'SSH' to slaves, the master needs the relevant
-           private key files in $HOME/.ssh (on the master).
-
  * UidGid  to authenticate 'uidgid' to slaves, the user must have the same
            (uid,gid) on master and slaves.
 
@@ -134,19 +130,9 @@ The authentication related entries in the .rootrc family of files define
 directives applying to all remote host and all remote accounts. The available
 directives are the following:
 
-* General switchings
-
-   Rootd.Authentication:    <code>
-   Proofd.Authentication   <code>
-
-  These variables specify the default method to be attempted for remote
-  authentication for rootd and proofd respectively; <code> is the internal code
-  given in Table 1; these directives supersede the default ('ssh' for normal
-  users and 'usrpwd' for anonymous users).
-
 * The <method>.Login directives specify the default login for the method:
 
-  UsrPwd.Login, SRP.Login, SSH.Login, UidGid.Login:   <username>   (e.g.: qwerty)
+  UsrPwd.Login, SRP.Login, UidGid.Login:   <username>   (e.g.: qwerty)
   Krb5.Login:    <principal>                       (e.g.: qwerty@THIS.DOM.AIN)
   Globus.Login:   cd:<dir_with_my_certs> cf:<my_cert_file> \
                   kf:<my_key_file> ad:<dir_with_CA_certs>
@@ -159,7 +145,6 @@ directives are the following:
   UsrPwd.LoginPrompt:   0
   Krb5.LoginPrompt:     1
   Globus.LoginPrompt:   no
-  SSH.LoginPrompt:      yes
 
   Default is no prompt.
 
@@ -173,7 +158,7 @@ directives are the following:
   transmits the public key to the server; the server generates a session 'token'
   which can be used by the client for later access to the server.
   This facility is implemented for all methods except UidGid (for which there would
-  be no advantage); it is switched ON by default for UsrPwd, SRP, Globus and SSH,
+  be no advantage); it is switched ON by default for UsrPwd, SRP and Globus,
   since it allows to speed up repeated access to the same server.
   For Krb5 it is implemented but switched OFF by default, since it does not improve
   on authentication time.
@@ -182,18 +167,16 @@ directives are the following:
   SRP.ReUse      1
   Krb5.ReUse     0
   Globus.ReUse   yes
-  SSH.ReUse      1
 
   NB: unless 'UsrPwd.Crypt 0' (see below), for UsrPwd the password is always sent
       encrypted with the session RSA key, even if UsrPwd.ReUse is OFF.
 
 * The <method>.Valid directives specify the duration validity of the security
-  context for methods UsrPwd, SRP and SSH; values are passed in the form
+  context for methods UsrPwd and SRP; values are passed in the form
   <hours>:<min>, the default being 24:00 .
 
   UsrPwd.Valid  16:45
   SRP.Valid     13:00
-  SSH.Valid      0:05
 
 * Other directives
 
@@ -215,13 +198,6 @@ directives are the following:
       Globus.ProxyKeyBits:      <bits>
       where <bits> is 512 or 1024 or 2048 or 4096
 
-  * ssh
-
-    * to change the path with the 'ssh' executable
-      SSH.ExecDir              <new_path>
-      (the executable will then be <new_path>/ssh)
-
-
 .rootauthrc
 ===========
 
@@ -235,7 +211,7 @@ Modifying/Adding authentication info during the session
 =======================================================
 
 Remote authentication in root is controlled by the TAuthenticate class;
-TNetFile, TFTP and TSlave create a TAuthenticate object before proceeding to
+TNetFile and TSlave create a TAuthenticate object before proceeding to
 authentication.
 
 Authentication is (host,user) specific. The dedicated class THostAuth contains
@@ -289,7 +265,6 @@ Info in <::Print>:  +-----------------------------------------------------------
 Info in <THostAuth::Print>:  +------------------------------------------------------------------+
 Info in <THostAuth::Print>:  + Host:default - User:* - # of available methods:6
 Info in <THostAuth::Print>:  + Method: 0 (UsrPwd) Ok:0 Ko:0 Dets:pt:no ru:yes cp:yes us:
-Info in <THostAuth::Print>:  + Method: 4 (SSH) Ok:0 Ko:0 Dets:pt:no ru:yes us:
 Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:no us:
 Info in <THostAuth::Print>:  + Method: 2 (Krb5) Ok:0 Ko:0 Dets:pt:no ru:no us:
 Info in <THostAuth::Print>:  + Method: 3 (Globus) Ok:0 Ko:0 Dets:pt:no ru:yes
@@ -311,7 +286,6 @@ Info in <TSecContext::PrintEstblshed>: +    expiring: Sat Jan 10 13:18:41 2004
 Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
 Info in <THostAuth::Print>:  +------------------------------------------------------------------+
 Info in <THostAuth::Print>:  + Host:lxplus*.cern.ch - User:* - # of available methods:2
-Info in <THostAuth::Print>:  + Method: 4 (SSH) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
 Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
 Info in <THostAuth::Print>:  +------------------------------------------------------------------+
 Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
@@ -331,7 +305,6 @@ Info in <::Print>:  +-----------------------------------------------------------
 Info in <THostAuth::Print>:  +------------------------------------------------------------------+
 Info in <THostAuth::Print>:  + Host:lxplus*.cern.ch - User:ganis - # of available methods:2
 Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
-Info in <THostAuth::Print>:  + Method: 4 (SSH) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
 Info in <THostAuth::Print>:  +------------------------------------------------------------------+
 Info in <::Print>:  +---------------------------- END ---------------------------------+
 
@@ -482,78 +455,28 @@ TSecContext
 The class TSecContext contains the relevant details about an established security
 context, typically needed for re-usage of the context.
 
-TestAuth.C
-==========
+authserv.C, authclient.C
+========================
 
-This macro is provided to test the authentication methods available.
-The macro is located under $ROOTSYS/tutorials.
-Before executing it, start a rootd daemon in the background or, to get
-some debug printouts, on a separate window with
+These macros must be run together to test authentication between two remote
+ROOT sessions.
+Run first the authserv.C within a ROOT session on the server
+machine, eg. "srv.machi.ne":
 
-  rootd -d 3 -f
+          root[] .x authserv.C(3000)
 
-Remember to add "-p <port>" if the default port (1094) cannot be used
-for some reason.
+authserv accepts as argument the port where it starts listening
+(default 3000).
+You can then run authclient.c in a ROOT session on the client machine:
 
-Then run
+          root[] .x authclient.C("srv.machi.ne:3000")
 
-  root -q -l $ROOTSYS/tutorials/TestAuth.C
+and you should get prompted for the credentials, if the case.
+To start a parallel socket of size, for example, 5, enter the
+size as second argument, ie
 
-and answer to the requests for passwords or similar to initialize
-credentials. Upon success, you should get at the end something like this
+          root[] .x authclient.C("srv.machi.ne:3000",5)
 
-
-   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   +                                                                             +
-   +   Result of the tests:                                                      +
-   +                                                                             +
-   +   Method: 0 (UsrPwd): successful! (reuse: successful!)                      +
-   +   Method: 1    (SRP): successful! (reuse: successful!)                      +
-   +   Method: 2   (Krb5): successful! (reuse: successful!)                      +
-   +   Method: 3 (Globus): successful! (reuse: successful!)                      +
-   +   Method: 4    (SSH): successful! (reuse: successful!)                      +
-   +   Method: 5 (UidGid): successful!                                           +
-   +                                                                             +
-   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-The macro assumes rootd accepting connections on port 1094; if this
-is not the case you can pass the port number as the first argument to
-the macro.
-
-The macro assumes that you are trying to login as yourself to rootd,
-i.e. with the username your are logged in. You may change this passing
-a different username "newuser" as second argument. In this case you
-have to start rootd from the "newuser" account or as supersuser,
-to avoid access problems. Also, for SSH, make sure that "newuser"
-can execute $ROOTSYS/bin/ssh2rpd.
-
-The macro assumes that the Kerberos principal is in the form
-
-     <current_user>@<DEFAULT_REALM>
-
-where <DEFAULT_REALM> is searched for in the Kerberos conf file
-/etc/krb5.conf (or $KRB5_CONFIG). If the principal for the current
-user is different, you have to pass it as third argument to TestAuth.C.
-
-Finally, for Globus, if the certificate files and directories are not
-standard, you should pass the ones to be used as fourth argument, the
-syntax being the same as for $HOME/.rootauthrc .
-
-This is a summary of the arguments to TestAuth.C:
-
-   TestAuth.C(<port>,"<user>","<krb5_princ","<globus_det>")
-
-   <port>          = rootd port (default 1094)
-   <user>          = login user name for the test
-                    (default from getpwuid)
-   <krb5_princ>    = Principal to be used for Krb5 authentication
-                     in the form user@THE.REA.LM
-                     ( default: <running_user@Default_Realm with
-                                Default_realm taken from /etc/krb5.conf
-                                or the $KRB5_CONFIG file )
-   <globus_det>    = details for the globus authentication
-                     ( default: ad:certificates cd:$HOME/.globus
-                                cf:usercert.pem kf:userkey.pem )
 
 --------------------------------------------------------------------------------------
-Last update: September 23, 2004
+Last update: November 19, 2018

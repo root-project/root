@@ -23,10 +23,7 @@
 // Root > T->Process("RooProofDriverSelector.C+")
 //
 
-// #include <unistd.h>
 #include "RooProofDriverSelector.h"
-#include <TH2.h>
-#include <TStyle.h>
 #include "RooDataSet.h"
 #include "RooWorkspace.h"
 #include "RooAbsPdf.h"
@@ -35,23 +32,20 @@
 #include "TRandom.h"
 #include "RooRandom.h"
 #include "RooAbsStudy.h"
-#include "TSystem.h"
 #include "RooStudyPackage.h"
-#ifndef __CINT__
 #include "RooGlobalFunc.h"
-#endif
- 
-using namespace RooFit ;
-using namespace std ;
+
+using namespace RooFit;
+using namespace std;
 
 void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/) 
 {  
   // Retrieve study pack 
   _pkg=0 ;
   if (fInput) { 
-    TIterator* iter = fInput->MakeIterator() ;
+    TIter iter = fInput->MakeIterator() ;
     TObject* obj ;
-    while((obj=iter->Next())) {
+    while((obj=iter.Next())) {
       RooStudyPackage* tmp = dynamic_cast<RooStudyPackage*>(obj) ;
       if (tmp) {
 	_pkg = tmp ;

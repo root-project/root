@@ -22,9 +22,9 @@ TEST(RDataFrameReport, AnalyseCuts)
    testing::internal::CaptureStdout();
    repPr->Print();
    std::string output = testing::internal::GetCapturedStdout();
-   auto expOut = "cut0      : pass=67         all=128        --   52.344 %\n"
-                 "cut1      : pass=59         all=67         --   88.060 %\n"
-                 "cut2      : pass=50         all=59         --   84.746 %\n";
+   auto expOut = "cut0      : pass=67         all=128        -- eff=52.34 % cumulative eff=52.34 %\n"
+                 "cut1      : pass=59         all=67         -- eff=88.06 % cumulative eff=46.09 %\n"
+                 "cut2      : pass=50         all=59         -- eff=84.75 % cumulative eff=39.06 %\n";
 
    EXPECT_STREQ(output.c_str(), expOut);
 
@@ -52,21 +52,8 @@ TEST(RDataFrameReport, AnalyseCuts)
       ASSERT_FLOAT_EQ(cutis[j].GetEff(), effs[j]);
    }
 
-   int ret = 1;
-   try {
-      rep["NonExisting"];
-   } catch (...) {
-      ret = 0;
-   }
-   ASSERT_EQ(0, ret) << "No exception thrown when trying to get a non-existing cut.\n";
-
-   ret = 1;
-   try {
-      rep[""];
-   } catch (...) {
-      ret = 0;
-   }
-   ASSERT_EQ(0, ret) << "No exception thrown when trying to get an unnamed cut.\n";
+   EXPECT_ANY_THROW(rep["NonExisting"]) << "No exception thrown when trying to get a non-existing cut.\n";
+   EXPECT_ANY_THROW(rep[""]) << "No exception thrown when trying to get an unnamed cut.\n";
 }
 
 TEST(RDataFrameReport, Printing)

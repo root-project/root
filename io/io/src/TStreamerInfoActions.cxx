@@ -20,7 +20,6 @@
 #include "TBufferFile.h"
 #include "TBufferText.h"
 #include "TMemberStreamer.h"
-#include "TError.h"
 #include "TClassEdit.h"
 #include "TVirtualCollectionIterators.h"
 #include "TProcessID.h"
@@ -45,6 +44,16 @@ using namespace TStreamerInfoActions;
 
 namespace TStreamerInfoActions
 {
+   bool IsDefaultVector(TVirtualCollectionProxy &proxy)
+   {
+      const auto props = proxy.GetProperties();
+      const bool isVector = proxy.GetCollectionType() == ROOT::kSTLvector;
+      const bool hasDefaultAlloc = !(props & TVirtualCollectionProxy::kCustomAlloc);
+      const bool isEmulated = props & TVirtualCollectionProxy::kIsEmulated;
+
+      return isEmulated || (isVector && hasDefaultAlloc);
+   }
+
    template <typename From>
    struct WithFactorMarker {
       typedef From Value_t;
@@ -64,7 +73,16 @@ namespace TStreamerInfoActions
       // Add the (potentially negative) delta to all the configuration's offset.  This is used by
       // TBranchElement in the case of split sub-object.
 
-      fOffset += delta;
+      if (fOffset != TVirtualStreamerInfo::kMissing)
+         fOffset += delta;
+   }
+
+  void TConfiguration::SetMissing()
+   {
+      // Add the (potentially negative) delta to all the configuration's offset.  This is used by
+      // TBranchElement in the case of split sub-object.
+
+      fOffset = TVirtualStreamerInfo::kMissing;
    }
 
    void TConfiguredAction::PrintDebug(TBuffer &buf, void *addr) const
@@ -154,7 +172,14 @@ namespace TStreamerInfoActions
          // Add the (potentially negative) delta to all the configuration's offset.  This is used by
          // TBranchElement in the case of split sub-object.
 
-         fOffset += delta;
+         if (fOffset != TVirtualStreamerInfo::kMissing)
+            fOffset += delta;
+         fObjectOffset = 0;
+      }
+
+      void SetMissing()
+      {
+         fOffset = TVirtualStreamerInfo::kMissing;
          fObjectOffset = 0;
       }
 
@@ -938,6 +963,7 @@ namespace TStreamerInfoActions
          TVirtualCollectionProxy *proxy = fNewClass->GetCollectionProxy();
          if (proxy) {
             fCreateIterators = proxy->GetFunctionCreateIterators();
+            fCreateWriteIterators = proxy->GetFunctionCreateIterators(kFALSE);
             fCopyIterator = proxy->GetFunctionCopyIterator();
             fDeleteIterator = proxy->GetFunctionDeleteIterator();
             fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators();
@@ -952,6 +978,7 @@ namespace TStreamerInfoActions
       Bool_t          fIsSTLBase;  // aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()
 
       TVirtualCollectionProxy::CreateIterators_t    fCreateIterators;
+      TVirtualCollectionProxy::CreateIterators_t    fCreateWriteIterators;
       TVirtualCollectionProxy::CopyIterator_t       fCopyIterator;
       TVirtualCollectionProxy::DeleteIterator_t     fDeleteIterator;
       TVirtualCollectionProxy::DeleteTwoIterators_t fDeleteTwoIterators;
@@ -1475,6 +1502,17 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   Int_t PushDataCacheVectorPtr(TBuffer &b, void *, const void *, const TConfiguration *conf)
+   {
+      TConfigurationPushDataCache *config = (TConfigurationPushDataCache*)conf;
+      auto onfileObject = config->fOnfileObject;
+
+      // onfileObject->SetSize(n);
+      b.PushDataCache( onfileObject );
+
+      return 0;
+   }
+
    Int_t PushDataCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *loopconfig, const TConfiguration *conf)
    {
       TConfigurationPushDataCache *config = (TConfigurationPushDataCache*)conf;
@@ -1490,6 +1528,12 @@ namespace TStreamerInfoActions
    }
 
    Int_t PopDataCache(TBuffer &b, void *, const TConfiguration *)
+   {
+      b.PopDataCache();
+      return 0;
+   }
+
+   Int_t PopDataCacheVectorPtr(TBuffer &b, void *, const void *, const TConfiguration *)
    {
       b.PopDataCache();
       return 0;
@@ -1660,6 +1704,8 @@ namespace TStreamerInfoActions
                  || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap
                  || proxy.GetCollectionType() == ROOT::kSTLbitset) {
          return kAssociativeLooper;
+      } else if (proxy.GetCollectionType() == ROOT::kROOTRVec && proxy.GetType() == EDataType::kBool_t) {
+         return kVectorLooper;
       } else {
          return kGenericLooper;
       }
@@ -2963,6 +3009,10 @@ void TStreamerInfo::Compile()
    fNfulldata = 0;
 
    TObjArray* infos = (TObjArray*) gROOT->GetListOfStreamerInfo();
+   if (fNumber < 0) {
+      ++fgCount;
+      fNumber = fgCount;
+   }
    if (fNumber >= infos->GetSize()) {
       infos->AddAtAndExpand(this, fNumber);
    } else {
@@ -2974,7 +3024,7 @@ void TStreamerInfo::Compile()
    assert(fComp == 0 && fCompFull == 0 && fCompOpt == 0);
 
 
-   Int_t ndata = fElements->GetEntries();
+   Int_t ndata = fElements->GetEntriesFast();
 
 
    if (fReadObjectWise) fReadObjectWise->fActions.clear();
@@ -2993,10 +3043,10 @@ void TStreamerInfo::Compile()
    else fWriteMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
 
    if (fReadMemberWiseVecPtr) fReadMemberWiseVecPtr->fActions.clear();
-   else fReadMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this,ndata);
+   else fReadMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this, ndata, kTRUE);
 
    if (fWriteMemberWiseVecPtr) fWriteMemberWiseVecPtr->fActions.clear();
-   else fWriteMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this,ndata);
+   else fWriteMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this, ndata, kTRUE);
 
    if (fWriteText) fWriteText->fActions.clear();
    else fWriteText = new TStreamerInfoActions::TActionSequence(this,ndata);
@@ -3061,11 +3111,10 @@ void TStreamerInfo::Compile()
       // try to group consecutive members of the same type
       if (!TestBit(kCannotOptimize)
           && (keep >= 0)
-          && (element->GetType() >=0)
+          && (element->GetType() > 0)
           && (element->GetType() < 10)
           && (fComp[fNdata].fType == fComp[fNdata].fNewType)
           && (fComp[keep].fMethod == 0)
-          && (element->GetType() > 0)
           && (element->GetArrayDim() == 0)
           && (fComp[keep].fType < kObject)
           && (fComp[keep].fType != kCharStar) /* do not optimize char* */
@@ -3866,9 +3915,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
 
-   UInt_t ndata = info->GetElements()->GetEntries();
+   UInt_t ndata = info->GetElements()->GetEntriesFast();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
-   if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) )
+   if (IsDefaultVector(proxy))
    {
       if (proxy.HasPointers()) {
          // Instead of the creating a new one let's copy the one from the StreamerInfo.
@@ -3981,11 +4030,11 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          return new TStreamerInfoActions::TActionSequence(0,0);
       }
 
-      UInt_t ndata = info->GetElements()->GetEntries();
+      UInt_t ndata = info->GetElements()->GetEntriesFast();
       TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
       TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
 
-      if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) )
+      if (IsDefaultVector(proxy))
       {
          if (proxy.HasPointers()) {
             // Instead of the creating a new one let's copy the one from the StreamerInfo.
@@ -4048,7 +4097,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
                oldType += TVirtualStreamerInfo::kSkip;
             }
          }
-         if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+         if ( IsDefaultVector(proxy)
                /*|| (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
                || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap) */ )
          {
@@ -4121,7 +4170,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             }
          }
 #else
-         if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+         if ( IsDefaultVector(proxy)
                /*|| (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
                 || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap)*/ )
          {
@@ -4137,6 +4186,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       }
       return sequence;
 }
+
 void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
 {
    // Add the (potentially negative) delta to all the configuration's offset.  This is used by
@@ -4152,11 +4202,26 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
    }
 }
 
+void TStreamerInfoActions::TActionSequence::SetMissing()
+{
+   // Add the (potentially negative) delta to all the configuration's offset.  This is used by
+   // TBranchElement in the case of split sub-object.
+
+   TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
+   for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
+       iter != end;
+       ++iter)
+   {
+      if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+         iter->fConfiguration->SetMissing();
+   }
+}
+
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateCopy()
 {
    // Create a copy of this sequence.
 
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,fActions.size());
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, fActions.size(), IsForVectorPtrLooper());
 
    sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
 
@@ -4186,15 +4251,24 @@ void TStreamerInfoActions::TActionSequence::AddToSubSequence(TStreamerInfoAction
                auto conf = new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, element_ids[id].fNestedIDs->fOnfileObject, offset);
                if ( sequence->fLoopConfig )
                   sequence->AddAction( PushDataCacheGenericCollection, conf );
+               else if ( sequence->IsForVectorPtrLooper() )
+                  sequence->AddAction( PushDataCacheVectorPtr, conf );
                else
                   sequence->AddAction( PushDataCache, conf );
             }
 
             original->AddToSubSequence(sequence, element_ids[id].fNestedIDs->fIDs, element_ids[id].fNestedIDs->fOffset, create);
 
-            if (element_ids[id].fNestedIDs->fOnfileObject)
-               sequence->AddAction( PopDataCache,
-                  new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, nullptr, element_ids[id].fNestedIDs->fOffset) );
+            if (element_ids[id].fNestedIDs->fOnfileObject) {
+               auto conf =
+                  new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, nullptr, element_ids[id].fNestedIDs->fOffset);
+               if ( sequence->fLoopConfig )
+                  sequence->AddAction( PopDataCacheGenericCollection, conf );
+               else if ( sequence->IsForVectorPtrLooper() )
+                  sequence->AddAction( PopDataCacheVectorPtr, conf );
+               else
+                  sequence->AddAction( PopDataCache, conf );
+            }
          } else {
             TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
             for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
@@ -4239,7 +4313,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    // Create a sequence containing the subset of the action corresponding to the SteamerElement whose ids is contained in the vector.
    // 'offset' is the location of this 'class' within the object (address) that will be passed to ReadBuffer when using this sequence.
 
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, element_ids.size(), IsForVectorPtrLooper());
 
    sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
 
@@ -4253,7 +4327,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    // Create a sequence containing the subset of the action corresponding to the SteamerElement whose ids is contained in the vector.
    // 'offset' is the location of this 'class' within the object (address) that will be passed to ReadBuffer when using this sequence.
 
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, element_ids.size(), IsForVectorPtrLooper());
 
    sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
 

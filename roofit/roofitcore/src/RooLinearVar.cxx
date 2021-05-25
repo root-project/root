@@ -15,35 +15,32 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// RooLinearVar is the most general form of a derived real-valued object that can
-// be used by RooRealIntegral to integrate over. The requirements for this are
-//
-//          - Can be modified directly (i.e. invertible formula)
-//          - Jacobian term in integral is constant (but not necessarily 1)
-//
-// This class implements the most general form that satisfy these requirement
-// 
-//    RLV = (slope)*x + (offset)
-//
-// X is required to be a RooRealVar to meet the invertibility criterium
-// (slope) and (offset) is are RooAbsReals, but may not overlap with x,
-// i.e. x may not be a server of (slope) and (offset)
-//
-// In the context of a dataset, (slope) may not contain any real-valued dependents
-// (satisfied constant Jacobian requirement). This check cannot be enforced at
-// construction time, but can be performed at run time through the isJacobianOK(depList)
-// member function.
-//
-//
+/// \class RooLinearVar
+/// RooLinearVar is the most general form of a derived real-valued object that can
+/// be used by RooRealIntegral to integrate over. The requirements for this are
+/// * Can be modified directly (i.e. invertible formula)
+/// * Jacobian term in integral is constant (but not necessarily 1)
+///
+/// This class implements the most general form that satisfies these requirements
+/// \f[
+///    RLV = \mathrm{slope} \cdot x + \mathrm{offset}
+/// \f]
+/// \f$ x \f$ is required to be a RooRealVar to meet the invertibility criterium,
+/// `slope` and `offset` are RooAbsReals, but cannot overlap with \f$ x \f$,
+/// *i.e.*, \f$ x \f$ may not be a server of `slope` and `offset`.
+///
+/// In the context of a dataset, `slope` may not contain any real-valued dependents
+/// (to satisfyt the constant Jacobian requirement). This check cannot be enforced at
+/// construction time, but can be performed at run time through the isJacobianOK(depList)
+/// member function.
+///
+///
 
 #include "RooFit.h"
-#include "Riostream.h"
 
-#include <math.h>
+#include <cmath>
+
 #include "TClass.h"
-#include "TObjString.h"
-#include "TTree.h"
 #include "RooLinearVar.h"
 #include "RooStreamParser.h"
 #include "RooArgSet.h"
@@ -155,8 +152,8 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 
   // Check if jacobian has no real-valued dependents
   RooAbsArg* arg ;
-  TIterator* dIter = depList.createIterator() ;
-  while ((arg=(RooAbsArg*)dIter->Next())) {
+  TIter dIter = depList.createIterator() ;
+  while ((arg=(RooAbsArg*)dIter.Next())) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
       if (_slope.arg().dependsOnValue(*arg)) {
 // 	cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return kFALSE because slope depends on value of " << arg->GetName() << endl ;
@@ -164,8 +161,7 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
       }
     }
   }
-  delete dIter ;
-//   cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return kTRUE" << endl ;
+  //   cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return kTRUE" << endl ;
   return kTRUE ;
 }
 
@@ -207,8 +203,8 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve binning of this linear transformation. A RooLinearVar does not have its own
-/// binnings but uses linearly transformed binnings of teh input variable. If a given
-/// binning exists on the input variable, it will also exists on this linear transformation
+/// binnings but uses linearly transformed binnings of the input variable. If a given
+/// binning exists on the input variable, it will also exist on this linear transformation,
 /// and a binning adaptor object is created on the fly.
 
  RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 

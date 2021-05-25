@@ -1,12 +1,14 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook -draw
 /// Fill histograms in parallel with automatic binning.
 /// Illustrates use of power-of-two autobin algorithm
 ///
 /// \macro_code
+/// \macro_image
 ///
-/// \author Gerardo Ganis
 /// \date November 2017
+/// \author Gerardo Ganis
 
 // The number of workers
 const UInt_t nWorkers = 8U;

@@ -1,12 +1,9 @@
-/// \file ROOT/RWebWindowsManager.hxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2017-10-16
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <s.linev@gsi.de>
+// Date: 2017-10-16
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -53,33 +50,16 @@ private:
    /// Returns timeout for launching new browser process
    float GetLaunchTmout() const { return fLaunchTmout; }
 
-   bool CreateServer(bool with_http = false);
-
    void Unregister(RWebWindow &win);
 
-   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
-
-   /// Returns window URL, running in batch mode
-   std::string GetBatchUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
-
-   /// Returns window URL, running in normal mode
-   std::string GetWindowUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
-
-   unsigned Show(RWebWindow &win, bool batch_mode, const std::string &where);
-
    /// Show window in specified location, see Show() method for more details
-   unsigned ShowWindow(RWebWindow &win, const std::string &where) { return Show(win, false, where); }
-
-   /// Start window batch job in specified location, see Show() method for more details
-   unsigned ShowWindowBatch(RWebWindow &win, const std::string &where) { return Show(win, true, where); }
-
-   void HaltClient(const std::string &procid);
-
-   void TestProg(TString &prog, const std::string &nexttry);
+   unsigned ShowWindow(RWebWindow &win, const RWebDisplayArgs &args);
 
    int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
-   static bool IsMainThrd();
+   std::string GetUrl(const RWebWindow &win, bool remote = false);
+
+   bool CreateServer(bool with_http = false);
 
 public:
    RWebWindowsManager();
@@ -89,11 +69,17 @@ public:
    /// Returns THttpServer instance
    THttpServer *GetServer() const { return fServer.get(); }
 
+   /// Returns http address of the server, empty string when not available
+   std::string GetServerAddr() const { return fAddr; }
+
    static std::shared_ptr<RWebWindowsManager> &Instance();
 
    std::shared_ptr<RWebWindow> CreateWindow();
 
    void Terminate();
+
+   static bool IsMainThrd();
+   static void AssignMainThrd();
 };
 
 } // namespace Experimental

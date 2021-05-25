@@ -11,13 +11,17 @@
 
 #include "TGuiBldHintsButton.h"
 #include "TGResourcePool.h"
+#include "TVirtualX.h"
 
-//_____________________________________________________________________________
-//
-// TGuiBldHintsButton
-//
-// Special button class used for editing layout hints in the ROOT GUI Builder.
-//_____________________________________________________________________________
+
+
+/** \class TGuiBldHintsButton
+    \ingroup guibuilder
+
+Special button class used for editing layout hints in the ROOT GUI Builder.
+
+*/
+
 
 ClassImp(TGuiBldHintsButton);
 

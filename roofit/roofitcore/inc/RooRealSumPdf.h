@@ -20,6 +20,7 @@
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
+#include <list>
 
 class RooRealSumPdf : public RooAbsPdf {
 public:
@@ -82,20 +83,21 @@ protected:
   mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 
 
-  Bool_t _haveLastCoef ;
-
   RooListProxy _funcList ;   //  List of component FUNCs
   RooListProxy _coefList ;  //  List of coefficients
-  TIterator* _funcIter ;     //! Iterator over FUNC list
-  TIterator* _coefIter ;    //! Iterator over coefficient list
   Bool_t _extended ;        // Allow use as extended p.d.f.
 
   Bool_t _doFloor ; // Introduce floor at zero in pdf
+  mutable bool _haveWarned{false}; //!
   static Bool_t _doFloorGlobal ; // Global flag for introducing floor at zero in pdf
   
 private:
 
-  ClassDef(RooRealSumPdf,3) // PDF constructed from a sum of (non-pdf) functions
+  bool haveLastCoef() const {
+    return _funcList.size() == _coefList.size();
+  }
+
+  ClassDef(RooRealSumPdf, 4) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

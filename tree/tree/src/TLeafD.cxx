@@ -19,7 +19,7 @@ A TLeaf for a 64 bit floating point data type.
 #include "TBranch.h"
 #include "TBuffer.h"
 #include "TClonesArray.h"
-#include "Riostream.h"
+#include <iostream>
 
 ClassImp(TLeafD);
 
@@ -127,6 +127,12 @@ void TLeafD::ReadBasket(TBuffer &b)
          b.ReadFastArray(fValue,fLen);
       }
    }
+}
+
+// Deserialize N events from an input buffer.
+bool TLeafD::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
+   if (R__unlikely(fLeafCount)) { return false; }
+   return input_buf.ByteSwapBuffer(fLen*N, kDouble_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

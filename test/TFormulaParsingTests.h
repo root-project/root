@@ -7,6 +7,8 @@
 #include "Math/ChebyshevPol.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TMacro.h"
+#include "TSystem.h"
 
 #include <limits>
 #include <cstdlib>
@@ -935,6 +937,118 @@ bool test48() {
    return ok;
 }
 
+bool test49() {
+   // test copy consttructor in case of lazy initialization (i.e. when reading from a file)
+   TFile* f = TFile::Open("TFormulaTest49.root","RECREATE");   
+   if (!f) {
+      Error("test49","Error creating file for test49");
+      return false;
+   }
+   TF1 f1("f1","x*[0]");
+   f1.SetParameter(0,2); 
+   f1.Write();
+   f->Close();
+   // read the file 
+   f = TFile::Open("TFormulaTest49.root");   
+   if (!f) {
+      Error("test49","Error reading file for test49");
+      return false;
+   }
+   auto fr = (TF1*) f->Get("f1");
+   if (!fr) { 
+      Error("test49","Error reading function from file for test49");
+      return false;
+   }
+   // create a copy
+   TF1 fr2 = *fr;
+   bool ok = (fr->Eval(2.) == 4.);
+   ok &= ( fr2.Eval(2.) == fr->Eval(2.) );
+
+   // now read using an indpendent process (ROOT session)
+   // this should cause ROOT-9801
+
+   TMacro m;
+   m.AddLine("bool TFormulaTest49() { TFile * f = TFile::Open(\"TFormulaTest49.root\");"
+             "TF1 *f1 = (TF1*) f->Get(\"f1\"); TF1 f2 = *f1;"
+             "bool ok = (f1->Eval(2) == f2.Eval(2.)) && (f2.Eval(2.) == 4.);"
+             "if (!ok) Error(\"test49\",\"Error in test49 (lazy initialization)\");" 
+             "return ok; }");
+
+   m.SaveSource("TFormulaTest49.C");
+   int ret = gSystem->Exec("root.exe -q -l -i TFormulaTest49.C");
+   ok |= (ret == 0);
+   return ok;
+}
+
+bool test50() {
+   // test detailed printing of function
+   TFormula f1("f1","[A]*sin([B]*x)");
+   f1.Print("V");
+   bool ok = f1.IsValid(); 
+
+   TF2 f2("f2","[0]*x+[1]*y");
+   f2.Print("V");
+   ok &= f2.GetFormula()->IsValid();
+
+   // create using lambda expression, need to pass ndim and npar
+   TFormula f3("f3","[](double *x, double *p){ return p[0]*x[0] + p[1]; } ",1,2);
+   f3.Print("V");
+   ok &= f3.IsValid();
+
+   // create again using lambda from TF1, need to pass xmin(0.),xmax(1.), npar (1)
+   TF1 f4("f3","[](double *x, double *p){ return p[0]*x[0]; } ",0.,1.,1);  
+   f4.Print("V");
+   ok &= f3.IsValid();
+
+   return ok;
+}
+
+bool test51() {
+   //switch off error messages to have test passing
+   int prevLevel = gErrorIgnoreLevel; 
+   gErrorIgnoreLevel= kFatal; 
+   TFormula f("fMissingParenthesis", "exp(x");
+   bool ok = !f.IsValid();
+   TFormula f2("fEmpty", "");
+   ok &= !f2.IsValid();
+   TFormula f3("fNonsense", "skmg#$#@!1");
+   ok &= !f3.IsValid();
+   gErrorIgnoreLevel = prevLevel; 
+   return ok;
+}
+
+bool test52() {
+   // test for bug 10815
+   // mixing user previous defined functions (available in gROOT)
+   // and pre-defined functions
+   bool ok  = true;
+   TF1 f1("f1gaus","[0]*gaus(1)",-10,10);
+   TF1 f2("f2","[0]*f1gaus",-10,10);
+   f1.SetParameters(2,3,1,2);
+   f2.SetParameters(3,2,3,1,2);
+   ok &=  TMath::AreEqualAbs( f1.Eval(1), 2.*3.*TMath::Gaus(1,1,2), 1.E-10);
+   if (!ok) Error("test52","Error testing f1");
+   bool ret =  TMath::AreEqualAbs( f2.Eval(1), 3.*2.*3.*TMath::Gaus(1,1,2), 1.E-10);
+   if (!ret) Error("test52","Error testing f2");
+   ok &= ret; 
+   TF1 f3("f3","f1gaus*gaus(4)",-10,10);
+   f3.SetParameters(2,3,1,2,3,2,3);
+   ret =  TMath::AreEqualAbs( f3.Eval(1), 2.*3.*TMath::Gaus(1,1,2) * 3. * TMath::Gaus(1,2,3), 1.E-10);    
+   if (!ret) Error("test52","Error testing f3");
+   ok &= ret; 
+   // check also after
+   TF1 f4("gaus2a","[0]*gaus(1)",-10,10);
+   TF1 f5("f2","[0]*gaus2a",-10,10);
+   f4.SetParameters(2,3,1,2);
+   f5.SetParameters(3,2,3,1,2);
+   ret =  TMath::AreEqualAbs( f5.Eval(1), 3.*f4.Eval(1),1.E-10);
+   if (!ret) Error("test52","Error testing f4 & f5");
+   return ok;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 
 void PrintError(int itest)  {
    Error("TFormula test","test%d FAILED ",itest);
@@ -1001,6 +1115,10 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test46() ) { PrintError(itest); }
    IncrTest(itest); if (!test47() ) { PrintError(itest); }
    IncrTest(itest); if (!test48() ) { PrintError(itest); }
+   IncrTest(itest); if (!test49() ) { PrintError(itest); }
+   IncrTest(itest); if (!test50() ) { PrintError(itest); }
+   IncrTest(itest); if (!test51() ) { PrintError(itest); }
+   IncrTest(itest); if (!test52() ) { PrintError(itest); }
 
    std::cout << ".\n";
 

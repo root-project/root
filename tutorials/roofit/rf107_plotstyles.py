@@ -1,15 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #107
-## Demonstration of various plotting styles of data, functions
-## in a RooPlot
+## Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -58,8 +55,14 @@ data.plotOn(frame3, ROOT.RooFit.MarkerColor(
     ROOT.kBlue), ROOT.RooFit.LineColor(ROOT.kBlue))
 
 # Filled bar chart
-data.plotOn(frame4, ROOT.RooFit.DrawOption("B"), ROOT.RooFit.DataError(
-    ROOT.RooAbsData.ErrorType(2)), ROOT.RooFit.XErrorSize(0), ROOT.RooFit.FillColor(ROOT.kGray))
+data.plotOn(
+    frame4,
+    ROOT.RooFit.DrawOption("B"),
+    ROOT.RooFit.DataError(
+        ROOT.RooAbsData.ErrorType(2)),
+    ROOT.RooFit.XErrorSize(0),
+    ROOT.RooFit.FillColor(
+        ROOT.kGray))
 
 # Function plotting styles
 # -----------------------------------------------
@@ -72,11 +75,11 @@ gauss.plotOn(frame2, ROOT.RooFit.LineStyle(ROOT.kDashed))
 
 # Filled shapes in green color
 gauss.plotOn(frame3, ROOT.RooFit.DrawOption("F"),
-                ROOT.RooFit.FillColor(ROOT.kOrange), ROOT.RooFit.MoveToBack())
+             ROOT.RooFit.FillColor(ROOT.kOrange), ROOT.RooFit.MoveToBack())
 
 #
 gauss.plotOn(frame4, ROOT.RooFit.Range(-8, 3),
-                ROOT.RooFit.LineColor(ROOT.kMagenta))
+             ROOT.RooFit.LineColor(ROOT.kMagenta))
 
 c = ROOT.TCanvas("rf107_plotstyles", "rf107_plotstyles", 800, 800)
 c.Divide(2, 2)

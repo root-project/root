@@ -1,9 +1,8 @@
-//===--- TokenLexer.h - Lex from a token buffer -----------------*- C++ -*-===//
+//===- TokenLexer.h - Lex from a token buffer -------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,32 +14,33 @@
 #define LLVM_CLANG_LEX_TOKENLEXER_H
 
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/ArrayRef.h"
 
 namespace clang {
-  class MacroInfo;
-  class Preprocessor;
-  class Token;
-  class MacroArgs;
+
+class MacroArgs;
+class MacroInfo;
+class Preprocessor;
+class Token;
+class VAOptExpansionContext;
 
 /// TokenLexer - This implements a lexer that returns tokens from a macro body
 /// or token stream instead of lexing from a character buffer.  This is used for
 /// macro expansion and _Pragma handling, for example.
-///
 class TokenLexer {
-  /// Macro - The macro we are expanding from.  This is null if expanding a
-  /// token stream.
-  ///
-  MacroInfo *Macro;
+  friend class Preprocessor;
 
-  /// ActualArgs - The actual arguments specified for a function-like macro, or
-  /// null.  The TokenLexer owns the pointed-to object.
-  MacroArgs *ActualArgs;
+  /// The macro we are expanding from. This is null if expanding a token stream.
+  MacroInfo *Macro = nullptr;
 
-  /// PP - The current preprocessor object we are expanding for.
-  ///
+  /// The actual arguments specified for a function-like macro, or null. The
+  /// TokenLexer owns the pointed-to object.
+  MacroArgs *ActualArgs = nullptr;
+
+  /// The current preprocessor object we are expanding for.
   Preprocessor &PP;
 
-  /// Tokens - This is the pointer to an array of tokens that the macro is
+  /// This is the pointer to an array of tokens that the macro is
   /// defined to, with arguments expanded for function-like macros.  If this is
   /// a token stream, these are the tokens we are returning.  This points into
   /// the macro definition we are lexing from, a cache buffer that is owned by
@@ -49,31 +49,28 @@ class TokenLexer {
   /// Note that if it points into Preprocessor's cache buffer, the Preprocessor
   /// may update the pointer as needed.
   const Token *Tokens;
-  friend class Preprocessor;
 
-  /// NumTokens - This is the length of the Tokens array.
-  ///
+  /// This is the length of the Tokens array.
   unsigned NumTokens;
 
-  /// CurToken - This is the next token that Lex will return.
-  ///
-  unsigned CurToken;
+  /// This is the index of the next token that Lex will return.
+  unsigned CurTokenIdx;
 
-  /// ExpandLocStart/End - The source location range where this macro was
-  /// expanded.
+  /// The source location range where this macro was expanded.
   SourceLocation ExpandLocStart, ExpandLocEnd;
 
-  /// \brief Source location pointing at the source location entry chunk that
+  /// Source location pointing at the source location entry chunk that
   /// was reserved for the current macro expansion.
   SourceLocation MacroExpansionStart;
-  
-  /// \brief The offset of the macro expansion in the
+
+  /// The offset of the macro expansion in the
   /// "source location address space".
   unsigned MacroStartSLocOffset;
 
-  /// \brief Location of the macro definition.
+  /// Location of the macro definition.
   SourceLocation MacroDefStart;
-  /// \brief Length of the macro definition.
+
+  /// Length of the macro definition.
   unsigned MacroDefLength;
 
   /// Lexical information about the expansion point of the macro: the identifier
@@ -81,7 +78,7 @@ class TokenLexer {
   bool AtStartOfLine : 1;
   bool HasLeadingSpace : 1;
 
-  // NextTokGetsSpace - When this is true, the next token appended to the
+  // When this is true, the next token appended to the
   // output list during function argument expansion will get a leading space,
   // regardless of whether it had one to begin with or not. This is used for
   // placemarker support. If still true after function argument expansion, the
@@ -89,18 +86,20 @@ class TokenLexer {
   // expansion.
   bool NextTokGetsSpace : 1;
 
-  /// OwnsTokens - This is true if this TokenLexer allocated the Tokens
+  /// This is true if this TokenLexer allocated the Tokens
   /// array, and thus needs to free it when destroyed.  For simple object-like
   /// macros (for example) we just point into the token buffer of the macro
   /// definition, we don't make a copy of it.
   bool OwnsTokens : 1;
 
-  /// DisableMacroExpansion - This is true when tokens lexed from the TokenLexer
+  /// This is true when tokens lexed from the TokenLexer
   /// should not be subject to further macro expansion.
   bool DisableMacroExpansion : 1;
 
-  TokenLexer(const TokenLexer &) = delete;
-  void operator=(const TokenLexer &) = delete;
+  /// When true, the produced tokens have Token::IsReinjected flag set.
+  /// See the flag documentation for details.
+  bool IsReinject : 1;
+
 public:
   /// Create a TokenLexer for the specified macro with the specified actual
   /// arguments.  Note that this ctor takes ownership of the ActualArgs pointer.
@@ -108,42 +107,44 @@ public:
   /// identifier for an object-like macro.
   TokenLexer(Token &Tok, SourceLocation ILEnd, MacroInfo *MI,
              MacroArgs *ActualArgs, Preprocessor &pp)
-    : Macro(nullptr), ActualArgs(nullptr), PP(pp), OwnsTokens(false) {
+      : PP(pp), OwnsTokens(false) {
     Init(Tok, ILEnd, MI, ActualArgs);
   }
-
-  /// Init - Initialize this TokenLexer to expand from the specified macro
-  /// with the specified argument information.  Note that this ctor takes
-  /// ownership of the ActualArgs pointer.  ILEnd specifies the location of the
-  /// ')' for a function-like macro or the identifier for an object-like macro.
-  void Init(Token &Tok, SourceLocation ILEnd, MacroInfo *MI,
-            MacroArgs *ActualArgs);
 
   /// Create a TokenLexer for the specified token stream.  If 'OwnsTokens' is
   /// specified, this takes ownership of the tokens and delete[]'s them when
   /// the token lexer is empty.
   TokenLexer(const Token *TokArray, unsigned NumToks, bool DisableExpansion,
-             bool ownsTokens, Preprocessor &pp)
-    : Macro(nullptr), ActualArgs(nullptr), PP(pp), OwnsTokens(false) {
-    Init(TokArray, NumToks, DisableExpansion, ownsTokens);
+             bool ownsTokens, bool isReinject, Preprocessor &pp)
+      : PP(pp), OwnsTokens(false) {
+    Init(TokArray, NumToks, DisableExpansion, ownsTokens, isReinject);
   }
 
-  /// Init - Initialize this TokenLexer with the specified token stream.
+  TokenLexer(const TokenLexer &) = delete;
+  TokenLexer &operator=(const TokenLexer &) = delete;
+  ~TokenLexer() { destroy(); }
+
+  /// Initialize this TokenLexer to expand from the specified macro
+  /// with the specified argument information.  Note that this ctor takes
+  /// ownership of the ActualArgs pointer.  ILEnd specifies the location of the
+  /// ')' for a function-like macro or the identifier for an object-like macro.
+  void Init(Token &Tok, SourceLocation ELEnd, MacroInfo *MI,
+            MacroArgs *Actuals);
+
+  /// Initialize this TokenLexer with the specified token stream.
   /// This does not take ownership of the specified token vector.
   ///
   /// DisableExpansion is true when macro expansion of tokens lexed from this
   /// stream should be disabled.
-  void Init(const Token *TokArray, unsigned NumToks,
-            bool DisableMacroExpansion, bool OwnsTokens);
+  void Init(const Token *TokArray, unsigned NumToks, bool DisableMacroExpansion,
+            bool OwnsTokens, bool IsReinject);
 
-  ~TokenLexer() { destroy(); }
-
-  /// isNextTokenLParen - If the next token lexed will pop this macro off the
+  /// If the next token lexed will pop this macro off the
   /// expansion stack, return 2.  If the next unexpanded token is a '(', return
   /// 1, otherwise return 0.
   unsigned isNextTokenLParen() const;
 
-  /// Lex - Lex and return a token from this macro stream.
+  /// Lex and return a token from this macro stream.
   bool Lex(Token &Tok);
 
   /// isParsingPreprocessorDirective - Return true if we are in the middle of a
@@ -153,36 +154,75 @@ public:
 private:
   void destroy();
 
-  /// isAtEnd - Return true if the next lex call will pop this macro off the
-  /// include stack.
+  /// Return true if the next lex call will pop this macro off the include
+  /// stack.
   bool isAtEnd() const {
-    return CurToken == NumTokens;
+    return CurTokenIdx == NumTokens;
   }
 
-  /// PasteTokens - Tok is the LHS of a ## operator, and CurToken is the ##
-  /// operator.  Read the ## and RHS, and paste the LHS/RHS together.  If there
-  /// are is another ## after it, chomp it iteratively.  Return the result as
-  /// Tok.  If this returns true, the caller should immediately return the
+  /// Concatenates the next (sub-)sequence of \p Tokens separated by '##'
+  /// starting with LHSTok - stopping when we encounter a token that is neither
+  /// '##' nor preceded by '##'.  Places the result back into \p LHSTok and sets
+  /// \p CurIdx to point to the token following the last one that was pasted.
+  ///
+  /// Also performs the MSVC extension wide-literal token pasting involved with:
+  ///       \code L #macro-arg. \endcode
+  ///
+  /// \param[in,out] LHSTok - Contains the token to the left of '##' in \p
+  /// Tokens upon entry and will contain the resulting concatenated Token upon
+  /// exit.
+  ///
+  /// \param[in] TokenStream - The stream of Tokens we are lexing from.
+  ///
+  /// \param[in,out] CurIdx - Upon entry, \pTokens[\pCurIdx] must equal '##'
+  /// (with the exception of the MSVC extension mentioned above).  Upon exit, it
+  /// is set to the index of the token following the last token that was
+  /// concatenated together.
+  ///
+  /// \returns If this returns true, the caller should immediately return the
   /// token.
-  bool PasteTokens(Token &Tok);
+  bool pasteTokens(Token &LHSTok, ArrayRef<Token> TokenStream,
+                   unsigned int &CurIdx);
+
+  /// Calls pasteTokens above, passing in the '*this' object's Tokens and
+  /// CurTokenIdx data members.
+  bool pasteTokens(Token &Tok);
+
+
+  /// Takes the tail sequence of tokens within ReplacementToks that represent
+  /// the just expanded __VA_OPT__ tokens (possibly zero tokens) and transforms
+  /// them into a string.  \p VCtx is used to determine which token represents
+  /// the first __VA_OPT__ replacement token.
+  ///
+  /// \param[in,out] ResultToks - Contains the current Replacement Tokens
+  /// (prior to rescanning and token pasting), the tail end of which represents
+  /// the tokens just expanded through __VA_OPT__ processing.  These (sub)
+  /// sequence of tokens are folded into one stringified token.
+  ///
+  /// \param[in] VCtx - contains relevant contextual information about the
+  /// state of the tokens around and including the __VA_OPT__ token, necessary
+  /// for stringification.
+  void stringifyVAOPTContents(SmallVectorImpl<Token> &ResultToks,
+                              const VAOptExpansionContext &VCtx,
+                              SourceLocation VAOPTClosingParenLoc);
 
   /// Expand the arguments of a function-like macro so that we can quickly
   /// return preexpanded tokens from Tokens.
   void ExpandFunctionArguments();
 
-  /// HandleMicrosoftCommentPaste - In microsoft compatibility mode, /##/ pastes
+  /// In microsoft compatibility mode, /##/ pastes
   /// together to form a comment that comments out everything in the current
   /// macro, other active macros, and anything left on the current physical
   /// source line of the expanded buffer.  Handle this by returning the
   /// first token on the next line.
   void HandleMicrosoftCommentPaste(Token &Tok, SourceLocation OpLoc);
 
-  /// \brief If \p loc is a FileID and points inside the current macro
+  /// If \p loc is a FileID and points inside the current macro
   /// definition, returns the appropriate source location pointing at the
   /// macro expansion source location entry.
   SourceLocation getExpansionLocForMacroDefLoc(SourceLocation loc) const;
 
-  /// \brief Creates SLocEntries and updates the locations of macro argument
+  /// Creates SLocEntries and updates the locations of macro argument
   /// tokens to their new expanded locations.
   ///
   /// \param ArgIdSpellLoc the location of the macro argument id inside the
@@ -200,6 +240,6 @@ private:
   void PropagateLineStartLeadingSpaceInfo(Token &Result);
 };
 
-}  // end namespace clang
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_LEX_TOKENLEXER_H

@@ -1,9 +1,8 @@
 //===-- LTOModule.cpp - LLVM Link Time Optimizer --------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,19 +13,16 @@
 
 #include "llvm/LTO/legacy/LTOModule.h"
 #include "llvm/ADT/Triple.h"
-#include "llvm/Analysis/ObjectUtils.h"
 #include "llvm/Bitcode/BitcodeReader.h"
+#include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/Constants.h"
-#include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Mangler.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
-#include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCParser/MCAsmParser.h"
-#include "llvm/MC/MCParser/MCTargetAsmParser.h"
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbol.h"
@@ -40,10 +36,7 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
-#include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
-#include "llvm/Target/TargetRegisterInfo.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 #include "llvm/Transforms/Utils/GlobalStatus.h"
 #include <system_error>
 using namespace llvm;
@@ -60,9 +53,9 @@ LTOModule::~LTOModule() {}
 /// isBitcodeFile - Returns 'true' if the file (or memory contents) is LLVM
 /// bitcode.
 bool LTOModule::isBitcodeFile(const void *Mem, size_t Length) {
-  ErrorOr<MemoryBufferRef> BCData = IRObjectFile::findBitcodeInMemBuffer(
+  Expected<MemoryBufferRef> BCData = IRObjectFile::findBitcodeInMemBuffer(
       MemoryBufferRef(StringRef((const char *)Mem, Length), "<mem>"));
-  return bool(BCData);
+  return !errorToBool(BCData.takeError());
 }
 
 bool LTOModule::isBitcodeFile(StringRef Path) {
@@ -71,15 +64,15 @@ bool LTOModule::isBitcodeFile(StringRef Path) {
   if (!BufferOrErr)
     return false;
 
-  ErrorOr<MemoryBufferRef> BCData = IRObjectFile::findBitcodeInMemBuffer(
+  Expected<MemoryBufferRef> BCData = IRObjectFile::findBitcodeInMemBuffer(
       BufferOrErr.get()->getMemBufferRef());
-  return bool(BCData);
+  return !errorToBool(BCData.takeError());
 }
 
 bool LTOModule::isThinLTO() {
   Expected<BitcodeLTOInfo> Result = getBitcodeLTOInfo(MBRef);
   if (!Result) {
-    logAllUnhandledErrors(Result.takeError(), errs(), "");
+    logAllUnhandledErrors(Result.takeError(), errs());
     return false;
   }
   return Result->IsThinLTO;
@@ -87,9 +80,9 @@ bool LTOModule::isThinLTO() {
 
 bool LTOModule::isBitcodeForTarget(MemoryBuffer *Buffer,
                                    StringRef TriplePrefix) {
-  ErrorOr<MemoryBufferRef> BCOrErr =
+  Expected<MemoryBufferRef> BCOrErr =
       IRObjectFile::findBitcodeInMemBuffer(Buffer->getMemBufferRef());
-  if (!BCOrErr)
+  if (errorToBool(BCOrErr.takeError()))
     return false;
   LLVMContext Context;
   ErrorOr<std::string> TripleOrErr =
@@ -100,9 +93,9 @@ bool LTOModule::isBitcodeForTarget(MemoryBuffer *Buffer,
 }
 
 std::string LTOModule::getProducerString(MemoryBuffer *Buffer) {
-  ErrorOr<MemoryBufferRef> BCOrErr =
+  Expected<MemoryBufferRef> BCOrErr =
       IRObjectFile::findBitcodeInMemBuffer(Buffer->getMemBufferRef());
-  if (!BCOrErr)
+  if (errorToBool(BCOrErr.takeError()))
     return "";
   LLVMContext Context;
   ErrorOr<std::string> ProducerOrErr = expectedToErrorOrAndEmitErrors(
@@ -137,7 +130,8 @@ LTOModule::createFromOpenFileSlice(LLVMContext &Context, int fd, StringRef path,
                                    size_t map_size, off_t offset,
                                    const TargetOptions &options) {
   ErrorOr<std::unique_ptr<MemoryBuffer>> BufferOrErr =
-      MemoryBuffer::getOpenFileSlice(fd, path, map_size, offset);
+      MemoryBuffer::getOpenFileSlice(sys::fs::convertFDToNativeFile(fd), path,
+                                     map_size, offset);
   if (std::error_code EC = BufferOrErr.getError()) {
     Context.emitError(EC.message());
     return EC;
@@ -174,11 +168,11 @@ LTOModule::createInLocalContext(std::unique_ptr<LLVMContext> Context,
 static ErrorOr<std::unique_ptr<Module>>
 parseBitcodeFileImpl(MemoryBufferRef Buffer, LLVMContext &Context,
                      bool ShouldBeLazy) {
-
   // Find the buffer.
-  ErrorOr<MemoryBufferRef> MBOrErr =
+  Expected<MemoryBufferRef> MBOrErr =
       IRObjectFile::findBitcodeInMemBuffer(Buffer);
-  if (std::error_code EC = MBOrErr.getError()) {
+  if (Error E = MBOrErr.takeError()) {
+    std::error_code EC = errorToErrorCode(std::move(E));
     Context.emitError(EC.message());
     return EC;
   }
@@ -213,7 +207,7 @@ LTOModule::makeLTOModule(MemoryBufferRef Buffer, const TargetOptions &options,
   std::string errMsg;
   const Target *march = TargetRegistry::lookupTarget(TripleStr, errMsg);
   if (!march)
-    return std::unique_ptr<LTOModule>(nullptr);
+    return make_error_code(object::object_error::arch_not_found);
 
   // construct LTOModule, hand over ownership of module and target
   SubtargetFeatures Features;
@@ -381,24 +375,20 @@ void LTOModule::addDefinedDataSymbol(StringRef Name, const GlobalValue *v) {
   // from the ObjC data structures generated by the front end.
 
   // special case if this data blob is an ObjC class definition
-  std::string Section = v->getSection();
-  if (Section.compare(0, 15, "__OBJC,__class,") == 0) {
-    if (const GlobalVariable *gv = dyn_cast<GlobalVariable>(v)) {
-      addObjCClass(gv);
+  if (const GlobalVariable *GV = dyn_cast<GlobalVariable>(v)) {
+    StringRef Section = GV->getSection();
+    if (Section.startswith("__OBJC,__class,")) {
+      addObjCClass(GV);
     }
-  }
 
-  // special case if this data blob is an ObjC category definition
-  else if (Section.compare(0, 18, "__OBJC,__category,") == 0) {
-    if (const GlobalVariable *gv = dyn_cast<GlobalVariable>(v)) {
-      addObjCCategory(gv);
+    // special case if this data blob is an ObjC category definition
+    else if (Section.startswith("__OBJC,__category,")) {
+      addObjCCategory(GV);
     }
-  }
 
-  // special case if this data blob is the list of referenced classes
-  else if (Section.compare(0, 18, "__OBJC,__cls_refs,") == 0) {
-    if (const GlobalVariable *gv = dyn_cast<GlobalVariable>(v)) {
-      addObjCClassRef(gv);
+    // special case if this data blob is the list of referenced classes
+    else if (Section.startswith("__OBJC,__cls_refs,")) {
+      addObjCClassRef(GV);
     }
   }
 }
@@ -453,7 +443,7 @@ void LTOModule::addDefinedSymbol(StringRef Name, const GlobalValue *def,
     attr |= LTO_SYMBOL_SCOPE_HIDDEN;
   else if (def->hasProtectedVisibility())
     attr |= LTO_SYMBOL_SCOPE_PROTECTED;
-  else if (canBeOmittedFromSymbolTable(def))
+  else if (def->canBeOmittedFromSymbolTable())
     attr |= LTO_SYMBOL_SCOPE_DEFAULT_CAN_BE_HIDDEN;
   else
     attr |= LTO_SYMBOL_SCOPE_DEFAULT;
@@ -656,6 +646,32 @@ void LTOModule::parseMetadata() {
       continue;
     emitLinkerFlagsForGlobalCOFF(OS, Sym.symbol, TT, M);
   }
+}
 
-  // Add other interesting metadata here.
+lto::InputFile *LTOModule::createInputFile(const void *buffer,
+                                           size_t buffer_size, const char *path,
+                                           std::string &outErr) {
+  StringRef Data((const char *)buffer, buffer_size);
+  MemoryBufferRef BufferRef(Data, path);
+
+  Expected<std::unique_ptr<lto::InputFile>> ObjOrErr =
+      lto::InputFile::create(BufferRef);
+
+  if (ObjOrErr)
+    return ObjOrErr->release();
+
+  outErr = std::string(path) +
+           ": Could not read LTO input file: " + toString(ObjOrErr.takeError());
+  return nullptr;
+}
+
+size_t LTOModule::getDependentLibraryCount(lto::InputFile *input) {
+  return input->getDependentLibraries().size();
+}
+
+const char *LTOModule::getDependentLibrary(lto::InputFile *input, size_t index,
+                                           size_t *size) {
+  StringRef S = input->getDependentLibraries()[index];
+  *size = S.size();
+  return S.data();
 }

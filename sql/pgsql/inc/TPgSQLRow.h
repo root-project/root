@@ -14,19 +14,13 @@
 
 #include "TSQLRow.h"
 
-#if !defined(__CINT__)
 #include <libpq-fe.h>
-#else
-struct PGresult;
-typedef char **PGresAttValue;
-#endif
-
 
 class TPgSQLRow : public TSQLRow {
 
 private:
-   PGresult *fResult;       // current result set
-   ULong_t   fRowNum;       // row number
+   PGresult *fResult{nullptr};       // current result set
+   ULong_t   fRowNum{0};       // row number
 
    Bool_t  IsValid(Int_t field);
 
@@ -34,11 +28,11 @@ public:
    TPgSQLRow(void *result, ULong_t rowHandle);
    ~TPgSQLRow();
 
-   void        Close(Option_t *opt="");
-   ULong_t     GetFieldLength(Int_t field);
-   const char *GetField(Int_t field);
+   void        Close(Option_t *opt="") final;
+   ULong_t     GetFieldLength(Int_t field) final;
+   const char *GetField(Int_t field) final;
 
-   ClassDef(TPgSQLRow,0)  // One row of PgSQL query result
+   ClassDefOverride(TPgSQLRow,0)  // One row of PgSQL query result
 };
 
 #endif

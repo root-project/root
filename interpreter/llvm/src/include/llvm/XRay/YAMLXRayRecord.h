@@ -1,9 +1,8 @@
 //===- YAMLXRayRecord.h - XRay Record YAML Support Definitions ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -37,6 +36,9 @@ struct YAMLXRayRecord {
   std::string Function;
   uint64_t TSC;
   uint32_t TId;
+  uint32_t PId;
+  std::vector<uint64_t> CallArgs;
+  std::string Data;
 };
 
 struct YAMLXRayTrace {
@@ -54,6 +56,10 @@ template <> struct ScalarEnumerationTraits<xray::RecordTypes> {
   static void enumeration(IO &IO, xray::RecordTypes &Type) {
     IO.enumCase(Type, "function-enter", xray::RecordTypes::ENTER);
     IO.enumCase(Type, "function-exit", xray::RecordTypes::EXIT);
+    IO.enumCase(Type, "function-tail-exit", xray::RecordTypes::TAIL_EXIT);
+    IO.enumCase(Type, "function-enter-arg", xray::RecordTypes::ENTER_ARG);
+    IO.enumCase(Type, "custom-event", xray::RecordTypes::CUSTOM_EVENT);
+    IO.enumCase(Type, "typed-event", xray::RecordTypes::TYPED_EVENT);
   }
 };
 
@@ -69,14 +75,16 @@ template <> struct MappingTraits<xray::YAMLXRayFileHeader> {
 
 template <> struct MappingTraits<xray::YAMLXRayRecord> {
   static void mapping(IO &IO, xray::YAMLXRayRecord &Record) {
-    // FIXME: Make this type actually be descriptive
     IO.mapRequired("type", Record.RecordType);
-    IO.mapRequired("func-id", Record.FuncId);
+    IO.mapOptional("func-id", Record.FuncId);
     IO.mapOptional("function", Record.Function);
+    IO.mapOptional("args", Record.CallArgs);
     IO.mapRequired("cpu", Record.CPU);
-    IO.mapRequired("thread", Record.TId);
+    IO.mapOptional("thread", Record.TId, 0U);
+    IO.mapOptional("process", Record.PId, 0U);
     IO.mapRequired("kind", Record.Type);
     IO.mapRequired("tsc", Record.TSC);
+    IO.mapOptional("data", Record.Data);
   }
 
   static constexpr bool flow = true;

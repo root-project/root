@@ -28,5 +28,4 @@ void ratioplot1() {
    c1->SetTicks(0, 1);
    rp->Draw();
    rp->GetLowYaxis()->SetNdivisions(505);
-   c1->Update();
 }

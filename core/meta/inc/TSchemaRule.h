@@ -4,17 +4,15 @@
 #ifndef ROOT_TSchemaRule
 #define ROOT_TSchemaRule
 
-class TBuffer;
-class TVirtualObject;
-class TObjArray;
-
-#include "TObject.h"
 #include "TNamed.h"
-#include "Rtypes.h"
 #include "TString.h"
 
 #include <vector>
 #include <utility>
+
+class TBuffer;
+class TVirtualObject;
+class TObjArray;
 
 namespace ROOT {
 
@@ -98,6 +96,7 @@ namespace ROOT {
 
          Bool_t ProcessVersion( const TString& version ) const;
          Bool_t ProcessChecksum( const TString& checksum ) const;
+         UInt_t ParseChecksum( const char* checksum ) const;
          static void ProcessList( TObjArray* array, const TString& list );
          static void ProcessDeclaration( TObjArray* array, const TString& list );
 

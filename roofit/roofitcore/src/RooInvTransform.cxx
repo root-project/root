@@ -19,7 +19,7 @@
 \class RooInvTransform
 \ingroup Roofitcore
 
-Lightweight function binding that returns the inverse of an input function binding
+Lightweight function binding that returns the inverse of an input function binding.
 Apply the change of variables transformation x -> 1/x to the input
 function and its range. The function must be one dimensional and its
 range cannot include zero.
@@ -28,7 +28,6 @@ range cannot include zero.
 
 #include "RooFit.h"
 
-#include "RooInvTransform.h"
 #include "RooInvTransform.h"
 
 #include "Riostream.h"

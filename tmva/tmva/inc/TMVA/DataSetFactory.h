@@ -38,6 +38,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <map>
 
 #include "TString.h"
 #include "TTree.h"
@@ -272,7 +273,8 @@ namespace TMVA {
       TString                    fVerboseLevel;      // VerboseLevel
 
       // Printing
-      Bool_t fCorrelations; // Whether to print correlations or not
+      Bool_t fCorrelations = kFALSE;          // Whether to print correlations or not
+      Bool_t fComputeCorrelations = kFALSE;   // Whether to force computation of correlations or not
 
       Bool_t                     fScaleWithPreselEff; // how to deal with requested #events in connection with preselection cuts 
 
@@ -282,7 +284,8 @@ namespace TMVA {
 
       // the formulas for reading the original tree
       std::vector<TTreeFormula*> fInputFormulas;   // input variables
-      std::vector<TTreeFormula*> fTargetFormulas;  // targets
+      std::vector<std::pair<TTreeFormula*, Int_t>> fInputTableFormulas;    //! input variables expression for arrays
+      std::vector<TTreeFormula *> fTargetFormulas; // targets
       std::vector<TTreeFormula*> fCutFormulas;     // cuts
       std::vector<TTreeFormula*> fWeightFormula;   // weights
       std::vector<TTreeFormula*> fSpectatorFormulas; // spectators

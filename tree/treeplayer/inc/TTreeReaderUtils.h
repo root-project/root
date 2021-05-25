@@ -26,6 +26,8 @@
 #include "TBranchProxy.h"
 #include "TTreeReaderValue.h"
 
+#include <string>
+
 class TDictionary;
 class TTree;
 
@@ -43,6 +45,11 @@ namespace Internal {
       TNamedBranchProxy(): fDict(0), fContentDict(0) {}
       TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* fullname, const char* membername):
          fProxy(boss, fullname, branch, membername), fDict(0), fContentDict(0), fFullName(fullname) {}
+
+      // Constructor for friend case, the fullname (containing the name of the friend tree) may be different
+      // from the lookup name (without the name of the friend)
+      TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* fullname, const char* proxyname, const char* membername):
+         fProxy(boss, proxyname, branch, membername), fDict(0), fContentDict(0), fFullName(fullname) {}
 
       const char* GetName() const { return fFullName.c_str(); }
       const Detail::TBranchProxy* GetProxy() const { return &fProxy; }

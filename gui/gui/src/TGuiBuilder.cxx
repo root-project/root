@@ -9,87 +9,78 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TGuiBuilder
-//
-//
-//  ************************************************
-//                ROOT GUI Builder principles
-//  ************************************************
-//
-//  With the GUI builder, we try to make the next step from WYSIWYG
-//  to embedded editing concept - WYSIWYE ("what you see is what you edit").
-//  The ROOT GUI Builder allows modifying real GUI objects.
-//  For example, one can edit the existing GUI application created by
-//  $ROOTSYS/tutorials/gui/guitest.C.
-//  GUI components can be added to a design area from a widget palette,
-//  or can be borrowed from another application.
-//  One can drag and and drop TCanvas's menu bar into the application.
-//  GUI objects can be resized and dragged, copied and pasted.
-//  ROOT GUI Builder allows changing the layout, snap to grid, change object's
-//  layout order via the GUI Builder toolbar, or by options in the right-click
-//  context menus.
-//  A final design can be immediatly tested and used, or saved as a C++ macro.
-//  For example, it's possible to rearrange buttons in control bar,
-//  add separators etc. and continue to use a new fancy control bar in the
-//  application.
-//
-//  ************************************************
-//
-//  The following is a short description of the GUI Builder actions and key shortcuts:
-//
-//   o Press Ctrl-Double-Click to start/stop edit mode
-//   o Press Double-Click to activate quick edit action (defined in root.mimes)
-//
-//                 Selection, grabbing, dropping
-//       ************************************************
-//    It is possible to select, drag any frame and drop it to any frame
-//
-//   o Click left mouse button or Ctrl-Click to select an object to edit.
-//   o Press right mouse button to activate context menu
-//   o Multiple selection (grabbing):
-//      - draw lasso and press Return key
-//      - press Shift key and draw lasso
-//   o Dropping:
-//      - select frame and press Ctrl-Return key
-//   o Changing layout order:
-//      - select frame and use arrow keys to change layout order
-//   o Alignment:
-//      - draw lasso and press arrow keys (or Shift-Arrow key) to align frames
-//
-//                    Key shortcuts
-//       ************************************************
-//   o Return      - grab selected frames
-//   o Ctrl-Return - drop frames
-//   o Del         - delete selected frame
-//   o Shift-Del   - crop action
-//   o Ctrl-X      - cut action
-//   o Ctrl-C      - copy action
-//   o Ctrl-V      - paste action
-//   o Ctrl-R      - replace action
-//   o Ctrl-L      - compact layout
-//   o Ctrl-B      - break layout
-//   o Ctrl-H      - switch horizontal-vertical layout
-//   o Ctrl-G      - switch on/off grid
-//   o Ctrl-S      - save action
-//   o Ctrl-O      - open and execute a ROOT macro file. GUI components created
-//                   after macro execution will be emebedded to currently edited
-//                   design area.
-//   o Ctrl-N      - create new main frame
-//
-//Begin_Html
-/*
-<img src="gif/RootGuiBuilder.gif">
+
+/** \class TGuiBuilder
+    \ingroup guibuilder
+
+### %ROOT GUI Builder principles
+
+With the GUI builder, we try to make the next step from WYSIWYG
+to embedded editing concept - WYSIWYE ("what you see is what you edit").
+The ROOT GUI Builder allows modifying real GUI objects.
+For example, one can edit the existing GUI application created by
+guitest.C.
+GUI components can be added to a design area from a widget palette,
+or can be borrowed from another application.
+One can drag and and drop TCanvas's menu bar into the application.
+GUI objects can be resized and dragged, copied and pasted.
+ROOT GUI Builder allows changing the layout, snap to grid, change object's
+layout order via the GUI Builder toolbar, or by options in the right-click
+context menus.
+A final design can be immediately tested and used, or saved as a C++ macro.
+For example, it's possible to rearrange buttons in control bar,
+add separators etc. and continue to use a new fancy control bar in the
+application.
+
+
+The following is a short description of the GUI Builder actions and key shortcuts:
+
+  - Press Ctrl-Double-Click to start/stop edit mode
+  - Press Double-Click to activate quick edit action (defined in root.mimes)
+
+### Selection, grabbing, dropping
+
+It is possible to select, drag any frame and drop it to any frame
+
+  - Click left mouse button or Ctrl-Click to select an object to edit.
+  - Press right mouse button to activate context menu
+  - Multiple selection (grabbing):
+    - draw lasso and press Return key
+    - press Shift key and draw lasso
+  - Dropping:
+    - select frame and press Ctrl-Return key
+  - Changing layout order:
+    - select frame and use arrow keys to change layout order
+  - Alignment:
+    - draw lasso and press arrow keys (or Shift-Arrow key) to align frames
+
+### Key shortcuts
+
+  - Return      - grab selected frames
+  - Ctrl-Return - drop frames
+  - Del         - delete selected frame
+  - Shift-Del   - crop action
+  - Ctrl-X      - cut action
+  - Ctrl-C      - copy action
+  - Ctrl-V      - paste action
+  - Ctrl-R      - replace action
+  - Ctrl-L      - compact layout
+  - Ctrl-B      - break layout
+  - Ctrl-H      - switch horizontal-vertical layout
+  - Ctrl-G      - switch on/off grid
+  - Ctrl-S      - save action
+  - Ctrl-O      - open and execute a ROOT macro file. GUI components created
+               after macro execution will be embedded to currently edited
+               design area.
+  - Ctrl-N      - create new main frame
+
 */
-//End_Html
 
 
 #include "TGuiBuilder.h"
 #include "TVirtualDragManager.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
-#include "TApplication.h"
 
 ClassImp(TGuiBuilder);
 ClassImp(TGuiBldAction);

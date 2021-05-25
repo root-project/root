@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,21 +12,6 @@
 #ifndef ROOT_TGTextEntry
 #define ROOT_TGTextEntry
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEntry                                                          //
-//                                                                      //
-// A TGTextEntry is a one line text input widget.                       //
-//                                                                      //
-// Changing text in the text entry widget will generate the event:      //
-// kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
-// Hitting the enter key will generate:                                 //
-// kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
-// Hitting the tab key will generate:                                   //
-// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGWidget.h"
@@ -43,32 +28,32 @@ public:
    enum   EInsertMode { kInsert, kReplace };
 
 protected:
-   TGTextBuffer     *fText;              // text buffer
-   Int_t             fStartX;            // selection begin in pixels
-   Int_t             fEndX;              // selection end in pixels
-   Int_t             fStartIX;           // selection begin in characters
-   Int_t             fEndIX;             // selection end in characters
-   Bool_t            fSelectionOn;       // selection status (on/off)
-   Int_t             fOffset;            // start position of text (in pixels)
-   Int_t             fCursorX;           // cursor position in pixels
-   Int_t             fCursorIX;          // cursor position in characters
-   Bool_t            fCursorOn;          // cursor status (on/off)
-   FontStruct_t      fFontStruct;        // text font
-   TGGC              fNormGC;            // normal drawing context
-   TGGC              fSelGC;             // selected text drawing context
-   GContext_t        fSelbackGC;         // selected background drawing context
-   Atom_t            fClipboard;         // clipboard property
-   TBlinkTimer      *fCurBlink;          // cursor blink timer
-   TGToolTip        *fTip;               // associated tooltip
-   Int_t             fMaxLen;            // maximum length of text
-   Bool_t            fEdited;            // kFALSE, if the line edit's contents have not been changed since the construction
-   Bool_t            fFrameDrawn;        // kTRUE draw itself inside a two-pixel frame, kFALSE draw without any frame
-   EEchoMode         fEchoMode;          // *OPTION={GetMethod="GetEchoMode";SetMethod="SetEchoMode";Items=(kNormal="Normal",kNoEcho="No Echo",kPassword="Password")}*
-   EInsertMode       fInsertMode;        // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
-   ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
-   Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
-   UInt_t            fDefWidth;          // default width
-   UInt_t            fDefHeight;         // default height
+   TGTextBuffer     *fText;              ///< text buffer
+   Int_t             fStartX;            ///< selection begin in pixels
+   Int_t             fEndX;              ///< selection end in pixels
+   Int_t             fStartIX;           ///< selection begin in characters
+   Int_t             fEndIX;             ///< selection end in characters
+   Bool_t            fSelectionOn;       ///< selection status (on/off)
+   Int_t             fOffset;            ///< start position of text (in pixels)
+   Int_t             fCursorX;           ///< cursor position in pixels
+   Int_t             fCursorIX;          ///< cursor position in characters
+   Bool_t            fCursorOn;          ///< cursor status (on/off)
+   FontStruct_t      fFontStruct;        ///< text font
+   TGGC              fNormGC;            ///< normal drawing context
+   TGGC              fSelGC;             ///< selected text drawing context
+   GContext_t        fSelbackGC;         ///< selected background drawing context
+   Atom_t            fClipboard;         ///< clipboard property
+   TBlinkTimer      *fCurBlink;          ///< cursor blink timer
+   TGToolTip        *fTip;               ///< associated tooltip
+   Int_t             fMaxLen;            ///< maximum length of text
+   Bool_t            fEdited;            ///< kFALSE, if the line edit's contents have not been changed since the construction
+   Bool_t            fFrameDrawn;        ///< kTRUE draw itself inside a two-pixel frame, kFALSE draw without any frame
+   EEchoMode         fEchoMode;          ///< *OPTION={GetMethod="GetEchoMode";SetMethod="SetEchoMode";Items=(kNormal="Normal",kNoEcho="No Echo",kPassword="Password")}*
+   EInsertMode       fInsertMode;        ///< *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
+   ETextJustification fAlignment;        ///< *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
+   Bool_t            fHasOwnFont;        ///< kTRUE - font defined locally,  kFALSE - globally
+   UInt_t            fDefWidth;          ///< default width
+   UInt_t            fDefHeight;         ///< default height
 
             void        CopyText() const;
    virtual  void        DoRedraw();
@@ -80,7 +65,7 @@ protected:
    virtual  void        ScrollByChar();
    virtual  void        UpdateOffset();
 
-   static TString      *fgClipboardText; // application clipboard text
+   static TString      *fgClipboardText; ///< application clipboard text
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultSelectedGC;
    static const TGGC   *fgDefaultSelectedBackgroundGC;
@@ -90,8 +75,8 @@ protected:
    static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 private:
-   TGTextEntry(const TGTextEntry&);              // not implemented
-   TGTextEntry& operator=(const TGTextEntry&);   // not implemented
+   TGTextEntry(const TGTextEntry&) = delete;
+   TGTextEntry& operator=(const TGTextEntry&) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -186,7 +171,7 @@ public:
    virtual  Bool_t      HandleTimer(TTimer *t);
    virtual  Bool_t      HandleConfigureNotify(Event_t *event);
 
-   virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
+   virtual  void        TextChanged(const char *text = nullptr);//*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
    virtual  void        TabPressed();                           //*SIGNAL*
    virtual  void        ShiftTabPressed();                      //*SIGNAL*

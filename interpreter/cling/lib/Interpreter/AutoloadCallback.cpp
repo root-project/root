@@ -62,7 +62,7 @@ namespace cling {
     return false;
   }
 
-  class AutoloadingVisitor: public RecursiveASTVisitor<AutoloadingVisitor> {
+  class AutoLoadingVisitor: public RecursiveASTVisitor<AutoLoadingVisitor> {
   private:
     ///\brief Flag determining the visitor's actions. If true, register autoload
     /// entries, i.e. remember the connection between filename and the declaration
@@ -100,7 +100,7 @@ namespace cling {
 
     using Annotations_t = std::pair<llvm::StringRef,llvm::StringRef>;
 
-    void InsertIntoAutoloadingState(Decl* decl, Annotations_t FileNames) {
+    void InsertIntoAutoLoadingState(Decl* decl, Annotations_t FileNames) {
 
       assert(m_PP);
 
@@ -124,7 +124,8 @@ namespace cling {
           FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
                                 FromDir, FromFile, CurDir, /*SearchPath*/0,
                                 /*RelativePath*/ 0, /*suggestedModule*/0,
-                                /*IsMapped*/0, /*SkipCache*/ false,
+                                /*IsMapped*/0, /*IsFrameworkFound*/ nullptr,
+                                /*SkipCache*/ false,
                                 /*OpenFile*/ false, /*CacheFail*/ true);
           needCacheUpdate = true;
         }
@@ -141,7 +142,7 @@ namespace cling {
           // by the user as an interface header to be available on the
           // run-time include path.
           cling::errs()
-          << "Error in cling::AutoloadingVisitor::InsertIntoAutoloadingState:\n"
+          << "Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:\n"
           "   Missing FileEntry for " << FileName << "\n";
           if (NamedDecl* ND = dyn_cast<NamedDecl>(decl)) {
             cling::errs() << "   requested to autoload type ";
@@ -173,7 +174,7 @@ namespace cling {
     }
 
   public:
-    AutoloadingVisitor():
+    AutoLoadingVisitor():
       m_IsStoringState(false), m_IsAutloadEntry(false), m_Map(0), m_PP(0),
     m_Sema(0), m_PrevFE({nullptr,nullptr})
     {}
@@ -228,7 +229,7 @@ namespace cling {
           }
         }
       }
-      InsertIntoAutoloadingState(D, annotations);
+      InsertIntoAutoLoadingState(D, annotations);
 
       return true;
     }
@@ -324,15 +325,16 @@ namespace cling {
     }
   };
 
-  void AutoloadCallback::InclusionDirective(clang::SourceLocation HashLoc,
-                          const clang::Token &IncludeTok,
-                          llvm::StringRef FileName,
-                          bool IsAngled,
-                          clang::CharSourceRange FilenameRange,
-                          const clang::FileEntry *File,
-                          llvm::StringRef SearchPath,
-                          llvm::StringRef RelativePath,
-                          const clang::Module *Imported) {
+  void AutoloadCallback::InclusionDirective(clang::SourceLocation /*HashLoc*/,
+                                            const clang::Token &/*IncludeTok*/,
+                                            llvm::StringRef /*FileName*/,
+                                            bool /*IsAngled*/,
+                                       clang::CharSourceRange /*FilenameRange*/,
+                                            const clang::FileEntry *File,
+                                            llvm::StringRef /*SearchPath*/,
+                                            llvm::StringRef /*RelativePath*/,
+                                            const clang::Module */*Imported*/,
+                               clang::SrcMgr::CharacteristicKind /*FileType*/) {
     // If File is 0 this means that the #included file doesn't exist.
     if (!File)
       return;
@@ -341,7 +343,7 @@ namespace cling {
     if (found == m_Map.end())
      return; // nothing to do, file not referred in any annotation
 
-    AutoloadingVisitor defaultArgsCleaner;
+    AutoLoadingVisitor defaultArgsCleaner;
     for (auto D : found->second) {
       defaultArgsCleaner.RemoveDefaultArgsOf(D, &getInterpreter()->getSema());
     }
@@ -359,20 +361,20 @@ namespace cling {
       return;
 
     // The first decl must be
-    //   extern int __Cling_Autoloading_Map;
-    bool HaveAutoloadingMapMarker = false;
+    //   extern int __Cling_AutoLoading_Map;
+    bool HaveAutoLoadingMapMarker = false;
     for (auto I = T.decls_begin(), E = T.decls_end();
-         !HaveAutoloadingMapMarker && I != E; ++I) {
+         !HaveAutoLoadingMapMarker && I != E; ++I) {
       if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl)
         return;
       for (auto&& D: I->m_DGR) {
         if (isa<EmptyDecl>(D))
           continue;
         else if (auto VD = dyn_cast<VarDecl>(D)) {
-          HaveAutoloadingMapMarker
+          HaveAutoLoadingMapMarker
             = VD->hasExternalStorage() && VD->getIdentifier()
-              && VD->getName().equals("__Cling_Autoloading_Map");
-          if (!HaveAutoloadingMapMarker)
+              && VD->getName().equals("__Cling_AutoLoading_Map");
+          if (!HaveAutoLoadingMapMarker)
             return;
           break;
         } else
@@ -380,10 +382,10 @@ namespace cling {
       }
     }
 
-    if (!HaveAutoloadingMapMarker)
+    if (!HaveAutoLoadingMapMarker)
       return;
 
-    AutoloadingVisitor defaultArgsStateCollector;
+    AutoLoadingVisitor defaultArgsStateCollector;
     Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
     for (auto I = T.decls_begin(), E = T.decls_end(); I != E; ++I)
       for (auto&& D: I->m_DGR)

@@ -4,6 +4,7 @@
 ## In this tutorial we learn how combinations of RVecs can be build.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date August 2018
 ## \author Stefan Wunsch
@@ -20,6 +21,7 @@ v2[0], v2[1] = -4, -5
 
 # To get the indices, which result in all combinations, you can call the
 # following helper.
+# Note that you can also pass the size of the vectors directly.
 idx = Combinations(v1, v2)
 
 # Next, the respective elements can be taken via the computed indices.

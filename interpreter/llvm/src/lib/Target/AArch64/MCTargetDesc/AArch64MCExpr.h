@@ -1,9 +1,8 @@
 //=--- AArch64MCExpr.h - AArch64 specific MC expression classes ---*- C++ -*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -23,8 +22,6 @@ namespace llvm {
 class AArch64MCExpr : public MCTargetExpr {
 public:
   enum VariantKind {
-    VK_NONE     = 0x000,
-
     // Symbol locations specifying (roughly speaking) what calculation should be
     // performed to construct the final address for the relocated
     // symbol. E.g. direct, via the GOT, ...
@@ -35,6 +32,7 @@ public:
     VK_GOTTPREL = 0x005,
     VK_TPREL    = 0x006,
     VK_TLSDESC  = 0x007,
+    VK_SECREL   = 0x008,
     VK_SymLocBits = 0x00f,
 
     // Variants specifying which part of the final address calculation is
@@ -98,6 +96,8 @@ public:
     VK_TPREL_LO12_NC     = VK_TPREL    | VK_PAGEOFF | VK_NC,
     VK_TLSDESC_LO12      = VK_TLSDESC  | VK_PAGEOFF,
     VK_TLSDESC_PAGE      = VK_TLSDESC  | VK_PAGE,
+    VK_SECREL_LO12       = VK_SECREL   | VK_PAGEOFF,
+    VK_SECREL_HI12       = VK_SECREL   | VK_HI12,
 
     VK_INVALID  = 0xfff
   };

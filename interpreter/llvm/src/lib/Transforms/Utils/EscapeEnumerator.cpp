@@ -1,9 +1,8 @@
 //===- EscapeEnumerator.cpp -----------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,12 +13,12 @@
 
 #include "llvm/Transforms/Utils/EscapeEnumerator.h"
 #include "llvm/Analysis/EHPersonalities.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/Module.h"
-#include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
-static Constant *getDefaultPersonalityFn(Module *M) {
+static FunctionCallee getDefaultPersonalityFn(Module *M) {
   LLVMContext &C = M->getContext();
   Triple T(M->getTargetTriple());
   EHPersonality Pers = getDefaultEHPersonality(T);
@@ -37,7 +36,7 @@ IRBuilder<> *EscapeEnumerator::Next() {
 
     // Branches and invokes do not escape, only unwind, resume, and return
     // do.
-    TerminatorInst *TI = CurBB->getTerminator();
+    Instruction *TI = CurBB->getTerminator();
     if (!isa<ReturnInst>(TI) && !isa<ResumeInst>(TI))
       continue;
 
@@ -69,12 +68,12 @@ IRBuilder<> *EscapeEnumerator::Next() {
   BasicBlock *CleanupBB = BasicBlock::Create(C, CleanupBBName, &F);
   Type *ExnTy = StructType::get(Type::getInt8PtrTy(C), Type::getInt32Ty(C));
   if (!F.hasPersonalityFn()) {
-    Constant *PersFn = getDefaultPersonalityFn(F.getParent());
-    F.setPersonalityFn(PersFn);
+    FunctionCallee PersFn = getDefaultPersonalityFn(F.getParent());
+    F.setPersonalityFn(cast<Constant>(PersFn.getCallee()));
   }
 
-  if (isFuncletEHPersonality(classifyEHPersonality(F.getPersonalityFn()))) {
-    report_fatal_error("Funclet EH not supported");
+  if (isScopedEHPersonality(classifyEHPersonality(F.getPersonalityFn()))) {
+    report_fatal_error("Scoped EH not supported");
   }
 
   LandingPadInst *LPad =

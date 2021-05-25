@@ -22,7 +22,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TH1.h"
-//________________________________________________________________________
 
 class TH1K : public TH1, public TArrayF {
 
@@ -56,7 +55,7 @@ public:
 
    void    SetKOrd(Int_t k){fKOrd=k;}
 
-   ClassDef(TH1K,1)  //1-Dim Nearest Kth neighbour method
+   ClassDef(TH1K,2)  //1-Dim Nearest Kth neighbour method
 };
 
 #endif

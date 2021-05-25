@@ -24,6 +24,7 @@ namespace ROOT {
     * <a href="http://en.cppreference.com/w/cpp/thread/unique_lock">std::unique_lock</a> or
     * <a href="http://en.cppreference.com/w/cpp/thread/condition_variable_any">std::condition_variable_any</a>.
     * For example:
+    * 
     * ~~~ {.cpp}
     * ROOT::TSpinMutex m;
     * std::condition_variable cv;
@@ -34,7 +35,8 @@ namespace ROOT {
     *    // Wait until main() sends data
     *    std::unique_lock<ROOT::TSpinMutex> lk(m);
     *    cv.wait(lk, []{return ready;});
-    * [...]
+    *    [...]
+    * }
     * ~~~ {.cpp}
     */
    class TSpinMutex {

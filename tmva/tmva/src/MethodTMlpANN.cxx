@@ -58,12 +58,11 @@ for details on this ANN.
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Tools.h"
 
-#include "Riostream.h"
 #include "TLeaf.h"
 #include "TEventList.h"
-#include "TObjString.h"
 #include "TROOT.h"
 #include "TMultiLayerPerceptron.h"
+#include "ThreadLocalStorage.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -74,12 +73,6 @@ using std::atoi;
 
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
-#if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
-//const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
-// const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
-#else
-//const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
-#endif
 
 REGISTER_METHOD(TMlpANN)
 
@@ -320,11 +313,7 @@ void TMVA::MethodTMlpANN::Train( void )
    fMLP->SetEventWeight( "weight" );
 
    // set learning method
-#if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
    TMultiLayerPerceptron::ELearningMethod learningMethod = TMultiLayerPerceptron::kStochastic;
-#else
-   TMultiLayerPerceptron::LearningMethod  learningMethod = TMultiLayerPerceptron::kStochastic;
-#endif
 
    fLearningMethod.ToLower();
    if      (fLearningMethod == "stochastic"      ) learningMethod = TMultiLayerPerceptron::kStochastic;

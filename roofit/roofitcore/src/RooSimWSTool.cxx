@@ -15,91 +15,100 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// Class RooSimWSTool is a tool operating on RooWorkspace objects that
-// can clone p.d.f.s into a series of variations that are joined together
-// into a RooSimultanous p.d.f.
-//
-// The simplest use case to take a workspace p.d.f as prototype and
-// 'split' a parameter of that p.d.f into two specialized parameters
-// depending on a category in the dataset. 
-// 
-// For example, given a Gaussian
-// p.d.f G(x,m,s) we want to construct a G_a(x,m_a,s) and a G_b(x,m_b,s)
-// with different mean parameters to be fit to a dataset with observables
-// (x,c) where c is a category with states 'a' and 'b'
-//
-// Using RooSimWSTool one can create a simultaneous p.d.f from G_a and G_b
-// from G with the following command
-//
-//   RooSimWSTool wst(wspace) ;
-//   wst.build("G_sim","G",SplitParam("m","c")) ;
-//
-// From this simple example one can go to builds of arbitrary complexity
-// by specifying multiple SplitParam arguments on multiple parameters
-// involving multiple splitting categories. Splits can also be performed
-// in the product multiple categories, e.g. 
-//
-//      SplitParam("m","c,d")) ;
-//
-// splits parameter m in the product of states of c and d. Another possibility
-// is the 'constrained' split which clones the parameter for all but one state
-// and insert a formula specialization in a chosen state that evaluates
-// to 1 - sum_i(a_i) where a_i are all other specializations. For example,
-// given a category c with state "A","B","C","D" the specification
-//
-//     SplitParamConstrained("m","c","D")
-//
-// will result in parameters m_A,m_B,m_C and a formula expression m_D
-// that evaluates to (1-(m_A+m_B+m_C)). Constrained split can also be
-// specified in product of categories. In that case the name of the
-// remainder state follows the syntax "{State1;State2}" where State1 and
-// State2 are the state names of the two spitting categories.
-//
-// The examples so far deal with a single prototype p.d.f. It is also
-// possible to build with multiple prototype p.d.fs by specifying a 
-// mapping between the prototype to use and the names of states of
-// a 'master' splitting category. To specify these configurations
-// an intermediate MultiBuildConfig must be composed with all
-// the necessary specifications. For example, this code
-// 
-//  RooSimWSTool::MultiBuildConfig mbc("mc") ;
-//  mbc.addPdf("I","G",SplitParam("m,s","c")) ;
-//  mbc.addPdf("II,III","F",SplitParam("a","c,d")) ;
-//
-// configures a build with two prototype p.d.f.s G and F.
-// Prototype G is used for state "I" of master split category
-// mc and prototype F is used for states "II" and "III" of
-// master split category mc. Furthermore parameters m,s of prototype G are split
-// in category c while parameter a of prototype F is split in
-// the product of categories c and d. The actual build is then
-// performed by passing the build configuration to RooSimWSTool, e.g.
-//
-//  wst.build("MASTER",mbc) ;
-//
-// By default, a specialization is built for each permutation of
-// states of the spitting categories that are used. It is possible
-// to restrict the building of specialized p.d.f to a subset of states
-// by adding a restriction on the number of states to build as follows
-//
-//  mbc.restrictBuild("c","A,B") ;  
-//
-// The restrictBuild method can be called multiple times, but at most
-// once for each used splitting category. For simple builds with a single
-// prototype, restriction can be specified with a Restrict() argument
-// on the build command line
-//
+/// \class RooSimWSTool
+/// The RooSimWSTool is a tool operating on RooWorkspace objects that
+/// can clone PDFs into a series of variations that are joined together
+/// into a RooSimultanous PDF.
+///
+/// ## Splitting a single PDF
+/// The simplest use case is to take a workspace PDF as prototype and
+/// "split" a parameter of that PDF into two specialized parameters
+/// depending on a category in the dataset.
+///
+/// For example, given a Gaussian
+/// PDF \f$ G(x \,|\, m,s) \f$ we want to construct a \f$ G_a(x \,|\, m_a,s) \f$ and a \f$ G_b(x \,|\, m_b,s) \f$
+/// with different mean parameters to be fit to a dataset with observables
+/// \f$ (x,c) \f$ where \f$ c \f$ is a category with states 'a' and 'b'.
+///
+/// Using RooSimWSTool, one can create a simultaneous PDF from \f$ G_a \f$ and \f$ G_b \f$
+/// from \f$ G \f$ with the following commands:
+/// ```
+///   RooSimWSTool wst(wspace);
+///   wst.build("G_sim", "G", SplitParam("m","c"));
+/// ```
+///
+/// #### Splitting using a product category
+/// From this simple example one can go to builds of arbitrary complexity
+/// by specifying multiple SplitParam arguments on multiple parameters
+/// involving multiple splitting categories. Splits can also be performed
+/// in the product of multiple categories, *i.e.*,
+/// ```
+///   wst.build("G_sim", "G", SplitParam("m","c,d"));
+/// ```
+/// splits the parameter \f$ m \f$ in the product of the states of \f$ c \f$ and
+/// \f$ d \f$.
+///
+/// #### Constrained split
+/// Another possibility
+/// is the "constrained" split, which clones the parameter for all but one state
+/// and inserts a formula specialization in a chosen state that evaluates
+/// to \f$ 1 - \sum_i(a_i) \f$ where \f$ a_i \f$ are all other specializations. For example,
+/// given a category \f$ c \f$ with the states `"A","B","C","D"`, the specification
+/// ```
+///     SplitParamConstrained("m","c","D")
+/// ```
+/// will create the parameters \f$ m_A,m_B,m_C \f$ and a formula expression \f$ m_D \f$
+/// that evaluates to \f$ (1-(m_A+m_B+m_C)) \f$. Constrained splits can also be
+/// specified in the product of categories. In that case, the name of the
+/// remainder state follows the syntax `"{State1;State2}"`, where `State1` and
+/// `State2` are the state names of the two spitting categories.
+///
+/// ## Splitting multiple PDFs
+/// The examples so far deal with a single prototype PDF. It is also
+/// possible to build with multiple prototype PDFs by specifying a
+/// mapping between the prototype to use and the names of states of
+/// a "master" splitting category. To specify these configurations,
+/// an intermediate `MultiBuildConfig` must be composed with all
+/// the necessary specifications. This, for example,
+/// ```
+///  RooSimWSTool::MultiBuildConfig mbc("mc");
+///  mbc.addPdf("I","G",SplitParam("m,s","c"));
+///  mbc.addPdf("II,III","F",SplitParam("a","c,d"));
+/// ```
+/// configures a build with two prototype PDFs \f$ G \f$ and \f$ F \f$.
+/// Prototype \f$ G \f$ is used for state `"I"` of the master split category
+/// `mc` and prototype \f$ F \f$ is used for states `"II"` and `"III"` of the
+/// master split category `mc`. Furthermore, the parameters \f$ m,s \f$ of
+/// prototype \f$ G \f$ are split
+/// in category \f$ c \f$ while the parameter \f$ a \f$ of prototype \f$ F \f$ is split in
+/// the product of the categories \f$ c \f$ and \f$ d \f$. The actual build is then
+/// performed by passing the build configuration to RooSimWSTool, *e.g.*,
+/// ```
+///  wst.build("MASTER", mbc);
+/// ```
+/// By default, a specialisation is built for each permutation of
+/// states of the splitting categories that are used. It is possible
+/// to restrict the building of specialised PDFs to a subset of states
+/// by adding a restriction on the number of states to build as follows:
+/// ```
+///  mbc.restrictBuild("c","A,B");
+/// ```
+/// The restrictBuild method can be called multiple times, but at most
+/// once for each splitting category in use. For simple builds with a single
+/// prototype, restriction can be specified with a Restrict() argument
+/// on the build command line.
+///
 
 
 #include "RooFit.h"
 #include "RooSimWSTool.h"
+
+#include "RooFitLegacy/RooCatTypeLegacy.h"
 #include "RooMsgService.h"
 #include "RooCategory.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
-#include "RooStringVar.h"
 #include "RooSuperCategory.h"
-#include "RooCatType.h"
 #include "RooCustomizer.h"
 #include "RooMultiCategory.h"
 #include "RooSimultaneous.h"
@@ -117,10 +126,11 @@ ClassImp(RooSimWSTool::ObjSplitRule);
 
 using namespace std ;
 
+namespace {
 
 static Int_t init();
 
-static Int_t dummy = init() ;
+Int_t dummy = init() ;
 
 static Int_t init()
 {
@@ -131,6 +141,7 @@ static Int_t init()
   return 0 ;
 }
 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of SimWSTool on given workspace. All input is taken from the workspace
@@ -152,16 +163,16 @@ RooSimWSTool::~RooSimWSTool()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Build a RooSimultaneous p.d.f with name simPdfName from cloning specializations of protytpe p.d.f protoPdfName.
-/// The following named arguments are supported
-///
-/// SplitParam(varname, catname)                   -- Split parameter(s) with given name(s) in category(s) with given names
-/// SplitParam(var, cat)                           -- Split given parameter(s) in givem category(s) 
-/// SplitParamConstrained(vname, cname, remainder) -- Make constrained split in parameter(s) with given name(s) in category(s) with given names
+/// Build a RooSimultaneous PDF with name simPdfName from cloning specializations of protytpe PDF protoPdfName.
+/// <table>
+/// <tr><th> Optional Arguments <th> Effect
+/// <tr><td> SplitParam(varname, catname)                   <td> Split parameter(s) with given name(s) in category(s) with given names
+/// <tr><td> SplitParam(var, cat)                           <td> Split given parameter(s) in givem category(s)
+/// <tr><td> SplitParamConstrained(vname, cname, remainder) <td> Make constrained split in parameter(s) with given name(s) in category(s) with given names
 ///                                                   putting remainder fraction formula in state with name "remainder"
-/// SplitParamConstrained(var,cat,remainder)       -- Make constrained split in parameter(s) with given name(s) in category(s) with given names
+/// <tr><td> SplitParamConstrained(var,cat,remainder)       <td> Make constrained split in parameter(s) with given name(s) in category(s) with given names
 ///                                                   putting remainder fraction formula in state with name "remainder"
-/// Restrict(catName,stateNameList)                -- Restrict build by only considered listed state names of category with given name
+/// <tr><td> Restrict(catName,stateNameList)                <td> Restrict build by only considered listed state names of category with given name
 
 RooSimultaneous* RooSimWSTool::build(const char* simPdfName, const char* protoPdfName, const RooCmdArg& arg1,const RooCmdArg& arg2,
 					const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)
@@ -173,7 +184,7 @@ RooSimultaneous* RooSimWSTool::build(const char* simPdfName, const char* protoPd
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Build a RooSimultaneous p.d.f with name simPdfName from cloning specializations of protytpe p.d.f protoPdfName.
+/// Build a RooSimultaneous PDF with name simPdfName from cloning specializations of protytpe PDF protoPdfName.
 /// Use the provided BuildConfig or MultiBuildConfig object to configure the build
 
 RooSimultaneous* RooSimWSTool::build(const char* simPdfName,BuildConfig& bc, Bool_t verbose) 
@@ -441,9 +452,9 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   TList* customizerList = new TList ;
 
   // Loop over requested physics models and build components
-  TIterator* physMIter = physModelSet.createIterator() ;
+  TIter physMIter = physModelSet.createIterator() ;
   RooAbsPdf* physModel ;
-  while((physModel=(RooAbsPdf*)physMIter->Next())) {
+  while((physModel=(RooAbsPdf*)physMIter.Next())) {
     if (verbose) coutI(ObjectHandling) << "RooSimPdfBuilder::executeBuild: processing prototype pdf " << physModel->GetName() << endl ;
 
     RooCustomizer* physCustomizer = new RooCustomizer(*physModel,*masterSplitCat,splitNodeListOwned,&splitNodeListAll) ;
@@ -470,7 +481,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       if(splitIter->second.second.size()>0) {
 	
 	// Check that specified split name is in fact valid
-	if (!splitCat->lookupType(splitIter->second.second.c_str())) {
+	if (!splitCat->hasLabel(splitIter->second.second)) {
 	  coutE(InputArguments) << "RooSimWSTool::executeBuild(" << GetName() << ") ERROR: name of remainder state for constrained split, '" 
 				<< splitIter->second.second << "' , does not match any state name of (composite) split category " << splitCat->GetName() << endl ;
 	  return 0 ;
@@ -514,7 +525,6 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       physCustomizer->splitArgs(*splitIter->first,*splitCat) ;
     }
   }
-  delete physMIter ;
 
   // List all existing workspace components as prebuilt items for the customizers at this point
   splitNodeListAll.add(_ws->components()) ;
@@ -577,7 +587,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 	
 	list<const RooCatType*>::iterator sli ;
 	for (sli=slist.begin() ; sli!=slist.end() ; ++sli) {
-	  if (string(splitCat->getLabel())==(*sli)->GetName()) {
+	  if (string(splitCat->getCurrentLabel())==(*sli)->GetName()) {
 	    select=kTRUE ;
 	  }
 	}      
@@ -590,7 +600,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     // Select appropriate PDF for this physCat state
     RooCustomizer* physCustomizer ;
     if (physCat) {      
-      RooAbsPdf* pdf = stateMap[physCat->getLabel()] ;
+      RooAbsPdf* pdf = stateMap[physCat->getCurrentLabel()] ;
       if (pdf==0) {
 	continue ;
       }
@@ -603,7 +613,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 				       << " for mode " << fcState->GetName() << endl ;    
 
     // Customizer PDF for current state and add to master simPdf
-    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat->getLabel(),kFALSE) ;
+    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat->getCurrentLabel(),kFALSE) ;
     simPdf->addPdf(*fcPdf,fcState->GetName()) ;
   }
   delete fcIter ;

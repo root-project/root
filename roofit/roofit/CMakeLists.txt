@@ -1,11 +1,14 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT rootfit package
 # @author Pere Mato, CERN
 ############################################################################
 
-if(mathmore OR ROOT_mathmore_FOUND)
-  set(ROOT_MATHMORE_LIBRARY MathMore)
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
@@ -21,6 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooBreitWigner.h
     RooBukinPdf.h
     RooCBShape.h
+    RooCrystalBall.h
     RooCFunction1Binding.h
     RooCFunction2Binding.h
     RooCFunction3Binding.h
@@ -41,25 +45,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooIntegralMorph.h
     RooJeffreysPrior.h
     RooKeysPdf.h
+    RooLagrangianMorphFunc.h
     RooLandau.h
-    RooLegendre.h
     RooLognormal.h
     RooMathCoreReg.h
-    RooMathMoreReg.h
     RooMomentMorphFunc.h
     RooMomentMorphFuncND.h
     RooMomentMorph.h
     RooMomentMorphND.h
     RooMultiBinomial.h
     RooNDKeysPdf.h
-    RooNonCentralChiSquare.h
     RooNonCPEigenDecay.h
     RooNovosibirsk.h
     RooParametricStepFunction.h
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
-    RooSpHarmonic.h
     RooStepFunction.h
     RooTFnBinding.h
     RooTFnPdfBinding.h
@@ -70,6 +71,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooUnblindUniform.h
     RooUniform.h
     RooVoigtian.h
+    RooJohnson.h
   SOURCES
     src/Roo2DKeysPdf.cxx
     src/RooArgusBG.cxx
@@ -83,6 +85,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBreitWigner.cxx
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
+    src/RooCrystalBall.cxx
     src/RooCFunction1Binding.cxx
     src/RooCFunction2Binding.cxx
     src/RooCFunction3Binding.cxx
@@ -103,25 +106,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooIntegralMorph.cxx
     src/RooJeffreysPrior.cxx
     src/RooKeysPdf.cxx
+    src/RooLagrangianMorphFunc.cxx
     src/RooLandau.cxx
-    src/RooLegendre.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
-    src/RooMathMoreReg.cxx
     src/RooMomentMorph.cxx
     src/RooMomentMorphFunc.cxx
     src/RooMomentMorphFuncND.cxx
     src/RooMomentMorphND.cxx
     src/RooMultiBinomial.cxx
     src/RooNDKeysPdf.cxx
-    src/RooNonCentralChiSquare.cxx
     src/RooNonCPEigenDecay.cxx
     src/RooNovosibirsk.cxx
     src/RooParametricStepFunction.cxx
     src/RooParamHistFunc.cxx
     src/RooPoisson.cxx
     src/RooPolynomial.cxx
-    src/RooSpHarmonic.cxx
     src/RooStepFunction.cxx
     src/RooTFnBinding.cxx
     src/RooTFnPdfBinding.cxx
@@ -132,12 +132,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUnblindUniform.cxx
     src/RooUniform.cxx
     src/RooVoigtian.cxx
+    src/RooJohnson.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
     LinkDef1.h
   LIBRARIES
-    ${ROOT_MATHMORE_LIBRARY}
+    RooBatchCompute
   DEPENDENCIES
     Core
     RooFitCore
@@ -146,3 +147,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     Matrix
     MathCore
 )
+
+# For recent clang, this can facilitate auto-vectorisation.
+# In RooFit, the errno side effect is not needed, anyway:
+if(NOT MSVC)
+  target_compile_options(RooFit PUBLIC -fno-math-errno)
+endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

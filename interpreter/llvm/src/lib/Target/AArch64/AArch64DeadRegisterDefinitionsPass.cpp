@@ -1,9 +1,8 @@
 //==-- AArch64DeadRegisterDefinitions.cpp - Replace dead defs w/ zero reg --==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file When allowed by the instruction, replace a dead definition of a GPR
@@ -20,10 +19,10 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
+#include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Target/TargetInstrInfo.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "aarch64-dead-defs"
@@ -69,6 +68,51 @@ static bool usesFrameIndex(const MachineInstr &MI) {
   return false;
 }
 
+// Instructions that lose their 'read' operation for a subesquent fence acquire
+// (DMB LD) once the zero register is used.
+//
+// WARNING: The aquire variants of the instructions are also affected, but they
+// are split out into `atomicBarrierDroppedOnZero()` to support annotations on
+// assembly.
+static bool atomicReadDroppedOnZero(unsigned Opcode) {
+  switch (Opcode) {
+    case AArch64::LDADDB:     case AArch64::LDADDH:
+    case AArch64::LDADDW:     case AArch64::LDADDX:
+    case AArch64::LDADDLB:    case AArch64::LDADDLH:
+    case AArch64::LDADDLW:    case AArch64::LDADDLX:
+    case AArch64::LDCLRB:     case AArch64::LDCLRH:
+    case AArch64::LDCLRW:     case AArch64::LDCLRX:
+    case AArch64::LDCLRLB:    case AArch64::LDCLRLH:
+    case AArch64::LDCLRLW:    case AArch64::LDCLRLX:
+    case AArch64::LDEORB:     case AArch64::LDEORH:
+    case AArch64::LDEORW:     case AArch64::LDEORX:
+    case AArch64::LDEORLB:    case AArch64::LDEORLH:
+    case AArch64::LDEORLW:    case AArch64::LDEORLX:
+    case AArch64::LDSETB:     case AArch64::LDSETH:
+    case AArch64::LDSETW:     case AArch64::LDSETX:
+    case AArch64::LDSETLB:    case AArch64::LDSETLH:
+    case AArch64::LDSETLW:    case AArch64::LDSETLX:
+    case AArch64::LDSMAXB:    case AArch64::LDSMAXH:
+    case AArch64::LDSMAXW:    case AArch64::LDSMAXX:
+    case AArch64::LDSMAXLB:   case AArch64::LDSMAXLH:
+    case AArch64::LDSMAXLW:   case AArch64::LDSMAXLX:
+    case AArch64::LDSMINB:    case AArch64::LDSMINH:
+    case AArch64::LDSMINW:    case AArch64::LDSMINX:
+    case AArch64::LDSMINLB:   case AArch64::LDSMINLH:
+    case AArch64::LDSMINLW:   case AArch64::LDSMINLX:
+    case AArch64::LDUMAXB:    case AArch64::LDUMAXH:
+    case AArch64::LDUMAXW:    case AArch64::LDUMAXX:
+    case AArch64::LDUMAXLB:   case AArch64::LDUMAXLH:
+    case AArch64::LDUMAXLW:   case AArch64::LDUMAXLX:
+    case AArch64::LDUMINB:    case AArch64::LDUMINH:
+    case AArch64::LDUMINW:    case AArch64::LDUMINX:
+    case AArch64::LDUMINLB:   case AArch64::LDUMINLH:
+    case AArch64::LDUMINLW:   case AArch64::LDUMINLX:
+    return true;
+  }
+  return false;
+}
+
 void AArch64DeadRegisterDefinitions::processMachineBasicBlock(
     MachineBasicBlock &MBB) {
   const MachineFunction &MF = *MBB.getParent();
@@ -77,64 +121,23 @@ void AArch64DeadRegisterDefinitions::processMachineBasicBlock(
       // We need to skip this instruction because while it appears to have a
       // dead def it uses a frame index which might expand into a multi
       // instruction sequence during EPI.
-      DEBUG(dbgs() << "    Ignoring, operand is frame index\n");
+      LLVM_DEBUG(dbgs() << "    Ignoring, operand is frame index\n");
       continue;
     }
     if (MI.definesRegister(AArch64::XZR) || MI.definesRegister(AArch64::WZR)) {
       // It is not allowed to write to the same register (not even the zero
       // register) twice in a single instruction.
-      DEBUG(dbgs() << "    Ignoring, XZR or WZR already used by the instruction\n");
+      LLVM_DEBUG(
+          dbgs()
+          << "    Ignoring, XZR or WZR already used by the instruction\n");
       continue;
     }
-    if (MF.getSubtarget<AArch64Subtarget>().hasLSE()) {
-      // XZ/WZ for LSE can only be used when acquire semantics are not used,
-      // LDOPAL WZ is an invalid opcode.
-      switch (MI.getOpcode()) {
-      case AArch64::CASALb:
-      case AArch64::CASALh:
-      case AArch64::CASALs:
-      case AArch64::CASALd:
-      case AArch64::SWPALb:
-      case AArch64::SWPALh:
-      case AArch64::SWPALs:
-      case AArch64::SWPALd:
-      case AArch64::LDADDALb:
-      case AArch64::LDADDALh:
-      case AArch64::LDADDALs:
-      case AArch64::LDADDALd:
-      case AArch64::LDCLRALb:
-      case AArch64::LDCLRALh:
-      case AArch64::LDCLRALs:
-      case AArch64::LDCLRALd:
-      case AArch64::LDEORALb:
-      case AArch64::LDEORALh:
-      case AArch64::LDEORALs:
-      case AArch64::LDEORALd:
-      case AArch64::LDSETALb:
-      case AArch64::LDSETALh:
-      case AArch64::LDSETALs:
-      case AArch64::LDSETALd:
-      case AArch64::LDSMINALb:
-      case AArch64::LDSMINALh:
-      case AArch64::LDSMINALs:
-      case AArch64::LDSMINALd:
-      case AArch64::LDSMAXALb:
-      case AArch64::LDSMAXALh:
-      case AArch64::LDSMAXALs:
-      case AArch64::LDSMAXALd:
-      case AArch64::LDUMINALb:
-      case AArch64::LDUMINALh:
-      case AArch64::LDUMINALs:
-      case AArch64::LDUMINALd:
-      case AArch64::LDUMAXALb:
-      case AArch64::LDUMAXALh:
-      case AArch64::LDUMAXALs:
-      case AArch64::LDUMAXALd:
-        continue;
-      default:
-        break;
-      }
+
+    if (atomicBarrierDroppedOnZero(MI.getOpcode()) || atomicReadDroppedOnZero(MI.getOpcode())) {
+      LLVM_DEBUG(dbgs() << "    Ignoring, semantics change with xzr/wzr.\n");
+      continue;
     }
+
     const MCInstrDesc &Desc = MI.getDesc();
     for (int I = 0, E = Desc.getNumDefs(); I != E; ++I) {
       MachineOperand &MO = MI.getOperand(I);
@@ -147,30 +150,30 @@ void AArch64DeadRegisterDefinitions::processMachineBasicBlock(
           (!MO.isDead() && !MRI->use_nodbg_empty(Reg)))
         continue;
       assert(!MO.isImplicit() && "Unexpected implicit def!");
-      DEBUG(dbgs() << "  Dead def operand #" << I << " in:\n    ";
-            MI.print(dbgs()));
+      LLVM_DEBUG(dbgs() << "  Dead def operand #" << I << " in:\n    ";
+                 MI.print(dbgs()));
       // Be careful not to change the register if it's a tied operand.
       if (MI.isRegTiedToUseOperand(I)) {
-        DEBUG(dbgs() << "    Ignoring, def is tied operand.\n");
+        LLVM_DEBUG(dbgs() << "    Ignoring, def is tied operand.\n");
         continue;
       }
       const TargetRegisterClass *RC = TII->getRegClass(Desc, I, TRI, MF);
       unsigned NewReg;
       if (RC == nullptr) {
-        DEBUG(dbgs() << "    Ignoring, register is not a GPR.\n");
+        LLVM_DEBUG(dbgs() << "    Ignoring, register is not a GPR.\n");
         continue;
       } else if (RC->contains(AArch64::WZR))
         NewReg = AArch64::WZR;
       else if (RC->contains(AArch64::XZR))
         NewReg = AArch64::XZR;
       else {
-        DEBUG(dbgs() << "    Ignoring, register is not a GPR.\n");
+        LLVM_DEBUG(dbgs() << "    Ignoring, register is not a GPR.\n");
         continue;
       }
-      DEBUG(dbgs() << "    Replacing with zero register. New:\n      ");
+      LLVM_DEBUG(dbgs() << "    Replacing with zero register. New:\n      ");
       MO.setReg(NewReg);
       MO.setIsDead();
-      DEBUG(MI.print(dbgs()));
+      LLVM_DEBUG(MI.print(dbgs()));
       ++NumDeadDefsReplaced;
       Changed = true;
       // Only replace one dead register, see check for zero register above.
@@ -182,13 +185,13 @@ void AArch64DeadRegisterDefinitions::processMachineBasicBlock(
 // Scan the function for instructions that have a dead definition of a
 // register. Replace that register with the zero register when possible.
 bool AArch64DeadRegisterDefinitions::runOnMachineFunction(MachineFunction &MF) {
-  if (skipFunction(*MF.getFunction()))
+  if (skipFunction(MF.getFunction()))
     return false;
 
   TRI = MF.getSubtarget().getRegisterInfo();
   TII = MF.getSubtarget().getInstrInfo();
   MRI = &MF.getRegInfo();
-  DEBUG(dbgs() << "***** AArch64DeadRegisterDefinitions *****\n");
+  LLVM_DEBUG(dbgs() << "***** AArch64DeadRegisterDefinitions *****\n");
   Changed = false;
   for (auto &MBB : MF)
     processMachineBasicBlock(MBB);

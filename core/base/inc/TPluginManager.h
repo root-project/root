@@ -22,10 +22,10 @@
 // library to load to get a specific class that is used to extend the   //
 // functionality of a specific base class and how to create an object   //
 // of this class. For example, to extend the base class TFile to be     //
-// able to read RFIO files one needs to load the plugin library         //
-// libRFIO.so which defines the TRFIOFile class. This loading should    //
-// be triggered when a given URI contains a regular expression defined  //
-// by the handler.                                                      //
+// able to read SQLite files one needs to load the plugin library       //
+// libRSQLite.so which defines the TSQLiteServer class. This loading    //
+// should be triggered when a given URI contains a regular expression   //
+// defined by the handler.                                              //
 // Plugin handlers can be defined via macros in a list of plugin        //
 // directories. With $ROOTSYS/etc/plugins the default top plugin        //
 // directory specified in $ROOTSYS/etc/system.rootrc. Additional        //
@@ -34,7 +34,7 @@
 // override previous ones (the inverse of normal search path behavior). //
 // The macros must have names like <BaseClass>/PX0_<PluginClass>.C,     //
 // e.g.:                                                                //
-//    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
+//    TSQLServer/P20_TMySQLServer.C, etc.                               //
 // to allow easy sorting and grouping. If the BaseClass is in a         //
 // namespace the directory must have the name NameSpace@@BaseClass as   //
 // : is a reserved pathname character on some operating systems.        //
@@ -51,7 +51,6 @@
 // file. Although now deprecated this method still works for backward   //
 // compatibility, e.g.:                                                 //
 //                                                                      //
-//   Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"   //
 //   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"   //
 //   +Plugin.TSQLServer: ^pgsql:  TPgSQLServer PgSQL  "<constructor>"   //
 //   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"  //
@@ -70,9 +69,9 @@
 //                                                                      //
 // Plugin handlers can also be registered at run time, e.g.:            //
 //                                                                      //
-//   gPluginMgr->AddHandler("TSQLServer", "^sapdb:",                    //
-//                          "TSapDBServer", "SapDB",                    //
-//             "TSapDBServer(const char*,const char*, const char*)");   //
+//   gPluginMgr->AddHandler("TSQLServer", "^sqlite:",                   //
+//                          "TSQLiteServer", "RSQLite",                 //
+//             "TSQLiteServer(const char*,const char*,const char*)");   //
 //                                                                      //
 // A list of currently defined handlers can be printed using:           //
 //                                                                      //
@@ -95,7 +94,6 @@ class TEnv;
 class TList;
 class THashTable;
 class TFunction;
-class TMethodCall;
 class TPluginManager;
 
 #include <atomic>
@@ -121,12 +119,12 @@ private:
 
    TPluginHandler() :
       fBase(), fRegexp(), fClass(), fPlugin(), fCtor(), fOrigin(),
-      fCallEnv(0), fMethod(0), fCanCall(0), fIsMacro(kTRUE), fIsGlobal(kTRUE) { }
+      fCallEnv(nullptr), fMethod(nullptr), fCanCall(0), fIsMacro(kTRUE), fIsGlobal(kTRUE) { }
    TPluginHandler(const char *base, const char *regexp,
                   const char *className, const char *pluginName,
                   const char *ctor, const char *origin);
-   TPluginHandler(const TPluginHandler&);            // not implemented
-   TPluginHandler& operator=(const TPluginHandler&); // not implemented
+   TPluginHandler(const TPluginHandler &) = delete;
+   TPluginHandler& operator=(const TPluginHandler &) = delete;
 
    ~TPluginHandler();
 
@@ -146,10 +144,10 @@ public:
    Int_t       CheckPlugin() const;
    Int_t       LoadPlugin();
 
-   template <typename... T> Long_t ExecPluginImpl(const T&... params)
+   template <typename... T> Longptr_t ExecPluginImpl(const T&... params)
    {
       auto nargs = sizeof...(params);
-      if (!CheckForExecPlugin(nargs)) return 0;
+      if (!CheckForExecPlugin((Int_t)nargs)) return 0;
 
       // The fCallEnv object is shared, since the PluginHandler is a global
       // resource ... and both SetParams and Execute ends up taking the lock
@@ -158,13 +156,13 @@ public:
       R__LOCKGUARD(gInterpreterMutex);
       fCallEnv->SetParams(params...);
 
-      Long_t ret;
+      Longptr_t ret;
       fCallEnv->Execute(ret);
 
       return ret;
    }
 
-   template <typename... T> Long_t ExecPlugin(int nargs, const T&... params)
+   template <typename... T> Longptr_t ExecPlugin(int nargs, const T&... params)
    {
       // For backward compatibility.
       if ((gDebug > 1) && (nargs != (int)sizeof...(params))) {
@@ -187,8 +185,8 @@ private:
    THashTable *fBasesLoaded;  //! table of base classes already checked or loaded
    Bool_t      fReadingDirs;  //! true if we are running LoadHandlersFromPluginDirs
 
-   TPluginManager(const TPluginManager& pm);              // not implemented
-   TPluginManager& operator=(const TPluginManager& pm);   // not implemented
+   TPluginManager(const TPluginManager &) = delete;
+   TPluginManager& operator=(const TPluginManager &) = delete;
    void   LoadHandlerMacros(const char *path);
 
 public:

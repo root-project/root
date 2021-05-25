@@ -5,6 +5,7 @@
 /// express easily mathematical operations involving arrays and scalars.
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \date May 2018
 /// \author Danilo Piparo

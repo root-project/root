@@ -1,0 +1,48 @@
+0. root-indent
+   innamespace 0
+
+1. namespace REX
+   using namespace REX
+
+namespace ROOT { namespace Experimental
+{
+
+using namespace ROOT::Experimental;
+namespace REX = ROOT::Experimental;
+
+includes:      TEve*.h -> ROOT/TEve*.hxx
+include guard: ROOT_TEveVSD -> ROOT_TEveVSD_hxx
+
+3. Remove Editor GL friends
+
+
+//==============================================================================
+
+Issues:
+
+* Exporting top level collection(s): events, viewers, scenes
+
+* Emitting signals
+
+* Serialization of EveElements
+  - separate internal "links" - componds, parents, projectables/eds
+  - separate hierarchy ?
+  - request children separately ?
+
+* What does redraw do? We know which elements / scenes have changed.
+  Has to be synchronized with expectations of the client.
+
+* Event scene / EventManager - is it needed?
+
+* SceneInfo
+
+* Review ownership of shape in TEveGeoShape
+
+* Argh, CSG/Boolean shapes were generated through GL.
+  Need to re-extract Timur's stuff and hack a TPad krappe around it.
+  ! Ask what is the plan for TGeo !
+
+-----
+
+* Inverted sign of magnetic field ... fix it.
+

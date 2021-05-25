@@ -9,18 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TPaveStats.h"
 #include "TPaveLabel.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "TClass.h"
 #include "TLatex.h"
+#include "strlcpy.h"
 
 ClassImp(TPaveStats);
 
@@ -349,7 +350,7 @@ void TPaveStats::Paint(Option_t *option)
    if (textsize == 0)  {
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
-      wtok[0] = 0; wtok[1] = 0;
+      wtok[0] = wtok[1] = 0;
       while ((line = (TObject*) next())) {
          if (line->IsA() == TLatex::Class()) {
             latex = (TLatex*)line;
@@ -359,7 +360,7 @@ void TPaveStats::Paint(Option_t *option)
             if (strpbrk(sl, "=") !=0 && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
-               while ( st !=0 ) {
+               while (( st != 0 ) && (itok < 2)) {
                   latex_tok = new TLatex(0.,0.,st);
                   Style_t tfont = latex->GetTextFont();
                   if (tfont == 0) tfont = GetTextFont();

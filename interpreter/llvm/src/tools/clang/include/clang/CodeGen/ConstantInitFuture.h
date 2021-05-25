@@ -1,9 +1,8 @@
 //===- ConstantInitFuture.h - "Future" constant initializers ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -31,8 +30,7 @@ class ConstantInitBuilderBase;
 }
 namespace llvm {
 template <>
-class PointerLikeTypeTraits< ::clang::CodeGen::ConstantInitBuilderBase*> {
-public:
+struct PointerLikeTypeTraits< ::clang::CodeGen::ConstantInitBuilderBase*> {
   using T = ::clang::CodeGen::ConstantInitBuilderBase*;
 
   static inline void *getAsVoidPointer(T p) { return p; }
@@ -93,8 +91,7 @@ public:
 namespace llvm {
 
 template <>
-class PointerLikeTypeTraits< ::clang::CodeGen::ConstantInitFuture> {
-public:
+struct PointerLikeTypeTraits< ::clang::CodeGen::ConstantInitFuture> {
   using T = ::clang::CodeGen::ConstantInitFuture;
 
   static inline void *getAsVoidPointer(T future) {

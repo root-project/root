@@ -3,9 +3,8 @@
 
 #include "TFoamIntegrand.h"
 
-ClassImp(TFoamIntegrand);
+/** \class TFoamIntegrand
+Abstract class representing n-dimensional real positive integrand function
+*/
 
-//_________________________________________
-// Class TFoamIntegrand
-// =====================
-// Abstract class representing n-dimensional real positive integrand function
+ClassImp(TFoamIntegrand);

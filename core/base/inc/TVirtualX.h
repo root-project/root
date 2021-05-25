@@ -24,9 +24,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <utility>
-#include <vector>
-
 #include "TNamed.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -34,26 +31,17 @@
 #include "TAttMarker.h"
 #include "GuiTypes.h"
 
+#include <vector>
+#include <utility>
 
 // WM Atoms are initialized in TGClient
 R__EXTERN Atom_t gWM_DELETE_WINDOW;
 R__EXTERN Atom_t gMOTIF_WM_HINTS;
 R__EXTERN Atom_t gROOT_MESSAGE;
 
-const int kNumCursors = 19;
-enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
-               kBottomSide, kLeftSide, kTopSide, kRightSide,
-               kMove, kCross, kArrowHor, kArrowVer, kHand, kRotate,
-               kPointer, kArrowRight, kCaret, kWatch, kNoDrop };
-
 class TPoint;
 class TString;
 class TGWin32Command;
-#ifdef __cplusplus
-   class GLUtesselator;
-#else
-   extern "C" { struct GLUtesselator; }
-#endif
 
 class TVirtualX : public TNamed, public TAttLine, public TAttFill, public TAttText, public TAttMarker {
 
@@ -71,7 +59,7 @@ public:
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 
-   virtual Bool_t    Init(void *display=0);
+   virtual Bool_t    Init(void *display = nullptr);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();
@@ -117,10 +105,10 @@ public:
    virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const;
-   virtual Int_t     InitWindow(ULong_t window);
-   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
-   virtual void      RemoveWindow(ULong_t qwid);
+   virtual Int_t     InitWindow(ULongptr_t window);
+   virtual Int_t     AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h);
+   virtual Int_t     AddPixmap(ULongptr_t pixid, UInt_t w, UInt_t h);
+   virtual void      RemoveWindow(ULongptr_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
    virtual void      QueryPointer(Int_t &ix, Int_t &iy);
@@ -179,7 +167,7 @@ public:
    virtual void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    virtual void         IconifyWindow(Window_t id);
-   virtual Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force);
+   virtual Bool_t       NeedRedraw(ULongptr_t tgwindow, Bool_t force);
    virtual void         ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    virtual void         SetWindowBackground(Window_t id, ULong_t color);
    virtual void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);

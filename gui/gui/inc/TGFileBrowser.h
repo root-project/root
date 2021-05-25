@@ -18,6 +18,7 @@
 
 #include <list>
 #include <map>
+#include <string>
 
 class TGCanvas;
 class TGListTree;
@@ -38,40 +39,39 @@ public:
    typedef std::list<TGListTreeItem*> sLTI_t;
    typedef sLTI_t::iterator           sLTI_i;
    typedef sLTI_t::reverse_iterator   sLTI_ri;
-   typedef std::map<TGListTreeItem*, const char *> mFiltered_t;
-   typedef mFiltered_t::iterator      mFiltered_i;
+   typedef std::map<TGListTreeItem*, std::string> mFiltered_t;
 
 protected:
-   TRootBrowser      *fNewBrowser;        // Pointer back to the Browser
-   TGHorizontalFrame *fTopFrame;          // Top horizontal frame
-   TGHorizontalFrame *fBotFrame;          // Bottom horizontal frame
-   TGCanvas          *fCanvas;            // Canvas for the list tree
-   TGListTree        *fListTree;          // Main list tree
-   TGListTreeItem    *fListLevel;         // Current list tree level
-   TGListTreeItem    *fCurrentDir;        // Current (list tree) directory
-   TGListTreeItem    *fRootDir;           // Root (list tree) directory
-   TGComboBox        *fDrawOption;        // Draw options combobox
-   TGComboBox        *fFileType;          // File type combobox
-   TContextMenu      *fContextMenu;       // pointer to context menu
-   TGPictureButton   *fSortButton;        // "Sort" button
-   TGPictureButton   *fRefreshButton;     // "Refresh" button
-   TGPictureButton   *fFilterButton;      // "Filter" button
-   const TGPicture   *fRootIcon;          // Root files icon
-   const TGPicture   *fFileIcon;          // System files icon
-   const TGPicture   *fCachedPic;         // Cached picture
-   TString            fCachedPicName;     // Cached picture name
-   TRegexp           *fFilter;            // Regular expression used to filter files
-   TSystemDirectory  *fDir;               // Actual (selected) system directory
-   TSystemFile       *fFile;              // Actual (selected) system file
-   Int_t              fGroupSize;         // total number of items when icon box switched to "global view" mode
-   Long_t             fNKeys, fCnt;       // Counters for keys inside a Root file
-   Bool_t             fGrouped;           // kTRUE if Root file content (keys) is grouped
-   Bool_t             fShowHidden;        // kTRUE to display hidden files
-   Bool_t             fDblClick;          // kTRUE if user double-clicked on a list tree item
+   TRootBrowser      *fNewBrowser;        ///< Pointer back to the Browser
+   TGHorizontalFrame *fTopFrame;          ///< Top horizontal frame
+   TGHorizontalFrame *fBotFrame;          ///< Bottom horizontal frame
+   TGCanvas          *fCanvas;            ///< Canvas for the list tree
+   TGListTree        *fListTree;          ///< Main list tree
+   TGListTreeItem    *fListLevel;         ///< Current list tree level
+   TGListTreeItem    *fCurrentDir;        ///< Current (list tree) directory
+   TGListTreeItem    *fRootDir;           ///< Root (list tree) directory
+   TGComboBox        *fDrawOption;        ///< Draw options combobox
+   TGComboBox        *fFileType;          ///< File type combobox
+   TContextMenu      *fContextMenu;       ///< pointer to context menu
+   TGPictureButton   *fSortButton;        ///< "Sort" button
+   TGPictureButton   *fRefreshButton;     ///< "Refresh" button
+   TGPictureButton   *fFilterButton;      ///< "Filter" button
+   const TGPicture   *fRootIcon;          ///< Root files icon
+   const TGPicture   *fFileIcon;          ///< System files icon
+   const TGPicture   *fCachedPic;         ///< Cached picture
+   TString            fCachedPicName;     ///< Cached picture name
+   TRegexp           *fFilter;            ///< Regular expression used to filter files
+   TSystemDirectory  *fDir;               ///< Actual (selected) system directory
+   TSystemFile       *fFile;              ///< Actual (selected) system file
+   Int_t              fGroupSize;         ///< total number of items when icon box switched to "global view" mode
+   Long_t             fNKeys, fCnt;       ///< Counters for keys inside a Root file
+   Bool_t             fGrouped;           ///< kTRUE if Root file content (keys) is grouped
+   Bool_t             fShowHidden;        ///< kTRUE to display hidden files
+   Bool_t             fDblClick;          ///< kTRUE if user double-clicked on a list tree item
 
-   sLTI_t             fSortedItems;       // List of sorted list-tree items.
-   mFiltered_t        fFilteredItems;     // List of filtered list-tree items.
-   TString            fFilterStr;         // Filter expression string
+   sLTI_t             fSortedItems;       ///< List of sorted list-tree items.
+   mFiltered_t        fFilteredItems;     ///< List of filtered list-tree items.
+   TString            fFilterStr;         ///< Filter expression string
 
    void CreateBrowser();
 

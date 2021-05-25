@@ -14,36 +14,34 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooArgSet is a container object that can hold multiple RooAbsArg objects.
-// The container has set semantics which means that:
-//
-//  - Every object it contains must have a unique name returned by GetName().
-//
-//  - Contained objects are not ordered, although the set can be traversed
-//    using an iterator returned by createIterator(). The iterator does not
-//    necessarily follow the object insertion order.
-//
-//  - Objects can be retrieved by name only, and not by index.
-//
-//
-// Ownership of contents. 
-//
-// Unowned objects are inserted with the add() method. Owned objects
-// are added with addOwned() or addClone(). A RooArgSet either owns all 
-// of it contents, or none, which is determined by the first <add>
-// call. Once an ownership status is selected, inappropriate <add> calls
-// will return error status. Clearing the list via removeAll() resets the 
-// ownership status. Arguments supplied in the constructor are always added 
-// as unowned elements.
-//
-//
+/// \class RooArgSet
+/// RooArgSet is a container object that can hold multiple RooAbsArg objects.
+/// The container has set semantics which means that:
+///
+///  - Every object it contains must have a unique name returned by GetName().
+///
+///  - Contained objects are not ordered, although the set can be traversed
+///    using an iterator returned by createIterator(). The iterator does not
+///    necessarily follow the object insertion order.
+///
+///  - Objects can be retrieved by name only, and not by index.
+///
+///
+/// Ownership of contents
+/// -------------------------
+/// Unowned objects are inserted with the add() method. Owned objects
+/// are added with addOwned() or addClone(). A RooArgSet either owns all
+/// of it contents, or none, which is determined by the first `add`
+/// call. Once an ownership status is selected, inappropriate `add` calls
+/// will return error status. Clearing the list via removeAll() resets the
+/// ownership status. Arguments supplied in the constructor are always added
+/// as unowned elements.
+///
+///
 
-#include "Riostream.h"
-#include <iomanip>
-#include "TClass.h"
-#include "RooErrorHandler.h"
 #include "RooArgSet.h"
+
+#include "TClass.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
@@ -53,6 +51,13 @@
 #include "RooArgList.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+#include "ROOT/RMakeUnique.hxx"
+#include "strlcpy.h"
+
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <stdexcept>
 
 using namespace std ;
 
@@ -61,36 +66,34 @@ char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooArgSet);
-  ;
 
-char* RooArgSet::_poolBegin = 0 ;
-char* RooArgSet::_poolCur = 0 ;
-char* RooArgSet::_poolEnd = 0 ;
-#define POOLSIZE 1048576
 
-struct POOLDATA 
-{
-  void* _base ;
-} ;
 
-static std::list<POOLDATA> _memPoolList ;
+#ifndef USEMEMPOOLFORARGSET
+void RooArgSet::cleanup() { }
+#else
+
+#include "MemPoolForRooSets.h"
+
+RooArgSet::MemPool* RooArgSet::memPool() {
+  RooSentinel::activate();
+  static auto * memPool = new RooArgSet::MemPool();
+  return memPool;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear memoery pool on exit to avoid reported memory leaks
+/// Clear memory pool on exit to avoid reported memory leaks
 
 void RooArgSet::cleanup()
 {
-  std::list<POOLDATA>::iterator iter = _memPoolList.begin() ;
-  while(iter!=_memPoolList.end()) {
-    free(iter->_base) ;
-    iter->_base=0 ;
-    ++iter ;
-  }
-  _memPoolList.clear() ;
+  auto pool = memPool();
+  memPool()->teardown();
+
+  //Here, the pool might have to leak if RooArgSets are still alive.
+  if (pool->empty())
+    delete pool;
 }
 
-
-#ifdef USEMEMPOOL
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overloaded new operator guarantees that all RooArgSets allocated with new
@@ -101,64 +104,10 @@ void RooArgSet::cleanup()
 
 void* RooArgSet::operator new (size_t bytes)
 {
-  //cout << " RooArgSet::operator new(" << bytes << ")" << endl ;
+  //This will fail if a derived class uses this operator
+  assert(sizeof(RooArgSet) == bytes);
 
-  if (!_poolBegin || _poolCur+(sizeof(RooArgSet)) >= _poolEnd) {
-
-    if (_poolBegin!=0) {
-      oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), starting new 1MB memory pool" << endl ;
-    }
-
-    RooTrace::createSpecial("RooArgSet_pool",POOLSIZE) ;
-
-    // Start pruning empty memory pools if number exceeds 3
-    if (_memPoolList.size()>3) {
-      
-      void* toFree(0) ;
-
-      for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
-
-	// If pool is empty, delete it and remove it from list
-	if ((*(Int_t*)(poolIter->_base))==0) {
-	  oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), pruning empty memory pool " << (void*)(poolIter->_base) << endl ;
-
-	  toFree = poolIter->_base ;
-	  _memPoolList.erase(poolIter) ;
-	  RooTrace::destroySpecial("RooArgSet_pool") ;
-	  
-	  break ;
-	}
-      }      
-
-      free(toFree) ;      
-    }
-    
-    void* mem = malloc(POOLSIZE) ;
-    memset(mem, TStorage::kObjectAllocMemValue, POOLSIZE);
-
-    _poolBegin = (char*)mem ;
-    // Reserve space for pool counter at head of pool
-    _poolCur = _poolBegin+sizeof(Int_t) ;
-    _poolEnd = _poolBegin+(POOLSIZE) ;
-
-    // Clear pool counter
-    *((Int_t*)_poolBegin)=0 ;
-    
-    POOLDATA p ;
-    p._base=mem ;
-    _memPoolList.push_back(p) ;
-
-    RooSentinel::activate() ;
-  }
-
-  char* ptr = _poolCur ;
-  _poolCur += bytes ;
-
-  // Increment use counter of pool
-  (*((Int_t*)_poolBegin))++ ;
-
-  return ptr ;
-
+  return memPool()->allocate(bytes);
 }
 
 
@@ -179,12 +128,11 @@ void* RooArgSet::operator new (size_t bytes, void* ptr) noexcept
 void RooArgSet::operator delete (void* ptr)
 {
   // Decrease use count in pool that ptr is on
-  for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
-    if ((char*)ptr > (char*)poolIter->_base && (char*)ptr < (char*)poolIter->_base + POOLSIZE) {
-      (*(Int_t*)(poolIter->_base))-- ;
-      return ;
-    }
-  }
+  if (memPool()->deallocate(ptr))
+    return;
+
+  std::cerr << __func__ << " " << ptr << " is not in any of the pools." << std::endl;
+
   // Not part of any pool; use global op delete:
   ::operator delete(ptr);
 }
@@ -202,12 +150,10 @@ RooArgSet::RooArgSet() :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a RooArgList. If the list contains multiple
 /// objects with the same name, only the first is store in the set.
 /// Warning messages will be printed for dropped items.
-
 RooArgSet::RooArgSet(const RooArgList& list) :
   RooAbsCollection(list.GetName())
 {
@@ -216,27 +162,27 @@ RooArgSet::RooArgSet(const RooArgList& list) :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a RooArgList. If the list contains multiple
-/// objects with the same name, only the first is store in the set.
+/// Constructor from a RooArgSet / RooArgList and a pointer to another RooFit object.
+///
+/// \param[in] collection Collection of RooFit objects to be added. If a list contains multiple
+/// objects with the same name, only the first is stored in the set.
 /// Warning messages will be printed for dropped items.
-
-RooArgSet::RooArgSet(const RooArgList& list, const RooAbsArg* var1) :
-  RooAbsCollection(list.GetName())
+/// \param[in] var1 Further object to be added. If it is already in `collection`,
+/// nothing happens, and the warning message is suppressed.
+RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) :
+  RooAbsCollection(collection.GetName())
 {
-  if (var1 && !list.contains(*var1)) {
+  if (var1 && !collection.contains(*var1)) {
     add(*var1,kTRUE) ;
   }
-  add(list,kTRUE) ; // verbose to catch duplicate errors
+  add(collection,kTRUE) ; // verbose to catch duplicate errors
   TRACE_CREATE
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Empty set constructor
-
+/// Empty set constructor.
 RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {
@@ -244,151 +190,15 @@ RooArgSet::RooArgSet(const char *name) :
 }
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a set from two existing sets
-
+/// Construct a set from two existing sets. The new set will not own its
+/// contents.
 RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *name) : RooAbsCollection(name)
 {
   add(set1) ;
   add(set2) ;
-  TRACE_CREATE    
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 1 initial object
-
-RooArgSet::RooArgSet(const RooAbsArg& var1,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1);
   TRACE_CREATE
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 2 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 3 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 4 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 5 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1,
-		     const RooAbsArg& var2, const RooAbsArg& var3,
-		     const RooAbsArg& var4, const RooAbsArg& var5,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 6 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 7 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 8 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 9 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const RooAbsArg& var9, const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
-  TRACE_CREATE
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,18 +224,15 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Note that a copy of a set is always non-owning,
-/// even the source set is owning. To create an owning copy of
-/// a set (owning or not), use the snaphot() method.
-
-RooArgSet::RooArgSet(const RooArgSet& other, const char *name) 
+/// even if the source set owns its contents. To create an owning copy of
+/// a set (owning or not), use the snapshot() method.
+RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
   : RooAbsCollection(other,name)
 {
   TRACE_CREATE
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,6 +244,13 @@ RooArgSet::~RooArgSet()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add contents of a RooArgList to the set.
+void RooArgSet::processArg(const RooArgList& list) {
+  add(list);
+  if (_name.Length() == 0)
+    _name = list.GetName();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add element to non-owning set. The operation will fail if
@@ -479,18 +293,21 @@ RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Named element must exist in set, otherwise
-/// code will abort. 
+/// Get reference to an element using its name. Named element must exist in set.
+/// \throws invalid_argument if an element with the given name is not in the set.
 ///
-/// When used as lvalue in assignment operations, the element contained in
-/// the list will not be changed, only the value of the existing element!
-
-RooAbsArg& RooArgSet::operator[](const char* name) const 
+/// Note that since most RooFit objects use an assignment operator that copies
+/// values, an expression like
+/// ```
+/// mySet["x"] = y;
+/// ```
+/// will not replace the element "x", it just assigns the values of y.
+RooAbsArg& RooArgSet::operator[](const TString& name) const
 {     
   RooAbsArg* arg = find(name) ;
   if (!arg) {
     coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
-    RooErrorHandler::softAbort() ;
+    throw std::invalid_argument((TString("No element named '") + name + "' in set " + GetName()).Data());
   }
   return *arg ; 
 }
@@ -519,175 +336,7 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Get value of a RooAbsReal stored in set with given name. If none is found, value of defVal is returned.
-/// No error messages are printed unless the verbose flag is set
 
-Double_t RooArgSet::getRealValue(const char* name, Double_t defVal, Bool_t verbose) const
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getRealValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return defVal ;
-  }
-  RooAbsReal* rar = dynamic_cast<RooAbsReal*>(raa) ;
-  if (!rar) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getRealValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsReal" << endl ;
-    return defVal ;
-  }
-  return rar->getVal() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set value of a RooAbsRealLValye stored in set with given name to newVal
-/// No error messages are printed unless the verbose flag is set
-
-Bool_t RooArgSet::setRealValue(const char* name, Double_t newVal, Bool_t verbose) 
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setRealValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return kTRUE ;
-  }
-  RooAbsRealLValue* rar = dynamic_cast<RooAbsRealLValue*>(raa) ;
-  if (!rar) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setRealValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsRealLValue" << endl ;
-    return kTRUE;
-  }
-  rar->setVal(newVal) ;
-  return kFALSE ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get state name of a RooAbsCategory stored in set with given name. If none is found, value of defVal is returned.
-/// No error messages are printed unless the verbose flag is set
-
-const char* RooArgSet::getCatLabel(const char* name, const char* defVal, Bool_t verbose) const
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return defVal ;
-  }
-  RooAbsCategory* rac = dynamic_cast<RooAbsCategory*>(raa) ;
-  if (!rac) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
-    return defVal ;
-  }
-  return rac->getLabel() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set state name of a RooAbsCategoryLValue stored in set with given name to newVal.
-/// No error messages are printed unless the verbose flag is set
-
-Bool_t RooArgSet::setCatLabel(const char* name, const char* newVal, Bool_t verbose) 
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return kTRUE ;
-  }
-  RooAbsCategoryLValue* rac = dynamic_cast<RooAbsCategoryLValue*>(raa) ;
-  if (!rac) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
-    return kTRUE ;
-  }
-  rac->setLabel(newVal) ;
-  return kFALSE ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get index value of a RooAbsCategory stored in set with given name. If none is found, value of defVal is returned.
-/// No error messages are printed unless the verbose flag is set
-
-Int_t RooArgSet::getCatIndex(const char* name, Int_t defVal, Bool_t verbose) const
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return defVal ;
-  }
-  RooAbsCategory* rac = dynamic_cast<RooAbsCategory*>(raa) ;
-  if (!rac) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
-    return defVal ;
-  }
-  return rac->getIndex() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set index value of a RooAbsCategoryLValue stored in set with given name to newVal.
-/// No error messages are printed unless the verbose flag is set
-
-Bool_t RooArgSet::setCatIndex(const char* name, Int_t newVal, Bool_t verbose) 
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return kTRUE ;
-  }
-  RooAbsCategoryLValue* rac = dynamic_cast<RooAbsCategoryLValue*>(raa) ;
-  if (!rac) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
-    return kTRUE ;
-  }
-  rac->setIndex(newVal) ;
-  return kFALSE ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get string value of a RooAbsString stored in set with given name. If none is found, value of defVal is returned.
-/// No error messages are printed unless the verbose flag is set
-
-const char* RooArgSet::getStringValue(const char* name, const char* defVal, Bool_t verbose) const
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return defVal ;
-  }
-  RooAbsString* ras = dynamic_cast<RooAbsString*>(raa) ;
-  if (!ras) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsString" << endl ;
-    return defVal ;
-  }
-  return ras->getVal() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set string value of a RooStringVar stored in set with given name to newVal.
-/// No error messages are printed unless the verbose flag is set
-
-Bool_t RooArgSet::setStringValue(const char* name, const char* newVal, Bool_t verbose) 
-{
-  RooAbsArg* raa = find(name) ;
-  if (!raa) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
-    return kTRUE ;
-  }
-  RooStringVar* ras = dynamic_cast<RooStringVar*>(raa) ;
-  if (!ras) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsString" << endl ;
-    return kTRUE ;
-  }
-  ras->setVal(newVal) ;
-  return kFALSE ;
-}
 
 
 
@@ -728,26 +377,33 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 /// Write the contents of the argset in ASCII form to given stream.
 /// 
 /// A line is written for each element contained in the form
-/// <argName> = <argValue>
+/// `<argName> = <argValue>`
 /// 
-/// The <argValue> part of each element is written by the arguments' 
+/// The `<argValue>` part of each element is written by the arguments'
 /// writeToStream() function.
-
-void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) const
+/// \param os The stream to write to.
+/// \param compact Write only the bare values, separated by ' '.
+/// \note In compact mode, the stream cannot be read back into a RooArgSet,
+/// but only into a RooArgList, because the variable names are lost.
+/// \param section If non-null, add a section header like `[<section>]`.
+void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* section) const
 {
-  if (compact) {
-    coutE(InputArguments) << "RooArgSet::writeToStream(" << GetName() << ") compact mode not supported" << endl ;
-    return ;
-  }
+  if (section && section[0] != '\0')
+    os << '[' << section << ']' << '\n';
 
-  TIterator *iterat= createIterator();
-  RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-    os << next->GetName() << " = " ;
-    next->writeToStream(os,kFALSE) ;
-    os << endl ;
+  if (compact) {
+    for (const auto next : _list) {
+      next->writeToStream(os, true);
+      os << " ";
+    }
+    os << endl;
+  } else {
+    for (const auto next : _list) {
+      os << next->GetName() << " = " ;
+      next->writeToStream(os,kFALSE) ;
+      os << endl ;
+    }
   }
-  delete iterat;  
 }
 
 
@@ -758,36 +414,37 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section
 /// 
 /// The stream is read to end-of-file and each line is assumed to be
 /// of the form
-///
-/// <argName> = <argValue>
-/// 
+/// \code
+///   <argName> = <argValue>
+/// \endcode
 /// Lines starting with argNames not matching any element in the list
 /// will be ignored with a warning message. In addition limited C++ style 
 /// preprocessing and flow control is provided. The following constructions 
 /// are recognized:
-///
-/// > #include "include.file"       
-/// 
+/// \code
+///   include "include.file"
+/// \endcode
 /// Include given file, recursive inclusion OK
-/// 
-/// > if (<boolean_expression>)
-/// >   <name> = <value>
-/// >   ....
-/// > else if (<boolean_expression>)
-///     ....
-/// > else
-///     ....
-/// > endif
+/// \code
+/// if (<boolean_expression>)
+///   <name> = <value>
+///   ....
+/// else if (<boolean_expression>)
+///   ....
+/// else
+///   ....
+/// endif
+/// \endcode
 ///
 /// All expressions are evaluated by RooFormula, and may involve any of
 /// the sets variables. 
-///
-/// > echo <Message>
-///
+/// \code
+///   echo <Message>
+/// \endcode
 /// Print console message while reading from stream
-///
-/// > abort
-///
+/// \code
+///   abort
+/// \endcode
 /// Force termination of read sequence with error status 
 ///
 /// The value of each argument is read by the arguments readFromStream
@@ -804,7 +461,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   parser.setPunctuation("=") ;
   TString token ;
   Bool_t retVal(kFALSE) ;
-  
+
   // Conditional stack and related state variables
   // coverity[UNINIT]
   Bool_t anyCondTrue[100] ;
@@ -812,7 +469,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   Bool_t lastLineWasElse=kFALSE ;
   Int_t condStackLevel=0 ;
   condStack[0]=kTRUE ;
-  
+
   // Prepare section processing
   TString sectionHdr("[") ;
   if (section) sectionHdr.Append(section) ;
@@ -825,8 +482,8 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
     if (is.eof() || is.fail() || parser.atEOF()) {
       break ;
     }
-    
-    // Read next token until end of file
+
+    // Read next token until memEnd of file
     if (!reprocessToken) {
       token = parser.readToken() ;
     }
@@ -840,18 +497,18 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
     // Process include directives
     if (!token.CompareTo("include")) {
       if (parser.atEOL()) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() 
-			      << "): no filename found after include statement" << endl ;
-	return kTRUE ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName()
+			          << "): no filename found after include statement" << endl ;
+        return kTRUE ;
       }
       TString filename = parser.readLine() ;
       ifstream incfs(filename) ;
       if (!incfs.good()) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
-	return kTRUE ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
+        return kTRUE ;
       }
       coutI(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
-			    << filename << endl ;
+          << filename << endl ;
       if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return kTRUE ;
       continue ;
     }
@@ -861,13 +518,13 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       TString hdr(token) ;
       const char* last = token.Data() + token.Length() -1 ;
       if (*last != ']') {
-	hdr.Append(" ") ;
-	hdr.Append(parser.readLine()) ;
+        hdr.Append(" ") ;
+        hdr.Append(parser.readLine()) ;
       }
-//       parser.putBackToken(token) ;
-//       token = parser.readLine() ;
+      //       parser.putBackToken(token) ;
+      //       token = parser.readLine() ;
       if (section) {
-	inSection = !sectionHdr.CompareTo(hdr) ;
+        inSection = !sectionHdr.CompareTo(hdr) ;
       }
       continue ;
     }
@@ -880,123 +537,123 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 
     // Conditional statement evaluation
     if (!token.CompareTo("if")) {
-      
+
       // Extract conditional expressions and check validity
       TString expr = parser.readLine() ;
       RooFormula form(expr,expr,*this) ;
       if (!form.ok()) return kTRUE ;
-      
+
       // Evaluate expression
       Bool_t status = form.eval()?kTRUE:kFALSE ;
       if (lastLineWasElse) {
-	anyCondTrue[condStackLevel] |= status ;
-	lastLineWasElse=kFALSE ;
+        anyCondTrue[condStackLevel] |= status ;
+        lastLineWasElse=kFALSE ;
       } else {
-	condStackLevel++ ;
-	anyCondTrue[condStackLevel] = status ;
+        condStackLevel++ ;
+        anyCondTrue[condStackLevel] = status ;
       }
       condStack[condStackLevel] = status ;
-      
+
       if (verbose) cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName() 
-				 << "): conditional expression " << expr << " = " 
-				 << (condStack[condStackLevel]?"true":"false") << endl ;
+				     << "): conditional expression " << expr << " = "
+				     << (condStack[condStackLevel]?"true":"false") << endl ;
       continue ; // go to next line
     }
-    
+
     if (!token.CompareTo("else")) {
       // Must have seen an if statement before
       if (condStackLevel==0) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'else'" << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'else'" << endl ;
       }
-      
+
       if (parser.atEOL()) {
-	// simple else: process if nothing else was true
-	condStack[condStackLevel] = !anyCondTrue[condStackLevel] ; 
-	parser.zapToEnd(kFALSE) ;
-	continue ;
+        // simple else: process if nothing else was true
+        condStack[condStackLevel] = !anyCondTrue[condStackLevel] ;
+        parser.zapToEnd(kFALSE) ;
+        continue ;
       } else {
-	// if anything follows it should be 'if'
-	token = parser.readToken() ;
-	if (token.CompareTo("if")) {
-	  coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): syntax error: 'else " << token << "'" << endl ;
-	  return kTRUE ;
-	} else {
-	  if (anyCondTrue[condStackLevel]) {
-	    // No need for further checking, true conditional already processed
-	    condStack[condStackLevel] = kFALSE ;
-	    parser.zapToEnd(kFALSE) ;
-	    continue ;
-	  } else {
-	    // Process as normal 'if' no true conditional was encountered 
-	    reprocessToken = kTRUE ;
-	    lastLineWasElse=kTRUE ;
-	    continue ;
-	  }
-	}
+        // if anything follows it should be 'if'
+        token = parser.readToken() ;
+        if (token.CompareTo("if")) {
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): syntax error: 'else " << token << "'" << endl ;
+          return kTRUE ;
+        } else {
+          if (anyCondTrue[condStackLevel]) {
+            // No need for further checking, true conditional already processed
+            condStack[condStackLevel] = kFALSE ;
+            parser.zapToEnd(kFALSE) ;
+            continue ;
+          } else {
+            // Process as normal 'if' no true conditional was encountered
+            reprocessToken = kTRUE ;
+            lastLineWasElse=kTRUE ;
+            continue ;
+          }
+        }
       }	
     }
-    
+
     if (!token.CompareTo("endif")) {
       // Must have seen an if statement before
       if (condStackLevel==0) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'endif'" << endl ;
-	return kTRUE ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'endif'" << endl ;
+        return kTRUE ;
       }
-      
+
       // Decrease stack by one
       condStackLevel-- ;
       continue ;
     } 
-    
+
     // If current conditional is true
     if (condStack[condStackLevel]) {
-      
+
       // Process echo statements
       if (!token.CompareTo("echo")) {
-	TString message = parser.readLine() ;
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): >> " << message << endl ;
-	continue ;
+        TString message = parser.readLine() ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): >> " << message << endl ;
+        continue ;
       } 
-      
+
       // Process abort statements
       if (!token.CompareTo("abort")) {
-	TString message = parser.readLine() ;
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << endl ;
-	return kTRUE ;
+        TString message = parser.readLine() ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << endl ;
+        return kTRUE ;
       } 
-      
+
       // Interpret the rest as <arg> = <value_expr> 
       RooAbsArg *arg ;
 
       if ((arg = find(token)) && !arg->getAttribute("Dynamic")) {
-	if (parser.expectToken("=",kTRUE)) {
-	  parser.zapToEnd(kTRUE) ;
-	  retVal=kTRUE ;
-	  coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() 
-				<< "): missing '=' sign: " << arg << endl ;
-	  continue ;
-	}
-	Bool_t argRet = arg->readFromStream(is,kFALSE,verbose) ;	
-	if (!argRet && flagReadAtt) arg->setAttribute(flagReadAtt,kTRUE) ;
-	retVal |= argRet ;
+        if (parser.expectToken("=",kTRUE)) {
+          parser.zapToEnd(kTRUE) ;
+          retVal=kTRUE ;
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName()
+				    << "): missing '=' sign: " << arg << endl ;
+          continue ;
+        }
+        Bool_t argRet = arg->readFromStream(is,kFALSE,verbose) ;
+        if (!argRet && flagReadAtt) arg->setAttribute(flagReadAtt,kTRUE) ;
+        retVal |= argRet ;
       } else {
-	if (verbose) {
-	  coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): argument " 
-				<< token << " not in list, ignored" << endl ;
-	}
-	parser.zapToEnd(kTRUE) ;
+        if (verbose) {
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): argument "
+              << token << " not in list, ignored" << endl ;
+        }
+        parser.zapToEnd(kTRUE) ;
       }
     } else {
       parser.readLine() ;
     }
   }
-  
+
   // Did we fully unwind the conditional stack?
   if (condStackLevel!=0) {
     coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): missing 'endif'" << endl ;
     return kTRUE ;
   }
-  
+
   return retVal ;
 }
 

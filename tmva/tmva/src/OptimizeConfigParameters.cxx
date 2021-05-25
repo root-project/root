@@ -43,7 +43,6 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "TDirectory.h"
 #include "TGraph.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -100,8 +99,8 @@ TMVA::OptimizeConfigParameters::~OptimizeConfigParameters()
    Int_t n=Int_t(fFOMvsIter.size());
    Float_t *x = new Float_t[n];
    Float_t *y = new Float_t[n];
-   Float_t  ymin=+999999999;
-   Float_t  ymax=-999999999;
+   Float_t  ymin=(Float_t)+999999999;
+   Float_t  ymax=(Float_t)-999999999;
 
    for (Int_t i=0;i<n;i++){
       x[i] = Float_t(i);
@@ -350,25 +349,39 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
 
 Double_t TMVA::OptimizeConfigParameters::GetFOM()
 {
-   Double_t fom=0;
+   auto parsePercent = [this](TString input) -> Double_t {
+      // Expects input e.g. SigEffAtBkgEff0 (14 chars) followed by a fraction
+      // either as e.g. 01 or .01 (meaning the same thing 1 %).
+      TString percent = TString(input(14, input.Sizeof()));
+      if (!percent.CountChar('.')) percent.Insert(1,".");
+
+      if (percent.IsFloat()) {
+         return percent.Atof();
+      } else {
+         Log() << kFATAL << " ERROR, " << percent << " in " << fFOMType
+               << " is not a valid floating point number" << Endl;
+         return 0; // Cannot happen
+      }
+   };
+
+   Double_t fom = 0;
    if (fMethod->DoRegression()){
       std::cout << " ERROR: Sorry, Regression is not yet implement for automatic parameter optimisation"
                 << " --> exit" << std::endl;
       std::exit(1);
-   }else{
+   } else {
       if      (fFOMType == "Separation")  fom = GetSeparation();
       else if (fFOMType == "ROCIntegral") fom = GetROCIntegral();
-      else if (fFOMType == "SigEffAtBkgEff01")  fom = GetSigEffAtBkgEff(0.1);
-      else if (fFOMType == "SigEffAtBkgEff001") fom = GetSigEffAtBkgEff(0.01);
-      else if (fFOMType == "SigEffAtBkgEff002") fom = GetSigEffAtBkgEff(0.02);
-      else if (fFOMType == "BkgRejAtSigEff05")  fom = GetBkgRejAtSigEff(0.5);
-      else if (fFOMType == "BkgEffAtSigEff05")  fom = GetBkgEffAtSigEff(0.5);
+      else if (fFOMType.BeginsWith("SigEffAtBkgEff0")) fom = GetSigEffAtBkgEff(parsePercent(fFOMType));
+      else if (fFOMType.BeginsWith("BkgRejAtSigEff0")) fom = GetBkgRejAtSigEff(parsePercent(fFOMType));
+      else if (fFOMType.BeginsWith("BkgEffAtSigEff0")) fom = GetBkgEffAtSigEff(parsePercent(fFOMType));
       else {
-         Log()<<kFATAL << " ERROR, you've specified as Figure of Merit in the "
+         Log()<< kFATAL << " ERROR, you've specified as Figure of Merit in the "
               << " parameter optimisation " << fFOMType << " which has not"
               << " been implemented yet!! ---> exit " << Endl;
       }
    }
+
    fFOMvsIter.push_back(fom);
    //   std::cout << "fom="<<fom<<std::endl; // should write that into a debug log (as option)
    return fom;

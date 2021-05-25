@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
-#include <iostream>
-#include "TROOT.h"
+#include <cstdlib>
+
+#include "TBuffer.h"
 #include "TCandle.h"
-#include "TClass.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
+#include "TH2D.h"
 #include "TRandom2.h"
+#include "strlcpy.h"
 
 Double_t TCandle::fWhiskerRange  = 1.0;
 Double_t TCandle::fBoxRange      = 0.5;
@@ -243,16 +244,13 @@ void TCandle::SetScaledViolin(const Bool_t vScale) {
 
 int TCandle::ParseOption(char * opt) {
    fOption = kNoOption;
-   char *l;
+   char *l = strstr(opt,"CANDLE");
 
-   l = strstr(opt,"CANDLE");
    if (l) {
       const CandleOption fallbackCandle = (CandleOption)(kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor);
 
       char direction = ' ';
       char preset = ' ';
-
-
 
       if (l[6] >= 'A' && l[6] <= 'Z') direction = l[6];
       if (l[6] >= '1' && l[6] <= '9') preset = l[6];
@@ -298,18 +296,17 @@ int TCandle::ParseOption(char * opt) {
             if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
-            sprintf(fOptionStr,"CANDLE%c(%ld)",direction,(long)fOption);
+            snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c(%ld)",direction,(long)fOption);
          } else {
-            preset = 1;
             fOption = (CandleOption)(fOption + fallbackCandle);
-            }
+         }
       } else {
-         sprintf(fOptionStr,"CANDLE%c%c",direction,preset);
+         snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c%c",direction,preset);
       }
       //Handle option "CANDLE" ,"CANDLEX" or "CANDLEY" to behave like "CANDLEX1" or "CANDLEY1"
       if (!useIndivOption && !fOption ) {
          fOption = fallbackCandle;
-         sprintf(fOptionStr,"CANDLE%c2",direction);
+         snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c2",direction);
       }
    }
 
@@ -356,19 +353,17 @@ int TCandle::ParseOption(char * opt) {
             if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
-            sprintf(fOptionStr,"VIOLIN%c(%ld)",direction,(long)fOption);
-
+            snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c(%ld)",direction,(long)fOption);
          } else {
-            preset = 1;
             fOption = (CandleOption)(fOption + fallbackCandle);
          }
       } else {
-         sprintf(fOptionStr,"VIOLIN%c%c",direction,preset);
+         snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c%c",direction,preset);
       }
       //Handle option "VIOLIN" ,"VIOLINX" or "VIOLINY" to behave like "VIOLINX1" or "VIOLINY1"
       if (!useIndivOption && !fOption ) {
          fOption = fallbackCandle;
-         sprintf(fOptionStr,"VIOLIN%c1",direction);
+         snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c1",direction);
       }
    }
 

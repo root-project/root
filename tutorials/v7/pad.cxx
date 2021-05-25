@@ -17,6 +17,7 @@
  *************************************************************************/
 
 #include "ROOT/RCanvas.hxx"
+#include "ROOT/RPad.hxx"
 #include "ROOT/RLine.hxx"
 
 void pad()
@@ -28,8 +29,8 @@ void pad()
 
    for (int i = 0; i < 3; ++i)
       for (int j = 0; j < 3; ++j) {
-         pads[i][j]->Draw(RLine({0.1_normal, 0.1_normal}, {0.9_normal, 0.9_normal}));
-         pads[i][j]->Draw(RLine({0.1_normal, 0.9_normal}, {0.9_normal, 0.1_normal}));
+         pads[i][j]->Draw<RLine>()->SetP1({0.1_normal, 0.1_normal}).SetP2({0.9_normal, 0.9_normal});
+         pads[i][j]->Draw<RLine>()->SetP1({0.1_normal, 0.9_normal}).SetP2({0.9_normal, 0.1_normal});
       }
 
    canvas->Show();

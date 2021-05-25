@@ -6,13 +6,13 @@
 
 // NOTE: #included by libCore and libCling. All symbols must be inline.
 
-#include <stdlib.h>
 #include <cstring>
 #include <string>
 #include <list>
 #include <utility>
 #include <cstdlib>
 #include <iostream>
+#include <algorithm>
 #include "RtypesCore.h"
 
 #include "TSchemaType.h"
@@ -234,18 +234,17 @@ namespace Internal {
          }
 
          //---------------------------------------------------------------------
-         static bool IsANumber( const std::string& source )
+         /// Check if given string consists of digits.
+         static bool IsANumber( const std::string& source, bool acceptHex = false )
          {
-            // check if given string si consisted of digits
-
             if( source.empty() )
                return false;
 
-            std::string::size_type i;
-            for( i = 0; i < source.size(); ++i )
-               if( !isdigit( source[i] ) )
-                  return false;
-            return true;
+            if( acceptHex && source.size() > 2 && source[0] == '0' && source[1] == 'x'
+                   && std::all_of(source.begin()+2, source.end(), [](unsigned char c){return std::isxdigit(c);}) )
+               return true;
+
+            return std::all_of(source.begin(), source.end(), [](unsigned char c){return std::isdigit(c);});
          }
    };
 } // namespace Internal

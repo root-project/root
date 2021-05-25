@@ -1,22 +1,21 @@
-//===-- llvm/CodeGen/SelectionDAGAddressAnalysis.h  ------- DAG Address Analysis
-//---*- C++ -*-===//
+//===- SelectionDAGAddressAnalysis.h - DAG Address Analysis -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
-//
 
 #ifndef LLVM_CODEGEN_SELECTIONDAGADDRESSANALYSIS_H
 #define LLVM_CODEGEN_SELECTIONDAGADDRESSANALYSIS_H
 
-#include "llvm/CodeGen/ISDOpcodes.h"
-#include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
+#include <cstdint>
 
 namespace llvm {
+
+class SelectionDAG;
+
 /// Helper struct to parse and store a memory address as base + index + offset.
 /// We ignore sign extensions when it is safe to do so.
 /// The following two expressions are not equivalent. To differentiate we need
@@ -34,31 +33,63 @@ class BaseIndexOffset {
 private:
   SDValue Base;
   SDValue Index;
-  int64_t Offset;
-  bool IsIndexSignExt;
+  Optional<int64_t> Offset;
+  bool IsIndexSignExt = false;
 
 public:
-  BaseIndexOffset() : Offset(0), IsIndexSignExt(false) {}
-
+  BaseIndexOffset() = default;
+  BaseIndexOffset(SDValue Base, SDValue Index, bool IsIndexSignExt)
+      : Base(Base), Index(Index), Offset(), IsIndexSignExt(IsIndexSignExt) {}
   BaseIndexOffset(SDValue Base, SDValue Index, int64_t Offset,
                   bool IsIndexSignExt)
       : Base(Base), Index(Index), Offset(Offset),
         IsIndexSignExt(IsIndexSignExt) {}
 
   SDValue getBase() { return Base; }
+  SDValue getBase() const { return Base; }
   SDValue getIndex() { return Index; }
+  SDValue getIndex() const { return Index; }
+  bool hasValidOffset() const { return Offset.hasValue(); }
 
-  bool equalBaseIndex(BaseIndexOffset &Other, const SelectionDAG &DAG) {
+  // Returns true if `Other` and `*this` are both some offset from the same base
+  // pointer. In that case, `Off` is set to the offset between `*this` and
+  // `Other` (negative if `Other` is before `*this`).
+  bool equalBaseIndex(const BaseIndexOffset &Other, const SelectionDAG &DAG,
+                      int64_t &Off) const;
+
+  bool equalBaseIndex(const BaseIndexOffset &Other,
+                      const SelectionDAG &DAG) const {
     int64_t Off;
     return equalBaseIndex(Other, DAG, Off);
   }
 
-  bool equalBaseIndex(BaseIndexOffset &Other, const SelectionDAG &DAG,
-                      int64_t &Off);
+  // Returns true if `Other` (with size `OtherSize`) can be proven to be fully
+  // contained in `*this` (with size `Size`).
+  bool contains(const SelectionDAG &DAG, int64_t BitSize,
+                const BaseIndexOffset &Other, int64_t OtherBitSize,
+                int64_t &BitOffset) const;
 
-  /// Parses tree in Ptr for base, index, offset addresses.
-  static BaseIndexOffset match(SDValue Ptr, const SelectionDAG &DAG);
+  bool contains(const SelectionDAG &DAG, int64_t BitSize,
+                const BaseIndexOffset &Other, int64_t OtherBitSize) const {
+    int64_t BitOffset;
+    return contains(DAG, BitSize, Other, OtherBitSize, BitOffset);
+  }
+
+  // Returns true `Op0` and `Op1` can be proven to alias/not alias, in
+  // which case `IsAlias` is set to true/false.
+  static bool computeAliasing(const SDNode *Op0,
+                              const Optional<int64_t> NumBytes0,
+                              const SDNode *Op1,
+                              const Optional<int64_t> NumBytes1,
+                              const SelectionDAG &DAG, bool &IsAlias);
+
+  /// Parses tree in N for base, index, offset addresses.
+  static BaseIndexOffset match(const SDNode *N, const SelectionDAG &DAG);
+
+  void print(raw_ostream& OS) const;
+  void dump() const;
 };
-} // namespace llvm
 
-#endif
+} // end namespace llvm
+
+#endif // LLVM_CODEGEN_SELECTIONDAGADDRESSANALYSIS_H

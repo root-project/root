@@ -27,7 +27,9 @@ TProofMonSender implementation for the ML writer
 #include "TPluginManager.h"
 #include "TProofDebug.h"
 #include "TROOT.h"
+#include "TUrl.h"
 #include "TSystem.h"
+#include "TObjString.h"
 #include "TVirtualMonitoring.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +162,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
 
    TObject *dsn = 0;
    // We may need to correct some variable names first
-   if (fSummaryVrs == 0) {
+   if (fSummaryVrs > 1) {
       if ((dsn = recs->FindObject("dataset"))) recs->Remove(dsn);
    } else if (fSummaryVrs == 0) {
       // Only the first records
@@ -466,7 +468,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
          if (hmiss.FindObject(fne)) status = 0;
          // Prepare the parameters list
          nm_lnf->SetTitle(gSystem->BaseName(fne));
-         nm_path->SetTitle(gSystem->DirName(fne));
+         nm_path->SetTitle(gSystem->GetDirName(fne));
          pi_status->SetVal(status);
          fneh.Form("file_%x", TString(TUrl(fne.Data()).GetFile()).Hash());
          if (!(rc = fWriter->SendParameters(&values, fneh.Data()))) break;
@@ -482,7 +484,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
             if (hmiss.FindObject(fne)) status = 0;
             // Prepare the parameters list
             nm_lnf->SetTitle(gSystem->BaseName(fne));
-            nm_path->SetTitle(gSystem->DirName(fne));
+            nm_path->SetTitle(gSystem->GetDirName(fne));
             pi_status->SetVal(status);
             fneh.Form("file_%x", TString(TUrl(fne.Data()).GetFile()).Hash());
             if (!(rc = fWriter->SendParameters(&values, fneh.Data()))) break;

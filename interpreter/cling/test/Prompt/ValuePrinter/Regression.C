@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %cling 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -Xclang -verify 2>&1 | FileCheck %s
 
 // This file should be used as regression test for the value printing subsystem
 // Reproducers of fixed bugs should be put here
@@ -57,9 +57,9 @@ true // CHECK: (bool) true
 false // CHECK: (bool) false
 
 unordered_multiset<float> {1} // ROOT-7310
-// expected-error@2 {{use of undeclared identifier 'unordered_multiset'}}
-// expected-error@2 {{expected '(' for function-style cast or type construction}}
-// expected-error@2 {{initializer list cannot be used on the right hand side of operator '>'}}
+// expected-error@input_line_42:2 {{expected ';' after expression}}
+// expected-error@input_line_42:2 {{use of undeclared identifier 'unordered_multiset'}}
+// expected-error@input_line_42:2 {{expected ';' after expression}}
 
 #include <unordered_set>
 std::unordered_multiset<float> {1}
@@ -82,7 +82,7 @@ struct Enumer {
 #endif
 };
 Enumer::h
-// CHECK: (Enumer::H) (Enumer::H::h) : (unsigned long{{( long)?}}) 18446744073709551615
+// CHECK: (Enumer::H) (Enumer::h) : (unsigned long{{( long)?}}) 18446744073709551615
 
 // ROOT-7837
 auto bla=[](double *x, double *par, int blub){return x[0]*blub;} // CHECK: ((lambda) &) @0x{{[0-9a-f]+}}
@@ -114,13 +114,20 @@ OverloadedAddrOf overloadedAddrOf
 
 // Much more important than what cling prints: cling survives this!
 .rawInput
-auto func() { class X {} x; return x; };
 namespace WithUnnamed { namespace { struct Y {} y; } Y z; }
 .rawInput
-//func
-func()
 WithUnnamed::y
 WithUnnamed::z // CHECK: (WithUnnamed::
+
+.rawInput 1
+#if __cplusplus > 201103L
+auto func() { class X {} x; return x; };
+#endif
+.rawInput 0
+#if __cplusplus > 201103L
+//func
+func()
+#endif
 
 namespace PR180 {
   class base {};

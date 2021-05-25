@@ -15,31 +15,32 @@
 #include "TNamed.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "TList.h"
+
+class TList;
 
 class TPrincipal : public TNamed {
 
 protected:
-   Int_t       fNumberOfDataPoints;   // Number of data points
-   Int_t       fNumberOfVariables;    // Number of variables
+   Int_t       fNumberOfDataPoints;   ///< Number of data points
+   Int_t       fNumberOfVariables;    ///< Number of variables
 
-   TVectorD    fMeanValues;           // Mean value over all data points
-   TVectorD    fSigmas;               // vector of sigmas
-   TMatrixD    fCovarianceMatrix;     // Covariance matrix
+   TVectorD    fMeanValues;           ///< Mean value over all data points
+   TVectorD    fSigmas;               ///< vector of sigmas
+   TMatrixD    fCovarianceMatrix;     ///< Covariance matrix
 
-   TMatrixD    fEigenVectors;         // Eigenvector matrix of trans
-   TVectorD    fEigenValues;          // Eigenvalue vector of trans
+   TMatrixD    fEigenVectors;         ///< Eigenvector matrix of trans
+   TVectorD    fEigenValues;          ///< Eigenvalue vector of trans
 
-   TVectorD    fOffDiagonal;          // elements of the tridiagonal
+   TVectorD    fOffDiagonal;          ///< Elements of the tridiagonal
 
-   TVectorD    fUserData;             // Vector of original data points
+   TVectorD    fUserData;             ///< Vector of original data points
 
-   Double_t    fTrace;                // Trace of covarience matrix
+   Double_t    fTrace;                ///< Trace of covarience matrix
 
-   TList      *fHistograms;           // List of histograms
+   TList      *fHistograms;           ///< List of histograms
 
-   Bool_t      fIsNormalised;         // Normalize matrix?
-   Bool_t      fStoreData;            // Should we store input data?
+   Bool_t      fIsNormalised;         ///< Normalize matrix?
+   Bool_t      fStoreData;            ///< Should we store input data?
 
    TPrincipal(const TPrincipal&);
    TPrincipal& operator=(const TPrincipal&);

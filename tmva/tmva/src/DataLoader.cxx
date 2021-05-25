@@ -32,31 +32,14 @@
 
 */
 
-#include "TROOT.h"
-#include "TFile.h"
 #include "TTree.h"
-#include "TLeaf.h"
-#include "TEventList.h"
 #include "TH2.h"
-#include "TText.h"
-#include "TStyle.h"
-#include "TMatrixF.h"
-#include "TMatrixDSym.h"
-#include "TPaletteAxis.h"
-#include "TPrincipal.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TRandom3.h"
+#include "TMatrixD.h"
 
-#include <string.h>
-
-#include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
 #include "TMVA/CvSplit.h"
 #include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/DataSet.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/DataInputHandler.h"
@@ -73,16 +56,26 @@
 #include "TMVA/VariableNormalizeTransform.h"
 #include "TMVA/VarTransformHandler.h"
 
-
-#include "TMVA/ResultsClassification.h"
-#include "TMVA/ResultsRegression.h"
-#include "TMVA/ResultsMulticlass.h"
-#include "TMVA/Types.h"
-
 ClassImp(TMVA::DataLoader);
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/*** Create a data loader
+ \param[in] thedlName  name of DataLoader object. This name will be used as the
+                       top directory name where the training results
+                        (weights, i.e .XML and .C files) will be stored.
+                       The results will be stored by default in the `theDlName/weights`
+                       directory and relative to the current directory. If the directory is not existing,
+                       a new one will be created automatically.
+                       For using a different location (i.e. a different path to the current directory) one
+                       can set an absolute path location in `TMVA::gConfig()::GetIONames().fWeightFileDirPrefix`
+                       For example, by setting
+~~~~~~~~~~~~~~~{.cpp}
+   TMVA::gConfig()::GetIONames().fWeightFileDirPrefix = "/tmp";
+   TMVA::gConfig()::GetIONames().fWeightFileDir = "myTrainigResults";
+~~~~~~~~~~~~~~~
+                       The training results will be stored in the `/tmp/thedlName/myTrainingResults`
+                       directory.
+**/
 
 TMVA::DataLoader::DataLoader( TString thedlName)
 : Configurable( ),
@@ -186,6 +179,7 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
       return transformedLoader;
    }
    else {
+      delete handler;
       Log() << kFATAL << "Incorrect transformation string provided, please check" << Endl;
    }
    Log() << kINFO << "No transformation applied, returning original loader" << Endl;
@@ -504,6 +498,15 @@ void TMVA::DataLoader::AddVariable( const TString& expression, char type,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// user inserts discriminating array of variables in data set info
+/// in case input tree provides an array of values
+
+void TMVA::DataLoader::AddVariablesArray(const TString &expression, int size, char type,
+                                   Double_t min, Double_t max)
+{
+   DefaultDataSetInfo().AddVariablesArray(expression, size, "", "", min, max, type);
+}
+////////////////////////////////////////////////////////////////////////////////
 /// user inserts target in data set info
 
 void TMVA::DataLoader::AddTarget( const TString& expression, const TString& title, const TString& unit,
@@ -672,7 +675,7 @@ void TMVA::DataLoader::PrepareFoldDataSet(CvSplit & s, UInt_t foldNumber, Types:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Recombines the dataset. The precise semantics depend on the actual split.
-/// 
+///
 /// Similar to the inverse operation of `MakeKFoldDataSet` but _will_ differ.
 /// See documentation for each particular split for more information.
 ///

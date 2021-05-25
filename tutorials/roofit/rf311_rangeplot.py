@@ -1,16 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #311
-##
-## Projecting p.d.f and data ranges in continuous observables
+## Multidimensional models: projecting pdf and data ranges in continuous observables
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -41,7 +37,9 @@ bkg = ROOT.RooProdPdf("bkg", "bkg", ROOT.RooArgList(px, py, pz))
 
 # Create composite pdf sig+bkg
 fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(fsig))
+model = ROOT.RooAddPdf(
+    "model", "model", ROOT.RooArgList(
+        sig, bkg), ROOT.RooArgList(fsig))
 
 data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
 

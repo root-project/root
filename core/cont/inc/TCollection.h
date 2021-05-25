@@ -30,7 +30,7 @@
 
 #include "TVirtualRWMutex.h"
 
-#include <assert.h>
+#include <cassert>
 
 class TClass;
 class TObjectTable;
@@ -57,7 +57,7 @@ R__EXTERN TVirtualMutex *gCollectionMutex;
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
 #include <atomic>
 #include <thread>
-#include <unordered_set>
+#include <unordered_multiset>
 #endif
 
 class TCollection : public TObject {
@@ -261,6 +261,13 @@ public:
    Bool_t             operator!=(const TIter &aIter) const {
       return !(*this == aIter);
    }
+   TIter &operator=(TIterator *iter)
+   {
+      if (fIterator)
+         delete fIterator;
+      fIterator = iter;
+      return *this;
+   }
    TObject           *operator*() const { return fIterator ? *(*fIterator): nullptr; }
    TIter             &Begin();
    static TIter       End();
@@ -326,12 +333,12 @@ namespace Detail {
 /// This is best used with a TClonesArray, for other cases prefered TRangeDynCast.
 ///
 /// The typical use is:
-/// ~~~ {.cpp}
+/// ```{.cpp}
 ///    TTypedIter<TBaseClass> next(tbaseClassClonesArrayPtr);
 ///    while(auto bcl = next()) {
 ///       ... use bcl as a TBaseClass*
 ///    }
-/// ~~~ {.cpp}
+/// ```
 template <class Containee> // Containee must derive from TObject.
 class TTypedIter : public TIter {
    static_assert(std::is_base_of<TObject, Containee>::value, "Containee type must inherit from TObject");
@@ -368,7 +375,7 @@ public:
 /// This is best used with a TClonesArray, for other cases prefered TRangeDynCast.
 ///
 /// The typical use is:
-/// ~~~ {.cpp}
+/// ```{.cpp}
 ///    for(auto bcl : TRangeStaticCast<TBaseClass>( *tbaseClassClonesArrayPtr )) {
 ///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
 ///        ... use bcl as a TBaseClass*
@@ -377,7 +384,7 @@ public:
 ///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
 ///        ... use bcl as a TBaseClass*
 ///    }
-/// ~~~ {.cpp}
+/// ```
 template <class T>
 class TRangeStaticCast {
    const TCollection &fCollection;
@@ -397,7 +404,7 @@ public:
 /// through a TCollection.
 ///
 /// The typical use is:
-/// ~~~ {.cpp}
+/// ```{.cpp}
 ///    for(auto bcl : TRangeDynCast<TBaseClass>( *cl->GetListOfBases() )) {
 ///        if (!bcl) continue;
 ///        ... use bcl as a TBaseClass*
@@ -406,7 +413,7 @@ public:
 ///        if (!bcl) continue;
 ///        ... use bcl as a TBaseClass*
 ///    }
-/// ~~~ {.cpp}
+/// ```
 template <class T>
 class TRangeDynCast {
    const TCollection &fCollection;

@@ -32,6 +32,7 @@ class TTree;
 class TBranch;
 
 class TBasket : public TKey {
+friend class TBranch;
 
 private:
    TBasket(const TBasket&);            ///< TBasket objects are not copiable.
@@ -53,6 +54,10 @@ private:
    // Returns true if the underlying TLeaf can regenerate the entry offsets for us.
    Bool_t CanGenerateOffsetArray();
 
+   // Manage buffer ownership.
+   void   DisownBuffer();
+   void   AdoptBuffer(TBuffer *user_buffer);
+
 protected:
    Int_t       fBufferSize{0};                    ///< fBuffer length in bytes
    Int_t       fNevBufSize{0};                    ///< Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
@@ -73,6 +78,8 @@ protected:
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t   fResetAllocationTime{0};           ///<! Time spent reallocating baskets in microseconds during last Reset operation.
 #endif
+
+   virtual void    ReadResetBuffer(Int_t basketnumber);
 
 public:
    // The IO bits flag is to provide improved forward-compatibility detection.
@@ -126,7 +133,7 @@ public:
    virtual void    PrepareBasket(Long64_t /* entry */) {};
            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
-   virtual void    Reset();
+   virtual void    WriteReset();
 
 // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
 #ifdef R__TRACK_BASKET_ALLOC_TIME

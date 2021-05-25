@@ -1,9 +1,11 @@
-#include <ROOT/RConfig.h>
+#include <ROOTUnitTestSupport.h>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/TSeq.hxx>
 
+#include <TROOT.h>
 #include <TSystem.h>
 
 #include <gtest/gtest.h>
@@ -124,7 +126,9 @@ TEST(RSqliteDS, ColumnReaders)
 {
    RSqliteDS rds(fileName0, query0);
    const auto nSlots = 2U;
-   rds.SetNSlots(nSlots);
+   ROOT_EXPECT_WARNING(rds.SetNSlots(nSlots), "SetNSlots",
+                       "Currently the SQlite data source faces performance degradation in multi-threaded mode. "
+                       "Consider turning off IMT.");
    auto vals = rds.GetColumnReaders<Long64_t>("fint");
    rds.Initialise();
    auto ranges = rds.GetEntryRanges();
@@ -225,6 +229,7 @@ TEST(RSqliteDS, IMT)
 
 TEST(RSqliteDS, Davix)
 {
+   (void)url1; // silence -Wunused-const-variable
 #ifdef R__HAS_DAVIX
    auto rdf = MakeSqliteDataFrame(url0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));

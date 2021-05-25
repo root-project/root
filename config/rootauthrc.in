@@ -51,8 +51,6 @@
 #           any of these is valid: '137.138.99', '137.138', '137`, '99.73'; 
 #           or with wild cards: '137.13*' or '*.99.73`; however, '138.99' 
 #           is invalid because ambigous.
-#         - host names can be followed by :rootd or :proofd to define directives
-#           applying only to the given service
 #
 #      <key> <info>:
 #         - valid keys are 'list' and 'method';
@@ -64,28 +62,13 @@
 #              Method                        short name      code
 #
 #              UsrPwd                         usrpwd          0
-#              SRP                            srp             1
-#              Kerberos                       krb5            2
-#              Globus                         globus          3
-#              SSH                            ssh             4
-#              UidGid                         uidgid          5   (insecure)
 #
 #           Example of a valid 'list' line:
 #
-#              default          list  4 
-#              lxplus*.cern.ch  list  ssh 3 krb5
+#              default          list  0 
+#              lxplus*.cern.ch  list  usrpwd
 #
-#           The first line defines as default method SSH, this is equivalent
-#           of setting:
-#
-#              Rootd.Authentication    4
-#              Proofd.Authentication   4
-#
-#           in the .rootc file.
-#
-#           The second line adds Globus and Kerberos as available methods
-#           for authentication to the lxplus machines (in addition to SSH):
-#           SSH the preferred first, Kerberos the last option. 
+#           The first line defines as default method UsrPwd.
 #
 #           Having a line 'list' for a host is non mandatory: methods can
 #           also be defined directly via 'method' lines (see below); in
@@ -111,11 +94,8 @@
 #           be later re-used without prompting (e.g. when the user tries
 #           to access the same host with same method during the same
 #           session: this allows to speed up operation in case of multiple
-#           access). Default is 'yes' for methods 0 (UsrPwd), 3 (Globus)
-#           and 4 (SSH), superseeded by the related entries in '.rootrc';
-#           feature not yet implemented for methods 1 (SRP) and 2 (Kerberos). 
-#           No additional info is needed by method 5 (UidGid): this method
-#           sends to the remote host the (uid,gid) of the current process;
+#           access). Default is 'yes' for methods 0 (UsrPwd), superseeded
+#           by the related entries in '.rootrc'.
 #           'reuse' will be af no advantage and 'prompt' is not allowed for
 #           security reasons. The format for the default info depends on
 #           the method:
@@ -123,15 +103,6 @@
 #              Method                       Format info
 #
 #              UsrPwd                       us:<username> cp:<crypt_option>
-#              SRP                          us:<username> 
-#              Kerberos                     pp:<principal> us:<username>(<principal>) 
-#              Globus                       cd:<user_certkey_dir> 
-#                                           cf:<usercert_file>
-#                                           kf:<userkey_file>
-#                                           ad:<authorities_dir>
-#              SSH                          us:<username>
-#              UidGid
-#
 #
 #           The key 'us' allows to specify a target username different from
 #           the local username (which is the default target username); the 
@@ -143,82 +114,23 @@
 #                   or not (slighty faster), values are 'yes' or '1' for YES,
 #                   'no' or '0' for NO (case sensitive);
 #
-#
-#           For Kerberos, the default principal is the one associated to
-#           the local user in the Kerberos realm. A different principal
-#           can be specified via the key 'pp', access to which must be granted
-#           remotely via .k5login . For backward compatibility, the principal 
-#           can also be specified via the 'us' key (it must be in its full 
-#           form <username>@<KERBEROS.REALM>, otherwise the string pointed by
-#           'us' is interpreted as target username).
-#
-#           The keys for Globus allow to specify only partial changes of 
-#           the defaults:
-#              'cd' defines the directory containing the user certificate
-#                   and private key files;
-#              'cf' defines the user certificate file
-#              'kf' defines the user private key file
-#              'ad' defines the directory containing credentials for
-#                   recognized Certificate Authorities
-#                   (the CA signing the remote host certificate must have
-#                   an entry here)
-#           All these files and directories can be specified as absolute
-#           paths (starting with '/') or as relative to the getenv("HOME")
-#           directory (starting with '~/') or relative to the local '.globus'
-#           directory. Defaults are:
-#              cd:~/.globus
-#              cf:usercert.pem
-#              kf:userkey.pem
-#              ad:/etc/grid-security/certificates
-#
-#           NB: for all the mentioned keys, there should be NO space between
-#           the key and the value, e.g. 'us: qwerty' will result in 
-#           <username>=""
-#
 #           Example of valid 'method' lines:
 #
-#              default list 4 0 1
-#              default    method  ssh pt:yes us:qwerty
-#              default    method  3 pt:0 
+#              default list 0
 #              default user asdfgh  method  usrpwd pt:1 ru:no 
-#              lxplus*.cern.ch  method  3 pt:no  ad:certificates
-#              pcepsft43.cern.ch  user poiuyt method globus pt:no \
-#                                 cd:~/CA/HubCA/poiuyt ad:certificates
-#              include    local/pceple19.rootauthrc
+#              include local/myrootauthrc
 #              include $ROOTSYS/etc/system.rootauthrc
-#              localhost:proofd list  uidgid 
-#              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
 #            
 #           The first line states that, unless differently specified, 
-#           the first method to be tried for autentication is SSH,
-#           followed in case of failure by UsrPwd and SRP. 
-#           The second line specifies that when a SSH authentication is
-#           attempted, the user will be prompted for the remote username,
-#           with 'qwerty' as default. The third line states that for 
-#           Globus the user will not be prompted and the credentials
-#           and related files will be looked for in the default places.
-#           The fourth line specifies that, for UsrPwd authentication, user
+#           the first method to be tried for autentication is UsrPwd.
+#           The second line specifies that, for UsrPwd authentication, user
 #           'asdfgh' will get a prompt with default username 'asdfgh' and
 #           that a successful authentication will not be reused
-#           The fifth line tells that for Globus to lxplus, the user 
-#           will still not be prompted, but the credentials for the 
-#           CA signing the remote certificate will be looked
-#           for in ~/.globus/certificates.
-#           The sixth line tells that for Globus authentication on 
-#           pcepsft43 of user poiuyt, the usercert.pem and userkey.pem
-#           files are looked for in directory ~/CA/HubCA/poiuyt, 
-#           and the credentials for the CA signing the remote certificate
-#           in ~/.globus/certificates.
-#           The seventh directive includes the content of the file 
-#           pceple19.rootauthrc located in the subdirectory local of the
+#           The third directive includes the content of the file 
+#           myrootauthrc located in the subdirectory local of the
 #           directory where the intercative root session was started. 
-#           The eight directive includes the content of the system 
+#           The fourth directive includes the content of the system 
 #           defaults.
-#           The ninth line states that when accessing slaves on the local
-#           host, the uidgid method should be used.
-#           The tenth line states that the krb5 method should be used for
-#           accessing account 'asdfgh' at pcepsft43.cern.ch, with kerberos
-#           credentials for principal adskrb@LOC.KRB.REALM .
 #
 #    - Finally, also supported are lines of the form:
 #
@@ -236,4 +148,4 @@
 #      from the rest of the .rootauthrc file is sent to slaves via the master
 #            
 #
-default list usrpwd ssh @havesrp@ @havekrb5@ @haveglobus@ uidgid 
+default list usrpwd

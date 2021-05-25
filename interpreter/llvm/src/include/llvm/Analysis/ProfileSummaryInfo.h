@@ -1,9 +1,8 @@
 //===- llvm/Analysis/ProfileSummaryInfo.h - profile summary ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -31,7 +30,7 @@ class BasicBlock;
 class BlockFrequencyInfo;
 class CallSite;
 class ProfileSummary;
-/// \brief Analysis providing profile information.
+/// Analysis providing profile information.
 ///
 /// This is an immutable analysis pass that provides ability to query global
 /// (program-level) profile information. The main APIs are isHotCount and
@@ -49,25 +48,35 @@ private:
   void computeThresholds();
   // Count thresholds to answer isHotCount and isColdCount queries.
   Optional<uint64_t> HotCountThreshold, ColdCountThreshold;
+  // True if the working set size of the code is considered huge,
+  // because the number of profile counts required to reach the hot
+  // percentile is above a huge threshold.
+  Optional<bool> HasHugeWorkingSetSize;
 
 public:
   ProfileSummaryInfo(Module &M) : M(M) {}
   ProfileSummaryInfo(ProfileSummaryInfo &&Arg)
       : M(Arg.M), Summary(std::move(Arg.Summary)) {}
 
-  /// \brief Returns true if profile summary is available.
+  /// Returns true if profile summary is available.
   bool hasProfileSummary() { return computeSummary(); }
 
-  /// \brief Returns true if module \c M has sample profile.
+  /// Returns true if module \c M has sample profile.
   bool hasSampleProfile() {
     return hasProfileSummary() &&
            Summary->getKind() == ProfileSummary::PSK_Sample;
   }
 
-  /// \brief Returns true if module \c M has instrumentation profile.
+  /// Returns true if module \c M has instrumentation profile.
   bool hasInstrumentationProfile() {
     return hasProfileSummary() &&
            Summary->getKind() == ProfileSummary::PSK_Instr;
+  }
+
+  /// Returns true if module \c M has context sensitive instrumentation profile.
+  bool hasCSInstrumentationProfile() {
+    return hasProfileSummary() &&
+           Summary->getKind() == ProfileSummary::PSK_CSInstr;
   }
 
   /// Handle the invalidation of this information.
@@ -83,27 +92,44 @@ public:
 
   /// Returns the profile count for \p CallInst.
   Optional<uint64_t> getProfileCount(const Instruction *CallInst,
-                                     BlockFrequencyInfo *BFI);
-  /// \brief Returns true if \p F has hot function entry.
+                                     BlockFrequencyInfo *BFI,
+                                     bool AllowSynthetic = false);
+  /// Returns true if the working set size of the code is considered huge.
+  bool hasHugeWorkingSetSize();
+  /// Returns true if \p F has hot function entry.
   bool isFunctionEntryHot(const Function *F);
-  /// Returns true if \p F has hot function entry or hot call edge.
-  bool isFunctionHotInCallGraph(const Function *F);
-  /// \brief Returns true if \p F has cold function entry.
+  /// Returns true if \p F contains hot code.
+  bool isFunctionHotInCallGraph(const Function *F, BlockFrequencyInfo &BFI);
+  /// Returns true if \p F has cold function entry.
   bool isFunctionEntryCold(const Function *F);
-  /// Returns true if \p F has cold function entry or cold call edge.
-  bool isFunctionColdInCallGraph(const Function *F);
-  /// \brief Returns true if \p F is a hot function.
+  /// Returns true if \p F contains only cold code.
+  bool isFunctionColdInCallGraph(const Function *F, BlockFrequencyInfo &BFI);
+  /// Returns true if count \p C is considered hot.
   bool isHotCount(uint64_t C);
-  /// \brief Returns true if count \p C is considered cold.
+  /// Returns true if count \p C is considered cold.
   bool isColdCount(uint64_t C);
-  /// \brief Returns true if BasicBlock \p B is considered hot.
-  bool isHotBB(const BasicBlock *B, BlockFrequencyInfo *BFI);
-  /// \brief Returns true if BasicBlock \p B is considered cold.
-  bool isColdBB(const BasicBlock *B, BlockFrequencyInfo *BFI);
-  /// \brief Returns true if CallSite \p CS is considered hot.
+  /// Returns true if BasicBlock \p BB is considered hot.
+  bool isHotBlock(const BasicBlock *BB, BlockFrequencyInfo *BFI);
+  /// Returns true if BasicBlock \p BB is considered cold.
+  bool isColdBlock(const BasicBlock *BB, BlockFrequencyInfo *BFI);
+  /// Returns true if CallSite \p CS is considered hot.
   bool isHotCallSite(const CallSite &CS, BlockFrequencyInfo *BFI);
-  /// \brief Returns true if Callsite \p CS is considered cold.
+  /// Returns true if Callsite \p CS is considered cold.
   bool isColdCallSite(const CallSite &CS, BlockFrequencyInfo *BFI);
+  /// Returns HotCountThreshold if set. Recompute HotCountThreshold
+  /// if not set.
+  uint64_t getOrCompHotCountThreshold();
+  /// Returns ColdCountThreshold if set. Recompute HotCountThreshold
+  /// if not set.
+  uint64_t getOrCompColdCountThreshold();
+  /// Returns HotCountThreshold if set.
+  uint64_t getHotCountThreshold() {
+    return HotCountThreshold ? HotCountThreshold.getValue() : 0;
+  }
+  /// Returns ColdCountThreshold if set.
+  uint64_t getColdCountThreshold() {
+    return ColdCountThreshold ? ColdCountThreshold.getValue() : 0;
+  }
 };
 
 /// An analysis pass based on legacy pass manager to deliver ProfileSummaryInfo.
@@ -114,9 +140,8 @@ public:
   static char ID;
   ProfileSummaryInfoWrapperPass();
 
-  ProfileSummaryInfo *getPSI() {
-    return &*PSI;
-  }
+  ProfileSummaryInfo &getPSI() { return *PSI; }
+  const ProfileSummaryInfo &getPSI() const { return *PSI; }
 
   bool doInitialization(Module &M) override;
   bool doFinalization(Module &M) override;
@@ -138,7 +163,7 @@ private:
   static AnalysisKey Key;
 };
 
-/// \brief Printer pass that uses \c ProfileSummaryAnalysis.
+/// Printer pass that uses \c ProfileSummaryAnalysis.
 class ProfileSummaryPrinterPass
     : public PassInfoMixin<ProfileSummaryPrinterPass> {
   raw_ostream &OS;

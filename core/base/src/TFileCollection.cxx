@@ -26,11 +26,15 @@ collection of TFile names.
 #include "TObjString.h"
 #include "TUri.h"
 #include "TUrl.h"
+#include "TUUID.h"
+#include "TMD5.h"
 #include "TSystem.h"
-#include "Riostream.h"
 #include "TRegexp.h"
 #include "TPRegexp.h"
 #include "TError.h"
+
+#include <iostream>
+#include <fstream>
 
 
 ClassImp(TFileCollection);
@@ -166,7 +170,7 @@ Int_t TFileCollection::Add(const char *dir)
 
    FileStat_t st;
    FileStat_t tmp;
-   TString baseDir = gSystem->DirName(dir);
+   TString baseDir = gSystem->GetDirName(dir);
    // if the 'dir' or its base dir exist
    if (gSystem->GetPathInfo(dir, st) == 0 ||
        gSystem->GetPathInfo(baseDir, tmp) == 0) {
@@ -180,11 +184,11 @@ Int_t TFileCollection::Add(const char *dir)
          Update();
          return nf;
       } else {
-         void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(dir));
+         void *dataSetDir = gSystem->OpenDirectory(gSystem->GetDirName(dir).Data());
          if (!dataSetDir) {
             // directory cannot be opened
             Error("Add", "directory %s cannot be opened",
-                  gSystem->DirName(dir));
+                  gSystem->GetDirName(dir).Data());
          } else {
             const char *ent;
             TString filesExp(TString("^") + gSystem->BaseName(dir) + "$");
@@ -194,7 +198,7 @@ Int_t TFileCollection::Add(const char *dir)
                TString entryString(ent);
                if (entryString.Index(rg) != kNPOS) {
                   // matching dir entry
-                  TString fn = gSystem->DirName(dir);
+                  TString fn = gSystem->GetDirName(dir);
                   fn += "/";
                   fn += ent;
                   gSystem->GetPathInfo(fn, st);

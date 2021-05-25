@@ -11,8 +11,9 @@
 
 #include <stdlib.h>
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
@@ -138,6 +139,20 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t py1 = gPad->YtoAbsPixel(fY1);
    Int_t px2 = gPad->XtoAbsPixel(fX2);
    Int_t py2 = gPad->YtoAbsPixel(fY2);
+
+   Bool_t isBox = !(InheritsFrom("TPave") || InheritsFrom("TWbox"));
+
+   if (isBox) {
+      if (gPad->GetLogx()) {
+        if (fX1>0) px1 = gPad->XtoAbsPixel(TMath::Log10(fX1));
+        if (fX2>0) px2 = gPad->XtoAbsPixel(TMath::Log10(fX2));
+      }
+      if (gPad->GetLogy()) {
+        if (fY1>0) py1 = gPad->YtoAbsPixel(TMath::Log10(fY1));
+        if (fY2>0) py2 = gPad->YtoAbsPixel(TMath::Log10(fY2));
+      }
+   }
+
    if (px1 < px2) {pxl = px1; pxt = px2;}
    else           {pxl = px2; pxt = px1;}
    if (py1 < py2) {pyl = py1; pyt = py2;}
@@ -220,6 +235,8 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (TestBit(kCannotMove)) return;
 
+   Bool_t isBox = !(InheritsFrom("TPave") || InheritsFrom("TWbox"));
+
    const Int_t kMaxDiff = 7;
    const Int_t kMinSize = 20;
 
@@ -267,6 +284,17 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       py1 = gPad->YtoAbsPixel(GetY1());
       px2 = gPad->XtoAbsPixel(GetX2());
       py2 = gPad->YtoAbsPixel(GetY2());
+
+      if (isBox) {
+         if (gPad->GetLogx()) {
+           if (fX1>0) px1 = gPad->XtoAbsPixel(TMath::Log10(fX1));
+           if (fX2>0) px2 = gPad->XtoAbsPixel(TMath::Log10(fX2));
+         }
+         if (gPad->GetLogy()) {
+           if (fY1>0) py1 = gPad->YtoAbsPixel(TMath::Log10(fY1));
+           if (fY2>0) py2 = gPad->YtoAbsPixel(TMath::Log10(fY2));
+         }
+      }
 
       if (px1 < px2) {
          pxl = px1;
@@ -486,6 +514,18 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fX2 = gPad->AbsPixeltoX(px2);
             fY2 = gPad->AbsPixeltoY(py2);
          }
+
+         if (isBox) {
+            if (gPad->GetLogx()) {
+               fX1 = TMath::Power(10,fX1);
+               fX2 = TMath::Power(10,fX2);
+            }
+            if (gPad->GetLogy()) {
+               fY1 = TMath::Power(10,fY1);
+               fY2 = TMath::Power(10,fY2);
+            }
+         }
+
          if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);
          if (pTop) gPad->ShowGuidelines(this, event, 't', true);
          if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
@@ -549,6 +589,16 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fY2 = gPad->AbsPixeltoY(py2);
          }
 
+         if (isBox) {
+            if (gPad->GetLogx()) {
+               fX1 = TMath::Power(10,fX1);
+               fX2 = TMath::Power(10,fX2);
+            }
+            if (gPad->GetLogy()) {
+               fY1 = TMath::Power(10,fY1);
+               fY2 = TMath::Power(10,fY2);
+            }
+         }
          if (pINSIDE) {
             // if it was not a pad that was moved then it must have been
             // a box or something like that so we have to redraw the pad
@@ -618,7 +668,7 @@ void TBox::ls(Option_t *) const
 
 void TBox::Paint(Option_t *option)
 {
-   PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
+   if(gPad) PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,6 +801,7 @@ Rectangle_t TBox::GetBBox()
 TPoint TBox::GetBBoxCenter()
 {
    TPoint p;
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
    return(p);
@@ -761,6 +812,7 @@ TPoint TBox::GetBBoxCenter()
 
 void TBox::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fX2>fX1) {
@@ -786,6 +838,8 @@ void TBox::SetBBoxCenter(const TPoint &p)
 
 void TBox::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
+   if (x<0) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    if (fX2>fX1) {
       this->SetX1(gPad->PixeltoX(x)-0.5*w);
@@ -802,6 +856,8 @@ void TBox::SetBBoxCenterX(const Int_t x)
 
 void TBox::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
+   if (y<0) return;
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fY2>fY1) {
       this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
@@ -819,6 +875,8 @@ void TBox::SetBBoxCenterY(const Int_t y)
 
 void TBox::SetBBoxX1(const Int_t x)
 {
+   if (x<0) return;
+   if (!gPad) return;
    fX1 = gPad->PixeltoX(x);
 }
 
@@ -828,6 +886,8 @@ void TBox::SetBBoxX1(const Int_t x)
 
 void TBox::SetBBoxX2(const Int_t x)
 {
+   if (x<0) return;
+   if (!gPad) return;
    fX2 = gPad->PixeltoX(x);
 }
 
@@ -836,6 +896,8 @@ void TBox::SetBBoxX2(const Int_t x)
 
 void TBox::SetBBoxY1(const Int_t y)
 {
+   if (y<0) return;
+   if (!gPad) return;
    fY2 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }
 
@@ -845,5 +907,7 @@ void TBox::SetBBoxY1(const Int_t y)
 
 void TBox::SetBBoxY2(const Int_t y)
 {
+   if (y<0) return;
+   if (!gPad) return;
    fY1 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }

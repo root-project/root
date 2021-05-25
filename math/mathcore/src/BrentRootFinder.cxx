@@ -20,7 +20,7 @@ namespace Math {
 
 
 static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the root
-static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
+static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeted
 
    BrentRootFinder::BrentRootFinder() : fFunction(0),
                                         fLogScan(false), fNIter(0),
@@ -70,7 +70,7 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
    }
 
    if (fLogScan && fXMin <= 0) {
-      MATH_ERROR_MSG("BrentRootFinder::Solve", "xmin is < 0 and log scan is set - disable it");
+      MATH_ERROR_MSG("BrentRootFinder::Solve", "xmin is <=0 and log scan is set - disable it");
       fLogScan = false;
    }
 
@@ -81,6 +81,7 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
 
    double xmin = fXMin;
    double xmax = fXMax;
+   fRoot = 0; 
 
    int maxIter1 = gDefaultNSearch;  // external loop (number of search )
    int maxIter2 = maxIter;          // internal loop inside the Brent algorithm
@@ -95,6 +96,11 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
          return false;
       }
       double x = BrentMethods::MinimStep(fFunction, 4, xmin, xmax, fy, fNpx,fLogScan);
+      if (xmin > xmax) {
+         // interval does not contain minimum - return
+         MATH_ERROR_MSG("BrentRootFinder", "Interval does not contain a root");
+         return false; 
+      }
       x = BrentMethods::MinimBrent(fFunction, 4, xmin, xmax, x, fy, ok, niter2, absTol, relTol, maxIter2);
       fNIter += niter2;  // count the total number of iterations
       niter1++;

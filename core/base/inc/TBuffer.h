@@ -21,13 +21,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TDataType.h"
 #include "TObject.h"
+#include "TClass.h"
+#include "Bytes.h"
 
 #include <vector>
+#include <string>
 
 class TVirtualStreamerInfo;
 class TStreamerElement;
-class TClass;
 class TString;
 class TProcessID;
 class TClonesArray;
@@ -57,8 +60,8 @@ protected:
      fBufCur(0), fBufMax(0), fParent(0), fReAllocFunc(0), fCacheStack(0,(TVirtualArray*)0) {}
 
    // TBuffer objects cannot be copied or assigned
-   TBuffer(const TBuffer &);           // not implemented
-   void operator=(const TBuffer &);    // not implemented
+   TBuffer(const TBuffer &) = delete;
+   void operator=(const TBuffer &) = delete;
 
    Int_t Read(const char *name) { return TObject::Read(name); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
@@ -91,11 +94,13 @@ public:
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }
+   char    *GetCurrent() const { return fBufCur; }
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = 0; }
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
    void     Expand(Int_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
    void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
+   Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
@@ -386,14 +391,14 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // would not be sufficient to pass the information 'which class do we want'
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
-   TClass *cl = TBuffer::GetClass(typeid(Tmpl));
+   auto cl = TClass::GetClass<Tmpl>();
    obj = (Tmpl *) ( (void*) buf.ReadObjectAny(cl) );
    return buf;
 }
 
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
 {
-   TClass *cl = (obj) ? TBuffer::GetClass(typeid(*obj)) : 0;
+   auto cl = (obj) ? TClass::GetClass<Tmpl>() : nullptr;
    buf.WriteObjectAny(obj, cl);
    return buf;
 }
@@ -402,16 +407,10 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
 #endif
 
-#if defined(R__TEMPLATE_OVERLOAD_BUG)
-template <>
-#endif
-inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
-   { buf.WriteObjectAny(obj, TObject::Class()); return buf; }
-
 template <class T>
 inline Int_t TBuffer::WriteObject(const T *objptr, Bool_t cacheReuse)
 {
-   TClass *cl = (objptr) ? TBuffer::GetClass(typeid(T)) : 0;
+   auto cl = (objptr) ? TClass::GetClass<T>() : nullptr;
    return WriteObjectAny(objptr, cl, cacheReuse);
 }
 

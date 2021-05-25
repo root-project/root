@@ -1,0 +1,71 @@
+<!--  this file used for display different panels in ROOT7 -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>ROOT7 web panel</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
+   </head>
+
+   <style>
+      html { height: 100%; }
+      body { min-height: 100%; margin: 0; overflow: hidden }
+      #PanelDiv {
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         right: 0;
+         padding: 1
+      }
+   </style>
+
+   <body>
+      <div id="PanelDiv">
+         loading scripts...
+      </div>
+   </body>
+
+   <script type='text/javascript'>
+
+      JSROOT.connectWebWindow({
+         prereq_logdiv: "PanelDiv",
+         // openui5src: "jsroot",
+         // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
+         // openui5libs: "sap.ui.core, sap.ui.layout, sap.m",
+         first_recv: "SHOWPANEL:",
+         prereq2: "openui5" // components which can be loaded during connection establishing
+      }).then(handle => {
+
+         if (!handle || !sap) return false;
+
+         let viewName = handle.first_msg;
+         if (!viewName) return false;
+
+         if ((viewName.indexOf("rootui5.") !== 0) && (viewName.indexOf("jsroot.") !== 0) && (viewName.indexOf("sap.") !== 0)) {
+            let p = viewName.indexOf(".");
+            if ((p > 1) && (p < viewName.length - 1)) {
+               let tgtpath = "/currentdir/";
+               let pp = JSROOT.source_dir.indexOf("/jsrootsys/");
+               if (pp > 0) tgtpath = JSROOT.source_dir.substr(0,pp) + "currentdir/";
+               let _paths = {};
+               _paths[viewName.substr(0,p)] = tgtpath;
+               console.log('Register module path', viewName.substr(0,p), ' as ', tgtpath);
+               sap.ui.loader.config({ paths: _paths });
+            }
+         }
+
+         sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+            XMLView.create({
+               id: "TopPanelId",
+               viewName: viewName,
+               viewData: { handle: handle }
+            }).then(oView => oView.placeAt("PanelDiv"));
+
+         });
+
+      });
+
+   </script>
+
+</html>

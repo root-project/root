@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>ROOT RBrowser</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
+      <link rel="stylesheet" type="text/css" href="rootui5sys/browser/style.css">
+   </head>
+
+   <body>
+      <div id="BrowserDiv">
+         loading scripts...
+      </div>
+
+      <script type='text/javascript'>
+
+        JSROOT.connectWebWindow({
+           prereq: "openui5",
+//           openui5src: "jsroot",    // use JSROOT provided package, default
+//           openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor, sap.ui.commons, sap.tnt", // customize openui5 libs later
+           prereq_logdiv: "BrowserDiv"
+        }).then(handle => {
+            sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+                XMLView.create({
+                   id: "TopBrowserId",
+                   viewName: "rootui5.browser.view.Browser",
+                   viewData: { conn_handle: handle }
+                }).then(oView => oView.placeAt("BrowserDiv"));
+            });
+        });
+
+      </script>
+
+   </body>
+
+</html>

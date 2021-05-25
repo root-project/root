@@ -1,15 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #106
-## Adding boxes with parameters, to RooPlots.
-## Decorating RooPlots with arrows, etc...
+## Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
 ##
 ## \macro_code
 ##
-## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -30,7 +26,7 @@ data = gauss.generate(ROOT.RooArgSet(x), 1000)
 # Fit pdf to data
 gauss.fitTo(data)
 
-# Plot p.d.f. and data
+# Plot pdf and data
 # -------------------------------------
 
 # Overlay projection of gauss on data

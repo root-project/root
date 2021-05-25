@@ -12,42 +12,42 @@
 /** \class RooStats::ProfileLikelihoodCalculator
     \ingroup Roostats
 
-ProfileLikelihoodCalculator is a concrete implementation of CombinedCalculator
-(the interface class for a tools which can produce both RooStats HypoTestResults
-and ConfIntervals). The tool uses the profile likelihood ratio as a test statistic,
-and assumes that Wilks' theorem is valid. Wilks' theorem states that -2* log
-(profile likelihood ratio) is asymptotically distributed as a chi^2 distribution
-with N-dof, where N is the number of degrees of freedom. Thus, p-values can be
-constructed and the profile likelihood ratio can be used to construct a
+The ProfileLikelihoodCalculator is a concrete implementation of CombinedCalculator
+(the interface class for tools which can produce both a RooStats HypoTestResult
+and ConfInterval). The tool uses the profile likelihood ratio as a test statistic,
+and assumes that Wilks' theorem is valid. Wilks' theorem states that \f$ -2 \cdot \ln(\lambda) \f$
+(profile likelihood ratio) is asymptotically distributed as a \f$ \chi^2 \f$ distribution
+with \f$ N \f$ degrees of freedom. Thus, \f$p\f$-values can be
+constructed, and the profile likelihood ratio can be used to construct a
 LikelihoodInterval. (In the future, this class could be extended to use toy
 Monte Carlo to calibrate the distribution of the test statistic).
 
 Usage: It uses the interface of the CombinedCalculator, so that it can be
 configured by specifying:
 
-  - a model common model (eg. a family of specific models which includes both
-    the null and alternate),
-  - a data set,
-  - a set of parameters of interest. The nuisance parameters will be all other
-    parameters of the model
-  - a set of parameters of which specify the null hypothesis (including values
-    and const/non-const status)
+  - A model common model (*e.g.* a family of specific models, which includes both
+    the null and alternate)
+  - A data set
+  - A set of parameters of interest. The nuisance parameters will be all other
+    parameters of the model.
+  - A set of parameters which specify the null hypothesis (including values
+    and const/non-const status).
 
 The interface allows one to pass the model, data, and parameters either directly
 or via a ModelConfig class. The alternate hypothesis leaves the parameter free
-to take any value other than those specified by the null hypotesis. There is
+to take any value other than those specified by the null hypothesis. There is
 therefore no need to specify the alternate parameters.
 
-After configuring the calculator, one only needs to ask GetHypoTest() (which
-will return a HypoTestResult pointer) or GetInterval() (which will return an
+After configuring the calculator, one only needs to call GetHypoTest() (which
+will return a HypoTestResult pointer) or GetInterval() (which will return a
 ConfInterval pointer).
 
 This calculator can work with both one-dimensional intervals or multi-
-dimensional ones (contours)
+dimensional ones (contours).
 
 Note that for hypothesis tests, it is often better to use the
-RooStats::AsymptoricCalculator class, which can compute in addition the expected
-p-value using an Asimov data set.
+AsymptoticCalculator, which can compute in addition the expected
+\f$p\f$-value using an Asimov data set.
 
 */
 
@@ -136,8 +136,9 @@ RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
    if (!constrainedParams) return 0;
    RemoveConstantParameters(constrainedParams);
 
-
-   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs), Offset(RooStats::IsNLLOffset() ) );
+   const auto& config = GetGlobalRooStatsConfig();
+   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
+       RooFit::Offset(config.useLikelihoodOffset) );
 
    // check if global fit has been already done
    if (fFitResult && fGlobalFitDone) {
@@ -176,11 +177,14 @@ RooFitResult * ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
    oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoMinimizeNLL - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
    // do global fit and store fit result for further use
 
+   const auto& config = GetGlobalRooStatsConfig();
+
    RooMinimizer minim(*nll);
    minim.setStrategy(strategy);
    minim.setEps(tolerance);
    minim.setPrintLevel(level);
    minim.optimizeConst(2); // to optimize likelihood calculations
+   minim.setEvalErrorWall(config.useEvalErrorWall);
 
    int status = -1;
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
@@ -214,7 +218,7 @@ RooFitResult * ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main interface to get a RooStats::ConfInterval.
-/// It constructs a profile likelihood ratio and uses that to construct a RooStats::LikelihoodInterval.
+/// It constructs a profile likelihood ratio, and uses that to construct a RooStats::LikelihoodInterval.
 
 LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
 //    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
@@ -287,10 +291,12 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Main interface to get a HypoTestResult.
 /// It does two fits:
-/// the first lets the null parameters float, so it's a maximum likelihood estimate
-/// the second is to the null (fixing null parameters to their specified values): eg. a conditional maximum likelihood
-/// the ratio of the likelihood at the conditional MLE to the MLE is the profile likelihood ratio.
-/// Wilks' theorem is used to get p-values
+/// 1. The first lets the null parameters float, so it's a maximum likelihood estimate.
+/// 2. The second is to the null model (fixing null parameters to their specified values): *e.g.* a conditional maximum likelihood.
+/// Since not all parameters are floating, this likelihood will be lower than the unconditional model.
+///
+/// The ratio of the likelihood obtained from the conditional MLE to the MLE is the profile likelihood ratio.
+/// Wilks' theorem is used to get \f$p\f$-values.
 
 HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 //    RooAbsPdf* pdf   = fWS->pdf(fPdfName);

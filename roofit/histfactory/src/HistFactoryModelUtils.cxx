@@ -1,3 +1,6 @@
+/**
+ *  \ingroup HistFactory 
+ */
 
 // A set of utils for navegating HistFactory models
 #include <stdexcept>    
@@ -89,7 +92,7 @@ namespace HistFactory{
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
             cat->setBin(ic);
-            FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getLabel()), obsTerms, constraints);
+            FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getCurrentLabel()), obsTerms, constraints);
          }
          delete cat;
       } else if (pdf.dependsOn(observables)) {
@@ -240,6 +243,11 @@ namespace HistFactory{
     }
     delete obsIter;
 
+    if (!cat) {
+       std::cerr <<"Category not found"<< std::endl;
+       return;
+    }
+
     // split dataset
     TList* dataByCategory = data->split(*cat);
     if(verbose) dataByCategory->Print();
@@ -248,18 +256,16 @@ namespace HistFactory{
 
     // loop over channels
     RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
-    TIterator* iter = channelCat->typeIterator() ;
-    RooCatType* tt = NULL;
-    while((tt=(RooCatType*) iter->Next())) {
+    for (const auto& nameIdx : *channelCat) {
 
       // Get pdf associated with state from simpdf
-      RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
+      RooAbsPdf* pdftmp = simPdf->getPdf(nameIdx.first.c_str());
 
       std::string ChannelName = pdftmp->GetName(); //tt->GetName();
       if(verbose) std::cout << "Getting data for channel: " << ChannelName << std::endl;
       ChannelBinDataMap[ ChannelName ] = std::vector<double>();
 
-      RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject(tt->GetName());
+      RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject(nameIdx.first.c_str());
       if(verbose) dataForChan->Print();
 
       // Generate observables defined by the pdf associated with this state
@@ -288,10 +294,9 @@ namespace HistFactory{
       delete histForN;
     
     } // End Loop Over Categories
-    
-    delete iter;
-    return;
 
+    dataByCategory->Delete();
+    delete dataByCategory;
   }
 
 
@@ -347,9 +352,9 @@ namespace HistFactory{
     // Find the "data" of the poisson term
     // This is the nominal value
     bool FoundNomMean=false;
-    TIterator* iter_pois = constraintTerm->serverIterator(); //constraint_args
+    TIter iter_pois = constraintTerm->serverIterator(); //constraint_args
     RooAbsArg* term_pois ;
-    while((term_pois=(RooAbsArg*)iter_pois->Next())) {
+    while((term_pois=(RooAbsArg*)iter_pois.Next())) {
       std::string serverName = term_pois->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("nom_")!=std::string::npos ) {
@@ -365,15 +370,14 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found Poisson 'data' term: " << pois_nom->GetName() << std::endl;
     }
-    delete iter_pois;
 
     // Taking the constraint term (a Poisson), find
     // the "mean" which is the product: gamma*tau
     // Then, from that mean, find tau
-    TIterator* iter_constr = constraintTerm->serverIterator(); //constraint_args
+    TIter iter_constr = constraintTerm->serverIterator(); //constraint_args
     RooAbsArg* pois_mean_arg=NULL;
     bool FoundPoissonMean = false;
-    while(( pois_mean_arg = (RooAbsArg*) iter_constr->Next() )) {
+    while(( pois_mean_arg = (RooAbsArg*) iter_constr.Next() )) {
       std::string serverName = pois_mean_arg->GetName();
       if( pois_mean_arg->dependsOn( *gamma_stat ) ) {
 	FoundPoissonMean=true;
@@ -390,13 +394,11 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found Poisson 'mean' term: " << pois_mean_arg->GetName() << std::endl;
     }
-    delete iter_constr;
 
-
-    TIterator* iter_product = pois_mean_arg->serverIterator(); //constraint_args
+    TIter iter_product = pois_mean_arg->serverIterator(); //constraint_args
     RooAbsArg* term_in_product ;
     bool FoundTau=false;
-    while((term_in_product=(RooAbsArg*)iter_product->Next())) {
+    while((term_in_product=(RooAbsArg*)iter_product.Next())) {
       std::string serverName = term_in_product->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("_tau")!=std::string::npos ) {
@@ -412,7 +414,6 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found Poisson 'tau' term: " << tau->GetName() << std::endl;
     }
-    delete iter_product;
 
     return 0;
 

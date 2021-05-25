@@ -76,8 +76,6 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TList.h"
-#include "TBrowser.h"
-#include "TObjArray.h"
 #include "TKeyXML.h"
 #include "TObjArray.h"
 #include "TArrayC.h"
@@ -87,17 +85,10 @@
 #include "TError.h"
 #include "TClass.h"
 #include "TVirtualMutex.h"
+#include <ROOT/RMakeUnique.hxx>
 
 ClassImp(TXMLFile);
 
-////////////////////////////////////////////////////////////////////////////////
-/// default TXMLFile constructor
-
-TXMLFile::TXMLFile() : TFile(), TXMLSetup(), fDoc(nullptr), fStreamerInfoNode(nullptr), fXML(nullptr), fKeyCounter(0)
-{
-   SetBit(kBinaryFile, kFALSE);
-   fIOVersion = TXMLFile::Class_Version();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open or creates local XML file with name filename.
@@ -122,12 +113,11 @@ TXMLFile::TXMLFile() : TFile(), TXMLSetup(), fDoc(nullptr), fStreamerInfoNode(nu
 /// TXMLFile does not support TTree objects
 
 TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, Int_t compression)
-   : TFile(), TXMLSetup(), fDoc(nullptr), fStreamerInfoNode(nullptr), fXML(nullptr), fKeyCounter(0)
 {
-   fXML = new TXMLEngine();
-
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
+
+   fXML = std::make_unique<TXMLEngine>();
 
    if (filename && !strncmp(filename, "xml:", 4))
       filename += 4;
@@ -139,7 +129,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
 
    fD = -1;
    fFile = this;
-   fFree = 0;
+   fFree = nullptr;
    fVersion = gROOT->GetVersionInt(); // ROOT version in integer format
    fUnits = 4;
    fOption = option;
@@ -152,7 +142,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    fClassIndex = 0;
    fSeekInfo = 0;
    fNbytesInfo = 0;
-   fProcessIDs = 0;
+   fProcessIDs = nullptr;
    fNProcessIDs = 0;
    fIOVersion = TXMLFile::Class_Version();
    SetBit(kBinaryFile, kFALSE);
@@ -210,7 +200,6 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    if (recreate) {
       if (!gSystem->AccessPathName(fname, kFileExists))
          gSystem->Unlink(fname);
-      recreate = kFALSE;
       create = kTRUE;
       fOption = "CREATE";
    }
@@ -322,17 +311,17 @@ void TXMLFile::Close(Option_t *option)
 
    if (fDoc) {
       fXML->FreeDoc(fDoc);
-      fDoc = 0;
+      fDoc = nullptr;
    }
 
    if (fClassIndex) {
       delete fClassIndex;
-      fClassIndex = 0;
+      fClassIndex = nullptr;
    }
 
    if (fStreamerInfoNode) {
       fXML->FreeNode(fStreamerInfoNode);
-      fStreamerInfoNode = 0;
+      fStreamerInfoNode = nullptr;
    }
 
    {
@@ -365,18 +354,6 @@ void TXMLFile::Close(Option_t *option)
 TXMLFile::~TXMLFile()
 {
    Close();
-
-   if (fXML != 0) {
-      delete fXML;
-      fXML = 0;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// make private to exclude copy operator
-
-void TXMLFile::operator=(const TXMLFile &)
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -384,7 +361,7 @@ void TXMLFile::operator=(const TXMLFile &)
 
 Bool_t TXMLFile::IsOpen() const
 {
-   return fDoc != 0;
+   return fDoc != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -492,13 +469,22 @@ void TXMLFile::SaveToFile()
    if (GetIOVersion() > 1) {
 
       fXML->FreeAttr(fRootNode, xmlio::CreateTm);
-      fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, fDatimeC.AsSQLString());
+      if (TestBit(TFile::kReproducible))
+         fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, TDatime((UInt_t) 1).AsSQLString());
+      else
+         fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, fDatimeC.AsSQLString());
 
       fXML->FreeAttr(fRootNode, xmlio::ModifyTm);
-      fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, fDatimeM.AsSQLString());
+      if (TestBit(TFile::kReproducible))
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, TDatime((UInt_t) 1).AsSQLString());
+      else
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, fDatimeM.AsSQLString());
 
       fXML->FreeAttr(fRootNode, xmlio::ObjectUUID);
-      fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, fUUID.AsString());
+      if (TestBit(TFile::kReproducible))
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, TUUID("00000000-0000-0000-0000-000000000000").AsString());
+      else
+         fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, fUUID.AsString());
 
       fXML->FreeAttr(fRootNode, xmlio::Title);
       if (strlen(GetTitle()) > 0)
@@ -975,7 +961,7 @@ void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces)
 
 Bool_t TXMLFile::AddXmlComment(const char *comment)
 {
-   if (!IsWritable() || !fXML)
+   if (!IsWritable())
       return kFALSE;
 
    return fXML->AddDocComment(fDoc, comment);
@@ -994,7 +980,7 @@ Bool_t TXMLFile::AddXmlComment(const char *comment)
 Bool_t TXMLFile::AddXmlStyleSheet(const char *href, const char *type, const char *title, int alternate,
                                   const char *media, const char *charset)
 {
-   if (!IsWritable() || !fXML)
+   if (!IsWritable())
       return kFALSE;
 
    return fXML->AddDocStyleSheet(fDoc, href, type, title, alternate, media, charset);
@@ -1009,7 +995,7 @@ Bool_t TXMLFile::AddXmlStyleSheet(const char *href, const char *type, const char
 
 Bool_t TXMLFile::AddXmlLine(const char *line)
 {
-   if (!IsWritable() || !fXML)
+   if (!IsWritable())
       return kFALSE;
 
    return fXML->AddDocRawLine(fDoc, line);

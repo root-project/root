@@ -27,7 +27,7 @@ public:
   virtual void Add(TObject* obj, Int_t count) ;
   virtual Bool_t Remove(TObject* obj) ;
   virtual Bool_t RemoveAll(TObject* obj) ;
-  Int_t refCount(TObject* obj) ;
+  Int_t refCount(TObject* obj) const;
   
 protected:  
   ClassDef(RooRefCountList,1) // RooLinkedList with reference counting

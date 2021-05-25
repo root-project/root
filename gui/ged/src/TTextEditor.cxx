@@ -1,3 +1,11 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TTextEditor.h"
 #include "TText.h"
 #include "TGTextEntry.h"
@@ -5,6 +13,14 @@
 #include "TGLabel.h"
 
 ClassImp(TTextEditor);
+
+
+/** \class TTextEditor
+\ingroup ged
+
+Editor for changing TText's and TLatex's attributes.
+
+*/
 
 
 enum ELatexID{

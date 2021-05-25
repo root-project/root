@@ -23,6 +23,7 @@
 #include "TMath.h"
 
 #include <vector>
+#include <string>
 
 namespace ROOT {
 
@@ -192,6 +193,10 @@ public:
    */
    const std::string & MinimizerAlgoType() const { return fMinimizerOpts.MinimizerAlgorithm(); }
 
+   /**
+    * return Minimizer full name (type / algorithm)
+    */
+   std::string MinimizerName() const;
 
    /**
       flag to check if resulting errors are be normalized according to chi2/ndf

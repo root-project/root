@@ -16,8 +16,6 @@
 
 #pragma link C++ enum EErrorType;
 
-
-
 #pragma link C++ class TAxis-;
 #pragma link C++ class TAxisModLab+;
 #pragma link C++ class TBinomialEfficiencyFitter+;
@@ -48,6 +46,7 @@
 #pragma link C++ class TGraph-;
 #pragma link C++ class TGraphErrors-;
 #pragma link C++ class TGraphAsymmErrors-;
+#pragma link C++ class TGraphMultiErrors+;
 #pragma link C++ class TGraphBentErrors+;
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
@@ -68,6 +67,8 @@
 #pragma link C++ class TH2F-;
 #pragma link C++ class TH2Poly+;
 #pragma link C++ class TH2PolyBin+;
+#pragma link C++ class THistRange+;
+#pragma link C++ class TBinIterator+;
 #pragma link C++ class TProfile2Poly+;
 #pragma link C++ class TProfile2PolyBin+;
 #pragma link C++ class TH2S-;
@@ -166,6 +167,7 @@
 #pragma link C++ class TVirtualHistPainter+;
 #pragma link C++ class TVirtualGraphPainter+;
 #pragma link C++ class TVirtualFitter+;
+#pragma link C++ class TVirtualPaveStats+;
 #pragma link C++ class TBackCompFitter+;
 #pragma link C++ class TSVDUnfold+;
 #pragma link C++ class TEfficiency+;
@@ -329,10 +331,7 @@
 #pragma link C++ function ROOT::Fit::FitResult::GetCovarianceMatrix<TMatrixDSym>( TMatrixDSym & );
 #pragma link C++ function ROOT::Fit::FitResult::GetCorrelationMatrix<TMatrixDSym>( TMatrixDSym & );
 
-
-
-
-// for having backward comptibility after new data member in TProfile
+// for having backward compatibility after new data member in TProfile
 #pragma read sourceClass="TProfile" version="[1-5]" targetClass="TProfile" \
   source="" target="fBinSumw2" \
   code="{ fBinSumw2.Reset(); }"
@@ -343,33 +342,6 @@
   source="" target="fBinSumw2" \
   code="{ fBinSumw2.Reset(); }"
 
-
-#ifdef ROOT7_RHist
-
-#pragma link C++ class ROOT::Experimental::RH1F+;
-#pragma link C++ class ROOT::Experimental::RH1D+;
-#pragma link C++ class ROOT::Experimental::RH2F+;
-#pragma link C++ class ROOT::Experimental::RH2D+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImpl<ROOT::Experimental::Detail::RHistData<1,double,vector<double>,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>,ROOT::Experimental::RAxisEquidistant>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImpl<ROOT::Experimental::Detail::RHistData<2,double,vector<double>, ROOT::Experimental::RHistStatContent, ROOT::Experimental::RHistStatUncertainty>, ROOT::Experimental::RAxisEquidistant, ROOT::Experimental::RAxisIrregular>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImplBase<ROOT::Experimental::Detail::RHistData<1,double,vector<double>,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImplBase<ROOT::Experimental::Detail::RHistData<2,double,vector<double>,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>+;
-#pragma link C++ class ROOT::Experimental::RHistStatContent<1,double>+;
-#pragma link C++ class ROOT::Experimental::RHistStatContent<2,double>+;
-#pragma link C++ class ROOT::Experimental::RHistStatContent<3,double>+;
-#pragma link C++ class ROOT::Experimental::RHistStatUncertainty<1,double>+;
-#pragma link C++ class ROOT::Experimental::RHistStatUncertainty<2,double>+;
-#pragma link C++ class ROOT::Experimental::RHistStatUncertainty<3,double>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistData<1,double,vector<double>,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>+;
-#pragma link C++ class ROOT::Experimental::Detail::RHistData<2,double,vector<double>,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>+;
-#pragma link C++ class tuple<ROOT::Experimental::RAxisEquidistant>+;
-#pragma link C++ class tuple<ROOT::Experimental::RAxisEquidistant,ROOT::Experimental::RAxisIrregular>+;
-#pragma link C++ class ROOT::Experimental::RAxisEquidistant+;
-#pragma link C++ class ROOT::Experimental::RAxisIrregular+;
-#pragma link C++ class ROOT::Experimental::RAxisBase+;
-#endif
+#pragma read sourceClass="TF1" targetClass="TF1" version="[10]" source="TF1AbsComposition* fComposition_ptr" target="fComposition" code="{ fComposition.reset(onfile.fComposition_ptr); onfile.fComposition_ptr = nullptr; }"
 
 #endif

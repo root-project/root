@@ -20,22 +20,27 @@
     \ingroup Roofit
 
 Special p.d.f shape that can be used to model the background of
-D*-D0 mass difference distributions
+D*-D0 mass difference distributions. It computes
+
+\f[
+  \mathrm{RooDSTD0}(m \, | \, m_0, A, B, C) =
+    \left(1 - \exp\left(-\frac{m - m_0}{C}\right) \right)
+    \cdot \left(\frac{m}{m_0}\right)^A + B
+    \cdot \left(\frac{m}{m_0} - 1 \right)
+\f]
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-#include "TMath.h"
-
 #include "RooDstD0BG.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooIntegrator1D.h"
 #include "RooAbsFunc.h"
+#include "RooBatchCompute.h"
 
+#include "TMath.h"
+
+#include <cmath>
 using namespace std;
 
 ClassImp(RooDstD0BG);
@@ -72,6 +77,12 @@ Double_t RooDstD0BG::evaluate() const
   Double_t val= (1- exp(-arg/C))* TMath::Power(ratio, A) + B*(ratio-1);
 
   return (val > 0 ? val : 0) ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of D*-D0 mass difference distribution.  
+RooSpan<double> RooDstD0BG::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeDstD0BG(this, evalData, dm->getValues(evalData, normSet), dm0->getValues(evalData, normSet), C->getValues(evalData, normSet), A->getValues(evalData, normSet), B->getValues(evalData, normSet));
 }
 
 

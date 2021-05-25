@@ -16,48 +16,18 @@
  *************************************************************************/
 
 #include "ROOT/RHist.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFitPanel.hxx"
-#include "ROOT/TDirectory.hxx"
+#include "ROOT/RDirectory.hxx"
 
-void fitpanel0() {
-
-  using namespace ROOT::Experimental;
-
-  // Create the histogram.
-  RAxisConfig xaxis(10, 0., 10.);
-  auto pHist = std::make_shared<RH1D>(xaxis);
-
-  // Fill a few points.
-  pHist->Fill(1);
-  pHist->Fill(2);
-  pHist->Fill(2);
-  pHist->Fill(3);
-
-
-  auto panel = std::make_shared<RFitPanel>("FitPanel Title");
-  panel->Show();
-
-  // Register the histogram with ROOT: now it lives even after draw() ends.
-  ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
-
-
-  // Create a canvas to be displayed.
-  // auto canvas = Experimental::RCanvas::Create("Canvas Title");
-  // canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
-  // canvas->Draw(pHist2)->SetLineColor(Experimental::TColor::kBlue);
-
-  // canvas->Show();
-}
+using namespace ROOT::Experimental;
 
 void fitpanel() {
 
-   using namespace ROOT::Experimental;
-
-   // TODO - also keep axis correctly in the help
-   auto xaxis = std::make_shared<RAxisConfig>(10, 0., 10.);
+   RAxisConfig xaxis(10, 0., 10.);
    // Create the histogram.
-   auto pHist = std::make_shared<RH1D>(*xaxis.get());
+   auto pHist = std::make_shared<RH1D>(xaxis);
 
    // Fill a few points.
    pHist->Fill(1);
@@ -66,21 +36,21 @@ void fitpanel() {
    pHist->Fill(3);
 
    auto canvas = RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
+   canvas->Draw(pHist); //->SetLineColor(RColor::kRed);
 
    canvas->Show();
    canvas->Update(); // need to ensure canvas is drawn
 
    auto panel = std::make_shared<RFitPanel>("FitPanel Title");
 
-   ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
-   ROOT::Experimental::TDirectory::Heap().Add("firsthisto", pHist);
-   ROOT::Experimental::TDirectory::Heap().Add("firstaxis", xaxis);
+   RDirectory::Heap().Add("fitpanel", panel);
+   RDirectory::Heap().Add("firsthisto", pHist);
 
    // TODO: how combine there methods together
    // here std::shread_ptr<> on both sides
 
-   panel->UseCanvas(canvas);
+   panel->AssignCanvas(canvas);
+   panel->AssignHistogram(pHist);
 
    canvas->AddPanel(panel);
 }

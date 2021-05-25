@@ -17,17 +17,21 @@
 /** \class RooExponential
     \ingroup Roofit
 
-Exponential p.d.f
+Exponential PDF. It computes
+\f[
+  \mathrm{RooExponential}(x, c) = \mathcal{N} \cdot \exp(c\cdot x),
+\f]
+where \f$ \mathcal{N} \f$ is a normalisation constant that depends on the
+range and values of the arguments.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooExponential.h"
+
 #include "RooRealVar.h"
+#include "RooBatchCompute.h"
+
+
+#include <cmath>
 
 using namespace std;
 
@@ -61,7 +65,8 @@ Double_t RooExponential::evaluate() const{
 
 Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
-  if (matchArgs(allVars,analVars,x)) return 1 ;
+  if (matchArgs(allVars,analVars,x)) return 1;
+  if (matchArgs(allVars,analVars,c)) return 2;
   return 0 ;
 }
 
@@ -69,21 +74,22 @@ Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 
 Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  switch(code) {
-  case 1:
-    {
-      Double_t ret(0) ;
-      if(c == 0.0) {
-   ret = (x.max(rangeName) - x.min(rangeName));
-      } else {
-   ret =  ( exp( c*x.max(rangeName) ) - exp( c*x.min(rangeName) ) )/c;
-      }
+  assert(code == 1 || code ==2);
 
-      //cout << "Int_exp_dx(c=" << c << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
-      return ret ;
-    }
+  auto& constant  = code == 1 ? c : x;
+  auto& integrand = code == 1 ? x : c;
+
+  if (constant == 0.0) {
+    return integrand.max(rangeName) - integrand.min(rangeName);
   }
 
-  assert(0) ;
-  return 0 ;
+  return (exp(constant*integrand.max(rangeName)) - exp(constant*integrand.min(rangeName)))
+      / constant;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Exponential distribution.  
+RooSpan<double> RooExponential::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeExponential(this, evalData, x->getValues(evalData, normSet), c->getValues(evalData, normSet));
+}
+

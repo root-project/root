@@ -520,7 +520,7 @@ utDataSetInfo::utDataSetInfo() :
    histname = "histname";
    histtitle = "histtitle";
    weightexpr = "weightexpr";
-   event = new Event();
+   event = new TMVA::Event();
 
    varinfo = VariableInfo( expression, title,  unit, varcounter, vartype, external, min, max, normalized);
 
@@ -720,11 +720,11 @@ utDataSet::utDataSet() :
    _testSpectatorVec.push_back(25.);
    Float_t  _testWeight      = 3.1415;
    Float_t _testBoostWeight = 0.1234;
-   event0 = new Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
-   event1 = new Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
-   event2 = new Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
-   event3 = new Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
-   event4 = new Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
+   event0 = new TMVA::Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
+   event1 = new TMVA::Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
+   event2 = new TMVA::Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
+   event3 = new TMVA::Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
+   event4 = new TMVA::Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
 
    UInt_t  varcounter = 0;
 
@@ -925,7 +925,7 @@ void utEvent::run()
 
 void utEvent::_testConstructor1()
 {
-   _eventC1 = new Event();
+   _eventC1 = new TMVA::Event();
 
    test_(_eventC1->IsDynamic()         == false);
 
@@ -948,7 +948,7 @@ void utEvent::_testConstructor1()
 
 void utEvent::_testConstructor2()
 {
-   _eventC2 = new Event(*_eventC3);
+   _eventC2 = new TMVA::Event(*_eventC3);
 
    test_(_eventC2->IsDynamic()         == false);
 
@@ -990,7 +990,7 @@ void utEvent::_testConstructor2()
 
 void utEvent::_testConstructor3()
 {
-   _eventC3 = new Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
+   _eventC3 = new TMVA::Event( _testValueVec, _testTargetVec, _testSpectatorVec, _testClassVal, _testWeight, _testBoostWeight);
 
    test_(_eventC3->IsDynamic()         == false);
 
@@ -1031,7 +1031,7 @@ void utEvent::_testConstructor3()
 
 void utEvent::_testConstructor4()
 {
-   _eventC4 = new Event( _testValueVec, _testTargetVec, _testClassVal, _testWeight, _testBoostWeight);
+   _eventC4 = new TMVA::Event( _testValueVec, _testTargetVec, _testClassVal, _testWeight, _testBoostWeight);
 
    test_(_eventC4->IsDynamic()         == false);
 
@@ -1063,7 +1063,7 @@ void utEvent::_testConstructor4()
 
 void utEvent::_testConstructor5()
 {
-   _eventC5 = new Event( _testValueVec, _testClassVal, _testWeight, _testBoostWeight);
+   _eventC5 = new TMVA::Event( _testValueVec, _testClassVal, _testWeight, _testBoostWeight);
 
    test_(_eventC5->IsDynamic()         == false);
 
@@ -1088,7 +1088,7 @@ void utEvent::_testConstructor5()
 void utEvent::_testConstructor6()
 {
    const vector<Float_t*>* _constPointerToPointerVec = &_testPointerVec;
-   _eventC6 = new Event( _constPointerToPointerVec, _testNVar);
+   _eventC6 = new TMVA::Event( _constPointerToPointerVec, _testNVar);
 
    // TODO I don't understand what the constructor is for
    // or in what cases it should be used
@@ -2505,6 +2505,7 @@ void RegressionUnitTestWithDeviation::run()
    outputFile->Close();
    delete dataloader; 
    delete factory;
+   delete input;
 
    // reader tests
 
@@ -3051,12 +3052,12 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
 
 #ifdef R__HAS_TMVACPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-                         TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
+                         TMVA::Types::kDL, "DNN CPU", configCpu, 0.85, 0.98)
                      );
 #endif
 #ifdef R__HAS_TMVAGPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-                         TMVA::Types::kDNN, "DNN GPU", configGpu, 0.85, 0.98)
+                         TMVA::Types::kDL, "DNN GPU", configGpu, 0.85, 0.98)
                      );
 #endif
 }

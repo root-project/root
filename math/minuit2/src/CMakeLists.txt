@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 add_subdirectory(math)
 
 set(MINUIT2_HEADERS
@@ -80,8 +86,6 @@ set(MINUIT2_HEADERS
     MnPlot.h
     MnPosDef.h
     MnPrint.h
-    MnRefCountedPointer.h
-    MnReferenceCounter.h
     MnScan.h
     MnSeedGenerator.h
     MnSimplex.h
@@ -154,6 +158,7 @@ set(MINUIT2_SOURCES
     MnPlot.cxx
     MnPosDef.cxx
     MnPrint.cxx
+    MnPrintImpl.cxx
     MnScan.cxx
     MnSeedGenerator.cxx
     MnStrategy.cxx
@@ -208,12 +213,6 @@ target_include_directories(
     $<INSTALL_INTERFACE:include/Minuit2>
     )
 
-target_compile_definitions(
-    Minuit2
-    PRIVATE
-    WARNINGMSG
-    )
-
 target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 
@@ -226,4 +225,3 @@ install(TARGETS Minuit2
         )
 
 install(FILES ${MINUIT2_HEADERS} DESTINATION include/Minuit2/Minuit2)
-

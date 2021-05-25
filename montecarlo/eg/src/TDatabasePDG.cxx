@@ -45,6 +45,9 @@ Root.DatabasePDG: $(HOME)/my_pdg_table.txt
 
 See TParticlePDG for the description of a static particle properties.
 See TParticle    for the description of a dynamic particle particle.
+
+The current default pdg_table file displays lifetime 0 for some unstable particles.
+
 */
 
 ClassImp(TDatabasePDG);

@@ -364,7 +364,8 @@ L160: //to divide or not
       if (idvax0 < 1) {
          // Can happen for overflows / degenerate floats.
          idvax0 = 1;
-         ::Error("AdaptiveIntegratorMultiDim::DoIntegral()", "Logic error: idvax0 < 1!");
+         MATH_ERROR_MSG("AdaptiveIntegratorMultiDim::DoIntegral()", "Logic error: idvax0 < 1!");
+         //::Error("AdaptiveIntegratorMultiDim::DoIntegral()", "Logic error: idvax0 < 1!");
       }
       wth[idvax0-1]  = 0.5*wth[idvax0-1];
       ctr[idvax0-1] -= wth[idvax0-1];

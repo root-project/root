@@ -18,7 +18,7 @@
 
 #include "RooArgSet.h"
 
-#include "RooWorkspace.h"
+#include "RooWorkspaceHandle.h"
 
 #include "TRef.h"
 
@@ -27,7 +27,7 @@
 
 namespace RooStats {
 
-class ModelConfig : public TNamed {
+class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
 
@@ -51,7 +51,7 @@ public:
 
 
    /// clone
-   virtual ModelConfig * Clone(const char * name = "") const {
+   virtual ModelConfig * Clone(const char * name = "") const override {
       ModelConfig * mc =  new ModelConfig(*this);
       if(strcmp(name,"")==0)
    mc->SetName(this->GetName());
@@ -60,10 +60,16 @@ public:
       return mc;
    }
 
-   /// set a workspace that owns all the necessary components for the analysis
-   virtual void SetWS(RooWorkspace & ws);
+   /// Set a workspace that owns all the necessary components for the analysis.
+   virtual void SetWS(RooWorkspace & ws) override;
    //// alias for SetWS(...)
    virtual void SetWorkspace(RooWorkspace & ws) { SetWS(ws); }
+
+   /// Remove the existing reference to a workspace and replace it with this new one.
+   virtual void ReplaceWS(RooWorkspace *ws) override {
+     fRefWS = nullptr;
+     SetWS(*ws);
+   }
 
    /// Set the proto DataSet, add to the the workspace if not already there
    virtual void SetProtoData(RooAbsData & data) {
@@ -83,80 +89,86 @@ public:
       SetPriorPdf( pdf.GetName() );
    }
 
-   /// specify the parameters of interest in the interval
+   /// Specify parameters of the PDF.
    virtual void SetParameters(const RooArgSet& set) {
      if (!SetHasOnlyParameters(set,"ModelConfig::SetParameters")) return ;
      fPOIName=std::string(GetName()) + "_POI";
      DefineSetInWS(fPOIName.c_str(), set);
    }
 
+   /// Specify parameters of interest.
    virtual void SetParametersOfInterest(const RooArgSet& set) {
      if (!SetHasOnlyParameters(set,"ModelConfig::SetParametersOfInterest")) return ;
       SetParameters(set);
    }
-   /// specify the parameters of interest
-   /// through a list of comma-separated arguments already in the workspace
+
+   /// Specify parameters
+   /// using a list of comma-separated list of arguments already in the workspace.
    virtual void SetParameters(const char *argList) {
       if(!GetWS()) return;
       SetParameters(GetWS()->argSet(argList));
    }
+
+   /// Specify parameters of interest
+   /// using a comma-separated list of arguments already in the workspace.
    virtual void SetParametersOfInterest(const char *argList) {
       SetParameters(argList);
    }
 
-   /// specify the nuisance parameters (e.g. the rest of the parameters)
+   /// Specify the nuisance parameters (parameters that are not POI).
    virtual void SetNuisanceParameters(const RooArgSet& set) {
      if (!SetHasOnlyParameters(set,"ModelConfig::SetNuisanceParameters")) return ;
       fNuisParamsName=std::string(GetName()) + "_NuisParams";
       DefineSetInWS(fNuisParamsName.c_str(), set);
    }
-   /// specify the nuisance parameters
-   /// through a list of comma-separated arguments already in the workspace
+
+   /// Specify the nuisance parameters
+   /// using a comma-separated list of arguments already in the workspace.
    virtual void SetNuisanceParameters(const char *argList) {
       if(!GetWS()) return;
       SetNuisanceParameters(GetWS()->argSet(argList));
    }
 
-   /// specify the constraint parameters
+   /// Specify the constraint parameters
    virtual void SetConstraintParameters(const RooArgSet& set) {
      if (!SetHasOnlyParameters(set,"ModelConfig::SetConstainedParameters")) return ;
       fConstrParamsName=std::string(GetName()) + "_ConstrainedParams";
       DefineSetInWS(fConstrParamsName.c_str(), set);
    }
-   /// specify the constraint parameters
-   /// through a list of comma-separated arguments already in the workspace
+   /// Specify the constraint parameters
+   /// through a comma-separated list of arguments already in the workspace.
    virtual void SetConstraintParameters(const char *argList) {
       if(!GetWS()) return;
       SetConstraintParameters(GetWS()->argSet(argList));
    }
 
-   /// specify the observables
+   /// Specify the observables.
    virtual void SetObservables(const RooArgSet& set) {
      if (!SetHasOnlyParameters(set,"ModelConfig::SetObservables")) return ;
       fObservablesName=std::string(GetName()) + "_Observables";
       DefineSetInWS(fObservablesName.c_str(), set);
    }
    /// specify the observables
-   /// through a list of comma-separated arguments already in the workspace
+   /// through a comma-separated list of arguments already in the workspace.
    virtual void SetObservables(const char *argList) {
       if(!GetWS()) return;
       SetObservables(GetWS()->argSet(argList));
    }
 
-   /// specify the conditional observables
+   /// Specify the conditional observables.
    virtual void SetConditionalObservables(const RooArgSet& set) {
      if (!SetHasOnlyParameters(set,"ModelConfig::SetConditionalObservables")) return ;
       fConditionalObsName=std::string(GetName()) + "_ConditionalObservables";
       DefineSetInWS(fConditionalObsName.c_str(), set);
    }
-   /// specify the conditional observables
-   /// through a list of comma-separated arguments already in the workspace
+   /// Specify the conditional observables
+   /// through a comma-separated list of arguments already in the workspace.
    virtual void SetConditionalObservables(const char *argList) {
       if(!GetWS()) return;
       SetConditionalObservables(GetWS()->argSet(argList));
    }
 
-   /// specify the global observables
+   /// Specify the global observables.
    virtual void SetGlobalObservables(const RooArgSet& set) {
 
      if (!SetHasOnlyParameters(set,"ModelConfig::SetGlobalObservables")) return ;
@@ -172,18 +184,18 @@ public:
       fGlobalObsName=std::string(GetName()) + "_GlobalObservables";
       DefineSetInWS(fGlobalObsName.c_str(), set);
    }
-   /// specify the global observables
-   /// through a list of comma-separated arguments already in the workspace
+   /// Specify the global observables
+   /// through a comma-separated list of arguments already in the workspace.
    virtual void SetGlobalObservables(const char *argList) {
       if(!GetWS()) return;
       SetGlobalObservables(GetWS()->argSet(argList));
    }
 
-   /// set parameter values for a particular hypothesis if using a common PDF
-   /// by saving a snapshot in the workspace
+   /// Set parameter values for a particular hypothesis if using a common PDF
+   /// by saving a snapshot in the workspace.
    virtual void SetSnapshot(const RooArgSet& set);
 
-   /// specify the name of the PDF in the workspace to be used
+   /// Specify the name of the PDF in the workspace to be used.
    virtual void SetPdf(const char* name) {
       if (! GetWS() ) return;
 
@@ -193,7 +205,7 @@ public:
          coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<std::endl;
    }
 
-   /// specify the name of the PDF in the workspace to be used
+   /// Specify the name of the PDF in the workspace to be used.
    virtual void SetPriorPdf(const char* name) {
       if (! GetWS() ) return;
 
@@ -204,7 +216,7 @@ public:
    }
 
 
-   /// specify the name of the dataset in the workspace to be used
+   /// Specify the name of the dataset in the workspace to be used.
    virtual void SetProtoData(const char* name){
       if (! GetWS() ) return;
 
@@ -250,15 +262,14 @@ public:
 
    void LoadSnapshot() const;
 
-   RooWorkspace * GetWS() const;
+   RooWorkspace * GetWS() const override;
    /// alias for GetWS()
    RooWorkspace * GetWorkspace() const { return GetWS(); }
 
-   /// guesses Observables and ParametersOfInterest if not already set
-   void GuessObsAndNuisance(const RooAbsData& data);
+   void GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig = true);
 
    /// overload the print method
-   virtual void Print(Option_t* option = "") const;
+   virtual void Print(Option_t* option = "") const override;
 
 protected:
 
@@ -294,7 +305,7 @@ protected:
 
    std::string fObservablesName; /// name for RooArgSet specifying observable parameters.
 
-   ClassDef(ModelConfig,4) /// A class that holds configuration information for a model using a workspace as a store
+   ClassDefOverride(ModelConfig,5) /// A class that holds configuration information for a model using a workspace as a store
 
 };
 

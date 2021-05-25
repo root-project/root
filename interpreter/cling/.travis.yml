@@ -6,19 +6,8 @@ addons: &addons
   apt:
     packages: coreutils
 
-cache:
-  apt: true
-  ccache: true
-  directories:
-    - $HOME/.ccache
-    - $CLING_BUILD_DEPS
-
 env:
   global:
-    - USE_CCACHE=1
-    - CCACHE_COMPRESS=1
-    - CCACHE_MAXSIZE=500M
-    - CCACHE_CPP2=1
     - TIMEOUT=0
     - secure: "MWXnhg939UrLRP7Jg5xLFxxquIgale0crNyP9Y2L2Pg+zINTgSExyykP/+s4uV1mj44uYLr4oEU7Ue72w3yGptanau90BUO+ZN5clC7QEUWsfJUDBc/ytilp+xhNRNLA+MJvaYLNOyXJOf9JKf/IzgRAR0m0PGAl9pMRG2vP5Sg="
 
@@ -34,27 +23,20 @@ matrix:
   # Abort all builds on a single failing matrix entry.
   fast_finish: true
 
-  exclude:
-    # Note: Workaround travis-ci/travis-ci#4681
-    # Exclude default job which lacks our included environment variables.
-    - os: osx
-    - os: linux
-
   include:
     # There seems to be a hard limit to how many machines a Travis build will
     # run across all platforms. By interleaving OS X, the hope is to get in the
     # queue faster while not blocking Linux builds from occuring.
-    - os: linux
-      env: COMPILER=g++-4.8 CCOMPILER=gcc-4.8 NIGHTLY_CRON_SYNC=1
-      compiler: gcc-4.8
-
     - os: osx
       env: COMPILER=clang++ CCOMPILER=clang
-      osx_image: xcode8.3
+      osx_image: xcode11
+      before_install:
+        - curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci;
+          source ./macports-ci install
       compiler: clang
 
     - os: linux
-      env: COMPILER=g++-5 CCOMPILER=gcc-5
+      env: COMPILER=g++-5 CCOMPILER=gcc-5 NIGHTLY_CRON_SYNC=1
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
@@ -68,14 +50,6 @@ matrix:
           sources: ubuntu-toolchain-r-test
           packages: g++-6
       compiler: gcc-6
-
-    - os: osx
-      env: COMPILER=g++-7 CCOMPILER=gcc-7
-      osx_image: xcode8.3
-      before_install:
-        - brew cask uninstall oclint
-        - brew install gcc@7
-      compiler: gcc-7
 
     - os: linux
       env: COMPILER=g++-7 CCOMPILER=gcc-7
@@ -96,15 +70,16 @@ matrix:
     - os: osx
       env: COMPILER=clang++ CCOMPILER=clang
       osx_image: xcode9.3
+      before_install:
+        - curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci;
+          source ./macports-ci install
       compiler: clang
 
     - os: linux
-      env: CXXLIB=libstdc++ COMPILER=clang++-5.0 CCOMPILER=clang-5.0
+      env: CXXLIB=libstdc++ COMPILER=clang++ CCOMPILER=clang
       addons:
         apt:
-          sources: llvm-toolchain-trusty-5.0
-          packages: clang-5.0
-      compiler: clang-5.0
+      compiler: clang
 
 #  allow_failures:
 #    # clang-3.5 crashes compiling clang-3.9 with libc++-3.9
@@ -118,9 +93,7 @@ install:
   export CLING_BUILD_DEPS="$CLING_USER_ROOT/deps"
   export CLING_LOCAL_BIN="$CLING_USER_ROOT/bin"
   if [ $TRAVIS_OS_NAME == 'osx' ]; then
-    brew install ccache python coreutils
-
-    PATH="/usr/local/opt/ccache/libexec:$PATH"
+    brew install python coreutils
   fi
 
   if [ "$COMPILER" == "g++-7" ]; then
@@ -130,19 +103,17 @@ install:
       export CLING_BUILD_FLAGS="$CLING_BUILD_FLAGS -DCXX_EXTENSIONS=OFF"
     fi
   fi
+  # Only care about cling warnings.
+  export CLING_BUILD_FLAGS="$CLING_BUILD_FLAGS -DCLANG_ENABLE_ARCMT=OFF -DCLANG_ENABLE_STATIC_ANALYZER=OFF -DLLVM_ENABLE_WARNINGS=OFF -DCLING_ENABLE_WARNINGS=ON"
   echo "travis_fold:""end:install"
 
   # Containers need to timeout before the buildscript exits
-  TIMEOUT='37m' # Any more and Travis might cancel
-
-  # If we timeout, objects can be corrupted in the cache, causing link errors
-  # Turn this on to get the mapping to the cache.o to delete
-  # export CCACHE_LOGFILE="$CLING_USER_ROOT/ccache.log"
+  TIMEOUT='50m' # Any more and Travis might cancel
 
 before_script:
  - cmake --version
- - export CXX="ccache $COMPILER"
- - export CC="ccache $CCOMPILER"
+ - export CXX="$COMPILER"
+ - export CC="$CCOMPILER"
  - |
    # If we are running our nightly cron job, sync.
    if [ -n "$NIGHTLY_CRON_SYNC" ] && [ "$TRAVIS_EVENT_TYPE" = "cron" ] \
@@ -175,27 +146,28 @@ script:
   if [ -z $TRAVIS_TAG ]; then
     TIMEOUTEXE=`which timeout`;
     if [ "x" = "x$TIMEOUTEXE" ] ; then TIMEOUTEXE=gtimeout; fi
-    $TIMEOUTEXE -s SIGTERM $TIMEOUT tools/packaging/cpt.py \
+    $TIMEOUTEXE -s SIGTERM $TIMEOUT tools/packaging/cpt.py -y \
+      --check-requirements \
       --current-dev=tar \
+      --with-binary-llvm \
+      --with-llvm-tar \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \
-      --with-llvm-url=http://root.cern.ch/git/llvm.git \
       --with-cmake-flags="$CLING_BUILD_FLAGS" \
       --skip-cleanup
   else
-    tools/packaging/cpt.py \
+    tools/packaging/cpt.py -y \
+      --check-requirements \
+      --with-binary-llvm \
+      --with-llvm-tar \
       --tarball-tag=$([[ $TRAVIS_TAG = cling-nightlies ]] && echo "master" || echo "$TRAVIS_TAG") \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \
-      --with-llvm-url=http://root.cern.ch/git/llvm.git \
       --with-cmake-flags="$CLING_BUILD_FLAGS"
   fi
 
   RESULT="$?"
   echo "Build Result: $RESULT"
-  echo "travis_fold:""start:ccache-s"
-  ccache -s
-  echo "travis_fold:""end:ccache-s"
   if [ $RESULT -ne 124 ]; then
     return $RESULT
   fi
@@ -243,13 +215,6 @@ deploy:
 
 after_failure:
 - |
-  if [ -n "$CCACHE_LOGFILE" ]; then
-    echo "travis_fold:""start:ccache_log"
-    echo "ccache log stored to:"
-    cat "$CCACHE_LOGFILE" | curl -sT - chunk.io
-    echo "travis_fold:""end:ccache_log"
-  fi
-- |
   if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then  
     echo "travis_fold:""start:env_dump"
     echo "Dumping env."
@@ -286,12 +251,4 @@ after_failure:
     COMPDATA_CXX=$(cat $COMPILE_DATA_H | cut -c 18- | sed "s,\",,g")
     eval echo | LC_ALL=C $COMPDATA_CXX -xc++ -E -v -
     echo "travis_fold:""end:clingcompiledata_dump"
-  fi
-- |
-  if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then
-    echo "travis_fold:""start:ccache_stats"
-    echo "Dumping `which ccache`"
-    ccache -s
-    ls -la /usr/lib/ccache/ || ls -la /usr/local/opt/ccache/libexec
-    echo "travis_fold:""end:ccache_stats"
   fi

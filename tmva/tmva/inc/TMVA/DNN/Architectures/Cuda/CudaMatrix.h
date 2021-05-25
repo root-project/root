@@ -19,6 +19,16 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA_CUDAMATRIX
 #define TMVA_DNN_ARCHITECTURES_CUDA_CUDAMATRIX
 
+// in case we compile C++ code with std-17 and cuda with lower standard
+// use experimental string_view, otherwise keep as is
+#include "RConfigure.h"
+#ifdef R__HAS_STD_STRING_VIEW
+#ifndef R__CUDA_HAS_STD_STRING_VIEW
+#undef R__HAS_STD_STRING_VIEW
+#define R__HAS_STD_EXPERIMENTAL_STRING_VIEW
+#endif
+#endif
+
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include "cublas_v2.h"
@@ -109,11 +119,14 @@ private:
    static curandState_t * fCurandStates;
    static size_t          fNCurandStates;
 
+
    size_t                    fNRows;
    size_t                    fNCols;
    TCudaDeviceBuffer<AFloat> fElementBuffer;
 
 public:
+
+   static Bool_t gInitializeCurand;
 
    static AFloat * GetOnes() {return fOnes;}
 
@@ -148,22 +161,25 @@ public:
     * not the default stream. */
    inline void Synchronize(const TCudaMatrix &) const;
 
+   static size_t GetNDim() {return 2;}
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}
-    
+
    const AFloat * GetDataPointer() const {return fElementBuffer;}
    AFloat *       GetDataPointer()       {return fElementBuffer;}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
+
+   inline  TCudaDeviceBuffer<AFloat> GetDeviceBuffer() const { return fElementBuffer;}
 
    /** Access to elements of device matrices provided through TCudaDeviceReference
     *  class. Note that access is synchronous end enforces device synchronization
     *  on all streams. Only used for testing. */
    TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const;
 
-   void Print() const { 
-      TMatrixT<AFloat> mat(*this); 
-      mat.Print(); 
+   void Print() const {
+      TMatrixT<AFloat> mat(*this);
+      mat.Print();
    }
 
    void Zero() {

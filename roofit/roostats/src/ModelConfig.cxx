@@ -15,11 +15,27 @@ ModelConfig is a simple class that holds configuration information specifying ho
 should be used in the context of various RooStats tools.  A single model can be used
 in different ways, and this class should carry all that is needed to specify how it should be used.
 ModelConfig requires a workspace to be set.
+
+A ModelConfig holds sets of parameters of the likelihood function that have different interpretations:
+- **Parameter of interest** Parameters that are measured (*i.e.* fitted).
+- **Nuisance parameters** Parameters that are fitted, but their post-fit value is not interesting. Often,
+they might be constrained because external knowledge about them exists, *e.g.* from external measurements.
+- **Constraint parameters** No direct use in RooFit/RooStats. Can be used by the user for bookkeeping.
+- **Observables** Parameters that have been measured externally, *i.e.* they exist in a dataset. These are not fitted,
+but read during fitting from the entries of a dataset.
+- **Conditional observables** Observables that are not integrated when the normalisation of the PDF is calculated.
+See *e.g.* `rf306_condpereventerrors` in the RooFit tutorials.
+- **Global observables** Observables that to the fit look like "constant" values, *i.e.* they are not being
+fitted and they are not loaded from a dataset, but some knowledge exists that allows to set them to a
+specific value. Examples:
+-- A signal efficiency measured in a Monte Carlo study.
+-- When constraining a parameter \f$ b \f$, the target value (\f$ b_0 \f$) that this parameter is constrained to:
+\f[
+  \mathrm{Constraint}_b = \mathrm{Gauss}(b_0 \, | \, b, 0.2)
+\f]
 */
 
 #include "RooStats/ModelConfig.h"
-
-#include "TROOT.h"
 
 #include "RooMsgService.h"
 
@@ -36,18 +52,18 @@ namespace RooStats {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Makes sensible guesses of observables, parameters of interest
-/// and nuisance parameters.
+/// and nuisance parameters if one or multiple have been set by the creator of this ModelConfig.
 ///
 /// Defaults:
-///  observables: determined from data,
-///  global observables = explicit obs  -  obs from data
-///  parameters of interest: empty,
-///  nuisance parameters: all parameters except parameters of interest
+/// - Observables: determined from data,
+/// - Global observables: explicit obs  -  obs from data  -  constant observables
+/// - Parameters of interest: empty,
+/// - Nuisance parameters: all parameters except parameters of interest
 ///
 /// We use NULL to mean not set, so we don't want to fill
-/// with empty RooArgSets/
+/// with empty RooArgSets.
 
-void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
+void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig) {
 
    // observables
   if (!GetObservables()) {
@@ -89,9 +105,11 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
 
    // print Modelconfig as an info message
 
-   std::ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
-   Print();
-   RooPrintable::defaultPrintStream(&oldstream);
+   if (printModelConfig) {
+     std::ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
+     Print();
+     RooPrintable::defaultPrintStream(&oldstream);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +174,8 @@ void ModelConfig::Print(Option_t*) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set a workspace that owns all the necessary components for the analysis
+/// If a workspace already exists in this ModelConfig, RooWorkspace::merge(ws) will be called
+/// on the existing workspace.
 
 void ModelConfig::SetWS(RooWorkspace & ws) {
    if( !fRefWS.GetObject() ) {

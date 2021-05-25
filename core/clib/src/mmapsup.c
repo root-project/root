@@ -253,7 +253,7 @@ __mmalloc_remap_core (mdp)
     {
         base = MapViewOfFileEx(hMap, FILE_MAP_READ, 0, 0, 0, 0);
         if (!base)
-           fprintf(stderr, "__mmalloc_remap_core: can't get base address %x to map. Error code %d.\n",
+           fprintf(stderr, "__mmalloc_remap_core: can't get base address %p to map. Error code %d.\n",
                    mdp -> base,GetLastError());
     }
     else
@@ -279,7 +279,7 @@ __mmalloc_remap_core (mdp)
     {
        base = MapViewOfFileEx(hMap, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0, mdp -> base);
        if (!base)
-           fprintf(stderr, "__mmalloc_remap_core: can't get base address %x to map. Error code %d.\n",
+           fprintf(stderr, "__mmalloc_remap_core: can't get base address %p to map. Error code %d.\n",
                    mdp -> base,GetLastError());
     }
     else {

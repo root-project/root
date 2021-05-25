@@ -30,6 +30,7 @@ arrow::Schema.
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RArrowDS.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <snprintf.h>
 
 #include <algorithm>
 #include <sstream>
@@ -38,8 +39,10 @@ arrow::Schema.
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 #include <arrow/table.h>
+#include <arrow/stl.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -47,15 +50,64 @@ arrow::Schema.
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+// This is needed by Arrow 0.12.0 which dropped 
+//
+//      using ArrowType = ArrowType_;
+//
+// from ARROW_STL_CONVERSION
+template <typename T>
+struct RootConversionTraits {};
+
+#define ROOT_ARROW_STL_CONVERSION(c_type, ArrowType_)  \
+   template <>                                         \
+   struct RootConversionTraits<c_type> {               \
+   using ArrowType = ::arrow::ArrowType_;              \
+   };
+
+ROOT_ARROW_STL_CONVERSION(bool, BooleanType)
+ROOT_ARROW_STL_CONVERSION(int8_t, Int8Type)
+ROOT_ARROW_STL_CONVERSION(int16_t, Int16Type)
+ROOT_ARROW_STL_CONVERSION(int32_t, Int32Type)
+ROOT_ARROW_STL_CONVERSION(Long64_t, Int64Type)
+ROOT_ARROW_STL_CONVERSION(uint8_t, UInt8Type)
+ROOT_ARROW_STL_CONVERSION(uint16_t, UInt16Type)
+ROOT_ARROW_STL_CONVERSION(uint32_t, UInt32Type)
+ROOT_ARROW_STL_CONVERSION(ULong64_t, UInt64Type)
+ROOT_ARROW_STL_CONVERSION(float, FloatType)
+ROOT_ARROW_STL_CONVERSION(double, DoubleType)
+ROOT_ARROW_STL_CONVERSION(std::string, StringType)
+
 // Per slot visitor of an Array.
 class ArrayPtrVisitor : public ::arrow::ArrayVisitor {
 private:
    /// The pointer to update.
    void **fResult;
    bool fCachedBool{false}; // Booleans need to be unpacked, so we use a cached entry.
+   // FIXME: I should really use a variant here
+   RVec<float> fCachedRVecFloat;
+   RVec<double> fCachedRVecDouble;
+   RVec<ULong64_t> fCachedRVecULong64;
+   RVec<UInt_t> fCachedRVecUInt;
+   RVec<Long64_t> fCachedRVecLong64;
+   RVec<Int_t> fCachedRVecInt;
    std::string fCachedString;
    /// The entry in the array which should be looked up.
    ULong64_t fCurrentEntry;
+
+   template <typename T>
+   void *getTypeErasedPtrFrom(arrow::ListArray const &array, int32_t entry, RVec<T> &cache)
+   {
+      using ArrowType = typename RootConversionTraits<T>::ArrowType;
+      using ArrayType = typename arrow::TypeTraits<ArrowType>::ArrayType;
+      auto values = reinterpret_cast<ArrayType *>(array.values().get());
+      auto offset = array.value_offset(entry);
+      // Here the cast to void* is a worksround while we figure out the
+      // issues we have with long long types, signed and unsigned.
+      RVec<T> tmp(reinterpret_cast<T *>((void *)values->raw_values()) + offset, array.value_length(entry));
+      std::swap(cache, tmp);
+      return (void *)(&cache);
+   }
 
 public:
    ArrayPtrVisitor(void **result) : fResult{result}, fCurrentEntry{0} {}
@@ -112,6 +164,37 @@ public:
       fCachedString = array.GetString(fCurrentEntry);
       *fResult = reinterpret_cast<void *>(&fCachedString);
       return arrow::Status::OK();
+   }
+
+   virtual arrow::Status Visit(arrow::ListArray const &array) final
+   {
+      switch (array.value_type()->id()) {
+      case arrow::Type::FLOAT: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecFloat);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::DOUBLE: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecDouble);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::UINT32: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecUInt);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::UINT64: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecULong64);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::INT32: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecInt);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::INT64: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecLong64);
+         return arrow::Status::OK();
+      }
+      default: return arrow::Status::TypeError("Type not supported");
+      }
    }
 
    using ::arrow::ArrayVisitor::Visit;
@@ -183,6 +266,7 @@ public:
       auto chunk = fChunks.at(fLastChunkPerSlot[slot]);
       assert(slot < fArrayVisitorPerSlot.size());
       fArrayVisitorPerSlot[slot].SetEntry(entry - fFirstEntryPerChunk[fLastChunkPerSlot[slot]]);
+      fLastEntryPerSlot[slot] = entry;
       auto status = chunk->Accept(fArrayVisitorPerSlot.data() + slot);
       if (!status.ok()) {
          std::string msg = "Could not get pointer for slot ";
@@ -212,50 +296,69 @@ namespace RDF {
 /// Helper to get the human readable name of type
 class RDFTypeNameGetter : public ::arrow::TypeVisitor {
 private:
-   std::string fTypeName;
+   std::vector<std::string> fTypeName;
 
 public:
    arrow::Status Visit(const arrow::Int64Type &) override
    {
-      fTypeName = "Long64_t";
+      fTypeName.push_back("Long64_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::Int32Type &) override
    {
-      fTypeName = "Long_t";
+      fTypeName.push_back("Int_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::UInt64Type &) override
    {
-      fTypeName = "ULong64_t";
+      fTypeName.push_back("ULong64_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::UInt32Type &) override
    {
-      fTypeName = "ULong_t";
+      fTypeName.push_back("UInt_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::FloatType &) override
    {
-      fTypeName = "float";
+      fTypeName.push_back("float");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::DoubleType &) override
    {
-      fTypeName = "double";
+      fTypeName.push_back("double");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::StringType &) override
    {
-      fTypeName = "string";
+      fTypeName.push_back("string");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::BooleanType &) override
    {
-      fTypeName = "bool";
+      fTypeName.push_back("bool");
       return arrow::Status::OK();
    }
-   std::string result() { return fTypeName; }
+   arrow::Status Visit(const arrow::ListType &l) override
+   {
+      /// Recursively visit List types and map them to
+      /// an RVec. We accumulate the result of the recursion on
+      /// fTypeName so that we can create the actual type
+      /// when the recursion is done.
+      fTypeName.push_back("ROOT::VecOps::RVec<%s>");
+      return l.value_type()->Accept(this);
+   }
+   std::string result()
+   {
+      // This recursively builds a nested type.
+      std::string result = "%s";
+      char buffer[8192];
+      for (size_t i = 0; i < fTypeName.size(); ++i) {
+         snprintf(buffer, 8192, result.c_str(), fTypeName[i].c_str());
+         result = buffer;
+      }
+      return result;
+   }
 
    using ::arrow::TypeVisitor::Visit;
 };
@@ -272,14 +375,15 @@ public:
    virtual arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::BooleanType &) override { return arrow::Status::OK(); }
+   virtual arrow::Status Visit(const arrow::ListType &) override { return arrow::Status::OK(); }
 
    using ::arrow::TypeVisitor::Visit;
 };
 
 ////////////////////////////////////////////////////////////////////////
 /// Constructor to create an Arrow RDataSource for RDataFrame.
-/// \param[in] table the arrow Table to observe.
-/// \param[in] columns the name of the columns to use
+/// \param[in] inTable the arrow Table to observe.
+/// \param[in] inColumns the name of the columns to use
 /// In case columns is empty, we use all the columns found in the table
 RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::string> const &inColumns)
    : fTable{inTable}, fColumnNames{inColumns}
@@ -297,6 +401,9 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
       }
    };
 
+   // To support both arrow 0.14.0 and 0.16.0
+   using ColumnType = decltype(fTable->column(0));
+
    auto getRecordsFirstColumn = [&columnNames, &table]() {
       if (columnNames.empty()) {
          throw std::runtime_error("At least one column required");
@@ -307,21 +414,21 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
    };
 
    // All columns are supposed to have the same number of entries.
-   auto verifyColumnSize = [](std::shared_ptr<arrow::Column> column, int nRecords) {
+   auto verifyColumnSize = [&table](ColumnType column, int columnIdx, int nRecords) {
       if (column->length() != nRecords) {
          std::string msg = "Column ";
-         msg += column->name() + " has a different number of entries.";
+         msg += table->schema()->field(columnIdx)->name() + " has a different number of entries.";
          throw std::runtime_error(msg);
       }
    };
 
    /// For the moment we support only a few native types.
-   auto verifyColumnType = [](std::shared_ptr<arrow::Column> column) {
+   auto verifyColumnType = [&table](ColumnType column, int columnIdx) {
       auto verifyType = std::make_unique<VerifyValidColumnType>();
       auto result = column->type()->Accept(verifyType.get());
       if (result.ok() == false) {
          std::string msg = "Column ";
-         msg += column->name() + " contains an unsupported type.";
+         msg += table->schema()->field(columnIdx)->name() + " contains an unsupported type.";
          throw std::runtime_error(msg);
       }
    };
@@ -343,8 +450,8 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
       addColumnToGetterIndex(columnIdx);
 
       auto column = fTable->column(columnIdx);
-      verifyColumnSize(column, nRecords);
-      verifyColumnType(column);
+      verifyColumnSize(column, columnIdx, nRecords);
+      verifyColumnType(column, columnIdx);
    }
 }
 
@@ -395,7 +502,6 @@ bool RArrowDS::HasColumn(std::string_view colName) const
 bool RArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    for (auto link : fGetterIndex) {
-      auto column = fTable->column(link.first);
       auto &getter = fValueGetters[link.second];
       getter->SetEntry(slot, entry);
    }
@@ -405,53 +511,58 @@ bool RArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
 void RArrowDS::InitSlot(unsigned int slot, ULong64_t entry)
 {
    for (auto link : fGetterIndex) {
-      auto column = fTable->column(link.first);
       auto &getter = fValueGetters[link.second];
       getter->UncachedSlotLookup(slot, entry);
    }
 }
 
+void splitInEqualRanges(std::vector<std::pair<ULong64_t, ULong64_t>> &ranges, int nRecords, unsigned int nSlots)
+{
+   ranges.clear();
+   const auto chunkSize = nRecords / nSlots;
+   const auto remainder = 1U == nSlots ? 0 : nRecords % nSlots;
+   auto start = 0UL;
+   auto end = 0UL;
+   for (auto i : ROOT::TSeqU(nSlots)) {
+      start = end;
+      end += chunkSize;
+      ranges.emplace_back(start, end);
+      (void)i;
+   }
+   ranges.back().second += remainder;
+}
+
+int getNRecords(std::shared_ptr<arrow::Table> &table, std::vector<std::string> &columnNames)
+{
+   auto index = table->schema()->GetFieldIndex(columnNames.front());
+   return table->column(index)->length();
+};
+
+template <typename T>
+std::shared_ptr<arrow::ChunkedArray> getData(T p)
+{
+   return p->data();
+}
+
+template <>
+std::shared_ptr<arrow::ChunkedArray>
+getData<std::shared_ptr<arrow::ChunkedArray>>(std::shared_ptr<arrow::ChunkedArray> p)
+{
+   return p;
+}
+
 void RArrowDS::SetNSlots(unsigned int nSlots)
 {
    assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
-
+   fNSlots = nSlots;
    // We dump all the previous getters structures and we rebuild it.
    auto nColumns = fGetterIndex.size();
-   auto &outNSlots = fNSlots;
-   auto &ranges = fEntryRanges;
-   auto &table = fTable;
-   auto &columnNames = fColumnNames;
 
    fValueGetters.clear();
    for (size_t ci = 0; ci != nColumns; ++ci) {
-      auto chunkedArray = fTable->column(fGetterIndex[ci].first)->data();
+      auto chunkedArray = getData(fTable->column(fGetterIndex[ci].first));
       fValueGetters.emplace_back(std::make_unique<ROOT::Internal::RDF::TValueGetter>(nSlots, chunkedArray->chunks()));
    }
-
-   // We use the same logic as the ROOTDS.
-   auto splitInEqualRanges = [&outNSlots, &ranges](int nRecords, unsigned int newNSlots) {
-      ranges.clear();
-      outNSlots = newNSlots;
-      const auto chunkSize = nRecords / outNSlots;
-      const auto remainder = 1U == outNSlots ? 0 : nRecords % outNSlots;
-      auto start = 0UL;
-      auto end = 0UL;
-      for (auto i : ROOT::TSeqU(outNSlots)) {
-         start = end;
-         end += chunkSize;
-         ranges.emplace_back(start, end);
-         (void)i;
-      }
-      ranges.back().second += remainder;
-   };
-
-   auto getNRecords = [&table, &columnNames]() -> int {
-      auto index = table->schema()->GetFieldIndex(columnNames.front());
-      return table->column(index)->length();
-   };
-
-   auto nRecords = getNRecords();
-   splitInEqualRanges(nRecords, nSlots);
 }
 
 /// This needs to return a pointer to the pointer each value getter
@@ -477,9 +588,11 @@ std::vector<void *> RArrowDS::GetColumnReadersImpl(std::string_view colName, con
 
 void RArrowDS::Initialise()
 {
+   auto nRecords = getNRecords(fTable, fColumnNames);
+   splitInEqualRanges(fEntryRanges, nRecords, fNSlots);
 }
 
-std::string RArrowDS::GetDataSourceType()
+std::string RArrowDS::GetLabel()
 {
    return "ArrowDS";
 }

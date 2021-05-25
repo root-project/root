@@ -20,21 +20,23 @@ namespace ROOT {
 namespace RDF {
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
-   using ECAlgo = ::ROOT::ECompressionAlgorithm;
+   using ECAlgo = ROOT::ECompressionAlgorithm;
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
-   RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy)
+   RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
+                    bool overwriteIfExists = false)
       : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
-        fSplitLevel(splitLevel), fLazy(lazy)
+        fSplitLevel(splitLevel), fLazy(lazy), fOverwriteIfExists(overwriteIfExists)
    {
    }
-   std::string fMode = "RECREATE";            ///< Mode of creation of output file
-   ECAlgo fCompressionAlgorithm = ROOT::kLZ4; ///< Compression algorithm of output file
-   int fCompressionLevel = 4;                 ///< Compression level of output file
-   int fAutoFlush = 0;                        ///< AutoFlush value for output tree
-   int fSplitLevel = 99;                      ///< Split level of output tree
-   bool fLazy = false;                        ///< Delay the snapshot of the dataset
+   std::string fMode = "RECREATE";             ///< Mode of creation of output file
+   ECAlgo fCompressionAlgorithm = ROOT::kZLIB; ///< Compression algorithm of output file
+   int fCompressionLevel = 1;                  ///< Compression level of output file
+   int fAutoFlush = 0;                         ///< AutoFlush value for output tree
+   int fSplitLevel = 99;                       ///< Split level of output tree
+   bool fLazy = false;                         ///< Do not start the event loop when Snapshot is called
+   bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
 };
 } // ns RDF
 } // ns ROOT

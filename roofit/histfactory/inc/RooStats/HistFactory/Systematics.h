@@ -22,8 +22,8 @@ namespace RooStats{
 namespace HistFactory {
 
   namespace Constraint {
-    enum Type{ Gaussian, Poisson };            
-    std::string Name( Type type ); 
+    enum Type{ Gaussian, Poisson };
+    std::string Name( Type type );
     Type GetType( const std::string& Name );
   }
 
@@ -31,33 +31,37 @@ namespace HistFactory {
   // Base class for common functions
   /*
   class Systematic {
-    
+
   public:
 
     virtual void Print(std::ostream& = std::cout);
-    virtual void writeToFile(const std::string& FileName, 
+    virtual void writeToFile(const std::string& FileName,
 			     const std::string& Directory);
-    
-    
+
+
   };
   */
 
+/** \class OverallSys
+ * \ingroup HistFactory
+ * Configuration for a constrained overall systematic to scale sample normalisations.
+ */
   class OverallSys {
 
   public:
 
-    OverallSys() : fLow(0), fHigh(0) {} 
+    OverallSys() : fLow(0), fHigh(0) {}
 
     void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() { return fName; }
+    const std::string& GetName() const { return fName; }
 
     void SetLow( double Low )   { fLow  = Low; }
     void SetHigh( double High ) { fHigh = High; }
-    double GetLow() { return fLow; }
-    double GetHigh() { return fHigh; }
+    double GetLow() const { return fLow; }
+    double GetHigh() const { return fHigh; }
 
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream&);
+    void Print(std::ostream& = std::cout) const;
+    void PrintXML(std::ostream&) const;
 
   protected:
     std::string fName;
@@ -66,7 +70,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class NormFactor
+ * \ingroup HistFactory
+ * Configuration for an \a un- constrained overall systematic to scale sample normalisations.
+ */
   class NormFactor {
 
   public:
@@ -74,21 +81,21 @@ namespace HistFactory {
     NormFactor();
 
     void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() { return fName; }
+    std::string GetName() const { return fName; }
 
     void SetVal( double Val ) { fVal = Val; }
-    double GetVal() { return fVal; }
+    double GetVal() const { return fVal; }
 
     void SetConst( bool Const=true ) { fConst = Const; }
-    bool GetConst() { return fConst; }
+    bool GetConst() const { return fConst; }
 
     void SetLow( double Low )   { fLow  = Low; }
     void SetHigh( double High ) { fHigh = High; }
-    double GetLow() { return fLow; }
-    double GetHigh() { return fHigh; }
+    double GetLow() const { return fLow; }
+    double GetHigh() const { return fHigh; }
 
-    void Print(std::ostream& = std::cout);      
-    void PrintXML(std::ostream&);
+    void Print(std::ostream& = std::cout) const;
+    void PrintXML(std::ostream&) const;
 
   protected:
 
@@ -101,43 +108,77 @@ namespace HistFactory {
   };
 
 
-  class HistoSys {
+  /** ////////////////////////////////////////////////////////////////////////////////////////////
+   * \class HistogramUncertaintyBase
+   * \ingroup HistFactory
+   * Base class to store the up and down variations for histogram uncertainties.
+   * Use the derived classes for actual models.
+   */
+  class HistogramUncertaintyBase {
 
   public:
 
-    HistoSys() : fhLow(NULL), fhHigh(NULL) {;}
-    HistoSys(const std::string& Name) : fName(Name), fhLow(NULL), fhHigh(NULL) {;}
+    HistogramUncertaintyBase() : fhLow(nullptr), fhHigh(nullptr) {}
+    HistogramUncertaintyBase(const std::string& Name) : fName(Name), fhLow(nullptr), fhHigh(nullptr) {}
+    HistogramUncertaintyBase(const HistogramUncertaintyBase& oth) :
+    fName{oth.fName},
+    fInputFileLow{oth.fInputFileLow}, fHistoNameLow{oth.fHistoNameLow}, fHistoPathLow{oth.fHistoPathLow},
+    fInputFileHigh{oth.fInputFileHigh}, fHistoNameHigh{oth.fHistoNameHigh}, fHistoPathHigh{oth.fHistoPathHigh},
+    fhLow{oth.fhLow ? static_cast<TH1*>(oth.fhLow->Clone()) : nullptr},
+    fhHigh{oth.fhHigh ? static_cast<TH1*>(oth.fhHigh->Clone()) : nullptr} {
 
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream&);
-    void writeToFile( const std::string& FileName, const std::string& DirName );
+    }
+    HistogramUncertaintyBase(HistogramUncertaintyBase&&) = default;
 
-    void SetHistoLow( TH1* Low ) { fhLow = Low; }
-    void SetHistoHigh( TH1* High ) { fhHigh = High; }
-    
-    TH1* GetHistoLow();
-    TH1* GetHistoHigh();
-    
+    virtual ~HistogramUncertaintyBase() {};
+
+
+    // Need deep copies because the class owns its histograms.
+    HistogramUncertaintyBase& operator=(const HistogramUncertaintyBase& oth) {
+      fName = oth.fName;
+      fInputFileLow = oth.fInputFileLow;
+      fHistoNameLow = oth.fHistoNameLow;
+      fHistoPathLow = oth.fHistoPathLow;
+      fInputFileHigh = oth.fInputFileHigh;
+      fHistoNameHigh = oth.fHistoNameHigh;
+      fHistoPathHigh = oth.fHistoPathHigh;
+      fhLow.reset(oth.fhLow ? static_cast<TH1*>(oth.fhLow->Clone()) : nullptr);
+      fhHigh.reset(oth.fhHigh ? static_cast<TH1*>(oth.fhHigh->Clone()) : nullptr);
+
+      return *this;
+    }
+    HistogramUncertaintyBase& operator=(HistogramUncertaintyBase&&) = default;
+
+    virtual void Print(std::ostream& = std::cout) const;
+    virtual void PrintXML(std::ostream&) const = 0;
+    virtual void writeToFile( const std::string& FileName, const std::string& DirName );
+
+    void SetHistoLow(TH1* Low ) {Low->SetDirectory(nullptr); fhLow.reset(Low);}
+    void SetHistoHigh(TH1* High ) {High->SetDirectory(nullptr); fhHigh.reset(High);}
+
+    const TH1* GetHistoLow() const {return fhLow.get();}
+    const TH1* GetHistoHigh() const {return fhHigh.get();}
+
     void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() { return fName; }
+    const std::string& GetName() const { return fName; }
 
     void SetInputFileLow( const std::string& InputFileLow ) { fInputFileLow = InputFileLow; }
     void SetInputFileHigh( const std::string& InputFileHigh ) { fInputFileHigh = InputFileHigh; }
-    
-    std::string GetInputFileLow() { return fInputFileLow; }
-    std::string GetInputFileHigh() { return fInputFileHigh; }
+
+    const std::string& GetInputFileLow() const { return fInputFileLow; }
+    const std::string& GetInputFileHigh() const { return fInputFileHigh; }
 
     void SetHistoNameLow( const std::string& HistoNameLow ) { fHistoNameLow = HistoNameLow; }
     void SetHistoNameHigh( const std::string& HistoNameHigh ) { fHistoNameHigh = HistoNameHigh; }
-    
-    std::string GetHistoNameLow() { return fHistoNameLow; }
-    std::string GetHistoNameHigh() { return fHistoNameHigh; }
+
+    const std::string& GetHistoNameLow() const { return fHistoNameLow; }
+    const std::string& GetHistoNameHigh() const { return fHistoNameHigh; }
 
     void SetHistoPathLow( const std::string& HistoPathLow ) { fHistoPathLow = HistoPathLow; }
     void SetHistoPathHigh( const std::string& HistoPathHigh ) { fHistoPathHigh = HistoPathHigh; }
-    
-    std::string GetHistoPathLow() { return fHistoPathLow; }
-    std::string GetHistoPathHigh() { return fHistoPathHigh; }
+
+    const std::string& GetHistoPathLow() const { return fHistoPathLow; }
+    const std::string& GetHistoPathHigh() const { return fHistoPathHigh; }
 
   protected:
 
@@ -152,224 +193,204 @@ namespace HistFactory {
     std::string fHistoPathHigh;
 
     // The Low and High Histograms
-    HistRef fhLow;
-    HistRef fhHigh;
+    std::unique_ptr<TH1> fhLow;
+    std::unique_ptr<TH1> fhHigh;
 
   };
 
+/** \class HistoSys
+ * \ingroup HistFactory
+ * Configuration for a constrained, coherent shape variation of affected samples.
+ */
+class HistoSys final : public HistogramUncertaintyBase {
+public:
+  virtual ~HistoSys() {}
+  virtual void PrintXML(std::ostream&) const override;
+};
 
-  class HistoFactor {
-
+/** \class HistoFactor
+ * \ingroup HistFactory
+ * Configuration for an *un*constrained, coherent shape variation of affected samples.
+ */
+  class HistoFactor final : public HistogramUncertaintyBase {
   public:
-
-    HistoFactor() : fhLow(NULL), fhHigh(NULL) {;}
-
-    void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() { return fName; }
-    
-    void SetInputFileLow( const std::string& InputFileLow ) { fInputFileLow = InputFileLow; }
-    void SetInputFileHigh( const std::string& InputFileHigh ) { fInputFileHigh = InputFileHigh; }
-    
-    std::string GetInputFileLow() { return fInputFileLow; }
-    std::string GetInputFileHigh() { return fInputFileHigh; }
-
-    void SetHistoNameLow( const std::string& HistoNameLow ) { fHistoNameLow = HistoNameLow; }
-    void SetHistoNameHigh( const std::string& HistoNameHigh ) { fHistoNameHigh = HistoNameHigh; }
-    
-    std::string GetHistoNameLow() { return fHistoNameLow; }
-    std::string GetHistoNameHigh() { return fHistoNameHigh; }
-
-    void SetHistoPathLow( const std::string& HistoPathLow ) { fHistoPathLow = HistoPathLow; }
-    void SetHistoPathHigh( const std::string& HistoPathHigh ) { fHistoPathHigh = HistoPathHigh; }
-    
-    std::string GetHistoPathLow() { return fHistoPathLow; }
-    std::string GetHistoPathHigh() { return fHistoPathHigh; }
-
-    void Print(std::ostream& = std::cout);  
-    void writeToFile( const std::string& FileName, const std::string& DirName );
-    void PrintXML(std::ostream&);
-
-    TH1* GetHistoLow();
-    TH1* GetHistoHigh();
-    void SetHistoLow( TH1* Low ) { fhLow = Low; }
-    void SetHistoHigh( TH1* High ) { fhHigh = High; }
-
-  protected:
-
-    std::string fName;
-
-    std::string fInputFileLow;
-    std::string fHistoNameLow;
-    std::string fHistoPathLow;
-
-    std::string fInputFileHigh;
-    std::string fHistoNameHigh;
-    std::string fHistoPathHigh;
-
-    // The Low and High Histograms
-    HistRef fhLow;
-    HistRef fhHigh;
-
+    virtual ~HistoFactor() {}
+    void PrintXML(std::ostream&) const override;
   };
 
-
-  class ShapeSys {
+/** \class ShapeSys
+ * \ingroup HistFactory
+ * Constrained bin-by-bin variation of affected histogram.
+ */
+  class ShapeSys final : public HistogramUncertaintyBase {
 
   public:
 
-    ShapeSys() :  fConstraintType(Constraint::Gaussian), fhError(NULL) {}
+    ShapeSys() :
+      HistogramUncertaintyBase(),
+      fConstraintType(Constraint::Gaussian) {}
+    ShapeSys(const ShapeSys& other) :
+      HistogramUncertaintyBase(other),
+      fConstraintType(other.fConstraintType) {}
+    ShapeSys& operator=(const ShapeSys& oth) {
+       if (this == &oth) return *this;
+       HistogramUncertaintyBase::operator=(oth);
+       fConstraintType = oth.fConstraintType;
+       return *this;
+    }
+    ShapeSys& operator=(ShapeSys&&) = default;
 
-    void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() { return fName; }
+    void SetInputFile( const std::string& InputFile ) { fInputFileHigh = InputFile; }
+    std::string GetInputFile() const { return fInputFileHigh; }
 
-    void SetInputFile( const std::string& InputFile ) { fInputFile = InputFile; }
-    std::string GetInputFile() { return fInputFile; }
+    void SetHistoName( const std::string& HistoName ) { fHistoNameHigh = HistoName; }
+    std::string GetHistoName() const { return fHistoNameHigh; }
 
-    void SetHistoName( const std::string& HistoName ) { fHistoName = HistoName; }
-    std::string GetHistoName() { return fHistoName; }
+    void SetHistoPath( const std::string& HistoPath ) { fHistoPathHigh = HistoPath; }
+    std::string GetHistoPath() const { return fHistoPathHigh; }
 
-    void SetHistoPath( const std::string& HistoPath ) { fHistoPath = HistoPath; }
-    std::string GetHistoPath() { return fHistoPath; }
+    void Print(std::ostream& = std::cout) const override;
+    void PrintXML(std::ostream&) const override;
+    void writeToFile( const std::string& FileName, const std::string& DirName ) override;
 
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream&);
-    void writeToFile( const std::string& FileName, const std::string& DirName );
-
-    TH1* GetErrorHist();
-    void SetErrorHist(TH1* hError) { fhError = hError; }
+    const TH1* GetErrorHist() const {
+      return fhHigh.get();
+    }
+    void SetErrorHist(TH1* hError) {
+      fhHigh.reset(hError);
+    }
 
     void SetConstraintType( Constraint::Type ConstrType ) { fConstraintType = ConstrType; }
-    Constraint::Type GetConstraintType() { return fConstraintType; }
+    Constraint::Type GetConstraintType() const { return fConstraintType; }
 
   protected:
-
-    std::string fName;
-    std::string fInputFile;
-    std::string fHistoName;
-    std::string fHistoPath;
-    Constraint::Type fConstraintType; 
-
-    // The histogram holding the error
-    HistRef fhError;
-
+    Constraint::Type fConstraintType;
   };
 
-
-  class ShapeFactor {
+/** \class ShapeFactor
+ * \ingroup HistFactory
+ * *Un*constrained bin-by-bin variation of affected histogram.
+ */
+  class ShapeFactor : public HistogramUncertaintyBase {
 
   public:
 
-    ShapeFactor();
-    
-    void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() { return fName; }
+    ShapeFactor() :
+      HistogramUncertaintyBase(),
+      fConstant{false},
+      fHasInitialShape{false} {}
 
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream&);
-    void writeToFile( const std::string& FileName, const std::string& DirName);
+    void Print(std::ostream& = std::cout) const override;
+    void PrintXML(std::ostream&) const override;
+    void writeToFile( const std::string& FileName, const std::string& DirName) override;
 
-    void SetInitialShape(TH1* shape) { fhInitialShape = shape; }
-    TH1* GetInitialShape() { return fhInitialShape; }
+    void SetInitialShape(TH1* shape) {
+      fhHigh.reset(shape);
+    }
+    const TH1* GetInitialShape() const { return fhHigh.get(); }
 
     void SetConstant(bool constant) { fConstant = constant; }
-    bool IsConstant() { return fConstant; }
-    
-    bool HasInitialShape() { return fHasInitialShape; }
+    bool IsConstant() const { return fConstant; }
 
-    void SetInputFile( const std::string& InputFile ) { 
-      fInputFile = InputFile; 
+    bool HasInitialShape() const { return fHasInitialShape; }
+
+    void SetInputFile( const std::string& InputFile ) {
+      fInputFileHigh = InputFile;
       fHasInitialShape=true;
     }
-    std::string GetInputFile() { return fInputFile; }
+    const std::string& GetInputFile() const { return fInputFileHigh; }
 
-    void SetHistoName( const std::string& HistoName ) { 
-      fHistoName = HistoName; 
-      fHasInitialShape=true; 
-    }
-    std::string GetHistoName() { return fHistoName; }
-
-    void SetHistoPath( const std::string& HistoPath ) { 
-      fHistoPath = HistoPath; 
+    void SetHistoName( const std::string& HistoName ) {
+      fHistoNameHigh = HistoName;
       fHasInitialShape=true;
     }
-    std::string GetHistoPath() { return fHistoPath; }
+    const std::string& GetHistoName() const { return fHistoNameHigh; }
+
+    void SetHistoPath( const std::string& HistoPath ) {
+      fHistoPathHigh = HistoPath;
+      fHasInitialShape=true;
+    }
+    const std::string& GetHistoPath() const { return fHistoPathHigh; }
 
   protected:
-    std::string fName;
 
     bool fConstant;
 
     // A histogram representing
     // the initial shape
     bool fHasInitialShape;
-    std::string fHistoName;
-    std::string fHistoPath;
-    std::string fInputFile;
-    TH1* fhInitialShape;
-
   };
 
-
-  class StatError {
+/** \class StatError
+ * \ingroup HistFactory
+ * Statistical error of Monte Carlo predictions.
+ */
+  class StatError : public HistogramUncertaintyBase {
 
   public:
 
-    StatError() : fActivate(false), fUseHisto(false), fhError(NULL) {;}
+    StatError() :
+      HistogramUncertaintyBase(),
+      fActivate(false), fUseHisto(false) {}
 
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream&);
-    void writeToFile( const std::string& FileName, const std::string& DirName );
+    void Print(std::ostream& = std::cout) const override;
+    void PrintXML(std::ostream&) const override;
+    void writeToFile( const std::string& FileName, const std::string& DirName ) override;
 
     void Activate( bool IsActive=true ) { fActivate = IsActive; }
-    bool GetActivate() { return fActivate; }
+    bool GetActivate() const { return fActivate; }
 
     void SetUseHisto( bool UseHisto=true ) { fUseHisto = UseHisto; }
-    bool GetUseHisto() { return fUseHisto; }
+    bool GetUseHisto() const { return fUseHisto; }
 
-    void SetInputFile( const std::string& InputFile ) { fInputFile = InputFile; }
-    std::string GetInputFile() { return fInputFile; }
+    void SetInputFile( const std::string& InputFile ) { fInputFileHigh = InputFile; }
+    const std::string& GetInputFile() const { return fInputFileHigh; }
 
-    void SetHistoName( const std::string& HistoName ) { fHistoName = HistoName; }
-    std::string GetHistoName() { return fHistoName; }
+    void SetHistoName( const std::string& HistoName ) { fHistoNameHigh = HistoName; }
+    const std::string& GetHistoName() const { return fHistoNameHigh; }
 
-    void SetHistoPath( const std::string& HistoPath ) { fHistoPath = HistoPath; }
-    std::string GetHistoPath() { return fHistoPath; }
+    void SetHistoPath( const std::string& HistoPath ) { fHistoPathHigh = HistoPath; }
+    const std::string& GetHistoPath() const { return fHistoPathHigh; }
 
 
-    TH1* GetErrorHist();
-    void SetErrorHist(TH1* Error) { fhError = Error; }
+    const TH1* GetErrorHist() const {
+      return fhHigh.get();
+    }
+    void SetErrorHist(TH1* Error) {
+      fhHigh.reset(Error);
+    }
 
   protected:
 
     bool fActivate;
-    bool fUseHisto; // Use an external histogram for the errors 
-    std::string fInputFile;
-    std::string fHistoName;
-    std::string fHistoPath;
-
-    // The histogram holding the error
-    HistRef fhError;
-
+    bool fUseHisto; // Use an external histogram for the errors
   };
 
+/** \class StatErrorConfig
+ * \ingroup HistFactory
+ * Configuration to automatically assign nuisance parameters for the statistical
+ * error of the Monte Carlo simulations.
+ * The default is to assign a Poisson uncertainty to a bin when its statistical uncertainty
+ * is larger than 5% of the bin content.
+ */
   class StatErrorConfig {
 
   public:
 
-    StatErrorConfig() : fRelErrorThreshold( .05 ), fConstraintType( Constraint::Gaussian ) {;}
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream&);
+    StatErrorConfig() : fRelErrorThreshold( .05 ), fConstraintType( Constraint::Poisson ) {;}
+    void Print(std::ostream& = std::cout) const;
+    void PrintXML(std::ostream&) const;
 
     void SetRelErrorThreshold( double Threshold ) { fRelErrorThreshold = Threshold; }
-    double GetRelErrorThreshold() { return fRelErrorThreshold; }
+    double GetRelErrorThreshold() const { return fRelErrorThreshold; }
 
     void SetConstraintType( Constraint::Type ConstrType ) { fConstraintType = ConstrType; }
-    Constraint::Type GetConstraintType() { return fConstraintType; }
+    Constraint::Type GetConstraintType() const { return fConstraintType; }
 
   protected:
 
     double fRelErrorThreshold;
-    Constraint::Type fConstraintType; 
+    Constraint::Type fConstraintType;
 
   };
 

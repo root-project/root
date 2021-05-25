@@ -20,41 +20,42 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEdit                                                           //
-//                                                                      //
-// A TGTextEdit is a specialization of TGTextView. It provides the      //
-// text edit functionality to the static text viewing widget.           //
-// For the messages supported by this widget see the TGView class.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextEdit
+    \ingroup guiwidgets
+
+A TGTextEdit is a specialization of TGTextView. It provides the
+text edit functionality to the static text viewing widget.
+For the messages supported by this widget see the TGView class.
+
+*/
+
 
 #include "TGTextEdit.h"
 #include "TGTextEditDialogs.h"
 #include "TGResourcePool.h"
 #include "TSystem.h"
-#include "TMath.h"
 #include "TTimer.h"
 #include "TGMenu.h"
 #include "TGMsgBox.h"
 #include "TGFileDialog.h"
 #include "TGScrollBar.h"
 #include "KeySymbols.h"
-#include "Riostream.h"
 #include "RConfigure.h"
+#include "TVirtualX.h"
 
+#include <iostream>
 
 static const char *gFiletypes[] = { "All files",     "*",
                                     "Text files",    "*.txt",
                                     "ROOT macros",   "*.C",
                                     0,               0 };
-static char *gPrinter      = 0;
-static char *gPrintCommand = 0;
+static char *gPrinter      = nullptr;
+static char *gPrintCommand = nullptr;
 
 
-TGGC *TGTextEdit::fgCursor0GC;
-TGGC *TGTextEdit::fgCursor1GC;
+TGGC *TGTextEdit::fgCursor0GC = nullptr;
+TGGC *TGTextEdit::fgCursor1GC = nullptr;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -279,7 +280,7 @@ TGTextEdit::~TGTextEdit()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initiliaze a text edit widget.
+/// Initialize a text edit widget.
 
 void TGTextEdit::Init()
 {
@@ -393,7 +394,7 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
          static Bool_t overwr = kFALSE;
          TGFileInfo fi;
          fi.fFileTypes = gFiletypes;
-         fi.fIniDir    = StrDup(dir);
+         fi.SetIniDir(dir);
          fi.fOverwrite = overwr;
          new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
          overwr = fi.fOverwrite;
@@ -1869,7 +1870,6 @@ void TGTextEdit::DelChar()
          pos2.fY = ToScrYCoord(fCurrent.fY+1);
          pos.fY = fCurrent.fY - 1;
          fText->DelLine(fCurrent.fY);
-         len = fText->GetLineLength(fCurrent.fY-1);
 
          if (ToScrXCoord(pos.fX, fCurrent.fY-1) >= (Int_t)fCanvas->GetWidth()) {
             SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
@@ -2226,7 +2226,8 @@ void TGTextEdit::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      fn = gSystem->ExpandPathName(gSystem->UnixPathName(filename));
+      fn = gSystem->UnixPathName(filename);
+      gSystem->ExpandPathName(fn);
    } else {
       fn = TString::Format("Txt%s", GetName()+5);
       txt->Save(fn.Data());

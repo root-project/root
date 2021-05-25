@@ -11,9 +11,9 @@ def getLongest():
 			size = len(", ".join(arg.option_strings))
 		longestSize = max(longestSize, size)
 	return longestSize
-	
+
 def write_header(parser, fileName):
-	longestSize = getLongest() 
+	longestSize = getLongest()
 	file= open(fileName, "w+")
 	splitPath = sys.argv[2].split("/")
 	file.write("#ifndef ROOT_{}\n".format(splitPath[len(splitPath)-1].partition(".")[0]))
@@ -23,7 +23,7 @@ def write_header(parser, fileName):
 	file.write("OPTIONS:\n")
 	for arg in listArgs:
 		options = ""
-		help = arg.help 
+		help = arg.help
 		if (len(arg.option_strings)==0):
 			listOptions = [arg.dest]
 		else:
@@ -38,7 +38,7 @@ def write_header(parser, fileName):
 	file.write(")RAW\";\n")
 	file.write("#endif\n")
 	file.close()
-	
+
 def write_man(parser, fileName):
 	file= open(fileName, "w+")
 	file.write(".TH {} 1 \n".format(parser.prog))
@@ -64,12 +64,12 @@ def write_man(parser, fileName):
 
 if __name__ == "__main__":
 	path = os.path.expanduser(sys.argv[1])
-	splitPath = path.split("/")
-	sys.path.insert(0, "/".join(splitPath[:len(splitPath)-1]))
-	i = importlib.import_module(splitPath[len(splitPath)-1].partition(".")[0])
+	sys.path.insert(0, os.path.abspath(os.path.dirname(path)))
+	i = importlib.import_module(os.path.splitext(os.path.basename(path))[0])
 	parser = i.get_argparse()
 	listArgs = parser._actions
-	if (sys.argv[2].partition(".")[2] == "h"):
+	ext = sys.argv[2][-2:]
+	if (ext == ".h"):
 		write_header(parser, sys.argv[2])
-	elif (sys.argv[2].partition(".")[2] == "1"):
+	elif (ext == ".1"):
 		write_man(parser, sys.argv[2])

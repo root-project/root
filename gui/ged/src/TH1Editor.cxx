@@ -9,118 +9,94 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TH1Editor                                                           //
-//  Editor for changing TH1 histogram attributes, rebinning & fitting.  //
-//  For all possible draw options (there are a few which are not imple- //
-//  mentable in graphical user interface) see THistPainter::Paint in    //
-//  root/histpainter/THistPainter.cxx                                   //
-//
-//Begin_Html
-/*
-<img src="gif/TH1Editor_1.gif">
+
+/** \class  TH1Editor
+    \ingroup ged
+
+Editor for changing TH1 histogram attributes, rebinning & fitting.
+For all possible draw options (there are a few which are not implementable
+in graphical user interface) see THistPainter::Paint
+
+ These changes can be made via the TH1Editor:
+   Style Tab:
+     'Line'     : change Line attributes (color, thickness)
+                  see TAttLineEditor
+     'Fill'     : change Fill attributes (color, pattern)
+                  see TAttFillEditor
+     'Title'    : TextEntry: set the title of the histogram
+     'Histogram': change the draw options of the histogram
+         'Plot' : Radiobutton: draw a 2D or 3D plot of the histogram
+                  according to the Plot dimension there will be
+                  different drawing possibilities (ComboBoxes/
+                  CheckBoxes)
+   2d Plot:
+     'Error'   : ComboBox: add different error bars to the histogram
+                 (no errors, simple, ...,  see THistPainter::Paint
+     'Add'     : ComboBox: further things which can be added to the
+                 histogram (None, simple/smooth line, fill area
+     'Simple Drawing': CheckBox: draw a simple histogram without
+                 errors (= "HIST" drawoption). In combination with
+                 some other draw options an outer line is drawn on
+                 top of the histogram
+     'Show markers': CheckBox: draw a marker on to of each bin (="P"
+                 drawoption)
+     'Draw bar chart': CheckBox: draw a bar chart (="B" drawoption)
+                 change the Fill Color with Fill in the Style Tab
+                 => will show Bar menue in the Style Tab
+     'Bar option': CheckBox: draw a bar chart (="BAR" drawoption)
+                 => will show Bar menue in the Style Tab
+   3d Plot:
+     'Type'    : ComboBox: set histogram type Lego-Plot or Surface
+                 draw(Lego, Lego1.2, Surf, Surf1..5)
+                 see THistPainter::Paint
+     'Coords'  : ComboBox: set the coordinate system (Cartesian, ..
+                 Spheric) see THistPainter::Paint
+     'Error'   : see 2D plot
+     'Bar'     : change the bar attributes
+           'W' : change Bar Width
+           'O' : change Bar Offset
+     'Percentage': specifies the percentage of the bar which is drawn
+                   brighter and darker (10% == BAR1 drawoption)
+     'Horizontal Bar': draw a horizontal bar chart
+
+     'Marker'   : change the Marker attributes (color, appearance,
+                  thickness) see TAttMarkerEditor
+
+     This Tab has two different layouts. One is for a histogram which
+     is not drawn from an ntuple. The other one is available for a
+     histogram which is drawn from an ntuple. In this case the rebin
+     algorithm can create a rebinned histogram from the original data
+     i.e. the ntuple.
+     To see te differences do:
+        TFile f("hsimple.root");
+        hpx->Draw("BAR1");        // non ntuple histogram
+        ntuple->Draw("px");       // ntuple histogram
+   Non ntuple histogram:
+      'Rebin': with the Slider the number of bins (shown in the field
+               below the Slider) can be changed to any number which
+               divides the number of bins of the original histogram.
+               Pushing 'Apply' will delete the origin histogram and
+               replace it by the rebinned one on the screen
+               Pushing 'Ignore' the origin histogram will be restored
+   Histogram drawn from an ntuple:
+      'Rebin'  with the slider the number of bins can be enlarged by
+               a factor of 2,3,4,5 (moving to the right) or reduced
+               by a factor of 1/2, 1/3, 1/4, 1/5
+      'BinOffset': with the BinOffset slider the origin of the
+               histogram can be changed within one binwidth
+               Using this slider the effect of binning the data into
+               bins can be made visible => statistical fluctuations
+      'Axis Range': with the DoubleSlider it is possible to zoom into
+               the specified axis range. It is also possible to set
+               the upper and lower limit in fields below the slider
+      'Delayed drawing': all the Binning sliders can set to delay
+               draw mode. Then the changes on the histogram are only
+               updated, when the Slider is released. This should be
+               activated if the redrawing of the histogram is too
+               time consuming.                                       //
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/TH1Editor_2.gif">
-*/
-//End_Html
-//
-//  These changes can be made via the TH1Editor:                        //
-//    Style Tab:                                                        //
-//      'Line'     : change Line attributes (color, thickness)          //
-//                   see TAttLineEditor                                 //
-//      'Fill'     : change Fill attributes (color, pattern)            //
-//                   see TAttFillEditor                                 //
-//      'Title'    : TextEntry: set the title of the histogram          //
-//      'Histogram': change the draw options of the histogram           //
-//          'Plot' : Radiobutton: draw a 2D or 3D plot of the histogram //
-//                   according to the Plot dimension there will be      //
-//                   different drawing possibilities (ComboBoxes/       //
-//                   CheckBoxes)                                        //
-//    2d Plot:                                                          //
-//      'Error'   : ComboBox: add different error bars to the histogram //
-//                  (no errors, simple, ...,  see THistPainter::Paint   //
-//      'Add'     : ComboBox: further things which can be added to the  //
-//                  histogram (None, simple/smooth line, fill area      //
-//      'Simple Drawing': CheckBox: draw a simple histogram without     //
-//                  errors (= "HIST" drawoption). In combination with   //
-//                  some other draw options an outer line is drawn on   //
-//                  top of the histogram                                //
-//      'Show markers': CheckBox: draw a marker on to of each bin (="P" //
-//                  drawoption)                                         //
-//      'Draw bar chart': CheckBox: draw a bar chart (="B" drawoption)  //
-//                  change the Fill Color with Fill in the Style Tab    //
-//                  => will show Bar menue in the Style Tab             //
-//      'Bar option': CheckBox: draw a bar chart (="BAR" drawoption)    //
-//                  => will show Bar menue in the Style Tab             //
-//    3d Plot:                                                          //
-//      'Type'    : ComboBox: set histogram type Lego-Plot or Surface   //
-//                  draw(Lego, Lego1.2, Surf, Surf1..5)                 //
-//                  see THistPainter::Paint                             //
-//      'Coords'  : ComboBox: set the coordinate system (Cartesian, ..  //
-//                  Spheric) see THistPainter::Paint                    //
-//      'Error'   : see 2D plot                                         //
-//      'Bar'     : change the bar attributes                           //
-//            'W' : change Bar Width                                    //
-//            'O' : change Bar Offset                                   //
-//      'Percentage': specifies the percentage of the bar which is drawn//
-//                    brighter and darker (10% == BAR1 drawoption)      //
-//      'Horizontal Bar': draw a horizontal bar chart                   //
-//                                                                      //
-//      'Marker'   : change the Marker attributes (color, appearance,   //
-//                   thickness) see TAttMarkerEditor                    //
-//Begin_Html
-/*
-<img src="gif/TH1Editor1.gif">
-*/
-//End_Html
-//      This Tab has two different layouts. One is for a histogram which//
-//      is not drawn from an ntuple. The other one is available for a   //
-//      histogram which is drawn from an ntuple. In this case the rebin //
-//      algorithm can create a rebinned histogram from the original data//
-//      i.e. the ntuple.                                                //
-//      To see te differences do:                                       //
-//         TFile f("hsimple.root");                                     //
-//         hpx->Draw("BAR1");        // non ntuple histogram            //
-//         ntuple->Draw("px");       // ntuple histogram                //
-//    Non ntuple histogram:                                             //
-//       'Rebin': with the Slider the number of bins (shown in the field//
-//                below the Slider) can be changed to any number which  //
-//                divides the number of bins of the original histogram. //
-//                Pushing 'Apply' will delete the origin histogram and  //
-//                replace it by the rebinned one on the screen          //
-//                Pushing 'Ignore' the origin histogram will be restored//
-//    Histogram drawn from an ntuple:                                   //
-//       'Rebin'  with the slider the number of bins can be enlarged by //
-//                a factor of 2,3,4,5 (moving to the right) or reduced  //
-//                by a factor of 1/2, 1/3, 1/4, 1/5                     //
-//       'BinOffset': with the BinOffset slider the origin of the       //
-//                histogram can be changed within one binwidth          //
-//                Using this slider the effect of binning the data into //
-//                bins can be made visible => statistical fluctuations  //
-//       'Axis Range': with the DoubleSlider it is possible to zoom into//
-//                the specified axis range. It is also possible to set  //
-//                the upper and lower limit in fields below the slider  //
-//       'Delayed drawing': all the Binning sliders can set to delay    //
-//                draw mode. Then the changes on the histogram are only //
-//                updated, when the Slider is released. This should be  //
-//                activated if the redrawing of the histogram is too    //
-//                time consuming.                                       //
-//////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html
-/*
-<img src="gif/TH1Editor1_1.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/TH1Editor1_2.gif">
-*/
-//End_Html
+
 
 
 #include "TH1Editor.h"
@@ -128,14 +104,11 @@
 #include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
-#include "TGToolTip.h"
 #include "TGLabel.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
 #include "TString.h"
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
-#include <stdlib.h>
 #include "TG3DLine.h"
 #include "TGDoubleSlider.h"
 #include "TGSlider.h"
@@ -146,6 +119,9 @@
 #include "TGMsgBox.h"
 #include "TGTab.h"
 #include "TROOT.h"
+#include "TVirtualX.h"
+
+#include <cstdlib>
 
 ClassImp(TH1Editor);
 
@@ -1779,7 +1755,6 @@ void TH1Editor::DoBinMoved(Int_t numx)
    Int_t* divx = Dividers(nx);
    if (divx[0]==2) {
       fBinSlider->SetPosition(2);
-      numx=1;
       delete [] divx;
       return;
    }

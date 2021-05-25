@@ -1,17 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'SPECIAL PDFS' RooFit tutorial macro #704
-##
-## Using a p.d.f defined by a sum of real-valued amplitude components
+## Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -29,15 +24,32 @@ tau = ROOT.RooRealVar("tau", "#tau", 1.5)
 deltaGamma = ROOT.RooRealVar("deltaGamma", "deltaGamma", 0.3)
 tm = ROOT.RooTruthModel("tm", "tm", t)
 coshGBasis = ROOT.RooFormulaVar(
-    "coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", ROOT.RooArgList(t, tau, deltaGamma))
+    "coshGBasis",
+    "exp(-@0/ @1)*cosh(@0*@2/2)",
+    ROOT.RooArgList(
+        t,
+        tau,
+        deltaGamma))
 sinhGBasis = ROOT.RooFormulaVar(
-    "sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", ROOT.RooArgList(t, tau, deltaGamma))
+    "sinhGBasis",
+    "exp(-@0/ @1)*sinh(@0*@2/2)",
+    ROOT.RooArgList(
+        t,
+        tau,
+        deltaGamma))
 coshGConv = tm.convolution(coshGBasis, t)
 sinhGConv = tm.convolution(sinhGBasis, t)
 
 # Construct polynomial amplitudes in cos(a)
-poly1 = ROOT.RooPolyVar("poly1", "poly1", cosa, ROOT.RooArgList(
-    ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(0.2), ROOT.RooFit.RooConst(0.2)), 0)
+poly1 = ROOT.RooPolyVar(
+    "poly1",
+    "poly1",
+    cosa,
+    ROOT.RooArgList(
+        ROOT.RooFit.RooConst(0.5),
+        ROOT.RooFit.RooConst(0.2),
+        ROOT.RooFit.RooConst(0.2)),
+    0)
 poly2 = ROOT.RooPolyVar("poly2", "poly2", cosa, ROOT.RooArgList(
     ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(-0.2), ROOT.RooFit.RooConst(3)), 0)
 
@@ -84,7 +96,7 @@ pdf.plotOn(frame1)
 # workaround, see https://root.cern.ch/phpBB3/viewtopic.php?t=7764
 ras_ampl1 = ROOT.RooArgSet(ampl1)
 pdf.plotOn(frame1, ROOT.RooFit.Components(ras_ampl1),
-            ROOT.RooFit.LineStyle(ROOT.kDashed))
+           ROOT.RooFit.LineStyle(ROOT.kDashed))
 ras_ampl2 = ROOT.RooArgSet(ampl2)
 pdf.plotOn(frame1, ROOT.RooFit.Components(ras_ampl2), ROOT.RooFit.LineStyle(
     ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))
@@ -96,7 +108,7 @@ frame2 = cosa.frame()
 data.plotOn(frame2)
 pdf.plotOn(frame2)
 pdf.plotOn(frame2, ROOT.RooFit.Components(ras_ampl1),
-            ROOT.RooFit.LineStyle(ROOT.kDashed))
+           ROOT.RooFit.LineStyle(ROOT.kDashed))
 pdf.plotOn(frame2, ROOT.RooFit.Components(ras_ampl2), ROOT.RooFit.LineStyle(
     ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))
 

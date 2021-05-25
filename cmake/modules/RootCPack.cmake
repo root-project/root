@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 #---------------------------------------------------------------------------------------------------
 #  RootCPack.cmake
 #   - basic setup for packaging ROOT using CTest
@@ -23,12 +29,24 @@ string(REGEX REPLACE "^([0-9]+).*$" "\\1" CXX_MAJOR ${CMAKE_CXX_COMPILER_VERSION
 string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\2" CXX_MINOR ${CMAKE_CXX_COMPILER_VERSION})
 
 #---Resource Files-----------------------------------------------------------------------------------
-configure_file(README/README README.txt COPYONLY)
 configure_file(LICENSE LICENSE.txt COPYONLY)
 configure_file(LGPL2_1.txt LGPL2_1.txt COPYONLY)
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.txt")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.txt")
+if (APPLE)
+  # Apple productbuild cannot handle .md files as CPACK_PACKAGE_DESCRIPTION_FILE;
+  # convert to HTML instead.
+  find_program(CONVERTER textutil)
+  if (NOT CONVERTER)
+    message(FATAL_ERROR "textutil executable not found")
+  endif()
+  execute_process(COMMAND ${CONVERTER} -convert html "${CMAKE_SOURCE_DIR}/README.md" -output "${CMAKE_BINARY_DIR}/README.html")
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.html")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.html")
+else()
+  configure_file(README.md README.md COPYONLY)
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.md")
+endif()
 
 #---Source package settings--------------------------------------------------------------------------
 set(CPACK_SOURCE_IGNORE_FILES
@@ -56,6 +74,8 @@ if(MSVC)
     math(EXPR VS_VERSION "${VC_MAJOR} - 5")
   elseif(MSVC_VERSION LESS 1919)
     math(EXPR VS_VERSION "${VC_MAJOR} - 4")
+  elseif(MSVC_VERSION LESS 1925)
+    math(EXPR VS_VERSION "${VC_MAJOR} - 3")
   endif()
   set(COMPILER_NAME_VERSION ".vc${VS_VERSION}")
 else()
@@ -67,22 +87,15 @@ else()
 endif()
 
 #---Processor architecture---------------------------------------------------------------------------
-if(APPLE)
-  execute_process(COMMAND uname -m OUTPUT_VARIABLE arch OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif(UNIX)
-  execute_process(COMMAND uname -p OUTPUT_VARIABLE arch OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif(DEFINED ENV{Platform})
-  set(arch $ENV{Platform})
-  string(TOLOWER ${arch} arch)
-else()
-  set(arch $ENV{PROCESSOR_ARCHITECTURE})
-endif()
+
+set(arch ${CMAKE_SYSTEM_PROCESSOR})
+
 #---OS and version-----------------------------------------------------------------------------------
 if(APPLE)
   execute_process(COMMAND sw_vers "-productVersion"
                   COMMAND cut -d . -f 1-2
                   OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(OS_NAME_VERSION macosx64-${osvers})
+  set(OS_NAME_VERSION macos-${osvers}-${CMAKE_SYSTEM_PROCESSOR})
 elseif(WIN32)
   set(OS_NAME_VERSION win32)
 else()
@@ -106,19 +119,19 @@ else()
 endif()
 #---Build type---------------------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-  string(TOLOWER .${CMAKE_BUILD_TYPE} BUILD_TYPE)
+  string(TOLOWER .${CMAKE_BUILD_TYPE} BUILD_TYPE_FOR_NAME)
 endif()
 
 set(CPACK_PACKAGE_RELOCATABLE True)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "root_v${ROOT_VERSION}")
-set(CPACK_PACKAGE_FILE_NAME "root_v${ROOT_VERSION}.${OS_NAME_VERSION}${COMPILER_NAME_VERSION}${BUILD_TYPE}")
+set(CPACK_PACKAGE_FILE_NAME "root_v${ROOT_VERSION}.${OS_NAME_VERSION}${COMPILER_NAME_VERSION}${BUILD_TYPE_FOR_NAME}")
 set(CPACK_PACKAGE_EXECUTABLES "root" "ROOT")
 
 if(WIN32)
   set(CPACK_GENERATOR "ZIP;NSIS")
   set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
 elseif(APPLE)
-  set(CPACK_GENERATOR "TGZ;PackageMaker")
+  set(CPACK_GENERATOR "TGZ;productbuild")
   set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 else()
   set(CPACK_GENERATOR "TGZ")
@@ -159,5 +172,3 @@ cpack_add_component(tests
     DISPLAY_NAME "ROOT Tests and Tutorials"
     DESCRIPTION "These are needed to do any test and tutorial"
      INSTALL_TYPES full developer)
-
-

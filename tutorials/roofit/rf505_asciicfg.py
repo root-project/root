@@ -1,16 +1,12 @@
-## \file
+## \file rf505_asciicfg.py
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #505
-##
-## Reading and writing ASCII configuration files
+## Organization and simultaneous fits: reading and writing ASCII configuration files
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT
@@ -56,19 +52,22 @@ params.writeToFile("rf505_asciicfg_example.txt")
 params.readFromFile("rf505_asciicfg_example.txt")
 params.Print("v")
 
+configFile = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/rf505_asciicfg.txt"
+
 # Read parameters from section 'Section2' of file
-params.readFromFile("rf505_asciicfg.txt", "", "Section2")
+params.readFromFile(configFile, "", "Section2")
 params.Print("v")
 
 # Read parameters from section 'Section3' of file. Mark all
 # variables that were processed with the "READ" attribute
-params.readFromFile("rf505_asciicfg.txt", "READ", "Section3")
+params.readFromFile(configFile, "READ", "Section3")
 
 # Print the list of parameters that were not read from Section3
-print("The following parameters of the were _not_ read from Section3: ", params.selectByAttrib("READ", ROOT.kFALSE))
+print("The following parameters of the were _not_ read from Section3: ",
+      params.selectByAttrib("READ", ROOT.kFALSE))
 
 # Read parameters from section 'Section4' of file, contains
 # 'include file' statement of rf505_asciicfg_example.txt
 # so that we effective read the same
-params.readFromFile("rf505_asciicfg.txt", "", "Section4")
+params.readFromFile(configFile, "", "Section4")
 params.Print("v")

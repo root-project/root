@@ -1,16 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
-## Multi-dimensional p.d.f.s with conditional p.d.fs in product
+## Multidimensional models: multi-dimensional pdfs with conditional pdfs in product
 ##
-## pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
+## `pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)`    with `f(y) = a0 + a1*y`
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -36,14 +34,23 @@ gaussx = ROOT.RooGaussian(
 
 # Create gaussy(y,0,5)
 gaussy = ROOT.RooGaussian(
-    "gaussy", "Gaussian in y", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(3))
+    "gaussy",
+    "Gaussian in y",
+    y,
+    ROOT.RooFit.RooConst(0),
+    ROOT.RooFit.RooConst(3))
 
 # Create product gx(x|y)*gy(y)
 # -------------------------------------------------------
 
 # Create gaussx(x,sx|y) * gaussy(y)
 model = ROOT.RooProdPdf(
-    "model", "gaussx(x|y)*gaussy(y)", ROOT.RooArgSet(gaussy), ROOT.RooFit.Conditional(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)))
+    "model",
+    "gaussx(x|y)*gaussy(y)",
+    ROOT.RooArgSet(gaussy),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(gaussx),
+        ROOT.RooArgSet(x)))
 
 # Sample, fit and plot product pdf
 # ---------------------------------------------------------------

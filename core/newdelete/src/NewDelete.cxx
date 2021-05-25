@@ -200,7 +200,7 @@ void *operator new(size_t size)
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);  // NOLINT
    return ExtStart(vp);
 }
 
@@ -211,16 +211,16 @@ void *operator new(size_t size, const std::nothrow_t&) noexcept
 
 #if __cplusplus >= 201700L
 
-void *operator new(size_t /*size*/, std::align_val_t /*al*/)
+void *operator new(size_t size, std::align_val_t)
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
-   return nullptr;
+   return ::operator new(size);
 }
 
-void *operator new(size_t /*size*/, std::align_val_t /*al*/, const std::nothrow_t&) noexcept
+void *operator new(size_t size, std::align_val_t, const std::nothrow_t& nt) noexcept
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
-   return nullptr;
+   return ::operator new(size, nt);
 }
 
 #endif
@@ -283,7 +283,7 @@ void operator delete(void *ptr) noexcept
           || !ROOT::Internal::gFreeIfTMapFile(RealStart(ptr))) {
          do {
             TSystem::ResetErrno();
-            ::free(RealStart(ptr));
+            ::free(RealStart(ptr));  // NOLINT
          } while (TSystem::GetErrno() == EINTR);
       }
       if (TSystem::GetErrno() != 0)
@@ -338,16 +338,16 @@ void *operator new[](size_t size, const std::nothrow_t&) noexcept
 
 #if __cplusplus >= 201700L
 
-void *operator new[](size_t /*size*/, std::align_val_t /*al*/)
+void *operator new[](size_t size, std::align_val_t al)
 {
    Fatal("operator new[]","with std::align_val_t is not implemented yet");
-   return nullptr;
+   return ::operator new(size, al);
 }
 
-void *operator new[](size_t /*size*/, std::align_val_t /*al*/, const std::nothrow_t&) noexcept
+void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t& nt) noexcept
 {
    Fatal("operator new[]","with std::align_val_t is not implemented yet");
-   return nullptr;
+   return ::operator new(size, al, nt);
 }
 
 #endif
@@ -383,7 +383,7 @@ void operator delete[](void* ptr, std::size_t) noexcept {
    operator delete[](ptr);
 }
 #if __cplusplus >= 201700L
-void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
+void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */) noexcept
 {
    Fatal("operator delete[]","with size_t and std::align_val_t is not implemented yet");
 }
@@ -421,9 +421,9 @@ void *CustomReAlloc1(void *ovp, size_t size)
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);
+      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
 
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);   // NOLINT
    return ExtStart(vp);
 }
 
@@ -461,8 +461,8 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);
+      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
 
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);    // NOLINT
    return ExtStart(vp);
 }

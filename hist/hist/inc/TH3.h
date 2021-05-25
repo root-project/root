@@ -31,13 +31,13 @@ class TProfile2D;
 class TH3 : public TH1, public TAtt3D {
 
 protected:
-   Double_t     fTsumwy;          //Total Sum of weight*Y
-   Double_t     fTsumwy2;         //Total Sum of weight*Y*Y
-   Double_t     fTsumwxy;         //Total Sum of weight*X*Y
-   Double_t     fTsumwz;          //Total Sum of weight*Z
-   Double_t     fTsumwz2;         //Total Sum of weight*Z*Z
-   Double_t     fTsumwxz;         //Total Sum of weight*X*Z
-   Double_t     fTsumwyz;         //Total Sum of weight*Y*Z
+   Double_t     fTsumwy;          ///< Total Sum of weight*Y
+   Double_t     fTsumwy2;         ///< Total Sum of weight*Y*Y
+   Double_t     fTsumwxy;         ///< Total Sum of weight*X*Y
+   Double_t     fTsumwz;          ///< Total Sum of weight*Z
+   Double_t     fTsumwz2;         ///< Total Sum of weight*Z*Z
+   Double_t     fTsumwxz;         ///< Total Sum of weight*X*Z
+   Double_t     fTsumwyz;         ///< Total Sum of weight*Y*Z
 
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
@@ -62,10 +62,16 @@ protected:
    Int_t    Fill(const char*,Double_t,Double_t) {return Fill(0);} //MayNotUse
    Int_t    Fill(const char*,const char*,Double_t) {return Fill(0);} //MayNotUse
 
+   virtual Double_t Interpolate(Double_t x, Double_t y) const; // May not use
+   virtual Double_t Interpolate(Double_t x) const; // MayNotUse
+
 private:
 
    TH3(const TH3&);
    TH3& operator=(const TH3&); // Not implemented
+
+   using TH1::Integral;
+   using TH1::IntegralAndError;
 
 public:
    virtual ~TH3();
@@ -78,13 +84,12 @@ public:
    virtual Int_t    Fill(const char *namex, Double_t y, const char *namez, Double_t w);
    virtual Int_t    Fill(const char *namex, const char *namey, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, const char *namey, const char *namez, Double_t w);
+   virtual Int_t    Fill(const char *namex, Double_t y, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, const char *namey, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, Double_t y, const char *namez, Double_t w);
 
-   virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
-   virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
-   virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1) const;
-   virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1) const;
+   virtual void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
+   virtual void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual void     FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
                                         Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
    virtual Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz) const;
@@ -98,16 +103,12 @@ public:
    virtual Double_t GetBinWithContent3(Double_t c, Int_t &binx, Int_t &biny, Int_t &binz, Int_t firstx=0, Int_t lastx=0,Int_t firsty=0, Int_t lasty=0, Int_t firstz=0, Int_t lastz=0, Double_t maxdiff=0) const;
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
    virtual Double_t GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
-   virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &z);
+   virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &, TRandom * rng = nullptr);
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t Integral(Option_t *option="") const;
-   using TH1::Integral;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
-   using TH1::IntegralAndError;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & err, Option_t *option="") const;
-   virtual Double_t Interpolate(Double_t x);
-   virtual Double_t Interpolate(Double_t x, Double_t y);
-   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual TH1D    *ProjectionX(const char *name="_px", Int_t iymin=0, Int_t iymax=-1, Int_t izmin=0,
                                 Int_t izmax=-1, Option_t *option="") const; // *MENU*
@@ -130,10 +131,10 @@ public:
 
 protected:
 
-   virtual TH1D        *DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2, 
+   virtual TH1D        *DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2,
                                     const TAxis* projAxis, const TAxis * axis1, const TAxis * axis2, Option_t * option) const;
-   virtual TH1D        *DoProject1D(const char* name, const char * title, const TAxis* projAxis,  
-                         bool computeErrors, bool originalRange, bool useUF, bool useOF) const;
+   virtual TH1D *DoProject1D(const char *name, const char *title, const TAxis *projAxis, const TAxis *axis1,
+                             const TAxis *axis2, bool computeErrors, bool originalRange, bool useUF, bool useOF) const;
    virtual TH2D        *DoProject2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                         bool computeErrors, bool originalRange,
                          bool useUF, bool useOF) const;
@@ -143,14 +144,14 @@ protected:
    // these functions are need to be used inside TProfile3D::DoProjectProfile2D
    static TH1D         *DoProject1D(const TH3 & h, const char* name, const char * title, const TAxis* projX,
                                     bool computeErrors, bool originalRange, bool useUF, bool useOF)  {
-      return h.DoProject1D(name, title, projX, computeErrors, originalRange, useUF, useOF);
+      return h.DoProject1D(name, title, projX, nullptr, nullptr, computeErrors, originalRange, useUF, useOF);
    }
    static TH2D         *DoProject2D(const TH3 & h, const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                                     bool computeErrors, bool originalRange, bool useUF, bool useOF)  {
       return h.DoProject2D(name, title, projX,projY, computeErrors, originalRange, useUF, useOF);
    }
 
-   ClassDef(TH3,5)  //3-Dim histogram base class
+   ClassDef(TH3,6)  //3-Dim histogram base class
 };
 
 //________________________________________________________________________
@@ -186,7 +187,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Char_t (content); }
 
-   ClassDef(TH3C,3)  //3-Dim histograms (one char per channel)
+   ClassDef(TH3C,4)  //3-Dim histograms (one char per channel)
 };
 
 //________________________________________________________________________
@@ -222,7 +223,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); }
 
-   ClassDef(TH3S,3)  //3-Dim histograms (one short per channel)
+   ClassDef(TH3S,4)  //3-Dim histograms (one short per channel)
 };
 
 //________________________________________________________________________
@@ -258,7 +259,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Int_t (content); }
 
-   ClassDef(TH3I,3)  //3-Dim histograms (one 32 bits integer per channel)
+   ClassDef(TH3I,4)  //3-Dim histograms (one 32 bits integer per channel)
 };
 
 
@@ -296,7 +297,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Float_t (content); }
 
-   ClassDef(TH3F,3)  //3-Dim histograms (one float per channel)
+   ClassDef(TH3F,4)  //3-Dim histograms (one float per channel)
 };
 
 //________________________________________________________________________
@@ -333,8 +334,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray[bin]; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = content; }
 
-   ClassDef(TH3D,3)  //3-Dim histograms (one double per channel)
+   ClassDef(TH3D,4)  //3-Dim histograms (one double per channel)
 };
 
 #endif
-

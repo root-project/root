@@ -1,9 +1,8 @@
 //===-- llvm-split: command line tool for testing module splitter ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -55,15 +54,15 @@ int main(int argc, char **argv) {
   unsigned I = 0;
   SplitModule(std::move(M), NumOutputs, [&](std::unique_ptr<Module> MPart) {
     std::error_code EC;
-    std::unique_ptr<tool_output_file> Out(new tool_output_file(
-        OutputFilename + utostr(I++), EC, sys::fs::F_None));
+    std::unique_ptr<ToolOutputFile> Out(
+        new ToolOutputFile(OutputFilename + utostr(I++), EC, sys::fs::F_None));
     if (EC) {
       errs() << EC.message() << '\n';
       exit(1);
     }
 
     verifyModule(*MPart);
-    WriteBitcodeToFile(MPart.get(), Out->os());
+    WriteBitcodeToFile(*MPart, Out->os());
 
     // Declare success.
     Out->keep();

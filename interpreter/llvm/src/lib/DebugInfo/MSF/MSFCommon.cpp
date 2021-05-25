@@ -1,9 +1,8 @@
 //===- MSFCommon.cpp - Common types and functions for MSF files -----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -58,4 +57,26 @@ Error llvm::msf::validateSuperBlock(const SuperBlock &SB) {
         "The free block map isn't at block 1 or block 2.");
 
   return Error::success();
+}
+
+MSFStreamLayout llvm::msf::getFpmStreamLayout(const MSFLayout &Msf,
+                                              bool IncludeUnusedFpmData,
+                                              bool AltFpm) {
+  MSFStreamLayout FL;
+  uint32_t NumFpmIntervals =
+      getNumFpmIntervals(Msf, IncludeUnusedFpmData, AltFpm);
+
+  uint32_t FpmBlock = AltFpm ? Msf.alternateFpmBlock() : Msf.mainFpmBlock();
+
+  for (uint32_t I = 0; I < NumFpmIntervals; ++I) {
+    FL.Blocks.push_back(support::ulittle32_t(FpmBlock));
+    FpmBlock += msf::getFpmIntervalLength(Msf);
+  }
+
+  if (IncludeUnusedFpmData)
+    FL.Length = NumFpmIntervals * Msf.SB->BlockSize;
+  else
+    FL.Length = divideCeil(Msf.SB->NumBlocks, 8);
+
+  return FL;
 }

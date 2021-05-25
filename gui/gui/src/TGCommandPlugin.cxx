@@ -1,6 +1,21 @@
 // @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   26/09/2007
 
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+/** \class TGCommandPlugin
+    \ingroup guiwidgets
+
+Class used to redirect the command line input/output.
+
+*/
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRint.h"
@@ -12,18 +27,13 @@
 #include "TGComboBox.h"
 #include "TGTextView.h"
 #include "TGTextEntry.h"
-#include "TGTextEdit.h"
 #include "TInterpreter.h"
 #include "Getline.h"
+#include "KeySymbols.h"
 
 #include "TGCommandPlugin.h"
-
-//_____________________________________________________________________________
-//
-// TGCommandPlugin
-//
-// Class used to redirect command line input/output.
-//_____________________________________________________________________________
+#include <vector>
+#include <string>
 
 ClassImp(TGCommandPlugin);
 
@@ -34,6 +44,9 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
       TGMainFrame(p, w, h)
 {
    SetCleanup(kDeepCleanup);
+   fHistAdd = kFALSE;
+   fPos = 0;
+   fTempString = "";
    fHf = new TGHorizontalFrame(this, 100, 20);
    fComboCmd   = new TGComboBox(fHf, "", 1);
    fCommand    = fComboCmd->GetTextEntry();
@@ -48,6 +61,14 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
             kLHintsExpandX, 3, 3, 3, 3));
    fCommand->Connect("ReturnPressed()", "TGCommandPlugin", this,
                      "HandleCommand()");
+   fCommand->Connect("CursorOutUp()", "TGCommandPlugin", this,
+                     "HandleArrows(=kKey_Up)");
+   fCommand->Connect("CursorOutDown()", "TGCommandPlugin", this,
+                     "HandleArrows(=kKey_Down)");
+   fCommand->Connect("TabPressed()", "TGCommandPlugin", this,
+                     "HandleTab()");
+   fCommand->Connect("TextChanged(const char *)", "TGCommandPlugin", this,
+                     "HandleTextChanged(const char *)");
    fStatus = new TGTextView(this, 10, 100, 1);
    if (gClient->GetStyle() < 2) {
       Pixel_t pxl;
@@ -62,10 +83,25 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
                         gSystem->HomeDirectory())));
    FILE *lunin = fopen(defhist.Data(), "rt");
    if (lunin) {
+      ULong_t linecount = 0;
       char histline[256];
+      rewind(lunin);
+      while (fgets(histline, 256, lunin))
+         ++linecount;
+      rewind(lunin);
+      if (linecount > 500) {
+         linecount -= 500;
+         while(--linecount > 0)
+            if (!fgets(histline, 256, lunin))
+               break;
+      }
+      linecount = 0;
       while (fgets(histline, 256, lunin)) {
          histline[strlen(histline)-1] = 0; // remove trailing "\n"
-         fComboCmd->InsertEntry(histline, 0, -1);
+         fComboCmd->InsertEntry(histline, linecount, -1);
+         // limit the history size to 500 lines
+         if (++linecount > 500)
+            break;
       }
       fclose(lunin);
    }
@@ -86,6 +122,10 @@ TGCommandPlugin::~TGCommandPlugin()
                                      gSystem->TempDirectory(), fPid);
    gSystem->Unlink(pathtmp);
    fCommand->Disconnect("ReturnPressed()");
+   fCommand->Disconnect("CursorOutUp()");
+   fCommand->Disconnect("CursorOutDown()");
+   fCommand->Disconnect("TabPressed()");
+   fCommand->Disconnect("TextChanged(const char *)");
    delete fTimer;
    fTimer = 0;
    Cleanup();
@@ -119,12 +159,41 @@ void TGCommandPlugin::CheckRemote(const char * /*str*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Handle the 'up' and 'down' arrow key events.
+
+void TGCommandPlugin::HandleArrows(Int_t keysym)
+{
+   Int_t entries = fComboCmd->GetNumberOfEntries();
+   switch ((EKeySym)keysym) {
+      case kKey_Up:
+         if (fPos < entries-1) ++fPos;
+         break;
+      case kKey_Down:
+         if (fPos > 0) --fPos;
+         break;
+      default:
+         break;
+   }
+   if (fPos > 0) {
+      TGTextLBEntry *te = (TGTextLBEntry *)fComboCmd->GetListBox()->GetEntry(entries-fPos);
+      if (te) {
+         fCommand->SetText(te->GetText()->GetString(), kFALSE);
+      }
+   } else {
+      if (fTempString.Length() > 0)
+         fCommand->SetText(fTempString.Data(), kFALSE);
+      else
+         fCommand->Clear();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Handle command line from the "command" combo box.
 
 void TGCommandPlugin::HandleCommand()
 {
    const char *string = fCommandBuf->GetString();
-   if (strlen(string) > 1) {
+   if (strlen(string) > 0) {
       // form temporary file path
       TString sPrompt = "root []";
       TString pathtmp = TString::Format("%s/command.%d.log",
@@ -140,15 +209,48 @@ void TGCommandPlugin::HandleCommand()
       gSystem->RedirectOutput(pathtmp.Data(), "a");
       gApplication->SetBit(TApplication::kProcessRemotely);
       gROOT->ProcessLine(string);
-      fComboCmd->InsertEntry(string, 0, -1);
-      if (app->InheritsFrom("TRint"))
+      Int_t entries = fComboCmd->GetNumberOfEntries();
+      fComboCmd->InsertEntry(string, entries, -1);
+      fPos = 0;
+      if (app->InheritsFrom("TRint") || fHistAdd)
          Gl_histadd((char *)string);
       gSystem->RedirectOutput(0);
       fStatus->LoadFile(pathtmp.Data());
       fStatus->ShowBottom();
       CheckRemote(string);
       fCommand->Clear();
+      fTempString.Clear();
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the 'TAB' key events.
+
+void TGCommandPlugin::HandleTab()
+{
+   std::string prompt = gInterpreter->GetPrompt();
+   std::string line = fCommandBuf->GetString();
+   if (prompt.find("root") == std::string::npos)
+      prompt = "root []";
+   prompt += " ";
+   prompt += line;
+   fStatus->AddLine(prompt.c_str());
+   fStatus->ShowBottom();
+   std::vector<std::string> result;
+   size_t cur = line.length();
+   gInterpreter->CodeComplete(line, cur, result);
+   for (auto& res : result) {
+      fStatus->AddLine(res.c_str());
+      fStatus->ShowBottom();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the text changed events.
+
+void TGCommandPlugin::HandleTextChanged(const char *text)
+{
+   fTempString = text;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,4 +261,20 @@ Bool_t TGCommandPlugin::HandleTimer(TTimer *t)
    if ((fTimer == 0) || (t != fTimer)) return kTRUE;
    CheckRemote("");
    return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The function SetHistAdd() is needed for a standalone TApplication to log the
+/// TGCommandPlugin commands into a ROOT history file.
+/// However, this function has no effect if the user does not explictly set on
+/// his standalone application the name of the ROOT history file.
+/// To log into the default ROOT history file, call this on the user-side of the
+/// code:
+///    Gl_histinit(gEnv->GetValue("Rint.History", gSystem->HomeDirectory()));
+/// Otherwise, replace the argument of Gl_histinit with a text file name you want
+/// to use for application-specific logging.
+
+void TGCommandPlugin::SetHistAdd(Bool_t add)
+{
+   fHistAdd = add;
 }

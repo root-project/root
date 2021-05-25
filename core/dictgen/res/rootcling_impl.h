@@ -8,8 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string>
-
 namespace cling {
    class Interpreter;
 }
@@ -30,7 +28,6 @@ namespace RootCling {
       void (*fAddStreamerInfoToROOTFile)(const char *normName) = nullptr;
       void (*fAddTypedefToROOTFile)(const char *tdname) = nullptr;
       void (*fAddEnumToROOTFile)(const char *tdname) = nullptr;
-      void (*fAddAncestorPCMROOTFile)(const char *pcmName) = nullptr;
       bool (*fCloseStreamerInfoROOTFile)(bool writeEmptyRootPCM) = nullptr;
    };
 
@@ -41,10 +38,12 @@ namespace RootCling {
 } // namespace Internal
 } // namespace ROOT
 
+#ifndef R__DLLEXPORT
 #ifdef _MSC_VER
 #define R__DLLEXPORT __declspec(dllexport)
 #else
 #define R__DLLEXPORT __attribute__ ((visibility ("default")))
+#endif
 #endif
 
 extern "C" R__DLLEXPORT

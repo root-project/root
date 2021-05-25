@@ -11,6 +11,7 @@
 #ifndef ROOT_RDATASOURCE
 #define ROOT_RDATASOURCE
 
+#include "RDF/RColumnReaderBase.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // ULong64_t
 #include "TString.h"
@@ -98,6 +99,7 @@ The sequence of calls that RDataFrame (or any other client of a RDataSource) per
 RDataSource implementations must support running multiple event-loops consecutively (although sequentially) on the same dataset.
  - \b SetNSlots() is called once per RDataSource object, typically when it is associated to a RDataFrame.
  - \b GetColumnReaders() can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
+ - \b GetEntryRanges() will be called several times, including during an event loop, as additional ranges are needed.  It will not be called concurrently.
  - \b Initialise() and \b Finalise() are called once per event-loop,  right before starting and right after finishing.
  - \b InitSlot(), \b SetEntry(), and \b FinaliseSlot() can be called concurrently from multiple threads, multiple times per event-loop.
 */
@@ -125,14 +127,14 @@ public:
    virtual const std::vector<std::string> &GetColumnNames() const = 0;
 
    /// \brief Checks if the dataset has a certain column
-   /// \param[in] columnName The name of the column
-   virtual bool HasColumn(std::string_view) const = 0;
+   /// \param[in] colName The name of the column
+   virtual bool HasColumn(std::string_view colName) const = 0;
 
    // clang-format off
    /// \brief Type of a column as a string, e.g. `GetTypeName("x") == "double"`. Required for jitting e.g. `df.Filter("x>0")`.
-   /// \param[in] columnName The name of the column
+   /// \param[in] colName The name of the column
    // clang-format on
-   virtual std::string GetTypeName(std::string_view) const = 0;
+   virtual std::string GetTypeName(std::string_view colName) const = 0;
 
    // clang-format off
    /// Called at most once per column by RDF. Return vector of pointers to pointers to column values - one per slot.
@@ -152,10 +154,24 @@ public:
       return typedVec;
    }
 
+   /// If the other GetColumnReaders overload returns an empty vector, this overload will be called instead.
+   /// \param[in] slot The data processing slot that needs to be considered
+   /// \param[in] name The name of the column for which a column reader needs to be returned
+   /// \param[in] tid A type_info
+   /// At least one of the two must return a non-empty/non-null value.
+   virtual std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &)
+   {
+      return {};
+   }
+
    // clang-format off
    /// \brief Return ranges of entries to distribute to tasks.
    /// They are required to be contiguous intervals with no entries skipped. Supposing a dataset with nEntries, the
    /// intervals must start at 0 and end at nEntries, e.g. [0-5],[5-10] for 10 entries.
+   /// This function will be invoked repeatedly by RDataFrame as it needs additional entries to process.
+   /// The same entry range should not be returned more than once.
+   /// Returning an empty collection of ranges signals to RDataFrame that the processing can stop.
    // clang-format on
    virtual std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() = 0;
 
@@ -200,7 +216,11 @@ public:
    // clang-format on
    virtual void Finalise() {}
 
-   virtual std::string GetDataSourceType() = 0;
+   /// \brief Return a string representation of the datasource type.
+   /// The returned string will be used by ROOT::RDF::SaveGraph() to represent
+   /// the datasource in the visualization of the computation graph.
+   /// Concrete datasources can override the default implementation.
+   virtual std::string GetLabel() { return "Custom Datasource"; }
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot

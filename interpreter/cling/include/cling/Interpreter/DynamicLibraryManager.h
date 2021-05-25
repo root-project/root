@@ -11,12 +11,14 @@
 #define CLING_DYNAMIC_LIBRARY_MANAGER_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 
 #include "llvm/Support/Path.h"
 
 namespace cling {
+  class Dyld;
   class InterpreterCallbacks;
   class InvocationOptions;
 
@@ -34,6 +36,21 @@ namespace cling {
       kLoadLibNumResults
     };
 
+    /// Describes the library search paths.
+    struct SearchPathInfo {
+      /// The search path.
+      ///
+      std::string Path;
+
+      /// True if the Path is on the LD_LIBRARY_PATH.
+      ///
+      bool IsUser;
+
+      bool operator==(const SearchPathInfo& Other) const {
+        return IsUser == Other.IsUser && Path == Other.Path;
+      }
+    };
+    using SearchPathInfos = llvm::SmallVector<SearchPathInfo, 32>;
   private:
     typedef const void* DyLibHandle;
     typedef llvm::DenseMap<DyLibHandle, std::string> DyLibs;
@@ -48,9 +65,11 @@ namespace cling {
 
     ///\brief System's include path, get initialized at construction time.
     ///
-    llvm::SmallVector<std::string, 32> m_SystemSearchPaths;
+    SearchPathInfos m_SearchPaths;
 
-    InterpreterCallbacks* m_Callbacks;
+    InterpreterCallbacks* m_Callbacks = nullptr;
+
+    Dyld* m_Dyld = nullptr;
 
     ///\brief Concatenates current include paths and the system include paths
     /// and performs a lookup for the filename.
@@ -70,12 +89,32 @@ namespace cling {
     ///\returns the canonical path to the file or empty string if not found
     ///
     std::string lookupLibMaybeAddExt(llvm::StringRef filename) const;
+
+    /// On a success returns to full path to a shared object that holds the
+    /// symbol pointed by func.
+    ///
+    static std::string getSymbolLocation(void* func);
   public:
     DynamicLibraryManager(const InvocationOptions& Opts);
     ~DynamicLibraryManager();
+    DynamicLibraryManager(const DynamicLibraryManager&) = delete;
+    DynamicLibraryManager& operator=(const DynamicLibraryManager&) = delete;
+
     InterpreterCallbacks* getCallbacks() { return m_Callbacks; }
     const InterpreterCallbacks* getCallbacks() const { return m_Callbacks; }
     void setCallbacks(InterpreterCallbacks* C) { m_Callbacks = C; }
+
+    ///\brief Returns the system include paths.
+    ///
+    ///\returns System include paths.
+    ///
+    const SearchPathInfos& getSearchPaths() const {
+       return m_SearchPaths;
+    }
+
+    void addSearchPath(llvm::StringRef dir) {
+      m_SearchPaths.emplace_back(SearchPathInfo{dir, /*IsUser*/ true});
+    }
 
     ///\brief Looks up a library taking into account the current include paths
     /// and the system include paths.
@@ -106,6 +145,35 @@ namespace cling {
     ///
     bool isLibraryLoaded(llvm::StringRef fullPath) const;
 
+    /// Initialize the dyld.
+    ///
+    ///\param [in] shouldPermanentlyIgnore - a callback deciding if a library
+    ///            should be ignored from the result set. Useful for ignoring
+    ///            dangerous libraries such as the ones overriding malloc.
+    ///
+    void
+    initializeDyld(std::function<bool(llvm::StringRef)> shouldPermanentlyIgnore);
+
+    /// Find the first not-yet-loaded shared object that contains the symbol
+    ///
+    ///\param[in] mangledName - the mangled name to look for.
+    ///\param[in] searchSystem - whether to decend into system libraries.
+    ///
+    ///\returns the library name if found, and empty string otherwise.
+    ///
+    std::string searchLibrariesForSymbol(const std::string& mangledName,
+                                         bool searchSystem = true) const;
+
+    /// On a success returns to full path to a shared object that holds the
+    /// symbol pointed by func.
+    ///
+    template <class T>
+    static std::string getSymbolLocation(T func) {
+      static_assert(std::is_pointer<T>::value, "Must be a function pointer!");
+      return getSymbolLocation(reinterpret_cast<void*>(func));
+    }
+
+
     ///\brief Explicitly tell the execution engine to use symbols from
     ///       a shared library that would otherwise not be used for symbol
     ///       resolution, e.g. because it was dlopened with RTLD_LOCAL.
@@ -114,6 +182,15 @@ namespace cling {
     static void ExposeHiddenSharedLibrarySymbols(void* handle);
 
     static std::string normalizePath(llvm::StringRef path);
+
+    /// Returns true if file is a shared library.
+    ///
+    ///\param[in] libFullPath - the full path to file.
+    ///
+    ///\param[out] exists - sets if the file exists. Useful to distinguish if it
+    ///            is a library but of incompatible file format.
+    ///
+    static bool isSharedLibrary(llvm::StringRef libFullPath, bool* exists = 0);
   };
 } // end namespace cling
 #endif // CLING_DYNAMIC_LIBRARY_MANAGER_H

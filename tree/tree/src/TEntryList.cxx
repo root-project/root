@@ -91,7 +91,7 @@ an entry list. Example:
               branch->GetEntry(localEntry);
            or
               chain->GetEntry(entryNumber);
-           In the later case the LoadTree is then somewhat redudant.
+           In the later case the LoadTree is then somewhat redundant.
            ...
         }
      }
@@ -125,7 +125,7 @@ changed.
 ## Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())
 
 while the TTree::SetEntryList() function is only setting the TTree::fEntryList
-data member, the same function in TChain also finds correspondance between
+data member, the same function in TChain also finds correspondence between
 the TTrees of this TChain and the sub-lists of this TEntryList.
 
 ## TEntryList and the current directory
@@ -148,10 +148,12 @@ See comments to those functions for more details
 #include "TEntryListBlock.h"
 #include "TError.h"
 #include "TKey.h"
+#include "TBuffer.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TRegexp.h"
 #include "TSystem.h"
+#include "TObjString.h"
 
 ClassImp(TEntryList);
 
@@ -614,7 +616,9 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 
 Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 {
-   if (!tree){
+   if (entry < 0)
+     return kFALSE;
+   if (!tree) {
       if (!fLists) {
          if (!fBlocks) return 0;
          TEntryListBlock *block = 0;
@@ -655,7 +659,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 Long64_t TEntryList::GetEntry(Int_t index)
 {
 
-   if (index>=fN){
+   if ((index>=fN) || (index<0)) {
       return -1;
    }
    if (index==fLastIndexQueried+1){
@@ -740,11 +744,17 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 //third sublist will be returned
 
    Long64_t result = GetEntry(index);
-   if (fLists)
+   if (result < 0) {
+      treenum = -1;
+      return result;
+   }
+   R__ASSERT(fLists == nullptr || (fLists != nullptr && fCurrent != nullptr));
+   if (fCurrent)
       treenum = fCurrent->fTreeNumber;
    else
       treenum = fTreeNumber;
-   if (treenum<0) return -1;
+   if (treenum < 0)
+      return -1;
 
    return result;
 }
@@ -1452,8 +1462,8 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
    }
    // Apply to ourselves
    Bool_t newobjs = kTRUE;
-   TString path = gSystem->DirName(fFileName), com;
-   TObjString *objs = 0;
+   TString path = gSystem->GetDirName(fFileName), com;
+   TObjString *objs = nullptr;
    TIter nxr(xrl);
    while ((objs = (TObjString *) nxr())) {
       Int_t rc = 0;

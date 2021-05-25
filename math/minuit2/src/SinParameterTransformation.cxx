@@ -11,7 +11,7 @@
 #include "Minuit2/SinParameterTransformation.h"
 #include "Minuit2/MnMachinePrecision.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 
@@ -21,14 +21,14 @@ namespace ROOT {
 
     long double SinParameterTransformation::Int2ext(long double Value, long double Upper, long double Lower) const {
       // transformation from  to internal (unlimited) to external values (limited by Lower/Upper )
-      return Lower + 0.5*(Upper - Lower)*(sin(Value) + 1.);
+      return Lower + 0.5*(Upper - Lower)*(std::sin(Value) + 1.);
     }
 
     long double SinParameterTransformation::Ext2int(long double Value, long double Upper, long double Lower, const MnMachinePrecision& prec) const {
       // transformation from external (limited by Lower/Upper )  to internal (unlimited) values given the lower/upper limits
 
-      long double piby2 = 2.*atan(1.);
-      long double distnn = 8.*sqrt(prec.Eps2());
+      long double piby2 = 2.*std::atan(1.);
+      long double distnn = 8.*std::sqrt(prec.Eps2());
       long double vlimhi = piby2 - distnn;
       long double vlimlo = -piby2 + distnn;
 
@@ -46,13 +46,13 @@ namespace ROOT {
         }
 
       } else {
-        return asin(yy);
+        return std::asin(yy);
       }
     }
 
     long double SinParameterTransformation::DInt2Ext(long double Value, long double Upper, long double Lower) const {
       // return the derivative of the transformation d Ext/ d Int
-      return 0.5*((Upper - Lower)*cos(Value));
+      return 0.5*((Upper - Lower)*std::cos(Value));
     }
 
     long double SinParameterTransformation::D2Int2Ext(long double Value, long double Upper, long double Lower) const {
@@ -66,4 +66,4 @@ namespace ROOT {
 
   }  // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT

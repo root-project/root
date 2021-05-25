@@ -24,7 +24,6 @@ Full description with examples and pictures
 #include "TGeoVoxelFinder.h"
 
 #include "TBuffer.h"
-#include "TObject.h"
 #include "TMath.h"
 #include "TGeoMatrix.h"
 #include "TGeoBBox.h"
@@ -120,97 +119,6 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    fNsliceZ = 0;
    memset(fPriority, 0, 3*sizeof(Int_t));
    SetNeedRebuild();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
-  TObject(vf),
-  fVolume(vf.fVolume),
-  fIbx(vf.fIbx),
-  fIby(vf.fIby),
-  fIbz(vf.fIbz),
-  fNboxes(vf.fNboxes),
-  fNox(vf.fNox),
-  fNoy(vf.fNoy),
-  fNoz(vf.fNoz),
-  fNex(vf.fNex),
-  fNey(vf.fNey),
-  fNez(vf.fNez),
-  fNx(vf.fNx),
-  fNy(vf.fNy),
-  fNz(vf.fNz),
-  fBoxes(vf.fBoxes),
-  fXb(vf.fXb),
-  fYb(vf.fYb),
-  fZb(vf.fZb),
-  fOBx(vf.fOBx),
-  fOBy(vf.fOBy),
-  fOBz(vf.fOBz),
-  fOEx(vf.fOEx),
-  fOEy(vf.fOEy),
-  fOEz(vf.fOEz),
-  fExtraX(vf.fExtraX),
-  fExtraY(vf.fExtraY),
-  fExtraZ(vf.fExtraZ),
-  fNsliceX(vf.fNsliceX),
-  fNsliceY(vf.fNsliceY),
-  fNsliceZ(vf.fNsliceZ),
-  fIndcX(vf.fIndcX),
-  fIndcY(vf.fIndcY),
-  fIndcZ(vf.fIndcZ)
-{
-   for(Int_t i=0; i<3; i++) {
-      fPriority[i]=vf.fPriority[i];
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
-{
-   if(this!=&vf) {
-      TObject::operator=(vf);
-      fVolume=vf.fVolume;
-      fIbx=vf.fIbx;
-      fIby=vf.fIby;
-      fIbz=vf.fIbz;
-      fNboxes=vf.fNboxes;
-      fNox=vf.fNox;
-      fNoy=vf.fNoy;
-      fNoz=vf.fNoz;
-      fNex=vf.fNex;
-      fNey=vf.fNey;
-      fNez=vf.fNez;
-      fNx=vf.fNx;
-      fNy=vf.fNy;
-      fNz=vf.fNz;
-      for(Int_t i=0; i<3; i++) {
-         fPriority[i]=vf.fPriority[i];
-      }
-      fBoxes=vf.fBoxes;
-      fXb=vf.fXb;
-      fYb=vf.fYb;
-      fZb=vf.fZb;
-      fOBx=vf.fOBx;
-      fOBy=vf.fOBy;
-      fOBz=vf.fOBz;
-      fOEx=vf.fOEx;
-      fOEy=vf.fOEy;
-      fOEz=vf.fOEz;
-      fNsliceX=vf.fNsliceX;
-      fNsliceY=vf.fNsliceY;
-      fNsliceZ=vf.fNsliceZ;
-      fIndcX=vf.fIndcX;
-      fIndcY=vf.fIndcY;
-      fIndcZ=vf.fIndcZ;
-      fExtraX=vf.fExtraX;
-      fExtraY=vf.fExtraY;
-      fExtraZ=vf.fExtraZ;
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

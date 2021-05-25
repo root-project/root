@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
-## Complete example with use of conditional p.d.f. with per-event errors
+## Multidimensional models: complete example with use of conditional pdf with per-event errors
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -30,12 +28,12 @@ gm = ROOT.RooGaussModel(
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
 decay_gm = ROOT.RooDecay("decay_gm", "decay", dt,
-                            tau, gm, ROOT.RooDecay.DoubleSided)
+                         tau, gm, ROOT.RooDecay.DoubleSided)
 
 # Construct fake 'external' data with per-event error
 # ------------------------------------------------------------------------------------------------------
 
-# Use landau p.d.f to get somewhat realistic distribution with long tail
+# Use landau pdf to get somewhat realistic distribution with long tail
 pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(
     1), ROOT.RooFit.RooConst(0.25))
 expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
@@ -44,7 +42,7 @@ expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
 # ---------------------------------------------------------------------------------------------
 
 # Specify external dataset with dterr values to use decay_dm as
-# conditional p.d.f.
+# conditional pdf
 data = decay_gm.generate(ROOT.RooArgSet(
     dt), ROOT.RooFit.ProtoData(expDataDterr))
 
@@ -58,7 +56,7 @@ decay_gm.fitTo(data, ROOT.RooFit.ConditionalObservables(
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
 
-# Make two-dimensional plot of conditional p.d.f in (dt,dterr)
+# Make two-dimensional plot of conditional pdf in (dt,dterr)
 hh_decay = decay_gm.createHistogram("hh_decay", dt, ROOT.RooFit.Binning(
     50), ROOT.RooFit.YVar(dterr, ROOT.RooFit.Binning(50)))
 hh_decay.SetLineColor(ROOT.kBlue)
@@ -83,7 +81,7 @@ decay_gm.plotOn(frame2, ROOT.RooFit.ProjWData(expDataDterr, ROOT.kTRUE))
 
 # Draw all frames on canvas
 c = ROOT.TCanvas("rf306_condpereventerrors",
-                    "rf306_condperventerrors", 1200, 400)
+                 "rf306_condperventerrors", 1200, 400)
 c.Divide(3)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.20)

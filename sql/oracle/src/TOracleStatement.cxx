@@ -21,11 +21,13 @@
 #include "TOracleStatement.h"
 #include "TOracleServer.h"
 #include "TDataType.h"
-#include <stdlib.h>
+#include "snprintf.h"
+#include <cstdlib>
+
+#include <occi.h>
 
 ClassImp(TOracleStatement);
 
-using namespace std;
 using namespace oracle::occi;
 
 
@@ -39,13 +41,7 @@ TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement
    fEnv(env),
    fConn(conn),
    fStmt(stmt),
-   fResult(0),
-   fFieldInfo(0),
-   fBuffer(0),
-   fBufferSize(0),
    fNumIterations(niter),
-   fIterCounter(0),
-   fWorkingMode(0),
    fTimeFmt(TOracleServer::GetDatimeFormat())
 {
    if (fStmt) {
@@ -81,10 +77,10 @@ void TOracleStatement::Close(Option_t *)
 
    CloseBuffer();
 
-   fConn = 0;
-   fStmt = 0;
-   fResult = 0;
-   fFieldInfo = 0;
+   fConn = nullptr;
+   fStmt =  nullptr;
+   fResult = nullptr;
+   fFieldInfo = nullptr;
    fIterCounter = 0;
 }
 
@@ -140,9 +136,8 @@ void TOracleStatement::SetBufferSize(Int_t size)
     fBufferSize = size;
     fBuffer = new TBufferRec[size];
     for (Int_t n=0;n<fBufferSize;n++) {
-       fBuffer[n].strbuf = 0;
-       fBuffer[n].strbufsize = -1;
-       fBuffer[n].namebuf = 0;
+       fBuffer[n].membuf = nullptr;
+       fBuffer[n].bufsize = -1;
     }
 }
 
@@ -153,13 +148,13 @@ void TOracleStatement::CloseBuffer()
 {
    if (fBuffer) {
       for (Int_t n=0;n<fBufferSize;n++) {
-         delete[] fBuffer[n].strbuf;
-         delete[] fBuffer[n].namebuf;
+         if (fBuffer[n].membuf)
+            free(fBuffer[n].membuf);
       }
 
       delete[] fBuffer;
    }
-   fBuffer = 0;
+   fBuffer = nullptr;
    fBufferSize = 0;
 }
 
@@ -667,19 +662,12 @@ const char* TOracleStatement::GetFieldName(Int_t npar)
 {
    CheckGetField("GetFieldName", 0);
 
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return nullptr;
 
-   if (fBuffer[npar].namebuf!=0) return fBuffer[npar].namebuf;
+   if (fBuffer[npar].namebuf.empty())
+      fBuffer[npar].namebuf = (*fFieldInfo)[npar].getString(MetaData::ATTR_NAME);
 
-   std::string buff = (*fFieldInfo)[npar].getString(MetaData::ATTR_NAME);
-
-   if (buff.length()==0) return 0;
-
-   fBuffer[npar].namebuf = new char[buff.length()+1];
-
-   strcpy(fBuffer[npar].namebuf, buff.c_str());
-
-   return fBuffer[npar].namebuf;
+   return fBuffer[npar].namebuf.empty() ? nullptr : fBuffer[npar].namebuf.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -699,10 +687,11 @@ Bool_t TOracleStatement::NextResultRow()
 
    try {
       for (int n=0;n<fBufferSize;n++) {
-        if (fBuffer[n].strbuf)
-           delete[] fBuffer[n].strbuf;
-        fBuffer[n].strbuf = 0;
-        fBuffer[n].strbufsize = -1;
+        if (fBuffer[n].membuf) {
+           free(fBuffer[n].membuf);
+           fBuffer[n].membuf = nullptr;
+        }
+        fBuffer[n].bufsize = -1;
       }
       if (fResult->next() == oracle::occi::ResultSet::END_OF_FETCH) {
          fWorkingMode = 0;
@@ -859,7 +848,8 @@ const char* TOracleStatement::GetString(Int_t npar)
 {
    CheckGetField("GetString", 0);
 
-   if (fBuffer[npar].strbuf!=0) return fBuffer[npar].strbuf;
+   if (fBuffer[npar].membuf)
+      return (const char *) fBuffer[npar].membuf;
 
    try {
       if (fResult->isNull(npar+1)) return 0;
@@ -904,13 +894,13 @@ const char* TOracleStatement::GetString(Int_t npar)
 
       int len = res.length();
 
-      if (len>0) {
-          fBuffer[npar].strbuf = new char[len+1];
-          fBuffer[npar].strbufsize = len+1;
-          strcpy(fBuffer[npar].strbuf, res.c_str());
+      if (len > 0) {
+          fBuffer[npar].membuf = malloc(len+1);
+          fBuffer[npar].bufsize = len+1;
+          strncpy((char *) fBuffer[npar].membuf, res.c_str(), len+1);
       }
 
-      return fBuffer[npar].strbuf;
+      return (const char *)fBuffer[npar].membuf;
 
    } catch (SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetString");
@@ -932,9 +922,9 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
    CheckGetField("GetBinary", kFALSE);
 
-   if (fBuffer[npar].strbufsize>=0) {
-      mem = fBuffer[npar].strbuf;
-      size = fBuffer[npar].strbufsize;
+   if (fBuffer[npar].bufsize >= 0) {
+      mem = fBuffer[npar].membuf;
+      size = fBuffer[npar].bufsize;
       return kTRUE;
    }
 
@@ -949,14 +939,14 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
             size = parbytes.length();
 
-            fBuffer[npar].strbufsize = size;
+            fBuffer[npar].bufsize = size;
 
-            if (size>0) {
+            if (size > 0) {
                mem = malloc(size);
 
-               fBuffer[npar].strbuf = (char*) mem;
+               fBuffer[npar].membuf = mem;
 
-               parbytes.getBytes((unsigned char*) mem, size);
+               parbytes.getBytes((unsigned char *) mem, size);
             }
 
             break;
@@ -967,14 +957,14 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
             size = parblob.length();
 
-            fBuffer[npar].strbufsize = size;
+            fBuffer[npar].bufsize = size;
 
-            if (size>0) {
+            if (size > 0) {
                mem = malloc(size);
 
-               fBuffer[npar].strbuf = (char*) mem;
+               fBuffer[npar].membuf = mem;
 
-               parblob.read(size, (unsigned char*) mem, size);
+               parblob.read(size, (unsigned char *) mem, size);
             }
 
             break;
@@ -985,14 +975,14 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
             size = parclob.length();
 
-            fBuffer[npar].strbufsize = size;
+            fBuffer[npar].bufsize = size;
 
-            if (size>0) {
+            if (size > 0) {
                mem = malloc(size);
 
-               fBuffer[npar].strbuf = (char*) mem;
+               fBuffer[npar].membuf = mem;
 
-               parclob.read(size, (unsigned char*) mem, size);
+               parclob.read(size, (unsigned char *) mem, size);
             }
 
             break;
@@ -1005,14 +995,14 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
             size = parbfile.length();
 
-            fBuffer[npar].strbufsize = size;
+            fBuffer[npar].bufsize = size;
 
             if (size>0) {
                mem = malloc(size);
 
-               fBuffer[npar].strbuf = (char*) mem;
+               fBuffer[npar].membuf = mem;
 
-               parbfile.read(size, (unsigned char*) mem, size);
+               parbfile.read(size, (unsigned char *) mem, size);
             }
 
             break;

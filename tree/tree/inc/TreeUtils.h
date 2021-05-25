@@ -24,18 +24,18 @@
 
 #include <iosfwd>
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 namespace ROOT {
 namespace TreeUtils {
 
-//1. Function to fill tuples (TNtuple/TNtupleD) from
-//a simple ASCII data file. With auto and decltype - we can
-//get rid of DataType parameter :) (or with a simple typedef inside ntuple class).
-//An input file consists of non-empty lines (separated by newline-characters), possibly empty lines,
-//and comments (treated as empty lines). Each non-empty line should contain N numbers - entry for a tuple.
-//Non-strict mode lets you to have newline-characters inside a tuple's row (as it worked
-//in ROOT prior to v5.3xxx).
+/// Function to fill tuples (TNtuple/TNtupleD) from
+/// a simple ASCII data file. With auto and decltype - we can
+/// get rid of DataType parameter :) (or with a simple typedef inside ntuple class).
+/// An input file consists of non-empty lines (separated by newline-characters), possibly empty lines,
+/// and comments (treated as empty lines). Each non-empty line should contain N numbers - entry for a tuple.
+/// Non-strict mode lets you to have newline-characters inside a tuple's row (as it worked
+/// in ROOT prior to v5.3xxx).
 
 template<class DataType, class Tuple>
 Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char delimiter, bool strictMode);

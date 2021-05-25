@@ -37,8 +37,8 @@ namespace ROOT {
 
 
 /** Dfinv.
-    Function to compute the inverse of a square matrix ($A^{-1}$) of
-    dimension $idim$ and order $n$. The routine Dfactir must be called
+    Function to compute the inverse of a square matrix (\f$A^{-1}\f$) of
+    dimension \f$idim\f$ and order \f$n\f$. The routine Dfactir must be called
     before Dfinv!
 
     @author T. Glebe

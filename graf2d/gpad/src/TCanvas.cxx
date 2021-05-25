@@ -9,15 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
+#include "TDatime.h"
 #include "TClass.h"
 #include "TStyle.h"
-#include "TText.h"
 #include "TBox.h"
 #include "TCanvasImp.h"
 #include "TDialogCanvas.h"
@@ -29,23 +32,27 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TColor.h"
+#include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
-#include "TObjectSpy.h"
+#include "TVirtualX.h"
 #include "TAxis.h"
+#include "TH1.h"
+#include "TGraph.h"
+#include "TMath.h"
 #include "TView.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include "TVirtualMutex.h"
 
 class TCanvasInit {
 public:
    TCanvasInit() { TApplication::NeedGraphicsLibs(); }
-};
-static TCanvasInit gCanvasInit;
-
+} gCanvasInit;
 
 //*-*x16 macros/layout_canvas
 
@@ -71,7 +78,7 @@ An example of a Canvas layout is sketched in the picture below.
 \image html gpad_canvas.png
 
 This canvas contains two pads named P1 and P2. Both Canvas, P1 and P2 can be
-moved, grown, shrinked using the normal rules of the Display manager.
+moved, grown, shrunk using the normal rules of the Display manager.
 
 Once objects have been drawn in a canvas, they can be edited/moved by pointing
 directly to them. The cursor shape is changed to suggest the type of action that
@@ -94,7 +101,7 @@ the interactive mode, the following four lines of code should be used:
    {
       Double_t w = 600;
       Double_t h = 600;
-      TCanvas * c1 = new TCanvas("c", "c", w, h);
+      auto c = new TCanvas("c", "c", w, h);
       c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
    }
 ~~~
@@ -107,9 +114,11 @@ If the canvas size this exceed the window size, scroll bars will be added to the
 This allows to display very large canvases (even bigger than the screen size). The
 Following example shows how to proceed.
 ~~~ {.cpp}
-TCanvas *c1 = new TCanvas("c1","c1");
-c1->SetCanvasSize(1500, 1500);
-c1->SetWindowSize(500, 500);
+   {
+      auto c = new TCanvas("c","c");
+      c->SetCanvasSize(1500, 1500);
+      c->SetWindowSize(500, 500);
+   }
 ~~~
 */
 
@@ -153,7 +162,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
       const char *defcanvas = gROOT->GetDefCanvasName();
       char *cdef;
 
-      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      auto lc = (TList*)gROOT->GetListOfCanvases();
       if (lc->FindObject(defcanvas)) {
          Int_t n = lc->GetSize()+1;
          while (lc->FindObject(Form("%s_n%d",defcanvas,n))) n++;
@@ -290,7 +299,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX = fWindowTopY = 0;
       if (form == 1) {
          fWindowWidth  = gStyle->GetCanvasDefW();
@@ -381,6 +390,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       ww       = -ww;
       SetBit(kMenuBar,0);
    }
+   if (wh <= 0) {
+      Error("Constructor", "Invalid canvas height: %d",wh);
+      return;
+   }
    fCw       = ww;
    fCh       = wh;
    fCanvasID = -1;
@@ -389,7 +402,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
       fWindowHeight = wh;
@@ -475,7 +488,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
       fWindowHeight = wh;
@@ -575,7 +588,15 @@ void TCanvas::Build()
    fCanvas         = this;
    fMother         = (TPad*)gPad;
 
-   if (!IsBatch()) {    //normal mode with a screen window
+   if (IsBatch()) {
+      // Make sure that batch interactive canvas sizes are the same
+      fCw -= 4;
+      fCh -= 28;
+   } else if (IsWeb()) {
+      // mark canvas as batch - avoid virtualx in many places
+      SetBatch(kTRUE);
+   } else {
+      //normal mode with a screen window
       // Set default physical canvas attributes
       //Should be done via gVirtualX, not via fPainter (at least now). No changes here.
       gVirtualX->SelectWindow(fCanvasID);
@@ -598,11 +619,8 @@ void TCanvas::Build()
       gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
 
       fContextMenu = new TContextMenu("ContextMenu");
-   } else {
-      // Make sure that batch interactive canvas sizes are the same
-      fCw -= 4;
-      fCh -= 28;
    }
+
    gROOT->GetListOfCanvases()->Add(this);
 
    if (!fPrimitives) {
@@ -671,13 +689,13 @@ void TCanvas::Destructor()
 
    if (!TestBit(kNotDeleted)) return;
 
-   if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
+   SafeDelete(fContextMenu);
    if (!gPad) return;
 
    Close();
 
    //If not yet (batch mode?).
-   delete fPainter;
+   SafeDelete(fPainter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -789,8 +807,7 @@ void TCanvas::Close(Option_t *option)
       gROOT->GetListOfCanvases()->Remove(this);
 
       // Close actual window on screen
-      if (fCanvasImp)
-         SafeDelete(fCanvasImp);
+      SafeDelete(fCanvasImp);
    }
 
    if (cansave == this) {
@@ -872,17 +889,8 @@ void TCanvas::Draw(Option_t *)
 
 TObject *TCanvas::DrawClone(Option_t *option) const
 {
-   const char *defcanvas = gROOT->GetDefCanvasName();
-   char *cdef;
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (lc->FindObject(defcanvas))
-      cdef = Form("%s_n%d",defcanvas,lc->GetSize()+1);
-   else
-      cdef = Form("%s",defcanvas);
-
    TCanvas *newCanvas = (TCanvas*)Clone();
-   newCanvas->SetName(cdef);
+   newCanvas->SetName();
 
    newCanvas->Draw(option);
    newCanvas->Update();
@@ -971,7 +979,46 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    else
       snprintf(atext, kTMAX, "%d,%d", px, py);
    fCanvasImp->SetStatusText(atext,2);
+
+   // Show date/time if TimeDisplay is selected
+   TAxis *xaxis = NULL;
+   if ( selected->InheritsFrom("TH1") )
+      xaxis = ((TH1*)selected)->GetXaxis();
+   else if ( selected->InheritsFrom("TGraph") )
+      xaxis = ((TGraph*)selected)->GetXaxis();
+   else if ( selected->InheritsFrom("TAxis") )
+      xaxis = (TAxis*)selected;
+   if ( xaxis != NULL && xaxis->GetTimeDisplay()) {
+      TString objinfo = selected->GetObjectInfo(px,py);
+      // check if user has overwritten GetObjectInfo and altered
+      // the default text from TObject::GetObjectInfo "x=.. y=.."
+      if (objinfo.Contains("x=") && objinfo.Contains("y=") ) {
+         UInt_t toff = 0;
+         TString time_format(xaxis->GetTimeFormat());
+         // TimeFormat may contain offset: %F2000-01-01 00:00:00
+         Int_t idF = time_format.Index("%F");
+         if (idF>=0) {
+            Int_t lnF = time_format.Length();
+            // minimal check for correct format
+            if (lnF - idF == 21) {
+               time_format = time_format(idF+2, lnF);
+               TDatime dtoff(time_format);
+               toff = dtoff.Convert();
+            }
+         } else {
+            toff = (UInt_t)gStyle->GetTimeOffset();
+         }
+         TDatime dt((UInt_t)gPad->AbsPixeltoX(px) + toff);
+         snprintf(atext, kTMAX, "%s, y=%g",
+            dt.AsSQLString(),gPad->AbsPixeltoY(py));
+         fCanvasImp->SetStatusText(atext,3);
+         gPad = savepad;
+         return;
+      }
+   }
+   // default
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
+
    gPad = savepad;
 }
 
@@ -1084,7 +1131,7 @@ void TCanvas::FeedbackMode(Bool_t set)
 
 void TCanvas::Flush()
 {
-   if (fCanvasID == -1) return;
+   if ((fCanvasID == -1) || IsWeb()) return;
 
    TPad *padsav = (TPad*)gPad;
    cd();
@@ -1111,6 +1158,14 @@ void TCanvas::Flush()
       }
    }
    if (padsav) padsav->cd();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Force canvas update
+
+void TCanvas::ForceUpdate()
+{
+   if (fCanvasImp) fCanvasImp->ForceUpdate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1407,11 +1462,28 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Iconify canvas
+
+void TCanvas::Iconify()
+{
+   if (fCanvasImp)
+      fCanvasImp->Iconify();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Is folder ?
 
 Bool_t TCanvas::IsFolder() const
 {
    return fgIsFolder;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Is web canvas
+
+Bool_t TCanvas::IsWeb() const
+{
+   return fCanvasImp ? fCanvasImp->IsWeb() : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1434,7 +1506,7 @@ TCanvas *TCanvas::MakeDefCanvas()
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
 
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   auto lc = (TList*)gROOT->GetListOfCanvases();
    if (lc->FindObject(defcanvas)) {
       Int_t n = lc->GetSize() + 1;
       cdef = new char[strlen(defcanvas)+15];
@@ -1470,7 +1542,8 @@ void TCanvas::MoveOpaque(Int_t set)
 
 void TCanvas::Paint(Option_t *option)
 {
-   if (fCanvas) TPad::Paint(option);
+   if (fCanvas)
+      TPad::Paint(option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1665,6 +1738,16 @@ void TCanvas::Resize(Option_t *)
    TPad::ResizePad();
 
    if (padsav) padsav->cd();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Raise canvas window
+
+void TCanvas::RaiseWindow()
+{
+   if (fCanvasImp)
+      fCanvasImp->RaiseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1893,7 +1976,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 void TCanvas::SetBatch(Bool_t batch)
 {
-   if (gROOT->IsBatch())
+   if (gROOT->IsBatch() || IsWeb())
       fBatch = kTRUE;
    else
       fBatch = batch;
@@ -1974,6 +2057,116 @@ void TCanvas::SetFolder(Bool_t isfolder)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set canvas name. In case `name` is an empty string, a default name is set.
+
+void TCanvas::SetName(const char *name)
+{
+   if (!name || !name[0]) {
+      const char *defcanvas = gROOT->GetDefCanvasName();
+      char *cdef;
+      auto lc = (TList*)gROOT->GetListOfCanvases();
+      if (lc->FindObject(defcanvas)) {
+         cdef = Form("%s_n%d",defcanvas,lc->GetSize()+1);
+      } else {
+         cdef = Form("%s",defcanvas);
+      }
+      fName = cdef;
+   } else {
+      fName = name;
+   }
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Function to resize a canvas so that the plot inside is shown in real aspect
+/// ratio
+///
+/// \param[in] axis 1 for resizing horizontally (x-axis) in order to get real
+///            aspect ratio, 2 for the resizing vertically (y-axis)
+/// \return false if error is encountered, true otherwise
+///
+/// ~~~ {.cpp}
+/// hpxpy->Draw();
+/// c1->SetRealAspectRatio();
+/// ~~~
+///
+///  - For defining the concept of real aspect ratio, it is assumed that x and y
+///    axes are in same units, e.g. both in MeV or both in ns.
+///  - You can resize either the width of the canvas or the height, but not both
+///    at the same time
+///  - Call this function AFTER drawing AND zooming (SetUserRange) your TGraph or
+///    Histogram, otherwise it cannot infer your actual axes lengths
+///  - This function ensures that the TFrame has a real aspect ratio, this does not
+///    mean that the full pad (i.e. the canvas or png output) including margins has
+///    exactly the same ratio
+///  - This function does not work if the canvas is divided in several subpads
+
+bool TCanvas::SetRealAspectRatio(const Int_t axis)
+{
+   Update();
+
+   //Get how many pixels are occupied by the canvas
+   Int_t npx = GetWw();
+   Int_t npy = GetWh();
+
+   //Get x-y coordinates at the edges of the canvas (extrapolating outside the axes, NOT at the edges of the histogram)
+   Double_t x1 = GetX1();
+   Double_t y1 = GetY1();
+   Double_t x2 = GetX2();
+   Double_t y2 = GetY2();
+
+   //Get the length of extrapolated x and y axes
+   Double_t xlength2 = x2 - x1;
+   Double_t ylength2 = y2 - y1;
+   Double_t ratio2   = xlength2/ylength2;
+
+   //Now get the number of pixels including the canvas borders
+   Int_t bnpx = GetWindowWidth();
+   Int_t bnpy = GetWindowHeight();
+
+   if (axis==1) {
+      SetCanvasSize(TMath::Nint(npy*ratio2), npy);
+      SetWindowSize((bnpx-npx)+TMath::Nint(npy*ratio2), bnpy);
+   } else if (axis==2) {
+      SetCanvasSize(npx, TMath::Nint(npx/ratio2));
+      SetWindowSize(bnpx, (bnpy-npy)+TMath::Nint(npx/ratio2));
+   } else {
+      Error("SetRealAspectRatio", "axis value %d is neither 1 (resize along x-axis) nor 2 (resize along y-axis).",axis);
+      return false;
+   }
+
+   //Check now that resizing has worked
+
+   Update();
+
+   //Get how many pixels are occupied by the canvas
+   npx = GetWw();
+   npy = GetWh();
+
+   //Get x-y coordinates at the edges of the canvas (extrapolating outside the axes,
+   //NOT at the edges of the histogram)
+   x1 = GetX1();
+   y1 = GetY1();
+   x2 = GetX2();
+   y2 = GetY2();
+
+   //Get the length of extrapolated x and y axes
+   xlength2 = x2 - x1;
+   ylength2 = y2 - y1;
+   ratio2 = xlength2/ylength2;
+
+   //Check accuracy +/-1 pixel due to rounding
+   if (abs(TMath::Nint(npy*ratio2) - npx)<2) {
+      return true;
+   } else {
+      Error("SetRealAspectRatio", "Resizing failed.");
+      return false;
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set selected canvas.
 
 void TCanvas::SetSelected(TObject *obj)
@@ -1989,6 +2182,26 @@ void TCanvas::SetTitle(const char *title)
 {
    fTitle = title;
    if (fCanvasImp) fCanvasImp->SetWindowTitle(title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set canvas window position
+
+void TCanvas::SetWindowPosition(Int_t x, Int_t y)
+{
+   if (fCanvasImp)
+      fCanvasImp->SetWindowPosition(x, y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set canvas window size
+
+void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
+{
+   if (fBatch)
+      SetCanvasSize((ww + fCw) / 2, (wh + fCh) / 2);
+   else if (fCanvasImp)
+      fCanvasImp->SetWindowSize(ww, wh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2017,6 +2230,15 @@ void TCanvas::Size(Float_t xsize, Float_t ysize)
    fYsizeUser = ysize;
 
    Resize();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Show canvas
+
+void TCanvas::Show()
+{
+   if (fCanvasImp)
+      fCanvasImp->Show();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2400,8 +2622,7 @@ void TCanvas::DeleteCanvasPainter()
       gGLManager->MakeCurrent(fGLDevice);
    }
 
-   delete fPainter;
-   fPainter = 0;
+   SafeDelete(fPainter);
 
    if (fGLDevice != -1) {
       gGLManager->DeleteGLContext(fGLDevice);//?

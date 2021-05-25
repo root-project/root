@@ -32,8 +32,8 @@ private:
    void Init();
 
    // Non-copyable class
-   TBuffer3D(const TBuffer3D &);
-   const TBuffer3D & operator=(const TBuffer3D &);
+   TBuffer3D(const TBuffer3D &) = delete;
+   TBuffer3D & operator=(const TBuffer3D &) = delete;
 
    //CS specific
    static UInt_t fgCSLevel;
@@ -94,7 +94,7 @@ public:
    // SECTION: kBoundingBox
    //
    // Local frame (fLocalFrame true) axis aligned
-   // Master frame (fLocalFrame false) orientated
+   // Master frame (fLocalFrame false) oriented
    // Could be more compact (2 and 3 vertices respectively) and rest
    // calculated as needed - but not worth it
    //   7-------6
@@ -129,8 +129,8 @@ class TBuffer3DSphere : public TBuffer3D
 {
 private:
    // Non-copyable class
-   TBuffer3DSphere(const TBuffer3DSphere &);
-   const TBuffer3DSphere & operator=(const TBuffer3DSphere &);
+   TBuffer3DSphere(const TBuffer3DSphere &) = delete;
+   TBuffer3DSphere & operator=(const TBuffer3DSphere &) = delete;
 
 public:
    TBuffer3DSphere(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
@@ -156,8 +156,8 @@ class TBuffer3DTube : public TBuffer3D
 {
 private:
    // Non-copyable class
-   TBuffer3DTube(const TBuffer3DTube &);
-   const TBuffer3DTube & operator=(const TBuffer3DTube &);
+   TBuffer3DTube(const TBuffer3DTube &) = delete;
+   TBuffer3DTube & operator=(const TBuffer3DTube &) = delete;
 
 protected:
    TBuffer3DTube(Int_t type,
@@ -185,7 +185,7 @@ class TBuffer3DTubeSeg : public TBuffer3DTube
 private:
    // Non-copyable class
    TBuffer3DTubeSeg(const TBuffer3DTubeSeg &);
-   const TBuffer3DTubeSeg & operator=(const TBuffer3DTubeSeg &);
+   TBuffer3DTubeSeg & operator=(const TBuffer3DTubeSeg &) = delete;
 
 protected:
    TBuffer3DTubeSeg(Int_t type,
@@ -211,8 +211,8 @@ class TBuffer3DCutTube : public TBuffer3DTubeSeg
 {
 private:
    // Non-copyable class
-   TBuffer3DCutTube(const TBuffer3DTubeSeg &);
-   const TBuffer3DCutTube & operator=(const TBuffer3DTubeSeg &);
+   TBuffer3DCutTube(const TBuffer3DTubeSeg &) = delete;
+   TBuffer3DCutTube & operator=(const TBuffer3DTubeSeg &) = delete;
 
 public:
    TBuffer3DCutTube(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,

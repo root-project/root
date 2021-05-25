@@ -28,7 +28,6 @@
 #ifndef ROOT_TESTFLATTEN_H
 #define ROOT_TESTFLATTEN_H
 
-#include <iostream>
 #include "TestConvNet.h"
 
 using namespace TMVA::DNN;
@@ -82,7 +81,8 @@ bool testReshape()
 template<typename Architecture_t>
 bool testFlatten()
 {
-    using Matrix_t = typename Architecture_t::Matrix_t;
+    //using Matrix_t = typename Architecture_t::Matrix_t;
+    using Tensor_t = typename Architecture_t::Tensor_t;
 
     double input[][5][5] = {{{158, 157, 22, 166, 179},
                                 {68, 179, 233, 110, 163},
@@ -116,25 +116,23 @@ bool testFlatten()
     size_t nRows = 5;
     size_t nCols = 5;
 
-    std::vector<Matrix_t> A;
+    Tensor_t A(size, nRows, nCols);
     for (size_t i = 0; i < size; i++) {
-        Matrix_t temp(nRows, nCols);
         for (size_t j = 0; j < nRows; j++) {
             for (size_t k = 0; k < nCols; k++) {
-                temp(j, k) = input[i][j][k];
+                A(i, j, k) = input[i][j][k];
             }
         }
-        A.push_back(temp);
     }
 
-    Matrix_t B(size, nRows * nCols);
+    Tensor_t B(1, size, nRows * nCols);
     for (size_t i = 0; i < size; i++) {
         for (size_t j = 0; j < nRows * nCols; j++) {
-            B(i, j) = expected[i][j];
+            B(0, i, j) = expected[i][j];
         }
     }
 
-    return testFlatten<Architecture_t>(A, B, size, nRows, nCols);
+    return testFlatten<Architecture_t>(A, B);
 }
 
 /*************************************************************************
@@ -144,7 +142,8 @@ bool testFlatten()
 template<typename Architecture_t>
 bool testDeflatten()
 {
-    using Matrix_t = typename Architecture_t::Matrix_t;
+    //using Matrix_t = typename Architecture_t::Matrix_t;
+    using Tensor_t = typename Architecture_t::Tensor_t;
 
     double input[][25] = {{158, 157, 22,  166, 179, 68, 179, 233, 110, 163, 168, 216, 76,
                            8, 102, 159, 163, 25,  78, 119, 116, 50,  206, 102, 247},
@@ -178,25 +177,23 @@ bool testDeflatten()
     size_t nRows = 5;
     size_t nCols = 5;
 
-    Matrix_t A(size, nRows * nCols);
+    Tensor_t A(1, size, nRows * nCols);
     for (size_t i = 0; i < size; i++) {
         for (size_t j = 0; j < nRows * nCols; j++) {
-            A(i, j) = input[i][j];
+            A(0, i, j) = input[i][j];
         }
     }
 
-    std::vector<Matrix_t> B;
+    Tensor_t B(size, nRows, nCols);
     for (size_t i = 0; i < size; i++) {
-        Matrix_t temp(nRows, nCols);
         for (size_t j = 0; j < nRows; j++) {
             for (size_t k = 0; k < nCols; k++) {
-                temp(j, k) = expected[i][j][k];
+                B(i, j, k) = expected[i][j][k];
             }
         }
-        B.push_back(temp);
     }
 
-    return testDeflatten<Architecture_t>(A, B, size, nRows, nCols);
+    return testDeflatten<Architecture_t>(A, B);
 
 }
 

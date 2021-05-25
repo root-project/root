@@ -44,13 +44,15 @@ public:
   inline virtual ~RooNovosibirsk() { }
 
 protected:
+  Double_t evaluate() const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+
+private:
   RooRealProxy x;
   RooRealProxy width;
   RooRealProxy peak;
   RooRealProxy tail;
-  Double_t evaluate() const;
 
-private:
   ClassDef(RooNovosibirsk,1) // Novosibirsk PDF
 };
 

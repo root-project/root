@@ -22,6 +22,7 @@ initialized when the program starts (see the ClassImp macro).
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TProtoClass.h"
+#include "TList.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TError.h"
@@ -34,9 +35,8 @@ initialized when the program starts (see the ClassImp macro).
 
 #include <map>
 #include <memory>
-#include "Riostream.h"
 #include <typeinfo>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 
 using namespace ROOT;
@@ -132,7 +132,7 @@ namespace ROOT {
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
          for (const_iterator iter = fMap.begin(); iter != fMap.end(); ++iter) {
-            printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
+            printf("Key: %40s 0x%zx\n", iter->first.c_str(), (size_t)iter->second);
          }
       }
 #else
@@ -407,6 +407,9 @@ void TClassTable::Add(TProtoClass *proto)
    if (r->fName) {
       if (r->fProto) delete r->fProto;
       r->fProto = proto;
+      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
+      if (oldcl && oldcl->GetState() == TClass::kHasTClassInit)
+         proto->FillTClass(oldcl);
       return;
    } else if (ROOT::Internal::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
@@ -589,7 +592,7 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
    if (!CheckClassTableInit()) return nullptr;
 
    if (gDebug > 9) {
-      ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
+      ::Info("GetDict", "searches for %s at 0x%zx", info.name(), (size_t)&info);
       fgIdMap->Print();
    }
 

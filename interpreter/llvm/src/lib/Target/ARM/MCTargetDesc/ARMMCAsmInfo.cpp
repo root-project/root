@@ -1,9 +1,8 @@
 //===-- ARMMCAsmInfo.cpp - ARM asm properties -----------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -31,6 +30,9 @@ ARMMCAsmInfoDarwin::ARMMCAsmInfoDarwin(const Triple &TheTriple) {
 
   SupportsDebugInformation = true;
 
+  // Conditional Thumb 4-byte instructions can have an implicit IT.
+  MaxInstLength = 6;
+
   // Exceptions handling
   ExceptionsType = (TheTriple.isOSDarwin() && !TheTriple.isWatchABI())
                        ? ExceptionHandling::SjLj
@@ -56,9 +58,11 @@ ARMELFMCAsmInfo::ARMELFMCAsmInfo(const Triple &TheTriple) {
 
   SupportsDebugInformation = true;
 
+  // Conditional Thumb 4-byte instructions can have an implicit IT.
+  MaxInstLength = 6;
+
   // Exceptions handling
   switch (TheTriple.getOS()) {
-  case Triple::Bitrig:
   case Triple::NetBSD:
     ExceptionsType = ExceptionHandling::DwarfCFI;
     break;
@@ -87,10 +91,13 @@ void ARMCOFFMCAsmInfoMicrosoft::anchor() { }
 
 ARMCOFFMCAsmInfoMicrosoft::ARMCOFFMCAsmInfoMicrosoft() {
   AlignmentIsInBytes = false;
-
+  ExceptionsType = ExceptionHandling::WinEH;
   PrivateGlobalPrefix = "$M";
   PrivateLabelPrefix = "$M";
   CommentString = ";";
+
+  // Conditional Thumb 4-byte instructions can have an implicit IT.
+  MaxInstLength = 6;
 }
 
 void ARMCOFFMCAsmInfoGNU::anchor() { }
@@ -106,10 +113,12 @@ ARMCOFFMCAsmInfoGNU::ARMCOFFMCAsmInfoGNU() {
   PrivateLabelPrefix = ".L";
 
   SupportsDebugInformation = true;
-  ExceptionsType = ExceptionHandling::None;
+  ExceptionsType = ExceptionHandling::DwarfCFI;
   UseParensForSymbolVariant = true;
 
-  UseIntegratedAssembler = false;
-  DwarfRegNumForCFI = true;
-}
+  UseIntegratedAssembler = true;
+  DwarfRegNumForCFI = false;
 
+  // Conditional Thumb 4-byte instructions can have an implicit IT.
+  MaxInstLength = 6;
+}

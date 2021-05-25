@@ -25,18 +25,15 @@ algorithm. Select the faster algorithm either in the constructor, or with
 the selectFastAlgorithm() method.
 **/
 
-#include <cmath>
-#include <complex>
-
-#include "RooFit.h"
-
-#include "Riostream.h"
-
 #include "RooVoigtian.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
+#include "RooBatchCompute.h"
 
+#include <cmath>
+#include <complex>
 using namespace std;
 
 ClassImp(RooVoigtian);
@@ -54,7 +51,7 @@ RooVoigtian::RooVoigtian(const char *name, const char *title,
   sigma("sigma","Gauss Width",this,_sigma),
   _doFast(doFast)
 {
-  _invRootPi= 1./sqrt(atan2(0.,-1.));
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +61,7 @@ RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
   width("width",this,other.width),sigma("sigma",this,other.sigma),
   _doFast(other._doFast)
 {
-  _invRootPi= 1./sqrt(atan2(0.,-1.));
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +95,12 @@ Double_t RooVoigtian::evaluate() const
   } else {
     v = RooMath::faddeeva(z);
   }
-  return c*_invRootPi*v.real();
-
+  return c * v.real();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Voigtian distribution.  
+RooSpan<double> RooVoigtian::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeVoigtian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
+}
+

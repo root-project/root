@@ -1,9 +1,8 @@
-//===---  BugType.h - Bug Information Desciption ----------------*- C++ -*-===//
+//===---  BugType.h - Bug Information Description ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -32,29 +31,40 @@ private:
   const CheckName Check;
   const std::string Name;
   const std::string Category;
-  bool SuppressonSink;
+  const CheckerBase *Checker;
+  bool SuppressOnSink;
 
   virtual void anchor();
-public:
-  BugType(class CheckName check, StringRef name, StringRef cat)
-      : Check(check), Name(name), Category(cat), SuppressonSink(false) {}
-  BugType(const CheckerBase *checker, StringRef name, StringRef cat)
-      : Check(checker->getCheckName()), Name(name), Category(cat),
-        SuppressonSink(false) {}
-  virtual ~BugType() {}
 
-  // FIXME: Should these be made strings as well?
+public:
+  BugType(CheckName Check, StringRef Name, StringRef Cat,
+          bool SuppressOnSink=false)
+      : Check(Check), Name(Name), Category(Cat), Checker(nullptr),
+        SuppressOnSink(SuppressOnSink) {}
+  BugType(const CheckerBase *Checker, StringRef Name, StringRef Cat,
+          bool SuppressOnSink=false)
+      : Check(Checker->getCheckName()), Name(Name), Category(Cat),
+        Checker(Checker), SuppressOnSink(SuppressOnSink) {}
+  virtual ~BugType() = default;
+
   StringRef getName() const { return Name; }
   StringRef getCategory() const { return Category; }
-  StringRef getCheckName() const { return Check.getName(); }
+  StringRef getCheckName() const {
+    // FIXME: This is a workaround to ensure that the correct check name is used
+    // The check names are set after the constructors are run.
+    // In case the BugType object is initialized in the checker's ctor
+    // the Check field will be empty. To circumvent this problem we use
+    // CheckerBase whenever it is possible.
+    StringRef CheckName =
+        Checker ? Checker->getCheckName().getName() : Check.getName();
+    assert(!CheckName.empty() && "Check name is not set properly.");
+    return CheckName;
+  }
 
   /// isSuppressOnSink - Returns true if bug reports associated with this bug
   ///  type should be suppressed if the end node of the report is post-dominated
   ///  by a sink node.
-  bool isSuppressOnSink() const { return SuppressonSink; }
-  void setSuppressOnSink(bool x) { SuppressonSink = x; }
-
-  virtual void FlushReports(BugReporter& BR);
+  bool isSuppressOnSink() const { return SuppressOnSink; }
 };
 
 class BuiltinBug : public BugType {
@@ -74,7 +84,7 @@ public:
   StringRef getDescription() const { return desc; }
 };
 
-} // end GR namespace
+} // end ento namespace
 
 } // end clang namespace
 #endif

@@ -9,14 +9,10 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
+/** \class RooStats::HistFactory::Asimov
+ *  \ingroup HistFactory
+ *  TODO Here, we are missing some documentation.
 */
-//
 
 #include "RooRealVar.h"
 #include "RooStats/HistFactory/HistFactoryException.h"

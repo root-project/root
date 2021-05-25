@@ -30,29 +30,11 @@ Rectified Linear Unit activation function for TNeuron
 
 #include "TMVA/TActivation.h"
 
-#include "TFormula.h"
-#include "TMath.h"
 #include "TString.h"
 
 #include <iostream>
 
 ClassImp(TMVA::TActivationReLU);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor for ReLU
-
-TMVA::TActivationReLU::TActivationReLU()
-{
-   // sorry, I really don't know what I would possibly want to do here ;)
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-TMVA::TActivationReLU::~TActivationReLU()
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get expressions for the tanh and its derivative
@@ -65,7 +47,7 @@ TString TMVA::TActivationReLU::GetExpression()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// writes the sigmoid activation function source code
+/// writes the Rectified Linear Unit activation function source code
 
 void TMVA::TActivationReLU::MakeFunction( std::ostream& fout, const TString& fncName )
 {

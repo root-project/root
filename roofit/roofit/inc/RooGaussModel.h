@@ -39,11 +39,11 @@ public:
 
   // Constructors, assignment etc
   inline RooGaussModel() : _flatSFInt(kFALSE), _asympInt(kFALSE) { }
-  RooGaussModel(const char *name, const char *title, RooRealVar& x,
+  RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma) ;
-  RooGaussModel(const char *name, const char *title, RooRealVar& x,
+  RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& msSF) ;
-  RooGaussModel(const char *name, const char *title, RooRealVar& x,
+  RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
   RooGaussModel(const RooGaussModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooGaussModel(*this,newname) ; }

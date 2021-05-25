@@ -1,4 +1,11 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 include(ExternalProject)
+include(FindPackageHandleStandardArgs)
 
 # find_package(OpenSSL) may not have found it,
 # clear parent scope variables set to NOTFOUND
@@ -6,10 +13,9 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS CRYPTO_LIBRARY SSL_LIBRARY LIBRARY
   unset(OPENSSL_${suffix} PARENT_SCOPE)
 endforeach()
 
-set(OPENSSL_FOUND TRUE)
-set(OPENSSL_VERSION "1.0.2o")
+set(OPENSSL_VERSION "1.1.1g")
 set(OPENSSL_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/openssl-${OPENSSL_VERSION}.tar.gz")
-set(OPENSSL_URLHASH "SHA256=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d")
+set(OPENSSL_URLHASH "SHA256=ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46")
 set(OPENSSL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/OPENSSL-prefix)
 
 foreach(lib ssl crypto)
@@ -19,7 +25,11 @@ foreach(lib ssl crypto)
 endforeach()
 
 if(APPLE)
-  set(OPENSSL_CONFIG_CMD ./Configure darwin64-x86_64-cc)
+  if(${ROOT_ARCHITECTURE} MATCHES "macosxarm64")
+    set(OPENSSL_CONFIG_CMD ./Configure darwin64-aarch64-cc)
+  else()
+    set(OPENSSL_CONFIG_CMD ./Configure darwin64-x86_64-cc)
+  endif()
   if (CMAKE_OSX_SYSROOT)
     set(OSX_SYSROOT "-isysroot ${CMAKE_OSX_SYSROOT}")
   endif()
@@ -29,14 +39,18 @@ endif()
 
 ExternalProject_Add(OPENSSL
   URL ${OPENSSL_URL} URL_HASH ${OPENSSL_URLHASH}
+  PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/openssl-darwin64-aarch64-cc.diff
   CONFIGURE_COMMAND ${OPENSSL_CONFIG_CMD} no-shared --prefix=<INSTALL_DIR>
   BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC\ ${OSX_SYSROOT}
   INSTALL_COMMAND make install_sw
   BUILD_IN_SOURCE 1
   LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
-  BUILD_BYPRODUCTS ${OPENSSL_CRYPTO_LIBRARY} ${OPENSSL_SSL_LIBRARY})
+  BUILD_BYPRODUCTS ${OPENSSL_CRYPTO_LIBRARY} ${OPENSSL_SSL_LIBRARY}
+  TIMEOUT 600)
 
+set(OPENSSL_FOUND TRUE CACHE BOOL "" FORCE)
 set(OPENSSL_VERSION ${OPENSSL_VERSION} CACHE INTERNAL "" FORCE)
+set(OPENSSL_VERSION_STRING "${OPENSSL_VERSION}" CACHE INTERNAL "" FORCE)
 set(OPENSSL_PREFIX ${OPENSSL_PREFIX} CACHE INTERNAL "" FORCE) # needed by Davix
 set(OPENSSL_INCLUDE_DIR ${OPENSSL_PREFIX}/include CACHE INTERNAL "" FORCE)
 set(OPENSSL_INCLUDE_DIRS ${OPENSSL_PREFIX}/include CACHE INTERNAL "" FORCE)
@@ -56,5 +70,17 @@ add_dependencies(builtin_ssl OPENSSL)
 
 add_library(OpenSSL::Crypto ALIAS builtin_crypto)
 add_library(OpenSSL::SSL ALIAS builtin_ssl)
+
+find_package_handle_standard_args(OpenSSL
+  FOUND_VAR
+    OPENSSL_FOUND
+  REQUIRED_VARS
+    OPENSSL_INCLUDE_DIR
+    OPENSSL_CRYPTO_LIBRARY
+    OPENSSL_SSL_LIBRARY
+    OPENSSL_LIBRARIES
+  VERSION_VAR
+    OPENSSL_VERSION_STRING
+)
 
 set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS OPENSSL)

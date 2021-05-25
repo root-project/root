@@ -1,16 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #310
-##
-## Projecting p.d.f and data slices in discrete observables
+## Multidimensional models: projecting pdf and data slices in discrete observables
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -44,8 +40,18 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.01)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct a decay pdf, with single gaussian resolution model
-bmix_gm1 = ROOT.RooBMixDecay("bmix", "decay", dt, mixState,
-                                tagFlav, tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+bmix_gm1 = ROOT.RooBMixDecay(
+    "bmix",
+    "decay",
+    dt,
+    mixState,
+    tagFlav,
+    tau,
+    dm,
+    w,
+    dw,
+    gm1,
+    ROOT.RooBMixDecay.DoubleSided)
 
 # Generate BMixing data with above set of event errors
 data = bmix_gm1.generate(ROOT.RooArgSet(dt, tagFlav, mixState), 20000)

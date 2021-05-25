@@ -13,21 +13,17 @@
 #ifndef ROOT_TGeoVolume
 #define ROOT_TGeoVolume
 
-#include <mutex>
 
+#include "TNamed.h"
 #include "TGeoAtt.h"
-
 #include "TAttLine.h"
-
 #include "TAttFill.h"
-
 #include "TAtt3D.h"
-
 #include "TObjArray.h"
-
 #include "TGeoMedium.h"
-
 #include "TGeoShape.h"
+#include <mutex>
+#include <vector>
 
 // forward declarations
 class TH2F;
@@ -68,8 +64,9 @@ protected :
    TGeoExtension     *fUserExtension;  //! Transient user-defined extension to volumes
    TGeoExtension     *fFWExtension;    //! Transient framework-defined extension to volumes
 
-   TGeoVolume(const TGeoVolume&);
-   TGeoVolume& operator=(const TGeoVolume&);
+private:
+   TGeoVolume(const TGeoVolume&) = delete;
+   TGeoVolume& operator=(const TGeoVolume&) = delete;
 
 public:
    virtual void  ClearThreadData() const;
@@ -265,9 +262,8 @@ private:
    Double_t         fStep;         // division step
    Bool_t           fAttSet;       // flag attributes set
 
-protected:
-   TGeoVolumeMulti(const TGeoVolumeMulti&);
-   TGeoVolumeMulti& operator=(const TGeoVolumeMulti&);
+   TGeoVolumeMulti(const TGeoVolumeMulti&) = delete;
+   TGeoVolumeMulti& operator=(const TGeoVolumeMulti&) = delete;
 
 public:
    TGeoVolumeMulti();
@@ -292,7 +288,6 @@ public:
    virtual void    SetLineWidth(Width_t lwidth);
    virtual void    SetMedium(TGeoMedium *medium);
    virtual void    SetVisibility(Bool_t vis=kTRUE);
-
 
    ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
 };
@@ -324,7 +319,11 @@ protected:
    mutable std::vector<ThreadData_t*> fThreadData; //! Thread specific data vector
    mutable Int_t                      fThreadSize; //! Thread vector size
    mutable std::mutex                 fMutex;      //! Mutex for concurrent operations
-   
+
+private:
+   TGeoVolumeAssembly(const TGeoVolumeAssembly &) = delete;
+   TGeoVolumeAssembly& operator=(const TGeoVolumeAssembly&) = delete;
+
 public:
    TGeoVolumeAssembly();
    TGeoVolumeAssembly(const char *name);

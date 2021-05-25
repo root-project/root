@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// This tutorial illustrates how to express the H1 analysis with a RDataFrame.
+/// Show how to express ROOT's standard H1 analysis with RDataFrame.
 ///
 /// \macro_code
 /// \macro_image
 ///
 /// \date December 2016
-/// \author Axel Naumann, Danilo Piparo (CERN)
+/// \authors Axel Naumann, Danilo Piparo (CERN)
 
 auto Select = [](ROOT::RDataFrame &dataFrame) {
    using Farray_t = ROOT::VecOps::RVec<float>;
@@ -59,7 +59,6 @@ void FitAndPlotHdmd(TH1 &hdmd)
    // create the canvas for the h1analysis fit
    gStyle->SetOptFit();
    auto c1 = new TCanvas("c1", "h1analysis analysis", 10, 10, 800, 600);
-   hdmd.GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
    hdmd.GetXaxis()->SetTitleOffset(1.4);
 
    // fit histogram hdmd with function f5 using the loglikelihood option
@@ -100,16 +99,17 @@ void FitAndPlotH2(TH2 &h2)
 void df101_h1Analysis()
 {
    TChain chain("h42");
-   chain.Add("http://root.cern.ch/files/h1/dstarmb.root");
-   chain.Add("http://root.cern.ch/files/h1/dstarp1a.root");
-   chain.Add("http://root.cern.ch/files/h1/dstarp1b.root");
-   chain.Add("http://root.cern.ch/files/h1/dstarp2.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarp1a.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarp1b.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarp2.root");
 
    ROOT::EnableImplicitMT(4);
 
    ROOT::RDataFrame dataFrame(chain);
    auto selected = Select(dataFrame);
-   auto hdmdARP = selected.Histo1D({"hdmd", "Dm_d", 40, 0.13, 0.17}, "dm_d");
+   // Note: The title syntax is "<Title>;<Label x axis>;<Label y axis>"
+   auto hdmdARP = selected.Histo1D({"hdmd", "Dm_d;m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]", 40, 0.13, 0.17}, "dm_d");
    auto selectedAddedBranch = selected.Define("h2_y", "rpd0_t / 0.029979f * 1.8646f / ptd0_d");
    auto h2ARP = selectedAddedBranch.Histo2D({"h2", "ptD0 vs Dm_d", 30, 0.135, 0.165, 30, -3, 6}, "dm_d", "h2_y");
 

@@ -40,8 +40,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include "Rtypes.h"
-//#include "time.h"
+#include "RtypesCore.h"
 
 namespace TMVA {
   
@@ -60,6 +59,9 @@ namespace TMVA {
 
       // destructor
       virtual ~Volume( void );
+
+      // operators
+      Volume& operator=( const Volume& );
 
       // destruct the volue 
       void Delete       ( void );

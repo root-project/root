@@ -61,29 +61,11 @@ TGeoBuilder::TGeoBuilder()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
-            :TObject(other), fGeometry(nullptr)
-{
-   Error("copy constructor","copying not allowed for TGeoBuilder");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TGeoBuilder::~TGeoBuilder()
 {
    fgInstance = nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment.
-
-TGeoBuilder &TGeoBuilder::operator=(const TGeoBuilder&)
-{
-   Error("Assignment","assignment not allowed for TGeoBuilder");
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +316,7 @@ TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
-   TGeoCone *cone = new TGeoCone(dz, rmin1, rmax1, rmin2, rmax2);
+   TGeoCone *cone = new TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2);
    TGeoVolume *vol = 0;
    if (cone->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);

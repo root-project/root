@@ -30,8 +30,8 @@ protected:
 
 public:
    THbookBranch() {;}
-   THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
-   THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    virtual ~THbookBranch();
    virtual void     Browse(TBrowser *b);
    virtual Int_t    GetEntry(Long64_t entry=0, Int_t getall=0);

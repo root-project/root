@@ -1,9 +1,8 @@
-//===--- ModuleManager.cpp - Module Manager ---------------------*- C++ -*-===//
+//===- ModuleManager.cpp - Module Manager ---------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -11,28 +10,50 @@
 //  modules for the ASTReader.
 //
 //===----------------------------------------------------------------------===//
+
 #include "clang/Serialization/ModuleManager.h"
-#include "clang/Basic/MemoryBufferCache.h"
-#include "clang/Frontend/PCHContainerOperations.h"
+#include "clang/Basic/FileManager.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
 #include "clang/Serialization/GlobalModuleIndex.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/Path.h"
-#include <system_error>
-
-#ifndef NDEBUG
+#include "clang/Serialization/InMemoryModuleCache.h"
+#include "clang/Serialization/Module.h"
+#include "clang/Serialization/PCHContainerOperations.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator.h"
+#include "llvm/Support/Chrono.h"
+#include "llvm/Support/DOTGraphTraits.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/GraphWriter.h"
-#endif
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/VirtualFileSystem.h"
+#include <algorithm>
+#include <cassert>
+#include <memory>
+#include <string>
+#include <system_error>
 
 using namespace clang;
 using namespace serialization;
 
-ModuleFile *ModuleManager::lookup(StringRef Name) const {
-  const FileEntry *Entry = FileMgr.getFile(Name, /*openFile=*/false,
-                                           /*cacheFailure=*/false);
+ModuleFile *ModuleManager::lookupByFileName(StringRef Name) const {
+  const FileEntry *Entry = FileMgr.getFile(Name, /*OpenFile=*/false,
+                                           /*CacheFailure=*/false);
   if (Entry)
     return lookup(Entry);
+
+  return nullptr;
+}
+
+ModuleFile *ModuleManager::lookupByModuleName(StringRef Name) const {
+  if (const Module *Mod = HeaderSearchInfo.getModuleMap().findModule(Name))
+    if (const FileEntry *File = Mod->getASTFile())
+      return lookup(File);
 
   return nullptr;
 }
@@ -47,8 +68,8 @@ ModuleFile *ModuleManager::lookup(const FileEntry *File) const {
 
 std::unique_ptr<llvm::MemoryBuffer>
 ModuleManager::lookupBuffer(StringRef Name) {
-  const FileEntry *Entry = FileMgr.getFile(Name, /*openFile=*/false,
-                                           /*cacheFailure=*/false);
+  const FileEntry *Entry = FileMgr.getFile(Name, /*OpenFile=*/false,
+                                           /*CacheFailure=*/false);
   return std::move(InMemoryBuffers[Entry]);
 }
 
@@ -97,6 +118,8 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
     // contents, but we can't check that.)
     ExpectedModTime = 0;
   }
+  // Note: ExpectedSize and ExpectedModTime will be 0 for MK_ImplicitModule
+  // when using an ASTFileSignature.
   if (lookupModuleFile(FileName, ExpectedSize, ExpectedModTime, Entry)) {
     ErrorStr = "module file out of date";
     return OutOfDate;
@@ -128,7 +151,7 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
 
   if (NewModule->Kind == MK_ImplicitModule) {
     std::string TimestampFilename = NewModule->getTimestampFilename();
-    vfs::Status Status;
+    llvm::vfs::Status Status;
     // A cached stat value would be fine as well.
     if (!FileMgr.getNoncachedStatValue(TimestampFilename, Status))
       NewModule->InputFilesValidationTimestamp =
@@ -138,22 +161,31 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
   // Load the contents of the module
   if (std::unique_ptr<llvm::MemoryBuffer> Buffer = lookupBuffer(FileName)) {
     // The buffer was already provided for us.
-    NewModule->Buffer = &PCMCache->addBuffer(FileName, std::move(Buffer));
-  } else if (llvm::MemoryBuffer *Buffer = PCMCache->lookupBuffer(FileName)) {
+    NewModule->Buffer = &ModuleCache->addBuiltPCM(FileName, std::move(Buffer));
+    // Since the cached buffer is reused, it is safe to close the file
+    // descriptor that was opened while stat()ing the PCM in
+    // lookupModuleFile() above, it won't be needed any longer.
+    Entry->closeFile();
+  } else if (llvm::MemoryBuffer *Buffer =
+                 getModuleCache().lookupPCM(FileName)) {
     NewModule->Buffer = Buffer;
+    // As above, the file descriptor is no longer needed.
+    Entry->closeFile();
+  } else if (getModuleCache().shouldBuildPCM(FileName)) {
+    // Report that the module is out of date, since we tried (and failed) to
+    // import it earlier.
+    Entry->closeFile();
+    return OutOfDate;
   } else {
     // Open the AST file.
     llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> Buf((std::error_code()));
     if (FileName == "-") {
       Buf = llvm::MemoryBuffer::getSTDIN();
     } else {
-      // Leave the FileEntry open so if it gets read again by another
-      // ModuleManager it must be the same underlying file.
-      // FIXME: Because FileManager::getFile() doesn't guarantee that it will
-      // give us an open file, this may not be 100% reliable.
+      // Get a buffer of the file and close the file descriptor when done.
       Buf = FileMgr.getBufferForFile(NewModule->File,
-                                     /*IsVolatile=*/false,
-                                     /*ShouldClose=*/false);
+                                     /*isVolatile=*/false,
+                                     /*ShouldClose=*/true);
     }
 
     if (!Buf) {
@@ -161,7 +193,7 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
       return Missing;
     }
 
-    NewModule->Buffer = &PCMCache->addBuffer(FileName, std::move(*Buf));
+    NewModule->Buffer = &getModuleCache().addPCM(FileName, std::move(*Buf));
   }
 
   // Initialize the stream.
@@ -173,7 +205,7 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
                                           ExpectedSignature, ErrorStr)) {
     // Try to remove the buffer.  If it can't be removed, then it was already
     // validated by this process.
-    if (!PCMCache->tryToRemoveBuffer(NewModule->FileName))
+    if (!getModuleCache().tryToDropPCM(NewModule->FileName))
       FileMgr.invalidateCache(const_cast<FileEntry*>(NewModule->File));
     return OutOfDate;
   }
@@ -200,7 +232,6 @@ void ModuleManager::removeModules(
   if (First == Last)
     return;
 
-
   // Explicitly clear VisitOrder since we might not notice it is stale.
   VisitOrder.clear();
 
@@ -223,8 +254,7 @@ void ModuleManager::removeModules(
   // Remove the modules from the PCH chain.
   for (auto I = First; I != Last; ++I) {
     if (!I->isModule()) {
-      PCHChain.erase(std::find(PCHChain.begin(), PCHChain.end(), &*I),
-                     PCHChain.end());
+      PCHChain.erase(llvm::find(PCHChain, &*I), PCHChain.end());
       break;
     }
   }
@@ -240,17 +270,6 @@ void ModuleManager::removeModules(
         mod->setASTFile(nullptr);
       }
     }
-
-    // Files that didn't make it through ReadASTCore successfully will be
-    // rebuilt (or there was an error). Invalidate them so that we can load the
-    // new files that will be renamed over the old ones.
-    //
-    // The PCMCache tracks whether the module was successfully loaded in another
-    // thread/context; in that case, it won't need to be rebuilt (and we can't
-    // safely invalidate it anyway).
-    if (LoadedSuccessfully.count(&*victim) == 0 &&
-        !PCMCache->tryToRemoveBuffer(victim->FileName))
-      FileMgr.invalidateCache(const_cast<FileEntry*>(victim->File));
   }
 
   // Delete the modules.
@@ -260,7 +279,6 @@ void ModuleManager::removeModules(
 void
 ModuleManager::addInMemoryBuffer(StringRef FileName,
                                  std::unique_ptr<llvm::MemoryBuffer> Buffer) {
-
   const FileEntry *Entry =
       FileMgr.getVirtualFile(FileName, Buffer->getBufferSize(), 0);
   InMemoryBuffers[Entry] = std::move(Buffer);
@@ -306,10 +324,12 @@ void ModuleManager::moduleFileAccepted(ModuleFile *MF) {
   ModulesInCommonWithGlobalIndex.push_back(MF);
 }
 
-ModuleManager::ModuleManager(FileManager &FileMgr, MemoryBufferCache &PCMCache,
-                             const PCHContainerReader &PCHContainerRdr)
-    : FileMgr(FileMgr), PCMCache(&PCMCache), PCHContainerRdr(PCHContainerRdr),
-      GlobalIndex(), FirstVisitState(nullptr) {}
+ModuleManager::ModuleManager(FileManager &FileMgr,
+                             InMemoryModuleCache &ModuleCache,
+                             const PCHContainerReader &PCHContainerRdr,
+                             const HeaderSearch &HeaderSearchInfo)
+    : FileMgr(FileMgr), ModuleCache(&ModuleCache),
+      PCHContainerRdr(PCHContainerRdr), HeaderSearchInfo(HeaderSearchInfo) {}
 
 ModuleManager::~ModuleManager() { delete FirstVisitState; }
 
@@ -320,7 +340,7 @@ void ModuleManager::visit(llvm::function_ref<bool(ModuleFile &M)> Visitor,
     unsigned N = size();
     VisitOrder.clear();
     VisitOrder.reserve(N);
-    
+
     // Record the number of incoming edges for each module. When we
     // encounter a module with no incoming edges, push it into the queue
     // to seed the queue.
@@ -428,7 +448,7 @@ bool ModuleManager::lookupModuleFile(StringRef FileName,
 
   // Open the file immediately to ensure there is no race between stat'ing and
   // opening the file.
-  File = FileMgr.getFile(FileName, /*openFile=*/true, /*cacheFailure=*/false);
+  File = FileMgr.getFile(FileName, /*OpenFile=*/true, /*CacheFailure=*/false);
   if (!File)
     return false;
 
@@ -443,11 +463,12 @@ bool ModuleManager::lookupModuleFile(StringRef FileName,
 
 #ifndef NDEBUG
 namespace llvm {
+
   template<>
   struct GraphTraits<ModuleManager> {
-    typedef ModuleFile *NodeRef;
-    typedef llvm::SetVector<ModuleFile *>::const_iterator ChildIteratorType;
-    typedef pointer_iterator<ModuleManager::ModuleConstIterator> nodes_iterator;
+    using NodeRef = ModuleFile *;
+    using ChildIteratorType = llvm::SetVector<ModuleFile *>::const_iterator;
+    using nodes_iterator = pointer_iterator<ModuleManager::ModuleConstIterator>;
 
     static ChildIteratorType child_begin(NodeRef Node) {
       return Node->Imports.begin();
@@ -456,30 +477,29 @@ namespace llvm {
     static ChildIteratorType child_end(NodeRef Node) {
       return Node->Imports.end();
     }
-    
+
     static nodes_iterator nodes_begin(const ModuleManager &Manager) {
       return nodes_iterator(Manager.begin());
     }
-    
+
     static nodes_iterator nodes_end(const ModuleManager &Manager) {
       return nodes_iterator(Manager.end());
     }
   };
-  
+
   template<>
   struct DOTGraphTraits<ModuleManager> : public DefaultDOTGraphTraits {
     explicit DOTGraphTraits(bool IsSimple = false)
-      : DefaultDOTGraphTraits(IsSimple) { }
-    
-    static bool renderGraphFromBottomUp() {
-      return true;
-    }
+        : DefaultDOTGraphTraits(IsSimple) {}
+
+    static bool renderGraphFromBottomUp() { return true; }
 
     std::string getNodeLabel(ModuleFile *M, const ModuleManager&) {
       return M->ModuleName;
     }
   };
-}
+
+} // namespace llvm
 
 void ModuleManager::viewGraph() {
   llvm::ViewGraph(*this, "Modules");

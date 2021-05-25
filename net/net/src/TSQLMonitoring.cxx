@@ -175,7 +175,7 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *opt)
       o = nxi();
       TObjString *os = dynamic_cast<TObjString *>(o);
       if (!os) {
-         Error("SendParameters", "bulk insert: first entry in list is not 'TObjString' but '%s'", o->ClassName() );
+         Error("SendParameters", "bulk insert: first entry in list is not 'TObjString' but '%s'", o ? o->ClassName() : "noclass" );
          return kFALSE;
       }
       // Continue preparing the string

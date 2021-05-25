@@ -12,16 +12,6 @@
 #ifndef ROOT_TProofProgressMemoryPlot
 #define ROOT_TProofProgressMemoryPlot
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofProgressMemoryPlot                                             //
-//                                                                      //
-// This class implements a dialog, used to display the memory footprint //
-// on the proof workers and master. For the workers, memory is plotted  //
-// as a function of number of events processed. For the master, it is   //
-// plotted as a function of number of objects merged                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 

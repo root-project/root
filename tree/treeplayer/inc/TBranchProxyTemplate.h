@@ -178,7 +178,7 @@ namespace Internal {
 
       TVirtualCollectionProxy* GetCollection() {
          if (fCollection==0) {
-            TClass *cl = TClass::GetClass(typeid(T));
+            TClass *cl = TClass::GetClass<T>();
             if (cl && cl->GetCollectionProxy()) {
                fCollection =  cl->GetCollectionProxy()->Generate();
             }

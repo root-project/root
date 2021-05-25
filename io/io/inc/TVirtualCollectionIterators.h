@@ -20,12 +20,13 @@ Small helper class to generically acquire and release iterators.
 
 #include "TVirtualCollectionProxy.h"
 #include "TError.h"
+#include <vector>
 
 class TVirtualCollectionIterators
 {
 private:
-   TVirtualCollectionIterators(); // Intentionally unimplemented.
-   TVirtualCollectionIterators(const TVirtualCollectionIterators&); // Intentionally unimplemented.
+   TVirtualCollectionIterators() = delete; // Intentionally unimplemented.
+   TVirtualCollectionIterators(const TVirtualCollectionIterators&) = delete; // Intentionally unimplemented.
 
 public:
    // Note when the collection is a vector, fBegin and fEnd points to

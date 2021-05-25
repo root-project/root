@@ -32,7 +32,6 @@
 #include "TMVA/Version.h"
 #include "TMVA/MsgLogger.h"
 #include "TGraph.h"
-#include "TMath.h"
 
 #include <algorithm>
 #include <vector>
@@ -155,7 +154,7 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points
       auto weight = std::get<1>(ev);
       auto isSignal = std::get<2>(ev);
 
-      true_negatives_sum += weight * (not isSignal);
+      true_negatives_sum += weight * (!isSignal ? 1. : 0.);
       true_negatives.push_back(true_negatives_sum);
    }
 
@@ -219,7 +218,7 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points
 
 Double_t TMVA::ROCCurve::GetEffSForEffB(Double_t effB, const UInt_t num_points)
 {
-   assert(0.0 <= effB and effB <= 1.0);
+   assert(0.0 <= effB && effB <= 1.0);
 
    auto effS_vec = ComputeSensitivity(num_points);
    auto effB_vec = ComputeSpecificity(num_points);
@@ -266,8 +265,8 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a new TGraph containing the ROC curve. Specificity is on the x-axis,
-/// sensitivity on the y-axis.
+/// Returns a new TGraph containing the ROC curve. Sensitivity is on the x-axis,
+/// specificity on the y-axis.
 ///
 /// @param num_points Granularity of the resulting curve. The curve will be subdivided
 ///                     into num_points - 1 regions where the performance of the

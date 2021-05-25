@@ -2,7 +2,7 @@
 // Author: Philippe Canal, May 2011
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,10 +17,12 @@ A TMemFile is like a normal TFile except that it reads and writes
 only from memory.
 */
 
+#include "TBufferFile.h"
 #include "TMemFile.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TObjArray.h"
 #include "TArrayC.h"
 #include "TKey.h"
 #include "TClass.h"
@@ -40,15 +42,6 @@ only from memory.
 
 ClassImp(TMemFile);
 
-Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
-
-TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor allocating the memory buffer.
 ///
@@ -57,8 +50,7 @@ TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
 ///
 /// \param previous: previous TMemBlock, used to set up the linked list.
 
-TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
-   fPrevious(previous), fNext(0), fBuffer(0), fSize(0)
+TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) : fPrevious(previous)
 {
    // size will be -1 when copying an existing buffer into fBuffer.
    if (size != -1) {
@@ -70,9 +62,9 @@ TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor not allocating the memory buffer, for external ownership.
 
-TMemFile::TMemBlock::TMemBlock(UChar_t* data, Long64_t size) :
-   fPrevious(nullptr), fNext(nullptr), fBuffer(data), fSize(size)
-{}
+TMemFile::TMemBlock::TMemBlock(UChar_t *data, Long64_t size) : fBuffer(data), fSize(size)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual destructors.  Delete the block memory.
@@ -87,7 +79,7 @@ TMemFile::TMemBlock::~TMemBlock()
 
 void TMemFile::TMemBlock::CreateNext(Long64_t size)
 {
-   R__ASSERT(fNext == 0);
+   R__ASSERT(fNext == nullptr);
    fNext = new TMemBlock(size,this);
 }
 
@@ -114,50 +106,81 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor to create a TMemFile re-using external storage.
+/// Constructor to create a TMemFile re-using external C-Style storage.
 
-TMemFile::TMemFile(const char *path, ExternalDataPtr_t data) :
-   TFile(path, "WEB", "read-only memfile", 0 /*compress*/),
-   fBlockList(reinterpret_cast<UChar_t*>(const_cast<char*>(data->data())), data->size()),
-   fExternalData(std::move(data)), fSize(fExternalData->size()), fSysOffset(0), fBlockSeek(nullptr), fBlockOffset(0)
+TMemFile::TMemFile(const char *path, const ZeroCopyView_t &datarange)
+   : TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
+     fBlockList(reinterpret_cast<UChar_t *>(const_cast<char *>(datarange.fStart)), datarange.fSize),
+     fSize(datarange.fSize), fBlockSeek(&(fBlockList))
 {
-   EMode optmode = ParseOption("READ");
-   if (NeedsToWrite(optmode)) {
-      SysError("TMemFile", "file %s can not be opened", path);
-      // Error in opening file; make this a zombie
+   fD = 0;
+   fOption = "READ";
+   fWritable = kFALSE;
+
+   // This is read-only, so become a zombie if created with an empty buffer
+   if (!fBlockList.fBuffer) {
       MakeZombie();
       gDirectory = gROOT;
       return;
    }
 
-   fD = 0;
-   fWritable = kFALSE;
-
-   Init(!NeedsExistingFile(optmode));
+   Init(/* create */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Usual Constructor.  See the TFile constructor for details.
+/// Constructor to create a TMemFile re-using external storage.
 
-TMemFile::TMemFile(const char *path, Option_t *option,
-                   const char *ftitle, Int_t compress) :
-   TMemFile(path, nullptr, -1, option, ftitle, compress) {}
+TMemFile::TMemFile(const char *path, ExternalDataPtr_t data)
+   : TMemFile(path, ZeroCopyView_t(data->data(), data->size()))
+{
+   fExternalData = data;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+/// Constructor to create a read-only TMemFile using an std::unique_ptr<TBufferFile>
+
+TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer)
+   : TMemFile(name, ZeroCopyView_t(buffer->Buffer(), (size_t)buffer->BufferSize()))
+{
+   assert(!fD && !fWritable);
+
+   fIsOwnedByROOT = true;
+
+   // Note: We need to release the buffer here to avoid double delete.
+   // The memory of a TBufferFile is allocated with new[], so we can let
+   // TMemBlock delete it, as its destructor calls "delete [] fBuffer;"
+   buffer.release();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Usual Constructor.
+/// The defBlockSize parameter defines the size of the blocks of memory allocated
+/// when expanding the underlying TMemFileBuffer. If the value 0 is passed, the
+/// default block size, fgDefaultBlockSize, is adopted.
+/// See the TFile constructor for details.
+
+TMemFile::TMemFile(const char *path, Option_t *option, const char *ftitle, Int_t compress, Long64_t defBlockSize)
+   : TMemFile(path, nullptr, -1, option, ftitle, compress, defBlockSize)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual Constructor.  See the TFile constructor for details. Copy data from buffer.
 
-TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option,
-                   const char *ftitle, Int_t compress):
-   TFile(path, "WEB", ftitle, compress), fBlockList(size),
-   fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress,
+                   Long64_t defBlockSize)
+   : TFile(path, "WEB", ftitle, compress), fBlockList(size), fIsOwnedByROOT(kTRUE), fSize(size),
+     fBlockSeek(&(fBlockList))
 {
+   fDefaultBlockSize = defBlockSize == 0LL ? fgDefaultBlockSize : defBlockSize;
+
    EMode optmode = ParseOption(option);
 
    if (NeedsToWrite(optmode)) {
       Int_t mode = O_RDWR | O_CREAT;
       if (optmode == EMode::kRecreate) mode |= O_TRUNC;
 
-      fD = SysOpen(path, O_RDWR | O_CREAT, 0644);
+      fD = TMemFile::SysOpen(path, O_RDWR | O_CREAT, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened", path);
          goto zombie;
@@ -165,14 +188,13 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       fWritable = kTRUE;
 
    } else {
-      fD = SysOpen(path, O_RDONLY, 0644);
+      fD = TMemFile::SysOpen(path, O_RDONLY, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened for reading", path);
          goto zombie;
       }
       fWritable = kFALSE;
    }
-
 
    if (buffer)
       SysWriteImpl(fD,buffer,size);
@@ -189,17 +211,17 @@ zombie:
 ////////////////////////////////////////////////////////////////////////////////
 /// Copying the content of the TMemFile into another TMemFile.
 
-TMemFile::TMemFile(const TMemFile &orig) :
-   TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(),
-         orig.GetCompressionSettings() ), fBlockList(orig.GetEND()), fExternalData(orig.fExternalData),
-   fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+TMemFile::TMemFile(const TMemFile &orig)
+   : TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(), orig.GetCompressionSettings()),
+     fBlockList(orig.GetEND()), fExternalData(orig.fExternalData), fIsOwnedByROOT(orig.fIsOwnedByROOT),
+     fSize(orig.GetEND()), fBlockSeek(&(fBlockList))
 {
    EMode optmode = ParseOption(orig.fOption);
 
    fD = orig.fD; // not really used, so it is okay to have the same value.
    fWritable = orig.fWritable;
 
-   if (!fExternalData) {
+   if (!IsExternalData()) {
       // We intentionally allocated just one big buffer for this object.
       orig.CopyTo(fBlockList.fBuffer,fSize);
    }
@@ -216,11 +238,11 @@ TMemFile::~TMemFile()
    // Need to call close, now as it will need both our virtual table
    // and the content of the list of blocks
    Close();
-   if (fExternalData) {
+   if (IsExternalData()) {
       // Do not delete external buffer, we don't own it.
       fBlockList.fBuffer = nullptr;
       // We must not get extra blocks, as writing is disabled for external data!
-      R__ASSERT(!fBlockList.fNext || "External block is not the only one!");
+      R__ASSERT(!fBlockList.fNext && "External block is not the only one!");
    }
    TRACE("destroy")
 }
@@ -308,7 +330,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    if (fFree) {
       fFree->Delete();
       delete fFree;
-      fFree      = 0;
+      fFree      = nullptr;
    }
    fWritten      = 0;
    fSumBuffer    = 0;
@@ -317,11 +339,11 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fBytesReadExtra = 0;
    fBytesWrite   = 0;
    delete fClassIndex;
-   fClassIndex   = 0;
+   fClassIndex   = nullptr;
    fSeekInfo     = 0;
    fNbytesInfo   = 0;
    delete fProcessIDs;
-   fProcessIDs   = 0;
+   fProcessIDs   = nullptr;
    fNProcessIDs  = 0;
    fOffset       = 0;
    fCacheRead    = 0;
@@ -330,7 +352,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    if (fFree) {
       fFree->Delete();
       delete fFree;
-      fFree = 0;
+      fFree = nullptr;
    }
 
    fSysOffset   = 0;
@@ -368,7 +390,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
       TIter next(directory->GetListOfKeys());
       TKey *key;
       while( (key = (TKey*)next()) ) {
-         if (0 ==  directory->GetList()->FindObject(key->GetName())) {
+         if (nullptr == directory->GetList()->FindObject(key->GetName())) {
             Warning("ResetObjects","Key/Object %s is not attached to the directory %s and can not be ResetAfterMerge correctly",
                     key->GetName(),directory->GetName());
          }
@@ -551,9 +573,9 @@ Long64_t TMemFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 Int_t TMemFile::SysOpen(const char * /* pathname */, Int_t /* flags */, UInt_t /* mode */)
 {
    if (!fBlockList.fBuffer) {
-      fBlockList.fBuffer = new UChar_t[fgDefaultBlockSize];
-      fBlockList.fSize = fgDefaultBlockSize;
-      fSize = fgDefaultBlockSize;
+      fBlockList.fBuffer = new UChar_t[fDefaultBlockSize];
+      fBlockList.fSize = fDefaultBlockSize;
+      fSize = fDefaultBlockSize;
    }
    if (fBlockList.fBuffer) {
       return 0;
@@ -577,7 +599,7 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
 {
    TRACE("WRITE")
 
-   if (fExternalData) {
+   if (IsExternalData()) {
       gSystem->SetErrorStr("A memory file with shared data is read-only.");
       return 0;
    }
@@ -604,8 +626,8 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
          buf = (char*)buf + sublen;
          Int_t len_left = len - sublen;
          if (!fBlockSeek->fNext) {
-            fBlockSeek->CreateNext(fgDefaultBlockSize);
-            fSize += fgDefaultBlockSize;
+            fBlockSeek->CreateNext(fDefaultBlockSize);
+            fSize += fDefaultBlockSize;
          }
          fBlockSeek = fBlockSeek->fNext;
 
@@ -617,8 +639,8 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
             buf = (char*)buf + fBlockSeek->fSize;
             len_left -= fBlockSeek->fSize;
             if (!fBlockSeek->fNext) {
-               fBlockSeek->CreateNext(fgDefaultBlockSize);
-               fSize += fgDefaultBlockSize;
+               fBlockSeek->CreateNext(fDefaultBlockSize);
+               fSize += fDefaultBlockSize;
             }
             fBlockSeek = fBlockSeek->fNext;
          }
@@ -643,7 +665,7 @@ Int_t TMemFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform a stat on the HDFS file; see TFile::SysStat().
+/// Perform a stat on the file; see TFile::SysStat().
 
 Int_t TMemFile::SysStat(Int_t, Long_t* /* id */, Long64_t* /* size */, Long_t* /* flags */, Long_t* /* modtime */)
 {

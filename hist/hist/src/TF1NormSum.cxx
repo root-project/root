@@ -10,7 +10,8 @@
 
 #include "TROOT.h"
 #include "TClass.h"
-#include "TMath.h"
+#include "TObjString.h"
+#include "TObjArray.h"
 #include "TF1NormSum.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
@@ -65,10 +66,12 @@ void TF1NormSum::InitializeDataMembers(const std::vector<TF1 *> &functions, cons
    // fill fFunctions with unique_ptr's
    fFunctions = std::vector<std::unique_ptr<TF1>>(functions.size());
    for (unsigned int n = 0; n < fNOfFunctions; n++) {
-      TF1 *f = new TF1();
+      // use TF1::Copy and not clone to copy the TF1 pointers
+      // and use IsA()::New() in case we have base class pointers 
+      TF1 * f = (TF1*) functions[n]->IsA()->New();
       functions[n]->Copy(*f);
       fFunctions[n] = std::unique_ptr<TF1>(f);
-      // Use Copy, not Clone
+     
 
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
@@ -418,6 +421,8 @@ void TF1NormSum::Copy(TObject &obj) const
    // Clone objects in unique_ptr's
    ((TF1NormSum &)obj).fFunctions = std::vector<std::unique_ptr<TF1>>(fNOfFunctions);
    for (unsigned int n = 0; n < fNOfFunctions; n++) {
-      ((TF1NormSum &)obj).fFunctions[n] = std::unique_ptr<TF1>((TF1 *)fFunctions[n]->Clone());
+      TF1 * f = (TF1*) fFunctions[n]->IsA()->New();   
+      fFunctions[n]->Copy(*f);
+      ((TF1NormSum &)obj).fFunctions[n] = std::unique_ptr<TF1>(f);
    }
 }

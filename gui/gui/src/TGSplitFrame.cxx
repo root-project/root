@@ -22,7 +22,22 @@
 #include "TString.h"
 #include "TClass.h"
 #include "TList.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
+#include "snprintf.h"
+
+#include <iostream>
+
+/** \class TGSplitFrame
+    \ingroup guiwidgets
+A split frame.
+*/
+
+
+/** \class TGSplitTool
+    \ingroup guiwidgets
+A split frame tool tip.
+*/
+
 
 ClassImp(TGSplitTool);
 ClassImp(TGSplitFrame);

@@ -30,11 +30,11 @@ protected:
       kWarn = BIT(14)
    };
 
-   // In version of ROOT older then v6.12, kWarn was set to BIT(12)
-   // which overlaps with TBranch::kBranchObject.  Since it stored
-   // in ROOT files as part of the TBranchObject and that we want
-   // to reset in TBranchObject::Streamer, we need to keep track
-   // of the old value.
+   /// In version of ROOT older then v6.12, kWarn was set to BIT(12)
+   /// which overlaps with TBranch::kBranchObject.  Since it stored
+   /// in ROOT files as part of the TBranchObject and that we want
+   /// to reset in TBranchObject::Streamer, we need to keep track
+   /// of the old value.
    enum EStatusBitsOldValues {
       kOldWarn = BIT(12)
    };
@@ -46,8 +46,8 @@ protected:
 
 public:
    TBranchObject();
-   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1, Bool_t isptrptr = kTRUE);
-   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1, Bool_t isptrptr = kTRUE);
+   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
+   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
    virtual ~TBranchObject();
 
    virtual void        Browse(TBrowser *b);

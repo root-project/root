@@ -46,8 +46,6 @@ protected:
   std::vector<Int_t>    _catRef ;    // Reference valyes for categories
   Bool_t       _checkVal ;           // Check contents as well if true
 
-  mutable TIterator* _realSetIter ;     //! do not persist
-  mutable TIterator* _catSetIter ;     //! do not persist
   Bool_t        _init ; //!
 
   Double_t evaluate() const { return 1 ; }

@@ -9,6 +9,7 @@
 #include "TRandom3.h"
 #include "TROOT.h"
 #include "TVirtualFitter.h"
+#include "TFitResult.h"
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
@@ -64,7 +65,7 @@ int compareResult(double v1, double v2, std::string s = "", double tol = 0.01) {
 
 double chi2FromFit(const TF1 * func )  {
    // return last chi2 obtained from Fit method function
-   assert(TVirtualFitter::GetFitter() != 0 );
+   R__ASSERT(TVirtualFitter::GetFitter() != 0 );
    return (TVirtualFitter::GetFitter()->Chisquare(func->GetNpar(), func->GetParameters() ) );
 }
 
@@ -127,9 +128,9 @@ int testHisto1DFit() {
    TVirtualFitter::SetDefaultFitter("Minuit2");
    std::cout << "\n******************************\n\t TH1::Fit Result \n" << std::endl;
    func->SetParameters(p);
-   h1->Fit(func);
+   auto res = h1->Fit(func,"S");
 
-   iret |= compareResult( chi2FromFit(func), chi2ref,"1D histogram chi2 fit");
+   iret |= compareResult( res->Chi2(), chi2ref,"1D histogram chi2 fit");
 
 
    // test using binned likelihood
@@ -179,22 +180,30 @@ int testHisto1DFit() {
    // compare with TH1::Fit
    std::cout << "\n******************************\n\t TH1::Fit Result \n" << std::endl;
    func->SetParameters(p);
-   h1->Fit(func,"I");
+   h1->Fit(func,"I ");
    iret |= compareResult(func->GetChisquare(),fitter.Result().Chi2(),"TH1::Fit integral ",0.001);
 
    // test integral likelihood
+   std::cout << "\n\nTest Likelihood Fit using integral option" << std::endl;
    opt = ROOT::Fit::DataOptions();
    opt.fIntegral = true;
    opt.fUseEmpty = true;
+   ROOT::EExecutionPolicy execPolicy = ROOT::EExecutionPolicy::kSequential;
+
+   // if (ROOT::IsImplicitMTEnabled()) {
+   //    execPolicy = ROOT::EExecutionPolicy::kMultiThread;
+   // }
    ROOT::Fit::BinData dl2(opt);
    ROOT::Fit::FillData(dl2,h1,func);
    f.SetParameters(p);
-   ret = fitter.LikelihoodFit(dl2, f, true);
+   fitter.SetFunction(f);
+   ret = fitter.LikelihoodFit(dl2, true, execPolicy);
    if (ret)
       fitter.Result().Print(std::cout);
    else {
-      std::cout << "Integral Likelihood Fit Failed " << std::endl;
-      return -1;
+      fitter.Result().Print(std::cout);
+      std::cout << "ERROR: Integral Likelihood Fit Failed " << std::endl;
+      //return -1;
    }
    iret |= compareResult(fitter.Result().Chi2(), chi2ref,"1D histogram integral likelihood fit",0.3);
 
@@ -913,10 +922,33 @@ int testGraphFit() {
    return iret;
 }
 
+int testFitResultScan() {
+   TH1D *h1 = new TH1D("h1", "h1", 30, -3., 3.);
+   h1->FillRandom("gaus",500);
+
+   auto r = h1->Fit("gaus", "S");
+   if (r->Status() != 0)
+      return r->Status();
+   unsigned int np = 20;
+   std::vector<double> x(np);
+   std::vector<double> y(np);
+   bool ok = r->Scan(1, np, x.data(), y.data(), -1., 1.);
+   if (!ok) return -1;
+   std::cout << "scan points:  " << np << std::endl;
+   for (unsigned int i = 0; i < np; ++i)
+      std::cout << "( " << x[i] << " , " << y[i] << " )  ";
+   std::cout << std::endl;
+   // check that is a parabola
+   unsigned int imin = TMath::LocMin(np, y.data());
+   double xmin = x[imin];
+   std::cout << "Minimum of scan for parameter 1 (Gaussian mean) is " << xmin << " index " << imin << std::endl;
+   return !( (std::abs(xmin) < 0.3) && std::abs(double(imin)-np/2.) < 2. );
+}
 
 template<typename Test>
 int testFit(Test t, std::string name) {
-   std::cout << name << "\n\t\t";
+   std::cout << "******************************\n";
+   std::cout << name << "\n\n\t\t";
    int iret = t();
    std::cout << "\n" << name << ":\t\t";
    if (iret == 0)
@@ -926,7 +958,7 @@ int testFit(Test t, std::string name) {
    return iret;
 }
 
-int main() {
+int runAllTests() {
 
    int iret = 0;
    iret |= testFit( testHisto1DFit, "Histogram1D Fit");
@@ -934,10 +966,19 @@ int main() {
    iret |= testFit( testHisto2DFit, "Histogram2D Gradient Fit");
    iret |= testFit( testUnBin1DFit, "Unbin 1D Fit");
    iret |= testFit( testGraphFit, "Graph 1D Fit");
+   iret |= testFit( testFitResultScan, "FitResult Scan");
 
    std::cout << "\n******************************\n";
    if (iret) std::cerr << "\n\t testFit FAILED !!!!!!!!!!!!!!!! \n";
-   else std::cout << "\n\t testFit all OK \n";
+   else std::cout << "\n\t testFit all OK  !\n";
    return iret;
 }
+int main() {
+   runAllTests();
 
+   std::cout << "\n******************************\n";
+   std::cout << "Test NOW in Multithreading mode " << std::endl;
+   std::cout << "\n******************************\n";
+   ROOT::EnableImplicitMT(1);
+   runAllTests();
+}

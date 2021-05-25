@@ -68,9 +68,9 @@ The status of major ABI-impacting C++ features:
   base class`_.  Clang does not yet support this.
 
 .. _#pragma pointers_to_members:
-  http://msdn.microsoft.com/en-us/library/83cch5a6.aspx
-.. _/vm: http://msdn.microsoft.com/en-us/library/yad46a6z.aspx
-.. _pointer to a member of a virtual base class: http://llvm.org/PR15713
+  https://msdn.microsoft.com/en-us/library/83cch5a6.aspx
+.. _/vm: https://msdn.microsoft.com/en-us/library/yad46a6z.aspx
+.. _pointer to a member of a virtual base class: https://llvm.org/PR15713
 
 * Debug info: :good:`Mostly complete`.  Clang emits relatively complete CodeView
   debug information if ``/Z7`` or ``/Zi`` is passed. Microsoft's link.exe will
@@ -137,7 +137,7 @@ following program, Clang will recover as if the user had written the
 commented-out code:
 
 .. _frequently asked question:
-  http://clang.llvm.org/compatibility.html#dep_lookup
+  https://clang.llvm.org/compatibility.html#dep_lookup
 
 .. code-block:: c++
 

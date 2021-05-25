@@ -12,33 +12,6 @@
 #ifndef ROOT_TGedPatternSelect
 #define ROOT_TGedPatternSelect
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedPatternFrame, TGedPatternSelector, TGedPatternPopup              //
-// and TGedPatternColor.                                                //
-//                                                                      //
-// The TGedPatternFrame is a small frame with border showing a          //
-// specific pattern (fill style).                                       //
-//                                                                      //
-// The TGedPatternSelector is a composite frame with TGedPatternFrames  //
-// of all diferent styles                                               //
-//                                                                      //
-// The TGedPattern is a popup containing a TGPatternSelector.           //
-//                                                                      //
-// The TGedPatternSelect widget is a button with pattern area with      //
-// a little down arrow. When clicked on the arrow the                   //
-// TGedPatternPopup pops up.                                            //
-//                                                                      //
-// Selecting a pattern in this widget will generate the event:          //
-// kC_PATTERNSEL, kPAT_SELCHANGED, widget id, style.                    //
-//                                                                      //
-// and the signal:                                                      //
-// PatternSelected(Style_t pattern)                                     //
-//                                                                      //
-// TGedSelect is button that shows popup window when clicked.           //
-// TGedPopup is a popup window.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGButton.h"
 #include "TGToolTip.h"
@@ -69,7 +42,7 @@ protected:
    Bool_t          fActive;
    Style_t         fPattern;
    static TGGC    *fgGC;
-   TGToolTip      *fTip;         // tool tip associated with a button
+   TGToolTip      *fTip;         ///< tool tip associated with a button
    char            fTipText[7];
 
    virtual void    DoRedraw();

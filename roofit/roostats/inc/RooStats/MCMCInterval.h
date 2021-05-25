@@ -17,7 +17,10 @@
 #include "RooStats/ConfInterval.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
+#include "RooMsgService.h"
 #include "RooStats/MarkovChain.h"
+
+#include <vector>
 
 class RooNDKeysPdf;
 class RooProduct;

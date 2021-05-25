@@ -1,46 +1,78 @@
-/*
-
-  This program will add histograms (see note) and Trees from a list of root files and write them
-  to a target root file. The target file is newly created and must not be
+/**
+  \file hadd.cxx
+  \brief This program will add histograms (see note) and Trees from a list of root files and write them to a target root file.
+  The target file is newly created and must not be
   identical to one of the source files.
 
   Syntax:
-
+  ```{.cpp}
        hadd targetfile source1 source2 ...
-    or
+  ```
+  or
+  ```{.cpp}
        hadd -f targetfile source1 source2 ...
-         (targetfile is overwritten if it exists)
+  ```
+  (targetfile is overwritten if it exists)
+
+  \param -a   Append to the output
+  \param -f   Force overwriting of output file.
+  \param -f[0-9] Set target compression level. 0 = uncompressed, 6 = highly compressed.
+  \param -fk  Sets the target file to contain the baskets with the same compression
+              as the input files (unless -O is specified). Compresses the meta data
+              using the compression level specified in the first input or the
+              compression setting after fk (for example 206 when using -fk206)
+  \param -ff  The compression level used is the one specified in the first input
+
+  \param -k   Skip corrupt or non-existent files, do not exit
+  \param -O   Re-optimize basket size when merging TTree
+  \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the default
+  \param -j   Parallelise the execution in multiple processes
+  \param -dbg  Parallelise the execution in multiple processes in debug mode (Does not delete  partial  files  stored
+              inside working directory)
+  \param -d   Carry out the partial multiprocess execution in the specified directory
+  \param -n   Open at most `n` at once (use 0 to request to use the system maximum)
+  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees
+  \return hadd returns a status code: 0 if OK, -1 otherwise
 
   When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 4, but
+  level of the target file. By default the compression level is 1 (kDefaultZLIB), but
   if "-f0" is specified, the target file will not be compressed.
   if "-f6" is specified, the compression level 6 will be used.
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
-    f1 with h1 h2 h3 T1
-    f2 with h1 h4 T1 T2
-    f3 with h5
-   the result of
-     hadd -f x.root f1.root f2.root f3.root
-   will be a file x.root with h1 h2 h3 h4 h5 T1 T2
-   where h1 will be the sum of the 2 histograms in f1 and f2
-         T1 will be the merge of the Trees in f1 and f2
+   - f1 with h1 h2 h3 T1
+   - f2 with h1 h4 T1 T2
+   - f3 with h5
+  the result of
+  ```
+    hadd -f x.root f1.root f2.root f3.root
+  ```
+  will be a file x.root with h1 h2 h3 h4 h5 T1 T2
+  where
+   - h1 will be the sum of the 2 histograms in f1 and f2
+   - T1 will be the merge of the Trees in f1 and f2
 
   The files may contain sub-directories.
 
-  if the source files contains histograms and Trees, one can skip
+  If the source files contains histograms and Trees, one can skip
   the Trees with
+  ```
        hadd -T targetfile source1 source2 ...
+  ```
 
   Wildcarding and indirect files are also supported
-    hadd result.root  myfil*.root
-   will merge all files in myfil*.root
-    hadd result.root file1.root @list.txt file2. root myfil*.root
-    will merge file1. root, file2. root, all files in myfil*.root
-    and all files in the indirect text file list.txt ("@" as the first
-    character of the file indicates an indirect file. An indirect file
-    is a text file containing a list of other files, including other
-    indirect files, one line per file).
+  ```
+      hadd result.root  myfil*.root
+  ```
+  will merge all files in myfil*.root
+  ```
+      hadd result.root file1.root @list.txt file2. root myfil*.root
+  ```
+  will merge file1.root, file2.root, all files in myfil*.root
+  and all files in the indirect text file list.txt ("@" as the first
+  character of the file indicates an indirect file. An indirect file
+  is a text file containing a list of other files, including other
+  indirect files, one line per file).
 
   If the sources and and target compression levels are identical (default),
   the program uses the TChain::Merge function with option "fast", ie
@@ -51,40 +83,38 @@
   If the option -cachesize is used, hadd will resize (or disable if 0) the
   prefetching cache use to speed up I/O operations.
 
-  For options that takes a size as argument, a decimal number of bytes is expected.
-  If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied
+  For options that take a size as argument, a decimal number of bytes is expected.
+  If the number ends with a `k`, `m`, `g`, etc., the number is multiplied
   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
-  If this prefix is followed by i, the number is multipled by the traditional
+  If this prefix is followed by `i`, the number is multiplied by the traditional
   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
   The prefix can be optionally followed by B whose casing is ignored,
   eg. 1k, 1K, 1Kb and 1KB are the same.
 
-  NOTE1: By default histograms are added. However hadd does not support the case where
+  \note By default histograms are added. However hadd does not support the case where
          histograms have their bit TH1::kIsAverage set.
 
-  NOTE2: hadd returns a status code: 0 if OK, -1 otherwise
-
-  Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
-         : rewritten from scratch by Rene Brun (30 November 2005)
-            to support files with nested directories.
-           Toby Burnett implemented the possibility to use indirect files.
- */
-
-#include <ROOT/RConfig.h>
+  \authors Rene Brun, Dirk Geppert, Sven A. Schmidt, Toby Burnett
+*/
+#include "Compression.h"
+#include <ROOT/RConfig.hxx>
 #include "ROOT/TIOFeatures.hxx"
-#include <string>
 #include "TFile.h"
 #include "THashList.h"
 #include "TKey.h"
-#include "TObjString.h"
-#include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include "TUUID.h"
 #include "ROOT/StringConv.hxx"
-#include <stdlib.h>
+#include "snprintf.h"
+
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
 #include <climits>
 #include <sstream>
+#include "haddCommandLineOptionsHelp.h"
 
 #include "TFileMerger.h"
 #ifndef R__WIN32
@@ -96,56 +126,8 @@
 int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
-      std::cout << "Usage: " << argv[0] << " [-f[fk][0-9]] [-k] [-T] [-O] [-a] \n"
-      "            [-n maxopenedfiles] [-cachesize size] [-j ncpus] [-v [verbosity]] \n"
-      "            targetfile source1 [source2 source3 ...]\n" << std::endl;
-      std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
-      std::cout << "   to a target root file. The target file is newly created and must not" << std::endl;
-      std::cout << "   exist, or if -f (\"force\") is given, must not be one of the source files." << std::endl;
-      std::cout << "   Supply at least two source files for this to make sense... ;-)" << std::endl;
-      std::cout << "If the option -a is used, hadd will append to the output." << std::endl;
-      std::cout << "If the option -k is used, hadd will not exit on corrupt or non-existant input\n"
-                   "   files but skip the offending files instead." << std::endl;
-      std::cout << "If the option -T is used, Trees are not merged" <<std::endl;
-      std::cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<std::endl;
-      std::cout << "If the option -v is used, explicitly set the verbosity level;\n"\
-                   "   0 request no output, 99 is the default" <<std::endl;
-      std::cout << "If the option -j is used, the execution will be parallelized in multiple processes\n" << std::endl;
-      std::cout << "If the option -dbg is used, the execution will be parallelized in multiple processes in debug mode."
-                   " This will not delete the partial files stored in the working directory\n"
-                << std::endl;
-      std::cout << "If the option -d is used, the partial multiprocess execution will be carried out in the specified "
-                   "directory\n"
-                << std::endl;
-      std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0\n"
-                   "   to request to use the system maximum." << std::endl;
-      std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
-                   "   prefetching cache use to speed up I/O operations." << std::endl;
-      std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
-                   "   the corresponding experimental feature will be enabled for output trees." << std::endl;
-      std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
-                   "   the target file.  By default the compression level is 4."
-                << std::endl;
-      std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
-                   "   compression as in the input files unless -O is specified.  The meta data will\n"
-                   "   be compressed using the compression level specified in the first input or the\n"
-                   "   compression setting specified follow fk (206 when using -fk206 for example)" <<std::endl;
-      std::cout << "If \"-ff\" is specified, the compression level use is the one specified in the\n"
-                   "   first input." <<std::endl;
-      std::cout << "If \"-f0\" is specified, the target file will not be compressed." <<std::endl;
-      std::cout << "If \"-f6\" is specified, the compression level 6 will be used.  \n"
-                   "   See TFile::SetCompressionSettings for the support range of value." <<std::endl;
-      std::cout << "If Target and source files have different compression settings a slower method\n"
-                   "   is used.\n"<<std::endl;
-      std::cout << "For options that takes a size as argument, a decimal number of bytes is expected.\n"
-                   "If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied\n"
-                   "   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc. \n"
-                   "If this prefix is followed by i, the number is multipled by the traditional\n"
-                   "   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc. \n"
-                   "The prefix can be optionally followed by B whose casing is ignored,\n"
-                   "   eg. 1k, 1K, 1Kb and 1KB are the same."<<std::endl;
-
-      return 1;
+         fprintf(stderr, kCommandLineOptionsHelp);
+         return 1;
    }
 
    ROOT::TIOFeatures features;
@@ -312,22 +294,22 @@ int main( int argc, char **argv )
 //         if (a+1 >= argc) {
 //            std::cerr << "Error: no verbosity level was provided after -v.\n";
          } else {
-            Long_t request = -1;
+            Bool_t hasFollowupNumber = kTRUE;
             for (char *c = argv[a+1]; *c != '\0'; ++c) {
                if (!isdigit(*c)) {
                   // Verbosity level was not specified use the default:
-                  request = 99;
+                  hasFollowupNumber = kFALSE;
                   break;
                }
             }
-            if (request == 1) {
-               request = strtol(argv[a+1], 0, 10);
+            if (hasFollowupNumber) {
+               Long_t request = strtol(argv[a+1], 0, 10);
                if (request < kMaxLong && request >= 0) {
                   verbosity = (Int_t)request;
                   ++a;
                   ++ffirst;
-                  std::cerr << "Error: from " << argv[a+1] << " guess verbosity level : " << verbosity << "\n";
                } else {
+                  verbosity = 99;
                   std::cerr << "Error: could not parse the verbosity level passed after -v: " << argv[a+1] << ". We will use the default value (99).\n";
                }
             }
@@ -357,7 +339,7 @@ int main( int argc, char **argv )
             }
          }
          char ft[7];
-         for (int alg = 0; !useFirstInputCompression && alg <= 4; ++alg) {
+         for (int alg = 0; !useFirstInputCompression && alg <= 5; ++alg) {
             for( int j=0; j<=9; ++j ) {
                const int comp = (alg*100)+j;
                snprintf(ft,7,"-f%s%d",prefix,comp);
@@ -421,15 +403,15 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = 4;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100;
          delete firstInput;
-      } else newcomp = 4; // default compression level.
+      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
          std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
       else
-         std::cout << "hadd compression setting for all ouput: " << newcomp << '\n';
+         std::cout << "hadd compression setting for all output: " << newcomp << '\n';
    }
    if (append) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
@@ -451,8 +433,15 @@ int main( int argc, char **argv )
       std::cout << "Each process should handle at least 3 files for efficiency.";
       std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
    }
+   if (nProcesses == 1)
+      multiproc = kFALSE;
+
    std::vector<std::string> partialFiles;
 
+#ifndef R__WIN32
+   // this is commented out only to try to prevent false positive detection
+   // from several anti-virus engines on Windows, and multiproc is not
+   // supported on Windows anyway
    if (multiproc) {
       auto uuid = TUUID();
       auto partialTail = uuid.AsString();
@@ -462,6 +451,7 @@ int main( int argc, char **argv )
          partialFiles.emplace_back(buffer.str());
       }
    }
+#endif
 
    auto mergeFiles = [&](TFileMerger &merger) {
       if (reoptimize) {

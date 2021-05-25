@@ -1,16 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
-##
-## Performing fits in multiple (disjoint) ranges in one or more dimensions
+## Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -38,7 +34,9 @@ bkg = ROOT.RooProdPdf("bkg", "bkg", px, py)
 
 # Construct the composite model sig+bkg
 f = ROOT.RooRealVar("f", "f", 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(f))
+model = ROOT.RooAddPdf(
+    "model", "model", ROOT.RooArgList(
+        sig, bkg), ROOT.RooArgList(f))
 
 # Sample 10000 events in (x,y) from the model
 modelData = model.generate(ROOT.RooArgSet(x, y), 10000)

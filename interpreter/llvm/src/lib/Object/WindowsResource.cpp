@@ -1,9 +1,8 @@
 //===-- WindowsResource.cpp -------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,10 +13,11 @@
 #include "llvm/Object/WindowsResource.h"
 #include "llvm/Object/COFF.h"
 #include "llvm/Support/FileOutputBuffer.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/ScopedPrinter.h"
 #include <ctime>
 #include <queue>
-#include <sstream>
 #include <system_error>
 
 using namespace llvm;
@@ -46,30 +46,34 @@ WindowsResource::WindowsResource(MemoryBufferRef Source)
                          support::little);
 }
 
+// static
 Expected<std::unique_ptr<WindowsResource>>
 WindowsResource::createWindowsResource(MemoryBufferRef Source) {
   if (Source.getBufferSize() < WIN_RES_MAGIC_SIZE + WIN_RES_NULL_ENTRY_SIZE)
     return make_error<GenericBinaryError>(
-        "File too small to be a resource file",
+        Source.getBufferIdentifier() + ": too small to be a resource file",
         object_error::invalid_file_type);
   std::unique_ptr<WindowsResource> Ret(new WindowsResource(Source));
   return std::move(Ret);
 }
 
 Expected<ResourceEntryRef> WindowsResource::getHeadEntry() {
-  Error Err = Error::success();
-  auto Ref = ResourceEntryRef(BinaryStreamRef(BBS), this, Err);
-  if (Err)
-    return std::move(Err);
-  return Ref;
+  if (BBS.getLength() < sizeof(WinResHeaderPrefix) + sizeof(WinResHeaderSuffix))
+    return make_error<EmptyResError>(getFileName() + " contains no entries",
+                                     object_error::unexpected_eof);
+  return ResourceEntryRef::create(BinaryStreamRef(BBS), this);
 }
 
 ResourceEntryRef::ResourceEntryRef(BinaryStreamRef Ref,
-                                   const WindowsResource *Owner, Error &Err)
-    : Reader(Ref), OwningRes(Owner) {
-  if (loadNext())
-    Err = make_error<GenericBinaryError>("Could not read first entry.\n",
-                                         object_error::unexpected_eof);
+                                   const WindowsResource *Owner)
+    : Reader(Ref), Owner(Owner) {}
+
+Expected<ResourceEntryRef>
+ResourceEntryRef::create(BinaryStreamRef BSR, const WindowsResource *Owner) {
+  auto Ref = ResourceEntryRef(BSR, Owner);
+  if (auto E = Ref.loadNext())
+    return std::move(E);
+  return Ref;
 }
 
 Error ResourceEntryRef::moveNext(bool &End) {
@@ -105,7 +109,8 @@ Error ResourceEntryRef::loadNext() {
   RETURN_IF_ERROR(Reader.readObject(Prefix));
 
   if (Prefix->HeaderSize < MIN_HEADER_SIZE)
-    return make_error<GenericBinaryError>("Header size is too small.",
+    return make_error<GenericBinaryError>(Owner->getFileName() +
+                                              ": header size too small",
                                           object_error::parse_failed);
 
   RETURN_IF_ERROR(readStringOrId(Reader, TypeID, Type, IsStringType));
@@ -125,10 +130,93 @@ Error ResourceEntryRef::loadNext() {
 
 WindowsResourceParser::WindowsResourceParser() : Root(false) {}
 
-Error WindowsResourceParser::parse(WindowsResource *WR) {
+void printResourceTypeName(uint16_t TypeID, raw_ostream &OS) {
+  switch (TypeID) {
+  case  1: OS << "CURSOR (ID 1)"; break;
+  case  2: OS << "BITMAP (ID 2)"; break;
+  case  3: OS << "ICON (ID 3)"; break;
+  case  4: OS << "MENU (ID 4)"; break;
+  case  5: OS << "DIALOG (ID 5)"; break;
+  case  6: OS << "STRINGTABLE (ID 6)"; break;
+  case  7: OS << "FONTDIR (ID 7)"; break;
+  case  8: OS << "FONT (ID 8)"; break;
+  case  9: OS << "ACCELERATOR (ID 9)"; break;
+  case 10: OS << "RCDATA (ID 10)"; break;
+  case 11: OS << "MESSAGETABLE (ID 11)"; break;
+  case 12: OS << "GROUP_CURSOR (ID 12)"; break;
+  case 14: OS << "GROUP_ICON (ID 14)"; break;
+  case 16: OS << "VERSIONINFO (ID 16)"; break;
+  case 17: OS << "DLGINCLUDE (ID 17)"; break;
+  case 19: OS << "PLUGPLAY (ID 19)"; break;
+  case 20: OS << "VXD (ID 20)"; break;
+  case 21: OS << "ANICURSOR (ID 21)"; break;
+  case 22: OS << "ANIICON (ID 22)"; break;
+  case 23: OS << "HTML (ID 23)"; break;
+  case 24: OS << "MANIFEST (ID 24)"; break;
+  default: OS << "ID " << TypeID; break;
+  }
+}
+
+static bool convertUTF16LEToUTF8String(ArrayRef<UTF16> Src, std::string &Out) {
+  if (!sys::IsBigEndianHost)
+    return convertUTF16ToUTF8String(Src, Out);
+
+  std::vector<UTF16> EndianCorrectedSrc;
+  EndianCorrectedSrc.resize(Src.size() + 1);
+  llvm::copy(Src, EndianCorrectedSrc.begin() + 1);
+  EndianCorrectedSrc[0] = UNI_UTF16_BYTE_ORDER_MARK_SWAPPED;
+  return convertUTF16ToUTF8String(makeArrayRef(EndianCorrectedSrc), Out);
+}
+
+static std::string makeDuplicateResourceError(
+    const ResourceEntryRef &Entry, StringRef File1, StringRef File2) {
+  std::string Ret;
+  raw_string_ostream OS(Ret);
+
+  OS << "duplicate resource:";
+
+  OS << " type ";
+  if (Entry.checkTypeString()) {
+    std::string UTF8;
+    if (!convertUTF16LEToUTF8String(Entry.getTypeString(), UTF8))
+      UTF8 = "(failed conversion from UTF16)";
+    OS << '\"' << UTF8 << '\"';
+  } else
+    printResourceTypeName(Entry.getTypeID(), OS);
+
+  OS << "/name ";
+  if (Entry.checkNameString()) {
+    std::string UTF8;
+    if (!convertUTF16LEToUTF8String(Entry.getNameString(), UTF8))
+      UTF8 = "(failed conversion from UTF16)";
+    OS << '\"' << UTF8 << '\"';
+  } else {
+    OS << "ID " << Entry.getNameID();
+  }
+
+  OS << "/language " << Entry.getLanguage() << ", in " << File1 << " and in "
+     << File2;
+
+  return OS.str();
+}
+
+Error WindowsResourceParser::parse(WindowsResource *WR,
+                                   std::vector<std::string> &Duplicates) {
   auto EntryOrErr = WR->getHeadEntry();
-  if (!EntryOrErr)
-    return EntryOrErr.takeError();
+  if (!EntryOrErr) {
+    auto E = EntryOrErr.takeError();
+    if (E.isA<EmptyResError>()) {
+      // Check if the .res file contains no entries.  In this case we don't have
+      // to throw an error but can rather just return without parsing anything.
+      // This applies for files which have a valid PE header magic and the
+      // mandatory empty null resource entry.  Files which do not fit this
+      // criteria would have already been filtered out by
+      // WindowsResource::createWindowsResource().
+      consumeError(std::move(E));
+      return Error::success();
+    }
+    return E;
+  }
 
   ResourceEntryRef Entry = EntryOrErr.get();
   bool End = false;
@@ -138,7 +226,14 @@ Error WindowsResourceParser::parse(WindowsResource *WR) {
     bool IsNewTypeString = false;
     bool IsNewNameString = false;
 
-    Root.addEntry(Entry, IsNewTypeString, IsNewNameString);
+    TreeNode* Node;
+    bool IsNewNode = Root.addEntry(Entry, InputFilenames.size(),
+                                   IsNewTypeString, IsNewNameString, Node);
+    InputFilenames.push_back(WR->getFileName());
+    if (!IsNewNode) {
+      Duplicates.push_back(makeDuplicateResourceError(
+          Entry, InputFilenames[Node->Origin], WR->getFileName()));
+    }
 
     if (IsNewTypeString)
       StringTable.push_back(Entry.getTypeString());
@@ -157,12 +252,14 @@ void WindowsResourceParser::printTree(raw_ostream &OS) const {
   Root.print(Writer, "Resource Tree");
 }
 
-void WindowsResourceParser::TreeNode::addEntry(const ResourceEntryRef &Entry,
+bool WindowsResourceParser::TreeNode::addEntry(const ResourceEntryRef &Entry,
+                                               uint32_t Origin,
                                                bool &IsNewTypeString,
-                                               bool &IsNewNameString) {
+                                               bool &IsNewNameString,
+                                               TreeNode *&Result) {
   TreeNode &TypeNode = addTypeNode(Entry, IsNewTypeString);
   TreeNode &NameNode = TypeNode.addNameNode(Entry, IsNewNameString);
-  NameNode.addLanguageNode(Entry);
+  return NameNode.addLanguageNode(Entry, Origin, Result);
 }
 
 WindowsResourceParser::TreeNode::TreeNode(bool IsStringNode) {
@@ -172,10 +269,11 @@ WindowsResourceParser::TreeNode::TreeNode(bool IsStringNode) {
 
 WindowsResourceParser::TreeNode::TreeNode(uint16_t MajorVersion,
                                           uint16_t MinorVersion,
-                                          uint32_t Characteristics)
+                                          uint32_t Characteristics,
+                                          uint32_t Origin)
     : IsDataNode(true), MajorVersion(MajorVersion), MinorVersion(MinorVersion),
-      Characteristics(Characteristics) {
-    DataIndex = DataCount++;
+      Characteristics(Characteristics), Origin(Origin) {
+  DataIndex = DataCount++;
 }
 
 std::unique_ptr<WindowsResourceParser::TreeNode>
@@ -191,44 +289,52 @@ WindowsResourceParser::TreeNode::createIDNode() {
 std::unique_ptr<WindowsResourceParser::TreeNode>
 WindowsResourceParser::TreeNode::createDataNode(uint16_t MajorVersion,
                                                 uint16_t MinorVersion,
-                                                uint32_t Characteristics) {
+                                                uint32_t Characteristics,
+                                                uint32_t Origin) {
   return std::unique_ptr<TreeNode>(
-      new TreeNode(MajorVersion, MinorVersion, Characteristics));
+      new TreeNode(MajorVersion, MinorVersion, Characteristics, Origin));
 }
 
 WindowsResourceParser::TreeNode &
 WindowsResourceParser::TreeNode::addTypeNode(const ResourceEntryRef &Entry,
                                              bool &IsNewTypeString) {
   if (Entry.checkTypeString())
-    return addChild(Entry.getTypeString(), IsNewTypeString);
+    return addNameChild(Entry.getTypeString(), IsNewTypeString);
   else
-    return addChild(Entry.getTypeID());
+    return addIDChild(Entry.getTypeID());
 }
 
 WindowsResourceParser::TreeNode &
 WindowsResourceParser::TreeNode::addNameNode(const ResourceEntryRef &Entry,
                                              bool &IsNewNameString) {
   if (Entry.checkNameString())
-    return addChild(Entry.getNameString(), IsNewNameString);
+    return addNameChild(Entry.getNameString(), IsNewNameString);
   else
-    return addChild(Entry.getNameID());
+    return addIDChild(Entry.getNameID());
 }
 
-WindowsResourceParser::TreeNode &
-WindowsResourceParser::TreeNode::addLanguageNode(
-    const ResourceEntryRef &Entry) {
-  return addChild(Entry.getLanguage(), true, Entry.getMajorVersion(),
-                  Entry.getMinorVersion(), Entry.getCharacteristics());
+bool WindowsResourceParser::TreeNode::addLanguageNode(
+    const ResourceEntryRef &Entry, uint32_t Origin, TreeNode *&Result) {
+  return addDataChild(Entry.getLanguage(), Entry.getMajorVersion(),
+                      Entry.getMinorVersion(), Entry.getCharacteristics(),
+                      Origin, Result);
 }
 
-WindowsResourceParser::TreeNode &WindowsResourceParser::TreeNode::addChild(
-    uint32_t ID, bool IsDataNode, uint16_t MajorVersion, uint16_t MinorVersion,
-    uint32_t Characteristics) {
+bool WindowsResourceParser::TreeNode::addDataChild(
+    uint32_t ID, uint16_t MajorVersion, uint16_t MinorVersion,
+    uint32_t Characteristics, uint32_t Origin, TreeNode *&Result) {
+  auto NewChild =
+      createDataNode(MajorVersion, MinorVersion, Characteristics, Origin);
+  auto ElementInserted = IDChildren.emplace(ID, std::move(NewChild));
+  Result = ElementInserted.first->second.get();
+  return ElementInserted.second;
+}
+
+WindowsResourceParser::TreeNode &WindowsResourceParser::TreeNode::addIDChild(
+    uint32_t ID) {
   auto Child = IDChildren.find(ID);
   if (Child == IDChildren.end()) {
-    auto NewChild =
-        IsDataNode ? createDataNode(MajorVersion, MinorVersion, Characteristics)
-                   : createIDNode();
+    auto NewChild = createIDNode();
     WindowsResourceParser::TreeNode &Node = *NewChild;
     IDChildren.emplace(ID, std::move(NewChild));
     return Node;
@@ -237,19 +343,10 @@ WindowsResourceParser::TreeNode &WindowsResourceParser::TreeNode::addChild(
 }
 
 WindowsResourceParser::TreeNode &
-WindowsResourceParser::TreeNode::addChild(ArrayRef<UTF16> NameRef,
-                                          bool &IsNewString) {
+WindowsResourceParser::TreeNode::addNameChild(ArrayRef<UTF16> NameRef,
+                                              bool &IsNewString) {
   std::string NameString;
-  ArrayRef<UTF16> CorrectedName;
-  std::vector<UTF16> EndianCorrectedName;
-  if (sys::IsBigEndianHost) {
-    EndianCorrectedName.resize(NameRef.size() + 1);
-    std::copy(NameRef.begin(), NameRef.end(), EndianCorrectedName.begin() + 1);
-    EndianCorrectedName[0] = UNI_UTF16_BYTE_ORDER_MARK_SWAPPED;
-    CorrectedName = makeArrayRef(EndianCorrectedName);
-  } else
-    CorrectedName = NameRef;
-  convertUTF16ToUTF8String(CorrectedName, NameString);
+  convertUTF16LEToUTF8String(NameRef, NameString);
 
   auto Child = StringChildren.find(NameString);
   if (Child == StringChildren.end()) {
@@ -303,13 +400,13 @@ class WindowsResourceCOFFWriter {
 public:
   WindowsResourceCOFFWriter(COFF::MachineTypes MachineType,
                             const WindowsResourceParser &Parser, Error &E);
-  std::unique_ptr<MemoryBuffer> write();
+  std::unique_ptr<MemoryBuffer> write(uint32_t TimeDateStamp);
 
 private:
   void performFileLayout();
   void performSectionOneLayout();
   void performSectionTwoLayout();
-  void writeCOFFHeader();
+  void writeCOFFHeader(uint32_t TimeDateStamp);
   void writeFirstSectionHeader();
   void writeSecondSectionHeader();
   void writeFirstSection();
@@ -319,7 +416,7 @@ private:
   void writeDirectoryTree();
   void writeDirectoryStringTable();
   void writeFirstSectionRelocations();
-  std::unique_ptr<MemoryBuffer> OutputBuffer;
+  std::unique_ptr<WritableMemoryBuffer> OutputBuffer;
   char *BufferStart;
   uint64_t CurrentOffset = 0;
   COFF::MachineTypes MachineType;
@@ -345,7 +442,8 @@ WindowsResourceCOFFWriter::WindowsResourceCOFFWriter(
       Data(Parser.getData()), StringTable(Parser.getStringTable()) {
   performFileLayout();
 
-  OutputBuffer = MemoryBuffer::getNewMemBuffer(FileSize);
+  OutputBuffer = WritableMemoryBuffer::getNewMemBuffer(
+      FileSize, "internal .obj file created from .res files");
 }
 
 void WindowsResourceCOFFWriter::performFileLayout() {
@@ -402,17 +500,11 @@ void WindowsResourceCOFFWriter::performSectionTwoLayout() {
   FileSize = alignTo(FileSize, SECTION_ALIGNMENT);
 }
 
-static std::time_t getTime() {
-  std::time_t Now = time(nullptr);
-  if (Now < 0 || !isUInt<32>(Now))
-    return UINT32_MAX;
-  return Now;
-}
+std::unique_ptr<MemoryBuffer>
+WindowsResourceCOFFWriter::write(uint32_t TimeDateStamp) {
+  BufferStart = OutputBuffer->getBufferStart();
 
-std::unique_ptr<MemoryBuffer> WindowsResourceCOFFWriter::write() {
-  BufferStart = const_cast<char *>(OutputBuffer->getBufferStart());
-
-  writeCOFFHeader();
+  writeCOFFHeader(TimeDateStamp);
   writeFirstSectionHeader();
   writeSecondSectionHeader();
   writeFirstSection();
@@ -423,28 +515,17 @@ std::unique_ptr<MemoryBuffer> WindowsResourceCOFFWriter::write() {
   return std::move(OutputBuffer);
 }
 
-void WindowsResourceCOFFWriter::writeCOFFHeader() {
+void WindowsResourceCOFFWriter::writeCOFFHeader(uint32_t TimeDateStamp) {
   // Write the COFF header.
   auto *Header = reinterpret_cast<coff_file_header *>(BufferStart);
-  switch (MachineType) {
-  case COFF::IMAGE_FILE_MACHINE_ARMNT:
-    Header->Machine = COFF::IMAGE_FILE_MACHINE_ARMNT;
-    break;
-  case COFF::IMAGE_FILE_MACHINE_AMD64:
-    Header->Machine = COFF::IMAGE_FILE_MACHINE_AMD64;
-    break;
-  case COFF::IMAGE_FILE_MACHINE_I386:
-    Header->Machine = COFF::IMAGE_FILE_MACHINE_I386;
-    break;
-  default:
-    Header->Machine = COFF::IMAGE_FILE_MACHINE_UNKNOWN;
-  }
+  Header->Machine = MachineType;
   Header->NumberOfSections = 2;
-  Header->TimeDateStamp = getTime();
+  Header->TimeDateStamp = TimeDateStamp;
   Header->PointerToSymbolTable = SymbolTableOffset;
-  // One symbol for every resource plus 2 for each section and @feat.00
+  // One symbol for every resource plus 2 for each section and 1 for @feat.00
   Header->NumberOfSymbols = Data.size() + 5;
   Header->SizeOfOptionalHeader = 0;
+  // cvtres.exe sets 32BIT_MACHINE even for 64-bit machine types. Match it.
   Header->Characteristics = COFF::IMAGE_FILE_32BIT_MACHINE;
 }
 
@@ -498,8 +579,7 @@ void WindowsResourceCOFFWriter::writeFirstSection() {
 void WindowsResourceCOFFWriter::writeSecondSection() {
   // Now write the .rsrc$02 section.
   for (auto const &RawDataEntry : Data) {
-    std::copy(RawDataEntry.begin(), RawDataEntry.end(),
-              BufferStart + CurrentOffset);
+    llvm::copy(RawDataEntry, BufferStart + CurrentOffset);
     CurrentOffset += alignTo(RawDataEntry.size(), sizeof(uint64_t));
   }
 
@@ -558,10 +638,9 @@ void WindowsResourceCOFFWriter::writeSymbolTable() {
 
   // Now write a symbol for each relocation.
   for (unsigned i = 0; i < Data.size(); i++) {
-    char RelocationName[9];
-    sprintf(RelocationName, "$R%06X", DataOffsets[i]);
+    auto RelocationName = formatv("$R{0:X-6}", i & 0xffffff).sstr<COFF::NameSize>();
     Symbol = reinterpret_cast<coff_symbol16 *>(BufferStart + CurrentOffset);
-    strncpy(Symbol->Name.ShortName, RelocationName, (size_t)COFF::NameSize);
+    memcpy(Symbol->Name.ShortName, RelocationName.data(), (size_t) COFF::NameSize);
     Symbol->Value = DataOffsets[i];
     Symbol->SectionNumber = 2;
     Symbol->Type = COFF::IMAGE_SYM_DTYPE_NULL;
@@ -670,7 +749,7 @@ void WindowsResourceCOFFWriter::writeDirectoryStringTable() {
     support::endian::write16le(BufferStart + CurrentOffset, Length);
     CurrentOffset += sizeof(uint16_t);
     auto *Start = reinterpret_cast<UTF16 *>(BufferStart + CurrentOffset);
-    std::copy(String.begin(), String.end(), Start);
+    llvm::copy(String, Start);
     CurrentOffset += Length * sizeof(UTF16);
     TotalStringTableSize += Length * sizeof(UTF16) + sizeof(uint16_t);
   }
@@ -699,8 +778,11 @@ void WindowsResourceCOFFWriter::writeFirstSectionRelocations() {
     case COFF::IMAGE_FILE_MACHINE_I386:
       Reloc->Type = COFF::IMAGE_REL_I386_DIR32NB;
       break;
+    case COFF::IMAGE_FILE_MACHINE_ARM64:
+      Reloc->Type = COFF::IMAGE_REL_ARM64_ADDR32NB;
+      break;
     default:
-      Reloc->Type = 0;
+      llvm_unreachable("unknown machine type");
     }
     CurrentOffset += sizeof(coff_relocation);
   }
@@ -708,12 +790,13 @@ void WindowsResourceCOFFWriter::writeFirstSectionRelocations() {
 
 Expected<std::unique_ptr<MemoryBuffer>>
 writeWindowsResourceCOFF(COFF::MachineTypes MachineType,
-                         const WindowsResourceParser &Parser) {
+                         const WindowsResourceParser &Parser,
+                         uint32_t TimeDateStamp) {
   Error E = Error::success();
   WindowsResourceCOFFWriter Writer(MachineType, Parser, E);
   if (E)
     return std::move(E);
-  return Writer.write();
+  return Writer.write(TimeDateStamp);
 }
 
 } // namespace object

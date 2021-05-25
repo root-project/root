@@ -9,31 +9,27 @@
  *************************************************************************/
 
 #include "TGFrame.h"
-#include "TClass.h"
 #include "TGWidget.h"
 #include "TGWindow.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
-#include "TSystem.h"
-#include "TImage.h"
-#include "TEnv.h"
 #include "TGToolTip.h"
 #include "TGPicture.h"
 #include "TGTable.h"
 #include "TVirtualTableInterface.h"
-#include "TColor.h"
+#include "TVirtualX.h"
 
 ClassImp(TGTableCell);
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableCell                                                          //
-//                                                                      //
-// TGTableCell is the class that represents a single cell in a TGTable. //
-//                                                                      //
-// This class is for internal use in TGTable only.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTableCell
+    \ingroup guiwidgets
+
+TGTableCell is the class that represents a single cell in a TGTable.
+
+This class is for internal use in TGTable only.
+
+*/
+
 
 const TGGC *TGTableCell::fgDefaultGC = 0;
 const TGFont *TGTableCell::fgDefaultFont = 0;
@@ -82,47 +78,6 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
    Init(resize);
 }
 
-// //______________________________________________________________________________
-// TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
-//                          TGString *label, UInt_t row, UInt_t column,
-//                          GContext_t norm, FontStruct_t font, UInt_t option,
-//                          Bool_t resize)
-//    : TGFrame(p, 80, 25, option), fTip(0), fReadOnly(kFALSE), fEnabled(kTRUE),
-//      fTMode(kTextRight | kTextCenterY), fImage(image), fFontStruct(font),
-//      fHasOwnFont(kFALSE), fColumn(column), fRow(row), fTable(table)
-// {
-//    if (label) {
-//       fLabel = label;
-//    } else {
-//       fLabel = new TGString("0");
-//    }
-//    fNormGC = norm;
-
-//    Init(resize);
-// }
-
-// //______________________________________________________________________________
-// TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
-//                          const char *label, UInt_t row, UInt_t column,
-//                          GContext_t norm, FontStruct_t font, UInt_t option,
-//                          Bool_t resize)
-//    : TGFrame(p, 80, 25, option), fTip(0), fReadOnly(kFALSE), fEnabled(kTRUE),
-//      fTMode(kTextRight | kTextCenterY), fImage(image), fFontStruct(font),
-//      fHasOwnFont(kFALSE), fColumn(column), fRow(row), fTable(table)
-// {
-
-//    if (label) {
-//       fLabel = new TGString(label);
-//    } else {
-//       fLabel = new TGString("0");
-//    }
-
-//    fNormGC = norm;
-
-//    Init(resize);
-// }
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTableCell destructor.
 
@@ -159,7 +114,7 @@ void TGTableCell::Init(Bool_t resize)
          }
       }
       SetBackgroundColor(fTable->GetRowBackground(fRow));
-      // Upto here
+      // Up to here
    } else {
       fWidth = 80;
       fHeight = 25;
@@ -279,17 +234,6 @@ void TGTableCell::Highlight()
    // Currently not implemented.
 }
 
-// //______________________________________________________________________________
-// void TGTableCell::SetRow(UInt_t row)
-// {
-//    fRow = row;
-// }
-
-// //______________________________________________________________________________
-// void TGTableCell::SetColumn(UInt_t column)
-// {
-//    fColumn = column;
-// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw list view item in other window.
@@ -321,18 +265,10 @@ void TGTableCell::DrawCopy(Handle_t id, Int_t x, Int_t y)
 
    ly += fTHeight;
 
-   //    if (fActive) {
-   //       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-   //       gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
-   //       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
-   //    } else {
-
    gVirtualX->SetForeground(fNormGC, fgWhitePixel);
    gVirtualX->FillRectangle(id, fNormGC, x, y, fWidth, fHeight);
    gVirtualX->SetForeground(fNormGC, fgBlackPixel);
    DrawBorder(id, x, y);
-
-   //    }
 
    fLabel->Draw(id, fNormGC, x + lx, y + ly);
 }
@@ -362,10 +298,6 @@ void TGTableCell::SetImage(TGPicture *image)
    fImage = image;
 }
 
-// //______________________________________________________________________________
-// void TGTableCell::SetBckgndGC(TGGC *gc)
-// {
-// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Changes text font.

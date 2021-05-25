@@ -88,7 +88,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, TSelector *selector,
 
    // Define fSelector in Client
    if (selector != fSelector) {
-      if (fCreateSelObj) SafeDelete(fSelector);
+      SafeDelete(fSelector);
       fSelector = selector;
    }
 
@@ -418,7 +418,7 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
       // so now we can cleanup the selector, making sure that we do not
       // touch the output objects
       if (output) output->SetOwner(kFALSE);
-      if (fCreateSelObj) SafeDelete(fSelector);
+      SafeDelete(fSelector);
 
       // Delete fOutput (not needed anymore, cannot be finalized twice),
       // making sure that the objects saved in TQueryResult are not deleted

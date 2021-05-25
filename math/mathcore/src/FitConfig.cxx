@@ -30,7 +30,6 @@
 //#define DEBUG
 #ifdef DEBUG
 #endif
-#include <iostream>
 
 namespace ROOT {
 
@@ -175,10 +174,17 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    // create minimizer according to the chosen configuration using the
    // plug-in manager
 
-   const std::string & minimType = fMinimizerOpts.MinimizerType();
+   // in case of empty string usesd default values
+   if (fMinimizerOpts.MinimizerType().empty())
+      fMinimizerOpts.SetMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
+   if (fMinimizerOpts.MinimizerAlgorithm().empty())
+      fMinimizerOpts.SetMinimizerAlgorithm(ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+
+   const std::string &minimType = fMinimizerOpts.MinimizerType();
    const std::string & algoType  = fMinimizerOpts.MinimizerAlgorithm();
 
    std::string  defaultMinim = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+
    ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer(minimType, algoType);
    // check if a different minimizer is used (in case a default value is passed, then set correctly in FitConfig)
    const std::string & minim_newDefault = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
@@ -228,6 +234,19 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    return min;
 }
 
+std::string FitConfig::MinimizerName() const
+{
+   // set minimizer type
+   std::string name = MinimizerType();
+
+   // append algorithm name for minimizer that support it
+   if ((name.find("Fumili") == std::string::npos) && (name.find("GSLMultiFit") == std::string::npos)) {
+      if (MinimizerAlgoType() != "")
+         name += " / " + MinimizerAlgoType();
+   }
+   return name;
+}
+
 void FitConfig::SetDefaultMinimizer(const char * type, const char *algo ) {
    // set the default minimizer type and algorithms
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(type, algo);
@@ -249,4 +268,3 @@ std::vector<double> FitConfig::ParamsValues() const {
    } // end namespace Fit
 
 } // end namespace ROOT
-

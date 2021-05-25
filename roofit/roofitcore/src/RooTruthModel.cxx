@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 RooTruthModel is an implementation of RooResolution
-model that provides a delta-function resolution model
+model that provides a delta-function resolution model.
 The truth model supports <i>all</i> basis functions because it evaluates each basis function as  
 as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
 functions used in D mixing have been hand coded for increased execution speed.
@@ -46,7 +46,7 @@ ClassImp(RooTruthModel);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'
 
-RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& xIn) : 
+RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsRealLValue& xIn) :
   RooResolutionModel(name,title,xIn)
 {  
 }

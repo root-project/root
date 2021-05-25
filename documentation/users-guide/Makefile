@@ -6,7 +6,7 @@ MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
 	CollectionClasses.md PhysicsVectors.md Geometry.md PythonRuby.md \
 	TutorialsandTests.md ExampleAnalysis.md Networking.md Threads.md \
-	PROOF.md WritingGUI.md SignalSlot.md ROOTandQt.md HTMLDoc.md InstallandBuild.md
+	PROOF.md WritingGUI.md SignalSlot.md HTMLDoc.md InstallandBuild.md
 
 HTMLFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.html))
 PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
@@ -14,13 +14,7 @@ PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
 LATEXA4PREFIX=ROOTUsersGuideA4
 LATEXLETTERPREFIX=ROOTUsersGuideLetter
 
-# define the pandoc options according to the pandoc version.
-PANDOC_VERSION=$(shell pandoc -v | grep "pandoc "  | sed -e "s/pandoc //")
-ifeq ($(PANDOC_VERSION),2.2)
 OPTIONS=-s -f markdown+smart --toc --toc-depth=2 --top-level-division=chapter --number-sections
-else
-OPTIONS=-s -S -f markdown --toc --toc-depth=2 --chapters --number-sections
-endif
 
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml

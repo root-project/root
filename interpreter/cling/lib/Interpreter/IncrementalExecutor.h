@@ -114,12 +114,10 @@ namespace cling {
     std::atomic_flag m_AtExitFuncsSpinLock; // MSVC doesn't support = ATOMIC_FLAG_INIT;
 
     ///\brief Function registered via __cxa_atexit, atexit, or one of
-    /// it's C++ overloads that should be run when a module is unloaded.
+    /// it's C++ overloads that should be run when a transaction is unloaded.
     ///
-    // FIXME: We should probably try using a weak_ptr instead of a shared_ptr.
-    typedef utils::OrderedMap<std::shared_ptr<llvm::Module>,
-                              std::vector<CXAAtExitElement>>
-        AtExitFunctions;
+    using AtExitFunctions =
+      utils::OrderedMap<const Transaction*, std::vector<CXAAtExitElement>>;
     AtExitFunctions m_AtExitFuncs;
 
     ///\brief Modules to emit upon the next call to the JIT.
@@ -133,7 +131,7 @@ namespace cling {
 
     ///\brief Set of the symbols that the JIT couldn't resolve.
     ///
-    std::unordered_set<std::string> m_unresolvedSymbols;
+    mutable std::unordered_set<std::string> m_unresolvedSymbols;
 
 #if 0 // See FIXME in IncrementalExecutor.cpp
     ///\brief The diagnostics engine, printing out issues coming from the
@@ -141,7 +139,9 @@ namespace cling {
     clang::DiagnosticsEngine& m_Diags;
 #endif
 
-
+    ///\brief The list of llvm::Module-s to return the transaction
+    /// after the JIT has emitted them.
+    std::map<llvm::orc::VModuleKey, Transaction*> m_PendingModules;
   public:
     enum ExecutionResult {
       kExeSuccess,
@@ -164,7 +164,7 @@ namespace cling {
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
     ///\brief Unload a set of JIT symbols.
-    bool unloadModule(const std::shared_ptr<llvm::Module>& M) {
+    bool unloadModule(const llvm::Module* M) const {
       // FIXME: Propagate the error in a more verbose way.
       if (auto Err = m_JIT->removeModule(M))
         return false;
@@ -172,7 +172,7 @@ namespace cling {
     }
 
     ///\brief Run the static initializers of all modules collected to far.
-    ExecutionResult runStaticInitializersOnce(const Transaction& T);
+    ExecutionResult runStaticInitializersOnce(Transaction& T);
 
     ///\brief Runs all destructors bound to the given transaction and removes
     /// them from the list.
@@ -182,21 +182,7 @@ namespace cling {
 
     ///\brief Runs a wrapper function.
     ExecutionResult executeWrapper(llvm::StringRef function,
-                                   Value* returnValue = 0) {
-      // Set the value to cling::invalid.
-      if (returnValue) {
-        *returnValue = Value();
-      }
-      typedef void (*InitFun_t)(void*);
-      InitFun_t fun;
-      ExecutionResult res = jitInitOrWrapper(function, fun);
-      if (res != kExeSuccess)
-        return res;
-      EnterUserCodeRAII euc(m_Callbacks);
-      (*fun)(returnValue);
-      return kExeSuccess;
-    }
-
+                                   Value* returnValue = 0) const;
     ///\brief Adds a symbol (function) to the execution engine.
     ///
     /// Allows runtime declaration of a function passing its pointer for being
@@ -208,64 +194,71 @@ namespace cling {
     /// @param[in] JIT - Add to the JIT injected symbol table
     /// @returns true if the symbol is successfully registered, false otherwise.
     ///
-    bool addSymbol(const char* Name, void* Address, bool JIT = false);
+    bool addSymbol(const char* Name, void* Address, bool JIT = false) const;
 
-    ///\brief Emit a llvm::Module to the JIT.
+    ///\brief Tells the execution to run all registered atexit functions once.
     ///
-    /// @param[in] module - The module to pass to the execution engine.
-    /// @param[in] optLevel - The optimization level to be used.
-    void emitModule(const std::shared_ptr<llvm::Module>& module, int optLevel) {
-      if (m_BackendPasses)
-        m_BackendPasses->runOnModule(*module, optLevel);
+    /// This rountine should be used with caution only when an external process
+    /// wants to carefully control the teardown. For example, if the process
+    /// has registered its own atexit functions which need the interpreter
+    /// service to be available when they are being executed.
+    ///
+    void runAtExitFuncs();
 
-      m_JIT->addModule(module);
-    }
-
-    ///\brief Tells the execution context that we are shutting down the system.
+    ///\brief A more meaningful synonym of runAtExitFuncs when used in a more
+    /// standard teardown.
     ///
-    /// This that notification is needed because the execution context needs to
-    /// perform extra actions like delete all managed by it symbols, which might
-    /// still require alive system.
-    ///
-    void shuttingDown();
+    void shuttingDown() { runAtExitFuncs(); }
 
     ///\brief Gets the address of an existing global and whether it was JITted.
     ///
     /// JIT symbols might not be immediately convertible to e.g. a function
     /// pointer as their call setup is different.
     ///
-    ///\param[in]  mangledName - the globa's name
+    ///\param[in]  mangledName - the global's name
     ///\param[out] fromJIT - whether the symbol was JITted.
     ///
-    void* getAddressOfGlobal(llvm::StringRef mangledName, bool* fromJIT = 0);
+    void*
+    getAddressOfGlobal(llvm::StringRef mangledName, bool* fromJIT = 0) const;
 
     ///\brief Return the address of a global from the JIT (as
     /// opposed to dynamic libraries). Forces the emission of the symbol if
     /// it has not happened yet.
     ///
-    ///param[in] GV - global value for which the address will be returned.
-    void* getPointerToGlobalFromJIT(const llvm::GlobalValue& GV);
+    ///param[in] name - the mangled name of the global.
+    void* getPointerToGlobalFromJIT(llvm::StringRef name) const;
 
     ///\brief Keep track of the entities whose dtor we need to call.
     ///
-    void AddAtExitFunc(void (*func)(void*), void* arg,
-                       const std::shared_ptr<llvm::Module>& M);
+    void AddAtExitFunc(void (*func)(void*), void* arg, const Transaction* T);
 
     ///\brief Try to resolve a symbol through our LazyFunctionCreators;
     /// print an error message if that fails.
-    void* NotifyLazyFunctionCreators(const std::string&);
+    void* NotifyLazyFunctionCreators(const std::string&) const;
 
   private:
+    ///\brief Emit a llvm::Module to the JIT.
+    ///
+    /// @param[in] module - The module to pass to the execution engine.
+    /// @param[in] optLevel - The optimization level to be used.
+    llvm::orc::VModuleKey
+    emitModule(std::unique_ptr<llvm::Module> module, int optLevel) const {
+      if (m_BackendPasses)
+        m_BackendPasses->runOnModule(*module, optLevel);
+
+      return m_JIT->addModule(std::move(module));
+    }
+
     ///\brief Report and empty m_unresolvedSymbols.
     ///\return true if m_unresolvedSymbols was non-empty.
     bool diagnoseUnresolvedSymbols(llvm::StringRef trigger,
-                                   llvm::StringRef title = llvm::StringRef());
+                               llvm::StringRef title = llvm::StringRef()) const;
 
     ///\brief Remember that the symbol could not be resolved by the JIT.
-    void* HandleMissingFunction(const std::string& symbol);
+    void* HandleMissingFunction(const std::string& symbol) const;
 
     ///\brief Runs an initializer function.
-    ExecutionResult executeInit(llvm::StringRef function) {
+    ExecutionResult executeInit(llvm::StringRef function) const {
       typedef void (*InitFun_t)();
       InitFun_t fun;
       ExecutionResult res = jitInitOrWrapper(function, fun);
@@ -277,7 +270,7 @@ namespace cling {
     }
 
     template <class T>
-    ExecutionResult jitInitOrWrapper(llvm::StringRef funcname, T& fun) {
+    ExecutionResult jitInitOrWrapper(llvm::StringRef funcname, T& fun) const {
       fun = utils::UIntToFunctionPtr<T>(m_JIT->getSymbolAddress(funcname,
                                                               false /*dlsym*/));
 

@@ -20,45 +20,46 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuBar, TGPopupMenu, TGMenuTitle and TGMenuEntry                  //
-//                                                                      //
-// The TGMenu.h header contains all different menu classes.             //
-//                                                                      //
-// The TGMenuBar class implements a menu bar widget. It is used to      //
-// specify and provide access to common and frequently used application //
-// actions grouped under menu titles (TGMenuTitle class). The menu bar  //
-// takes the highest-level of the menu system and it is a starting      //
-// point for many interactions. It is always visible and allows using   //
-// the keyboard equivalents. The geometry of the menu bar is            //
-// automatically set to the parent widget, i.e. the menu bar            //
-// automatically resizes itself so that it has the same width as its    //
-// parent (typically TGMainFrame). A menu bar contains one or more      //
-// popup menus and usually is placed along the top of the application   //
-// window. Any popup menu is invisible until the user invokes it by     //
-// using the mouse pointer or the keyboard.                             //
-//                                                                      //
-// Popup menus implemented by TGPopupMenu class are unique in that,     //
-// by convention, they are not placed with the other GUI components in  //
-// the user interfaces. Instead, a popup menu usually appears either in //
-// a menu bar or as a context menu on the TOP of the GUI. For that      //
-// reason it needs gClient->GetDefaultRoot() as a parent to get the     //
-// pointer to the root (i.e. desktop) window. This way a popup menu     //
-// will never be embedded.                                              //
-// NOTE: Using gClient->GetRoot() as a parent of TGPopupMenu will not   //
-// avoid the possibility of embedding the corresponding popup menu      //
-// because the current window hierarchy can be changed by using         //
-// gClient->SetRoot() method.                                           //
-//                                                                      //
-// As a context menus TGPopupMenu shows up after pressing the right     //
-// mouse button, over a popup-enabled component. The popup menu then    //
-// appears under the mouse pointer.                                     //
-//                                                                      //
-// Selecting a menu item will generate the event:                       //
-// kC_COMMAND, kCM_MENU, menu id, user data.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGMenuBar
+    \ingroup guiwidgets
+
+The TGMenu.h header contains all different menu classes.
+
+The TGMenuBar class implements a menu bar widget. It is used to
+specify and provide access to common and frequently used application
+actions grouped under menu titles (TGMenuTitle class). The menu bar
+takes the highest-level of the menu system and it is a starting
+point for many interactions. It is always visible and allows using
+the keyboard equivalents. The geometry of the menu bar is
+automatically set to the parent widget, i.e. the menu bar
+automatically resizes itself so that it has the same width as its
+parent (typically TGMainFrame). A menu bar contains one or more
+popup menus and usually is placed along the top of the application
+window. Any popup menu is invisible until the user invokes it by
+using the mouse pointer or the keyboard.
+
+Popup menus implemented by TGPopupMenu class are unique in that,
+by convention, they are not placed with the other GUI components in
+the user interfaces. Instead, a popup menu usually appears either in
+a menu bar or as a context menu on the TOP of the GUI. For that
+reason it needs gClient->GetDefaultRoot() as a parent to get the
+pointer to the root (i.e. desktop) window. This way a popup menu
+will never be embedded.
+NOTE: Using gClient->GetRoot() as a parent of TGPopupMenu will not
+avoid the possibility of embedding the corresponding popup menu
+because the current window hierarchy can be changed by using
+gClient->SetRoot() method.
+
+As a context menus TGPopupMenu shows up after pressing the right
+mouse button, over a popup-enabled component. The popup menu then
+appears under the mouse pointer.
+
+Selecting a menu item will generate the event:
+kC_COMMAND, kCM_MENU, menu id, user data.
+
+*/
+
 
 #include "TGMenu.h"
 #include "TGResourcePool.h"
@@ -66,23 +67,25 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TList.h"
-#include "Riostream.h"
 #include "KeySymbols.h"
 #include "TGButton.h"
 #include "TQConnection.h"
 #include "TParameter.h"
 #include "RConfigure.h"
-#include "TEnv.h"
+#include "TVirtualX.h"
+#include "snprintf.h"
 
-const TGGC   *TGPopupMenu::fgDefaultGC = 0;
-const TGGC   *TGPopupMenu::fgDefaultSelectedGC = 0;
-const TGGC   *TGPopupMenu::fgDefaultSelectedBackgroundGC = 0;
-const TGFont *TGPopupMenu::fgDefaultFont = 0;
-const TGFont *TGPopupMenu::fgHilightFont = 0;
+#include <iostream>
 
-const TGGC   *TGMenuTitle::fgDefaultGC = 0;
-const TGGC   *TGMenuTitle::fgDefaultSelectedGC = 0;
-const TGFont *TGMenuTitle::fgDefaultFont = 0;
+const TGGC   *TGPopupMenu::fgDefaultGC = nullptr;
+const TGGC   *TGPopupMenu::fgDefaultSelectedGC = nullptr;
+const TGGC   *TGPopupMenu::fgDefaultSelectedBackgroundGC = nullptr;
+const TGFont *TGPopupMenu::fgDefaultFont = nullptr;
+const TGFont *TGPopupMenu::fgHilightFont = nullptr;
+
+const TGGC   *TGMenuTitle::fgDefaultGC = nullptr;
+const TGGC   *TGMenuTitle::fgDefaultSelectedGC = nullptr;
+const TGFont *TGMenuTitle::fgDefaultFont = nullptr;
 
 
 ClassImp(TGMenuBar);
@@ -300,7 +303,7 @@ void TGMenuBar::PopupConnection()
    }
    fMenuMore->fMsgWindow = 0;
 
-   // Check wheter the current entry is a menu or not (just in case)
+   // Check whether the current entry is a menu or not (just in case)
    TGMenuEntry* currentEntry = fMenuMore->GetCurrent();
    if (currentEntry->GetType() != kMenuPopup) return;
 
@@ -384,7 +387,7 @@ void TGMenuBar::BindHotKey(Int_t keycode, Bool_t on)
    if (!main || !main->InheritsFrom("TGMainFrame")) return;
 
    if (on) {
-      // case unsensitive bindings
+      // case insensitive bindings
       main->BindKey(this, keycode, kKeyMod1Mask);
       main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask);
       main->BindKey(this, keycode, kKeyMod1Mask | kKeyLockMask);
@@ -1249,10 +1252,17 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
    // Parent is root window for a popup menu
    gVirtualX->GetWindowSize(fParent->GetId(), rx, ry, rw, rh);
 
-   if (x < 0) x = 0;
-   if (x + fMenuWidth > rw) x = rw - fMenuWidth;
-   if (y < 0) y = 0;
-   if (y + fMenuHeight > rh) y = rh - fMenuHeight;
+   if (gVirtualX->InheritsFrom("TGWin32")) {
+      if ((x > 0) && ((x + abs(rx) + (Int_t)fMenuWidth) > (Int_t)rw))
+         x = rw - abs(rx) - fMenuWidth;
+      if ((y > 0) && (y + abs(ry) + (Int_t)fMenuHeight > (Int_t)rh))
+         y = rh - fMenuHeight;
+   } else {
+      if (x < 0) x = 0;
+      if (x + fMenuWidth > rw) x = rw - fMenuWidth;
+      if (y < 0) y = 0;
+      if (y + fMenuHeight > rh) y = rh - fMenuHeight;
+   }
 
    Move(x, y);
    MapRaised();
@@ -2200,22 +2210,25 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             outext[i]=0;
             if (mentry->fShortcut) {
                snprintf(shortcut, 80, "\\t%s", mentry->GetShortcutText());
-            }
-            else {
+            } else {
                memset(shortcut, 0, 80);
             }
 
-            out << "   " << GetName() << "->AddEntry(" << quote
-                << gSystem->ExpandPathName(gSystem->UnixPathName(outext)) // can be a file name
-                << shortcut
-                << quote << "," << mentry->GetEntryId();
+            {
+               TString entrytext = gSystem->UnixPathName(outext);
+               gSystem->ExpandPathName(entrytext);
+               out << "   " << GetName() << "->AddEntry(" << quote
+                   << entrytext // can be a file name
+                   << shortcut
+                   << quote << "," << mentry->GetEntryId();
+            }
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
             }
             if (mentry->fPic) {
-               out << ",gClient->GetPicture(" << quote
-                   << gSystem->ExpandPathName(gSystem->UnixPathName(mentry->fPic->GetName()))
-                   << quote << ")";
+               TString picname = gSystem->UnixPathName(mentry->fPic->GetName());
+               gSystem->ExpandPathName(picname);
+               out << ",gClient->GetPicture(" << quote << picname << quote << ")";
             }
             out << ");" << std::endl;
             delete [] outext;

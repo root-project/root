@@ -55,9 +55,9 @@ ClassImp(RooDataWeightedAverage);
 /// rather than a bulk-split pattern.
 
 RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& indata, 
-					       const RooArgSet& projdeps, Int_t nCPU, RooFit::MPSplit interleave, Bool_t CPUAffinity,
-                                               Bool_t showProgress, Bool_t verbose) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,0,0,nCPU,interleave,CPUAffinity,verbose,kFALSE),
+                                               const RooArgSet& projdeps, RooAbsTestStatistic::Configuration const& cfg,
+                                               bool showProgress) : 
+  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,cfg),
   _showProgress(showProgress)
 {
   if (_showProgress) {
@@ -104,9 +104,8 @@ Double_t RooDataWeightedAverage::globalNormalization() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the data weighted average for events [firstEVent,lastEvent] with step size stepSize
 
-Double_t RooDataWeightedAverage::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
+Double_t RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-  Int_t i ;
   Double_t result(0) ;
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,kFALSE) ;
@@ -116,7 +115,7 @@ Double_t RooDataWeightedAverage::evaluatePartition(Int_t firstEvent, Int_t lastE
     cout.flush() ;
   }
 
-  for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+  for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     _dataClone->get(i);

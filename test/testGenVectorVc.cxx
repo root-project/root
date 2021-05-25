@@ -20,41 +20,37 @@
 #include <cmath>
 #include <type_traits>
 
-// note scale here is > 1 as SIMD and scalar floating point calculations not
-// expected to be bit wise identical
-int compare(double v1, double v2, const std::string &name = "", double scale = 1000.0)
+template<typename T>
+T relativeError(const T &x, const T &y)
 {
-   //  ntest = ntest + 1;
-#if defined(__FAST_MATH__)
-      scale *= 100;
-#endif
-   // numerical double limit for epsilon
-   const double eps     = scale * std::numeric_limits<double>::epsilon();
-   int          iret    = 0;
-   double       delta   = v2 - v1;
-   double       d       = 0;
-   if (delta < 0) delta = -delta;
-   if (v1 == 0 || v2 == 0) {
-      if (delta > eps) {
-         iret = 1;
-      }
-   }
-   // skip case v1 or v2 is infinity
-   else {
-      d = v1;
+   if (x == y)
+      return 0;
 
-      if (v1 < 0) d = -d;
-      // add also case when delta is small by default
-      if (delta / d > eps && delta > eps) iret = 1;
+   T diff = std::abs(x - y);
+
+   if (x * y == T(0) || diff < std::numeric_limits<T>::epsilon())
+      return diff;
+
+   return diff / (std::abs(x) + std::abs(y));
+}
+
+int compare(double x, double y, double tolerance = 1.0e-12)
+{
+   double error = relativeError(x, y);
+
+   if (error > tolerance) {
+      int pr = std::cerr.precision(16);
+      std::cerr << "Error above tolerance:"         << std::endl
+                << "  expected = " << x             << std::endl
+                << "true value = " << y             << std::endl
+                << "abs. error = " << std::abs(x-y) << std::endl
+                << "rel. error = " << error         << std::endl
+                << "tolerance  = " << tolerance     << std::endl;
+      std::cerr.precision(pr);
+      return 1;
    }
 
-   if (iret != 0) {
-      int pr = std::cout.precision(18);
-      std::cout << "\nDiscrepancy in " << name << "() : " << v1 << " != " << v2 << " discr = " << int(delta / d / eps)
-                << "   (Allowed discrepancy is " << eps << ")\n";
-      std::cout.precision(pr);
-   }
-   return iret;
+   return 0;
 }
 
 // randomn generator
@@ -195,7 +191,7 @@ inline typename FTYPE::mask_type reflectPlane(POINT &position, VECTOR &direction
 }
 
 template <typename T>
-using Point = ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<T>, ROOT::Math::DefaultCoordinateSystemTag>;
+using PositionVector = ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<T>, ROOT::Math::DefaultCoordinateSystemTag>;
 template <typename T>
 using Vector = ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<T>, ROOT::Math::DefaultCoordinateSystemTag>;
 template <typename T>
@@ -211,10 +207,10 @@ int main(int /*argc*/, char ** /*argv*/)
       std::cout << "Creating " << nPhotons << " random photons ..." << std::endl;
 
       // Scalar Types
-      Data<Point<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
+      Data<PositionVector<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
 
       // Vc Types
-      Data<Point<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data;
+      Data<PositionVector<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data;
       // Clone the exact random values from the Scalar vector
       // Note we are making the same number of entries in the container, but each entry is a vector entry
       // with Vc::double_t::Size entries.
@@ -252,20 +248,20 @@ int main(int /*argc*/, char ** /*argv*/)
          auto &sc = scalar_data[i];
          auto &vc = vc_data[i];
 
-         // make 6 random scalar Points
-         Point<double> sp1(p_x(gen), p_y(gen), p_z(gen));
-         Point<double> sp2(p_x(gen), p_y(gen), p_z(gen));
-         Point<double> sp3(p_x(gen), p_y(gen), p_z(gen));
-         Point<double> sp4(p_x(gen), p_y(gen), p_z(gen));
-         Point<double> sp5(p_x(gen), p_y(gen), p_z(gen));
-         Point<double> sp6(p_x(gen), p_y(gen), p_z(gen));
+         // make 6 random scalar PositionVectors
+         PositionVector<double> sp1(p_x(gen), p_y(gen), p_z(gen));
+         PositionVector<double> sp2(p_x(gen), p_y(gen), p_z(gen));
+         PositionVector<double> sp3(p_x(gen), p_y(gen), p_z(gen));
+         PositionVector<double> sp4(p_x(gen), p_y(gen), p_z(gen));
+         PositionVector<double> sp5(p_x(gen), p_y(gen), p_z(gen));
+         PositionVector<double> sp6(p_x(gen), p_y(gen), p_z(gen));
          // clone to Vc versions
-         Point<Vc::double_v> vp1(sp1.x(), sp1.y(), sp1.z());
-         Point<Vc::double_v> vp2(sp2.x(), sp2.y(), sp2.z());
-         Point<Vc::double_v> vp3(sp3.x(), sp3.y(), sp3.z());
-         Point<Vc::double_v> vp4(sp4.x(), sp4.y(), sp4.z());
-         Point<Vc::double_v> vp5(sp5.x(), sp5.y(), sp5.z());
-         Point<Vc::double_v> vp6(sp6.x(), sp6.y(), sp6.z());
+         PositionVector<Vc::double_v> vp1(sp1.x(), sp1.y(), sp1.z());
+         PositionVector<Vc::double_v> vp2(sp2.x(), sp2.y(), sp2.z());
+         PositionVector<Vc::double_v> vp3(sp3.x(), sp3.y(), sp3.z());
+         PositionVector<Vc::double_v> vp4(sp4.x(), sp4.y(), sp4.z());
+         PositionVector<Vc::double_v> vp5(sp5.x(), sp5.y(), sp5.z());
+         PositionVector<Vc::double_v> vp6(sp6.x(), sp6.y(), sp6.z());
 
          // Make transformations from points
          // note warnings about axis not having the same angles expected here...
@@ -320,7 +316,7 @@ int main(int /*argc*/, char ** /*argv*/)
             ret |= compare(vc_plane.A()[j], vc_plane_i.A()[j]);
             ret |= compare(vc_plane.B()[j], vc_plane_i.B()[j]);
             ret |= compare(vc_plane.C()[j], vc_plane_i.C()[j]);
-            ret |= compare(vc_plane.D()[j], vc_plane_i.D()[j], "", 10000);
+            ret |= compare(vc_plane.D()[j], vc_plane_i.D()[j]);
             ret |= compare(sc_plane_i.A(), vc_plane_i.A()[j]);
             ret |= compare(sc_plane_i.B(), vc_plane_i.B()[j]);
             ret |= compare(sc_plane_i.C(), vc_plane_i.C()[j]);
@@ -336,9 +332,9 @@ int main(int /*argc*/, char ** /*argv*/)
       const unsigned int nTests = 1000; // number of tests to run
 
       // scalar data
-      Data<Point<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
+      Data<PositionVector<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
       // vector data with total equal number of photons (including vectorised size)
-      Data<Point<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data(
+      Data<PositionVector<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data(
          nPhotons / Vc::double_v::Size);
 
       TStopwatch t;

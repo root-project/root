@@ -15,6 +15,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
 #include <iostream>
 #include <algorithm>
 #include <exception>
@@ -22,9 +23,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -282,7 +281,7 @@ namespace BidirMMapPipe_impl {
     Pages& Pages::operator=(const Pages& other)
     {
         if (&other == this) return *this;
-        if (--(m_pimpl->m_refcnt)) {
+        if (!--(m_pimpl->m_refcnt)) {
             if (m_pimpl->m_parent) m_pimpl->m_parent->push(*this);
             delete m_pimpl;
         }
@@ -1504,8 +1503,14 @@ int BidirMMapPipe::poll(BidirMMapPipe::PollVector& pipes, int timeout)
             ++it, ++mit) {
         PollEntry& pe = *it;
         pe.revents = None;
-        // null pipe pointer or closed pipe is invalid
-        if (!pe.pipe || pe.pipe->closed()) pe.revents |= Invalid;
+        // null pipe is invalid
+        if (!pe.pipe) {
+           pe.revents |= Invalid;
+           canskiptimeout = true;
+           continue;
+        }
+        // closed pipe is invalid
+        if (pe.pipe->closed()) pe.revents |= Invalid;
         // check for error
         if (pe.pipe->bad()) pe.revents |= Error;
         // check for end of file

@@ -20,8 +20,10 @@
 
 #include "RConfigure.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "TSecContext.h"
 #include "TSocket.h"
 #include "TUrl.h"
@@ -246,8 +248,8 @@ Bool_t TSecContext::IsActive() const
 
 void TSecContext::Print(Option_t *opt) const
 {
-   char aOrd[10] = {0};
-   char aSpc[10] = {0};
+   char aOrd[16] = {0};
+   char aSpc[16] = {0};
 
    // Check if option is numeric
    Int_t ord = -1, i = 0;
@@ -263,11 +265,11 @@ void TSecContext::Print(Option_t *opt) const
 
    // If asked to print ordinal number, preapre the string
    if (ord > -1) {
-      snprintf(aOrd,10,"%d)",ord);
+      snprintf(aOrd, sizeof(aOrd), "%d)", ord);
       // and take care of alignment
       Int_t len=strlen(aOrd);
       while (len--)
-         strlcat(aSpc," ",10);
+         strlcat(aSpc, " ", sizeof(aSpc));
    }
 
    if (!strncasecmp(opt,"F",1)) {

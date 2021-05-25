@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>ROOT6 TCanvas</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
+   </head>
+
+   <style>
+      html { height: 100%; }
+      body { min-height: 100%; margin: 0; overflow: hidden }
+      #CanvasDiv {
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         right: 0;
+         padding: 1
+      }
+   </style>
+
+   <body>
+      <div id="CanvasDiv">
+         loading scripts...
+      </div>
+   </body>
+
+   <script type='text/javascript'>
+
+      let url = JSROOT.decodeUrl(),
+          is_batch = url.has("batch_mode"),
+          is_ui5 = !url.has("noopenui") && !is_batch,
+          _prereq = 'v6';
+
+      if (is_batch) JSROOT.batch_mode = true;
+
+      if (is_ui5)
+         _prereq += ";openui5";
+      else if (!is_batch)
+         _prereq += ";jq2d";  // jq2d need for BrowserLayout
+
+      JSROOT.connectWebWindow({
+         prereq: _prereq,
+         prereq_logdiv: "CanvasDiv",
+         // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
+      }).then(handle => {
+         let painter = new JSROOT.TCanvasPainter(null, null);
+
+         painter.online_canvas = true;
+         painter.use_openui = is_ui5;
+         painter.batch_mode = is_batch;
+
+         if (window) {
+            window.onbeforeunload = () => painter.closeWebsocket(true);
+            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+         }
+
+         if (is_ui5) {
+
+            painter._window_handle = handle;
+
+            sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
+               new ComponentContainer({
+                  name: "rootui5.canv",
+                  manifest: true,
+                  async: true,
+                  settings: {
+                     componentData: {
+                        canvas_painter: painter
+                     }
+                  },
+                  height: "100%"
+               }).placeAt("CanvasDiv")
+            });
+
+         } else {
+
+            painter.setDom("CanvasDiv"); // just assign id, nothing else happens
+
+            painter.useWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
+         }
+
+      });
+
+   </script>
+
+</html>

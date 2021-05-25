@@ -118,7 +118,6 @@
 // TEveElement
 #pragma link C++ class TEveElement+;
 #pragma link C++ class TEveElement::TEveListTreeInfo+;
-#pragma link C++ class TEveElementObjectPtr+;
 #pragma link C++ class TEveElementList+;
 #pragma link C++ class TEveElementListProjected+;
 #pragma link C++ class TEveElementEditor+;
@@ -199,6 +198,7 @@
 #pragma link C++ typedef TEveProjection::vPreScale_i;
 #pragma link C++ class TEveRhoZProjection+;
 #pragma link C++ class TEveRPhiProjection+;
+#pragma link C++ class TEveXZProjection+;
 #pragma link C++ class TEve3DProjection+;
 
 #pragma link C++ class TEveProjectionManager+;

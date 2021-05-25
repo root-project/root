@@ -60,7 +60,7 @@ protected:
 
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
-            Int_t compress = 1, Int_t netopt = 0);
+            Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault, Int_t netopt = 0);
    TNetFile() : fEndpointUrl(), fUser(), fSocket(0), fProtocol(0), fErrorCode(0), fNetopt(0) { }
    virtual ~TNetFile();
 

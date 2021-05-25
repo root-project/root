@@ -9,20 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGedTextEditor
-#define ROOT_TGedTextEditor
+#ifndef ROOT_TAttTextEditor
+#define ROOT_TAttTextEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttTextEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing text attributes.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
-
-#include "TGSlider.h"
 
 class TGComboBox;
 class TGFontTypeComboBox;
@@ -33,12 +24,12 @@ class TGNumberEntryField;
 class TAttTextEditor : public TGedFrame {
 
 protected:
-   TAttText            *fAttText;         // text attribute object
-   TGFontTypeComboBox  *fTypeCombo;       // font style combo box
-   TGComboBox          *fSizeCombo;       // font size combo box
-   TGComboBox          *fAlignCombo;      // font aligh combo box
-   TGColorSelect       *fColorSelect;     // color selection widget
-   TGHSlider           *fAlpha;           // fill opacity
+   TAttText            *fAttText;         ///< text attribute object
+   TGFontTypeComboBox  *fTypeCombo;       ///< font style combo box
+   TGComboBox          *fSizeCombo;       ///< font size combo box
+   TGComboBox          *fAlignCombo;      ///< font aligh combo box
+   TGColorSelect       *fColorSelect;     ///< color selection widget
+   TGHSlider           *fAlpha;           ///< fill opacity
    TGNumberEntryField  *fAlphaField;
 
    void             ConnectSignals2Slots();

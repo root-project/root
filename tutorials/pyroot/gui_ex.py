@@ -5,6 +5,7 @@
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+from __future__ import print_function
 
 import os, sys, ROOT
 
@@ -17,7 +18,7 @@ def pygaus( x, par ):
 
       gauss = arg3*arg2*math.exp(-0.5*arg1*arg1)
    else:
-      print 'returning 0'
+      print('returning 0')
       gauss = 0.
    return gauss
 
@@ -39,7 +40,7 @@ class pMainFrame( ROOT.TGMainFrame ):
        ROOT.TGMainFrame.__init__( self, parent, width, height )
 
        self.Canvas    = ROOT.TRootEmbeddedCanvas( 'Canvas', self, 200, 200 )
-       self.AddFrame( self.Canvas, ROOT.TGLayoutHints() )
+       self.AddFrame( self.Canvas, ROOT.TGLayoutHints(ROOT.kLHintsExpandX | ROOT.kLHintsExpandY) )
        self.ButtonsFrame = ROOT.TGHorizontalFrame( self, 200, 40 )
 
        self.DrawButton   = ROOT.TGTextButton( self.ButtonsFrame, '&Draw', 10 )

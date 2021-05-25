@@ -1,9 +1,8 @@
-//== FunctionSummary.h - Stores summaries of functions. ------------*- C++ -*-//
+//===- FunctionSummary.h - Stores summaries of functions. -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -18,15 +17,18 @@
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/None.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallBitVector.h"
+#include <cassert>
 #include <deque>
+#include <utility>
 
 namespace clang {
-
 namespace ento {
-typedef std::deque<Decl*> SetOfDecls;
-typedef llvm::DenseSet<const Decl*> SetOfConstDecls;
+
+using SetOfDecls = std::deque<Decl *>;
+using SetOfConstDecls = llvm::DenseSet<const Decl *>;
 
 class FunctionSummariesTy {
   class FunctionSummary {
@@ -47,13 +49,12 @@ class FunctionSummariesTy {
     /// The number of times the function has been inlined.
     unsigned TimesInlined : 32;
 
-    FunctionSummary() :
-      TotalBasicBlocks(0),
-      InlineChecked(0),
-      TimesInlined(0) {}
+    FunctionSummary()
+        : TotalBasicBlocks(0), InlineChecked(0), MayInline(0),
+          TimesInlined(0) {}
   };
 
-  typedef llvm::DenseMap<const Decl *, FunctionSummary> MapTy;
+  using MapTy = llvm::DenseMap<const Decl *, FunctionSummary>;
   MapTy Map;
 
 public:
@@ -62,7 +63,8 @@ public:
     if (I != Map.end())
       return I;
 
-    typedef std::pair<const Decl *, FunctionSummary> KVPair;
+    using KVPair = std::pair<const Decl *, FunctionSummary>;
+
     I = Map.insert(KVPair(D, FunctionSummary())).first;
     assert(I != Map.end());
     return I;
@@ -132,9 +134,9 @@ public:
 
   unsigned getTotalNumBasicBlocks();
   unsigned getTotalNumVisitedBasicBlocks();
-
 };
 
-}} // end clang ento namespaces
+} // namespace ento
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_STATICANALYZER_CORE_PATHSENSITIVE_FUNCTIONSUMMARY_H

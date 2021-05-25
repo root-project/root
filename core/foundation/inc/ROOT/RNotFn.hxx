@@ -1,4 +1,4 @@
-/// \file ROOT/RNotFn.h
+/// \file ROOT/RNotFn.hxx
 /// \ingroup Base StdExt
 /// \author Danilo Piparo, Enrico Guiraud
 /// \date 2018-01-19
@@ -14,7 +14,14 @@
 #ifndef ROOT_RNotFn
 #define ROOT_RNotFn
 
-#if __cplusplus < 201703L && !defined(_MSC_VER)
+#include <functional>
+
+// Backport if not_fn is not available.
+// libc++ does not define __cpp_lib_not_fn.
+// Assume we have not_fn if libc++ is compiled with C++14 and up.
+#if !defined(__cpp_lib_not_fn) && !(defined(_LIBCPP_VERSION) && __cplusplus > 201103L)
+
+#define R__NOTFN_BACKPORT
 
 #include <type_traits> // std::decay
 #include <utility>     // std::forward, std::declval
@@ -54,8 +61,6 @@ Detail::not_fn_t<F> not_fn(F &&f)
 }
 }
 
-#else
-#include <functional>
 #endif
 
 #endif

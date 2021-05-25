@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,17 +12,6 @@
 #ifndef ROOT_TGShutter
 #define ROOT_TGShutter
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGShutter, TGShutterItem                                             //
-//                                                                      //
-// A shutter widget contains a set of shutter items that can be         //
-// open and closed like a shutter.                                      //
-// This widget is usefull to group a large number of options in         //
-// a number of categories.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGCanvas.h"
@@ -41,17 +30,17 @@ class TGShutterItem : public TGVerticalFrame, public TGWidget {
 friend class TGShutter;
 
 protected:
-   TGButton      *fButton;     // shutter item button
-   TGCanvas      *fCanvas;     // canvas of shutter item
-   TGFrame       *fContainer;  // container in canvas containing shutter items
-   TGLayoutHints *fL1, *fL2;   // positioning hints
+   TGButton      *fButton;     ///< shutter item button
+   TGCanvas      *fCanvas;     ///< canvas of shutter item
+   TGFrame       *fContainer;  ///< container in canvas containing shutter items
+   TGLayoutHints *fL1, *fL2;   ///< positioning hints
 
 private:
-   TGShutterItem(const TGShutterItem&);              // not implemented
-   TGShutterItem& operator=(const TGShutterItem&);   // not implemented
+   TGShutterItem(const TGShutterItem&) = delete;
+   TGShutterItem& operator=(const TGShutterItem&) = delete;
 
 public:
-   TGShutterItem(const TGWindow *p = 0, TGHotString *s = 0, Int_t id = -1,
+   TGShutterItem(const TGWindow *p = nullptr, TGHotString *s = nullptr, Int_t id = -1,
                  UInt_t options = 0);
    virtual ~TGShutterItem();
 
@@ -69,22 +58,22 @@ public:
 class TGShutter : public TGCompositeFrame {
 
 protected:
-   TTimer         *fTimer;                  // Timer for animation
-   TGShutterItem  *fSelectedItem;           // Item currently open
-   TGShutterItem  *fClosingItem;            // Item closing down
-   TList          *fTrash;                  // Items that need to be cleaned up
-   Int_t           fHeightIncrement;        // Height delta
-   Int_t           fClosingHeight;          // Closing items current height
-   Int_t           fClosingHadScrollbar;    // Closing item had a scroll bar
-   UInt_t          fDefWidth;               // Default width
-   UInt_t          fDefHeight;              // Default height
+   TTimer         *fTimer;                  ///< Timer for animation
+   TGShutterItem  *fSelectedItem;           ///< Item currently open
+   TGShutterItem  *fClosingItem;            ///< Item closing down
+   TList          *fTrash;                  ///< Items that need to be cleaned up
+   Int_t           fHeightIncrement;        ///< Height delta
+   Int_t           fClosingHeight;          ///< Closing items current height
+   Int_t           fClosingHadScrollbar;    ///< Closing item had a scroll bar
+   UInt_t          fDefWidth;               ///< Default width
+   UInt_t          fDefHeight;              ///< Default height
 
 private:
-   TGShutter(const TGShutter&);             // not implemented
-   TGShutter& operator=(const TGShutter&);  // not implemented
+   TGShutter(const TGShutter&) = delete;
+   TGShutter& operator=(const TGShutter&) = delete;
 
 public:
-   TGShutter(const TGWindow *p = 0, UInt_t options = kSunkenFrame);
+   TGShutter(const TGWindow *p = nullptr, UInt_t options = kSunkenFrame);
    virtual ~TGShutter();
 
    virtual void   AddItem(TGShutterItem *item);

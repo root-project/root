@@ -33,7 +33,7 @@ It contains the following main methods:
   of a new file in a chain.
 
 - Bool_t TSelector::Process(Long64_t entry). This method is called
-  to process an entry. It is the user's responsability to read
+  to process an entry. It is the user's responsibility to read
   the corresponding entry in memory (may be just a partial read).
   Once the entry is in memory one can apply a selection and if the
   entry is selected histograms can be filled. Processing stops
@@ -44,7 +44,7 @@ It contains the following main methods:
   This method is used by PROOF.
 
 - Bool_t TSelector::ProcessCut(Long64_t entry). This method is called
-  before processing entry. It is the user's responsability to read
+  before processing entry. It is the user's responsibility to read
   the corresponding entry in memory (may be just a partial read).
   The function returns kTRUE if the entry must be processed,
   kFALSE otherwise. This method is obsolete, use Process().
@@ -297,55 +297,67 @@ void TSelector::ImportOutput(TList *output) {
    return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///    This method is called before processing entry. It is the user's responsibility to read
+///    the corresponding entry in memory (may be just a partial read).
+///    The function returns kTRUE if the entry must be processed,
+///    kFALSE otherwise. This method is obsolete, use Process().
+///
+/// WARNING when a selector is used with a TChain:
+///    in the Process, ProcessCut, ProcessFill function, you must use
+///    the pointer to the current Tree to call GetEntry(entry).
+///    entry is always the local entry number in the current tree.
+///    Assuming that fChain is the pointer to the TChain being processed,
+///    use fChain->GetTree()->GetEntry(entry);
+
 Bool_t TSelector::ProcessCut(Long64_t /*entry*/)
 {
-   //    This method is called before processing entry. It is the user's responsability to read
-   //    the corresponding entry in memory (may be just a partial read).
-   //    The function returns kTRUE if the entry must be processed,
-   //    kFALSE otherwise. This method is obsolete, use Process().
-   //
-   // WARNING when a selector is used with a TChain:
-   //    in the Process, ProcessCut, ProcessFill function, you must use
-   //    the pointer to the current Tree to call GetEntry(entry).
-   //    entry is always the local entry number in the current tree.
-   //    Assuming that fChain is the pointer to the TChain being processed,
-   //    use fChain->GetTree()->GetEntry(entry);
 
    return kTRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This method is called for all selected entries. User fills histograms
+/// in this function.  This method is obsolete, use Process().
+///
+/// WARNING when a selector is used with a TChain:
+///    in the Process, ProcessCut, ProcessFill function, you must use
+///    the pointer to the current Tree to call GetEntry(entry).
+///    entry is always the local entry number in the current tree.
+///    Assuming that fChain is the pointer to the TChain being processed,
+///    use fChain->GetTree()->GetEntry(entry);
+
 void TSelector::ProcessFill(Long64_t /*entry*/)
 {
-   // This method is called for all selected entries. User fills histograms
-   // in this function.  This method is obsolete, use Process().
-   //
-   // WARNING when a selector is used with a TChain:
-   //    in the Process, ProcessCut, ProcessFill function, you must use
-   //    the pointer to the current Tree to call GetEntry(entry).
-   //    entry is always the local entry number in the current tree.
-   //    Assuming that fChain is the pointer to the TChain being processed,
-   //    use fChain->GetTree()->GetEntry(entry);
+
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// The Process() function is called for each entry in the tree (or possibly
+/// keyed object in the case of PROOF) to be processed. The entry argument
+/// specifies which entry in the currently loaded tree is to be processed.
+/// It can be passed to either t01::GetEntry() or TBranch::GetEntry()
+/// to read either all or the required parts of the data. When processing
+/// keyed objects with PROOF, the object is already loaded and is available
+/// via the fObject pointer.
+///
+/// This function should contain the "body" of the analysis. It can contain
+/// simple or elaborate selection criteria, run algorithms on the data
+/// of the event and typically fill histograms.
+///
+/// The processing can be stopped by calling Abort().
+///
+/// Use fStatus to set the return value of TTree::Process().
+///
+/// The return value is currently not used.
+///
+/// WARNING when a selector is used with a TChain, you must use
+///  the pointer to the current TTree to call GetEntry(entry).
+///  The entry is always the local entry number in the current tree.
+///  Assuming that fChain is the pointer to the TChain being processed,
+///  use: `fChain->GetTree()->GetEntry(entry)`.
+
 Bool_t TSelector::Process(Long64_t /*entry*/) {
-   // The Process() function is called for each entry in the tree (or possibly
-   // keyed object in the case of PROOF) to be processed. The entry argument
-   // specifies which entry in the currently loaded tree is to be processed.
-   // It can be passed to either t01::GetEntry() or TBranch::GetEntry()
-   // to read either all or the required parts of the data. When processing
-   // keyed objects with PROOF, the object is already loaded and is available
-   // via the fObject pointer.
-   //
-   // This function should contain the "body" of the analysis. It can contain
-   // simple or elaborate selection criteria, run algorithms on the data
-   // of the event and typically fill histograms.
-   //
-   // The processing can be stopped by calling Abort().
-   //
-   // Use fStatus to set the return value of TTree::Process().
-   //
-   // The return value is currently not used.
 
    return kFALSE;
 }
-

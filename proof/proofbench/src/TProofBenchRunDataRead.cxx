@@ -42,7 +42,7 @@ for query are plotted.
 #include "TPerfStats.h"
 #include "THashList.h"
 #include "TSortedList.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TEnv.h"
 #include "TLeaf.h"
 #include "TQueryResult.h"
@@ -543,11 +543,7 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    Bool_t remote = (fcref->TestBit(TFileCollection::kRemoteCollection)) ? kTRUE : kFALSE;
 
    // Separate info per server
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,30,0)
    TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster(), kTRUE);
-#else
-   TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster());
-#endif
    if (!mpref) {
       SafeDelete(fcref);
       Error("GetDataSet", "problems classifying info on per-server base");

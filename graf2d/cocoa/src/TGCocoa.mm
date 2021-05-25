@@ -37,7 +37,6 @@
 #include "TGWindow.h"
 #include "TSystem.h"
 #include "TGFrame.h"
-#include "TGLIncludes.h"
 #include "TError.h"
 #include "TColor.h"
 #include "TROOT.h"
@@ -54,7 +53,7 @@
 #include <cstring>
 #include <cstddef>
 #include <limits>
-
+#include <memory>
 
 //Style notes: I'm using a lot of asserts to check pre-conditions - mainly function parameters.
 //In asserts, expression always looks like 'p != 0' for "C++ pointer" (either object of built-in type
@@ -193,12 +192,36 @@ void SetFilledAreaColorFromX11Context(CGContextRef ctx, const GCValues_t &gcVals
 }
 
 struct PatternContext {
-   Mask_t                 fMask;
-   Int_t                  fFillStyle;
-   ULong_t                fForeground;
-   ULong_t                fBackground;
-   NSObject<X11Drawable> *fImage;//Either stipple or tile image.
-   CGSize                 fPhase;
+   PatternContext(Mask_t mask = {}, Int_t fillStyle = {}, Int_t foreground = 0, Int_t background = 0,
+                  NSObject<X11Drawable> *image = nil, CGSize phase = {})
+      : fMask(mask), fFillStyle(fillStyle), fForeground(foreground), fBackground(background), fPhase(phase)
+   {
+      fImage = [image retain];
+   }
+   ~PatternContext()
+   {
+       [fImage release];
+   }
+
+   PatternContext(const PatternContext &) = delete;
+   PatternContext(PatternContext &&) = delete;
+   PatternContext &operator = (const PatternContext &) = delete;
+   PatternContext &operator = (PatternContext &&) = delete;
+
+   void SetImage(NSObject<X11Drawable> *image)
+   {
+       if (image != fImage) {
+           [fImage release];
+           fImage = [image retain];
+       }
+   }
+
+   Mask_t                 fMask = {};
+   Int_t                  fFillStyle = 0;
+   ULong_t                fForeground = 0;
+   ULong_t                fBackground = 0;
+   NSObject<X11Drawable> *fImage = nil;//Either stipple or tile image.
+   CGSize                 fPhase = {};
 };
 
 
@@ -305,6 +328,12 @@ void DrawPattern(void *info, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
+void PatternRelease(void *info)
+{
+    delete static_cast<PatternContext *>(info);
+}
+
+//______________________________________________________________________________
 void SetFillPattern(CGContextRef ctx, const PatternContext *patternContext)
 {
    //Create CGPatternRef to fill GUI elements with pattern.
@@ -320,6 +349,7 @@ void SetFillPattern(CGContextRef ctx, const PatternContext *patternContext)
 
    CGPatternCallbacks callbacks = {};
    callbacks.drawPattern = DrawPattern;
+   callbacks.releaseInfo = PatternRelease;
    const CGRect patternRect = CGRectMake(0, 0, patternContext->fImage.fWidth, patternContext->fImage.fHeight);
    const Util::CFScopeGuard<CGPatternRef> pattern(CGPatternCreate((void *)patternContext, patternRect, CGAffineTransformIdentity,
                                                                   patternContext->fImage.fWidth, patternContext->fImage.fHeight,
@@ -336,9 +366,35 @@ bool ParentRendersToChild(NSView<X11Window> *child)
 
    //Adovo poluchaetsia, tashhem-ta! ;)
    return (X11::ViewIsTextViewFrame(child, true) || X11::ViewIsHtmlViewFrame(child, true)) && !child.fContext &&
-          child.fMapState == kIsViewable && child.fParentView.fContext &&
-          !child.fIsOverlapped;
+           child.fMapState == kIsViewable && child.fParentView.fContext &&
+           !child.fIsOverlapped;
 }
+
+class ViewFixer final {
+public:
+   ViewFixer(QuartzView *&viewToFix, Drawable_t &widToFix)
+   {
+      if (ParentRendersToChild(viewToFix) && [viewToFix.fParentView isKindOfClass:[QuartzView class]]) {
+         const auto origin = viewToFix.frame.origin;
+         viewToFix = viewToFix.fParentView;
+         widToFix = viewToFix.fID;
+         if ((context = viewToFix.fContext)) {
+            CGContextSaveGState(context);
+            CGContextTranslateCTM(context, origin.x, origin.y);
+         }
+      }
+   }
+   ~ViewFixer()
+   {
+       if (context)
+          CGContextRestoreGState(context);
+   }
+   ViewFixer(const ViewFixer &rhs) = delete;
+   ViewFixer &operator = (const ViewFixer &) = delete;
+
+private:
+   CGContextRef context = nullptr;
+};
 
 //______________________________________________________________________________
 bool IsNonPrintableAsciiCharacter(UniChar c)
@@ -1702,16 +1758,8 @@ void TGCocoa::DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    if (!drawable.fIsPixmap) {
       NSObject<X11Window> * const window = (NSObject<X11Window> *)drawable;
-      QuartzView * const view = (QuartzView *)window.fContentView;
-
-      if (ParentRendersToChild(view)) {
-         if (X11::LockFocus(view)) {
-            DrawLineAux(view.fID, gcVals, x1, y1, x2, y2);
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
-
+      QuartzView *view = (QuartzView *)window.fContentView;
+      const ViewFixer fixer(view, wid);
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddDrawLine(wid, gcVals, x1, y1, x2, y2);
@@ -1756,15 +1804,8 @@ void TGCocoa::DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, I
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
 
    if (!drawable.fIsPixmap) {
-      QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
-
-      if (ParentRendersToChild(view)) {
-         if (X11::LockFocus(view)) {
-            DrawSegmentsAux(view.fID, gcVals, segments, nSegments);
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      const ViewFixer fixer(view, wid);
 
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
@@ -1832,15 +1873,8 @@ void TGCocoa::DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
 
    if (!drawable.fIsPixmap) {
       NSObject<X11Window> * const window = (NSObject<X11Window> *)drawable;
-      QuartzView * const view = (QuartzView *)window.fContentView;
-
-      if (ParentRendersToChild(view)) {
-         if (X11::LockFocus(view)) {
-            DrawRectangleAux(view.fID, gcVals, x, y, w, h);
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
+      QuartzView *view = (QuartzView *)window.fContentView;
+      const ViewFixer fixer(view, wid);
 
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
@@ -1891,26 +1925,27 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
 
    if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals) ||  HasFillTiledStyle(gcVals)) {
-      PatternContext patternContext = {gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase};
-
+      std::unique_ptr<PatternContext> patternContext(new PatternContext(gcVals.fMask, gcVals.fFillStyle,
+                                                                        0, 0, nil, patternPhase));
       if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals)) {
          assert(gcVals.fStipple != kNone &&
                 "FillRectangleAux, fill_style is FillStippled/FillOpaqueStippled,"
                 " but no stipple is set in a context");
 
-         patternContext.fForeground = gcVals.fForeground;
-         patternContext.fImage = fPimpl->GetDrawable(gcVals.fStipple);
+         patternContext->fForeground = gcVals.fForeground;
+         patternContext->SetImage(fPimpl->GetDrawable(gcVals.fStipple));
 
          if (HasFillOpaqueStippledStyle(gcVals))
-            patternContext.fBackground = gcVals.fBackground;
+            patternContext->fBackground = gcVals.fBackground;
       } else {
          assert(gcVals.fTile != kNone &&
                 "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
 
-         patternContext.fImage = fPimpl->GetDrawable(gcVals.fTile);
+         patternContext->SetImage(fPimpl->GetDrawable(gcVals.fTile));
       }
 
-      SetFillPattern(ctx, &patternContext);
+      SetFillPattern(ctx, patternContext.get());
+      patternContext.release();
       CGContextFillRect(ctx, fillRect);
 
       return;
@@ -1938,16 +1973,8 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
 
    if (!drawable.fIsPixmap) {
       NSObject<X11Window> * const window = (NSObject<X11Window> *)drawable;
-      QuartzView * const view = (QuartzView *)window.fContentView;
-
-      if (ParentRendersToChild(view)) {
-         if (X11::LockFocus(view)) {
-            FillRectangleAux(view.fID, gcVals, x, y, w, h);
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
-
+      QuartzView *view = (QuartzView *)window.fContentView;
+      const ViewFixer fixer(view, wid);
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddFillRectangle(wid, gcVals, x, y, w, h);
@@ -1988,26 +2015,27 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
    CGContextSetAllowsAntialiasing(ctx, false);
 
    if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals) ||  HasFillTiledStyle(gcVals)) {
-      PatternContext patternContext = {gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase};
+      std::unique_ptr<PatternContext> patternContext(new PatternContext(gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase));
 
       if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals)) {
          assert(gcVals.fStipple != kNone &&
                 "FillRectangleAux, fill style is FillStippled/FillOpaqueStippled,"
                 " but no stipple is set in a context");
 
-         patternContext.fForeground = gcVals.fForeground;
-         patternContext.fImage = fPimpl->GetDrawable(gcVals.fStipple);
+         patternContext->fForeground = gcVals.fForeground;
+         patternContext->SetImage(fPimpl->GetDrawable(gcVals.fStipple));
 
          if (HasFillOpaqueStippledStyle(gcVals))
-            patternContext.fBackground = gcVals.fBackground;
+            patternContext->fBackground = gcVals.fBackground;
       } else {
          assert(gcVals.fTile != kNone &&
                 "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
 
-         patternContext.fImage = fPimpl->GetDrawable(gcVals.fTile);
+         patternContext->SetImage(fPimpl->GetDrawable(gcVals.fTile));
       }
 
-      SetFillPattern(ctx, &patternContext);
+      SetFillPattern(ctx, patternContext.get());
+      patternContext.release();
    } else
       SetFilledAreaColorFromX11Context(ctx, gcVals);
 
@@ -2057,15 +2085,8 @@ void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t n
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
 
    if (!drawable.fIsPixmap) {
-      QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
-
-      if (ParentRendersToChild(view)) {
-         if (X11::LockFocus(view)) {
-            FillPolygonAux(view.fID, gcVals, polygon, nPoints);
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      const ViewFixer fixer(view, wid);
 
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
@@ -2133,15 +2154,8 @@ void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
 
    if (!drawable.fIsPixmap) {
-      QuartzView * const view = (QuartzView *)fPimpl->GetWindow(dst).fContentView;
-
-      if (ParentRendersToChild(view)) {
-         if (X11::LockFocus(view)) {
-            CopyAreaAux(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(dst).fContentView;
+      const ViewFixer fixer(view, dst);
 
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
@@ -2221,22 +2235,8 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
    assert(gcVals.fMask & kGCFont && "DrawString, font is not set in a context");
 
    if (!drawable.fIsPixmap) {
-      QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
-
-      if (ParentRendersToChild(view)) {//Ufff.
-         if (X11::LockFocus(view)) {
-
-            try {
-               DrawStringAux(view.fID, gcVals, x, y, text, len);
-            } catch (const std::exception &) {
-               X11::UnlockFocus(view);
-               throw;
-            }
-
-            X11::UnlockFocus(view);
-            return;
-         }
-      }
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      const ViewFixer fixer(view, wid);
 
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
@@ -2286,8 +2286,9 @@ void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t
       }
       const Quartz::CGStateGuard ctxGuard(view.fContext);//Will restore context state.
 
-      PatternContext patternContext = {Mask_t(), 0, 0, 0, view.fBackgroundPixmap, patternPhase};
-      SetFillPattern(view.fContext, &patternContext);
+      std::unique_ptr<PatternContext> patternContext(new PatternContext({}, 0, 0, 0, view.fBackgroundPixmap, patternPhase));
+      SetFillPattern(view.fContext, patternContext.get());
+      patternContext.release();
       CGContextFillRect(view.fContext, fillRect);
    }
 }
@@ -2305,15 +2306,9 @@ void TGCocoa::ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    assert(!fPimpl->IsRootWindow(wid) && "ClearArea, called for root window");
 
    //If wid is pixmap or image, this will crush.
-   QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
-
-   if (ParentRendersToChild(view)) {
-      if (X11::LockFocus(view)) {
-         ClearAreaAux(view.fID, x, y, w, h);
-         X11::UnlockFocus(view);
-         return;
-      }
-   }
+   QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+   if (ParentRendersToChild(view))
+       return;
 
    if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
       if (!view.fContext)
@@ -3479,6 +3474,8 @@ void TGCocoa::SetDoubleBufferON()
 
    NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
 
+   if (!window) return;
+
    assert(window.fIsPixmap == NO &&
           "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
 
@@ -3504,7 +3501,17 @@ void TGCocoa::SetDrawMode(EDrawMode mode)
 {
    // Sets the drawing mode.
    //
-   //EDrawMode{kCopy, kXor};
+   //EDrawMode{kCopy, kXor, kInvert};
+   if (fDrawMode == kInvert && mode != kInvert) {
+       // Remove previously added CrosshairWindow.
+       auto windows = NSApplication.sharedApplication.windows;
+       for (NSWindow *candidate : windows) {
+           if ([candidate isKindOfClass:QuartzWindow.class])
+               [(QuartzWindow *)candidate removeXorWindow];
+       }
+       fPimpl->fX11CommandBuffer.ClearXOROperations();
+   }
+
    fDrawMode = mode;
 }
 

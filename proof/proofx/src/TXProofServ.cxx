@@ -18,7 +18,7 @@ for the underlying connection technology.
 */
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "Riostream.h"
 
 #ifdef WIN32
@@ -39,7 +39,7 @@ for the underlying connection technology.
 #include "TParameter.h"
 #include "TProofDebug.h"
 #include "TProof.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TQueryResultManager.h"
 #include "TRegexp.h"
 #include "TClass.h"
@@ -51,6 +51,7 @@ for the underlying connection technology.
 #include "compiledata.h"
 #include "TProofNodeInfo.h"
 #include "XProofProtocol.h"
+#include "snprintf.h"
 
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
@@ -708,7 +709,7 @@ Int_t TXProofServ::Setup()
       fTopSessionTag = "";
       // Try to extract it from log file path (for backward compatibility)
       if (gSystem->Getenv("ROOTPROOFLOGFILE")) {
-         fTopSessionTag = gSystem->DirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
+         fTopSessionTag = gSystem->GetDirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
          Ssiz_t lstl;
          if ((lstl = fTopSessionTag.Last('/')) != kNPOS) fTopSessionTag.Remove(0, lstl + 1);
          if (fTopSessionTag.BeginsWith("session-")) {
@@ -746,9 +747,7 @@ Int_t TXProofServ::Setup()
    }
 
    // Goto to the main PROOF working directory
-   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-   fWorkDir = workdir;
-   delete [] workdir;
+   gSystem->ExpandPathName(fWorkDir);
    if (gProofDebugLevel > 0)
       Info("Setup", "working directory set to %s", fWorkDir.Data());
 

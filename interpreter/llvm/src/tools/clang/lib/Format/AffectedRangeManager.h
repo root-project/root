@@ -1,14 +1,13 @@
 //===--- AffectedRangeManager.h - Format C++ code ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief AffectedRangeManager class manages affected ranges in the code.
+/// AffectedRangeManager class manages affected ranges in the code.
 ///
 //===----------------------------------------------------------------------===//
 
@@ -30,10 +29,9 @@ public:
       : SourceMgr(SourceMgr), Ranges(Ranges.begin(), Ranges.end()) {}
 
   // Determines which lines are affected by the SourceRanges given as input.
-  // Returns \c true if at least one line between I and E or one of their
+  // Returns \c true if at least one line in \p Lines or one of their
   // children is affected.
-  bool computeAffectedLines(SmallVectorImpl<AnnotatedLine *>::iterator I,
-                            SmallVectorImpl<AnnotatedLine *>::iterator E);
+  bool computeAffectedLines(SmallVectorImpl<AnnotatedLine *> &Lines);
 
   // Returns true if 'Range' intersects with one of the input ranges.
   bool affectsCharSourceRange(const CharSourceRange &Range);
@@ -54,8 +52,8 @@ private:
 
   // Determines whether 'Line' is affected by the SourceRanges given as input.
   // Returns \c true if line or one if its children is affected.
-  bool nonPPLineAffected(AnnotatedLine *Line,
-                         const AnnotatedLine *PreviousLine);
+  bool nonPPLineAffected(AnnotatedLine *Line, const AnnotatedLine *PreviousLine,
+                         SmallVectorImpl<AnnotatedLine *> &Lines);
 
   const SourceManager &SourceMgr;
   const SmallVector<CharSourceRange, 8> Ranges;

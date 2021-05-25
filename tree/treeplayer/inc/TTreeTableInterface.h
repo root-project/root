@@ -25,19 +25,19 @@ class TList;
 class TTreeTableInterface : public TVirtualTableInterface {
 
 private:
-   TTree               *fTree;       // Data in a TTree
-   TList               *fFormulas;   // Array of TTreeFormulas to display values
-   Long64_t             fEntry;      // Present entry number in fTree.
-   Long64_t             fNEntries;   // Number of entries in the tree.
-   Long64_t             fFirstEntry; // First entry.
-   TTreeFormulaManager *fManager;    // Coordinator for the formulas.
-   TTreeFormula        *fSelect;     // Selection condition
-   TSelectorDraw       *fSelector;   // Selector
-   TList               *fInput;      // Used for fSelector.
-   Bool_t               fForceDim;   // Force dimension.
-   TEntryList          *fEntries;    // Currently active entries
-   UInt_t               fNRows;      // Amount of rows in the data
-   UInt_t               fNColumns;   // Amount of columns in the data
+   TTree               *fTree;       ///< Data in a TTree
+   TList               *fFormulas;   ///< Array of TTreeFormulas to display values
+   Long64_t             fEntry;      ///< Present entry number in fTree.
+   Long64_t             fNEntries;   ///< Number of entries in the tree.
+   Long64_t             fFirstEntry; ///< First entry.
+   TTreeFormulaManager *fManager;    ///< Coordinator for the formulas.
+   TTreeFormula        *fSelect;     ///< Selection condition
+   TSelectorDraw       *fSelector;   ///< Selector
+   TList               *fInput;      ///< Used for fSelector.
+   Bool_t               fForceDim;   ///< Force dimension.
+   TEntryList          *fEntries;    ///< Currently active entries
+   UInt_t               fNRows;      ///< Amount of rows in the data
+   UInt_t               fNColumns;   ///< Amount of columns in the data
 
    void SetVariablesExpression(const char *varexp);
    void SyncFormulas();

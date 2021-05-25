@@ -7,15 +7,14 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "MetaSema.h"
-
-#include "Display.h"
-
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
+
+#include "cling/MetaProcessor/Display.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
+#include "cling/MetaProcessor/MetaSema.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/SourceManager.h"
@@ -81,7 +80,7 @@ namespace cling {
 
   MetaSema::ActionResult MetaSema::actOnTCommand(llvm::StringRef inputFile,
                                                  llvm::StringRef outputFile) {
-    m_Interpreter.GenerateAutoloadingMap(inputFile, outputFile);
+    m_Interpreter.GenerateAutoLoadingMap(inputFile, outputFile);
     return AR_Success;
   }
 
@@ -138,7 +137,7 @@ namespace cling {
         if (T->containsNamedDecl(FuncName)) {
           expression = FuncName + args.str();
           // Give the user some context in case we have a problem invoking
-          expression += " /* invoking function corresponding to '.x' */";
+          expression += " /* '.x' tries to invoke a function with the same name as the macro */";
 
           // Above transaction might have set a different OptLevel; use that.
           int prevOptLevel = m_Interpreter.getDefaultOptLevel();
@@ -152,13 +151,14 @@ namespace cling {
 
       if (expression.empty()) {
         using namespace clang;
+        static const char msg[] = "Failed to call `%0%1` to execute the macro.\n"
+            "Add this function or rename the macro. Falling back to `.L`.";
+
         DiagnosticsEngine& Diags = m_Interpreter.getDiagnostics();
-        unsigned diagID
-          = Diags.getCustomDiagID (DiagnosticsEngine::Level::Warning,
-                                   "cannot find function '%0()'; falling back to .L");
+        unsigned diagID = Diags.getCustomDiagID(DiagnosticsEngine::Level::Warning, msg);
         //FIXME: Figure out how to pass in proper source locations, which we can
         // use with -verify.
-        Diags.Report(SourceLocation(), diagID) << FuncName;
+        Diags.Report(SourceLocation(), diagID) << FuncName << args.str();
         return AR_Success;
       }
     }

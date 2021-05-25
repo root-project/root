@@ -19,8 +19,8 @@
 class TDialogCanvas : public TCanvas, public TAttText {
 
 private:
-   TDialogCanvas(const TDialogCanvas&);
-   TDialogCanvas& operator=(const TDialogCanvas&);
+   TDialogCanvas(const TDialogCanvas &) = delete;
+   TDialogCanvas& operator=(const TDialogCanvas &) = delete;
 
 protected:
    TObject     *fRefObject;   ///< Pointer to object to set attributes

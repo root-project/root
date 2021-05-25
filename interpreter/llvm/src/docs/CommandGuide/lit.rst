@@ -1,6 +1,8 @@
 lit - LLVM Integrated Tester
 ============================
 
+.. program:: lit
+
 SYNOPSIS
 --------
 
@@ -35,6 +37,11 @@ executed (specific features may depend on the particular test format).  See
 Finally, :program:`lit` also supports additional options for only running a
 subset of the options specified on the command line, see
 :ref:`selection-options` for more information.
+
+:program:`lit` parses options from the environment variable ``LIT_OPTS`` after
+parsing options from the command line.  ``LIT_OPTS`` is primarily useful for
+supplementing or overriding the command-line options supplied to :program:`lit`
+by ``check`` targets defined by a project's build system.
 
 Users interested in the :program:`lit` architecture or designing a
 :program:`lit` testing implementation should see :ref:`lit-infrastructure`.
@@ -85,6 +92,10 @@ OUTPUT OPTIONS
  Echo all commands to stdout, as they are being executed.
  This can be valuable for debugging test failures, as the last echoed command
  will be the one which has failed.
+ :program:`lit` normally inserts a no-op command (``:`` in the case of bash)
+ with argument ``'RUN: at line N'`` before each command pipeline, and this
+ option also causes those no-op commands to be echoed to stdout to help you
+ locate the source line of the failed command.
  This option implies ``--verbose``.
 
 .. option:: -a, --show-all
@@ -403,7 +414,7 @@ These are defined in TestRunner.py. The base set of substitutions are:
  %p         same as %S
  %{pathsep} path separator
  %t         temporary file name unique to the test
- %T         temporary directory unique to the test
+ %T         parent directory of %t (not unique, deprecated, do not use)
  %%         %
  ========== ==============
 

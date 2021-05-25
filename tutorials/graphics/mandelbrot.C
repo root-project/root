@@ -8,7 +8,7 @@
 ///
 /// Try it (in compiled mode!) with:   `root mandelbrot.C+`
 ///
-/// \macro_image
+/// \macro_image (js)
 ///
 /// ### Details
 ///

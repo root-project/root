@@ -39,8 +39,6 @@ public:
   RooAbsNumGenerator* createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, 
 				    const RooNumGenConfig& config, Bool_t verbose=kFALSE, RooAbsReal* maxFuncVal=0) ;
 
-  static void cleanup() ;
-
 
 protected:
 	 
@@ -50,8 +48,6 @@ protected:
 
   RooNumGenFactory(); 
   RooNumGenFactory(const RooNumGenFactory& other) ;
-
-  static RooNumGenFactory* _instance ;
 
 
   ClassDef(RooNumGenFactory,1) // Numeric Generator factory

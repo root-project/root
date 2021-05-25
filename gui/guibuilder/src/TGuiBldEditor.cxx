@@ -9,11 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBldEditor - the property editor                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGuiBldEditor
+    \ingroup guibuilder
+
+The property editor
+
+*/
+
 
 #include "TGuiBldEditor.h"
 #include "TRootGuiBuilder.h"
@@ -27,13 +29,8 @@
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
-#include "TGCanvas.h"
-#include "TGListTree.h"
 #include "TGuiBldDragManager.h"
-#include "TMethod.h"
 #include "TGMsgBox.h"
-#include "TGIcon.h"
 #include "TGFrame.h"
 #include "TGSplitter.h"
 #include "TGTableLayout.h"
@@ -494,8 +491,8 @@ void TGuiBldEditor::Reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Popup dialog to set layout of editted frame off. If layout is on, all
-/// the elements in the frame get layouted automatically.
+/// Popup dialog to set layout of edited frame off. If layout is on, all
+/// the elements in the frame get laid out automatically.
 
 void TGuiBldEditor::SwitchLayout()
 {

@@ -25,7 +25,6 @@ unloaded data member.
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "TError.h"
-#include "TEnumConstant.h"
 #include "TClassEdit.h"
 
 #include <sstream>
@@ -33,14 +32,6 @@ unloaded data member.
 const unsigned int idsSize=19;
 
 ClassImp(TListOfDataMembers);
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/) :
-   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -226,6 +217,8 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 {
    if (!id) return 0;
 
+   R__LOCKGUARD(gInterpreterMutex);
+   //need the Find and possible Add to be one atomic operation
    TDictionary *dm = Find(id);
    if (dm) return dm;
 
@@ -243,13 +236,10 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
    }
 
-   R__LOCKGUARD(gInterpreterMutex);
-
    DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
 
    // Let's see if this is a reload ...
    const char *name = gInterpreter->DataMemberInfo_Name(info);
-
    TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
    if (update) {
       if (fClass) {
@@ -476,7 +466,7 @@ void TListOfDataMembers::Load()
    }
 
    // Now we follow the ordinary pattern
-   DataMemberInfo_t *t = gInterpreter->DataMemberInfo_Factory(info);
+   DataMemberInfo_t *t = gInterpreter->DataMemberInfo_Factory(info, fSelection);
    while (gInterpreter->DataMemberInfo_Next(t)) {
       if (gInterpreter->DataMemberInfo_IsValid(t)) {
          // Get will check if there is already there or create a new one

@@ -1,22 +1,8 @@
 /*===---- avxintrin.h - AVX intrinsics -------------------------------------===
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ * See https://llvm.org/LICENSE.txt for license information.
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  *
  *===-----------------------------------------------------------------------===
  */
@@ -45,15 +31,20 @@ typedef unsigned char __v32qu __attribute__ ((__vector_size__ (32)));
  * appear in the interface though. */
 typedef signed char __v32qs __attribute__((__vector_size__(32)));
 
-typedef float __m256 __attribute__ ((__vector_size__ (32)));
-typedef double __m256d __attribute__((__vector_size__(32)));
-typedef long long __m256i __attribute__((__vector_size__(32)));
+typedef float __m256 __attribute__ ((__vector_size__ (32), __aligned__(32)));
+typedef double __m256d __attribute__((__vector_size__(32), __aligned__(32)));
+typedef long long __m256i __attribute__((__vector_size__(32), __aligned__(32)));
+
+typedef float __m256_u __attribute__ ((__vector_size__ (32), __aligned__(1)));
+typedef double __m256d_u __attribute__((__vector_size__(32), __aligned__(1)));
+typedef long long __m256i_u __attribute__((__vector_size__(32), __aligned__(1)));
 
 /* Define the default attributes for the functions in this file. */
-#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("avx")))
+#define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("avx"), __min_vector_width__(256)))
+#define __DEFAULT_FN_ATTRS128 __attribute__((__always_inline__, __nodebug__, __target__("avx"), __min_vector_width__(128)))
 
 /* Arithmetic */
-/// \brief Adds two 256-bit vectors of [4 x double].
+/// Adds two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -71,7 +62,7 @@ _mm256_add_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4df)__a+(__v4df)__b);
 }
 
-/// \brief Adds two 256-bit vectors of [8 x float].
+/// Adds two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -89,7 +80,7 @@ _mm256_add_ps(__m256 __a, __m256 __b)
   return (__m256)((__v8sf)__a+(__v8sf)__b);
 }
 
-/// \brief Subtracts two 256-bit vectors of [4 x double].
+/// Subtracts two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -107,7 +98,7 @@ _mm256_sub_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4df)__a-(__v4df)__b);
 }
 
-/// \brief Subtracts two 256-bit vectors of [8 x float].
+/// Subtracts two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -125,7 +116,7 @@ _mm256_sub_ps(__m256 __a, __m256 __b)
   return (__m256)((__v8sf)__a-(__v8sf)__b);
 }
 
-/// \brief Adds the even-indexed values and subtracts the odd-indexed values of
+/// Adds the even-indexed values and subtracts the odd-indexed values of
 ///    two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -144,7 +135,7 @@ _mm256_addsub_pd(__m256d __a, __m256d __b)
   return (__m256d)__builtin_ia32_addsubpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Adds the even-indexed values and subtracts the odd-indexed values of
+/// Adds the even-indexed values and subtracts the odd-indexed values of
 ///    two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -163,7 +154,7 @@ _mm256_addsub_ps(__m256 __a, __m256 __b)
   return (__m256)__builtin_ia32_addsubps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Divides two 256-bit vectors of [4 x double].
+/// Divides two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -181,7 +172,7 @@ _mm256_div_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4df)__a/(__v4df)__b);
 }
 
-/// \brief Divides two 256-bit vectors of [8 x float].
+/// Divides two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -199,7 +190,7 @@ _mm256_div_ps(__m256 __a, __m256 __b)
   return (__m256)((__v8sf)__a/(__v8sf)__b);
 }
 
-/// \brief Compares two 256-bit vectors of [4 x double] and returns the greater
+/// Compares two 256-bit vectors of [4 x double] and returns the greater
 ///    of each pair of values.
 ///
 /// \headerfile <x86intrin.h>
@@ -218,7 +209,7 @@ _mm256_max_pd(__m256d __a, __m256d __b)
   return (__m256d)__builtin_ia32_maxpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Compares two 256-bit vectors of [8 x float] and returns the greater
+/// Compares two 256-bit vectors of [8 x float] and returns the greater
 ///    of each pair of values.
 ///
 /// \headerfile <x86intrin.h>
@@ -237,7 +228,7 @@ _mm256_max_ps(__m256 __a, __m256 __b)
   return (__m256)__builtin_ia32_maxps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Compares two 256-bit vectors of [4 x double] and returns the lesser
+/// Compares two 256-bit vectors of [4 x double] and returns the lesser
 ///    of each pair of values.
 ///
 /// \headerfile <x86intrin.h>
@@ -256,7 +247,7 @@ _mm256_min_pd(__m256d __a, __m256d __b)
   return (__m256d)__builtin_ia32_minpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Compares two 256-bit vectors of [8 x float] and returns the lesser
+/// Compares two 256-bit vectors of [8 x float] and returns the lesser
 ///    of each pair of values.
 ///
 /// \headerfile <x86intrin.h>
@@ -275,7 +266,7 @@ _mm256_min_ps(__m256 __a, __m256 __b)
   return (__m256)__builtin_ia32_minps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Multiplies two 256-bit vectors of [4 x double].
+/// Multiplies two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -293,7 +284,7 @@ _mm256_mul_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4df)__a * (__v4df)__b);
 }
 
-/// \brief Multiplies two 256-bit vectors of [8 x float].
+/// Multiplies two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -311,7 +302,7 @@ _mm256_mul_ps(__m256 __a, __m256 __b)
   return (__m256)((__v8sf)__a * (__v8sf)__b);
 }
 
-/// \brief Calculates the square roots of the values in a 256-bit vector of
+/// Calculates the square roots of the values in a 256-bit vector of
 ///    [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -328,7 +319,7 @@ _mm256_sqrt_pd(__m256d __a)
   return (__m256d)__builtin_ia32_sqrtpd256((__v4df)__a);
 }
 
-/// \brief Calculates the square roots of the values in a 256-bit vector of
+/// Calculates the square roots of the values in a 256-bit vector of
 ///    [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -345,7 +336,7 @@ _mm256_sqrt_ps(__m256 __a)
   return (__m256)__builtin_ia32_sqrtps256((__v8sf)__a);
 }
 
-/// \brief Calculates the reciprocal square roots of the values in a 256-bit
+/// Calculates the reciprocal square roots of the values in a 256-bit
 ///    vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -362,7 +353,7 @@ _mm256_rsqrt_ps(__m256 __a)
   return (__m256)__builtin_ia32_rsqrtps256((__v8sf)__a);
 }
 
-/// \brief Calculates the reciprocals of the values in a 256-bit vector of
+/// Calculates the reciprocals of the values in a 256-bit vector of
 ///    [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -379,7 +370,7 @@ _mm256_rcp_ps(__m256 __a)
   return (__m256)__builtin_ia32_rcpps256((__v8sf)__a);
 }
 
-/// \brief Rounds the values in a 256-bit vector of [4 x double] as specified
+/// Rounds the values in a 256-bit vector of [4 x double] as specified
 ///    by the byte operand. The source values are rounded to integer values and
 ///    returned as 64-bit double-precision floating-point values.
 ///
@@ -408,10 +399,10 @@ _mm256_rcp_ps(__m256 __a)
 ///      10: Upward (toward positive infinity). \n
 ///      11: Truncated.
 /// \returns A 256-bit vector of [4 x double] containing the rounded values.
-#define _mm256_round_pd(V, M) __extension__ ({ \
-    (__m256d)__builtin_ia32_roundpd256((__v4df)(__m256d)(V), (M)); })
+#define _mm256_round_pd(V, M) \
+    (__m256d)__builtin_ia32_roundpd256((__v4df)(__m256d)(V), (M))
 
-/// \brief Rounds the values stored in a 256-bit vector of [8 x float] as
+/// Rounds the values stored in a 256-bit vector of [8 x float] as
 ///    specified by the byte operand. The source values are rounded to integer
 ///    values and returned as floating-point values.
 ///
@@ -440,10 +431,10 @@ _mm256_rcp_ps(__m256 __a)
 ///      10: Upward (toward positive infinity). \n
 ///      11: Truncated.
 /// \returns A 256-bit vector of [8 x float] containing the rounded values.
-#define _mm256_round_ps(V, M) __extension__ ({ \
-  (__m256)__builtin_ia32_roundps256((__v8sf)(__m256)(V), (M)); })
+#define _mm256_round_ps(V, M) \
+  (__m256)__builtin_ia32_roundps256((__v8sf)(__m256)(V), (M))
 
-/// \brief Rounds up the values stored in a 256-bit vector of [4 x double]. The
+/// Rounds up the values stored in a 256-bit vector of [4 x double]. The
 ///    source values are rounded up to integer values and returned as 64-bit
 ///    double-precision floating-point values.
 ///
@@ -460,7 +451,7 @@ _mm256_rcp_ps(__m256 __a)
 /// \returns A 256-bit vector of [4 x double] containing the rounded up values.
 #define _mm256_ceil_pd(V)  _mm256_round_pd((V), _MM_FROUND_CEIL)
 
-/// \brief Rounds down the values stored in a 256-bit vector of [4 x double].
+/// Rounds down the values stored in a 256-bit vector of [4 x double].
 ///    The source values are rounded down to integer values and returned as
 ///    64-bit double-precision floating-point values.
 ///
@@ -478,7 +469,7 @@ _mm256_rcp_ps(__m256 __a)
 ///    values.
 #define _mm256_floor_pd(V) _mm256_round_pd((V), _MM_FROUND_FLOOR)
 
-/// \brief Rounds up the values stored in a 256-bit vector of [8 x float]. The
+/// Rounds up the values stored in a 256-bit vector of [8 x float]. The
 ///    source values are rounded up to integer values and returned as
 ///    floating-point values.
 ///
@@ -495,7 +486,7 @@ _mm256_rcp_ps(__m256 __a)
 /// \returns A 256-bit vector of [8 x float] containing the rounded up values.
 #define _mm256_ceil_ps(V)  _mm256_round_ps((V), _MM_FROUND_CEIL)
 
-/// \brief Rounds down the values stored in a 256-bit vector of [8 x float]. The
+/// Rounds down the values stored in a 256-bit vector of [8 x float]. The
 ///    source values are rounded down to integer values and returned as
 ///    floating-point values.
 ///
@@ -513,7 +504,7 @@ _mm256_rcp_ps(__m256 __a)
 #define _mm256_floor_ps(V) _mm256_round_ps((V), _MM_FROUND_FLOOR)
 
 /* Logical */
-/// \brief Performs a bitwise AND of two 256-bit vectors of [4 x double].
+/// Performs a bitwise AND of two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -531,7 +522,7 @@ _mm256_and_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4du)__a & (__v4du)__b);
 }
 
-/// \brief Performs a bitwise AND of two 256-bit vectors of [8 x float].
+/// Performs a bitwise AND of two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -549,7 +540,7 @@ _mm256_and_ps(__m256 __a, __m256 __b)
   return (__m256)((__v8su)__a & (__v8su)__b);
 }
 
-/// \brief Performs a bitwise AND of two 256-bit vectors of [4 x double], using
+/// Performs a bitwise AND of two 256-bit vectors of [4 x double], using
 ///    the one's complement of the values contained in the first source operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -570,7 +561,7 @@ _mm256_andnot_pd(__m256d __a, __m256d __b)
   return (__m256d)(~(__v4du)__a & (__v4du)__b);
 }
 
-/// \brief Performs a bitwise AND of two 256-bit vectors of [8 x float], using
+/// Performs a bitwise AND of two 256-bit vectors of [8 x float], using
 ///    the one's complement of the values contained in the first source operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -591,7 +582,7 @@ _mm256_andnot_ps(__m256 __a, __m256 __b)
   return (__m256)(~(__v8su)__a & (__v8su)__b);
 }
 
-/// \brief Performs a bitwise OR of two 256-bit vectors of [4 x double].
+/// Performs a bitwise OR of two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -609,7 +600,7 @@ _mm256_or_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4du)__a | (__v4du)__b);
 }
 
-/// \brief Performs a bitwise OR of two 256-bit vectors of [8 x float].
+/// Performs a bitwise OR of two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -627,7 +618,7 @@ _mm256_or_ps(__m256 __a, __m256 __b)
   return (__m256)((__v8su)__a | (__v8su)__b);
 }
 
-/// \brief Performs a bitwise XOR of two 256-bit vectors of [4 x double].
+/// Performs a bitwise XOR of two 256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -645,7 +636,7 @@ _mm256_xor_pd(__m256d __a, __m256d __b)
   return (__m256d)((__v4du)__a ^ (__v4du)__b);
 }
 
-/// \brief Performs a bitwise XOR of two 256-bit vectors of [8 x float].
+/// Performs a bitwise XOR of two 256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -664,7 +655,7 @@ _mm256_xor_ps(__m256 __a, __m256 __b)
 }
 
 /* Horizontal arithmetic */
-/// \brief Horizontally adds the adjacent pairs of values contained in two
+/// Horizontally adds the adjacent pairs of values contained in two
 ///    256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -687,7 +678,7 @@ _mm256_hadd_pd(__m256d __a, __m256d __b)
   return (__m256d)__builtin_ia32_haddpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Horizontally adds the adjacent pairs of values contained in two
+/// Horizontally adds the adjacent pairs of values contained in two
 ///    256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -710,7 +701,7 @@ _mm256_hadd_ps(__m256 __a, __m256 __b)
   return (__m256)__builtin_ia32_haddps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Horizontally subtracts the adjacent pairs of values contained in two
+/// Horizontally subtracts the adjacent pairs of values contained in two
 ///    256-bit vectors of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -733,7 +724,7 @@ _mm256_hsub_pd(__m256d __a, __m256d __b)
   return (__m256d)__builtin_ia32_hsubpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Horizontally subtracts the adjacent pairs of values contained in two
+/// Horizontally subtracts the adjacent pairs of values contained in two
 ///    256-bit vectors of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -757,7 +748,7 @@ _mm256_hsub_ps(__m256 __a, __m256 __b)
 }
 
 /* Vector permutations */
-/// \brief Copies the values in a 128-bit vector of [2 x double] as specified
+/// Copies the values in a 128-bit vector of [2 x double] as specified
 ///    by the 128-bit integer vector operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -780,13 +771,13 @@ _mm256_hsub_ps(__m256 __a, __m256 __b)
 ///      1: Bits [127:64] of the source are copied to bits [127:64] of the
 ///         returned vector.
 /// \returns A 128-bit vector of [2 x double] containing the copied values.
-static __inline __m128d __DEFAULT_FN_ATTRS
+static __inline __m128d __DEFAULT_FN_ATTRS128
 _mm_permutevar_pd(__m128d __a, __m128i __c)
 {
   return (__m128d)__builtin_ia32_vpermilvarpd((__v2df)__a, (__v2di)__c);
 }
 
-/// \brief Copies the values in a 256-bit vector of [4 x double] as specified
+/// Copies the values in a 256-bit vector of [4 x double] as specified
 ///    by the 256-bit integer vector operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -825,7 +816,7 @@ _mm256_permutevar_pd(__m256d __a, __m256i __c)
   return (__m256d)__builtin_ia32_vpermilvarpd256((__v4df)__a, (__v4di)__c);
 }
 
-/// \brief Copies the values stored in a 128-bit vector of [4 x float] as
+/// Copies the values stored in a 128-bit vector of [4 x float] as
 ///    specified by the 128-bit integer vector operand.
 /// \headerfile <x86intrin.h>
 ///
@@ -873,13 +864,13 @@ _mm256_permutevar_pd(__m256d __a, __m256i __c)
 ///      11: Bits [127:96] of the source are copied to bits [127:96] of the
 ///          returned vector.
 /// \returns A 128-bit vector of [4 x float] containing the copied values.
-static __inline __m128 __DEFAULT_FN_ATTRS
+static __inline __m128 __DEFAULT_FN_ATTRS128
 _mm_permutevar_ps(__m128 __a, __m128i __c)
 {
   return (__m128)__builtin_ia32_vpermilvarps((__v4sf)__a, (__v4si)__c);
 }
 
-/// \brief Copies the values stored in a 256-bit vector of [8 x float] as
+/// Copies the values stored in a 256-bit vector of [8 x float] as
 ///    specified by the 256-bit integer vector operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -970,7 +961,7 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
   return (__m256)__builtin_ia32_vpermilvarps256((__v8sf)__a, (__v8si)__c);
 }
 
-/// \brief Copies the values in a 128-bit vector of [2 x double] as specified
+/// Copies the values in a 128-bit vector of [2 x double] as specified
 ///    by the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -997,12 +988,10 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///      1: Bits [127:64] of the source are copied to bits [127:64] of the
 ///         returned vector.
 /// \returns A 128-bit vector of [2 x double] containing the copied values.
-#define _mm_permute_pd(A, C) __extension__ ({ \
-  (__m128d)__builtin_shufflevector((__v2df)(__m128d)(A), \
-                                   (__v2df)_mm_undefined_pd(), \
-                                   ((C) >> 0) & 0x1, ((C) >> 1) & 0x1); })
+#define _mm_permute_pd(A, C) \
+  (__m128d)__builtin_ia32_vpermilpd((__v2df)(__m128d)(A), (int)(C))
 
-/// \brief Copies the values in a 256-bit vector of [4 x double] as specified by
+/// Copies the values in a 256-bit vector of [4 x double] as specified by
 ///    the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -1039,15 +1028,10 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///      1: Bits [255:192] of the source are copied to bits [255:192] of the
 ///         returned vector.
 /// \returns A 256-bit vector of [4 x double] containing the copied values.
-#define _mm256_permute_pd(A, C) __extension__ ({ \
-  (__m256d)__builtin_shufflevector((__v4df)(__m256d)(A), \
-                                   (__v4df)_mm256_undefined_pd(), \
-                                   0 + (((C) >> 0) & 0x1), \
-                                   0 + (((C) >> 1) & 0x1), \
-                                   2 + (((C) >> 2) & 0x1), \
-                                   2 + (((C) >> 3) & 0x1)); })
+#define _mm256_permute_pd(A, C) \
+  (__m256d)__builtin_ia32_vpermilpd256((__v4df)(__m256d)(A), (int)(C))
 
-/// \brief Copies the values in a 128-bit vector of [4 x float] as specified by
+/// Copies the values in a 128-bit vector of [4 x float] as specified by
 ///    the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -1100,13 +1084,10 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///      11: Bits [127:96] of the source are copied to bits [127:96] of the
 ///          returned vector.
 /// \returns A 128-bit vector of [4 x float] containing the copied values.
-#define _mm_permute_ps(A, C) __extension__ ({ \
-  (__m128)__builtin_shufflevector((__v4sf)(__m128)(A), \
-                                  (__v4sf)_mm_undefined_ps(), \
-                                  ((C) >> 0) & 0x3, ((C) >> 2) & 0x3, \
-                                  ((C) >> 4) & 0x3, ((C) >> 6) & 0x3); })
+#define _mm_permute_ps(A, C) \
+  (__m128)__builtin_ia32_vpermilps((__v4sf)(__m128)(A), (int)(C))
 
-/// \brief Copies the values in a 256-bit vector of [8 x float] as specified by
+/// Copies the values in a 256-bit vector of [8 x float] as specified by
 ///    the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -1120,7 +1101,7 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 /// \param A
 ///    A 256-bit vector of [8 x float].
 /// \param C
-///    An immediate integer operand specifying how the values are to be \n
+///    An immediate integer operand specifying how the values are to be
 ///    copied. \n
 ///    Bits [1:0]: \n
 ///      00: Bits [31:0] of the source are copied to bits [31:0] of the
@@ -1150,7 +1131,7 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///      11: Bits [127:96] of the source are copied to bits [95:64] of the
 ///          returned vector. \n
 ///    Bits [7:6]: \n
-///      00: Bits [31:qq0] of the source are copied to bits [127:96] of the
+///      00: Bits [31:0] of the source are copied to bits [127:96] of the
 ///          returned vector. \n
 ///      01: Bits [63:32] of the source are copied to bits [127:96] of the
 ///          returned vector. \n
@@ -1195,19 +1176,10 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///      11: Bits [255:224] of the source are copied to bits [255:224] of the
 ///          returned vector.
 /// \returns A 256-bit vector of [8 x float] containing the copied values.
-#define _mm256_permute_ps(A, C) __extension__ ({ \
-  (__m256)__builtin_shufflevector((__v8sf)(__m256)(A), \
-                                  (__v8sf)_mm256_undefined_ps(), \
-                                  0 + (((C) >> 0) & 0x3), \
-                                  0 + (((C) >> 2) & 0x3), \
-                                  0 + (((C) >> 4) & 0x3), \
-                                  0 + (((C) >> 6) & 0x3), \
-                                  4 + (((C) >> 0) & 0x3), \
-                                  4 + (((C) >> 2) & 0x3), \
-                                  4 + (((C) >> 4) & 0x3), \
-                                  4 + (((C) >> 6) & 0x3)); })
+#define _mm256_permute_ps(A, C) \
+  (__m256)__builtin_ia32_vpermilps256((__v8sf)(__m256)(A), (int)(C))
 
-/// \brief Permutes 128-bit data values stored in two 256-bit vectors of
+/// Permutes 128-bit data values stored in two 256-bit vectors of
 ///    [4 x double], as specified by the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -1244,11 +1216,11 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///      11: Bits [255:128] of operand \a V2 are copied to bits [255:128] of the
 ///          destination.
 /// \returns A 256-bit vector of [4 x double] containing the copied values.
-#define _mm256_permute2f128_pd(V1, V2, M) __extension__ ({ \
+#define _mm256_permute2f128_pd(V1, V2, M) \
   (__m256d)__builtin_ia32_vperm2f128_pd256((__v4df)(__m256d)(V1), \
-                                           (__v4df)(__m256d)(V2), (M)); })
+                                           (__v4df)(__m256d)(V2), (int)(M))
 
-/// \brief Permutes 128-bit data values stored in two 256-bit vectors of
+/// Permutes 128-bit data values stored in two 256-bit vectors of
 ///    [8 x float], as specified by the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -1285,11 +1257,11 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///    11: Bits [255:128] of operand \a V2 are copied to bits [255:128] of the
 ///    destination.
 /// \returns A 256-bit vector of [8 x float] containing the copied values.
-#define _mm256_permute2f128_ps(V1, V2, M) __extension__ ({ \
+#define _mm256_permute2f128_ps(V1, V2, M) \
   (__m256)__builtin_ia32_vperm2f128_ps256((__v8sf)(__m256)(V1), \
-                                          (__v8sf)(__m256)(V2), (M)); })
+                                          (__v8sf)(__m256)(V2), (int)(M))
 
-/// \brief Permutes 128-bit data values stored in two 256-bit integer vectors,
+/// Permutes 128-bit data values stored in two 256-bit integer vectors,
 ///    as specified by the immediate integer operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -1325,12 +1297,12 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///    11: Bits [255:128] of operand \a V2 are copied to bits [255:128] of the
 ///    destination.
 /// \returns A 256-bit integer vector containing the copied values.
-#define _mm256_permute2f128_si256(V1, V2, M) __extension__ ({ \
+#define _mm256_permute2f128_si256(V1, V2, M) \
   (__m256i)__builtin_ia32_vperm2f128_si256((__v8si)(__m256i)(V1), \
-                                           (__v8si)(__m256i)(V2), (M)); })
+                                           (__v8si)(__m256i)(V2), (int)(M))
 
 /* Vector Blend */
-/// \brief Merges 64-bit double-precision data values stored in either of the
+/// Merges 64-bit double-precision data values stored in either of the
 ///    two 256-bit vectors of [4 x double], as specified by the immediate
 ///    integer operand.
 ///
@@ -1354,15 +1326,11 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///    destination. When a mask bit is 1, the corresponding 64-bit element in
 ///    operand \a V2 is copied to the same position in the destination.
 /// \returns A 256-bit vector of [4 x double] containing the copied values.
-#define _mm256_blend_pd(V1, V2, M) __extension__ ({ \
-  (__m256d)__builtin_shufflevector((__v4df)(__m256d)(V1), \
-                                   (__v4df)(__m256d)(V2), \
-                                   (((M) & 0x01) ? 4 : 0), \
-                                   (((M) & 0x02) ? 5 : 1), \
-                                   (((M) & 0x04) ? 6 : 2), \
-                                   (((M) & 0x08) ? 7 : 3)); })
+#define _mm256_blend_pd(V1, V2, M) \
+  (__m256d)__builtin_ia32_blendpd256((__v4df)(__m256d)(V1), \
+                                     (__v4df)(__m256d)(V2), (int)(M))
 
-/// \brief Merges 32-bit single-precision data values stored in either of the
+/// Merges 32-bit single-precision data values stored in either of the
 ///    two 256-bit vectors of [8 x float], as specified by the immediate
 ///    integer operand.
 ///
@@ -1386,19 +1354,11 @@ _mm256_permutevar_ps(__m256 __a, __m256i __c)
 ///    destination. When a mask bit is 1, the corresponding 32-bit element in
 ///    operand \a V2 is copied to the same position in the destination.
 /// \returns A 256-bit vector of [8 x float] containing the copied values.
-#define _mm256_blend_ps(V1, V2, M) __extension__ ({ \
-  (__m256)__builtin_shufflevector((__v8sf)(__m256)(V1), \
-                                  (__v8sf)(__m256)(V2), \
-                                  (((M) & 0x01) ?  8 : 0), \
-                                  (((M) & 0x02) ?  9 : 1), \
-                                  (((M) & 0x04) ? 10 : 2), \
-                                  (((M) & 0x08) ? 11 : 3), \
-                                  (((M) & 0x10) ? 12 : 4), \
-                                  (((M) & 0x20) ? 13 : 5), \
-                                  (((M) & 0x40) ? 14 : 6), \
-                                  (((M) & 0x80) ? 15 : 7)); })
+#define _mm256_blend_ps(V1, V2, M) \
+  (__m256)__builtin_ia32_blendps256((__v8sf)(__m256)(V1), \
+                                    (__v8sf)(__m256)(V2), (int)(M))
 
-/// \brief Merges 64-bit double-precision data values stored in either of the
+/// Merges 64-bit double-precision data values stored in either of the
 ///    two 256-bit vectors of [4 x double], as specified by the 256-bit vector
 ///    operand.
 ///
@@ -1426,7 +1386,7 @@ _mm256_blendv_pd(__m256d __a, __m256d __b, __m256d __c)
     (__v4df)__a, (__v4df)__b, (__v4df)__c);
 }
 
-/// \brief Merges 32-bit single-precision data values stored in either of the
+/// Merges 32-bit single-precision data values stored in either of the
 ///    two 256-bit vectors of [8 x float], as specified by the 256-bit vector
 ///    operand.
 ///
@@ -1455,7 +1415,7 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 }
 
 /* Vector Dot Product */
-/// \brief Computes two dot products in parallel, using the lower and upper
+/// Computes two dot products in parallel, using the lower and upper
 ///    halves of two [8 x float] vectors as input to the two computations, and
 ///    returning the two dot products in the lower and upper halves of the
 ///    [8 x float] result.
@@ -1492,12 +1452,12 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 ///    is set to zero. The bitmask is applied in the same way to each of the
 ///    two parallel dot product computations.
 /// \returns A 256-bit vector of [8 x float] containing the two dot products.
-#define _mm256_dp_ps(V1, V2, M) __extension__ ({ \
+#define _mm256_dp_ps(V1, V2, M) \
   (__m256)__builtin_ia32_dpps256((__v8sf)(__m256)(V1), \
-                                 (__v8sf)(__m256)(V2), (M)); })
+                                 (__v8sf)(__m256)(V2), (M))
 
 /* Vector shuffle */
-/// \brief Selects 8 float values from the 256-bit operands of [8 x float], as
+/// Selects 8 float values from the 256-bit operands of [8 x float], as
 ///    specified by the immediate value operand.
 ///
 ///    The four selected elements in each operand are copied to the destination
@@ -1546,19 +1506,11 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 ///    10: Bits [95:64] and [223:192] are copied from the selected operand. \n
 ///    11: Bits [127:96] and [255:224] are copied from the selected operand.
 /// \returns A 256-bit vector of [8 x float] containing the shuffled values.
-#define _mm256_shuffle_ps(a, b, mask) __extension__ ({ \
-  (__m256)__builtin_shufflevector((__v8sf)(__m256)(a), \
-                                  (__v8sf)(__m256)(b), \
-                                  0  + (((mask) >> 0) & 0x3), \
-                                  0  + (((mask) >> 2) & 0x3), \
-                                  8  + (((mask) >> 4) & 0x3), \
-                                  8  + (((mask) >> 6) & 0x3), \
-                                  4  + (((mask) >> 0) & 0x3), \
-                                  4  + (((mask) >> 2) & 0x3), \
-                                  12 + (((mask) >> 4) & 0x3), \
-                                  12 + (((mask) >> 6) & 0x3)); })
+#define _mm256_shuffle_ps(a, b, mask) \
+  (__m256)__builtin_ia32_shufps256((__v8sf)(__m256)(a), \
+                                   (__v8sf)(__m256)(b), (int)(mask))
 
-/// \brief Selects four double-precision values from the 256-bit operands of
+/// Selects four double-precision values from the 256-bit operands of
 ///    [4 x double], as specified by the immediate value operand.
 ///
 ///    The selected elements from the first 256-bit operand are copied to bits
@@ -1600,13 +1552,9 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 ///    Bit [3]=1: Bits [255:192] are copied from \a b to bits [255:192] of the
 ///    destination.
 /// \returns A 256-bit vector of [4 x double] containing the shuffled values.
-#define _mm256_shuffle_pd(a, b, mask) __extension__ ({ \
-  (__m256d)__builtin_shufflevector((__v4df)(__m256d)(a), \
-                                   (__v4df)(__m256d)(b), \
-                                   0 + (((mask) >> 0) & 0x1), \
-                                   4 + (((mask) >> 1) & 0x1), \
-                                   2 + (((mask) >> 2) & 0x1), \
-                                   6 + (((mask) >> 3) & 0x1)); })
+#define _mm256_shuffle_pd(a, b, mask) \
+  (__m256d)__builtin_ia32_shufpd256((__v4df)(__m256d)(a), \
+                                    (__v4df)(__m256d)(b), (int)(mask))
 
 /* Compare */
 #define _CMP_EQ_OQ    0x00 /* Equal (ordered, non-signaling)  */
@@ -1642,7 +1590,7 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 #define _CMP_GT_OQ    0x1e /* Greater-than (ordered, non-signaling)  */
 #define _CMP_TRUE_US  0x1f /* True (unordered, signaling)  */
 
-/// \brief Compares each of the corresponding double-precision values of two
+/// Compares each of the corresponding double-precision values of two
 ///    128-bit vectors of [2 x double], using the operation specified by the
 ///    immediate integer operand.
 ///
@@ -1665,44 +1613,44 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 /// \param c
 ///    An immediate integer operand, with bits [4:0] specifying which comparison
 ///    operation to use: \n
-///    0x00 : Equal (ordered, non-signaling)
-///    0x01 : Less-than (ordered, signaling)
-///    0x02 : Less-than-or-equal (ordered, signaling)
-///    0x03 : Unordered (non-signaling)
-///    0x04 : Not-equal (unordered, non-signaling)
-///    0x05 : Not-less-than (unordered, signaling)
-///    0x06 : Not-less-than-or-equal (unordered, signaling)
-///    0x07 : Ordered (non-signaling)
-///    0x08 : Equal (unordered, non-signaling)
-///    0x09 : Not-greater-than-or-equal (unordered, signaling)
-///    0x0a : Not-greater-than (unordered, signaling)
-///    0x0b : False (ordered, non-signaling)
-///    0x0c : Not-equal (ordered, non-signaling)
-///    0x0d : Greater-than-or-equal (ordered, signaling)
-///    0x0e : Greater-than (ordered, signaling)
-///    0x0f : True (unordered, non-signaling)
-///    0x10 : Equal (ordered, signaling)
-///    0x11 : Less-than (ordered, non-signaling)
-///    0x12 : Less-than-or-equal (ordered, non-signaling)
-///    0x13 : Unordered (signaling)
-///    0x14 : Not-equal (unordered, signaling)
-///    0x15 : Not-less-than (unordered, non-signaling)
-///    0x16 : Not-less-than-or-equal (unordered, non-signaling)
-///    0x17 : Ordered (signaling)
-///    0x18 : Equal (unordered, signaling)
-///    0x19 : Not-greater-than-or-equal (unordered, non-signaling)
-///    0x1a : Not-greater-than (unordered, non-signaling)
-///    0x1b : False (ordered, signaling)
-///    0x1c : Not-equal (ordered, signaling)
-///    0x1d : Greater-than-or-equal (ordered, non-signaling)
-///    0x1e : Greater-than (ordered, non-signaling)
-///    0x1f : True (unordered, signaling)
+///    0x00: Equal (ordered, non-signaling) \n
+///    0x01: Less-than (ordered, signaling) \n
+///    0x02: Less-than-or-equal (ordered, signaling) \n
+///    0x03: Unordered (non-signaling) \n
+///    0x04: Not-equal (unordered, non-signaling) \n
+///    0x05: Not-less-than (unordered, signaling) \n
+///    0x06: Not-less-than-or-equal (unordered, signaling) \n
+///    0x07: Ordered (non-signaling) \n
+///    0x08: Equal (unordered, non-signaling) \n
+///    0x09: Not-greater-than-or-equal (unordered, signaling) \n
+///    0x0A: Not-greater-than (unordered, signaling) \n
+///    0x0B: False (ordered, non-signaling) \n
+///    0x0C: Not-equal (ordered, non-signaling) \n
+///    0x0D: Greater-than-or-equal (ordered, signaling) \n
+///    0x0E: Greater-than (ordered, signaling) \n
+///    0x0F: True (unordered, non-signaling) \n
+///    0x10: Equal (ordered, signaling) \n
+///    0x11: Less-than (ordered, non-signaling) \n
+///    0x12: Less-than-or-equal (ordered, non-signaling) \n
+///    0x13: Unordered (signaling) \n
+///    0x14: Not-equal (unordered, signaling) \n
+///    0x15: Not-less-than (unordered, non-signaling) \n
+///    0x16: Not-less-than-or-equal (unordered, non-signaling) \n
+///    0x17: Ordered (signaling) \n
+///    0x18: Equal (unordered, signaling) \n
+///    0x19: Not-greater-than-or-equal (unordered, non-signaling) \n
+///    0x1A: Not-greater-than (unordered, non-signaling) \n
+///    0x1B: False (ordered, signaling) \n
+///    0x1C: Not-equal (ordered, signaling) \n
+///    0x1D: Greater-than-or-equal (ordered, non-signaling) \n
+///    0x1E: Greater-than (ordered, non-signaling) \n
+///    0x1F: True (unordered, signaling)
 /// \returns A 128-bit vector of [2 x double] containing the comparison results.
-#define _mm_cmp_pd(a, b, c) __extension__ ({ \
+#define _mm_cmp_pd(a, b, c) \
   (__m128d)__builtin_ia32_cmppd((__v2df)(__m128d)(a), \
-                                (__v2df)(__m128d)(b), (c)); })
+                                (__v2df)(__m128d)(b), (c))
 
-/// \brief Compares each of the corresponding values of two 128-bit vectors of
+/// Compares each of the corresponding values of two 128-bit vectors of
 ///    [4 x float], using the operation specified by the immediate integer
 ///    operand.
 ///
@@ -1725,44 +1673,44 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 /// \param c
 ///    An immediate integer operand, with bits [4:0] specifying which comparison
 ///    operation to use: \n
-///    0x00 : Equal (ordered, non-signaling)
-///    0x01 : Less-than (ordered, signaling)
-///    0x02 : Less-than-or-equal (ordered, signaling)
-///    0x03 : Unordered (non-signaling)
-///    0x04 : Not-equal (unordered, non-signaling)
-///    0x05 : Not-less-than (unordered, signaling)
-///    0x06 : Not-less-than-or-equal (unordered, signaling)
-///    0x07 : Ordered (non-signaling)
-///    0x08 : Equal (unordered, non-signaling)
-///    0x09 : Not-greater-than-or-equal (unordered, signaling)
-///    0x0a : Not-greater-than (unordered, signaling)
-///    0x0b : False (ordered, non-signaling)
-///    0x0c : Not-equal (ordered, non-signaling)
-///    0x0d : Greater-than-or-equal (ordered, signaling)
-///    0x0e : Greater-than (ordered, signaling)
-///    0x0f : True (unordered, non-signaling)
-///    0x10 : Equal (ordered, signaling)
-///    0x11 : Less-than (ordered, non-signaling)
-///    0x12 : Less-than-or-equal (ordered, non-signaling)
-///    0x13 : Unordered (signaling)
-///    0x14 : Not-equal (unordered, signaling)
-///    0x15 : Not-less-than (unordered, non-signaling)
-///    0x16 : Not-less-than-or-equal (unordered, non-signaling)
-///    0x17 : Ordered (signaling)
-///    0x18 : Equal (unordered, signaling)
-///    0x19 : Not-greater-than-or-equal (unordered, non-signaling)
-///    0x1a : Not-greater-than (unordered, non-signaling)
-///    0x1b : False (ordered, signaling)
-///    0x1c : Not-equal (ordered, signaling)
-///    0x1d : Greater-than-or-equal (ordered, non-signaling)
-///    0x1e : Greater-than (ordered, non-signaling)
-///    0x1f : True (unordered, signaling)
+///    0x00: Equal (ordered, non-signaling) \n
+///    0x01: Less-than (ordered, signaling) \n
+///    0x02: Less-than-or-equal (ordered, signaling) \n
+///    0x03: Unordered (non-signaling) \n
+///    0x04: Not-equal (unordered, non-signaling) \n
+///    0x05: Not-less-than (unordered, signaling) \n
+///    0x06: Not-less-than-or-equal (unordered, signaling) \n
+///    0x07: Ordered (non-signaling) \n
+///    0x08: Equal (unordered, non-signaling) \n
+///    0x09: Not-greater-than-or-equal (unordered, signaling) \n
+///    0x0A: Not-greater-than (unordered, signaling) \n
+///    0x0B: False (ordered, non-signaling) \n
+///    0x0C: Not-equal (ordered, non-signaling) \n
+///    0x0D: Greater-than-or-equal (ordered, signaling) \n
+///    0x0E: Greater-than (ordered, signaling) \n
+///    0x0F: True (unordered, non-signaling) \n
+///    0x10: Equal (ordered, signaling) \n
+///    0x11: Less-than (ordered, non-signaling) \n
+///    0x12: Less-than-or-equal (ordered, non-signaling) \n
+///    0x13: Unordered (signaling) \n
+///    0x14: Not-equal (unordered, signaling) \n
+///    0x15: Not-less-than (unordered, non-signaling) \n
+///    0x16: Not-less-than-or-equal (unordered, non-signaling) \n
+///    0x17: Ordered (signaling) \n
+///    0x18: Equal (unordered, signaling) \n
+///    0x19: Not-greater-than-or-equal (unordered, non-signaling) \n
+///    0x1A: Not-greater-than (unordered, non-signaling) \n
+///    0x1B: False (ordered, signaling) \n
+///    0x1C: Not-equal (ordered, signaling) \n
+///    0x1D: Greater-than-or-equal (ordered, non-signaling) \n
+///    0x1E: Greater-than (ordered, non-signaling) \n
+///    0x1F: True (unordered, signaling)
 /// \returns A 128-bit vector of [4 x float] containing the comparison results.
-#define _mm_cmp_ps(a, b, c) __extension__ ({ \
+#define _mm_cmp_ps(a, b, c) \
   (__m128)__builtin_ia32_cmpps((__v4sf)(__m128)(a), \
-                               (__v4sf)(__m128)(b), (c)); })
+                               (__v4sf)(__m128)(b), (c))
 
-/// \brief Compares each of the corresponding double-precision values of two
+/// Compares each of the corresponding double-precision values of two
 ///    256-bit vectors of [4 x double], using the operation specified by the
 ///    immediate integer operand.
 ///
@@ -1785,44 +1733,44 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 /// \param c
 ///    An immediate integer operand, with bits [4:0] specifying which comparison
 ///    operation to use: \n
-///    0x00 : Equal (ordered, non-signaling)
-///    0x01 : Less-than (ordered, signaling)
-///    0x02 : Less-than-or-equal (ordered, signaling)
-///    0x03 : Unordered (non-signaling)
-///    0x04 : Not-equal (unordered, non-signaling)
-///    0x05 : Not-less-than (unordered, signaling)
-///    0x06 : Not-less-than-or-equal (unordered, signaling)
-///    0x07 : Ordered (non-signaling)
-///    0x08 : Equal (unordered, non-signaling)
-///    0x09 : Not-greater-than-or-equal (unordered, signaling)
-///    0x0a : Not-greater-than (unordered, signaling)
-///    0x0b : False (ordered, non-signaling)
-///    0x0c : Not-equal (ordered, non-signaling)
-///    0x0d : Greater-than-or-equal (ordered, signaling)
-///    0x0e : Greater-than (ordered, signaling)
-///    0x0f : True (unordered, non-signaling)
-///    0x10 : Equal (ordered, signaling)
-///    0x11 : Less-than (ordered, non-signaling)
-///    0x12 : Less-than-or-equal (ordered, non-signaling)
-///    0x13 : Unordered (signaling)
-///    0x14 : Not-equal (unordered, signaling)
-///    0x15 : Not-less-than (unordered, non-signaling)
-///    0x16 : Not-less-than-or-equal (unordered, non-signaling)
-///    0x17 : Ordered (signaling)
-///    0x18 : Equal (unordered, signaling)
-///    0x19 : Not-greater-than-or-equal (unordered, non-signaling)
-///    0x1a : Not-greater-than (unordered, non-signaling)
-///    0x1b : False (ordered, signaling)
-///    0x1c : Not-equal (ordered, signaling)
-///    0x1d : Greater-than-or-equal (ordered, non-signaling)
-///    0x1e : Greater-than (ordered, non-signaling)
-///    0x1f : True (unordered, signaling)
+///    0x00: Equal (ordered, non-signaling) \n
+///    0x01: Less-than (ordered, signaling) \n
+///    0x02: Less-than-or-equal (ordered, signaling) \n
+///    0x03: Unordered (non-signaling) \n
+///    0x04: Not-equal (unordered, non-signaling) \n
+///    0x05: Not-less-than (unordered, signaling) \n
+///    0x06: Not-less-than-or-equal (unordered, signaling) \n
+///    0x07: Ordered (non-signaling) \n
+///    0x08: Equal (unordered, non-signaling) \n
+///    0x09: Not-greater-than-or-equal (unordered, signaling) \n
+///    0x0A: Not-greater-than (unordered, signaling) \n
+///    0x0B: False (ordered, non-signaling) \n
+///    0x0C: Not-equal (ordered, non-signaling) \n
+///    0x0D: Greater-than-or-equal (ordered, signaling) \n
+///    0x0E: Greater-than (ordered, signaling) \n
+///    0x0F: True (unordered, non-signaling) \n
+///    0x10: Equal (ordered, signaling) \n
+///    0x11: Less-than (ordered, non-signaling) \n
+///    0x12: Less-than-or-equal (ordered, non-signaling) \n
+///    0x13: Unordered (signaling) \n
+///    0x14: Not-equal (unordered, signaling) \n
+///    0x15: Not-less-than (unordered, non-signaling) \n
+///    0x16: Not-less-than-or-equal (unordered, non-signaling) \n
+///    0x17: Ordered (signaling) \n
+///    0x18: Equal (unordered, signaling) \n
+///    0x19: Not-greater-than-or-equal (unordered, non-signaling) \n
+///    0x1A: Not-greater-than (unordered, non-signaling) \n
+///    0x1B: False (ordered, signaling) \n
+///    0x1C: Not-equal (ordered, signaling) \n
+///    0x1D: Greater-than-or-equal (ordered, non-signaling) \n
+///    0x1E: Greater-than (ordered, non-signaling) \n
+///    0x1F: True (unordered, signaling)
 /// \returns A 256-bit vector of [4 x double] containing the comparison results.
-#define _mm256_cmp_pd(a, b, c) __extension__ ({ \
+#define _mm256_cmp_pd(a, b, c) \
   (__m256d)__builtin_ia32_cmppd256((__v4df)(__m256d)(a), \
-                                   (__v4df)(__m256d)(b), (c)); })
+                                   (__v4df)(__m256d)(b), (c))
 
-/// \brief Compares each of the corresponding values of two 256-bit vectors of
+/// Compares each of the corresponding values of two 256-bit vectors of
 ///    [8 x float], using the operation specified by the immediate integer
 ///    operand.
 ///
@@ -1845,44 +1793,44 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 /// \param c
 ///    An immediate integer operand, with bits [4:0] specifying which comparison
 ///    operation to use: \n
-///    0x00 : Equal (ordered, non-signaling)
-///    0x01 : Less-than (ordered, signaling)
-///    0x02 : Less-than-or-equal (ordered, signaling)
-///    0x03 : Unordered (non-signaling)
-///    0x04 : Not-equal (unordered, non-signaling)
-///    0x05 : Not-less-than (unordered, signaling)
-///    0x06 : Not-less-than-or-equal (unordered, signaling)
-///    0x07 : Ordered (non-signaling)
-///    0x08 : Equal (unordered, non-signaling)
-///    0x09 : Not-greater-than-or-equal (unordered, signaling)
-///    0x0a : Not-greater-than (unordered, signaling)
-///    0x0b : False (ordered, non-signaling)
-///    0x0c : Not-equal (ordered, non-signaling)
-///    0x0d : Greater-than-or-equal (ordered, signaling)
-///    0x0e : Greater-than (ordered, signaling)
-///    0x0f : True (unordered, non-signaling)
-///    0x10 : Equal (ordered, signaling)
-///    0x11 : Less-than (ordered, non-signaling)
-///    0x12 : Less-than-or-equal (ordered, non-signaling)
-///    0x13 : Unordered (signaling)
-///    0x14 : Not-equal (unordered, signaling)
-///    0x15 : Not-less-than (unordered, non-signaling)
-///    0x16 : Not-less-than-or-equal (unordered, non-signaling)
-///    0x17 : Ordered (signaling)
-///    0x18 : Equal (unordered, signaling)
-///    0x19 : Not-greater-than-or-equal (unordered, non-signaling)
-///    0x1a : Not-greater-than (unordered, non-signaling)
-///    0x1b : False (ordered, signaling)
-///    0x1c : Not-equal (ordered, signaling)
-///    0x1d : Greater-than-or-equal (ordered, non-signaling)
-///    0x1e : Greater-than (ordered, non-signaling)
-///    0x1f : True (unordered, signaling)
+///    0x00: Equal (ordered, non-signaling) \n
+///    0x01: Less-than (ordered, signaling) \n
+///    0x02: Less-than-or-equal (ordered, signaling) \n
+///    0x03: Unordered (non-signaling) \n
+///    0x04: Not-equal (unordered, non-signaling) \n
+///    0x05: Not-less-than (unordered, signaling) \n
+///    0x06: Not-less-than-or-equal (unordered, signaling) \n
+///    0x07: Ordered (non-signaling) \n
+///    0x08: Equal (unordered, non-signaling) \n
+///    0x09: Not-greater-than-or-equal (unordered, signaling) \n
+///    0x0A: Not-greater-than (unordered, signaling) \n
+///    0x0B: False (ordered, non-signaling) \n
+///    0x0C: Not-equal (ordered, non-signaling) \n
+///    0x0D: Greater-than-or-equal (ordered, signaling) \n
+///    0x0E: Greater-than (ordered, signaling) \n
+///    0x0F: True (unordered, non-signaling) \n
+///    0x10: Equal (ordered, signaling) \n
+///    0x11: Less-than (ordered, non-signaling) \n
+///    0x12: Less-than-or-equal (ordered, non-signaling) \n
+///    0x13: Unordered (signaling) \n
+///    0x14: Not-equal (unordered, signaling) \n
+///    0x15: Not-less-than (unordered, non-signaling) \n
+///    0x16: Not-less-than-or-equal (unordered, non-signaling) \n
+///    0x17: Ordered (signaling) \n
+///    0x18: Equal (unordered, signaling) \n
+///    0x19: Not-greater-than-or-equal (unordered, non-signaling) \n
+///    0x1A: Not-greater-than (unordered, non-signaling) \n
+///    0x1B: False (ordered, signaling) \n
+///    0x1C: Not-equal (ordered, signaling) \n
+///    0x1D: Greater-than-or-equal (ordered, non-signaling) \n
+///    0x1E: Greater-than (ordered, non-signaling) \n
+///    0x1F: True (unordered, signaling)
 /// \returns A 256-bit vector of [8 x float] containing the comparison results.
-#define _mm256_cmp_ps(a, b, c) __extension__ ({ \
+#define _mm256_cmp_ps(a, b, c) \
   (__m256)__builtin_ia32_cmpps256((__v8sf)(__m256)(a), \
-                                  (__v8sf)(__m256)(b), (c)); })
+                                  (__v8sf)(__m256)(b), (c))
 
-/// \brief Compares each of the corresponding scalar double-precision values of
+/// Compares each of the corresponding scalar double-precision values of
 ///    two 128-bit vectors of [2 x double], using the operation specified by the
 ///    immediate integer operand.
 ///
@@ -1904,44 +1852,44 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 /// \param c
 ///    An immediate integer operand, with bits [4:0] specifying which comparison
 ///    operation to use: \n
-///    0x00 : Equal (ordered, non-signaling)
-///    0x01 : Less-than (ordered, signaling)
-///    0x02 : Less-than-or-equal (ordered, signaling)
-///    0x03 : Unordered (non-signaling)
-///    0x04 : Not-equal (unordered, non-signaling)
-///    0x05 : Not-less-than (unordered, signaling)
-///    0x06 : Not-less-than-or-equal (unordered, signaling)
-///    0x07 : Ordered (non-signaling)
-///    0x08 : Equal (unordered, non-signaling)
-///    0x09 : Not-greater-than-or-equal (unordered, signaling)
-///    0x0a : Not-greater-than (unordered, signaling)
-///    0x0b : False (ordered, non-signaling)
-///    0x0c : Not-equal (ordered, non-signaling)
-///    0x0d : Greater-than-or-equal (ordered, signaling)
-///    0x0e : Greater-than (ordered, signaling)
-///    0x0f : True (unordered, non-signaling)
-///    0x10 : Equal (ordered, signaling)
-///    0x11 : Less-than (ordered, non-signaling)
-///    0x12 : Less-than-or-equal (ordered, non-signaling)
-///    0x13 : Unordered (signaling)
-///    0x14 : Not-equal (unordered, signaling)
-///    0x15 : Not-less-than (unordered, non-signaling)
-///    0x16 : Not-less-than-or-equal (unordered, non-signaling)
-///    0x17 : Ordered (signaling)
-///    0x18 : Equal (unordered, signaling)
-///    0x19 : Not-greater-than-or-equal (unordered, non-signaling)
-///    0x1a : Not-greater-than (unordered, non-signaling)
-///    0x1b : False (ordered, signaling)
-///    0x1c : Not-equal (ordered, signaling)
-///    0x1d : Greater-than-or-equal (ordered, non-signaling)
-///    0x1e : Greater-than (ordered, non-signaling)
-///    0x1f : True (unordered, signaling)
+///    0x00: Equal (ordered, non-signaling) \n
+///    0x01: Less-than (ordered, signaling) \n
+///    0x02: Less-than-or-equal (ordered, signaling) \n
+///    0x03: Unordered (non-signaling) \n
+///    0x04: Not-equal (unordered, non-signaling) \n
+///    0x05: Not-less-than (unordered, signaling) \n
+///    0x06: Not-less-than-or-equal (unordered, signaling) \n
+///    0x07: Ordered (non-signaling) \n
+///    0x08: Equal (unordered, non-signaling) \n
+///    0x09: Not-greater-than-or-equal (unordered, signaling) \n
+///    0x0A: Not-greater-than (unordered, signaling) \n
+///    0x0B: False (ordered, non-signaling) \n
+///    0x0C: Not-equal (ordered, non-signaling) \n
+///    0x0D: Greater-than-or-equal (ordered, signaling) \n
+///    0x0E: Greater-than (ordered, signaling) \n
+///    0x0F: True (unordered, non-signaling) \n
+///    0x10: Equal (ordered, signaling) \n
+///    0x11: Less-than (ordered, non-signaling) \n
+///    0x12: Less-than-or-equal (ordered, non-signaling) \n
+///    0x13: Unordered (signaling) \n
+///    0x14: Not-equal (unordered, signaling) \n
+///    0x15: Not-less-than (unordered, non-signaling) \n
+///    0x16: Not-less-than-or-equal (unordered, non-signaling) \n
+///    0x17: Ordered (signaling) \n
+///    0x18: Equal (unordered, signaling) \n
+///    0x19: Not-greater-than-or-equal (unordered, non-signaling) \n
+///    0x1A: Not-greater-than (unordered, non-signaling) \n
+///    0x1B: False (ordered, signaling) \n
+///    0x1C: Not-equal (ordered, signaling) \n
+///    0x1D: Greater-than-or-equal (ordered, non-signaling) \n
+///    0x1E: Greater-than (ordered, non-signaling) \n
+///    0x1F: True (unordered, signaling)
 /// \returns A 128-bit vector of [2 x double] containing the comparison results.
-#define _mm_cmp_sd(a, b, c) __extension__ ({ \
+#define _mm_cmp_sd(a, b, c) \
   (__m128d)__builtin_ia32_cmpsd((__v2df)(__m128d)(a), \
-                                (__v2df)(__m128d)(b), (c)); })
+                                (__v2df)(__m128d)(b), (c))
 
-/// \brief Compares each of the corresponding scalar values of two 128-bit
+/// Compares each of the corresponding scalar values of two 128-bit
 ///    vectors of [4 x float], using the operation specified by the immediate
 ///    integer operand.
 ///
@@ -1963,44 +1911,44 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 /// \param c
 ///    An immediate integer operand, with bits [4:0] specifying which comparison
 ///    operation to use: \n
-///    0x00 : Equal (ordered, non-signaling)
-///    0x01 : Less-than (ordered, signaling)
-///    0x02 : Less-than-or-equal (ordered, signaling)
-///    0x03 : Unordered (non-signaling)
-///    0x04 : Not-equal (unordered, non-signaling)
-///    0x05 : Not-less-than (unordered, signaling)
-///    0x06 : Not-less-than-or-equal (unordered, signaling)
-///    0x07 : Ordered (non-signaling)
-///    0x08 : Equal (unordered, non-signaling)
-///    0x09 : Not-greater-than-or-equal (unordered, signaling)
-///    0x0a : Not-greater-than (unordered, signaling)
-///    0x0b : False (ordered, non-signaling)
-///    0x0c : Not-equal (ordered, non-signaling)
-///    0x0d : Greater-than-or-equal (ordered, signaling)
-///    0x0e : Greater-than (ordered, signaling)
-///    0x0f : True (unordered, non-signaling)
-///    0x10 : Equal (ordered, signaling)
-///    0x11 : Less-than (ordered, non-signaling)
-///    0x12 : Less-than-or-equal (ordered, non-signaling)
-///    0x13 : Unordered (signaling)
-///    0x14 : Not-equal (unordered, signaling)
-///    0x15 : Not-less-than (unordered, non-signaling)
-///    0x16 : Not-less-than-or-equal (unordered, non-signaling)
-///    0x17 : Ordered (signaling)
-///    0x18 : Equal (unordered, signaling)
-///    0x19 : Not-greater-than-or-equal (unordered, non-signaling)
-///    0x1a : Not-greater-than (unordered, non-signaling)
-///    0x1b : False (ordered, signaling)
-///    0x1c : Not-equal (ordered, signaling)
-///    0x1d : Greater-than-or-equal (ordered, non-signaling)
-///    0x1e : Greater-than (ordered, non-signaling)
-///    0x1f : True (unordered, signaling)
+///    0x00: Equal (ordered, non-signaling) \n
+///    0x01: Less-than (ordered, signaling) \n
+///    0x02: Less-than-or-equal (ordered, signaling) \n
+///    0x03: Unordered (non-signaling) \n
+///    0x04: Not-equal (unordered, non-signaling) \n
+///    0x05: Not-less-than (unordered, signaling) \n
+///    0x06: Not-less-than-or-equal (unordered, signaling) \n
+///    0x07: Ordered (non-signaling) \n
+///    0x08: Equal (unordered, non-signaling) \n
+///    0x09: Not-greater-than-or-equal (unordered, signaling) \n
+///    0x0A: Not-greater-than (unordered, signaling) \n
+///    0x0B: False (ordered, non-signaling) \n
+///    0x0C: Not-equal (ordered, non-signaling) \n
+///    0x0D: Greater-than-or-equal (ordered, signaling) \n
+///    0x0E: Greater-than (ordered, signaling) \n
+///    0x0F: True (unordered, non-signaling) \n
+///    0x10: Equal (ordered, signaling) \n
+///    0x11: Less-than (ordered, non-signaling) \n
+///    0x12: Less-than-or-equal (ordered, non-signaling) \n
+///    0x13: Unordered (signaling) \n
+///    0x14: Not-equal (unordered, signaling) \n
+///    0x15: Not-less-than (unordered, non-signaling) \n
+///    0x16: Not-less-than-or-equal (unordered, non-signaling) \n
+///    0x17: Ordered (signaling) \n
+///    0x18: Equal (unordered, signaling) \n
+///    0x19: Not-greater-than-or-equal (unordered, non-signaling) \n
+///    0x1A: Not-greater-than (unordered, non-signaling) \n
+///    0x1B: False (ordered, signaling) \n
+///    0x1C: Not-equal (ordered, signaling) \n
+///    0x1D: Greater-than-or-equal (ordered, non-signaling) \n
+///    0x1E: Greater-than (ordered, non-signaling) \n
+///    0x1F: True (unordered, signaling)
 /// \returns A 128-bit vector of [4 x float] containing the comparison results.
-#define _mm_cmp_ss(a, b, c) __extension__ ({ \
+#define _mm_cmp_ss(a, b, c) \
   (__m128)__builtin_ia32_cmpss((__v4sf)(__m128)(a), \
-                               (__v4sf)(__m128)(b), (c)); })
+                               (__v4sf)(__m128)(b), (c))
 
-/// \brief Takes a [8 x i32] vector and returns the vector element value
+/// Takes a [8 x i32] vector and returns the vector element value
 ///    indexed by the immediate constant operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -2015,14 +1963,10 @@ _mm256_blendv_ps(__m256 __a, __m256 __b, __m256 __c)
 ///    element is extracted and returned.
 /// \returns A 32-bit integer containing the extracted 32 bits of extended
 ///    packed data.
-static __inline int __DEFAULT_FN_ATTRS
-_mm256_extract_epi32(__m256i __a, const int __imm)
-{
-  __v8si __b = (__v8si)__a;
-  return __b[__imm & 7];
-}
+#define _mm256_extract_epi32(X, N) \
+  (int)__builtin_ia32_vec_ext_v8si((__v8si)(__m256i)(X), (int)(N))
 
-/// \brief Takes a [16 x i16] vector and returns the vector element value
+/// Takes a [16 x i16] vector and returns the vector element value
 ///    indexed by the immediate constant operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -2037,14 +1981,11 @@ _mm256_extract_epi32(__m256i __a, const int __imm)
 ///    element is extracted and returned.
 /// \returns A 32-bit integer containing the extracted 16 bits of zero extended
 ///    packed data.
-static __inline int __DEFAULT_FN_ATTRS
-_mm256_extract_epi16(__m256i __a, const int __imm)
-{
-  __v16hi __b = (__v16hi)__a;
-  return (unsigned short)__b[__imm & 15];
-}
+#define _mm256_extract_epi16(X, N) \
+  (int)(unsigned short)__builtin_ia32_vec_ext_v16hi((__v16hi)(__m256i)(X), \
+                                                    (int)(N))
 
-/// \brief Takes a [32 x i8] vector and returns the vector element value
+/// Takes a [32 x i8] vector and returns the vector element value
 ///    indexed by the immediate constant operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -2059,15 +2000,12 @@ _mm256_extract_epi16(__m256i __a, const int __imm)
 ///    element is extracted and returned.
 /// \returns A 32-bit integer containing the extracted 8 bits of zero extended
 ///    packed data.
-static __inline int __DEFAULT_FN_ATTRS
-_mm256_extract_epi8(__m256i __a, const int __imm)
-{
-  __v32qi __b = (__v32qi)__a;
-  return (unsigned char)__b[__imm & 31];
-}
+#define _mm256_extract_epi8(X, N) \
+  (int)(unsigned char)__builtin_ia32_vec_ext_v32qi((__v32qi)(__m256i)(X), \
+                                                   (int)(N))
 
 #ifdef __x86_64__
-/// \brief Takes a [4 x i64] vector and returns the vector element value
+/// Takes a [4 x i64] vector and returns the vector element value
 ///    indexed by the immediate constant operand.
 ///
 /// \headerfile <x86intrin.h>
@@ -2082,15 +2020,11 @@ _mm256_extract_epi8(__m256i __a, const int __imm)
 ///    element is extracted and returned.
 /// \returns A 64-bit integer containing the extracted 64 bits of extended
 ///    packed data.
-static __inline long long  __DEFAULT_FN_ATTRS
-_mm256_extract_epi64(__m256i __a, const int __imm)
-{
-  __v4di __b = (__v4di)__a;
-  return __b[__imm & 3];
-}
+#define _mm256_extract_epi64(X, N) \
+  (long long)__builtin_ia32_vec_ext_v4di((__v4di)(__m256i)(X), (int)(N))
 #endif
 
-/// \brief Takes a [8 x i32] vector and replaces the vector element value
+/// Takes a [8 x i32] vector and replaces the vector element value
 ///    indexed by the immediate constant operand by a new value. Returns the
 ///    modified vector.
 ///
@@ -2108,16 +2042,12 @@ _mm256_extract_epi64(__m256i __a, const int __imm)
 ///    replaced.
 /// \returns A copy of vector \a __a, after replacing its element indexed by
 ///    \a __imm with \a __b.
-static __inline __m256i __DEFAULT_FN_ATTRS
-_mm256_insert_epi32(__m256i __a, int __b, int const __imm)
-{
-  __v8si __c = (__v8si)__a;
-  __c[__imm & 7] = __b;
-  return (__m256i)__c;
-}
+#define _mm256_insert_epi32(X, I, N) \
+  (__m256i)__builtin_ia32_vec_set_v8si((__v8si)(__m256i)(X), \
+                                       (int)(I), (int)(N))
 
 
-/// \brief Takes a [16 x i16] vector and replaces the vector element value
+/// Takes a [16 x i16] vector and replaces the vector element value
 ///    indexed by the immediate constant operand with a new value. Returns the
 ///    modified vector.
 ///
@@ -2135,15 +2065,11 @@ _mm256_insert_epi32(__m256i __a, int __b, int const __imm)
 ///    replaced.
 /// \returns A copy of vector \a __a, after replacing its element indexed by
 ///    \a __imm with \a __b.
-static __inline __m256i __DEFAULT_FN_ATTRS
-_mm256_insert_epi16(__m256i __a, int __b, int const __imm)
-{
-  __v16hi __c = (__v16hi)__a;
-  __c[__imm & 15] = __b;
-  return (__m256i)__c;
-}
+#define _mm256_insert_epi16(X, I, N) \
+  (__m256i)__builtin_ia32_vec_set_v16hi((__v16hi)(__m256i)(X), \
+                                        (int)(I), (int)(N))
 
-/// \brief Takes a [32 x i8] vector and replaces the vector element value
+/// Takes a [32 x i8] vector and replaces the vector element value
 ///    indexed by the immediate constant operand with a new value. Returns the
 ///    modified vector.
 ///
@@ -2161,16 +2087,12 @@ _mm256_insert_epi16(__m256i __a, int __b, int const __imm)
 ///    replaced.
 /// \returns A copy of vector \a __a, after replacing its element indexed by
 ///    \a __imm with \a __b.
-static __inline __m256i __DEFAULT_FN_ATTRS
-_mm256_insert_epi8(__m256i __a, int __b, int const __imm)
-{
-  __v32qi __c = (__v32qi)__a;
-  __c[__imm & 31] = __b;
-  return (__m256i)__c;
-}
+#define _mm256_insert_epi8(X, I, N) \
+  (__m256i)__builtin_ia32_vec_set_v32qi((__v32qi)(__m256i)(X), \
+                                        (int)(I), (int)(N))
 
 #ifdef __x86_64__
-/// \brief Takes a [4 x i64] vector and replaces the vector element value
+/// Takes a [4 x i64] vector and replaces the vector element value
 ///    indexed by the immediate constant operand with a new value. Returns the
 ///    modified vector.
 ///
@@ -2188,17 +2110,13 @@ _mm256_insert_epi8(__m256i __a, int __b, int const __imm)
 ///    replaced.
 /// \returns A copy of vector \a __a, after replacing its element indexed by
 ///     \a __imm with \a __b.
-static __inline __m256i __DEFAULT_FN_ATTRS
-_mm256_insert_epi64(__m256i __a, long long __b, int const __imm)
-{
-  __v4di __c = (__v4di)__a;
-  __c[__imm & 3] = __b;
-  return (__m256i)__c;
-}
+#define _mm256_insert_epi64(X, I, N) \
+  (__m256i)__builtin_ia32_vec_set_v4di((__v4di)(__m256i)(X), \
+                                       (long long)(I), (int)(N))
 #endif
 
 /* Conversion */
-/// \brief Converts a vector of [4 x i32] into a vector of [4 x double].
+/// Converts a vector of [4 x i32] into a vector of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -2213,7 +2131,7 @@ _mm256_cvtepi32_pd(__m128i __a)
   return (__m256d)__builtin_convertvector((__v4si)__a, __v4df);
 }
 
-/// \brief Converts a vector of [8 x i32] into a vector of [8 x float].
+/// Converts a vector of [8 x i32] into a vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -2225,10 +2143,10 @@ _mm256_cvtepi32_pd(__m128i __a)
 static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_cvtepi32_ps(__m256i __a)
 {
-  return (__m256)__builtin_ia32_cvtdq2ps256((__v8si) __a);
+  return (__m256)__builtin_convertvector((__v8si)__a, __v8sf);
 }
 
-/// \brief Converts a 256-bit vector of [4 x double] into a 128-bit vector of
+/// Converts a 256-bit vector of [4 x double] into a 128-bit vector of
 ///    [4 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -2244,7 +2162,7 @@ _mm256_cvtpd_ps(__m256d __a)
   return (__m128)__builtin_ia32_cvtpd2ps256((__v4df) __a);
 }
 
-/// \brief Converts a vector of [8 x float] into a vector of [8 x i32].
+/// Converts a vector of [8 x float] into a vector of [8 x i32].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -2259,7 +2177,7 @@ _mm256_cvtps_epi32(__m256 __a)
   return (__m256i)__builtin_ia32_cvtps2dq256((__v8sf) __a);
 }
 
-/// \brief Converts a 128-bit vector of [4 x float] into a 256-bit vector of [4
+/// Converts a 128-bit vector of [4 x float] into a 256-bit vector of [4
 ///    x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -2275,7 +2193,7 @@ _mm256_cvtps_pd(__m128 __a)
   return (__m256d)__builtin_convertvector((__v4sf)__a, __v4df);
 }
 
-/// \brief Converts a 256-bit vector of [4 x double] into a 128-bit vector of [4
+/// Converts a 256-bit vector of [4 x double] into a 128-bit vector of [4
 ///    x i32], truncating the result by rounding towards zero when it is
 ///    inexact.
 ///
@@ -2292,7 +2210,7 @@ _mm256_cvttpd_epi32(__m256d __a)
   return (__m128i)__builtin_ia32_cvttpd2dq256((__v4df) __a);
 }
 
-/// \brief Converts a 256-bit vector of [4 x double] into a 128-bit vector of [4
+/// Converts a 256-bit vector of [4 x double] into a 128-bit vector of [4
 ///    x i32]. When a conversion is inexact, the value returned is rounded
 ///    according to the rounding control bits in the MXCSR register.
 ///
@@ -2309,7 +2227,7 @@ _mm256_cvtpd_epi32(__m256d __a)
   return (__m128i)__builtin_ia32_cvtpd2dq256((__v4df) __a);
 }
 
-/// \brief Converts a vector of [8 x float] into a vector of [8 x i32],
+/// Converts a vector of [8 x float] into a vector of [8 x i32],
 ///    truncating the result by rounding towards zero when it is inexact.
 ///
 /// \headerfile <x86intrin.h>
@@ -2325,7 +2243,7 @@ _mm256_cvttps_epi32(__m256 __a)
   return (__m256i)__builtin_ia32_cvttps2dq256((__v8sf) __a);
 }
 
-/// \brief Returns the first element of the input vector of [4 x double].
+/// Returns the first element of the input vector of [4 x double].
 ///
 /// \headerfile <avxintrin.h>
 ///
@@ -2341,7 +2259,7 @@ _mm256_cvtsd_f64(__m256d __a)
  return __a[0];
 }
 
-/// \brief Returns the first element of the input vector of [8 x i32].
+/// Returns the first element of the input vector of [8 x i32].
 ///
 /// \headerfile <avxintrin.h>
 ///
@@ -2358,7 +2276,7 @@ _mm256_cvtsi256_si32(__m256i __a)
  return __b[0];
 }
 
-/// \brief Returns the first element of the input vector of [8 x float].
+/// Returns the first element of the input vector of [8 x float].
 ///
 /// \headerfile <avxintrin.h>
 ///
@@ -2375,9 +2293,8 @@ _mm256_cvtss_f32(__m256 __a)
 }
 
 /* Vector replicate */
-/// \brief Moves and duplicates high-order (odd-indexed) values from a 256-bit
-///    vector of [8 x float] to float values in a 256-bit vector of
-///    [8 x float].
+/// Moves and duplicates odd-indexed values from a 256-bit vector of
+///    [8 x float] to float values in a 256-bit vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -2401,8 +2318,8 @@ _mm256_movehdup_ps(__m256 __a)
   return __builtin_shufflevector((__v8sf)__a, (__v8sf)__a, 1, 1, 3, 3, 5, 5, 7, 7);
 }
 
-/// \brief Moves and duplicates low-order (even-indexed) values from a 256-bit
-///    vector of [8 x float] to float values in a 256-bit vector of [8 x float].
+/// Moves and duplicates even-indexed values from a 256-bit vector of
+///    [8 x float] to float values in a 256-bit vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -2426,7 +2343,7 @@ _mm256_moveldup_ps(__m256 __a)
   return __builtin_shufflevector((__v8sf)__a, (__v8sf)__a, 0, 0, 2, 2, 4, 4, 6, 6);
 }
 
-/// \brief Moves and duplicates double-precision floating point values from a
+/// Moves and duplicates double-precision floating point values from a
 ///    256-bit vector of [4 x double] to double-precision values in a 256-bit
 ///    vector of [4 x double].
 ///
@@ -2449,7 +2366,7 @@ _mm256_movedup_pd(__m256d __a)
 }
 
 /* Unpack and Interleave */
-/// \brief Unpacks the odd-indexed vector elements from two 256-bit vectors of
+/// Unpacks the odd-indexed vector elements from two 256-bit vectors of
 ///    [4 x double] and interleaves them into a 256-bit vector of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -2471,7 +2388,7 @@ _mm256_unpackhi_pd(__m256d __a, __m256d __b)
   return __builtin_shufflevector((__v4df)__a, (__v4df)__b, 1, 5, 1+2, 5+2);
 }
 
-/// \brief Unpacks the even-indexed vector elements from two 256-bit vectors of
+/// Unpacks the even-indexed vector elements from two 256-bit vectors of
 ///    [4 x double] and interleaves them into a 256-bit vector of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -2493,7 +2410,7 @@ _mm256_unpacklo_pd(__m256d __a, __m256d __b)
   return __builtin_shufflevector((__v4df)__a, (__v4df)__b, 0, 4, 0+2, 4+2);
 }
 
-/// \brief Unpacks the 32-bit vector elements 2, 3, 6 and 7 from each of the
+/// Unpacks the 32-bit vector elements 2, 3, 6 and 7 from each of the
 ///    two 256-bit vectors of [8 x float] and interleaves them into a 256-bit
 ///    vector of [8 x float].
 ///
@@ -2520,7 +2437,7 @@ _mm256_unpackhi_ps(__m256 __a, __m256 __b)
   return __builtin_shufflevector((__v8sf)__a, (__v8sf)__b, 2, 10, 2+1, 10+1, 6, 14, 6+1, 14+1);
 }
 
-/// \brief Unpacks the 32-bit vector elements 0, 1, 4 and 5 from each of the
+/// Unpacks the 32-bit vector elements 0, 1, 4 and 5 from each of the
 ///    two 256-bit vectors of [8 x float] and interleaves them into a 256-bit
 ///    vector of [8 x float].
 ///
@@ -2548,7 +2465,7 @@ _mm256_unpacklo_ps(__m256 __a, __m256 __b)
 }
 
 /* Bit Test */
-/// \brief Given two 128-bit floating-point vectors of [2 x double], perform an
+/// Given two 128-bit floating-point vectors of [2 x double], perform an
 ///    element-by-element comparison of the double-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2571,13 +2488,13 @@ _mm256_unpacklo_ps(__m256 __a, __m256 __b)
 /// \param __b
 ///    A 128-bit vector of [2 x double].
 /// \returns the ZF flag in the EFLAGS register.
-static __inline int __DEFAULT_FN_ATTRS
+static __inline int __DEFAULT_FN_ATTRS128
 _mm_testz_pd(__m128d __a, __m128d __b)
 {
   return __builtin_ia32_vtestzpd((__v2df)__a, (__v2df)__b);
 }
 
-/// \brief Given two 128-bit floating-point vectors of [2 x double], perform an
+/// Given two 128-bit floating-point vectors of [2 x double], perform an
 ///    element-by-element comparison of the double-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2600,13 +2517,13 @@ _mm_testz_pd(__m128d __a, __m128d __b)
 /// \param __b
 ///    A 128-bit vector of [2 x double].
 /// \returns the CF flag in the EFLAGS register.
-static __inline int __DEFAULT_FN_ATTRS
+static __inline int __DEFAULT_FN_ATTRS128
 _mm_testc_pd(__m128d __a, __m128d __b)
 {
   return __builtin_ia32_vtestcpd((__v2df)__a, (__v2df)__b);
 }
 
-/// \brief Given two 128-bit floating-point vectors of [2 x double], perform an
+/// Given two 128-bit floating-point vectors of [2 x double], perform an
 ///    element-by-element comparison of the double-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2630,13 +2547,13 @@ _mm_testc_pd(__m128d __a, __m128d __b)
 /// \param __b
 ///    A 128-bit vector of [2 x double].
 /// \returns 1 if both the ZF and CF flags are set to 0, otherwise returns 0.
-static __inline int __DEFAULT_FN_ATTRS
+static __inline int __DEFAULT_FN_ATTRS128
 _mm_testnzc_pd(__m128d __a, __m128d __b)
 {
   return __builtin_ia32_vtestnzcpd((__v2df)__a, (__v2df)__b);
 }
 
-/// \brief Given two 128-bit floating-point vectors of [4 x float], perform an
+/// Given two 128-bit floating-point vectors of [4 x float], perform an
 ///    element-by-element comparison of the single-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2659,13 +2576,13 @@ _mm_testnzc_pd(__m128d __a, __m128d __b)
 /// \param __b
 ///    A 128-bit vector of [4 x float].
 /// \returns the ZF flag.
-static __inline int __DEFAULT_FN_ATTRS
+static __inline int __DEFAULT_FN_ATTRS128
 _mm_testz_ps(__m128 __a, __m128 __b)
 {
   return __builtin_ia32_vtestzps((__v4sf)__a, (__v4sf)__b);
 }
 
-/// \brief Given two 128-bit floating-point vectors of [4 x float], perform an
+/// Given two 128-bit floating-point vectors of [4 x float], perform an
 ///    element-by-element comparison of the single-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2688,13 +2605,13 @@ _mm_testz_ps(__m128 __a, __m128 __b)
 /// \param __b
 ///    A 128-bit vector of [4 x float].
 /// \returns the CF flag.
-static __inline int __DEFAULT_FN_ATTRS
+static __inline int __DEFAULT_FN_ATTRS128
 _mm_testc_ps(__m128 __a, __m128 __b)
 {
   return __builtin_ia32_vtestcps((__v4sf)__a, (__v4sf)__b);
 }
 
-/// \brief Given two 128-bit floating-point vectors of [4 x float], perform an
+/// Given two 128-bit floating-point vectors of [4 x float], perform an
 ///    element-by-element comparison of the single-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2718,13 +2635,13 @@ _mm_testc_ps(__m128 __a, __m128 __b)
 /// \param __b
 ///    A 128-bit vector of [4 x float].
 /// \returns 1 if both the ZF and CF flags are set to 0, otherwise returns 0.
-static __inline int __DEFAULT_FN_ATTRS
+static __inline int __DEFAULT_FN_ATTRS128
 _mm_testnzc_ps(__m128 __a, __m128 __b)
 {
   return __builtin_ia32_vtestnzcps((__v4sf)__a, (__v4sf)__b);
 }
 
-/// \brief Given two 256-bit floating-point vectors of [4 x double], perform an
+/// Given two 256-bit floating-point vectors of [4 x double], perform an
 ///    element-by-element comparison of the double-precision elements in the
 ///    first source vector and the corresponding elements in the second source
 ///    vector.
@@ -2753,7 +2670,7 @@ _mm256_testz_pd(__m256d __a, __m256d __b)
   return __builtin_ia32_vtestzpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Given two 256-bit floating-point vectors of [4 x double], perform an
+/// Given two 256-bit floating-point vectors of [4 x double], perform an
 ///    element-by-element comparison of the double-precision elements in the
 ///    first source vector and the corresponding elements in the second source
 ///    vector.
@@ -2782,7 +2699,7 @@ _mm256_testc_pd(__m256d __a, __m256d __b)
   return __builtin_ia32_vtestcpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Given two 256-bit floating-point vectors of [4 x double], perform an
+/// Given two 256-bit floating-point vectors of [4 x double], perform an
 ///    element-by-element comparison of the double-precision elements in the
 ///    first source vector and the corresponding elements in the second source
 ///    vector.
@@ -2812,7 +2729,7 @@ _mm256_testnzc_pd(__m256d __a, __m256d __b)
   return __builtin_ia32_vtestnzcpd256((__v4df)__a, (__v4df)__b);
 }
 
-/// \brief Given two 256-bit floating-point vectors of [8 x float], perform an
+/// Given two 256-bit floating-point vectors of [8 x float], perform an
 ///    element-by-element comparison of the single-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2841,7 +2758,7 @@ _mm256_testz_ps(__m256 __a, __m256 __b)
   return __builtin_ia32_vtestzps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Given two 256-bit floating-point vectors of [8 x float], perform an
+/// Given two 256-bit floating-point vectors of [8 x float], perform an
 ///    element-by-element comparison of the single-precision element in the
 ///    first source vector and the corresponding element in the second source
 ///    vector.
@@ -2870,7 +2787,7 @@ _mm256_testc_ps(__m256 __a, __m256 __b)
   return __builtin_ia32_vtestcps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Given two 256-bit floating-point vectors of [8 x float], perform an
+/// Given two 256-bit floating-point vectors of [8 x float], perform an
 ///    element-by-element comparison of the single-precision elements in the
 ///    first source vector and the corresponding elements in the second source
 ///    vector.
@@ -2900,7 +2817,7 @@ _mm256_testnzc_ps(__m256 __a, __m256 __b)
   return __builtin_ia32_vtestnzcps256((__v8sf)__a, (__v8sf)__b);
 }
 
-/// \brief Given two 256-bit integer vectors, perform a bit-by-bit comparison
+/// Given two 256-bit integer vectors, perform a bit-by-bit comparison
 ///    of the two source vectors.
 ///
 ///    The EFLAGS register is updated as follows: \n
@@ -2926,7 +2843,7 @@ _mm256_testz_si256(__m256i __a, __m256i __b)
   return __builtin_ia32_ptestz256((__v4di)__a, (__v4di)__b);
 }
 
-/// \brief Given two 256-bit integer vectors, perform a bit-by-bit comparison
+/// Given two 256-bit integer vectors, perform a bit-by-bit comparison
 ///    of the two source vectors.
 ///
 ///    The EFLAGS register is updated as follows: \n
@@ -2952,7 +2869,7 @@ _mm256_testc_si256(__m256i __a, __m256i __b)
   return __builtin_ia32_ptestc256((__v4di)__a, (__v4di)__b);
 }
 
-/// \brief Given two 256-bit integer vectors, perform a bit-by-bit comparison
+/// Given two 256-bit integer vectors, perform a bit-by-bit comparison
 ///    of the two source vectors.
 ///
 ///    The EFLAGS register is updated as follows: \n
@@ -2980,7 +2897,7 @@ _mm256_testnzc_si256(__m256i __a, __m256i __b)
 }
 
 /* Vector extract sign mask */
-/// \brief Extracts the sign bits of double-precision floating point elements
+/// Extracts the sign bits of double-precision floating point elements
 ///    in a 256-bit vector of [4 x double] and writes them to the lower order
 ///    bits of the return value.
 ///
@@ -2998,7 +2915,7 @@ _mm256_movemask_pd(__m256d __a)
   return __builtin_ia32_movmskpd256((__v4df)__a);
 }
 
-/// \brief Extracts the sign bits of double-precision floating point elements
+/// Extracts the sign bits of single-precision floating point elements
 ///    in a 256-bit vector of [8 x float] and writes them to the lower order
 ///    bits of the return value.
 ///
@@ -3007,7 +2924,7 @@ _mm256_movemask_pd(__m256d __a)
 /// This intrinsic corresponds to the <c> VMOVMSKPS </c> instruction.
 ///
 /// \param __a
-///    A 256-bit vector of [8 x float] containing the double-precision floating
+///    A 256-bit vector of [8 x float] containing the single-precision floating
 ///    point values with sign bits to be extracted.
 /// \returns The sign bits from the operand, written to bits [7:0].
 static __inline int __DEFAULT_FN_ATTRS
@@ -3017,30 +2934,30 @@ _mm256_movemask_ps(__m256 __a)
 }
 
 /* Vector __zero */
-/// \brief Zeroes the contents of all XMM or YMM registers.
+/// Zeroes the contents of all XMM or YMM registers.
 ///
 /// \headerfile <x86intrin.h>
 ///
 /// This intrinsic corresponds to the <c> VZEROALL </c> instruction.
-static __inline void __DEFAULT_FN_ATTRS
+static __inline void __attribute__((__always_inline__, __nodebug__, __target__("avx")))
 _mm256_zeroall(void)
 {
   __builtin_ia32_vzeroall();
 }
 
-/// \brief Zeroes the upper 128 bits (bits 255:128) of all YMM registers.
+/// Zeroes the upper 128 bits (bits 255:128) of all YMM registers.
 ///
 /// \headerfile <x86intrin.h>
 ///
 /// This intrinsic corresponds to the <c> VZEROUPPER </c> instruction.
-static __inline void __DEFAULT_FN_ATTRS
+static __inline void __attribute__((__always_inline__, __nodebug__, __target__("avx")))
 _mm256_zeroupper(void)
 {
   __builtin_ia32_vzeroupper();
 }
 
 /* Vector load with broadcast */
-/// \brief Loads a scalar single-precision floating point value from the
+/// Loads a scalar single-precision floating point value from the
 ///    specified address pointed to by \a __a and broadcasts it to the elements
 ///    of a [4 x float] vector.
 ///
@@ -3052,14 +2969,14 @@ _mm256_zeroupper(void)
 ///    The single-precision floating point value to be broadcast.
 /// \returns A 128-bit vector of [4 x float] whose 32-bit elements are set
 ///    equal to the broadcast value.
-static __inline __m128 __DEFAULT_FN_ATTRS
+static __inline __m128 __DEFAULT_FN_ATTRS128
 _mm_broadcast_ss(float const *__a)
 {
   float __f = *__a;
-  return (__m128)(__v4sf){ __f, __f, __f, __f };
+  return __extension__ (__m128)(__v4sf){ __f, __f, __f, __f };
 }
 
-/// \brief Loads a scalar double-precision floating point value from the
+/// Loads a scalar double-precision floating point value from the
 ///    specified address pointed to by \a __a and broadcasts it to the elements
 ///    of a [4 x double] vector.
 ///
@@ -3075,10 +2992,10 @@ static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_broadcast_sd(double const *__a)
 {
   double __d = *__a;
-  return (__m256d)(__v4df){ __d, __d, __d, __d };
+  return __extension__ (__m256d)(__v4df){ __d, __d, __d, __d };
 }
 
-/// \brief Loads a scalar single-precision floating point value from the
+/// Loads a scalar single-precision floating point value from the
 ///    specified address pointed to by \a __a and broadcasts it to the elements
 ///    of a [8 x float] vector.
 ///
@@ -3094,10 +3011,10 @@ static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_broadcast_ss(float const *__a)
 {
   float __f = *__a;
-  return (__m256)(__v8sf){ __f, __f, __f, __f, __f, __f, __f, __f };
+  return __extension__ (__m256)(__v8sf){ __f, __f, __f, __f, __f, __f, __f, __f };
 }
 
-/// \brief Loads the data from a 128-bit vector of [2 x double] from the
+/// Loads the data from a 128-bit vector of [2 x double] from the
 ///    specified address pointed to by \a __a and broadcasts it to 128-bit
 ///    elements in a 256-bit vector of [4 x double].
 ///
@@ -3112,10 +3029,12 @@ _mm256_broadcast_ss(float const *__a)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_broadcast_pd(__m128d const *__a)
 {
-  return (__m256d)__builtin_ia32_vbroadcastf128_pd256((__v2df const *)__a);
+  __m128d __b = _mm_loadu_pd((const double *)__a);
+  return (__m256d)__builtin_shufflevector((__v2df)__b, (__v2df)__b,
+                                          0, 1, 0, 1);
 }
 
-/// \brief Loads the data from a 128-bit vector of [4 x float] from the
+/// Loads the data from a 128-bit vector of [4 x float] from the
 ///    specified address pointed to by \a __a and broadcasts it to 128-bit
 ///    elements in a 256-bit vector of [8 x float].
 ///
@@ -3130,11 +3049,13 @@ _mm256_broadcast_pd(__m128d const *__a)
 static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_broadcast_ps(__m128 const *__a)
 {
-  return (__m256)__builtin_ia32_vbroadcastf128_ps256((__v4sf const *)__a);
+  __m128 __b = _mm_loadu_ps((const float *)__a);
+  return (__m256)__builtin_shufflevector((__v4sf)__b, (__v4sf)__b,
+                                         0, 1, 2, 3, 0, 1, 2, 3);
 }
 
 /* SIMD load ops */
-/// \brief Loads 4 double-precision floating point values from a 32-byte aligned
+/// Loads 4 double-precision floating point values from a 32-byte aligned
 ///    memory location pointed to by \a __p into a vector of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -3151,7 +3072,7 @@ _mm256_load_pd(double const *__p)
   return *(__m256d *)__p;
 }
 
-/// \brief Loads 8 single-precision floating point values from a 32-byte aligned
+/// Loads 8 single-precision floating point values from a 32-byte aligned
 ///    memory location pointed to by \a __p into a vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -3167,7 +3088,7 @@ _mm256_load_ps(float const *__p)
   return *(__m256 *)__p;
 }
 
-/// \brief Loads 4 double-precision floating point values from an unaligned
+/// Loads 4 double-precision floating point values from an unaligned
 ///    memory location pointed to by \a __p into a vector of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -3182,12 +3103,12 @@ static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_loadu_pd(double const *__p)
 {
   struct __loadu_pd {
-    __m256d __v;
+    __m256d_u __v;
   } __attribute__((__packed__, __may_alias__));
   return ((struct __loadu_pd*)__p)->__v;
 }
 
-/// \brief Loads 8 single-precision floating point values from an unaligned
+/// Loads 8 single-precision floating point values from an unaligned
 ///    memory location pointed to by \a __p into a vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -3202,12 +3123,12 @@ static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_loadu_ps(float const *__p)
 {
   struct __loadu_ps {
-    __m256 __v;
+    __m256_u __v;
   } __attribute__((__packed__, __may_alias__));
   return ((struct __loadu_ps*)__p)->__v;
 }
 
-/// \brief Loads 256 bits of integer data from a 32-byte aligned memory
+/// Loads 256 bits of integer data from a 32-byte aligned memory
 ///    location pointed to by \a __p into elements of a 256-bit integer vector.
 ///
 /// \headerfile <x86intrin.h>
@@ -3224,7 +3145,7 @@ _mm256_load_si256(__m256i const *__p)
   return *__p;
 }
 
-/// \brief Loads 256 bits of integer data from an unaligned memory location
+/// Loads 256 bits of integer data from an unaligned memory location
 ///    pointed to by \a __p into a 256-bit integer vector.
 ///
 /// \headerfile <x86intrin.h>
@@ -3235,15 +3156,15 @@ _mm256_load_si256(__m256i const *__p)
 ///    A pointer to a 256-bit integer vector containing integer values.
 /// \returns A 256-bit integer vector containing the moved values.
 static __inline __m256i __DEFAULT_FN_ATTRS
-_mm256_loadu_si256(__m256i const *__p)
+_mm256_loadu_si256(__m256i_u const *__p)
 {
   struct __loadu_si256 {
-    __m256i __v;
+    __m256i_u __v;
   } __attribute__((__packed__, __may_alias__));
   return ((struct __loadu_si256*)__p)->__v;
 }
 
-/// \brief Loads 256 bits of integer data from an unaligned memory location
+/// Loads 256 bits of integer data from an unaligned memory location
 ///    pointed to by \a __p into a 256-bit integer vector. This intrinsic may
 ///    perform better than \c _mm256_loadu_si256 when the data crosses a cache
 ///    line boundary.
@@ -3262,7 +3183,7 @@ _mm256_lddqu_si256(__m256i const *__p)
 }
 
 /* SIMD store ops */
-/// \brief Stores double-precision floating point values from a 256-bit vector
+/// Stores double-precision floating point values from a 256-bit vector
 ///    of [4 x double] to a 32-byte aligned memory location pointed to by
 ///    \a __p.
 ///
@@ -3281,7 +3202,7 @@ _mm256_store_pd(double *__p, __m256d __a)
   *(__m256d *)__p = __a;
 }
 
-/// \brief Stores single-precision floating point values from a 256-bit vector
+/// Stores single-precision floating point values from a 256-bit vector
 ///    of [8 x float] to a 32-byte aligned memory location pointed to by \a __p.
 ///
 /// \headerfile <x86intrin.h>
@@ -3299,7 +3220,7 @@ _mm256_store_ps(float *__p, __m256 __a)
   *(__m256 *)__p = __a;
 }
 
-/// \brief Stores double-precision floating point values from a 256-bit vector
+/// Stores double-precision floating point values from a 256-bit vector
 ///    of [4 x double] to an unaligned memory location pointed to by \a __p.
 ///
 /// \headerfile <x86intrin.h>
@@ -3315,12 +3236,12 @@ static __inline void __DEFAULT_FN_ATTRS
 _mm256_storeu_pd(double *__p, __m256d __a)
 {
   struct __storeu_pd {
-    __m256d __v;
+    __m256d_u __v;
   } __attribute__((__packed__, __may_alias__));
   ((struct __storeu_pd*)__p)->__v = __a;
 }
 
-/// \brief Stores single-precision floating point values from a 256-bit vector
+/// Stores single-precision floating point values from a 256-bit vector
 ///    of [8 x float] to an unaligned memory location pointed to by \a __p.
 ///
 /// \headerfile <x86intrin.h>
@@ -3335,12 +3256,12 @@ static __inline void __DEFAULT_FN_ATTRS
 _mm256_storeu_ps(float *__p, __m256 __a)
 {
   struct __storeu_ps {
-    __m256 __v;
+    __m256_u __v;
   } __attribute__((__packed__, __may_alias__));
   ((struct __storeu_ps*)__p)->__v = __a;
 }
 
-/// \brief Stores integer values from a 256-bit integer vector to a 32-byte
+/// Stores integer values from a 256-bit integer vector to a 32-byte
 ///    aligned memory location pointed to by \a __p.
 ///
 /// \headerfile <x86intrin.h>
@@ -3358,7 +3279,7 @@ _mm256_store_si256(__m256i *__p, __m256i __a)
   *__p = __a;
 }
 
-/// \brief Stores integer values from a 256-bit integer vector to an unaligned
+/// Stores integer values from a 256-bit integer vector to an unaligned
 ///    memory location pointed to by \a __p.
 ///
 /// \headerfile <x86intrin.h>
@@ -3370,16 +3291,16 @@ _mm256_store_si256(__m256i *__p, __m256i __a)
 /// \param __a
 ///    A 256-bit integer vector containing the values to be moved.
 static __inline void __DEFAULT_FN_ATTRS
-_mm256_storeu_si256(__m256i *__p, __m256i __a)
+_mm256_storeu_si256(__m256i_u *__p, __m256i __a)
 {
   struct __storeu_si256 {
-    __m256i __v;
+    __m256i_u __v;
   } __attribute__((__packed__, __may_alias__));
   ((struct __storeu_si256*)__p)->__v = __a;
 }
 
 /* Conditional load ops */
-/// \brief Conditionally loads double-precision floating point elements from a
+/// Conditionally loads double-precision floating point elements from a
 ///    memory location pointed to by \a __p into a 128-bit vector of
 ///    [2 x double], depending on the mask bits associated with each data
 ///    element.
@@ -3397,13 +3318,13 @@ _mm256_storeu_si256(__m256i *__p, __m256i __a)
 ///    corresponding value in the memory location is not loaded and the
 ///    corresponding field in the return value is set to zero.
 /// \returns A 128-bit vector of [2 x double] containing the loaded values.
-static __inline __m128d __DEFAULT_FN_ATTRS
+static __inline __m128d __DEFAULT_FN_ATTRS128
 _mm_maskload_pd(double const *__p, __m128i __m)
 {
   return (__m128d)__builtin_ia32_maskloadpd((const __v2df *)__p, (__v2di)__m);
 }
 
-/// \brief Conditionally loads double-precision floating point elements from a
+/// Conditionally loads double-precision floating point elements from a
 ///    memory location pointed to by \a __p into a 256-bit vector of
 ///    [4 x double], depending on the mask bits associated with each data
 ///    element.
@@ -3428,7 +3349,7 @@ _mm256_maskload_pd(double const *__p, __m256i __m)
                                                (__v4di)__m);
 }
 
-/// \brief Conditionally loads single-precision floating point elements from a
+/// Conditionally loads single-precision floating point elements from a
 ///    memory location pointed to by \a __p into a 128-bit vector of
 ///    [4 x float], depending on the mask bits associated with each data
 ///    element.
@@ -3446,13 +3367,13 @@ _mm256_maskload_pd(double const *__p, __m256i __m)
 ///    corresponding value in the memory location is not loaded and the
 ///    corresponding field in the return value is set to zero.
 /// \returns A 128-bit vector of [4 x float] containing the loaded values.
-static __inline __m128 __DEFAULT_FN_ATTRS
+static __inline __m128 __DEFAULT_FN_ATTRS128
 _mm_maskload_ps(float const *__p, __m128i __m)
 {
   return (__m128)__builtin_ia32_maskloadps((const __v4sf *)__p, (__v4si)__m);
 }
 
-/// \brief Conditionally loads single-precision floating point elements from a
+/// Conditionally loads single-precision floating point elements from a
 ///    memory location pointed to by \a __p into a 256-bit vector of
 ///    [8 x float], depending on the mask bits associated with each data
 ///    element.
@@ -3477,7 +3398,7 @@ _mm256_maskload_ps(float const *__p, __m256i __m)
 }
 
 /* Conditional store ops */
-/// \brief Moves single-precision floating point values from a 256-bit vector
+/// Moves single-precision floating point values from a 256-bit vector
 ///    of [8 x float] to a memory location pointed to by \a __p, according to
 ///    the specified mask.
 ///
@@ -3501,7 +3422,7 @@ _mm256_maskstore_ps(float *__p, __m256i __m, __m256 __a)
   __builtin_ia32_maskstoreps256((__v8sf *)__p, (__v8si)__m, (__v8sf)__a);
 }
 
-/// \brief Moves double-precision values from a 128-bit vector of [2 x double]
+/// Moves double-precision values from a 128-bit vector of [2 x double]
 ///    to a memory location pointed to by \a __p, according to the specified
 ///    mask.
 ///
@@ -3519,13 +3440,13 @@ _mm256_maskstore_ps(float *__p, __m256i __m, __m256 __a)
 ///    changed.
 /// \param __a
 ///    A 128-bit vector of [2 x double] containing the values to be stored.
-static __inline void __DEFAULT_FN_ATTRS
+static __inline void __DEFAULT_FN_ATTRS128
 _mm_maskstore_pd(double *__p, __m128i __m, __m128d __a)
 {
   __builtin_ia32_maskstorepd((__v2df *)__p, (__v2di)__m, (__v2df)__a);
 }
 
-/// \brief Moves double-precision values from a 256-bit vector of [4 x double]
+/// Moves double-precision values from a 256-bit vector of [4 x double]
 ///    to a memory location pointed to by \a __p, according to the specified
 ///    mask.
 ///
@@ -3549,7 +3470,7 @@ _mm256_maskstore_pd(double *__p, __m256i __m, __m256d __a)
   __builtin_ia32_maskstorepd256((__v4df *)__p, (__v4di)__m, (__v4df)__a);
 }
 
-/// \brief Moves single-precision floating point values from a 128-bit vector
+/// Moves single-precision floating point values from a 128-bit vector
 ///    of [4 x float] to a memory location pointed to by \a __p, according to
 ///    the specified mask.
 ///
@@ -3567,14 +3488,14 @@ _mm256_maskstore_pd(double *__p, __m256i __m, __m256d __a)
 ///    changed.
 /// \param __a
 ///    A 128-bit vector of [4 x float] containing the values to be stored.
-static __inline void __DEFAULT_FN_ATTRS
+static __inline void __DEFAULT_FN_ATTRS128
 _mm_maskstore_ps(float *__p, __m128i __m, __m128 __a)
 {
   __builtin_ia32_maskstoreps((__v4sf *)__p, (__v4si)__m, (__v4sf)__a);
 }
 
 /* Cacheability support ops */
-/// \brief Moves integer data from a 256-bit integer vector to a 32-byte
+/// Moves integer data from a 256-bit integer vector to a 32-byte
 ///    aligned memory location. To minimize caching, the data is flagged as
 ///    non-temporal (unlikely to be used again soon).
 ///
@@ -3594,7 +3515,7 @@ _mm256_stream_si256(__m256i *__a, __m256i __b)
   __builtin_nontemporal_store((__v4di_aligned)__b, (__v4di_aligned*)__a);
 }
 
-/// \brief Moves double-precision values from a 256-bit vector of [4 x double]
+/// Moves double-precision values from a 256-bit vector of [4 x double]
 ///    to a 32-byte aligned memory location. To minimize caching, the data is
 ///    flagged as non-temporal (unlikely to be used again soon).
 ///
@@ -3614,7 +3535,7 @@ _mm256_stream_pd(double *__a, __m256d __b)
   __builtin_nontemporal_store((__v4df_aligned)__b, (__v4df_aligned*)__a);
 }
 
-/// \brief Moves single-precision floating point values from a 256-bit vector
+/// Moves single-precision floating point values from a 256-bit vector
 ///    of [8 x float] to a 32-byte aligned memory location. To minimize
 ///    caching, the data is flagged as non-temporal (unlikely to be used again
 ///    soon).
@@ -3636,7 +3557,7 @@ _mm256_stream_ps(float *__p, __m256 __a)
 }
 
 /* Create vectors */
-/// \brief Create a 256-bit vector of [4 x double] with undefined values.
+/// Create a 256-bit vector of [4 x double] with undefined values.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -3649,7 +3570,7 @@ _mm256_undefined_pd(void)
   return (__m256d)__builtin_ia32_undef256();
 }
 
-/// \brief Create a 256-bit vector of [8 x float] with undefined values.
+/// Create a 256-bit vector of [8 x float] with undefined values.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -3662,7 +3583,7 @@ _mm256_undefined_ps(void)
   return (__m256)__builtin_ia32_undef256();
 }
 
-/// \brief Create a 256-bit integer vector with undefined values.
+/// Create a 256-bit integer vector with undefined values.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -3675,7 +3596,7 @@ _mm256_undefined_si256(void)
   return (__m256i)__builtin_ia32_undef256();
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [4 x double]
+/// Constructs a 256-bit floating-point vector of [4 x double]
 ///    initialized with the specified double-precision floating-point values.
 ///
 /// \headerfile <x86intrin.h>
@@ -3699,10 +3620,10 @@ _mm256_undefined_si256(void)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_set_pd(double __a, double __b, double __c, double __d)
 {
-  return (__m256d){ __d, __c, __b, __a };
+  return __extension__ (__m256d){ __d, __c, __b, __a };
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float] initialized
+/// Constructs a 256-bit floating-point vector of [8 x float] initialized
 ///    with the specified single-precision floating-point values.
 ///
 /// \headerfile <x86intrin.h>
@@ -3739,10 +3660,10 @@ static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_set_ps(float __a, float __b, float __c, float __d,
               float __e, float __f, float __g, float __h)
 {
-  return (__m256){ __h, __g, __f, __e, __d, __c, __b, __a };
+  return __extension__ (__m256){ __h, __g, __f, __e, __d, __c, __b, __a };
 }
 
-/// \brief Constructs a 256-bit integer vector initialized with the specified
+/// Constructs a 256-bit integer vector initialized with the specified
 ///    32-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -3771,10 +3692,10 @@ static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set_epi32(int __i0, int __i1, int __i2, int __i3,
                  int __i4, int __i5, int __i6, int __i7)
 {
-  return (__m256i)(__v8si){ __i7, __i6, __i5, __i4, __i3, __i2, __i1, __i0 };
+  return __extension__ (__m256i)(__v8si){ __i7, __i6, __i5, __i4, __i3, __i2, __i1, __i0 };
 }
 
-/// \brief Constructs a 256-bit integer vector initialized with the specified
+/// Constructs a 256-bit integer vector initialized with the specified
 ///    16-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -3821,11 +3742,11 @@ _mm256_set_epi16(short __w15, short __w14, short __w13, short __w12,
                  short __w07, short __w06, short __w05, short __w04,
                  short __w03, short __w02, short __w01, short __w00)
 {
-  return (__m256i)(__v16hi){ __w00, __w01, __w02, __w03, __w04, __w05, __w06,
+  return __extension__ (__m256i)(__v16hi){ __w00, __w01, __w02, __w03, __w04, __w05, __w06,
     __w07, __w08, __w09, __w10, __w11, __w12, __w13, __w14, __w15 };
 }
 
-/// \brief Constructs a 256-bit integer vector initialized with the specified
+/// Constructs a 256-bit integer vector initialized with the specified
 ///    8-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -3908,7 +3829,7 @@ _mm256_set_epi8(char __b31, char __b30, char __b29, char __b28,
                 char __b07, char __b06, char __b05, char __b04,
                 char __b03, char __b02, char __b01, char __b00)
 {
-  return (__m256i)(__v32qi){
+  return __extension__ (__m256i)(__v32qi){
     __b00, __b01, __b02, __b03, __b04, __b05, __b06, __b07,
     __b08, __b09, __b10, __b11, __b12, __b13, __b14, __b15,
     __b16, __b17, __b18, __b19, __b20, __b21, __b22, __b23,
@@ -3916,7 +3837,7 @@ _mm256_set_epi8(char __b31, char __b30, char __b29, char __b28,
   };
 }
 
-/// \brief Constructs a 256-bit integer vector initialized with the specified
+/// Constructs a 256-bit integer vector initialized with the specified
 ///    64-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -3936,11 +3857,11 @@ _mm256_set_epi8(char __b31, char __b30, char __b29, char __b28,
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set_epi64x(long long __a, long long __b, long long __c, long long __d)
 {
-  return (__m256i)(__v4di){ __d, __c, __b, __a };
+  return __extension__ (__m256i)(__v4di){ __d, __c, __b, __a };
 }
 
 /* Create vectors with elements in reverse order */
-/// \brief Constructs a 256-bit floating-point vector of [4 x double],
+/// Constructs a 256-bit floating-point vector of [4 x double],
 ///    initialized in reverse order with the specified double-precision
 ///    floating-point values.
 ///
@@ -3965,10 +3886,10 @@ _mm256_set_epi64x(long long __a, long long __b, long long __c, long long __d)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_setr_pd(double __a, double __b, double __c, double __d)
 {
-  return (__m256d){ __a, __b, __c, __d };
+  return _mm256_set_pd(__d, __c, __b, __a);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float],
+/// Constructs a 256-bit floating-point vector of [8 x float],
 ///    initialized in reverse order with the specified single-precision
 ///    float-point values.
 ///
@@ -4006,10 +3927,10 @@ static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_setr_ps(float __a, float __b, float __c, float __d,
                float __e, float __f, float __g, float __h)
 {
-  return (__m256){ __a, __b, __c, __d, __e, __f, __g, __h };
+  return _mm256_set_ps(__h, __g, __f, __e, __d, __c, __b, __a);
 }
 
-/// \brief Constructs a 256-bit integer vector, initialized in reverse order
+/// Constructs a 256-bit integer vector, initialized in reverse order
 ///    with the specified 32-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -4038,10 +3959,10 @@ static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_setr_epi32(int __i0, int __i1, int __i2, int __i3,
                   int __i4, int __i5, int __i6, int __i7)
 {
-  return (__m256i)(__v8si){ __i0, __i1, __i2, __i3, __i4, __i5, __i6, __i7 };
+  return _mm256_set_epi32(__i7, __i6, __i5, __i4, __i3, __i2, __i1, __i0);
 }
 
-/// \brief Constructs a 256-bit integer vector, initialized in reverse order
+/// Constructs a 256-bit integer vector, initialized in reverse order
 ///    with the specified 16-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -4088,11 +4009,13 @@ _mm256_setr_epi16(short __w15, short __w14, short __w13, short __w12,
        short __w07, short __w06, short __w05, short __w04,
        short __w03, short __w02, short __w01, short __w00)
 {
-  return (__m256i)(__v16hi){ __w15, __w14, __w13, __w12, __w11, __w10, __w09,
-    __w08, __w07, __w06, __w05, __w04, __w03, __w02, __w01, __w00 };
+  return _mm256_set_epi16(__w00, __w01, __w02, __w03,
+                          __w04, __w05, __w06, __w07,
+                          __w08, __w09, __w10, __w11,
+                          __w12, __w13, __w14, __w15);
 }
 
-/// \brief Constructs a 256-bit integer vector, initialized in reverse order
+/// Constructs a 256-bit integer vector, initialized in reverse order
 ///    with the specified 8-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -4175,14 +4098,13 @@ _mm256_setr_epi8(char __b31, char __b30, char __b29, char __b28,
                  char __b07, char __b06, char __b05, char __b04,
                  char __b03, char __b02, char __b01, char __b00)
 {
-  return (__m256i)(__v32qi){
-    __b31, __b30, __b29, __b28, __b27, __b26, __b25, __b24,
-    __b23, __b22, __b21, __b20, __b19, __b18, __b17, __b16,
-    __b15, __b14, __b13, __b12, __b11, __b10, __b09, __b08,
-    __b07, __b06, __b05, __b04, __b03, __b02, __b01, __b00 };
+  return _mm256_set_epi8(__b00, __b01, __b02, __b03, __b04, __b05, __b06, __b07,
+                         __b08, __b09, __b10, __b11, __b12, __b13, __b14, __b15,
+                         __b16, __b17, __b18, __b19, __b20, __b21, __b22, __b23,
+                         __b24, __b25, __b26, __b27, __b28, __b29, __b30, __b31);
 }
 
-/// \brief Constructs a 256-bit integer vector, initialized in reverse order
+/// Constructs a 256-bit integer vector, initialized in reverse order
 ///    with the specified 64-bit integral values.
 ///
 /// \headerfile <x86intrin.h>
@@ -4202,11 +4124,11 @@ _mm256_setr_epi8(char __b31, char __b30, char __b29, char __b28,
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_setr_epi64x(long long __a, long long __b, long long __c, long long __d)
 {
-  return (__m256i)(__v4di){ __a, __b, __c, __d };
+  return _mm256_set_epi64x(__d, __c, __b, __a);
 }
 
 /* Create vectors with repeated elements */
-/// \brief Constructs a 256-bit floating-point vector of [4 x double], with each
+/// Constructs a 256-bit floating-point vector of [4 x double], with each
 ///    of the four double-precision floating-point vector elements set to the
 ///    specified double-precision floating-point value.
 ///
@@ -4221,10 +4143,10 @@ _mm256_setr_epi64x(long long __a, long long __b, long long __c, long long __d)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_set1_pd(double __w)
 {
-  return (__m256d){ __w, __w, __w, __w };
+  return _mm256_set_pd(__w, __w, __w, __w);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float], with each
+/// Constructs a 256-bit floating-point vector of [8 x float], with each
 ///    of the eight single-precision floating-point vector elements set to the
 ///    specified single-precision floating-point value.
 ///
@@ -4240,10 +4162,10 @@ _mm256_set1_pd(double __w)
 static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_set1_ps(float __w)
 {
-  return (__m256){ __w, __w, __w, __w, __w, __w, __w, __w };
+  return _mm256_set_ps(__w, __w, __w, __w, __w, __w, __w, __w);
 }
 
-/// \brief Constructs a 256-bit integer vector of [8 x i32], with each of the
+/// Constructs a 256-bit integer vector of [8 x i32], with each of the
 ///    32-bit integral vector elements set to the specified 32-bit integral
 ///    value.
 ///
@@ -4259,10 +4181,10 @@ _mm256_set1_ps(float __w)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set1_epi32(int __i)
 {
-  return (__m256i)(__v8si){ __i, __i, __i, __i, __i, __i, __i, __i };
+  return _mm256_set_epi32(__i, __i, __i, __i, __i, __i, __i, __i);
 }
 
-/// \brief Constructs a 256-bit integer vector of [16 x i16], with each of the
+/// Constructs a 256-bit integer vector of [16 x i16], with each of the
 ///    16-bit integral vector elements set to the specified 16-bit integral
 ///    value.
 ///
@@ -4277,11 +4199,11 @@ _mm256_set1_epi32(int __i)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set1_epi16(short __w)
 {
-  return (__m256i)(__v16hi){ __w, __w, __w, __w, __w, __w, __w, __w, __w, __w,
-    __w, __w, __w, __w, __w, __w };
+  return _mm256_set_epi16(__w, __w, __w, __w, __w, __w, __w, __w,
+                          __w, __w, __w, __w, __w, __w, __w, __w);
 }
 
-/// \brief Constructs a 256-bit integer vector of [32 x i8], with each of the
+/// Constructs a 256-bit integer vector of [32 x i8], with each of the
 ///    8-bit integral vector elements set to the specified 8-bit integral value.
 ///
 /// \headerfile <x86intrin.h>
@@ -4295,12 +4217,13 @@ _mm256_set1_epi16(short __w)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set1_epi8(char __b)
 {
-  return (__m256i)(__v32qi){ __b, __b, __b, __b, __b, __b, __b, __b, __b, __b,
-    __b, __b, __b, __b, __b, __b, __b, __b, __b, __b, __b, __b, __b, __b, __b,
-    __b, __b, __b, __b, __b, __b, __b };
+  return _mm256_set_epi8(__b, __b, __b, __b, __b, __b, __b, __b,
+                         __b, __b, __b, __b, __b, __b, __b, __b,
+                         __b, __b, __b, __b, __b, __b, __b, __b,
+                         __b, __b, __b, __b, __b, __b, __b, __b);
 }
 
-/// \brief Constructs a 256-bit integer vector of [4 x i64], with each of the
+/// Constructs a 256-bit integer vector of [4 x i64], with each of the
 ///    64-bit integral vector elements set to the specified 64-bit integral
 ///    value.
 ///
@@ -4315,11 +4238,11 @@ _mm256_set1_epi8(char __b)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set1_epi64x(long long __q)
 {
-  return (__m256i)(__v4di){ __q, __q, __q, __q };
+  return _mm256_set_epi64x(__q, __q, __q, __q);
 }
 
 /* Create __zeroed vectors */
-/// \brief Constructs a 256-bit floating-point vector of [4 x double] with all
+/// Constructs a 256-bit floating-point vector of [4 x double] with all
 ///    vector elements initialized to zero.
 ///
 /// \headerfile <x86intrin.h>
@@ -4330,10 +4253,10 @@ _mm256_set1_epi64x(long long __q)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_setzero_pd(void)
 {
-  return (__m256d){ 0, 0, 0, 0 };
+  return __extension__ (__m256d){ 0, 0, 0, 0 };
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float] with all
+/// Constructs a 256-bit floating-point vector of [8 x float] with all
 ///    vector elements initialized to zero.
 ///
 /// \headerfile <x86intrin.h>
@@ -4344,10 +4267,10 @@ _mm256_setzero_pd(void)
 static __inline __m256 __DEFAULT_FN_ATTRS
 _mm256_setzero_ps(void)
 {
-  return (__m256){ 0, 0, 0, 0, 0, 0, 0, 0 };
+  return __extension__ (__m256){ 0, 0, 0, 0, 0, 0, 0, 0 };
 }
 
-/// \brief Constructs a 256-bit integer vector initialized to zero.
+/// Constructs a 256-bit integer vector initialized to zero.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -4357,11 +4280,11 @@ _mm256_setzero_ps(void)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_setzero_si256(void)
 {
-  return (__m256i){ 0LL, 0LL, 0LL, 0LL };
+  return __extension__ (__m256i)(__v4di){ 0, 0, 0, 0 };
 }
 
 /* Cast between vector types */
-/// \brief Casts a 256-bit floating-point vector of [4 x double] into a 256-bit
+/// Casts a 256-bit floating-point vector of [4 x double] into a 256-bit
 ///    floating-point vector of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -4378,7 +4301,7 @@ _mm256_castpd_ps(__m256d __a)
   return (__m256)__a;
 }
 
-/// \brief Casts a 256-bit floating-point vector of [4 x double] into a 256-bit
+/// Casts a 256-bit floating-point vector of [4 x double] into a 256-bit
 ///    integer vector.
 ///
 /// \headerfile <x86intrin.h>
@@ -4395,7 +4318,7 @@ _mm256_castpd_si256(__m256d __a)
   return (__m256i)__a;
 }
 
-/// \brief Casts a 256-bit floating-point vector of [8 x float] into a 256-bit
+/// Casts a 256-bit floating-point vector of [8 x float] into a 256-bit
 ///    floating-point vector of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -4412,7 +4335,7 @@ _mm256_castps_pd(__m256 __a)
   return (__m256d)__a;
 }
 
-/// \brief Casts a 256-bit floating-point vector of [8 x float] into a 256-bit
+/// Casts a 256-bit floating-point vector of [8 x float] into a 256-bit
 ///    integer vector.
 ///
 /// \headerfile <x86intrin.h>
@@ -4429,7 +4352,7 @@ _mm256_castps_si256(__m256 __a)
   return (__m256i)__a;
 }
 
-/// \brief Casts a 256-bit integer vector into a 256-bit floating-point vector
+/// Casts a 256-bit integer vector into a 256-bit floating-point vector
 ///    of [8 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -4446,7 +4369,7 @@ _mm256_castsi256_ps(__m256i __a)
   return (__m256)__a;
 }
 
-/// \brief Casts a 256-bit integer vector into a 256-bit floating-point vector
+/// Casts a 256-bit integer vector into a 256-bit floating-point vector
 ///    of [4 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -4463,7 +4386,7 @@ _mm256_castsi256_pd(__m256i __a)
   return (__m256d)__a;
 }
 
-/// \brief Returns the lower 128 bits of a 256-bit floating-point vector of
+/// Returns the lower 128 bits of a 256-bit floating-point vector of
 ///    [4 x double] as a 128-bit floating-point vector of [2 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -4480,7 +4403,7 @@ _mm256_castpd256_pd128(__m256d __a)
   return __builtin_shufflevector((__v4df)__a, (__v4df)__a, 0, 1);
 }
 
-/// \brief Returns the lower 128 bits of a 256-bit floating-point vector of
+/// Returns the lower 128 bits of a 256-bit floating-point vector of
 ///    [8 x float] as a 128-bit floating-point vector of [4 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -4497,7 +4420,7 @@ _mm256_castps256_ps128(__m256 __a)
   return __builtin_shufflevector((__v8sf)__a, (__v8sf)__a, 0, 1, 2, 3);
 }
 
-/// \brief Truncates a 256-bit integer vector into a 128-bit integer vector.
+/// Truncates a 256-bit integer vector into a 128-bit integer vector.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -4513,7 +4436,7 @@ _mm256_castsi256_si128(__m256i __a)
   return __builtin_shufflevector((__v4di)__a, (__v4di)__a, 0, 1);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [4 x double] from a
+/// Constructs a 256-bit floating-point vector of [4 x double] from a
 ///    128-bit floating-point vector of [2 x double].
 ///
 ///    The lower 128 bits contain the value of the source vector. The contents
@@ -4534,7 +4457,7 @@ _mm256_castpd128_pd256(__m128d __a)
   return __builtin_shufflevector((__v2df)__a, (__v2df)__a, 0, 1, -1, -1);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float] from a
+/// Constructs a 256-bit floating-point vector of [8 x float] from a
 ///    128-bit floating-point vector of [4 x float].
 ///
 ///    The lower 128 bits contain the value of the source vector. The contents
@@ -4555,7 +4478,7 @@ _mm256_castps128_ps256(__m128 __a)
   return __builtin_shufflevector((__v4sf)__a, (__v4sf)__a, 0, 1, 2, 3, -1, -1, -1, -1);
 }
 
-/// \brief Constructs a 256-bit integer vector from a 128-bit integer vector.
+/// Constructs a 256-bit integer vector from a 128-bit integer vector.
 ///
 ///    The lower 128 bits contain the value of the source vector. The contents
 ///    of the upper 128 bits are undefined.
@@ -4574,7 +4497,7 @@ _mm256_castsi128_si256(__m128i __a)
   return __builtin_shufflevector((__v2di)__a, (__v2di)__a, 0, 1, -1, -1);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [4 x double] from a
+/// Constructs a 256-bit floating-point vector of [4 x double] from a
 ///    128-bit floating-point vector of [2 x double]. The lower 128 bits
 ///    contain the value of the source vector. The upper 128 bits are set
 ///    to zero.
@@ -4593,7 +4516,7 @@ _mm256_zextpd128_pd256(__m128d __a)
   return __builtin_shufflevector((__v2df)__a, (__v2df)_mm_setzero_pd(), 0, 1, 2, 3);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float] from a
+/// Constructs a 256-bit floating-point vector of [8 x float] from a
 ///    128-bit floating-point vector of [4 x float]. The lower 128 bits contain
 ///    the value of the source vector. The upper 128 bits are set to zero.
 ///
@@ -4611,7 +4534,7 @@ _mm256_zextps128_ps256(__m128 __a)
   return __builtin_shufflevector((__v4sf)__a, (__v4sf)_mm_setzero_ps(), 0, 1, 2, 3, 4, 5, 6, 7);
 }
 
-/// \brief Constructs a 256-bit integer vector from a 128-bit integer vector.
+/// Constructs a 256-bit integer vector from a 128-bit integer vector.
 ///    The lower 128 bits contain the value of the source vector. The upper
 ///    128 bits are set to zero.
 ///
@@ -4634,7 +4557,7 @@ _mm256_zextsi128_si256(__m128i __a)
    We use macros rather than inlines because we only want to accept
    invocations where the immediate M is a constant expression.
 */
-/// \brief Constructs a new 256-bit vector of [8 x float] by first duplicating
+/// Constructs a new 256-bit vector of [8 x float] by first duplicating
 ///    a 256-bit vector of [8 x float] given in the first parameter, and then
 ///    replacing either the upper or the lower 128 bits with the contents of a
 ///    128-bit vector of [4 x float] in the second parameter.
@@ -4668,20 +4591,11 @@ _mm256_zextsi128_si256(__m128i __a)
 ///    result, and bits [127:0] of \a V1 are copied to bits [127:0] of the
 ///    result.
 /// \returns A 256-bit vector of [8 x float] containing the interleaved values.
-#define _mm256_insertf128_ps(V1, V2, M) __extension__ ({ \
-  (__m256)__builtin_shufflevector( \
-    (__v8sf)(__m256)(V1), \
-    (__v8sf)_mm256_castps128_ps256((__m128)(V2)), \
-    (((M) & 1) ?  0 :  8), \
-    (((M) & 1) ?  1 :  9), \
-    (((M) & 1) ?  2 : 10), \
-    (((M) & 1) ?  3 : 11), \
-    (((M) & 1) ?  8 :  4), \
-    (((M) & 1) ?  9 :  5), \
-    (((M) & 1) ? 10 :  6), \
-    (((M) & 1) ? 11 :  7) );})
+#define _mm256_insertf128_ps(V1, V2, M) \
+  (__m256)__builtin_ia32_vinsertf128_ps256((__v8sf)(__m256)(V1), \
+                                           (__v4sf)(__m128)(V2), (int)(M))
 
-/// \brief Constructs a new 256-bit vector of [4 x double] by first duplicating
+/// Constructs a new 256-bit vector of [4 x double] by first duplicating
 ///    a 256-bit vector of [4 x double] given in the first parameter, and then
 ///    replacing either the upper or the lower 128 bits with the contents of a
 ///    128-bit vector of [2 x double] in the second parameter.
@@ -4715,16 +4629,11 @@ _mm256_zextsi128_si256(__m128i __a)
 ///    result, and bits [127:0] of \a V1 are copied to bits [127:0] of the
 ///    result.
 /// \returns A 256-bit vector of [4 x double] containing the interleaved values.
-#define _mm256_insertf128_pd(V1, V2, M) __extension__ ({ \
-  (__m256d)__builtin_shufflevector( \
-    (__v4df)(__m256d)(V1), \
-    (__v4df)_mm256_castpd128_pd256((__m128d)(V2)), \
-    (((M) & 1) ? 0 : 4), \
-    (((M) & 1) ? 1 : 5), \
-    (((M) & 1) ? 4 : 2), \
-    (((M) & 1) ? 5 : 3) );})
+#define _mm256_insertf128_pd(V1, V2, M) \
+  (__m256d)__builtin_ia32_vinsertf128_pd256((__v4df)(__m256d)(V1), \
+                                            (__v2df)(__m128d)(V2), (int)(M))
 
-/// \brief Constructs a new 256-bit integer vector by first duplicating a
+/// Constructs a new 256-bit integer vector by first duplicating a
 ///    256-bit integer vector given in the first parameter, and then replacing
 ///    either the upper or the lower 128 bits with the contents of a 128-bit
 ///    integer vector in the second parameter.
@@ -4758,21 +4667,16 @@ _mm256_zextsi128_si256(__m128i __a)
 ///    result, and bits [127:0] of \a V1 are copied to bits [127:0] of the
 ///    result.
 /// \returns A 256-bit integer vector containing the interleaved values.
-#define _mm256_insertf128_si256(V1, V2, M) __extension__ ({ \
-  (__m256i)__builtin_shufflevector( \
-    (__v4di)(__m256i)(V1), \
-    (__v4di)_mm256_castsi128_si256((__m128i)(V2)), \
-    (((M) & 1) ? 0 : 4), \
-    (((M) & 1) ? 1 : 5), \
-    (((M) & 1) ? 4 : 2), \
-    (((M) & 1) ? 5 : 3) );})
+#define _mm256_insertf128_si256(V1, V2, M) \
+  (__m256i)__builtin_ia32_vinsertf128_si256((__v8si)(__m256i)(V1), \
+                                            (__v4si)(__m128i)(V2), (int)(M))
 
 /*
    Vector extract.
    We use macros rather than inlines because we only want to accept
    invocations where the immediate M is a constant expression.
 */
-/// \brief Extracts either the upper or the lower 128 bits from a 256-bit vector
+/// Extracts either the upper or the lower 128 bits from a 256-bit vector
 ///    of [8 x float], as determined by the immediate integer parameter, and
 ///    returns the extracted bits as a 128-bit vector of [4 x float].
 ///
@@ -4793,16 +4697,10 @@ _mm256_zextsi128_si256(__m128i __a)
 ///    result. \n
 ///    If bit [0] of \a M is 1, bits [255:128] of \a V are copied to the result.
 /// \returns A 128-bit vector of [4 x float] containing the extracted bits.
-#define _mm256_extractf128_ps(V, M) __extension__ ({ \
-  (__m128)__builtin_shufflevector( \
-    (__v8sf)(__m256)(V), \
-    (__v8sf)(_mm256_undefined_ps()), \
-    (((M) & 1) ? 4 : 0), \
-    (((M) & 1) ? 5 : 1), \
-    (((M) & 1) ? 6 : 2), \
-    (((M) & 1) ? 7 : 3) );})
+#define _mm256_extractf128_ps(V, M) \
+  (__m128)__builtin_ia32_vextractf128_ps256((__v8sf)(__m256)(V), (int)(M))
 
-/// \brief Extracts either the upper or the lower 128 bits from a 256-bit vector
+/// Extracts either the upper or the lower 128 bits from a 256-bit vector
 ///    of [4 x double], as determined by the immediate integer parameter, and
 ///    returns the extracted bits as a 128-bit vector of [2 x double].
 ///
@@ -4823,14 +4721,10 @@ _mm256_zextsi128_si256(__m128i __a)
 ///    result. \n
 ///    If bit [0] of \a M is 1, bits [255:128] of \a V are copied to the result.
 /// \returns A 128-bit vector of [2 x double] containing the extracted bits.
-#define _mm256_extractf128_pd(V, M) __extension__ ({ \
-  (__m128d)__builtin_shufflevector( \
-    (__v4df)(__m256d)(V), \
-    (__v4df)(_mm256_undefined_pd()), \
-    (((M) & 1) ? 2 : 0), \
-    (((M) & 1) ? 3 : 1) );})
+#define _mm256_extractf128_pd(V, M) \
+  (__m128d)__builtin_ia32_vextractf128_pd256((__v4df)(__m256d)(V), (int)(M))
 
-/// \brief Extracts either the upper or the lower 128 bits from a 256-bit
+/// Extracts either the upper or the lower 128 bits from a 256-bit
 ///    integer vector, as determined by the immediate integer parameter, and
 ///    returns the extracted bits as a 128-bit integer vector.
 ///
@@ -4851,15 +4745,11 @@ _mm256_zextsi128_si256(__m128i __a)
 ///    result. \n
 ///    If bit [0] of \a M is 1, bits [255:128] of \a V are copied to the result.
 /// \returns A 128-bit integer vector containing the extracted bits.
-#define _mm256_extractf128_si256(V, M) __extension__ ({ \
-  (__m128i)__builtin_shufflevector( \
-    (__v4di)(__m256i)(V), \
-    (__v4di)(_mm256_undefined_si256()), \
-    (((M) & 1) ? 2 : 0), \
-    (((M) & 1) ? 3 : 1) );})
+#define _mm256_extractf128_si256(V, M) \
+  (__m128i)__builtin_ia32_vextractf128_si256((__v8si)(__m256i)(V), (int)(M))
 
 /* SIMD load ops (unaligned) */
-/// \brief Loads two 128-bit floating-point vectors of [4 x float] from
+/// Loads two 128-bit floating-point vectors of [4 x float] from
 ///    unaligned memory locations and constructs a 256-bit floating-point vector
 ///    of [8 x float] by concatenating the two 128-bit vectors.
 ///
@@ -4887,7 +4777,7 @@ _mm256_loadu2_m128(float const *__addr_hi, float const *__addr_lo)
   return _mm256_insertf128_ps(__v256, _mm_loadu_ps(__addr_hi), 1);
 }
 
-/// \brief Loads two 128-bit floating-point vectors of [2 x double] from
+/// Loads two 128-bit floating-point vectors of [2 x double] from
 ///    unaligned memory locations and constructs a 256-bit floating-point vector
 ///    of [4 x double] by concatenating the two 128-bit vectors.
 ///
@@ -4915,7 +4805,7 @@ _mm256_loadu2_m128d(double const *__addr_hi, double const *__addr_lo)
   return _mm256_insertf128_pd(__v256, _mm_loadu_pd(__addr_hi), 1);
 }
 
-/// \brief Loads two 128-bit integer vectors from unaligned memory locations and
+/// Loads two 128-bit integer vectors from unaligned memory locations and
 ///    constructs a 256-bit integer vector by concatenating the two 128-bit
 ///    vectors.
 ///
@@ -4934,14 +4824,14 @@ _mm256_loadu2_m128d(double const *__addr_hi, double const *__addr_lo)
 ///    address of the memory location does not have to be aligned.
 /// \returns A 256-bit integer vector containing the concatenated result.
 static __inline __m256i __DEFAULT_FN_ATTRS
-_mm256_loadu2_m128i(__m128i const *__addr_hi, __m128i const *__addr_lo)
+_mm256_loadu2_m128i(__m128i_u const *__addr_hi, __m128i_u const *__addr_lo)
 {
   __m256i __v256 = _mm256_castsi128_si256(_mm_loadu_si128(__addr_lo));
   return _mm256_insertf128_si256(__v256, _mm_loadu_si128(__addr_hi), 1);
 }
 
 /* SIMD store ops (unaligned) */
-/// \brief Stores the upper and lower 128 bits of a 256-bit floating-point
+/// Stores the upper and lower 128 bits of a 256-bit floating-point
 ///    vector of [8 x float] into two different unaligned memory locations.
 ///
 /// \headerfile <x86intrin.h>
@@ -4970,7 +4860,7 @@ _mm256_storeu2_m128(float *__addr_hi, float *__addr_lo, __m256 __a)
   _mm_storeu_ps(__addr_hi, __v128);
 }
 
-/// \brief Stores the upper and lower 128 bits of a 256-bit floating-point
+/// Stores the upper and lower 128 bits of a 256-bit floating-point
 ///    vector of [4 x double] into two different unaligned memory locations.
 ///
 /// \headerfile <x86intrin.h>
@@ -4999,7 +4889,7 @@ _mm256_storeu2_m128d(double *__addr_hi, double *__addr_lo, __m256d __a)
   _mm_storeu_pd(__addr_hi, __v128);
 }
 
-/// \brief Stores the upper and lower 128 bits of a 256-bit integer vector into
+/// Stores the upper and lower 128 bits of a 256-bit integer vector into
 ///    two different unaligned memory locations.
 ///
 /// \headerfile <x86intrin.h>
@@ -5018,7 +4908,7 @@ _mm256_storeu2_m128d(double *__addr_hi, double *__addr_lo, __m256d __a)
 /// \param __a
 ///    A 256-bit integer vector.
 static __inline void __DEFAULT_FN_ATTRS
-_mm256_storeu2_m128i(__m128i *__addr_hi, __m128i *__addr_lo, __m256i __a)
+_mm256_storeu2_m128i(__m128i_u *__addr_hi, __m128i_u *__addr_lo, __m256i __a)
 {
   __m128i __v128;
 
@@ -5028,7 +4918,7 @@ _mm256_storeu2_m128i(__m128i *__addr_hi, __m128i *__addr_lo, __m256i __a)
   _mm_storeu_si128(__addr_hi, __v128);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float] by
+/// Constructs a 256-bit floating-point vector of [8 x float] by
 ///    concatenating two 128-bit floating-point vectors of [4 x float].
 ///
 /// \headerfile <x86intrin.h>
@@ -5049,7 +4939,7 @@ _mm256_set_m128 (__m128 __hi, __m128 __lo)
   return (__m256) __builtin_shufflevector((__v4sf)__lo, (__v4sf)__hi, 0, 1, 2, 3, 4, 5, 6, 7);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [4 x double] by
+/// Constructs a 256-bit floating-point vector of [4 x double] by
 ///    concatenating two 128-bit floating-point vectors of [2 x double].
 ///
 /// \headerfile <x86intrin.h>
@@ -5067,10 +4957,10 @@ _mm256_set_m128 (__m128 __hi, __m128 __lo)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_set_m128d (__m128d __hi, __m128d __lo)
 {
-  return (__m256d)_mm256_set_m128((__m128)__hi, (__m128)__lo);
+  return (__m256d) __builtin_shufflevector((__v2df)__lo, (__v2df)__hi, 0, 1, 2, 3);
 }
 
-/// \brief Constructs a 256-bit integer vector by concatenating two 128-bit
+/// Constructs a 256-bit integer vector by concatenating two 128-bit
 ///    integer vectors.
 ///
 /// \headerfile <x86intrin.h>
@@ -5087,10 +4977,10 @@ _mm256_set_m128d (__m128d __hi, __m128d __lo)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_set_m128i (__m128i __hi, __m128i __lo)
 {
-  return (__m256i)_mm256_set_m128((__m128)__hi, (__m128)__lo);
+  return (__m256i) __builtin_shufflevector((__v2di)__lo, (__v2di)__hi, 0, 1, 2, 3);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [8 x float] by
+/// Constructs a 256-bit floating-point vector of [8 x float] by
 ///    concatenating two 128-bit floating-point vectors of [4 x float]. This is
 ///    similar to _mm256_set_m128, but the order of the input parameters is
 ///    swapped.
@@ -5113,7 +5003,7 @@ _mm256_setr_m128 (__m128 __lo, __m128 __hi)
   return _mm256_set_m128(__hi, __lo);
 }
 
-/// \brief Constructs a 256-bit floating-point vector of [4 x double] by
+/// Constructs a 256-bit floating-point vector of [4 x double] by
 ///    concatenating two 128-bit floating-point vectors of [2 x double]. This is
 ///    similar to _mm256_set_m128d, but the order of the input parameters is
 ///    swapped.
@@ -5133,10 +5023,10 @@ _mm256_setr_m128 (__m128 __lo, __m128 __hi)
 static __inline __m256d __DEFAULT_FN_ATTRS
 _mm256_setr_m128d (__m128d __lo, __m128d __hi)
 {
-  return (__m256d)_mm256_set_m128((__m128)__hi, (__m128)__lo);
+  return (__m256d)_mm256_set_m128d(__hi, __lo);
 }
 
-/// \brief Constructs a 256-bit integer vector by concatenating two 128-bit
+/// Constructs a 256-bit integer vector by concatenating two 128-bit
 ///    integer vectors. This is similar to _mm256_set_m128i, but the order of
 ///    the input parameters is swapped.
 ///
@@ -5154,9 +5044,10 @@ _mm256_setr_m128d (__m128d __lo, __m128d __hi)
 static __inline __m256i __DEFAULT_FN_ATTRS
 _mm256_setr_m128i (__m128i __lo, __m128i __hi)
 {
-  return (__m256i)_mm256_set_m128((__m128)__hi, (__m128)__lo);
+  return (__m256i)_mm256_set_m128i(__hi, __lo);
 }
 
 #undef __DEFAULT_FN_ATTRS
+#undef __DEFAULT_FN_ATTRS128
 
 #endif /* __AVXINTRIN_H */

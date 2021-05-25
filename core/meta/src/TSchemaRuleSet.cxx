@@ -7,7 +7,8 @@
 #include "TObjString.h"
 #include "TClass.h"
 #include "TROOT.h"
-#include "Riostream.h"
+#include "TBuffer.h"
+#include <iostream>
 
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
@@ -112,7 +113,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    bool streamerInfosTest;
    {
      R__LOCKGUARD(gInterpreterMutex);
-     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
+     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->IsEmpty());
    }
    if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
       TObjArrayIter titer( rule->GetTarget() );
@@ -229,8 +230,8 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
             }
          }
       }
-   } else if (!strncmp(fClass->GetName(),"std::pair<",10) || !strncmp(fClass->GetName(),"pair<",5)) {
-      if (!strncmp(source,"std::pair<",10) || !strncmp(source,"pair<",5)) {
+   } else if (TClassEdit::IsStdPair(fClass->GetName())) {
+      if (TClassEdit::IsStdPair(source)) {
          // std::pair can be converted into each other if both its parameter can be converted into
          // each other.
          TClass *src = TClass::GetClass(source);
@@ -494,7 +495,7 @@ Bool_t TSchemaRuleSet::TMatches::HasRuleWithSource( const TString& name, Bool_t 
       if( rule->HasSource( name ) ) {
          if (needingAlloc) {
             const TObjArray *targets = rule->GetTarget();
-            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+            if (targets && (targets->GetEntriesFast() > 1 || targets->IsEmpty()) ) {
                return kTRUE;
             }
             if (targets && name != targets->UncheckedAt(0)->GetName() ) {
@@ -524,11 +525,11 @@ Bool_t TSchemaRuleSet::TMatches::HasRuleWithTarget( const TString& name, Bool_t 
       if( rule->HasTarget( name ) ) {
          if (willset) {
             const TObjArray *targets = rule->GetTarget();
-            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+            if (targets && (targets->GetEntriesFast() > 1 || targets->IsEmpty()) ) {
                return kTRUE;
             }
             const TObjArray *sources = rule->GetSource();
-            if (sources && (sources->GetEntries() > 1 || sources->GetEntries()==0) ) {
+            if (sources && (sources->GetEntriesFast() > 1 || sources->IsEmpty()) ) {
                return kTRUE;
             }
             if (sources && name != sources->UncheckedAt(0)->GetName() ) {

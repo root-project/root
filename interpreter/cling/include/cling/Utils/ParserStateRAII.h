@@ -36,16 +36,19 @@ namespace cling {
     bool OldSuppressAllDiagnostics;
     bool OldPPSuppressAllDiagnostics;
     bool OldSpellChecking;
+    clang::Token OldTok;
     clang::SourceLocation OldPrevTokLocation;
     unsigned short OldParenCount, OldBracketCount, OldBraceCount;
     unsigned OldTemplateParameterDepth;
     bool OldInNonInstantiationSFINAEContext;
     bool SkipToEOF;
+    clang::EnterExpressionEvaluationContext ResetExprEvalCtx;
 
   public:
     ParserStateRAII(clang::Parser& p, bool skipToEOF);
     ~ParserStateRAII();
 
+    void SetSkipToEOF(bool newvalue) { SkipToEOF = newvalue; }
 };
 
 } // end namespace cling

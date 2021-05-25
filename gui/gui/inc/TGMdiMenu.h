@@ -33,13 +33,6 @@
 #ifndef ROOT_TGMdiMenu
 #define ROOT_TGMdiMenu
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMenu.                                                           //
-//                                                                      //
-// This file contains the TGMdiMenuBar class.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGMenu.h"
 #include "TGFrame.h"
@@ -55,10 +48,10 @@ class TGMdiMenuBar : public TGCompositeFrame {
 friend class TGMdiMainFrame;
 
 protected:
-   TGCompositeFrame   *fLeft, *fRight;          // left and right parts of MDI menu bar
-   TGMenuBar          *fBar;                    // standard menu bar
-   TGLayoutHints      *fLHint, *fLeftHint;      // left layout hints
-   TGLayoutHints      *fRightHint, *fBarHint;   // right layout hints
+   TGCompositeFrame   *fLeft, *fRight;          ///< left and right parts of MDI menu bar
+   TGMenuBar          *fBar;                    ///< standard menu bar
+   TGLayoutHints      *fLHint, *fLeftHint;      ///< left layout hints
+   TGLayoutHints      *fRightHint, *fBarHint;   ///< right layout hints
 
    void AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
    void RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);

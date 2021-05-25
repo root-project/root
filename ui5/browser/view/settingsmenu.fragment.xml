@@ -1,0 +1,81 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+  <ViewSettingsDialog confirm="handleSeetingsConfirm">
+    <customTabs>
+      <ViewSettingsCustomTab id="drawing-options" icon="sap-icon://signature" text="Drawing options" title="Drawing options" tooltip="Drawing options">
+        <content>
+          <Panel>
+            <content>
+              <f:Form editable="true">
+                <f:layout>
+                  <f:ResponsiveGridLayout
+                          labelSpanS="3"
+                          emptySpanS="0"
+                          singleContainerFullSize="false" />
+                </f:layout>
+                <f:formContainers>
+                  <f:FormContainer>
+                    <f:formElements>
+                      <f:FormElement label="TH1">
+                        <f:fields>
+                          <ComboBox
+                                id="do-TH1"
+                                items="{ path: '/TH1' }"
+                                selectedKey="hist"
+                                change="handleSettingsChange">
+                          <core:Item text="{name}" key="{name}"/>
+                        </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                      <f:FormElement label="TH2">
+                        <f:fields>
+                          <ComboBox
+                                  id="do-TH2"
+                                  items="{ path: '/TH2' }"
+                                  selectedKey="COL"
+                                  change="handleSettingsChange">
+                            <core:Item text="{name}" key="{name}"/>
+                          </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                      <f:FormElement label="TProfile">
+                        <f:fields>
+                          <ComboBox
+                                  id="do-TProfile"
+                                  items="{ path: '/TProfile' }"
+                                  selectedKey="E0"
+                                  change="handleSettingsChange">
+                            <core:Item text="{name}" key="{name}"/>
+                          </ComboBox>
+                        </f:fields>
+                      </f:FormElement>
+                    </f:formElements>
+                  </f:FormContainer>
+                </f:formContainers>
+              </f:Form>
+            </content>
+          </Panel>
+        </content>
+      </ViewSettingsCustomTab>
+      <ViewSettingsCustomTab icon="sap-icon://action-settings" >
+        <content>
+          <VBox>
+            <HBox alignItems="Center">
+               <Label text="Sorting" wrapping="true" labelFor="sortMethodsCombo"/>
+               <ComboBox id="sortMethodsCombo" items="{ path: '/SortMethods' }" selectedKey="{/SortMethod}">
+                   <core:Item text="{name}" key="{value}"/>
+               </ComboBox>
+            </HBox>
+            <CheckBox text="Reverse order" selected="{/ReverseOrder}" />
+            <CheckBox text="Show hidden files" selected="{/ShowHiddenFiles}" />
+            <CheckBox text="Double click to run macro" selected="{/DBLCLKRun}" />
+          </VBox>
+        </content>
+      </ViewSettingsCustomTab>
+      <ViewSettingsCustomTab icon="sap-icon://add-equipment" >
+        <content>
+          <Text text="Other setting tab, that you can implement" />
+        </content>
+      </ViewSettingsCustomTab>
+    </customTabs>
+  </ViewSettingsDialog>
+</core:FragmentDefinition>

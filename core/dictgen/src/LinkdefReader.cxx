@@ -736,13 +736,13 @@ public:
    }
 
    void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
+                     clang::PragmaIntroducer Introducer,
                      clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
-      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (Introducer.Kind != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "extra_include") return;
 
@@ -785,13 +785,13 @@ public:
    }
 
    void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
+                     clang::PragmaIntroducer Introducer,
                      clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
-      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (Introducer.Kind != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "read") return;
 
@@ -844,13 +844,13 @@ public:
    }
 
    void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
+                     clang::PragmaIntroducer Introducer,
                      clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
-      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (Introducer.Kind != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "link") return;
 
@@ -949,13 +949,13 @@ public:
    }
 
    void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
+                     clang::PragmaIntroducer Introducer,
                      clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
-      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (Introducer.Kind != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "create") return;
 
@@ -1014,7 +1014,8 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    // Extract all #pragmas
    std::unique_ptr<llvm::MemoryBuffer> memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CLING #pragma extraction");
    clang::CompilerInstance *pragmaCI = cling::CIFactory::createCI(std::move(memBuf), parserArgsC.size(),
-                                                                  &parserArgsC[0], llvmdir, nullptr, true /*OnlyLex*/);
+                                                                  &parserArgsC[0], llvmdir, nullptr /*Consumer*/,
+                                                                  {} /*ModuleFileExtension*/, true /*OnlyLex*/);
 
    clang::Preprocessor &PP = pragmaCI->getPreprocessor();
    clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();
@@ -1038,5 +1039,5 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    } while (tok.isNot(clang::tok::eof));
 
    fSelectionRules = 0;
-   return true;
+   return 0 == DClient.getNumErrors();
 }

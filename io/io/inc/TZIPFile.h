@@ -128,8 +128,8 @@ protected:
       kDEFLATED            = 8             ///< Stored using deflate
    };
 
-   TZIPFile(const TZIPFile&); // Not implemented
-   TZIPFile& operator=(const TZIPFile&); // Not implemented
+   TZIPFile(const TZIPFile&) = delete; // Not implemented
+   TZIPFile& operator=(const TZIPFile&) = delete; // Not implemented
 
 public:
    TZIPFile();

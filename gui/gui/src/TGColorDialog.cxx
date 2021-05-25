@@ -21,29 +21,42 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGColorPalette, TGColorPick and TGColorDialog.                       //
-//                                                                      //
-// The TGColorPalette is a widget showing an matrix of color cells. The //
-// colors can be set and selected.                                      //
-//                                                                      //
-// The TGColorPick is a widget which allows a color to be picked from   //
-// HLS space. It consists of two elements: a color map window from      //
-// where the user can select the hue and saturation level of a color,   //
-// and a slider to select color's lightness.                            //
-//                                                                      //
-// Selecting a color in these two widgets will generate the event:      //
-// kC_COLORSEL, kCOL_CLICK, widget id, 0.                               //
-// and the signal:                                                      //
-// ColorSelected(Pixel_t color)                                         //
-//                                                                      //
-// The TGColorDialog presents a full featured color selection dialog.   //
-// It uses 2 TGColorPalette's and the TGColorPick widgets.              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+/** \class TGColorPalette
+    \ingroup guiwidgets
+
+A widget showing an matrix of color cells. The colors can be set and selected.
+
+*/
+
+
+/** \class The TGColorPick
+    \ingroup guiwidgets
+
+A widget which allows a color to be picked from HLS color space.
+It consists of two elements: a color map window from
+where the user can select the hue and saturation level of a color,
+and a slider to select color's lightness.
+
+Selecting a color in these two widgets will generate the event:
+  - kC_COLORSEL, kCOL_CLICK, widget id, 0.
+
+and the signal:
+  - ColorSelected(Pixel_t color)
+
+*/
+
+
+/** \class TGColorDialog
+    \ingroup guiwidgets
+
+A full featured color selection dialog.
+It uses 2 TGColorPalette's and the TGColorPick widgets.
+
+*/
+
+
+#include <cstdlib>
 
 #include "TGLabel.h"
 #include "TGMsgBox.h"         // for ID_OK, ID_CANCEL
@@ -62,6 +75,8 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TVirtualX.h"
+#include "snprintf.h"
 
 ClassImp(TGColorPalette);
 ClassImp(TGColorPick);
@@ -1381,7 +1396,7 @@ void TGColorDialog::CloseWindow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Upadate Opacity text entry with alpha value of color c.
+/// Update Opacity text entry with alpha value of color c.
 
 void TGColorDialog::UpdateAlpha(ULong_t *c)
 {

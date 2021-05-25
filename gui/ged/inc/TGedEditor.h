@@ -2,7 +2,7 @@
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,16 +12,6 @@
 #ifndef ROOT_TGedEditor
 #define ROOT_TGedEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedEditor                                                           //
-//                                                                      //
-// Editor is a composite frame that contains GUI for editting objects   //
-// in a canvas. It looks for the class ROOT_classname + 'Editor'.       //
-//                                                                      //
-// It connects to a Canvas and listens for selected objects             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TVirtualPadEditor.h"
@@ -35,32 +25,31 @@ class TGTabElement;
 class TVirtualPad;
 class TGedFrame;
 class TGedNameFrame;
-
 class TGedTabInfo;
 
 class TGedEditor : public TVirtualPadEditor, public TGMainFrame
 {
 private:
-   TGedEditor(const TGedEditor&);            // Not implemented
-   TGedEditor& operator=(const TGedEditor&); // Not implemented
+   TGedEditor(const TGedEditor&) = delete;
+   TGedEditor& operator=(const TGedEditor&) = delete;
 
 protected:
-   TMap              fFrameMap;         //global map of available frames
-   TMap              fExclMap;          //map of excluded editors for selected model
-   TList             fGedFrames;        //list visible of frames
+   TMap              fFrameMap;         ///< global map of available frames
+   TMap              fExclMap;          ///< map of excluded editors for selected model
+   TList             fGedFrames;        ///< list visible of frames
 
-   TGCanvas         *fCan;              //provides scroll bars
-   TGTab            *fTab;              //tab widget holding the editor
+   TGCanvas         *fCan;              ///< provides scroll bars
+   TGTab            *fTab;              ///< tab widget holding the editor
 
-   TList             fCreatedTabs;      //list of created tabs
-   TList             fVisibleTabs;      //list ofcurrently used tabs
-   TGCompositeFrame *fTabContainer;     //main tab container
+   TList             fCreatedTabs;      ///< list of created tabs
+   TList             fVisibleTabs;      ///< list ofcurrently used tabs
+   TGCompositeFrame *fTabContainer;     ///< main tab container
 
-   TObject          *fModel;            //selected object
-   TVirtualPad      *fPad;              //selected pad
-   TCanvas          *fCanvas;           //canvas related to the editor
-   TClass           *fClass;            //class of the selected object
-   Bool_t            fGlobal;           //true if editor is global
+   TObject          *fModel;            ///< selected object
+   TVirtualPad      *fPad;              ///< selected pad
+   TCanvas          *fCanvas;           ///< canvas related to the editor
+   TClass           *fClass;            ///< class of the selected object
+   Bool_t            fGlobal;           ///< true if editor is global
 
    void              ConfigureGedFrames(Bool_t objChaged);
 
@@ -69,7 +58,7 @@ protected:
    static TGedEditor *fgFrameCreator;
 
 public:
-   TGedEditor(TCanvas* canvas = 0, UInt_t width = 175, UInt_t height = 20);
+   TGedEditor(TCanvas* canvas = nullptr, UInt_t width = 175, UInt_t height = 20);
    virtual ~TGedEditor();
 
    void          PrintFrameStat();

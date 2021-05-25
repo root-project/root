@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,14 +12,6 @@
 #ifndef ROOT_TGStatusBar
 #define ROOT_TGStatusBar
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGStatusBar                                                          //
-//                                                                      //
-// Provides a StatusBar widget.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -31,16 +23,16 @@ class TGStatusBar : public TGHorizontalFrame {
 friend class TGStatusBarPart;
 
 private:
-   TGStatusBar(const TGStatusBar&);            // not implemented
-   TGStatusBar& operator=(const TGStatusBar&); // not implemented
+   TGStatusBar(const TGStatusBar&) = delete;
+   TGStatusBar& operator=(const TGStatusBar&) = delete;
 
 protected:
-   TGStatusBarPart **fStatusPart; // frames containing statusbar text
-   Int_t            *fParts;      // size of parts (in percent of total width)
-   Int_t             fNpart;      // number of parts
-   Int_t             fYt;         // y drawing position (depending on font)
-   Int_t            *fXt;         // x position for each part
-   Bool_t            f3DCorner;   // draw 3D corner (drawn by default)
+   TGStatusBarPart **fStatusPart; ///< frames containing statusbar text
+   Int_t            *fParts;      ///< size of parts (in percent of total width)
+   Int_t             fNpart;      ///< number of parts
+   Int_t             fYt;         ///< y drawing position (depending on font)
+   Int_t            *fXt;         ///< x position for each part
+   Bool_t            f3DCorner;   ///< draw 3D corner (drawn by default)
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -51,7 +43,7 @@ protected:
    static const TGGC   &GetDefaultGC();
 
 public:
-   TGStatusBar(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
+   TGStatusBar(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 2,
                UInt_t options = kSunkenFrame | kHorizontalFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGStatusBar();

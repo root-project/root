@@ -1,16 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #502
-##
-## Creating and writing a workspace
+## Organization and simultaneous fits: creating and writing a workspace
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -30,12 +26,12 @@ sigma2 = ROOT.RooRealVar("sigma2", "width of gaussians", 1)
 sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
-# Build Chebychev polynomial p.d.f.
+# Build Chebychev polynomial pdf
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
 bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
-# Sum the signal components into a composite signal p.d.f.
+# Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar(
     "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
 sig = ROOT.RooAddPdf(
@@ -56,10 +52,10 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 w = ROOT.RooWorkspace("w", "workspace")
 
 # Import model and all its components into the workspace
-getattr(w, 'import')(model)
+w.Import(model)
 
 # Import data into the workspace
-getattr(w, 'import')(data)
+w.Import(data)
 
 # Print workspace contents
 w.Print()
@@ -70,5 +66,3 @@ w.Print()
 # Save the workspace into a ROOT file
 w.writeToFile("rf502_workspace.root")
 
-# Workspace will remain in memory after macro finishes
-ROOT.gDirectory.Add(w)

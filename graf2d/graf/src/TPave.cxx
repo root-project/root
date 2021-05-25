@@ -9,8 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TPave.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
@@ -119,14 +120,25 @@ TPave::TPave(const TPave &pave) : TBox(pave)
    fInit         = 0;
    fShadowColor  = 0;
 
-   ((TPave&)pave).TPave::Copy(*this);
+   pave.TPave::Copy(*this);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
+TPave &TPave::operator=(const TPave &src)
+{
+   src.TPave::Copy(*this);
+   return *this;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pave coordinates from NDC to Pad coordinates.
 
 void TPave::ConvertNDCtoPad()
 {
+   if (!gPad) return;
    Double_t dpx  = gPad->GetX2() - gPad->GetX1();
    Double_t dpy  = gPad->GetY2() - gPad->GetY1();
    Double_t xp1  = gPad->GetX1();
@@ -301,6 +313,7 @@ void TPave::Paint(Option_t *option)
 void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       Int_t bordersize ,Option_t *option)
 {
+   if (!gPad) return;
    Double_t x[7],y[7];
    TString opt = option;
    opt.ToLower();
@@ -399,6 +412,7 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                       Int_t, Option_t *option)
 {
+   if (!gPad) return;
    const Int_t kNPARC = 10;
    Double_t x[4*kNPARC+10],   y[4*kNPARC+10];
    Double_t px[4*kNPARC+10], py[4*kNPARC+10];

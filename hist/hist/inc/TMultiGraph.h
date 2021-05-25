@@ -23,23 +23,24 @@
 
 #include "TNamed.h"
 
-#include "TF1.h"
+#include "TCollection.h"
 
 class TH1F;
 class TAxis;
 class TBrowser;
 class TGraph;
+class TF1;
 
 #include "TFitResultPtr.h"
 
 class TMultiGraph : public TNamed {
 
 protected:
-   TList      *fGraphs;     //Pointer to list of TGraphs
-   TList      *fFunctions;  //Pointer to list of functions (fits and user)
-   TH1F       *fHistogram;  //Pointer to histogram used for drawing axis
-   Double_t    fMaximum;    //Maximum value for plotting along y
-   Double_t    fMinimum;    //Minimum value for plotting along y
+   TList      *fGraphs;     ///< Pointer to list of TGraphs
+   TList      *fFunctions;  ///< Pointer to list of functions (fits and user)
+   TH1F       *fHistogram;  ///< Pointer to histogram used for drawing axis
+   Double_t    fMaximum;    ///< Maximum value for plotting along y
+   Double_t    fMinimum;    ///< Minimum value for plotting along y
 
    TMultiGraph(const TMultiGraph&);
    TMultiGraph& operator=(const TMultiGraph&);
@@ -76,6 +77,7 @@ public:
    virtual void      Paint(Option_t *chopt="");
    void              PaintPads(Option_t *chopt="");
    void              PaintPolyLine3D(Option_t *chopt="");
+   void              PaintReverse(Option_t *chopt="");
    virtual void      Print(Option_t *chopt="") const;
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");

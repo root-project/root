@@ -43,11 +43,11 @@ ROOTSYS=`dirname $fullpath1`
 
 arch=@architecture@
 platform=@platform@
-cxxversion=@cxxversion@
 bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
 etcdir=@etcdir@
+tutdir=@tutdir@
 features="@features@"
 configargs="@configargs@"
 altcc="@altcc@"
@@ -73,13 +73,16 @@ newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
 rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
-          -lMultiProc"
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
 
-if [ `uname -m` != 'i686' ]; then
-   rootlibs="$rootlibs -lROOTDataFrame"
+# MultiProc is not supported on Windows
+if test "$platform" != "win32"; then
+   rootlibs="$rootlibs -lMultiProc"
 fi
 
+if echo "${features}" | grep -q "dataframe"; then
+   rootlibs="$rootlibs -lROOTDataFrame"
+fi
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \
@@ -145,11 +148,8 @@ fi
 
 ### machine dependent settings ###
 
-case "$cxxversion" in
-  cxx17) cxxversionflag="-std=c++1z " ;;
-  cxx14) cxxversionflag="-std=c++1y " ;;
-  *)     cxxversionflag="-std=c++11 " ;;
-esac
+# Set the C++ standard version
+cxxversionflag="@configstd@ "
 
 case $arch in
 aix5)
@@ -279,12 +279,13 @@ openbsd)
    ;;
 macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
+   macosx_major=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//'`
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_minor -le 4 ]; then
+   if [ $macosx_major -eq 10 -a $macosx_minor -le 4 ]; then
       rootlibs="$rootlibs -lfreetype"
    fi
-   if [ $macosx_minor -le 3 ]; then
+   if [ $macosx_major -eq 10 -a $macosx_minor -le 3 ]; then
       finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
       auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
       auxcflags="-Wno-long-double $auxcflags"
@@ -300,19 +301,21 @@ macosx)
    ;;
 macosxicc)
    # MacOS X with Intel icc compiler
+   macosx_major=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//'`
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_minor -le 4 ]; then
+   if [ $macosx_major -eq 10 -a $macosx_minor -le 4 ]; then
       rootlibs="$rootlibs -lfreetype"
    fi
    auxcflags="${cxxversionflag}"
    auxlibs="-lm -ldl"
    ;;
-macosx64)
+macosx64|macosxarm64)
    # MacOS X with gcc (GNU cc v4.x) in 64 bit mode
+   macosx_major=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//'`
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_minor -le 4 ]; then
+   if [ $macosx_major -eq 10 -a $macosx_minor -le 4 ]; then
       rootlibs="$rootlibs -lfreetype"
    fi
    auxcflags="${cxxversionflag} -m64"
@@ -337,9 +340,9 @@ win32)
       auxcflags="$auxcflags -GR -GX -G5"
    fi
    auxlibs=
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
-   forceevelibs=$rootuevelibs
+   #forcelibs=$rootulibs
+   #forceglibs=$rootuglibs
+   #forceevelibs=$rootuevelibs
    ;;
 win32gcc | win64gcc)
    # Windows (32 or 64) with cygwin gcc
@@ -361,11 +364,10 @@ esac
 
 case $arch in
 freebsd* | openbsd* | linux*)
+   auxcflags="-pthread $auxcflags"
+   auxlibs="-pthread $auxlibs"
+
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-pthread $auxcflags"
-         auxlibs="-pthread $auxlibs"
-      fi
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
@@ -376,18 +378,16 @@ freebsd* | openbsd* | linux*)
    done
    ;;
 macosx*)
+   if [ \( $macosx_major -eq 10 -a $macosx_minor -ge 5 \) -o $macosx_major -gt 10  ]; then
+      auxcflags="-pthread $auxcflags"
+      auxlibs="-lpthread $auxlibs"
+   else
+      auxcflags="-D_REENTRANT $auxcflags"
+      auxlibs="-lpthread $auxlibs"
+   fi
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         if [ $macosx_minor -ge 5 ]; then
-            auxcflags="-pthread $auxcflags"
-            auxlibs="-lpthread $auxlibs"
-         else
-            auxcflags="-D_REENTRANT $auxcflags"
-            auxlibs="-lpthread $auxlibs"
-         fi
-      fi
       if test "x$f" = "xrpath" ; then
-         if [ $macosx_minor -ge 5 ]; then
+         if [ \( $macosx_major -eq 10 -a $macosx_minor -ge 5 \) -o $macosx_major -gt 10  ]; then
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
       fi
@@ -398,21 +398,15 @@ macosx*)
    done
    ;;
 hpuxacc | hpuxia64acc)
-   for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-mt $auxcflags"
-         auxlibs="-mt $auxlibs"
-      fi
-   done
+   auxcflags="-mt $auxcflags"
+   auxlibs="-mt $auxlibs"
    ;;
 win32)
    ;;
 *)
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-D_REENTRANT $auxcflags"
-         auxlibs="-lpthread $auxlibs"
-      fi
+      auxcflags="-D_REENTRANT $auxcflags"
+      auxlibs="-lpthread $auxlibs"
    done
    ;;
 esac
@@ -445,10 +439,11 @@ noldflags=no
 usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs]\
- [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--srcdir]\
+ [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir] [--srcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
  [--platform] [--config] [--features] [--ncpu] [--git-revision]\
- [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
+ [--python-version] [--python2-version] [--python3-version]\
+ [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -556,6 +551,12 @@ while test $# -gt 0; do
       ;;
     --python-version)
       out="$out @pythonvers@"
+      ;;
+    --python2-version)
+      out="$out @python2vers@"
+      ;;
+    --python3-version)
+      out="$out @python3vers@"
       ;;
     --cflags)
       ### Output the compiler flags
@@ -742,6 +743,10 @@ while test $# -gt 0; do
       ### output the etc directory
       out="$out $etcdir"
       ;;
+    --tutdir)
+      ### output the tutorials directory
+      out="$out $tutdir"
+      ;;
     --srcdir)
       ### output the src directory
       out="$out $srcdir"
@@ -810,6 +815,7 @@ while test $# -gt 0; do
       echo "  --libdir              Print the library directory"
       echo "  --incdir              Print the header directory"
       echo "  --etcdir              Print the configuration directory"
+      echo "  --tutdir              Print the tutorials directory"
       echo "  --srcdir              Print the top of the original source directory"
       echo "  --auxlibs             Print auxiliary libraries"
       echo "  --auxcflags           Print auxiliary compiler flags"
@@ -823,6 +829,8 @@ while test $# -gt 0; do
       echo "  --version             Print the ROOT version"
       echo "  --git-revision        Print the ROOT git revision number"
       echo "  --python-version      Print the Python version used by ROOT"
+      echo "  --python2-version     Print the Python2 version used by PyROOT"
+      echo "  --python3-version     Print the Python3 version used by PyROOT"
       echo "  --ncpu                Print number of available (hyperthreaded) cores"
       echo "  --cc                  Print alternative C compiler specified when ROOT was built"
       echo "  --cxx                 Print alternative C++ compiler specified when ROOT was built"

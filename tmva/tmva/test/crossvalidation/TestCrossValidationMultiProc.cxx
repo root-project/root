@@ -81,7 +81,7 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    TMVA::CrossValidation cv{Form("%i-proc", numWorkers), dataloader,
                             Form("!Silent:AnalysisType=Classification"
                                  ":NumWorkerProcs=%i:NumFolds=%i"
-                                 ":SplitExpr=%s",
+                                 ":SplitType=Deterministic:SplitExpr=%s",
                                  numWorkers, NUM_FOLDS, splitExpr.c_str())};
 
    cv.BookMethod(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=100:MaxDepth=3");

@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # - Locate gl2ps library
 # Defines:
 #
@@ -18,6 +24,6 @@ endif()
 # handle the QUIETLY and REQUIRED arguments and set GL2PS_FOUND to TRUE if
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(GL2PS DEFAULT_MSG GL2PS_LIBRARY GL2PS_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(gl2ps DEFAULT_MSG GL2PS_LIBRARY GL2PS_INCLUDE_DIR)
 
 mark_as_advanced(GL2PS_FOUND GL2PS_INCLUDE_DIR GL2PS_LIBRARY)

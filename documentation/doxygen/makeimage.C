@@ -2,10 +2,40 @@
 
 #include <stdio.h>
 
+void FindImageInPad(TPad *P)
+{
+   TObject *o;
+   TIter next(P->GetListOfPrimitives());
+   while ((o = (TObject *)next())) {
+      if (o->InheritsFrom(TPad::Class())) {
+         FindImageInPad((TPad *)o);
+      } else if (o->InheritsFrom(TImage::Class())) {
+         gStyle->SetImageScaling(1.);
+         break;
+      } else {
+         continue;
+      }
+   }
+}
+
+void FindImageInCanvas(TCanvas *C)
+{
+   TObject *o;
+   TIter next(C->GetListOfPrimitives());
+   while ((o = (TObject *)next())) {
+      if (o->InheritsFrom(TPad::Class())) {
+         FindImageInPad((TPad *)o);
+      } else if (o->InheritsFrom(TImage::Class())) {
+         gStyle->SetImageScaling(1.);
+         break;
+      } else {
+         continue;
+      }
+   }
+}
+
 void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, bool cp, bool py)
 {
-   gStyle->SetImageScaling(3.);
-
    // Execute the macro as a C++ one or a Python one.
    if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
@@ -29,6 +59,8 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
    int cw;
    while ((canvas = (TCanvas*) iCanvas())) {
       ImageNum++;
+      gStyle->SetImageScaling(3.);
+      FindImageInCanvas(canvas);
       canvas->SaveAs(TString::Format("%s/html/pict%d_%s",OutDir,ImageNum,ImageName));
       cw = canvas->GetWindowWidth();
       fprintf(s,"%d\n",cw);

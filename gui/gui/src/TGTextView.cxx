@@ -20,17 +20,18 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextView                                                           //
-//                                                                      //
-// A TGTextView is a text viewer widget. It is a specialization of      //
-// TGView. It uses the TGText class (which contains all text            //
-// manipulation code, i.e. loading a file in memory, changing,          //
-// removing lines, etc.). Use a TGTextView to view non-editable text.   //
-// For supported messages see TGView.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextView
+    \ingroup guiwidgets
+
+A TGTextView is a text viewer widget. It is a specialization of
+TGView. It uses the TGText class (which contains all text
+manipulation code, i.e. loading a file in memory, changing,
+removing lines, etc.). Use a TGTextView to view non-editable text.
+For supported messages see TGView.
+
+*/
+
 
 #include "TGTextView.h"
 #include "TGScrollBar.h"
@@ -43,13 +44,14 @@
 #include "TMacro.h"
 #include "TGMsgBox.h"
 #include "TUrl.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
 
+#include <iostream>
 
-const TGFont *TGTextView::fgDefaultFont = 0;
-TGGC         *TGTextView::fgDefaultGC = 0;
-TGGC         *TGTextView::fgDefaultSelectedGC = 0;
-const TGGC   *TGTextView::fgDefaultSelectedBackgroundGC = 0;
+const TGFont *TGTextView::fgDefaultFont = nullptr;
+TGGC         *TGTextView::fgDefaultGC = nullptr;
+TGGC         *TGTextView::fgDefaultSelectedGC = nullptr;
+const TGGC   *TGTextView::fgDefaultSelectedBackgroundGC = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -998,7 +1000,7 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
 
    pos.fY = pos.fX = 0;
    buffer = new char[len+1];
-   prev_len = temp_len = 0;
+   prev_len = 0;
    for (pos.fY = 0; pos.fY < fClipText->RowCount(); pos.fY++) {
       temp_len = fClipText->GetLineLength(pos.fY);
       if (temp_len < 0) break;
@@ -1090,7 +1092,7 @@ Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
    if (fText->RowCount() > 1) {
       Int_t ret;
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Overvrite", "Do you want to replace existing text?",
+                   "Overwrite", "Do you want to replace existing text?",
                    kMBIconExclamation, kMBYes | kMBNo, &ret);
       if (ret == kMBNo)
          return kTRUE;
@@ -1577,7 +1579,8 @@ void TGTextView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      fn = gSystem->ExpandPathName(gSystem->UnixPathName(filename));
+      fn = gSystem->UnixPathName(filename);
+      gSystem->ExpandPathName(fn);
    } else {
       fn = TString::Format("Txt%s", GetName()+5);
       txt->Save(fn.Data());

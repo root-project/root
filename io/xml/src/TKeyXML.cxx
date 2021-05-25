@@ -22,16 +22,8 @@
 #include "TXMLFile.h"
 #include "TClass.h"
 #include "TROOT.h"
-#include "TBrowser.h"
 
 ClassImp(TKeyXML);
-
-////////////////////////////////////////////////////////////////////////////////
-/// default constructor
-
-TKeyXML::TKeyXML() : TKey(), fKeyNode(nullptr), fKeyId(0), fSubdir(kFALSE)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeyXML and convert object data to xml structures
@@ -161,7 +153,10 @@ void TKeyXML::StoreKeyAttributes()
    if (f->GetIOVersion() > 1) {
       if (strlen(GetTitle()) > 0)
          xml->NewAttr(fKeyNode, nullptr, xmlio::Title, GetTitle());
-      xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, fDatime.AsSQLString());
+      if (f->TestBit(TFile::kReproducible))
+         xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, TDatime((UInt_t) 1).AsSQLString());
+      else
+         xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, fDatime.AsSQLString());
    }
 }
 

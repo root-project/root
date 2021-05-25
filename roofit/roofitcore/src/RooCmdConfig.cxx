@@ -39,15 +39,14 @@ arguments and dependencies between arguments
 #include "RooAbsData.h"
 #include "TObjString.h"
 #include "RooMsgService.h"
+#include "strlcpy.h"
 
-#include "Riostream.h"
+#include <iostream>
 
 
 using namespace std;
 
-ClassImp(RooCmdConfig); 
-  ;
-
+ClassImp(RooCmdConfig);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -646,9 +645,9 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
 
 
   // Remove command from required-args list (if it was there)
-  TObject* obj = _rList.FindObject(opc) ;
-  if (obj) {
-    _rList.Remove(obj) ;
+  TObject* obj;
+  while ( (obj = _rList.FindObject(opc)) ) {
+    _rList.Remove(obj);
   }
 
   // Add command the processed list
@@ -852,13 +851,11 @@ Int_t RooCmdConfig::decodeIntOnTheFly(const char* callerID, const char* cmdArgNa
 /// Static decoder function allows to retrieve string property from set of RooCmdArgs 
 /// For use in base member initializers in constructors
 
-const char* RooCmdConfig::decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t strIdx, const char* defVal, const RooCmdArg& arg1, 
+std::string RooCmdConfig::decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t strIdx, const char* defVal, const RooCmdArg& arg1,
 					 const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
 					 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7,
 					 const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {  
-  static string retBuf = "" ;
-
   RooCmdConfig pc(callerID) ;
   pc.allowUndefined() ;
   pc.defineString("theString",cmdArgName,strIdx,defVal) ;
@@ -867,12 +864,10 @@ const char* RooCmdConfig::decodeStringOnTheFly(const char* callerID, const char*
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
   const char* ret =  pc.getString("theString",0,kTRUE) ;
 
-  if (ret) {
-    retBuf = ret ;
-  } else {
-    retBuf.clear() ;
-  }
-  return retBuf.c_str() ;
+  if (ret)
+    return std::string(ret);
+
+  return std::string();
 }
 
 
@@ -893,4 +888,17 @@ TObject* RooCmdConfig::decodeObjOnTheFly(const char* callerID, const char* cmdAr
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
   return (TObject*) pc.getObject("theObj") ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find a given double in a list of RooCmdArg.
+/// Should only be used to initialise base classes in constructors.
+double RooCmdConfig::decodeDoubleOnTheFly(const char* callerID, const char* cmdArgName, int idx, double defVal,
+    std::initializer_list<std::reference_wrapper<const RooCmdArg>> args) {
+  RooCmdConfig pc(callerID);
+  pc.allowUndefined();
+  pc.defineDouble("theDouble", cmdArgName, idx, defVal);
+  pc.process(args.begin(), args.end());
+  return pc.getDouble("theDouble");
 }

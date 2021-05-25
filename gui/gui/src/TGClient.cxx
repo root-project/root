@@ -20,14 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGClient                                                             //
-//                                                                      //
-// Window client. In client server windowing systems, like X11 this     //
-// class is used to make the initial connection to the window server.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGClient
+    \ingroup guiwidgets
+
+Window client. In client server windowing systems, like X11 this
+class is used to make the initial connection to the window server.
+
+*/
+
 
 #include "RConfigure.h"
 
@@ -48,17 +49,20 @@
 #include "TGIdleHandler.h"
 #include "TError.h"
 #include "TGlobal.h"
+#include "snprintf.h"
 
 // Global pointer to the TGClient object
-static TGClient *gClientGlobal = 0;
+static TGClient *gClientGlobal = nullptr;
 
 namespace {
 static struct AddPseudoGlobals {
 AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
-   // This code here must not trigger it.
-   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gClient", "TGClient*",
-                                 (TGlobalMappedFunction::GlobalFunc_t)&TGClient::Instance));
+   // This code here must not trigger it
+   TGlobalMappedFunction::MakeFunctor("gClient", "TGClient*", TGClient::Instance, [] {
+      TGClient::Instance(); // first ensure object is created;
+      return (void *) &gClientGlobal;
+   });
 }
 } gAddPseudoGlobals;
 }
@@ -70,7 +74,7 @@ public:
    TGClientInit() {
       TROOT *rootlocal = ROOT::Internal::gROOTLocal;
       if (rootlocal && rootlocal->IsBatch()) {
-         // For now check if the heaeder files (or the module containing them)
+         // For now check if the header files (or the module containing them)
          // has been loaded in Cling.
          // This is required because the dictionaries must be initialized
          // __before__ the TGClient creation which will induce the creation
@@ -369,6 +373,7 @@ void TGClient::FreeFont(const TGFont *font)
 
 void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
 {
+   if (!w) return;
    if (gVirtualX->NeedRedraw((ULong_t)w,force)) return;
    if (force) {
       w->DoRedraw();

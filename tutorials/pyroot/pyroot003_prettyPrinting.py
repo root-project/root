@@ -7,9 +7,10 @@
 ## powered by the C++ interpreter cling.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date June 2018
-## \author Stefan Wunsch
+## \author Stefan Wunsch, Enric Tejedor
 
 import ROOT
 
@@ -36,3 +37,11 @@ obj
 # The print output behaves similar to the ROOT prompt, e.g., here for a ROOT histogram.
 hist = ROOT.TH1F("name", "title", 10, 0, 1)
 print(hist)
+
+# If cling cannot produce any nice representation for the class, we fall back to a
+# "<ClassName at address>" format, which is what `__repr__` returns
+ROOT.gInterpreter.Declare('class MyClass {};')
+m = ROOT.MyClass()
+print(m)
+print(str(m) == repr(m))
+

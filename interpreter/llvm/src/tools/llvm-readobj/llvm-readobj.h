@@ -1,9 +1,8 @@
 //===-- llvm-readobj.h ----------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -23,6 +22,9 @@ namespace llvm {
 
   // Various helper functions.
   LLVM_ATTRIBUTE_NORETURN void reportError(Twine Msg);
+  void reportError(StringRef Input, Error Err); 
+  void reportWarning(Twine Msg);
+  void warn(llvm::Error Err);
   void error(std::error_code EC);
   void error(llvm::Error EC);
   template <typename T> T error(llvm::Expected<T> &&E) {
@@ -40,30 +42,20 @@ namespace llvm {
       return *EO;
     std::string Buf;
     raw_string_ostream OS(Buf);
-    logAllUnhandledErrors(EO.takeError(), OS, "");
+    logAllUnhandledErrors(EO.takeError(), OS);
     OS.flush();
     reportError(Buf);
   }
-  bool relocAddressLess(object::RelocationRef A,
-                        object::RelocationRef B);
 } // namespace llvm
 
 namespace opts {
-  extern llvm::cl::list<std::string> InputFilenames;
-  extern llvm::cl::opt<bool> FileHeaders;
-  extern llvm::cl::opt<bool> Sections;
   extern llvm::cl::opt<bool> SectionRelocations;
   extern llvm::cl::opt<bool> SectionSymbols;
   extern llvm::cl::opt<bool> SectionData;
-  extern llvm::cl::opt<bool> Relocations;
-  extern llvm::cl::opt<bool> Symbols;
-  extern llvm::cl::opt<bool> DynamicSymbols;
-  extern llvm::cl::opt<bool> UnwindInfo;
   extern llvm::cl::opt<bool> ExpandRelocs;
-  extern llvm::cl::opt<bool> CodeView;
+  extern llvm::cl::opt<bool> RawRelr;
   extern llvm::cl::opt<bool> CodeViewSubsectionBytes;
-  extern llvm::cl::opt<bool> ARMAttributes;
-  extern llvm::cl::opt<bool> MipsPLTGOT;
+  extern llvm::cl::opt<bool> Demangle;
   enum OutputStyleTy { LLVM, GNU };
   extern llvm::cl::opt<OutputStyleTy> Output;
 } // namespace opts

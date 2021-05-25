@@ -41,6 +41,7 @@ protected:
   RooRealProxy width ;
 
   Double_t evaluate() const ;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
 //   void initGenerator();
 //   Int_t generateDependents();

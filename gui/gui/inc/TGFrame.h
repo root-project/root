@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,15 +13,6 @@
 #define ROOT_TGFrame
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFrame, TGCompositeFrame, TGVerticalFrame, TGHorizontalFrame,       //
-// TGMainFrame, TGTransientFrame and TGGroupFrame                       //
-//                                                                      //
-// This header contains all different Frame classes.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWindow.h"
 #include "TQObject.h"
 #include "TGDimension.h"
@@ -29,12 +20,12 @@
 #include "TGFont.h"
 #include "TGLayout.h"
 #include "TGString.h"
-#include "TList.h"
 
 class TGResourcePool;
 class TGTextButton;
 class TGVFileSplitter;
 class TDNDData;
+class TList;
 
 //---- frame states
 
@@ -49,28 +40,6 @@ enum EFrameCleanup {
    kNoCleanup    = 0,
    kLocalCleanup = 1,
    kDeepCleanup  = -1
-};
-
-//---- types of frames (and borders)
-
-enum EFrameType {
-   kChildFrame      = 0,
-   kMainFrame       = BIT(0),
-   kVerticalFrame   = BIT(1),
-   kHorizontalFrame = BIT(2),
-   kSunkenFrame     = BIT(3),
-   kRaisedFrame     = BIT(4),
-   kDoubleBorder    = BIT(5),
-   kFitWidth        = BIT(6),
-   kFixedWidth      = BIT(7),
-   kFitHeight       = BIT(8),
-   kFixedHeight     = BIT(9),
-   kFixedSize       = (kFixedWidth | kFixedHeight),
-   kOwnBackground   = BIT(10),
-   kTransientFrame  = BIT(11),
-   kTempFrame       = BIT(12),
-   kMdiMainFrame    = BIT(13),
-   kMdiFrame        = BIT(14)
 };
 
 //---- MWM hints stuff
@@ -108,41 +77,25 @@ enum EDNDFlags {
 };
 
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFrame                                                              //
-//                                                                      //
-// This class subclasses TGWindow, used as base class for some simple   //
-// widgets (buttons, labels, etc.).                                     //
-// It provides:                                                         //
-//  - position & dimension fields                                       //
-//  - an 'options' attribute (see constant above)                       //
-//  - a generic event handler                                           //
-//  - a generic layout mechanism                                        //
-//  - a generic border                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGFrame : public TGWindow, public TQObject {
 
 protected:
    enum { kDeleteWindowCalled = BIT(15) };
 
-   Int_t    fX;             // frame x position
-   Int_t    fY;             // frame y position
-   UInt_t   fWidth;         // frame width
-   UInt_t   fHeight;        // frame height
-   UInt_t   fMinWidth;      // minimal frame width
-   UInt_t   fMinHeight;     // minimal frame height
-   UInt_t   fMaxWidth;      // maximal frame width
-   UInt_t   fMaxHeight;     // maximal frame height
-   Int_t    fBorderWidth;   // frame border width
-   UInt_t   fOptions;       // frame options
-   Pixel_t  fBackground;    // frame background color
-   UInt_t   fEventMask;     // currenty active event mask
-   Int_t    fDNDState;      // EDNDFlags
-   TGFrameElement *fFE;     // pointer to frame element
+   Int_t    fX;             ///< frame x position
+   Int_t    fY;             ///< frame y position
+   UInt_t   fWidth;         ///< frame width
+   UInt_t   fHeight;        ///< frame height
+   UInt_t   fMinWidth;      ///< minimal frame width
+   UInt_t   fMinHeight;     ///< minimal frame height
+   UInt_t   fMaxWidth;      ///< maximal frame width
+   UInt_t   fMaxHeight;     ///< maximal frame height
+   Int_t    fBorderWidth;   ///< frame border width
+   UInt_t   fOptions;       ///< frame options
+   Pixel_t  fBackground;    ///< frame background color
+   UInt_t   fEventMask;     ///< currently active event mask
+   Int_t    fDNDState;      ///< EDNDFlags
+   TGFrameElement *fFE;     ///< pointer to frame element
 
    static Bool_t      fgInit;
    static Pixel_t     fgDefaultFrameBackground;
@@ -176,8 +129,8 @@ protected:
    virtual void StartGuiBuilding(Bool_t on = kTRUE);
 
 private:
-   TGFrame(const TGFrame&);             // not implemented
-   TGFrame& operator=(const TGFrame&);  // not implemented
+   TGFrame(const TGFrame&) = delete;
+   TGFrame& operator=(const TGFrame&) = delete;
 
 public:
    // Default colors and graphics contexts
@@ -191,9 +144,9 @@ public:
    static const TGGC &GetShadowGC();
    static const TGGC &GetBckgndGC();
 
-   TGFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
-   TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGFrame(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
    virtual ~TGFrame();
 
    virtual void DeleteWindow();
@@ -261,7 +214,7 @@ public:
    virtual void    SetEditable(Bool_t) {}
    virtual void    SetLayoutBroken(Bool_t = kTRUE) {}
    virtual Bool_t  IsLayoutBroken() const { return kFALSE; }
-   virtual void    SetCleanup(Int_t = kLocalCleanup) { /* backward compatebility */ }
+   virtual void    SetCleanup(Int_t = kLocalCleanup) { /* backward compatibility */ }
 
    virtual void    SetDragType(Int_t type);
    virtual void    SetDropType(Int_t type);
@@ -330,40 +283,28 @@ public:
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCompositeFrame                                                     //
-//                                                                      //
-// This class is the base class for composite widgets                   //
-// (menu bars, list boxes, etc.).                                       //
-//                                                                      //
-// It provides:                                                         //
-//  - a layout manager                                                  //
-//  - a frame container (TList *)                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGCompositeFrame : public TGFrame {
 
 
 protected:
-   TGLayoutManager *fLayoutManager;   // layout manager
-   TList           *fList;            // container of frame elements
-   Bool_t           fLayoutBroken;    // no layout manager is used
-   Int_t            fMustCleanup;     // cleanup mode (see EFrameCleanup)
-   Bool_t           fMapSubwindows;   // kTRUE - map subwindows
+   TGLayoutManager *fLayoutManager;   ///< layout manager
+   TList           *fList;            ///< container of frame elements
+   Bool_t           fLayoutBroken;    ///< no layout manager is used
+   Int_t            fMustCleanup;     ///< cleanup mode (see EFrameCleanup)
+   Bool_t           fMapSubwindows;   ///< kTRUE - map subwindows
 
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
 
 private:
-   TGCompositeFrame(const TGCompositeFrame&);            // not implemented
-   TGCompositeFrame& operator=(const TGCompositeFrame&); // not implemented
+   TGCompositeFrame(const TGCompositeFrame&) = delete;
+   TGCompositeFrame& operator=(const TGCompositeFrame&) = delete;
 
 public:
-   TGCompositeFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGCompositeFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
-   TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
    virtual ~TGCompositeFrame();
 
    virtual TList *GetList() const { return fList; }
@@ -454,15 +395,6 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMainFrame                                                          //
-//                                                                      //
-// This class defines top level windows that interact with the system   //
-// Window Manager (WM or MWM for Motif Window Manager).                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGMainFrame : public TGCompositeFrame {
 
 protected:
@@ -479,38 +411,38 @@ protected:
       TGMapKey(UInt_t keycode, TGWindow *w): fKeyCode(keycode), fWindow(w) { }
    };
 
-   Atom_t       *fDNDTypeList;  // handles DND types
-   TList        *fBindList;     // list with key bindings
-   TString       fWindowName;   // window name
-   TString       fIconName;     // icon name
-   TString       fIconPixmap;   // icon pixmap name
-   TString       fClassName;    // WM class name
-   TString       fResourceName; // WM resource name
-   UInt_t        fMWMValue;     // MWM decoration hints
-   UInt_t        fMWMFuncs;     // MWM functions
-   UInt_t        fMWMInput;     // MWM input modes
-   Int_t         fWMX;          // WM x position
-   Int_t         fWMY;          // WM y position
-   UInt_t        fWMWidth;      // WM width
-   UInt_t        fWMHeight;     // WM height
-   UInt_t        fWMMinWidth;   // WM min width
-   UInt_t        fWMMinHeight;  // WM min height
-   UInt_t        fWMMaxWidth;   // WM max width
-   UInt_t        fWMMaxHeight;  // WM max height
-   UInt_t        fWMWidthInc;   // WM width increments
-   UInt_t        fWMHeightInc;  // WM height increments
-   EInitialState fWMInitState;  // WM initial state
+   Atom_t       *fDNDTypeList;  ///< handles DND types
+   TList        *fBindList;     ///< list with key bindings
+   TString       fWindowName;   ///< window name
+   TString       fIconName;     ///< icon name
+   TString       fIconPixmap;   ///< icon pixmap name
+   TString       fClassName;    ///< WM class name
+   TString       fResourceName; ///< WM resource name
+   UInt_t        fMWMValue;     ///< MWM decoration hints
+   UInt_t        fMWMFuncs;     ///< MWM functions
+   UInt_t        fMWMInput;     ///< MWM input modes
+   Int_t         fWMX;          ///< WM x position
+   Int_t         fWMY;          ///< WM y position
+   UInt_t        fWMWidth;      ///< WM width
+   UInt_t        fWMHeight;     ///< WM height
+   UInt_t        fWMMinWidth;   ///< WM min width
+   UInt_t        fWMMinHeight;  ///< WM min height
+   UInt_t        fWMMaxWidth;   ///< WM max width
+   UInt_t        fWMMaxHeight;  ///< WM max height
+   UInt_t        fWMWidthInc;   ///< WM width increments
+   UInt_t        fWMHeightInc;  ///< WM height increments
+   EInitialState fWMInitState;  ///< WM initial state
 
-   TString GetMWMvalueString() const;  //used in SaveSource()
-   TString GetMWMfuncString() const;   //used in SaveSource()
-   TString GetMWMinpString() const;    //used in SaveSource()
+   TString GetMWMvalueString() const;  ///< used in SaveSource()
+   TString GetMWMfuncString() const;   ///< used in SaveSource()
+   TString GetMWMinpString() const;    ///< used in SaveSource()
 
 private:
-   TGMainFrame(const TGMainFrame&);             // not implemented
-   TGMainFrame& operator=(const TGMainFrame&);  // not implemented
+   TGMainFrame(const TGMainFrame&) = delete;
+   TGMainFrame& operator=(const TGMainFrame&) = delete;
 
 public:
-   TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGMainFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
    virtual ~TGMainFrame();
 
@@ -563,26 +495,17 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTransientFrame                                                     //
-//                                                                      //
-// This class defines transient windows that typically are used for     //
-// dialogs.                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGTransientFrame : public TGMainFrame {
 
 protected:
    const TGWindow   *fMain;  // window over which to popup dialog
 
 private:
-   TGTransientFrame(const TGTransientFrame&);             // not implemented
-   TGTransientFrame& operator=(const TGTransientFrame&);  // not implemented
+   TGTransientFrame(const TGTransientFrame&) = delete;
+   TGTransientFrame& operator=(const TGTransientFrame&) = delete;
 
 public:
-   TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
+   TGTransientFrame(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = kVerticalFrame);
 
    enum EPlacement { kCenter, kLeft, kRight, kTop, kBottom, kTopLeft, kTopRight,
@@ -596,24 +519,14 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGGroupFrame                                                         //
-//                                                                      //
-// A group frame is a composite frame with a border and a title.        //
-// It is typically used to group a number of logically related widgets  //
-// visually together.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGGroupFrame : public TGCompositeFrame {
 
 protected:
-   TGString      *fText;         // title text
-   FontStruct_t   fFontStruct;   // title fontstruct
-   GContext_t     fNormGC;       // title graphics context
-   Int_t          fTitlePos;     // *OPTION={GetMethod="GetTitlePos";SetMethod="SetTitlePos";Items=(-1="Left",0="Center",1="Right")}*
-   Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
+   TGString      *fText;         ///< title text
+   FontStruct_t   fFontStruct;   ///< title fontstruct
+   GContext_t     fNormGC;       ///< title graphics context
+   Int_t          fTitlePos;     ///< *OPTION={GetMethod="GetTitlePos";SetMethod="SetTitlePos";Items=(-1="Left",0="Center",1="Right")}*
+   Bool_t         fHasOwnFont;   ///< kTRUE - font defined locally,  kFALSE - globally
 
    virtual void DoRedraw();
 
@@ -621,8 +534,8 @@ protected:
    static const TGGC   *fgDefaultGC;
 
 private:
-   TGGroupFrame(const TGGroupFrame&);              // not implemented
-   TGGroupFrame& operator=(const TGGroupFrame&);   // not implemented
+   TGGroupFrame(const TGGroupFrame&) = delete;
+   TGGroupFrame& operator=(const TGGroupFrame&) = delete;
 
 public:
    enum ETitlePos { kLeft = -1, kCenter = 0, kRight = 1 };
@@ -635,7 +548,7 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
-   TGGroupFrame(const TGWindow *p = 0, const char *title = 0,
+   TGGroupFrame(const TGWindow *p = nullptr, const char *title = nullptr,
                 UInt_t options = kVerticalFrame,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
@@ -663,31 +576,23 @@ public:
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGHeaderFrame                                                        //
-//                                                                      //
-// Horizontal Frame used to contain header buttons and splitters        //
-// in a list view. Used to have resizable column headers.               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGHeaderFrame : public TGHorizontalFrame {
 private:
-   TGHeaderFrame(const TGHeaderFrame&); // Not implemented
-   TGHeaderFrame& operator=(const TGHeaderFrame&); // Not implemented
+   TGHeaderFrame(const TGHeaderFrame&) = delete;
+   TGHeaderFrame& operator=(const TGHeaderFrame&) = delete;
 
 protected:
-   Int_t              fNColumns;     // number of columns
-   TGTextButton     **fColHeader;    // column headers for in detailed mode
-   TGVFileSplitter  **fSplitHeader;  // column splitters
-   Cursor_t           fSplitCursor;  // split cursor;
-   Bool_t             fOverSplitter; // Indicates if the cursor is over a splitter
-   Int_t              fOverButton;   // Indicates over which button the mouse is
-   Int_t              fLastButton;   // Indicates the last button clicked if any
+   Int_t              fNColumns;     ///< number of columns
+   TGTextButton     **fColHeader;    ///< column headers for in detailed mode
+   TGVFileSplitter  **fSplitHeader;  ///< column splitters
+   Cursor_t           fSplitCursor;  ///< split cursor;
+   Bool_t             fOverSplitter; ///< Indicates if the cursor is over a splitter
+   Int_t              fOverButton;   ///< Indicates over which button the mouse is
+   Int_t              fLastButton;   ///< Indicates the last button clicked if any
 
 public:
-   TGHeaderFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGHeaderFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
 

@@ -1,9 +1,8 @@
 //===-- X86MCCodeEmitter.cpp - Convert X86 code to machine code -----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -152,6 +151,8 @@ public:
 
   uint8_t DetermineREXPrefix(const MCInst &MI, uint64_t TSFlags,
                              int MemOperand, const MCInstrDesc &Desc) const;
+
+  bool isPCRel32Branch(const MCInst &MI) const;
 };
 
 } // end anonymous namespace
@@ -217,6 +218,8 @@ static bool Is32BitMemOperand(const MCInst &MI, unsigned Op) {
     assert(IndexReg.getReg() == 0 && "Invalid eip-based address.");
     return true;
   }
+  if (IndexReg.getReg() == X86::EIZ)
+    return true;
   return false;
 }
 
@@ -276,6 +279,22 @@ static bool HasSecRelSymbolRef(const MCExpr *Expr) {
   return false;
 }
 
+bool X86MCCodeEmitter::isPCRel32Branch(const MCInst &MI) const {
+  unsigned Opcode = MI.getOpcode();
+  const MCInstrDesc &Desc = MCII.get(Opcode);
+  if ((Opcode != X86::CALL64pcrel32 && Opcode != X86::JMP_4) ||
+      getImmFixupKind(Desc.TSFlags) != FK_PCRel_4)
+    return false;
+
+  unsigned CurOp = X86II::getOperandBias(Desc);
+  const MCOperand &Op = MI.getOperand(CurOp);
+  if (!Op.isExpr())
+    return false;
+
+  const MCSymbolRefExpr *Ref = dyn_cast<MCSymbolRefExpr>(Op.getExpr());
+  return Ref && Ref->getKind() == MCSymbolRefExpr::VK_None;
+}
+
 void X86MCCodeEmitter::
 EmitImmediate(const MCOperand &DispOp, SMLoc Loc, unsigned Size,
               MCFixupKind FixupKind, unsigned &CurByte, raw_ostream &OS,
@@ -331,8 +350,15 @@ EmitImmediate(const MCOperand &DispOp, SMLoc Loc, unsigned Size,
       FixupKind == MCFixupKind(X86::reloc_riprel_4byte) ||
       FixupKind == MCFixupKind(X86::reloc_riprel_4byte_movq_load) ||
       FixupKind == MCFixupKind(X86::reloc_riprel_4byte_relax) ||
-      FixupKind == MCFixupKind(X86::reloc_riprel_4byte_relax_rex))
+      FixupKind == MCFixupKind(X86::reloc_riprel_4byte_relax_rex) ||
+      FixupKind == MCFixupKind(X86::reloc_branch_4byte_pcrel)) {
     ImmOffset -= 4;
+    // If this is a pc-relative load off _GLOBAL_OFFSET_TABLE_:
+    // leaq _GLOBAL_OFFSET_TABLE_(%rip), %r15
+    // this needs to be a GOTPC32 relocation.
+    if (StartsWithGlobalOffsetTable(Expr) != GOT_None)
+      FixupKind = MCFixupKind(X86::reloc_global_offset_table);
+  }
   if (FixupKind == FK_PCRel_2)
     ImmOffset -= 2;
   if (FixupKind == FK_PCRel_1)
@@ -380,7 +406,8 @@ void X86MCCodeEmitter::emitMemModRMByte(const MCInst &MI, unsigned Op,
         return X86::reloc_riprel_4byte_movq_load;
       case X86::CALL64m:
       case X86::JMP64m:
-      case X86::TEST64rm:
+      case X86::TAILJMPm64:
+      case X86::TEST64mr:
       case X86::ADC64rm:
       case X86::ADD64rm:
       case X86::AND64rm:
@@ -396,10 +423,14 @@ void X86MCCodeEmitter::emitMemModRMByte(const MCInst &MI, unsigned Op,
 
     // rip-relative addressing is actually relative to the *next* instruction.
     // Since an immediate can follow the mod/rm byte for an instruction, this
-    // means that we need to bias the immediate field of the instruction with
-    // the size of the immediate field.  If we have this case, add it into the
+    // means that we need to bias the displacement field of the instruction with
+    // the size of the immediate field. If we have this case, add it into the
     // expression to emit.
-    int ImmSize = X86II::hasImm(TSFlags) ? X86II::getSizeOfImm(TSFlags) : 0;
+    // Note: rip-relative addressing using immediate displacement values should
+    // not be adjusted, assuming it was the user's intent.
+    int ImmSize = !Disp.isImm() && X86II::hasImm(TSFlags)
+                      ? X86II::getSizeOfImm(TSFlags)
+                      : 0;
 
     EmitImmediate(Disp, MI.getLoc(), 4, MCFixupKind(FixupKind),
                   CurByte, OS, Fixups, -ImmSize);
@@ -446,7 +477,7 @@ void X86MCCodeEmitter::emitMemModRMByte(const MCInst &MI, unsigned Op,
       }
 
       if (Disp.isImm() && isDisp8(Disp.getImm())) {
-        if (Disp.getImm() == 0 && BaseRegNo != N86::EBP) {
+        if (Disp.getImm() == 0 && RMfield != 6) {
           // There is no displacement; just the register.
           EmitByte(ModRMByte(0, RegOpcodeField, RMfield), CurByte, OS);
           return;
@@ -493,9 +524,23 @@ void X86MCCodeEmitter::emitMemModRMByte(const MCInst &MI, unsigned Op,
     // indirect register encoding, this handles addresses like [EAX].  The
     // encoding for [EBP] with no displacement means [disp32] so we handle it
     // by emitting a displacement of 0 below.
-    if (Disp.isImm() && Disp.getImm() == 0 && BaseRegNo != N86::EBP) {
-      EmitByte(ModRMByte(0, RegOpcodeField, BaseRegNo), CurByte, OS);
-      return;
+    if (BaseRegNo != N86::EBP) {
+      if (Disp.isImm() && Disp.getImm() == 0) {
+        EmitByte(ModRMByte(0, RegOpcodeField, BaseRegNo), CurByte, OS);
+        return;
+      }
+
+      // If the displacement is @tlscall, treat it as a zero.
+      if (Disp.isExpr()) {
+        auto *Sym = dyn_cast<MCSymbolRefExpr>(Disp.getExpr());
+        if (Sym && Sym->getKind() == MCSymbolRefExpr::VK_TLSCALL) {
+          // This is exclusively used by call *a@tlscall(base). The relocation
+          // (R_386_TLSCALL or R_X86_64_TLSCALL) applies to the beginning.
+          Fixups.push_back(MCFixup::create(0, Sym, FK_NONE, MI.getLoc()));
+          EmitByte(ModRMByte(0, RegOpcodeField, BaseRegNo), CurByte, OS);
+          return;
+        }
+      }
     }
 
     // Otherwise, if the displacement fits in a byte, encode as [REG+disp8].
@@ -677,10 +722,8 @@ void X86MCCodeEmitter::EmitVEXOpcodePrefix(uint64_t TSFlags, unsigned &CurByte,
   //  0b10: F3
   //  0b11: F2
   //
-  uint8_t VEX_PP;
+  uint8_t VEX_PP = 0;
   switch (TSFlags & X86II::OpPrefixMask) {
-  default: llvm_unreachable("Invalid op prefix!");
-  case X86II::PS: VEX_PP = 0x0; break; // none
   case X86II::PD: VEX_PP = 0x1; break; // 66
   case X86II::XS: VEX_PP = 0x2; break; // F3
   case X86II::XD: VEX_PP = 0x3; break; // F2
@@ -850,7 +893,8 @@ void X86MCCodeEmitter::EmitVEXOpcodePrefix(uint64_t TSFlags, unsigned &CurByte,
       if (HasEVEX_RC) {
         unsigned RcOperand = NumOps-1;
         assert(RcOperand >= CurOp);
-        EVEX_rc = MI.getOperand(RcOperand).getImm() & 0x3;
+        EVEX_rc = MI.getOperand(RcOperand).getImm();
+        assert(EVEX_rc <= 3 && "Invalid rounding control!");
       }
       EncodeRC = true;
     }
@@ -949,7 +993,8 @@ void X86MCCodeEmitter::EmitVEXOpcodePrefix(uint64_t TSFlags, unsigned &CurByte,
     uint8_t LastByte = VEX_PP | (VEX_L << 2) | (VEX_4V << 3);
 
     // Can we use the 2 byte VEX prefix?
-    if (Encoding == X86II::VEX && VEX_B && VEX_X && !VEX_W && (VEX_5M == 1)) {
+    if (!(MI.getFlags() & X86::IP_USE_VEX3) &&
+        Encoding == X86II::VEX && VEX_B && VEX_X && !VEX_W && (VEX_5M == 1)) {
       EmitByte(0xC5, CurByte, OS);
       EmitByte(LastByte | (VEX_R << 7), CurByte, OS);
       return;
@@ -1030,16 +1075,17 @@ uint8_t X86MCCodeEmitter::DetermineREXPrefix(const MCInst &MI, uint64_t TSFlags,
     REX |= isREXExtendedReg(MI, CurOp++) << 0; // REX.B
     break;
   case X86II::MRMSrcReg:
+  case X86II::MRMSrcRegCC:
     REX |= isREXExtendedReg(MI, CurOp++) << 2; // REX.R
     REX |= isREXExtendedReg(MI, CurOp++) << 0; // REX.B
     break;
-  case X86II::MRMSrcMem: {
+  case X86II::MRMSrcMem:
+  case X86II::MRMSrcMemCC:
     REX |= isREXExtendedReg(MI, CurOp++) << 2; // REX.R
     REX |= isREXExtendedReg(MI, MemOperand+X86::AddrBaseReg) << 0; // REX.B
     REX |= isREXExtendedReg(MI, MemOperand+X86::AddrIndexReg) << 1; // REX.X
     CurOp += X86::AddrNumOperands;
     break;
-  }
   case X86II::MRMDestReg:
     REX |= isREXExtendedReg(MI, CurOp++) << 0; // REX.B
     REX |= isREXExtendedReg(MI, CurOp++) << 2; // REX.R
@@ -1050,7 +1096,7 @@ uint8_t X86MCCodeEmitter::DetermineREXPrefix(const MCInst &MI, uint64_t TSFlags,
     CurOp += X86::AddrNumOperands;
     REX |= isREXExtendedReg(MI, CurOp++) << 2; // REX.R
     break;
-  case X86II::MRMXm:
+  case X86II::MRMXmCC: case X86II::MRMXm:
   case X86II::MRM0m: case X86II::MRM1m:
   case X86II::MRM2m: case X86II::MRM3m:
   case X86II::MRM4m: case X86II::MRM5m:
@@ -1058,7 +1104,7 @@ uint8_t X86MCCodeEmitter::DetermineREXPrefix(const MCInst &MI, uint64_t TSFlags,
     REX |= isREXExtendedReg(MI, MemOperand+X86::AddrBaseReg) << 0; // REX.B
     REX |= isREXExtendedReg(MI, MemOperand+X86::AddrIndexReg) << 1; // REX.X
     break;
-  case X86II::MRMXr:
+  case X86II::MRMXrCC: case X86II::MRMXr:
   case X86II::MRM0r: case X86II::MRM1r:
   case X86II::MRM2r: case X86II::MRM3r:
   case X86II::MRM4r: case X86II::MRM5r:
@@ -1108,8 +1154,12 @@ bool X86MCCodeEmitter::emitOpcodePrefix(uint64_t TSFlags, unsigned &CurByte,
     EmitByte(0x66, CurByte, OS);
 
   // Emit the LOCK opcode prefix.
-  if (TSFlags & X86II::LOCK)
+  if (TSFlags & X86II::LOCK || MI.getFlags() & X86::IP_HAS_LOCK)
     EmitByte(0xF0, CurByte, OS);
+
+  // Emit the NOTRACK opcode prefix.
+  if (TSFlags & X86II::NOTRACK || MI.getFlags() & X86::IP_HAS_NOTRACK)
+    EmitByte(0x3E, CurByte, OS);
 
   switch (TSFlags & X86II::OpPrefixMask) {
   case X86II::PD:   // 66
@@ -1130,13 +1180,16 @@ bool X86MCCodeEmitter::emitOpcodePrefix(uint64_t TSFlags, unsigned &CurByte,
       EmitByte(0x40 | REX, CurByte, OS);
       Ret = true;
     }
+  } else {
+    assert(!(TSFlags & X86II::REX_W) && "REX.W requires 64bit mode.");
   }
 
   // 0x0F escape code must be emitted just before the opcode.
   switch (TSFlags & X86II::OpMapMask) {
-  case X86II::TB:  // Two-byte opcode map
-  case X86II::T8:  // 0F 38
-  case X86II::TA:  // 0F 3A
+  case X86II::TB:         // Two-byte opcode map
+  case X86II::T8:         // 0F 38
+  case X86II::TA:         // 0F 3A
+  case X86II::ThreeDNow:  // 0F 0F, second 0F emitted by caller.
     EmitByte(0x0F, CurByte, OS);
     break;
   }
@@ -1159,6 +1212,7 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
   unsigned Opcode = MI.getOpcode();
   const MCInstrDesc &Desc = MCII.get(Opcode);
   uint64_t TSFlags = Desc.TSFlags;
+  unsigned Flags = MI.getFlags();
 
   // Pseudo instructions don't get encoded.
   if ((TSFlags & X86II::FormMask) == X86II::Pseudo)
@@ -1194,8 +1248,10 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
                               MI, OS);
 
   // Emit the repeat opcode prefix as needed.
-  if (TSFlags & X86II::REP)
+  if (TSFlags & X86II::REP || Flags & X86::IP_HAS_REPEAT)
     EmitByte(0xF3, CurByte, OS);
+  if (Flags & X86::IP_HAS_REPEAT_NE)
+    EmitByte(0xF2, CurByte, OS);
 
   // Emit the address size opcode prefix as needed.
   bool need_address_override;
@@ -1229,8 +1285,10 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
 
   uint8_t BaseOpcode = X86II::getBaseOpcodeFor(TSFlags);
 
-  if (TSFlags & X86II::Has3DNow0F0FOpcode)
+  if ((TSFlags & X86II::OpMapMask) == X86II::ThreeDNow)
     BaseOpcode = 0x0F;   // Weird 3DNow! encoding.
+
+  unsigned OpcodeOffset = 0;
 
   uint64_t Form = TSFlags & X86II::FormMask;
   switch (Form) {
@@ -1278,9 +1336,24 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
     EmitByte(BaseOpcode, CurByte, OS);
     break;
   }
+  case X86II::AddCCFrm: {
+    // This will be added to the opcode in the fallthrough.
+    OpcodeOffset = MI.getOperand(NumOps - 1).getImm();
+    assert(OpcodeOffset < 16 && "Unexpected opcode offset!");
+    --NumOps; // Drop the operand from the end.
+    LLVM_FALLTHROUGH;
   case X86II::RawFrm:
-    EmitByte(BaseOpcode, CurByte, OS);
+    EmitByte(BaseOpcode + OpcodeOffset, CurByte, OS);
+
+    if (!is64BitMode(STI) || !isPCRel32Branch(MI))
+      break;
+
+    const MCOperand &Op = MI.getOperand(CurOp++);
+    EmitImmediate(Op, MI.getLoc(), X86II::getSizeOfImm(TSFlags),
+                  MCFixupKind(X86::reloc_branch_4byte_pcrel), CurByte, OS,
+                  Fixups);
     break;
+  }
   case X86II::RawFrmMemOffs:
     // Emit segment override opcode prefix as needed.
     EmitSegmentOverridePrefix(CurByte, 1, MI, OS);
@@ -1387,6 +1460,17 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
     CurOp = SrcRegNum + 1;
     break;
   }
+  case X86II::MRMSrcRegCC: {
+    unsigned FirstOp = CurOp++;
+    unsigned SecondOp = CurOp++;
+
+    unsigned CC = MI.getOperand(CurOp++).getImm();
+    EmitByte(BaseOpcode + CC, CurByte, OS);
+
+    EmitRegModRMByte(MI.getOperand(SecondOp),
+                     GetX86RegNum(MI.getOperand(FirstOp)), CurByte, OS);
+    break;
+  }
   case X86II::MRMSrcMem: {
     unsigned FirstMemOp = CurOp+1;
 
@@ -1432,6 +1516,27 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
     CurOp = FirstMemOp + X86::AddrNumOperands;
     break;
   }
+  case X86II::MRMSrcMemCC: {
+    unsigned RegOp = CurOp++;
+    unsigned FirstMemOp = CurOp;
+    CurOp = FirstMemOp + X86::AddrNumOperands;
+
+    unsigned CC = MI.getOperand(CurOp++).getImm();
+    EmitByte(BaseOpcode + CC, CurByte, OS);
+
+    emitMemModRMByte(MI, FirstMemOp, GetX86RegNum(MI.getOperand(RegOp)),
+                     TSFlags, Rex, CurByte, OS, Fixups, STI);
+    break;
+  }
+
+  case X86II::MRMXrCC: {
+    unsigned RegOp = CurOp++;
+
+    unsigned CC = MI.getOperand(CurOp++).getImm();
+    EmitByte(BaseOpcode + CC, CurByte, OS);
+    EmitRegModRMByte(MI.getOperand(RegOp), 0, CurByte, OS);
+    break;
+  }
 
   case X86II::MRMXr:
   case X86II::MRM0r: case X86II::MRM1r:
@@ -1447,6 +1552,17 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
                      (Form == X86II::MRMXr) ? 0 : Form-X86II::MRM0r,
                      CurByte, OS);
     break;
+
+  case X86II::MRMXmCC: {
+    unsigned FirstMemOp = CurOp;
+    CurOp = FirstMemOp + X86::AddrNumOperands;
+
+    unsigned CC = MI.getOperand(CurOp++).getImm();
+    EmitByte(BaseOpcode + CC, CurByte, OS);
+
+    emitMemModRMByte(MI, FirstMemOp, 0, TSFlags, Rex, CurByte, OS, Fixups, STI);
+    break;
+  }
 
   case X86II::MRMXm:
   case X86II::MRM0m: case X86II::MRM1m:
@@ -1514,7 +1630,7 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
     }
   }
 
-  if (TSFlags & X86II::Has3DNow0F0FOpcode)
+  if ((TSFlags & X86II::OpMapMask) == X86II::ThreeDNow)
     EmitByte(X86II::getBaseOpcodeFor(TSFlags), CurByte, OS);
 
 #ifndef NDEBUG

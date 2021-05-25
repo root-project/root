@@ -7,7 +7,6 @@
 
 //#pragma link C++ global gMC;
 
-#pragma link C++ enum PDG_t;
 #pragma link C++ enum TMCProcess;
 #pragma link C++ enum TMCParticleType;
 #pragma link C++ enum EMCOpSurfaceModel;
@@ -21,5 +20,9 @@
 #pragma link C++ class TVirtualMCStack + ;
 #pragma link C++ class TMCVerbose + ;
 #pragma link C++ class TGeoMCGeometry + ;
+#pragma link C++ class TMCManager + ;
+#pragma link C++ class TMCManagerStack + ;
+#pragma link C++ struct TMCParticleStatus + ;
+#pragma link C++ class TGeoMCBranchArrayContainer + ;
 
 #endif

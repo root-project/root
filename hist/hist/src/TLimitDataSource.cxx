@@ -1,50 +1,60 @@
 // @(#)root/hist:$Id$
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
-///////////////////////////////////////////////////////////////////////////
+
 /** \class TLimitDataSource
-  This class serves as interface to feed data into the TLimit routines
-*/ 
-///////////////////////////////////////////////////////////////////////////
+ This class serves as input for the TLimit::ComputeLimit method.
+ It takes the signal, background and data histograms to form a channel.
+ More channels can be added using AddChannel(), as well as different
+ systematics sources.
+*/
+
 
 #include "TLimitDataSource.h"
 #include "TH1.h"
 #include "TVectorD.h"
-#include "TObjString.h"
 #include "TRandom3.h"
+#include "snprintf.h"
 
 ClassImp(TLimitDataSource);
 
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TLimitDataSource::TLimitDataSource()
 {
-   // Default constructor
    fDummyTA.SetOwner();
    fDummyIds.SetOwner();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Another constructor, directly adds one channel
+/// with signal, background and data given as input.
+
 TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d)
 {
-   // Another constructor, directly adds one channel
-   // with signal, background and data given as input.
    fDummyTA.SetOwner();
    fDummyIds.SetOwner();
    AddChannel(s, b, d);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Another constructor, directly adds one channel
+/// with signal, background and data given as input.
+
 TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d,
                                    TVectorD * es, TVectorD * eb, TObjArray * names)
 {
-   // Another constructor, directly adds one channel
-   // with signal, background and data given as input.
    fDummyTA.SetOwner();
    fDummyIds.SetOwner();
    AddChannel(s, b, d, es, eb, names);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a channel with signal, background and data given as input.
+
 void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d)
 {
-   // Adds a channel with signal, background and data given as input.
-
    TVectorD *empty;
    TRandom3 generator;
    fSignal.AddLast(s);
@@ -64,16 +74,17 @@ void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d)
    fDummyIds.AddLast(dummy);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a channel with signal, background and data given as input.
+/// In addition, error sources are defined.
+/// TH1 are here used for convenience: each bin has to be seen as
+/// an error source (relative).
+/// names is an array of strings containing the names of the sources.
+/// Sources with the same name are correlated.
+
 void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d, TVectorD * es,
                                   TVectorD * eb, TObjArray * names)
 {
-   // Adds a channel with signal, background and data given as input.
-   // In addition, error sources are defined.
-   // TH1 are here used for convenience: each bin has to be seen as
-   // an error source (relative).
-   // names is an array of strings containing the names of the sources.
-   // Sources with the same name are correlated.
-
    fSignal.AddLast(s);
    fBackground.AddLast(b);
    fCandidates.AddLast(d);
@@ -82,12 +93,13 @@ void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d, TVectorD * es,
    fIds.AddLast(names);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Gives to the TLimitDataSource the ownership of the various objects
+/// given as input.
+/// Objects are then deleted by the TLimitDataSource destructor.
+
 void TLimitDataSource::SetOwner(bool swtch)
 {
-   // Gives to the TLimitDataSource the ownership of the various objects
-   // given as input.
-   // Objects are then deleted by the TLimitDataSource destructor.
-
    fSignal.SetOwner(swtch);
    fBackground.SetOwner(swtch);
    fCandidates.SetOwner(swtch);

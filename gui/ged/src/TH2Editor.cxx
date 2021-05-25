@@ -10,126 +10,104 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TH2Editor                                                           //
-//  Editor for changing TH2 histogram attributes, rebinning & fitting.  //
-//  For all possible draw options (there are a few which are not imple- //
-//  mentable in a graphical user interface) see THistPainter::Paint in  //
-//  root/histpainter/THistPainter.cxx                                   //
-//
-//Begin_Html
-/*
-<img src="gif/TH2Editor_1.gif">
+
+/**\class TH2Editor
+    \ingroup ged
+
+Editor for changing TH2 histogram attributes, rebinning & fitting.
+For all possible draw options (there are a few which are not implementable
+in a graphical user interface) see THistPainter::Paint.
+
+These changes can be made via the TH2Editor:
+Style Tab:
+  'Line'     : change Line attributes (color, thickness)
+               see TAttLineEditor
+  'Fill'     : change Fill attributes (color, pattern)
+               see TAttFillEditor
+  'Title'    : TextEntry: set the title of the histogram
+  'Histogram': change the draw options of the histogram
+  'Plot'     : Radiobutton: draw a 2D or 3D plot of the histogram
+               according to the Plot dimension there will be
+               different drawing possibilities (ComboBoxes/
+               CheckBoxes)
+2d Plot:
+  'Contour' : ComboBox: draw a contour plot (None, Cont0..4)
+  'Cont #'  : TGNumberEntry: set the number of Contours
+2d Plot checkboxes:
+  'Arrow'   : arrow mode. Shows gradient between adjacent cells
+  'Col'     : a box is drawn for each cell with a color scale
+              varying with contents
+  'Text'    : Draw bin contents as text
+  'Box'     : a box is drawn for each cell with surface
+              proportional to contents
+  'Scat'    : Draw a scatter-plot (default)
+  'Palette' : the color palette is drawn
+
+3d Plot:
+  'Type'    : ComboBox: set histogram type Lego or Surface-Plot
+              draw(Lego, Lego1..4, Surf, Surf1..5)
+              see THistPainter::Paint
+  'Coords'  : ComboBox: set the coordinate system (Cartesian, ..
+              Spheric) see THistPainter::Paint
+  'Cont #'  : TGNumberEntry: set the number of Contours (for e.g.
+              Lego2 drawoption
+3d Plot checkboxes:
+  'Errors'  : draw errors in a cartesian lego plot
+  'Palette' : the color palette is drawn
+  'Front'   : draw the front box of a cartesian lego plot
+  'Back'    : draw the back box of a cartesian lego plot
+Available for a 3D lego plot:
+  'Bar'     : change the bar attributes
+        'W' : change Bar Width
+        'O' : change Bar Offset
+Further Editor:
+  'Marker'   : change the Marker attributes (color, appearance,
+               thickness) see TAttMarkerEditor
+
+
+Rebinning Tab:
+  This Tab has two different layouts. One is for a histogram which
+  is not drawn from an ntuple. The other one is available for a
+  histogram which is drawn from an ntuple. In this case the rebin
+  algorithm can create a rebinned histogram from the original data
+  i.e. the ntuple.
+  To see te differences do for example:
+     TFile f("hsimple.root");
+     hpxpy->Draw("Lego2");              // non ntuple histogram
+     ntuple->Draw("px:py","","Lego2");  // ntuple histogram
+Non ntuple histogram:
+   'Rebin': with the Sliders (one for the x, one for the y axis)
+            the number of bins (shown in the field below the
+            Slider) can be changed to any number which divides
+            the number of bins of the original histogram.
+            Pushing 'Apply' will delete the origin histogram and
+            replace it by the rebinned one on the screen.
+            Pushing 'Ignore' the origin histogram will be restored
+Histogram drawn from an ntuple:
+   'Rebin'  with the sliders the number of bins can be enlarged by
+            a factor of 2,3,4,5 (moving to the right) or reduced
+            by a factor of 1/2, 1/3, 1/4, 1/5
+   'BinOffset': with the BinOffset slider the origin of the
+            histogram can be changed within one binwidth
+            Using this slider the effect of binning the data into
+            bins can be made visible => statistical fluctuations
+   'Axis Range': with the DoubleSlider it is possible to zoom into
+            the specified axis range. It is also possible to set
+            the upper and lower limit in fields below the slider
+   'Delayed drawing': all the Binning sliders can be set to delay
+            draw mode. Then the changes on the histogram are only
+            updated, when the Slider is released. This should be
+            activated if the redrawing of the histogram is too
+            time consuming.                                       //
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/TH2Editor_2.gif">
-*/
-//End_Html
-//  These changes can be made via the TH2Editor:                        //
-//    Style Tab:                                                        //
-//      'Line'     : change Line attributes (color, thickness)          //
-//                   see TAttLineEditor                                 //
-//      'Fill'     : change Fill attributes (color, pattern)            //
-//                   see TAttFillEditor                                 //
-//      'Title'    : TextEntry: set the title of the histogram          //
-//      'Histogram': change the draw options of the histogram           //
-//      'Plot'     : Radiobutton: draw a 2D or 3D plot of the histogram //
-//                   according to the Plot dimension there will be      //
-//                   different drawing possibilities (ComboBoxes/       //
-//                   CheckBoxes)                                        //
-//    2d Plot:                                                          //
-//      'Contour' : ComboBox: draw a contour plot (None, Cont0..4)      //
-//      'Cont #'  : TGNumberEntry: set the number of Contours           //
-//    2d Plot checkboxes:                                               //
-//      'Arrow'   : arrow mode. Shows gradient between adjacent cells   //
-//      'Col'     : a box is drawn for each cell with a color scale     //
-//                  varying with contents                               //
-//      'Text'    : Draw bin contents as text                           //
-//      'Box'     : a box is drawn for each cell with surface           //
-//                  proportional to contents                            //
-//      'Scat'    : Draw a scatter-plot (default)                       //
-//      'Palette' : the color palette is drawn                          //
-//                                                                      //
-//    3d Plot:                                                          //
-//      'Type'    : ComboBox: set histogram type Lego or Surface-Plot   //
-//                  draw(Lego, Lego1..4, Surf, Surf1..5)                //
-//                  see THistPainter::Paint                             //
-//      'Coords'  : ComboBox: set the coordinate system (Cartesian, ..  //
-//                  Spheric) see THistPainter::Paint                    //
-//      'Cont #'  : TGNumberEntry: set the number of Contours (for e.g. //
-//                  Lego2 drawoption                                    //
-//    3d Plot checkboxes:                                               //
-//      'Errors'  : draw errors in a cartesian lego plot                //
-//      'Palette' : the color palette is drawn                          //
-//      'Front'   : draw the front box of a cartesian lego plot         //
-//      'Back'    : draw the back box of a cartesian lego plot          //
-//    Available for a 3D lego plot:                                     //
-//      'Bar'     : change the bar attributes                           //
-//            'W' : change Bar Width                                    //
-//            'O' : change Bar Offset                                   //
-//   Further Editor:                                                    //
-//      'Marker'   : change the Marker attributes (color, appearance,   //
-//                   thickness) see TAttMarkerEditor                    //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/TH2Editor1_1.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/TH2Editor1_2.gif">
-*/
-//End_Html
-//                                                                      //
-//   Rebinning Tab:                                                     //
-//      This Tab has two different layouts. One is for a histogram which//
-//      is not drawn from an ntuple. The other one is available for a   //
-//      histogram which is drawn from an ntuple. In this case the rebin //
-//      algorithm can create a rebinned histogram from the original data//
-//      i.e. the ntuple.                                                //
-//      To see te differences do for example:                           //
-//         TFile f("hsimple.root");                                     //
-//         hpxpy->Draw("Lego2");              // non ntuple histogram   //
-//         ntuple->Draw("px:py","","Lego2");  // ntuple histogram       //
-//    Non ntuple histogram:                                             //
-//       'Rebin': with the Sliders (one for the x, one for the y axis)  //
-//                the number of bins (shown in the field below the      //
-//                Slider) can be changed to any number which divides    //
-//                the number of bins of the original histogram.         //
-//                Pushing 'Apply' will delete the origin histogram and  //
-//                replace it by the rebinned one on the screen.         //
-//                Pushing 'Ignore' the origin histogram will be restored//
-//    Histogram drawn from an ntuple:                                   //
-//       'Rebin'  with the sliders the number of bins can be enlarged by//
-//                a factor of 2,3,4,5 (moving to the right) or reduced  //
-//                by a factor of 1/2, 1/3, 1/4, 1/5                     //
-//       'BinOffset': with the BinOffset slider the origin of the       //
-//                histogram can be changed within one binwidth          //
-//                Using this slider the effect of binning the data into //
-//                bins can be made visible => statistical fluctuations  //
-//       'Axis Range': with the DoubleSlider it is possible to zoom into//
-//                the specified axis range. It is also possible to set  //
-//                the upper and lower limit in fields below the slider  //
-//       'Delayed drawing': all the Binning sliders can be set to delay //
-//                draw mode. Then the changes on the histogram are only //
-//                updated, when the Slider is released. This should be  //
-//                activated if the redrawing of the histogram is too    //
-//                time consuming.                                       //
-//////////////////////////////////////////////////////////////////////////
 
 
 #include "TH2Editor.h"
 #include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
-#include "TGToolTip.h"
 #include "TGLabel.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
 #include "TString.h"
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
@@ -147,6 +125,7 @@
 #include "TGMsgBox.h"
 #include "TH2.h"
 #include "TROOT.h"
+#include "TVirtualX.h"
 
 
 ClassImp(TH2Editor);

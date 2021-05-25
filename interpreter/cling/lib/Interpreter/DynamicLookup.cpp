@@ -97,9 +97,7 @@ namespace {
           OS << ")@)";
 
           if (Node->hasExplicitTemplateArgs())
-            TemplateSpecializationType::PrintTemplateArgumentList(OS,
-                                                     Node->template_arguments(),
-                                                                  m_Policy);
+            printTemplateArgumentList(OS, Node->template_arguments(), m_Policy);
           if (Node->hasExplicitTemplateArgs())
             assert((Node->getTemplateArgs() || Node->getNumTemplateArgs()) && \
                    "There shouldn't be template paramlist");
@@ -176,7 +174,7 @@ namespace cling {
     DeclarationName Name = &m_Context->Idents.get("EvaluateT");
 
     LookupResult R(*m_Sema, Name, SourceLocation(), Sema::LookupOrdinaryName,
-                     Sema::ForRedeclaration);
+                     Sema::ForVisibleRedeclaration);
     assert(NSD && "There must be a valid namespace.");
     m_Sema->LookupQualifiedName(R, NSD);
     // We have specialized EvaluateT but we don't care because the templated
@@ -249,13 +247,12 @@ namespace cling {
     if (!getCompilationOpts().DynamicScoping)
       return Result(D, true);
 
-    // Find DynamicLookup specific builtins
-    if (!m_EvalDecl) {
-      Initialize();
-    }
-
     if (FunctionDecl* FD = dyn_cast<FunctionDecl>(D)) {
       if (FD->hasBody() && ShouldVisit(FD)) {
+        // Find DynamicLookup specific builtins
+        if (!m_EvalDecl)
+          Initialize();
+
         // Set the decl context, which is needed by Evaluate.
         m_CurDeclContext = FD;
         ASTNodeInfo NewBody = Visit(D->getBody());
@@ -265,7 +262,7 @@ namespace cling {
           unsigned diagID
           = Diags.getCustomDiagID(DiagnosticsEngine::Error,
                                   "Syntax error");
-          Diags.Report(NewBody.getAsSingleNode()->getLocStart(), diagID);
+          Diags.Report(NewBody.getAsSingleNode()->getBeginLoc(), diagID);
           D->dump();
           if (NewBody.hasSingleNode())
             NewBody.getAs<Expr>()->dump();
@@ -360,7 +357,7 @@ namespace cling {
           for(unsigned i = 0; i < NewStmts.size(); ++i)
             NewChildren.push_back(NewStmts[i]);
 
-          Node->setStmts(*m_Context, NewChildren);
+          Node->replaceStmts(*m_Context, NewChildren);
           // Resolve all 1:n replacements
           Visit(Node);
         }
@@ -389,7 +386,7 @@ namespace cling {
       }
     }
 
-    Node->setStmts(*m_Context, NewChildren);
+    Node->replaceStmts(*m_Context, NewChildren);
 
     --m_NestedCompoundStmts;
     return ASTNodeInfo(Node, 0);
@@ -466,7 +463,7 @@ namespace cling {
         // Build Arg3 cling::Interpreter
         CXXScopeSpec CXXSS;
         DeclarationNameInfo NameInfo(m_gCling->getDeclName(),
-                                     m_gCling->getLocStart());
+                                     m_gCling->getBeginLoc());
         Expr* gClingDRE
           = m_Sema->BuildDeclarationNameExpr(CXXSS, NameInfo ,m_gCling).get();
         Inits.push_back(gClingDRE);
@@ -509,7 +506,7 @@ namespace cling {
                                      HandlerTy,
                                      VK_LValue,
                                      m_NoSLoc
-                                     ).getAs<DeclRefExpr>();
+                                     );
         // 3.2 Create a MemberExpr to getMemory from its declaration.
         CXXScopeSpec SS;
         LookupResult MemberLookup(*m_Sema, m_LHgetMemoryDecl->getDeclName(),
@@ -586,23 +583,19 @@ namespace cling {
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitExpr(Expr* Node) {
+    bool NeedsEval = false;
     for (Stmt::child_iterator
            I = Node->child_begin(), E = Node->child_end(); I != E; ++I) {
       if (*I) {
         ASTNodeInfo NewNode = Visit(*I);
         assert(NewNode.hasSingleNode() &&
                "Cannot have more than one stmt at that point");
-        if (NewNode.isForReplacement()) {
-          if (Expr *E = NewNode.getAs<Expr>())
-            // Assume void if still not escaped
-            *I = SubstituteUnknownSymbol(m_Context->VoidTy, E);
-        }
-        else {
-          *I = NewNode.getAsSingleNode();
-        }
+        if (NewNode.isForReplacement())
+          NeedsEval = true;
+        *I = NewNode.getAsSingleNode();
       }
     }
-    return ASTNodeInfo(Node, 0);
+    return ASTNodeInfo(Node, NeedsEval);
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitBinaryOperator(BinaryOperator* Node) {
@@ -732,16 +725,19 @@ namespace cling {
     for (unsigned int i = 0; i < Addresses.size(); ++i) {
 
       Expr* UnOp
-        = m_Sema->BuildUnaryOp(S, Addresses[i]->getLocStart(), UO_AddrOf,
+        = m_Sema->BuildUnaryOp(S, Addresses[i]->getBeginLoc(), UO_AddrOf,
                                Addresses[i]).get();
       if (!UnOp) {
         // Not good, return what we had.
         cling::errs() << "Error while creating dynamic expression for:\n  ";
         SubTree->printPretty(cling::errs(), 0 /*PrinterHelper*/,
                              m_Context->getPrintingPolicy(), 2);
+        cling::errs() << "\n";
+#ifndef NDEBUG
         cling::errs() <<
-          "\nwith internal representation (look for <dependent type>):\n";
+          "with internal representation (look for <dependent type>):\n";
         SubTree->dump(cling::errs(), m_Sema->getSourceManager());
+#endif
         return SubTree;
       }
       m_Sema->ImpCastExprToType(UnOp,
@@ -794,7 +790,7 @@ namespace cling {
                                        m_NoRange,
                                        ExprInfoTy,
                                        TrivialTSI,
-                                       /*ArraySize=*/0,
+                                       /*ArraySize=*/{},
                                        //BuildCXXNew depends on the SLoc to be
                                        //valid!
                                        // TODO: Propose a patch in clang
@@ -879,7 +875,7 @@ namespace cling {
                                                 FnTy,
                                                 VK_RValue,
                                                 m_NoSLoc
-                                                ).getAs<DeclRefExpr>();
+                                                );
 #if 0
     getTransaction()->setState(oldState);
 #endif
@@ -890,9 +886,9 @@ namespace cling {
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     CallExpr* EvalCall = m_Sema->ActOnCallExpr(S,
                                                DRE,
-                                               SubTree->getLocStart(),
+                                               SubTree->getBeginLoc(),
                                                CallArgs,
-                                               SubTree->getLocEnd()
+                                               SubTree->getEndLoc()
                                                ).getAs<CallExpr>();
     assert (EvalCall && "Cannot create call to Eval");
 

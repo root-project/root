@@ -20,15 +20,16 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGObject                                                             //
-//                                                                      //
-// This class is the baseclass for all ROOT GUI widgets.                //
-// The ROOT GUI components emulate the Win95 look and feel and the code //
-// is based on the XClass'95 code (see Copyleft in source).             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGObject
+    \ingroup guiwidgets
+
+This class is the baseclass for all ROOT GUI widgets.
+The ROOT GUI components emulate the Win95 look and feel and the code
+is based on the XClass'95 code (see Copyleft in source).
+
+*/
+
 
 #include "TGObject.h"
 #include "TVirtualX.h"
@@ -77,8 +78,12 @@ void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) 
 
 Bool_t TGObject::IsEqual(const TObject *obj) const
 {
-   if ((fId == 0) && (((const TGObject *) obj)->fId == 0))
-      return TObject::IsEqual(obj);
-   return fId == ((const TGObject *) obj)->fId;
+   if (auto gobj = dynamic_cast<const TGObject *>(obj)) {
+      if (fId == 0 && gobj->fId == 0)
+         return TObject::IsEqual(obj);
+      return fId == gobj->fId;
+   }
+   // TGObject != some-other-TObject:
+   return false;
 }
 

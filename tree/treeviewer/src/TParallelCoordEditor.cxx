@@ -14,7 +14,6 @@
 #include "TParallelCoordRange.h"
 #include "TParallelCoordVar.h"
 
-#include "TGFrame.h"
 #include "TGButton.h"
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
@@ -25,15 +24,9 @@
 #include "TColor.h"
 #include "TG3DLine.h"
 #include "TGSlider.h"
-#include "TGComboBox.h"
 #include "TGDoubleSlider.h"
-#include "TTree.h"
-#include "TGListBox.h"
 #include "TGedPatternSelect.h"
-#include "TPad.h"
 #include "TCanvas.h"
-
-#include "Riostream.h"
 
 #include "TROOT.h"
 
@@ -45,13 +38,13 @@ ClassImp(TParallelCoordEditor);
 This is the TParallelCoord editor. It brings tools to explore datas
 Using parallel coordinates. The main tools are:
 
-  - Dots spacing : Set the dots spacing with whichone the lines
+  - Dots spacing : Set the dots spacing with which-one the lines
     must be drawn. This tool is useful to reduce the image
     cluttering.
   - The Selections section : Set the current edited selection and
     allows to apply it to the tree through a generated entry list.
   - The Entries section : Set how many events must be drawn.
-    A weight cut can be defioned here (see TParallelCoord for a
+    A weight cut can be defined here (see TParallelCoord for a
     a description of the weight cut).
   - The Variables tab : To define the global settings to display
     the axes. It is also possible to add a variable from its
@@ -584,7 +577,7 @@ void TParallelCoordEditor::DoDeleteVar()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot to set the line dotspacing.
+/// Slot to set the line dot spacing.
 
 void TParallelCoordEditor::DoDotsSpacing()
 {
@@ -596,7 +589,7 @@ void TParallelCoordEditor::DoDotsSpacing()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot to set the line dotspacing from the entry field.
+/// Slot to set the line dot spacing from the entry field.
 
 void TParallelCoordEditor::DoDotsSpacingField()
 {
@@ -643,8 +636,8 @@ void TParallelCoordEditor::DoEntriesToDraw()
    if (fAvoidSignal) return;
 
    Long64_t nentries,firstentry;
-   firstentry = (Long64_t)fEntriesToDraw->GetMinPosition();
-   nentries = (Long64_t)(fEntriesToDraw->GetMaxPosition() - fEntriesToDraw->GetMinPosition() + 1);
+   firstentry = fEntriesToDraw->GetMinPositionL();
+   nentries = (Long64_t)(fEntriesToDraw->GetMaxPositionD() - fEntriesToDraw->GetMinPositionD() + 1);
 
    fParallel->SetCurrentFirst(firstentry);
    fParallel->SetCurrentN(nentries);
@@ -813,8 +806,8 @@ void TParallelCoordEditor::DoLiveEntriesToDraw()
    if (fAvoidSignal) return;
 
    Long64_t nentries,firstentry;
-   firstentry = (Long64_t)fEntriesToDraw->GetMinPosition();
-   nentries = (Long64_t)(fEntriesToDraw->GetMaxPosition() - fEntriesToDraw->GetMinPosition() + 1);
+   firstentry = fEntriesToDraw->GetMinPositionL();
+   nentries = (Long64_t)(fEntriesToDraw->GetMaxPositionD() - fEntriesToDraw->GetMinPositionD() + 1);
 
    fFirstEntry->SetNumber(firstentry);
    fNentries->SetNumber(nentries);
@@ -827,7 +820,7 @@ void TParallelCoordEditor::DoLiveEntriesToDraw()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot to update the wieght cut entry field from the slider position.
+/// Slot to update the weight cut entry field from the slider position.
 
 void TParallelCoordEditor::DoLiveWeightCut(Int_t n)
 {
@@ -891,7 +884,7 @@ void TParallelCoordEditor::DoSelectLineWidth(Int_t wid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot to set the selection beeing edited.
+/// Slot to set the selection being edited.
 
 void TParallelCoordEditor::DoSelectionSelect(const char* title)
 {
@@ -992,7 +985,7 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    CleanUpSelections();
    CleanUpVariables();
 
-   if (fInit) fEntriesToDraw->SetRange(0,fParallel->GetNentries());
+   if (fInit) fEntriesToDraw->SetRange(0LL,fParallel->GetNentries());
    fEntriesToDraw->SetPosition(fParallel->GetCurrentFirst(), fParallel->GetCurrentFirst()+fParallel->GetCurrentN());
 
    fFirstEntry->SetNumber(fParallel->GetCurrentFirst());

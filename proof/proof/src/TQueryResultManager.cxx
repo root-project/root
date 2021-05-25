@@ -284,7 +284,7 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
          if (gSystem->GetPathInfo(fn, st)) {
             PDB(kGlobal, 1)
                Info("ApplyMaxQueries","file '%s' cannot be stated: remove it", fn.Data());
-            gSystem->Unlink(gSystem->DirName(fn));
+            gSystem->Unlink(gSystem->GetDirName(fn));
             continue;
          }
 
@@ -317,8 +317,8 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
          if (nm) {
             gSystem->Unlink(nm->GetTitle());
             // Update dir counters
-            TString tdir(gSystem->DirName(nm->GetTitle()));
-            tdir = gSystem->DirName(tdir.Data());
+            TString tdir = gSystem->GetDirName(nm->GetTitle());
+            tdir = gSystem->GetDirName(tdir.Data());
             TParameter<Int_t> *nq = dynamic_cast<TParameter<Int_t>*>(dl->FindObject(tdir));
             if (nq) {
                Int_t val = nq->GetVal();

@@ -15,13 +15,16 @@ Implement some of the functionality of the class TTree requiring access to
 extra libraries (Histogram, display, etc).
 */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "Riostream.h"
 #include "TTreePlayer.h"
+
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TSystem.h"
 #include "TFile.h"
 #include "TEventList.h"
@@ -38,8 +41,7 @@ extra libraries (Histogram, display, etc).
 #include "TLeafI.h"
 #include "TLeafS.h"
 #include "TMath.h"
-#include "TH2.h"
-#include "TH3.h"
+#include "TH1.h"
 #include "TPolyMarker.h"
 #include "TPolyMarker3D.h"
 #include "TText.h"
@@ -59,9 +61,7 @@ extra libraries (Histogram, display, etc).
 #include "TChain.h"
 #include "TChainElement.h"
 #include "TF1.h"
-#include "TH1.h"
 #include "TVirtualFitter.h"
-#include "TEnv.h"
 #include "THLimitsFinder.h"
 #include "TSelectorDraw.h"
 #include "TSelectorEntries.h"
@@ -75,20 +75,20 @@ extra libraries (Histogram, display, etc).
 #include "TRefArrayProxy.h"
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
-#include "TStyle.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include "HFitInterface.h"
-#include "Foption.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 
 
-
 R__EXTERN Foption_t Foption;
 
-TVirtualFitter *tFitter=0;
+TVirtualFitter *tFitter = nullptr;
 
 ClassImp(TTreePlayer);
 
@@ -2356,10 +2356,18 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 /// if maxrows is set to 0 all rows of the Tree are shown.
 ///
 /// This option is interesting when dumping the contents of a Tree to
-/// an ascii file, eg from the command line
+/// an ascii file, eg from the command line.
+/// ### with ROOT 5
 /// ~~~{.cpp}
-///   tree->SetScanField(0);
-///   tree->Scan("*"); >tree.log
+///   root [0] tree->SetScanField(0);
+///   root [1] tree->Scan("*"); >tree.log
+/// ~~~
+/// ### with ROOT 6
+/// ~~~{.cpp}
+///   root [0] tree->SetScanField(0);
+///   root [1] .> tree.log
+///   tree->Scan("*");
+///   .>
 /// ~~~
 ///  will create a file tree.log
 ///
@@ -2523,22 +2531,20 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    Int_t i,nch;
    UInt_t ncols = 8;   // by default first 8 columns are printed only
    std::ofstream out;
-   Int_t lenfile = 0;
-   char * fname = 0;
+   const char *fname = nullptr;
+   TString fownname;
    if (fScanRedirect) {
       fTree->SetScanField(0);  // no page break if Scan is redirected
-      fname = (char *) fScanFileName;
-      if (!fname) fname = (char*)"";
-      lenfile = strlen(fname);
+      fname = fScanFileName;
+      if (!fname) fname = "";
+      Int_t lenfile = strlen(fname);
       if (!lenfile) {
-         Int_t nch2 = strlen(fTree->GetName());
-         fname = new char[nch2+10];
-         strlcpy(fname, fTree->GetName(),nch2+10);
-         strlcat(fname, "-scan.dat",nch2+10);
+         fownname = fTree->GetName();
+         fownname.Append("-scan.dat");
+         fname = fownname.Data();
       }
       out.open(fname, std::ios::out);
       if (!out.good ()) {
-         if (!lenfile) delete [] fname;
          Error("Scan","Can not open file for redirection");
          return 0;
       }
@@ -2588,7 +2594,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
                cnames[ncols].Append( lf->GetBranch()->GetName() );
             }
          }
-         if (strcmp( lf->GetBranch()->GetName(), lf->GetName() ) != 0 ) {
+         if (lf->GetBranch()->IsA() == TBranch::Class() ||
+             strcmp( lf->GetBranch()->GetName(), lf->GetName() ) != 0 ) {
             cnames[ncols].Append('.');
             cnames[ncols].Append( lf->GetName() );
          }
@@ -2941,8 +2948,14 @@ void TTreePlayer::SetEstimate(Long64_t n)
 
 void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 {
+   if (!gApplication)
+      TApplication::CreateApplication();
+   // make sure that the Gpad and GUI libs are loaded
+   TApplication::NeedGraphicsLibs();
+   if (gApplication)
+      gApplication->InitializeGraphics();
    if (gROOT->IsBatch()) {
-      Warning("StartViewer", "viewer cannot run in batch mode");
+      Warning("StartViewer", "The tree viewer cannot run in batch mode");
       return;
    }
 

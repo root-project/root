@@ -58,6 +58,6 @@ int main()
         std::cerr << "ERROR - Backward-Propagation 1 failed " << std::endl;
         return -1;
     }
-
+    
     std::cout << "All tests passed!" << std::endl;
 }

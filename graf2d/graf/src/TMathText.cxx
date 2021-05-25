@@ -9,9 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
-#include "TClass.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -20,6 +19,7 @@
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
+#include "TVirtualX.h"
 #include "TText.h"
 
 #include "../../../graf2d/mathtext/inc/mathtext.h"
@@ -44,6 +44,10 @@ The list of all available symbols is given in the following example:
 Begin_Macro
 ../../../tutorials/graphics/tmathtext2.C
 End_Macro
+
+#### Limitation:
+TMathText rendering is not implemented for the PDF output.
+PostScript output should be used instead.
 */
 
 const Double_t kPI      = TMath::Pi();
@@ -227,9 +231,9 @@ public:
       const bool cyrillic_or_cjk = is_cyrillic_or_cjk(character);
 
       if (cyrillic_or_cjk) {
-         TTF::SetTextFont(root_cjk_face_number());
+         TTF::SetTextFont((Font_t) root_cjk_face_number());
       } else {
-         TTF::SetTextFont(root_face_number(family));
+         TTF::SetTextFont((Font_t) root_face_number(family));
       }
       FT_Load_Glyph(
          TTF::fgFace[TTF::fgCurFontIdx],
@@ -294,7 +298,7 @@ public:
           const std::wstring string,
           const unsigned int family = FAMILY_PLAIN)
    {
-      SetTextFont(root_face_number(family));
+      SetTextFont((Font_t) root_face_number(family));
       SetTextSize(_current_font_size[family]);
       TAttText::Modify();
 
@@ -307,7 +311,7 @@ public:
          const bool cyrillic_or_cjk = is_cyrillic_or_cjk(buf[0]);
 
          if (cyrillic_or_cjk) {
-            SetTextFont(root_cjk_face_number());
+            SetTextFont((Font_t) root_cjk_face_number());
             TAttText::Modify();
          }
 
@@ -320,7 +324,7 @@ public:
          gPad->PaintText(xt, yt, buf);
          advance += b.advance();
          if (cyrillic_or_cjk) {
-            SetTextFont(root_face_number(family));
+            SetTextFont((Font_t) root_face_number(family));
             TAttText::Modify();
          }
       }
@@ -586,6 +590,11 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    Short_t saveAlign = fTextAlign;
 
    TAttText::Modify();
+   if (gVirtualPS) { // Initialise TMathTextRenderer
+      if (gPad->IsBatch()) {
+         if (gVirtualPS->InheritsFrom("TImageDump")) gPad->PaintText(0, 0, "");
+      }
+   }
 
    // Do not use Latex if font is low precision.
    if (fTextFont % 10 < 2) {

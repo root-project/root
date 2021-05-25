@@ -11,19 +11,20 @@
 
 #include "TText.h"
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TVirtualPad.h"
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include "TTF.h"
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TPoint.h"
-#include "TClass.h"
-#include <wchar.h>
+
+#include <cwchar>
 #include <cstdlib>
+#include <iostream>
 
 ClassImp(TText);
 
@@ -55,18 +56,9 @@ End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Text default constructor.
-
-TText::TText(): TNamed(), TAttText(), fWcsTitle(NULL)
-{
-   fX = 0.;
-   fY = 0.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Text normal constructor.
 
-TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(NULL)
+TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(nullptr)
 {
    fX = x;
    fY = y;
@@ -75,7 +67,7 @@ TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttTe
 ////////////////////////////////////////////////////////////////////////////////
 /// Text normal constructor.
 
-TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
+TText::TText(Double_t x, Double_t y, const wchar_t *text) : TNamed(), TAttText()
 {
    fX = x;
    fY = y;
@@ -89,17 +81,24 @@ TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
 
 TText::~TText()
 {
-   if (fWcsTitle != NULL) delete reinterpret_cast<std::wstring *>(fWcsTitle);
+   if (fWcsTitle) delete reinterpret_cast<std::wstring *>(fWcsTitle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(NULL)
+TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(nullptr)
 {
-   fX = 0.;
-   fY = 0.;
-   ((TText&)text).Copy(*this);
+   text.TText::Copy(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
+TText &TText::operator=(const TText &src)
+{
+   src.TText::Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -745,7 +744,7 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
 void TText::PaintText(Double_t x, Double_t y, const char *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintText(x,y,text);
+   if (gPad) gPad->PaintText(x,y,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -754,7 +753,7 @@ void TText::PaintText(Double_t x, Double_t y, const char *text)
 void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintText(x,y,text);
+   if (gPad) gPad->PaintText(x,y,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -763,7 +762,7 @@ void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintTextNDC(u,v,text);
+   if (gPad) gPad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -772,7 +771,7 @@ void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 void TText::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintTextNDC(u,v,text);
+   if (gPad) gPad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

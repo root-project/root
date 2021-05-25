@@ -23,13 +23,12 @@ RooExpensiveObjectCache is a singleton class that serves as repository
 for objects that are expensive to calculate. Owners of such objects
 can registers these here with associated parameter values for which
 the object is valid, so that other instances can, at a later moment
-retrieve these precalculated objects
+retrieve these precalculated objects.
 **/
 
 
 #include "TClass.h"
 #include "RooFit.h"
-#include "RooSentinel.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgSet.h"
@@ -41,9 +40,6 @@ using namespace std ;
 
 ClassImp(RooExpensiveObjectCache);
 ClassImp(RooExpensiveObjectCache::ExpensiveObject);
-  ;
-
-RooExpensiveObjectCache* RooExpensiveObjectCache::_instance = 0 ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,10 +69,6 @@ RooExpensiveObjectCache::~RooExpensiveObjectCache()
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter!=_map.end() ; ++iter) {
     delete iter->second ;
   }
-
-  if (_instance == this) {
-    _instance = 0 ;
-  }
 }
 
  
@@ -87,25 +79,9 @@ RooExpensiveObjectCache::~RooExpensiveObjectCache()
 
 RooExpensiveObjectCache& RooExpensiveObjectCache::instance() 
 {
-  if (!_instance) {
-    _instance = new RooExpensiveObjectCache() ;    
-    RooSentinel::activate() ;    
-  }
-  return *_instance ;
+  static RooExpensiveObjectCache instance;
+  return instance;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Static function called by RooSentinel atexit() handler to cleanup at end of program
-
-void RooExpensiveObjectCache::cleanup() 
-{
-  delete _instance ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +230,7 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const cha
     } else {
       RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
       if (cat) {
-	_catRefParams[cat->GetName()] = cat->getIndex() ;
+	_catRefParams[cat->GetName()] = cat->getCurrentIndex() ;
       } else {
 	oocoutW(&inPayload,Caching) << "RooExpensiveObject::registerObject() WARNING: ignoring non-RooAbsReal/non-RooAbsCategory reference parameter " << arg->GetName() << endl ;
       }
@@ -311,7 +287,7 @@ Bool_t RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooAr
     } else {
       RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
       if (cat) {
-	if (cat->getIndex() != _catRefParams[cat->GetName()]) {
+	if (cat->getCurrentIndex() != _catRefParams[cat->GetName()]) {
 	  delete iter ;
 	  return kFALSE ;
 	}
@@ -343,17 +319,17 @@ void RooExpensiveObjectCache::print() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooExpensiveObjectCache::ExpensiveObject::print() 
+void RooExpensiveObjectCache::ExpensiveObject::print() const
 {
   cout << _payload->IsA()->GetName() << "::" << _payload->GetName() ;
   if (_realRefParams.size()>0 || _catRefParams.size()>0) {
     cout << " parameters=( " ;
-    map<TString,Double_t>::iterator iter = _realRefParams.begin() ;
+    auto iter = _realRefParams.begin() ;
     while(iter!=_realRefParams.end()) {
       cout << iter->first << "=" << iter->second << " " ;
       ++iter ;
     }  
-    map<TString,Int_t>::iterator iter2 = _catRefParams.begin() ;
+    auto iter2 = _catRefParams.begin() ;
     while(iter2!=_catRefParams.end()) {
       cout << iter2->first << "=" << iter2->second << " " ;
       ++iter2 ;

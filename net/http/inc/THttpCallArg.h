@@ -25,6 +25,7 @@ class THttpWSEngine;
 class THttpWSHandler;
 
 class THttpCallArg : public TObject {
+
    friend class THttpServer;
    friend class THttpWSEngine;
    friend class THttpWSHandler;
@@ -63,16 +64,14 @@ protected:
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
-   std::string  fContent;  ///!< content - text or binary
+   std::string  fContent;  ///<! content - text or binary
    std::string  fPostData; ///<! data received with post request - text - or binary
 
    void AssignWSId();
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
 
-   void ReplaceAllinContent(const std::string &from, const std::string &to);
-
 public:
-   explicit THttpCallArg() = default;
+   explicit THttpCallArg() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    virtual ~THttpCallArg();
 
    // these methods used to set http request arguments
@@ -107,6 +106,12 @@ public:
    /** get web-socket id */
    UInt_t GetWSId() const { return fWSId; }
 
+   /** provide WS kind - websocket, longpoll, rawlongpoll */
+   virtual const char *GetWSKind() const { return "websocket"; }
+
+   /** provide WS platform - http, fastcgi, cef3, qt5 */
+   virtual const char *GetWSPlatform() const { return "http"; }
+
    /** set full set of request header */
    void SetRequestHeader(const char *h) { fRequestHeader = (h ? h : ""); }
 
@@ -137,10 +142,6 @@ public:
    /** return length of posted with request data */
    Long_t GetPostDataLength() const { return (Long_t) fPostData.length(); }
 
-   /** returns post data as TString */
-   TString GetPostDataAsString() const _R__DEPRECATED_618("Use other methods to access POST data")
-   { return TString(fPostData.c_str()); }
-
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }
 
@@ -161,8 +162,17 @@ public:
    /** mark reply as 404 error - page/request not exists or refused */
    void Set404() { SetContentType("_404_"); }
 
+   /** Return true if reply can be postponed by server  */
+   virtual Bool_t CanPostpone() const { return kTRUE; }
+
    /** mark as postponed - reply will not be send to client immediately */
-   void SetPostponed() { SetContentType("_postponed_"); }
+   void SetPostponed()
+   {
+      if (CanPostpone())
+         SetContentType("_postponed_");
+      else
+         Set404();
+   }
 
    /** indicate that http request should response with file content */
    void SetFile(const char *filename = nullptr)
@@ -201,6 +211,7 @@ public:
 
    void SetContent(const char *cont);
    void SetContent(std::string &&cont);
+   void ReplaceAllinContent(const std::string &from, const std::string &to, bool once = false);
 
    Bool_t CompressWithGzip();
 
@@ -210,7 +221,6 @@ public:
    /** add extra http header value to the reply */
    void SetExtraHeader(const char *name, const char *value) { AddHeader(name, value); }
 
-   void FillHttpHeader(TString &buf, const char *header = nullptr) _R__DEPRECATED_618("Use method returning std::string");
    std::string FillHttpHeader(const char *header = nullptr);
 
    // these methods used to return results of http request processing
@@ -225,8 +235,6 @@ public:
    Bool_t IsXml() const { return IsContentType("text/xml"); }
    Bool_t IsJson() const { return IsContentType("application/json"); }
    Bool_t IsBinary() const { return IsContentType("application/x-binary"); }
-
-   void SetBinData(void *data, Long_t length) _R__DEPRECATED_618("Use SetContent(std::string &&)");
 
    Long_t GetContentLength() const { return (Long_t) fContent.length(); }
    const void *GetContent() const { return fContent.data(); }

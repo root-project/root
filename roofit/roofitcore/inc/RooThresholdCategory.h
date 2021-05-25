@@ -16,20 +16,22 @@
 #ifndef ROO_THRESHOLD_CATEGORY
 #define ROO_THRESHOLD_CATEGORY
 
-#include "TSortedList.h"
 #include "RooAbsCategory.h"
 #include "RooRealProxy.h"
-#include "RooCatType.h"
+#include <vector>
+#include <utility>
+
+#include "RooFitLegacy/RooCatTypeLegacy.h"
 
 class RooThresholdCategory : public RooAbsCategory {
 
 public:
   // Constructors etc.
-  inline RooThresholdCategory() { }
-  RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, const char* defCatName="Default", Int_t defCatIdx=0);
+  RooThresholdCategory() {};
+  RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
+      const char* defCatName="Default", Int_t defCatIdx=0);
   RooThresholdCategory(const RooThresholdCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooThresholdCategory(*this, newname); }
-  virtual ~RooThresholdCategory();
 
   // Mapping function
   Bool_t addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
@@ -42,13 +44,14 @@ public:
 protected:
   
   RooRealProxy _inputVar ;
-  RooCatType* _defCat ;
-  TSortedList _threshList ;
-  TIterator* _threshIter ; //! do not persist 
+  const value_type _defIndex{std::numeric_limits<value_type>::min()};
+  std::vector<std::pair<double,value_type>> _threshList;
 
-  virtual RooCatType evaluate() const ; 
+  virtual value_type evaluate() const ;
+  /// No shape recomputation is necessary. This category does not depend on other categories.
+  void recomputeShape() { }
 
-  ClassDef(RooThresholdCategory,1) // Real-to-Category function defined by series of threshold
+  ClassDef(RooThresholdCategory, 3) // Real-to-Category function defined by series of thresholds
 };
 
 #endif

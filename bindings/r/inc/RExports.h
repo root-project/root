@@ -1,9 +1,9 @@
 // @(#)root/r:$Id$
-// Author: Omar Zapata   29/05/2013
+// Author: Omar Zapata  Omar.Zapata@cern.ch   29/05/2013
 
 
 /*************************************************************************
- * Copyright (C) 2013-2014, Omar Andres Zapata Mesa                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -132,6 +132,11 @@ namespace Rcpp {
 #undef HAVE_UINTPTR_T
 #include<RInside.h>
 
+#ifdef Free
+// see https://sft.its.cern.ch/jira/browse/ROOT-9258
+# undef Free
+#endif
+
 namespace ROOT {
    namespace R {
       //reference to internal ROOTR's Module that call ROOT's classes in R
@@ -149,7 +154,7 @@ namespace ROOT {
          Rcpp::function(name_, fun, docstring);
       }
 
-      extern Rcpp::internal::NamedPlaceHolder Label;
+      extern const Rcpp::internal::NamedPlaceHolder &Label;
    }
 }
 

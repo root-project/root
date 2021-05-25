@@ -14,15 +14,19 @@
 //    stressGraphics
 //
 // To get a short help:
+//
 //    stressGraphics -h
 //
-// To run interactively, do
-// root
-//  Root > .L stressGraphics.cxx
-//  Root > stressGraphics()
-
-
-#ifndef __CINT__
+// To run interactively, do:
+//
+//    root -b
+//    root [0] .L stressGraphics.cxx
+//    root [1] stressGraphics()
+//
+// or:
+//
+//    root -b
+//    root [0] .x  stressGraphics.cxx
 
 #include <stdlib.h>
 #include <Riostream.h>
@@ -145,7 +149,6 @@ void     patterns_box   (Int_t pat, Double_t x1, Double_t y1, Double_t x2, Doubl
 Double_t interference   (Double_t *x, Double_t *par);
 Double_t result         (Double_t *x, Double_t *par);
 void     cleanup        ();
-#endif
 
 // Global variables.
 Int_t     gVerbose;
@@ -173,7 +176,7 @@ char      outfile[16];
 char      gLine[80];
 
 
-#ifndef __CINT__
+#ifndef __CLING__
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[])
@@ -280,9 +283,13 @@ void stressGraphics(Int_t verbose = 0)
    gErrorIgnoreLevel = 0;
 
    // Read the reference file "stressGraphics.ref"
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+   FILE *sg = fopen("stressGraphics_builtinzlib.ref","r");
+#else
    FILE *sg = fopen("stressGraphics.ref","r");
+#endif
    if (!sg) {
-      printf("Could not open stressGraphics.ref\n");
+      printf("Could not open stressGraphics.ref/stressGraphics_builtinzlib.ref\n");
       return;
    }
    char line[160];
@@ -1583,7 +1590,7 @@ void tgaxis5()
          char buf[256];
          if (offset[i] < t[i]) {
             sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
-                    stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
+                    stime(t+i).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;

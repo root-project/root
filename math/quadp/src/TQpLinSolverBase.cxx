@@ -40,17 +40,15 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQpLinSolverBase                                                     //
-//                                                                      //
-// Implementation of main solver for linear systems                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TQpLinSolverBase
+///
+/// Implementation of main solver for linear systems
+///
+////////////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TQpLinSolverBase.h"
-#include "TMatrixD.h"
 
 ClassImp(TQpLinSolverBase);
 

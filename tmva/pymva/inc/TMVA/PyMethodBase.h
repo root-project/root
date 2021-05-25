@@ -28,6 +28,7 @@
 
 #include "Rtypes.h"
 #include "TString.h"
+#include <vector>
 
 class TFile;
 class TGraph;
@@ -41,15 +42,6 @@ class TH1D;
 struct _object;
 typedef _object PyObject;
 #define Py_single_input 256
-#endif
-
-// needed by NPY_API_VERSION
-#include "numpy/numpyconfig.h"
-#if (NPY_API_VERSION >= 0x00000007 )
-struct tagPyArrayObject;
-typedef tagPyArrayObject PyArrayObject;
-#else
-struct PyArrayObject;
 #endif
 
 namespace TMVA {
@@ -118,10 +110,6 @@ namespace TMVA {
    protected:
       PyObject *fModule; // Module to load
       PyObject *fClassifier; // Classifier object
-
-      PyArrayObject *fTrainData;
-      PyArrayObject *fTrainDataWeights; // array of weights
-      PyArrayObject *fTrainDataClasses; // array with sig/bgk class
 
       PyObject *fPyReturn; // python return data
 

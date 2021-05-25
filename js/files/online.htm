@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <!--  this file used by THttpServer to display objects hierarchy -->
+      <meta charset="UTF-8">
+      <title>Online server</title>
+      <link rel="shortcut icon" href="jsrootsys/img/RootIcon.ico"/>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
+   </head>
+
+   <body>
+      <div id="onlineGUI">
+         loading scripts...
+      </div>
+
+      <script type="text/javascript">
+         function GetCachedHierarchy() { return "$$$h.json$$$"; }
+
+         JSROOT.buildGUI("onlineGUI", "online");
+      </script>
+
+   </body>
+
+</html>

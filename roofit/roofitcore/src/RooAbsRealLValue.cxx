@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 RooAbsRealLValue is the common abstract base class for objects that represent a
-real value that may appear on the left hand side of an equation ('lvalue')
+real value that may appear on the left hand side of an equation ('lvalue').
 Each implementation must provide a setVal() member to allow direct modification 
 of the value. RooAbsRealLValue may be derived, but its functional relation
 to other RooAbsArg must be invertible
@@ -32,16 +32,9 @@ range when interpreted as a observable and a boundaries when
 interpreted as a parameter.
 **/
 
-#include "RooFit.h"
-
-#include <math.h>
-#include "Riostream.h"
-#include "TObjString.h"
-#include "TTree.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TH3.h"
 #include "RooAbsRealLValue.h"
+
+#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooRandom.h"
 #include "RooPlot.h"
@@ -50,11 +43,16 @@ interpreted as a parameter.
 #include "RooBinning.h"
 #include "RooUniformBinning.h"
 #include "RooCmdConfig.h"
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
+#include "RooHelpers.h"
 
+#include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 
+#include <cmath>
 
 using namespace std;
 
@@ -104,19 +102,11 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
 
   // test this value against our upper fit limit
   if(!RooNumber::isInfinite(max) && value > (max+1e-6)) {
-    if (clippedValPtr) {
-//       coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-// 			    << " rounded down to max limit " << getMax(rangeName) << endl ;
-    }
     clippedValue = max;
     isInRange = kFALSE ;
   }
   // test this value against our lower fit limit
   if(!RooNumber::isInfinite(min) && value < min-1e-6) {
-    if (clippedValPtr) {
-//       coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-// 			    << " rounded up to min limit " << getMin(rangeName) << endl;
-    }
     clippedValue = min ;
     isInRange = kFALSE ;
   } 
@@ -188,28 +178,26 @@ RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Create a new RooPlot on the heap with a drawing frame initialized for this
+/// object, but no plot contents. Use x.frame() as the first argument to a
+/// y.plotOn(...) method, for example. The caller is responsible for deleting
+/// the returned object.
+///
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> Range(double lo, double hi)          <td> Make plot frame for the specified range
+/// <tr><td> Range(const char* name)              <td> Make plot frame for range with the specified name
+/// <tr><td> Bins(Int_t nbins)                    <td> Set default binning for datasets to specified number of bins
+/// <tr><td> AutoRange(const RooAbsData& data, double margin) <td> Specifies range so that all points in given data set fit
+///     inside the range with given margin.
+/// <tr><td> AutoSymRange(const RooAbsData& data, double margin) <td> Specifies range so that all points in given data set fit
+///     inside the range and center of range coincides with mean of distribution in given dataset.
+/// <tr><td> Name(const char* name)               <td> Give specified name to RooPlot object
+/// <tr><td> Title(const char* title)             <td> Give specified title to RooPlot object
+/// </table>
+///
 RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
 				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
-
-  // Create a new RooPlot on the heap with a drawing frame initialized for this
-  // object, but no plot contents. Use x.frame() as the first argument to a
-  // y.plotOn(...) method, for example. The caller is responsible for deleting
-  // the returned object.
-  //
-  // This function takes the following named arguments
-  //
-  // Range(double lo, double hi)          -- Make plot frame for the specified range
-  // Range(const char* name)              -- Make plot frame for range with the specified name
-  // Bins(Int_t nbins)                    -- Set default binning for datasets to specified number of bins
-  // AutoRange(const RooAbsData& data,    -- Specifies range so that all points in given data set fit 
-  //                    double margin)       inside the range with given margin.
-  // AutoSymRange(const RooAbsData& data, -- Specifies range so that all points in given data set fit 
-  //                    double margin)       inside the range and center of range coincides with mean
-  //                                         of distribution in given dataset. 
-  // Name(const char* name)               -- Give specified name to RooPlot object 
-  // Title(const char* title)             -- Give specified title to RooPlot object
-  //  
 {
   RooLinkedList cmdList ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
@@ -260,8 +248,12 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
     xmin = getMin(rangeName) ;
     xmax = getMax(rangeName) ;
   } else if (pc.hasProcessed("AutoRange")) {
-    RooTreeData* rangeData = static_cast<RooTreeData*>(pc.getObject("rangeData")) ;
-    rangeData->getRange((RooRealVar&)*this,xmin,xmax) ;
+    auto rangeData = static_cast<RooAbsData*>(pc.getObject("rangeData")) ;
+    const bool error = rangeData->getRange(*this,xmin,xmax);
+    if (error) {
+      xmin = getMin();
+      xmax = getMax();
+    }
     if (pc.getInt("rangeSym")==0) {
       // Regular mode: range is from xmin to xmax with given extra margin
       Double_t margin = pc.getDouble("rangeMargin")*(xmax-xmin) ;    
@@ -506,13 +498,23 @@ Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if current value is inside range with given name
-
+/// Check if current value is inside range with given name. Multiple comma-separated
+/// ranges can be passed. In this case, it will be checked if the value is in any of
+/// these ranges.
 Bool_t RooAbsRealLValue::inRange(const char* name) const 
 {
-  Double_t val = getVal() ;
-  Double_t epsilon = 1e-8 * fabs(val) ;
-  return (val >= getMin(name)-epsilon && val <= getMax(name)+epsilon) ;
+  const double val = getVal() ;
+  const double epsilon = 1e-8 * fabs(val) ;
+  if (!name || name[0] == '\0') {
+    const auto minMax = getRange(nullptr);
+    return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
+  }
+
+  const auto& ranges = RooHelpers::tokenise(name, ",");
+  return std::any_of(ranges.begin(), ranges.end(), [val,epsilon,this](const std::string& range){
+    const auto minMax = this->getRange(range.c_str());
+    return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
+  });
 }
 
 

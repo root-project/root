@@ -85,7 +85,6 @@ def makepch():
                  "-D__STDC_LIMIT_MACROS",
                  "-D__STDC_CONSTANT_MACROS",
                  "-DROOT_PCH",
-                 "-fsigned-char",
                  "-I%s" %os.path.join(rootdir,"include"),
                  "-I%s" %os.path.join(rootdir,"etc"),
                  "-I%s" %os.path.join(rootdir,cfgdir),
@@ -101,12 +100,12 @@ def makepch():
       alllinkdefsFilename.replace("\\","/")
 
    rootclingExe = os.path.join(rootdir,"bin","rootcling")
-   command = "%s %s -1 -f allDict.cxx -noDictSelection -c %s %s %s %s" %(rootclingExe,
-                                                                         rootbuildFlag,
-                                                                         allCppFlags,
-                                                                         allheadersFilename,
-                                                                         extraHeaders,
-                                                                         alllinkdefsFilename)
+   command = "%s %s -generate-pch -f allDict.cxx -noDictSelection %s %s %s %s" %(rootclingExe,
+                                                                                 rootbuildFlag,
+                                                                                 allCppFlags,
+                                                                                 allheadersFilename,
+                                                                                 extraHeaders,
+                                                                                 alllinkdefsFilename)
 
    if "VERBOSE" in os.environ:
       print(command)
@@ -116,7 +115,7 @@ def makepch():
    if not existing_ldlib: existing_ldlib = ""
    my_env["LD_LIBRARY_PATH"] = os.path.join(rootdir, "lib") + ":" + existing_ldlib
 
-   ret = subprocess.call(command, env=my_env, shell=True)
+   ret = subprocess.call(command.split(), env=my_env)
    if ret == 0:
       shutil.move("allDict_rdict.pch",pchFileName)
       os.unlink("allDict.cxx")

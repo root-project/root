@@ -35,21 +35,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-// ROOT_VERSION(5,15,02) = (5<<16)+(15<<8)+2 = 364802
-// we use the hardcoded number here since CINT does not easily understand macros
-// we tried using rootcints -p option, but that causes rootcint to pick up
-// things from the ROOT version of TMVA
-
-// #if ROOT_VERSION_CODE >= 364802
 #include "TMathBase.h"
-// #else
-// #ifndef ROOT_TMath
-// #include "TMath.h"
-// #endif
-// #endif
-
-#include "TObject.h"
-#include "TString.h"
 
 #include "TMVA/TNeuronInput.h"
 

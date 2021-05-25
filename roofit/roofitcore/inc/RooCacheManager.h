@@ -116,28 +116,27 @@ protected:
 } ;
 
 
+/// Constructor for simple caches without RooAbsArg payload. A cache
+/// made with this constructor is not registered with its owner
+/// and will not receive information on server redirects and
+/// cache operation mode changes.
 template<class T>
 RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
 {
-  // Constructor for simple caches without RooAbsArg payload. A cache
-  // made with this constructor is not registered with its owner
-  // and will not receive information on server redirects and
-  // cache operation mode changes
-
   _maxSize = maxSize ;
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
   _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
   _wired = kFALSE ;
 }
 
+
+/// Constructor for simple caches with RooAbsArg derived payload. A cache
+/// made with this constructor is registered with its owner
+/// and will receive information on server redirects and
+/// cache operation mode changes.
 template<class T>
 RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCache(owner)
 {
-  // Constructor for simple caches with RooAbsArg derived payload. A cache
-  // made with this constructor is registered with its owner
-  // and will receive information on server redirects and
-  // cache operation mode changes
-  
   _maxSize = maxSize ;
   _size = 0 ;
 
@@ -153,12 +152,10 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
 
 }
 
-
+/// Copy constructor.
 template<class T>
 RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* owner) : RooAbsCache(other,owner)
 {
-  // Copy constructor
-
   _maxSize = other._maxSize ;
   _size = other._size ;
   
@@ -180,28 +177,21 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   }
 }
 
-
+  /// Destructor
 template<class T>
 RooCacheManager<T>::~RooCacheManager()
 {
-  // Destructor
-
-  //delete[] _nsetCache ;  
-  Int_t i ;
-  for (i=0 ; i<_size ; i++) {
+  for (int i=0 ; i<_size ; i++) {
     delete _object[i] ;
   }
-  //delete[] _object ;
 }
 
 
+  /// Clear the cache
 template<class T>
 void RooCacheManager<T>::reset() 
 {
-  // Clear the cache
-
-  Int_t i ;
-  for (i=0 ; i<_maxSize ; i++) {
+  for (int i=0 ; i<_maxSize ; i++) {
     delete _object[i] ;
     _object[i]=0 ;
     _nsetCache[i].clear() ;
@@ -211,13 +201,11 @@ void RooCacheManager<T>::reset()
 }
   
 
-
+/// Clear the cache payload but retain slot mapping w.r.t to
+/// normalization and integration sets.
 template<class T>
 void RooCacheManager<T>::sterilize() 
 {
-  // Clear the cache payload but retain slot mapping w.r.t to
-  // normalization and integration sets.
-
   Int_t i ;
   for (i=0 ; i<_maxSize ; i++) {
     delete _object[i] ;
@@ -226,15 +214,14 @@ void RooCacheManager<T>::sterilize()
 }
   
 
-
+/// Insert payload object 'obj' in cache indexed on nset,iset and isetRangeName.
 template<class T>
 Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName) 
 {
-  // Insert payload object 'obj' in cache indexed on nset,iset and isetRangeName
-
   // Check if object is already registered
   Int_t sterileIdx(-1) ;
   if (getObj(nset,iset,&sterileIdx,isetRangeName)) {
+    delete obj; // important! do not forget to cleanup memory
     return lastIndex() ;
   } 
 
@@ -284,14 +271,12 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
 }
 
 
-
+/// Retrieve payload object indexed on nset,uset amd isetRangeName
+/// If sterileIdx is not null, it is set to the index of the sterile
+/// slot in cacse such a slot is recycled.
 template<class T>
 T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx, const TNamed* isetRangeName) 
 {
-  // Retrieve payload object indexed on nset,uset amd isetRangeName
-  // If sterileIdx is not null, it is set to the index of the sterile
-  // slot in cacse such a slot is recycled
-
   // Fast-track for wired mode
   if (_wired) {
     if(_object[0]==0 && sterileIdx) *sterileIdx=0 ;
@@ -319,12 +304,10 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
 }
 
 
-
+/// Retrieve payload object by slot index.
 template<class T>
 T* RooCacheManager<T>::getObjByIndex(Int_t index) const 
 {
-  // Retrieve payload object by slot index
-
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
 				   << index << ") out of range [0," << _size-1 << "]" << std::endl ;
@@ -333,11 +316,11 @@ T* RooCacheManager<T>::getObjByIndex(Int_t index) const
   return _object[index] ;
 }
 
+
+/// Retrieve RooNameSet associated with slot at given index.
 template<class T>
 const RooNameSet* RooCacheManager<T>::nameSet1ByIndex(Int_t index) const
 {
-  // Retrieve RooNameSet associated with slot at given index
-
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
 				   << index << ") out of range [0," << _size-1 << "]" << std::endl ;
@@ -346,11 +329,11 @@ const RooNameSet* RooCacheManager<T>::nameSet1ByIndex(Int_t index) const
   return &_nsetCache[index].nameSet1() ;
 }
 
+
+/// Retrieve RooNameSet associated with slot at given index.
 template<class T>
 const RooNameSet* RooCacheManager<T>::nameSet2ByIndex(Int_t index) const 
 {
-  // Retrieve RooNameSet associated with slot at given index
-
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
 				   << index << ") out of range [0," << _size-1 << "]" << std::endl ;

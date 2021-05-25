@@ -12,37 +12,28 @@
     \ingroup Roofit
 
 RooFit Lognormal PDF. The two parameters are:
-  - m0: the median of the distribution
-  - k=exp(sigma): sigma is called the shape parameter in the TMath parameterization
+  - `m0`: the median of the distribution
+  - `k = exp(sigma)`: sigma is called the shape parameter in the TMath parameterization
 
-\f[ Lognormal(x,m_0,k) = \frac{e^{(-ln^2(x/m_0))/(2ln^2(k))}}{\sqrt{2\pi \cdot ln(k)\cdot x}} \f]
+\f[
+  \mathrm{RooLognormal}(x \, | \, m_0, k) = \frac{1}{\sqrt{2\pi \cdot \ln(k) \cdot x}} \cdot \exp\left( \frac{-\ln^2(\frac{x}{m_0})}{2 \ln^2(k)} \right)
+\f]
 
-The parameterization here is physics driven and differs from the ROOT::Math::lognormal_pdf(x,m,s,x0) with:
-  - m = log(m0)
-  - s = log(k)
-  - x0 = 0
+The parameterization here is physics driven and differs from the ROOT::Math::lognormal_pdf() in `x,m,s,x0` with:
+  - `m = log(m0)`
+  - `s = log(k)`
+  - `x0 = 0`
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooLognormal.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
-#include "TMath.h"
+#include "RooHelpers.h"
+#include "RooBatchCompute.h"
 
-#include <Math/SpecFuncMathCore.h>
+#include "TClass.h"
+
 #include <Math/PdfFuncMathCore.h>
-#include <Math/ProbFuncMathCore.h>
-
-#include "TError.h"
-
-using namespace std;
 
 ClassImp(RooLognormal);
 
@@ -56,6 +47,14 @@ RooLognormal::RooLognormal(const char *name, const char *title,
   m0("m0","m0",this,_m0),
   k("k","k",this,_k)
 {
+    RooHelpers::checkRangeOfParameters(this, {&_x, &_m0, &_k}, 0.);
+    
+    auto par = dynamic_cast<const RooAbsRealLValue*>(&_k);
+    if (par && par->getMin()<=1 && par->getMax()>=1 ) {
+      oocoutE(this, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
+          << par->getMax() << "] of the " << this->IsA()->GetName() << " '" << this->GetName()
+          << "' can reach the unsafe value 1.0 " << ". Advise to limit its range." << std::endl;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,13 +73,17 @@ RooLognormal::RooLognormal(const RooLognormal& other, const char* name) :
 
 Double_t RooLognormal::evaluate() const
 {
-  Double_t xv = x;
   Double_t ln_k = TMath::Abs(TMath::Log(k));
   Double_t ln_m0 = TMath::Log(m0);
-  Double_t x0 = 0;
 
-  Double_t ret = ROOT::Math::lognormal_pdf(xv,ln_m0,ln_k,x0);
+  Double_t ret = ROOT::Math::lognormal_pdf(x,ln_m0,ln_k);
   return ret ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Lognormal distribution.  
+RooSpan<double> RooLognormal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooBatchCompute::dispatch->computeLognormal(this, evalData, x->getValues(evalData, normSet), m0->getValues(evalData, normSet), k->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

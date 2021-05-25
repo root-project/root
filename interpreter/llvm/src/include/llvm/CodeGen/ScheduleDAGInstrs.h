@@ -1,9 +1,8 @@
 //===- ScheduleDAGInstrs.h - MachineInstr Scheduling ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,9 +23,9 @@
 #include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSchedule.h"
 #include "llvm/MC/LaneBitmask.h"
-#include "llvm/Target/TargetRegisterInfo.h"
 #include <cassert>
 #include <cstdint>
 #include <list>
@@ -190,7 +189,7 @@ namespace llvm {
     using SUList = std::list<SUnit *>;
 
   protected:
-    /// \brief A map from ValueType to SUList, used during DAG construction, as
+    /// A map from ValueType to SUList, used during DAG construction, as
     /// a means of remembering which SUs depend on which memory locations.
     class Value2SUsMap;
 
@@ -201,7 +200,7 @@ namespace llvm {
     void reduceHugeMemNodeMaps(Value2SUsMap &stores,
                                Value2SUsMap &loads, unsigned N);
 
-    /// \brief Adds a chain edge between SUa and SUb, but only if both
+    /// Adds a chain edge between SUa and SUb, but only if both
     /// AliasAnalysis and Target fail to deny the dependency.
     void addChainDependency(SUnit *SUa, SUnit *SUb,
                             unsigned Latency = 0);
@@ -234,6 +233,11 @@ namespace llvm {
 
     /// For an unanalyzable memory access, this Value is used in maps.
     UndefValue *UnknownValue;
+
+
+    /// Topo - A topological ordering for SUnits which permits fast IsReachable
+    /// and similar queries.
+    ScheduleDAGTopologicalSort Topo;
 
     using DbgValueVector =
         std::vector<std::pair<MachineInstr *, MachineInstr *>>;
@@ -275,13 +279,18 @@ namespace llvm {
     /// Returns an existing SUnit for this MI, or nullptr.
     SUnit *getSUnit(MachineInstr *MI) const;
 
+    /// If this method returns true, handling of the scheduling regions
+    /// themselves (in case of a scheduling boundary in MBB) will be done
+    /// beginning with the topmost region of MBB.
+    virtual bool doMBBSchedRegionsTopDown() const { return false; }
+
     /// Prepares to perform scheduling in the given block.
     virtual void startBlock(MachineBasicBlock *BB);
 
     /// Cleans up after scheduling in the given block.
     virtual void finishBlock();
 
-    /// \brief Initialize the DAG and common scheduler state for a new
+    /// Initialize the DAG and common scheduler state for a new
     /// scheduling region. This does not actually create the DAG, only clears
     /// it. The scheduling driver may call BuildSchedGraph multiple times per
     /// scheduling region.
@@ -303,7 +312,7 @@ namespace llvm {
                          LiveIntervals *LIS = nullptr,
                          bool TrackLaneMasks = false);
 
-    /// \brief Adds dependencies from instructions in the current list of
+    /// Adds dependencies from instructions in the current list of
     /// instructions being scheduled to scheduling barrier. We want to make sure
     /// instructions which define registers that are either used by the
     /// terminator or are live-out are properly scheduled. This is especially
@@ -322,7 +331,8 @@ namespace llvm {
     /// whole MachineFunction. By default does nothing.
     virtual void finalizeSchedule() {}
 
-    void dumpNode(const SUnit *SU) const override;
+    void dumpNode(const SUnit &SU) const override;
+    void dump() const override;
 
     /// Returns a label for a DAG node that points to an instruction.
     std::string getGraphNodeLabel(const SUnit *SU) const override;
@@ -332,6 +342,17 @@ namespace llvm {
 
     /// Fixes register kill flags that scheduling has made invalid.
     void fixupKills(MachineBasicBlock &MBB);
+
+    /// True if an edge can be added from PredSU to SuccSU without creating
+    /// a cycle.
+    bool canAddEdge(SUnit *SuccSU, SUnit *PredSU);
+
+    /// Add a DAG edge to the given SU with the given predecessor
+    /// dependence data.
+    ///
+    /// \returns true if the edge may be added without creating a cycle OR if an
+    /// equivalent edge already existed (false indicates failure).
+    bool addEdge(SUnit *SuccSU, const SDep &PredDep);
 
   protected:
     void initSUnits();

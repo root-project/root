@@ -140,7 +140,7 @@ TMVA::CvSplitKFoldsExpr::CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr)
    : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()), fSplitFormula("", expr),
      fParValues(fSplitFormula.GetNpar())
 {
-   if (not fSplitFormula.IsValid()) {
+   if (!fSplitFormula.IsValid()) {
       throw std::runtime_error("Split expression \"" + std::string(fSplitExpr.Data()) + "\" is not a valid TFormula.");
    }
 
@@ -149,7 +149,7 @@ TMVA::CvSplitKFoldsExpr::CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr)
 
       // std::cout << "Found variable with name \"" << name << "\"." << std::endl;
 
-      if (name == "NumFolds" or name == "numFolds") {
+      if (name == "NumFolds" || name == "numFolds") {
          // std::cout << "NumFolds|numFolds is a reserved variable! Adding to context." << std::endl;
          fIdxFormulaParNumFolds = iFormulaPar;
       } else {
@@ -227,15 +227,15 @@ UInt_t TMVA::CvSplitKFoldsExpr::GetSpectatorIndexForName(DataSetInfo &dsi, TStri
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Splits a dataset into k folds, ready for use in cross validation.
-/// \param numFolds[in] Number of folds to split data into
-/// \param stratified[in] If true, use stratified splitting, balancing the
+/// \param[in] numFolds Number of folds to split data into
+/// \param[in] stratified If true, use stratified splitting, balancing the
 ///                       number of events across classes and folds. If false,
 ///                       no such balancing is done. For
-/// \param splitExpr[in] Expression used to split data into folds. If `""` a
+/// \param[in] splitExpr Expression used to split data into folds. If `""` a
 ///                      random assignment will be done. Otherwise the
 ///                      expression is fed into a TFormula and evaluated per
 ///                      event. The resulting value is the the fold assignment.
-/// \param seed[in] Used only when using random splitting (i.e. when
+/// \param[in] seed Used only when using random splitting (i.e. when
 ///                 `splitExpr` is `""`). Seed is used to initialise the random
 ///                 number generator when assigning events to folds.
 ///
@@ -243,13 +243,10 @@ UInt_t TMVA::CvSplitKFoldsExpr::GetSpectatorIndexForName(DataSetInfo &dsi, TStri
 TMVA::CvSplitKFolds::CvSplitKFolds(UInt_t numFolds, TString splitExpr, Bool_t stratified, UInt_t seed)
    : CvSplit(numFolds), fSeed(seed), fSplitExprString(splitExpr), fStratified(stratified)
 {
-   if (not CvSplitKFoldsExpr::Validate(fSplitExprString) and (splitExpr != TString(""))) {
+   if (!CvSplitKFoldsExpr::Validate(fSplitExprString) && (splitExpr != TString(""))) {
       Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
    }
 
-   if (stratified) {
-      Log() << kFATAL << "Stratified KFolds not currently implemented." << std::endl;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,20 +269,22 @@ void TMVA::CvSplitKFolds::MakeKFoldDataSet(DataSetInfo &dsi)
 
    fMakeFoldDataSet = kTRUE;
 
+   UInt_t numClasses = dsi.GetNClasses();
+
    // Get the original event vectors for testing and training from the dataset.
    std::vector<Event *> trainData = dsi.GetDataSet()->GetEventCollection(Types::kTraining);
    std::vector<Event *> testData = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
 
    // Split the sets into the number of folds.
-   fTrainEvents = SplitSets(trainData, fNumFolds);
-   fTestEvents = SplitSets(testData, fNumFolds);
+   fTrainEvents = SplitSets(trainData, fNumFolds, numClasses);
+   fTestEvents = SplitSets(testData, fNumFolds, numClasses);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Generates a vector of fold assignments
-/// \param nEntires[in] Number of events in range
-/// \param numFolds[in] Number of folds to split data into
-/// \param seed[in] Random seed
+/// \param[in] nEntries Number of events in range
+/// \param[in] numFolds Number of folds to split data into
+/// \param[in] seed Random seed
 ///
 /// Randomly assigns events to `numFolds` folds. Each fold will hold at most
 /// `nEntries / numFolds + 1` events.
@@ -297,6 +296,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    // `numFolds = 3`.
    std::vector<UInt_t> fOrigToFoldMapping;
    fOrigToFoldMapping.reserve(nEntries);
+
    for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
       fOrigToFoldMapping.push_back(iEvent % numFolds);
    }
@@ -308,14 +308,15 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    return fOrigToFoldMapping;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Split sets for into k-folds
-/// \param oldSet[in] Original, unsplit, events
-/// \param numFolds[in] Number of folds to split data into
+/// \param[in] oldSet Original, unsplit, events
+/// \param[in] numFolds Number of folds to split data into
 ///
 
 std::vector<std::vector<TMVA::Event *>>
-TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds)
+TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds, UInt_t numClasses)
 {
    const ULong64_t nEntries = oldSet.size();
    const ULong64_t foldSize = nEntries / numFolds;
@@ -327,7 +328,7 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
       tempSets.at(iFold).reserve(foldSize);
    }
 
-   Bool_t useSplitExpr = not(fSplitExpr == nullptr or fSplitExprString == "");
+   Bool_t useSplitExpr = !(fSplitExpr == nullptr || fSplitExprString == "");
 
    if (useSplitExpr) {
       // Deterministic split
@@ -337,17 +338,54 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
          tempSets.at((UInt_t)iFold).push_back(ev);
       }
    } else {
-      // Random split
-      std::vector<UInt_t> fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);
+      if(!fStratified){
+         // Random split
+         std::vector<UInt_t> fOrigToFoldMapping;
+         fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);
 
-      for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
-         UInt_t iFold = fOrigToFoldMapping[iEvent];
-         TMVA::Event *ev = oldSet[iEvent];
-         tempSets.at(iFold).push_back(ev);
+         for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
+            UInt_t iFold = fOrigToFoldMapping[iEvent];
+            TMVA::Event *ev = oldSet[iEvent];
+            tempSets.at(iFold).push_back(ev);
 
-         fEventToFoldMapping[ev] = iFold;
+            fEventToFoldMapping[ev] = iFold;
+         }
+      } else {
+         // Stratified Split
+         std::vector<std::vector<TMVA::Event *>> oldSets;
+         oldSets.reserve(numClasses);
+
+         for(UInt_t iClass = 0; iClass < numClasses; iClass++){
+            oldSets.emplace_back();
+            //find a way to get number of events in each class
+            oldSets.reserve(nEntries);
+         }
+
+         for(UInt_t iEvent = 0; iEvent < nEntries; ++iEvent){
+            // check the class of event and add to its vector of events
+            TMVA::Event *ev = oldSet[iEvent];
+            UInt_t iClass = ev->GetClass();
+            oldSets.at(iClass).push_back(ev);
+         }
+
+         for(UInt_t i = 0; i<numClasses; ++i){
+            // Shuffle each vector individually
+            TMVA::RandomGenerator<TRandom3> rng(fSeed);
+            std::shuffle(oldSets.at(i).begin(), oldSets.at(i).end(), rng);
+         }
+
+         for(UInt_t i = 0; i<numClasses; ++i) {
+            std::vector<UInt_t> fOrigToFoldMapping;
+            fOrigToFoldMapping = GetEventIndexToFoldMapping(oldSets.at(i).size(), numFolds, fSeed);
+
+            for (UInt_t iEvent = 0; iEvent < oldSets.at(i).size(); ++iEvent) {
+               UInt_t iFold = fOrigToFoldMapping[iEvent];
+               TMVA::Event *ev = oldSets.at(i)[iEvent];
+               tempSets.at(iFold).push_back(ev);
+               fEventToFoldMapping[ev] = iFold;
+            }
+         }
       }
    }
-
    return tempSets;
 }

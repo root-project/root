@@ -39,24 +39,7 @@ use this class in the (normalization) integral configuration interface
 
 using namespace std;
 
-ClassImp(RooNumIntConfig);
-;
-
-RooNumIntConfig* RooNumIntConfig::_default = 0 ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Function called by atexit() handler installed by RooSentinel to
-/// cleanup global objects at end of job
-
-void RooNumIntConfig::cleanup()
-{
-  if (_default) {
-    delete _default ;
-    _default = 0 ;
-  }
-}
-
+ClassImp(RooNumIntConfig)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +47,20 @@ void RooNumIntConfig::cleanup()
 
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
-  // Instantiate object if it doesn't exist yet
-  if (_default==0) {
-    _default = new RooNumIntConfig ;    
-    RooNumIntFactory::instance() ;
+  static RooNumIntConfig theConfig;
+  static bool initStarted = false;
+
+  if (!initStarted) {
+    // This is needed to break a deadlock. We need the RooNumIntFactory constructor
+    // to initialise us, but this constructor will call back to us again.
+    // Here, we ensure that we can return the instance to the factory constructor by
+    // flipping the bool, but we only return to the outside world when the factory
+    // is done constructing (i.e. we leave this block).
+    initStarted = true;
+    RooNumIntFactory::instance();
   }
-  return *_default ;
+
+  return theConfig;
 }
 
 
@@ -150,12 +141,12 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
   // Copy common properties
   _epsAbs = other._epsAbs ;
   _epsRel = other._epsRel ;
-  _method1D.setIndex(other._method1D.getIndex()) ;
-  _method2D.setIndex(other._method2D.getIndex()) ;
-  _methodND.setIndex(other._methodND.getIndex()) ;
-  _method1DOpen.setIndex(other._method1DOpen.getIndex()) ;
-  _method2DOpen.setIndex(other._method2DOpen.getIndex()) ;
-  _methodNDOpen.setIndex(other._methodNDOpen.getIndex()) ;
+  _method1D.setIndex(other._method1D.getCurrentIndex()) ;
+  _method2D.setIndex(other._method2D.getCurrentIndex()) ;
+  _methodND.setIndex(other._methodND.getCurrentIndex()) ;
+  _method1DOpen.setIndex(other._method1DOpen.getCurrentIndex()) ;
+  _method2DOpen.setIndex(other._method2DOpen.getCurrentIndex()) ;
+  _methodNDOpen.setIndex(other._methodNDOpen.getCurrentIndex()) ;
 
   // Delete old integrator-specific configuration data
   _configSets.Delete() ;
@@ -182,7 +173,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 
 Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
-  TString name = proto->IsA()->GetName() ;
+  std::string name = proto->IsA()->GetName() ;
 
   // Register integrator for appropriate dimensionalities
   if (proto->canIntegrate1D()) {
@@ -208,7 +199,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
   
   // Store default configuration parameters
   RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
-  config->setName(name) ;
+  config->setName(name.c_str());
   _configSets.Add(config) ;
 
   return kFALSE ;
@@ -233,7 +224,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
     return dummy ;
   }
   return *config ;
@@ -295,21 +286,21 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
     os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
   }
   
-  os << indent << "1-D integration method: " << _method1D.getLabel() ;
-  if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
-    os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
+  os << indent << "1-D integration method: " << _method1D.getCurrentLabel() ;
+  if (_method1DOpen.getCurrentIndex()!=_method1D.getCurrentIndex()) {
+    os << " (" << _method1DOpen.getCurrentLabel() << " if open-ended)" << endl ;
   } else {
     os << endl ;
   }
-  os << indent << "2-D integration method: " << _method2D.getLabel() ;
-  if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
-    os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
+  os << indent << "2-D integration method: " << _method2D.getCurrentLabel() ;
+  if (_method2DOpen.getCurrentIndex()!=_method2D.getCurrentIndex()) {
+    os << " (" << _method2DOpen.getCurrentLabel() << " if open-ended)" << endl ;
   } else {
     os << endl ;
   }
-  os << indent << "N-D integration method: " << _methodND.getLabel() ;
-  if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
-    os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
+  os << indent << "N-D integration method: " << _methodND.getCurrentLabel() ;
+  if (_methodNDOpen.getCurrentIndex()!=_methodND.getCurrentIndex()) {
+    os << " (" << _methodNDOpen.getCurrentLabel() << " if open-ended)" << endl ;
   } else {
     os << endl ;
   }

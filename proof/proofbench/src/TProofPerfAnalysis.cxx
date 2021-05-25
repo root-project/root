@@ -29,6 +29,7 @@ Set of tools to analyse the performance tree
 #include "TKey.h"
 #include "TList.h"
 #include "TSortedList.h"
+#include "TObjString.h"
 #include "TPerfStats.h"
 #include "TRegexp.h"
 #include "TStyle.h"
@@ -241,7 +242,7 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
 
    // Set the subdirectory name, if any
    if (fTreeName.Contains("/")) {
-      fDirName = gSystem->DirName(fTreeName);
+      fDirName = gSystem->GetDirName(fTreeName);
       fTreeName = gSystem->BaseName(fTreeName);
    }
 
@@ -1417,8 +1418,8 @@ void TProofPerfAnalysis::DoDraw(TObject *o, Option_t *opt, const char *name)
       if (f) delete f;
       gDirectory = curdir;
    }
-} 
- 
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set save result mode and validate 'file' according to 'mode'.
 /// Return 0 on success, -1 if any problem with the file is encountered

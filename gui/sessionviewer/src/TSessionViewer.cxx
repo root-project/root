@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSessionViewer                                                       //
-//                                                                      //
-// Widget used to manage PROOF or local sessions, PROOF connections,    //
-// queries construction and results handling.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TSessionViewer
+    \ingroup sessionviewer
+
+Widget used to manage PROOF or local sessions, PROOF connections,
+queries construction and results handling.
+
+*/
+
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -33,7 +34,7 @@
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
 #include "TGTableLayout.h"
-#include "TGComboBox.h"
+#include "TGListBox.h"
 #include "TGSplitter.h"
 #include "TGProgressBar.h"
 #include "TGListView.h"
@@ -44,13 +45,13 @@
 #include "TChain.h"
 #include "TDSet.h"
 #include "TFileInfo.h"
+#include "TObjString.h"
 #include "TProof.h"
 #include "TRandom.h"
 #include "TSessionViewer.h"
 #include "TSessionLogView.h"
 #include "TQueryResult.h"
 #include "TGTextView.h"
-#include "TGMenu.h"
 #include "TGToolBar.h"
 #include "TGTab.h"
 #include "TRootEmbeddedCanvas.h"
@@ -62,14 +63,18 @@
 #include "TSessionDialogs.h"
 #include "TEnv.h"
 #include "TH2.h"
-#include "TTreePlayer.h"
+#include "TVirtualTreePlayer.h"
+#include "TSelector.h"
 #include "TFileCollection.h"
+#include "TVirtualX.h"
+#include "snprintf.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
-#include <stdlib.h>
 
-TSessionViewer *gSessionViewer = 0;
+#include <cstdlib>
+
+TSessionViewer *gSessionViewer = nullptr;
 
 const char *kConfigFile = ".proofgui.conf";
 
@@ -2968,8 +2973,8 @@ void TSessionQueryFrame::OnBtnFinalize()
    if (fViewer->GetActDesc()->fLocal) {
       gPad->SetEditable(kFALSE);
       TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
-      if (chain)
-         ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile()->Terminate();
+      if (chain && chain->GetPlayer())
+         chain->GetPlayer()->GetSelectorFromFile()->Terminate();
    }
 }
 
@@ -3041,8 +3046,8 @@ void TSessionQueryFrame::OnBtnRetrieve()
       if (item2) {
          // add input and output list entries
          TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
-         if (chain) {
-            TSelector *selector = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile();
+         if (chain && chain->GetPlayer()) {
+            TSelector *selector = chain->GetPlayer()->GetSelectorFromFile();
             if (selector) {
                TList *objlist = selector->GetOutputList();
                if (objlist)
@@ -4784,8 +4789,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          }
          else {
             TChain *chain = (TChain *)fActDesc->fActQuery->fChain;
-            if (chain) {
-               objlist = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile()->GetOutputList();
+            if (chain && chain->GetPlayer()) {
+               objlist = chain->GetPlayer()->GetSelectorFromFile()->GetOutputList();
                if (objlist) {
                   TIter nexto(objlist);
                   while ((obj = (TObject *) nexto())) {
@@ -5637,8 +5642,8 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileLoadConfig:
                      {
                         TGFileInfo fi;
-                        fi.fFilename = strdup((char *)gSystem->BaseName(fConfigFile));
-                        fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
+                        fi.SetFilename(gSystem->BaseName(fConfigFile));
+                        fi.SetIniDir(gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
                         if (fi.fFilename) {
@@ -5652,8 +5657,8 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileSaveConfig:
                      {
                         TGFileInfo fi;
-                        fi.fFilename = strdup((char *)gSystem->BaseName(fConfigFile));
-                        fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
+                        fi.SetFilename(gSystem->BaseName(fConfigFile));
+                        fi.SetIniDir(gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
                         if (fi.fFilename) {

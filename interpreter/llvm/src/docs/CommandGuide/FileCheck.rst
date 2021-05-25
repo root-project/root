@@ -1,6 +1,8 @@
 FileCheck - Flexible pattern matching file verifier
 ===================================================
 
+.. program:: FileCheck
+
 SYNOPSIS
 --------
 
@@ -23,6 +25,9 @@ match.  The file to verify is read from standard input unless the
 
 OPTIONS
 -------
+
+Options are parsed from the environment variable ``FILECHECK_OPTS``
+and from the command line.
 
 .. option:: -help
 
@@ -77,6 +82,17 @@ OPTIONS
   -verify``. With this option FileCheck will verify that input does not contain
   warnings not covered by any ``CHECK:`` patterns.
 
+.. option:: --dump-input <mode>
+
+  Dump input to stderr, adding annotations representing currently enabled
+  diagnostics.  Do this either 'always', on 'fail', or 'never'.  Specify 'help'
+  to explain the dump format and quit.
+
+.. option:: --dump-input-on-failure
+
+  When the check fails, dump all of the original input.  This option is
+  deprecated in favor of `--dump-input=fail`.
+
 .. option:: --enable-var-scope
 
   Enables scope for regex variables.
@@ -86,9 +102,45 @@ OPTIONS
 
   All other variables get undefined after each encountered ``CHECK-LABEL``.
 
+.. option:: -D<VAR=VALUE>
+
+  Sets a filecheck pattern variable ``VAR`` with value ``VALUE`` that can be
+  used in ``CHECK:`` lines.
+
+.. option:: -D#<NUMVAR>=<VALUE EXPRESSION>
+
+  Sets a filecheck numeric variable ``NUMVAR`` to the result of evaluating
+  ``<VALUE EXPRESSION>`` that can be used in ``CHECK:`` lines. See section
+  ``FileCheck Numeric Variables and Expressions`` for details on the format
+  and meaning of ``<VALUE EXPRESSION>``.
+
 .. option:: -version
 
  Show the version number of this program.
+
+.. option:: -v
+
+  Print good directive pattern matches.  However, if ``-input-dump=fail`` or
+  ``-input-dump=always``, add those matches as input annotations instead.
+
+.. option:: -vv
+
+  Print information helpful in diagnosing internal FileCheck issues, such as
+  discarded overlapping ``CHECK-DAG:`` matches, implicit EOF pattern matches,
+  and ``CHECK-NOT:`` patterns that do not have matches.  Implies ``-v``.
+  However, if ``-input-dump=fail`` or ``-input-dump=always``, just add that
+  information as input annotations instead.
+
+.. option:: --allow-deprecated-dag-overlap
+
+  Enable overlapping among matches in a group of consecutive ``CHECK-DAG:``
+  directives.  This option is deprecated and is only provided for convenience
+  as old tests are migrated to the new non-overlapping ``CHECK-DAG:``
+  implementation.
+
+.. option:: --color
+
+  Use colors in output (autodetected by default).
 
 EXIT STATUS
 -----------
@@ -236,6 +288,25 @@ For example, the following works like you'd expect:
 it and the previous directive.  A "``CHECK-SAME:``" cannot be the first
 directive in a file.
 
+The "CHECK-EMPTY:" directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need to check that the next line has nothing on it, not even whitespace,
+you can use the "``CHECK-EMPTY:``" directive.
+
+.. code-block:: llvm
+
+   declare void @foo()
+
+   declare void @bar()
+   ; CHECK: foo
+   ; CHECK-EMPTY:
+   ; CHECK-NEXT: bar
+
+Just like "``CHECK-NEXT:``" the directive will fail if there is more than one
+newline before it finds the next blank line, and it cannot be the first
+directive in a file.
+
 The "CHECK-NOT:" directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -258,6 +329,29 @@ can be used:
    ; CHECK-NOT: load
    ; CHECK: ret i8
    }
+
+The "CHECK-COUNT:" directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need to match multiple lines with the same pattern over and over again
+you can repeat a plain ``CHECK:`` as many times as needed. If that looks too
+boring you can instead use a counted check "``CHECK-COUNT-<num>:``", where
+``<num>`` is a positive decimal number. It will match the pattern exactly
+``<num>`` times, no more and no less. If you specified a custom check prefix,
+just use "``<PREFIX>-COUNT-<num>:``" for the same effect.
+Here is a simple example:
+
+.. code-block:: text
+
+   Loop at depth 1
+   Loop at depth 1
+   Loop at depth 1
+   Loop at depth 1
+     Loop at depth 2
+       Loop at depth 3
+
+   ; CHECK-COUNT-6: Loop at depth {{[0-9]+}}
+   ; CHECK-NOT:     Loop at depth {{[0-9]+}}
 
 The "CHECK-DAG:" directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -336,6 +430,25 @@ real bugs away.
 
 In those cases, to enforce the order, use a non-DAG directive between DAG-blocks.
 
+A ``CHECK-DAG:`` directive skips matches that overlap the matches of any
+preceding ``CHECK-DAG:`` directives in the same ``CHECK-DAG:`` block.  Not only
+is this non-overlapping behavior consistent with other directives, but it's
+also necessary to handle sets of non-unique strings or patterns.  For example,
+the following directives look for unordered log entries for two tasks in a
+parallel program, such as the OpenMP runtime:
+
+.. code-block:: text
+
+    // CHECK-DAG: [[THREAD_ID:[0-9]+]]: task_begin
+    // CHECK-DAG: [[THREAD_ID]]: task_end
+    //
+    // CHECK-DAG: [[THREAD_ID:[0-9]+]]: task_begin
+    // CHECK-DAG: [[THREAD_ID]]: task_end
+
+The second pair of directives is guaranteed not to match the same log entries
+as the first pair even though the patterns are identical and even if the text
+of the log entries is identical because the thread ID manages to be reused.
+
 The "CHECK-LABEL:" directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -390,17 +503,18 @@ simply uniquely match a single line in the file being verified.
 
 ``CHECK-LABEL:`` directives cannot contain variable definitions or uses.
 
-FileCheck Pattern Matching Syntax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FileCheck Regex Matching Syntax
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All FileCheck directives take a pattern to match.
 For most uses of FileCheck, fixed string matching is perfectly sufficient.  For
 some things, a more flexible form of matching is desired.  To support this,
 FileCheck allows you to specify regular expressions in matching strings,
-surrounded by double braces: ``{{yourregex}}``.  Because we want to use fixed
-string matching for a majority of what we do, FileCheck has been designed to
-support mixing and matching fixed string matching with regular expressions.
-This allows you to write things like this:
+surrounded by double braces: ``{{yourregex}}``. FileCheck implements a POSIX
+regular expression matcher; it supports Extended POSIX regular expressions
+(ERE). Because we want to use fixed string matching for a majority of what we
+do, FileCheck has been designed to support mixing and matching fixed string
+matching with regular expressions.  This allows you to write things like this:
 
 .. code-block:: llvm
 
@@ -415,14 +529,15 @@ braces like you would in C.  In the rare case that you want to match double
 braces explicitly from the input, you can use something ugly like
 ``{{[{][{]}}`` as your pattern.
 
-FileCheck Variables
-~~~~~~~~~~~~~~~~~~~
+FileCheck String Substitution Blocks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is often useful to match a pattern and then verify that it occurs again
-later in the file.  For codegen tests, this can be useful to allow any register,
-but verify that that register is used consistently later.  To do this,
-:program:`FileCheck` allows named variables to be defined and substituted into
-patterns.  Here is a simple example:
+later in the file.  For codegen tests, this can be useful to allow any
+register, but verify that that register is used consistently later.  To do
+this, :program:`FileCheck` supports string substitution blocks that allow
+string variables to be defined and substituted into patterns.  Here is a simple
+example:
 
 .. code-block:: llvm
 
@@ -431,15 +546,16 @@ patterns.  Here is a simple example:
    ; CHECK:    andw	{{.*}}[[REGISTER]]
 
 The first check line matches a regex ``%[a-z]+`` and captures it into the
-variable ``REGISTER``.  The second line verifies that whatever is in
-``REGISTER`` occurs later in the file after an "``andw``".  :program:`FileCheck`
-variable references are always contained in ``[[ ]]`` pairs, and their names can
-be formed with the regex ``[a-zA-Z][a-zA-Z0-9]*``.  If a colon follows the name,
-then it is a definition of the variable; otherwise, it is a use.
+string variable ``REGISTER``.  The second line verifies that whatever is in
+``REGISTER`` occurs later in the file after an "``andw``". :program:`FileCheck`
+string substitution blocks are always contained in ``[[ ]]`` pairs, and string
+variable names can be formed with the regex ``[a-zA-Z_][a-zA-Z0-9_]*``.  If a
+colon follows the name, then it is a definition of the variable; otherwise, it
+is a substitution.
 
-:program:`FileCheck` variables can be defined multiple times, and uses always
-get the latest value.  Variables can also be used later on the same line they
-were defined on. For example:
+:program:`FileCheck` variables can be defined multiple times, and substitutions
+always get the latest value.  Variables can also be substituted later on the
+same line they were defined on. For example:
 
 .. code-block:: llvm
 
@@ -455,30 +571,95 @@ CHECK-LABEL block. Global variables are not affected by CHECK-LABEL.
 This makes it easier to ensure that individual tests are not affected
 by variables set in preceding tests.
 
-FileCheck Expressions
-~~~~~~~~~~~~~~~~~~~~~
+FileCheck Numeric Substitution Blocks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sometimes there's a need to verify output which refers line numbers of the
+:program:`FileCheck` also supports numeric substitution blocks that allow
+defining numeric variables and checking for numeric values that satisfy a
+numeric expression constraint based on those variables via a numeric
+substitution. This allows ``CHECK:`` directives to verify a numeric relation
+between two numbers, such as the need for consecutive registers to be used.
+
+The syntax to define a numeric variable is ``[[#<NUMVAR>:]]`` where
+``<NUMVAR>`` is the name of the numeric variable to define to the matching
+value.
+
+For example:
+
+.. code-block:: llvm
+
+    ; CHECK: mov r[[#REG:]], 42
+
+would match ``mov r5, 42`` and set ``REG`` to the value ``5``.
+
+The syntax of a numeric substitution is ``[[#<expr>]]`` where ``<expr>`` is an
+expression. An expression is recursively defined as:
+
+* a numeric operand, or
+* an expression followed by an operator and a numeric operand.
+
+A numeric operand is a previously defined numeric variable, or an integer
+literal. The supported operators are ``+`` and ``-``. Spaces are accepted
+before, after and between any of these elements.
+
+For example:
+
+.. code-block:: llvm
+
+    ; CHECK: load r[[#REG:]], [r0]
+    ; CHECK: load r[[#REG+1]], [r1]
+
+The above example would match the text:
+
+.. code-block:: gas
+
+    load r5, [r0]
+    load r6, [r1]
+
+but would not match the text:
+
+.. code-block:: gas
+
+    load r5, [r0]
+    load r7, [r1]
+
+due to ``7`` being unequal to ``5 + 1``.
+
+The ``--enable-var-scope`` option has the same effect on numeric variables as
+on string variables.
+
+Important note: In its current implementation, an expression cannot use a
+numeric variable defined on the same line.
+
+FileCheck Pseudo Numeric Variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes there's a need to verify output that contains line numbers of the
 match file, e.g. when testing compiler diagnostics.  This introduces a certain
 fragility of the match file structure, as "``CHECK:``" lines contain absolute
 line numbers in the same file, which have to be updated whenever line numbers
 change due to text addition or deletion.
 
-To support this case, FileCheck allows using ``[[@LINE]]``,
-``[[@LINE+<offset>]]``, ``[[@LINE-<offset>]]`` expressions in patterns. These
-expressions expand to a number of the line where a pattern is located (with an
-optional integer offset).
+To support this case, FileCheck expressions understand the ``@LINE`` pseudo
+numeric variable which evaluates to the line number of the CHECK pattern where
+it is found.
 
 This way match patterns can be put near the relevant test lines and include
 relative line number references, for example:
 
 .. code-block:: c++
 
-   // CHECK: test.cpp:[[@LINE+4]]:6: error: expected ';' after top level declarator
+   // CHECK: test.cpp:[[# @LINE + 4]]:6: error: expected ';' after top level declarator
    // CHECK-NEXT: {{^int a}}
    // CHECK-NEXT: {{^     \^}}
    // CHECK-NEXT: {{^     ;}}
    int a
+
+To support legacy uses of ``@LINE`` as a special string variable,
+:program:`FileCheck` also accepts the following uses of ``@LINE`` with string
+substitution block syntax: ``[[@LINE]]``, ``[[@LINE+<offset>]]`` and
+``[[@LINE-<offset>]]`` without any spaces inside the brackets and where
+``offset`` is an integer.
 
 Matching Newline Characters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

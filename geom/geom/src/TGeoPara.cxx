@@ -41,7 +41,7 @@ Begin_Macro(source)
 End_Macro
 */
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -272,7 +272,6 @@ Double_t TGeoPara::DistFromInside(const Double_t *point, const Double_t *dir, In
 
 Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-   Double_t snxt=TGeoShape::Big();
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point, kFALSE);
@@ -316,7 +315,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
    }
    Double_t xnew,ynew,znew;
    if (safz>0) {
-      snxt = safz/TMath::Abs(dir[2]);
+      Double_t snxt = safz/TMath::Abs(dir[2]);
       xnew = point[0]+snxt*dir[0];
       ynew = point[1]+snxt*dir[1];
       znew = (point[2]>0)?fZ:(-fZ);
@@ -327,7 +326,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
    }
    if (safy>0) {
-      snxt = safy/TMath::Abs(dy);
+      Double_t snxt = safy/TMath::Abs(dy);
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew)<=fZ) {
          Double_t ytn = (yt>0)?fY:(-fY);
@@ -337,7 +336,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
    }
    if (safx>0) {
-      snxt = safx/TMath::Abs(dx);
+      Double_t snxt = safx/TMath::Abs(dx);
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew)<=fZ) {
          ynew = point[1]+snxt*dir[1];
@@ -490,10 +489,9 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    upper[6]=z*fTxz-fTxy*fY+fX;
    upper[7]=-fY+z*fTyz;
 
-   Double_t ddmin=TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
-      ddmin=TGeoShape::Big();
+      Double_t ddmin = TGeoShape::Big();
       for (Int_t ivert=0; ivert<4; ivert++) {
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));

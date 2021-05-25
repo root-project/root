@@ -17,8 +17,10 @@
 #define ROO_NAME_REG
 
 #include "TNamed.h"
-#include "RooHashTable.h"
-#include "RooLinkedList.h"
+
+#include <memory>
+#include <unordered_map>
+#include <string>
 
 class RooNameReg : public TNamed {
 public:
@@ -31,23 +33,18 @@ public:
   static const char* str(const TNamed* ptr) ;
   static const TNamed* known(const char* stringPtr) ;
 
-  static void cleanup() ;
-
   enum {
     kRenamedArg = BIT(19)    // TNamed flag to indicate that some RooAbsArg has been renamed (flag set in new name)
   };
 
 protected:
+  RooNameReg();
+//  RooNameReg(Int_t hashSize = 31) ;
+  RooNameReg(const RooNameReg& other) = delete;
 
-  static RooNameReg* _instance ;
+  std::unordered_map<std::string,std::unique_ptr<TNamed>> _map;
 
-  RooNameReg(Int_t hashSize = 31) ;
-  RooNameReg(const RooNameReg& other) ;
-
-  RooHashTable _htable ; // Repository of registered names
-  RooLinkedList _list ; // 
-
-  ClassDef(RooNameReg,1) // String name registry
+//  ClassDef(RooNameReg,1) // String name registry
 };
 
 #endif

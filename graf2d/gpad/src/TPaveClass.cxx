@@ -1,17 +1,19 @@
 // @(#)root/gpad:$Id$
 // Author: Rene Brun   06/08/99
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "Buttons.h"
 #include "TPaveClass.h"
+#include "TClassTree.h"
+
+#include <iostream>
 
 ClassImp(TPaveClass);
 
@@ -33,7 +35,7 @@ Using the context menu on can select additional options in the ClassTree:
 
 TPaveClass::TPaveClass(): TPaveLabel()
 {
-   fClassTree  = 0;
+   fClassTree  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

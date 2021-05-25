@@ -49,7 +49,7 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
   dynamic_cast<RooAbsLValue&>(*sliceArgInt).setBin(0) ;
 
   if (hist._vars.getSize()>1) {
-    _baseIndex = hist.calcTreeIndex() ;  
+    _baseIndex = hist.calcTreeIndex(hist._vars, true);
   } else {
     _baseIndex = 0 ;
   }
@@ -60,10 +60,8 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 //   hist.Print() ;
 //   cout << "hist._iterator = " << hist._iterator << endl ;
 
-  hist._iterator->Reset() ;
-  RooAbsArg* arg ;
   Int_t i=0 ;
-  while((arg=(RooAbsArg*)hist._iterator->Next())) {
+  for (const auto arg : hist._vars) {
     if (arg==sliceArgInt) break ;
     i++ ;
   }

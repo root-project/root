@@ -110,11 +110,9 @@ the selection.
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "Riostream.h"
 #include "TRandom3.h"
-#include "TMath.h"
-#include "TObjString.h"
 
+#include <iostream>
 #include <algorithm>
 
 using std::vector;
@@ -280,7 +278,7 @@ void TMVA::MethodDT::ProcessOptions()
 
    if (fPruneStrength < 0) fAutomatic = kTRUE;
    else fAutomatic = kFALSE;
-   if (fAutomatic && fPruneMethod==!DecisionTree::kCostComplexityPruning){
+   if (fAutomatic && fPruneMethod == DecisionTree::kExpectedErrorPruning){
       Log() << kFATAL
             <<  "Sorry automatic pruning strength determination is not implemented yet for ExpectedErrorPruning" << Endl;
    }
@@ -376,7 +374,7 @@ TMVA::MethodDT::~MethodDT( void )
 
 void TMVA::MethodDT::Train( void )
 {
-   TMVA::DecisionTreeNode::fgIsTraining=true;
+   TMVA::DecisionTreeNode::SetIsTraining(true);
    fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), 0,
                              fRandomisedTrees, fUseNvars, fUsePoissonNvars,fMaxDepth,0 );
    fTree->SetNVars(GetNvar());
@@ -396,7 +394,7 @@ void TMVA::MethodDT::Train( void )
    fTree->BuildTree(tmp);
    if (fPruneMethod != DecisionTree::kNoPruning) fTree->PruneTree();
 
-   TMVA::DecisionTreeNode::fgIsTraining=false;
+   TMVA::DecisionTreeNode::SetIsTraining(false);
    ExitFromTraining();
 }
 

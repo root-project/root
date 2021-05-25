@@ -27,10 +27,6 @@
 
 #include "TTree.h"
 
-#include "TError.h"
-
-#include <vector>
-
 class TFolder;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
@@ -46,7 +42,7 @@ class TBranchElement : public TBranch {
    friend class TTreeCloner;
    friend class TLeafElement;
 
-// Types
+/// Types
 protected:
    enum EStatusBits {
       kBranchFolder  = BIT(14),
@@ -58,17 +54,6 @@ protected:
       kDecomposedObj = BIT(21)  ///<  More explicit alias for kMakeClass.
    };
 
-   // Note on fType values:
-   // -1 unsplit object with custom streamer at time of writing
-   //  0 unsplit object with default streamer at time of writing
-   //    OR simple data member of split object (fID==-1 for the former)
-   //  1 base class of a split object.
-   //  2 class typed data member of a split object
-   //  3 branch count of a split TClonesArray
-   // 31 data member of the content of a split TClonesArray
-   //  4 branch count of a split STL Collection.
-   // 41 data member of the content of a split STL collection
-
 
 // Data Members
 protected:
@@ -79,7 +64,18 @@ protected:
    UInt_t                   fCheckSum;      ///<  CheckSum of class
    Version_t                fClassVersion;  ///<  Version number of class
    Int_t                    fID;            ///<  element serial number in fInfo
-   Int_t                    fType;          ///<  branch type
+   Int_t                    fType;          ///<  Branch type
+                                            ///<
+                                            ///<  Note on fType values:
+                                            ///<  * -1 unsplit object with custom streamer at time of writing
+                                            ///<  * 0 unsplit object with default streamer at time of writing
+                                            ///<      OR simple data member of split object (fID==-1 for the former)
+                                            ///<  * 1 base class of a split object.
+                                            ///<  * 2 class typed data member of a split object
+                                            ///<  * 3 branch count of a split TClonesArray
+                                            ///<  * 31 data member of the content of a split TClonesArray
+                                            ///<  * 4 branch count of a split STL Collection.
+                                            ///<  * 41 data member of the content of a split STL collection
    Int_t                    fStreamerType;  ///<  branch streamer type
    Int_t                    fMaximum;       ///<  Maximum entries for a TClonesArray or variable array
    Int_t                    fSTLtype;       ///<! STL container type
@@ -130,8 +126,8 @@ protected:
    inline void              ValidateAddress() const;
 
    void Init(TTree *tree, TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
-   void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
 
    void SetActionSequence(TClass *originalClass, TStreamerInfo *localInfo, TStreamerInfoActions::TActionSequence::SequenceGetter_t create, TStreamerInfoActions::TActionSequence *&actionSequence);
    void ReadLeavesImpl(TBuffer& b);
@@ -149,6 +145,7 @@ protected:
    void SetReadLeavesPtr();
    void SetReadActionSequence();
    void SetupAddressesImpl();
+   void SetAddressImpl(void *addr, Bool_t implied);
 
    void FillLeavesImpl(TBuffer& b);
    void FillLeavesMakeClass(TBuffer& b);
@@ -170,11 +167,11 @@ protected:
 public:
    TBranchElement();
    TBranchElement(TTree *tree, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   TBranchElement(TTree *tree, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
-   TBranchElement(TTree *tree, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   TBranchElement(TTree *tree, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranchElement(TTree *tree, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    TBranchElement(TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
-   TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
 
    virtual                  ~TBranchElement();
 
@@ -193,6 +190,7 @@ public:
    TClass                  *GetCurrentClass(); // Class referenced by transient description
    virtual Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0);
    virtual Int_t            GetExpectedType(TClass *&clptr,EDataType &type);
+   virtual TString          GetFullName() const;
            const char      *GetIconName() const;
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
@@ -228,6 +226,7 @@ public:
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }
    virtual void             SetOffset(Int_t offset);
+   virtual void             SetMissing();
    inline  void             SetParentClass(TClass* clparent);
    virtual void             SetParentName(const char* name) { fParentName = name; }
    virtual void             SetTargetClass(const char *name);

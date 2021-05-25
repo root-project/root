@@ -1,5 +1,3 @@
-#if __cplusplus < 201703L && !defined(_MSC_VER)
-
 #include "ROOT/RNotFn.hxx"
 
 #include "gtest/gtest.h"
@@ -9,6 +7,9 @@ bool retFlip(bool b){return !b;}
 
 TEST(NotFn, Simple)
 {
+// libc++ does not define __cpp_lib_not_fn.
+// Assume we have not_fn if
+#if defined(R__NOTFN_BACKPORT)
    EXPECT_TRUE(true);
    EXPECT_TRUE(std::not_fn([]() { return false; })());
 
@@ -25,7 +26,6 @@ TEST(NotFn, Simple)
 
    EXPECT_TRUE(std::not_fn(std::not_fn(retFlip))(false));
    EXPECT_FALSE(std::not_fn(std::not_fn(retFlip))(true));
-
+#endif
 }
 
-#endif

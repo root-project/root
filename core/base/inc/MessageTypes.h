@@ -112,13 +112,6 @@ enum EMessageTypes {
    kROOTD_ACK            = 2010,         //acknowledgement (all OK)
    kROOTD_ERR            = 2011,         //error code and message follow
    kROOTD_PROTOCOL       = 2012,         //returns rootd protocol
-   kROOTD_SRPUSER        = 2013,         //user id for SRP authentication follows
-   kROOTD_SRPN           = 2014,         //SRP n follows
-   kROOTD_SRPG           = 2015,         //SRP g follows
-   kROOTD_SRPSALT        = 2016,         //SRP salt follows
-   kROOTD_SRPA           = 2017,         //SRP a follows
-   kROOTD_SRPB           = 2018,         //SRP b follows
-   kROOTD_SRPRESPONSE    = 2019,         //SRP final response
    kROOTD_PUTFILE        = 2020,         //store file
    kROOTD_GETFILE        = 2021,         //retrieve file
    kROOTD_CHDIR          = 2022,         //change directory
@@ -129,13 +122,9 @@ enum EMessageTypes {
    kROOTD_MV             = 2027,         //rename file
    kROOTD_RM             = 2028,         //delete file
    kROOTD_CHMOD          = 2029,         //change permission
-   kROOTD_KRB5           = 2030,         //krb5 authentication follows
    kROOTD_PROTOCOL2      = 2031,         //client proto follows, returns rootd proto
    kROOTD_BYE            = 2032,         //terminate rootd
-   kROOTD_GLOBUS         = 2033,         //Globus authetication follows
    kROOTD_CLEANUP        = 2034,         //cleanup things
-   kROOTD_SSH            = 2035,         //SSH-like authentication follows
-   kROOTD_RFIO           = 2036,         //RFIO-like authentication follows
    kROOTD_NEGOTIA        = 2037,         //negotiation follows
    kROOTD_RSAKEY         = 2038,         //RSA public key exchange
    kROOTD_ENCRYPT        = 2039,         //an encrypted message follows

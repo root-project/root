@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 #ifndef ROOT_MPSendRecv
 #define ROOT_MPSendRecv
 
@@ -20,6 +20,7 @@
 #include <type_traits> //enable_if
 #include <typeinfo> //typeid
 #include <utility> //pair
+#include <string>
 
 //////////////////////////////////////////////////////////////////////////
 /// An std::pair that wraps the code and optional object contained in a message.
@@ -90,7 +91,7 @@ T ReadBuffer(TBufferFile *buf);
 template<class T, typename std::enable_if<std::is_class<T>::value>::type *>
 int MPSend(TSocket *s, unsigned code, T obj)
 {
-   TClass *c = TClass::GetClass(typeid(T));
+   TClass *c = TClass::GetClass<T>();
    if (!c) {
       Error("MPSend", "[E] Could not find cling definition for class %s\n", typeid(T).name());
       return -1;

@@ -14,6 +14,7 @@
 #error "This file must not be included by compiled programs."
 #endif
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -28,7 +29,7 @@ namespace cling {
   // Fallback for e.g. vector<bool>'s bit iterator:
   template <class T,
     class = typename std::enable_if<!std::is_pointer<T>::value>::type>
-  std::string printValue(const T& val) { return "{not representable}"; }
+  inline std::string printValue(const T& val) { return "{not representable}"; }
 
   // void pointer
   std::string printValue(const void **ptr);
@@ -92,22 +93,22 @@ namespace cling {
   std::string toUTF8(const T* const Src, size_t N, const char Prefix = 0);
 
   template <size_t N>
-  std::string printValue(char16_t const (*val)[N]) {
+  inline std::string printValue(char16_t const (*val)[N]) {
     return toUTF8(reinterpret_cast<const char16_t * const>(val), N, 'u');
   }
 
   template <size_t N>
-  std::string printValue(char32_t const (*val)[N]) {
+  inline std::string printValue(char32_t const (*val)[N]) {
     return toUTF8(reinterpret_cast<const char32_t * const>(val), N, 'U');
   }
 
   template <size_t N>
-  std::string printValue(wchar_t const (*val)[N]) {
+  inline std::string printValue(wchar_t const (*val)[N]) {
     return toUTF8(reinterpret_cast<const wchar_t * const>(val), N, 'L');
   }
 
   template <size_t N>
-  std::string printValue(char const (*val)[N]) {
+  inline std::string printValue(char const (*val)[N]) {
     return toUTF8(reinterpret_cast<const char * const>(val), N, 1);
   }
 
@@ -124,13 +125,13 @@ namespace cling {
     // Forward declaration, so recursion of containers possible.
     template <typename T> std::string printValue(const T* V, const void* = 0);
 
-    template <typename T> std::string
+    template <typename T> inline std::string
     printValue(const T& V, typename std::enable_if<
                              std::is_pointer<decltype(&V)>::value>::type* = 0) {
       return printValue(&V);
     }
 
-    template <typename T0, typename T1> std::string
+    template <typename T0, typename T1> inline std::string
     printValue(const std::pair<T1, T0>* V, const void* AsMap = 0) {
       if (AsMap)
         return printValue(&V->first) + " => " + printValue(&V->second);
@@ -138,7 +139,7 @@ namespace cling {
     }
 
     // For std::vector<bool> elements
-    std::string printValue(const bool& B, const void* = 0) {
+    inline std::string printValue(const bool& B, const void* = 0) {
       return cling::printValue(&B);
     }
 
@@ -150,11 +151,11 @@ namespace cling {
 
     // vector, set, deque etc.
     template <typename CollectionType>
-    auto printValue_impl(
+    inline auto printValue_impl(
         const CollectionType* obj,
         typename std::enable_if<
-            std::is_reference<decltype(*(obj->begin()))>::value>::type* = 0)
-        -> decltype(++(obj->begin()), obj->end(), std::string()) {
+            std::is_reference<decltype(*std::begin(*obj))>::value>::type* = 0)
+        -> decltype(std::end(*obj), std::string()) {
       auto iter = obj->begin(), iterEnd = obj->end();
       if (iter == iterEnd) return valuePrinterInternal::kEmptyCollection;
 
@@ -171,7 +172,7 @@ namespace cling {
 
     // As above, but without ability to take address of elements.
     template <typename CollectionType>
-    auto printValue_impl(
+    inline auto printValue_impl(
         const CollectionType* obj,
         typename std::enable_if<
             !std::is_reference<decltype(*(obj->begin()))>::value>::type* = 0)
@@ -191,14 +192,14 @@ namespace cling {
 
   // Collections
   template<typename CollectionType>
-  auto printValue(const CollectionType *obj)
+  inline auto printValue(const CollectionType *obj)
   -> decltype(collectionPrinterInternal::printValue_impl(obj), std::string()) {
     return collectionPrinterInternal::printValue_impl(obj);
   }
 
   // Arrays
   template<typename T, size_t N>
-  std::string printValue(const T (*obj)[N]) {
+  inline std::string printValue(const T (*obj)[N]) {
     if (N == 0)
       return valuePrinterInternal::kEmptyCollection;
 
@@ -213,7 +214,7 @@ namespace cling {
 
   // Tuples
   template <class... ARGS>
-  std::string printValue(std::tuple<ARGS...> *);
+  inline std::string printValue(std::tuple<ARGS...> *);
 
   namespace collectionPrinterInternal {
     // We loop at compile time from element 0 to element TUPLE_SIZE - 1
@@ -249,7 +250,7 @@ namespace cling {
     };
 
     template <class T>
-    std::string tuplePairPrintValue(T *val)
+    inline std::string tuplePairPrintValue(T *val)
     {
       std::string ret("{ ");
       ret += collectionPrinterInternal::tuplePrinter<T>::print(val);
@@ -259,7 +260,7 @@ namespace cling {
   }
 
   template <class... ARGS>
-  std::string printValue(std::tuple<ARGS...> *val)
+  inline std::string printValue(std::tuple<ARGS...> *val)
   {
     using T = std::tuple<ARGS...>;
     if (std::tuple_size<T>::value == 0)
@@ -268,7 +269,7 @@ namespace cling {
   }
 
   template <class... ARGS>
-  std::string printValue(std::pair<ARGS...> *val)
+  inline std::string printValue(std::pair<ARGS...> *val)
   {
     using T = std::pair<ARGS...>;
     return collectionPrinterInternal::tuplePairPrintValue<T>(val);
@@ -280,6 +281,37 @@ namespace cling {
       return cling::printValue(V);
     }
   }
+
+  // unique_ptr<T>:
+  template <class T>
+  inline std::string printValue(std::unique_ptr<T> *val)
+  {
+     auto ptr = val->get();
+     // printValue dereference its argument. use cast to 'const void**' to get
+     // the same printout as a regular pointer.
+     return "std::unique_ptr -> " + printValue((const void**)&ptr);
+  }
+
+  // shared_ptr<T>:
+  template <class T>
+  inline std::string printValue(std::shared_ptr<T> *val)
+  {
+     auto ptr = val->get();
+     // printValue dereference its argument. use cast to 'const void**' to get
+     // the same printout as a regular pointer.
+     return "std::shared_ptr -> " + printValue((const void**)&ptr);
+  }
+
+  // weak_ptr<T>:
+  template <class T>
+  inline std::string printValue(std::weak_ptr<T> *val)
+  {
+     auto ptr = val->lock().get();
+     // printValue dereference its argument. use cast to 'const void**' to get
+     // the same printout as a regular pointer.
+     return "std::weak_ptr -> " + printValue((const void**)&ptr);
+  }
+
 }
 
 #endif

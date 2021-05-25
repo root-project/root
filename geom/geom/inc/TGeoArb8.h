@@ -24,12 +24,14 @@ protected:
       kArb8Tra  = BIT(28)  // general twisted trapezoid
    };
    // data members
-   Double_t              fDz;          // half length in Z
-   Double_t             *fTwist;       //! [4] tangents of twist angles
-   Double_t              fXY[8][2];    // list of vertices
+   Double_t              fDz{0};             // half length in Z
+   Double_t             *fTwist{nullptr};    //! [4] tangents of twist angles
+   Double_t              fXY[8][2];          // list of vertices
 
-   TGeoArb8(const TGeoArb8&);
-   TGeoArb8& operator=(const TGeoArb8&);
+   TGeoArb8(const TGeoArb8 &) = delete;
+   TGeoArb8& operator=(const TGeoArb8 &) = delete;
+
+   void CopyTwist(Double_t *twist = nullptr);
 
 public:
    // constructors

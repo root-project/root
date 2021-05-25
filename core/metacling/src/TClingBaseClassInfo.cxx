@@ -48,7 +48,6 @@ the Clang C++ compiler, not CINT.
 
 #include <string>
 #include <sstream>
-#include <iostream>
 
 using namespace llvm;
 using namespace clang;
@@ -110,6 +109,10 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    //CRD->isDerivedFrom(BaseCRD, Paths);
    // Check that base derives from derived.
    clang::CXXBasePaths Paths;
+
+   // CXXRecordDecl::isDerivedFrom can trigger deserialization.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
       //Not valid fBaseInfo = 0.
       return;
@@ -159,7 +162,7 @@ TClingClassInfo *TClingBaseClassInfo::GetBase() const
 }
 
 OffsetPtrFunc_t
-TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDerivedClass,
+TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedClass,
                                                 TClingClassInfo* toBaseClass,
                                                 void* address, bool isDerivedObject) const
 {
@@ -258,6 +261,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end())) {
       return 0;
    }
+
    // Advance to the next valid base.
    while (1) {
       // Advance the iterator.
@@ -364,7 +368,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
    // If Dst is not derived from Src we can skip the whole computation below and
    // return that Src is not a public base of Dst.  Record all inheritance paths.
    if (!Dst->isDerivedFrom(Src, Paths))
-     return clang::CharUnits::fromQuantity(-2ULL);
+     return clang::CharUnits::fromQuantity(-2);
 
    unsigned NumPublicPaths = 0;
    clang::CharUnits Offset;
@@ -379,7 +383,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
        // If the path contains a virtual base class we can't give any hint.
        // -1: no hint.
        if (J->Base->isVirtual())
-         return clang::CharUnits::fromQuantity(-1ULL);
+         return clang::CharUnits::fromQuantity(-1);
 
        if (NumPublicPaths > 1) // Won't use offsets, skip computation.
          continue;
@@ -393,11 +397,11 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
 
    // -2: Src is not a public base of Dst.
    if (NumPublicPaths == 0)
-     return clang::CharUnits::fromQuantity(-2ULL);
+     return clang::CharUnits::fromQuantity(-2);
 
    // -3: Src is a multiple public base type but never a virtual base type.
    if (NumPublicPaths > 1)
-     return clang::CharUnits::fromQuantity(-3ULL);
+     return clang::CharUnits::fromQuantity(-3);
 
    // Otherwise, the Src type is a unique public nonvirtual base type of Dst.
    // Return the offset of Src from the origin of Dst.

@@ -1,24 +1,17 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 add_subdirectory(net)
 add_subdirectory(auth)
 
-if(afs)
-  add_subdirectory(afs)
-endif()
-
-if(bonjour)
-  add_subdirectory(bonjour)
-endif()
-
-if(krb5)
-  add_subdirectory(krb5auth)
-endif()
-
 if(NOT WIN32 AND ssl)
   add_subdirectory(rpdutils)
-  add_subdirectory(rootd)
 endif()
 
-if(xrootd)
+if(netx)
   add_subdirectory(netx)
 endif()
 
@@ -28,14 +21,6 @@ endif()
 
 if(monalisa)
   add_subdirectory(monalisa)
-endif()
-
-if(ldap)
-   add_subdirectory(ldap)
-endif()
-
-if(globus)
-   add_subdirectory(globusauth)
 endif()
 
 if(davix)
@@ -50,4 +35,3 @@ if(http)
    add_subdirectory(http)
    add_subdirectory(httpsniff)
 endif()
-

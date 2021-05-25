@@ -9,19 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSplitter, TGVSplitter and TGHSplitter                              //
-//                                                                      //
-// A splitter allows the frames left and right or above and below of    //
-// it to be resized. The frame to be resized must have the kFixedWidth  //
-// or kFixedHeight property set.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGSplitter
+    \ingroup guiwidgets
+
+A splitter allows the frames left and right or above and below of
+it to be resized. The frame to be resized must have the kFixedWidth
+or kFixedHeight property set.
+
+*/
+
 
 #include "TGSplitter.h"
 #include "TGPicture.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
+
+#include <iostream>
 
 
 ClassImp(TGSplitter);

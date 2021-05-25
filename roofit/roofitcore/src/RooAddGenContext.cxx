@@ -24,17 +24,16 @@ generator context specific for RooAddPdf PDFs. The strategy
 of RooAddGenContext is to defer generation of each component
 to a dedicated generator context for that component and to
 randomly choose one of those context to generate an event,
-with a probability proportional to its associated coefficient
+with a probability proportional to its associated coefficient.
 **/
 
 
 #include "RooFit.h"
 
 #include "Riostream.h"
-
+#include "TClass.h"
 
 #include "RooMsgService.h"
-#include "RooAddGenContext.h"
 #include "RooAddGenContext.h"
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
@@ -74,13 +73,18 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
       _pdf->fixAddCoefNormalization(coefNSet,kFALSE) ;
     }
 
-  model._pdfIter->Reset() ;
-  RooAbsPdf* pdf ;
   _nComp = model._pdfList.getSize() ;
   _coefThresh = new Double_t[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
-  while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
+  for (const auto arg : model._pdfList) {
+    auto pdf = dynamic_cast<const RooAbsPdf *>(arg);
+    if (!pdf) {
+      coutF(Generation) << "Cannot generate events from an object that is not a PDF.\n\t"
+          << "The offending object is a " << arg->IsA()->GetName() << " named '" << arg->GetName() << "'." << std::endl;
+      throw std::invalid_argument("Trying to generate events from on object that is not a PDF.");
+    }
+
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.push_back(cx) ;
   }  
@@ -112,14 +116,12 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
   _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
 
-
-  model._pdfIter->Reset() ;
-  RooAbsPdf* pdf ;
   _nComp = model._pdfList.getSize() ;
   _coefThresh = new Double_t[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
-  while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
+  for (const auto obj : model._pdfList) {
+    auto pdf = static_cast<RooAbsPdf*>(obj);
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.push_back(cx) ;
   }  

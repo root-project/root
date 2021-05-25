@@ -28,14 +28,22 @@ class TIsAProxy  : public TVirtualIsAProxy {
 private:
    template <typename T> using Atomic_t = std::atomic<T>;
 
+   // On testing with the data from the 250202_181_RECO.root and doing "just" serializing
+   // the value 8 was the sweet spot of performance.  With more slots, too much time is
+   // spent scanning the array of "last" seen and with less slots then the
+   // serialization induced by and/or the cost of executed `++fSubTypesReaders is slow
+   // down (noticeably) the streaming of branches with polymorphic containers.
+   static constexpr UInt_t fgMaxLastSlot = 8;
+
    const std::type_info     *fType;        //Actual typeid of the proxy
-   Atomic_t<TClass*>         fClass;       //Actual TClass
-   Atomic_t<void*>           fLast;        //points into fSubTypes map for last used values
-   Char_t                    fSubTypes[72];//map of known sub-types
-   mutable Atomic_t<UInt_t>  fSubTypesReaders; //number of readers of fSubTypes
+   TClass                   *fClass;       //Actual TClass
+   Atomic_t<void*>           fLasts[fgMaxLastSlot];   // points into fSubTypes map for last used values
+   Char_t                    fSubTypes[72];           //map of known sub-types
+   mutable Atomic_t<UInt_t>  fSubTypesReaders;        //number of readers of fSubTypes
    Atomic_t<Bool_t>          fSubTypesWriteLockTaken; //True if there is a writer
-   Bool_t                    fVirtual;     //Flag if class is virtual
-   Atomic_t<Bool_t>          fInit;        //Initialization flag
+   Atomic_t<UChar_t>         fNextLastSlot; // Next slot in fLasts to use for update (ring buffer)
+   Atomic_t<Bool_t>          fInit;         //Initialization flag
+   Bool_t                    fVirtual;      //Flag if class is virtual
 
    void* FindSubType(const std::type_info*) const;
    void* CacheSubType(const std::type_info*, TClass*);

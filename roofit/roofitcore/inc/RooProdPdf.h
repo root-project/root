@@ -20,10 +20,16 @@
 #include "RooListProxy.h"
 #include "RooLinkedList.h"
 #include "RooAICRegistry.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
+
 #include <vector>
+#include <list>
+#include <string>
+
+namespace RooBatchCompute {
+struct RunContext;
+}
 
 typedef RooArgList* pRooArgList ;
 typedef RooLinkedList* pRooLinkedList ;
@@ -53,8 +59,6 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooProdPdf(*this,newname) ; }
   virtual ~RooProdPdf() ;
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
-  Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
@@ -95,8 +99,11 @@ public:
 
   RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
   
-protected:
 
+private:
+
+  Double_t evaluate() const ;
+  virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
@@ -115,8 +122,7 @@ protected:
   
 	
 	
-  void getPartIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& partList, pRooLinkedList& nsetList, 
-                      Int_t& code, const char* isetRangeName=0) const ;
+  Int_t getPartIntList(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=0) const ;
   
   std::vector<RooAbsReal*> processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
 					      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
@@ -129,17 +135,17 @@ protected:
   // The cache object
   class CacheElem : public RooAbsCacheElement {
   public:
-    CacheElem() : _isRearranged(kFALSE), _rearrangedNum(0), _rearrangedDen(0) {} 
-    virtual ~CacheElem() ;
+    CacheElem() : _isRearranged(kFALSE) { } 
+    virtual ~CacheElem() = default;
     // Payload
     RooArgList _partList ;
     RooArgList _numList ;
     RooArgList _denList ;
     RooArgList _ownedList ;
-    RooLinkedList _normList ;    
+    std::vector<std::unique_ptr<RooArgSet>> _normList;
     Bool_t _isRearranged ;
-    RooAbsReal* _rearrangedNum ;
-    RooAbsReal* _rearrangedDen ;
+    std::unique_ptr<RooAbsReal> _rearrangedNum{};
+    std::unique_ptr<RooAbsReal> _rearrangedDen{};
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
@@ -152,7 +158,6 @@ protected:
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   Double_t calculate(const RooProdPdf::CacheElem& cache, Bool_t verbose=kFALSE) const ;
-  Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
 
  
   friend class RooProdGenContext ;
@@ -162,7 +167,6 @@ protected:
 
   mutable RooAICRegistry _genCode ; //! Registry of composite direct generator codes
 
-  mutable RooArgSet* _curNormSet = nullptr; //!
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
   RooLinkedList _pdfNSetList ; // List of PDF component normalization sets

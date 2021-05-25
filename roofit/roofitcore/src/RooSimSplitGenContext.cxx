@@ -25,7 +25,6 @@ component pdfs.
 **/
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "RooSimSplitGenContext.h"
 #include "RooSimultaneous.h"
@@ -37,15 +36,15 @@ component pdfs.
 #include "RooRandom.h"
 #include "RooGlobalFunc.h"
 
-using namespace RooFit ;
+using namespace RooFit;
 
+#include <iostream>
 #include <string>
 
 using namespace std;
 
 ClassImp(RooSimSplitGenContext);
-;
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
@@ -100,8 +99,8 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   // We must extended likelihood to determine the relative fractions of the components
   _idxCatName = idxCat->GetName() ;
   if (!model.canBeExtended()) {
-    oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
-			     << " to calculate number of events per category" << endl ;
+    oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << "): All components of the simultaneous PDF "
+			     << "must be extended PDFs. Otherwise, it is impossible to calculate the number of events to be generated per component." << endl ;
     _isValid = kFALSE ;
     _numPdf = 0 ;
     // coverity[UNINIT_CTOR]
@@ -127,11 +126,11 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
     delete compVars ;
 
-    const RooCatType* state = idxCat->lookupType(proxy->name()) ; 
+    const auto state = idxCat->lookupIndex(proxy->name());
 
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
-    _gcIndex.push_back(state->getVal()) ;
+    _gcIndex.push_back(state);
     
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&allPdfVars) ;

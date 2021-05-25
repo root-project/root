@@ -6,25 +6,21 @@
 # LICENSE.TXT for details.
 #------------------------------------------------------------------------------
 
-set(CLING_DEPEND_LIBS
-  clangAnalysis
-  clangAST
-  clangBasic
-  clangCodeGen
-  clangDriver
-  clangEdit
-  clangFrontend
-  clangLex
-  clangParse
-  clangRewrite
-  clangRewriteFrontend
-  clangSema
-  clangSerialization
-  CACHE STRING "Dependency Clang libraries for Cling"
-)
-
 set(LIBS
   clingUtils
+  clangCodeGen
+  clangDriver
+  clangFrontend
+  clangParse
+  clangSema
+  clangAnalysis
+  clangEdit
+  clangRewrite
+  clangRewriteFrontend
+  clangSerialization
+  clangAST
+  clangBasic
+  clangLex
 )
 
 set(LLVM_LINK_COMPONENTS
@@ -54,6 +50,10 @@ set(CLING_DEPENDS)
 if(TARGET ClangDriverOptions)
   set(CLING_DEPENDS ClangDriverOptions)
 endif()
+# clangSema will make sure all of the dependencies of clingInterpreter are met.
+if(TARGET clangSema)
+  set(CLING_DEPENDS "${CLING_DEPENDS};clangSema")
+endif()
 
 
 add_cling_library(clingInterpreter OBJECT
@@ -68,8 +68,11 @@ add_cling_library(clingInterpreter OBJECT
   ClingPragmas.cpp
   DeclCollector.cpp
   DeclExtractor.cpp
+  DefinitionShadower.cpp
   DeclUnloader.cpp
+  DeviceKernelInliner.cpp
   DynamicLibraryManager.cpp
+  DynamicLibraryManagerSymbol.cpp
   DynamicLookup.cpp
   DynamicExprInfo.cpp
   Exception.cpp
@@ -96,13 +99,14 @@ add_cling_library(clingInterpreter OBJECT
   ${CLING_DEPENDS}
 
   LINK_LIBS
-  ${CLING_DEPEND_LIBS}
   ${LIBS}
+  ${CMAKE_DL_LIBS}
   )
 
 
 if (UNIX)
   set_source_files_properties(Exception.cpp COMPILE_FLAGS "-fexceptions -frtti")
+  set_source_files_properties(Interpreter.cpp COMPILE_FLAGS "-fexceptions")
 
   # Remove all -I from CMAKE_CXX_FLAGS
   string(REPLACE ";" " " __flags "${CMAKE_CXX_FLAGS}")
@@ -121,7 +125,6 @@ if (UNIX)
     # Remove absolute path from CMAKE_CXX_COMPILER
     get_filename_component(_name ${CMAKE_CXX_COMPILER} NAME)
     get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
-
     # This should probably be more general...but how?
     if(_name STREQUAL "ccache" OR _name STREQUAL "distcc")
       separate_arguments(_arg_list UNIX_COMMAND "${CMAKE_CXX_COMPILER_ARG1}")
@@ -148,13 +151,13 @@ if (UNIX)
           elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             execute_process(
               COMMAND echo ${_cling_cxx_path}
-              COMMAND grep "/${_name}\" -cc1"
+              COMMAND grep "/${_name}.*\" -cc1"
               OUTPUT_VARIABLE _cling_clng_path)
 
             if(NOT _cling_clng_path)
               execute_process(
                 COMMAND echo ${_cling_cxx_path}
-                COMMAND grep "/clang\" -cc1"
+                COMMAND grep "/clang.*\" -cc1"
                 OUTPUT_VARIABLE _cling_clng_path)
             endif()
 
@@ -241,15 +244,16 @@ if (UNIX)
       set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
     else()
       # convert CMAKE_CXX_FLAGS to a list for execute_process
-      string(REPLACE " " ";" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
+      string(REPLACE "-fdiagnostics-color=always" "" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
+      string(REPLACE "-fcolor-diagnosics" "" cling_tmp_arg_list ${cling_tmp_arg_list})
+      string(REPLACE " " ";" cling_tmp_arg_list ${cling_tmp_arg_list})
       execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${cling_tmp_arg_list} -xc++ -E -v /dev/null
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
     endif()
 
     execute_process(
       COMMAND echo ${CLING_CXX_HEADERS}
-      COMMAND awk "/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}"
-      COMMAND grep -E "(c|g)\\+\\+"
+      COMMAND sed -n -e /^.include/,\$\{ -e /^\\\ \\\/.*++/p -e \}
       OUTPUT_VARIABLE CLING_CXX_HEADERS)
 
     stripNewLine("${CLING_CXX_HEADERS}" CLING_CXX_HEADERS)
@@ -288,9 +292,22 @@ if (UNIX)
     #define CLING_INCLUDE_PATHS \"${CLING_INCLUDE_PATHS}\"
   ")
   if (CMAKE_OSX_SYSROOT)
+    # CMAKE_OSX_SYSROOT hardcodes the concrete version of the sdk
+    # (eg .../MacOSX11.1.sdk) which changes after every update of XCode. We use
+    # the assumption that in the parent folder there is a symlink MacOSX.sdk
+    # which points to the current active sdk. This change allows releases
+    # to work when the users update their sdks.
+    # FIXME: That is a horrible hack and we should teach CIFactory to pick up
+    # the SDK directory at runtime, just as we do for the include paths to C++.
+    set (OSX_SYSROOT_DEFAULT_SDK ${CMAKE_OSX_SYSROOT})
+    if (${OSX_SYSROOT_DEFAULT_SDK} MATCHES "MacOSX[.0-9]+\.sdk")
+      get_filename_component(OSX_SYSROOT_DEFAULT_SDK ${OSX_SYSROOT_DEFAULT_SDK} DIRECTORY)
+      set (OSX_SYSROOT_DEFAULT_SDK ${OSX_SYSROOT_DEFAULT_SDK}/MacOSX.sdk/)
+    endif()
+
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
       "
-      #define CLING_OSX_SYSROOT \"${CMAKE_OSX_SYSROOT}\"
+      #define CLING_OSX_SYSROOT \"${OSX_SYSROOT_DEFAULT_SDK}\"
     ")
   endif()
   if (CLING_CXX_PATH)

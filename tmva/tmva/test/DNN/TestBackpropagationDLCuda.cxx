@@ -27,16 +27,16 @@ int main()
 
     std::cout << "Testing Backpropagation:" << std::endl;
     double error;
-    error = testBackpropagationWeightsLinear<TCuda<Scalar_t>>(1.0);
+    error = testBackpropagationWeightsLinear<TCuda<Scalar_t>>(0.1);
     if (error > 1e-3)
         return 1;
-    error = testBackpropagationL1Regularization<TCuda<Scalar_t>>(1e-2);
+    error = testBackpropagationL1Regularization<TCuda<Scalar_t>>(1e-5);
     if (error > 1e-3)
         return 1;
-    error = testBackpropagationL2Regularization<TCuda<Scalar_t>>(1.0);
+    error = testBackpropagationL2Regularization<TCuda<Scalar_t>>(1e-5);
     if (error > 1e-3)
         return 1;
-    error = testBackpropagationBiasesLinear<TCuda<Scalar_t>>(1.0);
+    error = testBackpropagationBiasesLinear<TCuda<Scalar_t>>(0.1);
     if (error > 1e-3)
         return 1;
     return 0;

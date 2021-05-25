@@ -17,71 +17,84 @@
 
 #include "gsl/gsl_rng.h"
 
+#include <string>
 
 namespace ROOT {
 
    namespace Math {
 
-      template<class Engine>
-      struct GSLRngROOTWrapper {
+   /**
+    * class for wrapping ROOT Engines in gsl_rng types which can be used as extra
+    * GSL random number generators
+    * For this we need to implment functions which will be called by gsl_rng.
+    * The functions (Seed, Rndm, IntRndm) are passed in the gsl_rng_type and used to build a gsl_rng object.
+    * When gsl_rng is alloacated, only the memory state is allocated using calloc(1,size), which gives a memory 
+    * block of the given bytes and it initializes to zero. Therefore no constructor of GSLRngROOTWrapper can be called 
+    * and also we cannot call non-static member funciton of the class. 
+    * The underlined ROOT engine is then built and deleted using the functions CreateEngine() and FreeEngine(), 
+    * called by the specific GSLRandomEngine class that instantiates for the  the generator (e.g. GSLRngMixMax)
+    *
+    **/
+   template <class Engine>
+   struct GSLRngROOTWrapper {
 
-         Engine * fEngine;
-         bool fFirst;
+      Engine *fEngine = nullptr;
 
-         
-         GSLRngROOTWrapper() {
-            fEngine = nullptr;
-            fFirst = false; 
-         }
+      // non need to have specific ctor/dtor since we cannot call them
 
-         ~GSLRngROOTWrapper() {
-            if (fEngine) delete fEngine; 
-         }
+      // function called by the specific GSLRndmEngine to create the ROOT engine
+      static void CreateEngine(gsl_rng *r)
+      {
+         // the engine pointer is retrieved from r
+         GSLRngROOTWrapper *wrng = ((GSLRngROOTWrapper *)r->state);
+         //printf("calling create engine - engine pointer : %p\n", wrng->fEngine);
+         if (!wrng->fEngine)
+            wrng->fEngine = new Engine();
+         // do nothing in case it is already created (e.g. when calling with default_seed)
+      }
 
-         static double Rndm(void * p) {
-            return ((GSLRngROOTWrapper *) p)->fEngine->operator()(); 
+      static double Rndm(void *p) { return ((GSLRngROOTWrapper *)p)->fEngine->operator()(); }
+      static unsigned long IntRndm(void *p) { return ((GSLRngROOTWrapper *)p)->fEngine->IntRndm(); }
+
+      static void Seed(void *p, unsigned long seed)
+      {
+         auto wrng = ((GSLRngROOTWrapper *)p);
+         // (GSL calls at the beginning with the defaul seed (typically zero))
+         //printf("calling the seed function with %d on %p and engine %p\n", seed, p, wrng->fEngine);
+         if (seed == gsl_rng_default_seed) {
+            seed = 111; // avoid using 0 that for ROOT means a specific seed
+            if (!wrng->fEngine) wrng->fEngine = new Engine();
          }
-         static unsigned long IntRndm(void * p) {
-            return ((GSLRngROOTWrapper *) p)->fEngine->IntRndm(); 
-         }
-         static void Seed(void * p, unsigned long seed) {
-            //if (fFirst) {
-            // this will be a memory leak because I have no way to delete
-            // the engine class 
-            auto wr = ((GSLRngROOTWrapper *) p);
-            if (wr->fFirst) {
-               //printf("calling the seed function with %d on %p . Build Engine class \n",seed,p);               
-               wr->fEngine = new Engine();
-               wr->fFirst = false;
-            }
-            // the seed cannot be zero (GSL calls at the beginning with seed 0)
-            if (seed == 0) return; 
-            ((GSLRngROOTWrapper *) p)->fEngine->SetSeed(seed); 
-         }
-         static void Free(void *p) {
-            auto wr = ((GSLRngROOTWrapper *) p);
-            if (wr->fEngine) delete wr->fEngine;
-            wr->fFirst = true;
-            //printf("deleting gsl mixmax\n");
-         }
-         
-         static unsigned long Max() { return Engine::MaxInt(); }
-         static unsigned long Min() { return Engine::MinInt(); }
-         static size_t Size() { return sizeof( GSLRngROOTWrapper<Engine>); }
-         static std::string Name() { return std::string("GSL_")+Engine::Name(); }
-      };
-   }
-}
+         assert(wrng->fEngine != nullptr);
+         wrng->fEngine->SetSeed(seed);
+      }
+      static void FreeEngine(gsl_rng *r)
+      {
+         auto wrng = ((GSLRngROOTWrapper *)r->state);
+         if (wrng->fEngine)
+            delete wrng->fEngine;
+         wrng->fEngine = nullptr;
+      }
+
+      static unsigned long Max() { return Engine::MaxInt(); }
+      static unsigned long Min() { return Engine::MinInt(); }
+      static size_t Size() { return sizeof(GSLRngROOTWrapper<Engine>); }
+      static std::string Name() { return std::string("GSL_") + Engine::Name(); }
+   };
+
+   }  // end namespace Math
+} // end namespace ROOT
 
 #include "Math/MixMaxEngine.h"
 
 // now define and implement the specific types    
 
-typedef ROOT::Math::GSLRngROOTWrapper<ROOT::Math::MixMaxEngine<240,0>> GSLMixMaxWrapper;
+typedef ROOT::Math::GSLRngROOTWrapper<ROOT::Math::MixMaxEngine<17,0>> GSLMixMaxWrapper;
 
+static const std::string gsl_mixmax_name =  GSLMixMaxWrapper::Name();
 static const gsl_rng_type mixmax_type =
 {
-   GSLMixMaxWrapper::Name().c_str(), 
+   gsl_mixmax_name.c_str(), 
    GSLMixMaxWrapper::Max(), 
    GSLMixMaxWrapper::Min(),
    GSLMixMaxWrapper::Size(),

@@ -15,6 +15,7 @@
 #include "TNamed.h"
 #include "TList.h"
 #include <memory>
+#include <string>
 
 class TFolder;
 class TKey;
@@ -43,8 +44,8 @@ protected:
    UInt_t fMask{0};                       ///<! defines operation kind
    const char *fSearchPath{nullptr};      ///<! current path searched
    Int_t fLevel{0};                       ///<! current level of hierarchy
-   TString fItemName{};                   ///<! name of current item
-   TList fItemsNames{};                   ///<! list of created items names, need to avoid duplication
+   TString fItemName;                     ///<! name of current item
+   TList fItemsNames;                     ///<! list of created items names, need to avoid duplication
    Int_t fRestriction{0};                 ///<! restriction 0 - default, 1 - read-only, 2 - full access
 
    TRootSnifferStore *fStore{nullptr}; ///<! object to store results
@@ -239,11 +240,9 @@ public:
 
    virtual ULong_t GetItemHash(const char *itemname);
 
-   Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str) _R__DEPRECATED_618("Use signature with std::string");
-
    Bool_t Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
 
-   ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
+   ClassDefOverride(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
 };
 
 #endif

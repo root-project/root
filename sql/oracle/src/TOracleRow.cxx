@@ -11,25 +11,26 @@
 
 #include "TOracleRow.h"
 #include "TOracleServer.h"
-#include <string.h>
+#include "snprintf.h"
+#include <cstring>
 #include <ctime>
+
+#include <occi.h>
 
 ClassImp(TOracleRow);
 
-using namespace std;
 using namespace oracle::occi;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.
 
-TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
+TOracleRow::TOracleRow(ResultSet *rs, std::vector<MetaData> *fieldMetaData)
 {
    fResult      = rs;
    fFieldInfo   = fieldMetaData;
    fFieldCount  = fFieldInfo->size();
 
-   fFieldsBuffer = 0;
+   fFieldsBuffer = nullptr;
 
    GetRowData();
 }
@@ -47,15 +48,17 @@ TOracleRow::~TOracleRow()
 
 void TOracleRow::Close(Option_t *)
 {
-   if (fFieldsBuffer!=0) {
+   if (fFieldsBuffer) {
       for (int n=0;n<fFieldCount;n++)
-        if (fFieldsBuffer[n]) delete[] fFieldsBuffer[n];
-      delete[] fFieldsBuffer;
+        if (fFieldsBuffer[n])
+           delete[] fFieldsBuffer[n];
+      delete [] fFieldsBuffer;
    }
 
-   fFieldInfo   = 0;
+   fFieldsBuffer = nullptr;
+   fFieldInfo   = nullptr;
    fFieldCount  = 0;
-   fResult      = 0;
+   fResult      = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,10 +96,10 @@ const char* TOracleRow::GetField(Int_t field)
 {
    if ((field<0) || (field>=fFieldCount)) {
       Error("TOracleRow","GetField(): out-of-range or No RowData/ResultSet/MetaData");
-      return 0;
+      return nullptr;
    }
 
-   return fFieldsBuffer ? fFieldsBuffer[field] : 0;
+   return fFieldsBuffer ? fFieldsBuffer[field] : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

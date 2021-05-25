@@ -20,32 +20,50 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGColorFrame, TG16ColorSelector, TGColorPopup and TGColorSelect.     //
-//                                                                      //
-// The TGColorFrame is a small frame with border showing a specific     //
-// color.                                                               //
-//                                                                      //
-// The TG16ColorSelector is a composite frame with 16 TGColorFrames.    //
-//                                                                      //
-// The TGColorPopup is a popup containing a TG16ColorSelector and a     //
-// "More..." button which popups up a TGColorDialog allowing custom     //
-// color selection.                                                     //
-//                                                                      //
-// The TGColorSelect widget is like a checkbutton but instead of the    //
-// check mark there is color area with a little down arrow. When        //
-// clicked on the arrow the TGColorPopup pops up.                       //
-//                                                                      //
-// Selecting a color in this widget will generate the event:            //
-// kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.                      //
-// and the signal:                                                      //
-// ColorSelected(Pixel_t color)                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGColorFrame
+    \ingroup guiwidgets
+
+A small frame with border showing a specific color.
+
+*/
+
+
+/** \class TG16ColorSelector
+    \ingroup guiwidgets
+
+A composite frame with 16 TGColorFrames.
+
+*/
+
+
+/** \class TGColorPopup
+    \ingroup guiwidgets
+
+A popup containing a TG16ColorSelector and a "More..." button which popups up a
+TGColorDialog allowing custom color selection.
+
+*/
+
+
+/** \class TGColorSelect
+\ingroup guiwidgets
+
+Like a checkbutton but instead of the check mark there is color area with a little down
+arrow. When clicked on the arrow the TGColorPopup pops up.
+
+Selecting a color in this widget will generate the event:
+  - kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.
+
+and the signal:
+
+  - ColorSelected(Pixel_t color)
+
+*/
+
 
 #include "TGClient.h"
-#include "TGMsgBox.h"
+#include "TGMsgBox.h"   // for kMBOk
 #include "TGGC.h"
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
@@ -53,7 +71,9 @@
 #include "RConfigure.h"
 #include "TG3DLine.h"
 #include "TColor.h"
-#include "Riostream.h"
+#include "TVirtualX.h"
+
+#include <iostream>
 
 ClassImp(TGColorFrame);
 ClassImp(TG16ColorSelector);
@@ -261,10 +281,17 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    // Parent is root window for the popup:
    gVirtualX->GetWindowSize(fParent->GetId(), rx, ry, rw, rh);
 
-   if (x < 0) x = 0;
-   if (x + fWidth > rw) x = rw - fWidth;
-   if (y < 0) y = 0;
-   if (y + fHeight > rh) y = rh - fHeight;
+   if (gVirtualX->InheritsFrom("TGWin32")) {
+      if ((x > 0) && ((x + abs(rx) + (Int_t)fWidth) > (Int_t)rw))
+         x = rw - abs(rx) - fWidth;
+      if ((y > 0) && (y + abs(ry) + (Int_t)fHeight > (Int_t)rh))
+         y = rh - fHeight;
+   } else {
+      if (x < 0) x = 0;
+      if (x + fWidth > rw) x = rw - fWidth;
+      if (y < 0) y = 0;
+      if (y + fHeight > rh) y = rh - fHeight;
+   }
 
    MoveResize(x, y, w, h);
    MapSubwindows();
@@ -532,7 +559,7 @@ void TGColorSelect::DoRedraw()
       //Adjustment for Quartz 2D is required:
       //first, I DO not try to fit filled rectangle into outline - this
       //simply DOES NOT work (with retina/non-retina display, for example.
-      //First - fill rectable, then draw outline.
+      //First - fill rectangle, then draw outline.
       gVirtualX->FillRectangle(fId, fDrawGC(), x + 1, y + 1, w - 1, h - 1);
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x + 1, y + 1, w - 1, h - 1);
 #else

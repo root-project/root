@@ -8,10 +8,17 @@
 //                                                                            //
 //_____________________________________________________________________________
 
-#include "Riostream.h"
-#include "TSystem.h"
 #include "TFoamVect.h"
 
+#include <iostream>
+#include <iomanip>
+
+/** \class TFoamVect
+
+Auxiliary class TFoamVect of n-dimensional vector, with dynamic allocation
+used for the cartesian geometry of the TFoam cells
+
+*/
 
 ClassImp(TFoamVect);
 
@@ -41,7 +48,7 @@ TFoamVect::TFoamVect(Int_t n)
       }
       for (i=0; i<n; i++) *(fCoords+i)=0.0;
    }
-   if(gDebug) Info("TFoamVect", "USER CONSTRUCTOR TFoamVect(const Int_t)\n ");
+   if(gDebug>=3) Info("TFoamVect", "USER CONSTRUCTOR TFoamVect(const Int_t)\n ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,15 +75,10 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 
 TFoamVect::~TFoamVect()
 {
-   if(gDebug) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
+   if(gDebug>=3) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
    delete [] fCoords; //  free(fCoords)
    fCoords=0;
 }
-
-
-//////////////////////////////////////////////////////////////////////////////
-//                     Overloading operators                                //
-//////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// substitution operator
@@ -94,7 +96,7 @@ TFoamVect& TFoamVect::operator =(const TFoamVect& Vect)
    fDim=Vect.fDim;
    for(i=0; i<fDim; i++)
       fCoords[i] = Vect.fCoords[i];
-   if(gDebug)  Info("TFoamVect", "SUBSITUTE operator =\n ");
+   if(gDebug>=3)  Info("TFoamVect", "SUBSITUTE operator =\n ");
    return *this;
 }
 
@@ -194,9 +196,6 @@ TFoamVect& TFoamVect::operator =(Double_t x)
    }
    return *this;
 }
-//////////////////////////////////////////////////////////////////////////////
-//                          OTHER METHODS                                   //
-//////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Printout of all vector components on "std::cout"
@@ -212,8 +211,3 @@ void TFoamVect::Print(Option_t *option) const
    std::cout << ")";
    std::cout.precision(pr);
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-//                End of Class TFoamVect                                        //
-///////////////////////////////////////////////////////////////////////////////

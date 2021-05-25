@@ -19,8 +19,8 @@ either use:
 
   - the ProfileLikelihoodCalculator that relies on asymptotic properties of the
     Profile Likelihood Ratio
-  - the Neyman Construction classes with this class as a test statistic
-  - the Hybrid Calculator class with this class as a test statistic
+  - the NeymanConstruction class with this class as a test statistic
+  - the HybridCalculator class with this class as a test statistic
 
 
 */
@@ -299,8 +299,10 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
 RooFitResult* RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
 
+   const auto& config = GetGlobalRooStatsConfig();
    RooMinimizer minim(*fNll);
    minim.setStrategy(fStrategy);
+   minim.setEvalErrorWall(config.useEvalErrorWall);
    //LM: RooMinimizer.setPrintLevel has +1 offset - so subtract  here -1 + an extra -1
    int level = (fPrintLevel == 0) ? -1 : fPrintLevel -2;
    minim.setPrintLevel(level);

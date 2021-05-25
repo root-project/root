@@ -20,15 +20,17 @@
 class TWbox : public TBox {
 
 protected:
-   Short_t      fBorderSize;    ///< window box bordersize in pixels
-   Short_t      fBorderMode;    ///< Bordermode (-1=down, 0 = no border, 1=up)
+   Short_t      fBorderSize{0};    ///< window box bordersize in pixels
+   Short_t      fBorderMode{0};    ///< Bordermode (-1=down, 0 = no border, 1=up)
 
 public:
-   TWbox();
+   TWbox() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
          Color_t color=18, Short_t bordersize=5 ,Short_t bordermode=1);
    TWbox(const TWbox &wbox);
-   virtual ~TWbox();
+   virtual ~TWbox() = default;
+
+   TWbox &operator=(const TWbox &src);
 
    void          Copy(TObject &wbox) const;
    virtual void  Draw(Option_t *option="");

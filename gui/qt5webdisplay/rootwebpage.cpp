@@ -1,12 +1,9 @@
-/// \file rootwebpage.cpp
-/// \ingroup CanvasPainter ROOT7
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2017-06-29
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,13 +12,48 @@
 
 #include "rootwebpage.h"
 
-#include <stdio.h>
+#include <ROOT/RLogger.hxx>
+#include "TString.h"
+#include "TEnv.h"
+#include <iostream>
 
-void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel, const QString &message, int lineNumber,
-                                           const QString &sourceID)
+ROOT::Experimental::RLogChannel &QtWebDisplayLog()
 {
-   QByteArray ba = message.toLatin1();
-   QByteArray src = sourceID.toLatin1();
+   static ROOT::Experimental::RLogChannel sChannel("ROOT.QtWebDisplay");
+   return sChannel;
+}
 
-   printf("CONSOLE %s:%d: %s\n", src.data(), lineNumber, ba.data());
+/** \class RootWebPage
+\ingroup qt5webdisplay
+*/
+
+
+RootWebPage::RootWebPage(QObject *parent) : QWebEnginePage(parent)
+{
+   fConsole = gEnv->GetValue("WebGui.Console", (int)0);
+}
+
+void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, const QString &message, int lineNumber,
+                                           const QString &src)
+{
+   TString msg = TString::Format("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+                                 message.toLatin1().constData());
+
+   switch (lvl) {
+   case InfoMessageLevel:
+      R__LOG_DEBUG(0, QtWebDisplayLog()) << msg;
+      if (fConsole > 0)
+         std::cout << msg << std::endl;
+      break;
+   case WarningMessageLevel:
+      R__LOG_WARNING(QtWebDisplayLog()) << msg;
+      if (fConsole > 0)
+         std::cout << msg << std::endl;
+      break;
+   case ErrorMessageLevel:
+      R__LOG_ERROR(QtWebDisplayLog()) << msg;
+      if (fConsole > 0)
+         std::cerr << msg << std::endl;
+      break;
+   }
 }

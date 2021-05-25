@@ -20,14 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolBar                                                            //
-//                                                                      //
-// A toolbar is a composite frame that contains TGPictureButtons.       //
-// Often used in combination with a TGHorizontal3DLine.                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGToolBar
+\ingroup guiwidgets
+
+A toolbar is a composite frame that contains TGPictureButtons.
+Often used in combination with a TGHorizontal3DLine.
+
+*/
+
 
 #include "TGToolBar.h"
 #include "TList.h"
@@ -36,7 +37,7 @@
 #include "TGToolTip.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "Riostream.h"
+#include <iostream>
 #include "TMap.h"
 
 
@@ -293,7 +294,6 @@ void TGToolBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    char quote = '"';
 
    int i = 0;
-   const char *picname;
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -301,16 +301,15 @@ void TGToolBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    while ((f = (TGFrameElement *) next())) {
       if (f->fFrame->InheritsFrom(TGPictureButton::Class())) {
          if (!gROOT->ClassSaved(TGPictureButton::Class())) {
-            //  declare a structure used for pictute buttons
+            //  declare a structure used for picture buttons
             out << std::endl << "   ToolBarData_t t;" << std::endl;
          }
 
          TGPictureButton *pb = (TGPictureButton *)f->fFrame;
-         picname = pb->GetPicture()->GetName();
+         TString picname = gSystem->UnixPathName(pb->GetPicture()->GetName());
+         gSystem->ExpandPathName(picname);
 
-         out << "   t.fPixmap = " << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(picname))
-             << quote << ";" << std::endl;
+         out << "   t.fPixmap = " << quote << picname << quote << ";" << std::endl;
          out << "   t.fTipText = " << quote
              << pb->GetToolTip()->GetText()->GetString() << quote << ";" << std::endl;
          if (pb->GetState() == kButtonDown) {

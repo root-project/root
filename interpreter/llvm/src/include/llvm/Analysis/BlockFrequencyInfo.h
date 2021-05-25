@@ -1,9 +1,8 @@
 //===- BlockFrequencyInfo.h - Block Frequency Analysis ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -18,31 +17,36 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/BlockFrequency.h"
-#include <climits>
+#include <cstdint>
+#include <memory>
 
 namespace llvm {
 
+class BasicBlock;
 class BranchProbabilityInfo;
+class Function;
 class LoopInfo;
+class Module;
+class raw_ostream;
 template <class BlockT> class BlockFrequencyInfoImpl;
+
+enum PGOViewCountsType { PGOVCT_None, PGOVCT_Graph, PGOVCT_Text };
 
 /// BlockFrequencyInfo pass uses BlockFrequencyInfoImpl implementation to
 /// estimate IR basic block frequencies.
 class BlockFrequencyInfo {
-  typedef BlockFrequencyInfoImpl<BasicBlock> ImplType;
-  std::unique_ptr<ImplType> BFI;
+  using ImplType = BlockFrequencyInfoImpl<BasicBlock>;
 
-  void operator=(const BlockFrequencyInfo &) = delete;
-  BlockFrequencyInfo(const BlockFrequencyInfo &) = delete;
+  std::unique_ptr<ImplType> BFI;
 
 public:
   BlockFrequencyInfo();
   BlockFrequencyInfo(const Function &F, const BranchProbabilityInfo &BPI,
                      const LoopInfo &LI);
+  BlockFrequencyInfo(const BlockFrequencyInfo &) = delete;
+  BlockFrequencyInfo &operator=(const BlockFrequencyInfo &) = delete;
   BlockFrequencyInfo(BlockFrequencyInfo &&Arg);
-
   BlockFrequencyInfo &operator=(BlockFrequencyInfo &&RHS);
-
   ~BlockFrequencyInfo();
 
   /// Handle invalidation explicitly.
@@ -51,7 +55,7 @@ public:
 
   const Function *getFunction() const;
   const BranchProbabilityInfo *getBPI() const;
-  void view() const;
+  void view(StringRef = "BlockFrequencyDAGs") const;
 
   /// getblockFreq - Return block frequency. Return 0 if we don't have the
   /// information. Please note that initial frequency is equal to ENTRY_FREQ. It
@@ -60,15 +64,20 @@ public:
   /// floating points.
   BlockFrequency getBlockFreq(const BasicBlock *BB) const;
 
-  /// \brief Returns the estimated profile count of \p BB.
+  /// Returns the estimated profile count of \p BB.
   /// This computes the relative block frequency of \p BB and multiplies it by
   /// the enclosing function's count (if available) and returns the value.
-  Optional<uint64_t> getBlockProfileCount(const BasicBlock *BB) const;
+  Optional<uint64_t> getBlockProfileCount(const BasicBlock *BB,
+                                          bool AllowSynthetic = false) const;
 
-  /// \brief Returns the estimated profile count of \p Freq.
+  /// Returns the estimated profile count of \p Freq.
   /// This uses the frequency \p Freq and multiplies it by
   /// the enclosing function's count (if available) and returns the value.
   Optional<uint64_t> getProfileCountFromFreq(uint64_t Freq) const;
+
+  /// Returns true if \p BB is an irreducible loop header
+  /// block. Otherwise false.
+  bool isIrrLoopHeader(const BasicBlock *BB);
 
   // Set the frequency of the given basic block.
   void setBlockFreq(const BasicBlock *BB, uint64_t Freq);
@@ -96,31 +105,33 @@ public:
   void print(raw_ostream &OS) const;
 };
 
-/// \brief Analysis pass which computes \c BlockFrequencyInfo.
+/// Analysis pass which computes \c BlockFrequencyInfo.
 class BlockFrequencyAnalysis
     : public AnalysisInfoMixin<BlockFrequencyAnalysis> {
   friend AnalysisInfoMixin<BlockFrequencyAnalysis>;
+
   static AnalysisKey Key;
 
 public:
-  /// \brief Provide the result typedef for this analysis pass.
-  typedef BlockFrequencyInfo Result;
+  /// Provide the result type for this analysis pass.
+  using Result = BlockFrequencyInfo;
 
-  /// \brief Run the analysis pass over a function and produce BFI.
+  /// Run the analysis pass over a function and produce BFI.
   Result run(Function &F, FunctionAnalysisManager &AM);
 };
 
-/// \brief Printer pass for the \c BlockFrequencyInfo results.
+/// Printer pass for the \c BlockFrequencyInfo results.
 class BlockFrequencyPrinterPass
     : public PassInfoMixin<BlockFrequencyPrinterPass> {
   raw_ostream &OS;
 
 public:
   explicit BlockFrequencyPrinterPass(raw_ostream &OS) : OS(OS) {}
+
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
 
-/// \brief Legacy analysis pass which computes \c BlockFrequencyInfo.
+/// Legacy analysis pass which computes \c BlockFrequencyInfo.
 class BlockFrequencyInfoWrapperPass : public FunctionPass {
   BlockFrequencyInfo BFI;
 
@@ -140,6 +151,6 @@ public:
   void print(raw_ostream &OS, const Module *M) const override;
 };
 
-}
+} // end namespace llvm
 
-#endif
+#endif // LLVM_ANALYSIS_BLOCKFREQUENCYINFO_H

@@ -15,6 +15,8 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Value.h"
 #include <stdio.h>
+#include <iostream>
+
 gCling->declare("int print() { printf(\"print is run.\\n\"); return 1; }");
 cling::Value V;
 gCling->process("int a = print();",&V);
@@ -45,7 +47,7 @@ int step = 10 // CHECK: (int) 10
 step // CHECK: (int) 10
 
 gCling->process("#ifdef __UNDEFINED__\n42\n#endif")
-//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::CompilationResult::kSuccess) : ({{(unsigned )?}}int) 0
+//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::kSuccess) : ({{(unsigned )?}}int) 0
 
 // User input variants of above:
 #ifdef NOTDEFINED
@@ -54,7 +56,7 @@ gCling->process("#ifdef __UNDEFINED__\n42\n#endif")
  gCling->echo("12")
 #endif
 //CHECK: (int) 12
-//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::CompilationResult::kSuccess) : ({{(unsigned )?}}int) 0
+//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::kSuccess) : ({{(unsigned )?}}int) 0
 
 #ifdef __CLING__
  gCling->echo("19");
@@ -79,3 +81,13 @@ class MyClass;
 extern MyClass* my;
 class MyClass {public: MyClass* getMyClass() {return 0;}} cl;
 MyClass* my = cl.getMyClass();
+
+//
+printf("Auto flush printf\n");
+//CHECK-NEXT: Auto flush printf
+std::cout << "Auto flush cout\n";
+//CHECK-NEXT: Auto flush cout
+printf("Must flush printf\n"); std::cout.flush();
+//CHECK-NEXT: Must flush printf
+
+.q

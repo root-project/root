@@ -28,13 +28,15 @@ created using global helper functions defined in RooGlobalFunc.h
 that create and fill these generic containers
 **/
 
-#include "RooFit.h"
 
-#include "RooCmdArg.h"
+
 #include "RooCmdArg.h"
 #include "Riostream.h"
 #include "RooArgSet.h"
+#include "RooFit.h"
+
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -210,4 +212,15 @@ void RooCmdArg::setSet(Int_t idx,const RooArgSet& set)
   }
     _c[idx].removeAll() ;
     _c[idx].add(set) ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents
+void RooCmdArg::Print(const char*) const {
+  std::cout << GetName()
+      << ":\ndoubles\t" << _d[0] << " " << _d[1]
+      << "\nints\t" << _i[0] << " " << _i[1]
+      << "\nstrings\t" << _s[0] << " " << _s[1] << " " << _s[2]
+      << "\nobjects\t" << _o[0] << " " << _o[1] << std::endl;
 }

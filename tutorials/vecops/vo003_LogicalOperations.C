@@ -5,6 +5,7 @@
 /// express logical operations.
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \date May 2018
 /// \author Danilo Piparo
@@ -49,4 +50,8 @@ void vo003_LogicalOperations()
    // Suppose the pts of the muons with a pt greater than 10 and eta smaller than 2.1 are needed:
    auto good_mu_pt = mu_pt[mu_pt > 10 && abs(mu_eta) < 2.1];
    std::cout << "mu_pt = " << mu_pt << "  mu_pt[ mu_pt > 10 && abs(mu_eta) < 2.1] = " << good_mu_pt << std::endl;
+
+   // Advanced logical operations with masking can be performed with the Where helper.
+   auto masked_mu_pt = Where(abs(mu_eta) < 2., mu_pt, -999.);
+   std::cout << "mu_pt if abs(mu_eta) < 2 else -999 = " << masked_mu_pt << std::endl;
 }

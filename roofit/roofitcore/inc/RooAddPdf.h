@@ -22,9 +22,12 @@
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
 #include "RooNameSet.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
+
+#include <vector>
+#include <list>
+#include <utility>
 
 class RooAddPdf : public RooAbsPdf {
 public:
@@ -40,7 +43,6 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
   virtual ~RooAddPdf() ;
 
-  Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
@@ -80,6 +82,8 @@ public:
   const RooArgSet& getCoefNormalization() const { return _refCoefNorm ; }
   const char* getCoefRange() const { return _refCoefRangeName?RooNameReg::str(_refCoefRangeName):"" ; }
 
+  virtual Double_t getValV(const RooArgSet *set = 0) const;
+  
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
@@ -100,7 +104,7 @@ protected:
   mutable TNamed* _refCoefRangeName ;  // Reference range name for coefficient interpreation
 
   Bool_t _projectCoefs ;         // If true coefficients need to be projected for use in evaluate()
-  mutable Double_t* _coefCache ; //! Transiet cache with transformed values of coefficients
+  std::vector<double> _coefCache; //! Transient cache with transformed values of coefficients
 
 
   class CacheElem : public RooAbsCacheElement {
@@ -128,13 +132,15 @@ protected:
                                        const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
 
+  Double_t evaluate() const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+
+
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
-  mutable RooArgList* _snormList ;  //!  List of supplemental normalization factors
-  TIterator* _pdfIter ;     //! Iterator over PDF list
-  TIterator* _coefIter ;    //! Iterator over coefficient list
+  mutable RooArgList* _snormList{nullptr};  //!  List of supplemental normalization factors
   
   Bool_t _haveLastCoef ;    //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
@@ -143,6 +149,7 @@ protected:
   mutable Int_t _coefErrCount ; //! Coefficient error counter
 
 private:
+  std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* defaultNorm = nullptr) const;
 
   ClassDef(RooAddPdf,3) // PDF representing a sum of PDFs
 };

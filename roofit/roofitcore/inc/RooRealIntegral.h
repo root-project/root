@@ -22,6 +22,7 @@
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include "RooListProxy.h"
+#include <list>
 
 class RooArgSet ;
 class TH1F ;
@@ -79,7 +80,7 @@ public:
 
   void setAllowComponentSelection(Bool_t allow);
   Bool_t getAllowComponentSelection() const;
-
+  
 protected:
 
   mutable Bool_t _valid;
@@ -114,8 +115,6 @@ protected:
   mutable RooSetProxy _facList ; // Set of observables on which function does not depends, which are integrated nevertheless
 
   mutable RooArgSet   _facListOwned ;  // Owned components in _facList
-  TIterator*          _facListIter ; //! Iterator over factorizing observables
-  TIterator*          _jacListIter ; //! Iterator over lvalue observables with Jacobian
   RooRealProxy       _function ;     // Function being integration
   RooArgSet*      _funcNormSet ;     // Optional normalization set passed to function
 
@@ -125,7 +124,6 @@ protected:
   RooNumIntConfig* _iconfig ;
 
   mutable RooListProxy _sumCat ; //! do not persist  
-  TIterator* _sumCatIter ; //!
   
   Int_t _mode ;
   IntOperMode _intOperMode ;   // integration operation mode
@@ -140,9 +138,6 @@ protected:
 
   Bool_t _cacheNum ;           // Cache integral if numeric
   static Int_t _cacheAllNDim ; //! Cache all integrals with given numeric dimension
-
-
-  virtual void operModeHook() ; // cache operation mode
 
 public:
   void setNumIntTiming(Bool_t flag);

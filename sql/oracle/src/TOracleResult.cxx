@@ -13,7 +13,12 @@
 #include "TOracleRow.h"
 #include "TList.h"
 
-using namespace std;
+#ifndef R__WIN32
+#include <sys/time.h>
+#endif
+
+#include <occi.h>
+
 using namespace oracle::occi;
 
 ClassImp(TOracleResult);
@@ -31,12 +36,12 @@ void TOracleResult::initResultSet(Statement *stmt)
          if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
             fResultType  = 1;
             fResult      = stmt->getResultSet();
-            fFieldInfo   = (fResult==0) ? 0 : new vector<MetaData>(fResult->getColumnListMetaData());
-            fFieldCount  = (fFieldInfo==0) ? 0 : fFieldInfo->size();
+            fFieldInfo   = fResult ? new std::vector<MetaData>(fResult->getColumnListMetaData()) : nullptr;
+            fFieldCount  = fFieldInfo ? fFieldInfo->size() : 0;
          } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
             fResultType  = 3; // this is update_count_available
-            fResult      = 0;
-            fFieldInfo   = 0;
+            fResult      = nullptr;
+            fFieldInfo   = nullptr;
             fFieldCount  = 0;
             fUpdateCount = stmt->getUpdateCount();
          }
@@ -52,11 +57,11 @@ void TOracleResult::initResultSet(Statement *stmt)
 TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 {
    fConn        = conn;
-   fResult      = 0;
-   fStmt        = 0;
-   fPool        = 0;
+   fResult      = nullptr;
+   fStmt        = nullptr;
+   fPool        = nullptr;
    fRowCount    = 0;
-   fFieldInfo   = 0;
+   fFieldInfo   = nullptr;
    fResultType  = 0;
    fUpdateCount = 0;
 
@@ -70,12 +75,12 @@ TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 
 TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
-   fResult      = 0;
-   fStmt        = 0;
-   fConn        = 0;
-   fPool        = 0;
+   fResult      = nullptr;
+   fStmt        = nullptr;
+   fConn        = nullptr;
+   fPool        = nullptr;
    fRowCount    = 0;
-   fFieldInfo   = 0;
+   fFieldInfo   = nullptr;
    fResultType  = 0;
    fUpdateCount = 0;
    fFieldCount  = 0;
@@ -84,7 +89,7 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
       Error("TOracleResult", "construction: empty input parameter");
    } else {
       MetaData connMD = conn->getMetaData(tableName, MetaData::PTYPE_TABLE);
-      fFieldInfo   = new vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
+      fFieldInfo   = new std::vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
       fFieldCount  = fFieldInfo->size();
       fResultType  = 2; // indicates that this is just an table metainfo
    }
@@ -118,10 +123,10 @@ void TOracleResult::Close(Option_t *)
 
    fResultType = 0;
 
-   fStmt = 0;
-   fResult = 0;
-   fFieldInfo = 0;
-   fPool = 0;
+   fStmt = nullptr;
+   fResult = nullptr;
+   fFieldInfo = nullptr;
+   fPool = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +155,7 @@ Int_t TOracleResult::GetFieldCount()
 const char *TOracleResult::GetFieldName(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
    fNameBuffer = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
    return fNameBuffer.c_str();
 }
@@ -180,7 +185,7 @@ TSQLRow *TOracleResult::Next()
       Error("Next", "%s", (oraex.getMessage()).c_str());
       MakeZombie();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +194,7 @@ Int_t TOracleResult::GetRowCount() const
 {
    if (!fResult) return 0;
 
-   if (fPool==0) ((TOracleResult*) this)->ProducePool();
+   if (!fPool) ((TOracleResult*) this)->ProducePool();
 
    return fRowCount;
 }
@@ -198,11 +203,11 @@ Int_t TOracleResult::GetRowCount() const
 
 void TOracleResult::ProducePool()
 {
-   if (fPool!=0) return;
+   if (fPool) return;
 
    TList* pool = new TList;
-   TSQLRow* res = 0;
-   while ((res = Next()) !=0) {
+   TSQLRow* res = nullptr;
+   while ((res = Next()) != nullptr) {
       pool->Add(res);
    }
 

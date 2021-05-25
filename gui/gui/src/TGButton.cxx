@@ -20,73 +20,120 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGButton, TGTextButton, TGPictureButton, TGCheckButton,              //
-// TGRadioButton and TGSplitButton                                      //
-//                                                                      //
-// This header defines all GUI button widgets.                          //
-//                                                                      //
-// TGButton is a button abstract base class. It defines general button  //
-// behaviour.                                                           //
-//                                                                      //
-// TGTextButton and TGPictureButton yield an action as soon as they are //
-// clicked. These buttons usually provide fast access to frequently     //
-// used or critical commands. They may appear alone or placed in a      //
-// group.                                                               //
-//                                                                      //
-// The action they perform can be inscribed with a meaningful tooltip   //
-// set by SetToolTipText(const char* text, Long_t delayms=400).         //
-//                                                                      //
-// The text button has a label indicating the action to be taken when   //
-// the button is pressed. The text can be a hot string ("&Exit") that   //
-// defines the label "Exit" and keyboard mnemonics Alt+E for button     //
-// selection. A button label can be changed by SetText(new_label).      //
-//                                                                      //
-// Selecting a text or picture button will generate the event:          //
-// kC_COMMAND, kCM_BUTTON, button id, user data.                        //
-//                                                                      //
-// The purpose of TGCheckButton and TGRadioButton is for selecting      //
-// different options. Like text buttons, they have text or hot string   //
-// as a label.                                                          //
-//                                                                      //
-// Radio buttons are grouped usually in logical sets of two or more     //
-// buttons to present mutually exclusive choices.                       //
-//                                                                      //
-// Selecting a check button will generate the event:                    //
-// kC_COMMAND, kCM_CHECKBUTTON, button id, user data.                   //
-//                                                                      //
-// Selecting a radio button will generate the event:                    //
-// kC_COMMAND, kCM_RADIOBUTTON, button id, user data.                   //
-//                                                                      //
-// If a command string has been specified (via SetCommand()) then this  //
-// command string will be executed via the interpreter whenever a       //
-// button is selected. A command string can contain the macros:         //
-// $MSG   -- kC_COMMAND, kCM[CHECK|RADIO]BUTTON packed message          //
-//           (use GET_MSG() and GET_SUBMSG() to unpack)                 //
-// $PARM1 -- button id                                                  //
-// $PARM2 -- user data pointer                                          //
-// Before executing these macros are expanded into the respective       //
-// Long_t's                                                             //
-//                                                                      //
-// TGSplitButton implements a button with added menu functionality.     //
-// There are 2 modes of operation available.                            //
-//                                                                      //
-// If the button is split, a menu will popup when the menu area of the  //
-// button is clicked. Activating a menu item changes the functionality  //
-// of the button by having it emit a additional signal when it is       //
-// clicked. The signal emitted when the button is clicked, is the       //
-// ItemClicked(Int_t) signal with a different fixed value for the       //
-// Int_t that corresponds to the id of the activated menu entry.        //
-//                                                                      //
-// If the button is not split, clicking it will popup the menu and the  //
-// ItemClicked(Int_t) signal will be emitted when a menu entry is       //
-// acitvated. The value of the Int_t is again equal to the value of     //
-// the id of the activated menu entry.                                  //
-//                                                                      //
-// The mode of operation of a SplitButton can be changed on the fly     //
-// by calling the SetSplit(Bool_t) method.                              //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGButton
+    \ingroup guiwidgets
+
+A button abstract base class. It defines general button behaviour.
+
+*/
+
+
+/** \class TGTextButton
+    \ingroup guiwidgets
+
+Yield an action as soon as it is clicked. This buttons usually provides fast access to
+frequently used or critical commands. It may appear alone or placed in a group.
+
+The action it performs can be inscribed with a meaningful tooltip
+set by `SetToolTipText(const char* text, Long_t delayms=400).
+
+The text button has a label indicating the action to be taken when
+the button is pressed. The text can be a hot string ("&Exit") that
+defines the label "Exit" and keyboard mnemonics Alt+E for button
+selection. A button label can be changed by SetText(new_label).
+
+Selecting a text or picture button will generate the event:
+  - kC_COMMAND, kCM_BUTTON, button id, user data.
+*/
+
+
+/** \class TGPictureButton
+    \ingroup guiwidgets
+
+Yield an action as soon as it is clicked. This buttons usually provides fast access to
+frequently used or critical commands. It may appear alone or placed in a group.
+
+The action it performs can be inscribed with a meaningful tooltip
+set by `SetToolTipText(const char* text, Long_t delayms=400).
+
+The text button has a label indicating the action to be taken when
+the button is pressed. The text can be a hot string ("&Exit") that
+defines the label "Exit" and keyboard mnemonics Alt+E for button
+selection. A button label can be changed by SetText(new_label).
+
+Selecting a text or picture button will generate the event:
+  - kC_COMMAND, kCM_BUTTON, button id, user data.
+*/
+
+
+/** \class TGCheckButton
+    \ingroup guiwidgets
+
+Selects different options. Like text buttons, they have text or hot string as a label.
+
+Selecting a check button will generate the event:
+  - kC_COMMAND, kCM_CHECKBUTTON, button id, user data.
+
+If a command string has been specified (via SetCommand()) then this
+command string will be executed via the interpreter whenever a
+button is selected. A command string can contain the macros:
+
+  - $MSG   -- kC_COMMAND, kCMCHECKBUTTON packed message
+              (use GET_MSG() and GET_SUBMSG() to unpack)
+  - $PARM1 -- button id
+  - $PARM2 -- user data pointer
+
+Before executing these macros are expanded into the respective Long_t's
+*/
+
+
+/** \class TGRadioButton
+    \ingroup guiwidgets
+
+Selects different options. Like text buttons, they have text or hot string as a label.
+
+Radio buttons are grouped usually in logical sets of two or more
+buttons to present mutually exclusive choices.
+
+Selecting a radio button will generate the event:
+  - kC_COMMAND, kCM_RADIOBUTTON, button id, user data.
+
+If a command string has been specified (via SetCommand()) then this
+command string will be executed via the interpreter whenever a
+button is selected. A command string can contain the macros:
+
+  - $MSG   -- kC_COMMAND, kCMRADIOBUTTON packed message
+              (use GET_MSG() and GET_SUBMSG() to unpack)
+  - $PARM1 -- button id
+  - $PARM2 -- user data pointer
+
+Before executing these macros are expanded into the respective Long_t's
+*/
+
+
+/** \class TGSplitButton
+    \ingroup guiwidgets
+
+Implements a button with added menu functionality.
+There are 2 modes of operation available.
+
+If the button is split, a menu will popup when the menu area of the
+button is clicked. Activating a menu item changes the functionality
+of the button by having it emit a additional signal when it is
+clicked. The signal emitted when the button is clicked, is the
+ItemClicked(Int_t) signal with a different fixed value for the
+Int_t that corresponds to the id of the activated menu entry.
+
+If the button is not split, clicking it will popup the menu and the
+ItemClicked(Int_t) signal will be emitted when a menu entry is
+activated. The value of the Int_t is again equal to the value of
+the id of the activated menu entry.
+
+The mode of operation of a SplitButton can be changed on the fly
+by calling the SetSplit(Bool_t) method.
+*/
+
 
 #include "TGButton.h"
 #include "TGWidget.h"
@@ -94,24 +141,27 @@
 #include "TGToolTip.h"
 #include "TGButtonGroup.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 #include "TSystem.h"
 #include "TImage.h"
 #include "TEnv.h"
 #include "TClass.h"
 #include "TGMenu.h"
 #include "KeySymbols.h"
+#include "TVirtualX.h"
 
-const TGGC *TGButton::fgHibckgndGC = 0;
-const TGGC *TGButton::fgDefaultGC = 0;
+#include <iostream>
 
-const TGFont *TGTextButton::fgDefaultFont = 0;
 
-const TGFont *TGCheckButton::fgDefaultFont = 0;
-const TGGC   *TGCheckButton::fgDefaultGC = 0;
+const TGGC *TGButton::fgHibckgndGC = nullptr;
+const TGGC *TGButton::fgDefaultGC = nullptr;
 
-const TGFont *TGRadioButton::fgDefaultFont = 0;
-const TGGC   *TGRadioButton::fgDefaultGC = 0;
+const TGFont *TGTextButton::fgDefaultFont = nullptr;
+
+const TGFont *TGCheckButton::fgDefaultFont = nullptr;
+const TGGC   *TGCheckButton::fgDefaultGC = nullptr;
+
+const TGFont *TGRadioButton::fgDefaultFont = nullptr;
+const TGGC   *TGRadioButton::fgDefaultGC = nullptr;
 
 Window_t TGButton::fgReleaseBtn = 0;
 
@@ -573,7 +623,7 @@ TGTextButton::~TGTextButton()
 
 void TGTextButton::Layout()
 {
-   delete fTLayout;
+   SafeDelete(fTLayout);
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
@@ -899,7 +949,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Int_t id, GContext_t norm, UInt_t option) : TGButton(p, id, norm, option)
 {
    if (!pic) {
-      Error("TGPictureButton", "pixmap not found for button %d", id);
+      Error("TGPictureButton", "pixmap not found or the file format is not supported for button %d", id);
       fPic = fClient->GetPicture("mb_question_s.xpm");
    } else {
       fPic = pic;
@@ -928,7 +978,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
    : TGButton(p, id, norm, option)
 {
    if (!pic) {
-      Error("TGPictureButton", "pixmap not found for button\n%s",
+      Error("TGPictureButton", "pixmap not found or the file format is not supported for button\n%s",
             cmd ? cmd : "");
       fPic = fClient->GetPicture("mb_question_s.xpm");
    } else {
@@ -956,7 +1006,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
    Int_t id, GContext_t norm, UInt_t option) : TGButton(p, id, norm, option)
 {
    if (!pic || !pic[0]) {
-      if (p) Error("TGPictureButton", "pixmap not found for button");
+      if (p) Error("TGPictureButton", "pixmap not found or the file format is not supported for button");
       fPic = fClient->GetPicture("mb_question_s.xpm");
    } else {
       fPic = fClient->GetPicture(pic);
@@ -990,7 +1040,7 @@ TGPictureButton::~TGPictureButton()
 void TGPictureButton::SetPicture(const TGPicture *new_pic)
 {
    if (!new_pic) {
-      Error("SetPicture", "pixmap not found for button %d\n%s",
+      Error("SetPicture", "pixmap not found or the file format is not supported for button %d\n%s",
             fWidgetId, fCommand.Data());
       return;
    }
@@ -1140,13 +1190,13 @@ void TGCheckButton::Init()
    Resize();
 
    if (!fOn) {
-      Error("TGCheckButton", "checked_t.xpm not found");
+      Error("TGCheckButton", "checked_t.xpm not found or the file format is not supported.");
    } else if (!fOff) {
-      Error("TGCheckButton", "unchecked_t.xpm not found");
+      Error("TGCheckButton", "unchecked_t.xpm not found or the file format is not supported.");
    } else if (!fDisOn) {
-      Error("TGCheckButton", "checked_dis_t.xpm not found");
+      Error("TGCheckButton", "checked_dis_t.xpm not found or the file format is not supported.");
    } else if (!fDisOff) {
-      Error("TGCheckButton", "unchecked_dis_t.xpm not found");
+      Error("TGCheckButton", "unchecked_dis_t.xpm not found or the file format is not supported.");
    }
    int hotchar;
 
@@ -1504,7 +1554,7 @@ void TGRadioButton::Init()
    fDisOff = fClient->GetPicture("rbutton_dis_off.xpm");
 
    if (!fOn || !fOff || !fDisOn || !fDisOff)
-      Error("TGRadioButton", "rbutton_*.xpm not found");
+      Error("TGRadioButton", "rbutton_*.xpm not found or the file format is not supported.");
 
    Resize();
 
@@ -1549,8 +1599,8 @@ TGRadioButton::~TGRadioButton()
 
 TGDimension TGRadioButton::GetDefaultSize() const
 {
-   UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 10;
-   UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;
+   UInt_t w = !fTWidth ? ( fOff?fOff->GetWidth():10) : fTWidth + fOff->GetWidth() + 10;
+   UInt_t h = !fTHeight ? ( fOff?fOff->GetHeight():2) : fTHeight + 2;
 
    w = GetOptions() & kFixedWidth ? fWidth : w;
    h = GetOptions() & kFixedHeight ? fHeight : h;
@@ -1933,7 +1983,7 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    if (!fPic) {
-      Error("SavePrimitive()", "pixmap not found for picture button %d ", fWidgetId);
+      Error("SavePrimitive()", "pixmap not found or the file format is not supported for picture button %d ", fWidgetId);
       return;
    }
 
@@ -1951,13 +2001,14 @@ void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    }
 
    char quote = '"';
-   const char *picname = fPic->GetName();
+   TString picname = gSystem->UnixPathName(fPic->GetName());
+   gSystem->ExpandPathName(picname);
 
    out <<"   TGPictureButton *";
 
    out << GetName() << " = new TGPictureButton(" << fParent->GetName()
        << ",gClient->GetPicture(" << quote
-       << gSystem->ExpandPathName(gSystem->UnixPathName(picname)) << quote << ")";
+       << picname << quote << ")";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
@@ -2115,7 +2166,7 @@ void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a menu button widget. The hotstring will be adopted and
-/// deleted by the menu button. This constructior creates a
+/// deleted by the menu button. This constructor creates a
 /// menubutton with a popup menu attached that appears when the
 /// button for it is clicked. The popup menu is adopted.
 
@@ -3131,7 +3182,7 @@ Bool_t TGSplitButton::HandleMotion(Event_t *event)
 void TGSplitButton::Layout()
 {
    UInt_t dummya = 0, dummyb = 0;
-   delete fTLayout;
+   SafeDelete(fTLayout);
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {

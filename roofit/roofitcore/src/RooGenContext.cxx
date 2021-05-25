@@ -33,7 +33,6 @@ use a RooAcceptReject sampling technique.
 #include "Riostream.h"
 
 #include "RooGenContext.h"
-#include "RooGenContext.h"
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooRealIntegral.h"
@@ -371,6 +370,7 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
 
   // Create iterator for uniform vars (if any)
   if (_uniformVars.getSize()>0) {
+    delete _uniIter;
     _uniIter = _uniformVars.createIterator() ;
   }
 }

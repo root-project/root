@@ -28,6 +28,7 @@
 #include "TGWindow.h"
 #include "TGClient.h"
 #include "TGCocoa.h"
+#include "TError.h"
 
 namespace ROOT {
 namespace MacOSX {
@@ -277,16 +278,19 @@ void DrawBoxXor::Execute()const
    //Noop.
 }
 
+const auto rootToNs = [](Point rp) {
+    return NSPoint{CGFloat(rp.fX), CGFloat(rp.fY)};
+};
+
 //______________________________________________________________________________
 void DrawBoxXor::Execute(CGContextRef ctx)const
 {
-   //
-   assert(ctx != 0 && "Execute, ctx parameter is null");
-
-   CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
-   CGContextSetLineWidth(ctx, 1.);
-
-   CGContextStrokeRect(ctx, CGRectMake(fP1.fX, fP1.fY, fP2.fX - fP1.fX, fP2.fY - fP1.fY));
+   assert(ctx && "Execute, 'ctx' parameter is nullptr");
+   // XOR window/view is not flipped, thus this mess with coordinates :(
+   const auto height = fP2.fY - fP1.fY; // Presumably, cannot be negative?
+   NSPoint btLeft = [view convertPoint : rootToNs(fP1) toView : nil];
+   btLeft.y -= height;
+   CGContextStrokeRect(ctx, CGRectMake(btLeft.x, btLeft.y, fP2.fX - fP1.fX, height));
 }
 
 //______________________________________________________________________________
@@ -306,15 +310,18 @@ void DrawLineXor::Execute()const
 //______________________________________________________________________________
 void DrawLineXor::Execute(CGContextRef ctx)const
 {
-   //
-   assert(ctx != 0 && "Execute, ctx parameter is null");
+   assert(ctx && "Execute, invalid (nullptr) parameter 'ctx'");
 
-   CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
-   CGContextSetLineWidth(ctx, 1.);
+   // Line's colour and thickness were set elsewhere.
+   NSPoint line[] = {rootToNs(fP1), rootToNs(fP2)};
+   for (auto &point : line) {
+      // From the view's coordinates to window's:
+      point = [view convertPoint : point toView : nil];
+   };
 
    CGContextBeginPath(ctx);
-   CGContextMoveToPoint(ctx, fP1.fX, fP1.fY);
-   CGContextAddLineToPoint(ctx, fP2.fX, fP2.fY);
+   CGContextMoveToPoint(ctx, line[0].x, line[0].y);
+   CGContextAddLineToPoint(ctx, line[1].x, line[1].y);
    CGContextStrokePath(ctx);
 }
 
@@ -600,56 +607,37 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 //______________________________________________________________________________
 void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
 {
-   assert(impl != 0 && "FlushXOROps, impl parameter is null");
-
+   // The only XOR operations we ever had to support were the drawing
+   // of lines for a crosshair in a TCanvas and drawing the histogram's
+   // range when using a fit panel/interactive fitting. In the past
+   // we were using a deprecated (since 10.14) trick with locking
+   // a focus on a view, drawing, flushing CGContext and then unlocking.
+   // This stopped working since 10.15. So now the only thing
+   // we can do is to draw into a special transparent window which is
+   // attached on top of the canvas.
    if (!fXorOps.size())
       return;
 
-   //I assume here, that all XOR ops in one iteration (one Update call) must
-   //be for the same window (if not, there is no normal way to implement this at all).
+   assert(impl != 0 && "FlushXOROps, impl parameter is null");
 
-   NSObject<X11Drawable> *drawable = impl->GetDrawable(fXorOps[0]->fID);
-
+   NSObject<X11Drawable> * const drawable = impl->GetDrawable(fXorOps.back()->fID);
    assert([drawable isKindOfClass : [QuartzView class]] &&
           "FlushXOROps, drawable must be of type QuartzView");
-
-   QuartzView *view = (QuartzView *)drawable;
-
-   if ([view lockFocusIfCanDraw]) {
-      NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
-      assert(nsContext != nil && "FlushXOROps, currentContext is nil");
-      CGContextRef currContext = (CGContextRef)[nsContext graphicsPort];
-      assert(currContext != 0 && "FlushXOROps, graphicsPort is null");//remove this assert?
-
-      const Quartz::CGStateGuard ctxGuard(currContext);//ctx guard.
-
-      CGContextSetAllowsAntialiasing(currContext, false);
-
-      view.fContext = currContext;
-
-      if (view.fBackBuffer) {//back buffer has canvas' contents.
-         //Very "special" window.
-         const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-         [view copy : view.fBackBuffer area : copyArea
-          withMask : nil clipOrigin : Point() toPoint : Point()];
-      }
-
-      //Now, do "XOR" drawings.
-      for (size_type i = 0, e = fXorOps.size(); i < e; ++i) {
-         if (fXorOps[i]) {
-            fXorOps[i]->Execute(currContext);
-         }
-      }
-
-      [view unlockFocus];
-      view.fContext = 0;
-
-      CGContextFlush(currContext);
-
-      CGContextSetAllowsAntialiasing(currContext, true);
+   QuartzView * const view = (QuartzView *)drawable;
+   for (auto *op : fXorOps)
+       op->setView(view);
+   QuartzWindow * const window = view.fQuartzWindow;
+   auto xorWindow = [window findXorWindow];
+   if (!xorWindow) {
+      ::Warning("FlushXOROps", "No XorDrawingWindow found to draw into");
+       ClearXOROperations();
+       return;
    }
 
-   ClearXOROperations();
+   XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
+   [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
+   fXorOps.clear(); // A view will free the memory.
+   [cv setNeedsDisplay : YES];
 }
 
 //______________________________________________________________________________

@@ -54,13 +54,13 @@ namespace cling {
       : m_Sema(S), m_CodeGen(CG), m_CurTransaction(T) { }
     ~DeclUnloader();
 
-    ///\brief Interface with nice name, forwarding to Visit.
-    ///
-    ///\param[in] D - The declaration to forward.
+    ///\brief Forwards to Visit(), excluding PCH declarations (known to cause
+    /// problems).  If unsure, call this function instead of plain `Visit()'.
+    ///\param[in] D - The declaration to unload
     ///\returns true on success.
     ///
     bool UnloadDecl(clang::Decl* D) {
-      if (D->isFromASTFile())
+      if (D->isFromASTFile() || isInstantiatedInPCH(D))
         return true;
       return Visit(D);
     }
@@ -255,6 +255,12 @@ namespace cling {
     }
     /// @}
 
+    static void resetDefinitionData(void*) {
+      llvm_unreachable("resetDefinitionData on non-cxx record declaration");
+    }
+
+    static void resetDefinitionData(clang::TagDecl *decl);
+
   private:
     ///\brief Function that collects the files which we must reread from disk.
     ///
@@ -264,21 +270,7 @@ namespace cling {
     ///
     void CollectFilesToUncache(clang::SourceLocation Loc);
 
-    constexpr static bool isDefinition(void*) { return false; }
-    static bool isDefinition(clang::TagDecl* R);
-
-    static void resetDefinitionData(void*) {
-      llvm_unreachable("resetDefinitionData on non-cxx record declaration");
-    }
-
-    static void resetDefinitionData(clang::TagDecl *decl);
-
-    template<typename DeclT>
-    static void removeRedeclFromChain(DeclT* R);
-
-    static void removeRedeclFromChain(void*) {
-      llvm_unreachable("setLatestDeclImpl on non-redeclarable declaration");
-    }
+    bool isInstantiatedInPCH(const clang::Decl *D);
 
     template <typename T>
     bool VisitRedeclarable(clang::Redeclarable<T>* R, clang::DeclContext* DC);

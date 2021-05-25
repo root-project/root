@@ -20,6 +20,7 @@
 
 #include "Math/VirtualIntegrator.h"
 
+#include <vector>
 
 namespace ROOT {
 namespace Math {
@@ -217,13 +218,13 @@ private:
 
 protected:
 
-   static bool fgAbsValue;          // AbsValue used for the calculation of the integral
-   double fEpsRel;                  // Relative error.
-   double fEpsAbs;                  // Absolute error.
-   bool fUsedOnce;                  // Bool value to check if the function was at least called once.
-   double fLastResult;              // Result from the last estimation.
-   double fLastError;               // Error from the last estimation.
-   const IGenFunction* fFunction;   // Pointer to function used.
+   static bool fgAbsValue;          ///< AbsValue used for the calculation of the integral
+   double fEpsRel;                  ///< Relative error.
+   double fEpsAbs;                  ///< Absolute error.
+   bool fUsedOnce;                  ///< Bool value to check if the function was at least called once.
+   double fLastResult;              ///< Result from the last estimation.
+   double fLastError;               ///< Error from the last estimation.
+   const IGenFunction* fFunction;   ///< Pointer to function used.
 
 };
 

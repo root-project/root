@@ -58,7 +58,6 @@ the query by calling Terminate().
 #include "TStatus.h"
 #include "TEventList.h"
 #include "TProofLimitsFinder.h"
-#include "THashList.h"
 #include "TSortedList.h"
 #include "TTree.h"
 #include "TEntryList.h"
@@ -967,7 +966,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 Int_t TProofPlayer::AssertSelector(const char *selector_file)
 {
    if (selector_file && strlen(selector_file)) {
-      if (fCreateSelObj) SafeDelete(fSelector);
+      SafeDelete(fSelector);
 
       // Get selector files from cache
       TString ocwd = gSystem->WorkingDirectory();
@@ -982,7 +981,7 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
          gSystem->ChangeDirectory(ocwd);
          gProofServ->GetCacheLock()->Unlock();
       }
- 
+
       if (!fSelector) {
          Error("AssertSelector", "cannot load: %s", selector_file );
         return -1;
@@ -1189,7 +1188,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       // Initial memory footprint
       if (!CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg)) {
          Error("Process", "%s", wmsg.Data());
-         wmsg.Insert(0, TString::Format("ERROR:%s, after SlaveBegin(), ", gProofServ->GetOrdinal()));
+         wmsg.Insert(0, TString::Format("ERROR:%s, after SlaveBegin(), ", gProofServ ? gProofServ->GetOrdinal() : "gProofServ is nullptr"));
          fSelStatus->Add(wmsg.Data());
          if (gProofServ) {
             gProofServ->SendAsynMessage(wmsg.Data());
@@ -1491,7 +1490,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
       return -1;
    }
 
-   if (fCreateSelObj) SafeDelete(fSelector);
+   SafeDelete(fSelector);
    fSelector = selector;
    fCreateSelObj = kFALSE;
    return Process(dset, (const char *)0, option, nentries, first);
@@ -1831,7 +1830,7 @@ void TProofPlayerRemote::SetMerging(Bool_t on)
             fQuery->SetMergeTime(rt);
             fQuery->SetNumMergers(fNumMergers);
          } else {
-            // In a standard client we save the transfer-to-client time 
+            // In a standard client we save the transfer-to-client time
             fQuery->SetRecvTime(rt);
          }
          PDB(kGlobal,2) fQuery->Print("F");
@@ -2515,7 +2514,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
 
    // Define fSelector in Client
    if (IsClient() && (selector != fSelector)) {
-      if (fCreateSelObj) SafeDelete(fSelector);
+      SafeDelete(fSelector);
       fSelector = selector;
    }
 
@@ -2942,7 +2941,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // so now we can cleanup the selector, making sure that we do not
          // touch the output objects
          if (output) { output->SetOwner(kFALSE); output->Clear("nodelete"); }
-         if (fCreateSelObj) SafeDelete(fSelector);
+         SafeDelete(fSelector);
 
          // Delete fOutput (not needed anymore, cannot be finalized twice),
          // making sure that the objects saved in TQueryResult are not deleted
@@ -3069,7 +3068,7 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 
    // Update the macro path
    TString mp(TROOT::GetMacroPath());
-   TString np(gSystem->DirName(selec));
+   TString np = gSystem->GetDirName(selec);
    if (!np.IsNull()) {
       np += ":";
       if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
@@ -3211,11 +3210,11 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
             // The ordinal
             pf->SetWorkerOrdinal("0");
             // The dir
-            pf->SetDir(gSystem->DirName(pf->GetOutputFileName()));
+            pf->SetDir(gSystem->GetDirName(pf->GetOutputFileName()));
             // The filename and raw dir
             TUrl u(pf->GetOutputFileName(), kTRUE);
             pf->SetFileName(gSystem->BaseName(u.GetFile()));
-            pf->SetDir(gSystem->DirName(u.GetFile()), kTRUE);
+            pf->SetDir(gSystem->GetDirName(u.GetFile()), kTRUE);
             // Notify the output path
             Printf("\nOutput file: %s", pf->GetOutputFileName());
          }
@@ -4202,7 +4201,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
-      PDB(kPacketizer,2) 
+      PDB(kPacketizer,2)
          Info("GetNextPacket","%s: done!", slave->GetOrdinal());
    } else if (e == (TDSetElement*) -1) {
       PDB(kPacketizer,2)

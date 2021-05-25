@@ -5,11 +5,9 @@ The Cling Packaging Tool is a command-line utility written in Python to build
 Cling from source and generate installer bundles for a wide range of platforms.
 
 Cling maintains its own vendor clones of LLVM and Clang (part of ROOT's trunk)
-on which it is based. Due to some policy restrictions we do not distribute
-Cling on official repositories of Debian and others. Therefore this tool is the
-easiest way to build Cling for your favorite platorm and bundle it into an
-installer. If you want to manually compile Cling from source, go through the
-[README] of Cling or the build instructions [here].
+on which it is based. This tool is the easiest way to build Cling for your favorite
+platorm and bundle it into an installer. If you want to manually compile Cling
+from source, go through the [README] of Cling or the build instructions [here].
 
 [README]:https://github.com/root-project/cling/blob/master/README.md
 [here]:http://root.cern.ch/drupal/content/cling-build-instructions
@@ -36,8 +34,8 @@ or
 cd tools/packaging/
 ./cpt.py -c
 ```
-Regardless of the platform and operating system, make sure your system has the
-latest and greatest version of Python 2 installed, v2.7 being the absolute minimum.
+Regardless of the platform and operating system, make sure to call the cpt script
+with Python 3.
 CPT uses some features and modules which are not a part of older versions of Python.
 The same holds true for the versions of GCC/Clang you have on your machine. Older
 compilers do not support c++11 features and thus you can expect a build error if you

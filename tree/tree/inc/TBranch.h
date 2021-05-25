@@ -23,22 +23,17 @@
 //     the list of TLeaves (branch description)                         //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
-
 #include "TNamed.h"
-
-#include "TObjArray.h"
-
 #include "TAttFill.h"
-
-#include "TDataType.h"
-
-#include "ROOT/TIOFeatures.hxx"
-
+#include "TObjArray.h"
 #include "TBranchCacheInfo.h"
+#include "TDataType.h"
+#include "Compression.h"
+#include "ROOT/TIOFeatures.hxx"
 
 class TTree;
 class TBasket;
+class TBranchElement;
 class TLeaf;
 class TBrowser;
 class TDirectory;
@@ -47,16 +42,48 @@ class TClonesArray;
 class TTreeCloner;
 class TTreeCache;
 
-   const Int_t kDoNotProcess = BIT(10); // Active bit for branches
-   const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
-   const Int_t kBranchObject = BIT(12); // branch is a TObject*
-   const Int_t kBranchAny    = BIT(17); // branch is an object*
-   const Int_t kMapObject    = kBranchObject | kBranchAny;
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+class TBulkBranchRead;
+}
+}
+namespace Internal {
+class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
+}
+}
+
+const Int_t kDoNotProcess = BIT(10); // Active bit for branches
+const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
+const Int_t kBranchObject = BIT(12); // branch is a TObject*
+const Int_t kBranchAny    = BIT(17); // branch is an object*
+const Int_t kMapObject    = kBranchObject | kBranchAny;
 
 namespace ROOT {
-  namespace Internal {
-    class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
-  }
+namespace Experimental {
+namespace Internal {
+
+///\class TBulkBranchRead
+/// Helper class for reading many branch entries at once to optimize throughput.
+class TBulkBranchRead {
+
+   friend class ::TBranch;
+
+public:
+   Int_t GetBulkEntries(Long64_t evt, TBuffer &user_buf);
+   Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf);
+   Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf, TBuffer *count_buf);
+   Bool_t SupportsBulkRead() const;
+
+private:
+   TBulkBranchRead(TBranch &parent)
+      : fParent(parent)
+   {}
+
+   TBranch &fParent;
+};
+}
+}
 }
 
 class TBranch : public TNamed , public TAttFill {
@@ -66,25 +93,29 @@ protected:
    friend class TTreeCache;
    friend class TTreeCloner;
    friend class TTree;
+   friend class TBranchElement;
+   friend class ROOT::Experimental::Internal::TBulkBranchRead;
 
-   // TBranch status bits
+   /// TBranch status bits
    enum EStatusBits {
-      kDoNotProcess = ::kDoNotProcess, // Active bit for branches
-      kIsClone      = ::kIsClone,      // to indicate a TBranchClones
-      kBranchObject = ::kBranchObject, // branch is a TObject*
-      kBranchAny    = ::kBranchAny,    // branch is an object*
+      kDoNotProcess = ::kDoNotProcess, ///< Active bit for branches
+      kIsClone      = ::kIsClone,      ///< To indicate a TBranchClones
+      kBranchObject = ::kBranchObject, ///< Branch is a TObject*
+      kBranchAny    = ::kBranchAny,    ///< Branch is an object*
       // kMapObject    = kBranchObject | kBranchAny;
       kAutoDelete   = BIT(15),
 
-      kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
+      kDoNotUseBufferMap = BIT(22)     ///< If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
+   using BulkObj = ROOT::Experimental::Internal::TBulkBranchRead;
    static Int_t fgCount;          ///<! branch counter
    Int_t       fCompress;         ///<  Compression level and algorithm
    Int_t       fBasketSize;       ///<  Initial Size of  Basket Buffer
    Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
    Int_t       fWriteBasket;      ///<  Last basket number written
    Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
+   TBasket    *fExtraBasket;      ///<! Allocated basket not currently holding any data.
    TIOFeatures fIOFeatures;       ///<  IO features for newly-created baskets.
    Int_t       fOffset;           ///<  Offset of this branch
    Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far
@@ -115,6 +146,7 @@ protected:
    TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
    TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
+   BulkObj     fBulk;             ///<! Helper for performing bulk IO
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
@@ -134,22 +166,29 @@ protected:
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
-   TBasket *GetFreshBasket();
+   TBasket *GetFreshBasket(Int_t basketnumber, TBuffer *user_buffer);
    TBasket *GetFreshCluster();
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
 
+   virtual void SetAddressImpl(void *addr, Bool_t /* implied */) { SetAddress(addr); }
+
 private:
-   Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
+   Int_t    GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
+   TBasket *GetBasketImpl(Int_t basket, TBuffer* user_buffer);
+   Int_t    GetBulkEntries(Long64_t, TBuffer&);
+   Int_t    GetEntriesSerialized(Long64_t N, TBuffer& user_buf) {return GetEntriesSerialized(N, user_buf, nullptr);}
+   Int_t    GetEntriesSerialized(Long64_t, TBuffer&, TBuffer*);
+   Int_t    FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
    Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
    TBranch(const TBranch&) = delete;             // not implemented
    TBranch& operator=(const TBranch&) = delete;  // not implemented
 
 public:
    TBranch();
-   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
-   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    virtual ~TBranch();
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
@@ -167,11 +206,12 @@ public:
            Int_t     FlushOneBasket(UInt_t which);
 
    virtual char     *GetAddress() const {return fAddress;}
-           TBasket  *GetBasket(Int_t basket);
+           TBasket  *GetBasket(Int_t basket) {return GetBasketImpl(basket, nullptr);}
            Int_t    *GetBasketBytes() const {return fBasketBytes;}
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
+           ROOT::Experimental::Internal::TBulkBranchRead &GetBulkRead() { return fBulk; }
    virtual TList    *GetBrowsables();
    virtual const char* GetClassName() const;
            Int_t     GetCompressionAlgorithm() const;
@@ -182,6 +222,7 @@ public:
    virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
            Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
            Int_t     GetEvent(Long64_t entry=0) {return GetEntry(entry);}
+   virtual TString   GetFullName() const;
    const char       *GetIconName() const;
    virtual Int_t     GetExpectedType(TClass *&clptr,EDataType &type);
    virtual TLeaf    *GetLeaf(const char *name) const;
@@ -227,9 +268,9 @@ public:
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
-   void              SetCompressionAlgorithm(Int_t algorithm=0);
-   void              SetCompressionLevel(Int_t level=4);
-   void              SetCompressionSettings(Int_t settings=4);
+   void              SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void              SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
+   void              SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );
@@ -241,6 +282,7 @@ public:
    virtual void      SetStatus(Bool_t status=1);
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      SetupAddresses();
+           Bool_t    SupportsBulkRead() const;
    virtual void      UpdateAddress() {;}
    virtual void      UpdateFile();
 
@@ -266,5 +308,18 @@ inline Int_t TBranch::GetCompressionSettings() const
 {
    return (fCompress < 0) ? -1 : fCompress;
 }
+
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+
+inline Int_t  TBulkBranchRead::GetBulkEntries(Long64_t evt, TBuffer& user_buf) { return fParent.GetBulkEntries(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf) { return fParent.GetEntriesSerialized(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf) { return fParent.GetEntriesSerialized(evt, user_buf, count_buf); }
+inline Bool_t TBulkBranchRead::SupportsBulkRead() const { return fParent.SupportsBulkRead(); }
+
+}  // Internal
+}  // Experimental
+}  // ROOT
 
 #endif

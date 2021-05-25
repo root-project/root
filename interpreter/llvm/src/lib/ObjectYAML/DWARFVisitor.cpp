@@ -1,9 +1,8 @@
 //===--- DWARFVisitor.cpp ---------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -34,11 +33,11 @@ void DWARFYAML::VisitorImpl<T>::onVariableSizeValue(uint64_t U, unsigned Size) {
   }
 }
 
-unsigned getOffsetSize(const DWARFYAML::Unit &Unit) {
+static unsigned getOffsetSize(const DWARFYAML::Unit &Unit) {
   return Unit.Length.isDWARF64() ? 8 : 4;
 }
 
-unsigned getRefSize(const DWARFYAML::Unit &Unit) {
+static unsigned getRefSize(const DWARFYAML::Unit &Unit) {
   if (Unit.Version == 2)
     return Unit.AddrSize;
   return getOffsetSize(Unit);

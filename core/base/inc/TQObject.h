@@ -37,7 +37,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TError.h"
 #include "TList.h"
 #include "TString.h"
 #include "TVirtualQConnection.h"
@@ -78,8 +77,8 @@ protected:
    static TString CompressName(const char *method_name);
 
 private:
-   TQObject(const TQObject& tqo);            // not implemented
-   TQObject& operator=(const TQObject& tqo); // not implemented
+   TQObject(const TQObject &) = delete;
+   TQObject& operator=(const TQObject &) = delete;
 
 public:
    TQObject();
@@ -168,7 +167,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Acitvate signal without args.
+   /// Activate signal without args.
    /// Example:
    ///          theButton->Emit("Clicked()");
    void  Emit(const char *signal) { EmitVA(signal, (Int_t) 0); }

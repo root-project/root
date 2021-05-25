@@ -1,14 +1,13 @@
 //===-- WebAssemblyUtilities.cpp - WebAssembly Utility Functions ----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file implements several utility functions for WebAssembly.
+/// This file implements several utility functions for WebAssembly.
 ///
 //===----------------------------------------------------------------------===//
 
@@ -18,45 +17,12 @@
 #include "llvm/CodeGen/MachineLoopInfo.h"
 using namespace llvm;
 
-bool WebAssembly::isArgument(const MachineInstr &MI) {
-  switch (MI.getOpcode()) {
-  case WebAssembly::ARGUMENT_I32:
-  case WebAssembly::ARGUMENT_I64:
-  case WebAssembly::ARGUMENT_F32:
-  case WebAssembly::ARGUMENT_F64:
-  case WebAssembly::ARGUMENT_v16i8:
-  case WebAssembly::ARGUMENT_v8i16:
-  case WebAssembly::ARGUMENT_v4i32:
-  case WebAssembly::ARGUMENT_v4f32:
-    return true;
-  default:
-    return false;
-  }
-}
-
-bool WebAssembly::isCopy(const MachineInstr &MI) {
-  switch (MI.getOpcode()) {
-  case WebAssembly::COPY_I32:
-  case WebAssembly::COPY_I64:
-  case WebAssembly::COPY_F32:
-  case WebAssembly::COPY_F64:
-    return true;
-  default:
-    return false;
-  }
-}
-
-bool WebAssembly::isTee(const MachineInstr &MI) {
-  switch (MI.getOpcode()) {
-  case WebAssembly::TEE_I32:
-  case WebAssembly::TEE_I64:
-  case WebAssembly::TEE_F32:
-  case WebAssembly::TEE_F64:
-    return true;
-  default:
-    return false;
-  }
-}
+const char *const WebAssembly::ClangCallTerminateFn = "__clang_call_terminate";
+const char *const WebAssembly::CxaBeginCatchFn = "__cxa_begin_catch";
+const char *const WebAssembly::CxaRethrowFn = "__cxa_rethrow";
+const char *const WebAssembly::StdTerminateFn = "_ZSt9terminatev";
+const char *const WebAssembly::PersonalityWrapperFn =
+    "_Unwind_Wasm_CallPersonality";
 
 /// Test whether MI is a child of some other node in an expression tree.
 bool WebAssembly::isChild(const MachineInstr &MI,
@@ -71,27 +37,32 @@ bool WebAssembly::isChild(const MachineInstr &MI,
          MFI.isVRegStackified(Reg);
 }
 
-bool WebAssembly::isCallIndirect(const MachineInstr &MI) {
+bool WebAssembly::mayThrow(const MachineInstr &MI) {
   switch (MI.getOpcode()) {
-  case WebAssembly::CALL_INDIRECT_VOID:
-  case WebAssembly::CALL_INDIRECT_I32:
-  case WebAssembly::CALL_INDIRECT_I64:
-  case WebAssembly::CALL_INDIRECT_F32:
-  case WebAssembly::CALL_INDIRECT_F64:
-  case WebAssembly::CALL_INDIRECT_v16i8:
-  case WebAssembly::CALL_INDIRECT_v8i16:
-  case WebAssembly::CALL_INDIRECT_v4i32:
-  case WebAssembly::CALL_INDIRECT_v4f32:
+  case WebAssembly::THROW:
+  case WebAssembly::THROW_S:
+  case WebAssembly::RETHROW:
+  case WebAssembly::RETHROW_S:
     return true;
-  default:
-    return false;
   }
-}
+  if (isCallIndirect(MI.getOpcode()))
+    return true;
+  if (!MI.isCall())
+    return false;
 
-MachineBasicBlock *llvm::LoopBottom(const MachineLoop *Loop) {
-  MachineBasicBlock *Bottom = Loop->getHeader();
-  for (MachineBasicBlock *MBB : Loop->blocks())
-    if (MBB->getNumber() > Bottom->getNumber())
-      Bottom = MBB;
-  return Bottom;
+  const MachineOperand &MO = MI.getOperand(getCalleeOpNo(MI.getOpcode()));
+  assert(MO.isGlobal());
+  const auto *F = dyn_cast<Function>(MO.getGlobal());
+  if (!F)
+    return true;
+  if (F->doesNotThrow())
+    return false;
+  // These functions never throw
+  if (F->getName() == CxaBeginCatchFn || F->getName() == PersonalityWrapperFn ||
+      F->getName() == ClangCallTerminateFn || F->getName() == StdTerminateFn)
+    return false;
+
+  // TODO Can we exclude call instructions that are marked as 'nounwind' in the
+  // original LLVm IR? (Even when the callee may throw)
+  return true;
 }

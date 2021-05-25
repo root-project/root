@@ -88,7 +88,7 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
   for (Int_t i=0 ; i<cacheHist.numEntries() ; i++) {
     const RooArgSet* obs = cacheHist.get(i) ;
     Double_t wgt = clone2->getVal(obs) ;
-    cacheHist.set(wgt) ;
+    cacheHist.set(i, wgt, 0.);
   }
 
   cache.pdf()->setUnitNorm(kTRUE) ;
@@ -105,19 +105,14 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
 RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const 
 {
   // Make list of servers
-  RooArgSet servers ;
+  RooArgSet *serverSet = new RooArgSet;
 
-  TIterator* siter = serverIterator() ;
-  siter->Reset() ;
-  RooAbsArg* server ;
-  while((server=(RooAbsArg*)siter->Next())) {
-    servers.add(*server) ;
+  for (auto server : _serverList) {
+    serverSet->add(*server) ;
   }
   
   // Return servers that are in common with given normalization set
-  return new RooArgSet(servers) ;
-  //return (RooArgSet*) servers.selectCommon(nset) ;
-  
+  return serverSet;
 }
 
 
@@ -129,19 +124,16 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) con
 
 RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const 
 {  
-  RooArgSet *servers = new RooArgSet ;
+  RooArgSet *serverSet = new RooArgSet;
 
-  TIterator* siter = serverIterator() ;
-  siter->Reset() ;
-  RooAbsArg* server ;
-  while((server=(RooAbsArg*)siter->Next())) {
-    servers->add(*server) ;
+  for (auto server : _serverList) {
+    serverSet->add(*server) ;
   }
   
   // Remove all given observables from server list
-  servers->remove(nset,kTRUE,kTRUE) ;
+  serverSet->remove(nset,kTRUE,kTRUE);
 
-  return servers ;
+  return serverSet;
 }
 
 

@@ -16,13 +16,11 @@
 #ifndef ROO_GEXP_MODEL
 #define ROO_GEXP_MODEL
 
-#include <cmath>
-#include <complex>
-
 #include "Rtypes.h"
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
-#include "RooMath.h"
+
+#include <complex>
 
 class RooGExpModel : public RooResolutionModel {
 public:
@@ -43,19 +41,27 @@ public:
   inline RooGExpModel() {
     // coverity[UNINIT_CTOR]
   }
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
+          RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& rlife,
+          RooAbsReal& meanSF, RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
+          Bool_t nlo=kFALSE, Type type=Normal) ;
+
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& srSF,
           Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
           Bool_t nlo=kFALSE, Type type=Normal) ;
+
+
 
   RooGExpModel(const RooGExpModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooGExpModel(*this,newname) ; }
@@ -73,9 +79,9 @@ public:
   void advertiseAsymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
 protected:
+  virtual Double_t evaluate() const ;
 
-  Double_t logErfC(Double_t x) const ;
-
+private:
   //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
   Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;
    // modified FMV,08/13/03
@@ -87,42 +93,27 @@ protected:
         Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // added FMV,08/18/03
   //Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   //Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
-  virtual Double_t evaluate() const ;
+
   static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
-
-  // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-  static inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
-  {
-    std::complex<Double_t> z(swt*c,u+c);
-    return (z.imag()>-4.0) ? RooMath::faddeeva_fast(z)*std::exp(-u*u) : evalCerfApprox(swt,u,c) ;
-  }
-
-  // Calculate Re(exp(-u^2) cwerf(i(u+c)))
-  // added FMV, 08/17/03
-  inline Double_t evalCerfRe(Double_t u, Double_t c) const {
-    Double_t expArg = u*2*c+c*c ;
-    if (expArg<300) {
-       return exp(expArg) * RooMath::erfc(u+c);
-    } else {
-       return exp(expArg+logErfC(u+c));
-    }
-  }
 
   // Calculate common normalization factors
   // added FMV,07/24/03
   std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
   Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
 
+  RooRealProxy _mean;
   RooRealProxy sigma ;
   RooRealProxy rlife ;
+  RooRealProxy _meanSF;
   RooRealProxy ssf ;
   RooRealProxy rsf ;
+
   Bool_t _flip ;
   Bool_t _nlo ;
   Bool_t _flatSFInt ;
   Bool_t _asympInt ;  // added FMV,07/24/03
 
-  ClassDef(RooGExpModel,1) // Gauss (x) Exponential resolution model
+  ClassDef(RooGExpModel,2) // Gauss (x) Exponential resolution model
 };
 
 #endif

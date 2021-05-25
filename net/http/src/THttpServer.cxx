@@ -16,10 +16,13 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TUrl.h"
+#include "TEnv.h"
+#include "TError.h"
 #include "TClass.h"
-#include "RVersion.h"
 #include "RConfigure.h"
 #include "TRegexp.h"
+#include "TObjArray.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include "THttpEngine.h"
 #include "THttpLongPollEngine.h"
@@ -31,8 +34,7 @@
 
 #include <string>
 #include <cstdlib>
-#include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <fstream>
 #include <chrono>
 
@@ -56,7 +58,7 @@ public:
 
    /// timeout handler
    /// used to process http requests in main ROOT thread
-   virtual void Timeout() { fServer.ProcessRequests(); }
+   void Timeout() override { fServer.ProcessRequests(); }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,19 +134,26 @@ ClassImp(THttpServer);
 /// one should provide "http:8080;cors;noglobal" as parameter
 ///
 /// THttpServer uses JavaScript ROOT (https://root.cern/js) to implement web clients UI.
-/// Normally JSROOT sources are used from $ROOTSYS/etc/http directory,
+/// Normally JSROOT sources are used from $ROOTSYS/js directory,
 /// but one could set JSROOTSYS shell variable to specify alternative location
 
 THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server")
 {
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
-   if (jsrootsys)
-      fJSROOTSYS = jsrootsys;
+   if (!jsrootsys)
+      jsrootsys = gEnv->GetValue("HttpServ.JSRootPath", jsrootsys);
+
+   if (jsrootsys && *jsrootsys) {
+      if ((strncmp(jsrootsys, "http://", 7)==0) || (strncmp(jsrootsys, "https://", 8)==0))
+         fJSROOT = jsrootsys;
+      else
+         fJSROOTSYS = jsrootsys;
+   }
 
    if (fJSROOTSYS.Length() == 0) {
-      TString jsdir = TString::Format("%s/http", TROOT::GetEtcDir().Data());
+      TString jsdir = TString::Format("%s/js", TROOT::GetDataDir().Data());
       if (gSystem->ExpandPathName(jsdir)) {
-         Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location",
+         ::Warning("THttpServer::THttpServer", "problems resolving '%s', set JSROOTSYS to proper JavaScript ROOT location",
                  jsdir.Data());
          fJSROOTSYS = ".";
       } else {
@@ -153,7 +162,7 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    }
 
    AddLocation("currentdir/", ".");
-   AddLocation("jsrootsys/", fJSROOTSYS);
+   AddLocation("jsrootsys/", fJSROOTSYS.Data());
    AddLocation("rootsys/", TROOT::GetRootSys());
 
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
@@ -208,28 +217,9 @@ THttpServer::~THttpServer()
 {
    StopServerThread();
 
-   THttpCallArg *arg = nullptr;
-   Bool_t owner = kFALSE;
-   while (true) {
-      // delete outside the locked mutex area
-      if (owner && arg)
-         delete arg;
-
-      std::unique_lock<std::mutex> lk(fMutex);
-
-      if (fCallArgs.GetSize() == 0)
-         break;
-
-      arg = static_cast<THttpCallArg *>(fCallArgs.First());
-      const char *opt = fCallArgs.FirstLink()->GetAddOption();
-      owner = opt && !strcmp(opt, "owner");
-      fCallArgs.RemoveFirst();
-   }
-
    if (fTerminated) {
       TIter iter(&fEngines);
-      THttpEngine *engine = nullptr;
-      while ((engine = (THttpEngine *)iter()) != nullptr)
+      while (auto engine = dynamic_cast<THttpEngine *>(iter()))
          engine->Terminate();
    }
 
@@ -246,9 +236,7 @@ THttpServer::~THttpServer()
 
 void THttpServer::SetSniffer(TRootSniffer *sniff)
 {
-   if (fSniffer)
-      delete fSniffer;
-   fSniffer = sniff;
+   fSniffer.reset(sniff);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,6 +268,24 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// returns true if only websockets are handled by the server
+/// Typically used by WebGui
+
+Bool_t THttpServer::IsWSOnly() const
+{
+   return fWSOnly;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set websocket-only mode. If true, server will only handle websockets connection
+/// plus serving file requests to access jsroot/ui5 scripts
+
+void THttpServer::SetWSOnly(Bool_t on)
+{
+   fWSOnly = on;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// add files location, which could be used in the server
 /// one could map some system folder to the server like AddLocation("mydir/","/home/user/specials");
 /// Than files from this directory could be addressed via server like
@@ -299,8 +305,8 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set location of JSROOT to use with the server
 /// One could specify address like:
-///   https://root.cern.ch/js/3.3/
-///   http://web-docs.gsi.de/~linev/js/3.3/
+///   https://root.cern.ch/js/5.6.3/
+///   http://jsroot.gsi.de/5.6.3/
 /// This allows to get new JSROOT features with old server,
 /// reduce load on THttpServer instance, also startup time can be improved
 /// When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
@@ -313,7 +319,7 @@ void THttpServer::SetJSROOT(const char *location)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set file name of HTML page, delivered by the server when
 /// http address is opened in the browser.
-/// By default, $ROOTSYS/etc/http/files/online.htm page is used
+/// By default, $ROOTSYS/js/files/online.htm page is used
 /// When empty filename is specified, default page will be used
 
 void THttpServer::SetDefaultPage(const std::string &filename)
@@ -330,7 +336,7 @@ void THttpServer::SetDefaultPage(const std::string &filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set file name of HTML page, delivered by the server when
 /// objects drawing page is requested from the browser
-/// By default, $ROOTSYS/etc/http/files/draw.htm page is used
+/// By default, $ROOTSYS/js/files/draw.htm page is used
 /// When empty filename is specified, default page will be used
 
 void THttpServer::SetDrawPage(const std::string &filename)
@@ -420,14 +426,13 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 {
    if (fTimer) {
       fTimer->Stop();
-      delete fTimer;
-      fTimer = nullptr;
+      fTimer.reset();
    }
    if (milliSec > 0) {
       if (fOwnThread) {
          Error("SetTimer", "Server runs already in special thread, therefore no any timer can be created");
       } else {
-         fTimer = new THttpTimer(milliSec, mode, *this);
+         fTimer = std::make_unique<THttpTimer>(milliSec, mode, *this);
          fTimer->TurnOn();
       }
    }
@@ -444,7 +449,8 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 
 void THttpServer::CreateServerThread()
 {
-   if (fOwnThread) return;
+   if (fOwnThread)
+      return;
 
    SetTimer(0);
    fMainThrdId = 0;
@@ -474,7 +480,8 @@ void THttpServer::CreateServerThread()
 
 void THttpServer::StopServerThread()
 {
-   if (!fOwnThread) return;
+   if (!fOwnThread)
+      return;
 
    fOwnThread = false;
    fThrd.join();
@@ -541,14 +548,14 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TString fname(uri);
 
-   for (auto iter = fLocations.begin(); iter != fLocations.end(); iter++) {
-      Ssiz_t pos = fname.Index(iter->first.c_str());
+   for (auto &entry : fLocations) {
+      Ssiz_t pos = fname.Index(entry.first.c_str());
       if (pos == kNPOS)
          continue;
-      fname.Remove(0, pos + (iter->first.length() - 1));
+      fname.Remove(0, pos + (entry.first.length() - 1));
       if (!VerifyFilePath(fname.Data()))
          return kFALSE;
-      res = iter->second.c_str();
+      res = entry.second.c_str();
       if ((fname[0] == '/') && (res[res.Length() - 1] == '/'))
          res.Resize(res.Length() - 1);
       res.Append(fname);
@@ -583,72 +590,6 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
    arg->fCond.wait(lk);
 
    return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Signature with shared_ptr should be used
-/// Executes http request, specified in THttpCallArg structure
-/// Method can be called from any thread
-/// Actual execution will be done in main ROOT thread, where analysis code is running.
-
-Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
-{
-   if (fTerminated)
-      return kFALSE;
-
-   if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
-      // should not happen, but one could process requests directly without any signaling
-
-      ProcessRequest(arg);
-
-      return kTRUE;
-   }
-
-   // add call arg to the list
-   std::unique_lock<std::mutex> lk(fMutex);
-   fCallArgs.Add(arg);
-   // and now wait until request is processed
-   arg->fCond.wait(lk);
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Signature with shared_ptr should be used
-/// Submit http request, specified in THttpCallArg structure
-/// Contrary to ExecuteHttp, it will not block calling thread.
-/// User should reimplement THttpCallArg::HttpReplied() method
-/// to react when HTTP request is executed.
-/// Method can be called from any thread
-/// Actual execution will be done in main ROOT thread, where analysis code is running.
-/// When called from main thread and can_run_immediately==kTRUE, will be
-/// executed immediately.
-/// If ownership==kTRUE, THttpCallArg object will be destroyed by the THttpServer
-/// Returns kTRUE when was executed.
-
-Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately, Bool_t ownership)
-{
-   if (fTerminated) {
-      if (ownership)
-         delete arg;
-      return kFALSE;
-   }
-
-   if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
-      ProcessRequest(arg);
-      arg->NotifyCondition();
-      if (ownership)
-         delete arg;
-      return kTRUE;
-   }
-
-   // add call arg to the list
-   std::unique_lock<std::mutex> lk(fMutex);
-   if (ownership)
-      fArgs.push(std::shared_ptr<THttpCallArg>(arg));
-   else
-      fCallArgs.Add(arg);
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,7 +629,6 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
 /// User can call serv->ProcessRequests() directly, but only from main thread.
 /// If special server thread is created, called from that thread
 
-
 Int_t THttpServer::ProcessRequests()
 {
    if (fMainThrdId == 0)
@@ -723,33 +663,6 @@ Int_t THttpServer::ProcessRequests()
       }
 
       fSniffer->SetCurrentCallArg(arg.get());
-
-      try {
-         cnt++;
-         ProcessRequest(arg);
-         fSniffer->SetCurrentCallArg(nullptr);
-      } catch (...) {
-         fSniffer->SetCurrentCallArg(nullptr);
-      }
-
-      arg->NotifyCondition();
-   }
-
-   // then process old-style queue, will be removed later
-   while (true) {
-      THttpCallArg *arg = nullptr;
-
-      lk.lock();
-      if (fCallArgs.GetSize() > 0) {
-         arg = static_cast<THttpCallArg *>(fCallArgs.First());
-         fCallArgs.RemoveFirst();
-      }
-      lk.unlock();
-
-      if (!arg)
-         break;
-
-      fSniffer->SetCurrentCallArg(arg);
 
       try {
          cnt++;
@@ -800,6 +713,76 @@ void THttpServer::ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create summary page with active WS handlers
+
+std::string THttpServer::BuildWSEntryPage()
+{
+
+   std::string arr = "[";
+
+   {
+      std::lock_guard<std::mutex> grd(fWSMutex);
+      for (auto &ws : fWSHandlers) {
+         if (arr.length() > 1)
+            arr.append(", ");
+
+         arr.append(Form("{ name: \"%s\", title: \"%s\" }", ws->GetName(), ws->GetTitle()));
+      }
+   }
+
+   arr.append("]");
+
+   std::string res = ReadFileContent((TROOT::GetDataDir() + "/js/files/wslist.htm").Data());
+
+   std::string arg = "\"$$$wslist$$$\"";
+
+   auto pos = res.find(arg);
+   if (pos != std::string::npos)
+      res.replace(pos, arg.length(), arr);
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replaces all references like "jsrootsys/..."
+/// Either using pre-configured JSROOT installation from web or
+/// redirect to jsrootsys from the main server path to benefit from browser caching
+
+void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
+{
+   std::string repl;
+
+   if (fJSROOT.Length() > 0) {
+      repl = "=\"";
+      repl.append(fJSROOT.Data());
+      if (repl.back() != '/')
+         repl.append("/");
+   } else {
+      Int_t cnt = 0;
+      if (arg->fPathName.Length() > 0) cnt++;
+      for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
+         if (arg->fPathName[n] == '/') {
+            if (arg->fPathName[n-1] != '/') {
+               cnt++; // normal slash in the middle, count it
+            } else {
+               cnt = 0; // double slash, do not touch such path
+               break;
+            }
+         }
+
+      if (cnt > 0) {
+         repl = "=\"";
+         while (cnt-- >0) repl.append("../");
+         repl.append("jsrootsys/");
+      }
+   }
+
+   if (!repl.empty())
+      arg->ReplaceAllinContent("=\"jsrootsys/", repl);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process single http request
 /// Depending from requested path and filename different actions will be performed.
 /// In most cases information is provided by TRootSniffer class
@@ -808,49 +791,49 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 {
    if (fTerminated) {
       arg->Set404();
-   } else if ((arg->fFileName == "root.websocket") || (arg->fFileName == "root.longpoll")) {
-      ExecuteWS(arg);
-   } else {
-      ProcessRequest(arg.get());
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated  One should use signature with std::shared_ptr
-/// Process single http request
-/// Depending from requested path and filename different actions will be performed.
-/// In most cases information is provided by TRootSniffer class
-
-void THttpServer::ProcessRequest(THttpCallArg *arg)
-{
-   if (fTerminated) {
-      arg->Set404();
       return;
    }
 
-   if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
+   if ((arg->fFileName == "root.websocket") || (arg->fFileName == "root.longpoll")) {
+      ExecuteWS(arg);
+      return;
+   }
 
-      auto wsptr = FindWS(arg->GetPathName());
+   if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm") || (arg->fFileName == "default.htm")) {
 
-      auto handler = wsptr.get();
+      if (arg->fFileName == "default.htm") {
 
-      if (!handler)
-         handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+         if (!IsWSOnly())
+            arg->fContent = ReadFileContent((fJSROOTSYS + "/files/online.htm").Data());
 
-      if (handler) {
+      } else {
+         auto wsptr = FindWS(arg->GetPathName());
 
-         arg->fContent = handler->GetDefaultPageContent().Data();
+         auto handler = wsptr.get();
 
-         if (arg->fContent.find("file:") == 0) {
-            TString fname = arg->fContent.c_str() + 5;
-            fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
+         if (!handler)
+            handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-            arg->fContent = ReadFileContent(fname.Data());
-            arg->AddNoCacheHeader();
+         if (handler) {
+
+            arg->fContent = handler->GetDefaultPageContent().Data();
+
+            if (arg->fContent.find("file:") == 0) {
+               const char *fname = arg->fContent.c_str() + 5;
+               TString resolve;
+               if (!IsFileRequested(fname, resolve)) resolve = fname;
+               arg->fContent = ReadFileContent(resolve.Data());
+            }
+
+            handler->VerifyDefaultPageContent(arg);
          }
       }
 
-      if (arg->fContent.empty()) {
+      if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
+         arg->fContent = BuildWSEntryPage();
+      }
+
+      if (arg->fContent.empty() && !IsWSOnly()) {
 
          if (fDefaultPageCont.empty())
             fDefaultPageCont = ReadFileContent(fDefaultPage);
@@ -859,16 +842,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       }
 
       if (arg->fContent.empty()) {
+
          arg->Set404();
-      } else {
-         // replace all references on JSROOT
-         if (fJSROOT.Length() > 0) {
-            std::string repl("=\"");
-            repl.append(fJSROOT.Data());
-            if (repl.back() != '/')
-               repl.append("/");
-            arg->ReplaceAllinContent("=\"jsrootsys/", repl);
-         }
+      } else if (!arg->Is404()) {
+
+         ReplaceJSROOTLinks(arg);
 
          const char *hjsontag = "\"$$$h.json$$$\"";
 
@@ -893,7 +871,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
-   if (arg->fFileName == "draw.htm") {
+   if ((arg->fFileName == "draw.htm") && !IsWSOnly()) {
       if (fDrawPageCont.empty())
          fDrawPageCont = ReadFileContent(fDrawPage);
 
@@ -905,14 +883,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          arg->fContent = fDrawPageCont;
 
-         // replace all references on JSROOT
-         if (fJSROOT.Length() > 0) {
-            std::string repl("=\"");
-            repl.append(fJSROOT.Data());
-            if (repl.back() != '/')
-               repl.append("/");
-            arg->ReplaceAllinContent("=\"jsrootsys/", repl);
-         }
+         ReplaceJSROOTLinks(arg);
 
          if ((arg->fQuery.Index("no_h_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) &&
              (arg->fContent.find(hjsontag) != std::string::npos)) {
@@ -951,14 +922,55 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
+   // check if websocket handler may serve file request
+   if (!arg->fPathName.IsNull() && !arg->fFileName.IsNull()) {
+      TString wsname = arg->fPathName, fname;
+      auto pos = wsname.First('/');
+      if (pos == kNPOS) {
+         wsname = arg->fPathName;
+      } else {
+         wsname = arg->fPathName(0, pos);
+         fname = arg->fPathName(pos + 1, arg->fPathName.Length() - pos);
+         fname.Append("/");
+      }
+
+      fname.Append(arg->fFileName);
+
+      if (VerifyFilePath(fname.Data())) {
+
+         auto ws = FindWS(wsname.Data());
+
+         if (ws && ws->CanServeFiles()) {
+            TString fdir = ws->GetDefaultPageContent();
+            // only when file is specified, can take directory, append prefix and file name
+            if (fdir.Index("file:") == 0) {
+               fdir.Remove(0, 5);
+               auto separ = fdir.Last('/');
+               if (separ != kNPOS)
+                  fdir.Resize(separ + 1);
+               else
+                  fdir = "./";
+
+               fdir.Append(fname);
+               arg->SetFile(fdir);
+               return;
+            }
+         }
+      }
+   }
+
    filename = arg->fFileName;
+
    Bool_t iszip = kFALSE;
    if (filename.EndsWith(".gz")) {
       filename.Resize(filename.Length() - 3);
       iszip = kTRUE;
    }
 
-   if ((filename == "h.xml") || (filename == "get.xml")) {
+   if (IsWSOnly()) {
+      if (arg->fContent.empty())
+         arg->Set404();
+   } else if ((filename == "h.xml") || (filename == "get.xml")) {
 
       Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
 
@@ -1000,7 +1012,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       arg->SetContentType(GetMimeType(filename.Data()));
    } else {
       // miss request, user may process
-      MissedRequest(arg);
+      MissedRequest(arg.get());
    }
 
    if (arg->Is404())
@@ -1074,9 +1086,9 @@ void THttpServer::UnregisterWS(std::shared_ptr<THttpWSHandler> ws)
 std::shared_ptr<THttpWSHandler> THttpServer::FindWS(const char *name)
 {
    std::lock_guard<std::mutex> grd(fWSMutex);
-   for (int n = 0; n < (int)fWSHandlers.size(); ++n) {
-      if (strcmp(name, fWSHandlers[n]->GetName()) == 0)
-         return fWSHandlers[n];
+   for (auto &ws : fWSHandlers) {
+      if (strcmp(name, ws->GetName()) == 0)
+         return ws;
    }
 
    return nullptr;
@@ -1103,7 +1115,8 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       std::unique_lock<std::mutex> lk(fMutex);
       fArgs.push(arg);
       // and now wait until request is processed
-      if (wait_process) arg->fCond.wait(lk);
+      if (wait_process)
+         arg->fCond.wait(lk);
 
       return kTRUE;
    }
@@ -1155,7 +1168,8 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       }
    }
 
-   if (!process) arg->Set404();
+   if (!process)
+      arg->Set404();
 
    return process;
 }
@@ -1300,6 +1314,8 @@ const char *THttpServer::GetMimeType(const char *path)
                              {".avi", 4, "video/x-msvideo"},
                              {".bmp", 4, "image/bmp"},
                              {".ttf", 4, "application/x-font-ttf"},
+                             {".woff", 5, "font/woff"},
+                             {".woff2", 6, "font/woff2"},
                              {NULL, 0, NULL}};
 
    int path_len = strlen(path);
@@ -1317,15 +1333,15 @@ const char *THttpServer::GetMimeType(const char *path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// reads file content
+/// \deprecated reads file content
 
 char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 {
    len = 0;
 
-   std::ifstream is(filename);
+   std::ifstream is(filename, std::ios::in | std::ios::binary);
    if (!is)
-      return 0;
+      return nullptr;
 
    is.seekg(0, is.end);
    len = is.tellg();
@@ -1336,7 +1352,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
    if (!is) {
       free(buf);
       len = 0;
-      return 0;
+      return nullptr;
    }
 
    return buf;
@@ -1347,7 +1363,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 
 std::string THttpServer::ReadFileContent(const std::string &filename)
 {
-   std::ifstream is(filename);
+   std::ifstream is(filename, std::ios::in | std::ios::binary);
    std::string res;
    if (is) {
       is.seekg(0, std::ios::end);

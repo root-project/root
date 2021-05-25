@@ -48,7 +48,9 @@ protected:
 
   mutable std::vector<Double_t> _wksp; //! do not persist
 
+  /// Evaluation
   Double_t evaluate() const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
   ClassDef(RooPolynomial,1) // Polynomial PDF
 };

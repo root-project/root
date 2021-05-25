@@ -19,8 +19,8 @@
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
-#include <vector>
-#include <string>
+#include <list>
+
 class RooChangeTracker;
 
 class RooMomentMorphFunc : public RooAbsReal {
@@ -63,7 +63,6 @@ protected:
       {
          _frac.add(flist);
       };
-      void operModeHook(RooAbsArg::OperMode){};
       virtual ~CacheElem();
       virtual RooArgList containedArgs(Action);
       RooAbsReal *_sumFunc;

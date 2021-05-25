@@ -11,9 +11,9 @@
 
 #include <cmath>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TBuffer.h"
 #include "v5/TFormula.h"
 #include "TMath.h"
 #include "TRandom.h"
@@ -24,6 +24,8 @@
 #include "v5/TFormulaPrimitive.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -3699,7 +3701,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          if (var) newActionCode += var;
          newActionParam = action - var*100 - (kOldexpo+1);
 
-      } if (action > 100 && action < 200) {
+      } else if (action > 100 && action < 200) {
          // Parameter substitution
 
          newActionCode = kParameter;

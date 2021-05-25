@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <TROOT.h>
 
 #include "RNonCopiableColumnDS.hxx"
 #include "RStreamingDS.hxx"

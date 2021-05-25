@@ -23,9 +23,9 @@
 #include "Bytes.h"
 #include "Compression.h"
 #include "NetErrors.h"
-#include "TEnv.h"
 #include "TError.h"
 #include "TMessage.h"
+#include "TObjString.h"
 #include "TPSocket.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
@@ -35,6 +35,7 @@
 #include "TVirtualAuth.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
+
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
@@ -56,7 +57,6 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // 14: support for SSH authentication via SSH tunnel
 // 15: cope with fixes in TUrl::GetFile
 // 16: add env setup message exchange
-// 17: optmized Globus/GSI protocol exchange
 //
 Int_t TSocket::fgClientProtocol = 17;  // increase when client protocol changes
 
@@ -75,7 +75,7 @@ ClassImp(TSocket);
 /// closed on program termination.
 
 TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
-         : TNamed(addr.GetHostName(), service)
+         : TNamed(addr.GetHostName(), service), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -92,7 +92,6 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
    fUUIDs = 0;
    fLastUsageMtx = 0;
@@ -121,7 +120,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
-         : TNamed(addr.GetHostName(), "")
+         : TNamed(addr.GetHostName(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -139,7 +138,6 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
    fUUIDs = 0;
    fLastUsageMtx = 0;
@@ -165,7 +163,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
-         : TNamed(host, service)
+         : TNamed(host, service), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -183,7 +181,6 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    SetName(fAddress.GetHostName());
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
    fUUIDs = 0;
    fLastUsageMtx = 0;
@@ -211,7 +208,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
-         : TNamed(TUrl(url).GetHost(), "")
+         : TNamed(TUrl(url).GetHost(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -233,7 +230,6 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
    fUUIDs = 0;
    fLastUsageMtx = 0;
@@ -254,7 +250,8 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
 /// sockets list which will make sure that any open sockets are properly
 /// closed on program termination.
 
-TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
+TSocket::TSocket(const char *sockpath) : TNamed(sockpath, ""),
+                                         fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -270,7 +267,6 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
    fTcpWindowSize = -1;
    fUUIDs = 0;
    fLastUsageMtx  = 0;
@@ -286,7 +282,7 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
 /// Create a socket. The socket will adopt previously opened TCP socket with
 /// descriptor desc.
 
-TSocket::TSocket(Int_t desc) : TNamed("", "")
+TSocket::TSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -297,7 +293,6 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    fServType       = kSOCKD;
    fBytesSent      = 0;
    fBytesRecv      = 0;
-   fCompress       = 0;
    fTcpWindowSize = -1;
    fUUIDs          = 0;
    fLastUsageMtx   = 0;
@@ -316,7 +311,8 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
 /// descriptor desc. The sockpath arg is for info purposes only. Use
 /// this method to adopt e.g. a socket created via socketpair().
 
-TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
+TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
+                                                     fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -332,7 +328,6 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
    fTcpWindowSize = -1;
    fUUIDs = 0;
    fLastUsageMtx  = 0;
@@ -701,6 +696,7 @@ void TSocket::SendProcessIDs(const TMessage &mess)
          //if not add it to the fUUIDs list
          if (!fUUIDs) {
             fUUIDs = new TList();
+            fUUIDs->SetOwner(kTRUE);
          } else {
             if (fUUIDs->FindObject(pid->GetTitle()))
                continue;
@@ -1049,10 +1045,9 @@ Int_t TSocket::GetErrorCode() const
 
 void TSocket::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
    if (fCompress < 0) {
-      // if the level is not defined yet use 4 as a default (with ZLIB was 1)
-      fCompress = 100 * algorithm + 4;
+      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -1071,7 +1066,7 @@ void TSocket::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 }
@@ -1087,7 +1082,7 @@ void TSocket::SetCompressionLevel(Int_t level)
 /// (For the currently supported algorithms, the maximum level is 9)
 /// If compress is negative it indicates the compression level is not set yet.
 ///
-/// The enumeration ROOT::ECompressionAlgorithm associates each
+/// The enumeration ROOT::RCompressionSetting::EAlgorithm associates each
 /// algorithm with a number. There is a utility function to help
 /// to set the value of the argument. For example,
 ///   ROOT::CompressionSettings(ROOT::kLZMA, 1)
@@ -1262,8 +1257,7 @@ Bool_t TSocket::Authenticate(const char *user)
 ///                any remote server session using TServerSocket)
 ///          [p] = for parallel sockets (forced internally for
 ///                rootd; ignored for proofd)
-///       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
-///                SRP, Krb5, Globus, SSH or UidGid authentication
+///       [auth] = "up" or "k" to force UsrPwd or Krb5 authentication
 ///       [port] = is the remote port number
 ///    [service] = service name used to determine the port
 ///                (for backward compatibility, specification of
@@ -1279,15 +1273,6 @@ Bool_t TSocket::Authenticate(const char *user)
 /// code (see NetErrors.h).
 ///
 /// Example:
-///
-///   TSocket::CreateAuthSocket("rootds://qwerty@machine.fq.dn:5051")
-///
-///   creates an authenticated socket to a rootd server running
-///   on remote machine machine.fq.dn on port 5051; "parallel" sockets
-///   are forced internally because rootd expects
-///   parallel sockets; however a simple socket will be created
-///   in this case because the size is 0 (the default);
-///   authentication will attempt protocol SRP first.
 ///
 ///   TSocket::CreateAuthSocket("pk://qwerty@machine.fq.dn:5052",3)
 ///
@@ -1419,8 +1404,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 ///                any remote server session using TServerSocket)
 ///          [p] = for parallel sockets (forced internally for
 ///                rootd)
-///       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
-///                SRP, Krb5, Globus, SSH or UidGid authentication
+///       [auth] = "up" or "k" to force UsrPwd or Krb5 authentication
 ///    [options] = "m" or "s", when proto=proofd indicates whether
 ///                we are master or slave (used internally by TSlave)
 ///
@@ -1431,15 +1415,6 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 /// code (see NetErrors.h).
 ///
 /// Example:
-///
-///   TSocket::CreateAuthSocket("qwerty","rootdps://machine.fq.dn",5051)
-///
-///   creates an authenticated socket to a rootd server running
-///   on remote machine machine.fq.dn on port 5051; "parallel"
-///   sockets are forced internally because rootd expects
-///   parallel sockets; however a simple socket will be created
-///   in this case because the size is 0 (the default);
-///   authentication will attempt protocol SRP first.
 ///
 ///   TSocket::CreateAuthSocket("qwerty","pk://machine.fq.dn:5052",3)
 ///

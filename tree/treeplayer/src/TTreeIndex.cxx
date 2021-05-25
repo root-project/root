@@ -14,7 +14,10 @@ A Tree Index with majorname and minorname.
 */
 
 #include "TTreeIndex.h"
+
+#include "TTreeFormula.h"
 #include "TTree.h"
+#include "TBuffer.h"
 #include "TMath.h"
 
 ClassImp(TTreeIndex);
@@ -34,7 +37,7 @@ struct IndexSortComparator {
          return *(fValMajor + i1) < *(fValMajor + i2);
    }
 
-  // pointers to the start of index values tables keeping uppder 64bit and lower 64bit
+  // pointers to the start of index values tables keeping upper 64bit and lower 64bit
   // of combined indexed 128bit value
   Long64_t *fValMajor, *fValMinor;
 };
@@ -319,6 +322,10 @@ bool TTreeIndex::ConvertOldToNew()
 Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
 {
    if (!parent) return -3;
+   // We reached the end of the parent tree
+   Long64_t pentry = parent->GetReadEntry();
+   if (pentry >= parent->GetEntries())
+      return -2;
    GetMajorFormulaParent(parent);
    GetMinorFormulaParent(parent);
    if (!fMajorFormulaParent || !fMinorFormulaParent) return -1;
@@ -326,7 +333,6 @@ Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
       // The Tree Index in the friend has a pair majorname,minorname
       // not available in the parent Tree T.
       // if the friend Tree has less entries than the parent, this is an error
-      Long64_t pentry = parent->GetReadEntry();
       if (pentry >= fTree->GetEntries()) return -2;
       // otherwise we ignore the Tree Index and return the entry number
       // in the parent Tree.
@@ -380,7 +386,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// If it finds a pair that maches val, it returns directly the
 /// index in the table.
 /// If an entry corresponding to major and minor is not found, the function
-/// returns the index of the major,minor pair immediatly lower than the
+/// returns the index of the major,minor pair immediately lower than the
 /// requested value, ie it will return -1 if the pair is lower than
 /// the first entry in the index.
 ///
@@ -493,6 +499,18 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
    return fMinorFormulaParent;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if index can be applied to the TTree
+
+Bool_t TTreeIndex::IsValidFor(const TTree *parent)
+{
+   auto *majorFormula = GetMajorFormulaParent(parent);
+   auto *minorFormula = GetMinorFormulaParent(parent);
+   if ((majorFormula == nullptr || majorFormula->GetNdim() == 0) ||
+       (minorFormula == nullptr || minorFormula->GetNdim() == 0))
+         return kFALSE;
+   return kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the table with : serial number, majorname, minorname.

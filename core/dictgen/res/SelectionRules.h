@@ -13,6 +13,10 @@
 #define R__SELECTIONRULES_H
 
 #include <list>
+#include <string>
+#include <vector>
+#include <utility>
+
 #include "BaseSelectionRule.h"
 #include "ClassSelectionRule.h"
 #include "VariableSelectionRule.h"
@@ -99,7 +103,6 @@ public:
                   ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
                   const std::vector<std::pair<std::string,std::string>>& namesForExclusion):
       fSelectionFileType(kNumSelectionFileTypes),
-      fIsDeep(false),
       fHasFileNameRule(false),
       fRulesCounter(0),
       fNormCtxt(normCtxt),
@@ -152,12 +155,9 @@ public:
    int CheckDuplicates();
    void Optimize();
 
-   void SetDeep(bool deep);
-   bool GetDeep() const { return fIsDeep; }
-
    // These method are called from clr-scan and return true if the Decl selected, false otherwise
    //const BaseSelectionRule  *IsDeclSelected(clang::Decl* D) const;
-   const ClassSelectionRule *IsDeclSelected(const clang::RecordDecl* D) const;
+   const ClassSelectionRule *IsDeclSelected(const clang::RecordDecl* D, bool includeTypedefRule) const;
    const ClassSelectionRule *IsDeclSelected(const clang::TypedefNameDecl* D) const;
    const ClassSelectionRule *IsDeclSelected(const clang::NamespaceDecl* D) const;
    const BaseSelectionRule *IsDeclSelected(const clang::EnumDecl* D) const;
@@ -166,7 +166,7 @@ public:
    const BaseSelectionRule *IsDeclSelected(const clang::FunctionDecl* D) const;
    const BaseSelectionRule *IsDeclSelected(const clang::Decl* D) const;
 
-   const ClassSelectionRule *IsClassSelected(const clang::Decl* D, const std::string& qual_name) const; // is the class selected
+   const ClassSelectionRule *IsClassSelected(const clang::Decl* D, const std::string& qual_name, bool includeTypedefRule) const; // is the class selected
    const ClassSelectionRule *IsNamespaceSelected(const clang::Decl* D, const std::string& qual_name) const; // is the class selected
 
    // is the global function, variable, enum selected - the behavior is different for linkdef.h and selection.xml - that's why
@@ -237,7 +237,6 @@ private:
 
    ESelectionFileTypes fSelectionFileType;
 
-   bool fIsDeep; ///< if --deep option passed from command line, this should be set to true
    bool fHasFileNameRule; ///< if we have a file name rule, this should be set to true
    long int fRulesCounter;
 

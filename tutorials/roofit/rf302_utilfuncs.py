@@ -1,15 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #302
-## Utility functions classes available for use in tailoring
-##  of composite (multidimensional) pdfs
+## Multidimensional models: utility functions classes available for use in tailoring of
+## composite (multidimensional) pdfs
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

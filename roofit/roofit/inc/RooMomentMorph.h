@@ -19,9 +19,7 @@
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
-#include <vector>
-#include <string>
-class RooChangeTracker ;
+class RooChangeTracker;
 
 class RooMomentMorph : public RooAbsPdf {
 public:
@@ -56,7 +54,6 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsPdf& sumPdf, RooChangeTracker& tracker, const RooArgList& flist) : _sumPdf(&sumPdf), _tracker(&tracker) { _frac.add(flist) ; } ;
-    void operModeHook(RooAbsArg::OperMode) {};
     virtual ~CacheElem() ;
     virtual RooArgList containedArgs(Action) ;
     RooAbsPdf* _sumPdf ;

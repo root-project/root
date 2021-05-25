@@ -23,50 +23,27 @@
 
 /*! \class TMVA::TActivationRadial
 \ingroup TMVA
-Radial basis  activation function for ANN. This really simple implementation
-uses TFormula and should probably be replaced with something more
-efficient later.
+Radial basis  activation function for ANN.
 */
 
 #include "TMVA/TActivationRadial.h"
 
 #include "TMVA/TActivation.h"
 
-#include "TFormula.h"
 #include "TMath.h"
 #include "TString.h"
 
 #include <iostream>
 
-static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationRadial);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor for gaussian with center 0, width 1
-
-TMVA::TActivationRadial::TActivationRadial()
-{
-   fEqn           = new TFormula("Gaussian",   "TMath::Exp(-x^2/2.0)");
-   fEqnDerivative = new TFormula("derivative", "-x*TMath::Exp(-x^2/2.0)");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-TMVA::TActivationRadial::~TActivationRadial()
-{
-   if (fEqn != NULL) delete fEqn;
-   if (fEqnDerivative != NULL) delete fEqnDerivative;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluate gaussian
 
 Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 {
-   if (fEqn == NULL) return UNINITIALIZED;
-   return fEqn->Eval(arg);
+   return TMath::Exp(-arg * arg * 0.5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,8 +51,7 @@ Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 
 Double_t TMVA::TActivationRadial::EvalDerivative(Double_t arg)
 {
-   if (fEqnDerivative == NULL) return UNINITIALIZED;
-   return fEqnDerivative->Eval(arg);
+   return -arg*TMath::Exp(-arg * arg * 0.5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,16 +59,7 @@ Double_t TMVA::TActivationRadial::EvalDerivative(Double_t arg)
 
 TString TMVA::TActivationRadial::GetExpression()
 {
-   TString expr = "";
-
-   if (fEqn == NULL) expr += "<null>";
-   else              expr += fEqn->GetExpFormula();
-
-   expr += "\t\t";
-
-   if (fEqnDerivative == NULL) expr += "<null>";
-   else                        expr += fEqnDerivative->GetExpFormula();
-
+   TString expr = "TMath::Exp(-x^2/2.0)\t\t-x*TMath::Exp(-x^2/2.0)";
    return expr;
 }
 

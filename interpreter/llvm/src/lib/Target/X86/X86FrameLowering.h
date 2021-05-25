@@ -1,9 +1,8 @@
 //===-- X86TargetFrameLowering.h - Define frame lowering for X86 -*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,7 +13,7 @@
 #ifndef LLVM_LIB_TARGET_X86_X86FRAMELOWERING_H
 #define LLVM_LIB_TARGET_X86_X86FRAMELOWERING_H
 
-#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
 
 namespace llvm {
 
@@ -89,7 +88,7 @@ public:
 
   bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                   MachineBasicBlock::iterator MI,
-                                  const std::vector<CalleeSavedInfo> &CSI,
+                                  std::vector<CalleeSavedInfo> &CSI,
                                   const TargetRegisterInfo *TRI) const override;
 
   bool hasFP(const MachineFunction &MF) const override;
@@ -125,7 +124,7 @@ public:
   /// Emit a series of instructions to increment / decrement the stack
   /// pointer by a constant value.
   void emitSPUpdate(MachineBasicBlock &MBB, MachineBasicBlock::iterator &MBBI,
-                    int64_t NumBytes, bool InEpilogue) const;
+                    const DebugLoc &DL, int64_t NumBytes, bool InEpilogue) const;
 
   /// Check that LEA can be used on SP in an epilogue sequence for \p MF.
   bool canUseLEAForSPInEpilogue(const MachineFunction &MF) const;
@@ -157,15 +156,6 @@ public:
   void orderFrameObjects(const MachineFunction &MF,
                          SmallVectorImpl<int> &ObjectsToAllocate) const override;
 
-  /// convertArgMovsToPushes - This method tries to convert a call sequence
-  /// that uses sub and mov instructions to put the argument onto the stack
-  /// into a series of pushes.
-  /// Returns true if the transformation succeeded, false if not.
-  bool convertArgMovsToPushes(MachineFunction &MF, 
-                              MachineBasicBlock &MBB,
-                              MachineBasicBlock::iterator I, 
-                              uint64_t Amount) const;
-
   /// Wraps up getting a CFI index and building a MachineInstr for it.
   void BuildCFI(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
                 const DebugLoc &DL, const MCCFIInstruction &CFIInst) const;
@@ -176,6 +166,14 @@ public:
   restoreWin32EHStackPointers(MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator MBBI,
                               const DebugLoc &DL, bool RestoreSP = false) const;
+
+  int getInitialCFAOffset(const MachineFunction &MF) const override;
+
+  unsigned getInitialCFARegister(const MachineFunction &MF) const override;
+
+  /// Return true if the function has a redzone (accessible bytes past the
+  /// frame of the top of stack function) as part of it's ABI.  
+  bool has128ByteRedZone(const MachineFunction& MF) const;
 
 private:
   uint64_t calculateMaxStackAlign(const MachineFunction &MF) const;
@@ -214,6 +212,11 @@ private:
   unsigned getPSPSlotOffsetFromSP(const MachineFunction &MF) const;
 
   unsigned getWinEHFuncletFrameSize(const MachineFunction &MF) const;
+
+  /// Materialize the catchret target MBB in RAX.
+  void emitCatchRetReturnValue(MachineBasicBlock &MBB,
+                               MachineBasicBlock::iterator MBBI,
+                               MachineInstr *CatchRet) const;
 };
 
 } // End llvm namespace

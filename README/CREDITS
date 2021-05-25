@@ -19,6 +19,10 @@ N: Mohammad Al-Turany
 E: m.al-turany@gsi.de
 D: QTGSI classes
 
+N: Kim Albertsson
+E: kim.albertsson@cern.ch
+D: several contributions to TMVA
+
 N: Guilherme Amadio
 E: guilherme.amadio@cern.ch
 D: TDataFrame, build system, parallel writing
@@ -97,6 +101,10 @@ N: Dario Berzano
 E: dario.berzano@cern.ch
 D: Dataset stager daemon and other PROOF related contributions
 
+N: Iliana Betsou
+E: ilianampe@yahoo.com
+D: Several GUIs in the context of JSROOT/ROOT7 mainly the FitPanel
+
 N: Adrian Bevan
 E: bevan@slac.stanford.edu
 D: class TFeldmanCousins
@@ -106,10 +114,15 @@ N: Marek Biskup
 E: Marek.Biskup@cern.ch
 D: PROOF contributions
 
+N: Jakob Blomer
+E: Jakob.Blomer@cern.ch
+D: RDataSet
+
 N: Brian Bockelman
 E: bbockelm@cse.unl.edu
+D: BulkIO interface
 D: THDFSFile for accessing the Hadoop file system
-D: Improvement to ROOT I/O disk and memory efficiency.
+D: Improvement to ROOT I/O disk and memory efficiency
 
 N: Sebastian Boeser
 E: sboeser@ifh.de
@@ -167,8 +180,12 @@ D: support and development of TTreeFormula and TTree query mechanism
 N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
-D: TSpline classes
+D: TSpline, TComplex classes
 D: Support for gcc option -weffc++
+
+N: James Carroll
+E: eloquism@gmail.com
+D: Original maintainer of the ROOT Snap
 
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
@@ -199,6 +216,10 @@ D: contributions to ROOT6 / meta and cling.
 N: David Dagenhart
 E: wdd@fnal.gov
 D: Support for LZMA compression in ROOT files
+
+N: Pratyush Das
+E: reikdas@gmail.com
+D: ROOTUnitTestSupport, various rootcling improvements
 
 N: Bastien Dallapiazza
 E: bastien.dallapiazza@epfl.ch
@@ -257,14 +278,14 @@ D: ROOT::TDirectory
 
 N: Giulio Eulisse
 E: Giulio.Eulisse@cern.ch
-D: class TQtLock
+D: class TQtLock, RArrowDS
 
 N: Denis Favre-Miville
 E: Denis.Favre-Miville@ensimag.imag.fr
 D: contribution to the GUI and graphics editors
 
-N: André Felipe
-E: (felipe.andre@gmail.com)
+N: Andre Felipe
+E: felipe.andre@gmail.com
 D: CINT contributions
 
 N: Jan Fiete Grosse-Oetringhaus
@@ -356,8 +377,8 @@ E: luca.giommi2@studio.unibo.it
 D: rootdrawtree and TSimpleAnalysis
 
 N: Enrico Guiraud
-E: enrico.guiraud@gmail.com
-D: Multiproc runtime, TDataFrame
+E: enrico.guiraud@cern.ch
+D: Multiproc runtime, RDataFrame
 
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
@@ -371,7 +392,7 @@ N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
 D: CINT C/C++ interpreter
 
-N: Roberto Gracia Del Baño
+N: Roberto Gracia Del Bano
 E: cuboscombro@gmail.com
 D: Event Recorder
 
@@ -397,6 +418,14 @@ D: implement TGraphAsymmErrors::BayesDivide and corresponding functions
 N: Daniel Haertl
 E: Daniel.Haertl@cern.ch
 D: Reimplement in C++ the original chi2test of Nikolai Gagunashvili
+
+N: Stephan Hageboeck
+E: stephan.hageboeck@cern.ch
+D: Roofit support and developments
+
+N: Jonas Hahnfeld
+E: jonas.hahnfeld@cern.ch
+D: Portable implementation of RANLUX++
 
 N: Andy Hanushevsky
 E: abh@slac.stanford.edu
@@ -489,6 +518,10 @@ N: Pierre Juillot
 E: juillot@in2p3.fr
 D: various contributions to the postscript driver
 
+N: Desislava Kalaydjieva
+E: dnkalaydjieva@gmail.com
+D: .help TTree
+
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
 D: improvements in the ZIP package
@@ -504,6 +537,10 @@ D: PROOF contributions
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
+
+N: Sven Kreiss
+E: svenkreiss@gmail.com
+D: co-author of RooStats
 
 N: Anna Kreshuk
 E: akrechtc@mail.cern.ch
@@ -551,6 +588,7 @@ D: XML interface package
 D: SQL interface extensions, ODBC driver
 D: THttpServer class
 D: JavaScript ROOT package (together with Bertrand Bellenot)
+D: RWebDisplay classes for web-based graphics and GUI
 
 N: Yan Liu
 E: liuyan@fnal.gov
@@ -571,6 +609,10 @@ D: Guide lines in Editor, Opacity, Gradient
 N: Constantin Loizides
 E: loizides@MIT.EDU
 D: PROOF testing and debugging
+
+N: Javier Lopez-Gomez
+E: jalopezg@inf.uc3m.es
+D: Cling support for redefinitions
 
 N: Johan Lundberg
 E: johan.lundberg@cern.ch
@@ -671,7 +713,7 @@ D: many contributions to the Virtual Monte Carlo
 
 N: Alja Mrak-Tadel
 E: Alja.Mrak.Tadel@cern.ch
-D: Several contributions to GUI and GL
+D: Several contributions to GUI, GL and WebEVE
 
 N: Johannes Muelmenstaedt
 E: jmuelmen@socrates.Berkeley.EDU
@@ -680,6 +722,10 @@ D: kerberos5 authentication module
 N: Pasha Murat
 E: murat@cdfsga.fnal.gov
 D: Lorentz vector classes, PDG interface
+
+N: Jan Musinsky
+E: musinsky@gmail.com
+D: Highlight mechanism for histograms an graphs
 
 N: Axel Naumann
 E: Axel.Naumann@cern.ch
@@ -730,6 +776,10 @@ E: opocenska@gmail.com
 D: author of the Event Recorder
 D: author of the sub-merging technology in PROOF
 
+N: Vincenzo Eduardo Padulano
+E: v.e.padulano@gmail.com
+D: Contributions to distributed execution of RDataFrame
+
 N: Juan Palacios
 E: Juan.Palacios@cern.ch
 D: Contribution to symmetric representation of SMatrix classes
@@ -741,6 +791,11 @@ D: editor of the User's Guide
 N: Iulia Pasov
 E: iulia.pasov@gmail.com
 D: prototyping JavaScript graphics with d3.js
+
+N: Alexander Penev
+E: alexander_penev@yahoo.com
+D: Dyld symbol resolution facilities in cling and TCling
+D: runtime c++ modules on osx
 
 N: Marc Paterno
 E: paterno@fnal.gov
@@ -851,33 +906,51 @@ E: schiller@physi.uni-heidelberg.de
 D: contribution on the Cholesly decomposition in SMatrix
 D: contributions in RooFit
 
+N: Stefan Schmitt
+E: sschmitt@mail.desy.de
+D: contribution to TUnfold class
+
 N: Gregory Schott
 E: Gregory.Schott@cern.ch
 D: contributions in RooStats
+
+N: Henry Schreiner
+E: henry.fredrick.schreiner@cern.ch
+D: Build system improvements
 
 N: Jason Seely
 E: seely@mit.edu
 D: contribution to TH1::GetAsymmetry()
 
+N: Oksana Shadura
+E: Oksana.Shadura@cern.ch
+D: rootbench co-author
+D: runtime c++ modules
+D: contributions to cmake
+
 N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu
 D: TGNumberEntry GUI widget
-
-N: Evgenia Smirnova
-E: Evgenia.Smirnova@gsi.de
-D: OpenLDAP interface
-
-N: Stefan Schmitt
-E: sschmitt@mail.desy.de
-D: contribution to TUnfold class
 
 N: Elvin Alin Sindrilaru
 E: elvin.alin.sindrilaru@cern.ch
 D: Asynchronous prefetching of TTree baskets
 
+N: Evgenia Smirnova
+E: Evgenia.Smirnova@gsi.de
+D: OpenLDAP interface
+
 N: Tomasz Sosnicki
 E: tom.sosnicki@gmail.com
 D: contribution to gviz3d/TStructViewer
+
+N: Thibault Souquet
+E: contact@thibaultsouquet.fr
+D: Image viewer for the ROOT Browser (v7)
+D: Breadcrumbs display for the ROOT Browser (v7)
+D: ROOT Browser (v7) drawing options
+D: Improvements in JavaScript ROOT GUI
+D: Improvements in the ROOT website Jekyll theme
 
 N: Marcelo Sousa
 E: marcelo.sousa@cern.ch
@@ -886,6 +959,10 @@ D: Amazon S3 and Google Storage I/O plugins
 N: Peter Speckmayer
 E: Peter.Speckmayer@cern.ch
 D: author of the TMVA package
+
+N: Simon Spies
+E: s.spies@gsi.de
+D: TLeafF16 and TLeafD32
 
 N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
@@ -909,7 +986,12 @@ D: development of class TGraphSmooth + many suggestions
 
 N: Matevz Tadel
 E: Matevz.Tadel@cern.ch
-D: Several contributions to the 3-d graphics and GL interface
+D: Several contributions to the 3-d graphics and GL interface, WebEVE
+
+N: Yuka Takahashi
+E: Yuka.Takahashi@cern.ch
+D: contributions to runtime c++ modules and their integration into CMSSW
+D: contributions to rootcling, cling and cmake
 
 N: Evgueni Tcherniaev
 E: Evgueni.Tcherniaev@cern.ch
@@ -977,8 +1059,10 @@ D: author of the TMVA package
 
 N: Vassil Vassilev
 E: vasil.georgiev.vasilev@cern.ch
+D: clad author
 D: cling co-author
 D: c++ modules and runtime c++ modules co-author, integration in experiments
+D: rootbench co-author
 
 N: Helge Voss
 E: Helge.Voss@cern.ch
@@ -987,6 +1071,10 @@ D: author of the TMVA package
 N: Shaowen Wang
 E: shaowen-wang@uiowa.edu
 D: TOracleResult
+
+N: Stefan Wunsch
+E: stefan.wunsch@cern.ch
+D: TMVA and PyROOT contributions (Keras interface, numpy direct access from ROOT trees,...)
 
 N: Hady Zalek
 E: hady.zalek@gmail.com
@@ -999,7 +1087,3 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Omar Andres Zapata Mesa
 E: Omar.Zapata@cern.ch
 D: ROOT-R, JupyROOT, TMVA
-
-N: Jan Musinsky
-E: musinsky@gmail.com
-D: Highlight mechanism for histograms an graphs

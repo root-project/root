@@ -56,6 +56,7 @@
 // Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 // Test 15 : Divert Tree branches to separate files................ OK
 // Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
+// Test 17 : Test mkdir............................................ OK
 // ******************************************************************
 //*  Linux pcbrun.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
 //******************************************************************
@@ -69,7 +70,7 @@
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -81,10 +82,10 @@
 #include <TProfile.h>
 #include <TKey.h>
 #include <TCanvas.h>
-#include <TGraph.h>
 #include <TRandom.h>
 #include <TPostScript.h>
 #include <TNtuple.h>
+#include <TBranch.h>
 #include <TTreeCache.h>
 #include <TChain.h>
 #include <TCut.h>
@@ -95,6 +96,7 @@
 #include <TApplication.h>
 #include <TClassTable.h>
 #include <Compression.h>
+#include <snprintf.h>
 #include "Event.h"
 
 void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
@@ -115,11 +117,15 @@ void stress13();
 void stress14();
 void stress15();
 void stress16();
+void stress17();
 void cleanup();
 
 
 int main(int argc, char **argv)
 {
+   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
+   TROOT::AddExtraInterpreterArgs({inclRootSys});
+
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
@@ -129,7 +135,7 @@ int main(int argc, char **argv)
    if (argc > 2) style  = atoi(argv[2]);
    Int_t printSubBench = kFALSE;
    if (argc > 3) printSubBench = atoi(argv[3]);
-   Int_t portion = 65535;
+   Int_t portion = 131071;
    if (argc > 4) portion  = atoi(argv[4]);
    stress(nevent, style, printSubBench, portion);
    return 0;
@@ -147,7 +153,7 @@ int gPrintSubBench = 0;
 Double_t ntotin=0, ntotout=0;
 
 void stress(Int_t nevent, Int_t style = 1,
-            Int_t printSubBenchmark = kFALSE, UInt_t portion = 65535)
+            Int_t printSubBenchmark = kFALSE, UInt_t portion = 131071)
 {
    //Main control function invoking all test programs
 
@@ -182,6 +188,7 @@ void stress(Int_t nevent, Int_t style = 1,
    if (portion&8192) stress14();
    if (portion&16384) stress15();
    if (portion&32768) stress16();
+   if (portion&65536) stress17();
    gBenchmark->Stop("stress");
 
    cleanup();
@@ -361,7 +368,11 @@ void stress2()
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
          OK = kFALSE;
 #else
-      Long64_t lastgood = 10032;  // changes in TFormula (v12)
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+      Long64_t lastgood = 9813;
+#else
+      Long64_t lastgood = 10034;  // changes in TFormula (v12)
+#endif
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 2.0 || comp > 2.4)
          OK = kFALSE;
 #endif
@@ -394,8 +405,12 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   constexpr Long64_t lastgood = 51886;
-   constexpr Long64_t tolerance = 100;
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+   constexpr Long64_t lastgood = 52290;
+#else
+   constexpr Long64_t lastgood = 52116;
+#endif
+   constexpr Long64_t tolerance = 150;
 #ifdef R__HAS_DEFAULT_LZ4
       constexpr Long64_t difflastgoodlz4 = 5500;
       if (last < lastgood - tolerance || last > lastgood + difflastgoodlz4 + tolerance || comp < 1.5 || comp > 2.1)
@@ -1591,6 +1606,36 @@ void stress16()
       printf("%-8s nlines in stress_lhcb.ps file = %d\n"," ",nlines);
    }
    if (gPrintSubBench) { printf("Test 16 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Test mkdir returnExistingDirectory outside and within a Root file
+/// Create some directories, ensure they point to the expected places
+
+void stress17()
+{
+   Bprint(17,"Test mkdir");
+
+   // check mkdir functions as expected in TDirectory
+   TDirectory *free_motherdir = new TDirectory("free_motherdir", "free_motherdir");
+   TDirectory *free_daughterdir = free_motherdir->mkdir("free_daughterdir");
+   TDirectory *free_daughter2 = free_motherdir->mkdir("free_daughterdir");
+   TDirectory *free_daughtersame = free_motherdir->mkdir("free_daughterdir", "", true);
+
+   // check mkdir functions as expected inside a file
+   TFile f("stress.root","update");
+   TDirectory *motherdir = f.mkdir("motherdir");
+   TDirectory *daughterdir = motherdir->mkdir("daughterdir");
+   TDirectory *daughtersame = motherdir->mkdir("daughterdir", "", true);
+
+   Bool_t OK = kTRUE;
+   if (daughtersame != daughterdir || free_daughter2 == free_daughterdir || free_daughtersame != free_daughterdir) OK = kFALSE;
+   if (OK) printf("OK\n");
+   else    {
+      printf("FAILED\n");
+      printf("%-8s free_daughterdir=%p, free_daughter2=%p, free_daughtersame=%p, daughterdir=%p, daughtersame=%p \n"," ",free_daughterdir,free_daughter2,free_daughtersame,daughterdir,daughtersame);
+   }
+   if (gPrintSubBench) { printf("Test 17 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 void cleanup()
