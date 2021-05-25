@@ -89,9 +89,9 @@ protected:
 private:
    REveDataCollection *m_collection{nullptr};
 
-   float                 m_layer;
-   bool                  m_haveWindow;
-   bool                  m_modelsChanged;
+   float                 m_layer{0.};
+   bool                  m_haveWindow{false};
+   bool                  m_modelsChanged{false};
 };
 
 } // namespace Experimental
