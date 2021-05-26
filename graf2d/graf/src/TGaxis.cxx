@@ -1059,6 +1059,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 // and the user's coordinates in the pad
 
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
+   Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
    Double_t rwxmin = gPad->GetX1();
    Double_t rwxmax = gPad->GetX2();
    Double_t rwymin = gPad->GetY1();
@@ -2338,7 +2339,7 @@ L200:
       textaxis->SetTextSize (GetTitleSize());
       charheight = GetTitleSize();
       if ((GetTextFont() % 10) > 2) {
-         charheight = charheight/gPad->GetWh();
+         charheight /= ((x1==x0) ? padw : padh);
       }
       if (x1 == x0) {
          if (autotoff) {

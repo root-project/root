@@ -82,7 +82,7 @@ void canvas2()
          hFrame->GetYaxis()->SetLabelOffset(0.02);
          hFrame->GetYaxis()->SetTitleFont(43);
          hFrame->GetYaxis()->SetTitleSize(16);
-         hFrame->GetYaxis()->SetTitleOffset(5);
+         hFrame->GetYaxis()->SetTitleOffset(2);
 
          hFrame->GetYaxis()->CenterTitle();
          hFrame->GetYaxis()->SetNdivisions(505);
@@ -96,7 +96,7 @@ void canvas2()
          hFrame->GetXaxis()->SetLabelOffset(0.02);
          hFrame->GetXaxis()->SetTitleFont(43);
          hFrame->GetXaxis()->SetTitleSize(16);
-         hFrame->GetXaxis()->SetTitleOffset(5);
+         hFrame->GetXaxis()->SetTitleOffset(1);
          hFrame->GetXaxis()->CenterTitle();
          hFrame->GetXaxis()->SetNdivisions(505);
 
