@@ -14,11 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include "RooFitLegacy/RooHashTable.h"
+
 #include "RooFit.h"
 
 #include "TMath.h"
 #include "TCollection.h"
-#include "RooHashTable.h"
 #include "RooLinkedList.h"
 #include "RooAbsArg.h"
 #include "RooSetPair.h"

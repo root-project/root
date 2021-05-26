@@ -113,7 +113,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooGenProdProj.h
     RooGlobalFunc.h
     RooGrid.h
-    RooHashTable.h
     RooHistError.h
     RooHistFunc.h
     RooHist.h
@@ -228,6 +227,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooBinSamplingPdf.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
+    RooFitLegacy/RooHashTable.h
     RooFitLegacy/RooNameSet.h
     RooFitLegacy/RooTreeData.h
   SOURCES
@@ -331,7 +331,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooGenProdProj.cxx
     src/RooGlobalFunc.cxx
     src/RooGrid.cxx
-    src/RooHashTable.cxx
     src/RooHist.cxx
     src/RooHistError.cxx
     src/RooHistFunc.cxx
@@ -441,6 +440,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinSamplingPdf.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RooFitLegacy/RooCategorySharedProperties.cxx
+    src/RooFitLegacy/RooHashTable.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx
     src/RooFitLegacy/RooNameSet.cxx
   DICTIONARY_OPTIONS
