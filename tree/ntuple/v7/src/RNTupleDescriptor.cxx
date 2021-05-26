@@ -914,6 +914,79 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 }
 
 
+namespace {
+
+std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &val, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   void *ptrSize = nullptr;
+   pos += SerializeFrame(ROOT::Experimental::RFieldDescriptor::kFrameVersionCurrent,
+      ROOT::Experimental::RFieldDescriptor::kFrameVersionMin, *where, &ptrSize);
+
+   pos += SerializeUInt64(val.GetId(), *where);
+   pos += SerializeVersion(val.GetFieldVersion(), *where);
+   pos += SerializeVersion(val.GetTypeVersion(), *where);
+   pos += SerializeString(val.GetFieldName(), *where);
+   pos += SerializeString(val.GetFieldDescription(), *where);
+   pos += SerializeString(val.GetTypeName(), *where);
+   pos += SerializeUInt64(val.GetNRepetitions(), *where);
+   pos += SerializeUInt32(static_cast<int>(val.GetStructure()), *where);
+   pos += SerializeUInt64(val.GetParentId(), *where);
+   pos += SerializeUInt32(val.GetLinkIds().size(), *where);
+   for (const auto& l : val.GetLinkIds())
+      pos += SerializeUInt64(l, *where);
+
+   auto size = pos - base;
+   SerializeUInt32(size, ptrSize);
+   return size;
+}
+
+} // anonymous namespace
+
+
+std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buffer) const
+{
+   using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
+
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += RNTupleStreamer::SerializeEnvelopePreamble(*where);
+   // So far we don't make use of feature flags
+   pos += RNTupleStreamer::SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += RNTupleStreamer::SerializeString(fName, *where);
+   pos += RNTupleStreamer::SerializeString(fDescription, *where);
+
+   std::unordered_map<DescriptorId_t, DescriptorId_t> liveId2DiskId;
+   DescriptorId_t diskId = 0;
+
+   auto frame = pos;
+   pos += RNTupleStreamer::SerializeListFramePreamble(fFieldDescriptors.size(), *where);
+   for (const auto &f : fFieldDescriptors) {
+      liveId2DiskId[f.second.GetId()] = diskId;
+      pos += SerializeFieldV1(f.second, *where);
+      diskId++;
+   }
+   pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
+
+   frame = pos;
+   pos += RNTupleStreamer::SerializeListFramePreamble(fColumnDescriptors.size(), *where);
+   pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
+
+   // We don't use alias columns yet
+   frame = pos;
+   pos += RNTupleStreamer::SerializeListFramePreamble(0, *where);
+   pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
+
+   std::uint32_t size = pos - base;
+   pos += RNTupleStreamer::SerializeEnvelopePostscript(base, size, *where);
+   return size;
+}
+
 std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffer) const
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
