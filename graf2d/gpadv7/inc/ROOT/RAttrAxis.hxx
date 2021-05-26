@@ -34,6 +34,7 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<double> fZoomMin{this, "zoommin", 0.};                     ///<! axis zoom min
    RAttrValue<double> fZoomMax{this, "zoommax", 0.};                     ///<! axis zoom max
    RAttrValue<double> fLog{this, "log", 0};                              ///<! log scale, <1 off, 1 - base10, 2 - base 2, 2.71 - exp, 3, 4, ...
+   RAttrValue<double> fSymlog{this, "symlog", 0};                        ///<! symlog scale constant, 0 - off
    RAttrValue<bool> fReverse{this, "reverse", false};                    ///<! reverse scale
    RAttrValue<bool> fTimeDisplay{this, "time", false};                   ///<! time display
    RAttrValue<double> fTimeOffset{this, "time_offset", 0};               ///<! time offset to display
@@ -81,6 +82,18 @@ class RAttrAxis : public RAttrBase {
    bool IsLog10() const { auto l = GetLog(); return (std::fabs(l-1.) < 1e-6) || (std::fabs(l-10.) < 1e-6); }
    bool IsLog2() const { return std::fabs(GetLog() - 2.) < 1e-6; }
    bool IsLn() const { return std::fabs(GetLog() - 2.71828) < 0.1; }
+
+   RAttrAxis &SetSymlog(double const_value = 0.01)
+   {
+      if (const_value <= 0.)
+         fSymlog.Clear();
+      else
+         fSymlog = const_value;
+      return *this;
+   }
+   double GetSymlog() const { return fSymlog; }
+   bool HasSymlog() const { return fSymlog.Has(); }
+   void ClearSymlog() { fSymlog.Clear(); }
 
    RAttrAxis &SetReverse(bool on = true) { fReverse = on; return *this; }
    bool GetReverse() const { return fReverse; }
