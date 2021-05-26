@@ -80,8 +80,9 @@ Double_t RooBifurGauss::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BifurGauss distribution.  
-RooSpan<double> RooBifurGauss::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeBifurGauss(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigmaL->getValues(evalData, normSet), sigmaR->getValues(evalData, normSet));
+void RooBifurGauss::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  RooBatchCompute::dispatch->compute(RooBatchCompute::BifurGauss, output, nEvents, dataMap, {&*x,&*mean,&*sigmaL,&*sigmaR,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
