@@ -47,6 +47,11 @@ int NumericalMinimization(const char * minName = "Minuit2",
    //   Genetic
    ROOT::Math::Minimizer* minimum =
       ROOT::Math::Factory::CreateMinimizer(minName, algoName);
+   if (!minimum) {
+      std::cerr << "Error: cannot create minimizer \"" << minName
+                << "\". Maybe the required library was not built?" << std::endl;
+      return 1;
+   }
 
    // set tolerance , etc...
    minimum->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
