@@ -31,7 +31,6 @@ Use RooAbsCollection derived objects for public use
 
 #include "RooFit.h"
 #include "RooLinkedListIter.h"
-#include "RooHashTable.h"
 #include "RooAbsArg.h"
 #include "RooMsgService.h"
 

@@ -19,6 +19,8 @@
 #include "TObject.h"
 #include "TString.h"
 
+#include <ROOT/RConfig.hxx>
+
 class RooAbsArg ;
 class RooLinkedList ;
 class RooLinkedListElem ;
@@ -67,9 +69,6 @@ protected:
   RooLinkedList** _arr ;   //! Array of linked lists storing elements in each slot
 
   ClassDef(RooHashTable,1) // Hash table
-};
-
-
-
+} R__SUGGEST_ALTERNATIVE("Please use std::unordered_map, which is also a hash table.");
 
 #endif
