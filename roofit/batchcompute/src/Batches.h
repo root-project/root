@@ -13,12 +13,9 @@
 #ifndef ROOFIT_BATCHCOMPUTE_BATCHES_H
 #define ROOFIT_BATCHCOMPUTE_BATCHES_H
 
-#include "RooSpan.h"
 #include "RooBatchCompute.h"
 
 #include <stdint.h>
-#include <vector>
-#include <unordered_map>
 
 #ifndef __CUDACC__
 #define __device__
@@ -44,6 +41,7 @@ public:
    Batch() = default;
    inline Batch(InputArr _array, bool _isVector) : scalar{_array[0]}, array{_array}, isVector{_isVector} {}
 
+   __device__ constexpr bool isItVector() { return isVector; }
    inline void set(double _scalar, InputArr _array, bool _isVector)
    {
       scalar = _scalar;
