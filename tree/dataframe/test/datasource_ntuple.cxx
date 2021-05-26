@@ -56,7 +56,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
 
    EXPECT_STREQ("std::string", tds.GetTypeName("tag").c_str());
    EXPECT_STREQ("float", tds.GetTypeName("energy").c_str());
-   EXPECT_STREQ("ROOT::Experimental::ClusterSize_t::ValueType", tds.GetTypeName("__rdf_sizeof_jets").c_str());
+   EXPECT_STREQ("std::size_t", tds.GetTypeName("__rdf_sizeof_jets").c_str());
 }
 
 
