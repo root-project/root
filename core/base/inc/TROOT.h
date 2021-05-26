@@ -101,7 +101,6 @@ private:
 
    static Int_t    fgDirLevel;            //Indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
-   static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
    TROOT(const TROOT&) = delete;
    TROOT& operator=(const TROOT&) = delete;
@@ -344,7 +343,6 @@ public:
    static void        IndentLevel();
    static void        Initialize();
    static Bool_t      Initialized();
-   static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);

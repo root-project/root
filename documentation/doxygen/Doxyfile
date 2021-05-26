@@ -893,7 +893,6 @@ INPUT                  = . \
                          ../../io/xmlparser/ \
                          ../../main/src/hadd.cxx \
                          ../../math/ \
-                         ../../misc/memstat/ \
                          ../../montecarlo/ \
                          ../../net/alien/ \
                          ../../net/auth/ \

@@ -284,7 +284,6 @@ namespace {
 
 Int_t  TROOT::fgDirLevel = 0;
 Bool_t TROOT::fgRootInit = kFALSE;
-Bool_t TROOT::fgMemCheck = kFALSE;
 
 static void at_exit_of_TROOT() {
    if (ROOT::Internal::gROOTLocal)
@@ -1977,15 +1976,6 @@ void TROOT::InitSystem()
       if (gDebug > 0 && isatty(2))
          fprintf(stderr, "Info in <TROOT::InitSystem>: running with gDebug = %d\n", gDebug);
 
-      if (gEnv->GetValue("Root.MemStat", 0))
-         TStorage::EnableStatistics();
-      int msize = gEnv->GetValue("Root.MemStat.size", -1);
-      int mcnt  = gEnv->GetValue("Root.MemStat.cnt", -1);
-      if (msize != -1 || mcnt != -1)
-         TStorage::EnableStatistics(msize, mcnt);
-
-      fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
-
 #if defined(R__HAS_COCOA)
       // create and delete a dummy TUrl so that TObjectStat table does not contain
       // objects that are deleted after recording is turned-off (in next line),
@@ -2821,14 +2811,6 @@ void TROOT::Initialize() {
 Bool_t TROOT::Initialized()
 {
    return fgRootInit;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if the memory leak checker is on.
-
-Bool_t TROOT::MemCheck()
-{
-   return fgMemCheck;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

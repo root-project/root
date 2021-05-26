@@ -44,32 +44,8 @@ Root.CompressionAlgorithm: 0
 # Show where item is found in the specified path.
 Root.ShowPath:           false
 
-# Activate malloc/new, free/delete calls via the TMemStat class
-# the parameter buffersize is the number of calls to malloc or free that can be stored in one memory buffer.
-# when the buffer is full, the calls to malloc/free pointing to the same location
-# are eliminated and not written to the final Tree. The default value 100000
-# is such that between 50 and 90% of the calls are eliminated depending on the application.
-# the parameter TMemStat.maxcalls is the maximum number of new/delete calls to be monitored
-# 5 million calls is a reasonable number.
-# if your code has been compiled with -fno-omit-frame-pointer you can specify
-# gnubuiltin for Root.TMemStat.system. In this case the backtrace is much faster.
-Root.TMemStat:            0
-Root.TMemStat.buffersize: 100000
-Root.TMemStat.maxcalls:   5000000
-#Root.TMemStat.system:    gnubuiltin
-Root.TMemStat.system:
-
-# Activate memory statistics (size and cnt is used to trap allocation of
-# blocks of a certain size after cnt times).
-Root.MemStat:            0
-Root.MemStat.size:      -1
-Root.MemStat.cnt:       -1
+# Activate TObject statistics.
 Root.ObjectStat:         0
-
-# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe).
-# Currently only works on Linux with gcc.
-Root.MemCheck:           0
-Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
 Root.Debug:              0

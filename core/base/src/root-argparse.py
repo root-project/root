@@ -15,7 +15,6 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('-l', help='Do not show the ROOT banner')
 	parser.add_argument('-a', help='Show the ROOT splash screen')
 	parser.add_argument('-config', help='print ./configure options')
-	parser.add_argument('-memstat', help='run with memory usage monitoring')
 	parser.add_argument('-h','-?', '--help', help='Show summary of options')
 	parser.add_argument('--version', help='Show the ROOT version')
 	parser.add_argument('--notebook', help='Execute ROOT notebook')

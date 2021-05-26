@@ -204,8 +204,6 @@ GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
-BUILDMEMSTAT   := @buildmemstat@
-
 BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
 ALIENCLILIB    := @alienlib@
