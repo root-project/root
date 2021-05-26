@@ -111,9 +111,10 @@ double RooJohnson::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of the Johnson distribution.  
-RooSpan<double> RooJohnson::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeJohnson(this, evalData, _mass->getValues(evalData, normSet), _mu->getValues(evalData, normSet), _lambda->getValues(evalData, normSet), _gamma->getValues(evalData, normSet), _delta->getValues(evalData, normSet), _massThreshold);
+/// Compute multiple values of the Johnson distribution. 
+void RooJohnson::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  RooBatchCompute::dispatch->compute(RooBatchCompute::Johnson, output, nEvents, dataMap, {&*_mass,&*_mu,&*_lambda,&*_gamma,&*_delta,&*_norm},{_massThreshold});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
