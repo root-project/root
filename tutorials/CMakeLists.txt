@@ -121,7 +121,9 @@ else()
     set(roofit_veto roofit/rf104_classfactory.C
                     roofit/rf104_classfactory.py
                     roofit/rf401_importttreethx.C
+                    roofit/rf401_importttreethx.py
                     roofit/rf512_wsfactory_oper.C
+                    roofit/rf512_wsfactory_oper.py
     )
   endif()
 endif()
@@ -193,6 +195,10 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
                  roofit/rf512_wsfactory_oper.C
+                 roofit/rf208_convolution.py
+                 roofit/rf210_angularconv.py
+                 roofit/rf211_paramconv.py
+                 roofit/rf512_wsfactory_oper.py
                  fft/FFT.C
                  fit/fitConvolution.C)
 endif()
