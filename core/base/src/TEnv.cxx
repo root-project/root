@@ -40,7 +40,7 @@ E.g.:
   Unix.Rint.Root.DynamicPath: .:$(ROOTSYS)/lib:~/lib
   myapp.Root.Debug:  FALSE
   TH.Root.Debug: YES
-  *.Root.MemStat: 1
+  *.Root.ObjStat: 1
 ~~~
 `<SystemName>` and `<ProgName>` or `<RootName>` may be the wildcard "*".
 A # in the first column starts comment line.

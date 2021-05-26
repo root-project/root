@@ -234,7 +234,7 @@ public:
 /// TObject constructor. It sets the two data words of TObject to their
 /// initial values. The unique ID is set to 0 and the status word is
 /// set depending if the object is created on the stack or allocated
-/// on the heap. Depending on the ROOT environment variable "Root.MemStat"
+/// on the heap. Depending on the ROOT environment variable "Root.ObjStat"
 /// (see TEnv) the object is added to the global TObjectTable for
 /// bookkeeping.
 

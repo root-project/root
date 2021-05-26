@@ -189,7 +189,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
       // Needs to be protected by global mutex
       R__LOCKGUARD(gGlobalMutex);
 
-      if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+      if (fgReAllocHook && fgHasCustomNewDelete)
          return (*fgReAllocHook)(ovp, size);
    }
 
@@ -225,7 +225,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    {
       R__LOCKGUARD(gGlobalMutex);
 
-      if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+      if (fgReAllocCHook && fgHasCustomNewDelete)
          return (*fgReAllocCHook)(ovp, size, oldsize);
    }
 

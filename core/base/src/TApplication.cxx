@@ -96,7 +96,7 @@ static void CallEndOfProcessCleanups()
 
 TApplication::TApplication() :
    fArgc(0), fArgv(nullptr), fAppImp(nullptr), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
-   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
+   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE),
    fFiles(nullptr), fIdleTimer(nullptr), fSigHandler(nullptr), fExitOnException(kDontExit),
    fAppRemote(nullptr)
 {
@@ -120,7 +120,7 @@ TApplication::TApplication() :
 TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
                            void * /*options*/, Int_t numOptions) :
    fArgc(0), fArgv(nullptr), fAppImp(nullptr), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
-   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
+   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE),
    fFiles(nullptr), fIdleTimer(nullptr), fSigHandler(nullptr), fExitOnException(kDontExit),
    fAppRemote(nullptr)
 {
@@ -198,17 +198,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    // to allow user to interact with TCanvas's under WIN32
    gROOT->SetLineHasBeenProcessed();
 
-   // activate TMemStat
-   if (fUseMemstat || gEnv->GetValue("Root.TMemStat", 0)) {
-      fUseMemstat = kTRUE;
-      Int_t buffersize = gEnv->GetValue("Root.TMemStat.buffersize", 100000);
-      Int_t maxcalls   = gEnv->GetValue("Root.TMemStat.maxcalls", 5000000);
-      const char *ssystem = gEnv->GetValue("Root.TMemStat.system","gnubuiltin");
-      if (maxcalls > 0) {
-         gROOT->ProcessLine(Form("new TMemStat(\"%s\",%d,%d);",ssystem,buffersize,maxcalls));
-      }
-   }
-
    //Needs to be done last
    gApplication = this;
    gROOT->SetApplication(this);
@@ -226,12 +215,6 @@ TApplication::~TApplication()
 
    if (fgApplications)
       fgApplications->Remove(this);
-
-   //close TMemStat
-   if (fUseMemstat) {
-      ProcessLine("TMemStat::Close()");
-      fUseMemstat = kFALSE;
-   }
 
    // Reduce the risk of the files or sockets being closed after the
    // end of 'main' (or more exactly before the library start being
@@ -385,9 +368,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-config")) {
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
-      } else if (!strcmp(argv[i], "-memstat")) {
-         fUseMemstat = kTRUE;
-         argv[i] = null;
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
          argv[i] = null;
@@ -1689,12 +1669,6 @@ void TApplication::Terminate(Int_t status)
    if (fReturnFromRun)
       gSystem->ExitLoop();
    else {
-      //close TMemStat
-      if (fUseMemstat) {
-         ProcessLine("TMemStat::Close()");
-         fUseMemstat = kFALSE;
-      }
-
       gSystem->Exit(status);
    }
 }
