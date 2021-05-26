@@ -277,7 +277,7 @@ def getLinesFromDict(marker, dictFileName):
          recording = True
          continue
 
-      if recording and "nullptr" == line[0]: break
+      if recording and "nullptr" == line[0:7]: break
 
       if recording:
          selectedLines.append(line[:-1])
