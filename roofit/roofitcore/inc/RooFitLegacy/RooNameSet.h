@@ -19,6 +19,8 @@
 #include "TObject.h"
 #include "RooPrintable.h"
 
+#include <ROOT/RConfig.hxx>
+
 class RooArgSet;
 
 class RooNameSet : public TObject, public RooPrintable {
@@ -59,6 +61,6 @@ protected:
   static void strdup(Int_t& dstlen, char* &dstbuf, const char* str);
 
   ClassDef(RooNameSet,1) // A sterile version of RooArgSet, containing only the names of the contained RooAbsArgs
-};
+} R__SUGGEST_ALTERNATIVE("Please use RooHelpers::getColonSeparatedNameString() and RooHelpers::selectFromArgSet().");
 
 #endif

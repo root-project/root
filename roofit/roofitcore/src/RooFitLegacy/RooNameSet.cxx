@@ -17,7 +17,7 @@
 /**
 \file RooNameSet.cxx
 \class RooNameSet
-\ingroup Roofitcore
+\ingroup Roofitlegacy
 
 RooNameSet is a utility class that stores the names the objects
 in a RooArget. This allows to preserve the contents of a RooArgSet
@@ -26,15 +26,16 @@ the RooArgSet. A new RooArgSet can be created from a RooNameSet
 by offering it a list of new RooAbsArg objects. 
 **/
 
-#include <cstring>
+#include "RooFitLegacy/RooNameSet.h"
 
 #include "RooFit.h"
 #include "Riostream.h"
 
 #include "TClass.h"
-#include "RooNameSet.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
+
+#include <cstring>
 
 ClassImp(RooNameSet);
 
