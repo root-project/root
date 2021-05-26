@@ -1416,7 +1416,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    /** @summary Reset hist draw options */
    THistDrawOptions.prototype.reset = function() {
       JSROOT.extend(this,
-            { Axis: 0, RevX: false, RevY: false, Bar: false, BarStyle: 0, Curve: false,
+            { Axis: 0, RevX: false, RevY: false, SymlogX: 0, SymlogY: 0,
+              Bar: false, BarStyle: 0, Curve: false,
               Hist: true, Line: false, Fill: false,
               Error: false, ErrorKind: -1, errorX: JSROOT.gStyle.fErrorX,
               Mark: false, Same: false, Scat: false, ScatCoef: 1., Func: true,
@@ -1474,6 +1475,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (d.check('NOTOOLTIP') && painter) painter.setTooltipAllowed(false);
       if (d.check('TOOLTIP') && painter) painter.setTooltipAllowed(true);
+
+      if (d.check("SYMLOGX", true)) this.SymlogX = d.partAsInt(0, 3);
+      if (d.check("SYMLOGY", true)) this.SymlogY = d.partAsInt(0, 3);
 
       let lx = false, ly = false;
       if (d.check('LOGXY')) lx = ly = true;
@@ -2362,6 +2366,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                        swap_xy: (this.options.BarStyle >= 20),
                        reverse_x: this.options.RevX,
                        reverse_y: this.options.RevY,
+                       symlog_x: this.options.SymlogX,
+                       symlog_y: this.options.SymlogY,
                        Proj: this.options.Proj,
                        extra_y_space: this.options.Text && (this.options.BarStyle > 0) });
          delete this.check_pad_range;
