@@ -93,7 +93,7 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 ## 2D Graphics Libraries
 
 - Implement the option `X+` and `Y+` for reverse axis on TGraph.
-- Offsets for axis titles with absolute-sized fonts (size%10 == 3) are now absolute too (i.e. no longer relative to pad size).
+- Offsets for axis titles with absolute-sized fonts (size%10 == 3) are now relative only to the font size (i.e. no longer relative to pad dimensions).
 
 ## 3D Graphics Libraries
 
