@@ -2386,7 +2386,8 @@ public:
    ///   return the value of the partial result of this action for the given 'slot'. Different threads might call this
    ///   method concurrently, but will always pass different 'slot' numbers.
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
-   ///   Result_t). The RResultPtr returned by Book will point to this object.
+   ///   Result_t). The RResultPtr returned by Book will point to this object. Note that this method can be called
+   ///   before Initialize(), because the RResultPtr is constructed before the event loop is started.
    ///
    /// In case this is called without specifying column types, jitting is used,
    /// and the Helper class needs to be known to the interpreter.
