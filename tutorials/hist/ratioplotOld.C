@@ -94,7 +94,7 @@ void ratioplotOld( ) {
    // X axis ratio plot settings
    h3->GetXaxis()->SetTitleSize(20);
    h3->GetXaxis()->SetTitleFont(43);
-   h3->GetXaxis()->SetTitleOffset(4.);
+   h3->GetXaxis()->SetTitleOffset(1);
    h3->GetXaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
    h3->GetXaxis()->SetLabelSize(15);
 }
