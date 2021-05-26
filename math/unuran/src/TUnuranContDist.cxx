@@ -25,7 +25,7 @@ ClassImp(TUnuranContDist);
 TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * deriv, bool isLogPdf, bool copyFunc  ) :
    fPdf(&pdf),
    fDPdf(deriv),
-   fCdf(0),
+   fCdf(nullptr),
    fXmin(1.),
    fXmax(-1.),
    fMode(0),
@@ -40,15 +40,15 @@ TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const RO
    // manage the functions and clone them if flag copyFunc is true
    if (fOwnFunc) {
       fPdf = fPdf->Clone();
-      if (fDPdf) fDPdf->Clone();
+      if (fDPdf) fDPdf = fDPdf->Clone();
    }
 }
 
 
 TUnuranContDist::TUnuranContDist (TF1 * pdf, TF1 * deriv, bool isLogPdf  ) :
-   fPdf(  (pdf) ? new ROOT::Math::WrappedTF1 ( *pdf) : 0 ),
-   fDPdf( (deriv) ?  new ROOT::Math::WrappedTF1 ( *deriv) : 0 ),
-   fCdf(0),
+   fPdf(  (pdf) ? new ROOT::Math::WrappedTF1 ( *pdf) : nullptr ),
+   fDPdf( (deriv) ?  new ROOT::Math::WrappedTF1 ( *deriv) : nullptr ),
+   fCdf(nullptr),
    fXmin(1.),
    fXmax(-1.),
    fMode(0),
@@ -66,9 +66,9 @@ TUnuranContDist::TUnuranContDist (TF1 * pdf, TF1 * deriv, bool isLogPdf  ) :
 
 TUnuranContDist::TUnuranContDist(const TUnuranContDist & rhs) :
    TUnuranBaseDist(),
-   fPdf(0),
-   fDPdf(0),
-   fCdf(0)
+   fPdf(nullptr),
+   fDPdf(nullptr),
+   fCdf(nullptr)
 {
    // Implementation of copy constructor
    operator=(rhs);
@@ -96,9 +96,9 @@ TUnuranContDist & TUnuranContDist::operator = (const TUnuranContDist &rhs)
       if (fPdf) delete fPdf;
       if (fDPdf) delete fDPdf;
       if (fCdf) delete fCdf;
-      fPdf  = (rhs.fPdf)  ? rhs.fPdf->Clone()  : 0;
-      fDPdf = (rhs.fDPdf) ? rhs.fDPdf->Clone() : 0;
-      fCdf  = (rhs.fCdf)  ? rhs.fCdf->Clone()  : 0;
+      fPdf  = (rhs.fPdf)  ? rhs.fPdf->Clone()  : nullptr;
+      fDPdf = (rhs.fDPdf) ? rhs.fDPdf->Clone() : nullptr;
+      fCdf  = (rhs.fCdf)  ? rhs.fCdf->Clone()  : nullptr;
    }
 
    return *this;
@@ -123,29 +123,25 @@ void TUnuranContDist::SetCdf(TF1 *  cdf) {
    // set cumulative distribution function from a TF1
    if (!fOwnFunc) {
       // need to manage all functions now
-      assert (fPdf != 0);
-      fPdf = fPdf->Clone();
+      if (fPdf) fPdf = fPdf->Clone();
       if (fDPdf) fDPdf->Clone();
    }
    else
-      if (fOwnFunc && fCdf) delete fCdf;
+      if (fCdf) delete fCdf;
 
-   fCdf = (cdf) ? new ROOT::Math::WrappedTF1 ( *cdf) : 0;
+   fCdf = (cdf) ? new ROOT::Math::WrappedTF1 ( *cdf) : nullptr;
    fOwnFunc = true;
 }
 
 double TUnuranContDist::Pdf ( double x) const {
-   // evaluate the pdf of the distribution
-   assert(fPdf != 0);
-   //fX[0] = x;
-   return (*fPdf)(x);
+   // evaluate the pdf of the distribution. Return NaN if pdf is not available
+   return (fPdf) ? (*fPdf)(x) : TMath::QuietNaN();
 }
 
 double TUnuranContDist::DPdf( double x) const {
    // evaluate the derivative of the pdf
    // if derivative function is not given is evaluated numerically
-   if (fDPdf != 0) {
-      //fX[0] = x;
+   if (fDPdf) {
       return (*fDPdf)(x);
    }
    // do numerical derivation using numerical derivation
@@ -158,8 +154,7 @@ double TUnuranContDist::DPdf( double x) const {
 
 double TUnuranContDist::Cdf(double x) const {
    // evaluate the integral (cdf)  on the domain
-   if (fCdf != 0) {
-     // fX[0] = x;
+   if (fCdf) {
       return (*fCdf)(x);
    }
    // do numerical integration
