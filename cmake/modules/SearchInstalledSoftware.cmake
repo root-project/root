@@ -1240,8 +1240,10 @@ if(imt AND NOT builtin_tbb)
     endif()
   endif()
 
-  # Check that the found TBB does not use captured exceptions.
-  if(TBB_FOUND)
+  # Check that the found TBB does not use captured exceptions. If the header
+  # <tbb/tbb_config.h> does not exist, assume that we have oneTBB newer than
+  # version 2021, which does not have captured exceptions anyway.
+  if(TBB_FOUND AND EXISTS "${TBB_INCLUDE_DIRS}/tbb/tbb_config.h")
     set(CMAKE_REQUIRED_INCLUDES "${TBB_INCLUDE_DIRS}")
     check_cxx_source_compiles("
 #include <tbb/tbb_config.h>
