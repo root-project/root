@@ -390,7 +390,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.kind = "normal";
       this.vertical = vertical;
       this.log = false;
-      let _log = this.v7EvalAttr("log", 0);
+      let _log = this.v7EvalAttr("log", 0),
+          _symlog = this.v7EvalAttr("symlog", 0);
       this.reverse = opts.reverse || false;
 
       if (this.v7EvalAttr("time")) {
@@ -412,6 +413,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (this.kind == 'time') {
          this.func = d3.scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
+      } else if (_symlog && (_symlog > 0)) {
+         this.symlog = _symlog;
+         this.func = d3.scaleSymlog().constant(_symlog).domain([smin,smax]);
       } else if (_log) {
          if (smax <= 0) smax = 1;
          if ((smin <= 0) || (smin >= smax))
@@ -1353,7 +1357,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (arg === 'toggle') arg = this.log ? 0 : 10;
 
       arg = parseFloat(arg);
-      if (Number.isFinite(arg)) this.changeAxisAttr(2, "log", arg);
+      if (Number.isFinite(arg)) this.changeAxisAttr(2, "log", arg, "symlog", 0);
    }
 
    /** @summary Provide context menu for axis */
@@ -1362,10 +1366,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (kind) menu.add("Unzoom", () => this.getFramePainter().unzoom(kind));
 
       menu.add("sub:Log scale", () => this.changeAxisLog('toggle'));
-      menu.addchk(!this.log, "linear", 0, arg => this.changeAxisLog(arg));
-      menu.addchk(this.log && (this.logbase==10), "log10", () => this.changeAxisLog(10));
-      menu.addchk(this.log && (this.logbase==2), "log2", () => this.changeAxisLog(2));
-      menu.addchk(this.log && Math.abs(this.logbase - Math.exp(1)) < 0.1, "ln", () => this.changeAxisLog(Math.exp(1)));
+      menu.addchk(!this.log && !this.symlog, "linear", 0, arg => this.changeAxisLog(arg));
+      menu.addchk(this.log && !this.symlog && (this.logbase==10), "log10", () => this.changeAxisLog(10));
+      menu.addchk(this.log && !this.symlog && (this.logbase==2), "log2", () => this.changeAxisLog(2));
+      menu.addchk(this.log && !this.symlog && Math.abs(this.logbase - Math.exp(1)) < 0.1, "ln", () => this.changeAxisLog(Math.exp(1)));
+      menu.addchk(!this.log && this.symlog, "symlog", 0, () => {
+         menu.input("set symlog constant", this.symlog || 10, "float").then(v => this.changeAxisAttr(2,"symlog", v));
+      });
       menu.add("endsub:");
 
       menu.add("sub:Ticks");
@@ -3410,7 +3417,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // if canvas size not specified in batch mode, temporary use 900x700 size
       // if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
 
-      if (this.iscan && snap.fTitle && !this.embed_canvas && (typeof document !== "undefined"))
+      if (this.iscan && this._websocket && snap.fTitle && !this.embed_canvas && (typeof document !== "undefined"))
          document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
