@@ -16,6 +16,7 @@ The following people have contributed to this new version:
  Josh Bendavid, CERN/CMS,\
  Jakob Blomer, CERN/SFT,\
  Rene Brun, CERN/SFT,\
+ Will Buttinger, STFC/ATLAS,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
@@ -92,7 +93,7 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 ## 2D Graphics Libraries
 
 - Implement the option `X+` and `Y+` for reverse axis on TGraph.
-
+- Offsets for axis titles with absolute-sized fonts (size%10 == 3) are now absolute too (i.e. no longer relative to pad size).
 
 ## 3D Graphics Libraries
 

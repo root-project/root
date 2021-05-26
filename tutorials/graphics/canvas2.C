@@ -82,7 +82,7 @@ void canvas2()
          hFrame->GetYaxis()->SetLabelOffset(0.02);
          hFrame->GetYaxis()->SetTitleFont(43);
          hFrame->GetYaxis()->SetTitleSize(16);
-         hFrame->GetYaxis()->SetTitleOffset(1);
+         hFrame->GetYaxis()->SetTitleOffset(2);
 
          hFrame->GetYaxis()->CenterTitle();
          hFrame->GetYaxis()->SetNdivisions(505);
