@@ -1065,20 +1065,23 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 
 //*-*---------------------Case of Key---------------------
 //                        ===========
-   void *idcur = nullptr;
-   TKey *key;
-   TIter nextkey(GetListOfKeys());
-   while ((key = (TKey *) nextkey())) {
-      if (strcmp(namobj,key->GetName()) == 0) {
-         if ((cycle == 9999) || (cycle == key->GetCycle())) {
+   auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
+   if (!listOfKeys) {
+      Error("GetObjectChecked", "Unexpected type of TDirectoryFile::fKeys!");
+      return nullptr;
+   }
+
+   if (const TList *keyList = listOfKeys->GetListForObject(namobj)) {
+      for (auto key: TRangeDynCast<TKey>(*keyList)) {
+         if (key && !strcmp(key->GetName(), namobj)
+             && (cycle == 9999 || cycle == key->GetCycle())) {
             TDirectory::TContext ctxt(this);
-            idcur = key->ReadObjectAny(expectedClass);
-            break;
+            return key->ReadObjectAny(expectedClass);
          }
       }
    }
 
-   return idcur;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
