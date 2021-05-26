@@ -162,22 +162,10 @@ Show where item is found in the specified path:
 Root.ShowPath:              false
 ```
 
-Activate memory statistics (`size` and `cnt` are used to trap allocation
-of blocks of a certain `size` after `cnt` attempts).
+Activate memory statistics.
 
 ``` {.cpp}
-Root.MemStat:               0
-Root.MemStat.size:         -1
-Root.MemStat.cnt:          -1
 Root.ObjectStat:            0
-```
-
-Activate memory leak checker (use in conjunction with
-`$ROOTSYS/bin/memprobe`). Currently only works on Linux with gcc.
-
-``` {.cpp}
-Root.MemCheck:              0
-Root.MemCheckFile:          memcheck.out
 ```
 
 Global debug mode. When `>0` turns on progressively more details
