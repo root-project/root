@@ -13,7 +13,7 @@
 #include <ROOT/RWebBrowserImp.hxx>
 
 #include "TROOT.h"
-
+#include "TSeqCollection.h" // needed in gROOT->GetListOfFiles()->FindObject
 
 using namespace ROOT::Experimental;
 
