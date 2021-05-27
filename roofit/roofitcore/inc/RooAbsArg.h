@@ -301,7 +301,7 @@ public:
     return getObservables(&data) ;
   }
   RooArgSet* getObservables(const RooArgSet* depList, bool valueOnly=true) const ;
-  bool getObservables(const RooArgSet* depList, RooArgSet& outputSet, bool valueOnly=true) const;
+  bool getObservables(const RooAbsCollection* depList, RooArgSet& outputSet, bool valueOnly=true) const;
   Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;
