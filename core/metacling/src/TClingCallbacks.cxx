@@ -215,7 +215,7 @@ private:
 TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : InterpreterCallbacks(interp)
 {
    if (hasCodeGen) {
-      Transaction* T = 0;
+      Transaction* T = nullptr;
       m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
       fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
 
@@ -586,7 +586,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 
       // Use the Normalized name for the autoload
       std::string Name;
-      const ROOT::TMetaUtils::TNormalizedCtxt* tNormCtxt = NULL;
+      const ROOT::TMetaUtils::TNormalizedCtxt* tNormCtxt = nullptr;
       TCling__GetNormalizedContext(tNormCtxt);
       ROOT::TMetaUtils::GetNormalizedName(Name,
                                           C.getTypeDeclType(RD),
@@ -775,7 +775,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 
          VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(),
                               SourceLocation(), Name.getAsIdentifierInfo(), QT,
-                              /*TypeSourceInfo*/0, SC_None);
+                              /*TypeSourceInfo*/nullptr, SC_None);
          // Build an initializer
          Expr* Init
            = utils::Synthesize::CStyleCastPtrExpr(&SemaR, QT, (uint64_t)obj);
@@ -846,7 +846,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    }
 
    VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
-                                     /*TypeSourceInfo*/0, SC_None);
+                                     /*TypeSourceInfo*/nullptr, SC_None);
 
    if (!Result) {
       // We cannot handle the situation. Give up
@@ -983,7 +983,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
                                      C.getAutoType(QualType(),
                                                    clang::AutoTypeKeyword::Auto,
                                                    /*IsDependent*/false),
-                                     /*TypeSourceInfo*/0, SC_None);
+                                     /*TypeSourceInfo*/nullptr, SC_None);
 
    if (!Result) {
       ROOT::TMetaUtils::Error("TClingCallbacks::tryInjectImplicitAutoKeyword",
