@@ -122,7 +122,9 @@ Bool_t TPython::Initialize()
 #endif
       Py_Initialize();
 #if PY_VERSION_HEX >= 0x03020000
+#if PY_VERSION_HEX < 0x03090000
       PyEval_InitThreads();
+#endif
 #endif
 
       // try again to see if the interpreter is initialized
