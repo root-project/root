@@ -59,6 +59,7 @@ public:
    std::function<bool(void *)> fBoolFoo;
    std::function<std::string(void *)> fStringFoo;
 
+
 public:
    REveDataColumn(const std::string& n = "REveDataColumn", const std::string& t = "");
    virtual ~REveDataColumn() {}
@@ -69,6 +70,7 @@ public:
    void SetPrecision(Int_t prec);
 
    std::string EvalExpr(void *iptr) const;
+   bool hasValidExpression() const;
 };
 
 
