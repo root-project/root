@@ -168,7 +168,7 @@ private:
 };
 
 /**
- * \class TBufferMerger TBufferMerger.hxx
+ * \class TBufferMergerFile TBufferMerger.hxx
  * \ingroup IO
  *
  * A TBufferMergerFile is similar to a TMemFile, but when data

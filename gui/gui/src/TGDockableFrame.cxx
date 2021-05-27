@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \class  A TGDockableFrame
+/** \class TGDockableFrame
     \ingroup guiwidgets
 
 A frame with handles that allow it to be

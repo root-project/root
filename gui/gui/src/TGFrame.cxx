@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \class The TGFrame
+/** \class TGFrame
     \ingroup guiwidgets
 
 A subclasses of TGWindow, and is used as base

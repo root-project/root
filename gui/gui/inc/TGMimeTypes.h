@@ -19,6 +19,12 @@
 class TOrdCollection;
 class TRegexp;
 
+/** \class TGMime
+    \ingroup guiwidgets
+
+TGMime is internally used by TGMimeTypes.
+
+*/
 
 class TGMime : public TObject {
 

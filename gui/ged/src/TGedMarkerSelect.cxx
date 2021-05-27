@@ -11,11 +11,8 @@
 
 
 
-/** \class TGedMarkerSelect, TGedMarkerPopup
+/** \class TGedMarkerSelect
     \ingroup ged
-
-The TGedMarkerPopup is a popup containing buttons to
-select marker style.
 
 The TGedMarkerSelect widget is a button showing selected marker
 and a little down arrow. When clicked on the arrow the
@@ -26,6 +23,14 @@ kC_MARKERSEL, kMAR_SELCHANGED, widget id, style.
 
 and the signal:
 MarkerSelected(Style_t marker)
+
+*/
+
+/** \class TGedMarkerPopup
+    \ingroup ged
+
+The TGedMarkerPopup is a popup containing buttons to
+select marker style.
 
 */
 

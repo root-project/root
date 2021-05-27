@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \class TGFont and TGFontPool
+/** \class TGFont
     \ingroup guiwidgets
 
 Encapsulate fonts used in the GUI system.
@@ -30,13 +30,13 @@ Encapsulate fonts used in the GUI system.
 \class TGFontPool
 \ingroup guiwidgets
 
-provides a pool of fonts.
+Provides a pool of fonts.
 
 
 \class TGTextLayout
 \ingroup guiwidgets
 
-is used to keep track of string  measurement
+Is used to keep track of string  measurement
 information when  using the text layout facilities.
 It can be displayed with respect to any origin.
 

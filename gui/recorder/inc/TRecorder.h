@@ -341,17 +341,18 @@ public:
    ClassDef(TRecorder,2) // Class provides direct recorder/replayer interface for a user.
 };
 
-/** \class TRecorderState                                                      //
+/** \class TRecorderState
     \ingroup guirecorder
-//  Abstract class that defines interface for a state of recorder.      //
-//  Inherited classes are:                                              //
-//  - TRecorderInactive                                                 //
-//  - TRecorderRecording                                                //
-//  - TRecorderReplaying                                                //
-//  - TRecorderPaused                                                   //
-//                                                                      //
-//  See TRecorder for more information about creating, using,           //
-//  changing and deleting states.                                       //
+
+Abstract class that defines interface for a state of recorder.
+Inherited classes are:
+  - TRecorderInactive
+  - TRecorderRecording
+  - TRecorderReplaying
+  - TRecorderPaused
+
+See TRecorder for more information about creating, using,
+changing and deleting states.
 
 */
 
@@ -417,7 +418,7 @@ private:
    TTree      *fCmdTree;   // TTree with recorded commandline events
    TTree      *fExtraTree; // TTree with recorded extra events (PaveLabels and Texts)
 
-   ULong64_t       fWin;            // Window ID being currenty mapped
+   ULong64_t       fWin;            // Window ID being currently mapped
    TRecGuiEvent   *fGuiEvent;       // GUI event being currently replayed
    TRecCmdEvent   *fCmdEvent;       // Commandline event being currently replayed
    TRecExtraEvent *fExtraEvent;     // Extra event being currently replayed
@@ -440,7 +441,7 @@ private:
 
    Bool_t      fWaitingForWindow;   // Signalizes that we wait for a window to be registered in order
                                     // to replay the next event fNextEvent.
-                                    // Registraion of windows can last different time when recording and replaying.
+                                    // Registration of windows can last different time when recording and replaying.
                                     // If there is an event ready to be replayed but the corresponding windows has not been yet
                                     // registered, we wait (postopone fNextEvent) until it is registered.
 
@@ -517,7 +518,7 @@ private:
                                           // It is increased every time when a new window is registered
 
    Int_t               fFilteredIdsCount; // Only when GUI for recorder is used: Count of windows in GUI recorder
-   Window_t           *fFilteredIds;      // Only when GUI for recorer is used: IDs of windows that creates that GUI.
+   Window_t           *fFilteredIds;      // Only when GUI for recorder is used: IDs of windows that creates that GUI.
                                           // Events for GUI recorder are not recorded.
    Bool_t              fFilterEventPave;  // Special flag to filter events during the pave recording
 

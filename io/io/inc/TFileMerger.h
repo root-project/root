@@ -41,7 +41,7 @@ protected:
    TString        fOutputFilename;            ///< The name of the outputfile for merging
    Bool_t         fFastMethod{kTRUE};         ///< True if using Fast merging algorithm (default)
    Bool_t         fNoTrees{kFALSE};           ///< True if Trees should not be merged (default is kFALSE)
-   Bool_t         fExplicitCompLevel{kFALSE}; ///< True if the user explicitly requested a compressio level change (default kFALSE)
+   Bool_t         fExplicitCompLevel{kFALSE}; ///< True if the user explicitly requested a compression level change (default kFALSE)
    Bool_t         fCompressionChange{kFALSE}; ///< True if the output and input have different compression level (default kFALSE)
    Int_t          fPrintLevel{0};             ///< How much information to print out at run time
    TString        fMergeOptions;              ///< Options (in string format) to be passed down to the Merge functions
@@ -53,7 +53,7 @@ protected:
    Bool_t         fHistoOneGo;                ///< Merger histos in one go (default is kTRUE)
    TString        fObjectNames;               ///< List of object names to be either merged exclusively or skipped
    TList          fMergeList;                 ///< list of TObjString containing the name of the files need to be merged
-   TList          fExcessFiles;               ///<! List of TObjString containing the name of the files not yet added to fFileList due to user or system limitiation on the max number of files opened.
+   TList          fExcessFiles;               ///<! List of TObjString containing the name of the files not yet added to fFileList due to user or system limitation on the max number of files opened.
 
    Bool_t         OpenExcessFiles();
    virtual Bool_t AddFile(TFile *source, Bool_t own, Bool_t cpProgress);
@@ -67,8 +67,8 @@ protected:
 public:
    /// Type of the partial merge
    enum EPartialMergeType {
-      kRegular      = 0,             ///< Normal merge, overwritting the output file.
-      kIncremental  = BIT(1),        ///< Merge the input file with the content of the output file (if already exising).
+      kRegular      = 0,             ///< Normal merge, overwriting the output file.
+      kIncremental  = BIT(1),        ///< Merge the input file with the content of the output file (if already existing).
       kResetable    = BIT(2),        ///< Only the objects with a MergeAfterReset member function.
       kNonResetable = BIT(3),        ///< Only the objects without a MergeAfterReset member function.
       kDelayWrite   = BIT(4),        ///< Delay the TFile write (to reduce the number of write when reusing the file)

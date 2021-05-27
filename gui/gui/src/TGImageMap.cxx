@@ -10,8 +10,10 @@
  *************************************************************************/
 
 
-/** \class TGImageMap (with TGRegion and TGRegionWithId help classes)
+/** \class TGImageMap
     \ingroup guiwidgets
+
+(with TGRegion and TGRegionWithId help classes)
 
 A TGImageMap provides the functionality like a clickable image in
 a web browser with sensitive regions (MAP HTML tag).
