@@ -43,7 +43,7 @@ public:
       AssignDrawable(drawable, name);
    }
 
-   RAttrValue(RAttrBase *parent, const std::string &name, const T &dflt = T())
+   RAttrValue(const std::string &name, RAttrBase *parent, const T &dflt = T())
    {
       fDefaults.AddValue("", dflt);
       AssignParent(parent, name);

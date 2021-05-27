@@ -20,19 +20,17 @@ namespace Experimental {
 /** \class RLine
 \ingroup GrafROOT7
 \brief A simple line.
-\author Olivier Couet <Olivier.Couet@cern.ch>
-\author Sergey Linev <S.Linev@gsi.de>
+\authors Olivier Couet <Olivier.Couet@cern.ch>, Sergey Linev <S.Linev@gsi.de>
 \date 2017-10-16
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RLine : public RDrawable, public RAttrOnFrame {
+class RLine : public RDrawable, public RAttrOnFrame, public RAttrLine {
 
-   RPadPos fP1, fP2;                  ///< line begin/end
-   RAttrLine fAttrLine{this, "line"}; ///<! line attributes
+   RPadPos fP1, fP2;                    ///< line begin/end
 
 public:
-   RLine() : RDrawable("line"), RAttrOnFrame(this) {}
+   RLine() : RDrawable("line"), RAttrOnFrame(this), RAttrLine(this) {}
 
    RLine(const RPadPos &p1, const RPadPos &p2) : RLine()
    {
@@ -54,14 +52,6 @@ public:
 
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
-
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RLine &SetAttrLine(const RAttrLine &attr)
-   {
-      fAttrLine = attr;
-      return *this;
-   }
-   RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 } // namespace Experimental

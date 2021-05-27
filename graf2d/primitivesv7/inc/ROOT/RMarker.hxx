@@ -27,13 +27,12 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RMarker : public RDrawable, public RAttrOnFrame {
+class RMarker : public RDrawable, public RAttrOnFrame, public RAttrMarker {
 
    RPadPos fP;                              ///< position
-   RAttrMarker fMarkerAttr{this, "marker"}; ///<! marker attributes
 
 public:
-   RMarker() : RDrawable("marker"), RAttrOnFrame(this) {}
+   RMarker() : RDrawable("marker"), RAttrOnFrame(this), RAttrMarker(this) {}
 
    RMarker(const RPadPos &p) : RMarker() { fP = p; }
 
@@ -44,13 +43,6 @@ public:
    }
    const RPadPos &GetP() const { return fP; }
 
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RMarker &SetAttrMarker(const RAttrMarker &attr)
-   {
-      fMarkerAttr = attr;
-      return *this;
-   }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
 };
 
 } // namespace Experimental

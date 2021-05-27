@@ -28,14 +28,13 @@ namespace Experimental {
 welcome!
 */
 
-class RText : public RDrawable, public RAttrOnFrame {
+class RText : public RDrawable, public RAttrOnFrame, public RAttrText {
 
    std::string fText;                 ///< text to display
    RPadPos fPos;                      ///< position
-   RAttrText fAttrText{this, "text"}; ///<! text attributes
 
 public:
-   RText() : RDrawable("text"), RAttrOnFrame(this) {}
+   RText() : RDrawable("text"), RAttrOnFrame(this), RAttrText(this) {}
 
    RText(const std::string &txt) : RText() { fText = txt; }
 
@@ -58,14 +57,6 @@ public:
       return *this;
    }
    const RPadPos &GetPos() const { return fPos; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RText &SetAttrText(const RAttrText &attr)
-   {
-      fAttrText = attr;
-      return *this;
-   }
-   RAttrText &AttrText() { return fAttrText; }
 };
 
 } // namespace Experimental

@@ -26,30 +26,30 @@ namespace Experimental {
 
 class RAttrMargins : public RAttrBase {
 
-   RAttrValue<RPadLength>   fLeft{this, "left", 0._normal};
-   RAttrValue<RPadLength>   fRight{this, "right", 0._normal};
-   RAttrValue<RPadLength>   fTop{this, "top", 0._normal};
-   RAttrValue<RPadLength>   fBottom{this, "bottom", 0._normal};
-   RAttrValue<RPadLength>   fAll{this, "all", 0._normal};
+   RAttrValue<RPadLength>   fMarginLeft{"left", this, 0._normal};
+   RAttrValue<RPadLength>   fMarginRight{"right", this, 0._normal};
+   RAttrValue<RPadLength>   fMarginTop{"top", this, 0._normal};
+   RAttrValue<RPadLength>   fMarginBottom{"bottom", this, 0._normal};
+   RAttrValue<RPadLength>   fMarginAll{"all", this, 0._normal};
 
    R__ATTR_CLASS(RAttrMargins, "margin");
 
 public:
 
-   RAttrMargins &SetLeft(const RPadLength &len) { fLeft = len; return *this; }
-   RPadLength GetLeft() const { return fLeft; }
+   RAttrMargins &MarginSetLeft(const RPadLength &len) { fMarginLeft = len; return *this; }
+   RPadLength GetMarginLeft() const { return fMarginLeft; }
 
-   RAttrMargins &SetRight(const RPadLength &len) { fRight = len; return *this; }
-   RPadLength GetRight() const { return fRight; }
+   RAttrMargins &SetMarginRight(const RPadLength &len) { fMarginRight = len; return *this; }
+   RPadLength GetMarginRight() const { return fMarginRight; }
 
-   RAttrMargins &SetTop(const RPadLength &len) { fTop = len; return *this; }
-   RPadLength GetTop() const { return fTop; }
+   RAttrMargins &SetMarginTop(const RPadLength &len) { fMarginTop = len; return *this; }
+   RPadLength GetMarginTop() const { return fMarginTop; }
 
-   RAttrMargins &SetBottom(const RPadLength &len) { fBottom = len; return *this; }
-   RPadLength GetBottom() const { return fBottom; }
+   RAttrMargins &SetMarginBottom(const RPadLength &len) { fMarginBottom = len; return *this; }
+   RPadLength GetMarginBottom() const { return fMarginBottom; }
 
-   RAttrMargins &SetAll(const RPadLength &len) { fAll = len; return *this; }
-   RPadLength GetAll() const { return fAll; }
+   RAttrMargins &SetMarginAll(const RPadLength &len) { fMarginAll = len; return *this; }
+   RPadLength GetMarginAll() const { return fMarginAll; }
 
 };
 

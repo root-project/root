@@ -64,9 +64,17 @@ void draw_legend()
    legend->AddEntry(draw1, "histo1");
    legend->AddEntry(draw2, "histo2");
 
-   legend->AddEntry("test").SetAttrLine(RAttrLine().SetColor(RColor::kGreen).SetWidth(5))
-                           .SetAttrFill(RAttrFill().SetColor(RColor::kBlue).SetStyle(3004))
-                           .SetAttrMarker(RAttrMarker().SetColor(RColor::kRed).SetSize(3).SetStyle(28));
+   auto entry = legend->AddEntry("test");
+   entry->SetLine(true);
+   entry->SetLineColor(RColor::kGreen);
+   entry->SetLineWidth(5);
+   entry->SetFill(true);
+   entry->SetFillColor(RColor::kBlue);
+   entry->SetFillStyle(3004);
+   entry->SetMarker(true);
+   entry->SetMarkerColor(RColor::kRed);
+   entry->SetMarkerSize(3);
+   entry->SetMarkerStyle(28);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

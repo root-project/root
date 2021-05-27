@@ -25,23 +25,26 @@ namespace Experimental {
 
 class RAttrLine : public RAttrBase {
 
-   RAttrValue<RColor>  fColor{this, "color", RColor::kBlack}; ///<! line color
-   RAttrValue<double>  fWidth{this, "width", 1.};             ///<! line width
-   RAttrValue<int>     fStyle{this, "style", 1};              ///<! line style
+   RAttrValue<RColor>  fLineColor{"color", this, RColor::kBlack}; ///<! line color
+   RAttrValue<double>  fLineWidth{"width", this, 1.};             ///<! line width
+   RAttrValue<int>     fLineStyle{"style", this, 1};              ///<! line style
 
    R__ATTR_CLASS(RAttrLine, "line");
 
    ///The width of the line.
-   RAttrLine &SetWidth(double width) { fWidth = width; return *this; }
-   double GetWidth() const { return fWidth; }
+   RAttrLine &SetLineWidth(double width) { fLineWidth = width; return *this; }
+   double GetLineWidth() const { return fLineWidth; }
 
    ///The style of the line.
-   RAttrLine &SetStyle(int style) { fStyle = style; return *this; }
-   int GetStyle() const { return fStyle; }
+   RAttrLine &SetLineStyle(int style) { fLineStyle = style; return *this; }
+   int GetLineStyle() const { return fLineStyle; }
 
    ///The color of the line.
-   RAttrLine &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
+   RAttrLine &SetLineColor(const RColor &color) { fLineColor = color; return *this; }
+   RColor GetLineColor() const { return fLineColor; }
+
+   const RAttrLine &AttrLine() const { return *this; }
+   RAttrLine &AttrLine() { return *this; }
 
 };
 

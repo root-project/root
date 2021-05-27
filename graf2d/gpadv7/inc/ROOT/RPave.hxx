@@ -28,19 +28,16 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RPave : public RDrawable {
+class RPave : public RDrawable, public RAttrText, public RAttrLine, public RAttrFill {
 
-   RAttrText               fAttrText{this, "text"};          ///<! text attributes
-   RAttrLine               fAttrBorder{this, "border"};      ///<! border attributes
-   RAttrFill               fAttrFill{this, "fill"};          ///<! line attributes
-   RAttrValue<RPadLength>  fCornerX{this, "cornerx", 0.02};  ///<! X corner
-   RAttrValue<RPadLength>  fCornerY{this, "cornery", 0.02};  ///<! Y corner
-   RAttrValue<RPadLength>  fWidth{this, "width", 0.4};       ///<! pave width
-   RAttrValue<RPadLength>  fHeight{this, "height", 0.2};     ///<! pave height
+   RAttrValue<RPadLength> fCornerX{this, "cornerx", 0.02};  ///<! X corner
+   RAttrValue<RPadLength> fCornerY{this, "cornery", 0.02};  ///<! Y corner
+   RAttrValue<RPadLength> fWidth{this, "width", 0.4};       ///<! pave width
+   RAttrValue<RPadLength> fHeight{this, "height", 0.2};     ///<! pave height
 
 public:
 
-   RPave(const std::string &csstype = "pave") : RDrawable(csstype) {}
+   RPave(const std::string &csstype = "pave") : RDrawable(csstype), RAttrText(this), RAttrLine(this), RAttrFill(this) {}
 
    RPave &SetCornerX(const RPadLength &pos) { fCornerX = pos; return *this; }
    RPadLength GetCornerX() const { return fCornerX; }
@@ -53,18 +50,6 @@ public:
 
    RPave &SetHeight(const RPadLength &height) { fHeight = height; return *this; }
    RPadLength GetHeight() const { return fHeight; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RPave &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
-   RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RPave &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RPave &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 };
 
 } // namespace Experimental

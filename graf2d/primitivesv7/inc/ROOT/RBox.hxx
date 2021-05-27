@@ -10,7 +10,8 @@
 #define ROOT7_RBox
 
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RAttrBox.hxx>
+#include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrFill.hxx>
 #include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
@@ -23,22 +24,21 @@ namespace Experimental {
 /** \class RBox
 \ingroup GrafROOT7
 \brief A simple box.
-\author Olivier Couet <Olivier.Couet@cern.ch>
+\authors Olivier Couet <Olivier.Couet@cern.ch>, Sergey Linev <S.Linev@gsi.de>
 \date 2017-10-16
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RBox : public RDrawable, public RAttrOnFrame {
+class RBox : public RDrawable, public RAttrOnFrame, public RAttrLine, public RAttrFill {
 
    RPadPos fP1, fP2;               ///< box corners coordinates
-   RAttrBox fAttrBox{this, "box"}; ///<! box attributes
 
 protected:
    // constructor for derived classes
-   RBox(const std::string &subtype) : RDrawable(subtype), RAttrOnFrame(this) {}
+   RBox(const std::string &subtype) : RDrawable(subtype), RAttrOnFrame(this), RAttrLine(this), RAttrFill(this) {}
 
 public:
-   RBox() : RDrawable("box"), RAttrOnFrame(this) {}
+   RBox() : RDrawable("box"), RAttrOnFrame(this), RAttrLine(this), RAttrFill(this) {}
 
    RBox(const RPadPos &p1, const RPadPos &p2) : RBox()
    {
@@ -61,13 +61,6 @@ public:
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
 
-   const RAttrBox &GetAttrBox() const { return fAttrBox; }
-   RBox &SetAttrBox(RAttrBox &box)
-   {
-      fAttrBox = box;
-      return *this;
-   }
-   RAttrBox &AttrBox() { return fAttrBox; }
 };
 
 } // namespace Experimental

@@ -25,27 +25,31 @@ namespace Experimental {
 
 class RAttrText : public RAttrBase {
 
-   RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! text color
-   RAttrValue<double> fSize{this, "size", 12.};               ///<! text size
-   RAttrValue<double> fAngle{this, "angle", 0.};              ///<! text angle
-   RAttrValue<int> fAlign{this, "align", 22};                 ///<! text align
-   RAttrValue<std::string> fFontFamily{this, "font_family"};  ///<! font family, corresponds to css font-familty attribute
-   RAttrValue<std::string> fFontStyle{this, "font_style"};    ///<! font style, corresponds to css font-style attribute
-   RAttrValue<std::string> fFontWeight{this, "font_weight"};  ///<! font weight, corresponds to css font-weight attribute
+   RAttrValue<RColor> fTextColor{"color", this, RColor::kBlack};  ///<! text color
+   RAttrValue<double> fTextSize{"size", this, 12.};               ///<! text size
+   RAttrValue<double> fTextAngle{"angle", this, 0.};              ///<! text angle
+   RAttrValue<int> fTextAlign{"align", this, 22};                 ///<! text align
+   RAttrValue<std::string> fFontFamily{"font_family", this};  ///<! font family, corresponds to css font-familty attribute
+   RAttrValue<std::string> fFontStyle{"font_style", this};    ///<! font style, corresponds to css font-style attribute
+   RAttrValue<std::string> fFontWeight{"font_weight", this};  ///<! font weight, corresponds to css font-weight attribute
 
    R__ATTR_CLASS(RAttrText, "text");
 
+   ///The text color
+   RAttrText &SetTextColor(const RColor &color) { fTextColor = color; return *this; }
+   RColor GetTextColor() const { return fTextColor; }
+
    ///The text size
-   RAttrText &SetSize(double sz) { fSize = sz; return *this; }
-   double GetSize() const { return fSize; }
+   RAttrText &SetTextSize(double sz) { fTextSize = sz; return *this; }
+   double GetTextSize() const { return fTextSize; }
 
    ///The text angle
-   RAttrText &SetAngle(double angle) { fAngle = angle; return *this; }
-   double GetAngle() const { return fAngle; }
+   RAttrText &SetTextAngle(double angle) { fTextAngle = angle; return *this; }
+   double GetTextAngle() const { return fTextAngle; }
 
    ///The text alignment
-   RAttrText &SetAlign(int align) { fAlign = align; return *this; }
-   int GetAlign() const { return fAlign; }
+   RAttrText &SetTextAlign(int align) { fTextAlign = align; return *this; }
+   int GetTextAlign() const { return fTextAlign; }
 
    ///Set text font by id as usually handled in the ROOT, set number between 1 and 15
    RAttrText &SetFont(int font)
@@ -109,10 +113,8 @@ class RAttrText : public RAttrBase {
    }
    std::string GetFontWeight() const { return fFontWeight; }
 
-
-   ///The color of the text.
-   RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
+   const RAttrText &AttrText() const { return *this; }
+   RAttrText &AttrText() { return *this; }
 
 };
 

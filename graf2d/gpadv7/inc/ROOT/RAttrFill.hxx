@@ -25,18 +25,21 @@ namespace Experimental {
 
 class RAttrFill : public RAttrBase {
 
-   RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! fill color
-   RAttrValue<int>    fStyle{this, "style", 1};               ///<! fill style
+   RAttrValue<RColor> fFillColor{"color", this, RColor::kBlack};  ///<! fill color
+   RAttrValue<int>    fFillStyle{"style", this, 1};               ///<! fill style
 
    R__ATTR_CLASS(RAttrFill, "fill");
 
    ///The fill style
-   RAttrFill &SetStyle(int style) { fStyle = style; return *this; }
-   int GetStyle() const { return fStyle; }
+   RAttrFill &SetFillStyle(int style) { fFillStyle = style; return *this; }
+   int GetFillStyle() const { return fFillStyle; }
 
    ///The fill color
-   RAttrFill &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
+   RAttrFill &SetFillColor(const RColor &color) { fFillColor = color; return *this; }
+   RColor GetFillColor() const { return fFillColor; }
+
+   const RAttrFill &AttrFill() const { return *this; }
+   RAttrFill &AttrFill() { return *this; }
 
 };
 

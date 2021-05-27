@@ -22,7 +22,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RPad: public RPadBase {
+class RPad: public RPadBase, public RAttrLine {
 
    /// Pad containing this pad as a sub-pad.
    RPadBase *fParent{nullptr};             ///< The parent pad, if this pad has one.
@@ -30,18 +30,16 @@ class RPad: public RPadBase {
    RPadPos fPos;                           ///< pad position
    RPadExtent fSize;                       ///< pad size
 
-   RAttrLine fAttrLine{this, "border"};    ///<! border attributes
-
 protected:
 
    std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) final;
 
 public:
    /// Create a topmost, non-paintable pad.
-   RPad() = default;
+   RPad() : RPadBase(), RAttrLine((RDrawable *) this, "border") {}
 
    /// Create a child pad.
-   RPad(RPadBase *parent, const RPadPos &pos, const RPadExtent &size): fParent(parent) { fPos = pos; fSize = size; }
+   RPad(RPadBase *parent, const RPadPos &pos, const RPadExtent &size): RPad() { fParent = parent; fPos = pos; fSize = size; }
 
    /// Destructor to have a vtable.
    virtual ~RPad();
@@ -61,18 +59,15 @@ public:
    /// Get the position of the pad in parent (!) coordinates.
    const RPadPos &GetPos() const { return fPos; }
 
+   /// Set position
+   void SetPos(const RPadPos &p) { fPos = p; }
+
    /// Get the size of the pad in parent (!) coordinates.
    const RPadExtent &GetSize() const { return fSize; }
 
    /// Set the size of the pad in parent (!) coordinates.
    void SetSize(const RPadExtent &sz) { fSize = sz; }
 
-   /// Set position
-   void SetPos(const RPadPos &p) { fPos = p; }
-
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RPad &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
-   RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 } // namespace Experimental

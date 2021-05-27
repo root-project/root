@@ -35,7 +35,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RFrame : public RDrawable  {
+class RFrame : public RDrawable, public RAttrLine, public RAttrFill, public RAttrMargins {
 
    friend class RPadBase;
 
@@ -144,9 +144,6 @@ public:
    };
 
 private:
-   RAttrMargins fMargins{this, "margin"};         ///<! frame margins relative to pad
-   RAttrLine fAttrBorder{this, "border"};         ///<! line attributes for border
-   RAttrFill fAttrFill{this, "fill"};             ///<! fill attributes for the frame
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
    RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
    RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
@@ -165,7 +162,7 @@ private:
    RFrame &operator=(const RFrame &) = delete;
 
    // Default constructor
-   RFrame() : RDrawable("frame")
+   RFrame() : RDrawable("frame"), RAttrLine(this), RAttrFill(this), RAttrMargins(this)
    {
    }
 
@@ -196,18 +193,6 @@ public:
 
    bool GetDrawAxes() const { return fDrawAxes; }
    RFrame &SetDrawAxes(bool on = true) { fDrawAxes = on; return *this; }
-
-   const RAttrMargins &GetMargins() const { return fMargins; }
-   RFrame &SetMargins(const RAttrMargins &margins) { fMargins = margins; return *this; }
-   RAttrMargins &Margins() { return fMargins; }
-
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RFrame &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RFrame &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 
    const RAttrAxis &GetAttrX() const { return fAttrX; }
    RFrame &SetAttrX(const RAttrAxis &axis) { fAttrX = axis; return *this; }

@@ -33,7 +33,7 @@ class RAttrBase {
    friend class RAttrMap;
 
    RDrawable *fDrawable{nullptr};      ///<! drawable used to store attributes
-   std::unique_ptr<RAttrMap> fOwnAttr; ///<  own instance when deep copy is created, persistent for RColor and similar classes
+   std::unique_ptr<RAttrMap> fOwnAttr; ///<! own attributes independent from drawable, non-persistent, used when deep copy is created
    std::string fPrefix;                ///<! name prefix for all attributes values
    RAttrBase *fParent{nullptr};        ///<! parent attributes, prefix applied to it
 
@@ -205,7 +205,7 @@ const RAttrMap &GetDefaults() const override \
 public: \
    ClassName() = default; \
    ClassName(RDrawable *drawable, const std::string &prefix = dflt_prefix) { AssignDrawable(drawable, prefix); } \
-   ClassName(RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
+   ClassName(const std::string &prefix, RAttrBase *parent) { AssignParent(parent, prefix); } \
    ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
    ClassName(ClassName &&src) : ClassName() { src.MoveTo(*this); } \
    ClassName &operator=(ClassName &&src) { src.MoveTo(*this); return *this; } \

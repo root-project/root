@@ -29,16 +29,15 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAxisDrawableBase : public RDrawable {
+class RAxisDrawableBase : public RDrawable, public RAttrAxis  {
 
    RPadPos fPos;                          ///< axis start point
    bool fVertical{false};                 ///< is vertical axis
    RPadLength fLength;                    ///< axis length
-   RAttrAxis fAttrAxis{this, "axis"};     ///<! axis attributes
 
 public:
 
-   RAxisDrawableBase() : RDrawable("axis") {}
+   RAxisDrawableBase() : RDrawable("axis"), RAttrAxis(this, "axis")  {}
 
    RAxisDrawableBase(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase()
    {
@@ -47,17 +46,13 @@ public:
       SetLength(len);
    }
 
-   RAxisDrawableBase &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
    RAxisDrawableBase &SetVertical(bool vertical = true) { fVertical = vertical; return *this; }
+   RAxisDrawableBase &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
    RAxisDrawableBase &SetLength(const RPadLength &len) { fLength = len; return *this; }
 
    bool IsVertical() const { return fVertical; }
    const RPadPos& GetPos() const { return fPos; }
    const RPadLength& GetLength() const { return fLength; }
-
-   const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
-   RAxisDrawableBase &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
-   RAttrAxis &AttrAxis() { return fAttrAxis; }
 };
 
 

@@ -34,13 +34,9 @@
 namespace ROOT {
 namespace Experimental {
 
-class RHistDrawableBase : public RDrawable {
+class RHistDrawableBase : public RDrawable, public RAttrLine, public RAttrFill, public RAttrText, public RAttrMarker {
    RAttrValue<std::string>  fKind{this, "kind", ""};        ///<! hist draw kind
    RAttrValue<int>          fSub{this, "sub", -1};          ///<! hist draw sub kind
-   RAttrLine                fAttrLine{this, "line"};        ///<! hist line attributes
-   RAttrFill                fAttrFill{this, "fill"};        ///<! hist fill attributes
-   RAttrText                fAttrText{this, "text"};        ///<! hist text attributes
-   RAttrMarker              fMarkerAttr{this, "marker"};    ///<! hist marker attributes
    RAttrValue<bool>         fOptimize{this, "optimize", false}; ///<! optimize drawing
 
 protected:
@@ -93,23 +89,7 @@ public:
 
    friend class RRequest;
 
-   RHistDrawableBase() : RDrawable("hist") {}
-
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RHistDrawableBase &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
-   RAttrLine &AttrLine() { return fAttrLine; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RHistDrawableBase &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RHistDrawableBase &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
-   RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RHistDrawableBase &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
+   RHistDrawableBase() : RDrawable("hist"), RAttrLine(this), RAttrFill(this), RAttrText(this), RAttrMarker(this) {}
 
    RHistDrawableBase &Optimize(bool on = true) { fOptimize = on; return *this; }
 };
@@ -162,7 +142,7 @@ public:
    RHist1Drawable &Bar(double offset, double width, bool mode3d = false) { SetDrawKind("bar", mode3d ? 1 : 0); fBarOffset = offset; fBarWidth = width; return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
-   RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
+   RHist1Drawable &Star() { SetMarkerStyle(3); return Marker(); }
    RHist1Drawable &Hist() { SetDrawKind("hist"); return *this; }
    RHist1Drawable &Line() { SetDrawKind("l"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }

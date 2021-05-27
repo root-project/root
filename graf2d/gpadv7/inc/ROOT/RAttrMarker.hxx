@@ -25,22 +25,25 @@ namespace Experimental {
 
 class RAttrMarker : public RAttrBase {
 
-   RAttrValue<RColor>   fColor{this, "color", RColor::kBlack};  ///<! marker color
-   RAttrValue<double>   fSize{this, "size", 1.};                ///<! marker size
-   RAttrValue<int>      fStyle{this, "style", 1};               ///<! marker style
+   RAttrValue<RColor>   fMarkerColor{"color", this, RColor::kBlack};  ///<! marker color
+   RAttrValue<double>   fMarkerSize{"size", this, 1.};                ///<! marker size
+   RAttrValue<int>      fMarkerStyle{"style", this, 1};               ///<! marker style
 
    R__ATTR_CLASS(RAttrMarker, "marker");
 
-   RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
+   RAttrMarker &SetMarkerColor(const RColor &color) { fMarkerColor = color; return *this; }
+   RColor GetMarkerColor() const { return fMarkerColor; }
 
    /// The size of the marker.
-   RAttrMarker &SetSize(double size) { fSize = size; return *this; }
-   double GetSize() const { return fSize; }
+   RAttrMarker &SetMarkerSize(double size) { fMarkerSize = size; return *this; }
+   double GetMarkerSize() const { return fMarkerSize; }
 
    /// The style of the marker.
-   RAttrMarker &SetStyle(int style) { fStyle = style; return *this; }
-   int GetStyle() const { return fStyle; }
+   RAttrMarker &SetMarkerStyle(int style) { fMarkerStyle = style; return *this; }
+   int GetMarkerStyle() const { return fMarkerStyle; }
+
+   const RAttrMarker &AttrMarker() const { return *this; }
+   RAttrMarker &AttrMarker() { return *this; }
 
 };
 

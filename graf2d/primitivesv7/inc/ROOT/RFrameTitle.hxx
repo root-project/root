@@ -28,10 +28,9 @@ namespace Experimental {
 welcome!
 */
 
-class RFrameTitle final : public RDrawable {
+class RFrameTitle final : public RDrawable, public RAttrText {
 
    std::string fText;                                           ///< title to display
-   RAttrText fAttrText{this, "text"};                           ///<! title text attributes
    RAttrValue<RPadLength> fMargin{this, "margin", 0.02_normal}; ///<! title margin
    RAttrValue<RPadLength> fHeight{this, "height", 0.05_normal}; ///<! title height
 
@@ -39,7 +38,7 @@ protected:
    bool IsFrameRequired() const final { return true; }
 
 public:
-   RFrameTitle() : RDrawable("title") {}
+   RFrameTitle() : RDrawable("title"), RAttrText(this, "text") {}
 
    RFrameTitle(const std::string &txt) : RFrameTitle() { fText = txt; }
 
@@ -64,13 +63,6 @@ public:
    }
    RPadLength GetHeight() const { return fHeight; }
 
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RFrameTitle &SetAttrText(const RAttrText &attr)
-   {
-      fAttrText = attr;
-      return *this;
-   }
-   RAttrText &AttrText() { return fAttrText; }
 };
 
 } // namespace Experimental
