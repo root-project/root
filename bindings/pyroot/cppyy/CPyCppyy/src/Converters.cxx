@@ -757,7 +757,7 @@ bool CPyCppyy::WCharConverter::SetArg(
     PyObject* pyobject, Parameter& para, CallContext* /* ctxt */)
 {
 // convert <pyobject> to C++ <wchar_t>, set arg for call
-    if (!PyUnicode_Check(pyobject) || PyUnicode_GET_SIZE(pyobject) != 1) {
+    if (!PyUnicode_Check(pyobject) || CPyCppyy_PyUnicode_GET_SIZE(pyobject) != 1) {
         PyErr_SetString(PyExc_ValueError, "single wchar_t character expected");
         return false;
     }
@@ -777,7 +777,7 @@ PyObject* CPyCppyy::WCharConverter::FromMemory(void* address)
 
 bool CPyCppyy::WCharConverter::ToMemory(PyObject* value, void* address, PyObject* /* ctxt */)
 {
-    if (!PyUnicode_Check(value) || PyUnicode_GET_SIZE(value) != 1) {
+    if (!PyUnicode_Check(value) || CPyCppyy_PyUnicode_GET_SIZE(value) != 1) {
         PyErr_SetString(PyExc_ValueError, "single wchar_t character expected");
         return false;
     }
@@ -794,7 +794,7 @@ bool CPyCppyy::Char16Converter::SetArg(
     PyObject* pyobject, Parameter& para, CallContext* /* ctxt */)
 {
 // convert <pyobject> to C++ <char16_t>, set arg for call
-    if (!PyUnicode_Check(pyobject) || PyUnicode_GET_SIZE(pyobject) != 1) {
+    if (!PyUnicode_Check(pyobject) || CPyCppyy_PyUnicode_GET_SIZE(pyobject) != 1) {
         PyErr_SetString(PyExc_ValueError, "single char16_t character expected");
         return false;
     }
@@ -816,7 +816,7 @@ PyObject* CPyCppyy::Char16Converter::FromMemory(void* address)
 
 bool CPyCppyy::Char16Converter::ToMemory(PyObject* value, void* address, PyObject* /* ctxt */)
 {
-    if (!PyUnicode_Check(value) || PyUnicode_GET_SIZE(value) != 1) {
+    if (!PyUnicode_Check(value) || CPyCppyy_PyUnicode_GET_SIZE(value) != 1) {
         PyErr_SetString(PyExc_ValueError, "single char16_t character expected");
         return false;
     }
@@ -834,7 +834,7 @@ bool CPyCppyy::Char32Converter::SetArg(
     PyObject* pyobject, Parameter& para, CallContext* /* ctxt */)
 {
 // convert <pyobject> to C++ <char32_t>, set arg for call
-    if (!PyUnicode_Check(pyobject) || 2 < PyUnicode_GET_SIZE(pyobject)) {
+    if (!PyUnicode_Check(pyobject) || 2 < CPyCppyy_PyUnicode_GET_SIZE(pyobject)) {
         PyErr_SetString(PyExc_ValueError, "single char32_t character expected");
         return false;
     }
@@ -856,7 +856,7 @@ PyObject* CPyCppyy::Char32Converter::FromMemory(void* address)
 
 bool CPyCppyy::Char32Converter::ToMemory(PyObject* value, void* address, PyObject* /* ctxt */)
 {
-    if (!PyUnicode_Check(value) || 2 < PyUnicode_GET_SIZE(value)) {
+    if (!PyUnicode_Check(value) || 2 < CPyCppyy_PyUnicode_GET_SIZE(value)) {
         PyErr_SetString(PyExc_ValueError, "single char32_t character expected");
         return false;
     }
@@ -1711,7 +1711,7 @@ bool CPyCppyy::STLWStringConverter::SetArg(
     PyObject* pyobject, Parameter& para, CallContext* ctxt)
 {
     if (PyUnicode_Check(pyobject)) {
-        Py_ssize_t len = PyUnicode_GET_SIZE(pyobject);
+        Py_ssize_t len = CPyCppyy_PyUnicode_GET_SIZE(pyobject);
         fBuffer.resize(len);
         CPyCppyy_PyUnicode_AsWideChar(pyobject, &fBuffer[0], len);
         para.fValue.fVoidp = &fBuffer;
@@ -1739,7 +1739,7 @@ PyObject* CPyCppyy::STLWStringConverter::FromMemory(void* address)
 bool CPyCppyy::STLWStringConverter::ToMemory(PyObject* value, void* address, PyObject* ctxt)
 {
     if (PyUnicode_Check(value)) {
-        Py_ssize_t len = PyUnicode_GET_SIZE(value);
+        Py_ssize_t len = CPyCppyy_PyUnicode_GET_SIZE(value);
         wchar_t* buf = new wchar_t[len+1];
         CPyCppyy_PyUnicode_AsWideChar(value, buf, len);
         *((std::wstring*)address) = std::wstring(buf, len);
