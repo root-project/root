@@ -50,7 +50,9 @@ static TMemoryRegulator &GetMemoryRegulator()
 void PyROOT::Init()
 {
    // Initialize and acquire the GIL to allow for threading in ROOT
+#if PY_VERSION_HEX < 0x03090000
    PyEval_InitThreads();
+#endif
 
    // Memory management
    gROOT->GetListOfCleanups()->Add(&GetMemoryRegulator());

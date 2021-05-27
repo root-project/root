@@ -114,6 +114,8 @@ static inline const char* CPyCppyy_PyText_AsStringAndSize(PyObject* pystr, Py_ss
 
 #define CPyCppyy_PyText_Type PyString_Type
 
+#define CPyCppyy_PyUnicode_GET_SIZE           PyUnicode_GET_SIZE
+
 static inline PyObject* CPyCppyy_PyCapsule_New(
         void* cobj, const char* /* name */, void (*destr)(void*))
 {
@@ -141,7 +143,13 @@ typedef long Py_hash_t;
 #define CPyCppyy_PyText_AsString           PyUnicode_AsUTF8
 #define CPyCppyy_PyText_AsStringChecked    PyUnicode_AsUTF8
 #define CPyCppyy_PyText_GetSize            PyUnicode_GetSize
+#if PY_VERSION_HEX < 0x03090000
 #define CPyCppyy_PyText_GET_SIZE           PyUnicode_GET_SIZE
+#define CPyCppyy_PyUnicode_GET_SIZE        PyUnicode_GET_LENGTH
+#else
+#define CPyCppyy_PyText_GET_SIZE           PyUnicode_GET_LENGTH
+#define CPyCppyy_PyUnicode_GET_SIZE        PyUnicode_GET_LENGTH
+#endif
 #define CPyCppyy_PyText_FromFormat         PyUnicode_FromFormat
 #define CPyCppyy_PyText_FromString         PyUnicode_FromString
 #define CPyCppyy_PyText_InternFromString   PyUnicode_InternFromString
@@ -287,6 +295,13 @@ inline Py_ssize_t PyNumber_AsSsize_t(PyObject* obj, PyObject*) {
 
 #ifndef Py_RETURN_FALSE
 #define Py_RETURN_FALSE return Py_INCREF(Py_False), Py_False
+#endif
+
+// vector call support
+#if PY_VERSION_HEX >= 0x03090000
+#define CPyCppyy_PyCFunction_Call PyObject_Call
+#else
+#define CPyCppyy_PyCFunction_Call PyCFunction_Call
 #endif
 
 // C++ version of the cppyy API
