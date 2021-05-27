@@ -27,7 +27,7 @@ defined types (accessible via TROOT::GetListOfTypes()).
 
 ClassImp(TDataType);
 
-TDataType* TDataType::fgBuiltins[kNumDataTypes] = {0};
+TDataType* TDataType::fgBuiltins[kNumDataTypes] = {nullptr};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TDataType ctor. TDataTypes are constructed in TROOT via
@@ -56,10 +56,10 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for basic data types, like "char", "unsigned char", etc.
 
-TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental),
+TDataType::TDataType(const char *typenam) : fInfo(nullptr), fProperty(kIsFundamental),
    fTypeNameIdx(-1), fTypeNameLen(0)
 {
-   fInfo = 0;
+   fInfo = nullptr;
    SetName(typenam);
    SetTitle("Builtin basic type");
 
@@ -299,7 +299,7 @@ void TDataType::SetType(const char *name)
    fType = kOther_t;
    fSize = 0;
 
-   if (name==0) {
+   if (name==nullptr) {
       return;
    } else if (!strcmp("unsigned int", name)) {
       fType = kUInt_t;
@@ -410,7 +410,7 @@ void TDataType::CheckInfo()
 
 void TDataType::AddBuiltins(TCollection* types)
 {
-   if (fgBuiltins[kChar_t] == 0) {
+   if (fgBuiltins[kChar_t] == nullptr) {
       // Add also basic types (like a identity typedef "typedef int int")
       fgBuiltins[kChar_t] = new TDataType("char");
       fgBuiltins[kUChar_t] = new TDataType("unsigned char");
@@ -442,6 +442,6 @@ void TDataType::AddBuiltins(TCollection* types)
 
 TDataType* TDataType::GetDataType(EDataType type)
 {
-   if (type == kOther_t || type >= kNumDataTypes) return 0;
+   if (type == kOther_t || type >= kNumDataTypes) return nullptr;
    return fgBuiltins[(int)type];
 }
