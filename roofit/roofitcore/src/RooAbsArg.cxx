@@ -711,7 +711,7 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) 
 /// \param[in] valueOnly If this parameter is true, we only match leafs that
 ///                      depend on the value of any arg in `dataList`.
 
-bool RooAbsArg::getObservables(const RooArgSet* dataList, RooArgSet& outputSet, bool valueOnly) const
+bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outputSet, bool valueOnly) const
 {
   outputSet.clear();
   outputSet.setName("dependents");
