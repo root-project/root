@@ -810,7 +810,9 @@ LIBCPPYY_INIT_FUNCTION(extern "C" void initlibcppyy, PY_MAJOR_VERSION, _, PY_MIN
         CPYCPPYY_INIT_ERROR;
 
 // setup interpreter
+#if PY_VERSION_HEX < 0x03090000
     PyEval_InitThreads();
+#endif
 
 // prepare for lazyness (the insert is needed to capture the most generic lookup
 // function, just in case ...)
