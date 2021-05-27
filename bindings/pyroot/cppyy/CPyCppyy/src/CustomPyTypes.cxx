@@ -201,7 +201,7 @@ static PyObject* im_call(PyObject* meth, PyObject* args, PyObject* kw)
 // the function is globally shared, so set and reset its "self" (ok, b/c of GIL)
     Py_INCREF(self);
     func->m_self = self;
-    PyObject* result = PyCFunction_Call((PyObject*)func, args, kw);
+    PyObject* result = CPyCppyy_PyCFunction_Call((PyObject*)func, args, kw);
     func->m_self = nullptr;
     Py_DECREF(self);
     Py_DECREF(args);
