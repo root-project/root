@@ -44,8 +44,8 @@ private:
    Longptr_t   fSemaphore;      ///< Modification semaphore (or getpid() for WIN32)
    ULongptr_t  fhSemaphore;     ///< HANDLE of WIN32 Mutex object to implement semaphore
    TObject    *fGetting;        ///< Don't deadlock in update mode, when from Get() Add() is called
-   Int_t       fWritten;        ///< Number of objects written sofar
-   Double_t    fSumBuffer;      ///< Sum of buffer sizes of objects written sofar
+   Int_t       fWritten;        ///< Number of objects written so far
+   Double_t    fSumBuffer;      ///< Sum of buffer sizes of objects written so far
    Double_t    fSum2Buffer;     ///< Sum of squares of buffer sizes of objects written so far
 
    static Longptr_t fgMapAddress;  ///< Map to this address, set address via SetMapAddress()
