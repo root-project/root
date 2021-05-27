@@ -865,20 +865,6 @@ const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, con
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function for plotOn() that creates a projection of a function or p.d.f
-/// to be plotted on a RooPlot.
-/// \ref createPlotProjAnchor "createPlotProjection()"
-
-const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const
-{
-  RooArgSet* cloneSet = new RooArgSet() ;
-  return createPlotProjection(depVars,&projVars,cloneSet) ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for plotOn() that creates a projection of a function or p.d.f
 /// to be plotted on a RooPlot.
