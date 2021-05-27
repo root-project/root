@@ -21,13 +21,26 @@
 **************************************************************************/
 
 
-/** \class TGFileIcon, TGFileEntry, TGFSContainer
+/** \class TGFileIcon
     \ingroup guiwidgets
 
-Utility classes used by the file selection dialog (TGFSDialog).
+Utility class used by the file selection dialog (TGFSDialog).
 
 */
 
+/** \class TGFileEntry
+    \ingroup guiwidgets
+
+Utility class used by the file selection dialog (TGFSDialog).
+
+*/
+
+/** \class TGFSContainer
+    \ingroup guiwidgets
+
+Utility class used by the file selection dialog (TGFSDialog).
+
+*/
 
 #include "TGFSContainer.h"
 #include "TGIcon.h"

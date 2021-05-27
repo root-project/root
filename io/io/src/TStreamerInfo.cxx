@@ -9,9 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
-\class TStreamerInfo TStreamerInfo.cxx
-\ingroup IO
+/** \class TStreamerInfo
+    \ingroup IO
 
 Describes a persistent version of a class.
 
@@ -785,7 +784,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
          }
       }
       if (fClass->fIsSyntheticPair) {
-         // The format never change, no need to import the old StreamerInof
+         // The format never change, no need to import the old StreamerInfo
          // (which anyway would have issue when being setup due to the lack
          // of TDataMember in the TClass.
          SetBit(kCanDelete);
@@ -1581,7 +1580,7 @@ namespace {
             // be a pair and thus have a TClass ... so let's just give up ...
             // It actually happens in the case where one of the member is an
             // enum that is part of dictionary payload that is not yet
-            // autoloaded.
+            // auto-loaded.
             return nullptr;
          }
          TVirtualStreamerInfo *info = current->GetValueClass()->GetStreamerInfo();
@@ -1591,7 +1590,7 @@ namespace {
          TStreamerElement *f = (TStreamerElement*) info->GetElements()->At(0);
          TStreamerElement *s = (TStreamerElement*) info->GetElements()->At(1);
 
-         // Since we do not create TClass for pair of unknow types, old->GetValueClass can
+         // Since we do not create TClass for pair of unknown types, old->GetValueClass can
          // be nullptr even-though the type used be known.  An example of such change
          // is `RooExpensiveObjectCache::ExpensiveObject` which used to be recorded
          // as `ExpensiveObject` in the name of the map ... making it unknown
@@ -1808,7 +1807,7 @@ void TStreamerInfo::BuildOld()
       {
          // Prevent BuildOld from modifying existing ArtificialElement (We need to review when and why BuildOld
          // needs to be re-run; it might be needed if the 'current' class change (for example from being an onfile
-         // version to being a version loaded from a shared library) and we thus may have to remove the artifical
+         // version to being a version loaded from a shared library) and we thus may have to remove the artificial
          // element at the beginning of BuildOld)
 
          continue;
