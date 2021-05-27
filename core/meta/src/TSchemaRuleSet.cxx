@@ -25,8 +25,8 @@ using namespace ROOT::Detail;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( 0 ), fRemainingRules( 0 ),
-                                  fAllRules( 0 ), fVersion(-3), fCheckSum( 0 )
+TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( nullptr ), fRemainingRules( nullptr ),
+                                  fAllRules( nullptr ), fVersion(-3), fCheckSum( 0 )
 {
    fPersistentRules = new TObjArray();
    fRemainingRules  = new TObjArray();
@@ -53,7 +53,7 @@ void TSchemaRuleSet::ls(Option_t *) const
    TROOT::IndentLevel();
    std::cout << "TSchemaRuleSet for " << fClassName << ":\n";
    TROOT::IncreaseDirLevel();
-   TObject *object = 0;
+   TObject *object = nullptr;
    TIter next(fPersistentRules);
    while ((object = next())) {
       object->ls(fClassName);
@@ -113,7 +113,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    bool streamerInfosTest;
    {
      R__LOCKGUARD(gInterpreterMutex);
-     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->IsEmpty());
+     streamerInfosTest = (fClass->GetStreamerInfos()==nullptr || fClass->GetStreamerInfos()->IsEmpty());
    }
    if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
       TObjArrayIter titer( rule->GetTarget() );
@@ -206,14 +206,14 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
    }
    // There was no explicit rule, let's see we have implicit rules.
    if (fClass->GetCollectionProxy()) {
-      if (fClass->GetCollectionProxy()->GetValueClass() == 0) {
+      if (fClass->GetCollectionProxy()->GetValueClass() == nullptr) {
          // We have a numeric collection, let see if the target is
          // also a numeric collection.
          TClass *src = TClass::GetClass(source);
          if (src && src->GetCollectionProxy() &&
              src->GetCollectionProxy()->HasPointers() == fClass->GetCollectionProxy()->HasPointers()) {
             TVirtualCollectionProxy *proxy = src->GetCollectionProxy();
-            if (proxy->GetValueClass() == 0) {
+            if (proxy->GetValueClass() == nullptr) {
                return kTRUE;
             }
          }
@@ -469,7 +469,7 @@ const TSchemaRule* TSchemaRuleSet::TMatches::GetRuleWithSource( const TString& n
    for( auto rule : *this ) {
       if( rule->HasSource( name ) ) return rule;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,7 +480,7 @@ const TSchemaRule* TSchemaRuleSet::TMatches::GetRuleWithTarget( const TString& n
    for( auto rule : *this ) {
       if( rule->HasTarget( name ) ) return rule;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

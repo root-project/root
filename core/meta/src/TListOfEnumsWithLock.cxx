@@ -162,7 +162,7 @@ TObject *TListOfEnumsWithLock::FindObject(const char *name) const
 
       TInterpreter::DeclId_t decl;
       if (GetClass()) decl = gInterpreter->GetEnum(GetClass(), name);
-      else        decl = gInterpreter->GetEnum(0, name);
+      else        decl = gInterpreter->GetEnum(nullptr, name);
       if (decl) result = const_cast<TListOfEnumsWithLock *>(this)->Get(decl, name);
    }
    return result;
@@ -218,7 +218,7 @@ TObject *TListOfEnumsWithLock::Remove(TObject *obj)
 
 TObject *TListOfEnumsWithLock::Remove(TObjLink *lnk)
 {
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    R__LOCKGUARD(gInterpreterMutex);
    return TListOfEnums::Remove(lnk);

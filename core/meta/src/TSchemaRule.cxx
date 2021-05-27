@@ -86,10 +86,10 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
 
-TSchemaRule::TSchemaRule(): fVersionVect( 0 ), fChecksumVect( 0 ),
-                            fTargetVect( 0 ), fSourceVect( 0 ),
-                            fIncludeVect( 0 ), fEmbed( kTRUE ),
-                            fReadFuncPtr( 0 ), fReadRawFuncPtr( 0 ),
+TSchemaRule::TSchemaRule(): fVersionVect( nullptr ), fChecksumVect( nullptr ),
+                            fTargetVect( nullptr ), fSourceVect( nullptr ),
+                            fIncludeVect( nullptr ), fEmbed( kTRUE ),
+                            fReadFuncPtr( nullptr ), fReadRawFuncPtr( nullptr ),
                             fRuleType( kNone )
 {
 }
@@ -110,10 +110,10 @@ TSchemaRule::~TSchemaRule()
 /// Copy Constructor.
 
 TSchemaRule::TSchemaRule( const TSchemaRule& rhs ): TObject( rhs ),
-                            fVersionVect( 0 ), fChecksumVect( 0 ),
-                            fTargetVect( 0 ), fSourceVect( 0 ),
-                            fIncludeVect( 0 ), fEmbed( kTRUE ),
-                            fReadFuncPtr( 0 ), fReadRawFuncPtr( 0 ),
+                            fVersionVect( nullptr ), fChecksumVect( nullptr ),
+                            fTargetVect( nullptr ), fSourceVect( nullptr ),
+                            fIncludeVect( nullptr ), fEmbed( kTRUE ),
+                            fReadFuncPtr( nullptr ), fReadRawFuncPtr( nullptr ),
                             fRuleType( kNone )
 {
    *this = rhs;
@@ -159,8 +159,8 @@ Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs ) const
                        && fRuleType == rhs.fRuleType
                        && fAttributes == rhs.fAttributes );
       if (result &&
-          ( (fReadRawFuncPtr != rhs.fReadRawFuncPtr && fReadRawFuncPtr != 0 && rhs.fReadRawFuncPtr != 0)
-           ||  (fReadFuncPtr != rhs.fReadFuncPtr && fReadFuncPtr != 0 && rhs.fReadFuncPtr != 0) ) )
+          ( (fReadRawFuncPtr != rhs.fReadRawFuncPtr && fReadRawFuncPtr != nullptr && rhs.fReadRawFuncPtr != nullptr)
+           ||  (fReadFuncPtr != rhs.fReadFuncPtr && fReadFuncPtr != nullptr && rhs.fReadFuncPtr != nullptr) ) )
       {
          result = kFALSE;
       }
@@ -304,14 +304,14 @@ void TSchemaRule::Clear( const char * /* option */)
    fInclude.Clear();
    fCode.Clear();
    fAttributes.Clear();
-   fReadRawFuncPtr = 0;
-   fReadFuncPtr = 0;
+   fReadRawFuncPtr = nullptr;
+   fReadFuncPtr = nullptr;
    fRuleType = kNone;
-   delete fVersionVect;   fVersionVect = 0;
-   delete fChecksumVect;  fChecksumVect = 0;
-   delete fTargetVect;    fTargetVect = 0;
-   delete fSourceVect;    fSourceVect = 0;
-   delete fIncludeVect;   fIncludeVect = 0;
+   delete fVersionVect;   fVersionVect = nullptr;
+   delete fChecksumVect;  fChecksumVect = nullptr;
+   delete fTargetVect;    fTargetVect = nullptr;
+   delete fSourceVect;    fSourceVect = nullptr;
+   delete fIncludeVect;   fIncludeVect = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -495,7 +495,7 @@ void TSchemaRule::SetTarget( const TString& target )
 
    if( target == "" ) {
       delete fTargetVect;
-      fTargetVect = 0;
+      fTargetVect = nullptr;
       return;
    }
 
@@ -520,7 +520,7 @@ const char *TSchemaRule::GetTargetString() const
 const TObjArray*  TSchemaRule::GetTarget() const
 {
    if( fTarget == "" )
-      return 0;
+      return nullptr;
 
    if( !fTargetVect ) {
       fTargetVect = new TObjArray();
@@ -541,7 +541,7 @@ void TSchemaRule::SetSource( const TString& source )
 
    if( source == "" ) {
       delete fSourceVect;
-      fSourceVect = 0;
+      fSourceVect = nullptr;
       return;
    }
 
@@ -560,7 +560,7 @@ void TSchemaRule::SetSource( const TString& source )
 const TObjArray* TSchemaRule::GetSource() const
 {
    if( fSource == "" )
-      return 0;
+      return nullptr;
 
    if( !fSourceVect ) {
       fSourceVect = new TObjArray();
@@ -580,7 +580,7 @@ void TSchemaRule::SetInclude( const TString& incl )
 
    if( incl == "" ) {
       delete fIncludeVect;
-      fIncludeVect = 0;
+      fIncludeVect = nullptr;
       return;
    }
 
@@ -599,7 +599,7 @@ void TSchemaRule::SetInclude( const TString& incl )
 const TObjArray* TSchemaRule::GetInclude() const
 {
    if( fInclude == "" )
-      return 0;
+      return nullptr;
 
    if( !fIncludeVect ) {
       fIncludeVect = new TObjArray();
@@ -873,7 +873,7 @@ Bool_t TSchemaRule::ProcessVersion( const TString& version ) const
       if( !Internal::TSchemaRuleProcessor::ProcessVersion( *it, verpair ) )
       {
          delete fVersionVect;
-         fVersionVect = 0;
+         fVersionVect = nullptr;
          return kFALSE;
       }
       fVersionVect->push_back( verpair );
@@ -901,7 +901,7 @@ Bool_t TSchemaRule::ProcessChecksum( const TString& checksum ) const
 
    if( checksums.empty() ) {
       delete fChecksumVect;
-      fChecksumVect = 0;
+      fChecksumVect = nullptr;
       return kFALSE;
    }
 
