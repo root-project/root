@@ -27,6 +27,11 @@
 #undef _XOPEN_SOURCE
 #endif
 #endif
+#if PY_VERSION_HEX < 0x03000000
+#if __cplusplus >= 201703L
+#pragma GCC diagnostic ignored "-Wregister"
+#endif
+#endif
 #include "Python.h"
 
 // Cppyy types
