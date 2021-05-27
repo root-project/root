@@ -127,6 +127,7 @@ public:
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
+  bool selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
