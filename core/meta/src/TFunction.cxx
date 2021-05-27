@@ -35,7 +35,7 @@ ClassImp(TFunction);
 TFunction::TFunction(MethodInfo_t *info) : TDictionary()
 {
    fInfo       = info;
-   fMethodArgs = 0;
+   fMethodArgs = nullptr;
    if (fInfo) {
       SetName(gCling->MethodInfo_Name(fInfo));
       SetTitle(gCling->MethodInfo_Title(fInfo));
@@ -53,8 +53,8 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
       fInfo = gCling->MethodInfo_FactoryCopy(orig.fInfo);
       fMangledName = orig.fMangledName;
    } else
-      fInfo = 0;
-   fMethodArgs = 0;
+      fInfo = nullptr;
+   fMethodArgs = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +73,8 @@ TFunction& TFunction::operator=(const TFunction &rhs)
          SetTitle(gCling->MethodInfo_Title(fInfo));
          fMangledName = gCling->MethodInfo_GetMangledName(fInfo);
       } else
-         fInfo = 0;
-      fMethodArgs = 0;
+         fInfo = nullptr;
+      fMethodArgs = nullptr;
    }
    return *this;
 }
@@ -141,7 +141,7 @@ TList *TFunction::GetListOfMethodArgs()
 const char *TFunction::GetReturnTypeName() const
 {
    R__LOCKGUARD(gInterpreterMutex);
-   if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   if (fInfo == nullptr || gCling->MethodInfo_Type(fInfo) == nullptr) return "Unknown";
    return gCling->MethodInfo_TypeName(fInfo);
 }
 
@@ -155,7 +155,7 @@ const char *TFunction::GetReturnTypeName() const
 std::string TFunction::GetReturnTypeNormalizedName() const
 {
    R__LOCKGUARD(gInterpreterMutex);
-   if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   if (fInfo == nullptr || gCling->MethodInfo_Type(fInfo) == nullptr) return "Unknown";
    return gCling->MethodInfo_TypeNormalizedName(fInfo);
 }
 
@@ -208,7 +208,7 @@ TDictionary::DeclId_t TFunction::GetDeclId() const
 
 void *TFunction::InterfaceMethod() const
 {
-   return fInfo ? gCling->MethodInfo_InterfaceMethod(fInfo) : 0;
+   return fInfo ? gCling->MethodInfo_InterfaceMethod(fInfo) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,14 +221,14 @@ Bool_t TFunction::IsValid()
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       // Only for global functions. For data member functions TMethod does it.
-      DeclId_t newId = gInterpreter->GetFunction(0, fName);
+      DeclId_t newId = gInterpreter->GetFunction(nullptr, fName);
       if (newId) {
          MethodInfo_t *info = gInterpreter->MethodInfo_Factory(newId);
          Update(info);
       }
-      return newId != 0;
+      return newId != nullptr;
    }
-   return fInfo != 0;
+   return fInfo != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ const char *TFunction::GetPrototype() const
       R__LOCKGUARD(gInterpreterMutex);
       return gCling->MethodInfo_GetPrototype(fInfo);
    } else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,17 +278,17 @@ void TFunction::Print(Option_t *options /* ="" */) const
 
 Bool_t TFunction::Update(MethodInfo_t *info)
 {
-   if (info == 0) {
+   if (info == nullptr) {
 
       if (fInfo) {
          R__LOCKGUARD(gInterpreterMutex);
          gCling->MethodInfo_Delete(fInfo);
       }
-      fInfo = 0;
+      fInfo = nullptr;
       if (fMethodArgs) {
         for (Int_t i = 0; i < fMethodArgs->LastIndex() + 1; i ++) {
            TMethodArg *arg = (TMethodArg *) fMethodArgs->At( i );
-           arg->Update(0);
+           arg->Update(nullptr);
         }
       }
       return kTRUE;
@@ -302,7 +302,7 @@ Bool_t TFunction::Update(MethodInfo_t *info)
       if (newMangledName != fMangledName) {
          Error("Update","TFunction object updated with the 'wrong' MethodInfo (%s vs %s).",
                fMangledName.Data(),newMangledName.Data());
-         fInfo = 0;
+         fInfo = nullptr;
          return false;
       }
       SetTitle(gCling->MethodInfo_Title(fInfo));
