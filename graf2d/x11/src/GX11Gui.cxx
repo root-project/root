@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGX11
-*/
-
 // This file contains the implementation of the GUI methods of the
 // TGX11 class. Most of the methods are used by the machine independent
 // GUI classes (libGUI.so).

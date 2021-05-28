@@ -21,11 +21,6 @@
 
 #include "TObjArray.h"
 
-/**
-\class TStreamerInfo
-\ingroup IO
-Describe Streamer information for one class version
-*/
 
 class TFile;
 class TClass;
