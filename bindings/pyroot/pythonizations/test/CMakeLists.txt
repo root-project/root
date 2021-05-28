@@ -46,6 +46,9 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py PYTHON_DEPS numpy)
 endif()
 
+# TTreeReader pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttreereader_iterable ttreereader_iterable.py)
+
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)

@@ -53,6 +53,7 @@ set(py_sources
   ROOT/pythonization/_tseqcollection.py
   ROOT/pythonization/_tstring.py
   ROOT/pythonization/_ttree.py
+  ROOT/pythonization/_ttreereader.py
   ROOT/pythonization/_tvector3.py
   ROOT/pythonization/_tvectort.py
   ${PYROOT_EXTRA_PYSOURCE}
