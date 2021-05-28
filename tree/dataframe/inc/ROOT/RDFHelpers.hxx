@@ -49,7 +49,7 @@ template <std::size_t... N, typename T, typename F>
 class PassAsVecHelper<std::index_sequence<N...>, T, F> {
    template <std::size_t Idx>
    using AlwaysT = T;
-   F fFunc;
+   typename std::decay<F>::type fFunc;
 
 public:
    PassAsVecHelper(F &&f) : fFunc(std::forward<F>(f)) {}
