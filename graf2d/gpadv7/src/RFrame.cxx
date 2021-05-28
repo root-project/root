@@ -97,9 +97,9 @@ void RFrame::GetClientRanges(unsigned connid, RUserRanges &ranges)
    if (iter != fClientRanges.end()) {
       ranges = iter->second;
    } else {
-      GetAxisRanges(0, GetAttrX(), ranges);
-      GetAxisRanges(1, GetAttrY(), ranges);
-      GetAxisRanges(2, GetAttrZ(), ranges);
+      GetAxisRanges(0, AttrX(), ranges);
+      GetAxisRanges(1, AttrY(), ranges);
+      GetAxisRanges(2, AttrZ(), ranges);
    }
 }
 

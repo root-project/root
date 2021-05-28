@@ -51,6 +51,9 @@ public:
    RAttrMargins &SetMarginAll(const RPadLength &len) { fMarginAll = len; return *this; }
    RPadLength GetMarginAll() const { return fMarginAll; }
 
+   const RAttrMargins &AttrMargins() const { return *this; }
+   RAttrMargins &AttrMargins() { return *this; }
+
 };
 
 } // namespace Experimental
