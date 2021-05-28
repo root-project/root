@@ -1526,7 +1526,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!this.fillatt)
          this.createv7AttFill("fill_");
 
-      this.createv7AttLine("border_");
+      this.createv7AttLine("line_");
    }
 
    /** @summary Returns coordinates transformation func */
@@ -4652,9 +4652,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           pave_cornery = this.v7EvalLength("cornery", rect.height, -0.02),
           pave_width   = this.v7EvalLength("width", rect.width, 0.3),
           pave_height  = this.v7EvalLength("height", rect.height, 0.3),
-          line_width   = this.v7EvalAttr("border_width", 1),
-          line_style   = this.v7EvalAttr("border_style", 1),
-          line_color   = this.v7EvalColor("border_color", "black"),
+          line_width   = this.v7EvalAttr("line_width", 1),
+          line_style   = this.v7EvalAttr("line_style", 1),
+          line_color   = this.v7EvalColor("line_color", "black"),
           fill_color   = this.v7EvalColor("fill_color", "white"),
           fill_style   = this.v7EvalAttr("fill_style", 1);
 

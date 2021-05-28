@@ -60,13 +60,13 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
            p1           = pp.getCoordinate(box.fP1, onframe),
            p2           = pp.getCoordinate(box.fP2, onframe),
-           line_width   = this.v7EvalAttr("box_border_width", 1),
-           line_style   = this.v7EvalAttr("box_border_style", 1),
-           line_color   = this.v7EvalColor("box_border_color", "black"),
-           fill_color   = this.v7EvalColor("box_fill_color", "white"),
-           fill_style   = this.v7EvalAttr("box_fill_style", 1),
-           round_width  = this.v7EvalAttr("box_round_width", 0), // not yet exists
-           round_height = this.v7EvalAttr("box_round_height", 0); // not yet exists
+           line_width   = this.v7EvalAttr("line_width", 1),
+           line_style   = this.v7EvalAttr("line_style", 1),
+           line_color   = this.v7EvalColor("line_color", "black"),
+           fill_color   = this.v7EvalColor("fill_color", "white"),
+           fill_style   = this.v7EvalAttr("fill_style", 1),
+           round_width  = this.v7EvalAttr("round_width", 0), // not yet exists
+           round_height = this.v7EvalAttr("round_height", 0); // not yet exists
 
     this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
@@ -138,10 +138,10 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
          this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
 
-         if (entry.fDrawableId != "custom") {
+         if (entry.fDrawableId != undefined) {
             objp = pp.findSnap(entry.fDrawableId, true);
-         } else if (entry.fDrawable.fIO) {
-            objp = new JSROOT.ObjectPainter(this.getDom(), entry.fDrawable.fIO);
+         } else {
+            objp = new JSROOT.ObjectPainter(this.getDom(), entry);
             if (entry.fLine) objp.createv7AttLine();
             if (entry.fFill) objp.createv7AttFill();
             if (entry.fMarker) objp.createv7AttMarker();
