@@ -51,7 +51,7 @@ void draw_rh2_large()
    auto frame = canvas->GetOrCreateFrame();
 
    // should we made special style for frame with palette?
-   // frame->Margins().SetRight(0.2_normal);
+   // frame->SetMarginRight(0.2_normal);
 
    frame->SetGridX(false).SetGridY(false);
    frame->AttrX().SetZoom(nbins*0.2, nbins*0.8);
@@ -61,7 +61,7 @@ void draw_rh2_large()
 
    auto draw = canvas->Draw(pHist);
 
-   draw->AttrLine().SetColor(RColor::kLime);
+   draw->SetLineColor(RColor::kLime);
    // draw->Contour(); // configure cont draw option
    // draw->Scatter(); // configure scatter draw option
    // draw->Arrow(); // configure arrow draw option
@@ -75,7 +75,7 @@ void draw_rh2_large()
    draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
-   stat->AttrFill().SetColor(RColor::kBlue);
+   stat->SetFillColor(RColor::kBlue);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

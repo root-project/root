@@ -55,32 +55,32 @@ void draw_rh1()
 
    // default draw option
    subpads[0][0]->Draw<RFrameTitle>("Default RH1 drawing");
-   subpads[0][0]->Draw(pHist1)->AttrLine().SetColor(col1).SetWidth(2);
-   subpads[0][0]->Draw(pHist2)->AttrLine().SetColor(col2).SetWidth(4);
+   subpads[0][0]->Draw(pHist1)->SetLineColor(col1).SetLineWidth(2);
+   subpads[0][0]->Draw(pHist2)->SetLineColor(col2).SetLineWidth(4);
 
    // errors draw options
    subpads[1][0]->Draw<RFrameTitle>("Error() draw options");
-   subpads[1][0]->Draw(pHist1)->Error(1).AttrLine().SetColor(col1);
-   subpads[1][0]->Draw(pHist2)->Error(4).AttrFill().SetColor(col2).SetStyle(3003);
+   subpads[1][0]->Draw(pHist1)->Error(1).SetLineColor(col1);
+   subpads[1][0]->Draw(pHist2)->Error(4).SetFillColor(col2).SetFillStyle(3003);
 
    // text and marker draw options
    subpads[0][1]->Draw<RFrameTitle>("Text() and Marker() draw options");
-   subpads[0][1]->Draw(pHist1)->Text(true).AttrText().SetColor(col1);
-   subpads[0][1]->Draw(pHist2)->Marker().AttrMarker().SetColor(col2).SetStyle(30).SetSize(1.5);
+   subpads[0][1]->Draw(pHist1)->Text(true).SetTextColor(col1);
+   subpads[0][1]->Draw(pHist2)->Marker().SetMarkerColor(col2).SetMarkerStyle(30).SetMarkerSize(1.5);
 
    // bar draw options
    subpads[1][1]->Draw<RFrameTitle>("Bar() draw options");
-   subpads[1][1]->Draw(pHist1)->Bar(0,0.5).AttrFill().SetColor(col1);
-   subpads[1][1]->Draw(pHist2)->Bar(0.5,0.5,true).AttrFill().SetColor(col2);
+   subpads[1][1]->Draw(pHist1)->Bar(0,0.5).SetFillColor(col1);
+   subpads[1][1]->Draw(pHist2)->Bar(0.5,0.5,true).SetFillColor(col2);
 
    // line draw option
    subpads[0][2]->Draw<RFrameTitle>("Line() draw option");
-   subpads[0][2]->Draw(pHist1)->Line().AttrLine().SetColor(col1);
-   subpads[0][2]->Draw(pHist2)->Line().AttrLine().SetColor(col2);
+   subpads[0][2]->Draw(pHist1)->Line().SetLineColor(col1);
+   subpads[0][2]->Draw(pHist2)->Line().SetLineColor(col2);
 
    // lego draw option
    subpads[1][2]->Draw<RFrameTitle>("Lego() draw option");
-   subpads[1][2]->Draw(pHist1)->Lego().AttrFill().SetColor(col1);
+   subpads[1][2]->Draw(pHist1)->Lego().SetFillColor(col1);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

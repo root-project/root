@@ -36,7 +36,7 @@ void draw_text()
       auto text = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
 
       RColor col((int) (0.38*i), (int) (0.64*i), (int) (0.76*i));
-      text->AttrText().SetColor(col).SetSize(10+i/10).SetAngle(i).SetAlign(13).SetFont(42);
+      text->SetTextColor(col).SetTextSize(10+i/10).SetTextAngle(i).SetTextAlign(13).SetFont(42);
    }
 
    canvas->Show();

@@ -36,8 +36,8 @@ void draw_pave()
 
    // RFrame will be automatically created as well
    auto pave = canvas->Draw<RPave>();
-   pave->AttrFill().SetColor(RColor::kBlue);
-   pave->AttrBorder().SetColor(RColor::kGreen).SetWidth(3);
+   pave->SetFillColor(RColor::kBlue);
+   pave->SetLineColor(RColor::kGreen).SetLineWidth(3);
    pave->SetCornerY(-0.03_normal);
    pave->SetHeight(0.2_normal);
 
@@ -45,7 +45,7 @@ void draw_pave()
    text->AddLine("This is RTextPave");
    text->AddLine("It can have several lines");
    text->AddLine("It should be positioned below RPave");
-   text->AttrFill().SetColor(RColor::kYellow);
+   text->SetFillColor(RColor::kYellow);
    text->SetCornerY(0.25_normal);
    text->SetHeight(0.3_normal);
 

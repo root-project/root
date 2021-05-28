@@ -49,7 +49,7 @@ void draw_rh2_colz()
    auto frame = canvas->GetOrCreateFrame();
 
    // should we made special style for frame with palette?
-   frame->Margins().SetRight(0.2_normal);
+   frame->SetMarginRight(0.2_normal);
 
    frame->SetGridX(false).SetGridY(false);
 
@@ -68,7 +68,7 @@ void draw_rh2_colz()
    canvas->Draw<RPaletteDrawable>(RPalette::GetPalette(), true);
 
    auto draw = canvas->Draw(pHist);
-   // draw->AttrLine().SetColor(RColor::kLime);
+   // draw->SetLineColor(RColor::kLime);
    // draw->Surf(2); // configure surf4 draw option
    // draw->Lego(2); // configure lego2 draw option
    // draw->Contour(); // configure cont draw option
@@ -78,7 +78,7 @@ void draw_rh2_colz()
    draw->Text(true); // configure text drawing (can be enabled with most 2d options)
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
-   stat->AttrFill().SetColor(RColor::kRed);
+   stat->SetFillColor(RColor::kRed);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

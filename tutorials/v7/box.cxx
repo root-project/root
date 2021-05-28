@@ -29,22 +29,22 @@ void box()
    RColor Color1(0, 255, 0, 0.5); // 50% opaque
    RColor Color2(0, 0, 255, 0.7); // 70% opaque
 
-   Box1->AttrBox().AttrBorder().SetColor(Color1).SetWidth(5);
-   Box1->AttrBox().AttrFill().SetColor(RColor::kRed);
+   Box1->SetLineColor(Color1).SetLineWidth(5);
+   Box1->SetFillColor(RColor::kRed);
 
    auto Box2 = canvas->Draw<RBox>(RPadPos(0.4_normal, 0.2_normal), RPadPos(0.6_normal,0.7_normal));
-   Box2->AttrBox().AttrBorder().SetColor(Color2).SetStyle(2).SetWidth(10);
-   Box2->AttrBox().AttrFill().SetColor(RColor::kGreen);
+   Box2->SetLineColor(Color2).SetLineStyle(2).SetLineWidth(10);
+   Box2->SetFillColor(RColor::kGreen);
 
    auto Box3 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.4_normal), RPadPos(0.9_normal,0.6_normal));
-   Box3->AttrBox().AttrBorder().SetWidth(3);
-   Box3->AttrBox().AttrFill().SetColor(RColor::kBlue);
+   Box3->SetLineWidth(3);
+   Box3->SetFillColor(RColor::kBlue);
 
    auto Box4 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.7_normal), RPadPos(0.9_normal,0.9_normal));
-   Box4->AttrBox().AttrBorder().SetWidth(3);
+   Box4->SetLineWidth(3);
 
    auto Box5 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.1_normal), RPadPos(0.9_normal,0.3_normal));
-   Box5->AttrBox().AttrBorder().SetWidth(3);
+   Box5->SetLineWidth(3);
 
    canvas->Show();
 }

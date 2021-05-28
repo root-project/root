@@ -54,16 +54,16 @@ void draw_subpads()
 
   auto subpads = canvas->Divide(2,2);
 
-  subpads[0][0]->Draw(pHist1)->AttrLine().SetColor(RColor::kRed);
-  subpads[1][0]->Draw(pHist2)->AttrLine().SetColor(RColor::kBlue);
-  subpads[0][1]->Draw(pHist3)->AttrLine().SetColor(RColor::kGreen);
+  subpads[0][0]->Draw(pHist1)->SetLineColor(RColor::kRed);
+  subpads[1][0]->Draw(pHist2)->SetLineColor(RColor::kBlue);
+  subpads[0][1]->Draw(pHist3)->SetLineColor(RColor::kGreen);
 
   // Divide pad on sub-sub-pads
   auto subsubpads = subpads[1][1]->Divide(2,2);
 
-  subsubpads[0][0]->Draw(pHist1)->AttrLine().SetColor(RColor::kBlue);
-  subsubpads[1][0]->Draw(pHist2)->AttrLine().SetColor(RColor::kGreen);
-  subsubpads[0][1]->Draw(pHist3)->AttrLine().SetColor(RColor::kRed);
+  subsubpads[0][0]->Draw(pHist1)->SetLineColor(RColor::kBlue);
+  subsubpads[1][0]->Draw(pHist2)->SetLineColor(RColor::kGreen);
+  subsubpads[0][1]->Draw(pHist3)->SetLineColor(RColor::kRed);
 
    auto style = RStyle::Parse(
         "frame {"              // select type frame for RFrame

@@ -52,29 +52,25 @@ void draw_legend()
 
    // draw first histogram
    auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetWidth(2).SetColor(0.3); // should be red color
+   draw1->SetLineWidth(2).SetLineColor(0.3); // should be red color
 
    // draw second histogram
    auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetWidth(4).SetColor(0.7); // should be blue color
+   draw2->SetLineWidth(4).SetLineColor(0.7); // should be blue color
 
    auto legend = canvas->Draw<RLegend>("Legend title");
-   legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
-   legend->AttrBorder().SetWidth(2).SetColor(RColor::kRed);
+   legend->SetFillStyle(5).SetFillColor(RColor::kWhite);
+   legend->SetLineWidth(2).SetLineColor(RColor::kRed);
    legend->AddEntry(draw1, "histo1");
    legend->AddEntry(draw2, "histo2");
 
    auto entry = legend->AddEntry("test");
    entry->SetLine(true);
-   entry->SetLineColor(RColor::kGreen);
-   entry->SetLineWidth(5);
+   entry->SetLineColor(RColor::kGreen).SetLineWidth(5);
    entry->SetFill(true);
-   entry->SetFillColor(RColor::kBlue);
-   entry->SetFillStyle(3004);
+   entry->SetFillColor(RColor::kBlue).SetFillStyle(3004);
    entry->SetMarker(true);
-   entry->SetMarkerColor(RColor::kRed);
-   entry->SetMarkerSize(3);
-   entry->SetMarkerStyle(28);
+   entry->SetMarkerColor(RColor::kRed).SetMarkerSize(3).SetMarkerStyle(28);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

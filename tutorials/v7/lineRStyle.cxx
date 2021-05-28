@@ -28,7 +28,7 @@ void lineRStyle()
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
-      canvas->Draw<RText>(std::to_string(i))->SetPos({.3_normal, 1_normal*num}).AttrText().SetSize(13).SetAlign(32).SetFont(52);
+      canvas->Draw<RText>(std::to_string(i))->SetPos({.3_normal, 1_normal*num}).SetTextSize(13).SetTextAlign(32).SetFont(52);
 
       auto line = canvas->Draw<RLine>(RPadPos(.32_normal,1_normal*num), RPadPos(.8_normal, 1_normal*num));
 

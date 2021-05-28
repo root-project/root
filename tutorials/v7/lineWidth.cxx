@@ -26,10 +26,10 @@ void lineWidth()
       num = num + 0.05;
 
       // one can create object ourself
-      canvas->Draw(std::make_shared<RText>(RPadPos(.3_normal, 1_normal*num), std::to_string(i)))->AttrText().SetSize(13).SetAlign(32).SetFont(52);
+      canvas->Draw(std::make_shared<RText>(RPadPos(.3_normal, 1_normal*num), std::to_string(i)))->SetTextSize(13).SetTextAlign(32).SetFont(52);
 
       // or let it create by templated Draw<T> method
-      canvas->Draw<RLine>(RPadPos(.32_normal, 1_normal*num), RPadPos(.8_normal , 1_normal*num))->AttrLine().SetWidth(i);
+      canvas->Draw<RLine>(RPadPos(.32_normal, 1_normal*num), RPadPos(.8_normal , 1_normal*num))->SetLineWidth(i);
    }
 
    canvas->Show();

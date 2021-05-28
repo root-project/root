@@ -42,11 +42,11 @@ void draw_frame()
 
    // configure RFrame with direct API calls
    auto frame = canvas->GetOrCreateFrame();
-   // frame->AttrFill().SetColor(RColor::kBlue);
-   frame->AttrBorder().SetColor(RColor::kBlue);
-   frame->AttrBorder().SetWidth(3);
-   frame->Margins().SetTop(0.25_normal);
-   frame->Margins().SetAll(0.2_normal);
+   // frame->SetFillColor(RColor::kBlue);
+   frame->SetLineColor(RColor::kBlue);
+   frame->SetLineWidth(3);
+   frame->SetMarginTop(0.25_normal);
+   frame->SetMarginAll(0.2_normal);
 
    // let frame draw axes without need of any histogram
    frame->SetDrawAxes(true);
@@ -54,18 +54,18 @@ void draw_frame()
    frame->AttrX().SetMinMax(0,100);
    // frame->AttrX().SetLog(2.);
    frame->AttrX().SetZoom(5.,95.);
-   frame->AttrX().AttrLine().SetColor(RColor::kGreen); // or in CSS "x_line_color: green;"
+   frame->AttrX().SetLineColor(RColor::kGreen); // or in CSS "x_line_color: green;"
 
    frame->AttrY().SetMinMax(0,100);
    frame->AttrY().SetZoom(5,95);
-   frame->AttrY().AttrLine().SetColor(RColor::kGreen); // or in CSS "x_line_color: blue;"
+   frame->AttrY().SetLineColor(RColor::kGreen); // or in CSS "x_line_color: blue;"
 
    canvas->Draw<RFrameTitle>("Frame title")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // draw line over the frame
    auto line0 = canvas->Draw<RLine>(RPadPos(100_px, .9_normal), RPadPos(900_px , .9_normal));
    auto text0 = canvas->Draw<RText>(RPadPos(100_px, .9_normal + 5_px), "Line drawn on pad, fix pixel length");
-   text0->AttrText().SetAlign(11);
+   text0->SetTextAlign(11);
 
    // draw line under the frame
    auto line1 = canvas->Draw<RLine>(RPadPos(.1_normal, .1_normal), RPadPos(.9_normal, .1_normal));
@@ -74,24 +74,24 @@ void draw_frame()
    // draw on left size of frame, but bound to frame, moved with frame
    auto line2 = canvas->Draw<RLine>(RPadPos(-.2_normal, -.1_normal), RPadPos(-.2_normal , 1.1_normal));
    line2->SetOnFrame(true); // or via CSS "onframe: true;"
-   line2->AttrLine().SetColor(RColor::kRed);
+   line2->SetLineColor(RColor::kRed);
 
    auto text2 = canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
    text2->SetOnFrame(true); // or via CSS "onframe: true;"
-   text2->AttrText().SetAngle(90).SetAlign(11);
+   text2->SetTextAngle(90).SetTextAlign(11);
 
    // draw on right size of frame, user coordiante, moved and zoomed with frame
    auto line3 = canvas->Draw<RLine>(RPadPos(110_user, -.1_normal), RPadPos(110_user, 1.1_normal));
    line3->SetOnFrame(true); // or via CSS "onframe: true;"
-   line3->AttrLine().SetColor(RColor::kRed);
+   line3->SetLineColor(RColor::kRed);
 
    auto text3 = canvas->Draw<RText>(RPadPos(110_user, -.1_normal), "Line drawn on frame, user coordinates");
    text3->SetOnFrame(true); // or via CSS "onframe: true;"
-   text3->AttrText().SetAngle(90);
+   text3->SetTextAngle(90);
 
    // draw box before line at same position as line ending with 40x40 px size and clipping on
    auto box4 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 80_user - 20_px), RPadPos(80_user + 20_px, 80_user + 20_px));
-   box4->AttrBox().AttrFill().SetColor(RColor::kBlue);
+   box4->SetFillColor(RColor::kBlue);
    box4->SetClipping(true); // or via CSS "clipping: true;"
    box4->SetOnFrame(true); // or via CSS "onframe: true;"
 
@@ -106,7 +106,7 @@ void draw_frame()
 
    // draw box before line at same position as line ending with 40x40 px size
    auto box5 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 20_user - 20_px), RPadPos(80_user + 20_px, 20_user + 20_px));
-   box5->AttrBox().AttrFill().SetColor(RColor::kYellow);
+   box5->SetFillColor(RColor::kYellow);
    box5->SetOnFrame(true); // or via CSS "onframe: true;"
 
    // draw line in the frame, but disable default cutting by the frame borders
@@ -115,7 +115,7 @@ void draw_frame()
 
    auto text5 = canvas->Draw<RText>(RPadPos(20_user, 80_user), "clipping off");
    text5->SetOnFrame(true); // or via CSS "onframe: true;"
-   text5->AttrText().SetAlign(11);
+   text5->SetTextAlign(11);
 
    canvas->UseStyle(frame_style);
 

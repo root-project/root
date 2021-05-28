@@ -59,8 +59,8 @@ void draw_canvas(const std::string &title, RColor col)
    auto canvas = RCanvas::Create(title);
 
    canvas->Draw<RFrameTitle>(title);
-   canvas->Draw(pHist)->AttrLine().SetColor(col);
-   canvas->Draw(pHist2)->AttrLine().SetColor(RColor::kBlue);
+   canvas->Draw(pHist)->SetLineColor(col);
+   canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
 
    int maxloop = 100;
 

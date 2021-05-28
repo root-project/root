@@ -53,7 +53,7 @@ void draw_rh3_large()
    auto frame = canvas->GetOrCreateFrame();
 
    // should we made special style for frame with palette?
-   // frame->Margins().SetRight(0.2_normal);
+   // frame->SetMarginRight(0.2_normal);
 
    frame->AttrX().SetZoom(nbins*0.1, nbins*0.9);
    frame->AttrY().SetZoom(nbins*0.1, nbins*0.9);
@@ -63,7 +63,7 @@ void draw_rh3_large()
 
    auto draw = canvas->Draw(pHist);
 
-   draw->AttrLine().SetColor(RColor::kLime);
+   draw->SetLineColor(RColor::kLime);
    // draw->Box(); // configure box draw option (default)
    // draw->Sphere(); // configure sphere draw option
    draw->Scatter(); // configure scatter draw option
@@ -71,8 +71,8 @@ void draw_rh3_large()
 
    draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
 
-   //auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
-   //stat->AttrFill().SetColor(RColor::kBlue);
+   //auto stat = canvas->Draw<RHist3StatBox>(pHist, "hist");
+   //stat->SetFillColor(RColor::kBlue);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

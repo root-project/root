@@ -56,8 +56,8 @@ void draw_rh1_large()
 
    auto draw = canvas->Draw(pHist);
 
-   draw->AttrLine().SetColor(RColor::kLime);
-   // draw->AttrFill().SetColor(RColor::kLime);
+   draw->SetLineColor(RColor::kLime);
+   // draw->SetFillColor(RColor::kLime);
    // draw->Line(); // configure line draw option
    // draw->Bar(); // configure bar draw option
    // draw->Error(3); // configure error drawing
@@ -66,7 +66,7 @@ void draw_rh1_large()
    draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
 
    auto stat = canvas->Draw<RHist1StatBox>(pHist, "hist");
-   stat->AttrFill().SetColor(RColor::kBlue);
+   stat->SetFillColor(RColor::kBlue);
 
    canvas->SetSize(1000, 700);
    canvas->Show();
