@@ -19,7 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RAttrMap.hxx
     ROOT/RAttrBase.hxx
     ROOT/RAttrAxis.hxx
-    ROOT/RAttrBox.hxx
     ROOT/RAttrLine.hxx
     ROOT/RAttrFill.hxx
     ROOT/RAttrMarker.hxx
