@@ -36,7 +36,7 @@ ClassImp(RooMomentMorphFunc)
 
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc()
-   : _cacheMgr(this, 10, true, true), _curNormSet(nullptr), _mref(nullptr), _M(nullptr), _useHorizMorph(true)
+   : _cacheMgr(this, 10, true, true)
 {
 }
 
@@ -49,8 +49,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
      _varList("varList", "List of variables", this),
      _pdfList("pdfList", "List of pdfs", this),
      _mref(new TVectorD(mrefpoints)),
-     _setting(setting),
-     _useHorizMorph(true)
+     _setting(setting)
 {
    // observables
   _varList.addTyped<RooAbsReal>(varList);
@@ -71,8 +70,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
      _varList("varList", "List of variables", this),
      _pdfList("pdfList", "List of pdfs", this),
      _mref(new TVectorD(mrefList.size())),
-     _setting(setting),
-     _useHorizMorph(true)
+     _setting(setting)
 {
    // observables
   _varList.addTyped<RooAbsReal>(varList);
@@ -105,7 +103,6 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
 RooMomentMorphFunc::RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name)
    : RooAbsReal(other, name),
      _cacheMgr(other._cacheMgr, this),
-     _curNormSet(nullptr),
      m("m", this, other.m),
      _varList("varList", this, other._varList),
      _pdfList("pdfList", this, other._pdfList),
@@ -313,11 +310,11 @@ RooMomentMorphFunc::CacheElem::~CacheElem()
 }
 
 //_____________________________________________________________________________
-double RooMomentMorphFunc::getVal(const RooArgSet *set) const
+double RooMomentMorphFunc::getValV(const RooArgSet *set) const
 {
-   // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
+   // Special version of getValV() overrides RooAbsReal::getVal() to save value of current normalization set
    _curNormSet = set ? const_cast<RooArgSet *>(set) : const_cast<RooArgSet *>(static_cast<RooArgSet const*>(&_varList));
-   return RooAbsReal::getVal(set);
+   return RooAbsReal::getValV(set);
 }
 
 //_____________________________________________________________________________

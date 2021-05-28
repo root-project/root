@@ -36,7 +36,7 @@ ClassImp(RooMomentMorph);
 /// coverity[UNINIT_CTOR]
 
 RooMomentMorph::RooMomentMorph()
-  : _cacheMgr(this,10,true,true), _curNormSet(nullptr), _mref(nullptr), _M(nullptr), _useHorizMorph(true)
+  : _cacheMgr(this,10,true,true)
 {
 }
 
@@ -108,7 +108,6 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title, RooAbsReal &
 RooMomentMorph::RooMomentMorph(const RooMomentMorph &other, const char *name)
    : RooAbsPdf(other, name),
      _cacheMgr(other._cacheMgr, this),
-     _curNormSet(nullptr),
      m("m", this, other.m),
      _varList("varList", this, other._varList),
      _pdfList("pdfList", this, other._pdfList),
@@ -170,7 +169,7 @@ RooMomentMorph::CacheElem::CacheElem(std::unique_ptr<RooAbsPdf> && sumPdf,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) const
+RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
 {
   if (auto* cache = static_cast<CacheElem*>(_cacheMgr.getObj(nullptr,static_cast<RooArgSet*>(nullptr)))) {
     return cache ;
@@ -287,6 +286,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
   else {
     theSumPdf = std::make_unique<RooAddPdf>(sumpdfName.c_str(),sumpdfName.c_str(),_pdfList,coefList);
   }
+  theSumPdf->fixCoefNormalization(*nset);
 
   // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
   // This will prevent the likelihood optimizers from erroneously declaring terms constant
@@ -319,10 +319,10 @@ RooMomentMorph::CacheElem::~CacheElem() = default;
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
 
-double RooMomentMorph::getVal(const RooArgSet* set) const
+double RooMomentMorph::getValV(const RooArgSet* set) const
 {
   _curNormSet = set ? const_cast<RooArgSet*>(set) : const_cast<RooArgSet*>(static_cast<RooArgSet const*>(&_varList));
-  return RooAbsPdf::getVal(set) ;
+  return RooAbsPdf::getValV(set) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
