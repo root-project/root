@@ -43,7 +43,7 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 nll = model.createNLL(data, ROOT.RooFit.NumCPU(2))
 
 # Minimize likelihood w.r.t all parameters before making plots
-ROOT.RooMinuit(nll).migrad()
+ROOT.RooMinimizer(nll).migrad()
 
 # Plot likelihood scan frac
 frame1 = frac.frame(ROOT.RooFit.Bins(10), ROOT.RooFit.Range(0.01, 0.95), ROOT.RooFit.Title("LL and profileLL in frac"))
