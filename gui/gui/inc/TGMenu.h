@@ -279,13 +279,6 @@ public:
 };
 
 
-/** \class TGMenuBar
-
-This class creates a menu bar.
-
-*/
-
-
 class TGMenuBar : public TGHorizontalFrame {
 
 friend class TGPopupMenu;

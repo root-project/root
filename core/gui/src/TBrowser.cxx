@@ -35,6 +35,7 @@ contents of the selected class in the icon-box. And so on....
 #include "TApplication.h"
 
 /** \class TBrowserTimer
+Called whenever timer times out.
 */
 
 class TBrowserTimer : public TTimer {
@@ -50,8 +51,7 @@ public:
 };
 
 /** \class TBrowserObject
-This class is designed to wrap a Foreign object in order to
-inject it into the Browse sub-system.
+This class is designed to wrap a Foreign object in order to inject it into the Browse sub-system.
 */
 
 class TBrowserObject : public TNamed
@@ -67,8 +67,8 @@ public:
    TClass *IsA() const { return fClass; }
 
 private:
-   void     *fObj;   //! pointer to the foreign object
-   TClass   *fClass; //! pointer to class of the foreign object
+   void     *fObj;   ///<! pointer to the foreign object
+   TClass   *fClass; ///<! pointer to class of the foreign object
 
 };
 
@@ -400,10 +400,6 @@ void TBrowser::SetSelected(TObject *clickedObject)
    fLastSelectedObject = clickedObject;
 }
 
-/** \class  TBrowserTimer
-Called whenever timer times out.
-*/
-
 Bool_t TBrowserTimer::Notify()
 {
    if (fBrowser) {
@@ -420,10 +416,6 @@ Bool_t TBrowserTimer::Notify()
    return kFALSE;
 }
 
-/** \class TBrowserObject
-This is a wrapper class to emulate the TObject interface
-around an object of a non-TObject class
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

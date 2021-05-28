@@ -10,7 +10,7 @@
  *************************************************************************/
 
 
-/** \class TGeoMedium
+/** \class TGeoOpticalSurface
 \ingroup Geometry_classes
 
 This is a wrapper class to G4OpticalSurface

@@ -24,7 +24,7 @@
 #include "TMath.h"
 #include "TPRegexp.h"
 
-/** \class TGLAxisPainterBox
+/** \class TGLAxisPainter
 \ingroup opengl
 Utility class to paint axis in GL.
 */

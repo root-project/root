@@ -41,6 +41,12 @@ vertical scrollbar is added.
 Selecting an item in the listbox will generate the event:
   - kC_COMMAND, kCM_LISTBOX, listbox id, item id.
 
+\class TGLBEntry
+\ingroup guiwidgets
+
+Basic listbox entries.
+Listbox entries are created by a TGListBox and not by the user.
+
 \class TGTextLBEntry
 \ingroup guiwidgets
 
@@ -51,6 +57,7 @@ A TGTextLBEntry is for TGListBox internal use.
 \ingroup guiwidgets
 
 Line style and width listbox entries.
+Line example and width number
 
 \class TGIconLBEntry
 \ingroup guiwidgets
