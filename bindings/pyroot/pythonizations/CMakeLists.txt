@@ -111,21 +111,14 @@ foreach(val RANGE ${how_many_pythons})
   endif()
 
   target_include_directories(${libname}
-     PRIVATE ${python_include_dir}
-     PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
+     SYSTEM PRIVATE ${python_include_dir})
+
+  target_include_directories(${libname}
+     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
 
   # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
   if(NOT MSVC)
     target_compile_options(${libname} PRIVATE -Wno-strict-aliasing)
-  endif()
-
-  # Disables warnings originating from deprecated register keyword in Python
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(${libname} PRIVATE -Wno-register)
-  endif()
-  if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(${libname} PRIVATE -Wno-register)
-    target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
   # Compile .py files
