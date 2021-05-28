@@ -144,3 +144,21 @@ TEST(OptsTest, AttribAssign) {
    EXPECT_FLOAT_EQ(attrs1.AttrLine().GetLineWidth(), 1.);
    EXPECT_FLOAT_EQ(attrs2.AttrLine().GetLineWidth(), 1.);
 }
+
+TEST(OptsTest, AttrLineCopy) {
+   CustomAttrs attrs1;
+   CustomAttrs attrs2;
+
+   // deep copy - independent from origin
+   attrs1.AttrLine().SetLineWidth(10).SetLineStyle(5).SetLineColor(RColor::kRed);
+
+   EXPECT_NE(attrs1.AttrLine(), attrs2.AttrLine());
+
+   attrs2.AttrLine() = attrs1.AttrLine();
+
+   EXPECT_EQ(attrs1.AttrLine(), attrs2.AttrLine());
+
+   EXPECT_FLOAT_EQ(attrs2.AttrLine().GetLineWidth(), 10);
+   EXPECT_EQ(attrs2.AttrLine().GetLineStyle(), 5);
+   EXPECT_EQ(attrs2.AttrLine().GetLineColor(), RColor::kRed);
+}
