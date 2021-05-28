@@ -117,6 +117,11 @@ public:
       }
    }
 
+   bool receive_task_result_on_master(const zmq::message_t & /*message*/) override {
+      // TODO: implement; this no-op placeholder is just to make everything compile first so I can check whether merge was successful
+      return true;
+   }
+
    // -- END plumbing --
 
 
@@ -244,4 +249,4 @@ TEST_P(TestMPJob, multiJobGetResult)
 //}
 
 
-INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses, TestMPJob, ::testing::Values(1, 2, 3));
+INSTANTIATE_TEST_SUITE_P(NumberOfWorkerProcesses, TestMPJob, ::testing::Values(1, 2, 3));

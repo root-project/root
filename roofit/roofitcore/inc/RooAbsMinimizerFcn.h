@@ -86,8 +86,9 @@ public:
    virtual void setOptimizeConst(Int_t flag) = 0;
 
    bool getOptConst();
-   Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
    std::vector<double> get_parameter_values() const;
+
+   Bool_t SetPdfParamVal(int index, double value) const;
 
 protected:
    virtual void optimizeConstantTerms(bool constStatChange, bool constValChange) = 0;
@@ -97,13 +98,10 @@ protected:
    void ClearPdfParamAsymErr(Int_t index);
    void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
 
-   Bool_t SetPdfParamVal(int index, double value) const;
    void printEvalErrors() const;
 
-    void updateFloatVec();
-
    // members
-   const RooMinimizer *_context;
+   RooMinimizer *_context;
 
    // the following four are mutable because DoEval is const (in child classes)
    // Reset the *largest* negative log-likelihood value we have seen so far:
@@ -116,6 +114,7 @@ protected:
 
    unsigned int _nDim = 0;
 
+   Bool_t _optConst = kFALSE;
 
    RooArgList *_floatParamList;
    RooArgList *_constParamList;

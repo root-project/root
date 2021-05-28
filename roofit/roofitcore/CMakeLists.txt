@@ -239,7 +239,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspace.h
     RooWorkspaceHandle.h
     RooXYChi2Var.h
-        RooTestStatMPDriver.h
         RooTimer.h
         RooJsonListFile.h
         RooTaskSpec.h
@@ -482,7 +481,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooVectorDataStore.cxx
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
-        src/RooTestStatMPDriver.cxx
         src/RooTimer.cxx
         src/RooJsonListFile.cxx
         src/RooTaskSpec.cxx

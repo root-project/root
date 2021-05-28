@@ -413,8 +413,8 @@ void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFuncti
 
    t2 = get_time();
    timer.stop();
-   oocxcoutD((TObject *)nullptr, Benchmarking1)
-      << "SetInitialGradient time: " << timer.timing_s() << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+//   oocxcoutD((TObject *)nullptr, Benchmarking1)
+//      << "SetInitialGradient time: " << timer.timing_s() << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
 }
 
 bool NumericalDerivatorMinuit2::always_exactly_mimic_minuit2() const

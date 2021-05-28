@@ -14,7 +14,7 @@
 #include <TestStatistics/RooRealL.h>
 #include <TestStatistics/RooAbsL.h>
 
-ClassImp(RooFit::TestStatistics::RooRealL);
+//ClassImp(RooFit::TestStatistics::RooRealL);
 
 namespace RooFit {
 namespace TestStatistics {

@@ -110,7 +110,7 @@ public:
    Bool_t setLogFile(const char *logf = 0) { return fitterFcn()->SetLogFile(logf); }
 
    // necessary from RooAbsMinimizerFcn subclasses
-   Int_t getPrintLevel();
+   Int_t getPrintLevel() const;
 
    void setMinimizerType(const char *type);
 
@@ -182,7 +182,7 @@ private:
 
    RooMinimizer(const RooMinimizer &);
 
-   ClassDef(RooMinimizer, 1) // RooFit interface to ROOT::Fit::Fitter
+   ClassDef(RooMinimizer,1) // RooFit interface to ROOT::Fit::Fitter
 };
 
 

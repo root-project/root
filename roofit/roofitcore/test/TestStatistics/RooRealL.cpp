@@ -20,7 +20,6 @@
 #include <RooFitResult.h>
 #include <RooProdPdf.h>
 #include <RooChebychev.h>
-#include <RooStats/RooStatsUtils.h>
 #include <RooAddition.h>
 #include <RooConstraintSum.h>
 #include <RooPolynomial.h>
@@ -231,8 +230,8 @@ TEST_P(RooRealL, setVal)
    }
 }
 
-INSTANTIATE_TEST_CASE_P(NworkersModeSeed, RooRealL,
-                        ::testing::Values(2, 3)); // random seed
+INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RooRealL,
+                         ::testing::Values(2, 3)); // random seed
 
 class RealLVsMPFE
    : public ::testing::TestWithParam<std::tuple<std::size_t>> {
@@ -344,5 +343,5 @@ TEST_P(RealLVsMPFE, minimize)
    m1.cleanup(); // necessary in tests to clean up global _theFitter
 }
 
-INSTANTIATE_TEST_CASE_P(NworkersModeSeed, RealLVsMPFE,
-                        ::testing::Values(2, 3)); // random seed
+INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RealLVsMPFE,
+                         ::testing::Values(2, 3)); // random seed

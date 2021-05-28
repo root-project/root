@@ -110,8 +110,6 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    unsigned int n = st.VariableParameters();
    const MnMachinePrecision &prec = st.Precision();
 
-   int printLevel = MnPrint::Level();
-
   // initial starting values
    MnAlgebraicVector x(n);
    for (unsigned int i = 0; i < n; i++)
@@ -166,10 +164,6 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
 //      Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
 //      state = ng2ls(fcn, state, ngc, prec);
       state = ng2ls(fcn, state, gc, prec);
-
-      if (printLevel >1) {
-         MnPrint::PrintState(std::cout, state, "MnSeedGenerator: Negative G2 found - new state:  ");
-      }
    }
 
    if (stra.Strategy() == 2 && !st.HasCovariance()) {

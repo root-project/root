@@ -105,7 +105,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
       return fvalue;
    }
 
-   if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
+   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
 
       if (_printEvalErrors >= 0) {
 
@@ -141,7 +141,6 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
          fvalue = _maxFCN + 1;
       }
 
-      RooAbsPdf::clearEvalError();
       RooAbsReal::clearEvalErrorLog();
       _numBadNLL++;
    } else if (fvalue > _maxFCN) {

@@ -337,11 +337,10 @@
 #pragma link C++ class RooUnitTest+ ;
 #ifndef __ROOFIT_NOROOMINIMIZER
 #pragma link C++ class RooMinimizerFcn+;
-#pragma link C++ class RooMinimizerTemplate<RooMinimizerFcn, RooFit::MinimizerType::Minuit>+;
+#pragma link C++ class RooMinimizer+;
 #pragma link C++ class RooGradMinimizerFcn+;
-#pragma link C++ class RooMinimizerTemplate<RooGradMinimizerFcn, RooFit::MinimizerType::Minuit2>+;
-#pragma link C++ class RooMinimizerTemplate<RooFit::MultiProcess::GradMinimizerFcn, RooFit::MinimizerType::Minuit2, std::size_t>+;
 #endif
+#pragma link C++ class RooFit::TestStatistics::RooRealL+;
 #pragma link C++ class RooAbsMoment+ ;
 #pragma link C++ class RooMoment+ ;
 #pragma link C++ class RooFirstMoment+ ;

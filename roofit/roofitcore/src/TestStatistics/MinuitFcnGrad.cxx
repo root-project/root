@@ -61,7 +61,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
       return fvalue;
    }
 
-   if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
+   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
 
       if (_printEvalErrors >= 0) {
 
@@ -97,7 +97,6 @@ double MinuitFcnGrad::DoEval(const double *x) const
          fvalue = _maxFCN + 1;
       }
 
-      RooAbsPdf::clearEvalError();
       RooAbsReal::clearEvalErrorLog();
       _numBadNLL++;
    } else if (fvalue > _maxFCN) {
@@ -190,7 +189,7 @@ bool MinuitFcnGrad::sync_parameter_values_from_minuit_calls(const double *x, boo
          // we log in the flag below whether they are different so that calculators can use this information.
          bool parameter_changed = (x[ix] != minuit_external_x_[ix]);
          a_parameter_has_been_updated |= parameter_changed;
-         a_parameter_is_mismatched |= (((RooRealVar *)_floatParamVec[ix])->getVal() != minuit_external_x_[ix]);
+         a_parameter_is_mismatched |= (((RooRealVar *)_floatParamList->at(ix))->getVal() != minuit_external_x_[ix]);
       }
 
       minuit_internal_roofit_x_mismatch_ = a_parameter_is_mismatched;

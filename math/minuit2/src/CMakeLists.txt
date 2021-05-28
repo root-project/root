@@ -23,6 +23,7 @@ set(MINUIT2_HEADERS
     CombinedMinimumBuilder.h
     ContoursError.h
     DavidonErrorUpdator.h
+    ExternalInternalGradientCalculator.h
     FCNAdapter.h
     FCNBase.h
     FCNGradAdapter.h
@@ -124,6 +125,7 @@ set(MINUIT2_SOURCES
     BasicMinimumError.cxx
     CombinedMinimumBuilder.cxx
     DavidonErrorUpdator.cxx
+    ExternalInternalGradientCalculator.cxx
     FumiliBuilder.cxx
     FumiliErrorUpdator.cxx
     FumiliGradientCalculator.cxx

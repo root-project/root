@@ -348,7 +348,7 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    m1->cleanup(); // necessary in tests to clean up global _theFitter
 }
 
-INSTANTIATE_TEST_CASE_P(NworkersSeed, LikelihoodGradientJob,
+INSTANTIATE_TEST_SUITE_P(NworkersSeed, LikelihoodGradientJob,
                         ::testing::Combine(::testing::Values(1, 2, 3), // number of workers
                                            ::testing::Values(2, 3)));  // random seed
 

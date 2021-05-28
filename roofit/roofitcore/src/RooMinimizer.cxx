@@ -77,7 +77,7 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooMinimizer);
+//ClassImp(RooMinimizer);
 
 ROOT::Fit::Fitter *RooMinimizer::_theFitter = 0 ;
 
@@ -991,7 +991,7 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   return res;
 
 }
-Int_t RooMinimizer::getPrintLevel()
+Int_t RooMinimizer::getPrintLevel() const
 {
    return _printLevel;
 }

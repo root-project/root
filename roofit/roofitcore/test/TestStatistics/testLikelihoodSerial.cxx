@@ -167,17 +167,12 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
 
    // manually create NLL, ripping all relevant parts from RooAbsPdf::createNLL, except here we also set binnedL = true
    RooArgSet projDeps;
-   const char* rangeName = 0;
-   const char* addCoefRangeName = 0;
-   Int_t numcpu = 1;
-   Int_t ext = 2;
-   RooFit::MPSplit interl = (RooFit::MPSplit) 0;
-   Bool_t cpuAffinity = static_cast<Bool_t>(1);
-   Bool_t verbose = 0;
-   Int_t splitr = 0;
-   Int_t cloneData = 0;
-   RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, ext, rangeName, addCoefRangeName,
-                        numcpu, interl, cpuAffinity, verbose, splitr, cloneData, /*binnedL=*/true);
+   RooAbsTestStatistic::Configuration nll_config;
+   nll_config.verbose = false;
+   nll_config.cloneInputData = false;
+   nll_config.binnedL = true;
+   int extended = 2;
+   RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, nll_config, extended);
 
    likelihood = std::make_shared<RooFit::TestStatistics::RooBinnedL>(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);

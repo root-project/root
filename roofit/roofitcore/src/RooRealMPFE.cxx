@@ -77,9 +77,6 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 
-// FIXME: remove this include?
-#include "../../../graf3d/ftgl/inc/FTGL.h"
-
 // timing
 #include "RooTimer.h"
 // getpid and getppid:

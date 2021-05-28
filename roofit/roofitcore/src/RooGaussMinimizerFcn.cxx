@@ -533,17 +533,17 @@ double RooGaussMinimizerFcn::DoEval(const double *x) const
   double fvalue = _funct->getVal();
   RooAbsReal::setHideOffset(kTRUE) ;
 
-  if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || fvalue>1e30) {
+  if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
 
     if (_printEvalErrors>=0) {
 
       if (_doEvalErrorWall) {
-        oocoutW(_context,Minimization) << "RooGaussMinimizerFcn: Minimized function has error status." << endl 
-				       << "Returning maximum FCN so far (" << _maxFCN 
+        oocoutW(_context,Minimization) << "RooGaussMinimizerFcn: Minimized function has error status." << endl
+				       << "Returning maximum FCN so far (" << _maxFCN
 				       << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
       } else {
         oocoutW(_context,Minimization) << "RooGaussMinimizerFcn: Minimized function has error status but is ignored" << endl ;
-      } 
+      }
 
       TIterator* iter = _floatParamList->createIterator() ;
       RooRealVar* var ;
@@ -555,16 +555,15 @@ double RooGaussMinimizerFcn::DoEval(const double *x) const
       }
       delete iter ;
       ooccoutW(_context,Minimization) << endl ;
-      
+
       RooAbsReal::printEvalErrors(ooccoutW(_context,Minimization),_printEvalErrors) ;
       ooccoutW(_context,Minimization) << endl ;
-    } 
+    }
 
     if (_doEvalErrorWall) {
       fvalue = _maxFCN+1 ;
     }
 
-    RooAbsPdf::clearEvalError() ;
     RooAbsReal::clearEvalErrorLog() ;
     _numBadNLL++ ;
   } else if (fvalue>_maxFCN) {

@@ -75,13 +75,12 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 }
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
-   : ROOT::Math::IBaseFunctionMultiDim(other),
-     _context(other._context), _maxFCN(other._maxFCN),
+   : _context(other._context), _maxFCN(other._maxFCN),
      _funcOffset(other._funcOffset),
      _recoverFromNaNStrength(other._recoverFromNaNStrength),
      _numBadNLL(other._numBadNLL),
-     _printEvalErrors(other._printEvalErrors), _evalCounter(other._evalCounter), _doEvalErrorWall(other._doEvalErrorWall),
-     _nDim(other._nDim), _logfile(other._logfile), _verbose(other._verbose)
+     _printEvalErrors(other._printEvalErrors), _evalCounter(other._evalCounter),
+     _nDim(other._nDim), _optConst(other._optConst), _logfile(other._logfile), _doEvalErrorWall(other._doEvalErrorWall), _verbose(other._verbose)
 {
    _floatParamList = new RooArgList(*other._floatParamList);
    _constParamList = new RooArgList(*other._constParamList);
@@ -95,11 +94,6 @@ RooAbsMinimizerFcn::~RooAbsMinimizerFcn()
    delete _initFloatParamList;
    delete _constParamList;
    delete _initConstParamList;
-}
-
-ROOT::Math::IBaseFunctionMultiDim *RooAbsMinimizerFcn::Clone() const
-{
-   return new RooAbsMinimizerFcn(*this);
 }
 
 /// Internal function to synchronize TMinimizer with current
@@ -327,8 +321,6 @@ Bool_t RooAbsMinimizerFcn::synchronize_parameter_settings(std::vector<ROOT::Fit:
       optimizeConstantTerms(constStatChange, constValChange);
    }
 
-   updateFloatVec();
-
    return 0;
 }
 
@@ -416,7 +408,7 @@ void RooAbsMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym &V)
 }
 
 /// Set value of parameter i.
-Bool_t RooMinimizerFcn::SetPdfParamVal(int index, double value) const
+Bool_t RooAbsMinimizerFcn::SetPdfParamVal(int index, double value) const
 {
   auto par = static_cast<RooRealVar*>(&(*_floatParamList)[index]);
 
@@ -434,7 +426,7 @@ Bool_t RooMinimizerFcn::SetPdfParamVal(int index, double value) const
 /// Print information about why evaluation failed.
 /// Using _printEvalErrors, the number of errors printed can be steered.
 /// Negative values disable printing.
-void RooMinimizerFcn::printEvalErrors() const {
+void RooAbsMinimizerFcn::printEvalErrors() const {
   if (_printEvalErrors < 0)
     return;
 
@@ -537,29 +529,11 @@ std::vector<double> RooAbsMinimizerFcn::get_parameter_values() const
    values.reserve(_nDim);
 
    for (std::size_t index = 0; index < _nDim; ++index) {
-      RooRealVar *par = (RooRealVar *)_floatParamVec[index];
+      RooRealVar *par = (RooRealVar *)_floatParamList->at(index);
       values.push_back(par->getVal());
    }
 
    return values;
 }
-
-Bool_t RooAbsMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &value) const
-{
-   RooRealVar *par = (RooRealVar *)_floatParamVec[index];
-
-//   std::cout << "RooAbsMinimizerFcn::SetPdfParamVal, (par->getVal() != value): " << (par->getVal() != value) << std::endl;
-
-   if (par->getVal() != value) {
-      if (_verbose)
-         std::cout << par->GetName() << "=" << value << ", ";
-
-      par->setVal(value);
-      return kTRUE;
-   }
-
-   return kFALSE;
-}
-
 
 #endif
