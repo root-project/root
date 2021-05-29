@@ -60,6 +60,7 @@ TEST(RArraysDS, SnapshotAndShortSyntaxForCollectionSizes)
    auto *blist = t->GetListOfBranches();
    EXPECT_EQ(blist->GetEntries(), 1u);
    EXPECT_STREQ(blist->At(0)->GetName(), "var");
+   f.Close(); // Windows does not allow deletion/recreation of files that are still in use.
 
    // Snapshot must throw if #var is passed explicitly
    EXPECT_THROW(df.Snapshot<std::size_t>("t", fname, {"#var"}), std::runtime_error);
