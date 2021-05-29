@@ -30,7 +30,7 @@ A widget showing an matrix of color cells. The colors can be set and selected.
 */
 
 
-/** \class The TGColorPick
+/** \class TGColorPick
     \ingroup guiwidgets
 
 A widget which allows a color to be picked from HLS color space.

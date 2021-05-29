@@ -175,7 +175,7 @@ void TKeyXML::StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj)
       if (!actual) {
          actual = TObject::Class();
       } else if (actual != TObject::Class())
-         obj = (void *)((Long_t)obj - actual->GetBaseClassOffset(TObject::Class()));
+         obj = (void *)((Longptr_t)obj - actual->GetBaseClassOffset(TObject::Class()));
       cl = actual;
    }
 

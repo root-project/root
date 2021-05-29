@@ -40,7 +40,7 @@ TFunctionTemplate::TFunctionTemplate(const TFunctionTemplate &orig) : TDictionar
    if (orig.fInfo) {
       fInfo = gCling->FuncTempInfo_FactoryCopy(orig.fInfo);
    } else
-      fInfo = 0;
+      fInfo = nullptr;
    fClass = orig.fClass;
 }
 
@@ -56,7 +56,7 @@ TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
          gCling->FuncTempInfo_Name(fInfo,fName);
          gCling->FuncTempInfo_Title(fInfo,fTitle);
       } else
-         fInfo = 0;
+         fInfo = nullptr;
    }
    return *this;
 }
@@ -89,14 +89,14 @@ Bool_t TFunctionTemplate::IsValid()
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       // Only for global functions. For data member functions TMethod does it.
-      DeclId_t newId = gInterpreter->GetFunction(0, fName);
+      DeclId_t newId = gInterpreter->GetFunction(nullptr, fName);
       if (newId) {
          FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(newId);
          Update(info);
       }
-      return newId != 0;
+      return newId != nullptr;
    }
-   return fInfo != 0;
+   return fInfo != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,9 +147,9 @@ TDictionary::DeclId_t TFunctionTemplate::GetDeclId() const
 
 Bool_t TFunctionTemplate::Update(FuncTempInfo_t *info)
 {
-   if (info == 0) {
+   if (info == nullptr) {
       if (fInfo) gCling->FuncTempInfo_Delete(fInfo);
-      fInfo = 0;
+      fInfo = nullptr;
       return kTRUE;
    } else {
       if (fInfo) gCling->FuncTempInfo_Delete(fInfo);

@@ -8,13 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// clang-format off
-/** \class ROOT::RDF::RSqliteDS
-    \ingroup dataframe
-    \brief RDataFrame data source class for reading SQlite files.
-*/
-
-// clang-format on
 
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/RConfig.hxx>

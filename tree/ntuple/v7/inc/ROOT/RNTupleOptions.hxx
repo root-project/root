@@ -17,6 +17,7 @@
 #define ROOT7_RNTupleOptions
 
 #include <Compression.h>
+#include <ROOT/RNTupleUtil.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -29,8 +30,8 @@ namespace Experimental {
 */
 // clang-format on
 enum class ENTupleContainerFormat {
-  kTFile, // ROOT TFile
-  kBare, // A thin envelope supporting a single RNTuple only
+   kTFile, // ROOT TFile
+   kBare, // A thin envelope supporting a single RNTuple only
 };
 
 
@@ -44,18 +45,30 @@ All page sink classes need to support the common options.
 */
 // clang-format on
 class RNTupleWriteOptions {
-  int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
-  ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
+   int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
+   ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
+   NTupleSize_t fNEntriesPerCluster = 64000;
+   NTupleSize_t fNElementsPerPage = 10000;
+   bool fUseBufferedWrite = true;
 
 public:
-  int GetCompression() const { return fCompression; }
-  void SetCompression(int val) { fCompression = val; }
-  void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
-    fCompression = CompressionSettings(algorithm, compressionLevel);
-  }
+   int GetCompression() const { return fCompression; }
+   void SetCompression(int val) { fCompression = val; }
+   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
+     fCompression = CompressionSettings(algorithm, compressionLevel);
+   }
 
-  ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
-  void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
+   ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
+   void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
+
+   NTupleSize_t GetNElementsPerPage() const { return fNElementsPerPage; }
+   void SetNElementsPerPage(NTupleSize_t val) { fNElementsPerPage = val; }
+
+   NTupleSize_t GetNEntriesPerCluster() const { return fNEntriesPerCluster; }
+   void SetNEntriesPerCluster(NTupleSize_t val) { fNEntriesPerCluster = val; }
+
+   bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
+   void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
 };
 
 
@@ -70,7 +83,7 @@ All page source classes need to support the common options.
 // clang-format on
 class RNTupleReadOptions {
 public:
-  enum EClusterCache {
+   enum EClusterCache {
       kOff,
       kOn,
       kDefault = kOn,

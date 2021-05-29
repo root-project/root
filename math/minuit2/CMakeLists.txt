@@ -24,12 +24,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/ABTypes.h
       Minuit2/AnalyticalGradientCalculator.h
       Minuit2/BFGSErrorUpdator.h
-      Minuit2/BasicFunctionGradient.h
-      Minuit2/BasicFunctionMinimum.h
-      Minuit2/BasicMinimumError.h
-      Minuit2/BasicMinimumParameters.h
-      Minuit2/BasicMinimumSeed.h
-      Minuit2/BasicMinimumState.h
       Minuit2/CombinedMinimizer.h
       Minuit2/CombinedMinimumBuilder.h
       Minuit2/ContoursError.h
@@ -132,7 +126,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     SOURCES
       src/AnalyticalGradientCalculator.cxx
       src/BFGSErrorUpdator.cxx
-      src/BasicMinimumError.cxx
       src/CMakeLists.txt
       src/CombinedMinimumBuilder.cxx
       src/DavidonErrorUpdator.cxx

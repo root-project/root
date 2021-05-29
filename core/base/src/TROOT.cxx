@@ -174,7 +174,7 @@ TVirtualMutex* gROOTMutex = nullptr;
 ROOT::TVirtualRWMutex *ROOT::gCoreMutex = nullptr;
 
 // For accessing TThread::Tsd indirectly.
-void **(*gThreadTsd)(void*,Int_t) = 0;
+void **(*gThreadTsd)(void*,Int_t) = nullptr;
 
 //-------- Names of next three routines are a small homage to CMZ --------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -598,16 +598,16 @@ ClassImp(TROOT);
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fTimer(0), fApplication(nullptr), fInterpreter(nullptr), fBatch(kTRUE),
      fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
-     fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
-     fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
-     fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
-     fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
-     fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
-     fPluginManager(0)
+     fPrimitive(nullptr),fSelectPad(nullptr),fClasses(nullptr),fTypes(nullptr),fGlobals(nullptr),fGlobalFunctions(nullptr),
+     fClosedObjects(nullptr),fFiles(nullptr),fMappedFiles(nullptr),fSockets(nullptr),fCanvases(nullptr),fStyles(nullptr),fFunctions(nullptr),
+     fTasks(nullptr),fColors(nullptr),fGeometries(nullptr),fBrowsers(nullptr),fSpecials(nullptr),fCleanups(nullptr),
+     fMessageHandlers(nullptr),fStreamerInfo(nullptr),fClassGenerators(nullptr),fSecContexts(nullptr),
+     fProofs(nullptr),fClipboard(nullptr),fDataSets(nullptr),fUUIDs(nullptr),fRootFolder(nullptr),fBrowsables(nullptr),
+     fPluginManager(nullptr)
 {
 }
 
@@ -632,16 +632,16 @@ TROOT::TROOT() : TDirectory(),
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fTimer(0), fApplication(nullptr), fInterpreter(nullptr), fBatch(kTRUE),
      fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
-     fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
-     fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
-     fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
-     fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
-     fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
-     fPluginManager(0)
+     fPrimitive(nullptr),fSelectPad(nullptr),fClasses(nullptr),fTypes(nullptr),fGlobals(nullptr),fGlobalFunctions(nullptr),
+     fClosedObjects(nullptr),fFiles(nullptr),fMappedFiles(nullptr),fSockets(nullptr),fCanvases(nullptr),fStyles(nullptr),fFunctions(nullptr),
+     fTasks(nullptr),fColors(nullptr),fGeometries(nullptr),fBrowsers(nullptr),fSpecials(nullptr),fCleanups(nullptr),
+     fMessageHandlers(nullptr),fStreamerInfo(nullptr),fClassGenerators(nullptr),fSecContexts(nullptr),
+     fProofs(nullptr),fClipboard(nullptr),fDataSets(nullptr),fUUIDs(nullptr),fRootFolder(nullptr),fBrowsables(nullptr),
+     fPluginManager(nullptr)
 {
    if (fgRootInit || ROOT::Internal::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
@@ -651,14 +651,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    R__LOCKGUARD(gROOTMutex);
 
    ROOT::Internal::gROOTLocal = this;
-   gDirectory = 0;
+   gDirectory = nullptr;
 
    SetName(name);
    SetTitle(title);
 
    // will be used by global "operator delete" so make sure it is set
    // before anything is deleted
-   fMappedFiles = 0;
+   fMappedFiles = nullptr;
 
    // create already here, but only initialize it after gEnv has been created
    gPluginMgr = fPluginManager = new TPluginManager;
@@ -686,8 +686,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Initialize interface to CINT C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCling fails
-   fClasses         = 0;  // might be checked via TCling ctor
-   fEnums           = 0;
+   fClasses         = nullptr;  // might be checked via TCling ctor
+   fEnums           = nullptr;
 
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fConfigFeatures  = R__CONFIGUREFEATURES;
@@ -722,11 +722,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    };
 
    fTimer       = 0;
-   fApplication = 0;
+   fApplication = nullptr;
    fColors      = setNameLocked(new TObjArray(1000), "ListOfColors");
-   fTypes       = 0;
-   fGlobals     = 0;
-   fGlobalFunctions = 0;
+   fTypes       = nullptr;
+   fGlobals     = nullptr;
+   fGlobalFunctions = nullptr;
    // fList was created in TDirectory::Build but with different sizing.
    delete fList;
    fList        = new THashList(1000,3); fList->UseRWLock();
@@ -790,14 +790,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fInterrupt     = kFALSE;
    fEscape        = kFALSE;
    fMustClean     = kTRUE;
-   fPrimitive     = 0;
-   fSelectPad     = 0;
+   fPrimitive     = nullptr;
+   fSelectPad     = nullptr;
    fEditorMode    = 0;
    fDefCanvasName = "c1";
    fEditHistograms= kFALSE;
    fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
-   gPad           = 0;
+   gPad           = nullptr;
 
    //set name of graphical cut class for the graphics editor
    //cannot call SetCutClassName at this point because the TClass of TCutG
@@ -805,10 +805,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCutClassName = "TCutG";
 
    // Create a default MessageHandler
-   new TMessageHandler((TClass*)0);
+   new TMessageHandler((TClass*)nullptr);
 
    // Create some styles
-   gStyle = 0;
+   gStyle = nullptr;
    TStyle::BuildStyles();
    SetStyle(gEnv->GetValue("Canvas.Style", "Modern"));
 
@@ -866,7 +866,7 @@ TROOT::~TROOT()
 
       // Turn-off the global mutex to avoid recreating mutexes that have
       // already been deleted during the destruction phase
-      gGlobalMutex = 0;
+      gGlobalMutex = nullptr;
 
       // Return when error occurred in TCling, i.e. when setup file(s) are
       // out of date
@@ -889,7 +889,7 @@ TROOT::~TROOT()
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();           SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
-      TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
+      TSeqCollection *tl = fMappedFiles; fMappedFiles = nullptr; delete tl;
 
       SafeDelete(fClosedObjects);
 
@@ -989,7 +989,7 @@ TROOT::~TROOT()
       // Prints memory stats
       TStorage::PrintStatistics();
 
-      gROOTLocal = 0;
+      gROOTLocal = nullptr;
       fgRootInit = kFALSE;
    }
 }
@@ -1050,7 +1050,7 @@ void TROOT::Browse(TBrowser *b)
 
 Bool_t TROOT::ClassSaved(TClass *cl)
 {
-   if (cl == 0) return kFALSE;
+   if (cl == nullptr) return kFALSE;
    if (cl->TestBit(TClass::kClassSaved)) return kTRUE;
    cl->SetBit(TClass::kClassSaved);
    return kFALSE;
@@ -1131,7 +1131,7 @@ void TROOT::CloseFiles()
    Close("slow");
    // Now sockets.
    if (fSockets && fSockets->First()) {
-      if (0==fCleanups->FindObject(fSockets) ) {
+      if (nullptr==fCleanups->FindObject(fSockets) ) {
          fCleanups->Add(fSockets);
          fSockets->SetBit(kMustCleanup);
       }
@@ -1239,7 +1239,7 @@ void TROOT::EndOfProcessCleanups()
 TObject *TROOT::FindObject(const TObject *) const
 {
    Error("FindObject","Not yet implemented");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1266,7 +1266,7 @@ TObject *TROOT::FindObject(const char *name) const
 {
    if (name && strstr(name,"/")) return FindObjectAny(name);
 
-   TObject *temp = 0;
+   TObject *temp = nullptr;
 
    temp   = fFiles->FindObject(name);       if (temp) return temp;
    temp   = fMappedFiles->FindObject(name); if (temp) return temp;
@@ -1318,8 +1318,8 @@ TObject *TROOT::FindObject(const char *name) const
 
 TObject *TROOT::FindSpecialObject(const char *name, void *&where)
 {
-   TObject *temp = 0;
-   where = 0;
+   TObject *temp = nullptr;
+   where = nullptr;
 
    if (!temp) {
       temp  = fFiles->FindObject(name);
@@ -1365,9 +1365,9 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
          }
       }
    }
-   if (!temp) return 0;
+   if (!temp) return nullptr;
    if (temp->TestBit(kNotDeleted)) return temp;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1396,7 +1396,7 @@ TObject *TROOT::FindObjectAnyFile(const char *name) const
       TObject *obj = d->TDirectory::FindObject(name);
       if (obj) return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1412,7 +1412,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
    TGlobal *g = GetGlobal(name);
    if (g) return g->GetTypeName();
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1453,10 +1453,10 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
    std::string normalized;
    TClassEdit::GetNormalizedName(normalized, name);
 
-   TClass *cl = 0;
+   TClass *cl = nullptr;
    if (normalized != name) cl = TClass::GetClass(normalized.c_str(),load,silent);
 
-   if (load && cl==0) {
+   if (load && cl==nullptr) {
       // Create an Emulated class for this container.
       cl = gInterpreter->GenerateTClass(normalized.c_str(), kTRUE, silent);
    }
@@ -1489,15 +1489,15 @@ TColor *TROOT::GetColor(Int_t color) const
 {
    TColor::InitializeColors();
    TObjArray *lcolors = (TObjArray*) GetListOfColors();
-   if (!lcolors) return 0;
-   if (color < 0 || color >= lcolors->GetSize()) return 0;
+   if (!lcolors) return nullptr;
+   if (color < 0 || color >= lcolors->GetSize()) return nullptr;
    TColor *col = (TColor*)lcolors->At(color);
    if (col && col->GetNumber() == color) return col;
    TIter   next(lcolors);
    while ((col = (TColor *) next()))
       if (col->GetNumber() == color) return col;
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1538,8 +1538,8 @@ TStyle *TROOT::GetStyle(const char *name) const
 
 TObject *TROOT::GetFunction(const char *name) const
 {
-   if (name == 0 || name[0] == 0) {
-      return 0;
+   if (name == nullptr || name[0] == 0) {
+      return nullptr;
    }
 
    {
@@ -1558,9 +1558,9 @@ TObject *TROOT::GetFunction(const char *name) const
 
 TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
 {
-   if (!gInterpreter) return 0;
+   if (!gInterpreter) return nullptr;
 
-   if (!fFuncTemplate) fFuncTemplate = new TListOfFunctionTemplates(0);
+   if (!fFuncTemplate) fFuncTemplate = new TListOfFunctionTemplates(nullptr);
 
    return (TFunctionTemplate*)fFuncTemplate->FindObject(name);
 }
@@ -1579,7 +1579,7 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 
 TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 {
-   if (addr == 0 || ((Longptr_t)addr) == -1) return 0;
+   if (addr == nullptr || ((Longptr_t)addr) == -1) return nullptr;
 
    TInterpreter::DeclId_t decl = gInterpreter->GetDataMemberAtAddr(addr);
    if (decl) {
@@ -1594,7 +1594,7 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
       TListOfDataMembers *globals = ((TListOfDataMembers*)(gROOT->GetListOfGlobals(kFALSE)));
       return (TGlobal*)globals->Get(decl);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1603,7 +1603,7 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 
 TListOfFunctions *TROOT::GetGlobalFunctions()
 {
-   if (!fGlobalFunctions) fGlobalFunctions = new TListOfFunctions(0);
+   if (!fGlobalFunctions) fGlobalFunctions = new TListOfFunctions(nullptr);
    return fGlobalFunctions;
 }
 
@@ -1634,11 +1634,11 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
       R__LOCKGUARD(gROOTMutex);
-      TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(0,
+      TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(nullptr,
                                                                  function, params,
                                                                  false);
 
-      if (!decl) return 0;
+      if (!decl) return nullptr;
 
       TFunction *f = GetGlobalFunctions()->Get(decl);
       if (f) return f;
@@ -1646,7 +1646,7 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       Error("GetGlobalFunction",
             "\nDid not find matching TFunction <%s> with \"%s\".",
             function,params);
-      return 0;
+      return nullptr;
    }
 }
 
@@ -1667,10 +1667,10 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
       R__LOCKGUARD(gROOTMutex);
-      TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(0,
+      TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(nullptr,
                                                                            function, proto);
 
-      if (!decl) return 0;
+      if (!decl) return nullptr;
 
       TFunction *f = GetGlobalFunctions()->Get(decl);
       if (f) return f;
@@ -1678,7 +1678,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       Error("GetGlobalFunctionWithPrototype",
             "\nDid not find matching TFunction <%s> with \"%s\".",
             function,proto);
-      return 0;
+      return nullptr;
    }
 }
 
@@ -1698,7 +1698,7 @@ TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
       R__LOCKGUARD(gROOTMutex);
       // Test again just in case, another thread did the work while we were
       // waiting.
-      if (!fEnums.load()) fEnums = new TListOfEnumsWithLock(0);
+      if (!fEnums.load()) fEnums = new TListOfEnumsWithLock(nullptr);
    }
    if (load) {
       R__LOCKGUARD(gROOTMutex);
@@ -1713,7 +1713,7 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 {
    R__LOCKGUARD(gROOTMutex);
    if(!fFuncTemplate) {
-      fFuncTemplate = new TListOfFunctionTemplates(0);
+      fFuncTemplate = new TListOfFunctionTemplates(nullptr);
    }
    return fFuncTemplate;
 }
@@ -1769,7 +1769,7 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    R__LOCKGUARD(gROOTMutex);
 
    if (!fGlobalFunctions) {
-      fGlobalFunctions = new TListOfFunctions(0);
+      fGlobalFunctions = new TListOfFunctions(nullptr);
    }
 
    if (!fInterpreter)
@@ -1849,7 +1849,7 @@ static TClass* R__GetClassIfKnown(const char* className)
 {
    // Check whether the class is available for auto-loading first:
    const char* libsToLoad = gInterpreter->GetClassSharedLibs(className);
-   TClass* cla = 0;
+   TClass* cla = nullptr;
    if (libsToLoad) {
       // trigger autoload, and only create TClass in this case.
       return TClass::GetClass(className);
@@ -1868,7 +1868,7 @@ static TClass* R__GetClassIfKnown(const char* className)
 
 Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 {
-   if (fname == 0) return 0;
+   if (fname == nullptr) return 0;
 
    TString stem(fname);
    // Remove extension if any, ignore files with extension not being .h*
@@ -1918,7 +1918,7 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 
 void TROOT::InitSystem()
 {
-   if (gSystem == 0) {
+   if (gSystem == nullptr) {
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)
       gSystem = new TMacOSXSystem;
@@ -2145,7 +2145,7 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
 
       // If check == false, try to load the library
       else {
-         int err = gSystem->Load(path, 0, kTRUE);
+         int err = gSystem->Load(path, nullptr, kTRUE);
          delete [] path;
 
          // TSystem::Load returns 1 when the library was already loaded, return success in this case.
@@ -2720,7 +2720,7 @@ const char *TROOT::GetMacroPath()
    TString &macroPath = ROOT::GetMacroPath();
 
    if (macroPath.Length() == 0) {
-      macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
+      macroPath = gEnv->GetValue("Root.MacroPath", (char*)nullptr);
 #if defined(R__WIN32)
       macroPath.ReplaceAll("; ", ";");
 #else
@@ -2883,7 +2883,7 @@ const std::vector<std::string> &TROOT::AddExtraInterpreterArgs(const std::vector
 /// Used by rootcling to inject interpreter arguments through a C-interface layer.
 
 const char**& TROOT::GetExtraInterpreterArgs() {
-   static const char** extraInterpArgs = 0;
+   static const char** extraInterpArgs = nullptr;
    return extraInterpArgs;
 }
 

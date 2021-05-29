@@ -30,8 +30,8 @@ object.Inspect or object.DrawClass are called.
 ////////////////////////////////////////////////////////////////////////////////
 /// RealData default constructor.
 
-TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
-   fStreamer(0), fIsObject(kFALSE)
+TRealData::TRealData() : TObject(), fDataMember(nullptr), fThisOffset(-1),
+   fStreamer(nullptr), fIsObject(kFALSE)
 {
 }
 
@@ -42,7 +42,7 @@ TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
 
 TRealData::TRealData(const char *name, Long_t offset, TDataMember *datamember)
    : TObject(), fDataMember(datamember), fThisOffset(offset), fName(name),
-     fStreamer(0), fIsObject(kFALSE)
+     fStreamer(nullptr), fIsObject(kFALSE)
 {
 }
 

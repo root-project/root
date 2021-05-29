@@ -51,6 +51,9 @@ public:
    /** Title of TObject */
    std::string GetTitle() const override;
 
+   /** Size of TObject */
+   virtual Long64_t GetSize() const { return -1; }
+
    bool IsFolder();
 
    /** Create iterator for childs elements if any */

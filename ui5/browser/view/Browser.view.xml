@@ -26,6 +26,7 @@
                 <Toolbar width="100%">
                   <SearchField placeholder="Filter" liveChange="onSearch" />
                   <Button icon="sap-icon://synchronize" press="onRealoadPress" tooltip="Refresh browser content"/>
+                  <Button icon="sap-icon://overlay" press="onWorkingDirPress" tooltip="Toggle between working and top directory"/>
                   <Button id="expandMaster" icon="sap-icon://open-command-field" tooltip="Expand/shrink" press="onExpandMaster"/>
                 </Toolbar>
               </customHeader>

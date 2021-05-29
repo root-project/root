@@ -32,6 +32,8 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType type) {
       return std::make_unique<RColumnElement<double, EColumnType::kReal64>>(nullptr);
    case EColumnType::kByte:
       return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>(nullptr);
+   case EColumnType::kInt16:
+      return std::make_unique<RColumnElement<std::int16_t, EColumnType::kInt16>>(nullptr);
    case EColumnType::kInt32:
       return std::make_unique<RColumnElement<std::int32_t, EColumnType::kInt32>>(nullptr);
    case EColumnType::kInt64:
@@ -57,6 +59,8 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
       return 64;
    case EColumnType::kByte:
       return 8;
+   case EColumnType::kInt16:
+      return 16;
    case EColumnType::kInt32:
       return 32;
    case EColumnType::kInt64:
@@ -72,6 +76,31 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
    }
    // never here
    return 0;
+}
+
+std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnType type) {
+   switch (type) {
+   case EColumnType::kReal32:
+      return "Real32";
+   case EColumnType::kReal64:
+      return "Real64";
+   case EColumnType::kByte:
+      return "Byte";
+   case EColumnType::kInt16:
+      return "Int16";
+   case EColumnType::kInt32:
+      return "Int32";
+   case EColumnType::kInt64:
+      return "Int64";
+   case EColumnType::kBit:
+      return "Bit";
+   case EColumnType::kIndex:
+      return "Index";
+   case EColumnType::kSwitch:
+      return "Switch";
+   default:
+      return "UNKNOWN";
+   }
 }
 
 void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
@@ -105,5 +134,26 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
       for (std::size_t j = i; j < std::min(count, i + 8); ++j) {
          boolArray[j] = bitSet[j % 8];
       }
+   }
+}
+
+
+void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt32>::Pack(
+  void *dst, void *src, std::size_t count) const
+{
+   std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(src);
+   std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      int32Array[i] = int64Array[i];
+   }
+}
+
+void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt32>::Unpack(
+  void *dst, void *src, std::size_t count) const
+{
+   std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(src);
+   std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      int64Array[i] = int32Array[i];
    }
 }

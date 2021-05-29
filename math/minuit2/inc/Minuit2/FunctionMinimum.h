@@ -10,7 +10,10 @@
 #ifndef ROOT_Minuit2_FunctionMinimum
 #define ROOT_Minuit2_FunctionMinimum
 
-#include "Minuit2/BasicFunctionMinimum.h"
+#include "Minuit2/MinimumSeed.h"
+#include "Minuit2/MinimumState.h"
+#include "Minuit2/MnUserParameterState.h"
+#include "Minuit2/MnUserTransformation.h"
 
 #include <vector>
 #include <memory>
@@ -33,70 +36,90 @@ namespace Minuit2 {
 class FunctionMinimum {
 
 public:
-   using MnAboveMaxEdm = BasicFunctionMinimum::MnAboveMaxEdm;
-   using MnReachedCallLimit = BasicFunctionMinimum::MnReachedCallLimit;
+   enum Status {
+      MnValid,
+      MnReachedCallLimit,
+      MnAboveMaxEdm,
+   };
 
 public:
-   /// constructor from only MinimumSeed. Minimum is only from seed result not full minimization
-   FunctionMinimum(const MinimumSeed &seed, double up) : fData(std::make_shared<BasicFunctionMinimum>(seed, up)) {}
-
-   /// constructor at the end of a successfull minimization from seed and vector of states
-   FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up)
-      : fData(std::make_shared<BasicFunctionMinimum>(seed, states, up))
+   /// Constructor from only MinimumSeed. Minimum is only from seed result not the full minimization
+   FunctionMinimum(const MinimumSeed &seed, double up)
+      : FunctionMinimum(seed,
+                        std::vector<MinimumState>(1, MinimumState(seed.Parameters(), seed.Error(), seed.Gradient(),
+                                                                  seed.Parameters().Fval(), seed.NFcn())),
+                        up)
    {
    }
 
-   /// constructor at the end of a failed minimization due to exceeding function call limit
-   FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, MnReachedCallLimit)
-      : fData(std::make_shared<BasicFunctionMinimum>(seed, states, up, MnReachedCallLimit{}))
+   /// Constructor at the end of a minimization from seed and vector of states
+   FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, Status status = MnValid)
+      : fPtr{new Data{seed, states, up, status == MnAboveMaxEdm, status == MnReachedCallLimit, {}}}
    {
    }
 
-   /// constructor at the end of a failed minimization due to edm above maximum value
-   FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, MnAboveMaxEdm)
-      : fData(std::make_shared<BasicFunctionMinimum>(seed, states, up, MnAboveMaxEdm{}))
+   /// add latest minimization state (for example add Hesse result after Migrad)
+   void Add(const MinimumState &state, Status status = MnValid)
    {
+      fPtr->fStates.push_back(state);
+      // LM : update also the user state
+      fPtr->fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
+      // reset maxedm flag. If new state has edm over max other method must be used
+      fPtr->fAboveMaxEdm = status == MnAboveMaxEdm;
    }
 
-   // add new state
-   void Add(const MinimumState &state) { fData->Add(state); }
-
-   // add new state
-   void Add(const MinimumState &state, MnAboveMaxEdm) { fData->Add(state, MnAboveMaxEdm{}); }
-
-   const MinimumSeed &Seed() const { return fData->Seed(); }
-   const std::vector<ROOT::Minuit2::MinimumState> &States() const { return fData->States(); }
+   const MinimumSeed &Seed() const { return fPtr->fSeed; }
+   const std::vector<MinimumState> &States() const { return fPtr->fStates; }
 
    // user representation of state at Minimum
-   const MnUserParameterState &UserState() const { return fData->UserState(); }
-   const MnUserParameters &UserParameters() const { return fData->UserParameters(); }
-   const MnUserCovariance &UserCovariance() const { return fData->UserCovariance(); }
+   const MnUserParameterState &UserState() const
+   {
+      if (!fPtr->fUserState.IsValid())
+         fPtr->fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
+      return fPtr->fUserState;
+   }
+   const MnUserParameters &UserParameters() const { return UserState().Parameters(); }
+   const MnUserCovariance &UserCovariance() const { return UserState().Covariance(); }
 
    // forward interface of last state
-   const MinimumState &State() const { return fData->State(); }
-   const MinimumParameters &Parameters() const { return fData->Parameters(); }
-   const MinimumError &Error() const { return fData->Error(); }
-   const FunctionGradient &Grad() const { return fData->Grad(); }
-   double Fval() const { return fData->Fval(); }
-   double Edm() const { return fData->Edm(); }
-   int NFcn() const { return fData->NFcn(); }
+   const MinimumState &State() const { return States().back(); }
+   const MinimumParameters &Parameters() const { return States().back().Parameters(); }
+   const MinimumError &Error() const { return States().back().Error(); }
+   const FunctionGradient &Grad() const { return States().back().Gradient(); }
+   double Fval() const { return States().back().Fval(); }
+   double Edm() const { return States().back().Edm(); }
+   int NFcn() const { return States().back().NFcn(); }
 
-   double Up() const { return fData->Up(); }
-   bool IsValid() const { return fData->IsValid(); }
-   bool HasValidParameters() const { return fData->HasValidParameters(); }
-   bool HasValidCovariance() const { return fData->HasValidCovariance(); }
-   bool HasAccurateCovar() const { return fData->HasAccurateCovar(); }
-   bool HasPosDefCovar() const { return fData->HasPosDefCovar(); }
-   bool HasMadePosDefCovar() const { return fData->HasMadePosDefCovar(); }
-   bool HesseFailed() const { return fData->HesseFailed(); }
-   bool HasCovariance() const { return fData->HasCovariance(); }
-   bool IsAboveMaxEdm() const { return fData->IsAboveMaxEdm(); }
-   bool HasReachedCallLimit() const { return fData->HasReachedCallLimit(); }
+   double Up() const { return fPtr->fErrorDef; }
+   bool IsValid() const { return State().IsValid() && !IsAboveMaxEdm() && !HasReachedCallLimit(); }
+   bool HasValidParameters() const { return State().Parameters().IsValid(); }
+   bool HasValidCovariance() const { return State().Error().IsValid(); }
+   bool HasAccurateCovar() const { return State().Error().IsAccurate(); }
+   bool HasPosDefCovar() const { return State().Error().IsPosDef(); }
+   bool HasMadePosDefCovar() const { return State().Error().IsMadePosDef(); }
+   bool HesseFailed() const { return State().Error().HesseFailed(); }
+   bool HasCovariance() const { return State().Error().IsAvailable(); }
+   bool IsAboveMaxEdm() const { return fPtr->fAboveMaxEdm; }
+   bool HasReachedCallLimit() const { return fPtr->fReachedCallLimit; }
 
-   void SetErrorDef(double up) { return fData->SetErrorDef(up); }
+   void SetErrorDef(double up)
+   {
+      fPtr->fErrorDef = up;
+      // update user state for new valeu of up (scaling of errors)
+      fPtr->fUserState = MnUserParameterState(State(), up, Seed().Trafo());
+   }
 
 private:
-   std::shared_ptr<BasicFunctionMinimum> fData;
+   struct Data {
+      MinimumSeed fSeed;
+      std::vector<MinimumState> fStates;
+      double fErrorDef;
+      bool fAboveMaxEdm;
+      bool fReachedCallLimit;
+      mutable MnUserParameterState fUserState;
+   };
+
+   std::shared_ptr<Data> fPtr;
 };
 
 } // namespace Minuit2

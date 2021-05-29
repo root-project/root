@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 #include <limits>
 #include <memory>
+#include <thread>
 using namespace ROOT;         // RDataFrame
 using namespace ROOT::RDF;    // RInterface
 using namespace ROOT::VecOps; // RVec
@@ -1041,9 +1042,10 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
 {
    const auto fname = "emptybuffersmt.root";
    const auto treename = "t";
-   ROOT::EnableImplicitMT(4);
+   const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
+   ROOT::EnableImplicitMT(nslots);
    ROOT::RDataFrame d(10);
-   auto dd = d.DefineSlot("x", [](unsigned int s) { return s == 3 ? 0 : 1; })
+   auto dd = d.DefineSlot("x", [&](unsigned int s) { return s == nslots - 1 ? 0 : 1; })
                .Filter([](int x) { return x == 0; }, {"x"}, "f");
    auto r = dd.Report();
    dd.Snapshot<int>(treename, fname, {"x"});

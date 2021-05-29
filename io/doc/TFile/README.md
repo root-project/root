@@ -189,8 +189,8 @@ disk as shown in \ref dobject.
 The special method used for streaming a TClonesArray is described in the TClonesArray
 section below.
 
-More information on the StreamerInfo record and its use is found in the Input/Output
-chapter of the Root Users Guide:  http://root.cern.ch/root/RootDoc.html
+More information on the StreamerInfo record and its use is found in the
+[Input/Output chapter of the Root Manual](https://root.cern/manual/storing_root_objects/)
 
 NOTE:  Some of the classes used internally in ROOTIO (e.g. TObject, TRef, TRefArray)
 have explicitly coded (de)compositions, and do not use the information in the
@@ -202,7 +202,7 @@ actually written to disk for those objects.
 ## Pointers to persistent objects
 
 Information on how these work in memory can be found at:
-http://root.cern.ch/root/htmldoc/examples/Version302.news.html
+https://root.cern.ch/root/html303/examples/Version302.news.html
 These were introduced in release 3.02, so there is not yet a description in the current
 Root Users Guide, which is for a version release 3.1.  Here we discuss only the information
 on disk.
@@ -249,8 +249,9 @@ all will be of the same class:
 ### TTree
 
 A TTree is a highly specialized container class for efficient storage and retrieval of user data.
-The use of TTrees is discussed in detail in the Trees chapter of the Root Users Guide:
-http://root.cern.ch/root/RootDoc.html
+The use of TTrees is discussed in detail in the
+[Trees chapter of the Root Manual](https://root.cern/manual/trees/)
+
 Here we discuss in particular how a TTree is stored in a ROOTIO file.
 
 A TTree object is split into one or more branches (class TBranch), each of which may have its own

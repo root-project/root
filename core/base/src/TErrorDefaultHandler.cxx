@@ -57,7 +57,7 @@ void ReleaseDefaultErrorHandler()
 static void DebugPrint(const char *fmt, ...)
 {
    TTHREAD_TLS(Int_t) buf_size = 2048;
-   TTHREAD_TLS(char*) buf = 0;
+   TTHREAD_TLS(char*) buf = nullptr;
 
    va_list ap;
    va_start(ap, fmt);
@@ -75,7 +75,7 @@ again:
       else
          buf_size = n+1;
       delete [] buf;
-      buf = 0;
+      buf = nullptr;
       va_end(ap);
       va_start(ap, fmt);
       goto again;
@@ -132,7 +132,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level < gErrorIgnoreLevel)
       return;
 
-   const char *type = 0;
+   const char *type = nullptr;
 
    if (level >= kInfo)
       type = "Info";

@@ -1356,10 +1356,8 @@ JSROOT.define(['rawinflate'], () => {
             if ((typ === jsrio.kBits) && (kind === jsrio.kUInt)) continue;
             if ((typ === jsrio.kCounter) && (kind === jsrio.kInt)) continue;
 
-            if (typname && typ && (this.fBasicTypes[typname] !== typ)) {
+            if (typname && typ && (this.fBasicTypes[typname] !== typ))
                this.fBasicTypes[typname] = typ;
-               if (!JSROOT.batch_mode) console.log('Extract basic data type', typ, typname);
-            }
          }
       }
    }

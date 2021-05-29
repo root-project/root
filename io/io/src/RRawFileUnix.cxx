@@ -115,26 +115,33 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
 void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
-   if (RIoUring::IsAvailable()) {
-      RIoUring ring;
-      std::vector<RIoUring::RReadEvent> reads;
-      reads.reserve(nReq);
-      for (std::size_t i = 0; i < nReq; ++i) {
-         RIoUring::RReadEvent ev;
-         ev.fBuffer = ioVec[i].fBuffer;
-         ev.fOffset = ioVec[i].fOffset;
-         ev.fSize = ioVec[i].fSize;
-         ev.fFileDes = fFileDes;
-         reads.push_back(ev);
+   thread_local bool uring_failed = false;
+   if (!uring_failed) {
+      try {
+         RIoUring ring; // throws std::runtime_error
+         std::vector<RIoUring::RReadEvent> reads;
+         reads.reserve(nReq);
+         for (std::size_t i = 0; i < nReq; ++i) {
+            RIoUring::RReadEvent ev;
+            ev.fBuffer = ioVec[i].fBuffer;
+            ev.fOffset = ioVec[i].fOffset;
+            ev.fSize = ioVec[i].fSize;
+            ev.fFileDes = fFileDes;
+            reads.push_back(ev);
+         }
+         ring.SubmitReadsAndWait(reads.data(), nReq);
+         for (std::size_t i = 0; i < nReq; ++i) {
+            ioVec[i].fOutBytes = reads.at(i).fOutBytes;
+         }
+         return;
       }
-      ring.SubmitReadsAndWait(reads.data(), nReq);
-      for (std::size_t i = 0; i < nReq; ++i) {
-         ioVec[i].fOutBytes = reads.at(i).fOutBytes;
+      catch(const std::runtime_error &e) {
+         Warning("RIoUring", "io_uring is unexpectedly not available because:\n%s", e.what());
+         Warning("RRawFileUnix",
+              "io_uring setup failed, falling back to blocking I/O in ReadV");
+         uring_failed = true;
       }
-      return;
    }
-   Warning("RRawFileUnix",
-           "io_uring setup failed, falling back to default ReadV implementation");
 #endif
    RRawFile::ReadVImpl(ioVec, nReq);
 }

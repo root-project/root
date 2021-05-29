@@ -80,6 +80,7 @@ endfunction()
 ROOT_BUILD_OPTION(alien OFF "Enable support for AliEn (requires libgapiUI from ALICE)")
 ROOT_BUILD_OPTION(arrow OFF "Enable support for Apache Arrow")
 ROOT_BUILD_OPTION(asimage ON "Enable support for image processing via libAfterImage")
+ROOT_BUILD_OPTION(asserts OFF "Enable asserts (defaults to ON for CMAKE_BUILD_TYPE=Debug and/or dev=ON)")
 ROOT_BUILD_OPTION(builtin_afterimage OFF "Build bundled copy of libAfterImage")
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build CFITSIO internally (requires network)")
 ROOT_BUILD_OPTION(builtin_clang ON "Build bundled copy of Clang")
@@ -95,7 +96,7 @@ ROOT_BUILD_OPTION(builtin_gsl OFF "Build GSL internally (requires network)")
 ROOT_BUILD_OPTION(builtin_llvm ON "Build bundled copy of LLVM")
 ROOT_BUILD_OPTION(builtin_lz4 OFF "Build bundled copy of lz4")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build bundled copy of lzma")
-ROOT_BUILD_OPTION(builtin_nlohmannjson ON "Use nlohmann/json.hpp file distributed with ROOT")
+ROOT_BUILD_OPTION(builtin_nlohmannjson OFF "Use nlohmann/json.hpp file distributed with ROOT")
 ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally (requires network)")
 ROOT_BUILD_OPTION(builtin_openui5 ON "Use openui5 bundle distributed with ROOT")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Build bundled copy of PCRE")
@@ -117,6 +118,7 @@ ROOT_BUILD_OPTION(coverage OFF "Enable compile flags for coverage testing")
 ROOT_BUILD_OPTION(cuda OFF "Enable support for CUDA (requires CUDA toolkit >= 7.5)")
 ROOT_BUILD_OPTION(cudnn ON "Enable support for cuDNN (default when Cuda is enabled)")
 ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules")
+ROOT_BUILD_OPTION(daos OFF "Enable RNTuple support for Intel DAOS")
 ROOT_BUILD_OPTION(dataframe ON "Enable ROOT RDataFrame")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
 ROOT_BUILD_OPTION(davix ON "Enable support for Davix (HTTP/WebDAV access)")
@@ -176,7 +178,6 @@ ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers)")
 ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing and Linux kernel >= 5.1)")
 ROOT_BUILD_OPTION(vc OFF "Enable support for Vc (SIMD Vector Classes for C++)")
-ROOT_BUILD_OPTION(vmc OFF "Build VMC simulation library")
 ROOT_BUILD_OPTION(vdt ON "Enable support for VDT (fast and vectorisable mathematical functions)")
 ROOT_BUILD_OPTION(veccore OFF "Enable support for VecCore SIMD abstraction library")
 ROOT_BUILD_OPTION(vecgeom OFF "Enable support for VecGeom vectorized geometry library")
@@ -196,7 +197,6 @@ option(rootbench "Build rootbench if rootbench exists in root or if it is a sibl
 option(roottest "Build roottest if roottest exists in root or if it is a sibling directory." OFF)
 option(testing "Enable testing with CTest" OFF)
 option(asan "Build ROOT with address sanitizer instrumentation" OFF)
-option(asserts "Enable asserts (is ON for CMAKE_BUILD_TYPE=Debug and dev=ON)" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
@@ -263,7 +263,6 @@ if(all)
  set(tmva-rmva_defvalue ON)
  set(unuran_defvalue ON)
  set(vc_defvalue ON)
- set(vmc_defvalue ON)
  set(vdt_defvalue ON)
  set(veccore_defvalue ON)
  set(vecgeom_defvalue ON)
@@ -306,17 +305,12 @@ endif()
 
 #---Changes in defaults due to platform-------------------------------------------------------
 if(WIN32)
-  set(builtin_tbb_defvalue OFF)
-  set(dataframe_defvalue OFF)
   set(davix_defvalue OFF)
-  set(imt_defvalue OFF)
   set(memstat_defvalue OFF)
   set(pyroot_legacy_defvalue OFF)
-  set(roofit_defvalue OFF)
   set(roottest_defvalue OFF)
   set(runtime_cxxmodules_defvalue OFF)
   set(testing_defvalue OFF)
-  set(tmva_defvalue OFF)
   set(vdt_defvalue OFF)
   set(x11_defvalue OFF)
   set(xrootd_defvalue OFF)
@@ -369,13 +363,13 @@ endif()
 #---webgui by default always build together with root7-----------------------------------------
 set(webgui_defvalue ${root7_defvalue})
 
+#---Enable asserts for Debug builds and for the dev mode---------------------------------------
+if(_BUILD_TYPE_UPPER STREQUAL DEBUG OR dev)
+  set(asserts_defvalue ON)
+endif()
+
 #---Define at moment the options with the selected default values------------------------------
 ROOT_APPLY_OPTIONS()
-
-#---Enable asserts for Debug builds and for the dev mode---------------------------------------
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR dev)
-  set(asserts ON CACHE BOOL "" FORCE)
-endif()
 
 #---roottest option implies testing
 if(roottest OR rootbench)
@@ -397,7 +391,7 @@ if(root7)
   endif()
 endif()
 
-#---check if webgui can be build-------------------------------
+#---check if webgui can be built-------------------------------
 if(webgui)
   if(NOT CMAKE_CXX_STANDARD GREATER 11)
     set(webgui OFF CACHE BOOL "(WebGUI requires at least C++14)" FORCE)
@@ -409,14 +403,14 @@ endif()
 
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
-            krb5 ldap qt qtgsi rfio ruby sapdb srp table python)
+            krb5 ldap qt qtgsi rfio ruby sapdb srp table python vmc)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt memstat vmc)
+foreach(opt memstat)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()

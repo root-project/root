@@ -50,98 +50,7 @@ namespace {
 /// vectors store the number of items followed by the items. Time stamps are stored in number of seconds since the
 /// UNIX epoch.
 
-std::uint32_t SerializeInt64(std::int64_t val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes[0] = (val & 0x00000000000000FF);
-      bytes[1] = (val & 0x000000000000FF00) >> 8;
-      bytes[2] = (val & 0x0000000000FF0000) >> 16;
-      bytes[3] = (val & 0x00000000FF000000) >> 24;
-      bytes[4] = (val & 0x000000FF00000000) >> 32;
-      bytes[5] = (val & 0x0000FF0000000000) >> 40;
-      bytes[6] = (val & 0x00FF000000000000) >> 48;
-      bytes[7] = (val & 0xFF00000000000000) >> 56;
-   }
-   return 8;
-}
-
-std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer)
-{
-   return SerializeInt64(val, buffer);
-}
-
-std::uint32_t DeserializeInt64(const void *buffer, std::int64_t *val)
-{
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   *val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) +
-          (std::int64_t(bytes[2]) << 16) + (std::int64_t(bytes[3]) << 24) +
-          (std::int64_t(bytes[4]) << 32) + (std::int64_t(bytes[5]) << 40) +
-          (std::int64_t(bytes[6]) << 48) + (std::int64_t(bytes[7]) << 56);
-   return 8;
-}
-
-std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t *val)
-{
-   return DeserializeInt64(buffer, reinterpret_cast<std::int64_t *>(val));
-}
-
-std::uint32_t SerializeInt32(std::int32_t val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes[0] = (val & 0x000000FF);
-      bytes[1] = (val & 0x0000FF00) >> 8;
-      bytes[2] = (val & 0x00FF0000) >> 16;
-      bytes[3] = (val & 0xFF000000) >> 24;
-   }
-   return 4;
-}
-
-std::uint32_t SerializeUInt32(std::uint32_t val, void *buffer)
-{
-   return SerializeInt32(val, buffer);
-}
-
-std::uint32_t DeserializeInt32(const void *buffer, std::int32_t *val)
-{
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   *val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) +
-          (std::int32_t(bytes[2]) << 16) + (std::int32_t(bytes[3]) << 24);
-   return 4;
-}
-
-std::uint32_t DeserializeUInt32(const void *buffer, std::uint32_t *val)
-{
-   return DeserializeInt32(buffer, reinterpret_cast<std::int32_t *>(val));
-}
-
-std::uint32_t SerializeInt16(std::int16_t val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes[0] = (val & 0x00FF);
-      bytes[1] = (val & 0xFF00) >> 8;
-   }
-   return 2;
-}
-
-std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer)
-{
-   return SerializeInt16(val, buffer);
-}
-
-std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val)
-{
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   *val = std::int16_t(bytes[0]) + (std::int16_t(bytes[1]) << 8);
-   return 2;
-}
-
-std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val)
-{
-   return DeserializeInt16(buffer, reinterpret_cast<std::int16_t *>(val));
-}
+using namespace ROOT::Experimental::Internal::RNTupleSerialization;
 
 std::uint32_t SerializeClusterSize(ROOT::Experimental::ClusterSize_t val, void *buffer)
 {
@@ -218,8 +127,11 @@ std::uint32_t DeserializeFrame(std::uint16_t protocolVersion, const void *buffer
    std::uint16_t protocolVersionMinRequired;
    bytes += DeserializeUInt16(bytes, &protocolVersionAtWrite);
    bytes += DeserializeUInt16(bytes, &protocolVersionMinRequired);
-   R__ASSERT(protocolVersionAtWrite >= protocolVersionMinRequired);
-   R__ASSERT(protocolVersion >= protocolVersionMinRequired);
+   if (protocolVersion < protocolVersionMinRequired) {
+      throw ROOT::Experimental::RException(R__FAIL("RNTuple version too new (version "
+         + std::to_string(protocolVersionMinRequired)
+         + "), version <= " + std::to_string(protocolVersion) + " required"));
+   }
    bytes += DeserializeUInt32(bytes, size);
    return 8;
 }
@@ -473,7 +385,8 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
+bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
+{
    return fFieldId == other.fFieldId &&
           fFieldVersion == other.fFieldVersion &&
           fTypeVersion == other.fTypeVersion &&
@@ -487,7 +400,8 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
 }
 
 ROOT::Experimental::RFieldDescriptor
-ROOT::Experimental::RFieldDescriptor::Clone() const {
+ROOT::Experimental::RFieldDescriptor::Clone() const
+{
    RFieldDescriptor clone;
    clone.fFieldId = fFieldId;
    clone.fFieldVersion = fFieldVersion;
@@ -530,7 +444,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
+bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
+{
    return fColumnId == other.fColumnId &&
           fVersion == other.fVersion &&
           fModel == other.fModel &&
@@ -542,7 +457,8 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
+bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
+{
    return fClusterId == other.fClusterId &&
           fVersion == other.fVersion &&
           fFirstEntryIndex == other.fFirstEntryIndex &&
@@ -553,10 +469,26 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
 }
 
 
+std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClusterDescriptor::GetColumnIds() const
+{
+   std::unordered_set<DescriptorId_t> result;
+   for (const auto &x : fColumnRanges)
+      result.emplace(x.first);
+   return result;
+}
+
+
+bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t columnId) const
+{
+   return fColumnRanges.find(columnId) != fColumnRanges.end();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
+bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
+{
    return fName == other.fName &&
           fDescription == other.fDescription &&
           fAuthor == other.fAuthor &&
@@ -681,6 +613,8 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElem
 {
    NTupleSize_t result = 0;
    for (const auto &cd : fClusterDescriptors) {
+      if (!cd.second.ContainsColumn(columnId))
+         continue;
       auto columnRange = cd.second.GetColumnRange(columnId);
       result = std::max(result, columnRange.fFirstElementIndex + columnRange.fNElements);
    }
@@ -749,6 +683,8 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 {
    // TODO(jblomer): binary search?
    for (const auto &cd : fClusterDescriptors) {
+      if (!cd.second.ContainsColumn(columnId))
+         continue;
       auto columnRange = cd.second.GetColumnRange(columnId);
       if (columnRange.Contains(index))
          return cd.second.GetId();
@@ -757,6 +693,7 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 }
 
 
+// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterId) const
 {
@@ -771,6 +708,7 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
 }
 
 
+// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
 {
@@ -1071,4 +1009,13 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
    DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange)
 {
    fDescriptor.fClusterDescriptors[clusterId].fPageRanges.emplace(pageRange.fColumnId, std::move(pageRange));
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
+{
+   fDescriptor.fName = "";
+   fDescriptor.fVersion = RNTupleVersion();
+   fDescriptor.fFieldDescriptors.clear();
+   fDescriptor.fColumnDescriptors.clear();
+   fDescriptor.fClusterDescriptors.clear();
 }

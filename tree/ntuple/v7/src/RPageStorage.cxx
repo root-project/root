@@ -21,8 +21,12 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RStringView.hxx>
+#ifdef R__ENABLE_DAOS
+# include <ROOT/RPageStorageDaos.hxx>
+#endif
 
 #include <Compression.h>
 #include <TError.h>
@@ -60,6 +64,13 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleReadOptions &options)
 {
+   if (location.find("daos://") == 0)
+#ifdef R__ENABLE_DAOS
+      return std::make_unique<RPageSourceDaos>(ntupleName, location, options);
+#else
+      throw RException(R__FAIL("This RNTuple build does not support DAOS."));
+#endif
+
    return std::make_unique<RPageSourceFile>(ntupleName, location, options);
 }
 
@@ -144,7 +155,20 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
 {
-   return std::make_unique<RPageSinkFile>(ntupleName, location, options);
+   std::unique_ptr<ROOT::Experimental::Detail::RPageSink> realSink;
+   if (location.find("daos://") == 0) {
+#ifdef R__ENABLE_DAOS
+      realSink = std::make_unique<RPageSinkDaos>(ntupleName, location, options);
+#else
+      throw RException(R__FAIL("This RNTuple build does not support DAOS."));
+#endif
+   } else {
+      realSink = std::make_unique<RPageSinkFile>(ntupleName, location, options);
+   }
+
+   if (options.GetUseBufferedWrite())
+      return std::make_unique<RPageSinkBuf>(std::move(realSink));
+   return realSink;
 }
 
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
@@ -179,7 +203,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       );
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
       f.SetOnDiskId(fLastFieldId);
-      f.ConnectPageStorage(*this); // issues in turn one or several calls to AddColumn()
+      f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
    auto nColumns = fLastColumnId;
@@ -201,14 +225,25 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 
 void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
-   auto locator = CommitPageImpl(columnHandle, page);
+   fOpenColumnRanges.at(columnHandle.fId).fNElements += page.GetNElements();
 
-   auto columnId = columnHandle.fId;
-   fOpenColumnRanges[columnId].fNElements += page.GetNElements();
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator = locator;
-   fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
+   pageInfo.fLocator = CommitPageImpl(columnHandle, page);
+   fOpenPageRanges.at(columnHandle.fId).fPageInfos.emplace_back(pageInfo);
+}
+
+
+void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
+   ROOT::Experimental::DescriptorId_t columnId,
+   const ROOT::Experimental::Detail::RPageStorage::RSealedPage &sealedPage)
+{
+   fOpenColumnRanges.at(columnId).fNElements += sealedPage.fNElements;
+
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = sealedPage.fNElements;
+   pageInfo.fLocator = CommitSealedPageImpl(columnId, sealedPage);
+   fOpenPageRanges.at(columnId).fPageInfos.emplace_back(pageInfo);
 }
 
 
@@ -235,32 +270,39 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
    fPrevClusterNEntries = nEntries;
 }
 
-
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
-ROOT::Experimental::Detail::RPageSink::SealPage(
-   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
+   const RColumnElementBase &element, int compressionSetting, void *buf)
 {
-   unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
    auto packedBytes = page.GetSize();
 
    if (!element.IsMappable()) {
       packedBytes = element.GetPackedSize(page.GetNElements());
-      buffer = new unsigned char[packedBytes];
+      pageBuf = new unsigned char[packedBytes];
       isAdoptedBuffer = false;
-      element.Pack(buffer, page.GetBuffer(), page.GetNElements());
+      element.Pack(pageBuf, page.GetBuffer(), page.GetNElements());
    }
    auto zippedBytes = packedBytes;
 
    if ((compressionSetting != 0) || !element.IsMappable()) {
-      zippedBytes = fCompressor->Zip(buffer, packedBytes, fOptions.GetCompression());
+      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
       if (!isAdoptedBuffer)
-         delete[] buffer;
-      buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor->GetZipBuffer()));
+         delete[] pageBuf;
+      pageBuf = reinterpret_cast<unsigned char *>(buf);
       isAdoptedBuffer = true;
    }
 
    R__ASSERT(isAdoptedBuffer);
 
-   return RSealedPage{buffer, zippedBytes, page.GetNElements()};
+   return RSealedPage{pageBuf, zippedBytes, page.GetNElements()};
+}
+
+ROOT::Experimental::Detail::RPageStorage::RSealedPage
+ROOT::Experimental::Detail::RPageSink::SealPage(
+   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+{
+   R__ASSERT(fCompressor);
+   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
 }

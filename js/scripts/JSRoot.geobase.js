@@ -2587,7 +2587,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          arg.last = 0;
          arg.CopyStack = function(factor) {
             let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
-            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
+            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
             for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
          };
@@ -3138,7 +3138,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    ClonedNodes.prototype.mergeVisibles = function(current, prev) {
 
       let indx2 = 0, del = [];
-      for (let indx1=0; (indx1<current.length) && (indx2<prev.length); ++indx1) {
+      for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
 
          while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
             del.push(prev[indx2++]); // this entry should be removed
@@ -3151,14 +3151,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // remove rest
-      while (indx2<prev.length)
+      while (indx2 < prev.length)
          del.push(prev[indx2++]);
 
-      return del; //
+      return del;
    }
 
-   /** @summary Collect all uniques shapes which should be build
-    *  @desc Check if same shape used many time for drawing */
+   /** @summary Collect all uniques shapes which should be built
+    *  @desc Check if same shape used many times for drawing */
    ClonedNodes.prototype.collectShapes = function(lst) {
 
       // nothing else - just that single shape

@@ -28,6 +28,9 @@ class TSQLiteServer : public TSQLServer {
 
    void           Close(Option_t *opt = "") final;
    Bool_t         StartTransaction() final;
+   Bool_t         HasTransactionInFlight() final;
+   Bool_t         Commit() final;
+   Bool_t         Rollback() final;
    TSQLResult    *Query(const char *sql) final;
    Bool_t         Exec(const char *sql) final;
    TSQLStatement *Statement(const char *sql, Int_t = 100) final;

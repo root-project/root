@@ -32,30 +32,8 @@ The class can scan the CLs+b values or alternatively CLs. For the latter,
 call HypoTestInverter::UseCLs().
 */
 
-// include other header files
-
-#include "RooAbsData.h"
-#
-#include "TMath.h"
-
-#include "RooStats/HybridResult.h"
-
 #include "RooStats/HypoTestInverter.h"
-#include <cassert>
-#include <cmath>
 
-#include "TF1.h"
-#include "TFile.h"
-#include "TH1.h"
-#include "TLine.h"
-#include "TCanvas.h"
-#include "TGraphErrors.h"
-#include "RooRealVar.h"
-#include "RooArgSet.h"
-#include "RooAbsPdf.h"
-#include "RooRandom.h"
-#include "RooConstVar.h"
-#include "RooMsgService.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/HybridCalculator.h"
 #include "RooStats/FrequentistCalculator.h"
@@ -66,8 +44,29 @@ call HypoTestInverter::UseCLs().
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/HypoTestPlot.h"
 #include "RooStats/HypoTestInverterPlot.h"
+#include "RooStats/HybridResult.h"
+
+#include "RooAbsData.h"
+#include "RooRealVar.h"
+#include "RooArgSet.h"
+#include "RooAbsPdf.h"
+#include "RooRandom.h"
+#include "RooConstVar.h"
+#include "RooMsgService.h"
+
+#include "TMath.h"
+#include "TF1.h"
+#include "TFile.h"
+#include "TH1.h"
+#include "TLine.h"
+#include "TCanvas.h"
+#include "TGraphErrors.h"
 
 #include "RooStats/ProofConfig.h"
+
+#include <cassert>
+#include <cmath>
+#include <memory>
 
 ClassImp(RooStats::HypoTestInverter);
 
@@ -706,7 +705,7 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
       oocoutP((TObject*)0,Eval) << "Running for " << fScannedVariable->GetName() << " = " << fScannedVariable->getVal() << endl;
 
    // compute the results
-   HypoTestResult* result =   Eval(*fCalculator0,adaptive,clTarget);
+   std::unique_ptr<HypoTestResult> result( Eval(*fCalculator0,adaptive,clTarget) );
    if (!result) {
       oocoutE((TObject*)0,Eval) << "HypoTestInverter - Error running point " << fScannedVariable->GetName() << " = " <<
    fScannedVariable->getVal() << endl;
@@ -732,21 +731,22 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
                                 << fScannedVariable->GetName() << " = " << rVal << std::endl;
       HypoTestResult* prevResult =  fResults->GetResult(fResults->ArraySize()-1);
       if (prevResult && prevResult->GetNullDistribution() && prevResult->GetAltDistribution()) {
-         prevResult->Append(result);
-         delete result;  // we can delete the result
+         prevResult->Append(result.get());
       }
       else {
          // if it was empty we re-use it
          oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunOnePoint - replace previous empty result\n";
-         fResults->fYObjects.Remove( prevResult);
-         fResults->fYObjects.Add(result);
+         auto oldObj = fResults->fYObjects.Remove(prevResult);
+         delete oldObj;
+
+         fResults->fYObjects.Add(result.release());
       }
 
    } else {
 
      // fill the results in the HypoTestInverterResult array
      fResults->fXValues.push_back(rVal);
-     fResults->fYObjects.Add(result);
+     fResults->fYObjects.Add(result.release());
 
    }
 

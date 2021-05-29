@@ -9,7 +9,6 @@
 #include "ROOT/RFrame.hxx"
 
 #include "ROOT/RLogger.hxx"
-#include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/RMenuItems.hxx"
 
 #include "TROOT.h"
@@ -18,14 +17,6 @@
 #include <sstream>
 
 using namespace ROOT::Experimental;
-
-////////////////////////////////////////////////////////////////////////////
-/// Deprecated constructor, to be removed soon
-
-RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame()
-{
-   fUserCoord = std::move(coords);
-}
 
 ////////////////////////////////////////////////////////////////////////////
 /// Internal - extract range for specified axis
@@ -52,20 +43,6 @@ void RFrame::AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &
       if (ranges.HasMax(ndim))
          axis.SetZoomMax(ranges.GetMax(ndim));
    }
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// Deprecated, to be removed soon
-
-void RFrame::GrowToDimensions(size_t nDimensions)
-{
-   std::size_t oldSize = fUserCoord.size();
-   if (oldSize >= nDimensions)
-      return;
-   fUserCoord.resize(nDimensions);
-   for (std::size_t idx = oldSize; idx < nDimensions; ++idx)
-      if (!fUserCoord[idx])
-         fUserCoord[idx].reset(new RPadCartesianUserAxis);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -97,6 +74,8 @@ void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges, bool is
       AssignZoomRange(0, AttrX(), ranges);
       AssignZoomRange(1, AttrY(), ranges);
       AssignZoomRange(2, AttrZ(), ranges);
+      AssignZoomRange(3, AttrX2(), ranges);
+      AssignZoomRange(4, AttrY2(), ranges);
    }
 
    if (fClientRanges.find(connid) == fClientRanges.end()) {

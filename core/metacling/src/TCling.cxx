@@ -1605,7 +1605,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
-      DLM.addSearchPath(TROOT::GetLibDir().Data());
+      DLM.addSearchPath(TROOT::GetLibDir().Data(), /*isUser=*/true,
+                        /*prepend=*/true);
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
          return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
@@ -1926,10 +1927,7 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
       llvm::sys::path::append(ModuleMapFileName, ModuleMapName);
       const FileEntry *FE = FM.getFile(ModuleMapFileName, /*openFile*/ false,
                                        /*CacheFailure*/ false);
-
-      // FIXME: Calling IsLoaded is slow! Replace this with the appropriate
-      // call to the clang::ModuleMap class.
-      if (FE && !this->IsLoaded(FE->getName().data())) {
+      if (FE) {
          if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
             return true;
          Error("RegisterPrebuiltModulePath", "Could not load modulemap in %s", ModuleMapFileName.c_str());

@@ -93,8 +93,6 @@ void NuisanceParametersSampler::Refresh() {
 
    if (!fPrior || !fParams) return;
 
-   if (fPoints) delete fPoints;
-
    if (fExpected) {
       // UNDER CONSTRUCTION
       oocoutI((TObject*)NULL,InputArguments) << "Using expected nuisance parameters." << endl;
@@ -110,12 +108,12 @@ void NuisanceParametersSampler::Refresh() {
       }
 
 
-      fPoints = fPrior->generate(
+      fPoints.reset( fPrior->generate(
          *fParams,
          AllBinned(),
          ExpectedData(),
          NumEvents(1) // for Asimov set, this is only a scale factor
-      );
+      ));
       if(fPoints->numEntries() != fNToys) {
          fNToys = fPoints->numEntries();
          oocoutI((TObject*)NULL,InputArguments) <<
@@ -137,7 +135,7 @@ void NuisanceParametersSampler::Refresh() {
    }else{
       oocoutI((TObject*)NULL,InputArguments) << "Using randomized nuisance parameters." << endl;
 
-      fPoints = fPrior->generate(*fParams, fNToys);
+      fPoints.reset(fPrior->generate(*fParams, fNToys));
    }
 }
 
@@ -154,7 +152,6 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 {
 
    fPdf = NULL;
-   fParametersForTestStat = NULL;
    fPriorNuisance = NULL;
    fNuisancePars = NULL;
    fObservables = NULL;
@@ -176,12 +173,6 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 
    fProofConfig = NULL;
    fNuisanceParametersSampler = NULL;
-
-   _allVars = NULL ;
-   _gs1 = NULL ;
-   _gs2 = NULL ;
-   _gs3 = NULL ;
-   _gs4 = NULL ;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
@@ -194,7 +185,6 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(ts.GetVarName().Data()), fNToys(ntoys)
 {
    fPdf = NULL;
-   fParametersForTestStat = NULL;
    fPriorNuisance = NULL;
    fNuisancePars = NULL;
    fObservables = NULL;
@@ -216,12 +206,6 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(t
 
    fProofConfig = NULL;
    fNuisanceParametersSampler = NULL;
-
-   _allVars = NULL ;
-   _gs1 = NULL ;
-   _gs2 = NULL ;
-   _gs3 = NULL ;
-   _gs4 = NULL ;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
@@ -490,7 +474,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
          const RooArgSet *values = one->get(0);
          if (!_allVars) {
-            _allVars = pdf.getVariables();
+            _allVars.reset(pdf.getVariables());
          }
          *_allVars = *values;
          delete one;
@@ -507,18 +491,15 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
                RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
                RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
                _pdfList.push_back(pdftmp);
-               _obsList.push_back(globtmp);
-               _gsList.push_back(gs);
+               _obsList.emplace_back(globtmp);
+               _gsList.emplace_back(gs);
             }
          }
 
-         list<RooArgSet*>::iterator oiter = _obsList.begin();
-         list<RooAbsPdf::GenSpec*>::iterator giter = _gsList.begin();
-         for (list<RooAbsPdf*>::iterator iter = _pdfList.begin(); iter != _pdfList.end(); ++iter, ++giter, ++oiter) {
-            //RooDataSet* tmp = (*iter)->generate(**oiter,1) ;
-            RooDataSet* tmp = (*iter)->generate(**giter);
-            **oiter = *tmp->get(0);
-            delete tmp;
+         // Assign generated values to the observables in _obsList
+         for (unsigned int i = 0; i < _pdfList.size(); ++i) {
+           std::unique_ptr<RooDataSet> tmp( _pdfList[i]->generate(*_gsList[i]) );
+           *_obsList[i] = *tmp->get(0);
          }
       }
 
@@ -633,14 +614,14 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
       } else {
         if (protoData) {
           if (useMultiGen) {
-            if (!_gs2) { _gs2 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) ; }
+            if (!_gs2) _gs2.reset( pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) );
             data = pdf.generate(*_gs2) ;
           } else {
             data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
           }
         } else {
           if (useMultiGen) {
-            if (!_gs1) { _gs1 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) ) ; }
+            if (!_gs1) _gs1.reset( pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)) );
             data = pdf.generate(*_gs1) ;
           } else {
             data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) );
@@ -660,14 +641,14 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
     } else {
       if (protoData) {
         if (useMultiGen) {
-          if (!_gs3) { _gs3 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)); }
+          if (!_gs3) _gs3.reset( pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) );
           data = pdf.generate(*_gs3) ;
         } else {
           data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
         }
       } else {
         if (useMultiGen) {
-          if (!_gs4) { _gs4 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)); }
+          if (!_gs4) _gs4.reset( pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)) );
           data = pdf.generate(*_gs4) ;
         } else {
           data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag));
@@ -675,12 +656,6 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
       }
     }
   }
-
-  // in case of number counting print observables
-  // if (data->numEntries() == 1) {
-  //    std::cout << "generate observables : ";
-  //    RooStats::PrintListContent(*data->get(0), std::cout);
-  // }
 
   return data;
 }
@@ -712,32 +687,18 @@ SamplingDistribution* ToyMCSampler::AppendSamplingDistribution(
 /// needs to be called every time the model pdf (fPdf) changes
 
 void ToyMCSampler::ClearCache() {
+  _gs1 = nullptr;
+  _gs2 = nullptr;
+  _gs3 = nullptr;
+  _gs4 = nullptr;
+  _allVars = nullptr;
 
-   if (_gs1) delete _gs1;
-   _gs1 = 0;
-   if (_gs2) delete _gs2;
-   _gs2 = 0;
-   if (_gs3) delete _gs3;
-   _gs3 = 0;
-   if (_gs4) delete _gs4;
-   _gs4 = 0;
-
-   // no need to delete the _pdfList since it is managed by the RooSimultaneous object
-   if (_pdfList.size() > 0) {
-      std::list<RooArgSet*>::iterator oiter = _obsList.begin();
-      for (std::list<RooAbsPdf::GenSpec*>::iterator giter  = _gsList.begin(); giter != _gsList.end(); ++giter, ++oiter) {
-         delete *oiter;
-         delete *giter;
-      }
-      _pdfList.clear();
-      _obsList.clear();
-      _gsList.clear();
-   }
-
-   //LM: is this set really needed ??
-   if (_allVars) delete _allVars;
-   _allVars = 0;
-
+  // no need to delete the _pdfList since it is managed by the RooSimultaneous object
+  if (_pdfList.size() > 0) {
+    _pdfList.clear();
+    _obsList.clear();
+    _gsList.clear();
+  }
 }
 
 } // end namespace RooStats

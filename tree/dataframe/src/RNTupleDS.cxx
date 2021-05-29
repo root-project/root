@@ -49,14 +49,17 @@ protected:
    }
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
+   static std::string TypeName() { return "std::size_t"; }
    RRDFCardinalityField()
       : ROOT::Experimental::Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
 
-   void GenerateColumnsImpl() final
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { R__ASSERT(false && "Cardinality fields must only be used for reading"); }
+
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
       fColumns.emplace_back(std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
@@ -66,20 +69,22 @@ public:
 
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
    {
-      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<ClusterSize_t *>(where));
+      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<std::size_t *>(where));
    }
    ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
    {
       return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
+   size_t GetValueSize() const final { return sizeof(std::size_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void
    ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      *value->Get<std::size_t>() = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -87,7 +92,9 @@ public:
                           ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, value->Get<ClusterSize_t>());
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      *value->Get<std::size_t>() = size;
    }
 };
 
@@ -117,9 +124,9 @@ public:
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source)
    {
-      fField->ConnectPageStorage(source);
+      fField->ConnectPageSource(source);
       for (auto &f : *fField)
-         f.ConnectPageStorage(source);
+         f.ConnectPageSource(source);
    }
 
    void *GetImpl(Long64_t entry) final
@@ -180,7 +187,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       // skeinIDs would already contain the fieldID of "event.tracks"
       skeinIDs.emplace_back(fieldId);
       // There should only be one sub field but it's easiest to access via the sub field range
-      for (const auto &f : desc.GetFieldRange(fieldDesc.GetId())) {
+      for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          AddField(desc, colName, f.GetId(), skeinIDs);
       }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
@@ -188,7 +195,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       return;
    } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
-      for (const auto &f : desc.GetFieldRange(fieldDesc.GetId())) {
+      for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
          AddField(desc, innerName, f.GetId(), skeinIDs);
       }

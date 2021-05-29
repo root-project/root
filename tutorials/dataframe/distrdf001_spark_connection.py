@@ -65,7 +65,7 @@ h_gaus = df_1.Histo1D(("gaus", "Normal distribution", 50, 0, 30), "gaus")
 h_exp = df_1.Histo1D(("exponential", "Exponential distribution", 50, 0, 30), "exponential")
 
 # Plot the histograms side by side on a canvas
-c = ROOT.TCanvas("distrdf001", "distrdf001", 1280, 800)
+c = ROOT.TCanvas("distrdf001", "distrdf001", 800, 400)
 c.Divide(2, 1)
 c.cd(1)
 h_gaus.DrawCopy()

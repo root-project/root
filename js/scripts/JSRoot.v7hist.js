@@ -266,8 +266,16 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let main = this.getFramePainter();
       if (!main) return Promise.resolve(false);
 
-      if (!this.isMainPainter() || !this.draw_content)
-        return Promise.resolve(true);
+      if (!this.draw_content)
+         return Promise.resolve(true);
+
+      if (!this.isMainPainter()) {
+         if (!this.options.second_x && !this.options.second_y)
+            return Promise.resolve(true);
+
+         main.setAxes2Ranges(this.options.second_x, this.getAxis("x"), this.xmin, this.xmax, this.options.second_y, this.getAxis("y"), this.ymin, this.ymax);
+         return main.drawAxes2(this.options.second_x, this.options.second_y);
+      }
 
       main.cleanupAxes();
       main.xmin = main.xmax = 0;
@@ -344,6 +352,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             default: axis = obj.fAxes[0]; break;
          }
       } else if (histo && histo.fAxes) {
+         // console.log('histo fAxes', histo.fAxes, histo.fAxes._0)
          switch(name) {
             case "x": axis = histo.fAxes._0; break;
             case "y": axis = histo.fAxes._1; break;
@@ -408,11 +417,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    RHistPainter.prototype.addInteractivity = function() {
       // only first painter in list allowed to add interactive functionality to the frame
 
-      if (JSROOT.batch_mode || !this.isMainPainter())
-         return true;
-
-      let fp = this.getFramePainter();
-      return fp ? fp.addInteractivity() : false;
+      let ismain =  this.isMainPainter(),
+          second_axis = this.options.second_x || this.options.second_y,
+          fp = ismain || second_axis ? this.getFramePainter() : null;
+      return fp ? fp.addInteractivity(!ismain && second_axis) : Promise.resolve(true);
    }
 
    /** @summary Process item reply */
@@ -474,9 +482,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    RHistPainter.prototype.getSelectIndex = function(axis, size, add) {
       // be aware - here indexes starts from 0
       let indx = 0,
-          main = this.getFramePainter(),
           taxis = this.getAxis(axis),
-          nbins = this['nbins'+axis] || 0,
+          nbins = this['nbins'+axis] || 0;
+
+      if (this.options.second_x && axis == "x") axis = "x2";
+      if (this.options.second_y && axis == "y") axis = "y2";
+
+      let main = this.getFramePainter(),
           min = main ? main['zoom_' + axis + 'min'] : 0,
           max = main ? main['zoom_' + axis + 'max'] : 0;
 
@@ -824,12 +836,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (args.pixel_density) args.rounding = true;
 
+      let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
+
        // calculate graphical coordinates in advance
       for (i = res.i1; i <= res.i2; ++i) {
          x = xaxis.GetBinCoord(i + args.middle);
-         if (pmain.logx && (x <= 0)) { res.i1 = i+1; continue; }
+         if (funcs.logx && (x <= 0)) { res.i1 = i+1; continue; }
          if (res.origx) res.origx[i] = x;
-         res.grx[i] = pmain.grx(x);
+         res.grx[i] = funcs.grx(x);
          if (args.rounding) res.grx[i] = Math.round(res.grx[i]);
 
          if (args.use3d) {
@@ -847,15 +861,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       while (i < res.i2 + res.stepi + 1)
          res.grx[i++] = res.grx[res.i2];
 
-      if (hdim===1) {
-         res.gry[0] = pmain.gry(0);
-         res.gry[1] = pmain.gry(1);
+      if (hdim === 1) {
+         res.gry[0] = funcs.gry(0);
+         res.gry[1] = funcs.gry(1);
       } else
       for (j = res.j1; j <= res.j2; ++j) {
          y = yaxis.GetBinCoord(j + args.middle);
-         if (pmain.logy && (y <= 0)) { res.j1 = j+1; continue; }
+         if (funcs.logy && (y <= 0)) { res.j1 = j+1; continue; }
          if (res.origy) res.origy[j] = y;
-         res.gry[j] = pmain.gry(y);
+         res.gry[j] = funcs.gry(y);
          if (args.rounding) res.gry[j] = Math.round(res.gry[j]);
 
          if (args.use3d) {
@@ -1127,7 +1141,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Draw histogram as bars
      * @private */
-   RH1Painter.prototype.drawBars = function(handle, width, height) {
+   RH1Painter.prototype.drawBars = function(handle, funcs, width, height) {
 
       this.createG(true);
 
@@ -1139,21 +1153,21 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       gry2 = pmain.swap_xy ? 0 : height;
       if (Number.isFinite(this.options.BaseLine))
-         if (this.options.BaseLine >= pmain.scale_ymin)
-            gry2 = Math.round(pmain.gry(this.options.BaseLine));
+         if (this.options.BaseLine >= funcs.scale_ymin)
+            gry2 = Math.round(funcs.gry(this.options.BaseLine));
 
       for (i = left; i < right; i += di) {
          x1 = xaxis.GetBinCoord(i);
          x2 = xaxis.GetBinCoord(i+di);
 
-         if (pmain.logx && (x2 <= 0)) continue;
+         if (funcs.logx && (x2 <= 0)) continue;
 
-         grx1 = Math.round(pmain.grx(x1));
-         grx2 = Math.round(pmain.grx(x2));
+         grx1 = Math.round(funcs.grx(x1));
+         grx2 = Math.round(funcs.grx(x2));
 
          y = histo.getBinContent(i+1);
-         if (pmain.logy && (y < pmain.scale_ymin)) continue;
-         gry1 = Math.round(pmain.gry(y));
+         if (funcs.logy && (y < funcs.scale_ymin)) continue;
+         gry1 = Math.round(funcs.gry(y));
 
          w = grx2 - grx1;
          grx1 += Math.round(this.options.BarOffset*w);
@@ -1199,26 +1213,25 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Draw histogram as filled errors
      * @private */
-   RH1Painter.prototype.drawFilledErrors = function(handle /*, width, height*/) {
+   RH1Painter.prototype.drawFilledErrors = function(handle, funcs /*, width, height*/) {
       this.createG(true);
 
       let left = handle.i1, right = handle.i2, di = handle.stepi,
-          pmain = this.getFramePainter(),
           histo = this.getHisto(), xaxis = this.getAxis("x"),
           i, x, grx, y, yerr, gry1, gry2,
           bins1 = [], bins2 = [];
 
       for (i = left; i < right; i += di) {
          x = xaxis.GetBinCoord(i+0.5);
-         if (pmain.logx && (x <= 0)) continue;
-         grx = Math.round(pmain.grx(x));
+         if (funcs.logx && (x <= 0)) continue;
+         grx = Math.round(funcs.grx(x));
 
          y = histo.getBinContent(i+1);
          yerr = histo.getBinError(i+1);
-         if (pmain.logy && (y-yerr < pmain.scale_ymin)) continue;
+         if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
 
-         gry1 = Math.round(pmain.gry(y + yerr));
-         gry2 = Math.round(pmain.gry(y - yerr));
+         gry1 = Math.round(funcs.gry(y + yerr));
+         gry2 = Math.round(funcs.gry(y - yerr));
 
          bins1.push({grx:grx, gry: gry1});
          bins2.unshift({grx:grx, gry: gry2});
@@ -1239,34 +1252,35 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    /** @summary Draw 1D histogram as SVG */
    RH1Painter.prototype.draw1DBins = function() {
 
-      let rect = this.getFramePainter().getFrameRect();
+      let pmain = this.getFramePainter(),
+          rect = pmain.getFrameRect();
 
       if (!this.draw_content || (rect.width <= 0) || (rect.height <= 0))
          return this.removeG();
 
       this.createHistDrawAttributes();
 
-      let handle = this.prepareDraw({ extra: 1, only_indexes: true });
+      let handle = this.prepareDraw({ extra: 1, only_indexes: true }),
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
       if (this.options.Bar)
-         return this.drawBars(handle, rect.width, rect.height);
+         return this.drawBars(handle, funcs, rect.width, rect.height);
 
       if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
-         return this.drawFilledErrors(handle, rect.width, rect.height);
+         return this.drawFilledErrors(handle, funcs, rect.width, rect.height);
 
-      return this.drawHistBins(handle, rect.width, rect.height);
+      return this.drawHistBins(handle, funcs, rect.width, rect.height);
    }
 
    /** @summary Draw histogram bins
      * @private */
-   RH1Painter.prototype.drawHistBins = function(handle, width, height) {
+   RH1Painter.prototype.drawHistBins = function(handle, funcs, width, height) {
       this.createG(true);
 
       let options = this.options,
           left = handle.i1,
           right = handle.i2,
           di = handle.stepi,
-          pmain = this.getFramePainter(),
           histo = this.getHisto(), xaxis = this.getAxis("x"),
           res = "", lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
@@ -1336,15 +1350,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let draw_bin = besti => {
          bincont = histo.getBinContent(besti+1);
          if (!exclude_zero || (bincont!==0)) {
-            mx1 = Math.round(pmain.grx(xaxis.GetBinCoord(besti)));
-            mx2 = Math.round(pmain.grx(xaxis.GetBinCoord(besti+di)));
+            mx1 = Math.round(funcs.grx(xaxis.GetBinCoord(besti)));
+            mx2 = Math.round(funcs.grx(xaxis.GetBinCoord(besti+di)));
             midx = Math.round((mx1+mx2)/2);
-            my = Math.round(pmain.gry(bincont));
+            my = Math.round(funcs.gry(bincont));
             yerr1 = yerr2 = 20;
             if (show_errors) {
                binerr = histo.getBinError(besti+1);
-               yerr1 = Math.round(my - pmain.gry(bincont + binerr)); // up
-               yerr2 = Math.round(pmain.gry(bincont - binerr) - my); // down
+               yerr1 = Math.round(my - funcs.gry(bincont + binerr)); // up
+               yerr2 = Math.round(funcs.gry(bincont - binerr) - my); // down
             }
 
             if (show_text) {
@@ -1387,9 +1401,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          x = xaxis.GetBinCoord(i);
 
-         if (pmain.logx && (x <= 0)) continue;
+         if (funcs.logx && (x <= 0)) continue;
 
-         grx = Math.round(pmain.grx(x));
+         grx = Math.round(funcs.grx(x));
 
          lastbin = (i > right - di);
 
@@ -1397,7 +1411,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             gry = curry;
          } else {
             y = histo.getBinContent(i+1);
-            gry = Math.round(pmain.gry(y));
+            gry = Math.round(funcs.gry(y));
          }
 
          if (res.length === 0) {
@@ -1467,7 +1481,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (!this.fillatt.empty() || fill_for_interactive) {
          let h0 = height + 3;
          if (fill_for_interactive) {
-            let gry0 = Math.round(pmain.gry(0));
+            let gry0 = Math.round(funcs.gry(0));
             if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
          }
          close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
@@ -1562,6 +1576,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       let pmain = this.getFramePainter(),
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
           width = pmain.getFrameWidth(),
           height = pmain.getFrameHeight(),
           histo = this.getHisto(), xaxis = this.getAxis("x"),
@@ -1573,33 +1588,33 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       function GetBinGrX(i) {
          let xx = xaxis.GetBinCoord(i);
-         return (pmain.logx && (xx<=0)) ? null : pmain.grx(xx);
+         return (funcs.logx && (xx<=0)) ? null : funcs.grx(xx);
       }
 
       function GetBinGrY(i) {
          let yy = histo.getBinContent(i + 1);
-         if (pmain.logy && (yy < pmain.scale_ymin))
-            return pmain.swap_xy ? -1000 : 10*height;
-         return Math.round(pmain.gry(yy));
+         if (funcs.logy && (yy < funcs.scale_ymin))
+            return funcs.swap_xy ? -1000 : 10*height;
+         return Math.round(funcs.gry(yy));
       }
 
-      let pnt_x = pmain.swap_xy ? pnt.y : pnt.x,
-          pnt_y = pmain.swap_xy ? pnt.x : pnt.y;
+      let pnt_x = funcs.swap_xy ? pnt.y : pnt.x,
+          pnt_y = funcs.swap_xy ? pnt.x : pnt.y;
 
       while (l < r-1) {
          let m = Math.round((l+r)*0.5),
              xx = GetBinGrX(m);
          if ((xx === null) || (xx < pnt_x - 0.5)) {
-            if (pmain.swap_xy) r = m; else l = m;
+            if (funcs.swap_xy) r = m; else l = m;
          } else if (xx > pnt_x + 0.5) {
-            if (pmain.swap_xy) l = m; else r = m;
+            if (funcs.swap_xy) l = m; else r = m;
          } else { l++; r--; }
       }
 
       findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
-      if (pmain.swap_xy) {
+      if (funcs.swap_xy) {
          while ((l>left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
          while ((r<right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
       } else {
@@ -1643,7 +1658,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          gapx = 0;
 
-         gry1 = Math.round(pmain.gry(((this.options.BaseLine!==false) && (this.options.BaseLine > pmain.scale_ymin)) ? this.options.BaseLine : pmain.scale_ymin));
+         gry1 = Math.round(funcs.gry(((this.options.BaseLine!==false) && (this.options.BaseLine > funcs.scale_ymin)) ? this.options.BaseLine : funcs.scale_ymin));
 
          if (gry1 > gry2) { let d = gry1; gry1 = gry2; gry2 = d; }
 
@@ -1661,8 +1676,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             let cont = histo.getBinContent(findbin+1),
                 binerr = histo.getBinError(findbin+1);
 
-            gry1 = Math.round(pmain.gry(cont + binerr)); // up
-            gry2 = Math.round(pmain.gry(cont - binerr)); // down
+            gry1 = Math.round(funcs.gry(cont + binerr)); // up
+            gry2 = Math.round(funcs.gry(cont - binerr)); // down
 
             if ((cont==0) && this.isRProfile()) findbin = null;
 
@@ -1694,7 +1709,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             gry2 = height;
 
             if (!this.fillatt.empty()) {
-               gry2 = Math.round(pmain.gry(0));
+               gry2 = Math.round(funcs.gry(0));
                if (gry2 < 0) gry2 = 0; else if (gry2 > height) gry2 = height;
                if (gry2 < gry1) { let d = gry1; gry1 = gry2; gry2 = d; }
             }
@@ -1902,11 +1917,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          let kind = painter.v7EvalAttr("kind", "hist"),
              sub = painter.v7EvalAttr("sub", 0),
+             has_main = !!painter.getMainPainter(),
              o = painter.options;
 
          o.Text = painter.v7EvalAttr("text", false);
          o.BarOffset = painter.v7EvalAttr("bar_offset", 0.);
          o.BarWidth = painter.v7EvalAttr("bar_width", 1.);
+         o.second_x = has_main && painter.v7EvalAttr("secondx", false);
+         o.second_y = has_main && painter.v7EvalAttr("secondy", false);
 
          switch(kind) {
             case "bar": o.Bar = true; o.BarStyle = sub; break;
@@ -2569,7 +2587,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Draw histogram bins as contour
      * @private */
-   RH2Painter.prototype.drawBinsContour = function(frame_w,frame_h) {
+   RH2Painter.prototype.drawBinsContour = function(funcs, frame_w,frame_h) {
       let handle = this.prepareDraw({ rounding: false, extra: 100, original: this.options.Proj != 0 }),
           main = this.getFramePainter(),
           palette = main.getHistPalette(),
@@ -2581,8 +2599,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          for (let i = iminus; i <= iplus; ++i) {
             if (func) {
                pnt = func(xp[i], yp[i]);
-               pnt.x = Math.round(main.grx(pnt.x));
-               pnt.y = Math.round(main.gry(pnt.y));
+               pnt.x = Math.round(funcs.grx(pnt.x));
+               pnt.y = Math.round(funcs.gry(pnt.y));
             } else {
                pnt = { x: Math.round(xp[i]), y: Math.round(yp[i]) };
             }
@@ -2660,7 +2678,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH2Painter.prototype.createPolyBin = function(pmain, bin, text_pos) {
-      let cmd = "", ngr, ngraphs = 1, gr = null;
+      let cmd = "", ngr, ngraphs = 1, gr = null,
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
       if (bin.fPoly._typename=='TMultiGraph')
          ngraphs = bin.fPoly.fGraphs.arr.length;
@@ -2682,8 +2701,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          let npnts = gr.fNpoints, n,
              x = gr.fX, y = gr.fY,
-             grx = Math.round(pmain.grx(x[0])),
-             gry = Math.round(pmain.gry(y[0])),
+             grx = Math.round(funcs.grx(x[0])),
+             gry = Math.round(funcs.gry(y[0])),
              nextx, nexty;
 
          if ((npnts>2) && (x[0]==x[npnts-1]) && (y[0]==y[npnts-1])) npnts--;
@@ -2691,8 +2710,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          cmd += "M"+grx+","+gry;
 
          for (n=1;n<npnts;++n) {
-            nextx = Math.round(pmain.grx(x[n]));
-            nexty = Math.round(pmain.gry(y[n]));
+            nextx = Math.round(funcs.grx(x[n]));
+            nexty = Math.round(funcs.gry(y[n]));
             if (text_pos) addPoint(grx,gry, nextx, nexty);
             if ((grx!==nextx) || (gry!==nexty)) {
                if (grx===nextx)
@@ -2705,7 +2724,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             grx = nextx; gry = nexty;
          }
 
-         if (text_pos) addPoint(grx, gry, Math.round(pmain.grx(x[0])), Math.round(pmain.gry(y[0])));
+         if (text_pos) addPoint(grx, gry, Math.round(funcs.grx(x[0])), Math.round(funcs.gry(y[0])));
          cmd += "z";
       }
 
@@ -2714,8 +2733,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             bin._midx = Math.round(bin._sumx / bin._suml);
             bin._midy = Math.round(bin._sumy / bin._suml);
          } else {
-            bin._midx = Math.round(pmain.grx((bin.fXmin + bin.fXmax)/2));
-            bin._midy = Math.round(pmain.gry((bin.fYmin + bin.fYmax)/2));
+            bin._midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
+            bin._midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
          }
       }
 
@@ -3043,10 +3062,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    /** @summary Draw histogram bins as candle plot
      * @private */
-   RH2Painter.prototype.drawBinsCandle = function(w) {
+   RH2Painter.prototype.drawBinsCandle = function(funcs, w) {
       let histo = this.getHisto(), yaxis = this.getAxis("y"),
           handle = this.prepareDraw(),
-          pmain = this.getFramePainter(), // used for axis values conversions
           i, j, y, sum1, cont, center, counter, integral, pnt,
           bars = "", markers = "", posy;
 
@@ -3095,7 +3113,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
 
          // exclude points with negative y when log scale is specified
-         if (pmain.logy && (pnt.whiskerm<=0)) continue;
+         if (funcs.logy && (pnt.whiskerm<=0)) continue;
 
          w = handle.grx[i+1] - handle.grx[i];
          w *= 0.66;
@@ -3106,19 +3124,19 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          pnt.x2 = Math.round(center + w/2);
          center = Math.round(center);
 
-         pnt.y0 = Math.round(pmain.gry(pnt.median));
+         pnt.y0 = Math.round(funcs.gry(pnt.median));
          // mean line
          bars += "M" + pnt.x1 + "," + pnt.y0 + "h" + (pnt.x2-pnt.x1);
 
-         pnt.y1 = Math.round(pmain.gry(pnt.p25y));
-         pnt.y2 = Math.round(pmain.gry(pnt.m25y));
+         pnt.y1 = Math.round(funcs.gry(pnt.p25y));
+         pnt.y2 = Math.round(funcs.gry(pnt.m25y));
 
          // rectangle
          bars += "M" + pnt.x1 + "," + pnt.y1 +
          "v" + (pnt.y2-pnt.y1) + "h" + (pnt.x2-pnt.x1) + "v-" + (pnt.y2-pnt.y1) + "z";
 
-         pnt.yy1 = Math.round(pmain.gry(pnt.whiskerp));
-         pnt.yy2 = Math.round(pmain.gry(pnt.whiskerm));
+         pnt.yy1 = Math.round(funcs.gry(pnt.whiskerp));
+         pnt.yy2 = Math.round(funcs.gry(pnt.whiskerm));
 
          // upper part
          bars += "M" + center + "," + pnt.y1 + "v" + (pnt.yy1-pnt.y1);
@@ -3303,7 +3321,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       this.createG(true);
 
-      let rect = this.getFramePainter().getFrameRect(), handle = null;
+      let pmain = this.getFramePainter(),
+          rect = pmain.getFrameRect(),
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+          handle = null;
 
       // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
 
@@ -3319,9 +3340,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          else if (this.options.Arrow)
             handle = this.drawBinsArrow();
          else if (this.options.Contour > 0)
-            handle = this.drawBinsContour(rect.width, rect.height);
+            handle = this.drawBinsContour(funcs, rect.width, rect.height);
          else if (this.options.Candle)
-            handle = this.drawBinsCandle(rect.width);
+            handle = this.drawBinsCandle(funcs, rect.width);
 
          if (this.options.Text)
             handle = this.drawBinsText(handle);

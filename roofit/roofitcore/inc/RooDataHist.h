@@ -101,6 +101,7 @@ public:
 
   /// Return weight of i-th bin. \see getIndex()
   double weight(std::size_t i) const { return _wgt[i]; }
+  double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
   Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE, Bool_t oneSafe=kFALSE);
   /// Return squared weight sum of i-th bin. \see getIndex()
   double weightSquared(std::size_t i) const { return get_sumw2(i); }
@@ -204,6 +205,15 @@ public:
   ///@}
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /// Structure to cache information on the histogram variable that is
+  /// frequently used for histogram weights retrieval.
+  struct VarInfo {
+    size_t nRealVars = 0;
+    size_t realVarIdx1 = 0;
+    size_t realVarIdx2 = 0;
+    bool initialized = false;
+  };
+
 protected:
 
   friend class RooAbsCachedPdf ;
@@ -224,7 +234,7 @@ protected:
         const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
                   std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) override;
-  Double_t interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
+  double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;
 
@@ -257,7 +267,6 @@ protected:
   mutable double* _sumw2{nullptr}; //[_arrSize] Sum of weights^2
   double*         _binv {nullptr}; //[_arrSize] Bin volume array
 
-  RooArgSet  _realVars ; // Real dimensions of the dataset 
   mutable std::vector<double> _maskedWeights; //! Copy of _wgtVec, but masked events have a weight of zero.
  
   mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
@@ -272,10 +281,15 @@ protected:
   mutable Double_t _cache_sum{0.}; //! Cache for sum of entries ;
 
 private:
+  double weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
+
   void _adjustBinning(RooRealVar &theirVar, const TAxis &axis, RooRealVar *ourVar, Int_t *offset);
   void registerWeightArraysToDataStore() const;
 
-  ClassDefOverride(RooDataHist, 5) // Binned data set
+  VarInfo _varInfo; //!
+  VarInfo const& getVarInfo();
+
+  ClassDefOverride(RooDataHist, 6) // Binned data set
 };
 
 #endif

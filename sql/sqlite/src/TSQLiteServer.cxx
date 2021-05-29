@@ -98,12 +98,42 @@ void TSQLiteServer::Close(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// submit "START TRANSACTION" query to database
+/// submit "BEGIN TRANSACTION" query to database
 /// return kTRUE, if successful
 
 Bool_t TSQLiteServer::StartTransaction()
 {
    return Exec("BEGIN TRANSACTION");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// returns kTRUE when transaction is running
+
+Bool_t  TSQLiteServer::HasTransactionInFlight()
+{
+   if (!fSQLite)
+      return kFALSE;
+
+   return sqlite3_get_autocommit(fSQLite) == 0;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// submit "COMMIT TRANSACTION" query to database
+/// return kTRUE, if successful
+
+Bool_t TSQLiteServer::Commit()
+{
+   return Exec("COMMIT TRANSACTION");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// submit "ROLLBACK TRANSACTION" query to database
+/// return kTRUE, if successful
+
+Bool_t TSQLiteServer::Rollback()
+{
+   return Exec("ROLLBACK TRANSACTION");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

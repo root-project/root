@@ -96,7 +96,7 @@ public:
       // We refuse to do anything since we assume the memory is already initialised
       if (EAllocType::kAdopting == fAllocType)
          return;
-      fStdAllocator.construct(p, std::forward<Args>(args)...);
+      StdAllocTraits_t::construct(fStdAllocator, p, std::forward<Args>(args)...);
    }
 
    /// \brief Allocate some memory
@@ -125,7 +125,7 @@ public:
    void destroy(U *p)
    {
       if (EAllocType::kAdopting != fAllocType) {
-         fStdAllocator.destroy(p);
+         StdAllocTraits_t::destroy(fStdAllocator, p);
       }
    }
 
@@ -137,7 +137,7 @@ public:
 
    bool operator!=(const RAdoptAllocator<T> &other) { return !(*this == other); }
 
-   size_type max_size() const { return fStdAllocator.max_size(); };
+   size_type max_size() const { return StdAllocTraits_t::max_size(fStdAllocator); };
 };
 
 // The different semantics of std::vector<bool> make  memory adoption through a
@@ -167,6 +167,7 @@ public:
    using const_reference = typename StdAlloc_t::const_reference;
    using size_type = typename StdAlloc_t::size_type;
    using difference_type = typename StdAlloc_t::difference_type;
+   using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
 
    RAdoptAllocator() = default;
    RAdoptAllocator(const RAdoptAllocator &) = default;
@@ -178,20 +179,20 @@ public:
          throw std::runtime_error("Cannot rebind owning RAdoptAllocator");
    }
 
-   bool *allocate(std::size_t n) { return fStdAllocator.allocate(n); }
+   bool *allocate(std::size_t n) { return StdAllocTraits_t::allocate(fStdAllocator, n); }
 
    template <typename U, class... Args>
    void construct(U *p, Args &&... args)
    {
-      fStdAllocator.construct(p, std::forward<Args>(args)...);
+      StdAllocTraits_t::construct(fStdAllocator, p, std::forward<Args>(args)...);
    }
 
-   void deallocate(bool *p, std::size_t s) noexcept { fStdAllocator.deallocate(p, s); }
+   void deallocate(bool *p, std::size_t s) noexcept { StdAllocTraits_t::deallocate(fStdAllocator, p, s); }
 
    template <class U>
    void destroy(U *p)
    {
-      fStdAllocator.destroy(p);
+      StdAllocTraits_t::destroy(fStdAllocator, p);
    }
 
    bool operator==(const RAdoptAllocator &) { return true; }

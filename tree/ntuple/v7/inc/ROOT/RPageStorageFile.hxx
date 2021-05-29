@@ -54,9 +54,6 @@ The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
 class RPageSinkFile : public RPageSink {
-public:
-   static constexpr std::size_t kDefaultElementsPerPage = 10000;
-
 private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -76,6 +73,8 @@ private:
 protected:
    void CreateImpl(const RNTupleModel &model) final;
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
+                                                     const RPageStorage::RSealedPage &sealedPage) final;
    RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
 
@@ -184,6 +183,9 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
+
+   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
+                       RSealedPage &sealedPage) final;
 
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
 

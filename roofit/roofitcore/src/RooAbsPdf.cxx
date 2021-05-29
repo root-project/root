@@ -497,8 +497,9 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   }
 
   // If not create it now
-  std::unique_ptr<RooArgSet> depList{getObservables(iset)} ;
-  RooAbsReal* norm = createIntegral(*depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
+  RooArgSet depList;
+  getObservables(iset, depList);
+  RooAbsReal* norm = createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
 
   // Store it in the cache
   cache = new CacheElem(*norm) ;
@@ -551,20 +552,21 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
   }
 
-  std::unique_ptr<RooArgSet> depList(getObservables(nset));
+  RooArgSet depList;
+  getObservables(nset, depList);
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
       cxcoutD(Tracing) << IsA()->GetName() << "::syncNormalization(" << GetName()
 	   << ") recreating normalization integral " << endl ;
-      if (depList) depList->printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ; else ccoutD(Tracing) << "<none>" << endl ;
+      depList.printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ;
     } else {
       cxcoutD(Tracing) << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
     }
   }
 
   // Destroy old normalization & create new
-  if (selfNormalized() || !dependsOn(*depList)) {
+  if (selfNormalized() || !dependsOn(depList)) {
     auto ntitle = std::string(GetTitle()) + " Unit Normalization";
     auto nname = std::string(GetName()) + "_UnitNorm";
     _norm = new RooRealVar(nname.c_str(),ntitle.c_str(),1) ;
@@ -572,7 +574,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
-    RooAbsReal* normInt = createIntegral(*depList,*getIntegratorConfig(),nr) ;
+    RooAbsReal* normInt = createIntegral(depList,*getIntegratorConfig(),nr) ;
     normInt->getVal() ;
 //     cout << "resulting normInt = " << normInt->GetName() << endl ;
 
@@ -587,7 +589,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
       if (cacheParams->getSize()>0) {
 	cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
-			 << "-dim value cache for integral over " << *depList << " as a function of " << *cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
+			 << "-dim value cache for integral over " << depList << " as a function of " << *cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
 	string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams->contentsString().c_str()) ;
 	RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*cacheParams) ;
 	cachedIntegral->setInterpolationOrder(2) ;
@@ -792,7 +794,8 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
   if(expected < 0) {
     coutE(InputArguments) << fName << ": calculated negative expected events: " << expected
          << endl;
-    return 0;
+    logEvalError("extendedTerm #expected events is <0 return a  NaN");
+    return TMath::QuietNaN();
   }
 
 
@@ -802,9 +805,9 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
   }
 
   // Check for errors in Nexpected
-  if (expected<0 || TMath::IsNaN(expected)) {
-    logEvalError("extendedTerm #expected events is <0 or NaN") ;
-    return 0 ;
+  if (TMath::IsNaN(expected)) {
+    logEvalError("extendedTerm #expected events is a NaN") ;
+    return TMath::QuietNaN() ;
   }
 
   // calculate and return the negative log-likelihood of the Poisson
@@ -933,8 +936,9 @@ RooAbsReal *createMultiRangeNLLCorrectionTerm(RooAbsPdf const &pdf, RooAbsData c
       auto sumEntriesCurrent = data.sumEntries("1", currentRangeName.c_str());
       sumEntriesTotal += sumEntriesCurrent;
 
-      auto pdfIntegralCurrent =
-         pdf.createIntegral(*pdf.getObservables(data), nullptr, nullptr, currentRangeName.c_str());
+      RooArgSet depList;
+      pdf.getObservables(data.get(), depList);
+      auto pdfIntegralCurrent = pdf.createIntegral(depList, nullptr, nullptr, currentRangeName.c_str());
 
       auto term = new RooFormulaVar((currentName + "_correctionTerm").c_str(),
                                     (std::string("-(") + std::to_string(sumEntriesCurrent) + " * log(x[0]))").c_str(),
@@ -1082,8 +1086,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     Double_t rangeHi = pc.getDouble("rangeHi") ;
 
     // Create range with name 'fit' with above limits on all observables
-    RooArgSet* obs = getObservables(&data) ;
-    for (auto arg : *obs) {
+    RooArgSet obs;
+    getObservables(data.get(), obs) ;
+    for (auto arg : obs) {
       RooRealVar* rrv =  dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) rrv->setRange("fit",rangeLo,rangeHi) ;
     }
@@ -1239,7 +1244,8 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
          num(k, l) = 0.0;
       }
    }
-   RooArgSet *obs = this->getObservables(data);
+   RooArgSet obs;
+   this->getObservables(data.get(), obs);
    // Create derivative objects
    std::vector<std::unique_ptr<RooDerivative>> derivatives;
    const RooArgList &floated = rw->floatParsFinal();
@@ -1248,13 +1254,13 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
    for (const auto paramresult : floated) {
       auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
       assert(floatingparams->find(*paramresult)->IsA() == RooRealVar::Class());
-      derivatives.emplace_back(this->derivative(*paraminternal, *obs, 1));
+      derivatives.emplace_back(this->derivative(*paraminternal, obs, 1));
    }
 
    // Loop over data
    for (int j = 0; j < data.numEntries(); j++) {
       // Sets obs to current data point, this is where the pdf will be evaluated
-      *obs = *data.get(j);
+      obs = *data.get(j);
       // Determine first derivatives
       std::vector<double> diffs(floated.getSize(), 0.0);
       for (int k = 0; k < floated.getSize(); k++) {
@@ -1267,7 +1273,7 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
          diffs[k] = diff;
       }
       // Fill numerator matrix
-      double prob = getVal(obs);
+      double prob = getVal(&obs);
       for (int k = 0; k < floated.getSize(); k++) {
          for (int l = 0; l < floated.getSize(); l++) {
             num(k, l) += data.weight() * data.weight() * diffs[k] * diffs[l] / (prob * prob);
@@ -1410,7 +1416,7 @@ int RooAbsPdf::calculateSumW2CorrectedCovMatrix(Minimizer &minimizer, RooAbsReal
 ///                                                 \see RooBinSamplingPdf
 ///
 /// <tr><th><th> Options to control flow of fit procedure
-/// <tr><td> `Minimizer(type,algo)`   <td>  Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
+/// <tr><td> `Minimizer("<type>", "<algo>")`   <td>  Choose minimization package and optionally the algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
 ///                                       but others can be specified (through RooMinimizer interface). Select OldMinuit to use MINUIT through the old RooMinuit interface
 ///   <table>
 ///   <tr><th> Type         <th> Algorithm
@@ -3248,9 +3254,9 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::paramOn(%s)",GetName())) ;
   pc.defineString("label","Label",0,"") ;
-  pc.defineDouble("xmin","Layout",0,0.50) ;
-  pc.defineDouble("xmax","Layout",1,0.99) ;
-  pc.defineInt("ymaxi","Layout",0,Int_t(0.95*10000)) ;
+  pc.defineDouble("xmin","Layout",0,0.65) ;
+  pc.defineDouble("xmax","Layout",1,0.9) ;
+  pc.defineInt("ymaxi","Layout",0,Int_t(0.9*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
   pc.defineObject("params","Parameters",0,0) ;
   pc.defineString("formatStr","Format",0,"NELU") ;
@@ -3352,11 +3358,10 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   if(!box) return 0;
   box->SetName(Form("%s_paramBox",GetName())) ;
   box->SetFillColor(0);
-  box->SetBorderSize(1);
+  box->SetBorderSize(0);
   box->SetTextAlign(12);
   box->SetTextSize(0.04F);
-  box->SetFillStyle(1001);
-  box->SetFillColor(0);
+  box->SetFillStyle(0);
 
   for (const auto param : params) {
     auto var = static_cast<const RooRealVar*>(param);

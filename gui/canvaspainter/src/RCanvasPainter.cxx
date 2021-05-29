@@ -458,6 +458,18 @@ bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int
 
    auto snapshot = CreateSnapshot(ctxt);
 
+   auto len = fname.length();
+   if ((len > 4) && ((fname.compare(len-4,4,".json") == 0) || (fname.compare(len-4,4,".JSON") == 0))) {
+      std::ofstream f(fname);
+      if (!f) {
+         R__LOG_ERROR(CanvasPainerLog()) << "Fail to open file " << fname << " to store canvas snapshot";
+         return false;
+      }
+      R__LOG_INFO(CanvasPainerLog()) << "Store canvas in " << fname;
+      f << snapshot;
+      return true;
+   }
+
    return RWebDisplayHandle::ProduceImage(fname, snapshot, width, height);
 }
 

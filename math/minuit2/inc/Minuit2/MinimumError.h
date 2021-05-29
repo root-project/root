@@ -10,7 +10,10 @@
 #ifndef ROOT_Minuit2_MinimumError
 #define ROOT_Minuit2_MinimumError
 
-#include "Minuit2/BasicMinimumError.h"
+#include "Minuit2/MnConfig.h"
+#include "Minuit2/MnMatrix.h"
+#include "Minuit2/MnPrint.h"
+#include "Minuit2/LaSum.h"
 
 #include <memory>
 
@@ -22,57 +25,70 @@ namespace Minuit2 {
     calculating the Parameter step size (-V*g) and for the covariance Update
     (ErrorUpdator). The covariance matrix is equal to twice the inv. Hessian.
  */
-
 class MinimumError {
 
 public:
-   using MnHesseFailed = BasicMinimumError::MnHesseFailed;
-   using MnInvertFailed = BasicMinimumError::MnInvertFailed;
-   using MnMadePosDef = BasicMinimumError::MnMadePosDef;
-   using MnNotPosDef = BasicMinimumError::MnNotPosDef;
+   enum Status {
+      MnNotPosDef,
+      MnMadePosDef,
+      MnHesseFailed,
+      MnInvertFailed,
+   };
 
 public:
-   MinimumError(unsigned int n) : fData(std::make_shared<BasicMinimumError>(n)) {}
+   MinimumError(unsigned int n) : fPtr{new Data{{n}, 1.0, false, false, false, false, false, false}} {}
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, double dcov) : fData(std::make_shared<BasicMinimumError>(mat, dcov)) {}
-
-   MinimumError(const MnAlgebraicSymMatrix &mat, MnHesseFailed)
-      : fData(std::make_shared<BasicMinimumError>(mat, MnHesseFailed{}))
+   MinimumError(const MnAlgebraicSymMatrix &mat, double dcov)
+      : fPtr{new Data{mat, dcov, true, true, false, false, false, true}}
    {
    }
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, MnMadePosDef)
-      : fData(std::make_shared<BasicMinimumError>(mat, MnMadePosDef{}))
+   MinimumError(const MnAlgebraicSymMatrix &mat, Status status)
+      : fPtr{new Data{mat, 1.0, status == MnMadePosDef, false, status == MnMadePosDef, status == MnHesseFailed,
+                      status == MnInvertFailed, true}}
    {
    }
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, MnInvertFailed)
-      : fData(std::make_shared<BasicMinimumError>(mat, MnInvertFailed{}))
+   MnAlgebraicSymMatrix Matrix() const { return 2. * fPtr->fMatrix; }
+
+   const MnAlgebraicSymMatrix &InvHessian() const { return fPtr->fMatrix; }
+
+   MnAlgebraicSymMatrix Hessian() const
    {
+      // calculate Heassian: inverse of error matrix
+      MnAlgebraicSymMatrix tmp(fPtr->fMatrix);
+      if (Invert(tmp) != 0) {
+         MnPrint print("MinimumError::Hessian");
+         print.Warn("Inversion fails; return diagonal matrix");
+         for (unsigned int i = 0; i < fPtr->fMatrix.Nrow(); ++i)
+            for (unsigned int j = 0; j <= i; j++)
+               tmp(i, j) = i == j ? 1. / fPtr->fMatrix(i, i) : 0;
+      }
+      return tmp;
    }
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, MnNotPosDef)
-      : fData(std::make_shared<BasicMinimumError>(mat, MnNotPosDef{}))
-   {
-   }
-
-   MnAlgebraicSymMatrix Matrix() const { return fData->Matrix(); }
-
-   const MnAlgebraicSymMatrix &InvHessian() const { return fData->InvHessian(); }
-
-   MnAlgebraicSymMatrix Hessian() const { return fData->Hessian(); }
-
-   double Dcovar() const { return fData->Dcovar(); }
-   bool IsAccurate() const { return fData->IsAccurate(); }
-   bool IsValid() const { return fData->IsValid(); }
-   bool IsPosDef() const { return fData->IsPosDef(); }
-   bool IsMadePosDef() const { return fData->IsMadePosDef(); }
-   bool HesseFailed() const { return fData->HesseFailed(); }
-   bool InvertFailed() const { return fData->InvertFailed(); }
-   bool IsAvailable() const { return fData->IsAvailable(); }
+   double Dcovar() const { return fPtr->fDCovar; }
+   bool IsAccurate() const { return Dcovar() < 0.1; }
+   bool IsValid() const { return fPtr->fValid; }
+   bool IsPosDef() const { return fPtr->fPosDef; }
+   bool IsMadePosDef() const { return fPtr->fMadePosDef; }
+   bool HesseFailed() const { return fPtr->fHesseFailed; }
+   bool InvertFailed() const { return fPtr->fInvertFailed; }
+   bool IsAvailable() const { return fPtr->fAvailable; }
 
 private:
-   std::shared_ptr<BasicMinimumError> fData;
+   struct Data {
+      MnAlgebraicSymMatrix fMatrix;
+      double fDCovar;
+      bool fValid;
+      bool fPosDef;
+      bool fMadePosDef;
+      bool fHesseFailed;
+      bool fInvertFailed;
+      bool fAvailable;
+   };
+
+   std::shared_ptr<Data> fPtr;
 };
 
 } // namespace Minuit2

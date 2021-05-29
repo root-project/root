@@ -700,12 +700,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             setTimeout(this.processFrameTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
       },
 
-      addInteractivity: function() {
+      /** @summary Add interactive handlers */
+      addInteractivity: function(for_second_axes) {
 
          let pp = this.getPadPainter(),
              svg = this.getFrameSvg();
          if ((pp && pp._fast_drawing) || svg.empty())
             return Promise.resolve(this);
+
+         if (for_second_axes) {
+
+            // add extra handlers for second axes
+            let svg_x2 = svg.selectAll(".x2axis_container"),
+                svg_y2 = svg.selectAll(".y2axis_container");
+            if (JSROOT.settings.ContextMenu) {
+               svg_x2.on("contextmenu", evnt => this.showContextMenu("x2", evnt));
+               svg_y2.on("contextmenu", evnt => this.showContextMenu("y2", evnt));
+            }
+            svg_x2.on("mousemove", evnt => this.showAxisStatus("x2", evnt));
+            svg_y2.on("mousemove", evnt => this.showAxisStatus("y2", evnt));
+            return Promise.resolve(this);
+         }
 
          let svg_x = svg.selectAll(".xaxis_container"),
              svg_y = svg.selectAll(".yaxis_container");
@@ -751,6 +766,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(this);
       },
 
+      /** @summary Add keys handler */
       addKeysHandler: function() {
          if (this.keys_handler || (typeof window == 'undefined')) return;
 
@@ -759,6 +775,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          window.addEventListener('keydown', this.keys_handler, false);
       },
 
+      /** @summary Handle key press */
       processKeyPress: function(evnt) {
          let main = this.selectDom();
          if (!JSROOT.settings.HandleKeys || main.empty() || (this.enabledKeys === false)) return;
@@ -848,6 +865,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return res;
       },
 
+      /** @summary Start mouse rect zooming */
       startRectSel: function(evnt) {
          // ignore when touch selection is activated
 
@@ -870,13 +888,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                             Math.max(0, Math.min(h, pos[1])) ];
 
          this.zoom_origin = [0,0];
+         this.zoom_second = false;
 
          if ((pos[0] < 0) || (pos[0] > w)) {
+            this.zoom_second = (pos[0] > w) && this.y2_handle;
             this.zoom_kind = 3; // only y
             this.zoom_origin[1] = this.zoom_curr[1];
             this.zoom_curr[0] = w;
             this.zoom_curr[1] += 1;
          } else if ((pos[1] < 0) || (pos[1] > h)) {
+            this.zoom_second = (pos[1] < 0) && this.x2_handle;
             this.zoom_kind = 2; // only x
             this.zoom_origin[0] = this.zoom_curr[0];
             this.zoom_curr[0] += 1;
@@ -901,6 +922,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             setTimeout(() => this.startLabelsMove(), 500);
       },
 
+      /** @summary Starts labels move */
       startLabelsMove: function() {
          if (this.zoom_rect) return;
 
@@ -913,6 +935,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       },
 
+      /** @summary Process mouse rect zooming */
       moveRectSel: function(evnt) {
 
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
@@ -953,6 +976,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.zoom_rect.attr("x", x).attr("y", y).attr("width", w).attr("height", h);
       },
 
+      /** @summary Finish mouse rect zooming */
       endRectSel: function(evnt) {
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
 
@@ -977,21 +1001,32 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             }
 
             let xmin, xmax, ymin, ymax, isany = false,
-                idx = this.swap_xy ? 1 : 0, idy = 1 - idx;
+                idx = this.swap_xy ? 1 : 0, idy = 1 - idx,
+                namex = "x", namey = "y";
 
             if (changed[idx] && (Math.abs(this.zoom_curr[idx] - this.zoom_origin[idx]) > 10)) {
-               xmin = Math.min(this.revertAxis("x", this.zoom_origin[idx]), this.revertAxis("x", this.zoom_curr[idx]));
-               xmax = Math.max(this.revertAxis("x", this.zoom_origin[idx]), this.revertAxis("x", this.zoom_curr[idx]));
+               if (this.zoom_second && (this.zoom_kind == 2)) namex = "x2";
+               xmin = Math.min(this.revertAxis(namex, this.zoom_origin[idx]), this.revertAxis(namex, this.zoom_curr[idx]));
+               xmax = Math.max(this.revertAxis(namex, this.zoom_origin[idx]), this.revertAxis(namex, this.zoom_curr[idx]));
                isany = true;
             }
 
             if (changed[idy] && (Math.abs(this.zoom_curr[idy] - this.zoom_origin[idy]) > 10)) {
-               ymin = Math.min(this.revertAxis("y", this.zoom_origin[idy]), this.revertAxis("y", this.zoom_curr[idy]));
-               ymax = Math.max(this.revertAxis("y", this.zoom_origin[idy]), this.revertAxis("y", this.zoom_curr[idy]));
+               if (this.zoom_second && (this.zoom_kind == 3)) namey = "y2";
+               ymin = Math.min(this.revertAxis(namey, this.zoom_origin[idy]), this.revertAxis(namey, this.zoom_curr[idy]));
+               ymax = Math.max(this.revertAxis(namey, this.zoom_origin[idy]), this.revertAxis(namey, this.zoom_curr[idy]));
                isany = true;
             }
 
-            if (isany) {
+            if (namex == "x2") {
+               this.zoomChangedInteractive(namex, true);
+               this.zoomSingle(namex, xmin, xmax);
+               kind = 0;
+            } else if (namey == "y2") {
+               this.zoomChangedInteractive(namey, true);
+               this.zoomSingle(namey, ymin, ymax);
+               kind = 0;
+            } else if (isany) {
                this.zoomChangedInteractive("x", true);
                this.zoomChangedInteractive("y", true);
                this.zoom(xmin, xmax, ymin, ymax);
@@ -999,7 +1034,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             }
          }
 
-         let pnt =  (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
+         let pnt = (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
 
          this.clearInteractiveElements();
 
@@ -1022,20 +1057,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       },
 
+      /** @summary Handle mouse double click on frame */
       mouseDoubleClick: function(evnt) {
          evnt.preventDefault();
-         let m = d3.pointer(evnt, this.getFrameSvg().node());
+         let m = d3.pointer(evnt, this.getFrameSvg().node()),
+             fw = this.getFrameWidth(), fh = this.getFrameHeight();
          this.clearInteractiveElements();
 
-         let valid_x = (m[0] >= 0) && (m[0] <= this.getFrameWidth()),
-             valid_y = (m[1] >= 0) && (m[1] <= this.getFrameHeight());
+         let valid_x = (m[0] >= 0) && (m[0] <= fw),
+             valid_y = (m[1] >= 0) && (m[1] <= fh);
 
          if (valid_x && valid_y && this._dblclick_handler)
             if (this.processFrameClick({ x: m[0], y: m[1] }, true)) return;
 
          let kind = "xyz";
-         if (!valid_x) kind = this.swap_xy ? "x" : "y"; else
-         if (!valid_y) kind = this.swap_xy ? "y" : "x";
+         if (!valid_x) {
+            kind = this.swap_xy ? "x" : "y";
+            if ((m[0] > fw) && this[kind+"2_handle"]) kind += "2"; // let unzoom second axis
+         } else if (!valid_y) {
+            kind = this.swap_xy ? "y" : "x";
+            if ((m[1] < 0) && this[kind+"2_handle"]) kind += "2"; // let unzoom second axis
+         }
          this.unzoom(kind).then(changed => {
             if (changed) return;
             let pp = this.getPadPainter(), rect = this.getFrameRect();
@@ -1043,6 +1085,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
       },
 
+      /** @summary Start touch zoom */
       startTouchZoom: function(evnt) {
          // in case when zooming was started, block any other kind of events
          if (this.zoom_kind != 0) {
@@ -1099,12 +1142,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.zoom_curr = [ Math.min(pnt1[0], pnt2[0]), Math.min(pnt1[1], pnt2[1]) ];
          this.zoom_origin = [ Math.max(pnt1[0], pnt2[0]), Math.max(pnt1[1], pnt2[1]) ];
+         this.zoom_second = false;
 
          if ((this.zoom_curr[0] < 0) || (this.zoom_curr[0] > w)) {
+            this.zoom_second = (this.zoom_curr[0] > w) && this.y2_handle;
             this.zoom_kind = 103; // only y
             this.zoom_curr[0] = 0;
             this.zoom_origin[0] = w;
          } else if ((this.zoom_origin[1] > h) || (this.zoom_origin[1] < 0)) {
+            this.zoom_second = (this.zoom_origin[1] < 0) && this.x2_handle;
             this.zoom_kind = 102; // only x
             this.zoom_curr[1] = 0;
             this.zoom_origin[1] = h;
@@ -1122,12 +1168,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                .attr("width", this.zoom_origin[0] - this.zoom_curr[0])
                .attr("height", this.zoom_origin[1] - this.zoom_curr[1]);
 
-         d3.select(window).on("touchmove.zoomRect", this.moveTouchSel.bind(this))
-                          .on("touchcancel.zoomRect", this.endTouchSel.bind(this))
-                          .on("touchend.zoomRect", this.endTouchSel.bind(this));
+         d3.select(window).on("touchmove.zoomRect", this.moveTouchZoom.bind(this))
+                          .on("touchcancel.zoomRect", this.endTouchZoom.bind(this))
+                          .on("touchend.zoomRect", this.endTouchZoom.bind(this));
       },
 
-      moveTouchSel: function(evnt) {
+      /** @summary Move touch zooming */
+      moveTouchZoom: function(evnt) {
          if (this.zoom_kind < 100) return;
 
          evnt.preventDefault();
@@ -1160,7 +1207,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          evnt.stopPropagation();
       },
 
-      endTouchSel: function(evnt) {
+      /** @summary End touch zooming handler */
+      endTouchZoom: function(evnt) {
 
          this.getFrameSvg().on("touchcancel", null)
                          .on("touchend", null);
@@ -1191,26 +1239,35 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let xmin, xmax, ymin, ymax, isany = false,
              xid = this.swap_xy ? 1 : 0, yid = 1 - xid,
-             changed = [true, true];
+             changed = [true, true], namex = "x", namey = "y";
+
          if (this.zoom_kind === 102) changed[1] = false;
          if (this.zoom_kind === 103) changed[0] = false;
 
          if (changed[xid] && (Math.abs(this.zoom_curr[xid] - this.zoom_origin[xid]) > 10)) {
-            xmin = Math.min(this.revertAxis("x", this.zoom_origin[xid]), this.revertAxis("x", this.zoom_curr[xid]));
-            xmax = Math.max(this.revertAxis("x", this.zoom_origin[xid]), this.revertAxis("x", this.zoom_curr[xid]));
+            if (this.zoom_second && (this.zoom_kind == 102)) namex = "x2";
+            xmin = Math.min(this.revertAxis(namex, this.zoom_origin[xid]), this.revertAxis(namex, this.zoom_curr[xid]));
+            xmax = Math.max(this.revertAxis(namex, this.zoom_origin[xid]), this.revertAxis(namex, this.zoom_curr[xid]));
             isany = true;
          }
 
          if (changed[yid] && (Math.abs(this.zoom_curr[yid] - this.zoom_origin[yid]) > 10)) {
-            ymin = Math.min(this.revertAxis("y", this.zoom_origin[yid]), this.revertAxis("y", this.zoom_curr[yid]));
-            ymax = Math.max(this.revertAxis("y", this.zoom_origin[yid]), this.revertAxis("y", this.zoom_curr[yid]));
+            if (this.zoom_second && (this.zoom_kind == 103)) namey = "y2";
+            ymin = Math.min(this.revertAxis(namey, this.zoom_origin[yid]), this.revertAxis(namey, this.zoom_curr[yid]));
+            ymax = Math.max(this.revertAxis(namey, this.zoom_origin[yid]), this.revertAxis(namey, this.zoom_curr[yid]));
             isany = true;
          }
 
          this.clearInteractiveElements();
          this.last_touch = new Date(0);
 
-         if (isany) {
+         if (namex == "x2") {
+            this.zoomChangedInteractive(namex, true);
+            this.zoomSingle(namex, xmin, xmax);
+         } else if (namey == "y2") {
+            this.zoomChangedInteractive(namey, true);
+            this.zoomSingle(namey, ymin, ymax);
+         } else if (isany) {
             this.zoomChangedInteractive('x', true);
             this.zoomChangedInteractive('y', true);
             this.zoom(xmin, xmax, ymin, ymax);
@@ -1219,8 +1276,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          evnt.stopPropagation();
       },
 
-       /** @summary Analyze zooming with mouse wheel */
-      analyzeMouseWheelEvent: function(event, item, dmin, test_ignore) {
+      /** @summary Analyze zooming with mouse wheel */
+      analyzeMouseWheelEvent: function(event, item, dmin, test_ignore, second_side) {
+         // if there is second handle, use it
+         let handle2 = second_side ? this[item.name + "2_handle"] : null;
+         if (handle2) {
+            item.second = JSROOT.extend({}, item);
+            return handle2.analyzeWheelEvent(event, dmin, item.second, test_ignore);
+         }
          let handle = this[item.name + "_handle"];
          if (handle) return handle.analyzeWheelEvent(event, dmin, item, test_ignore);
          console.error('Fail to analyze zooming event for ', item.name);
@@ -1230,6 +1293,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          * @desc it is typically for 2-Dim histograms or
          * when histogram not draw, defined by other painters */
       isAllowedDefaultYZooming: function() {
+
+         if (this.self_drawaxes) return true;
 
          let pad_painter = this.getPadPainter();
          if (pad_painter && pad_painter.painters)
@@ -1242,6 +1307,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return false;
       },
 
+      /** @summary Handles mouse wheel event */
       mouseWheel: function(evnt) {
          evnt.stopPropagation();
 
@@ -1253,16 +1319,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              cur = d3.pointer(evnt, this.getFrameSvg().node()),
              w = this.getFrameWidth(), h = this.getFrameHeight();
 
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >=0) && (cur[1] <= h));
+         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >=0) && (cur[1] <= h), cur[1] < 0);
 
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w));
+         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
 
          this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
          if (itemx.changed) this.zoomChangedInteractive('x', true);
          if (itemy.changed) this.zoomChangedInteractive('y', true);
+
+         if (itemx.second) {
+            this.zoomSingle("x2", itemx.second.min, itemx.second.max);
+            if (itemx.second.changed) this.zoomChangedInteractive('x2', true);
+         }
+         if (itemy.second) {
+            this.zoomSingle("y2", itemy.second.min, itemy.second.max);
+            if (itemy.second.changed) this.zoomChangedInteractive('y2', true);
+         }
+
       },
 
+      /** @summary Show frame context menu */
       showContextMenu: function(kind, evnt, obj) {
 
          // ignore context menu when touches zooming is ongoing
@@ -1387,6 +1464,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          delete this[fld];
       },
 
+      /** @summary Clear frame interactive elements */
       clearInteractiveElements: function() {
          if (jsrp.closeMenu) jsrp.closeMenu();
          this.zoom_kind = 0;
@@ -1396,36 +1474,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          delete this.zoom_lastpos;
          delete this.zoom_labels;
 
-
          // enable tooltip in frame painter
          setPainterTooltipEnabled(this, true);
       },
 
-      /** Assign frame interactive methods */
+      /** @summary Assign frame interactive methods */
       assign: function(painter) {
          JSROOT.extend(painter, this);
-
-         /*
-         painter.addBasicInteractivity = this.addBasicInteractivity;
-         painter.addInteractivity = this.addInteractivity;
-         painter.addKeysHandler = this.addKeysHandler;
-         painter.processKeyPress = this.processKeyPress;
-         painter.processFrameClick = this.processFrameClick;
-         painter.startRectSel = this.startRectSel;
-         painter.moveRectSel = this.moveRectSel;
-         painter.endRectSel = this.endRectSel;
-         painter.mouseDoubleClick = this.mouseDoubleClick;
-         painter.startTouchZoom = this.startTouchZoom;
-         painter.moveTouchSel = this.moveTouchSel;
-         painter.endTouchSel = this.endTouchSel;
-         painter.analyzeMouseWheelEvent = this.analyzeMouseWheelEvent;
-         painter.isAllowedDefaultYZooming = this.isAllowedDefaultYZooming;
-         painter.mouseWheel = this.mouseWheel;
-         painter.showContextMenu = this.showContextMenu;
-         painter.startTouchMenu = this.startTouchMenu;
-         painter.endTouchMenu = this.endTouchMenu;
-         painter.clearInteractiveElements = this.clearInteractiveElements;
-         */
       }
 
    } // FrameInterative

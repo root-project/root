@@ -114,10 +114,24 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   _list.reserve(other._list.size());
 
   for (auto item : other._list) {
-    add(*item);
+    insert(item);
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move constructor.
+
+RooAbsCollection::RooAbsCollection(RooAbsCollection&& other) :
+  TObject(other),
+  RooPrintable(other),
+  _list(std::move(other._list)),
+  _ownCont(other._ownCont),
+  _name(std::move(other._name)),
+  _allRRV(other._allRRV),
+  _sizeThresholdForMapSearch(other._sizeThresholdForMapSearch)
+{
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,6 +402,8 @@ void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDi
 
 Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return false;
+
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
@@ -411,6 +427,8 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 
 RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return nullptr;
+
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
@@ -436,6 +454,8 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 
 Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return false;
+
   // check that this isn't a copy of a list
   if(_ownCont && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::add: cannot add to an owned list" << endl;
@@ -690,6 +710,27 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a subset of the current collection, consisting only of those
+/// elements that are contained as well in the given reference collection.
+/// Returns `true` only if something went wrong.
+/// The complement of this function is getParameters().
+/// \param[in] refColl The collection to check for common elements.
+/// \param[out] outColl Output collection.
+
+bool RooAbsCollection::selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const
+{
+  outColl.clear();
+  outColl.setName((std::string(GetName()) + "_selection").c_str());
+
+  // Scan set contents for matching attribute
+  for (auto arg : _list) {
+    if (refColl.find(*arg))
+      outColl.add(*arg) ;
+  }
+
+  return false;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -699,20 +740,10 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
 
 RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl) const
 {
-  // Create output set
-  TString selName(GetName()) ;
-  selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
-
-  // Scan set contents for matching attribute
-  for (auto arg : _list) {
-    if (refColl.find(*arg))
-      sel->add(*arg) ;
-  }
-
+  auto sel = static_cast<RooAbsCollection*>(create("")) ;
+  selectCommon(refColl, *sel);
   return sel ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1529,4 +1560,16 @@ RooAbsArg* RooAbsCollection::tryFastFind(const TNamed* namePtr) const {
   }
 
   return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check that all entries where the collections overlap have the same name.
+bool RooAbsCollection::hasSameLayout(const RooAbsCollection& other) const {
+  for (unsigned int i=0; i < std::min(_list.size(), other.size()); ++i) {
+    if (_list[i]->namePtr() != other._list[i]->namePtr())
+      return false;
+  }
+
+  return true;
 }

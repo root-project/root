@@ -19,6 +19,7 @@
 #include "TColor.h"
 
 #include <iostream>
+#include <regex>
 
 #include <nlohmann/json.hpp>
 
@@ -475,6 +476,9 @@ void REveSelection::UserUnPickedElement(REveElement* el)
 
 //==============================================================================
 
+////////////////////////////////////////////////////////////////////////////////
+/// Called from GUI when user picks or un-picks an element.
+
 void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs)
 {
    static const REveException eh("REveSelection::NewElementPicked ");
@@ -613,6 +617,36 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
 
    if (changed)
      StampObjProps();
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Wrapper for NewElementPickedStr that takes secondary indices as C-style string.
+/// Needed to be able to use TMethodCall interface.
+
+void REveSelection::NewElementPickedStr(ElementId_t id, bool multi, bool secondary, const char* secondary_idcs)
+{
+   static const REveException eh("REveSelection::NewElementPickedStr ");
+
+   if (secondary_idcs == 0 || secondary_idcs[0] == 0)
+   {
+      NewElementPicked(id, multi, secondary);
+      return;
+   }
+
+   static const std::regex comma_re("\\s*,\\s*", std::regex::optimize);
+   std::string   str(secondary_idcs);
+   std::set<int> sis;
+   std::sregex_token_iterator itr(str.begin(), str.end(), comma_re, -1);
+   std::sregex_token_iterator end;
+
+   try {
+      while (itr != end) sis.insert(std::stoi(*itr++));
+   }
+   catch (const std::invalid_argument& ia) {
+      throw eh + "invalid secondary index argument '" + *itr + "' - must be int.";
+   }
+
+   NewElementPicked(id, multi, secondary, sis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

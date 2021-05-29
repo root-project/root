@@ -69,73 +69,74 @@
     \ingroup Histpainter
     \brief The histogram painter class. Implements all histograms' drawing's options.
 
-- [Introduction](#HP00)
-- [Histograms' plotting options](#HP01)
-   - [Options supported for 1D and 2D histograms](#HP01a)
-   - [Options supported for 1D histograms](#HP01b)
-   - [Options supported for 2D histograms](#HP01c)
-   - [Options supported for 3D histograms](#HP01d)
-   - [Options supported for histograms' stacks (THStack)](#HP01e)
-- [Setting the Style](#HP02)
-- [Setting line, fill, marker, and text attributes](#HP03)
-- [Setting Tick marks on the histogram axis](#HP04)
-- [Giving titles to the X, Y and Z axis](#HP05)
-- [The option "SAME"](#HP060)
-   - [Limitations](#HP060a)
-- [Colors automatically picked in palette](#HP061)
-- [Superimposing two histograms with different scales in the same pad](#HP06)
-- [Statistics Display](#HP07)
-- [Fit Statistics](#HP08)
-- [The error bars options](#HP09)
-- [The bar chart option](#HP100)
-- [The "BAR" and "HBAR" options](#HP10)
-- [The SCATter plot option (default for 2D histograms)](#HP11)
-- [The ARRow option](#HP12)
-- [The BOX option](#HP13)
-- [The COLor option](#HP14)
-- [The CANDLE and VIOLIN options](#HP140)
-   - [The CANDLE option](#HP140a)
-   - [The VIOLIN option](#HP140b)
-- [The TEXT and TEXTnn Option](#HP15)
-- [The CONTour options](#HP16)
-   - [The LIST option](#HP16a)
-   - [The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options](#HP16b)
-- [The LEGO options](#HP17)
-- [The "SURFace" options](#HP18)
-- [Cylindrical, Polar, Spherical and PseudoRapidity/Phi options](#HP19)
-- [Base line for bar-charts and lego plots](#HP20)
-- [TH2Poly Drawing](#HP20a)
-- [The SPEC option](#HP21)
-- [Option "Z" : Adding the color palette on the right side of the pad](#HP22)
-- [Setting the color palette](#HP23)
-- [Drawing a sub-range of a 2-D histogram; the [cutg] option](#HP24)
-- [Drawing options for 3D histograms](#HP25)
-- [Drawing option for histograms' stacks](#HP26)
-- [Drawing of 3D implicit functions](#HP27)
-- [Associated functions drawing](#HP28)
-- [Drawing using OpenGL](#HP29)
-   - [General information: plot types and supported options](#HP29a)
-   - [TH3 as color boxes](#HP290)
-   - [TH3 as boxes (spheres)](#HP29b)
-   - [TH3 as iso-surface(s)](#HP29c)
-   - [TF3 (implicit function)](#HP29d)
-   - [Parametric surfaces](#HP29e)
-   - [Interaction with the plots](#HP29f)
-   - [Selectable parts](#HP29g)
-   - [Rotation and zooming](#HP29h)
-   - [Panning](#HP29i)
-   - [Box cut](#HP29j)
-   - [Plot specific interactions (dynamic slicing etc.)](#HP29k)
-   - [Surface with option "GLSURF"](#HP29l)
-   - [TF3](#HP29m)
-   - [Box](#HP29n)
-   - [Iso](#HP29o)
-   - [Parametric plot](#HP29p)
-- [Highlight mode for histogram](#HP30)
-   - [Highlight mode and user function](#HP30a)
+- [Introduction](\ref HP00)
+- [Histograms' plotting options](\ref HP01)
+   - [Options supported for 1D and 2D histograms](\ref HP01a)
+   - [Options supported for 1D histograms](\ref HP01b)
+   - [Options supported for 2D histograms](\ref HP01c)
+   - [Options supported for 3D histograms](\ref HP01d)
+   - [Options supported for histograms' stacks (THStack)](\ref HP01e)
+- [Setting the Style](\ref HP02)
+- [Setting line, fill, marker, and text attributes](\ref HP03)
+- [Setting Tick marks on the histogram axis](\ref HP04)
+- [Giving titles to the X, Y and Z axis](\ref HP05)
+- [The option \"SAME\"](\ref HP060)
+   - [Limitations](\ref HP060a)
+- [Colors automatically picked in palette](\ref HP061)
+- [Superimposing two histograms with different scales in the same pad](\ref HP06)
+- [Statistics Display](\ref HP07)
+- [Fit Statistics](\ref HP08)
+- [The error bars options](\ref HP09)
+- [The bar chart option](\ref HP100)
+- [The \"BAR\" and \"HBAR\" options](\ref HP10)
+- [The SCATter plot option (default for 2D histograms)](\ref HP11)
+- [The ARRow option](\ref HP12)
+- [The BOX option](\ref HP13)
+- [The COLor option](\ref HP14)
+- [The CANDLE and VIOLIN options](\ref HP140)
+   - [The CANDLE option](\ref HP140a)
+   - [The VIOLIN option](\ref HP140b)
+- [The TEXT and TEXTnn Option](\ref HP15)
+- [The CONTour options](\ref HP16)
+   - [The LIST option](\ref HP16a)
+   - [The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options](\ref HP16b)
+- [The LEGO options](\ref HP17)
+- [The \"SURFace\" options](\ref HP18)
+- [Cylindrical, Polar, Spherical and PseudoRapidity/Phi options](\ref HP19)
+- [Base line for bar-charts and lego plots](\ref HP20)
+- [TH2Poly Drawing](\ref HP20a)
+- [The SPEC option](\ref HP21)
+- [Option \"Z\" : Adding the color palette on the right side of the pad](\ref HP22)
+- [Setting the color palette](\ref HP23)
+- [Drawing a sub-range of a 2-D histogram; the [cutg] option](\ref HP24)
+- [Drawing options for 3D histograms](\ref HP25)
+- [Drawing option for histograms' stacks](\ref HP26)
+- [Drawing of 3D implicit functions](\ref HP27)
+- [Associated functions drawing](\ref HP28)
+- [Drawing using OpenGL](\ref HP29)
+   - [General information: plot types and supported options](\ref HP29a)
+   - [TH3 as color boxes](\ref HP290)
+   - [TH3 as boxes (spheres)](\ref HP29b)
+   - [TH3 as iso-surface(s)](\ref HP29c)
+   - [TF3 (implicit function)](\ref HP29d)
+   - [Parametric surfaces](\ref HP29e)
+   - [Interaction with the plots](\ref HP29f)
+   - [Selectable parts](\ref HP29g)
+   - [Rotation and zooming](\ref HP29h)
+   - [Panning](\ref HP29i)
+   - [Box cut](\ref HP29j)
+   - [Plot specific interactions (dynamic slicing etc.)](\ref HP29k)
+   - [Surface with option \"GLSURF\"](\ref HP29l)
+   - [TF3](\ref HP29m)
+   - [Box](\ref HP29n)
+   - [Iso](\ref HP29o)
+   - [Parametric plot](\ref HP29p)
+- [Highlight mode for histogram](\ref HP30)
+   - [Highlight mode and user function](\ref HP30a)
 
 
-## <a name="HP00"></a> Introduction
+\anchor HP00
+## Introduction
 
 
 Histograms are drawn via the `THistPainter` class. Each histogram has a
@@ -191,7 +192,8 @@ To create a copy of the histogram when drawing it, one can use
 and delete the original one without affecting the clone.
 
 
-### <a name="HP01"></a> Histograms' plotting options
+\anchor HP01
+### Histograms' plotting options
 
 
 Most options can be concatenated with or without spaces or commas, for example:
@@ -214,14 +216,15 @@ using `TH1::GetOption`:
     (const Option_t* 0xa3ff948)"E"
 
 
-#### <a name="HP01a"></a> Options supported for 1D and 2D histograms
+\anchor HP01a
+#### Options supported for 1D and 2D histograms
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | "E"      | Draw error bars. |
 | "AXIS"   | Draw only axis. |
 | "AXIG"   | Draw only grid (if the grid is requested). |
-| <a name="OPTHIST">"HIST"</a>   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
+| \anchor OPTHIST "HIST"   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
 | "FUNC"   | When an histogram has a fitted function, this option allows to draw the fit result only. |
 | "SAME"   | Superimpose on previous picture in the same pad. |
 | "SAMES"  | Same as "SAME" and draw the statistics box|
@@ -239,7 +242,8 @@ using `TH1::GetOption`:
 | "Y+"     | The Y-axis is drawn on the right side of the plot. |
 | "MIN0"   | Set minimum value for the Y axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
 
-#### <a name="HP01b"></a> Options supported for 1D histograms
+\anchor HP01b
+#### Options supported for 1D histograms
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
@@ -267,7 +271,8 @@ using `TH1::GetOption`:
 | "LF2"    | Draw histogram like with option "L" but with a fill area. Note that "L" draws also a fill area if the hist fill color is set but the fill area corresponds to the histogram contour.|
 
 
-#### <a name="HP01c"></a> Options supported for 2D histograms
+\anchor HP01c
+#### Options supported for 2D histograms
 
 | Option       | Description                                                      |
 |--------------|------------------------------------------------------------------|
@@ -322,7 +327,8 @@ using `TH1::GetOption`:
 | "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
-#### <a name="HP01d"></a> Options supported for 3D histograms
+\anchor HP01d
+#### Options supported for 3D histograms
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
@@ -336,7 +342,8 @@ using `TH1::GetOption`:
 | "LEGO"   | Same as `BOX`.|
 
 
-#### <a name="HP01e"></a> Options supported for histograms' stacks (`THStack`)
+\anchor HP01e
+#### Options supported for histograms' stacks (`THStack`)
 
 | Option     | Description                                                     |
 |------------|-----------------------------------------------------------------|
@@ -350,7 +357,8 @@ using `TH1::GetOption`:
 
 
 
-### <a name="HP02"></a> Setting the Style
+\anchor HP02
+### Setting the Style
 
 
 Histograms use the current style (`gStyle`). When one changes the current
@@ -365,7 +373,8 @@ To force all the histogram to use the current style use:
 All the histograms read after this call will use the current style.
 
 
-### <a name="HP03"></a> Setting line, fill, marker, and text attributes
+\anchor HP03
+### Setting line, fill, marker, and text attributes
 
 
 The histogram classes inherit from the attribute classes:
@@ -373,7 +382,8 @@ The histogram classes inherit from the attribute classes:
 See the description of these classes for the list of options.
 
 
-### <a name="HP04"></a> Setting Tick marks on the histogram axis
+\anchor HP04
+### Setting Tick marks on the histogram axis
 
 
 The `TPad::SetTicks` method specifies the type of tick marks on the axis.
@@ -397,7 +407,8 @@ the histograms by calling:
     gPad->RedrawAxis();
 
 
-### <a name="HP05"></a> Giving titles to the X, Y and Z axis
+\anchor HP05
+### Giving titles to the X, Y and Z axis
 
 
     h->GetXaxis()->SetTitle("X axis title");
@@ -407,7 +418,8 @@ The histogram title and the axis titles can be any `TLatex` string.
 The titles are part of the persistent histogram.
 
 
-### <a name="HP060"></a> The option "SAME"
+\anchor HP060
+### The option "SAME"
 
 
 By default, when an histogram is drawn, the current pad is cleared before
@@ -418,7 +430,8 @@ option `SAME` should be use. The histogram drawn with the option
 This option can be used alone or combined with any valid drawing option but
 some combinations must be use with care.
 
-#### <a name="HP060a"></a> Limitations
+\anchor HP060a
+#### Limitations
 
 - It does not work when combined with the `LEGO` and `SURF` options unless the
   histogram plotted with the option `SAME` has exactly the same
@@ -426,7 +439,8 @@ some combinations must be use with care.
   lego plots [histograms' stacks](#HP26) should be used.
 
 
-### <a name="HP061"></a> Colors automatically picked in palette
+\anchor HP061
+### Colors automatically picked in palette
 
 \since **ROOT version 6.09/01**
 
@@ -452,7 +466,8 @@ Begin_Macro(source)
 ../../../tutorials/hist/thstack2palettecolor.C
 End_Macro
 
-### <a name="HP06"></a> Superimposing two histograms with different scales in the same pad
+\anchor HP06
+### Superimposing two histograms with different scales in the same pad
 
 
 The following example creates two histograms, the second histogram is the bins
@@ -497,7 +512,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP07"></a> Statistics Display
+\anchor HP07
+### Statistics Display
 
 
 The type of information shown in the histogram statistics box can be selected
@@ -639,7 +655,8 @@ Labels used in the statistics box ("Mean", "Std Dev", ...) can be changed from
 `$ROOTSYS/etc/system.rootrc` or `.rootrc` (look for the string `Hist.Stats.`).
 
 
-### <a name="HP08"></a> Fit Statistics
+\anchor HP08
+### Fit Statistics
 
 
 The type of information about fit parameters printed in the histogram statistics
@@ -664,7 +681,8 @@ Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent
 to `gStyle->SetOptFit(111)`
 
 
-### <a name="HP09"></a> The error bars options
+\anchor HP09
+### The error bars options
 
 
 | Option   | Description                                                       |
@@ -730,7 +748,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP100"></a> The bar chart option
+\anchor HP100
+### The bar chart option
 
 
 The option "B" allows to draw simple vertical bar charts.
@@ -779,7 +798,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP10"></a> The "BAR" and "HBAR" options
+\anchor HP10
+### The "BAR" and "HBAR" options
 
 
 When the option `bar` or `hbar` is specified, a bar chart is drawn. A vertical
@@ -797,7 +817,7 @@ An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
    - 30% for option "(h)bar3"
    - 40% for option "(h)bar4"
 
-When an histogram has errors the option ["HIST"](#OPTHIST) together with the `(h)bar` option.
+When an histogram has errors the option [\"HIST\"](\ref OPTHIST) together with the `(h)bar` option.
 
 Begin_Macro(source)
 ../../../tutorials/hist/hbars.C
@@ -813,7 +833,8 @@ These two parameters are useful when several histograms are plotted using
 the option `SAME`. They allow to plot the histograms next to each other.
 
 
-### <a name="HP11"></a> The SCATter plot option (default for 2D histograms)
+\anchor HP11
+### The SCATter plot option (default for 2D histograms)
 
 
 For each cell (i,j) a number of points proportional to the cell content is
@@ -842,7 +863,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP12"></a> The ARRow option
+\anchor HP12
+### The ARRow option
 
 
 Shows gradient between adjacent cells. For each cell (i,j) an arrow is drawn
@@ -883,7 +905,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP13"></a> The BOX option
+\anchor HP13
+### The BOX option
 
 
 For each cell (i,j) a box is drawn. The size (surface) of the box is
@@ -1000,7 +1023,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP14"></a> The COLor option
+\anchor HP14
+### The COLor option
 
 
 For each cell (i,j) a box is drawn with a color proportional to the cell
@@ -1177,7 +1201,8 @@ graphics file format like PostScript or PDF (an empty image will be generated). 
 be saved only in bitmap files like PNG format for instance.
 
 
-### <a name="HP140"></a> The CANDLE and VIOLIN options
+\anchor HP140
+### The CANDLE and VIOLIN options
 
 The mechanism behind Candle plots and Violin plots is very similar. Because of this they are
 implemented in the same class TCandle. The keywords CANDLE or VIOLIN will initiate the drawing of
@@ -1246,7 +1271,8 @@ Using a logarithmic x- or y-axis is possible for candle and violin charts.
 
 a logarithmic z-axis is possible, too but will only affect violin charts of course.
 
-#### <a name="HP140a"></a> The CANDLE option
+\anchor HP140a
+#### The CANDLE option
 
 <a href="http://en.wikipedia.org/wiki/Box_plot">A Candle plot</a> (also known as
 a "box plot" or "whisker plot") was invented in 1977 by John Tukey. It is a convenient
@@ -1493,7 +1519,8 @@ Begin_Macro(source)
 ../../../tutorials/hist/candleplot.C
 End_Macro
 
-#### <a name="HP140b"></a> The VIOLIN option
+\anchor HP140b
+#### The VIOLIN option
 
 <a href="http://en.wikipedia.org/wiki/Violin_plot">A violin plot</a> is a candle plot
 that also encodes the pdf information at each point.
@@ -1591,7 +1618,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP15"></a> The TEXT and TEXTnn Option
+\anchor HP15
+### The TEXT and TEXTnn Option
 
 
 For each bin the content is printed. The text attributes are:
@@ -1696,7 +1724,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="HP16"></a> The CONTour options
+\anchor HP16
+### The CONTour options
 
 
 The following contour options are supported:
@@ -1813,7 +1842,8 @@ End_Macro
 The default number of contour levels is 20 equidistant levels and can be changed
 with `TH1::SetContour()` or `TStyle::SetNumberContours()`.
 
-#### <a name="HP16a"></a> The LIST option
+\anchor HP16a
+#### The LIST option
 
 When option `LIST` is specified together with option
 `CONT`, the points used to draw the contours are saved in
@@ -1849,7 +1879,8 @@ Begin_Macro(source)
 ../../../tutorials/hist/ContourList.C
 End_Macro
 
-#### <a name="HP16b"></a> The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options
+\anchor HP16b
+#### The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options
 
 The following options select the `CONT4` option and are useful for
 sky maps or exposure maps (earth.C).
@@ -1866,7 +1897,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP17"></a> The LEGO options
+\anchor HP17
+### The LEGO options
 
 
 In a lego plot the cell contents are drawn as 3-d boxes. The height of each box
@@ -1969,7 +2001,8 @@ End_Macro
 
 
 
-### <a name="HP18"></a> The "SURFace" options
+\anchor HP18
+### The "SURFace" options
 
 
 In a surface plot, cell contents are represented as a mesh.
@@ -2148,7 +2181,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP19"></a> Cylindrical, Polar, Spherical and PseudoRapidity/Phi options
+\anchor HP19
+### Cylindrical, Polar, Spherical and PseudoRapidity/Phi options
 
 
 Legos and surfaces plots are represented by default in Cartesian coordinates.
@@ -2215,7 +2249,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP20"></a> Base line for bar-charts and lego plots
+\anchor HP20
+### Base line for bar-charts and lego plots
 
 
 By default the base line used to draw the boxes for bar-charts and lego plots is
@@ -2291,7 +2326,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP20a"></a> TH2Poly Drawing
+\anchor HP20a
+### TH2Poly Drawing
 
 
 The following options are supported:
@@ -2432,14 +2468,16 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="HP21"></a> The SPEC option
+\anchor HP21
+### The SPEC option
 
 
 This option allows to use the `TSpectrum2Painter` tools. See the full
 documentation in `TSpectrum2Painter::PaintSpectrum`.
 
 
-### <a name="HP22"></a> Option "Z" : Adding the color palette on the right side of the pad
+\anchor HP22
+### Option "Z" : Adding the color palette on the right side of the pad
 
 
 When this option is specified, a color palette with an axis indicating the value
@@ -2454,7 +2492,8 @@ set the labels size on the palette axis do:
 <b>WARNING:</b> The palette axis is always drawn vertically.
 
 
-### <a name="HP23"></a> Setting the color palette
+\anchor HP23
+### Setting the color palette
 
 
 To change the color palette `TStyle::SetPalette` should be used, eg:
@@ -2510,7 +2549,8 @@ If option "CJUST" is given labels and ticks are justified at the
 color boundaries defined by the contour levels.
 For more details see `TPaletteAxis`
 
-### <a name="HP24"></a> Drawing a sub-range of a 2D histogram; the [cutg] option
+\anchor HP24
+### Drawing a sub-range of a 2D histogram; the [cutg] option
 
 
 Using a `TCutG` object, it is possible to draw a sub-range of a 2D
@@ -2532,7 +2572,8 @@ Begin_Macro(source)
 ../../../tutorials/fit/fit2a.C
 End_Macro
 
-### <a name="HP25"></a> Drawing options for 3D histograms
+\anchor HP25
+### Drawing options for 3D histograms
 
 
 | Option   | Description                                                       |
@@ -2673,7 +2714,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP26"></a> Drawing option for histograms' stacks
+\anchor HP26
+### Drawing option for histograms' stacks
 
 
 Stacks of histograms are managed with the `THStack`. A `THStack`
@@ -2759,7 +2801,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="HP27"></a> Drawing of 3D implicit functions
+\anchor HP27
+### Drawing of 3D implicit functions
 
 
 3D implicit functions (`TF3`) can be drawn as iso-surfaces.
@@ -2779,7 +2822,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="HP28"></a> Associated functions drawing
+\anchor HP28
+### Associated functions drawing
 
 
 An associated function is created by `TH1::Fit`. More than on fitted
@@ -2808,7 +2852,8 @@ To avoid the painting of the associated functions the option `HIST`
 should be added to the list of the options used to paint the histogram.
 
 
-### <a name="HP29"></a> Drawing using OpenGL
+\anchor HP29
+### Drawing using OpenGL
 
 
 The class `TGLHistPainter` allows to paint data set using the OpenGL 3D
@@ -2819,7 +2864,8 @@ In addition, in order to inform canvases that OpenGL should be used to render
     gStyle->SetCanvasPreferGL(true);
 
 
-#### <a name="HP29a"></a> General information: plot types and supported options
+\anchor HP29a
+#### General information: plot types and supported options
 
 The following types of plots are provided:
 
@@ -2863,7 +2909,8 @@ Additional options to SURF and LEGO - Coordinate systems:
 
 
 
-#### <a name="HP290"></a> TH3 as color boxes
+\anchor HP290
+#### TH3 as color boxes
 
 The supported option is:
 
@@ -2873,7 +2920,8 @@ The supported option is:
 
 
 
-#### <a name="HP29b"></a> TH3 as boxes (spheres)
+\anchor HP29b
+#### TH3 as boxes (spheres)
 
 The supported options are:
 
@@ -2884,7 +2932,8 @@ The supported options are:
 
 
 
-#### <a name="HP29c"></a> TH3 as iso-surface(s)
+\anchor HP29c
+#### TH3 as iso-surface(s)
 
 The supported option is:
 
@@ -2894,7 +2943,8 @@ The supported option is:
 
 
 
-#### <a name="HP29d"></a> TF3 (implicit function)
+\anchor HP29d
+#### TF3 (implicit function)
 
 The supported option is:
 
@@ -2904,12 +2954,14 @@ The supported option is:
 
 
 
-#### <a name="HP29e"></a> Parametric surfaces
+\anchor HP29e
+#### Parametric surfaces
 
 `$ROOTSYS/tutorials/gl/glparametric.C` shows how to create parametric
 equations and visualize the surface.
 
-#### <a name="HP29f"></a> Interaction with the plots
+\anchor HP29f
+#### Interaction with the plots
 
 All the interactions are implemented via standard methods
 `DistancetoPrimitive()` and `ExecuteEvent()`. That's why all the
@@ -2918,7 +2970,8 @@ in the plot's area (the plot's area is the part of a the pad occupied by
 gl-produced picture). If the mouse cursor is not above gl-picture, the standard
 pad interaction is performed.
 
-#### <a name="HP29g"></a> Selectable parts
+\anchor HP29g
+#### Selectable parts
 
 Different parts of the plot can be selected:
 
@@ -2933,7 +2986,8 @@ Different parts of the plot can be selected:
    the bin info is displayed in pad's status bar.
 
 
-#### <a name="HP29h"></a> Rotation and zooming
+\anchor HP29h
+#### Rotation and zooming
 
 
 - Rotation:
@@ -2943,12 +2997,14 @@ Different parts of the plot can be selected:
   Mouse wheel or 'j', 'J', 'k', 'K' keys.
 
 
-#### <a name="HP29i"></a> Panning
+\anchor HP29i
+#### Panning
 
 The selected plot can be moved in a pad's area by pressing and
 holding the left mouse button and the shift key.
 
-#### <a name="HP29j"></a> Box cut
+\anchor HP29j
+#### Box cut
 
 Surface, iso, box, TF3 and parametric painters support box cut by
 pressing the 'c' or 'C' key when the mouse cursor is in a plot's
@@ -2958,7 +3014,8 @@ can be moved inside the plot's area (the full size of the box is
 equal to the plot's surrounding box) by selecting one of the box
 cut axes and pressing the left mouse button to move it.
 
-#### <a name="HP29k"></a> Plot specific interactions (dynamic slicing etc.)
+\anchor HP29k
+#### Plot specific interactions (dynamic slicing etc.)
 
 Currently, all gl-plots support some form of slicing. When back plane
 is selected (and if it's highlighted in green) you can press and hold
@@ -2967,33 +3024,39 @@ plot's area, creating the slice. During this "slicing" plot becomes
 semi-transparent. To remove all slices (and projected curves for
 surfaces) double click with left mouse button in a plot's area.
 
-#### <a name="HP29l"></a> Surface with option "GLSURF"
+\anchor HP29l
+#### Surface with option "GLSURF"
 
 The surface profile is displayed on the slicing plane.
 The profile projection is drawn on the back plane
 by pressing `'p'` or `'P'` key.
 
-#### <a name="HP29m"></a> TF3
+\anchor HP29m
+#### TF3
 
 The contour plot is drawn on the slicing plane. For TF3 the color
 scheme can be changed by pressing 's' or 'S'.
 
-#### <a name="HP29n"></a> Box
+\anchor HP29n
+#### Box
 
 The contour plot corresponding to slice plane position is drawn in real time.
 
-#### <a name="HP29o"></a> Iso
+\anchor HP29o
+#### Iso
 
 Slicing is similar to "GLBOX" option.
 
-#### <a name="HP29p"></a> Parametric plot
+\anchor HP29p
+#### Parametric plot
 
 No slicing. Additional keys: 's' or 'S' to change color scheme -
 about 20 color schemes supported ('s' for "scheme"); 'l' or 'L' to
 increase number of polygons ('l' for "level" of details), 'w' or 'W'
 to show outlines ('w' for "wireframe").
 
-#### <a name="HP30"></a> Highlight mode for histogram
+\anchor HP30
+#### Highlight mode for histogram
 
 \since **ROOT version 6.15/01**
 
@@ -3020,7 +3083,8 @@ whether the highlight mode enabled or disabled, default it is disabled.
 
 \image html hlsimple_nofun.gif "Highlight mode for histogram"
 
-#### <a name="HP30a"></a> Highlight mode and user function
+\anchor HP30a
+#### Highlight mode and user function
 
 The user can use (connect) `TCanvas::Highlighted()` signal, which is always
 emitted if there is a highlight bin and call user function via signal
@@ -3391,8 +3455,8 @@ void THistPainter::DrawPanel()
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",
-                           (ULong_t)gPad->GetCanvas(), (ULong_t)gPad, (ULong_t)fH));
+   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)fH));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4421,8 +4485,8 @@ void THistPainter::Paint(Option_t *option)
    if (Hoption.Spec) {
       if (!TableInit()) return;
       if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
-      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%lx,\"%s\",%d)",
-                                  (ULong_t)fH, option, Hoption.Spec));
+      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%zx,\"%s\",%d)",
+                                  (size_t)fH, option, Hoption.Spec));
       return;
    }
 
@@ -6934,7 +6998,7 @@ void THistPainter::PaintH3(Option_t *option)
       PaintTF3();
       return;
    } else {
-      cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+      cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%zx,\"%s\");",(size_t)fH,option);
    }
 
    if (strstr(opt,"fb")) Hoption.FrontBox = 0;
@@ -10645,7 +10709,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
    gROOT->MakeDefCanvas();
-   gPad->SetName(Form("c_%lx_projection_%d", (ULong_t)fH, fShowProjection));
+   gPad->SetName(Form("c_%zx_projection_%d", (size_t)fH, fShowProjection));
    gPad->SetGrid();
 }
 
@@ -10680,8 +10744,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
-                                                                              (ULong_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection));
    if (c) {
       c->Clear();
    } else {
@@ -10763,8 +10827,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
-                                                                              (ULong_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection));
    if (c) {
       c->Clear();
    } else {
@@ -10867,8 +10931,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
    Double_t cy    = (pymax-pymin)/(uymax-uymin);
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
-                                                                              (ULong_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection));
    if (!c) {
       fShowProjection = 0;
       return;

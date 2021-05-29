@@ -38,9 +38,9 @@
 #include <iostream>
 
 
-const Double_t kR_min = 300;
-const Double_t kR_max = 299;
-const Double_t kZ_d   = 300;
+const Double_t kR_min = 299;
+const Double_t kR_max = 300;
+const Double_t kZ_d   = 500;
 
 
 namespace fw3dlego {
@@ -772,12 +772,10 @@ public:
 
    virtual void NextEvent()
    {
-      eveMng->DisableRedraw();
       eveMng->GetSelection()->ClearSelection();
       eveMng->GetHighlight()->ClearSelection();
       fEvent->Create();
       fCMng->LoadEvent();
-      eveMng->EnableRedraw();
    }
 };
 

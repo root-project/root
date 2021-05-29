@@ -570,7 +570,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
 
       if ((val != nullptr) && (strcmp(val, "_this_") == 0)) {
          // special case - object itself is used as argument
-         sval.Form("(%s*)0x%lx", obj_cl->GetName(), (long unsigned)obj_ptr);
+         sval.Form("(%s*)0x%zx", obj_cl->GetName(), (size_t)obj_ptr);
          val = sval.Data();
       } else if ((val != nullptr) && (fCurrentArg != nullptr) && (fCurrentArg->GetPostData() != nullptr)) {
          // process several arguments which are specific for post requests
@@ -580,7 +580,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
             if (!post_obj) {
                sval = "0";
             } else {
-               sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned)post_obj);
+               sval.Form("(%s*)0x%zx", post_obj->ClassName(), (size_t)post_obj);
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
@@ -591,7 +591,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
             if (!post_obj) {
                sval = "0";
             } else {
-               sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned)post_obj);
+               sval.Form("(%s*)0x%zx", post_obj->ClassName(), (size_t)post_obj);
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
@@ -614,10 +614,10 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                      garbage.Add(post_obj);
                }
             }
-            sval.Form("(%s*)0x%lx", clname.Data(), (long unsigned)post_obj);
+            sval.Form("(%s*)0x%zx", clname.Data(), (size_t)post_obj);
             val = sval.Data();
          } else if (strcmp(val, "_post_data_") == 0) {
-            sval.Form("(void*)0x%lx", (long unsigned)fCurrentArg->GetPostData());
+            sval.Form("(void*)0x%zx", (size_t)fCurrentArg->GetPostData());
             val = sval.Data();
          } else if (strcmp(val, "_post_length_") == 0) {
             sval.Form("%ld", (long)fCurrentArg->GetPostDataLength());
@@ -683,7 +683,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
 
    switch (call->ReturnType()) {
    case TMethodCall::kLong: {
-      Long_t l(0);
+      Longptr_t l(0);
       if (method)
          call->Execute(obj_ptr, l);
       else
@@ -691,7 +691,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       if (resbuf)
          resbuf->WriteLong(l);
       else
-         res.Form("%ld", l);
+         res.Form("%zd", (size_t)l);
       break;
    }
    case TMethodCall::kDouble: {
@@ -728,7 +728,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       }
 
       if (ret_cl != nullptr) {
-         Long_t l(0);
+         Longptr_t l(0);
          if (method)
             call->Execute(obj_ptr, l);
          else

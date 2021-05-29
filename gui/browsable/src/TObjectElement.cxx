@@ -18,6 +18,7 @@
 #include "TBrowserImp.h"
 #include "TFolder.h"
 #include "TList.h"
+#include "TColor.h"
 #include "TDirectory.h"
 #include "TBufferJSON.h"
 
@@ -82,6 +83,10 @@ public:
       item->SetIcon(RProvider::GetClassIcon(cl, nchilds > 0));
 
       item->SetTitle(elem->GetTitle());
+
+      auto sz = elem->GetSize();
+      if (sz >= 0)
+         item->SetSize(std::to_string(sz));
 
       return item;
    }
@@ -185,6 +190,11 @@ public:
       item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
 
       item->SetTitle(obj->GetTitle());
+
+      if (obj->IsA() == TColor::Class()) {
+         if (item->GetName().empty())
+            item->SetName("Color"s + std::to_string(static_cast<TColor *>(obj)->GetNumber()));
+      }
 
       return item;
    }
@@ -426,11 +436,14 @@ public:
 
    RTObjectProvider()
    {
-      RegisterTObject("TTree", "sap-icon://tree", true, 0);
-      RegisterTObject("TNtuple", "sap-icon://tree", true, 0);
+      RegisterClass("TTree", "sap-icon://tree", "libROOTBranchBrowseProvider");
+      RegisterClass("TNtuple", "sap-icon://tree", "libROOTBranchBrowseProvider");
       RegisterClass("TBranchElement", "sap-icon://e-care", "libROOTBranchBrowseProvider", "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TLeaf", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+      RegisterClass("TBranch", "sap-icon://e-care", "libROOTBranchBrowseProvider"s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TVirtualBranchBrowsable", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+      RegisterClass("TColor", "sap-icon://palette");
+      RegisterClass("TStyle", "sap-icon://badge");
 
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);
       RegisterTObject("TH1", "sap-icon://bar-chart");

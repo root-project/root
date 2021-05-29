@@ -19,6 +19,8 @@
 #include <set>
 #include <random>
 
+#include "MaxSlotHelper.h"
+
 using namespace ROOT;
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;
@@ -26,7 +28,7 @@ using namespace ROOT::VecOps;
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFSimpleTests : public ::testing::TestWithParam<bool> {
 protected:
-   RDFSimpleTests() : NSLOTS(GetParam() ? 4u : 1u)
+   RDFSimpleTests() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
    {
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
@@ -599,27 +601,6 @@ TEST_P(RDFSimpleTests, Graph)
    }
 }
 
-class MaxSlotHelper : public ROOT::Detail::RDF::RActionImpl<MaxSlotHelper> {
-   const std::shared_ptr<unsigned int> fMaxSlot; // final result
-   std::vector<unsigned int> fMaxSlots;          // per-thread partial results
-public:
-   MaxSlotHelper(unsigned int nSlots)
-      : fMaxSlot(std::make_shared<unsigned int>(std::numeric_limits<unsigned int>::lowest())),
-        fMaxSlots(nSlots, std::numeric_limits<unsigned int>::lowest())
-   {
-   }
-   MaxSlotHelper(MaxSlotHelper &&) = default;
-   MaxSlotHelper(const MaxSlotHelper &) = delete;
-   using Result_t = unsigned int;
-   std::shared_ptr<unsigned int> GetResultPtr() const { return fMaxSlot; }
-   void Initialize() {}
-   void InitTask(TTreeReader *, unsigned int) {}
-   void Exec(unsigned int slot, unsigned int /*slot2*/) { fMaxSlots[slot] = std::max(fMaxSlots[slot], slot); }
-   void Finalize() { *fMaxSlot = *std::max_element(fMaxSlots.begin(), fMaxSlots.end()); }
-
-   std::string GetActionName() { return "MaxSlot"; }
-};
-
 TEST_P(RDFSimpleTests, BookCustomAction)
 {
    RDataFrame d(1);
@@ -628,6 +609,18 @@ TEST_P(RDFSimpleTests, BookCustomAction)
 
    auto maxSlot0 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"rdfslot_"});
+   EXPECT_EQ(*maxSlot0, expected);
+   EXPECT_EQ(*maxSlot1, expected);
+}
+
+TEST_P(RDFSimpleTests, BookCustomActionJitted)
+{
+   RDataFrame d(1);
+   const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
+   const auto expected = nWorkers-1;
+
+   auto maxSlot0 = d.Book(MaxSlotHelper(nWorkers), {"tdfslot_"});
+   auto maxSlot1 = d.Book(MaxSlotHelper(nWorkers), {"rdfslot_"});
    EXPECT_EQ(*maxSlot0, expected);
    EXPECT_EQ(*maxSlot1, expected);
 }

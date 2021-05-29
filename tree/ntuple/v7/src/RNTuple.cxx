@@ -17,8 +17,10 @@
 
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include "ROOT/RPageStorageFile.hxx"
+#include <ROOT/RPageSinkBuf.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 #ifdef R__USE_IMT
 #include <ROOT/TTaskGroup.hxx>
 #endif
@@ -38,6 +40,11 @@
 
 
 #ifdef R__USE_IMT
+ROOT::Experimental::RNTupleImtTaskScheduler::RNTupleImtTaskScheduler()
+{
+   Reset();
+}
+
 void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
 {
    fTaskGroup = std::make_unique<TTaskGroup>();
@@ -69,7 +76,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) 
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
          field.SetOnDiskId(desc.FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
       }
-      field.ConnectPageStorage(*fSource);
+      field.ConnectPageSource(*fSource);
    }
 }
 
@@ -130,6 +137,16 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    const RNTupleReadOptions &options)
 {
    return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage, options));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::OpenFriends(
+   std::span<ROpenSpec> ntuples)
+{
+   std::vector<std::unique_ptr<Detail::RPageSource>> sources;
+   for (const auto &n : ntuples) {
+      sources.emplace_back(Detail::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
+   }
+   return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceFriends>("_friends", sources));
 }
 
 ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
@@ -260,7 +277,6 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    : fSink(std::move(sink))
    , fModel(std::move(model))
    , fMetrics("RNTupleWriter")
-   , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
    , fNEntries(0)
 {
@@ -270,6 +286,12 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    if (!fSink) {
       throw RException(R__FAIL("null sink"));
    }
+#ifdef R__USE_IMT
+   if (IsImplicitMTEnabled()) {
+      fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fSink->SetTaskScheduler(fZipTasks.get());
+   }
+#endif
    fSink->Create(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 }
@@ -296,6 +318,10 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    const RNTupleWriteOptions &options)
 {
    auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
+   if (options.GetUseBufferedWrite()) {
+      auto bufferedSink = std::make_unique<Detail::RPageSinkBuf>(std::move(sink));
+      return std::make_unique<RNTupleWriter>(std::move(model), std::move(bufferedSink));
+   }
    return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
 }
 

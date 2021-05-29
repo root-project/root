@@ -57,17 +57,18 @@ using std::floor;
 
 The color creation and management class.
 
-  - [Introduction](#C00)
-  - [Basic colors](#C01)
-  - [The color wheel](#C02)
-  - [Bright and dark colors](#C03)
-  - [Gray scale view of of canvas with colors](#C04)
-  - [Color palettes](#C05)
-  - [High quality predefined palettes](#C06)
-  - [Palette inversion](#C061)
-  - [Color transparency](#C07)
+  - [Introduction](\ref C00)
+  - [Basic colors](\ref C01)
+  - [The color wheel](\ref C02)
+  - [Bright and dark colors](\ref C03)
+  - [Gray scale view of of canvas with colors](\ref C04)
+  - [Color palettes](\ref C05)
+  - [High quality predefined palettes](\ref C06)
+  - [Palette inversion](\ref C061)
+  - [Color transparency](\ref C07)
 
-## <a name="C00"></a> Introduction
+\anchor C00
+## Introduction
 
 Colors are defined by their red, green and blue components, simply called the
 RGB components. The colors are also known by the hue, light and saturation
@@ -108,7 +109,8 @@ Two sets of colors are initialized;
   -  The basic colors: colors with index from 0 to 50.
   -  The color wheel: colors with indices from 300 to 1000.
 
-## <a name="C01"></a> Basic colors
+\anchor C01
+## Basic colors
 The following image displays the 50 basic colors.
 
 Begin_Macro(source)
@@ -119,7 +121,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-## <a name="C02"></a> The color wheel
+\anchor C02
+## The color wheel
 The wheel contains the recommended 216 colors to be used in web applications.
 
 The colors in the color wheel are created by `TColor::CreateColorWheel`.
@@ -172,7 +175,8 @@ simplest is to define an other white color not attached to the color index 0:
    TColor *color = new TColor(ci, 1., 1., 1.);
 ~~~
 
-## <a name="C03"></a> Bright and dark colors
+\anchor C03
+## Bright and dark colors
 The dark and bright color are used to give 3-D effects when drawing various
 boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
 
@@ -186,7 +190,8 @@ boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
       Int_t bright = TColor::GetColorBright(color_index);
    ~~~
 
-## <a name="C04"></a> Grayscale view of of canvas with colors
+\anchor C04
+## Grayscale view of of canvas with colors
 One can toggle between a grayscale preview and the regular colored mode using
 `TCanvas::SetGrayscale()`. Note that in grayscale mode, access via RGB
 will return grayscale values according to ITU standards (and close to b&w
@@ -203,7 +208,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-## <a name="C05"></a> Color palettes
+\anchor C05
+## Color palettes
 It is often very useful to represent a variable with a color map. The concept
 of "color palette" allows to do that. One color palette is active at any time.
 This "current palette" is set using:
@@ -287,7 +293,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multipalette.C
 End_Macro
 
-## <a name="C06"></a> High quality predefined palettes
+\anchor C06
+## High quality predefined palettes
 \since **6.04:**
 62 high quality palettes are predefined with 255 colors each.
 Despite the [disadvantages of the Rainbow color map](https://root.cern.ch/rainbow-color-map),
@@ -910,7 +917,8 @@ End_Macro
 </td></tr>
 </table>
 
-## <a name="C061"></a> Palette inversion
+\anchor C061
+## Palette inversion
 Once a palette is defined, it is possible to invert the color order thanks to the
 method TColor::InvertPalette. The top of the palette becomes the bottom and vice versa.
 
@@ -924,7 +932,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-## <a name="C07"></a> Color transparency
+\anchor C07
+## Color transparency
 To make a graphics object transparent it is enough to set its color to a
 transparent one. The color transparency is defined via its alpha component. The
 alpha value varies from `0.` (fully transparent) to `1.` (fully
@@ -1090,7 +1099,7 @@ void TColor::InitializeColors()
    if (initDone) return;
    initDone = kTRUE;
 
-   if (gROOT->GetListOfColors()->First() == 0) {
+   if (gROOT->GetListOfColors()->First() == nullptr) {
 
       new TColor(kWhite,1,1,1,"background");
       new TColor(kBlack,0,0,0,"black");
@@ -1201,7 +1210,7 @@ void TColor::InitializeColors()
    // If fgPalette.fN !=0 SetPalette has been called already
    // (from rootlogon.C for instance)
 
-   if (!fgPalette.fN) SetPalette(1,0);
+   if (!fgPalette.fN) SetPalette(1,nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1863,7 +1872,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    // Get list of all defined colors
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
 
-   TColor *color = 0;
+   TColor *color = nullptr;
 
    // Look for color by name
    if ((color = (TColor*) colors->FindObject(Form("#%02x%02x%02x", r, g, b))))
@@ -1918,7 +1927,7 @@ Int_t TColor::GetColorBright(Int_t n)
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
    // Get existing color at index n
-   TColor *color = 0;
+   TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
@@ -1928,7 +1937,7 @@ Int_t TColor::GetColorBright(Int_t n)
 
    //Build the bright color (unless the slot nb is already used)
    Int_t nb = n+150;
-   TColor *colorb = 0;
+   TColor *colorb = nullptr;
    if (nb < ncolors) colorb = (TColor*)colors->At(nb);
    if (colorb) return nb;
    colorb = new TColor(nb,r,g,b);
@@ -1950,7 +1959,7 @@ Int_t TColor::GetColorDark(Int_t n)
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
    // Get existing color at index n
-   TColor *color = 0;
+   TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
@@ -1960,7 +1969,7 @@ Int_t TColor::GetColorDark(Int_t n)
 
    //Build the dark color (unless the slot nd is already used)
    Int_t nd = n+100;
-   TColor *colord = 0;
+   TColor *colord = nullptr;
    if (nd < ncolors) colord = (TColor*)colors->At(nd);
    if (colord) return nd;
    colord = new TColor(nd,r,g,b);
@@ -2171,7 +2180,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 
    TColor::InitializeColors();
    TIter iColor(gROOT->GetListOfColors());
-   TColor* color = 0;
+   TColor* color = nullptr;
    while ((color = (TColor*) iColor()))
       color->Allocate();
 }
@@ -2433,7 +2442,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    }
 
    // set Rainbow Color map. Kept for backward compatibility.
-   if (ncolors == 1 && colors == 0) {
+   if (ncolors == 1 && colors == nullptr) {
       ncolors = 50;
       fgPalette.Set(ncolors);
       for (i=0;i<ncolors-1;i++) fgPalette.fArray[i] = 51+i;
@@ -2443,7 +2452,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    }
 
    // High quality palettes (255 levels)
-   if (colors == 0 && ncolors>50) {
+   if (colors == nullptr && ncolors>50) {
 
       if (!fgPalettesList.fN) fgPalettesList.Set(63);        // Right now 63 high quality palettes
       Int_t Idx = (Int_t)fgPalettesList.fArray[ncolors-51];  // High quality palettes indices start at 51

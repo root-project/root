@@ -247,7 +247,7 @@ void REveDataCollection::AddItem(void *data_ptr, const std::string& /*n*/, const
 
 //------------------------------------------------------------------------------
 
-void REveDataCollection::SetFilterExpr(const TString& filter)
+void REveDataCollection::SetFilterExpr(const char* filter)
 {
    static const REveException eh("REveDataCollection::SetFilterExpr ");
 
@@ -258,7 +258,7 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    std::stringstream s;
    s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)&fFilterFoo
      << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName() << " &i=*p; return ("
-     << fFilterExpr.Data() << "); }";
+     << fFilterExpr.Data() << "); };";
 
    // printf("%s\n", s.Data());
    try {
@@ -268,7 +268,7 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    }
    catch (const std::exception &exc)
    {
-      std::cerr << "EveDataCollection::SetFilterExpr" << exc.what();
+      R__LOG_ERROR(REveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
    }
 }
 

@@ -147,22 +147,6 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    if (templateParms->getMinRequiredArguments() > 0)
       return nullptr;
 
-   if (templateParms->size() > 0) {
-      NamedDecl *arg0 = *templateParms->begin();
-      if (arg0->isTemplateParameterPack())
-         return nullptr;
-      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(*templateParms->begin())) {
-         if (!TTP->hasDefaultArgument())
-            return nullptr;
-      } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(*templateParms->begin())) {
-         if (!NTTP->hasDefaultArgument())
-            return nullptr;
-      } else {
-         // TemplateTemplateParmDecl, pack
-         return nullptr;
-      }
-   }
-
    const FunctionDecl *templatedDecl = llvm::dyn_cast<FunctionDecl>(TD->getTemplatedDecl());
    const Decl *declCtxDecl = dyn_cast<Decl>(TD->getDeclContext());
 
@@ -174,26 +158,29 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    // If the function argument type is dependent (a1 and a2) we need to
    // substitute the types first, using the template arguments derived from the
    // template parameters' defaults.
-   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs(templateParms->size());
-   for (int iParam = 0, nParams = templateParms->size(); iParam < nParams; ++iParam) {
-      const NamedDecl *templateParm = templateParms->getParam(iParam);
+   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs;
+   for (const NamedDecl *templateParm: *templateParms) {
       if (templateParm->isTemplateParameterPack()) {
-         // shouldn't end up here
-         assert(0 && "unexpected template parameter pack");
+         // This would inject an emprt parameter pack, which is a good default.
+         // But for cases where instantiation fails, this hits bug in unloading
+         // of the failed instantiation, causing a missing symbol in subsequent
+         // transactions where a Decl instantiated by the failed instatiation
+         // is not re-emitted. So for now just give up default-instantiating
+         // templates with parameter packs, even if this is simply a work-around.
+         //defaultTemplateArgs.emplace_back(ArrayRef<TemplateArgument>{}); // empty pack.
          return nullptr;
-      }
-      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
+      } else if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument());
       } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(templateParm)) {
          if (!NTTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(NTTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(NTTP->getDefaultArgument());
       } else if (auto TTP = dyn_cast<TemplateTemplateParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument().getArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument().getArgument());
       } else {
          // shouldn't end up here
          assert(0 && "unexpected template parameter kind");

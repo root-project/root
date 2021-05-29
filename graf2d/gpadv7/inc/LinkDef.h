@@ -39,14 +39,9 @@
 #pragma link C++ class ROOT::Experimental::RMenuItems+;
 #pragma link C++ class ROOT::Experimental::RDrawableMenuRequest+;
 #pragma link C++ class ROOT::Experimental::TObjectDrawable+;
-#pragma link C++ class ROOT::Experimental::RPadUserAxisBase+;
-#pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
 #pragma link C++ class ROOT::Experimental::RPadExtent+;
 #pragma link C++ class ROOT::Experimental::RPadPos+;
 #pragma link C++ class ROOT::Experimental::RChangeAttrRequest+;
-#pragma link C++ class ROOT::Experimental::RPadBase+;
-#pragma link C++ class ROOT::Experimental::RPad+;
-#pragma link C++ class ROOT::Experimental::RCanvas+;
 #pragma link C++ class ROOT::Experimental::RFrame+;
 #pragma link C++ class ROOT::Experimental::RFrame::RUserRanges+;
 #pragma link C++ class ROOT::Experimental::RFrame::RZoomRequest+;
@@ -65,7 +60,7 @@
 #pragma link C++ class ROOT::Experimental::RPadDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RCanvasDisplayItem+;
 
-#pragma read sourceClass="ROOT::Experimental::RCanvas" targetClass="ROOT::Experimental::RCanvas" source="" target="" code="{ newObj->ResolveSharedPtrs() ; }"
+#pragma link C++ class ROOT::Experimental::RColor+;
 
 #pragma link C++ class ROOT::Experimental::RAttrMap+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::Value_t+;
@@ -80,9 +75,9 @@
 #pragma link C++ class ROOT::Experimental::RAttrValue<double>+;
 #pragma link C++ class ROOT::Experimental::RAttrValue<std::string>+;
 #pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RPadLength>+;
+#pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RColor>+;
+#pragma link C++ class ROOT::Experimental::RAttrOnFrame+;
 
-#pragma link C++ class ROOT::Experimental::RColor+;
-#pragma link C++ class ROOT::Experimental::RAttrColor+;
 #pragma link C++ class ROOT::Experimental::RAttrFill+;
 #pragma link C++ class ROOT::Experimental::RAttrLine+;
 #pragma link C++ class ROOT::Experimental::RAttrBox+;
@@ -94,5 +89,12 @@
 #pragma link C++ class ROOT::Experimental::RAxisDrawableBase+;
 #pragma link C++ class ROOT::Experimental::RAxisDrawable+;
 #pragma link C++ class ROOT::Experimental::RAxisLabelsDrawable+;
+
+#pragma link C++ class ROOT::Experimental::RPadBase+;
+#pragma link C++ class ROOT::Experimental::RPad+;
+#pragma link C++ class ROOT::Experimental::RCanvas+;
+
+#pragma read sourceClass="ROOT::Experimental::RCanvas" targetClass="ROOT::Experimental::RCanvas" source="" target="" code="{ newObj->ResolveSharedPtrs() ; }"
+
 
 #endif

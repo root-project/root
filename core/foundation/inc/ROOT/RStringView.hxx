@@ -14,7 +14,7 @@
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_STD_STRING_VIEW
+#if defined(R__HAS_STD_STRING_VIEW) || _MSVC_LANG >= 201703L || __cplusplus >= 201703L
 
 #include <string_view>
 
@@ -55,7 +55,7 @@ namespace std {
 
 #endif // ifdef else R__HAS_STD_STRING_VIEW
 
-#ifndef R__HAS_OP_EQUAL_PLUS_STRING_VIEW
+#if !(defined(R__HAS_OP_EQUAL_PLUS_STRING_VIEW) || _MSVC_LANG >= 201703L || __cplusplus >= 201703L)
 
 #include <string>
 

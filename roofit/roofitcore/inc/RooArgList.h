@@ -39,7 +39,7 @@ public:
     // Expand parameter pack in C++ 11 way:
     int dummy[] = { 0, (processArg(argsOrName), 0) ... };
     (void)dummy;
-  };
+  }
 
   /// Construct from iterators.
   /// \tparam Iterator_t An iterator pointing to RooFit objects or references thereof.
@@ -61,6 +61,8 @@ public:
   // to a copied list. The variables in the copied list are independent
   // of the original variables.
   RooArgList(const RooArgList& other, const char *name="");
+  /// Move constructor.
+  RooArgList(RooArgList && other) : RooAbsCollection(std::move(other)) {}
   virtual TObject* clone(const char* newname) const { return new RooArgList(*this,newname); }
   virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
@@ -76,14 +78,17 @@ public:
   }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) ;  
+  virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false);
+  virtual void writeToStream(std::ostream& os, bool compact); 
 
   /// Access element by index.
   RooAbsArg& operator[](Int_t idx) const {
     assert(0 <= idx && idx < static_cast<Int_t>(_list.size()));
     return *_list[idx];
   }
+
+protected:
+  virtual bool canBeAdded(RooAbsArg const&, bool) const  { return true; }
 
 private:
   void processArg(const RooAbsArg& arg) { add(arg); }

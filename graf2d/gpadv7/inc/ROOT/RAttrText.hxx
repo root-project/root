@@ -11,7 +11,6 @@
 
 #include <ROOT/RAttrBase.hxx>
 #include <ROOT/RAttrValue.hxx>
-#include <ROOT/RAttrColor.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -26,11 +25,11 @@ namespace Experimental {
 
 class RAttrText : public RAttrBase {
 
-   RAttrColor fColor{this, "color"};                          ///<! text color
+   RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! text color
    RAttrValue<double> fSize{this, "size", 12.};               ///<! text size
    RAttrValue<double> fAngle{this, "angle", 0.};              ///<! text angle
    RAttrValue<int> fAlign{this, "align", 22};                 ///<! text align
-   RAttrValue<std::string> fFontFamily{this, "font_familty"}; ///<! font family, corresponds to css font-familty attribute
+   RAttrValue<std::string> fFontFamily{this, "font_family"};  ///<! font family, corresponds to css font-familty attribute
    RAttrValue<std::string> fFontStyle{this, "font_style"};    ///<! font style, corresponds to css font-style attribute
    RAttrValue<std::string> fFontWeight{this, "font_weight"};  ///<! font weight, corresponds to css font-weight attribute
 
@@ -113,8 +112,7 @@ class RAttrText : public RAttrBase {
 
    ///The color of the text.
    RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
+   RColor GetColor() const { return fColor; }
 
 };
 

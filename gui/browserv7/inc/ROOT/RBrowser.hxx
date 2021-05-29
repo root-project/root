@@ -59,6 +59,8 @@ protected:
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
 
+   void AddInitWidget(const std::string &kind);
+
 public:
    RBrowser(bool use_rcanvas = true);
    virtual ~RBrowser();
@@ -66,11 +68,16 @@ public:
    bool GetUseRCanvas() const { return fUseRCanvas; }
    void SetUseRCanvas(bool on = true) { fUseRCanvas = on; }
 
+   void AddTCanvas() { AddInitWidget("tcanvas"); }
+   void AddRCanvas() { AddInitWidget("rcanvas"); }
+
    /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
    /// hide Browser
    void Hide();
+
+   void SetWorkingPath(const std::string &path);
 
 };
 

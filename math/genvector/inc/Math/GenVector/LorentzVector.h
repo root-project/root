@@ -490,6 +490,7 @@ More details about the GenVector package can be found \ref GenVector "here".
           //        We should then move the code to a .cpp file.
           const Scalar ee  = E();
           const Scalar ppz = Pz();
+          using std::log;
           return Scalar(0.5) * log((ee + ppz) / (ee - ppz));
        }
 
@@ -501,6 +502,7 @@ More details about the GenVector package can be found \ref GenVector "here".
           //        mechanism or at least load a NAN if not.
           const Scalar ee = E();
           const Scalar pp = P();
+          using std::log;
           return Scalar(0.5) * log((ee + pp) / (ee - pp));
        }
 
@@ -614,6 +616,7 @@ More details about the GenVector package can be found \ref GenVector "here".
           else if ( t2 == v2 ) {
              GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
+          using std::sqrt;
           return Scalar(1) / sqrt(Scalar(1) - v2 / t2);
        } /* gamma */
 
@@ -769,6 +772,3 @@ std::string printValue(const ROOT::Math::LorentzVector<CoordSystem> *v)
 #endif
 
 //#include "Math/GenVector/LorentzVectorOperations.h"
-
-
-

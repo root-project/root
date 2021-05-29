@@ -23,6 +23,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
@@ -68,6 +69,7 @@ class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
 private:
    std::unique_ptr<TTaskGroup> fTaskGroup;
 public:
+   RNTupleImtTaskScheduler();
    virtual ~RNTupleImtTaskScheduler() = default;
    void Reset() final;
    void AddTask(const std::function<void(void)> &taskFunc) final;
@@ -131,6 +133,15 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
+   /// Used to specify the underlying RNTuples in OpenFriends()
+   struct ROpenSpec {
+      std::string fNTupleName;
+      std::string fStorage;
+      RNTupleReadOptions fOptions;
+
+      ROpenSpec() = default;
+      ROpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
+   };
 
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
@@ -140,6 +151,10 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
+   /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
+   /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
+   static std::unique_ptr<RNTupleReader> OpenFriends(std::span<ROpenSpec> ntuples);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on
    /// storage.
@@ -168,15 +183,16 @@ public:
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an exception.
-   void LoadEntry(NTupleSize_t index) { LoadEntry(index, *fModel->GetDefaultEntry()); }
-   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry &entry) {
+   void LoadEntry(NTupleSize_t index) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetDescriptor().GenerateModel();
          ConnectModel(*fModel);
       }
-
+      LoadEntry(index, *fModel->GetDefaultEntry());
+   }
+   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
+   void LoadEntry(NTupleSize_t index, REntry &entry) {
       for (auto& value : entry) {
          value.GetField()->Read(index, &value);
       }
@@ -232,12 +248,13 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class RNTupleWriter {
 private:
-   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 64000;
+   /// The page sink's parallel page compression scheduler if IMT is on.
+   /// Needs to be destructed after the page sink is destructed and so declared before.
+   std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fZipTasks;
    std::unique_ptr<Detail::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
-   NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
    NTupleSize_t fNEntries;
 
@@ -267,7 +284,7 @@ public:
          value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fNEntries % fClusterSizeEntries) == 0)
+      if ((fNEntries % fSink->GetWriteOptions().GetNEntriesPerCluster()) == 0)
          CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage

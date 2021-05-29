@@ -195,7 +195,7 @@ template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... 
 void swap(RHist<DIMENSIONS, PRECISION, STAT...> &a, RHist<DIMENSIONS, PRECISION, STAT...> &b) noexcept
 {
    a.swap(b);
-};
+}
 
 namespace Internal {
 /**
@@ -280,7 +280,7 @@ HistFromImpl(std::unique_ptr<typename RHist<DIMENSIONS, PRECISION, STAT...>::Imp
    ret.fFillFunc = pHistImpl->GetFillFunc();
    std::swap(ret.fImpl, pHistImpl);
    return ret;
-};
+}
 
 /// \name RHist Typedefs
 ///\{ Convenience typedefs (ROOT6-compatible type names)

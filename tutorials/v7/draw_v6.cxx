@@ -3,6 +3,7 @@
 ///
 /// This macro shows how ROOT objects like TH1, TH2, TGraph can be drawn in RCanvas.
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2017-06-02
@@ -47,7 +48,7 @@ void draw_v6()
    }
 
    static constexpr int nth2points = 40;
-   auto th2 = std::make_shared<TH2I>("gaus2", "Example of TH1", nth2points, -5, 5, nth2points, -5, 5);
+   auto th2 = std::make_shared<TH2I>("gaus2", "Example of TH2", nth2points, -5, 5, nth2points, -5, 5);
    th2->SetDirectory(nullptr);
    for (int n=0;n<nth2points;++n) {
       for (int k=0;k<nth2points;++k) {

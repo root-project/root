@@ -122,7 +122,9 @@ Bool_t TPython::Initialize()
 #endif
       Py_Initialize();
 #if PY_VERSION_HEX >= 0x03020000
+#if PY_VERSION_HEX < 0x03090000
       PyEval_InitThreads();
+#endif
 #endif
 
       // try again to see if the interpreter is initialized
@@ -141,7 +143,12 @@ Bool_t TPython::Initialize()
       PySys_SetArgv(sizeof(argv) / sizeof(argv[0]), argv);
 
       // force loading of the ROOT module
-      PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      if( ret != 0 )
+      {
+          std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
+          return kFALSE;
+      }
    }
 
    if (!gMainDict) {
@@ -407,7 +414,7 @@ const TPyReturn TPython::Eval(const char *expr)
       return TPyReturn();
    }
 
-   // results that require no convserion
+   // results that require no conversion
    if (result == Py_None || CPyCppyy::CPPInstance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
        PyLong_Check(result) || PyInt_Check(result))
       return TPyReturn(result);

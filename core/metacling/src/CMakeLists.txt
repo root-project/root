@@ -8,8 +8,6 @@
 # symbols from libCore.
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
-
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
@@ -63,6 +61,11 @@ target_include_directories(MetaCling PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
+set_target_properties(MetaCling PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
+
 if(MSVC)
    target_include_directories(MetaCling PRIVATE
       ${CMAKE_SOURCE_DIR}/core/winnt/inc
@@ -104,6 +107,12 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
+string(TOUPPER "${LLVM_BUILD_TYPE}" THE_BUILD_TYPE)
+if("${THE_BUILD_TYPE}" STREQUAL DEBUG OR "${THE_BUILD_TYPE}" STREQUAL RELWITHDEBINFO)
+  # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
+  add_dependencies(Cling rootcling_stage1)
+endif()
+
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set(cling_exports ${cling_exports}
@@ -118,7 +127,6 @@ if(MSVC)
   )
   if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
     set(cling_exports ${cling_exports}
-      ??1Value@cling@@QEAA@XZ
       ??2@YAPEAX_K@Z
       ??2@YAPEAX_KPEAX@Z
       ??2@YAPEAX_KHPEBDH@Z
@@ -130,7 +138,6 @@ if(MSVC)
       ??_V@YAXPEAX@Z
       ??_V@YAXPEAX_K@Z
       ??_V@YAXPEAXHPEBDH@Z
-      ?kEmptyCollection@valuePrinterInternal@cling@@3QEBDEB
       ?print@Decl@clang@@QEBAXAEAVraw_ostream@llvm@@I_N@Z
       ??6raw_ostream@llvm@@QEAAAEAV01@PEBX@Z
       ?decls_begin@DeclContext@clang@@QEBA?AVdecl_iterator@12@XZ
@@ -153,43 +160,9 @@ if(MSVC)
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@N@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@PEBX@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@P6AAEAV01@AEAV01@@Z@Z
+      ??$?6U?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@D@Z
       ??$?6U?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@PEBD@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00D@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00DM@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00DN@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00DO@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00D_K@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00DPEBX@Z
-      ?setValueWithAlloc@internal@runtime@cling@@YAPEAXPEAX00D@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAPEBD@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAPEBX@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBC@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBD@Z 
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBE@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBF@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBG@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBH@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBI@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBJ@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBK@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBM@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBN@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBO@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBQEBD@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBV23@@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBV?$basic_string@_SU?$char_traits@_S@std@@V?$allocator@_S@2@@3@@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBV?$basic_string@_UU?$char_traits@_U@std@@V?$allocator@_U@2@@3@@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@3@@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBVValue@1@@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBX@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEB_J@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEB_K@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEB_N@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEB_S@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEB_U@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEB_W@Z
-      ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QEBD_KD@Z
-      ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PEAVInterpreter@3@PEAVDynamicExprInfo@123@PEAVDeclContext@clang@@@Z
+      ??$endl@DU?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@@Z
     )
     if($<CONFIG:Debug>)
        set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
@@ -211,28 +184,6 @@ if(MSVC)
       ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z
       ??$endl@DU?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@@Z
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
-      ??1Value@cling@@QAE@XZ
-      ?isValid@Value@cling@@QBE_NXZ
-      ?kEmptyCollection@valuePrinterInternal@cling@@3QBDB
-      ?AssertOnUnsupportedTypeCast@Value@cling@@IBEXXZ
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DM@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DN@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DO@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
-      ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBI@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBM@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBN@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBH@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBD@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBV23@@Z
-      ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
-      ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
     )
     if(MSVC_VERSION LESS 1914)
       set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)

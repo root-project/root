@@ -28,7 +28,7 @@ ClassImp(TAttBBox);
 
 void TAttBBox::BBoxInit(Float_t infinity)
 {
-   if (fBBox == 0) fBBox = new Float_t[6];
+   if (fBBox == nullptr) fBBox = new Float_t[6];
 
    fBBox[0] =  infinity;   fBBox[1] = -infinity;
    fBBox[2] =  infinity;   fBBox[3] = -infinity;
@@ -41,7 +41,7 @@ void TAttBBox::BBoxInit(Float_t infinity)
 
 void TAttBBox::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 {
-   if (fBBox == 0) fBBox = new Float_t[6];
+   if (fBBox == nullptr) fBBox = new Float_t[6];
 
    fBBox[0] = x - epsilon;   fBBox[1] = x + epsilon;
    fBBox[2] = y - epsilon;   fBBox[3] = y + epsilon;
@@ -53,7 +53,7 @@ void TAttBBox::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 
 void TAttBBox::BBoxClear()
 {
-   delete [] fBBox; fBBox = 0;
+   delete [] fBBox; fBBox = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

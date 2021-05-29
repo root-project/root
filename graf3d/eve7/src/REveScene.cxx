@@ -97,7 +97,12 @@ void REveScene::BeginAcceptingChanges()
 {
    if (fAcceptingChanges) return;
 
-   if (HasSubscribers()) fAcceptingChanges = kTRUE;
+   if (HasSubscribers()) {
+      fAcceptingChanges = kTRUE;
+      for (auto &&client : fSubscribers) {
+         REX::gEve->SceneSubscriberProcessingChanges(client->fId);
+      }
+   }
 }
 
 void REveScene::SceneElementChanged(REveElement* element)
@@ -330,6 +335,7 @@ void REveScene::SendChangesToSubscribers()
             printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
          client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
       }
+      REX::gEve->SceneSubscriberWaitingResponse(client->fId);
    }
 }
 
@@ -548,6 +554,17 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
 }
 
 */
+
+bool REveSceneList::AnyChanges() const
+{
+   for (auto &el : fChildren)
+   {
+      if (((REveScene*) el)->IsChanged())
+      return true;
+   }
+   return false;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //

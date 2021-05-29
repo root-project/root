@@ -52,6 +52,9 @@ public:
   RooAbsCollection& assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe=kFALSE) ;
   void assignFast(const RooAbsCollection& other, Bool_t setValDirty=kTRUE) ;
 
+  // Move constructor
+  RooAbsCollection(RooAbsCollection && other);
+
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
@@ -108,6 +111,12 @@ public:
   RooAbsArg *find(const char *name) const ;
   RooAbsArg *find(const RooAbsArg&) const ;
 
+  /// Find object by name in the collection
+  TObject* FindObject(const char* name) const { return find(name); }
+
+  /// Find object in the collection, Note: matching by object name, like the find() method
+  TObject* FindObject(const TObject* obj) const { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
+
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
   Bool_t contains(const RooAbsArg& var) const { 
@@ -118,9 +127,11 @@ public:
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
+  bool selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
+  bool hasSameLayout(const RooAbsCollection& other) const;
   Bool_t overlaps(const RooAbsCollection& otherColl) const ;
 
   /// TIterator-style iteration over contained elements.
@@ -279,7 +290,10 @@ protected:
 
   void makeStructureTag() ;
   void makeTypedStructureTag() ;
-  
+
+  /// Determine whether it's possible to add a given RooAbsArg to the collection or not.
+  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const = 0;
+
 private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
   mutable std::unique_ptr<std::unordered_map<const TNamed*, Storage_t::value_type>> _nameToItemMap; //!

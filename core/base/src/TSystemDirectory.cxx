@@ -29,8 +29,8 @@ ClassImp(TSystemDirectory);
 
 TSystemDirectory::TSystemDirectory()
 {
-   fDirsInBrowser  = 0;
-   fFilesInBrowser = 0;
+   fDirsInBrowser  = nullptr;
+   fFilesInBrowser = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,8 +39,8 @@ TSystemDirectory::TSystemDirectory()
 TSystemDirectory::TSystemDirectory(const char *dirname, const char *path) :
    TSystemFile(dirname, path)
 {
-   fDirsInBrowser  = 0;
-   fFilesInBrowser = 0;
+   fDirsInBrowser  = nullptr;
+   fFilesInBrowser = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,9 +84,9 @@ TSystemDirectory::~TSystemDirectory()
 TList *TSystemDirectory::GetListOfFiles() const
 {
    void *dir = gSystem->OpenDirectory(GetTitle());
-   if (!dir) return 0;
+   if (!dir) return nullptr;
 
-   const char *file = 0;
+   const char *file = nullptr;
    TList *contents  = new TList;
    contents->SetOwner();
    while ((file = gSystem->GetDirEntry(dir))) {
@@ -207,7 +207,7 @@ TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
       if (!strcmp(name, obj->GetTitle()))
          return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,5 +222,5 @@ TSystemFile *TSystemDirectory::FindFileObj(const char *name, const char *dir)
       if (!strcmp(name, obj->GetName()) && !strcmp(dir, obj->GetTitle()))
          return obj;
    }
-   return 0;
+   return nullptr;
 }

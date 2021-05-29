@@ -4,6 +4,7 @@
 /// This macro generates two TH1D objects and build RLegend
 /// In addition use of auto colors are shown
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2019-10-09
@@ -19,6 +20,7 @@
  *************************************************************************/
 
 #include "ROOT/RHistDrawable.hxx"
+#include "ROOT/RPaletteDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RLegend.hxx"
 #include "TRandom.h"
@@ -45,15 +47,16 @@ void draw_legend()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
 
-   // draw histogram
+   // add palette to canvas, it will not be seen on the canvas but used for colors
+   canvas->Draw<RPaletteDrawable>(RPalette({{0., RColor::kWhite}, {.3, RColor::kRed}, {.7, RColor::kBlue}, {1., RColor::kBlack}}), false);
+
+   // draw first histogram
    auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetWidth(2).AttrColor().SetAuto();
+   draw1->AttrLine().SetWidth(2).SetColor(0.3); // should be red color
 
-   // draw histogram
+   // draw second histogram
    auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetWidth(4).AttrColor().SetAuto();
-
-   canvas->AssignAutoColors();
+   draw2->AttrLine().SetWidth(4).SetColor(0.7); // should be blue color
 
    auto legend = canvas->Draw<RLegend>("Legend title");
    legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);

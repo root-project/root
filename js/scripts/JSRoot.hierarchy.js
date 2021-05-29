@@ -673,6 +673,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       main.insert('div', ".jsroot_browser_btns").classed('jsroot_browser_area', true)
           .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('width','250px')
+          .style('overflow', 'hidden')
           .style('padding-left','5px')
           .style('display','flex').style('flex-direction', 'column')   /* use the flex model */
           .html("<p class='jsroot_browser_title'>title</p>" +  guiCode);
@@ -1106,7 +1107,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if ((arg.rest == d.rest) || (arg.rest.length <= d.rest.length))
                return Promise.resolve(result);
 
-         return this.expandItem(parentname, null, true).then(res => {
+         return this.expandItem(parentname, undefined, options != "hierarchy_expand_verbose").then(res => {
             if (!res) return result;
             let newparentname = this.itemFullName(d.last);
             if (newparentname.length > 0) newparentname += "/";
@@ -1736,7 +1737,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          jsrp.showProgress("Loading " + itemname);
 
-         return this.getObject(itemname, "hierarchy_expand").then(res => {
+         return this.getObject(itemname, silent ? "hierarchy_expand" : "hierarchy_expand_verbose").then(res => {
 
             jsrp.showProgress();
 
@@ -1927,7 +1928,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let url = itemname, h_get = false, req = "", req_kind = "object", draw_handle = null;
 
-      if (option === 'hierarchy_expand') { h_get = true; option = undefined; }
+      if ((typeof option == "string") && (option.indexOf('hierarchy_expand')==0)) {
+         h_get = true;
+         option = undefined;
+      }
 
       if (item) {
          url = this.getOnlineItemUrl(item);
@@ -2576,13 +2580,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                document.title = this.h._toptitle;
 
             if (gui_div)
-               this.prepareGuiDiv(gui_div, this.disp_kind);
+               this.prepareGuiDiv(gui_div.attr('id'), this.disp_kind);
 
             return openAllFiles();
          });
 
       if (gui_div)
-         this.prepareGuiDiv(gui_div, this.disp_kind);
+         this.prepareGuiDiv(gui_div.attr('id'), this.disp_kind);
 
       return openAllFiles();
    }
@@ -2591,7 +2595,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    HierarchyPainter.prototype.prepareGuiDiv = function(myDiv, layout) {
 
-      this.gui_div = myDiv.attr('id');
+      this.gui_div = (typeof myDiv == "string") ? myDiv : myDiv.attr('id');
 
       this.brlayout = new BrowserLayout(this.gui_div, this);
 

@@ -5,6 +5,7 @@
 /// draw ROOT 7 boxes in it (RBox). It generates a set of boxes using the
 /// "normal" coordinates' system.
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2018-10-10
@@ -40,15 +41,9 @@ void box()
    Box3->AttrBox().AttrFill().SetColor(RColor::kBlue);
 
    auto Box4 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.7_normal), RPadPos(0.9_normal,0.9_normal));
-   //OptsBox4->SetFillStyle(0);
-   //OptsBox4->SetRoundWidth(50);
-   //OptsBox4->SetRoundHeight(25);
    Box4->AttrBox().AttrBorder().SetWidth(3);
 
    auto Box5 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.1_normal), RPadPos(0.9_normal,0.3_normal));
-   //OptsBox5->SetFillStyle(0);
-   //OptsBox5->SetRoundWidth(25);
-   //OptsBox5->SetRoundHeight(50);
    Box5->AttrBox().AttrBorder().SetWidth(3);
 
    canvas->Show();

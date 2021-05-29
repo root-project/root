@@ -7419,13 +7419,6 @@ void TH1::UseCurrentStyle()
 /// See TH1::GetStats.
 ///
 /// Return mean value of this histogram along the X axis.
-///
-/// Note that the mean value/StdDev is computed using the bins in the currently
-/// defined range (see TAxis::SetRange). By default the range includes
-/// all bins from 1 to nbins included, excluding underflows and overflows.
-/// To force the underflows and overflows in the computation, one must
-/// call the static function TH1::StatOverflows(kTRUE) before filling
-/// the histogram.
 
 Double_t TH1::GetMean(Int_t axis) const
 {
@@ -9129,8 +9122,8 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error)
 TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 {
 
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%lx,%d,\"%s\")",
-                                            (ULong_t)this, niter, option));
+   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
+                                            (size_t)this, niter, option));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9143,8 +9136,8 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 
 Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",
-                                             (ULong_t)this, sigma, option, threshold));
+   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
+                                             (size_t)this, sigma, option, threshold));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
