@@ -42,12 +42,12 @@ public:
 ~FCNGradAdapter() {}
 
 
-   double operator()(const std::vector<double> &v) const { return fFunc.operator()(&v[0]); }
+   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
 
-   double Up() const { return fUp; }
+   double Up() const override { return fUp; }
 
-   std::vector<double> Gradient(const std::vector<double> &v) const
+   std::vector<double> Gradient(const std::vector<double> &v) const override
    {
       fFunc.Gradient(&v[0], &fGrad[0]);
 

@@ -65,8 +65,6 @@
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;
 #pragma link C++ class RooFunctor1DPdfBinding+ ;
-#pragma link C++ class RooStarMomentMorph+ ;
-#pragma link C++ class RooParamKeysPdf+ ;
 //
 #pragma link C++ class RooCFunction1Ref<Double_t,Double_t>- ;
 #pragma link C++ class RooCFunction1Binding<Double_t,Double_t>+ ;

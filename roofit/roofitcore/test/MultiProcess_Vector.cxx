@@ -143,7 +143,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
 }
 
 
-INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
+INSTANTIATE_TEST_SUITE_P(NumberOfWorkerProcesses,
                         MultiProcessVectorSingleJob,
                         ::testing::Values(1,2,3));
 
@@ -181,6 +181,6 @@ TEST_P(MultiProcessVectorMultiJob, getResult) {
 }
 
 
-INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
+INSTANTIATE_TEST_SUITE_P(NumberOfWorkerProcesses,
                         MultiProcessVectorMultiJob,
                         ::testing::Values(2,1,3));

@@ -196,7 +196,7 @@ void LikelihoodJob::send_back_results_from_queue_to_master() {
    }
 }
 
-bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t & message) {
+bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t & /*message*/) {
    std::size_t task = get_manager()->messenger().receive_from_worker_on_master<std::size_t>();
    results[task] = get_manager()->messenger().receive_from_worker_on_master<double>();
    carrys[task] = get_manager()->messenger().receive_from_worker_on_master<double>();

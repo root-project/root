@@ -350,7 +350,7 @@ void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, Double_t loVal, Double_t hi
 /// Transfer MINUIT fit results back into RooFit objects.
 void RooAbsMinimizerFcn::BackProp(const ROOT::Fit::FitResult &results)
 {
-   for (Int_t index = 0; index < _nDim; index++) {
+   for (unsigned int index = 0; index < _nDim; index++) {
       Double_t value = results.Value(index);
       SetPdfParamVal(index, value);
 
@@ -398,7 +398,7 @@ Bool_t RooAbsMinimizerFcn::SetLogFile(const char *inLogfile)
 /// HESSE matrix at the next save() call
 void RooAbsMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym &V)
 {
-   for (Int_t i = 0; i < _nDim; i++) {
+   for (unsigned int i = 0; i < _nDim; i++) {
       // Skip fixed parameters
       if (_floatParamList->at(i)->isConstant()) {
          continue;

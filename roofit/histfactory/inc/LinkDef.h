@@ -31,9 +31,6 @@
 #pragma link C++ class RooStats::HistFactory::Measurement+ ;
 #pragma read sourceClass="RooStats::HistFactory::Measurement" targetClass="RooStats::HistFactory::Measurement" checksum="[973506941]" source="std::string fPOI" target="fPOI"  code="{ fPOI.push_back(onfile.fPOI) ; }" 
 
-#pragma link C++ class RooStats::HistFactory::RooBSplineBases+ ;
-#pragma link C++ class RooStats::HistFactory::RooBSpline+ ;
-
 #pragma link C++ class RooStats::HistFactory::Channel+ ;
 #pragma link C++ class RooStats::HistFactory::Sample+ ;
 #pragma link C++ class RooStats::HistFactory::Data+ ;

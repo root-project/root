@@ -112,9 +112,9 @@ public:
 
 private:
    std::vector<double> vx_fVal_cache;
-#ifndef NDEBUG
-   std::size_t fVal_eval_counter = 0; //!
-#endif
+//#ifndef NDEBUG
+//   std::size_t fVal_eval_counter = 0; //!
+//#endif
 };
 
 std::ostream& operator<<(std::ostream& out, const MinuitDerivatorElement value);

@@ -300,7 +300,7 @@ TEST_P(MPGradMinimizer, GaussianND) {
 
 
 
-INSTANTIATE_TEST_CASE_P(NworkersSeed,
+INSTANTIATE_TEST_SUITE_P(NworkersSeed,
                         MPGradMinimizer,
                         ::testing::Combine(::testing::Values(1,2,3),  // number of workers
                                            ::testing::Values(2,3)));  // random seed

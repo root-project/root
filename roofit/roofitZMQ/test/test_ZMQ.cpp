@@ -106,12 +106,12 @@ auto socket_name_options = ::testing::Values(
     );
 
 
-INSTANTIATE_TEST_CASE_P(REQREP, AllSocketTypes,
+INSTANTIATE_TEST_SUITE_P(REQREP, AllSocketTypes,
                         ::testing::Combine(::testing::Range(0, 10), // repeat to probe connection stability
                                            ::testing::Values(std::make_pair(zmq::REQ, zmq::REP)),
                                            socket_name_options
                         ));
-INSTANTIATE_TEST_CASE_P(PAIRPAIR, AllSocketTypes,
+INSTANTIATE_TEST_SUITE_P(PAIRPAIR, AllSocketTypes,
                         ::testing::Combine(::testing::Range(0, 10), // repeat to probe connection stability
                                            ::testing::Values(std::make_pair(zmq::PAIR, zmq::PAIR)),
                                            socket_name_options
@@ -251,14 +251,14 @@ TEST_P(AsyncSocketTypes, forkIgnoreSomeMessages) {
 }
 
 
-INSTANTIATE_TEST_CASE_P(PAIRPAIR, AsyncSocketTypes,
+INSTANTIATE_TEST_SUITE_P(PAIRPAIR, AsyncSocketTypes,
                         ::testing::Combine(::testing::Range(0, 10), // repeat to probe connection stability
                                            ::testing::Values(std::make_pair(zmq::PAIR, zmq::PAIR)),
                                            socket_name_options,
                                            ::testing::Values(false) // don't expect throw
                         ));
 
-INSTANTIATE_TEST_CASE_P(REQREP, AsyncSocketTypes,
+INSTANTIATE_TEST_SUITE_P(REQREP, AsyncSocketTypes,
                         ::testing::Combine(::testing::Values(0), // no repeats, we only care about the throw
                                            ::testing::Values(std::make_pair(zmq::REQ, zmq::REP)),
                                            socket_name_options,

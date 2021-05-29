@@ -224,7 +224,7 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 }
 
 
-INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
+INSTANTIATE_TEST_SUITE_P(NworkersModeSeed,
                         MultiProcessVectorNLL,
                         ::testing::Combine(::testing::Values(1,2,3),  // number of workers
                                            ::testing::Values(RooFit::MultiProcess::NLLVarTask::all_events,
@@ -369,7 +369,7 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
 }
 
 
-INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
+INSTANTIATE_TEST_SUITE_P(NworkersModeSeed,
                         NLLMultiProcessVsMPFE,
                         ::testing::Combine(::testing::Values(2,3),  // number of workers
                                            ::testing::Values(RooFit::MultiProcess::NLLVarTask::bulk_partition,

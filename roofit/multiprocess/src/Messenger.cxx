@@ -74,7 +74,8 @@ Messenger::Messenger(const ProcessManager &process_manager)
          while (N_subscribers_confirmed < process_manager.N_workers()) {
             zmqSvc().send(*mw_pub, false);
             auto poll_results = subscriber_ping_poller.poll(0);
-            for (auto& poll_result : poll_results) {
+//            for (auto& poll_result : poll_results) {
+            for (std::size_t ix = 0; ix < poll_results.size(); ++ix) {
                auto request = zmqSvc().receive<std::string>(*subscriber_ping_socket, zmq::DONTWAIT);
                assert(request == "present");
                zmqSvc().send(*subscriber_ping_socket, "roger");
@@ -243,7 +244,7 @@ void Messenger::test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t w
 
 
 void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id) {
-   X2X handshake;
+   X2X handshake = X2X::initial_value;
 
    std::size_t max_tries = 3, tries = 0;
    bool carry_on = true;
@@ -273,10 +274,10 @@ void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, s
          if (response == zmq_ppoll_error_response::abort) {
             throw std::runtime_error("EINTR in test_receive and SIGTERM received, aborting\n");
          } else if (response == zmq_ppoll_error_response::unknown_eintr) {
-            printf("EINTR in test_receive but no SIGTERM received, try %d\n", tries);
+            printf("EINTR in test_receive but no SIGTERM received, try %lu\n", tries);
             continue;
          } else if (response == zmq_ppoll_error_response::retry) {
-            printf("EAGAIN in test_receive, try %d\n", tries);
+            printf("EAGAIN in test_receive, try %lu\n", tries);
             continue;
          }
       } catch (zmq::error_t &e) {

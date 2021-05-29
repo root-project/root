@@ -21,11 +21,11 @@
 
 class ZMQPushPullTest : public ::testing::Test {
 protected:
-   int N_children = 4;
-   int max_sends = 20;
+   std::size_t N_children = 4;
+   std::size_t max_sends = 20;
 
    void SetUp() override {
-      for (int i = 0; i < N_children; ++i) {
+      for (std::size_t i = 0; i < N_children; ++i) {
          do {
             child_pid = fork();
          } while (child_pid == -1);  // retry if fork fails

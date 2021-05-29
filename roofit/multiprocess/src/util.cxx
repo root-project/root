@@ -100,7 +100,7 @@ careful_ppoll(ZeroMQPoller &poller, const sigset_t &ppoll_sigmask, std::size_t m
    bool carry_on = true;
    while (carry_on && (tries++ < max_tries)) {
       if (tries > 1) {
-         printf("careful_ppoll try %d\n", tries);
+         printf("careful_ppoll try %lu\n", tries);
       }
       try { // watch for zmq_error from ppoll caused by SIGTERM from master
          poll_result = poller.ppoll(-1, &ppoll_sigmask);
@@ -111,17 +111,17 @@ careful_ppoll(ZeroMQPoller &poller, const sigset_t &ppoll_sigmask, std::size_t m
          if (response == zmq_ppoll_error_response::abort) {
             break;
          } else if (response == zmq_ppoll_error_response::unknown_eintr) {
-            printf("EINTR in careful_ppoll but no SIGTERM received, try %d\n", tries);
+            printf("EINTR in careful_ppoll but no SIGTERM received, try %lu\n", tries);
             continue;
          } else if (response == zmq_ppoll_error_response::retry) {
-            printf("EAGAIN in careful_ppoll (from either send or receive), try %d\n", tries);
+            printf("EAGAIN in careful_ppoll (from either send or receive), try %lu\n", tries);
             continue;
          }
       }
    }
 
    if (tries == max_tries) {
-      printf("careful_ppoll reached maximum number of tries, %d, please report as a bug\n", tries);
+      printf("careful_ppoll reached maximum number of tries, %lu, please report as a bug\n", tries);
    }
    return {poll_result, abort};
 }

@@ -123,7 +123,7 @@ double RooUnbinnedL::evaluate_partition(Section events,
 
          // Calculate sum of weights-squared here for extended term
          Double_t sumW2(0), sumW2carry(0);
-         for (std::size_t i = 0; i < data_->numEntries(); i++) {
+         for (Int_t i = 0; i < data_->numEntries(); i++) {
             data_->get(i);
             Double_t y = data_->weightSquared() - sumW2carry;
             Double_t t = sumW2 + y;

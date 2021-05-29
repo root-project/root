@@ -32,6 +32,7 @@ void set_socket_immediate(ZmqLingeringSocketPtr<> &socket);
 enum class X2X : int {
    ping = -1,
    pong = -2,
+   initial_value = 0
 };
 
 class Messenger {

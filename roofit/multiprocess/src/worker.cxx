@@ -45,7 +45,7 @@ bool process_queue_message(Q2W message_q2w, bool &dequeue_acknowledged)
          std::chrono::high_resolution_clock::now().time_since_epoch())
          .count();
    };
-   decltype(get_time()) t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+   decltype(get_time()) t1 = 0, t2 = 0;
 
 
    switch (message_q2w) {
