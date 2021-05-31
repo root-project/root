@@ -145,6 +145,14 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
    auto element = columnHandle.fColumn->GetElement();
    auto sealedPage = SealPage(page, *element, fOptions.GetCompression());
 
+   return CommitSealedPageImpl(columnHandle.fId, sealedPage);
+}
+
+
+ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
+   DescriptorId_t /*columnId*/, const RPageStorage::RSealedPage &sealedPage)
+{
    auto offsetData = std::get<0>(fDaosContainer->WriteObject(sealedPage.fBuffer,
                                                              sealedPage.fSize,
                                                              kDistributionKey,
@@ -154,17 +162,6 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
    result.fPosition = offsetData;
    result.fBytesOnStorage = sealedPage.fSize;
    return result;
-}
-
-
-ROOT::Experimental::RClusterDescriptor::RLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
-   DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage)
-{
-   /// TODO(jalopezg): this will be addressed in a different pull request.
-   (void)columnId;
-   (void)sealedPage;
-   return {};
 }
 
 
@@ -316,10 +313,19 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
 void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(
    DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage)
 {
-   /// TODO(jalopezg): this will be addressed in a different pull request.
-   (void)columnId;
-   (void)clusterIndex;
-   (void)sealedPage;
+   const auto clusterId = clusterIndex.GetClusterId();
+   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+
+   auto pageInfo = clusterDescriptor.GetPageRange(columnId).Find(clusterIndex.GetIndex());
+
+   const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   sealedPage.fSize = bytesOnStorage;
+   sealedPage.fNElements = pageInfo.fNElements;
+   if (sealedPage.fBuffer) {
+      fDaosContainer->ReadObject({static_cast<decltype(daos_obj_id_t::lo)>(pageInfo.fLocator.fPosition), 0},
+                                 const_cast<void *>(sealedPage.fBuffer), bytesOnStorage,
+                                 kDistributionKey, kAttributeKey);
+   }
 }
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(
