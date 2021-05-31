@@ -947,7 +947,10 @@ again:
 
    void *arr[2];
    arr[1] = (void*) buf;
-   if (XARequest("PRTF", 2, arr, 0)) return;
+   if (XARequest("PRTF", 2, arr, 0)) {
+      delete [] buf;
+      return;
+   }
 
    printf("%s\n", buf);
    fflush(stdout);
