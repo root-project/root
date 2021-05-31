@@ -180,6 +180,7 @@ if(NOT ROOT_mathmore_FOUND)
       math/LegendreAssoc.C
       math/Legendre.C
       math/mathmoreIntegration.C
+      math/multivarGaus.C
       math/tStudent.C
       math/normalDist.C
       roostats/TestNonCentral.C
