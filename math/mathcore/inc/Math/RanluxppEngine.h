@@ -27,17 +27,17 @@ template <int p>
 class RanluxppEngine final : public TRandomEngine {
 
 private:
-   std::unique_ptr<RanluxppEngineImpl<52, p>> fImpl;
+   std::unique_ptr<RanluxppEngineImpl<48, p>> fImpl;
 
 public:
    RanluxppEngine(uint64_t seed = 314159265);
    virtual ~RanluxppEngine();
 
-   /// Generate a double-precision random number with 52 bits of randomness
+   /// Generate a double-precision random number with 48 bits of randomness
    double Rndm() override;
    /// Generate a double-precision random number (non-virtual method)
    double operator()();
-   /// Generate a random integer value with 52 bits
+   /// Generate a random integer value with 48 bits
    uint64_t IntRndm();
 
    /// Initialize and seed the state of the generator
