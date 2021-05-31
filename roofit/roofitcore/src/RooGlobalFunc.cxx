@@ -209,9 +209,9 @@ namespace RooFit {
   RooCmdArg Minos(Bool_t flag)           { return RooCmdArg("Minos",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Minos(const RooArgSet& minosArgs)            { return RooCmdArg("Minos",kTRUE,0,0,0,0,0,&minosArgs,0) ; }
   RooCmdArg Minos(RooArgSet && minosArgs) { return Minos(RooCmdArg::take(std::move(minosArgs))); }
-  RooCmdArg ConditionalObservables(const RooArgSet& set) { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,0,0,0,0,&set) ; }
+  RooCmdArg ConditionalObservables(const RooArgSet& set) { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,&set) ; }
   RooCmdArg ConditionalObservables(RooArgSet && set)     { return ConditionalObservables(RooCmdArg::take(std::move(set))) ; }
-  RooCmdArg ProjectedObservables(const RooArgSet& set)   { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,0,0,0,0,&set) ; }
+  RooCmdArg ProjectedObservables(const RooArgSet& set)   { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,&set) ; }
   RooCmdArg ProjectedObservables(RooArgSet && set)       { return ProjectedObservables(RooCmdArg::take(std::move(set))) ; }
   RooCmdArg SplitRange(Bool_t flag)                      { return RooCmdArg("SplitRange",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg SumCoefRange(const char* rangeName)          { return RooCmdArg("SumCoefRange",0,0,0,0,rangeName,0,0,0) ; }

@@ -1369,7 +1369,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
   pc.defineObject("compSet","SelectCompSet",0) ;
   pc.defineString("compSpec","SelectCompSpec",0) ;
-  pc.defineSet("projObs","ProjectedObservables",0,0) ;
+  pc.defineObject("projObs","ProjectedObservables",0,0) ;
   pc.defineObject("yvar","YVar",0,0) ;
   pc.defineObject("zvar","ZVar",0,0) ;
   pc.defineMutex("SelectCompSet","SelectCompSpec") ;
@@ -1394,7 +1394,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     vars.add(*zvar) ;
   }
 
-  RooArgSet* projObs = pc.getSet("projObs") ;
+  auto projObs = static_cast<RooArgSet*>(pc.getObject("projObs")) ;
   RooArgSet* intObs = 0 ;
 
   Bool_t doScaling = pc.getInt("scaling") ;

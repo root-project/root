@@ -990,7 +990,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,0) ;
   pc.defineInt("cloneData","CloneData", 0, 2);
-  pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
 //  pc.defineInt("constrAll","Constrained",0,0) ;
@@ -1096,7 +1096,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   RooArgSet projDeps ;
-  RooArgSet* tmp = pc.getSet("projDepSet") ;
+  auto tmp = static_cast<RooArgSet*>(pc.getObject("projDepSet")) ;
   if (tmp) {
     projDeps.add(*tmp) ;
   }
