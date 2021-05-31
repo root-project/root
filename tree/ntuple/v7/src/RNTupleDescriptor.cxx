@@ -457,6 +457,27 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
 ////////////////////////////////////////////////////////////////////////////////
 
 
+ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
+ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::Experimental::RClusterSize::ValueType idxInCluster) const
+{
+   // TODO(jblomer): binary search
+   RPageInfo pageInfo;
+   decltype(idxInCluster) firstInPage = 0;
+   NTupleSize_t pageNo = 0;
+   for (const auto &pi : fPageInfos) {
+      if (firstInPage + pi.fNElements > idxInCluster) {
+         pageInfo = pi;
+         break;
+      }
+      firstInPage += pi.fNElements;
+      ++pageNo;
+   }
+   R__ASSERT(firstInPage <= idxInCluster);
+   R__ASSERT((firstInPage + pageInfo.fNElements) > idxInCluster);
+   return RPageInfoExtended{pageInfo, firstInPage, pageNo};
+}
+
+
 bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
 {
    return fClusterId == other.fClusterId &&
