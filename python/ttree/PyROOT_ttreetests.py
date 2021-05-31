@@ -355,6 +355,30 @@ class TFileGetNonTObject( MyTestCase ):
       self.assertTrue( not gDirectory.Get( "non_existent_stuff" ) )
 
 
+class TTreeReaderTests(MyTestCase):
+   def test01TTreeReaderIter(self):
+      """Test iteration of TTreeReader and its side effects on TTreeReaderValues"""
+      # 8183
+      import array
+
+      # Create input tree
+      t = ROOT.TTree("t", "test_tree")
+      n = array.array("i", [ 0 ])
+      t.Branch("x", n, "x/I")
+      for i in range(10):
+          n[0] = i
+          t.Fill()
+
+      # Iterate over tree
+      # Check correspondance between entry number returned by the iterator,
+      # entry number of the reader and value of x
+      r = ROOT.TTreeReader(t)
+      x = ROOT.TTreeReaderValue("int")(r, "x")
+      for entry in r:
+         self.assertEqual(entry, r.GetCurrentEntry())
+         self.assertEqual(entry, x.__deref__())
+
+
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner
