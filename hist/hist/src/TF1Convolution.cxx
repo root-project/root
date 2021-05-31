@@ -90,11 +90,14 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    fFunction1->SetBit(TF1::kNotGlobal, kTRUE);
    fFunction2->SetBit(TF1::kNotGlobal, kTRUE);
 
-   // add by default an extra 10% on  each side
+   // use by default range of first function 
    fFunction1->GetRange(fXmin, fXmax);
-   Double_t range = fXmax - fXmin;
-   fXmin       -= 0.1*range;
-   fXmax       += 0.1*range;
+   // when using FFT add by default an extra 10% on  each side
+   if (useFFT) {
+      Double_t range = fXmax - fXmin;
+      fXmin       -= 0.1*range;
+      fXmax       += 0.1*range;
+   }
    fNofParams1 = fFunction1->GetNpar();
    fNofParams2 = fFunction2->GetNpar();
    fParams1    = std::vector<Double_t>(fNofParams1);
@@ -150,6 +153,7 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Do
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+      if (useFFT) SetExtraRange(0.1);
    } else {
       Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
       SetRange(-TMath::Infinity(), TMath::Infinity());
@@ -186,6 +190,7 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+      if (useFFT) SetExtraRange(0.1);
    } else {
       Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
       SetRange(-TMath::Infinity(), TMath::Infinity());

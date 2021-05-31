@@ -567,9 +567,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       // std::cout << "functions have been defined" << std::endl;
 
-      TF1Convolution *conv = new TF1Convolution(function1, function2);
-      // make sure we use the right range for the convolution
-      conv->SetRange(xmin,xmax);  
+      TF1Convolution *conv = new TF1Convolution(function1, function2,xmin,xmax);
 
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
