@@ -68,7 +68,11 @@ def g(x): return 2 * x
 gradFunc = ROOT.Math.GradFunctor1D(f, g)
 
 #check if ROOT has mathmore
-if (ROOT.gSystem.Load("libMathMore") < 0) :
+prevLevel = ROOT.gErrorIgnoreLevel
+ROOT.gErrorIgnoreLevel=ROOT.kFatal
+ret = ROOT.gSystem.Load("libMathMore") 
+ROOT.gErrorIgnoreLevel=prevLevel
+if (ret < 0) :
    print("ROOT has not Mathmore")
    print("derivative value at x = 1", gradFunc.Derivative(1) )
 
