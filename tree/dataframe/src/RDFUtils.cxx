@@ -137,7 +137,8 @@ std::string ComposeRVecTypeName(const std::string &valueType)
 
 std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
 {
-   std::string colType = leaf->GetTypeName();
+   const char *colTypeCStr = leaf->GetTypeName();
+   std::string colType = colTypeCStr == nullptr ? "" : colTypeCStr;
    if (colType.empty())
       throw std::runtime_error("Could not deduce type of leaf " + colName);
    if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() == 1) {
