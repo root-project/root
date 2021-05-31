@@ -961,6 +961,11 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
 
       offset += key.GetHeaderSize();
       ReadBuffer(&name, 1, offset);
+      ReadBuffer(&name, name.GetSize(), offset);
+      if (std::string_view(name.fData, name.fLName) != kNTupleClassName) {
+         offset = offsetNextKey;
+         continue;
+      }
       offset += name.GetSize();
       ReadBuffer(&name, 1, offset);
       ReadBuffer(&name, name.GetSize(), offset);
