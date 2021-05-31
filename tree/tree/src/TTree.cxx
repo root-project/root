@@ -3256,8 +3256,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch addresses of passed tree equal to ours.
-/// If undo is true, reset the branch address instead of copying them.
-/// This insures 'separation' of a cloned tree from its original
+/// If undo is true, reset the branch addresses instead of copying them.
+/// This ensures 'separation' of a cloned tree from its original.
 
 void TTree::CopyAddresses(TTree* tree, Bool_t undo)
 {
