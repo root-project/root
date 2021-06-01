@@ -86,6 +86,17 @@ Currently, an object is allocated for each page + 3 additional objects (anchor/h
 // clang-format on
 class RPageSinkDaos : public RPageSink {
 private:
+   /// I/O performance counters that get registered in fMetrics
+   struct RCounters {
+      RNTupleAtomicCounter &fNPageCommitted;
+      RNTupleAtomicCounter &fSzWritePayload;
+      RNTupleAtomicCounter &fSzZip;
+      RNTupleAtomicCounter &fTimeWallWrite;
+      RNTupleAtomicCounter &fTimeWallZip;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
+   };
+   std::unique_ptr<RCounters> fCounters;
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 

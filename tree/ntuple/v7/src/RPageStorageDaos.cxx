@@ -114,6 +114,16 @@ ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntuple
 {
    R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. " <<
       "Do not store real data with this version of RNTuple!";
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallWrite", "ns", "wall clock time spent writing"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
+                                                                        "CPU time spent compressing")
+   });
    fCompressor = std::make_unique<RNTupleCompressor>();
 }
 
@@ -143,8 +153,13 @@ ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
-   auto sealedPage = SealPage(page, *element, fOptions.GetCompression());
+   RPageStorage::RSealedPage sealedPage;
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
+      sealedPage = SealPage(page, *element, fOptions.GetCompression());
+   }
 
+   fCounters->fSzZip.Add(page.GetSize());
    return CommitSealedPageImpl(columnHandle.fId, sealedPage);
 }
 
@@ -153,14 +168,20 @@ ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
    DescriptorId_t /*columnId*/, const RPageStorage::RSealedPage &sealedPage)
 {
-   auto offsetData = std::get<0>(fDaosContainer->WriteObject(sealedPage.fBuffer,
-                                                             sealedPage.fSize,
-                                                             kDistributionKey,
-                                                             kAttributeKey)).lo;
+   std::uint64_t offsetData;
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
+      offsetData = std::get<0>(fDaosContainer->WriteObject(sealedPage.fBuffer,
+                                                           sealedPage.fSize,
+                                                           kDistributionKey,
+                                                           kAttributeKey)).lo;
+   }
 
    RClusterDescriptor::RLocator result;
    result.fPosition = offsetData;
    result.fBytesOnStorage = sealedPage.fSize;
+   fCounters->fNPageCommitted.Inc();
+   fCounters->fSzWritePayload.Add(sealedPage.fSize);
    return result;
 }
 
