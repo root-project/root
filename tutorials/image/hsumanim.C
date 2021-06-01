@@ -72,7 +72,7 @@ void hsumanim() {
    // make infinite animation by adding "++" to the file name
    if (gROOT->IsBatch()) c1->Print("hsumanim.gif++");
 
-   //You can view the animated file hsumanim.gif with Netscape/IE or mozilla
+   // you can view the animated file hsumanim.gif with a web browser
 
    gBenchmark->Show("hsum");
 }
