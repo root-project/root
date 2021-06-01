@@ -83,8 +83,8 @@ zmq_ppoll_error_response handle_zmq_ppoll_error(ZMQ::ppoll_error_t &e)
       return zmq_ppoll_error_response::retry;
    } else {
       char buffer[512];
-      sprintf(buffer, "handle_zmq_ppoll_error is out of options to handle exception, caught ZMQ::ppoll_error_t had errno %d and text: %s\n",
-              e.num(), e.what());
+      snprintf(buffer, 512, "handle_zmq_ppoll_error is out of options to handle exception, caught ZMQ::ppoll_error_t had errno %d and text: %s\n",
+               e.num(), e.what());
       throw std::logic_error(buffer);
    }
 }

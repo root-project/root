@@ -524,7 +524,7 @@ double RooGaussMinimizerFcn::DoEval(const double *x) const
 
   // Set the parameter values for this iteration
   for (int index = 0; index < _nDim; index++) {
-    if (_logfile) (*_logfile) << x[index] << " " ;
+    if (_logfile && _logfile->is_open()) (*_logfile) << x[index] << " " ;
     SetPdfParamVal(index,x[index]);
   }
 
@@ -571,7 +571,7 @@ double RooGaussMinimizerFcn::DoEval(const double *x) const
   }
       
   // Optional logging
-  if (_logfile) 
+  if (_logfile && _logfile->is_open())
     (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
   if (_verbose) {
     cout << "\nprevFCN" << (_funct->isOffsetting()?"-offset":"") << " = " << setprecision(10) 
@@ -590,7 +590,7 @@ double RooGaussMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) 
   // Set the parameter values for this iteration
   // EGP TODO: this is already done in DoEval as well; find efficient way to do only once
   for (int index = 0; index < _nDim; index++) {
-    if (_logfile) (*_logfile) << x[index] << " " ;
+    if (_logfile && _logfile->is_open()) (*_logfile) << x[index] << " " ;
     SetPdfParamVal(index,x[index]);
   }
 
