@@ -426,7 +426,7 @@ void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double
 void TF1Convolution::SetExtraRange(Double_t percentage)
 {
    if (percentage<0) return;
-   double range = fXmax = fXmin;
+   double range = fXmax - fXmin;
    fXmin -= percentage * range;
    fXmax += percentage * range;
    fFlagGraph = false;  // to indicate we need to re-do the convolution
