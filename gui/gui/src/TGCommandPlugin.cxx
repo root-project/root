@@ -228,20 +228,33 @@ void TGCommandPlugin::HandleCommand()
 
 void TGCommandPlugin::HandleTab()
 {
-   std::string prompt = gInterpreter->GetPrompt();
    std::string line = fCommandBuf->GetString();
-   if (prompt.find("root") == std::string::npos)
-      prompt = "root []";
-   prompt += " ";
-   prompt += line;
-   fStatus->AddLine(prompt.c_str());
-   fStatus->ShowBottom();
    std::vector<std::string> result;
    size_t cur = line.length();
    gInterpreter->CodeComplete(line, cur, result);
-   for (auto& res : result) {
-      fStatus->AddLine(res.c_str());
+   if (result.size() == 1) {
+      // when there is only one result, complete the command line input
+      std::string found = result[0];
+      std::string what = line;
+      size_t colon = line.find_last_of("::");
+      if (colon != std::string::npos)
+         what = line.substr(colon+2);
+      size_t pos = found.find(what) + what.length();
+      std::string suffix = found.substr(pos);
+      fCommand->AppendText(suffix.c_str());
+   } else {
+      // otherwise print all results
+      std::string prompt = gInterpreter->GetPrompt();
+      if (prompt.find("root") == std::string::npos)
+         prompt = "root []";
+      prompt += " ";
+      prompt += line;
+      fStatus->AddLine(prompt.c_str());
       fStatus->ShowBottom();
+      for (auto& res : result) {
+         fStatus->AddLine(res.c_str());
+         fStatus->ShowBottom();
+      }
    }
 }
 
