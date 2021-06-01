@@ -33,11 +33,11 @@ by many other classes (graphics, histograms). It holds all the line attributes.
 ## Line attributes
 Line attributes are:
 
-  - [Line Color](\ref L1)
-  - [Line Width](\ref L2)
-  - [Line Style](\ref L3)
+  - [Line Color](\ref ATTLINE1)
+  - [Line Width](\ref ATTLINE2)
+  - [Line Style](\ref ATTLINE3)
 
-\anchor L1
+\anchor ATTLINE1
 ## Line Color
 The line color is a color index (integer) pointing in the ROOT
 color table.
@@ -69,7 +69,7 @@ in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file o
 it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 
 
-\anchor L2
+\anchor ATTLINE2
 ## Line Width
 The line width is expressed in pixel units.
 The line width of any class inheriting from `TAttLine` can
@@ -93,7 +93,7 @@ Begin_Macro
 }
 End_Macro
 
-\anchor L3
+\anchor ATTLINE3
 ## Line Style
 Line styles are identified via integer numbers. The line style of any class
 inheriting from `TAttLine` can be changed using the method
