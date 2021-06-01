@@ -39,6 +39,7 @@ class TVirtualArray;
 class TBranchElement : public TBranch {
 
 // Friends
+   friend TTree;
    friend class TTreeCloner;
    friend class TLeafElement;
 

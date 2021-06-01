@@ -3358,15 +3358,21 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             branch->SetupAddresses();
          }
          if (branch->GetAddress()) {
-            tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
             TBranch* br = tree->GetBranch(branch->GetName());
             if (br) {
                if (br->IsA() != branch->IsA()) {
-                  Error(
-                     "CopyAddresses",
-                     "Branch kind mismatch between input tree '%s' and output tree '%s' for branch '%s': '%s' vs '%s'",
-                     tree->GetName(), br->GetTree()->GetName(), br->GetName(), branch->IsA()->GetName(),
-                     br->IsA()->GetName());
+                  TBranchElement *be = dynamic_cast<TBranchElement *>(branch);
+                  if (be && br->IsA() == TBranch::Class()) {
+                     auto offset = be->fReadActionSequence->fActions.front().fConfiguration->fOffset;
+                     tree->SetBranchAddressImp(br, be->GetAddress() + offset, nullptr);
+                  } else {
+                     Error("CopyAddresses",
+                           "Branch kind mismatch between input tree '%s' and output tree '%s' for branch '%s': '%s' vs '%s'",
+                           tree->GetName(), br->GetTree()->GetName(), br->GetName(), branch->IsA()->GetName(),
+                           br->IsA()->GetName());
+                  }
+               } else {
+                  tree->SetBranchAddressImp(br, branch->GetAddress(), nullptr);
                }
                // The copy does not own any object allocated by SetAddress().
                // FIXME: We do too much here, br may not be a top-level branch.
