@@ -246,7 +246,7 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
       xxmin = x[0];
       yymin = x[1];
       zzmin = x[2];
-      zzmin = function(xx);
+      zzmin = function(x);
    }
    xx[0] = xxmin;
    xx[1] = yymin;
