@@ -14,6 +14,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 
+#include <vector>
 #include <memory> // shared_ptr
 #include <Fit/ParameterSettings.h>
 #include <Math/IFunctionfwd.h>
