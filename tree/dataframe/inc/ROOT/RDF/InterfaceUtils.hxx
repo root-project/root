@@ -533,7 +533,7 @@ struct RMinReturnType<T, true> {
 template <typename R, typename F, typename... Args>
 std::function<R(unsigned int, Args...)> AddSlotParameter(F &f, TypeList<Args...>)
 {
-   return [f](unsigned int, Args... a) -> R { return f(a...); };
+   return [f](unsigned int, Args... a) mutable -> R { return f(a...); };
 }
 
 template <typename ColType, typename... Rest>
