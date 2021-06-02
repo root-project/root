@@ -111,13 +111,13 @@ enum ERealStyle {         // Style of real
 ////////////////////////////////////////////////////////////////////////////////
 
 struct RealInfo_t {
-   ERealStyle fStyle;     // Style of real
-   Int_t fFracDigits;     // Number of fractional digits
-   Int_t fFracBase;       // Base of fractional digits
-   Int_t fIntNum;         // Integer number
-   Int_t fFracNum;        // Fraction
-   Int_t fExpoNum;        // Exponent
-   Int_t fSign;           // Sign
+   ERealStyle fStyle{kRSInt};  // Style of real
+   Int_t fFracDigits{0};       // Number of fractional digits
+   Int_t fFracBase{0};         // Base of fractional digits
+   Int_t fIntNum{0};           // Integer number
+   Int_t fFracNum{0};          // Fraction
+   Int_t fExpoNum{0};          // Exponent
+   Int_t fSign{0};             // Sign
 };
 
 ////////////////////////////////////////////////////////////////////////////////
