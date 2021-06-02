@@ -5486,6 +5486,9 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       del = kTRUE;
    }
 
+   ET.scanlines.next = nullptr; // to avoid compiler warnings
+   ET.ymin = ET.ymax = 0;       // to avoid compiler warnings
+
    ptsOut = firstPoint;
    width = firstWidth;
    CreateETandAET(count, ptsIn, &ET, &AET, pETEs, &SLLBlock);
@@ -5585,6 +5588,9 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    ScanLineListBlock SLLBlock;     // header for ScanLineList
 
    pETEs = new EdgeTableEntry[count];
+
+   ET.scanlines.next = nullptr; // to avoid compiler warnings
+   ET.ymin = ET.ymax = 0;       // to avoid compiler warnings
 
    ptsOut = firstPoint;
    width = firstWidth;
