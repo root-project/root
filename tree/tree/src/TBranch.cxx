@@ -1428,7 +1428,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket *&basket, Long64_t &first,
 /// still fail, depending on the contents of the individual TBaskets loaded.
 Bool_t TBranch::SupportsBulkRead() const {
    return (fNleaves == 1) &&
-          (static_cast<TLeaf*>(fLeaves.UncheckedAt(0))->GetDeserializeType() != TLeaf::DeserializeType::kDestructive);
+          (static_cast<TLeaf*>(fLeaves.UncheckedAt(0))->GetDeserializeType() != TLeaf::DeserializeType::kExternal);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1456,7 +1456,9 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
    // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) return -1;
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
-   if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {return -1;}
+   if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kExternal)) {
+      return -1;
+   }
 
    // Remember which entry we are reading.
    fReadEntry = entry;
@@ -1534,7 +1536,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
    if (R__unlikely(fNleaves != 1)) { return -1; }
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
    if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
-      Error("GetEntriesSerialized", "Encountered a branch with destructive deserialization; failing.\n");
+      Error("GetEntriesSerialized", "Encountered a branch with destructive deserialization; failing.");
       return -1;
    }
 

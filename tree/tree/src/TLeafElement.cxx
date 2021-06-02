@@ -116,13 +116,13 @@ TLeafElement::GetDeserializeType() const
    TClass *clptr = nullptr;
    EDataType type = EDataType::kOther_t;
    if (fBranch->GetExpectedType(clptr, type)) {  // Returns non-zero in case of failure
-      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-      return DeserializeType::kDestructive;  // I don't know what it is, but we aren't going to use bulk IO.
+      fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+      return DeserializeType::kExternal;  // I don't know what it is, but we aren't going to use bulk IO.
    }
    fDataTypeCache.store(type, std::memory_order_release);
    if (clptr) {  // Something that requires a dictionary to read; skip.
-      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-      return DeserializeType::kDestructive;
+      fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+      return DeserializeType::kExternal;
    }
 
    if ((fType == EDataType::kChar_t) || fType == EDataType::kUChar_t || type == EDataType::kBool_t) {
