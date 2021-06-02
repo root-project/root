@@ -224,3 +224,4 @@ ROOTTEST_ADD_TEST(test_progressiveCSV
 
 # need the '+' to autogenerate required dictionaries with ACLiC
 ROOTTEST_ADD_TEST(test_nested_rvec_snapshot MACRO test_nested_rvec_snapshot.C+)
+ROOTTEST_ADD_TEST(test_snapshot_copyaddresses MACRO test_snapshot_copyaddresses.C+)
