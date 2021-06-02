@@ -56,6 +56,19 @@ TEST(RDFHelpers, PassAsVec)
    EXPECT_EQ(1u, *df.Filter(PassAsVec<2, int>(TwoOnesDeque), {"one", "_1"}).Count());
 }
 
+
+// this tests https://github.com/root-project/root/issues/8276
+TEST(RDFHelpers, ReturnPassAsVec)
+{
+   auto returnPassAsVecLambda = [] {
+      double f = 42;
+      auto fn = [f](std::vector<int>) { return f; };
+      return PassAsVec<1, int>(fn);
+   };
+   auto fn = returnPassAsVecLambda();
+   EXPECT_EQ(fn(0), 42.);
+}
+
 class SaveGraphTestHelper {
 private:
    RDataFrame rd1;

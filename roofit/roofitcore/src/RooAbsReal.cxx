@@ -701,15 +701,13 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
 
     RooArgSet* intParams = integral->getVariables() ;
 
-    RooNameSet cacheParamNames ;
-    cacheParamNames.setNameList(cacheParamsStr) ;
-    RooArgSet* cacheParams = cacheParamNames.select(*intParams) ;
+    RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
 
-    if (cacheParams->getSize()>0) {
-      cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
-		     << "-dim value cache for integral over " << iset2 << " as a function of " << *cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  endl ;
-      string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams->contentsString().c_str()) ;
-      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,*cacheParams) ;
+    if (cacheParams.getSize()>0) {
+      cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.getSize()
+		     << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  endl ;
+      string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
+      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,cacheParams) ;
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(*integral) ;
       cachedIntegral->setCacheSource(kTRUE) ;
@@ -720,7 +718,6 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
       integral = cachedIntegral ;
     }
 
-    delete cacheParams ;
     delete intParams ;
   }
 
@@ -1372,7 +1369,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
   pc.defineObject("compSet","SelectCompSet",0) ;
   pc.defineString("compSpec","SelectCompSpec",0) ;
-  pc.defineSet("projObs","ProjectedObservables",0,0) ;
+  pc.defineObject("projObs","ProjectedObservables",0,0) ;
   pc.defineObject("yvar","YVar",0,0) ;
   pc.defineObject("zvar","ZVar",0,0) ;
   pc.defineMutex("SelectCompSet","SelectCompSpec") ;
@@ -1397,7 +1394,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     vars.add(*zvar) ;
   }
 
-  RooArgSet* projObs = pc.getSet("projObs") ;
+  auto projObs = static_cast<RooArgSet*>(pc.getObject("projObs")) ;
   RooArgSet* intObs = 0 ;
 
   Bool_t doScaling = pc.getInt("scaling") ;

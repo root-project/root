@@ -741,16 +741,12 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
 
   // If cache has been sterilized, revive this slot
   if (cache==0) {
-    RooArgSet* vars = getParameters(RooArgSet()) ;
-    RooArgSet* nset = _intCacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
-    RooArgSet* iset = _intCacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;
+    std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
+    RooArgSet nset = _intCacheMgr.selectFromSet1(*vars, code-1) ;
+    RooArgSet iset = _intCacheMgr.selectFromSet2(*vars, code-1) ;
 
-    Int_t code2(-1) ;
-    getCompIntList(nset,iset,compIntList,code2,rangeName) ;
-
-    delete vars ;
-    delete nset ;
-    delete iset ;
+    int code2 = -1 ;
+    getCompIntList(&nset,&iset,compIntList,code2,rangeName) ;
   } else {
 
     compIntList = &cache->_intList ;

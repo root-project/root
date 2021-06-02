@@ -110,15 +110,15 @@ void TText::Copy(TObject &obj) const
    ((TText&)obj).fY = fY;
    TNamed::Copy(obj);
    TAttText::Copy(((TText&)obj));
-   if (((TText&)obj).fWcsTitle != NULL) {
-      if (fWcsTitle != NULL) {
-         *reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(&fWcsTitle);
+   if (((TText&)obj).fWcsTitle) {
+      if (fWcsTitle) {
+         *reinterpret_cast<std::wstring*>(((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(fWcsTitle);
       } else {
-        delete reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle);
-        ((TText&)obj).fWcsTitle = NULL;
+        delete reinterpret_cast<std::wstring*>(((TText&)obj).fWcsTitle);
+        ((TText&)obj).fWcsTitle = nullptr;
       }
    } else {
-      if (fWcsTitle != NULL) {
+      if (fWcsTitle) {
          ((TText&)(obj)).fWcsTitle = new std::wstring(*reinterpret_cast<const std::wstring*>(fWcsTitle));
       }
    }
@@ -129,10 +129,10 @@ void TText::Copy(TObject &obj) const
 
 const void *TText::GetWcsTitle(void) const
 {
-   if (fWcsTitle != NULL) {
+   if (fWcsTitle) {
       return reinterpret_cast<std::wstring *>(fWcsTitle)->c_str();
    } else {
-      return NULL;
+      return nullptr;
    }
 }
 

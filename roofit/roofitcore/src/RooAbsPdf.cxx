@@ -191,6 +191,8 @@ called for each data event.
 
 using namespace std;
 
+using RooHelpers::getColonSeparatedNameString;
+
 ClassImp(RooAbsPdf);
 
 ClassImp(RooAbsPdf::GenSpec);
@@ -583,15 +585,13 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
       std::unique_ptr<RooArgSet> intParams{normInt->getVariables()} ;
 
-      RooNameSet cacheParamNames ;
-      cacheParamNames.setNameList(cacheParamsStr) ;
-      std::unique_ptr<RooArgSet> cacheParams{cacheParamNames.select(*intParams)} ;
+      RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
 
-      if (cacheParams->getSize()>0) {
-	cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
-			 << "-dim value cache for integral over " << depList << " as a function of " << *cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
-	string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams->contentsString().c_str()) ;
-	RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*cacheParams) ;
+      if (!cacheParams.empty()) {
+	cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.getSize()
+			 << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
+	string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams.contentsString().c_str()) ;
+	RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,cacheParams) ;
 	cachedIntegral->setInterpolationOrder(2) ;
 	cachedIntegral->addOwnedComponents(*normInt) ;
 	cachedIntegral->setCacheSource(kTRUE) ;
@@ -991,7 +991,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,0) ;
   pc.defineInt("cloneData","CloneData", 0, 2);
-  pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
 //  pc.defineInt("constrAll","Constrained",0,0) ;
@@ -1098,7 +1098,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   RooArgSet projDeps ;
-  RooArgSet* tmp = pc.getSet("projDepSet") ;
+  auto tmp = static_cast<RooArgSet*>(pc.getObject("projDepSet")) ;
   if (tmp) {
     projDeps.add(*tmp) ;
   }
@@ -1159,11 +1159,11 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
 
-  if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()))) {
+  if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str()))) {
 
      // retrieve from cache
      const RooArgSet *constr =
-        _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()));
+        _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str()));
      coutI(Minimization) << "createNLL picked up cached constraints from workspace with " << constr->getSize()
                          << " entries" << endl;
      allConstraints.add(*constr);
@@ -1183,10 +1183,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
      if (_myws) {
         // cout << "createNLL: creating cache for allconstraints=" << allConstraints << endl ;
         coutI(Minimization) << "createNLL: caching constraint set under name "
-                            << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content())
+                            << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str())
                             << " with " << allConstraints.getSize() << " entries" << endl;
         _myws->defineSetInternal(
-           Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()), allConstraints);
+           Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str()), allConstraints);
      }
   }
 
