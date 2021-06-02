@@ -749,3 +749,10 @@ TEST(RDataFrameInterface, StressShortSyntaxForCollectionSizes)
    auto c = df.Count().GetValue();
    EXPECT_EQ(c, 42ull);
 }
+
+TEST(RDataFrameInterface, MutableForeach)
+{
+   int i = 0;
+   ROOT::RDataFrame(10).Foreach([&](ULong64_t) mutable { ++i; }, {"rdfentry_"});
+   EXPECT_EQ(i, 10);
+}
