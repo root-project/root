@@ -52,7 +52,7 @@ struct ZmqLingeringSocketPtrDeleter {
              || e.num() == EINVAL || e.num() == ETERM || e.num() == ENOTSOCK  // not recoverable from here
              ) {
            std::cerr << "ERROR in ZeroMQSvc::socket: " << e.what() << " (errno: " << e.num() << ")\n";
-           throw e;
+           throw;
          }
          std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZmqLingeringSocketPtrDeleter: call interrupted (errno: " << e.num() << ")\n";
        }
@@ -80,7 +80,7 @@ auto retry_send(zmq::socket_t& socket, int max_tries, args_t ...args) -> decltyp
           || e.num() != EINTR  // only recoverable error
           ) {
 //        std::cerr << "ERROR in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
-        throw e;
+        throw;
       }
       std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << ")\n";
     }
@@ -99,7 +99,7 @@ auto retry_recv(zmq::socket_t& socket, int max_tries, args_t ...args) -> decltyp
           || e.num() != EINTR  // only recoverable error
           ) {
 //        std::cerr << "ERROR in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
-        throw e;
+        throw;
       }
       std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << ")\n";
     }
