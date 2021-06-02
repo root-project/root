@@ -112,9 +112,9 @@ void TText::Copy(TObject &obj) const
    TAttText::Copy(((TText&)obj));
    if (((TText&)obj).fWcsTitle != NULL) {
       if (fWcsTitle != NULL) {
-         *reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(&fWcsTitle);
+         *reinterpret_cast<std::wstring*>(((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(fWcsTitle);
       } else {
-        delete reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle);
+        delete reinterpret_cast<std::wstring*>(((TText&)obj).fWcsTitle);
         ((TText&)obj).fWcsTitle = NULL;
       }
    } else {
