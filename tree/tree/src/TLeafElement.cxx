@@ -135,14 +135,16 @@ TLeafElement::GetDeserializeType() const
       return DeserializeType::kInPlace;
    }
 
-   fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-   return DeserializeType::kDestructive;
+   fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+   return DeserializeType::kExternal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
 Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 {
+   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
+      GetDeserializeType(); // Set fDataTypeCache if need be.
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
    return input_buf.ByteSwapBuffer(fLen*N, type);
 }
