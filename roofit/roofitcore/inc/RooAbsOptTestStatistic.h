@@ -45,7 +45,7 @@ public:
   const RooAbsData& data() const ;
 
 
-  const char* cacheUniqueSuffix() const override { return Form("_%zx", (size_t)_dataClone) ; }
+  const char* cacheUniqueSuffix() const override;
 
   // Override this to be always true to force calculation of likelihood without parameters
   Bool_t isDerived() const override { return kTRUE ; }
