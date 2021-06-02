@@ -531,9 +531,9 @@
 /*---- misc ------------------------------------------------------------------*/
 
 #ifdef R__GNU
-#   define SafeDelete(p) { if (p) { delete p; p = 0; } }
+#   define SafeDelete(p) { if (p) { delete p; p = nullptr; } }
 #else
-#   define SafeDelete(p) { delete p; p = 0; }
+#   define SafeDelete(p) { delete p; p = nullptr; }
 #endif
 
 #ifdef __FAST_MATH__
