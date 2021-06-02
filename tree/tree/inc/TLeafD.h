@@ -50,7 +50,7 @@ public:
    virtual void    SetAddress(void *add=0);
 
    virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() == DeserializeType::kInPlace; }
+   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() > DeserializeType::kExternal; }
 
    ClassDef(TLeafD,1);  //A TLeaf for a 64 bit floating point data type.
 };
