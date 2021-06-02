@@ -57,14 +57,16 @@ using ROOT::RDF::RDataSource;
 class RLoopManager : public RNodeBase {
    using ColumnNames_t = std::vector<std::string>;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
+
    using Callback_t = std::function<void(unsigned int)>;
-   class TCallback {
+
+   class RCallback {
       const Callback_t fFun;
       const ULong64_t fEveryN;
       std::vector<ULong64_t> fCounters;
 
    public:
-      TCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
+      RCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
          : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
       {
       }
@@ -80,12 +82,12 @@ class RLoopManager : public RNodeBase {
       }
    };
 
-   class TOneTimeCallback {
+   class ROneTimeCallback {
       const Callback_t fFun;
       std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
 
    public:
-      TOneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
+      ROneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
 
       void operator()(unsigned int slot)
       {
@@ -114,8 +116,8 @@ class RLoopManager : public RNodeBase {
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
-   std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
-   std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
+   std::vector<RCallback> fCallbacks;                      ///< Registered callbacks
+   std::vector<ROneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
    std::vector<Callback_t> fDataBlockCallbacks; ///< Registered callbacks to call at the beginning of each "data block"
    RDFInternal::RDataBlockNotifier fDataBlockNotifier;
    unsigned int fNRuns{0}; ///< Number of event loops run
