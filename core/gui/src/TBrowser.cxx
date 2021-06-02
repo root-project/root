@@ -20,6 +20,15 @@ will place all browsable objects in a new list and draws the
 contents of the selected class in the icon-box. And so on....
 
 \image html base_browser.png
+
+\since **ROOT version 6.24/00**
+
+TBrowser invokes by default the Web-based %ROOT file browser RBrowser
+To change this behaviour, and invoke the standard TBrowser, one should put
+the following directive in the `.rootrc` file:
+```
+Browser.Name:      TRootBrowser
+```
 */
 
 #include "TBrowser.h"

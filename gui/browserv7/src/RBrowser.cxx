@@ -120,6 +120,13 @@ public:
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
 \brief Web-based %ROOT file browser
+
+RBrowser requires one of the supported web browsers:
+  - Google Chrome (preferable)
+  - Mozilla Firefox
+
+\image html v7_rbrowser.png
+
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////
