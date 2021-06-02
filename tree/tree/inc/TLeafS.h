@@ -50,7 +50,6 @@ public:
    virtual void    ReadBasket(TBuffer &b);
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() > DeserializeType::kExternal; }
    virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
    virtual void    SetAddress(void *add=0);
    virtual void    SetMaximum(Short_t max) { fMaximum = max; }

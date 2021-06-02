@@ -1594,10 +1594,6 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
    //Info("GetEntriesSerialized", "Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
 
-   if (R__unlikely(!leaf->ReadBasketSerialized(user_buf, N))) {
-      Error("GetEntriesSerialized", "Leaf failed to read.\n");
-      return -1;
-   }
    user_buf.SetBufferOffset(bufbegin);
 
    if (count_buf) {
