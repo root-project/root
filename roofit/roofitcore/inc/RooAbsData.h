@@ -22,6 +22,7 @@
 #include "RooArgList.h"
 #include "RooSpan.h"
 #include "RooNameReg.h"
+#include "RooFit/UniqueId.h"
 
 #include "TNamed.h"
 
@@ -301,6 +302,11 @@ public:
   void SetName(const char* name) override ;
   void SetNameTitle(const char *name, const char *title) override ;
 
+  /// Returns a unique ID that is different for every instantiated RooAbsData object.
+  /// This ID can be used whether two RooAbsData are the same object, which is safer
+  /// than memory address comparisons that might result in false positives when
+  /// memory is reused.
+  RooFit::UniqueId<RooAbsData> const& uniqueId() const { return _uniqueId; }
 
 protected:
 
@@ -355,6 +361,8 @@ protected:
 
 private:
   void copyGlobalObservables(const RooAbsData& other);
+
+  const RooFit::UniqueId<RooAbsData> _uniqueId; ///<!
 
    ClassDefOverride(RooAbsData, 6) // Abstract data collection
 };
