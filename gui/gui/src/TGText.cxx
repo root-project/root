@@ -187,7 +187,7 @@ char *TGTextLine::GetText(ULong_t pos, ULong_t length)
       return 0;
    }
 
-   if (pos + length > (ULong_t)fString) {
+   if (pos + length > fLength) {
       length = fLength - pos;
    }
 
