@@ -77,6 +77,10 @@ public:
 
    // Should both be protected (waiting for cint)
    virtual ~TMapFile();
+   void *operator new(size_t sz) { return TObject::operator new(sz); }
+   void *operator new[](size_t sz) { return TObject::operator new[](sz); }
+   void *operator new(size_t sz, void *vp) { return TObject::operator new(sz, vp); }
+   void *operator new[](size_t sz, void *vp) { return TObject::operator new[](sz, vp); }
    void     operator delete(void *vp);
 
    void          Browse(TBrowser *b);
