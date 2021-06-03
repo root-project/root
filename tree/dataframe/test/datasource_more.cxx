@@ -58,7 +58,7 @@ TEST(RArraysDS, SnapshotAndShortSyntaxForCollectionSizes)
    TFile f(fname);
    auto *t = f.Get<TTree>("t");
    auto *blist = t->GetListOfBranches();
-   EXPECT_EQ(blist->GetEntries(), 1u);
+   EXPECT_EQ(blist->GetEntriesUnsafe(), 1u);
    EXPECT_STREQ(blist->At(0)->GetName(), "var");
    f.Close(); // Windows does not allow deletion/recreation of files that are still in use.
 
