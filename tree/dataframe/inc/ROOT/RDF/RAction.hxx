@@ -164,6 +164,8 @@ private:
 
    // this one is always available but has lower precedence thanks to `...`
    void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
+
+   std::function<void(unsigned int)> GetDataBlockCallback() final { return fHelper.GetDataBlockCallback(); }
 };
 
 } // namespace RDF

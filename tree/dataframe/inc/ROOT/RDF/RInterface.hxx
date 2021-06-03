@@ -2586,6 +2586,7 @@ private:
       auto action =
          RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{}, fDefines);
       fLoopManager->Book(action.get());
+      fLoopManager->AddDataBlockCallback(action->GetDataBlockCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
 

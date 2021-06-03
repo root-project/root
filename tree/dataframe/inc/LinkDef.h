@@ -56,6 +56,7 @@
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TStatistic>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile2D>+;
+#pragma link C++ class TNotifyLink<ROOT::Internal::RDF::RDataBlockFlag>;
 
 #endif
 

@@ -46,6 +46,7 @@
 #include "ROOT/RDF/RMergeableValue.hxx"
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -79,6 +80,8 @@ public:
    {
       throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
    }
+
+   virtual std::function<void(unsigned int)> GetDataBlockCallback() { return {}; }
 };
 
 } // namespace RDF
