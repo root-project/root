@@ -11,7 +11,6 @@
 
 #sofie is built only if protobuf is found
 
-include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS "onnx_proto3")
 set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRUE)
 
@@ -38,3 +37,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     TMVA
    NO_CXXMODULE
 )
+
+target_include_directories(ROOTTMVASofie PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+target_include_directories(ROOTTMVASofie PUBLIC
+  ${Protobuf_INCLUDE_DIRS})
+set_target_properties(ROOTTMVASofie PROPERTIES
+  POSITION_INDEPENDENT_CODE TRUE)
