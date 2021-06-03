@@ -52,7 +52,7 @@ RRootDS::RRootDS(std::string_view treeName, std::string_view fileNameGlob)
    fModelChain.Add(fFileNameGlob.c_str());
 
    const TObjArray &lob = *fModelChain.GetListOfBranches();
-   fListOfBranches.resize(lob.GetEntries());
+   fListOfBranches.resize(lob.GetEntriesUnsafe());
 
    TIterCategory<TObjArray> iter(&lob);
    std::transform(iter.Begin(), iter.End(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
