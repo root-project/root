@@ -170,16 +170,6 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
 
-   // force segV. to allow backtracing the error with gdb
-   if (gDebug == (Long_t)gVirtualX) {
-      gSystem->ProcessEvents();
-      ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
-               (UInt_t)err->resourceid, err->request_code);
-      int *kil = (int*)1;
-      delete kil;
-      return 0;
-   }
-
    if (!err->resourceid) return 0;
 
    TObject *w = (TObject *)gROOT->ProcessLineFast(Form("gClient ? gClient->GetWindowById(%lu) : 0",
