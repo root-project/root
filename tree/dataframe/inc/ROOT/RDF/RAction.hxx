@@ -153,6 +153,8 @@ public:
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
+   std::function<void(unsigned int)> GetDataBlockCallback() final { return fHelper.GetDataBlockCallback(); }
+
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
    // the template parameter is required to defer instantiation of the method to SFINAE time
