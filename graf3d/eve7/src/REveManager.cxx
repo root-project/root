@@ -18,6 +18,7 @@
 #include <ROOT/REveClient.hxx>
 #include <ROOT/REveGeomViewer.hxx>
 #include <ROOT/RWebWindow.hxx>
+#include <ROOT/RFileDialog.hxx>
 #include <ROOT/RLogger.hxx>
 
 #include "TGeoManager.h"
@@ -787,8 +788,8 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       return;
    }
    // client status data
-   if (arg.compare("__REveDoneChanges") == 0) {
-
+   if (arg.compare("__REveDoneChanges") == 0)
+   {
       std::unique_lock<std::mutex> lock(fServerState.fMutex);
 
       for (auto &conn : fConnList) {
@@ -804,6 +805,11 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       }
 
       return;
+   }
+   else if (arg.compare( 0, 10, "FILEDIALOG") == 0)
+   {
+       RFileDialog::Embedded(fWebWindow, arg);
+       return;
    }
 
    nlohmann::json cj = nlohmann::json::parse(arg);
