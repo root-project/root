@@ -61,5 +61,5 @@ matrix:
 #    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
 #    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
 #  fi
-
+  
 on_failure: echo "Showing current directory contents" && ls -la
