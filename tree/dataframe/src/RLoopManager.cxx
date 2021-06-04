@@ -294,6 +294,21 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
 
 } // anonymous namespace
 
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+
+/// A RAII object that calls RLoopManager::CleanUpTask at destruction
+struct RCallCleanUpTask {
+   RLoopManager &fLoopManager;
+   unsigned int fArg;
+   ~RCallCleanUpTask() { fLoopManager.CleanUpTask(fArg); }
+};
+
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the branches names, including the ones of the friend trees
 ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates)
@@ -359,6 +374,7 @@ void RLoopManager::RunEmptySourceMT()
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       RSlotRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
+      RCallCleanUpTask cleanup{*this, slot};
       InitNodeSlots(nullptr, slot);
       R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
@@ -366,12 +382,10 @@ void RLoopManager::RunEmptySourceMT()
             RunAndCheckFilters(slot, currEntry);
          }
       } catch (...) {
-         CleanUpTask(slot);
          // Error might throw in experiment frameworks like CMSSW
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(slot);
    };
 
    ROOT::TThreadExecutor pool;
@@ -385,16 +399,15 @@ void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
+   RCallCleanUpTask cleanup{*this, 0u};
    try {
       for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
          RunAndCheckFilters(0, currEntry);
       }
    } catch (...) {
-      CleanUpTask(0u);
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   CleanUpTask(0u);
 }
 
 /// Run event loop over one or multiple ROOT files, in parallel.
@@ -410,6 +423,7 @@ void RLoopManager::RunTreeProcessorMT()
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
       RSlotRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
+      RCallCleanUpTask cleanup{*this, slot};
       InitNodeSlots(&r, slot);
       R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
@@ -421,11 +435,9 @@ void RLoopManager::RunTreeProcessorMT()
             RunAndCheckFilters(slot, count++);
          }
       } catch (...) {
-         CleanUpTask(slot);
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(slot);
    });
 #endif // no-op otherwise (will not be called)
 }
@@ -436,6 +448,7 @@ void RLoopManager::RunTreeReader()
    TTreeReader r(fTree.get(), fTree->GetEntryList());
    if (0 == fTree->GetEntriesFast())
       return;
+   RCallCleanUpTask cleanup{*this, 0u};
    InitNodeSlots(&r, 0);
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
 
@@ -446,7 +459,6 @@ void RLoopManager::RunTreeReader()
          RunAndCheckFilters(0, r.GetCurrentEntry());
       }
    } catch (...) {
-      CleanUpTask(0u);
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
@@ -455,7 +467,6 @@ void RLoopManager::RunTreeReader()
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(r.GetEntryStatus()));
    }
-   CleanUpTask(0u);
 }
 
 /// Run event loop over data accessed through a DataSource, in sequence.
@@ -467,6 +478,7 @@ void RLoopManager::RunDataSource()
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
       fDataSource->InitSlot(0u, 0ull);
+      RCallCleanUpTask cleanup{*this, 0u};
       try {
          for (const auto &range : ranges) {
             const auto start = range.first;
@@ -479,11 +491,9 @@ void RLoopManager::RunDataSource()
             }
          }
       } catch (...) {
-         CleanUpTask(0u);
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(0u);
       fDataSource->FinaliseSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
@@ -503,6 +513,7 @@ void RLoopManager::RunDataSourceMT()
       RSlotRAII slotRAII(slotStack);
       const auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
+      RCallCleanUpTask cleanup{*this, slot};
       fDataSource->InitSlot(slot, range.first);
       const auto start = range.first;
       const auto end = range.second;
@@ -514,11 +525,9 @@ void RLoopManager::RunDataSourceMT()
             }
          }
       } catch (...) {
-         CleanUpTask(slot);
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);
    };
 
