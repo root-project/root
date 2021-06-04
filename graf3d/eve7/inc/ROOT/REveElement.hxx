@@ -18,7 +18,11 @@
 
 #include <memory>
 
+#ifdef NLOHMANN_JSON_PROVIDES_FWD_HPP
 #include <nlohmann/json_fwd.hpp>
+#else
+#include <nlohmann/json.hpp>
+#endif
 
 class TGeoMatrix;
 
