@@ -101,15 +101,15 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 /// \param nL Exponent of power-law tail on the left.
 /// \param alphaR Location of transition to a power law on the right, in standard deviations away from the mean.
 /// \param nR Exponent of power-law tail on the right.
-RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
+RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigmaLR,
                                RooAbsReal &alphaL, RooAbsReal &nL, RooAbsReal &alphaR, RooAbsReal &nR)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
-     sigmaL_("sigmaL", "Left Sigma", this, sigma), sigmaR_("sigmaR", "Right Sigma", this, sigma),
+     sigmaL_("sigmaL", "Left Sigma", this, sigmaLR), sigmaR_("sigmaR", "Right Sigma", this, sigmaLR),
      alphaL_{"alphaL", "Left Alpha", this, alphaL}, nL_{"nL", "Left Order", this, nL},
      alphaR_{std::make_unique<RooRealProxy>("alphaR", "Right Alpha", this, alphaR)},
      nR_{std::make_unique<RooRealProxy>("nR", "Right Order", this, nR)}
 {
-   RooHelpers::checkRangeOfParameters(this, {&sigma}, 0.0);
+   RooHelpers::checkRangeOfParameters(this, {&sigmaLR}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&alphaL}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&alphaR}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&nL}, 0.0);
@@ -128,10 +128,10 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 /// \param alpha Location of transition to a power law, in standard deviations away from the mean.
 /// \param n Exponent of power-law tail.
 /// \param doubleSided Whether the tail is only on one side or on both sides
-RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigma,
+RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigmaLR,
                                RooAbsReal &alpha, RooAbsReal &n, bool doubleSided)
    : RooAbsPdf(name, title), x_("x", "Dependent", this, x), x0_("x0", "X0", this, x0),
-     sigmaL_{"sigmaL", "Left Sigma", this, sigma}, sigmaR_{"sigmaR", "Right Sigma", this, sigma},
+     sigmaL_{"sigmaL", "Left Sigma", this, sigmaLR}, sigmaR_{"sigmaR", "Right Sigma", this, sigmaLR},
      alphaL_{"alphaL", "Left Alpha", this, alpha},
      nL_{"nL", "Left Order", this, n}
 {
@@ -140,7 +140,7 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
       nR_ = std::make_unique<RooRealProxy>("nR", "Right Order", this, n);
    }
 
-   RooHelpers::checkRangeOfParameters(this, {&sigma}, 0.0);
+   RooHelpers::checkRangeOfParameters(this, {&sigmaLR}, 0.0);
    RooHelpers::checkRangeOfParameters(this, {&n}, 0.0);
    if (doubleSided) {
       RooHelpers::checkRangeOfParameters(this, {&alpha}, 0.0);
