@@ -1,4 +1,4 @@
-find_package(ZeroMQ REQUIRED)
+#find_package(ZeroMQ REQUIRED)
 
 ROOT_ADD_GTEST(test_RooFitZMQ test_ZMQ.cpp LIBRARIES
         RooFitZMQ ${ZeroMQ_LIBRARY}

@@ -3,7 +3,9 @@
 # @author Patrick Bos, NL eScience Center
 ############################################################################
 
-find_package(ZeroMQ REQUIRED)
+#if(NOT ZeroMQ_FOUND)
+#    find_package(ZeroMQ REQUIRED)
+#endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitZMQ
     HEADERS
@@ -18,20 +20,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitZMQ
         src/ZeroMQPoller.cpp
         src/functions.cpp
         src/ppoll.cpp
-        src/libzmq/clock.cpp
-        src/libzmq/err.cpp
-        src/libzmq/polling_util.cpp
     DICTIONARY_OPTIONS
-        -I${ZeroMQ_INCLUDE_DIR}
+#        -I${ZeroMQ_INCLUDE_DIR}
         -writeEmptyRootPCM
     DEPENDENCIES
         Core # TVersionCheck, RegisterModule, these are always called from G__RooFitZMQ.cxx.o
 #        RIO  # TBufferFile, TBufferIO
     LIBRARIES
-        ${ZeroMQ_LIBRARY}
+#        ${ZeroMQ_LIBRARY}
+        ZeroMQ
     )
 
-target_include_directories(RooFitZMQ PUBLIC ${ZeroMQ_INCLUDE_DIR})
+
+target_link_libraries(RooFitZMQ PRIVATE ZeroMQ)
+target_include_directories(RooFitZMQ PUBLIC $<BUILD_INTERFACE:${ZeroMQ_INCLUDE_DIR}>)
+target_include_directories(RooFitZMQ PUBLIC $<BUILD_INTERFACE:${ZeroMQ_SOURCE_DIR}>)
+target_include_directories(RooFitZMQ PUBLIC $<BUILD_INTERFACE:${ZeroMQ_BUILD_DIR}>)
 
 if(testing)
     ROOT_ADD_TEST_SUBDIRECTORY(test)

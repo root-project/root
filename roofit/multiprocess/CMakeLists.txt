@@ -3,7 +3,7 @@
 # @author Patrick Bos, Netherlands eScience Center
 ############################################################################
 
-FIND_PACKAGE(ZeroMQ REQUIRED)
+#FIND_PACKAGE(ZeroMQ REQUIRED)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMultiProcess
     HEADERS

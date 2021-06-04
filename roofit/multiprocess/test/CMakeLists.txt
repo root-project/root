@@ -1,6 +1,6 @@
 # @author Patrick Bos, NL eScience Center, 2019
 
-find_package(ZeroMQ REQUIRED)
+#find_package(ZeroMQ REQUIRED)
 
 add_library(RooFit_multiprocess_testing_utils INTERFACE)
 target_link_libraries(RooFit_multiprocess_testing_utils INTERFACE RooFitCore RooBatchCompute)

@@ -14,12 +14,13 @@
 
 #include <unistd.h>  // pselect
 #include <time.h>  // timespec
+#include <poll.h>
 
-#include "libzmq/likely.hpp"  // unlikely
-#include "libzmq/clock.hpp"   // zmq::clock_t
-#include "libzmq/err.hpp"  // zmq_assert
-#include "libzmq/polling_util.hpp"  // zmq::optimized_fd_set_t, zmq::compute_timeout, zmq::timeout_t
-#include "libzmq/fd.hpp"  // zmq::fd_t
+#include "likely.hpp"  // unlikely
+#include "clock.hpp"   // zmq::clock_t
+#include "err.hpp"  // zmq_assert
+#include "polling_util.hpp"  // zmq::optimized_fd_set_t, zmq::compute_timeout, zmq::timeout_t
+#include "fd.hpp"  // zmq::fd_t
 
 #include <RooFit_ZMQ/ppoll.h>
 

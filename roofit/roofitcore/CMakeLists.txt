@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-find_package(ZeroMQ REQUIRED)
+#find_package(ZeroMQ REQUIRED)
 
 # this should really be used as a dependency for the RooFitCore target, but since the ROOT macros do some custom variable mangling, instead of just using target_link_libraries, defining this library as INTERFACE gives an error like this: https://gitlab.kitware.com/cmake/cmake/issues/18194 when trying to call get_property(dep_include_dirs... in RootNewMacros.cmake.
 #add_library(ZeroMQ INTERFACE)
