@@ -20,5 +20,5 @@ public:
    void Exec(unsigned int slot, unsigned int /*slot2*/) { fMaxSlots[slot] = std::max(fMaxSlots[slot], slot); }
    void Finalize() { *fMaxSlot = *std::max_element(fMaxSlots.begin(), fMaxSlots.end()); }
 
-   std::string GetActionName() { return "MaxSlot"; }   
+   std::string GetActionName() { return "MaxSlot"; }
 };
