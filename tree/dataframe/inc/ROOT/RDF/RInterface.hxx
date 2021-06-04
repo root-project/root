@@ -2426,7 +2426,12 @@ public:
       auto hPtr = std::make_shared<Helper>(std::forward<Helper>(helper));
       auto resPtr = hPtr->GetResultPtr();
 
-      return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr, columns.size());
+      if (std::is_same<FirstColumn, RDFDetail::RInferredType>::value && columns.empty()) {
+         return CallCreateActionWithoutColsIfPossible<Helper>(resPtr, hPtr, TTraits::TypeList<FirstColumn>{});
+      } else {
+         return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr,
+                                                                                          columns.size());
+      }
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2727,6 +2732,25 @@ private:
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnListWithoutSizeColumns));
 
       return cachedRDF;
+   }
+
+   template <typename Helper, typename ActionResultType>
+   auto CallCreateActionWithoutColsIfPossible(const std::shared_ptr<ActionResultType> &resPtr,
+                                              const std::shared_ptr<Helper> &hPtr,
+                                              TTraits::TypeList<RDFDetail::RInferredType>)
+      -> decltype(hPtr->Exec(0u), RResultPtr<ActionResultType>{})
+   {
+      return CreateAction<RDFInternal::ActionTags::Book>(/*columns=*/{}, resPtr, hPtr, 0u);
+   }
+
+   template <typename Helper, typename ActionResultType, typename... Others>
+   RResultPtr<ActionResultType>
+   CallCreateActionWithoutColsIfPossible(const std::shared_ptr<ActionResultType> &, Others...)
+   {
+      throw std::logic_error(std::string("An action was booked with no input columns, but the action requires "
+                                         "columns! The action helper type was ") +
+                             typeid(Helper).name());
+      return {};
    }
 
 protected:
