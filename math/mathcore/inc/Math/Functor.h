@@ -178,10 +178,12 @@ public:
    ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
-#if defined(_MSC_VER) && (_MSC_VER < 1929) && !defined(__CLING__)
-   // FIXME: this is a work-around for a compiler error with VS 2019 (16.4.3)
-   // try to remove this #ifdef when updating Visual Studio
-   auto Clone() const { return Copy(); }
+#ifdef _MSC_VER
+   // FIXME: this is a work-around for a a problem with how the compiler
+   // generates the covariant virtual function "Clone". To address the
+   // issue just use the original return type of the virtual base class.
+   // Try to remove this #ifdef when updating Visual Studio
+   typename ParentFunctor::ImplBase* Clone() const { return Copy(); }
 #else
    BaseFunc * Clone() const { return Copy(); }
 #endif
