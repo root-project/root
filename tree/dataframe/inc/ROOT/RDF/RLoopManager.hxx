@@ -95,6 +95,8 @@ class RLoopManager : public RNodeBase {
       }
    };
 
+   friend struct RCallCleanUpTask;
+
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
    std::vector<RDFInternal::RActionBase *> fRunActions;    ///< Non-owning pointers to actions already run
    std::vector<RFilterBase *> fBookedFilters;
