@@ -43,6 +43,11 @@ if (imt)
    ROOT_ADD_GTEST(dataframe_concurrency dataframe_concurrency.cxx LIBRARIES ROOTDataFrame)
 endif()
 
+if (MSVC)
+  # TODO: remove this workaround for MS compiler bug #1441527 once fixed
+  string(REPLACE "-Od -Z7" "-O2" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  string(REPLACE "-Z7" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+endif()
 ROOT_ADD_GTEST(datasource_more datasource_more.cxx LIBRARIES ROOTDataFrame)
 # TODO: RRootDS is in the process of being hidden from users, and it's currently deprecated.
 # Re-enable these tests after moving RRootDS to the internal namespace
