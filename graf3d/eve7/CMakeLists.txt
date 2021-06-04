@@ -135,6 +135,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
 
 if(builtin_nlohmannjson)
    target_include_directories(ROOTEve PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
+   add_definitions(-DHAVE_JSON_FWD_HPP=1)
 else()
    target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
 endif()
