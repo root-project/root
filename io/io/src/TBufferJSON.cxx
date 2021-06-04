@@ -4030,10 +4030,9 @@ void TBufferJSON::JsonWriteConstChar(const char *value, Int_t len, const char * 
          len = strlen(value);
 
       for (Int_t n = 0; n < len; n++) {
-         char c = value[n];
-         if (c == 0)
-            break;
+         unsigned char c = value[n];
          switch (c) {
+         case 0: n = len; break;
          case '\n': fValue.Append("\\n"); break;
          case '\t': fValue.Append("\\t"); break;
          case '\"': fValue.Append("\\\""); break;
@@ -4043,10 +4042,26 @@ void TBufferJSON::JsonWriteConstChar(const char *value, Int_t len, const char * 
          case '\r': fValue.Append("\\r"); break;
          case '/': fValue.Append("\\/"); break;
          default:
-            if ((c > 31) && (c < 127))
-               fValue.Append(c);
-            else
+            if (c < 31) {
                fValue.Append(TString::Format("\\u%04x", (unsigned)c));
+            } else if (c < 0x80) {
+               fValue.Append(c);
+            } else if ((n < len - 1) && ((c & 0xe0) == 0xc0) && ((value[n+1] & 0xc0) == 0x80)) {
+               unsigned code = ((unsigned)value[n+1] & 0x3f) | (((unsigned) c & 0x1f) << 6);
+               fValue.Append(TString::Format("\\u%04x", code));
+               n++;
+            } else if ((n < len - 2) &&  ((c & 0xf0) == 0xe0) && ((value[n+1] & 0xc0) == 0x80) && ((value[n+2] & 0xc0) == 0x80)) {
+               unsigned code = ((unsigned)value[n+2] & 0x3f) | (((unsigned) value[n+1] & 0x3f) << 6) | (((unsigned) c & 0x0f) << 12);
+               fValue.Append(TString::Format("\\u%04x", code));
+               n+=2;
+            } else if ((n < len - 3) && ((c & 0xf8) == 0xf0) && ((value[n+1] & 0xc0) == 0x80) && ((value[n+2] & 0xc0) == 0x80) && ((value[n+3] & 0xc0) == 0x80)) {
+               unsigned code = ((unsigned)value[n+3] & 0x3f) | (((unsigned) value[n+2] & 0x3f) << 6) | (((unsigned) value[n+1] & 0x3f) << 12) | (((unsigned) c & 0x07) << 18);
+               // TODO: no idea how to add codes which are higher then 0xFFFF
+               fValue.Append(TString::Format("\\u%04x\\u%04x", code & 0xffff, code >> 16));
+               n+=3;
+            } else {
+               fValue.Append(TString::Format("\\u%04x", (unsigned)c));
+            }
          }
       }
 
