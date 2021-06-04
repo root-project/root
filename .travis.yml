@@ -1,44 +1,24 @@
 sudo: false
-dist: trusty
 
 language: cpp
-compiler: gcc
+os: linux
+compiler: clang
 
-# caching of the build dir (which is large, so large timeout (3 minute default))
 cache:
-  timeout: 1000
-  directories:
-  - ../root_build  # the build directory
-  - ../deps        # cmake
-  - files          # testing downloads some files to the git repo dir
+  ccache: true
 
-# following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
-# updated with https://stackoverflow.com/a/49412522/1199693 for trusty
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - ninja-build
-      - gcc-7
-      - g++-7
-      - libxpm-dev
-      - libgsl0-dev
-      - libfftw3-dev
-      - libafterimage-dev
-      - libftgl-dev
-      - libgl2ps-dev
-      - libglew-dev
-      - liblzma-dev
+# Do not build our sync branch.
+branches:
+  only:
+    - master
+    - Travis*
 
-# following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
-before_install:
-  - |
-    DEPS_DIR="${TRAVIS_BUILD_DIR}/../deps"
-    mkdir -p "${DEPS_DIR}"
+# Without the top-level env, no job will be allowed to fail.
+env:
 
-install:
-  - mkdir -p "${TRAVIS_BUILD_DIR}"/../root_build
+matrix:
+  # Abort all builds on a single failing matrix entry.
+  fast_finish: true
 
   include:
     - env: TOOL=clang-format
@@ -72,14 +52,14 @@ install:
     - env: TOOL=clang-format
 
 
-# This will never run since there is not a clang-tidy only TOOL
-#  elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
-#    # We need to ignore our vendor drops.
-#    FILES_REGEX='^.*root\/(?!interpreter\/|core\/clib)'
-#
-#    echo "Running clang-tidy-3.9 against branch $TRAVIS_BRANCH."
-#    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
-#    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
-#  fi
-  
+  # This will never run since there is not a clang-tidy only TOOL
+  #  elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
+  #    # We need to ignore our vendor drops.
+  #    FILES_REGEX='^.*root\/(?!interpreter\/|core\/clib)'
+  #
+  #    echo "Running clang-tidy-3.9 against branch $TRAVIS_BRANCH."
+  #    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
+  #    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
+  #  fi
+
 on_failure: echo "Showing current directory contents" && ls -la
