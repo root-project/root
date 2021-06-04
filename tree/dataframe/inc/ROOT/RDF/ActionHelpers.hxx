@@ -96,6 +96,41 @@ using namespace ROOT::Detail::RDF;
 
 using Hist_t = ::TH1D;
 
+class RBranchSet {
+   std::vector<TBranch *> fBranches;
+   std::vector<std::string> fNames;
+
+public:
+   TBranch *Get(const std::string &name) const
+   {
+      auto it = std::find(fNames.begin(), fNames.end(), name);
+      if (it == fNames.end())
+         return nullptr;
+      return fBranches[std::distance(fNames.begin(), it)];
+   }
+
+   void Insert(const std::string &name, TBranch *address)
+   {
+      if (address == nullptr) {
+         throw std::logic_error("Trying to insert a null branch address.");
+      }
+      if (std::find(fBranches.begin(), fBranches.end(), address) != fBranches.end()) {
+         throw std::logic_error("Trying to insert a branch address that's already present.");
+      }
+      if (std::find(fNames.begin(), fNames.end(), name) != fNames.end()) {
+         throw std::logic_error("Trying to insert a branch name that's already present.");
+      }
+      fNames.emplace_back(name);
+      fBranches.emplace_back(address);
+   }
+
+   void Clear()
+   {
+      fBranches.clear();
+      fNames.clear();
+   }
+};
+
 /// The container type for each thread's partial result in an action helper
 // We have to avoid to instantiate std::vector<bool> as that makes it impossible to return a reference to one of
 // the thread-local results. In addition, a common definition for the type of the container makes it easy to swap
@@ -1117,9 +1152,28 @@ void *GetData(T & /*v*/)
 
 template <typename T>
 void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &name, TBranch *&branch, void *&branchAddress, T *address)
+                       const std::string &name, TBranch *&branch, void *&branchAddress, T *address,
+                       RBranchSet &outputBranches)
 {
-   auto *inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+   static TClassRef TBOClRef("TBranchObject");
+   // FIXME we should be using FindBranch as a fallback if GetBranch fails
+   TBranch *inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+
+   auto *outputBranch = outputBranches.Get(name);
+   if (outputBranch) {
+      // the output branch was already created, we just need to (re)set its address
+      if (inputBranch && inputBranch->IsA() == TBOClRef) {
+         outputBranch->SetAddress(reinterpret_cast<T **>(inputBranch->GetAddress()));
+      } else if (outputBranch->IsA() != TBranch::Class()) {
+         branchAddress = address;
+         outputBranch->SetAddress(&branchAddress);
+      } else {
+         outputBranch->SetAddress(address);
+         branchAddress = address;
+      }
+      return;
+   }
+
    if (inputBranch) {
       // Respect the original bufsize and splitlevel arguments
       // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
@@ -1128,16 +1182,17 @@ void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, cons
       const auto bufSize = inputBranch->GetBasketSize();
       const auto splitLevel = inputBranch->GetSplitLevel();
 
-      static TClassRef tbo_cl("TBranchObject");
-      if (inputBranch->IsA() == tbo_cl) {
+      if (inputBranch->IsA() == TBOClRef) {
          // Need to pass a pointer to pointer
-         outputTree.Branch(name.c_str(), (T **)inputBranch->GetAddress(), bufSize, splitLevel);
+         outputBranch =
+            outputTree.Branch(name.c_str(), reinterpret_cast<T **>(inputBranch->GetAddress()), bufSize, splitLevel);
       } else {
-         outputTree.Branch(name.c_str(), address, bufSize, splitLevel);
+         outputBranch = outputTree.Branch(name.c_str(), address, bufSize, splitLevel);
       }
    } else {
-      outputTree.Branch(name.c_str(), address);
+      outputBranch = outputTree.Branch(name.c_str(), address);
    }
+   outputBranches.Insert(name, outputBranch);
    // This is not an array branch, so we don't need to register the address of the input branch.
    branch = nullptr;
    branchAddress = nullptr;
@@ -1154,7 +1209,8 @@ void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, cons
 /// `branchAddress`) so we can intercept changes in the address of the input branch and tell the output branch.
 template <typename T>
 void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab)
+                       const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab,
+                       RBranchSet &outputBranches)
 {
    TBranch *inputBranch = nullptr;
    if (inputTree) {
@@ -1164,6 +1220,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
          inputBranch = inputTree->FindBranch(inName.c_str());
       }
    }
+   auto *outputBranch = outputBranches.Get(outName);
    const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
    const auto mustWriteStdVec = !inputBranch || isTClonesArray ||
                                 ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
@@ -1180,7 +1237,13 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
                  "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
-      outputTree.Branch(outName.c_str(), &(ab->fData));
+      if (outputBranch) {
+         branchAddress = &(ab->fData);
+         outputBranch->SetAddress(&branchAddress);
+      } else {
+         auto *b = outputTree.Branch(outName.c_str(), &(ab->fData));
+         outputBranches.Insert(outName, b);
+      }
       return;
    }
 
@@ -1197,13 +1260,22 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
    /// so we need to explicitly manage storage of the data that the tree needs to Fill branches with.
    auto dataPtr = UpdateBoolArrayIfBool(boolArrays, *ab, outName);
 
-   auto *const outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
-   outputBranch->SetTitle(inputBranch->GetTitle());
-
-   // Record the branch ptr and the address associated to it if this is not a bool array
-   if (!std::is_same<bool, T>::value) {
-      branch = outputBranch;
-      branchAddress = GetData(*ab);
+   if (outputBranch) {
+      if (outputBranch->IsA() != TBranch::Class()) {
+         branchAddress = dataPtr;
+         outputBranch->SetAddress(&branchAddress);
+      } else {
+         outputBranch->SetAddress(dataPtr);
+      }
+   } else {
+      outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
+      outputBranch->SetTitle(inputBranch->GetTitle());
+      outputBranches.Insert(outName, outputBranch);
+      // Record the branch ptr and the address associated to it if this is not a bool array
+      if (!std::is_same<bool, T>::value) {
+         branch = outputBranch;
+         branchAddress = GetData(*ab);
+      }
    }
 }
 
@@ -1238,13 +1310,15 @@ class SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
    const RSnapshotOptions fOptions;
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
-   bool fIsFirstEvent{true};
+   bool fBranchAddressesNeedReset{true};
    const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
    BoolArrayMap fBoolArrays; // Storage for C arrays of bools to be written out
-   std::vector<TBranch *> fBranches;     // Addresses of branches in output, non-null only for the ones holding C arrays
-   std::vector<void *> fBranchAddresses; // Addresses associated to output branches, non-null only for the ones holding C arrays
+   // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
+   std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
+   std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
+   RBranchSet fOutputBranches;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
@@ -1264,20 +1338,17 @@ public:
    {
       if (r)
          fInputTree = r->GetTree();
+      fBranchAddressesNeedReset = true;
    }
 
    void Exec(unsigned int /* slot */, ColTypes &... values)
    {
       using ind_t = std::index_sequence_for<ColTypes...>;
-      if (! fIsFirstEvent) {
+      if (!fBranchAddressesNeedReset) {
          UpdateCArraysPtrs(values..., ind_t{});
       } else {
          SetBranches(values..., ind_t{});
-         // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
-         // addresses of the branch values
-         if (fInputTree != nullptr)
-            fInputTree->AddClone(fOutputTree.get());
-         fIsFirstEvent = false;
+         fBranchAddressesNeedReset = false;
       }
       UpdateBoolArrays(values..., ind_t{});
       fOutputTree->Fill();
@@ -1303,10 +1374,11 @@ public:
    void SetBranches(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // create branches in output tree (and fill fBoolArrays for RVec<bool> columns)
-      int expander[] = {(SetBranchesHelper(fBoolArrays, fInputTree, *fOutputTree, fInputBranchNames[S],
-                                           fOutputBranchNames[S], fBranches[S], fBranchAddresses[S], &values),
-                         0)...,
-                        0};
+      int expander[] = {
+         (SetBranchesHelper(fBoolArrays, fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
+                            fBranches[S], fBranchAddresses[S], &values, fOutputBranches),
+          0)...,
+         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
@@ -1355,6 +1427,12 @@ public:
    }
 
    std::string GetActionName() { return "Snapshot"; }
+
+   std::function<void(unsigned int)> GetDataBlockCallback() final
+   {
+      auto callback = [this](unsigned int) mutable { fBranchAddressesNeedReset = true; };
+      return {callback};
+   }
 };
 
 /// Helper object for a multi-thread Snapshot action
@@ -1364,7 +1442,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
-   std::vector<int> fIsFirstEvent;        // vector<bool> does not allow concurrent writing of different elements
+   std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;           // name of output tree
@@ -1376,18 +1454,19 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
    // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<void *>> fBranchAddresses; 
+   std::vector<std::vector<void *>> fBranchAddresses;
+   std::vector<RBranchSet> fOutputBranches;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const RSnapshotOptions &options)
-      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
-        fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
+      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fBranchAddressesNeedReset(fNSlots, 1),
+        fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots),
-        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
-        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
+        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
+        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)), fOutputBranches(fNSlots)
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
    }
@@ -1418,15 +1497,8 @@ public:
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
-         // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
-         // addresses of the branch values. We need this in case of friend trees with different cluster granularity
-         // than the main tree.
-         // FIXME: AddClone might result in many many (safe) warnings printed by TTree::CopyAddresses, see ROOT-9487.
-         const auto friendsListPtr = fInputTrees[slot]->GetListOfFriends();
-         if (friendsListPtr && friendsListPtr->GetEntries() > 0)
-            fInputTrees[slot]->AddClone(fOutputTrees[slot].get());
       }
-      fIsFirstEvent[slot] = 1; // reset first event flag for this slot
+      fBranchAddressesNeedReset[slot] = 1; // reset first event flag for this slot
    }
 
    void FinalizeTask(unsigned int slot)
@@ -1435,16 +1507,17 @@ public:
          fOutputFiles[slot]->Write();
       // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
       fOutputTrees[slot].reset(nullptr);
+      fOutputBranches[slot].Clear();
    }
 
    void Exec(unsigned int slot, ColTypes &... values)
    {
       using ind_t = std::index_sequence_for<ColTypes...>;
-      if (!fIsFirstEvent[slot]) {
+      if (fBranchAddressesNeedReset[slot] == 0) {
          UpdateCArraysPtrs(slot, values..., ind_t{});
       } else {
          SetBranches(slot, values..., ind_t{});
-         fIsFirstEvent[slot] = 0;
+         fBranchAddressesNeedReset[slot] = 0;
       }
       UpdateBoolArrays(slot, values..., ind_t{});
       fOutputTrees[slot]->Fill();
@@ -1475,13 +1548,13 @@ public:
    void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
          // hack to call TTree::Branch on all variadic template arguments
-         int expander[] = {
-            (SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
-                               fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S], &values),
-             0)...,
-            0};
-      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-      (void)slot;     // avoid unused variable warnings in gcc6.2
+         int expander[] = {(SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot],
+                                              fInputBranchNames[S], fOutputBranchNames[S], fBranches[slot][S],
+                                              fBranchAddresses[slot][S], &values, fOutputBranches[slot]),
+                            0)...,
+                           0};
+         (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+         (void)slot;     // avoid unused variable warnings in gcc6.2
    }
 
    template <std::size_t... S>
@@ -1529,6 +1602,12 @@ public:
    }
 
    std::string GetActionName() { return "Snapshot"; }
+
+   std::function<void(unsigned int)> GetDataBlockCallback() final
+   {
+      auto callback = [this](unsigned int slot) mutable { fBranchAddressesNeedReset[slot] = 1; };
+      return {callback};
+   }
 };
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,

@@ -68,10 +68,12 @@ class RVec;
 namespace Internal {
 namespace RDF {
 class BoolArray;
+class RBranchSet;
 using BoolArrayMap = std::map<std::string, BoolArray>;
 template <typename T>
 void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &outName, TBranch *&branch, void *&branchAddress, ROOT::VecOps::RVec<T> *ab);
+                       const std::string &outName, TBranch *&branch, void *&branchAddress, ROOT::VecOps::RVec<T> *ab,
+                       RBranchSet &outputBranches);
 }
 }
 
@@ -296,13 +298,14 @@ class RVec {
    friend void ::ROOT::Internal::RDF::SetBranchesHelper<T>(ROOT::Internal::RDF::BoolArrayMap &boolArrays,
                                                            TTree *inputTree, TTree &outputTree,
                                                            const std::string &inName, const std::string &outName,
-                                                           TBranch *&branch, void *&branchAddress, RVec<T> *ab);
+                                                           TBranch *&branch, void *&branchAddress, RVec<T> *ab,
+                                                           ROOT::Internal::RDF::RBranchSet &outputBranches);
 
-   // Here we check if T is a bool. This is done in order to decide what type
-   // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
-   // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
-   // to write the data type given the shortcomings of TCollectionProxy design.
-   static constexpr const auto IsVecBool = std::is_same<bool, T>::value;
+      // Here we check if T is a bool. This is done in order to decide what type
+      // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
+      // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
+      // to write the data type given the shortcomings of TCollectionProxy design.
+      static constexpr const auto IsVecBool = std::is_same<bool, T>::value;
 public:
    using Impl_t = typename std::conditional<IsVecBool, std::vector<bool>, std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>>>::type;
    using value_type = typename Impl_t::value_type;
