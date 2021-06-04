@@ -16,17 +16,17 @@ TEST(Primitives, RBox)
    RCanvas canv;
    auto box = canv.Draw<RBox>(RPadPos(0.1_normal, 0.3_normal), RPadPos(0.3_normal,0.6_normal));
 
-   box->AttrBox().AttrBorder().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
-   box->AttrBox().AttrFill().SetColor(RColor::kBlue).SetStyle(6);
+   box->AttrBorder().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
+   box->AttrFill().SetColor(RColor::kBlue).SetStyle(6);
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(box->GetAttrBox().GetAttrBorder().GetColor(), RColor::kRed);
-   EXPECT_DOUBLE_EQ(box->GetAttrBox().GetAttrBorder().GetWidth(), 5.);
-   EXPECT_EQ(box->GetAttrBox().GetAttrBorder().GetStyle(), 7);
+   EXPECT_EQ(box->GetAttrBorder().GetColor(), RColor::kRed);
+   EXPECT_DOUBLE_EQ(box->GetAttrBorder().GetWidth(), 5.);
+   EXPECT_EQ(box->GetAttrBorder().GetStyle(), 7);
 
-   EXPECT_EQ(box->GetAttrBox().GetAttrFill().GetColor(), RColor::kBlue);
-   EXPECT_EQ(box->GetAttrBox().GetAttrFill().GetStyle(), 6);
+   EXPECT_EQ(box->GetAttrFill().GetColor(), RColor::kBlue);
+   EXPECT_EQ(box->GetAttrFill().GetStyle(), 6);
 }
 
 // Test RLine API
