@@ -30,7 +30,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     src/RModelParser_ONNX.cxx
     src/SOFIE_common.cxx
     ${PROTO_SRCS}
-
   LIBRARIES
     ${Protobuf_LIBRARIES}
   DEPENDENCIES
