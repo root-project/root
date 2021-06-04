@@ -155,7 +155,7 @@ public:
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
-           Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
+           Int_t    ResetAddress(void *add, Bool_t calledFromDestructor = kFALSE);
    virtual void     SetAddress(void *add = 0);
    virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
    virtual void     SetLeafCount(TLeaf *leaf);
