@@ -649,11 +649,10 @@ if(testing)
   endif()
 endif()
 
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-  if (${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-    message(FATAL_ERROR "Remove this condition")
-  endif()
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
   cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
+else()
+  set(PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR})
 endif()
 
 message(STATUS "ROOT Configuration \n
