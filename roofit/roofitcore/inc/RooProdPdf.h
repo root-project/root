@@ -98,6 +98,7 @@ public:
 
   RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
   
+  void writeCacheToStream(std::ostream& os, RooArgSet const* nset) const;
 
 private:
 
@@ -132,10 +133,10 @@ private:
   virtual void setCacheAndTrackHints(RooArgSet&) ;
 
   // The cache object
-  class CacheElem : public RooAbsCacheElement {
+  class CacheElem final : public RooAbsCacheElement {
   public:
     CacheElem() : _isRearranged(kFALSE) { } 
-    virtual ~CacheElem() = default;
+    ~CacheElem() override = default;
     // Payload
     RooArgList _partList ;
     RooArgList _numList ;
@@ -146,13 +147,13 @@ private:
     std::unique_ptr<RooAbsReal> _rearrangedNum{};
     std::unique_ptr<RooAbsReal> _rearrangedDen{};
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ;
-    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
-  private:
-    CacheElem(const CacheElem&) ;
+    RooArgList containedArgs(Action) override ;
+    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
+    void writeToStream(std::ostream& os) const ;
   } ;
   mutable RooObjCacheManager _cacheMgr ; // The cache manager
 
+  CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
