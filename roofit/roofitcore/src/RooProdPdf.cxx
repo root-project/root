@@ -59,6 +59,7 @@ have to appear in any specific place in the list.
 #include "RooRealIntegral.h"
 #include "RooTrace.h"
 #include "RooBatchCompute.h"
+#include "RooHelpers.h"
 #include "strtok.h"
 
 #include <cstring>
@@ -444,23 +445,25 @@ RooProdPdf::~RooProdPdf()
 }
 
 
+RooProdPdf::CacheElem* RooProdPdf::getCacheElem(RooArgSet const* nset) const {
+  int code ;
+  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, 0, &code)) ;
+
+  // If cache doesn't have our configuration, recalculate here
+  if (!cache) {
+    code = getPartIntList(nset, nullptr) ;
+    cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, 0, &code)) ;
+  }
+  return cache;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of object
 
 Double_t RooProdPdf::evaluate() const
 {
-  Int_t code ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_normSet, 0, &code) ;
-
-  // If cache doesn't have our configuration, recalculate here
-  if (!cache) {
-    code = getPartIntList(_normSet, nullptr) ;
-    cache = (CacheElem*) _cacheMgr.getObj(_normSet, 0, &code) ;
-  }
-
-
-  return calculate(*cache) ;
+  return calculate(*getCacheElem(_normSet)) ;
 }
 
 
@@ -1972,12 +1975,9 @@ void RooProdPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent
      os << indent << "RooProdPdf begin partial integral cache" << endl ;
    }
 
-   RooFIter iter = _partList.fwdIterator() ;
-   RooAbsArg* arg ;
-   TString indent2(indent) ;
-   indent2 += Form("[%d] ",curElem) ;
-   while((arg=(RooAbsArg*)iter.next())) {
-     arg->printCompactTree(os,indent2) ;
+   auto indent2 = std::string(indent) +  "[" + std::to_string(curElem) + "]";
+   for(auto const& arg : _partList) {
+     arg->printCompactTree(os,indent2.c_str()) ;
    }
 
    if (curElem==maxElem) {
@@ -2310,4 +2310,38 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/
     _cacheMgr.reset() ;
   }
   return kFALSE ;
+}
+
+void RooProdPdf::CacheElem::writeToStream(std::ostream& os) const {
+  using namespace RooHelpers;
+  os << "_partList\n";
+  os << getColonSeparatedNameString(_partList) << "\n";
+  os << "_numList\n";
+  os << getColonSeparatedNameString(_numList) << "\n";
+  os << "_denList\n";
+  os << getColonSeparatedNameString(_denList) << "\n";
+  os << "_ownedList\n";
+  os << getColonSeparatedNameString(_ownedList) << "\n";
+  os << "_normList\n";
+  for(auto const& set : _normList) {
+    os << getColonSeparatedNameString(*set) << "\n";
+  }
+  os << "_isRearranged" << "\n";
+  os << _isRearranged << "\n";
+  os << "_rearrangedNum" << "\n";
+  if(_rearrangedNum) {
+    os << getColonSeparatedNameString(*_rearrangedNum) << "\n";
+  } else {
+    os << "nullptr" << "\n";
+  }
+  os << "_rearrangedDen" << "\n";
+  if(_rearrangedDen) {
+    os << getColonSeparatedNameString(*_rearrangedDen) << "\n";
+  } else {
+    os << "nullptr" << "\n";
+  }
+}
+
+void RooProdPdf::writeCacheToStream(std::ostream& os, RooArgSet const* nset) const {
+  getCacheElem(nset)->writeToStream(os);
 }
