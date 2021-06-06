@@ -137,7 +137,7 @@ The list of pre-defined functions that can be used with the `Fit` method is the 
 -   "`landau`" Landau function with mean and sigma. This function has
 been adapted from the `CERNLIB` routine `G110 denlan` (see `TMath::Landau`).
 
-- "`gausn` Normalized form of the gaussian function with 3 parameters
+- "`gausn`" Normalized form of the gaussian function with 3 parameters
 `f(x) = p0*exp(-0.5*((x-p1)/p2)^2)/(p2 *sqrt(2PI))`
 
 
