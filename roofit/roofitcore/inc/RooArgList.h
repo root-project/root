@@ -42,17 +42,17 @@ public:
   }
 
   /// Construct from iterators.
-  /// \tparam Iterator_t An iterator pointing to RooFit objects or references thereof.
+  /// \tparam Iterator_t An iterator pointing to RooFit objects or pointers/references thereof.
   /// \param beginIt Iterator to first element to add.
-  /// \param end Iterator to end of range to be added.
+  /// \param endIt Iterator to end of range to be added.
   /// \param name Optional name of the collection.
   template<typename Iterator_t,
-      typename value_type = typename std::iterator_traits<Iterator_t>::value_type,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>,
       typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
   RooArgList(Iterator_t beginIt, Iterator_t endIt, const char* name="") :
   RooArgList(name) {
     for (auto it = beginIt; it != endIt; ++it) {
-      add(*it);
+      processArg(*it);
     }
   }
 
@@ -92,6 +92,7 @@ protected:
 
 private:
   void processArg(const RooAbsArg& arg) { add(arg); }
+  void processArg(const RooAbsArg* arg) { add(*arg); }
   void processArg(const char* name) { _name = name; }
 
   ClassDef(RooArgList,1) // Ordered list of RooAbsArg objects

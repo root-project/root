@@ -58,18 +58,18 @@ public:
     (void)dummy;
   }
 
-  /// Construct from iterators.
-  /// \tparam Iterator_t An iterator pointing to RooFit objects or references thereof.
+  /// Construct a (non-owning) RooArgSet from iterators.
+  /// \tparam Iterator_t An iterator pointing to RooFit objects or to pointers/references of those.
   /// \param beginIt Iterator to first element to add.
-  /// \param end Iterator to end of range to be added.
+  /// \param endIt Iterator to end of range to be added.
   /// \param name Optional name of the collection.
   template<typename Iterator_t,
-      typename value_type = typename std::iterator_traits<Iterator_t>::value_type,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>::type,
       typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
   RooArgSet(Iterator_t beginIt, Iterator_t endIt, const char* name="") :
   RooArgSet(name) {
     for (auto it = beginIt; it != endIt; ++it) {
-      add(*it);
+      processArg(*it);
     }
   }
 
@@ -129,6 +129,7 @@ protected:
 
 private:
   void processArg(const RooAbsArg& var) { add(var); }
+  void processArg(const RooAbsArg* var) { add(*var); }
   void processArg(const RooArgSet& set) { add(set); if (_name.Length() == 0) _name = set.GetName(); }
   void processArg(const RooArgList& list);
   void processArg(const char* name) { _name = name; }
