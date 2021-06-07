@@ -47,6 +47,9 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
    RooBatchCompute::dispatch = RooBatchCompute::dispatchCPU;
    // If cuda mode is on, copy all observable data to device memory
    if (_batchMode == -1) {
+      if (!RooBatchCompute::dispatchCUDA)
+         throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
+                                  ": Cuda implementation of the computing library is not available\n");
       RooBatchCompute::dispatch = RooBatchCompute::dispatchCUDA;
       _cudaMemDataset =
          static_cast<double *>(RooBatchCompute::dispatch->malloc(_nEvents * _dataMap.size() * sizeof(double)));
@@ -125,9 +128,10 @@ double RooFitDriver::getVal()
 
       // get an available buffer for storing the comptation results
       double *buffer;
-      if (_buffers.empty())
+      if (_buffers.empty()) {
          buffer = static_cast<double *>(RooBatchCompute::dispatch->malloc(_nEvents * sizeof(double)));
-      else {
+         buffer = static_cast<double *>(RooBatchCompute::dispatch->malloc(_nEvents * sizeof(double)));
+      } else {
          buffer = _buffers.front();
          _buffers.pop();
       }
