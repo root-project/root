@@ -77,7 +77,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   RooAbsIntegrator(function)
 {
   _useIntegrandLimits= kTRUE;
-  assert(0 != integrand() && integrand()->isValid());
+  assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
@@ -86,18 +86,18 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   _xmin.resize(_function->getDimension()) ;
   _xmax.resize(_function->getDimension()) ;
 
-  auto realBinding = dynamic_cast<const RooRealBinding*>(integrand());
+  auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
   if (realBinding) {
     _evalData.reset(new RooBatchCompute::RunContext());
     _evalDataOrig.reset(new RooBatchCompute::RunContext());
   }
 
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
-    _xmin[i]= integrand()->getMinLimit(i);
-    _xmax[i]= integrand()->getMaxLimit(i);
+    _xmin[i]= _function->getMinLimit(i);
+    _xmax[i]= _function->getMaxLimit(i);
 
     // Retrieve bin configuration from integrand
-    std::unique_ptr<list<Double_t>> tmp{ integrand()->binBoundaries(i) };
+    std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
       oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
@@ -130,23 +130,23 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
   _useIntegrandLimits= kTRUE;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
-  assert(0 != integrand() && integrand()->isValid());
+  assert(_function && _function->isValid());
   
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
 
-  auto realBinding = dynamic_cast<const RooRealBinding*>(integrand());
+  auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
   if (realBinding) {
     _evalData.reset(new RooBatchCompute::RunContext());
     _evalDataOrig.reset(new RooBatchCompute::RunContext());
   }
 
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
-    _xmin.push_back(integrand()->getMinLimit(i));
-    _xmax.push_back(integrand()->getMaxLimit(i));
+    _xmin.push_back(_function->getMinLimit(i));
+    _xmax.push_back(_function->getMaxLimit(i));
     
     // Retrieve bin configuration from integrand
-    std::unique_ptr<list<Double_t>> tmp{ integrand()->binBoundaries(i) };
+    std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
       oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
