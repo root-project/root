@@ -151,6 +151,8 @@ public:
    void   SetOverColorPixel(Pixel_t pix);
    void   SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
+   virtual void OnZeroRefCount() { delete this; }
+
    // ================================================================
 
    void MinMaxValChanged(); // *SIGNAL*
