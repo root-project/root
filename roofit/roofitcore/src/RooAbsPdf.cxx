@@ -2970,6 +2970,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 		      << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
       return frame ;
     }
+    frame->updateNormVars(*frame->getPlotVar()) ;
     nExpected = expectedEvents(frame->getNormVars()) ;
   }
 
@@ -3185,6 +3186,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 		      << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
       return frame ;
     }
+    frame->updateNormVars(*frame->getPlotVar()) ;
     nExpected = expectedEvents(frame->getNormVars()) ;
   }
 
