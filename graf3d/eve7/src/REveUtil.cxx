@@ -384,40 +384,11 @@ REveElement objects.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
-
-REveRefBackPtr::REveRefBackPtr() :
-   REveRefCnt(),
-   fBackRefs()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor. Noop, should complain if back-ref list is not empty.
 
 REveRefBackPtr::~REveRefBackPtr()
 {
    // !!! Complain if list not empty.
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor. New copy starts with zero reference count and
-/// empty back-reference list.
-
-REveRefBackPtr::REveRefBackPtr(const REveRefBackPtr&) :
-   REveRefCnt(),
-   fBackRefs()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator. Reference count and back-reference
-/// information is not assigned as these object hold pointers to a
-/// specific object.
-
-REveRefBackPtr& REveRefBackPtr::operator=(const REveRefBackPtr&)
-{
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
