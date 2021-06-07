@@ -70,6 +70,14 @@ set(sources
   X86WinEHState.cpp
   )
 
+if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
+  # note: ‘-Wmisleading-indentation’ is disabled from this point onwards, since
+  # column-tracking was disabled due to the size of the code/headers.
+  set_source_files_properties(X86ISelDAGToDAG.cpp PROPERTIES
+    COMPILE_FLAGS -Wno-misleading-indentation
+    )
+endif()
+
 add_llvm_target(X86CodeGen ${sources})
 
 add_subdirectory(AsmParser)
