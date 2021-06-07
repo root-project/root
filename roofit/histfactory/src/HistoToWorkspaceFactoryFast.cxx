@@ -64,6 +64,7 @@
 #include "TStopwatch.h"
 #include "TVectorD.h"
 #include "TMatrixDSym.h"
+#include "ROOT/RMakeUnique.hxx"
 
 // specific to this package
 #include "RooStats/HistFactory/LinInterpVar.h"
@@ -492,7 +493,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     string overallNorm_times_sigmaEpsilon = sample.GetName() + "_" + channel + "_scaleFactors";
     auto sigEps = proto->arg(sigmaEpsilon.c_str());
     assert(sigEps);
-    std::unique_ptr<RooProduct> normFactor( new RooProduct(overallNorm_times_sigmaEpsilon.c_str(), overallNorm_times_sigmaEpsilon.c_str(), RooArgList(*sigEps) ) );
+    auto normFactor = std::make_unique<RooProduct>(overallNorm_times_sigmaEpsilon.c_str(), overallNorm_times_sigmaEpsilon.c_str(), RooArgList(*sigEps));
 
     if(normList.size() > 0){
 
