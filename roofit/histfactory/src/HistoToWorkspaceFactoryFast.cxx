@@ -755,12 +755,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           name = name.substr(0, pos) + "shapes";
         }
 
-        RooArgSet terms;
-        for (auto func : thisSampleHistFuncs) {
-          terms.add(*func);
-        }
-
-        RooProduct shapeProduct(name.c_str(), name.c_str(), terms);
+        RooProduct shapeProduct(name.c_str(), name.c_str(), RooArgSet(thisSampleHistFuncs.begin(), thisSampleHistFuncs.end()));
         proto->import(shapeProduct, RecycleConflictNodes());
         shapeList.add(*proto->function(name.c_str()));
       }
