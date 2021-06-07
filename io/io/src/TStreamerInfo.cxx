@@ -1109,12 +1109,12 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
                              fClassVersion, GetName(), GetName(), GetName(), fClassVersion);
                   } else {
                      Warning("BuildCheck", "\n\
-   The StreamerInfo from %s does not match existing one (%s:%d)\n\
+   The StreamerInfo does not match existing one (%s:%d)\n\
    The existing one has not been used yet and will be discarded.\n\
    Reading should work properly, however writing object of\n\
    type %s will not work properly.  Most likely the version number\n\
    of the class was not properly updated [See ClassDef(%s,%d)].",
-                             file->GetName(), GetName(), fClassVersion, GetName(), GetName(), fClassVersion);
+                             GetName(), fClassVersion, GetName(), GetName(), fClassVersion);
                   }
                }
             }
