@@ -23,6 +23,12 @@
 #include <unordered_map>
 #include <vector>
 
+#ifndef __CUDACC__
+#define __device__
+#define __global__
+#define __host__
+#endif // #ifndef __CUDACC__
+
 /**
  * Namespace for dispatching RooFit computations to various backends.
  *
@@ -37,16 +43,15 @@
  */
 namespace RooBatchCompute {
 
-struct RunContext;
 typedef std::unordered_map<const RooAbsReal *, RooSpan<const double>> DataMap;
 typedef std::vector<const RooAbsReal *> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
 
-enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev, ChiSquare, 
-              DstD0BG, Exponential, Gaussian, Gamma, Johnson, Lognormal, NegativeLogarithms, Novosibirsk, 
-              Polynomial, ProdPdf};
+enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev,
+              ChiSquare, DstD0BG, Exponential, Gaussian, Gamma, Johnson, Landau, Lognormal,
+              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
 
 /**
  * \brief The interface which should be implemented to provide optimised computation functions for implementations of RooAbsReal::evaluateSpan().
@@ -69,14 +74,6 @@ class RooBatchComputeInterface {
     virtual void   free(void*) = 0;
     virtual void   memcpyToGPU(void* dest, const void* src, size_t) { (void)dest; (void)src; throw std::bad_function_call(); }
     virtual void   memcpyToCPU(void* dest, const void* src, size_t) { (void)dest; (void)src; throw std::bad_function_call(); }
-
-                            
-    virtual RooSpan<double> computeLandau(const RooAbsReal*, RunContext&, RooSpan<const double> , RooSpan<const double> , RooSpan<const double> ) {return{};}
-    virtual RooSpan<double> computeLognormal(const RooAbsReal*, RunContext&, RooSpan<const double> , RooSpan<const double> , RooSpan<const double> ) {return{};}
-    virtual RooSpan<double> computeNovosibirsk(const RooAbsReal*, RunContext&, RooSpan<const double> , RooSpan<const double> , RooSpan<const double> , RooSpan<const double> ) {return{};}
-    virtual RooSpan<double> computePoisson(const RooAbsReal*, RunContext&, RooSpan<const double> , RooSpan<const double> , bool , bool ) {return{};}
-    //~  virtual void computePolynomial(size_t , double * __restrict , const double * __restrict const , int , std::vector<BracketAdapterWithMask>&) {return;}
-    virtual RooSpan<double> computeVoigtian(const RooAbsReal*, RunContext&, RooSpan<const double> , RooSpan<const double> , RooSpan<const double> , RooSpan<const double> ) {return{};}    
 };
 
 /**
