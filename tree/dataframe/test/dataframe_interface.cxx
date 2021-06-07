@@ -1,3 +1,6 @@
+#include "CounterHelper.h"
+#include "MaxSlotHelper.h"
+
 #include "ROOT/RCsvDS.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RStringView.hxx"
@@ -755,4 +758,10 @@ TEST(RDataFrameInterface, MutableForeach)
    int i = 0;
    ROOT::RDataFrame(10).Foreach([&](ULong64_t) mutable { ++i; }, {"rdfentry_"});
    EXPECT_EQ(i, 10);
+}
+
+TEST(RDataFrameInterface, BookWithoutColumns)
+{
+   EXPECT_EQ(ROOT::RDataFrame(3).Book<>(CounterHelper()).GetValue(), 3);
+   EXPECT_THROW(ROOT::RDataFrame(3).Book(MaxSlotHelper(1u)), std::logic_error);
 }
