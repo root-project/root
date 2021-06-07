@@ -34,7 +34,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     ${Protobuf_LIBRARIES}
   DEPENDENCIES
     TMVA
-   NO_CXXMODULE
 )
 
 target_include_directories(ROOTTMVASofie PUBLIC
