@@ -152,6 +152,8 @@ public:
    void   SetOverColorPixel(Pixel_t pix);
    void   SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
+   virtual void OnZeroRefCount() { delete this; }
+
    // ================================================================
 
    ClassDef(REveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
