@@ -23,8 +23,8 @@ public:
    enum EFrameType_e  { kFT_None, kFT_Quad, kFT_Box };
 
 private:
-   REveFrameBox(const REveFrameBox&);            // Not implemented
-   REveFrameBox& operator=(const REveFrameBox&); // Not implemented
+   REveFrameBox(const REveFrameBox&) = delete;
+   REveFrameBox& operator=(const REveFrameBox&) = delete;
 
 protected:
    EFrameType_e fFrameType;
@@ -84,6 +84,8 @@ public:
 
    Bool_t GetDrawBack() const   { return fDrawBack; }
    void   SetDrawBack(Bool_t f) { fDrawBack = f;    }
+
+   void OnZeroRefCount() override { delete this; }
 
 };
 
