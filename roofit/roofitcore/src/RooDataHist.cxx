@@ -977,7 +977,7 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, Bool_t fast) const {
 std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast) const
 {
   // With fast, caller promises that layout of "coords" is identical to our internal "vars"
-  assert(!fast || _vars.size() == coords.size());
+  assert(!fast || coords.hasSameLayout(_vars));
 
   if (&_vars == &coords)
     fast = true;
