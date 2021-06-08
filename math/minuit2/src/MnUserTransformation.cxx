@@ -1,9 +1,10 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
+ * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -206,6 +207,44 @@ double MnUserTransformation::DInt2Ext(unsigned int i, double val) const
    }
 
    return dd;
+}
+
+
+double MnUserTransformation::D2Int2Ext(unsigned int i, double val) const {
+    // return the 2nd derivative of the int->ext transformation: d^2{Pext(i)} / d{Pint(i)}^2
+    // for the parameter i with value val
+
+    double dd = 1.;
+    if(fParameters[fExtOfInt[i]].HasLimits()) {
+        if (fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit()) {
+            dd = fDoubleLimTrafo.D2Int2Ext(val, fParameters[fExtOfInt[i]].UpperLimit(),
+                                           fParameters[fExtOfInt[i]].LowerLimit());
+        } else if (fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit()) {
+            dd = fUpperLimTrafo.D2Int2Ext(val, fParameters[fExtOfInt[i]].UpperLimit());
+        } else {
+            dd = fLowerLimTrafo.D2Int2Ext(val, fParameters[fExtOfInt[i]].LowerLimit());
+        }
+    }
+
+    return dd;
+}
+
+double MnUserTransformation::GStepInt2Ext(unsigned int i, double val) const {
+    // return the conversion factor of the int->ext transformation for the step size
+    // for the parameter i with value val
+
+    double dd = 1.;
+    if(fParameters[fExtOfInt[i]].HasLimits()) {
+        if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit()) {
+            dd = fDoubleLimTrafo.GStepInt2Ext(val, fParameters[fExtOfInt[i]].UpperLimit(), fParameters[fExtOfInt[i]].LowerLimit());
+        } else if(fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit()) {
+            dd = fUpperLimTrafo.GStepInt2Ext(val, fParameters[fExtOfInt[i]].UpperLimit());
+        } else {
+            dd = fLowerLimTrafo.GStepInt2Ext(val, fParameters[fExtOfInt[i]].LowerLimit());
+        }
+    }
+
+    return dd;
 }
 
 /*
