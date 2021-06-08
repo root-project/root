@@ -1630,7 +1630,9 @@ void TApplication::Run(Bool_t retrn)
    gROOTMutex->UnLock();
 
    gSystem->Run();
+   gROOTMutex->Lock();
    fIsRunning = kFALSE;
+   gROOTMutex->UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
