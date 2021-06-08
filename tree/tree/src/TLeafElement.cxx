@@ -110,7 +110,7 @@ TLeafElement::~TLeafElement()
 TLeaf::DeserializeType
 TLeafElement::GetDeserializeType() const
 {
-   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
+   if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
       return fDeserializeTypeCache;
 
    TClass *clptr = nullptr;
@@ -143,7 +143,7 @@ TLeafElement::GetDeserializeType() const
 /// Deserialize N events from an input buffer.
 Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 {
-   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
+   if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
       GetDeserializeType(); // Set fDataTypeCache if need be.
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
    return input_buf.ByteSwapBuffer(fLen*N, type);
