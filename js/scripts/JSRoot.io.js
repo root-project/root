@@ -1561,8 +1561,13 @@ JSROOT.define(['rawinflate'], () => {
          return null;
       }
 
-      // for each entry in streamer info produce member function
+      // special handling for TStyle which has duplicated member name fLineStyle
+      if ((s_i.fName == "TStyle") && s_i.fElements)
+         s_i.fElements.arr.forEach(elem => {
+            if (elem.fName == "fLineStyle") elem.fName = "fLineStyles"; // like in ROOT JSON now
+         });
 
+      // for each entry in streamer info produce member function
       if (s_i.fElements)
          for (let j = 0; j < s_i.fElements.arr.length; ++j)
             streamer.push(jsrio.createMember(s_i.fElements.arr[j], this));

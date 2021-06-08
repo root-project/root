@@ -215,6 +215,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           line_style = this.v7EvalAttr(prefix + "style", 1);
 
       this.createAttLine({ color: line_color, width: line_width, style: line_style });
+
+      if (prefix == "border_") {
+         this.lineatt.rx = this.v7EvalAttr(prefix + "rx", 0);
+         this.lineatt.ry = this.v7EvalAttr(prefix + "ry", 0);
+      }
    }
 
     /** @summary Create this.markeratt object based on v7 attributes
@@ -1517,10 +1522,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
          let rect = this.getPadPainter().getPadRect();
-         this.fX1NDC = this.v7EvalLength("margin_left", rect.width, JSROOT.settings.FrameNDC.fX1NDC, "margin_all") / rect.width;
-         this.fY1NDC = this.v7EvalLength("margin_bottom", rect.height, JSROOT.settings.FrameNDC.fY1NDC, "margin_all") / rect.height;
-         this.fX2NDC = 1 - this.v7EvalLength("margin_right", rect.width, 1-JSROOT.settings.FrameNDC.fX2NDC, "margin_all") / rect.width;
-         this.fY2NDC = 1 - this.v7EvalLength("margin_top", rect.height, 1-JSROOT.settings.FrameNDC.fY2NDC, "margin_all") / rect.height;
+         this.fX1NDC = this.v7EvalLength("margins_left", rect.width, JSROOT.settings.FrameNDC.fX1NDC, "margins_all") / rect.width;
+         this.fY1NDC = this.v7EvalLength("margins_bottom", rect.height, JSROOT.settings.FrameNDC.fY1NDC, "margins_all") / rect.height;
+         this.fX2NDC = 1 - this.v7EvalLength("margins_right", rect.width, 1-JSROOT.settings.FrameNDC.fX2NDC, "margins_all") / rect.width;
+         this.fY2NDC = 1 - this.v7EvalLength("margins_top", rect.height, 1-JSROOT.settings.FrameNDC.fY2NDC, "margins_all") / rect.height;
       }
 
       if (!this.fillatt)
@@ -1890,10 +1895,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RFramePainter.prototype.sizeChanged = function() {
 
       let changes = {};
-      this.v7AttrChange(changes, "margin_left", this.fX1NDC);
-      this.v7AttrChange(changes, "margin_bottom", this.fY1NDC);
-      this.v7AttrChange(changes, "margin_right", 1 - this.fX2NDC);
-      this.v7AttrChange(changes, "margin_top", 1 - this.fY2NDC);
+      this.v7AttrChange(changes, "margins_left", this.fX1NDC);
+      this.v7AttrChange(changes, "margins_bottom", this.fY1NDC);
+      this.v7AttrChange(changes, "margins_right", 1 - this.fX2NDC);
+      this.v7AttrChange(changes, "margins_top", 1 - this.fY2NDC);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
       this.redrawPad();
@@ -2000,7 +2005,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // first update all attributes from objects
       this.updateAttributes();
 
-      let rect = pp ? pp.getPadRect() : { width: 10, height: 10},
+      let rect = pp ? pp.getPadRect() : { width: 10, height: 10 },
           lm = Math.round(rect.width * this.fX1NDC),
           w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
           tm = Math.round(rect.height * (1 - this.fY2NDC)),
@@ -2066,6 +2071,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .attr("y", 0)
               .attr("width", w)
               .attr("height", h)
+              .attr("rx", this.lineatt.rx || null)
+              .attr("ry", this.lineatt.ry || null)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
@@ -4655,6 +4662,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           line_width   = this.v7EvalAttr("border_width", 1),
           line_style   = this.v7EvalAttr("border_style", 1),
           line_color   = this.v7EvalColor("border_color", "black"),
+          border_rx    = this.v7EvalAttr("border_rx", 0),
+          border_ry    = this.v7EvalAttr("border_ry", 0),
           fill_color   = this.v7EvalColor("fill_color", "white"),
           fill_style   = this.v7EvalAttr("fill_style", 1);
 
@@ -4679,6 +4688,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  .attr("width", pave_width)
                  .attr("y", 0)
                  .attr("height", pave_height)
+                 .attr("rx", border_rx || null)
+                 .attr("ry", border_ry || null)
                  .style("stroke", line_color)
                  .attr("stroke-width", line_width)
                  .style("stroke-dasharray", jsrp.root_line_styles[line_style])
@@ -4844,7 +4855,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.fContour && (this.fContour.length > 1) ? this.fContour : null;
       },
 
-      DeleteContour: function() {
+      deleteContour: function() {
          delete this.fContour;
       },
 
@@ -4866,7 +4877,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return color.toString();
       },
 
-      CreatePaletteColors: function(len) {
+      createPaletteColors: function(len) {
          let arr = [], indx = 0;
 
          while (arr.length < len) {
@@ -4915,7 +4926,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return JSROOT.v7.extractRColor(next.fColor);
       },
 
-
+      /** @summary set full z scale range, used in zooming */
+      setFullRange: function(min, max) {
+          this.full_min = min;
+          this.full_max = max;
+      },
 
       createContour: function(logz, nlevels, zmin, zmax, zminpositive) {
          this.fContour = [];
@@ -4951,7 +4966,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          if (!this.palette || (this.palette.length != nlevels))
-            this.palette = this.CreatePaletteColors(nlevels);
+            this.palette = this.createPaletteColors(nlevels);
       }
 
    });
@@ -4999,7 +5014,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!framep)
          return console.log('no frame painter - no palette');
 
-      let zmin         = contour[0],
+      let gmin         = palette.full_min,
+          gmax         = palette.full_max,
+          zmin         = contour[0],
           zmax         = contour[contour.length-1],
           rect         = framep.getFrameRect(),
           fx           = rect.x,
@@ -5050,7 +5067,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           .style("stroke", "black")
           .attr("fill", "none");
 
-      framep.z_handle.configureAxis("zaxis", zmin, zmax, zmin, zmax, true, [palette_height, 0], -palette_height, { reverse: false });
+      if ((gmin === undefined) || (gmax === undefined)) { gmin = zmin; gmax = zmax; }
+
+      framep.z_handle.configureAxis("zaxis", gmin, gmax, zmin, zmax, true, [palette_height, 0], -palette_height, { reverse: false });
 
       for (let i=0;i<contour.length-1;++i) {
          let z0 = framep.z_handle.gr(contour[i]),
