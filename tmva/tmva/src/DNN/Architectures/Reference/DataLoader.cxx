@@ -128,7 +128,7 @@ void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &m
    Event *event = nullptr;
 
    Int_t m = matrix.GetNrows();
-   Int_t n = event->GetNVariables();
+   Int_t n = matrix.GetNcols();
 
    // Copy input variables.
 
