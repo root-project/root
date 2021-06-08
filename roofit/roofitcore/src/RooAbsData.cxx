@@ -2429,6 +2429,7 @@ void RooAbsData::RecursiveRemove(TObject *obj)
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the global observables stored in this data. A snapshot of the
 /// observables will be saved.
@@ -2444,4 +2445,21 @@ void RooAbsData::setGlobalObservables(RooArgSet const& globalObservables) {
     if(auto lval = dynamic_cast<RooAbsRealLValue*>(arg)) lval->setConstant(true);
     if(auto lval = dynamic_cast<RooAbsCategoryLValue*>(arg)) lval->setConstant(true);
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return sum of squared weights of this data.
+
+double RooAbsData::sumEntriesW2() const {
+  const RooSpan<const double> eventWeights = getWeightBatch(0, numEntries(), /*sumW2=*/true);
+  if (eventWeights.empty()) {
+    return numEntries() * weightSquared();
+  }
+
+  ROOT::Math::KahanSum<double, 4u> kahanWeight;
+  for (std::size_t i = 0; i < eventWeights.size(); ++i) {
+    kahanWeight.AddIndexed(eventWeights[i], i);
+  }
+  return kahanWeight.Sum();
 }
