@@ -12,7 +12,7 @@
 #include "ROOT/RDrawable.hxx"
 
 #include "ROOT/RDrawableRequest.hxx"
-#include "ROOT/RAttrLine.hxx"
+#include "ROOT/RAttrBorder.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrMargins.hxx"
 #include "ROOT/RAttrAxis.hxx"
@@ -145,8 +145,8 @@ public:
 
 private:
    RAttrMargins fAttrMargins{this, "margins"};    ///<! frame margins relative to pad
-   RAttrLine fAttrBorder{this, "border"};         ///<! line attributes for border
-   RAttrFill fAttrFill{this, "fill"};             ///<! fill attributes for the frame
+   RAttrBorder fAttrBorder{this, "border"};       ///<! frame border attributes
+   RAttrFill fAttrFill{this, "fill"};             ///<! frame fill attributes
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
    RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
    RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
@@ -200,8 +200,8 @@ public:
    const RAttrMargins &AttrMargins() const { return fAttrMargins; }
    RAttrMargins &AttrMargins() { return fAttrMargins; }
 
-   const RAttrLine &AttrBorder() const { return fAttrBorder; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
+   const RAttrBorder &AttrBorder() const { return fAttrBorder; }
+   RAttrBorder &AttrBorder() { return fAttrBorder; }
 
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
