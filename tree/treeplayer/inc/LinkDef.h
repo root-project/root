@@ -30,6 +30,7 @@
 #pragma link C++ class TSimpleAnalysis+;
 #ifndef _MSC_VER
 #pragma link C++ class TMPWorkerTree+;
+#pragma link C++ class ROOT::TTreeProcessorMP-;
 #endif
 #ifdef R__USE_IMT
 #pragma link C++ class ROOT::TTreeProcessorMT-;
