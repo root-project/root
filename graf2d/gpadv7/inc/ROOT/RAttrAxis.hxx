@@ -113,8 +113,7 @@ class RAttrAxis : public RAttrBase {
       fTimeFormat.Clear();
    }
 
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
+   const RAttrLine &AttrLine() const { return fAttrLine; }
    RAttrLine &AttrLine() { return fAttrLine; }
 
    RAttrAxis &SetEndingSize(const RPadLength &sz) { fEndingSize = sz; return *this; }

@@ -47,6 +47,10 @@ class RAttrText : public RAttrBase {
    RAttrText &SetAlign(int align) { fAlign = align; return *this; }
    int GetAlign() const { return fAlign; }
 
+   ///The color of the text.
+   RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
+   RColor GetColor() const { return fColor; }
+
    ///Set text font by id as usually handled in the ROOT, set number between 1 and 15
    RAttrText &SetFont(int font)
    {
@@ -108,11 +112,6 @@ class RAttrText : public RAttrBase {
       return *this;
    }
    std::string GetFontWeight() const { return fFontWeight; }
-
-
-   ///The color of the text.
-   RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
 
 };
 

@@ -55,8 +55,7 @@ public:
    const RPadPos& GetPos() const { return fPos; }
    const RPadLength& GetLength() const { return fLength; }
 
-   const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
-   RAxisDrawableBase &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
+   const RAttrAxis &AttrAxis() const { return fAttrAxis; }
    RAttrAxis &AttrAxis() { return fAttrAxis; }
 };
 
