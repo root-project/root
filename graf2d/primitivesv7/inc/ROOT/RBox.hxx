@@ -11,7 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrFill.hxx>
-#include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrBorder.hxx>
 #include <ROOT/RPadPos.hxx>
 
 #include <initializer_list>
@@ -31,7 +31,7 @@ namespace Experimental {
 class RBox : public RDrawable {
 
    RPadPos fP1, fP2;                                   ///< box corners coordinates
-   RAttrLine fAttrBorder{this, "border"};              ///<! box border attributes
+   RAttrBorder fAttrBorder{this, "border"};            ///<! box border attributes
    RAttrFill fAttrFill{this, "fill"};                  ///<! box fill attributes
    RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
    RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
@@ -64,8 +64,8 @@ public:
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
 
-   const RAttrLine &AttrBorder() const { return fAttrBorder; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
+   const RAttrBorder &AttrBorder() const { return fAttrBorder; }
+   RAttrBorder &AttrBorder() { return fAttrBorder; }
 
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }

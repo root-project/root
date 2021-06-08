@@ -79,6 +79,7 @@
 
 #pragma link C++ class ROOT::Experimental::RAttrFill+;
 #pragma link C++ class ROOT::Experimental::RAttrLine+;
+#pragma link C++ class ROOT::Experimental::RAttrBorder+;
 #pragma link C++ class ROOT::Experimental::RAttrMarker+;
 #pragma link C++ class ROOT::Experimental::RAttrText+;
 #pragma link C++ class ROOT::Experimental::RAttrAxis+;
