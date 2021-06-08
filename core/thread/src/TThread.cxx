@@ -1204,7 +1204,7 @@ TThreadTimer::TThreadTimer(Long_t ms) : TTimer(ms, kTRUE)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Periodically execute the TThread::XAxtion() method in the main thread.
+/// Periodically execute the TThread::XAction() method in the main thread.
 
 Bool_t TThreadTimer::Notify()
 {
