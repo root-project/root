@@ -41,10 +41,10 @@ void box()
    box3->AttrFill().SetColor(RColor::kBlue);
 
    auto box4 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.7_normal), RPadPos(0.9_normal,0.9_normal));
-   box4->AttrBorder().SetWidth(3);
+   box4->AttrBorder().SetWidth(4);
 
    auto box5 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.1_normal), RPadPos(0.9_normal,0.3_normal));
-   box5->AttrBorder().SetWidth(3);
+   box5->AttrBorder().SetRx(10).SetRy(10).SetWidth(2);
 
    canvas->Show();
 }
