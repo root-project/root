@@ -245,12 +245,6 @@ TApplication::~TApplication()
    SafeDelete(fAppImp);
 }
 
-Bool_t TApplication::IsRunning() const
-{
-   R__LOCKGUARD(gROOTMutex);
-   return fIsRunning;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method. This method should be called from static library
 /// initializers if the library needs the low level graphics system.
@@ -1625,14 +1619,10 @@ void TApplication::Run(Bool_t retrn)
 {
    SetReturnFromRun(retrn);
 
-   gROOTMutex->Lock();
    fIsRunning = kTRUE;
-   gROOTMutex->UnLock();
 
    gSystem->Run();
-   gROOTMutex->Lock();
    fIsRunning = kFALSE;
-   gROOTMutex->UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

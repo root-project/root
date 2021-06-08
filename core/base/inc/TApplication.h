@@ -58,7 +58,7 @@ private:
    Int_t              fArgc;            //Number of com   mand line arguments
    char             **fArgv;            //Command line arguments
    TApplicationImp   *fAppImp;          //!Window system specific application implementation
-   Bool_t             fIsRunning;       //True when in event loop (Run() has been called)
+   std::atomic<bool>  fIsRunning;       //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;   //When true return from Run()
    Bool_t             fNoLog;           //Do not process logon and logoff macros
    Bool_t             fNoLogo;          //Do not show splash screen and welcome message
@@ -145,7 +145,7 @@ public:
 
    TApplication   *GetAppRemote() const { return fAppRemote; }
 
-   Bool_t          IsRunning() const;
+   Bool_t          IsRunning() const { return fIsRunning; }
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
