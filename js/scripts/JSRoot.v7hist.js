@@ -602,6 +602,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
       }
 
+      palette.setFullRange(main.zmin, main.zmax);
       palette.createContour(main.logz, nlevels, zmin, zmax, zminpos);
 
       if (this.getDimension() < 3) {

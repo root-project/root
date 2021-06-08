@@ -6,34 +6,26 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    "use strict";
 
    let createDefaultPalette = () => {
-
-      function HLStoRGB(h, l, s) {
-         let r, g, b;
-         if (s < 1e-100) {
-            r = g = b = l; // achromatic
-         } else {
-            function hue2rgb(p, q, t) {
-               if (t < 0) t += 1;
-               if (t > 1) t -= 1;
-               if (t < 1 / 6) return p + (q - p) * 6 * t;
-               if (t < 1 / 2) return q;
-               if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
-               return p;
-            }
-            let q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
-                p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1/3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1/3);
-         }
+      let hue2rgb = (p, q, t) => {
+         if (t < 0) t += 1;
+         if (t > 1) t -= 1;
+         if (t < 1 / 6) return p + (q - p) * 6 * t;
+         if (t < 1 / 2) return q;
+         if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
+         return p;
+      };
+      let HLStoRGB = (h, l, s) => {
+         let q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
+             p = 2 * l - q,
+             r = hue2rgb(p, q, h + 1/3),
+             g = hue2rgb(p, q, h),
+             b = hue2rgb(p, q, h - 1/3);
          return 'rgb(' + Math.round(r*255) + ',' + Math.round(g*255) + ',' + Math.round(b*255) + ')';
-      }
-
-      let palette = [], saturation = 1, lightness = 0.5, maxHue = 280, minHue = 0, maxPretty = 50;
+      };
+      let palette = [], minHue = 0, maxHue = 280, maxPretty = 50;
       for (let i = 0; i < maxPretty; ++i) {
-         let hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360,
-             rgbval = HLStoRGB(hue, lightness, saturation);
-         palette.push(rgbval);
+         let hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360;
+         palette.push(HLStoRGB(hue, 0.5, 1));
       }
       return new JSROOT.ColorPalette(palette);
    }
@@ -843,7 +835,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           pos_y = parseInt(this.draw_g.attr("y")),
           width = this.getPadPainter().getPadWidth(),
           pad = this.getPadPainter().getRootPad(true),
-          main = this.getMainPainter(),
+          main = palette.$main_painter || this.getMainPainter(),
           framep = this.getFramePainter(),
           zmin = 0, zmax = 100,
           contour = main.fContour,
@@ -3093,9 +3085,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
      * @returns {Promise} when done */
    THistPainter.prototype.drawColorPalette = function(enabled, postpone_draw, can_move) {
       // only when create new palette, one could change frame size
-
-      if (!this.isMainPainter())
-         return Promise.resolve(null);
+      let mp = this.getMainPainter();
+      if (mp !== this) {
+         if (mp && (mp.draw_content !== false))
+            return Promise.resolve(null);
+      }
 
       let pal = this.findFunction('TPaletteAxis'),
           pp = this.getPadPainter(),
@@ -3152,6 +3146,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          pal.fY1NDC = frame_painter.fY1NDC;
          pal.fY2NDC = frame_painter.fY2NDC;
       }
+
+      //  required for z scale setting
+      // TODO: use weak reference (via pad list of painters and any kind of string)
+      pal.$main_painter = this;
 
       let arg = "";
       if (postpone_draw) arg+=";postpone";
@@ -4528,7 +4526,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       this.scanContent(true);
 
-      if (typeof this.drawColorPalette === 'function')
+      if ((typeof this.drawColorPalette === 'function') && this.isMainPainter())
          this.drawColorPalette(false);
 
       return this.drawAxes().then(() => {
@@ -6608,8 +6606,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
             this.draw2DBins();
 
+            if (!pp) return true;
+
+            pp.$main_painter = this;
+
             // redraw palette till the end when contours are available
-            return pp ? pp.drawPave() : true;
+            return pp.drawPave();
          });
       }).then(() => {
          return this.drawHistTitle();
