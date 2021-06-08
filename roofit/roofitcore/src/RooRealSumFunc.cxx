@@ -149,10 +149,10 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
       _coefList.add(*coef);
    }
 
-   func = (RooAbsReal *)funcIter->Next();
+   func = (RooAbsArg *)funcIter->Next();
    if (func) {
       if (!dynamic_cast<RooAbsReal *>(func)) {
-         coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") last func " << coef->GetName()
+         coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") last func " << func->GetName()
                                << " is not of type RooAbsReal, fatal error" << endl;
          assert(0);
       }
