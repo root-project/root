@@ -27,7 +27,7 @@
 
 using namespace ROOT::Experimental;
 
-auto symlog_style = RStyle::Parse("frame { margin_left: 0.1; }"
+auto symlog_style = RStyle::Parse("frame { margins_left: 0.1; }"
                                   "marker { onframe: true; clipping: true; }"
                                   ".group1 { marker_style: 8; marker_color: blue; }"
                                   ".group2 { marker_style: 8; marker_color: orange; }");

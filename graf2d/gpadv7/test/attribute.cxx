@@ -17,16 +17,13 @@ protected:
 
    R__ATTR_CLASS(CustomAttrs, "custom");
 
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   CustomAttrs &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
+   const RAttrLine &AttrLine() const { return fAttrLine; }
    RAttrLine &AttrLine() { return fAttrLine; }
 
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   CustomAttrs &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
 
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   CustomAttrs &SetAttrText(const RAttrText &txt) { fAttrText = txt; return *this; }
+   const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
    double GetDirect(const std::string &name) const { return GetValue<double>(name); }
@@ -54,18 +51,18 @@ TEST(OptsTest, AttribVals) {
    CustomAttrs attrs;
 
    attrs.AttrText().SetColor(RColor::kBlue);
-   auto &border = attrs.AttrLine();
-   border.SetWidth(42.);
+   auto &line = attrs.AttrLine();
+   line.SetWidth(42.);
 
    {
       // Value was set on this attr, not coming from style:
-      EXPECT_FLOAT_EQ(attrs.GetAttrLine().GetWidth(), 42.f);
-      EXPECT_FLOAT_EQ(border.GetWidth(), 42.f);
+      EXPECT_FLOAT_EQ(attrs.AttrLine().GetWidth(), 42.f);
+      EXPECT_FLOAT_EQ(line.GetWidth(), 42.f);
    }
 
    {
       // Value was set on this attr, not coming from style:
-      EXPECT_EQ(attrs.GetAttrText().GetColor(), RColor::kBlue);
+      EXPECT_EQ(attrs.AttrText().GetColor(), RColor::kBlue);
    }
 
 }
@@ -117,8 +114,8 @@ TEST(OptsTest, AttribAssign) {
    CustomAttrs attrs2;
 
    // deep copy - independent from origin
-   auto attrLine1 = attrs1.GetAttrLine();
-   auto attrLine2 = attrs2.GetAttrLine();
+   auto attrLine1 = attrs1.AttrLine();
+   auto attrLine2 = attrs2.AttrLine();
 
    EXPECT_EQ(attrLine2, attrLine1);
    EXPECT_EQ(attrLine1, attrLine2);
@@ -131,20 +128,20 @@ TEST(OptsTest, AttribAssign) {
    EXPECT_EQ(attrLine1, attrLine2);
 
    // But original attributes now differ
-   EXPECT_NE(attrs1.GetAttrLine(), attrLine1);
-   EXPECT_NE(attrs2.GetAttrLine(), attrLine2);
+   EXPECT_NE(attrs1.AttrLine(), attrLine1);
+   EXPECT_NE(attrs2.AttrLine(), attrLine2);
 
    EXPECT_FLOAT_EQ(attrLine1.GetWidth(), 42.);
    EXPECT_FLOAT_EQ(attrLine2.GetWidth(), 42.);
    // default width return 1
-   EXPECT_FLOAT_EQ(attrs1.GetAttrLine().GetWidth(), 1.);
-   EXPECT_FLOAT_EQ(attrs2.GetAttrLine().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs1.AttrLine().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs2.AttrLine().GetWidth(), 1.);
 
    // Are the two attributes disconnected?
    attrLine2.SetWidth(3.);
-   EXPECT_EQ(attrs1.GetAttrLine(), attrs2.GetAttrLine());
+   EXPECT_EQ(attrs1.AttrLine(), attrs2.AttrLine());
    EXPECT_FLOAT_EQ(attrLine1.GetWidth(), 42.);
    EXPECT_FLOAT_EQ(attrLine2.GetWidth(), 3.);
-   EXPECT_FLOAT_EQ(attrs1.GetAttrLine().GetWidth(), 1.);
-   EXPECT_FLOAT_EQ(attrs2.GetAttrLine().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs1.AttrLine().GetWidth(), 1.);
+   EXPECT_FLOAT_EQ(attrs2.AttrLine().GetWidth(), 1.);
 }

@@ -45,8 +45,8 @@ void draw_frame()
    // frame->AttrFill().SetColor(RColor::kBlue);
    frame->AttrBorder().SetColor(RColor::kBlue);
    frame->AttrBorder().SetWidth(3);
-   frame->Margins().SetTop(0.25_normal);
-   frame->Margins().SetAll(0.2_normal);
+   frame->AttrMargins().SetTop(0.25_normal);
+   frame->AttrMargins().SetAll(0.2_normal);
 
    // let frame draw axes without need of any histogram
    frame->SetDrawAxes(true);
