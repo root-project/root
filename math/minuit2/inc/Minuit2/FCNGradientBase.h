@@ -1,9 +1,10 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
+ * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -29,7 +30,11 @@ namespace Minuit2 {
     Minuit does a check of the user Gradient at the beginning, if this is not
     wanted the method "CheckGradient()" has to be overridden to return
     "false".
- */
+  */
+
+enum class GradientParameterSpace {
+  External, Internal
+};
 
 class FCNGradientBase : public FCNBase {
 
@@ -38,7 +43,24 @@ public:
 
    virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
 
+   virtual std::vector<double> G2ndDerivative(const std::vector<double> &) const = 0;
+
+   virtual std::vector<double> GStepSize(const std::vector<double> &) const = 0;
+
+   virtual bool hasG2ndDerivative() const {
+      return false;
+   }
+
+   virtual bool hasGStepSize() const {
+      return false;
+   }
+
    virtual bool CheckGradient() const { return true; }
+
+   virtual GradientParameterSpace gradParameterSpace() const {
+      return GradientParameterSpace::External;
+   };
+
 };
 
 } // namespace Minuit2

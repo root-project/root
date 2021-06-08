@@ -22,7 +22,7 @@ public:
 
    ~Quad1F() {}
 
-   double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
 
       double x = par[0];
@@ -30,7 +30,7 @@ public:
       return (x * x);
    }
 
-   std::vector<double> Gradient(const std::vector<double> &par) const
+   std::vector<double> Gradient(const std::vector<double> &par) const override
    {
 
       double x = par[0];
@@ -38,9 +38,21 @@ public:
       return (std::vector<double>(1, 2. * x));
    }
 
-   void SetErrorDef(double up) { fErrorDef = up; }
+   // G2ndDerivative and GStepSize will not be used since the default hasG2ndDerivative
+   // and hasGStepSize functions that return false are not overridden, but these have to
+   // be defined, since they are pure virtual functions in FCNGradientBase
+   std::vector<double> G2ndDerivative(const std::vector<double>&) const override {
+      std::vector<double> g(0);
+      return g;
+   }
+   std::vector<double> GStepSize(const std::vector<double>&) const override {
+      std::vector<double> g(0);
+      return g;
+   }
 
-   double Up() const { return fErrorDef; }
+   void SetErrorDef(double up) override { fErrorDef = up; }
+
+   double Up() const override { return fErrorDef; }
 
    const FCNBase *Base() const { return this; }
 
