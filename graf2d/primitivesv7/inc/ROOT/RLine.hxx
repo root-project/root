@@ -55,12 +55,7 @@ public:
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
 
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RLine &SetAttrLine(const RAttrLine &attr)
-   {
-      fAttrLine = attr;
-      return *this;
-   }
+   const RAttrLine &AttrLine() const { return fAttrLine; }
    RAttrLine &AttrLine() { return fAttrLine; }
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }

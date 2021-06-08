@@ -144,7 +144,7 @@ public:
    };
 
 private:
-   RAttrMargins fMargins{this, "margin"};         ///<! frame margins relative to pad
+   RAttrMargins fAttrMargins{this, "margins"};    ///<! frame margins relative to pad
    RAttrLine fAttrBorder{this, "border"};         ///<! line attributes for border
    RAttrFill fAttrFill{this, "fill"};             ///<! fill attributes for the frame
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
@@ -197,36 +197,28 @@ public:
    bool GetDrawAxes() const { return fDrawAxes; }
    RFrame &SetDrawAxes(bool on = true) { fDrawAxes = on; return *this; }
 
-   const RAttrMargins &GetMargins() const { return fMargins; }
-   RFrame &SetMargins(const RAttrMargins &margins) { fMargins = margins; return *this; }
-   RAttrMargins &Margins() { return fMargins; }
+   const RAttrMargins &AttrMargins() const { return fAttrMargins; }
+   RAttrMargins &AttrMargins() { return fAttrMargins; }
 
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RFrame &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
+   const RAttrLine &AttrBorder() const { return fAttrBorder; }
    RAttrLine &AttrBorder() { return fAttrBorder; }
 
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RFrame &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
 
-   const RAttrAxis &GetAttrX() const { return fAttrX; }
-   RFrame &SetAttrX(const RAttrAxis &axis) { fAttrX = axis; return *this; }
+   const RAttrAxis &AttrX() const { return fAttrX; }
    RAttrAxis &AttrX() { return fAttrX; }
 
-   const RAttrAxis &GetAttrY() const { return fAttrY; }
-   RFrame &SetAttrY(const RAttrAxis &axis) { fAttrY = axis; return *this; }
+   const RAttrAxis &AttrY() const { return fAttrY; }
    RAttrAxis &AttrY() { return fAttrY; }
 
-   const RAttrAxis &GetAttrZ() const { return fAttrZ; }
-   RFrame &SetAttrZ(const RAttrAxis &axis) { fAttrZ = axis; return *this; }
+   const RAttrAxis &AttrZ() const { return fAttrZ; }
    RAttrAxis &AttrZ() { return fAttrZ; }
 
-   const RAttrAxis &GetAttrX2() const { return fAttrX2; }
-   RFrame &SetAttrX2(const RAttrAxis &axis) { fAttrX2 = axis; return *this; }
+   const RAttrAxis &AttrX2() const { return fAttrX2; }
    RAttrAxis &AttrX2() { return fAttrX2; }
 
-   const RAttrAxis &GetAttrY2() const { return fAttrY2; }
-   RFrame &SetAttrY2(const RAttrAxis &axis) { fAttrY2 = axis; return *this; }
+   const RAttrAxis &AttrY2() const { return fAttrY2; }
    RAttrAxis &AttrY2() { return fAttrY2; }
 
    RFrame &SetGridX(bool on = true) { fGridX = on; return *this; }

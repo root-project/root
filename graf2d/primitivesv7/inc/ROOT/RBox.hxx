@@ -64,12 +64,10 @@ public:
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
 
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RBox &SetAttrBorder(const RAttrLine &line) { fAttrBorder = line; return *this; }
+   const RAttrLine &AttrBorder() const { return fAttrBorder; }
    RAttrLine &AttrBorder() { return fAttrBorder; }
 
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RBox &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }

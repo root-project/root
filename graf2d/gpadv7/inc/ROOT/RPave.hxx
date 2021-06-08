@@ -54,16 +54,13 @@ public:
    RPave &SetHeight(const RPadLength &height) { fHeight = height; return *this; }
    RPadLength GetHeight() const { return fHeight; }
 
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RPave &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RPave &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
+   const RAttrLine &AttrBorder() const { return fAttrBorder; }
    RAttrLine &AttrBorder() { return fAttrBorder; }
 
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RPave &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
 };
 

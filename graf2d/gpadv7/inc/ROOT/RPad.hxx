@@ -70,8 +70,7 @@ public:
    /// Set position
    void SetPos(const RPadPos &p) { fPos = p; }
 
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RPad &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   const RAttrLine &AttrLine() const { return fAttrLine; }
    RAttrLine &AttrLine() { return fAttrLine; }
 };
 

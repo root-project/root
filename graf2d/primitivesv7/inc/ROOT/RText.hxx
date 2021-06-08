@@ -60,12 +60,7 @@ public:
    }
    const RPadPos &GetPos() const { return fPos; }
 
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RText &SetAttrText(const RAttrText &attr)
-   {
-      fAttrText = attr;
-      return *this;
-   }
+   const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }

@@ -27,11 +27,11 @@ TEST(Primitives, RPave)
    // when adding pave, RFrame is automatically created
    EXPECT_EQ(canv.NumPrimitives(), 2u);
 
-   EXPECT_EQ(pave->GetAttrBorder().GetColor(), RColor::kRed);
-   EXPECT_EQ(pave->GetAttrBorder().GetWidth(), 3);
+   EXPECT_EQ(pave->AttrBorder().GetColor(), RColor::kRed);
+   EXPECT_EQ(pave->AttrBorder().GetWidth(), 3);
 
-   EXPECT_EQ(pave->GetAttrFill().GetColor(), RColor::kBlue);
-   EXPECT_EQ(pave->GetAttrFill().GetStyle(), 3003);
+   EXPECT_EQ(pave->AttrFill().GetColor(), RColor::kBlue);
+   EXPECT_EQ(pave->AttrFill().GetStyle(), 3003);
 
    EXPECT_EQ(pave->GetCornerX(), 0.03_normal);
    EXPECT_EQ(pave->GetWidth(), 0.4_normal);

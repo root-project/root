@@ -64,12 +64,7 @@ public:
    }
    RPadLength GetHeight() const { return fHeight; }
 
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RFrameTitle &SetAttrText(const RAttrText &attr)
-   {
-      fAttrText = attr;
-      return *this;
-   }
+   const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 };
 

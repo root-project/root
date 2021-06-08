@@ -45,12 +45,7 @@ public:
    }
    const RPadPos &GetP() const { return fP; }
 
-   const RAttrMarker &GetAttrMarker() const { return fAttrMarker; }
-   RMarker &SetAttrMarker(const RAttrMarker &attr)
-   {
-      fAttrMarker = attr;
-      return *this;
-   }
+   const RAttrMarker &AttrMarker() const { return fAttrMarker; }
    RAttrMarker &AttrMarker() { return fAttrMarker; }
 
    void SetOnFrame(bool on = true) { fOnFrame = on; }
