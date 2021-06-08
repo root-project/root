@@ -145,7 +145,7 @@ public:
 
    TApplication   *GetAppRemote() const { return fAppRemote; }
 
-   Bool_t          IsRunning() const { return fIsRunning; }
+   Bool_t          IsRunning() const;
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
