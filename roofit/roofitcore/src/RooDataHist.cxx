@@ -591,7 +591,7 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
     RooRealVar *ourVar, Int_t *offset)
 {
-  if (!dynamic_cast<RooRealVar*>(ourVar)) {
+  if (!dynamic_cast<RooRealVar*>(static_cast<RooAbsArg*>(ourVar))) {
     coutE(InputArguments) << "RooDataHist::adjustBinning(" << GetName() << ") ERROR: dimension " << ourVar->GetName() << " must be real" << endl ;
     assert(0) ;
   }
