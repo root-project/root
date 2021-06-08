@@ -35,7 +35,7 @@ public:
 
    virtual bool CheckGradient() const;
 
-private:
+protected:
    const FCNGradientBase &fGradCalc;
    const MnUserTransformation &fTransformation;
 };
