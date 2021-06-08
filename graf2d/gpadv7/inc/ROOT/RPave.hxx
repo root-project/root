@@ -11,7 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
-#include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrBorder.hxx>
 #include <ROOT/RAttrFill.hxx>
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
@@ -31,7 +31,7 @@ namespace Experimental {
 class RPave : public RDrawable {
 
    RAttrText               fAttrText{this, "text"};          ///<! text attributes
-   RAttrLine               fAttrBorder{this, "border"};      ///<! border attributes
+   RAttrBorder             fAttrBorder{this, "border"};      ///<! border attributes
    RAttrFill               fAttrFill{this, "fill"};          ///<! line attributes
    RAttrValue<RPadLength>  fCornerX{this, "cornerx", 0.02};  ///<! X corner
    RAttrValue<RPadLength>  fCornerY{this, "cornery", 0.02};  ///<! Y corner
@@ -57,8 +57,8 @@ public:
    const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
-   const RAttrLine &AttrBorder() const { return fAttrBorder; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
+   const RAttrBorder &AttrBorder() const { return fAttrBorder; }
+   RAttrBorder &AttrBorder() { return fAttrBorder; }
 
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
