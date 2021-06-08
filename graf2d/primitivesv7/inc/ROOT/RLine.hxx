@@ -11,7 +11,6 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
-#include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
 namespace ROOT {
@@ -26,13 +25,14 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RLine : public RDrawable, public RAttrOnFrame {
+class RLine : public RDrawable {
 
-   RPadPos fP1, fP2;                  ///< line begin/end
-   RAttrLine fAttrLine{this, "line"}; ///<! line attributes
-
+   RPadPos fP1, fP2;                                   ///< line begin/end
+   RAttrLine fAttrLine{this, "line"};                  ///<! line attributes
+   RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
+   RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 public:
-   RLine() : RDrawable("line"), RAttrOnFrame(this) {}
+   RLine() : RDrawable("line") {}
 
    RLine(const RPadPos &p1, const RPadPos &p2) : RLine()
    {
@@ -62,6 +62,12 @@ public:
       return *this;
    }
    RAttrLine &AttrLine() { return fAttrLine; }
+
+   void SetOnFrame(bool on = true) { fOnFrame = on; }
+   bool GetOnFrame() const { return fOnFrame; }
+
+   void SetClipping(bool on = true) { fClipping = on; }
+   bool GetClipping() const { return fClipping; }
 };
 
 } // namespace Experimental
