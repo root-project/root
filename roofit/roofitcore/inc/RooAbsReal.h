@@ -89,6 +89,14 @@ public:
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
+    // Sometimes, the calling code uses an empty RooArgSet to request evaluation
+    // without normalization set instead of following the `nullptr` convention.
+    // To remove this ambiguity which might not always be correctly handled in
+    // downstream code, we set `normalisationSet` to nullptr if it is pointing
+    // to an empty set.
+    if(normalisationSet && normalisationSet->empty()) {
+      normalisationSet = nullptr;
+    }
 #ifdef ROOFIT_CHECK_CACHED_VALUES
     return _DEBUG_getVal(normalisationSet);
 #else
@@ -103,7 +111,13 @@ public:
   }
 
   /// Like getVal(const RooArgSet*), but always requires an argument for normalisation.
-  inline  Double_t getVal(const RooArgSet& normalisationSet) const { return _fast ? _value : getValV(&normalisationSet) ; }
+  inline  Double_t getVal(const RooArgSet& normalisationSet) const {
+    // Sometimes, the calling code uses an empty RooArgSet to request evaluation
+    // without normalization set instead of following the `nullptr` convention.
+    // To remove this ambiguity which might not always be correctly handled in
+    // downstream code, we set `normalisationSet` to nullptr if it is an empty set.
+    return _fast ? _value : getValV(normalisationSet.empty() ? nullptr : &normalisationSet) ;
+  }
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
