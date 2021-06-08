@@ -1,9 +1,10 @@
 // @(#)root/mathcore:$Id$
-// Authors: L. Moneta    11/2006
+// Authors: L. Moneta, E.G.P. Bos   2006-2017
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2006 , LCG ROOT MathLib Team                         *
+ * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  *                                                                    *
  **********************************************************************/
@@ -34,6 +35,7 @@
 //typedefs and tags definitions
 #include "Math/IFunctionfwd.h"
 
+#include <stdexcept>  // runtime_error
 
 namespace ROOT {
    namespace Math {
@@ -216,6 +218,8 @@ namespace ROOT {
          */
          T Derivative(const T *x, unsigned int icoord = 0) const { return DoDerivative(x, icoord); }
 
+      T SecondDerivative(const T *x, unsigned int icoord) const { return DoSecondDerivative(x, icoord); }
+      T StepSize(const T *x, unsigned int icoord) const { return DoStepSize(x, icoord); }
          /**
              Optimized method to evaluate at the same time the function value and derivative at a point x.
              Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
@@ -232,6 +236,29 @@ namespace ROOT {
             function to evaluate the derivative with respect each coordinate. To be implemented by the derived class
          */
          virtual T DoDerivative(const T *x, unsigned int icoord) const = 0;
+
+      /**
+       function to evaluate the second derivative with respect to each coordinate.
+       Optionally override in the derived class if you want to use it. If not, it will simply throw.
+       This because this function was added retroactively. Perhaps a cleaner setup would be to define
+       a separate subclass that can do second derivatives (and step sizes, see DoStepSize), but this
+       was chosen because of easier integration into the existing Minuit2 / Fitter framework.
+      */
+      virtual T DoSecondDerivative(const T */*x*/, unsigned int /*icoord*/) const {
+        throw std::runtime_error("IGradientMultiDimTempl<T>::DoSecondDerivative not defined!");
+      };
+
+      /**
+       function to evaluate the step size for each coordinate.
+       Optionally override in the derived class if you want to use it. If not, it will simply throw.
+       This because this function was added retroactively. Perhaps a cleaner setup would be to define
+       a separate subclass that can do step sizes (and second derivatives, see DoSecondDerivative), but this
+       was chosen because of easier integration into the existing Minuit2 / Fitter framework.
+      */
+      virtual T DoStepSize(const T */*x*/, unsigned int /*icoord*/) const {
+        throw std::runtime_error("IGradientMultiDimTempl<T>::DoStepSize not defined!");
+      };
+
       };
 
 //___________________________________________________________________________________
@@ -360,6 +387,31 @@ namespace ROOT {
             Gradient(x, df);
          }
 
+      virtual void G2ndDerivative(const T *x, T *g2) const {
+        unsigned int ndim = NDim();
+        for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
+          g2[icoord] = BaseGrad::SecondDerivative(x, icoord);
+        }
+      }
+
+      virtual void GStepSize(const T *x, T *gstep) const {
+        unsigned int ndim = NDim();
+        for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
+          gstep[icoord] = BaseGrad::StepSize(x, icoord);
+        }
+      }
+
+      virtual bool hasG2ndDerivative() const {
+        return false;
+      }
+
+      virtual bool hasGStepSize() const {
+        return false;
+      }
+
+      virtual bool returnsInMinuit2ParameterSpace() const {
+        return false;
+      }
 
       };
 
