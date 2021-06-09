@@ -1193,7 +1193,7 @@ void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, cons
       outputBranch = outputTree.Branch(name.c_str(), address);
    }
    outputBranches.Insert(name, outputBranch);
-   // This is not an array branch, so we don't need to register the address of the input branch.
+   // This is not an array branch, so we don't register the address of the output branch here
    branch = nullptr;
    branchAddress = nullptr;
 }
@@ -1229,12 +1229,11 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       // Treat:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
-      // 4. TClonesArray.
-      // In all cases, we write out a std::vector<T> when the column is RVec<T>
+      // 4. TClonesArray written out as RVec<T>
       if (isTClonesArray) {
          Warning("Snapshot",
                  "Branch \"%s\" contains TClonesArrays but the type specified to Snapshot was RVec<T>. The branch will "
-                 "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
+                 "be written out as a RVec instead of a TClonesArray. Specify that the type of the branch is "
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
       if (outputBranch) {
