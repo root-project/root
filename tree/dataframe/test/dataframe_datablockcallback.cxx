@@ -81,7 +81,7 @@ TEST_P(RDFDataBlockCallback, TTree) {
 }
 
 TEST_P(RDFDataBlockCallback, TChain) {
-   const std::string prefix = "rdfdatablockcallback_ttree";
+   const std::string prefix = "rdfdatablockcallback_tchain";
    InputFilesRAII file(5u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
    auto result = df.Book<>(CounterHelper(), {});
