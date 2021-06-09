@@ -47,6 +47,18 @@ ExeSuf        = .exe
 DllSuf        = dll
 OutPutOpt     = -out:
 
+!IF "$(PLATFORM)" == "x86"
+CPU=i386
+DLLENTRY = @12
+MACHINE=IX86
+!endif
+
+!IF "$(PLATFORM)" == "x64"
+CPU=x86_64
+MACHINE=AMD64
+DLLENTRY =
+!ENDIF
+
 # Win32 system with Microsoft Visual C/C++
 
 APPVER        = 5.01
@@ -54,7 +66,6 @@ cc            = cl
 link          = link
 implib        = lib
 lflags        = $(lflags) /INCREMENTAL:NO /NOLOGO
-DLLENTRY      = @12
 conlflags     = $(lflags) -subsystem:console
 guilflags     = $(lflags) -subsystem:windows
 dlllflags     = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
@@ -334,13 +345,13 @@ all:            $(PROGRAMS)
 
 $(EVENTSO):     $(EVENTO)
                 BINDEXPLIB  $* $(EVENTO) > $*.def
-                lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def $(OutPutOpt)$(EVENTLIB)
+                lib -nologo -MACHINE:$(MACHINE) $(EVENTO) -def:$*.def $(OutPutOpt)$(EVENTLIB)
                 $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $*.exp $(LIBS) $(OutPutOpt)$(EVENTSO)
                 @echo "$(EVENTSO) done"
 
 $(EVENTMTSO):   $(EVENTMTO)
                 BINDEXPLIB  $* $(EVENTMTO) > $*.def
-                lib -nologo -MACHINE:IX86 $(EVENTMTO) -def:$*.def $(OutPutOpt)$(EVENTMTLIB)
+                lib -nologo -MACHINE:$(MACHINE) $(EVENTMTO) -def:$*.def $(OutPutOpt)$(EVENTMTLIB)
                 $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTMTO) $*.exp $(LIBS) $(OutPutOpt)$(EVENTMTSO)
                 @echo "$(EVENTMTSO) done"
 
@@ -511,15 +522,21 @@ $(BENCH):       $(BENCHO) $(TBENCHSO)
 
 Hello:          $(HELLOSO)
 $(HELLOSO):     $(HELLOO)
-                $(LD) $(SOFLAGS) $(LDFLAGS) $(HELLOO) $(GLIBS) $(OutPutOpt)$@
+                BINDEXPLIB  $* $(HELLOO) > $*.def
+                lib -nologo -MACHINE:$(MACHINE) $(HELLOO) -def:$*.def $(OutPutOpt)Hello.lib
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(HELLOO) $*.exp $(GLIBS) $(OutPutOpt)$@
 
 Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
-                $(LD) $(SOFLAGS) $(LDFLAGS) $(ACLOCKO) $(GLIBS) $(OutPutOpt)$@
+                BINDEXPLIB  $* $(ACLOCKO) > $*.def
+                lib -nologo -MACHINE:$(MACHINE) $(ACLOCKO) -def:$*.def $(OutPutOpt)Aclock.lib
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(ACLOCKO) $*.exp $(GLIBS) $(OutPutOpt)$@
 
 Tetris:         $(TETRISSO)
 $(TETRISSO):    $(TETRISO)
-                $(LD) $(SOFLAGS) $(LDFLAGS) $(TETRISO) $(GLIBS) $(OutPutOpt)$@
+                BINDEXPLIB  $* $(TETRISO) > $*.def
+                lib -nologo -MACHINE:$(MACHINE) $(TETRISO) -def:$*.def $(OutPutOpt)Tetris.lib
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(TETRISO) $*.exp $(GLIBS) $(OutPutOpt)$@
 
 $(TBENCHSO):    $(TBENCHO)
                 $(LD) $(SOFLAGS) $(LDFLAGS) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
