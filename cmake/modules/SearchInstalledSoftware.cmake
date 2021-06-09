@@ -1862,6 +1862,75 @@ if(testing AND NO_CONNECTION)
   endif()
 endif()
 
+#---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
+
+if (roofit_multiprocess)
+  if(NOT builtin_zeromq)
+    message(STATUS "Looking for ZeroMQ (libzmq)")
+    # Clear cache before calling find_package(ZeroMQ),
+    # necessary to be able to toggle builtin_zeromq and
+    # not have find_package(ZeroMQ) find builtin ZeroMQ.
+    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+      unset(ZeroMQ_${suffix} CACHE)
+    endforeach()
+
+    # Temporarily prefer config mode over module mode, so that a CMake-installed system version
+    # gets detected before looking for an autotools-installed system version (which the
+    # FindZeroMQ.cmake module does).
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE ${CMAKE_FIND_PACKAGE_PREFER_CONFIG})
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+
+    if(fail-on-missing)
+      find_package(ZeroMQ REQUIRED)
+    else()
+      find_package(ZeroMQ)
+      if(NOT ZeroMQ_FOUND)
+        message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
+        set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
+      endif()
+    endif()
+
+    # Reset default find_package mode
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ${CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE})
+    unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE)
+  endif()
+
+  if(builtin_zeromq)
+    list(APPEND ROOT_BUILTINS ZeroMQ)
+    add_subdirectory(builtins/zeromq/libzmq)
+  endif()
+
+  if(NOT builtin_cppzmq)
+    message(STATUS "Looking for ZeroMQ C++ bindings (cppzmq)")
+    # Clear cache before calling find_package(cppzmq),
+    # necessary to be able to toggle builtin_cppzmq and
+    # not have find_package(cppzmq) find builtin cppzmq.
+    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS)
+      unset(cppzmq_${suffix} CACHE)
+    endforeach()
+    if(fail-on-missing)
+      find_package(cppzmq REQUIRED)
+    else()
+      find_package(cppzmq QUIET)
+      if(NOT cppzmq_FOUND)
+        message(STATUS "ZeroMQ C++ bindings not found. Switching on builtin_cppzmq option")
+        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ C++ bindings not found (${builtin_cppzmq_description})" FORCE)
+      endif()
+    endif()
+  endif()
+
+  if(builtin_cppzmq)
+    list(APPEND ROOT_BUILTINS cppzmq)
+    add_subdirectory(builtins/zeromq/cppzmq)
+  endif()
+
+  # zmq_ppoll is still in the draft API, so enable that transitively
+  target_compile_definitions(libzmq INTERFACE ZMQ_BUILD_DRAFT_API)
+  target_compile_definitions(libzmq INTERFACE ZMQ_NO_EXPORT)
+  target_compile_definitions(cppzmq INTERFACE ZMQ_BUILD_DRAFT_API)
+  target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
+endif (roofit_multiprocess)
+
 #---Download googletest--------------------------------------------------------------
 if (testing)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
