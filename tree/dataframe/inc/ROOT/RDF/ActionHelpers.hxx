@@ -1430,8 +1430,7 @@ public:
 
    std::function<void(unsigned int)> GetDataBlockCallback() final
    {
-      auto callback = [this](unsigned int) mutable { fBranchAddressesNeedReset = true; };
-      return {callback};
+      return [this](unsigned int) mutable { fBranchAddressesNeedReset = true; };
    }
 };
 
@@ -1605,8 +1604,7 @@ public:
 
    std::function<void(unsigned int)> GetDataBlockCallback() final
    {
-      auto callback = [this](unsigned int slot) mutable { fBranchAddressesNeedReset[slot] = 1; };
-      return {callback};
+      return [this](unsigned int slot) mutable { fBranchAddressesNeedReset[slot] = 1; };
    }
 };
 
