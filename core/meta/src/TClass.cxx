@@ -1093,8 +1093,8 @@ TClass::TClass() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TClass object. This object contains the full dictionary
 /// of a class. It has list to baseclasses, datamembers and methods.
-/// Use this ctor to create a standalone TClass object. Most useful
-/// to get a TClass interface to an interpreted class. Used by TTabCom.
+/// Use this ctor to create a standalone TClass object. Only useful
+/// to get a temporary TClass interface to an interpreted class. Used by TTabCom.
 ///
 /// \note Use `TClass::GetClass("ClassName")` to get access to a TClass object for a certain class!
 
