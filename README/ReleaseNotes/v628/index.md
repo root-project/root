@@ -78,6 +78,11 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 The following lesser-used RooFit functions now return a `std::string` instead of a `const char*`, potentially requiring the update of your code:
 
 - [std::string RooCmdConfig::missingArgs() const](https://root.cern/doc/v628/classRooCmdConfig.html#aec50335293c45a507d347c604bf9651f)
+### Uniquely identifying RooArgSet and RooDataSet objects
+
+Before v6.28, it was ensured that no `RooArgSet` and `RooDataSet` objects on the heap were located at an address that had already been used for an instance of the same class before.
+With v6.28, this is not guaranteed anymore.
+Hence, if your code uses pointer comparisons to uniquely identify RooArgSet or RooDataSet instances, please consider using the new `RooArgSet::uniqueId()` or `RooAbsData::uniqueId()`.
 
 ## Removal of HistoToWorkspaceFactory (non-Fast)
 
