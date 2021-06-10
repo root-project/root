@@ -78,6 +78,7 @@ RooCmdArg Normalization(Double_t scaleFactor) ;
 RooCmdArg Slice(const RooArgSet& sliceSet) ;
 RooCmdArg Slice(RooArgSet && sliceSet) ;
 RooCmdArg Slice(RooCategory& cat, const char* label) ;
+RooCmdArg Slice(std::map<RooCategory*, std::string> const&) ;
 RooCmdArg Project(const RooArgSet& projSet) ;
 RooCmdArg Project(RooArgSet && projSet) ;
 RooCmdArg ProjWData(const RooAbsData& projData, Bool_t binData=kFALSE) ;

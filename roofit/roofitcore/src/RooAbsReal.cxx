@@ -1596,10 +1596,13 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///
 /// <tr><td> `Slice(RooCategory& cat, const char* label)`        <td> Override default projection behaviour by omitting the specified category
 ///                                    observable from the projection, i.e., by not integrating over all states of this category.
-///                                    The slice is positioned at the given label value. Multiple Slice() commands can be given to specify slices
-///                                    in multiple observables, e.g.
+///                                    The slice is positioned at the given label value. To pass multiple Slice() commands, please use the
+///                                    Slice(std::map<RooCategory*, std::string> const&) argument explained below.
+///
+/// <tr><td> `Slice(std::map<RooCategory*, std::string> const&)`        <td> Omits multiple categories from the projection, as explianed above.
+///                                    Can be used with initializer lists for convenience, e.g.
 /// ```{.cpp}
-///   pdf.plotOn(frame, Slice(tagCategory, "2tag"), Slice(jetCategory, "3jet"));
+///   pdf.plotOn(frame, Slice({{&tagCategory, "2tag"}, {&jetCategory, "3jet"}});
 /// ```
 ///
 /// <tr><td> `Project(const RooArgSet& set)`   <td> Override default projection behaviour by projecting over observables
@@ -1744,6 +1747,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("scaleType","Normalization",0,Relative) ; 
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
+  // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
+  // It is not used directly, but the "SliceCat" commands are nested in it.
+  // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
+  pc.defineObject("dummy1","SliceCatMany",0) ;
   pc.defineObject("projSet","Project",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
   pc.defineDouble("precision","Precision",0,1e-3) ;
