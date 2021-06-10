@@ -30,11 +30,17 @@ std::string ROOT::Experimental::Detail::RNTuplePerfCounter::ToString() const
 
 bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
 {
+  return GetLocalCounter(name) != nullptr;
+}
+
+const ROOT::Experimental::Detail::RNTuplePerfCounter*
+ROOT::Experimental::Detail::RNTupleMetrics::GetLocalCounter(std::string_view name) const
+{
    for (const auto &c : fCounters) {
       if (c->GetName() == name)
-         return true;
+         return c.get();
    }
-   return false;
+   return nullptr;
 }
 
 const ROOT::Experimental::Detail::RNTuplePerfCounter*
@@ -45,10 +51,8 @@ ROOT::Experimental::Detail::RNTupleMetrics::GetCounter(std::string_view name) co
       return nullptr;
 
    auto innerName = name.substr(prefix.length());
-   for (const auto &c : fCounters) {
-      if (c->GetName() == innerName)
-         return c.get();
-   }
+   if (auto counter = GetLocalCounter(innerName))
+      return counter;
 
    for (auto m : fObservedMetrics) {
       auto counter = m->GetCounter(innerName);
