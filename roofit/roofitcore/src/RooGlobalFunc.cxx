@@ -48,6 +48,10 @@ namespace RooFit {
     return Link(item.first.c_str(), *item.second) ;
   }
 
+  RooCmdArg processSliceItem(std::pair<RooCategory * const, std::string> const& item) {
+    return Slice(*item.first, item.second.c_str());
+  }
+
   template<class Map_t, class Func_t>
   RooCmdArg processMap(const char* name, Func_t func, Map_t const& map) {
     RooCmdArg container(name,0,0,0,0,0,0,0,0) ;
@@ -66,6 +70,9 @@ namespace RooFit {
   RooCmdArg Slice(const RooArgSet& sliceSet)       { return RooCmdArg("SliceVars",0,0,0,0,0,0,&sliceSet,0) ; }
   RooCmdArg Slice(RooArgSet && sliceSet)           { return Slice(RooCmdArg::take(std::move(sliceSet))); }
   RooCmdArg Slice(RooCategory& cat, const char* label) { return RooCmdArg("SliceCat",0,0,0,0,label,0,&cat,0) ; }
+  RooCmdArg Slice(std::map<RooCategory*, std::string> const& arg) {
+    return processMap("SliceCatMany", processSliceItem, arg);
+  }
 
   RooCmdArg Project(const RooArgSet& projSet)      { return RooCmdArg("Project",0,0,0,0,0,0,&projSet,0) ; }
   RooCmdArg Project(RooArgSet && projSet)          { return Project(RooCmdArg::take(std::move(projSet))); }
