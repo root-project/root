@@ -22,15 +22,19 @@
 #include <exception>
 #include <sstream>
 #include <iostream>
+#include <cstring>
 
 using namespace ROOT::Experimental;
 
-TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : TObjectDrawable()
+std::string TObjectDrawable::DetectCssType(const std::shared_ptr<TObject> &obj)
 {
-   fKind = kind;
-
-   if (persistent)
-      fObj = CreateSpecials(kind);
+   const char *clname = obj ? obj->ClassName() : "TObject";
+   if (strncmp(clname, "TH1", 3) == 0) return "th1";
+   if (strncmp(clname, "TH2", 3) == 0) return "th2";
+   if (strncmp(clname, "TH3", 3) == 0) return "th3";
+   if (strncmp(clname, "TGraph", 6) == 0) return "tgraph";
+   if (strncmp(clname, "TLine", 5) == 0) return "tline";
+   return "tobject";
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -116,7 +120,7 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
 {
    if (GetVersion() > ctxt.GetLastVersion()) {
       if ((fKind == kObject) || fObj) {
-         auto item = std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), GetOpt());
+         auto item = std::make_unique<TObjectDisplayItem>(*this, fKind, fObj.get(), GetOpt());
          if ((fKind == kObject) && fObj) {
             ExtractTColor(item, "TAttLine", "fLineColor");
             ExtractTColor(item, "TAttFill", "fFillColor");
@@ -133,7 +137,7 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
       }
 
       auto specials = CreateSpecials(fKind);
-      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), GetOpt(), true);
+      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), GetOpt());
    }
 
    return nullptr;
