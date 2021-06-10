@@ -34,7 +34,6 @@ protected:
    int fKind{0};                           ///< object kind
    const TObject *fObject{nullptr};        ///< ROOT6 object
    std::string fCssType;                   ///< CSS type
-   std::string fOption;                    ///< drawing options
    bool fOwner{false};                     ///<! if object must be deleted
    std::vector<int> fColIndex;             ///< stored color index
    std::vector<std::string> fColValue;     ///< stored color value
@@ -42,20 +41,18 @@ protected:
 public:
 
    /// normal constructor, also copies drawable id and csstype
-   TObjectDisplayItem(const RDrawable &dr, int kind, const TObject *obj, const std::string &opt) : RIndirectDisplayItem(dr)
+   TObjectDisplayItem(const RDrawable &dr, int kind, const TObject *obj) : RIndirectDisplayItem(dr)
    {
       fCssType = dr.GetCssType();
       fKind = kind;
       fObject = obj;
-      fOption = opt;
    }
 
    /// constructor for special objects like palette, takes ownership!!
-   TObjectDisplayItem(int kind, const TObject *obj, const std::string &opt) : RIndirectDisplayItem()
+   TObjectDisplayItem(int kind, const TObject *obj) : RIndirectDisplayItem()
    {
       fKind = kind;
       fObject = obj;
-      fOption = opt;
       fOwner = true;
    }
 
