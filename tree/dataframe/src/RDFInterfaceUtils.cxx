@@ -37,7 +37,7 @@
 #endif
 
 #include <algorithm>
-#include <set>
+#include <unordered_set>
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -845,6 +845,19 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
    for (auto i = 0u; i < nColumns; ++i)
       mustBeDefined[i] = std::find(definedCols.begin(), definedCols.end(), requestedCols[i]) == definedCols.end();
    return mustBeDefined;
+}
+
+void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
+{
+   std::unordered_set<std::string> uniqueCols;
+   for (auto &col : cols) {
+      if (!uniqueCols.insert(col).second) {
+         const auto msg = "Error: column \"" + col +
+                          "\" was passed to Snapshot twice. This is not supported: only one of the columns would be "
+                          "readable with RDataFrame.";
+         throw std::logic_error(msg);
+      }
+   }
 }
 
 } // namespace RDF

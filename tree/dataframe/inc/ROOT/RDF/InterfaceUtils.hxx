@@ -653,6 +653,8 @@ template <typename T>
 struct IsDeque_t<std::deque<T>> : std::true_type {};
 // clang-format on
 
+void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
+
 } // namespace RDF
 } // namespace Internal
 
