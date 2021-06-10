@@ -11,6 +11,10 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrValue.hxx>
+#include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrText.hxx>
+#include <ROOT/RAttrMarker.hxx>
+#include <ROOT/RAttrFill.hxx>
 
 class TObject;
 class TColor;
@@ -24,7 +28,7 @@ class TObjectDisplayItem;
 
 /** \class TObjectDrawable
 \ingroup GpadROOT7
-\brief Provides v7 drawing facilities for TObject types (TGraph etc).
+\brief Provides v7 drawing facilities for TObject types (TGraph, TH1, TH2, etc).
 \author Sergey Linev
 \date 2017-05-31
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -41,6 +45,10 @@ private:
    int fKind{kNone};                           ///< object kind
    Internal::RIOShared<TObject> fObj;          ///< The object to be painted
    RAttrValue<std::string> fOpt{this, "opt"};  ///<! object draw options
+   RAttrLine fAttrLine{this, "line"};          ///<! object line attributes
+   RAttrFill fAttrFill{this, "fill"};          ///<! object fill attributes
+   RAttrText fAttrText{this, "text"};          ///<! object text attributes
+   RAttrMarker fMarkerAttr{this, "marker"};    ///<! object marker attributes
 
    const char *GetColorCode(TColor *col);
 
@@ -95,6 +103,18 @@ public:
 
    void SetOpt(const std::string &opt) { fOpt = opt; }
    std::string GetOpt() const { return fOpt; }
+
+   const RAttrLine &AttrLine() const { return fAttrLine; }
+   RAttrLine &AttrLine() { return fAttrLine; }
+
+   const RAttrFill &AttrFill() const { return fAttrFill; }
+   RAttrFill &AttrFill() { return fAttrFill; }
+
+   const RAttrText &AttrText() const { return fAttrText; }
+   RAttrText &AttrText() { return fAttrText; }
+
+   const RAttrMarker &AttrMarker() const { return fMarkerAttr; }
+   RAttrMarker &AttrMarker() { return fMarkerAttr; }
 };
 
 } // namespace Experimental

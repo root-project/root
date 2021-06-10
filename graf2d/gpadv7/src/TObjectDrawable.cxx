@@ -33,7 +33,8 @@ std::string TObjectDrawable::DetectCssType(const std::shared_ptr<TObject> &obj)
    if (strncmp(clname, "TH2", 3) == 0) return "th2";
    if (strncmp(clname, "TH3", 3) == 0) return "th3";
    if (strncmp(clname, "TGraph", 6) == 0) return "tgraph";
-   if (strncmp(clname, "TLine", 5) == 0) return "tline";
+   if (strcmp(clname, "TLine") == 0) return "tline";
+   if (strcmp(clname, "TBox") == 0) return "tbox";
    return "tobject";
 }
 
