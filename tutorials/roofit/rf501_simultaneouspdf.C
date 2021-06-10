@@ -79,8 +79,8 @@ void rf501_simultaneouspdf()
    sample.defineType("control");
 
    // Construct combined dataset in (x,sample)
-   RooDataSet combData("combData", "combined data", x, Index(sample), Import("physics", *data),
-                       Import("control", *data_ctl));
+   RooDataSet combData("combData", "combined data", x, Index(sample),
+                       Import({{"physics", data}, {"control", data_ctl}}));
 
    // C o n s t r u c t   a   s i m u l t a n e o u s   p d f   i n   ( x , s a m p l e )
    // -----------------------------------------------------------------------------------
