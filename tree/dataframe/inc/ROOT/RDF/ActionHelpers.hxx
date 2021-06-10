@@ -1271,6 +1271,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       outputBranch->SetTitle(inputBranch->GetTitle());
       outputBranches.Insert(outName, outputBranch);
       // Record the branch ptr and the address associated to it if this is not a bool array
+      // The case of RVec<bool> is taken care of by the `UpdateBoolArrayIfBool` call above
       if (!std::is_same<bool, T>::value) {
          branch = outputBranch;
          branchAddress = GetData(*ab);
