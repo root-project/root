@@ -3,8 +3,7 @@ import unittest
 from array import array
 
 import ROOT
-from DistRDF.Node import FriendInfo
-from DistRDF.Node import HeadNode
+from DistRDF.HeadNode import Factory
 
 
 class FriendInfoTest(unittest.TestCase):
@@ -46,21 +45,6 @@ class FriendInfoTest(unittest.TestCase):
         ff.Write()
         ff.Close()
 
-    def test_empty_friend_info(self):
-        """Check that FriendInfo is initialized with two empty lists"""
-
-        friend_info = FriendInfo()
-
-        friend_names = friend_info.friend_names
-        friend_file_names = friend_info.friend_file_names
-
-        # Check that both lists in FriendInfo are empty
-        self.assertTrue(len(friend_names) == 0)
-        self.assertTrue(len(friend_file_names) == 0)
-
-        # Check functioning of __bool__ method
-        self.assertFalse(friend_info)
-
     def test_friend_info_with_ttree(self):
         """
         Check that FriendInfo correctly stores information about the friend
@@ -77,6 +61,7 @@ class FriendInfoTest(unittest.TestCase):
 
         # Friend Tree
         friend_tree_name = "TF"
+        friend_tree_alias = "TF"
         friend_tree_filename = "treefriend.root"
         friendtree = ROOT.TChain(friend_tree_name)
         friendtree.Add(friend_tree_filename)
@@ -85,21 +70,21 @@ class FriendInfoTest(unittest.TestCase):
         basetree.AddFriend(friendtree)
 
         # Instantiate head node of the graph with the base TTree
-        headnode = HeadNode(basetree)
+        headnode = Factory.get_headnode(basetree)
 
-        # Retrieve FriendInfo instance
-        friend_info = headnode._get_friend_info()
+        # Retrieve information about friends
+        friendnamesalias, friendfilenames, friendchainsubnames = headnode.get_friendinfo()
 
         # Check that FriendInfo has non-empty lists
-        self.assertTrue(friend_info)
+        self.assertIsNotNone(friendnamesalias)
+        self.assertIsNotNone(friendfilenames)
+        self.assertIsNotNone(friendchainsubnames)
 
-        # Check that the two lists with treenames and filenames are populated
+        # Check that the three lists with treenames, filenames and subnames are populated
         # as expected.
-        self.assertListEqual(friend_info.friend_names, [friend_tree_name])
-        self.assertListEqual(
-            friend_info.friend_file_names,
-            [[friend_tree_filename]]
-        )
+        self.assertTupleEqual(friendnamesalias, ((friend_tree_name, friend_tree_alias),))
+        self.assertTupleEqual(friendfilenames,  ((friend_tree_filename,),))
+        self.assertTupleEqual(friendchainsubnames,  ((friend_tree_name,),))
 
         # Remove unnecessary .root files
         os.remove(base_tree_filename)
