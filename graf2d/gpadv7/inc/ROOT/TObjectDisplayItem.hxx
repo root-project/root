@@ -10,6 +10,7 @@
 #define ROOT7_TObjectDisplayItem
 
 #include <ROOT/RDisplayItem.hxx>
+#include <ROOT/RDrawable.hxx>
 
 #include <string>
 #include <vector>
@@ -27,11 +28,12 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class TObjectDisplayItem : public RDisplayItem {
+class TObjectDisplayItem : public RIndirectDisplayItem {
 protected:
 
    int fKind{0};                           ///< object kind
    const TObject *fObject{nullptr};        ///< ROOT6 object
+   std::string fCssType;                   ///< CSS type
    std::string fOption;                    ///< drawing options
    bool fOwner{false};                     ///<! if object must be deleted
    std::vector<int> fColIndex;             ///< stored color index
@@ -39,12 +41,22 @@ protected:
 
 public:
 
-   TObjectDisplayItem(int kind, const TObject *obj, const std::string &opt, bool owner = false)
+   /// normal constructor, also copies drawable id and csstype
+   TObjectDisplayItem(const RDrawable &dr, int kind, const TObject *obj, const std::string &opt) : RIndirectDisplayItem(dr)
+   {
+      fCssType = dr.GetCssType();
+      fKind = kind;
+      fObject = obj;
+      fOption = opt;
+   }
+
+   /// constructor for special objects like palette, takes ownership!!
+   TObjectDisplayItem(int kind, const TObject *obj, const std::string &opt) : RIndirectDisplayItem()
    {
       fKind = kind;
       fObject = obj;
       fOption = opt;
-      fOwner = owner;
+      fOwner = true;
    }
 
    virtual ~TObjectDisplayItem()

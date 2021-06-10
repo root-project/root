@@ -14,6 +14,7 @@
 
 class TObject;
 class TColor;
+class TClass;
 
 namespace ROOT {
 namespace Experimental {
@@ -57,6 +58,8 @@ protected:
 
    void ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member);
 
+   static std::string DetectCssType(const std::shared_ptr<TObject> &obj);
+
 public:
    // special kinds, see TWebSnapshot enums
    enum EKind {
@@ -65,22 +68,26 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
-   TObjectDrawable() : RDrawable("tobject") {}
-
-   TObjectDrawable(const std::shared_ptr<TObject> &obj) : TObjectDrawable()
+   TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj))
    {
       fKind = kObject;
       fObj = obj;
    }
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : TObjectDrawable()
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable(DetectCssType(obj))
    {
       fKind = kObject;
       fObj = obj;
       fOpt = opt;
    }
 
-   TObjectDrawable(EKind kind, bool persistent = false);
+   TObjectDrawable(EKind kind, bool persistent = false) : RDrawable("tobject")
+   {
+      fKind = kind;
+
+      if (persistent)
+         fObj = CreateSpecials(kind);
+   }
 
    virtual ~TObjectDrawable() = default;
 
