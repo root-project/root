@@ -108,23 +108,13 @@ ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer)
 ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
-   , fMetrics("RPageSinkDaos")
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
    , fURI(uri)
 {
    R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. " <<
       "Do not store real data with this version of RNTuple!";
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallWrite", "ns", "wall clock time spent writing"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
-      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
-      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
-                                                                        "CPU time spent compressing")
-   });
    fCompressor = std::make_unique<RNTupleCompressor>();
+   EnableDefaultMetrics("RPageSinkDaos");
 }
 
 
@@ -274,28 +264,13 @@ void ROOT::Experimental::Detail::RPageAllocatorDaos::DeletePage(const RPage& pag
 ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
    const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options)
-   , fMetrics("RPageSourceDaos")
    , fPageAllocator(std::make_unique<RPageAllocatorDaos>())
    , fPagePool(std::make_shared<RPagePool>())
    , fURI(uri)
    , fClusterPool(std::make_unique<RClusterPool>(*this))
 {
    fDecompressor = std::make_unique<RNTupleDecompressor>();
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from container"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*> ("szUnzip", "B", "volume after unzipping"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nClusterLoaded", "",
-                                                   "number of partial clusters preloaded from storage"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*> ("nPageLoaded", "", "number of pages loaded from storage"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*> ("nPagePopulated", "", "number of populated pages"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallRead", "ns", "wall clock time spent reading"),
-      *fMetrics.MakeCounter<RNTupleAtomicCounter*> ("timeWallUnzip", "ns", "wall clock time spent decompressing"),
-      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuRead", "ns", "CPU time spent reading"),
-      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuUnzip", "ns",
-                                                                       "CPU time spent decompressing")
-   });
+   EnableDefaultMetrics("RPageSourceDaos");
 
    auto args = ParseDaosURI(uri);
    auto pool = std::make_shared<RDaosPool>(args.fPoolUuid, args.fSvcReplicas);

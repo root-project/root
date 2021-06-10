@@ -17,7 +17,6 @@
 #define ROOT7_RPageStorageDaos
 
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -86,18 +85,6 @@ Currently, an object is allocated for each page + 3 additional objects (anchor/h
 // clang-format on
 class RPageSinkDaos : public RPageSink {
 private:
-   /// I/O performance counters that get registered in fMetrics
-   struct RCounters {
-      RNTupleAtomicCounter &fNPageCommitted;
-      RNTupleAtomicCounter &fSzWritePayload;
-      RNTupleAtomicCounter &fSzZip;
-      RNTupleAtomicCounter &fTimeWallWrite;
-      RNTupleAtomicCounter &fTimeWallZip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
-   };
-   std::unique_ptr<RCounters> fCounters;
-   RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    /// \brief Underlying DAOS container. An internal `std::shared_ptr` keep the pool connection alive.
@@ -127,8 +114,6 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
-
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 
@@ -155,24 +140,6 @@ public:
 // clang-format on
 class RPageSourceDaos : public RPageSource {
 private:
-   /// I/O performance counters that get registered in fMetrics
-   struct RCounters {
-      RNTupleAtomicCounter &fNReadV;
-      RNTupleAtomicCounter &fNRead;
-      RNTupleAtomicCounter &fSzReadPayload;
-      RNTupleAtomicCounter &fSzUnzip;
-      RNTupleAtomicCounter &fNClusterLoaded;
-      RNTupleAtomicCounter &fNPageLoaded;
-      RNTupleAtomicCounter &fNPagePopulated;
-      RNTupleAtomicCounter &fTimeWallRead;
-      RNTupleAtomicCounter &fTimeWallUnzip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuRead;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuUnzip;
-   };
-   std::unique_ptr<RCounters> fCounters;
-   /// Wraps the I/O counters and is observed by the RNTupleReader metrics
-   RNTupleMetrics fMetrics;
-
    /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
    std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
    // TODO: the page pool should probably be handled by the base class.
@@ -209,8 +176,6 @@ public:
                        RSealedPage &sealedPage) final;
 
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
-
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 
