@@ -30,10 +30,12 @@
 
 #include <iostream>
 
+using namespace ROOT::Experimental;
+
+auto v6_style = RStyle::Parse("tgraph { line_width: 3; line_color: red; }");
+
 void draw_v6()
 {
-   using namespace ROOT::Experimental;
-
    static constexpr int npoints = 10;
    double x[npoints] = { 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. };
    double y[npoints] = { .1, .2, .3, .4, .3, .2, .1, .2, .3, .4 };
@@ -85,7 +87,11 @@ void draw_v6()
    // show same object again, but with other draw options
    subpads[1][1]->Draw<TObjectDrawable>(th2, "lego2");
 
-   canvas->Show(); // new window in default browser should popup and async update will be triggered
+   // add style, evaluated only on client side
+   canvas->UseStyle(v6_style);
+
+   // new window in web browser should popup and async update will be triggered
+   canvas->Show();
 
    // synchronous, wait until drawing is really finished
    canvas->Update(false, [](bool res) { std::cout << "First sync update done = " << (res ? "true" : "false") << std::endl; });
