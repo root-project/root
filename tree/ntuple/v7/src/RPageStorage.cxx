@@ -42,18 +42,12 @@ ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 {
 }
 
-ROOT::Experimental::Detail::RNTupleMetrics &ROOT::Experimental::Detail::RPageStorage::GetMetrics()
-{
-   static RNTupleMetrics metrics("");
-   return metrics;
-}
-
 
 //------------------------------------------------------------------------------
 
 
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
-   : RPageStorage(name), fOptions(options)
+   : RPageStorage(name), fMetrics(""), fOptions(options)
 {
 }
 
@@ -139,12 +133,103 @@ std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::Unsea
    return pageBuffer;
 }
 
+void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)
+{
+   fMetrics = RNTupleMetrics(prefix);
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from storage (required)"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadOverhead", "B", "volume read from storage (overhead)"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szUnzip", "B", "volume after unzipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nClusterLoaded", "",
+                                                   "number of partial clusters preloaded from storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageLoaded", "", "number of pages loaded from storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPagePopulated", "", "number of populated pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallRead", "ns", "wall clock time spent reading"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallUnzip", "ns", "wall clock time spent decompressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuRead", "ns", "CPU time spent reading"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuUnzip", "ns",
+                                                                        "CPU time spent decompressing"),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwRead", "MB/s", "bandwidth compressed bytes read per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+               if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
+                  if (const auto timeWallRead = metrics.GetLocalCounter("timeWallRead")) {
+                     if (auto walltime = timeWallRead->GetValueAsInt()) {
+                        double payload = szReadPayload->GetValueAsInt();
+                        double overhead = szReadOverhead->GetValueAsInt();
+                        // unit: bytes / nanosecond = GB/s
+                        return {true, (1000. * (payload + overhead) / walltime)};
+                     }
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwReadUnzip", "MB/s", "bandwidth uncompressed bytes read per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szUnzip = metrics.GetLocalCounter("szUnzip")) {
+               if (const auto timeWallRead = metrics.GetLocalCounter("timeWallRead")) {
+                  if (auto walltime = timeWallRead->GetValueAsInt()) {
+                     double unzip = szUnzip->GetValueAsInt();
+                     // unit: bytes / nanosecond = GB/s
+                     return {true, 1000. * unzip / walltime};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwUnzip", "MB/s", "decompression bandwidth of uncompressed bytes per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szUnzip = metrics.GetLocalCounter("szUnzip")) {
+               if (const auto timeWallUnzip = metrics.GetLocalCounter("timeWallUnzip")) {
+                  if (auto walltime = timeWallUnzip->GetValueAsInt()) {
+                     double unzip = szUnzip->GetValueAsInt();
+                     // unit: bytes / nanosecond = GB/s
+                     return {true, 1000. * unzip / walltime};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("rtReadEfficiency", "", "ratio of payload over all bytes read",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+               if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
+                  if (auto payload = szReadPayload->GetValueAsInt()) {
+                     // r/(r+o) = 1/((r+o)/r) = 1/(1 + o/r)
+                     return {true, 1./(1. + (1. * szReadOverhead->GetValueAsInt()) / payload)};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("rtCompression", "", "ratio of compressed bytes / uncompressed bytes",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+               if (const auto szUnzip = metrics.GetLocalCounter("szUnzip")) {
+                  if (auto unzip = szUnzip->GetValueAsInt()) {
+                     return {true, (1. * szReadPayload->GetValueAsInt()) / unzip};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      )
+   });
+}
+
 
 //------------------------------------------------------------------------------
 
 
 ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
-   : RPageStorage(name), fOptions(options)
+   : RPageStorage(name), fMetrics(""), fOptions(options)
 {
 }
 
@@ -305,4 +390,19 @@ ROOT::Experimental::Detail::RPageSink::SealPage(
 {
    R__ASSERT(fCompressor);
    return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
+}
+
+void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::string &prefix)
+{
+   fMetrics = RNTupleMetrics(prefix);
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallWrite", "ns", "wall clock time spent writing"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
+                                                                        "CPU time spent compressing")
+   });
 }
