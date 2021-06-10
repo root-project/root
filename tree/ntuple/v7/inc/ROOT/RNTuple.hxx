@@ -87,6 +87,16 @@ An input ntuple provides data from storage as C++ objects. The ntuple model can 
 or it can be imposed by the user. The latter case allows users to read into a specialized ntuple model that covers
 only a subset of the fields in the ntuple. The ntuple model is used when reading complete entries.
 Individual fields can be read as well by instantiating a tree view.
+
+~~~ {.cpp}
+#include <ROOT/RNTuple.hxx>
+using ROOT::Experimental::RNTupleReader;
+
+#include <iostream>
+
+auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
+~~~
 */
 // clang-format on
 class RNTupleReader {
@@ -148,6 +158,20 @@ public:
                                               std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// Open an RNTuple for reading.
+   ///
+   /// Throws an RException if there is no RNTuple with the given name.
+   ///
+   /// **Example: open an RNTuple and print the number of entries**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
+   /// ~~~
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
@@ -173,6 +197,31 @@ public:
    const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
+   ///
+   /// **Example: print summary information to stdout**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleInfo;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// ntuple->PrintInfo();
+   /// // or, equivalently:
+   /// ntuple->PrintInfo(ENTupleInfo::kSummary, std::cout);
+   /// ~~~
+   /// **Example: print detailed column storage data to stderr**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleInfo;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// ntuple->PrintInfo(ENTupleInfo::kStorageDetails, std::cerr);
+   /// ~~~
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
 
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
@@ -198,6 +247,20 @@ public:
       }
    }
 
+   /// Returns an iterator over the entry indices of the RNTuple.
+   ///
+   /// **Example: iterate over all entries and print each entry in JSON format**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// for (auto i : ntuple->GetEntryRange()) {
+   ///    ntuple->Show(i);
+   /// }
+   /// ~~~
    RNTupleGlobalRange GetEntryRange() { return RNTupleGlobalRange(0, GetNEntries()); }
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
