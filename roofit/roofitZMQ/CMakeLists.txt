@@ -13,19 +13,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitZMQ
         RooFit_ZMQ/ZeroMQSvc.h
         RooFit_ZMQ/functions.h
         RooFit_ZMQ/ZeroMQPoller.h
-#        RooFit_ZMQ/ppoll.h
+        RooFit_ZMQ/ppoll.h
     SOURCES
         src/ZeroMQSvc.cpp
         src/ZeroMQPoller.cpp
         src/functions.cpp
-#        src/ppoll.cpp
+        src/ppoll.cpp
     DICTIONARY_OPTIONS
-#        -I${ZeroMQ_INCLUDE_DIR}
         -writeEmptyRootPCM
     DEPENDENCIES
         Core # TVersionCheck, RegisterModule, these are always called from G__RooFitZMQ.cxx.o
     LIBRARIES
-#        ${ZeroMQ_LIBRARY}
         ZeroMQ
     )
 
