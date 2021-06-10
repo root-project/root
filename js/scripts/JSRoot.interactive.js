@@ -725,6 +725,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let svg_x = svg.selectAll(".xaxis_container"),
              svg_y = svg.selectAll(".yaxis_container");
 
+         this.can_zoom_x = this.can_zoom_y = JSROOT.settings.Zooming;
+
+         if (pp && pp.options) {
+            if (pp.options.NoZoomX) this.can_zoom_x = false;
+            if (pp.options.NoZoomY) this.can_zoom_y = false;
+         }
+
          if (!svg.property('interactive_set')) {
             this.addKeysHandler();
 
@@ -990,7 +997,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.zoom_labels) {
             this.zoom_labels.processLabelsMove('stop', m);
          } else {
-            let changed = [true, true];
+            let changed = [this.can_zoom_x, this.can_zoom_y];
             m[0] = Math.max(0, Math.min(this.getFrameWidth(), m[0]));
             m[1] = Math.max(0, Math.min(this.getFrameHeight(), m[1]));
 
@@ -1070,11 +1077,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (valid_x && valid_y && this._dblclick_handler)
             if (this.processFrameClick({ x: m[0], y: m[1] }, true)) return;
 
-         let kind = "xyz";
+         let kind = (this.can_zoom_x ? "x" : "") + (this.can_zoom_y ? "y" : "") + "z";
          if (!valid_x) {
+            if (!this.can_zoom_y) return;
             kind = this.swap_xy ? "x" : "y";
             if ((m[0] > fw) && this[kind+"2_handle"]) kind += "2"; // let unzoom second axis
          } else if (!valid_y) {
+            if (!this.can_zoom_x) return;
             kind = this.swap_xy ? "y" : "x";
             if ((m[1] < 0) && this[kind+"2_handle"]) kind += "2"; // let unzoom second axis
          }
@@ -1310,18 +1319,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       /** @summary Handles mouse wheel event */
       mouseWheel: function(evnt) {
          evnt.stopPropagation();
-
          evnt.preventDefault();
          this.clearInteractiveElements();
 
-         let itemx = { name: "x", reverse: this.reverse_x, ignore: false },
+         let itemx = { name: "x", reverse: this.reverse_x },
              itemy = { name: "y", reverse: this.reverse_y, ignore: !this.isAllowedDefaultYZooming() },
              cur = d3.pointer(evnt, this.getFrameSvg().node()),
              w = this.getFrameWidth(), h = this.getFrameHeight();
 
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >=0) && (cur[1] <= h), cur[1] < 0);
+         if (this.can_zoom_x)
+            this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >=0) && (cur[1] <= h), cur[1] < 0);
 
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
+         if (this.can_zoom_y)
+            this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
 
          this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
@@ -1336,7 +1346,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.zoomSingle("y2", itemy.second.min, itemy.second.max);
             if (itemy.second.changed) this.zoomChangedInteractive('y2', true);
          }
-
       },
 
       /** @summary Show frame context menu */

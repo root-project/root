@@ -3249,6 +3249,57 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Extract properties from TObjectDisplayItem */
+   RPadPainter.prototype.extractTObjectProp = function(snap) {
+      if (snap.fColIndex && snap.fColValue) {
+         let colors = this.root_colors || jsrp.root_colors;
+         for (let k = 0; k < snap.fColIndex.length; ++k)
+            colors[snap.fColIndex[k]] = snap.fColValue[k];
+       }
+
+      // painter used only for evaluation of attributes
+      let pattr = new JSROOT.ObjectPainter(), obj = snap.fObject;
+      pattr.assignObject(snap);
+      pattr.csstype = snap.fCssType;
+      pattr.rstyle = snap.fStyle;
+
+      snap.fOption = pattr.v7EvalAttr("opt", "");
+
+      let extract_color = (member_name, attr_name) => {
+         let col = pattr.v7EvalColor(attr_name, "");
+         if (col) obj[member_name] = jsrp.addColor(col, this.root_colors);
+      }
+
+      // handle TAttLine
+      if ((obj.fLineColor !== undefined) && (obj.fLineWidth !== undefined) && (obj.fLineStyle !== undefined)) {
+         extract_color("fLineColor", "line_color");
+         obj.fLineWidth = pattr.v7EvalAttr("line_width", obj.fLineWidth);
+         obj.fLineStyle = pattr.v7EvalAttr("line_style", obj.fLineStyle);
+      }
+
+      // handle TAttFill
+      if ((obj.fFillColor !== undefined) && (obj.fFillStyle !== undefined)) {
+         extract_color("fFillColor", "fill_color");
+         obj.fFillStyle = pattr.v7EvalAttr("fill_style", obj.fFillStyle);
+      }
+
+      // handle TAttMarker
+      if ((obj.fMarkerColor !== undefined) && (obj.fMarkerStyle !== undefined) && (obj.fMarkerSize !== undefined)) {
+         extract_color("fMarkerColor", "marker_color");
+         obj.fMarkerStyle = pattr.v7EvalAttr("marker_style", obj.fMarkerStyle);
+         obj.fMarkerSize = pattr.v7EvalAttr("marker_size", obj.fMarkerSize);
+      }
+
+      // handle TAttText
+      if ((obj.fTextColor !== undefined) && (obj.fTextAlign !== undefined) && (obj.fTextAngle !== undefined) && (obj.fTextSize !== undefined)) {
+         extract_color("fTextColor", "text_color");
+         obj.fTextAlign = pattr.v7EvalAttr("text_align", obj.fTextAlign);
+         obj.fTextAngle = pattr.v7EvalAttr("text_angle", obj.fTextAngle);
+         obj.fTextSize = pattr.v7EvalAttr("text_size", obj.fTextSize);
+         // TODO: v7 font handling differs much from v6, ignore for the moment
+      }
+   }
+
    /** @summary Function called when drawing next snapshot from the list
      * @returns {Promise} with pad painter when ready
      * @private */
@@ -3300,6 +3351,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                return this.drawNextSnap(lst, indx);
             });
 
+         if (snap._typename === "ROOT::Experimental::TObjectDisplayItem")
+            this.extractTObjectProp(snap);
+
          let promise;
 
          if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || ""))
@@ -3340,7 +3394,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (snap._typename === "ROOT::Experimental::TObjectDisplayItem") {
 
          // identifier used in RObjectDrawable
-         let webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
+         const webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
 
          if (snap.fKind == webSnapIds.kStyle) {
             JSROOT.extend(JSROOT.gStyle, snap.fObject);
@@ -3372,6 +3426,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!this.getFramePainter())
             return JSROOT.draw(this.getDom(), { _typename: "TFrame", $dummy: true }, "")
                          .then(() => this.drawNextSnap(lst, indx-1)); // call same object again
+
+         this.extractTObjectProp(snap);
       }
 
       // TODO - fDrawable is v7, fObject from v6, maybe use same data member?

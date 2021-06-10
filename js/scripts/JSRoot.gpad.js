@@ -3264,7 +3264,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // set palette
          if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
             let palette = [];
-            for (let n=0;n<snap.fSnapshot.fBuf.length;++n)
+            for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
                palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
 
             this.custom_palette = new JSROOT.ColorPalette(palette);
@@ -3959,6 +3959,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (d.check("CP",true)) this.options.CreatePalette = d.partAsInt(0,0);
 
+      if (d.check("NOZOOMX")) this.options.NoZoomX = true;
+      if (d.check("NOZOOMY")) this.options.NoZoomY = true;
+
       if (d.check('WHITE')) pad.fFillColor = 0;
       if (d.check('LOG2X')) { pad.fLogx = 2; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
       if (d.check('LOGX')) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
@@ -4016,7 +4019,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          painter.selectCurrentPad(prev_name);
          return painter;
       });
-   }
+   };
 
    // ==========================================================================================
 
@@ -4030,7 +4033,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       kResizeOpaque: JSROOT.BIT(21),
       kIsGrayscale: JSROOT.BIT(22),
       kShowToolTips: JSROOT.BIT(23)
-   }
+   };
 
    /**
      * @summary Painter for TCanvas object
