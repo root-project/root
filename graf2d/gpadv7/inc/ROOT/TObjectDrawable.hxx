@@ -78,7 +78,7 @@ public:
    {
       fKind = kObject;
       fObj = obj;
-      fOpt = opt;
+      SetOpt(opt);
    }
 
    TObjectDrawable(EKind kind, bool persistent = false) : RDrawable("tobject")
