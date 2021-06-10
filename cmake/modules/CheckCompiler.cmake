@@ -166,7 +166,7 @@ if(cxx11 OR cxx14 OR cxx17)
   unset(cxx11 CACHE)
 endif()
 
-if(NOT CMAKE_CXX_STANDARD MATCHES "11|14|17")
+if(NOT CMAKE_CXX_STANDARD MATCHES "11|14|17|20")
   message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
 endif()
 
