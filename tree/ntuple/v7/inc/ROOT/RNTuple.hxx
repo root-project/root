@@ -222,6 +222,8 @@ public:
    /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
    /// ntuple->PrintInfo(ENTupleInfo::kStorageDetails, std::cerr);
    /// ~~~
+   ///
+   /// For use of ENTupleInfo::kMetrics, see #EnableMetrics.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
 
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
@@ -293,6 +295,25 @@ public:
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(GetNEntries()); }
 
+   /// Enable performance measurements (decompression time, bytes read from storage, etc.)
+   ///
+   /// **Example: inspect the reader metrics after loading every entry**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleInfo;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// // metrics must be turned on beforehand
+   /// ntuple->EnableMetrics();
+   ///
+   /// for (auto i : ntuple->GetEntryRange()) {
+   ///    ntuple->LoadEntry(i);
+   /// }
+   /// ntuple->PrintInfo(ENTupleInfo::kMetrics);
+   /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
