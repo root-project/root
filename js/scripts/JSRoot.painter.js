@@ -318,12 +318,14 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Add new color
      * @param {string} rgb - color name or just string with rgb value
+     * @param {array} [lst] - optional colors list, to which add colors
      * @returns {number} index of new color */
-   jsrp.addColor = function(rgb) {
-      let indx = jsrp.root_colors.indexOf(rgb);
+   jsrp.addColor = function(rgb, lst) {
+      if (!lst) lst = jsrp.root_colors;
+      let indx = lst.indexOf(rgb);
       if (indx >= 0) return indx;
-      jsrp.root_colors.push(rgb);
-      return jsrp.root_colors.length-1;
+      lst.push(rgb);
+      return lst.length-1;
    }
 
    // =====================================================================

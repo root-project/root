@@ -3796,7 +3796,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    // =============================================================
 
-
    function RHistStatsPainter(divid, palette, opt) {
       JSROOT.v7.RPavePainter.call(this, divid, palette, opt, "stats");
    }
