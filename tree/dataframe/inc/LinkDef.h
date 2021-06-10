@@ -20,6 +20,7 @@
 #pragma link C++ namespace ROOT::Internal::RDF::GraphDrawing;
 #pragma link C++ namespace ROOT::Detail::RDF;
 #pragma link C++ namespace ROOT::RDF;
+#pragma link C++ class ROOT::RDF::RDisplay-;
 #pragma link C++ class ROOT::Internal::RDF::RActionBase-;
 #pragma link C++ class ROOT::Internal::RDF::RJittedAction-;
 #pragma link C++ class ROOT::Detail::RDF::RFilterBase-;
