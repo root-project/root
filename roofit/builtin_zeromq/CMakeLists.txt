@@ -18,6 +18,8 @@ ExternalProject_Add(BUILTIN_ZeroMQ
     BUILD_BYPRODUCTS ${ZeroMQ_LIBRARIES}
     )
 
+ExternalProject_Get_Property(BUILTIN_ZeroMQ install_dir)
+
 set(ZeroMQ_FOUND TRUE CACHE BOOL "" FORCE)
 
 set(ZeroMQ_INCLUDE_DIR  ${ZeroMQ_PREFIX}/include CACHE INTERNAL "" FORCE)
@@ -35,3 +37,10 @@ set(ZeroMQ_DIR ${ZeroMQ_PREFIX}/share/cmake/ZeroMQ CACHE INTERNAL "" FORCE)
 # also need source and build directories for ppoll in RooFitZMQ
 set(ZeroMQ_SOURCE_DIR ${ZeroMQ_PREFIX}/src/BUILTIN_ZeroMQ/src CACHE INTERNAL "" FORCE)
 set(ZeroMQ_BUILD_DIR ${ZeroMQ_PREFIX}/src/BUILTIN_ZeroMQ-build CACHE INTERNAL "" FORCE)
+
+ExternalProject_Add(BUILTIN_cppzmq
+    URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.7.1.tar.gz
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${install_dir}
+        -DCPPZMQ_BUILD_TESTS=OFF
+    )
