@@ -90,13 +90,47 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
 }
 
 ////////////////////////////////////////////////////////////////////
+/// Check if object has specified color value and store it in display item
+/// Ensure that color matches on client side too
+
+void TObjectDrawable::ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member)
+{
+   TClass *cl = fObj->IsA();
+   if (!cl->GetBaseClass(class_name)) return;
+
+   auto offset = cl->GetDataMemberOffset(class_member);
+   if (offset <= 0) return;
+
+   Color_t *icol = (Color_t *)((char *) fObj.get() + offset);
+   if (*icol < 10) return;
+
+   TColor *col = gROOT->GetColor(*icol);
+   if (col) item->AddTColor(*icol, col->AsHexString());
+}
+
+
+////////////////////////////////////////////////////////////////////
 /// Create display item which will be delivered to the client
 
 std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ctxt)
 {
    if (GetVersion() > ctxt.GetLastVersion()) {
-      if ((fKind == kObject) || fObj)
-         return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), GetOpt());
+      if ((fKind == kObject) || fObj) {
+         auto item = std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), GetOpt());
+         if ((fKind == kObject) && fObj) {
+            ExtractTColor(item, "TAttLine", "fLineColor");
+            ExtractTColor(item, "TAttFill", "fFillColor");
+            ExtractTColor(item, "TAttMarker", "fMarkerColor");
+            ExtractTColor(item, "TAttText", "fTextColor");
+            ExtractTColor(item, "TAttPad", "fFrameFillColor");
+            ExtractTColor(item, "TAttPad", "fFrameLineColor");
+            ExtractTColor(item, "TAttAxis", "fAxisColor");
+            ExtractTColor(item, "TAttAxis", "fLabelColor");
+            ExtractTColor(item, "TAttAxis", "fTitleColor");
+         }
+
+         return item;
+      }
 
       auto specials = CreateSpecials(fKind);
       return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), GetOpt(), true);

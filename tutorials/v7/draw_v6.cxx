@@ -62,12 +62,11 @@ void draw_v6()
 
    auto canvas = RCanvas::Create("RCanvas showing a v6 objects");
 
-   // place copy of gStyle object, will be applied on JSROOT side
+   // add gStyle object, will be applied on JSROOT side
    // set on the canvas before any other object is drawn
    canvas->Draw<TObjectDrawable>(TObjectDrawable::kStyle);
 
-   // copy all existing ROOT colors, required when colors was modified
-   // or when colors should be possible from client side
+   // add ROOT colors, required when they are changed from default values
    canvas->Draw<TObjectDrawable>(TObjectDrawable::kColors);
 
    // copy custom palette to canvas, will be used for col drawings
