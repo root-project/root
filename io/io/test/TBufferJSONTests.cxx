@@ -7,7 +7,7 @@
 // check utf8 coding with two bytes - most frequent usecase
 TEST(TBufferJSON, utf8_2)
 {
-   std::string str0 = u8"test \u0444"; // this should be cyrillic letter f
+   std::string str0 = reinterpret_cast<const char *>(u8"test \u0444"); // this should be cyrillic letter f
 
    auto len0 = str0.length();
 
@@ -28,7 +28,7 @@ TEST(TBufferJSON, utf8_2)
 // check utf8 coding with three bytes
 TEST(TBufferJSON, utf8_3)
 {
-   std::string str0 = u8"test \u7546"; // no idea that
+   std::string str0 = reinterpret_cast<const char *>(u8"test \u7546"); // no idea that
 
    auto len0 = str0.length();
 
