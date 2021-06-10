@@ -765,3 +765,11 @@ TEST(RDataFrameInterface, BookWithoutColumns)
    EXPECT_EQ(ROOT::RDataFrame(3).Book<>(CounterHelper()).GetValue(), 3);
    EXPECT_THROW(ROOT::RDataFrame(3).Book(MaxSlotHelper(1u)), std::logic_error);
 }
+
+TEST(RDataFrameInterface, SnapshotWithDuplicateColumns)
+{
+   EXPECT_THROW(
+      (ROOT::RDataFrame(1).Snapshot<ULong64_t, ULong64_t>("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})),
+      std::logic_error);
+   EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
+}
