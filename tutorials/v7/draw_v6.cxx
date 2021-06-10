@@ -35,7 +35,7 @@ void draw_v6()
    using namespace ROOT::Experimental;
 
    static constexpr int npoints = 10;
-   double x[npoints] = { 0., 1., 2., 3., 4., 5., 6., 7., 8., 9. };
+   double x[npoints] = { 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. };
    double y[npoints] = { .1, .2, .3, .4, .3, .2, .1, .2, .3, .4 };
    auto gr = std::make_shared<TGraph>(npoints, x, y);
 

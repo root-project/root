@@ -8,7 +8,7 @@
 
 #include <ROOT/TObjectDrawable.hxx>
 
-#include <ROOT/RDisplayItem.hxx>
+#include <ROOT/TObjectDisplayItem.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItems.hxx>
 
@@ -25,12 +25,12 @@
 
 using namespace ROOT::Experimental;
 
-TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : RDrawable("tobject"), fKind(kind)
+TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : TObjectDrawable()
 {
-   if (!persistent) return;
+   fKind = kind;
 
-   fOpts = "persistent";
-   fObj = CreateSpecials(kind);
+   if (persistent)
+      fObj = CreateSpecials(kind);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -89,29 +89,33 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
    return nullptr;
 }
 
-
 ////////////////////////////////////////////////////////////////////
 /// Create display item which will be delivered to the client
 
 std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ctxt)
 {
    if (GetVersion() > ctxt.GetLastVersion()) {
-      if ((fKind == kObject) || (fOpts == "persistent"))
-         return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), fOpts);
+      if ((fKind == kObject) || fObj)
+         return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), GetOpt());
 
       auto specials = CreateSpecials(fKind);
-      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), fOpts, true);
+      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), GetOpt(), true);
    }
 
    return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////
+/// fill context menu items for the ROOT class
+
 void TObjectDrawable::PopulateMenu(RMenuItems &items)
 {
-   // fill context menu items for the ROOT class
    if (fKind == kObject)
       items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
 }
+
+////////////////////////////////////////////////////////////////////
+/// Execute object method
 
 void TObjectDrawable::Execute(const std::string &exec)
 {
@@ -132,7 +136,7 @@ void TObjectDrawable::Execute(const std::string &exec)
    }
 
    std::stringstream cmd;
-   cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
+   cmd << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
    std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }

@@ -40,6 +40,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPadPos.hxx
     ROOT/RPave.hxx
     ROOT/RVirtualCanvasPainter.hxx
+    ROOT/TObjectDisplayItem.hxx
     ROOT/TObjectDrawable.hxx
   SOURCES
     src/RCanvas.cxx

@@ -10,6 +10,7 @@
 #define ROOT7_TObjectDrawable
 
 #include <ROOT/RDrawable.hxx>
+#include <ROOT/RAttrValue.hxx>
 
 class TObject;
 class TColor;
@@ -35,9 +36,9 @@ private:
       kObject = 1,   ///< plain object
    };
 
-   int fKind{kNone};                   ///< object kind
-   Internal::RIOShared<TObject> fObj;  ///< The object to be painted
-   std::string fOpts;                  ///< drawing options
+   int fKind{kNone};                           ///< object kind
+   Internal::RIOShared<TObject> fObj;          ///< The object to be painted
+   RAttrValue<std::string> fOpt{this, "opt"};  ///<! object draw options
 
    const char *GetColorCode(TColor *col);
 
@@ -63,11 +64,27 @@ public:
 
    TObjectDrawable() : RDrawable("tobject") {}
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
+   TObjectDrawable(const std::shared_ptr<TObject> &obj) : TObjectDrawable()
+   {
+      fKind = kObject;
+      fObj = obj;
+   }
+
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : TObjectDrawable()
+   {
+      fKind = kObject;
+      fObj = obj;
+      fOpt = opt;
+   }
 
    TObjectDrawable(EKind kind, bool persistent = false);
 
    virtual ~TObjectDrawable() = default;
+
+   std::shared_ptr<TObject> GetObject() const { return fObj.get_shared(); }
+
+   void SetOpt(const std::string &opt) { fOpt = opt; }
+   std::string GetOpt() const { return fOpt; }
 };
 
 } // namespace Experimental
