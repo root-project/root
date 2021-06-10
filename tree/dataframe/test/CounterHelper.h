@@ -18,7 +18,15 @@ public:
    std::shared_ptr<std::atomic_uint> GetResultPtr() const { return fNCalls; }
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
+#ifndef COUNTERHELPER_CALLBACKMODE
    void Exec(unsigned int) { ++(*fNCalls); }
+#else
+   void Exec(unsigned int) {}
+   std::function<void(unsigned int)> GetDataBlockCallback() final
+   {
+      return [this](unsigned int) mutable { ++(*this->fNCalls); };
+   }
+#endif
    void Finalize() {}
 
    std::string GetActionName() { return "ThreadSafeCounter"; }
