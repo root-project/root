@@ -35,6 +35,6 @@ target_include_directories(RooFitZMQ PUBLIC $<BUILD_INTERFACE:${ZeroMQ_INCLUDE_D
 target_include_directories(RooFitZMQ PUBLIC $<BUILD_INTERFACE:${ZeroMQ_SOURCE_DIR}>)
 target_include_directories(RooFitZMQ PUBLIC $<BUILD_INTERFACE:${ZeroMQ_BUILD_DIR}>)
 
-#if(testing)
-#    ROOT_ADD_TEST_SUBDIRECTORY(test)
-#endif()
+if(testing)
+    ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()
