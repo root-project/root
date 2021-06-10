@@ -19,6 +19,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RPadBase;
+class TObjectDisplayItem;
 
 /** \class TObjectDrawable
 \ingroup GpadROOT7
@@ -53,6 +54,8 @@ protected:
    void PopulateMenu(RMenuItems &) final;
 
    void Execute(const std::string &) final;
+
+   void ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member);
 
 public:
    // special kinds, see TWebSnapshot enums

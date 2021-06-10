@@ -12,6 +12,7 @@
 #include <ROOT/RDisplayItem.hxx>
 
 #include <string>
+#include <vector>
 #include "TObject.h"
 
 namespace ROOT {
@@ -33,6 +34,8 @@ protected:
    const TObject *fObject{nullptr};        ///< ROOT6 object
    std::string fOption;                    ///< drawing options
    bool fOwner{false};                     ///<! if object must be deleted
+   std::vector<int> fColIndex;             ///< stored color index
+   std::vector<std::string> fColValue;     ///< stored color value
 
 public:
 
@@ -47,6 +50,12 @@ public:
    virtual ~TObjectDisplayItem()
    {
       if (fOwner) delete fObject;
+   }
+
+   void AddTColor(int color_indx, const std::string &color_value)
+   {
+      fColIndex.emplace_back(color_indx);
+      fColValue.emplace_back(color_value);
    }
 
 };
