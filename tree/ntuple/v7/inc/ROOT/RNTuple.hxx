@@ -254,13 +254,14 @@ public:
    /// **Example: iterate over all entries and print each entry in JSON format**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleShowFormat;
    /// using ROOT::Experimental::RNTupleReader;
    ///
    /// #include <iostream>
    ///
    /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
    /// for (auto i : ntuple->GetEntryRange()) {
-   ///    ntuple->Show(i);
+   ///    ntuple->Show(i, ENTupleShowFormat::kCompleteJSON);
    /// }
    /// ~~~
    RNTupleGlobalRange GetEntryRange() { return RNTupleGlobalRange(0, GetNEntries()); }
