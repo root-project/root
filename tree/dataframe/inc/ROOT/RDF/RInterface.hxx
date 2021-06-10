@@ -2746,7 +2746,9 @@ private:
 
    template <typename Helper, typename ActionResultType, typename... Others>
    RResultPtr<ActionResultType>
-   CallCreateActionWithoutColsIfPossible(const std::shared_ptr<ActionResultType> &, Others...)
+   CallCreateActionWithoutColsIfPossible(const std::shared_ptr<ActionResultType> &,
+                                         const std::shared_ptr<Helper>& /*hPtr*/,
+                                         Others...)
    {
       throw std::logic_error(std::string("An action was booked with no input columns, but the action requires "
                                          "columns! The action helper type was ") +
