@@ -31,6 +31,7 @@ target_link_libraries(ZeroMQ INTERFACE $<BUILD_INTERFACE:${ZeroMQ_LIBRARIES}>)
 add_dependencies(ZeroMQ BUILTIN_ZeroMQ)
 
 add_library(ZeroMQ::ZeroMQ ALIAS ZeroMQ)
+add_library(libzmq ALIAS ZeroMQ)
 
 set(ZeroMQ_DIR ${ZeroMQ_PREFIX}/share/cmake/ZeroMQ CACHE INTERNAL "" FORCE)
 
@@ -43,4 +44,5 @@ ExternalProject_Add(BUILTIN_cppzmq
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${install_dir}
         -DCPPZMQ_BUILD_TESTS=OFF
+    DEPENDS BUILTIN_ZeroMQ
     )
