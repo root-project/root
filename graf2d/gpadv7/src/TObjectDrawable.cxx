@@ -120,7 +120,7 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
 {
    if (GetVersion() > ctxt.GetLastVersion()) {
       if ((fKind == kObject) || fObj) {
-         auto item = std::make_unique<TObjectDisplayItem>(*this, fKind, fObj.get(), GetOpt());
+         auto item = std::make_unique<TObjectDisplayItem>(*this, fKind, fObj.get());
          if ((fKind == kObject) && fObj) {
             ExtractTColor(item, "TAttLine", "fLineColor");
             ExtractTColor(item, "TAttFill", "fFillColor");
@@ -137,7 +137,7 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
       }
 
       auto specials = CreateSpecials(fKind);
-      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), GetOpt());
+      return std::make_unique<TObjectDisplayItem>(fKind, specials.release());
    }
 
    return nullptr;
