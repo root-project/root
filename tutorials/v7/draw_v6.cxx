@@ -80,14 +80,15 @@ void draw_v6()
 
    subpads[0][0]->Draw<TObjectDrawable>(gr, "AL");
 
-   subpads[0][1]->Draw<TObjectDrawable>(th1, "");
+   // one can change basic attributes via v7 classes, value will be replaced on client side
+   subpads[0][1]->Draw<TObjectDrawable>(th1)->AttrLine().SetColor(RColor::kBlue).SetWidth(3).SetStyle(2);
 
    subpads[1][0]->Draw<TObjectDrawable>(th2, "colz");
 
    // show same object again, but with other draw options
    subpads[1][1]->Draw<TObjectDrawable>(th2, "lego2");
 
-   // add style, evaluated only on client side
+   // add style, here used to configure TGraph attrbutes, evaluated only on client side
    canvas->UseStyle(v6_style);
 
    // new window in web browser should popup and async update will be triggered
