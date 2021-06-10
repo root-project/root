@@ -271,6 +271,21 @@ public:
    /// field of a collection itself, like GetView<NTupleSize_t>("particle").
    ///
    /// Raises an exception if there is no field with the given name.
+   ///
+   /// **Example: iterate over a field named "pt" of type `float`**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto pt = ntuple->GetView<float>("pt");
+   ///
+   /// for (auto i : ntuple->GetEntryRange()) {
+   ///    std::cout << i << ": " << pt(i) << "\n";
+   /// }
+   /// ~~~
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
@@ -282,7 +297,9 @@ public:
       return RNTupleView<T>(fieldId, fSource.get());
    }
 
-   /// Raises an exception if there is no field with the given name.
+   /// Raises an exception if:
+   /// * there is no field with the given name or,
+   /// * the field is not a collection
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId) {
