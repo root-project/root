@@ -1056,6 +1056,9 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 ClassImp(TClass);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Internal, default constructor.
+///
+/// \note Use `TClass::GetClass("ClassName")` to get access to a TClass object for a certain class!
 
 TClass::TClass() :
    TDictionary(),
@@ -1090,10 +1093,10 @@ TClass::TClass() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TClass object. This object contains the full dictionary
 /// of a class. It has list to baseclasses, datamembers and methods.
-/// Use this ctor to create a standalone TClass object. Most useful
-/// to get a TClass interface to an interpreted class. Used by TTabCom.
-/// Normally you would use TClass::GetClass("class") to get access to a
-/// TClass object for a certain class.
+/// Use this ctor to create a standalone TClass object. Only useful
+/// to get a temporary TClass interface to an interpreted class. Used by TTabCom.
+///
+/// \note Use `TClass::GetClass("ClassName")` to get access to a TClass object for a certain class!
 
 TClass::TClass(const char *name, Bool_t silent) :
    TDictionary(name),
@@ -1139,8 +1142,9 @@ TClass::TClass(const char *name, Bool_t silent) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TClass object. This object contains the full dictionary
-/// of a class. It has list to baseclasses, datamembers and methods.
+/// Internal constructor.
+///
+/// \note Use `TClass::GetClass("ClassName")` to get access to a TClass object for a certain class!
 
 TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    TDictionary(name),
@@ -1166,8 +1170,9 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TClass object. This object does not contain anything. We mimic
-/// the case of a class fwd declared in the interpreter.
+/// Internal constructor, mimicing the case of a class fwd declared in the interpreter.
+///
+/// \note Use `TClass::GetClass("ClassName")` to get access to a TClass object for a certain class!
 
 TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t silent) :
    TDictionary(name),
@@ -1203,14 +1208,16 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Internal constructor.
+///
 /// Create a TClass object. This object contains the full dictionary
 /// of a class. It has list to baseclasses, datamembers and methods.
 /// Use this ctor to create a standalone TClass object. Most useful
 /// to get a TClass interface to an interpreted class. Used by TTabCom.
-/// Normally you would use TClass::GetClass("class") to get access to a
-/// TClass object for a certain class.
 ///
 /// This copies the ClassInfo (i.e. does *not* take ownership of it).
+///
+/// \note Use `TClass::GetClass("class")` to get access to a TClass object for a certain class!
 
 TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
@@ -1259,8 +1266,9 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TClass object. This object contains the full dictionary
-/// of a class. It has list to baseclasses, datamembers and methods.
+/// Internal constructor.
+///
+/// \note Use `TClass::GetClass("class")` to get access to a TClass object for a certain class!
 
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
@@ -1287,8 +1295,9 @@ TClass::TClass(const char *name, Version_t cversion,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TClass object. This object contains the full dictionary
-/// of a class. It has list to baseclasses, datamembers and methods.
+/// Internal constructor.
+///
+/// \note Use `TClass::GetClass("class")` to get access to a TClass object for a certain class!
 
 TClass::TClass(const char *name, Version_t cversion,
                const std::type_info &info, TVirtualIsAProxy *isa,
