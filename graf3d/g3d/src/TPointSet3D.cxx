@@ -145,8 +145,8 @@ void TPointSet3D::ClearIds()
 void TPointSet3D::PointSelected(Int_t n)
 {
    TObject* id = GetPointId(n);
-   printf("TPointSet3D::PointSelected n=%d, id=(%s*)0x%lx\n",
-          n, id ? id->IsA()->GetName() : "void", (ULong_t)id);
+   printf("TPointSet3D::PointSelected n=%d, id=(%s*)0x%zx\n",
+          n, id ? id->IsA()->GetName() : "void", (size_t)id);
    if (id)
       id->Print();
 }

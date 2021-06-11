@@ -38,7 +38,7 @@ TX3DFrame::~TX3DFrame()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process Message
 
-Bool_t TX3DFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TX3DFrame::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    return fViewer.ProcessFrameMessage(msg, parm1, parm2);
 }

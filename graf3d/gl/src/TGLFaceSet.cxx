@@ -312,7 +312,7 @@ void TGLFaceSet::EnforceTriangles()
 void TGLFaceSet::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    if (gDebug > 4) {
-      Info("TGLFaceSet::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLFaceSet::DirectDraw", "this %zd (class %s) LOD %d", (size_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    if (fNbPols == 0) return;
