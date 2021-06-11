@@ -1362,22 +1362,7 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Parse cutRange specification
-  vector<string> cutVec ;
-  if (cutRange && strlen(cutRange)>0) {
-    if (strchr(cutRange,',')==0) {
-      cutVec.push_back(cutRange) ;
-    } else {
-      const size_t bufSize = strlen(cutRange)+1;
-      char* buf = new char[bufSize] ;
-      strlcpy(buf,cutRange,bufSize) ;
-      const char* oneRange = strtok(buf,",") ;
-      while(oneRange) {
-   cutVec.push_back(oneRange) ;
-   oneRange = strtok(0,",") ;
-      }
-      delete[] buf ;
-    }
-  }
+  const auto cutVec = RooHelpers::tokenise(cutRange ? cutRange : "", ",", /*returnEmptyToken =*/ false);
 
   // Loop over events and fill the histogram
   if (hist->GetSumw2()->fN==0) {
