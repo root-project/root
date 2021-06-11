@@ -5255,9 +5255,10 @@ void TH1::LabelsInflate(Option_t *ax)
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) return;
 
-   TH1 *hold = (TH1*)IsA()->New();;
+   TH1 *hold = (TH1*)IsA()->New();
    hold->SetDirectory(0);
    Copy(*hold);
+   hold->ResetBit(kMustCleanup);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Int_t nbins   = axis->GetNbins();
