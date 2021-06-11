@@ -401,7 +401,7 @@ namespace FitUtil {
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 
          double maxResValue = std::numeric_limits<double>::max() / n;
-         std::vector<double> ones{1, 1, 1, 1};
+         std::vector<double> ones{1., 1., 1., 1.};
          auto vecSize = vecCore::VectorSize<T>();
 
          auto mapFunction = [&](unsigned int i) {
