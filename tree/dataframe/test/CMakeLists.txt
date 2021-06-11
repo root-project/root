@@ -24,7 +24,8 @@ ROOT_ADD_GTEST(dataframe_redefine dataframe_redefine.cxx LIBRARIES ROOTDataFrame
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(dataframe_simple dataframe_simple.cxx LIBRARIES ROOTDataFrame)
   target_include_directories(dataframe_simple PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  ROOT_GENERATE_DICTIONARY(MaxSlotHelperDict MaxSlotHelper.h MODULE dataframe_simple LINKDEF MaxSlotHelperLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES ROOTDataFrame)
+  ROOT_GENERATE_DICTIONARY(DataFrameSimpleDict MaxSlotHelper.h SimpleFiller.h MODULE dataframe_simple
+                           LINKDEF DataFrameSimpleLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES ROOTDataFrame Hist)
   if(NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS)
     ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame)
   endif()

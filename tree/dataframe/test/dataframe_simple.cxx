@@ -20,6 +20,7 @@
 #include <random>
 
 #include "MaxSlotHelper.h"
+#include "SimpleFiller.h"
 
 using namespace ROOT;
 using namespace ROOT::RDF;
@@ -957,6 +958,22 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
 TEST_P(RDFSimpleTests, WritingToFundamentalType)
 {
    EXPECT_THROW(ROOT::RDataFrame(1).Define("x", [] { return 1; }).Filter("x = 42"), std::runtime_error);
+}
+
+TEST_P(RDFSimpleTests, FillWithCustomClass)
+{
+   auto simplefilled = ROOT::RDataFrame(10).Define("x", [] { return 42.; }).Fill<double>(SimpleFiller{}, {"x"});
+   auto &h = simplefilled->GetHisto();
+   EXPECT_DOUBLE_EQ(h.GetMean(), 42.);
+   EXPECT_EQ(h.GetEntries(), 10);
+}
+
+TEST_P(RDFSimpleTests, FillWithCustomClassJitted)
+{
+   auto simplefilled = ROOT::RDataFrame(10).Define("x", [] { return 42.; }).Fill(SimpleFiller{}, {"x"});
+   auto &h = simplefilled->GetHisto();
+   EXPECT_DOUBLE_EQ(h.GetMean(), 42.);
+   EXPECT_EQ(h.GetEntries(), 10);
 }
 
 // run single-thread tests
