@@ -18,7 +18,7 @@ dt = ROOT.RooRealVar("dt", "dt", -20, 20)
 dm = ROOT.RooRealVar("dm", "dm", 0.472)
 tau = ROOT.RooRealVar("tau", "tau", 1.547)
 w = ROOT.RooRealVar("w", "mistag rate", 0.1)
-dw = ROOT.RooRealVar("dw", "delta mistag rate", 0.)
+dw = ROOT.RooRealVar("dw", "delta mistag rate", 0.0)
 
 mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state")
 mixState.defineType("mixed", -1)
@@ -34,8 +34,7 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.1)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct Bdecay (x) gauss
-bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav,
-                         tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
 
 # Sample data from model
 # --------------------------------------------
@@ -59,9 +58,8 @@ tbins.addUniform(60, -15, 0)
 tbins.addUniform(15, 0, 15)
 
 # Make plot with specified binning
-dtframe = dt.frame(ROOT.RooFit.Range(-15, 15),
-                   ROOT.RooFit.Title("dt distribution with custom binning"))
-data.plotOn(dtframe, Binning = tbins)
+dtframe = dt.frame(ROOT.RooFit.Range(-15, 15), ROOT.RooFit.Title("dt distribution with custom binning"))
+data.plotOn(dtframe, Binning=tbins)
 bmix.plotOn(dtframe)
 
 # NB: Note that bin density for each bin is adjusted to that of default frame binning as shown
@@ -86,14 +84,13 @@ abins.addBoundaryPair(4)
 abins.addBoundaryPair(6)
 
 # Create plot frame in dt
-aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title(
-    "mixState asymmetry distribution with custom binning"))
+aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title("mixState asymmetry distribution with custom binning"))
 
 # Plot mixState asymmetry of data with specified customg binning
-data.plotOn(aframe, Asymmetry = mixState, Binning = abins)
+data.plotOn(aframe, Asymmetry=mixState, Binning=abins)
 
 # Plot corresponding property of pdf
-bmix.plotOn(aframe, Asymmetry = mixState)
+bmix.plotOn(aframe, Asymmetry=mixState)
 
 # Adjust vertical range of plot to sensible values for an asymmetry
 aframe.SetMinimum(-1.1)

@@ -20,28 +20,23 @@ dterr = ROOT.RooRealVar("dterr", "per-event error on dt", 0.01, 10)
 # Build a gaussian resolution model scaled by the per-error =
 # gauss(dt,bias,sigma*dterr)
 bias = ROOT.RooRealVar("bias", "bias", 0, -10, 10)
-sigma = ROOT.RooRealVar(
-    "sigma", "per-event error scale factor", 1, 0.1, 10)
-gm = ROOT.RooGaussModel(
-    "gm1", "gauss model scaled bt per-event error", dt, bias, sigma, dterr)
+sigma = ROOT.RooRealVar("sigma", "per-event error scale factor", 1, 0.1, 10)
+gm = ROOT.RooGaussModel("gm1", "gauss model scaled bt per-event error", dt, bias, sigma, dterr)
 
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
-decay_gm = ROOT.RooDecay("decay_gm", "decay", dt,
-                         tau, gm, ROOT.RooDecay.DoubleSided)
+decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, ROOT.RooDecay.DoubleSided)
 
 # Construct empirical pdf for per-event error
 # -----------------------------------------------------------------
 
 # Use landau pdf to get empirical distribution with long tail
-pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(
-    1), ROOT.RooFit.RooConst(0.25))
+pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(0.25))
 expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
 
 # Construct a histogram pdf to describe the shape of the dtErr distribution
 expHistDterr = expDataDterr.binnedClone()
-pdfErr = ROOT.RooHistPdf(
-    "pdfErr", "pdfErr", ROOT.RooArgSet(dterr), expHistDterr)
+pdfErr = ROOT.RooHistPdf("pdfErr", "pdfErr", ROOT.RooArgSet(dterr), expHistDterr)
 
 # Construct conditional product decay_dm(dt|dterr)*pdf(dterr)
 # ----------------------------------------------------------------------------------------------------------------------
@@ -49,12 +44,8 @@ pdfErr = ROOT.RooHistPdf(
 # Construct production of conditional decay_dm(dt|dterr) with empirical
 # pdfErr(dterr)
 model = ROOT.RooProdPdf(
-    "model",
-    "model",
-    ROOT.RooArgSet(pdfErr),
-    ROOT.RooFit.Conditional(
-        ROOT.RooArgSet(decay_gm),
-        ROOT.RooArgSet(dt)))
+    "model", "model", ROOT.RooArgSet(pdfErr), ROOT.RooFit.Conditional(ROOT.RooArgSet(decay_gm), ROOT.RooArgSet(dt))
+)
 
 # (Alternatively you could also use the landau shape pdfDtErr)
 # ROOT.RooProdPdf model("model", "model",pdfDtErr,
@@ -77,8 +68,9 @@ model.fitTo(data)
 # ---------------------------------------------------------------------
 
 # Make two-dimensional plot of conditional pdf in (dt,dterr)
-hh_model = model.createHistogram("hh_model", dt, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(dterr, ROOT.RooFit.Binning(50)))
+hh_model = model.createHistogram(
+    "hh_model", dt, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(dterr, ROOT.RooFit.Binning(50))
+)
 hh_model.SetLineColor(ROOT.kBlue)
 
 # Make projection of data an dt
@@ -87,8 +79,7 @@ data.plotOn(frame)
 model.plotOn(frame)
 
 # Draw all frames on canvas
-c = ROOT.TCanvas("rf307_fullpereventerrors",
-                 "rf307_fullpereventerrors", 800, 400)
+c = ROOT.TCanvas("rf307_fullpereventerrors", "rf307_fullpereventerrors", 800, 400)
 c.Divide(2)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.20)

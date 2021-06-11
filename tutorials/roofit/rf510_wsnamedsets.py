@@ -77,7 +77,7 @@ def fillWorkspace(w):
     # Do a dummy fit to a (supposedly) reference dataset here and store the results
     # of that fit into a snapshot
     refData = model.generate(ROOT.RooArgSet(x), 10000)
-    model.fitTo(refData, PrintLevel = -1)
+    model.fitTo(refData, PrintLevel=-1)
 
     # The kTRUE flag imports the values of the objects in (*params) into the workspace
     # If not set, present values of the workspace parameters objects are stored
@@ -89,7 +89,7 @@ def fillWorkspace(w):
     bkgfrac.setVal(1)
     bkgfrac.setConstant(True)
     bkgfrac.removeError()
-    model.fitTo(refData, PrintLevel = -1)
+    model.fitTo(refData, PrintLevel=-1)
 
     w.saveSnapshot("reference_fit_bkgonly", params, True)
 
@@ -117,9 +117,9 @@ model.plotOn(frame)
 
 # Overlay plot with model with reference parameters as stored in snapshots
 w.loadSnapshot("reference_fit")
-model.plotOn(frame, LineColor = ROOT.kRed)
+model.plotOn(frame, LineColor=ROOT.kRed)
 w.loadSnapshot("reference_fit_bkgonly")
-model.plotOn(frame, LineColor = ROOT.kRed, LineStyle = ROOT.kDashed)
+model.plotOn(frame, LineColor=ROOT.kRed, LineStyle=ROOT.kDashed)
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf510_wsnamedsets", "rf503_wsnamedsets", 600, 600)

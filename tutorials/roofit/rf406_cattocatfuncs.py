@@ -39,8 +39,7 @@ data = p.generate(ROOT.RooArgSet(x, b0flav, tagCat), 10000)
 # A RooMappedCategory is category.category mapping function based on string expression
 # The constructor takes an input category an a default state name to which unassigned
 # states are mapped
-tcatType = ROOT.RooMappedCategory(
-    "tcatType", "tagCat type", tagCat, "Cut based")
+tcatType = ROOT.RooMappedCategory("tcatType", "tagCat type", tagCat, "Cut based")
 
 # Enter fully specified state mappings
 tcatType.map("Lepton", "Cut based")
@@ -58,8 +57,7 @@ mtable.Print("v")
 
 # A SUPER-category is 'product' of _lvalue_ categories. The state names of a super
 # category is a composite of the state labels of the input categories
-b0Xtcat = ROOT.RooSuperCategory(
-    "b0Xtcat", "b0flav X tagCat", ROOT.RooArgSet(b0flav, tagCat))
+b0Xtcat = ROOT.RooSuperCategory("b0Xtcat", "b0flav X tagCat", ROOT.RooArgSet(b0flav, tagCat))
 
 # Make a table of the product category state multiplicity in data
 stable = data.table(b0Xtcat)
@@ -70,8 +68,7 @@ b0Xtcat.setLabel("{B0bar;Lepton}")
 
 # A MULTI-category is a 'product' of any category (function). The state names of a super
 # category is a composite of the state labels of the input categories
-b0Xttype = ROOT.RooMultiCategory(
-    "b0Xttype", "b0flav X tagType", ROOT.RooArgSet(b0flav, tcatType))
+b0Xttype = ROOT.RooMultiCategory("b0Xttype", "b0flav X tagType", ROOT.RooArgSet(b0flav, tcatType))
 
 # Make a table of the product category state multiplicity in data
 xtable = data.table(b0Xttype)
