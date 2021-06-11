@@ -53,21 +53,21 @@ g2.plotOn(frame1)
 
 # Show interpolated shapes in red
 alpha.setVal(0.125)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.25)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.375)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.50)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.625)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.75)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.875)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 alpha.setVal(0.95)
-lmorph.plotOn(frame1, LineColor = ROOT.kRed)
+lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 
 # Show 2D distribution of pdf(x,alpha)
 # -----------------------------------------------------------------------
@@ -85,7 +85,7 @@ data = lmorph.generate(ROOT.RooArgSet(x), 1000)
 
 # Fit pdf to toy data
 lmorph.setCacheAlpha(True)
-lmorph.fitTo(data, Verbose = True)
+lmorph.fitTo(data, Verbose=True)
 
 # Plot fitted pdf and data overlaid
 frame2 = x.frame(ROOT.RooFit.Bins(100))

@@ -27,8 +27,7 @@ fy = ROOT.RooPolyVar("fy", "fy", y, ROOT.RooArgList(a0, a1))
 
 # Creat gauss(x,f(y),s)
 sigma = ROOT.RooRealVar("sigma", "width of gaussian", 0.5)
-model = ROOT.RooGaussian(
-    "model", "Gaussian with shifting mean", x, fy, sigma)
+model = ROOT.RooGaussian("model", "Gaussian with shifting mean", x, fy, sigma)
 
 # Sample data, plot data and pdf on x and y
 # ---------------------------------------------------------------------------------
@@ -49,8 +48,7 @@ data.plotOn(yframe)
 model.plotOn(yframe)
 
 # Make two-dimensional plot in x vs y
-hh_model = model.createHistogram("hh_model", x, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
+hh_model = model.createHistogram("hh_model", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
 hh_model.SetLineColor(ROOT.kBlue)
 
 # Make canvas and draw ROOT.RooPlots

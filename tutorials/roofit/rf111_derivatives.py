@@ -43,9 +43,9 @@ xframe = x.frame(ROOT.RooFit.Title("d(Gauss)/dx"))
 gauss.plotOn(xframe)
 
 # Plot derivatives in same frame
-dgdx.plotOn(xframe, LineColor = ROOT.kMagenta)
-d2gdx2.plotOn(xframe, LineColor = ROOT.kRed)
-d3gdx3.plotOn(xframe, LineColor = ROOT.kOrange)
+dgdx.plotOn(xframe, LineColor=ROOT.kMagenta)
+d2gdx2.plotOn(xframe, LineColor=ROOT.kRed)
+d3gdx3.plotOn(xframe, LineColor=ROOT.kOrange)
 
 # Create and plot derivatives w.r.t. sigma
 # ------------------------------------------------------------------------------
@@ -58,16 +58,15 @@ d2gds2 = gauss.derivative(sigma, 2)
 d3gds3 = gauss.derivative(sigma, 3)
 
 # Construct plot frame in 'sigma'
-sframe = sigma.frame(ROOT.RooFit.Title(
-    "d(Gauss)/d(sigma)"), ROOT.RooFit.Range(0., 2.))
+sframe = sigma.frame(ROOT.RooFit.Title("d(Gauss)/d(sigma)"), ROOT.RooFit.Range(0.0, 2.0))
 
 # Plot gauss in frame (i.e. in x)
 gauss.plotOn(sframe)
 
 # Plot derivatives in same frame
-dgds.plotOn(sframe, LineColor = ROOT.kMagenta)
-d2gds2.plotOn(sframe, LineColor = ROOT.kRed)
-d3gds3.plotOn(sframe, LineColor = ROOT.kOrange)
+dgds.plotOn(sframe, LineColor=ROOT.kMagenta)
+d2gds2.plotOn(sframe, LineColor=ROOT.kRed)
+d3gds3.plotOn(sframe, LineColor=ROOT.kOrange)
 
 # Draw all frames on a canvas
 c = ROOT.TCanvas("rf111_derivatives", "rf111_derivatives", 800, 400)

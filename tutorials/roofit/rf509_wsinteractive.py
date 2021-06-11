@@ -29,26 +29,17 @@ def fillWorkspace(w):
     sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
     # Build Chebychev polynomial pdf
-    a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
-    a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
+    a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+    a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
     bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
     # Sum the signal components into a composite signal pdf
-    sig1frac = ROOT.RooRealVar(
-        "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
-    sig = ROOT.RooAddPdf(
-        "sig", "Signal", ROOT.RooArgList(
-            sig1, sig2), ROOT.RooArgList(sig1frac))
+    sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
+    sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
 
     # Sum the composite signal and background
-    bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0., 1.)
-    model = ROOT.RooAddPdf(
-        "model",
-        "g1+g2+a",
-        ROOT.RooArgList(
-            bkg,
-            sig),
-        ROOT.RooArgList(bkgfrac))
+    bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
+    model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
 
     w.Import(model)
 
@@ -79,8 +70,8 @@ w.Print()
 
 # Old syntax to use the name space prefix operator to access the workspace contents
 #
-#d = w.model.generate(w.x,1000)
-#r = w.model.fitTo(*d)
+# d = w.model.generate(w.x,1000)
+# r = w.model.fitTo(*d)
 
 # use normal workspace methods
 model = w.pdf("model")
@@ -107,7 +98,7 @@ d.plotOn(frame)
 bkg = w.pdf("bkg")
 model.plotOn(frame)
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(frame, Components = ras_bkg, LineStyle = ROOT.kDashed)
+model.plotOn(frame, Components=ras_bkg, LineStyle=ROOT.kDashed)
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)

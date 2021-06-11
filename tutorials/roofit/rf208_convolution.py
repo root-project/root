@@ -53,7 +53,7 @@ lxg.fitTo(data)
 frame = t.frame(ROOT.RooFit.Title("landau (x) gauss convolution"))
 data.plotOn(frame)
 lxg.plotOn(frame)
-landau.plotOn(frame, LineStyle = ROOT.kDashed)
+landau.plotOn(frame, LineStyle=ROOT.kDashed)
 
 # Draw frame on canvas
 c = ROOT.TCanvas("rf208_convolution", "rf208_convolution", 600, 600)

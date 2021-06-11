@@ -28,11 +28,10 @@ tagFlav.defineType("B0", 1)
 tagFlav.defineType("B0bar", -1)
 
 # Model parameters
-dm = ROOT.RooRealVar("dm", "delta m(B)", 0.472, 0., 1.0)
+dm = ROOT.RooRealVar("dm", "delta m(B)", 0.472, 0.0, 1.0)
 tau = ROOT.RooRealVar("tau", "B0 decay time", 1.547, 1.0, 2.0)
 w = ROOT.RooRealVar("w", "Flavor Mistag rate", 0.03, 0.0, 1.0)
-dw = ROOT.RooRealVar(
-    "dw", "Flavor Mistag rate difference between B0 and B0bar", 0.01)
+dw = ROOT.RooRealVar("dw", "Flavor Mistag rate difference between B0 and B0bar", 0.01)
 
 # Build a gaussian resolution model
 bias1 = ROOT.RooRealVar("bias1", "bias1", 0)
@@ -40,18 +39,7 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.01)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct a decay pdf, with single gaussian resolution model
-bmix_gm1 = ROOT.RooBMixDecay(
-    "bmix",
-    "decay",
-    dt,
-    mixState,
-    tagFlav,
-    tau,
-    dm,
-    w,
-    dw,
-    gm1,
-    ROOT.RooBMixDecay.DoubleSided)
+bmix_gm1 = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
 
 # Generate BMixing data with above set of event errors
 data = bmix_gm1.generate(ROOT.RooArgSet(dt, tagFlav, mixState), 20000)
@@ -70,20 +58,19 @@ bmix_gm1.plotOn(frame)
 
 # Create frame, data (mixed only)
 frame2 = dt.frame(ROOT.RooFit.Title("Decay distribution of mixed events"))
-data.plotOn(frame2, Cut = "mixState==mixState::mixed")
+data.plotOn(frame2, Cut="mixState==mixState::mixed")
 
 # Position slice in mixState at "mixed" and plot slice of pdf in mixstate
 # over data (integrated over tagFlav)
-bmix_gm1.plotOn(frame2, Slice = (mixState, "mixed"))
+bmix_gm1.plotOn(frame2, Slice=(mixState, "mixed"))
 
 # Create frame, data (unmixed only)
-frame3 = dt.frame(ROOT.RooFit.Title(
-    "Decay distribution of unmixed events"))
-data.plotOn(frame3, Cut = "mixState==mixState::unmixed")
+frame3 = dt.frame(ROOT.RooFit.Title("Decay distribution of unmixed events"))
+data.plotOn(frame3, Cut="mixState==mixState::unmixed")
 
 # Position slice in mixState at "unmixed" and plot slice of pdf in
 # mixstate over data (integrated over tagFlav)
-bmix_gm1.plotOn(frame3, Slice = (mixState, "unmixed"))
+bmix_gm1.plotOn(frame3, Slice=(mixState, "unmixed"))
 
 c = ROOT.TCanvas("rf310_sliceplot", "rf310_sliceplot", 1200, 400)
 c.Divide(3)

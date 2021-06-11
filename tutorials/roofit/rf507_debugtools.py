@@ -27,16 +27,15 @@ ROOT.RooTrace.dump()
 ROOT.RooTrace.verbose(True)
 
 # Construct poly(x,p0)
-p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0., 1.)
+p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0.0, 1.0)
 poly = ROOT.RooPolynomial("p", "p", x, ROOT.RooArgList(p0))
 
 # Put marker in trace list for future reference
 ROOT.RooTrace.mark()
 
 # model = f*gauss(x) + (1-f)*poly(x)
-f = ROOT.RooRealVar("f", "f", 0.5, 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(
-    gauss, poly), ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.5, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(gauss, poly), ROOT.RooArgList(f))
 
 # Show object added to memory since marker
 ROOT.RooTrace.printObjectCounts()

@@ -41,7 +41,8 @@ else:
 
     w.factory(
         "SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[-0.2,0.,1.]}), "
-        "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))")
+        "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))"
+    )
 
 # Advanced pdf constructor arguments
 # ----------------------------------------------------------------
@@ -69,4 +70,3 @@ w.Import(k, ROOT.RooFit.RenameAllNodes("workspace"))
 
 # Print workspace contents
 w.Print()
-

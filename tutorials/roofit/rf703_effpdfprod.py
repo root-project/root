@@ -25,10 +25,7 @@ model = ROOT.RooExponential("model", "model", t, tau)
 # ---------------------------------------------------
 
 # Use error function to simulate turn-on slope
-eff = ROOT.RooFormulaVar(
-    "eff",
-    "0.5*(TMath::Erf((t-1)/0.5)+1)",
-    ROOT.RooArgList(t))
+eff = ROOT.RooFormulaVar("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", ROOT.RooArgList(t))
 
 # Define decay pdf with efficiency
 # ---------------------------------------------------------------
@@ -40,11 +37,11 @@ modelEff = ROOT.RooEffProd("modelEff", "model with efficiency", model, eff)
 # ----------------------------------------
 
 frame1 = t.frame(ROOT.RooFit.Title("Efficiency"))
-eff.plotOn(frame1, LineColor = ROOT.kRed)
+eff.plotOn(frame1, LineColor=ROOT.kRed)
 
 frame2 = t.frame(ROOT.RooFit.Title("Pdf with and without efficiency"))
 
-model.plotOn(frame2, LineStyle = ROOT.kDashed)
+model.plotOn(frame2, LineStyle=ROOT.kDashed)
 modelEff.plotOn(frame2)
 
 # Generate toy data, fit model eff to data

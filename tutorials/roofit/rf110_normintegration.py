@@ -19,8 +19,7 @@ import ROOT
 x = ROOT.RooRealVar("x", "x", -10, 10)
 
 # Create pdf gaussx(x,-2,3)
-gx = ROOT.RooGaussian(
-    "gx", "gx", x, ROOT.RooFit.RooConst(-2), ROOT.RooFit.RooConst(3))
+gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(-2), ROOT.RooFit.RooConst(3))
 
 # Retrieve raw & normalized values of RooFit pdfs
 # --------------------------------------------------------------------------------------------------
@@ -62,8 +61,7 @@ frame = x.frame(ROOT.RooFit.Title("cdf of Gaussian pdf"))
 gx_cdf.plotOn(frame)
 
 # Draw plot on canvas
-c = ROOT.TCanvas("rf110_normintegration",
-                 "rf110_normintegration", 600, 600)
+c = ROOT.TCanvas("rf110_normintegration", "rf110_normintegration", 600, 600)
 ROOT.gPad.SetLeftMargin(0.15)
 frame.GetYaxis().SetTitleOffset(1.6)
 frame.Draw()
