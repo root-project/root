@@ -1628,9 +1628,15 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
    ///
-   /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
-   /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
-   /// specified columns (these types are passed as template parameters to this method).
+   /// Type T must provide at least:
+   /// - a copy-constructor
+   /// - a `Fill` method that accepts as many arguments and with same types as the column names passed as columnList
+   ///   (these types can also be passed as template parameters to this method)
+   /// - a `Merge` method with signature `Merge(TCollection *)` or `Merge(const std::vector<T *>&)` that merges the
+   ///   objects assed as argument into the object on which `Merge` was called (an analogous of TH1::Merge). Note that
+   ///   if the signature that takes a `TCollection*` is used, then T must inherit from TObject (to allow insertion in
+   ///   the TCollection*).
+   ///
    /// \tparam FirstColumn The first type of the column the values of which are used to fill the object. Inferred together with OtherColumns if not present.
    /// \tparam OtherColumns A list of the other types of the columns the values of which are used to fill the object.
    /// \tparam T The type of the object to fill. Automatically deduced.
@@ -1660,7 +1666,8 @@ public:
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h, columnList.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h,
+                                                                                       columnList.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
