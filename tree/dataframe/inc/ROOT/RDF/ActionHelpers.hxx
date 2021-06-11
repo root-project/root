@@ -327,6 +327,39 @@ template <typename HIST = Hist_t>
 class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
    std::vector<HIST *> fObjects;
 
+   void UnsetDirectoryIfPossible(TH1 *h) {
+      h->SetDirectory(nullptr);
+   }
+
+   void UnsetDirectoryIfPossible(...) {}
+
+   // Merge overload for types with Merge(TCollection*), like TH1s
+   template <typename H, typename = typename std::enable_if<std::is_base_of<TObject, H>::value, int>::type>
+   auto Merge(std::vector<H *> &objs, int /*toincreaseoverloadpriority*/)
+      -> decltype(objs[0]->Merge((TCollection *)nullptr), void())
+   {
+      TList l;
+      for (auto it = ++objs.begin(); it != objs.end(); ++it)
+         l.Add(*it);
+      objs[0]->Merge(&l);
+   }
+
+   // Merge overload for types with Merge(const std::vector&)
+   template <typename H>
+   auto Merge(std::vector<H *> &objs, double /*toloweroverloadpriority*/)
+      -> decltype(objs[0]->Merge(std::vector<HIST *>{}), void())
+   {
+      objs[0]->Merge({++objs.begin(), objs.end()});
+   }
+
+   // Merge overload to error out in case no valid HIST::Merge method was detected
+   template <typename T>
+   void Merge(T, ...)
+   {
+      static_assert(sizeof(T) < 0,
+                    "The type passed to Fill does not provide a Merge(TCollection*) or Merge(const std::vector&) method.");
+   }
+
 public:
    FillParHelper(FillParHelper &&) = default;
    FillParHelper(const FillParHelper &) = delete;
@@ -337,9 +370,7 @@ public:
       // Initialise all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
-         if (auto objAsHist = dynamic_cast<TH1*>(fObjects[i])) {
-            objAsHist->SetDirectory(nullptr);
-         }
+         UnsetDirectoryIfPossible(fObjects[i]);
       }
    }
 
@@ -487,15 +518,14 @@ public:
 
    void Finalize()
    {
-      auto resObj = fObjects[0];
-      const auto nSlots = fObjects.size();
-      TList l;
-      l.SetOwner(); // The list will free the memory associated to its elements upon destruction
-      for (unsigned int slot = 1; slot < nSlots; ++slot) {
-         l.Add(fObjects[slot]);
-      }
+      if (fObjects.size() == 1)
+         return;
 
-      resObj->Merge(&l);
+      Merge(fObjects, /*toselectcorrectoverload=*/0);
+
+      // delete the copies we created for the slots other than the first
+      for (auto it = ++fObjects.begin(); it != fObjects.end(); ++it)
+         delete *it;
    }
 
    HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
