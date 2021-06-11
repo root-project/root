@@ -22,10 +22,11 @@ from ._rooabsreal import RooAbsReal
 from ._rooarglist import RooArgList
 from ._rooargset import RooArgSet
 from ._rooworkspace import RooWorkspace
+from ._roosimultaneous import RooSimultaneous
 
 
 # list of python classes that are used to pythonize RooFit classes
-python_classes = [RooAbsCollection, RooAbsData, RooAbsPdf, RooAbsReal, RooArgList, RooArgSet, RooWorkspace]
+python_classes = [RooAbsCollection, RooAbsData, RooAbsPdf, RooAbsReal, RooArgList, RooArgSet, RooSimultaneous, RooWorkspace]
 
 # create a dictionary for convenient access to python classes
 python_classes_dict = dict()
