@@ -70,20 +70,20 @@ bmix_gm1.plotOn(frame)
 
 # Create frame, data (mixed only)
 frame2 = dt.frame(ROOT.RooFit.Title("Decay distribution of mixed events"))
-data.plotOn(frame2, ROOT.RooFit.Cut("mixState==mixState::mixed"))
+data.plotOn(frame2, Cut = "mixState==mixState::mixed")
 
 # Position slice in mixState at "mixed" and plot slice of pdf in mixstate
 # over data (integrated over tagFlav)
-bmix_gm1.plotOn(frame2, ROOT.RooFit.Slice(mixState, "mixed"))
+bmix_gm1.plotOn(frame2, Slice = (mixState, "mixed"))
 
 # Create frame, data (unmixed only)
 frame3 = dt.frame(ROOT.RooFit.Title(
     "Decay distribution of unmixed events"))
-data.plotOn(frame3, ROOT.RooFit.Cut("mixState==mixState::unmixed"))
+data.plotOn(frame3, Cut = "mixState==mixState::unmixed")
 
 # Position slice in mixState at "unmixed" and plot slice of pdf in
 # mixstate over data (integrated over tagFlav)
-bmix_gm1.plotOn(frame3, ROOT.RooFit.Slice(mixState, "unmixed"))
+bmix_gm1.plotOn(frame3, Slice = (mixState, "unmixed"))
 
 c = ROOT.TCanvas("rf310_sliceplot", "rf310_sliceplot", 1200, 400)
 c.Divide(3)

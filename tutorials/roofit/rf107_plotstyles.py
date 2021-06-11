@@ -48,38 +48,28 @@ frame4 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
 data.plotOn(frame1, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
 
 # Remove horizontal error bars
-data.plotOn(frame2, ROOT.RooFit.XErrorSize(0))
+data.plotOn(frame2, XErrorSize = 0 )
 
 # Blue markers and error bors
-data.plotOn(frame3, ROOT.RooFit.MarkerColor(
-    ROOT.kBlue), ROOT.RooFit.LineColor(ROOT.kBlue))
+data.plotOn(frame3, MarkerColor = ROOT.kBlue, LineColor = ROOT.kBlue)
 
 # Filled bar chart
-data.plotOn(
-    frame4,
-    ROOT.RooFit.DrawOption("B"),
-    ROOT.RooFit.DataError(
-        ROOT.RooAbsData.ErrorType(2)),
-    ROOT.RooFit.XErrorSize(0),
-    ROOT.RooFit.FillColor(
-        ROOT.kGray))
+data.plotOn(frame4, DrawOption = "B", DataError = ROOT.RooAbsData.ErrorType(2), XErrorSize = 0, FillColor = ROOT.kGray)
 
 # Function plotting styles
 # -----------------------------------------------
 
 # Change line color to red
-gauss.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+gauss.plotOn(frame1, LineColor = ROOT.kRed)
 
 # Change line style to dashed
-gauss.plotOn(frame2, ROOT.RooFit.LineStyle(ROOT.kDashed))
+gauss.plotOn(frame2, LineStyle = ROOT.kDashed)
 
 # Filled shapes in green color
-gauss.plotOn(frame3, ROOT.RooFit.DrawOption("F"),
-             ROOT.RooFit.FillColor(ROOT.kOrange), ROOT.RooFit.MoveToBack())
+gauss.plotOn(frame3, ROOT.RooFit.MoveToBack(), DrawOption = "F", FillColor = ROOT.kOrange)
 
 #
-gauss.plotOn(frame4, ROOT.RooFit.Range(-8, 3),
-             ROOT.RooFit.LineColor(ROOT.kMagenta))
+gauss.plotOn(frame4, Range = (-8, 3),  LineColor = ROOT.kMagenta)
 
 c = ROOT.TCanvas("rf107_plotstyles", "rf107_plotstyles", 800, 800)
 c.Divide(2, 2)

@@ -95,7 +95,7 @@ mcprojDataSel = mcprojData.reduce(ROOT.RooFit.Cut("llratio>0.7"))
 
 # Project model on x, projected observables (y,z) with Monte Carlo technique
 # on set of events with the same llratio cut as was applied to data
-model.plotOn(frame2, ROOT.RooFit.ProjWData(mcprojDataSel))
+model.plotOn(frame2, ProjWData = mcprojDataSel)
 
 c = ROOT.TCanvas("rf316_llratioplot", "rf316_llratioplot", 800, 400)
 c.Divide(2)

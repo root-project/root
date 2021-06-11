@@ -12,7 +12,7 @@
 import ROOT
 
 
-compact = ROOT.kFALSE
+compact = False
 w = ROOT.RooWorkspace("w")
 
 # Creating and adding basic pdfs

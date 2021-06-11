@@ -25,12 +25,10 @@ model = ROOT.RooChebychev("model", "model", x, ROOT.RooArgList(
 # ( an interface to the ROOT.TFoam MC generator with adaptive subdivisioning strategy ) to ROOT.RooAcceptReject,
 # a plain accept/reject sampling algorithm [ ROOT.RooFit default before
 # ROOT 5.23/04 ]
-ROOT.RooAbsPdf.defaultGeneratorConfig().method1D(
-    ROOT.kFALSE, ROOT.kFALSE).setLabel("RooAcceptReject")
+ROOT.RooAbsPdf.defaultGeneratorConfig().method1D(False, False).setLabel("RooAcceptReject")
 
 # Generate 10Kevt using ROOT.RooAcceptReject
-data_ar = model.generate(ROOT.RooArgSet(
-    x), 10000, ROOT.RooFit.Verbose(ROOT.kTRUE))
+data_ar = model.generate(ROOT.RooArgSet(x), 10000, verbose = True)
 data_ar.Print()
 
 # Adjusting default config for a specific pdf
@@ -39,8 +37,7 @@ data_ar.Print()
 # Another possibility: associate custom MC sampling configuration as default for object 'model'
 # The kTRUE argument will install a clone of the default configuration as specialized configuration
 # for self model if none existed so far
-model.specialGeneratorConfig(ROOT.kTRUE).method1D(
-    ROOT.kFALSE, ROOT.kFALSE).setLabel("RooFoamGenerator")
+model.specialGeneratorConfig(True).method1D(False, False).setLabel("RooFoamGenerator")
 
 # Adjusting parameters of a specific technique
 # ---------------------------------------------------------------------------------------

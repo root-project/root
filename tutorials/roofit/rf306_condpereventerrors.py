@@ -50,8 +50,7 @@ data = decay_gm.generate(ROOT.RooArgSet(
 # ---------------------------------------------------------------------
 
 # Specify dterr as conditional observable
-decay_gm.fitTo(data, ROOT.RooFit.ConditionalObservables(
-    ROOT.RooArgSet(dterr)))
+decay_gm.fitTo(data, ConditionalObservables = ROOT.RooArgSet(dterr))
 
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
@@ -66,7 +65,7 @@ frame = dt.frame(ROOT.RooFit.Title(
     "Slices of decay(dt|dterr) at various dterr"))
 for ibin in range(0, 100, 20):
     dterr.setBin(ibin)
-    decay_gm.plotOn(frame, ROOT.RooFit.Normalization(5.))
+    decay_gm.plotOn(frame, Normalization = 5.)
 
 # Make projection of data an dt
 frame2 = dt.frame(ROOT.RooFit.Title("Projection of decay(dt|dterr) on dt"))
@@ -77,7 +76,7 @@ data.plotOn(frame2)
 # Instead of integrating out dterr, a weighted average of curves
 # at values dterr_i as given in the external dataset.
 # (The kTRUE argument bins the data before projection to speed up the process)
-decay_gm.plotOn(frame2, ROOT.RooFit.ProjWData(expDataDterr, ROOT.kTRUE))
+decay_gm.plotOn(frame2, ProjWData = (expDataDterr, True))
 
 # Draw all frames on canvas
 c = ROOT.TCanvas("rf306_condpereventerrors",

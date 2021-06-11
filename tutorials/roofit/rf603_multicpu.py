@@ -52,7 +52,7 @@ data = model.generate(ROOT.RooArgSet(x, y, z), 200000)
 # it back to MINUIT.
 
 # Use four processes and time results both in wall time and CPU time
-model.fitTo(data, ROOT.RooFit.NumCPU(4), ROOT.RooFit.Timer(ROOT.kTRUE))
+model.fitTo(data, NumCPU = 4, Timer = True)
 
 # Parallel MC projections
 # ----------------------------------------------
@@ -81,7 +81,7 @@ dataSel.plotOn(frame)
 # final result
 
 # Use four processes
-model.plotOn(frame, ROOT.RooFit.ProjWData(dataSel), ROOT.RooFit.NumCPU(4))
+model.plotOn(frame, ProjWData = dataSel, NumCPU = 4)
 
 c = ROOT.TCanvas("rf603_multicpu", "rf603_multicpu", 600, 600)
 ROOT.gPad.SetLeftMargin(0.15)

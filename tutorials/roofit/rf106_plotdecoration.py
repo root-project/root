@@ -30,8 +30,7 @@ gauss.fitTo(data)
 # -------------------------------------
 
 # Overlay projection of gauss on data
-frame = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
-    "RooPlot with decorations"), ROOT.RooFit.Bins(40))
+frame = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("RooPlot with decorations"), ROOT.RooFit.Bins(40))
 data.plotOn(frame)
 gauss.plotOn(frame)
 

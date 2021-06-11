@@ -60,7 +60,7 @@ data = model.generate(ROOT.RooArgSet(x, cut), 10000)
 # --------------------------------------------------------------------------
 
 # Fit conditional efficiency pdf to data
-effPdf.fitTo(data, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(x)))
+effPdf.fitTo(data, ConditionalObservables = ROOT.RooArgSet(x))
 
 # Plot fitted, data efficiency
 # --------------------------------------------------------
@@ -69,19 +69,13 @@ effPdf.fitTo(data, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(x)))
 frame1 = x.frame(ROOT.RooFit.Bins(
     20), ROOT.RooFit.Title("Data (all, accepted)"))
 data.plotOn(frame1)
-data.plotOn(
-    frame1,
-    ROOT.RooFit.Cut("cut==cut::accept"),
-    ROOT.RooFit.MarkerColor(
-        ROOT.kRed),
-    ROOT.RooFit.LineColor(
-        ROOT.kRed))
+data.plotOn(frame1, Cut = "cut==cut::accept", MarkerColor = ROOT.kRed, LineColor = ROOT.kRed)
 
 # Plot accept/reject efficiency on data overlay fitted efficiency curve
 frame2 = x.frame(ROOT.RooFit.Bins(
     20), ROOT.RooFit.Title("Fitted efficiency"))
-data.plotOn(frame2, ROOT.RooFit.Efficiency(cut))  # needs ROOT version >= 5.21
-effFunc.plotOn(frame2, ROOT.RooFit.LineColor(ROOT.kRed))
+data.plotOn(frame2, Efficiency = cut)  # needs ROOT version >= 5.21
+effFunc.plotOn(frame2, LineColor = ROOT.kRed)
 
 # Draw all frames on a canvas
 ca = ROOT.TCanvas("rf701_efficiency", "rf701_efficiency", 800, 400)

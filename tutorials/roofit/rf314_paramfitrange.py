@@ -46,15 +46,14 @@ dacc = model.generate(ROOT.RooArgSet(t), ROOT.RooFit.ProtoData(tmp))
 # Fit pdf to data in acceptance region
 # -----------------------------------------------------------------------
 
-r = model.fitTo(dacc, ROOT.RooFit.Save())
+r = model.fitTo(dacc, Save = True)
 
 # Plot fitted pdf on full and accepted data
 # ---------------------------------------------------------------------------------
 
 # Make plot frame, datasets and overlay model
 frame = t.frame(ROOT.RooFit.Title("Fit to data with per-event acceptance"))
-dall.plotOn(frame, ROOT.RooFit.MarkerColor(ROOT.kRed),
-            ROOT.RooFit.LineColor(ROOT.kRed))
+dall.plotOn(frame, MarkerColor = ROOT.kRed, LineColor = ROOT.kRed)
 model.plotOn(frame)
 dacc.plotOn(frame)
 

@@ -33,7 +33,7 @@ decay_tm = ROOT.RooDecay("decay_tm", "decay", dt,
 
 # Plot pdf (dashed)
 frame = dt.frame(ROOT.RooFit.Title("Bdecay (x) resolution"))
-decay_tm.plotOn(frame, ROOT.RooFit.LineStyle(ROOT.kDashed))
+decay_tm.plotOn(frame, LineStyle = ROOT.kDashed)
 
 # B-physics pdf with Gaussian resolution
 # ----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ decay_gmsum = ROOT.RooDecay(
     "decay_gmsum", "decay", dt, tau, gmsum, ROOT.RooDecay.DoubleSided)
 
 # Plot pdf (red)
-decay_gmsum.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kRed))
+decay_gmsum.plotOn(frame, LineColor = ROOT.kRed)
 
 # Draw all frames on canvas
 c = ROOT.TCanvas("rf209_anaconv", "rf209_anaconv", 600, 600)

@@ -57,13 +57,7 @@ xframe = x.frame(ROOT.RooFit.Title(
 data.plotOn(xframe)
 
 # Use calculated category to select sideband data
-data.plotOn(
-    xframe,
-    ROOT.RooFit.Cut("xRegion==xRegion::SideBand"),
-    ROOT.RooFit.MarkerColor(
-        ROOT.kRed),
-    ROOT.RooFit.LineColor(
-        ROOT.kRed))
+data.plotOn(xframe, Cut = "xRegion==xRegion::SideBand", MarkerColor = ROOT.kRed, LineColor = ROOT.kRed)
 
 # Create a binning real -> cat function
 # ----------------------------------------------------------------------
@@ -97,8 +91,7 @@ xb.setRange(
 # 5000 events and plot it on the frame
 dataSel = data.reduce(ROOT.RooFit.CutRange(
     "alt"), ROOT.RooFit.EventRange(0, 5000))
-dataSel.plotOn(xframe, ROOT.RooFit.MarkerColor(ROOT.kGreen),
-               ROOT.RooFit.LineColor(ROOT.kGreen))
+dataSel.plotOn(xframe, MarkerColor = ROOT.kGreen, LineColor = ROOT.kGreen)
 
 c = ROOT.TCanvas("rf405_realtocatfuncs", "rf405_realtocatfuncs", 600, 600)
 xframe.SetMinimum(0.01)

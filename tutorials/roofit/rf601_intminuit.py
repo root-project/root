@@ -46,7 +46,7 @@ nll = model.createNLL(data)
 m = ROOT.RooMinimizer(nll)
 
 # Activate verbose logging of MINUIT parameter space stepping
-m.setVerbose(ROOT.kTRUE)
+m.setVerbose(True)
 
 # Call MIGRAD to minimize the likelihood
 m.migrad()
@@ -56,7 +56,7 @@ m.migrad()
 model.getParameters(ROOT.RooArgSet(x)).Print("s")
 
 # Disable verbose logging
-m.setVerbose(ROOT.kFALSE)
+m.setVerbose(False)
 
 # Run HESSE to calculate errors from d2L/dp2
 m.hesse()
@@ -102,7 +102,7 @@ m.hesse()
 frac.Print()
 
 # Now fix sigma_g2
-sigma_g2.setConstant(ROOT.kTRUE)
+sigma_g2.setConstant(True)
 
 # Rerun MIGRAD,HESSE
 m.migrad()

@@ -95,11 +95,9 @@ data.plotOn(frame1)
 pdf.plotOn(frame1)
 # workaround, see https://root.cern.ch/phpBB3/viewtopic.php?t=7764
 ras_ampl1 = ROOT.RooArgSet(ampl1)
-pdf.plotOn(frame1, ROOT.RooFit.Components(ras_ampl1),
-           ROOT.RooFit.LineStyle(ROOT.kDashed))
+pdf.plotOn(frame1, Components = ras_ampl1, LineStyle = ROOT.kDashed)
 ras_ampl2 = ROOT.RooArgSet(ampl2)
-pdf.plotOn(frame1, ROOT.RooFit.Components(ras_ampl2), ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))
+pdf.plotOn(frame1, Components = ras_ampl2, LineStyle = ROOT.kDashed, LineColor = ROOT.kRed)
 
 # Make projection on cosa, data, and its components
 # Note that components projection may be larger than sum because
@@ -107,10 +105,8 @@ pdf.plotOn(frame1, ROOT.RooFit.Components(ras_ampl2), ROOT.RooFit.LineStyle(
 frame2 = cosa.frame()
 data.plotOn(frame2)
 pdf.plotOn(frame2)
-pdf.plotOn(frame2, ROOT.RooFit.Components(ras_ampl1),
-           ROOT.RooFit.LineStyle(ROOT.kDashed))
-pdf.plotOn(frame2, ROOT.RooFit.Components(ras_ampl2), ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))
+pdf.plotOn(frame2, Components = ras_ampl1, LineStyle = ROOT.kDashed)
+pdf.plotOn(frame2, Components = ras_ampl2, LineStyle = ROOT.kDashed, LineColor = ROOT.kRed)
 
 c = ROOT.TCanvas("rf704_amplitudefit", "rf704_amplitudefit", 800, 800)
 c.Divide(2, 2)

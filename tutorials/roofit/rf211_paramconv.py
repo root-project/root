@@ -46,7 +46,7 @@ projModel = model.createProjection(ROOT.RooArgSet(mean))
 d = projModel.generateBinned(ROOT.RooArgSet(x), 1000)
 
 # Fit p.d.f. to toy data
-projModel.fitTo(d, ROOT.RooFit.Verbose())
+projModel.fitTo(d, Verbose = True)
 
 # Plot data and fitted p.d.f.
 frame = x.frame(ROOT.RooFit.Bins(25))

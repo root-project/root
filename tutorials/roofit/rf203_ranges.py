@@ -36,7 +36,7 @@ modelData = model.generate(ROOT.RooArgSet(x), 10000)
 # ---------------------------
 
 # Fit pdf to all data
-r_full = model.fitTo(modelData, ROOT.RooFit.Save(ROOT.kTRUE))
+r_full = model.fitTo(modelData, Save = True)
 
 # Fit partial range
 # ----------------------------------
@@ -45,8 +45,7 @@ r_full = model.fitTo(modelData, ROOT.RooFit.Save(ROOT.kTRUE))
 x.setRange("signal", -3, 3)
 
 # Fit pdf only to data in "signal" range
-r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
-    ROOT.kTRUE), ROOT.RooFit.Range("signal"))
+r_sig = model.fitTo(modelData, Save = True, Range = "signal")
 
 # Plot/print results
 # ---------------------------------------
@@ -54,10 +53,7 @@ r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
 # Make plot frame in x and add data and fitted model
 frame = x.frame(ROOT.RooFit.Title("Fitting a sub range"))
 modelData.plotOn(frame)
-model.plotOn(
-    frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
-        ROOT.kDashed), ROOT.RooFit.LineColor(
-            ROOT.kRed)) # Add shape in full ranged dashed
+model.plotOn(frame, Range = "Full", LineColor = ROOT.kRed, LineStyle = ROOT.kDashed) # Add shape in full ranged dashed
 model.plotOn(frame)  # By default only fitted range is shown
 
 # Print fit results
