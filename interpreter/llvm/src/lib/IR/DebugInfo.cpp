@@ -655,7 +655,7 @@ bool llvm::stripNonLineTableDebugInfo(Module &M) {
           if (auto *T = dyn_cast_or_null<MDTuple>(Attachment.second))
             for (unsigned N = 0; N < T->getNumOperands(); ++N)
               if (auto *Loc = dyn_cast_or_null<DILocation>(T->getOperand(N)))
-                if (Loc != DebugLoc())
+                if (DebugLoc(Loc) != DebugLoc())
                   T->replaceOperandWith(N, remapDebugLoc(Loc));
       }
     }
