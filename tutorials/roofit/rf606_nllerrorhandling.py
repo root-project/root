@@ -52,7 +52,7 @@ argus.plotOn(frame1)
 # is to return a very high value of the likelihood to MINUIT if errors occur,
 # which will force MINUIT to retreat from the problematic area
 
-argus.fitTo(data, PrintEvalErrors = 10)
+argus.fitTo(data, PrintEvalErrors=10)
 
 # Peform another fit. In self configuration only the number of errors per
 # likelihood evaluation is shown, it is greater than zero. The
@@ -66,7 +66,7 @@ argus.fitTo(data, PrintEvalErrors = 10)
 # illustrated in the second plot
 
 m0.setError(0.1)
-argus.fitTo(data, PrintEvalErrors = 0, EvalErrorWall = False)
+argus.fitTo(data, PrintEvalErrors=0, EvalErrorWall=False)
 
 # Plot likelihood as function of m0
 # ------------------------------------------------------------------
@@ -81,11 +81,7 @@ nll = ROOT.RooNLLVar("nll", "nll", argus, data)
 
 frame2 = m0.frame(ROOT.RooFit.Range(5.288, 5.293), ROOT.RooFit.Title("-log(L) scan vs m0, regions masked"))
 nll.plotOn(
-    frame2,
-    ROOT.RooFit.ShiftToZero(),
-    PrintEvalErrors = -1,
-    EvalErrorValue= (nll.getVal() + 10),
-    LineColor = ROOT.kRed
+    frame2, ROOT.RooFit.ShiftToZero(), PrintEvalErrors=-1, EvalErrorValue=(nll.getVal() + 10), LineColor=ROOT.kRed
 )
 frame2.SetMaximum(15)
 frame2.SetMinimum(0)

@@ -26,22 +26,20 @@ s2 = ROOT.RooRealVar("s2", "s2", 6, 1, 50)
 bkg = ROOT.RooGaussian("bkg", "bkg", x, m2, s2)
 
 fsig = ROOT.RooRealVar("fsig", "fsig", 0.33, 0, 1)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(
-    sig, bkg), ROOT.RooArgList(fsig))
+model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(fsig))
 
 # Create binned dataset
 x.setBins(25)
 d = model.generateBinned(ROOT.RooArgSet(x), 1000)
 
 # Perform fit and save fit result
-r = model.fitTo(d, Save = True)
+r = model.fitTo(d, Save=True)
 
 # Visualize fit error
 # -------------------------------------
 
 # Make plot frame
-frame = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title(
-    "P.d.f with visualized 1-sigma error band"))
+frame = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("P.d.f with visualized 1-sigma error band"))
 d.plotOn(frame)
 
 # Visualize 1-sigma error encoded in fit result 'r' as orange band using linear error propagation
@@ -61,7 +59,7 @@ d.plotOn(frame)
 # but may not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and
 # Gaussian approximations made
 #
-model.plotOn(frame, VisualizeError = (r, 1), FillColor = ROOT.kOrange)
+model.plotOn(frame, VisualizeError=(r, 1), FillColor=ROOT.kOrange)
 
 # Calculate error using sampling method and visualize as dashed red line.
 #
@@ -73,28 +71,25 @@ model.plotOn(frame, VisualizeError = (r, 1), FillColor = ROOT.kOrange)
 # 100 (e.g. Z=1.Ncurve=356, Z=2.Ncurve=2156)) Intervals from the sampling method can be asymmetric,
 # and may perform better in the presence of strong correlations, may take
 # (much) longer to calculate
-model.plotOn(
-    frame,
-    VisualizeError = (r, 1, False),
-    DrawOption = "L",
-    LineWidth = 2,
-    LineColor = ROOT.kRed)
+model.plotOn(frame, VisualizeError=(r, 1, False), DrawOption="L", LineWidth=2, LineColor=ROOT.kRed)
 
 # Perform the same type of error visualization on the background component only.
 # The VisualizeError() option can generally applied to _any_ kind of
 # plot (components, asymmetries, etc..)
-model.plotOn(frame, VisualizeError = (r, 1), FillColor = ROOT.kOrange, Components = "bkg")
-model.plotOn(frame,
-    VisualizeError = (r, 1, False),
-    DrawOption = "L",
-    LineWidth = 2,
-    LineColor = ROOT.kRed,
-    Components = "bkg",
-    LineStyle = ROOT.kDashed)
+model.plotOn(frame, VisualizeError=(r, 1), FillColor=ROOT.kOrange, Components="bkg")
+model.plotOn(
+    frame,
+    VisualizeError=(r, 1, False),
+    DrawOption="L",
+    LineWidth=2,
+    LineColor=ROOT.kRed,
+    Components="bkg",
+    LineStyle=ROOT.kDashed,
+)
 
 # Overlay central value
 model.plotOn(frame)
-model.plotOn(frame, Components = "bkg", LineStyle = ROOT.kDashed)
+model.plotOn(frame, Components="bkg", LineStyle=ROOT.kDashed)
 d.plotOn(frame)
 frame.SetMinimum(0)
 
@@ -102,8 +97,7 @@ frame.SetMinimum(0)
 # ------------------------------------------------------
 
 # Make plot frame
-frame2 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title(
-    "Visualization of 2-sigma partial error from (m,m2)"))
+frame2 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Visualization of 2-sigma partial error from (m,m2)"))
 
 # Visualize partial error. For partial error visualization the covariance matrix is first reduced as follows
 #        ___                   -1
@@ -117,37 +111,35 @@ frame2 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title(
 
 # Propagate partial error due to shape parameters (m,m2) using linear and
 # sampling method
-model.plotOn(frame2, VisualizeError = (r, ROOT.RooArgSet(m, m2), 2), FillColor = ROOT.kCyan)
-model.plotOn(frame2, Components = "bkg", VisualizeError = (r, ROOT.RooArgSet(m, m2), 2), FillColor = ROOT.kCyan)
+model.plotOn(frame2, VisualizeError=(r, ROOT.RooArgSet(m, m2), 2), FillColor=ROOT.kCyan)
+model.plotOn(frame2, Components="bkg", VisualizeError=(r, ROOT.RooArgSet(m, m2), 2), FillColor=ROOT.kCyan)
 
 model.plotOn(frame2)
-model.plotOn(frame2, Components = "bkg", LineStyle = ROOT.kDashed)
+model.plotOn(frame2, Components="bkg", LineStyle=ROOT.kDashed)
 frame2.SetMinimum(0)
 
 # Make plot frame
-frame3 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title(
-    "Visualization of 2-sigma partial error from (s,s2)"))
+frame3 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Visualization of 2-sigma partial error from (s,s2)"))
 
 # Propagate partial error due to yield parameter using linear and sampling
 # method
-model.plotOn(frame3, VisualizeError = (r, ROOT.RooArgSet(s, s2), 2), FillColor = ROOT.kGreen)
-model.plotOn(frame3, Components = "bkg", VisualizeError = (r, ROOT.RooArgSet(fsig), 2), FillColor = ROOT.kGreen)
+model.plotOn(frame3, VisualizeError=(r, ROOT.RooArgSet(s, s2), 2), FillColor=ROOT.kGreen)
+model.plotOn(frame3, Components="bkg", VisualizeError=(r, ROOT.RooArgSet(fsig), 2), FillColor=ROOT.kGreen)
 
 model.plotOn(frame3)
-model.plotOn(frame3, Components = "bkg", LineStyle = ROOT.kDashed)
+model.plotOn(frame3, Components="bkg", LineStyle=ROOT.kDashed)
 frame3.SetMinimum(0)
 
 # Make plot frame
-frame4 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title(
-    "Visualization of 2-sigma partial error from fsig"))
+frame4 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Visualization of 2-sigma partial error from fsig"))
 
 # Propagate partial error due to yield parameter using linear and sampling
 # method
-model.plotOn(frame4, VisualizeError = (r, ROOT.RooArgSet(fsig), 2), FillColor = ROOT.kMagenta)
-model.plotOn(frame4, Components = "bkg", VisualizeError = (r, ROOT.RooArgSet(fsig), 2), FillColor = ROOT.kMagenta)
+model.plotOn(frame4, VisualizeError=(r, ROOT.RooArgSet(fsig), 2), FillColor=ROOT.kMagenta)
+model.plotOn(frame4, Components="bkg", VisualizeError=(r, ROOT.RooArgSet(fsig), 2), FillColor=ROOT.kMagenta)
 
 model.plotOn(frame4)
-model.plotOn(frame4, Components = "bkg", LineStyle = ROOT.kDashed)
+model.plotOn(frame4, Components="bkg", LineStyle=ROOT.kDashed)
 frame4.SetMinimum(0)
 
 c = ROOT.TCanvas("rf610_visualerror", "rf610_visualerror", 800, 800)

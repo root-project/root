@@ -27,12 +27,10 @@ sigma = ROOT.RooRealVar("sigma", "width of gaussian", 0.5)
 # -----------------------------------------------------------------------
 
 # Create interpreted function f(y) = a0 - a1*sqrt(10*abs(y))
-fy_1 = ROOT.RooFormulaVar(
-    "fy_1", "a0-a1*sqrt(10*abs(y))", ROOT.RooArgList(y, a0, a1))
+fy_1 = ROOT.RooFormulaVar("fy_1", "a0-a1*sqrt(10*abs(y))", ROOT.RooArgList(y, a0, a1))
 
 # Create gauss(x,f(y),s)
-model_1 = ROOT.RooGaussian(
-    "model_1", "Gaussian with shifting mean", x, fy_1, sigma)
+model_1 = ROOT.RooGaussian("model_1", "Gaussian with shifting mean", x, fy_1, sigma)
 
 # Using RooPolyVar to tailor pdf
 # -----------------------------------------------------------------------
@@ -41,8 +39,7 @@ model_1 = ROOT.RooGaussian(
 fy_2 = ROOT.RooPolyVar("fy_2", "fy_2", y, ROOT.RooArgList(a0, a1))
 
 # Create gauss(x,f(y),s)
-model_2 = ROOT.RooGaussian(
-    "model_2", "Gaussian with shifting mean", x, fy_2, sigma)
+model_2 = ROOT.RooGaussian("model_2", "Gaussian with shifting mean", x, fy_2, sigma)
 
 # Using RooAddition to tailor pdf
 # -----------------------------------------------------------------------
@@ -51,8 +48,7 @@ model_2 = ROOT.RooGaussian(
 fy_3 = ROOT.RooAddition("fy_3", "a0+y", ROOT.RooArgList(a0, y))
 
 # Create gauss(x,f(y),s)
-model_3 = ROOT.RooGaussian(
-    "model_3", "Gaussian with shifting mean", x, fy_3, sigma)
+model_3 = ROOT.RooGaussian("model_3", "Gaussian with shifting mean", x, fy_3, sigma)
 
 # Using RooProduct to tailor pdf
 # -----------------------------------------------------------------------
@@ -61,21 +57,24 @@ model_3 = ROOT.RooGaussian(
 fy_4 = ROOT.RooProduct("fy_4", "a1*y", ROOT.RooArgList(a1, y))
 
 # Create gauss(x,f(y),s)
-model_4 = ROOT.RooGaussian(
-    "model_4", "Gaussian with shifting mean", x, fy_4, sigma)
+model_4 = ROOT.RooGaussian("model_4", "Gaussian with shifting mean", x, fy_4, sigma)
 
 # Plot all pdfs
 # ----------------------------
 
 # Make two-dimensional plots in x vs y
-hh_model_1 = model_1.createHistogram("hh_model_1", x, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
-hh_model_2 = model_2.createHistogram("hh_model_2", x, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
-hh_model_3 = model_3.createHistogram("hh_model_3", x, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
-hh_model_4 = model_4.createHistogram("hh_model_4", x, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
+hh_model_1 = model_1.createHistogram(
+    "hh_model_1", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50))
+)
+hh_model_2 = model_2.createHistogram(
+    "hh_model_2", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50))
+)
+hh_model_3 = model_3.createHistogram(
+    "hh_model_3", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50))
+)
+hh_model_4 = model_4.createHistogram(
+    "hh_model_4", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50))
+)
 hh_model_1.SetLineColor(ROOT.kBlue)
 hh_model_2.SetLineColor(ROOT.kBlue)
 hh_model_3.SetLineColor(ROOT.kBlue)

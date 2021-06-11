@@ -24,8 +24,7 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 a = ROOT.RooRealVar("a", "a", 0.4, 0, 1)
 b = ROOT.RooRealVar("b", "b", 5)
 c = ROOT.RooRealVar("c", "c", -1, -10, 10)
-effFunc = ROOT.RooFormulaVar(
-    "effFunc", "(1-a)+a*cos((x-c)/b)", ROOT.RooArgList(a, b, c, x))
+effFunc = ROOT.RooFormulaVar("effFunc", "(1-a)+a*cos((x-c)/b)", ROOT.RooArgList(a, b, c, x))
 
 # Construct conditional efficiency pdf E(cut|x)
 # ------------------------------------------------------------------------------------------
@@ -43,15 +42,10 @@ effPdf = ROOT.RooEfficiency("effPdf", "effPdf", effFunc, cut, "accept")
 
 # Construct global shape pdf shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
 # (These are _only_ needed to generate some toy MC here to be used later)
-shapePdf = ROOT.RooPolynomial(
-    "shapePdf", "shapePdf", x, ROOT.RooArgList(ROOT.RooFit.RooConst(-0.095)))
+shapePdf = ROOT.RooPolynomial("shapePdf", "shapePdf", x, ROOT.RooArgList(ROOT.RooFit.RooConst(-0.095)))
 model = ROOT.RooProdPdf(
-    "model",
-    "model",
-    ROOT.RooArgSet(shapePdf),
-    ROOT.RooFit.Conditional(
-        ROOT.RooArgSet(effPdf),
-        ROOT.RooArgSet(cut)))
+    "model", "model", ROOT.RooArgSet(shapePdf), ROOT.RooFit.Conditional(ROOT.RooArgSet(effPdf), ROOT.RooArgSet(cut))
+)
 
 # Generate some toy data from model
 data = model.generate(ROOT.RooArgSet(x, cut), 10000)
@@ -60,22 +54,20 @@ data = model.generate(ROOT.RooArgSet(x, cut), 10000)
 # --------------------------------------------------------------------------
 
 # Fit conditional efficiency pdf to data
-effPdf.fitTo(data, ConditionalObservables = ROOT.RooArgSet(x))
+effPdf.fitTo(data, ConditionalObservables=ROOT.RooArgSet(x))
 
 # Plot fitted, data efficiency
 # --------------------------------------------------------
 
 # Plot distribution of all events and accepted fraction of events on frame
-frame1 = x.frame(ROOT.RooFit.Bins(
-    20), ROOT.RooFit.Title("Data (all, accepted)"))
+frame1 = x.frame(ROOT.RooFit.Bins(20), ROOT.RooFit.Title("Data (all, accepted)"))
 data.plotOn(frame1)
-data.plotOn(frame1, Cut = "cut==cut::accept", MarkerColor = ROOT.kRed, LineColor = ROOT.kRed)
+data.plotOn(frame1, Cut="cut==cut::accept", MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
 
 # Plot accept/reject efficiency on data overlay fitted efficiency curve
-frame2 = x.frame(ROOT.RooFit.Bins(
-    20), ROOT.RooFit.Title("Fitted efficiency"))
-data.plotOn(frame2, Efficiency = cut)  # needs ROOT version >= 5.21
-effFunc.plotOn(frame2, LineColor = ROOT.kRed)
+frame2 = x.frame(ROOT.RooFit.Bins(20), ROOT.RooFit.Title("Fitted efficiency"))
+data.plotOn(frame2, Efficiency=cut)  # needs ROOT version >= 5.21
+effFunc.plotOn(frame2, LineColor=ROOT.kRed)
 
 # Draw all frames on a canvas
 ca = ROOT.TCanvas("rf701_efficiency", "rf701_efficiency", 800, 400)
