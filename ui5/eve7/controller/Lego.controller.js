@@ -35,7 +35,6 @@ sap.ui.define([
             console.log("viewer", eviewer);
             let sceneInfo = eviewer.childs[0];
             let sceneId = sceneInfo.fSceneId;
-
             this.mgr.RegisterController(this);
             this.mgr.RegisterSceneReceiver(sceneId, this);
 
