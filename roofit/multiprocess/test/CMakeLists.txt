@@ -1,0 +1,16 @@
+# @author Patrick Bos, NL eScience Center, 2019-2021
+
+add_library(RooFit_multiprocess_testing_utils INTERFACE)
+target_link_libraries(RooFit_multiprocess_testing_utils INTERFACE RooFitCore RooBatchCompute)
+target_include_directories(RooFit_multiprocess_testing_utils PRIVATE ${RooFitMultiProcess_INCLUDE_DIRS})
+
+ROOT_ADD_GTEST(test_RooFit_MultiProcess_Job test_Job.cxx LIBRARIES RooFitMultiProcess)
+# link to the INTERFACE library separately, ROOT_EXECUTABLE cannot handle INTERFACE library properties:
+target_link_libraries(test_RooFit_MultiProcess_Job RooFit_multiprocess_testing_utils)
+target_include_directories(test_RooFit_MultiProcess_Job PRIVATE ${RooFitMultiProcess_INCLUDE_DIRS})
+
+ROOT_ADD_GTEST(test_RooFit_MultiProcess_ProcessManager test_ProcessManager.cxx LIBRARIES RooFitMultiProcess)
+target_include_directories(test_RooFit_MultiProcess_ProcessManager PRIVATE ${RooFitMultiProcess_INCLUDE_DIRS})
+
+ROOT_ADD_GTEST(test_RooFit_MultiProcess_Messenger test_Messenger.cxx LIBRARIES RooFitMultiProcess)
+target_include_directories(test_RooFit_MultiProcess_Messenger PRIVATE ${RooFitMultiProcess_INCLUDE_DIRS})

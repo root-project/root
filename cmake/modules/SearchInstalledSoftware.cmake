@@ -1864,7 +1864,7 @@ endif()
 
 #---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
 
-if (roofit_multiprocess)
+if (roofit_multiprocess AND NOT MSVC)
   if(NOT builtin_zeromq)
     message(STATUS "Looking for ZeroMQ (libzmq)")
     # Clear cache before calling find_package(ZeroMQ),
@@ -1929,7 +1929,7 @@ if (roofit_multiprocess)
   target_compile_definitions(libzmq INTERFACE ZMQ_NO_EXPORT)
   target_compile_definitions(cppzmq INTERFACE ZMQ_BUILD_DRAFT_API)
   target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
-endif (roofit_multiprocess)
+endif (roofit_multiprocess AND NOT MSVC)
 
 #---Download googletest--------------------------------------------------------------
 if (testing)
