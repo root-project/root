@@ -64,47 +64,30 @@ data = bmix.generate(ROOT.RooArgSet(dt, mixState, tagFlav), 10000)
 frame1 = dt.frame(ROOT.RooFit.Title(
     "B decay distribution with mixing (B0/B0bar)"))
 
-data.plotOn(frame1, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
-bmix.plotOn(frame1, ROOT.RooFit.Slice(tagFlav, "B0"))
+data.plotOn(frame1, Cut = "tagFlav==tagFlav::B0")
+bmix.plotOn(frame1, Slice = (tagFlav, "B0"))
 
-data.plotOn(frame1, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-            ROOT.RooFit.MarkerColor(ROOT.kCyan))
-bmix.plotOn(frame1, ROOT.RooFit.Slice(tagFlav, "B0bar"),
-            ROOT.RooFit.LineColor(ROOT.kCyan))
+data.plotOn(frame1, Cut = "tagFlav==tagFlav::B0bar", MarkerColor = ROOT.kCyan)
+bmix.plotOn(frame1, Slice = (tagFlav, "B0bar"), LineColor = ROOT.kCyan)
 
 # Plot mixed slice for B0 and B0bar tagged data separately
 frame2 = dt.frame(ROOT.RooFit.Title(
     "B decay distribution of mixed events (B0/B0bar)"))
 
-data.plotOn(frame2, ROOT.RooFit.Cut(
-    "mixState==mixState::mixed&&tagFlav==tagFlav::B0"))
-bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0"),
-            ROOT.RooFit.Slice(mixState, "mixed"))
+data.plotOn(frame2, Cut = "mixState==mixState::mixed&&tagFlav==tagFlav::B0")
+bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0"),Slice = (mixState, "mixed"))
 
-data.plotOn(
-    frame2,
-    ROOT.RooFit.Cut("mixState==mixState::mixed&&tagFlav==tagFlav::B0bar"),
-    ROOT.RooFit.MarkerColor(
-        ROOT.kCyan))
-bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0bar"), ROOT.RooFit.Slice(
-    mixState, "mixed"), ROOT.RooFit.LineColor(ROOT.kCyan))
+data.plotOn(frame2, Cut = "mixState==mixState::mixed&&tagFlav==tagFlav::B0bar", MarkerColor = ROOT.kCyan)
+bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0bar"), Slice = (mixState, "mixed"), LineColor = ROOT.kCyan)
 
 # Plot unmixed slice for B0 and B0bar tagged data separately
-frame3 = dt.frame(ROOT.RooFit.Title(
-    "B decay distribution of unmixed events (B0/B0bar)"))
+frame3 = dt.frame(ROOT.RooFit.Title("B decay distribution of unmixed events (B0/B0bar)"))
 
-data.plotOn(frame3, ROOT.RooFit.Cut(
-    "mixState==mixState::unmixed&&tagFlav==tagFlav::B0"))
-bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0"),
-            ROOT.RooFit.Slice(mixState, "unmixed"))
+data.plotOn(frame3, Cut = "mixState==mixState::unmixed&&tagFlav==tagFlav::B0")
+bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0"), Slice = (mixState, "unmixed"))
 
-data.plotOn(
-    frame3,
-    ROOT.RooFit.Cut("mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar"),
-    ROOT.RooFit.MarkerColor(
-        ROOT.kCyan))
-bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0bar"), ROOT.RooFit.Slice(
-    mixState, "unmixed"), ROOT.RooFit.LineColor(ROOT.kCyan))
+data.plotOn(frame3, Cut = "mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar", MarkerColor = ROOT.kCyan)
+bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0bar"),  Slice = (mixState, "unmixed"), LineColor = ROOT.kCyan)
 
 # B-decay with CP violation
 # -------------------------
@@ -145,13 +128,11 @@ data2 = bcp.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
 frame4 = dt.frame(ROOT.RooFit.Title(
     "B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)"))
 
-data2.plotOn(frame4, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
-bcp.plotOn(frame4, ROOT.RooFit.Slice(tagFlav, "B0"))
+data2.plotOn(frame4, Cut = "tagFlav==tagFlav::B0")
+bcp.plotOn(frame4, Slice = (tagFlav, "B0"))
 
-data2.plotOn(frame4, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-             ROOT.RooFit.MarkerColor(ROOT.kCyan))
-bcp.plotOn(frame4, ROOT.RooFit.Slice(tagFlav, "B0bar"),
-           ROOT.RooFit.LineColor(ROOT.kCyan))
+data2.plotOn(frame4, Cut = "tagFlav==tagFlav::B0bar", MarkerColor = ROOT.kCyan)
+bcp.plotOn(frame4, Slice = (tagFlav, "B0bar"), LineColor = ROOT.kCyan)
 
 # # Plot scenario 2 - sin(2b)=0.7, |l|=0.7
 # -------------------------------------------------------------------------------
@@ -166,13 +147,11 @@ data3 = bcp.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
 frame5 = dt.frame(ROOT.RooFit.Title(
     "B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)"))
 
-data3.plotOn(frame5, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
-bcp.plotOn(frame5, ROOT.RooFit.Slice(tagFlav, "B0"))
+data3.plotOn(frame5, Cut = "tagFlav==tagFlav::B0")
+bcp.plotOn(frame5, Slice = (tagFlav, "B0"))
 
-data3.plotOn(frame5, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-             ROOT.RooFit.MarkerColor(ROOT.kCyan))
-bcp.plotOn(frame5, ROOT.RooFit.Slice(tagFlav, "B0bar"),
-           ROOT.RooFit.LineColor(ROOT.kCyan))
+data3.plotOn(frame5, Cut = "tagFlav==tagFlav::B0bar", MarkerColor = ROOT.kCyan)
+bcp.plotOn(frame5, Slice = (tagFlav, "B0bar"), LineColor = ROOT.kCyan)
 
 
 # Generic B-decay with user coefficients
@@ -213,13 +192,11 @@ data4 = bcpg.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
 frame6 = dt.frame(ROOT.RooFit.Title(
     "B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)"))
 
-data4.plotOn(frame6, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
-bcpg.plotOn(frame6, ROOT.RooFit.Slice(tagFlav, "B0"))
+data4.plotOn(frame6, Cut = "tagFlav==tagFlav::B0")
+bcpg.plotOn(frame6, Slice = (tagFlav, "B0"))
 
-data4.plotOn(frame6, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-             ROOT.RooFit.MarkerColor(ROOT.kCyan))
-bcpg.plotOn(frame6, ROOT.RooFit.Slice(tagFlav, "B0bar"),
-            ROOT.RooFit.LineColor(ROOT.kCyan))
+data4.plotOn(frame6, Cut = "tagFlav==tagFlav::B0bar", MarkerColor = ROOT.kCyan)
+bcpg.plotOn(frame6, Slice = (tagFlav, "B0bar"), LineColor = ROOT.kCyan)
 
 c = ROOT.TCanvas("rf708_bphysics", "rf708_bphysics", 1200, 800)
 c.Divide(3, 2)

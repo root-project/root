@@ -66,7 +66,7 @@ ROOT.RooMsgService.instance().addStream(
     ROOT.RooFit.ClassName("RooGaussian"))
 
 # Perform a fit to generate some tracing messages
-model.fitTo(data, ROOT.RooFit.Verbose(ROOT.kTRUE))
+model.fitTo(data, Verbose = True)
 
 # Reset message service to default stream configuration
 ROOT.RooMsgService.instance().reset()
@@ -80,7 +80,7 @@ ROOT.RooMsgService.instance().addStream(
     ROOT.RooFit.OutputFile("rf506_debug.log"))
 
 # Perform a fit to generate some tracing messages
-model.fitTo(data, ROOT.RooFit.Verbose(ROOT.kTRUE))
+model.fitTo(data, Verbose = True)
 
 # Reset message service to default stream configuration
 ROOT.RooMsgService.instance().reset()

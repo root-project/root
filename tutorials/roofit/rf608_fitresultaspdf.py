@@ -37,7 +37,7 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 # Fit model to data
 # ----------------------------------
 
-r = model.fitTo(data, ROOT.RooFit.Save())
+r = model.fitTo(data, Save = True)
 
 # Create MV Gaussian pdf of fitted parameters
 # ------------------------------------------------------------------------------------

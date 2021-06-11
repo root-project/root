@@ -47,14 +47,13 @@ frame = x.frame(
     ROOT.RooFit.Bins(20))
 data1.plotOn(frame)
 kest1.plotOn(frame)
-kest2.plotOn(frame, ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))
+kest2.plotOn(frame, LineStyle = ROOT.kDashed, LineColor = ROOT.kRed)
 
 # Plot kernel estimation pdfs with regular and increased bandwidth
 frame2 = x.frame(ROOT.RooFit.Title(
     "Adaptive kernel estimation pdf with regular, bandwidth"))
 kest1.plotOn(frame2)
-kest3.plotOn(frame2, ROOT.RooFit.LineColor(ROOT.kMagenta))
+kest3.plotOn(frame2, LineColor = ROOT.kMagenta)
 
 # Create low status 2D dataset
 # -------------------------------------------------------

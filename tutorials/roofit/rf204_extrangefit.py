@@ -27,15 +27,13 @@ sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
 # Build Chebychev polynomial pdf
-a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
-a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
+a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
 bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
 # Sum the signal components into a composite signal pdf
-sig1frac = ROOT.RooRealVar(
-    "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
-sig = ROOT.RooAddPdf(
-    "sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
+sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
 
 # Construct extended comps with range spec
 # ------------------------------------------------------------------------------
@@ -45,14 +43,10 @@ x.setRange("signalRange", 4, 6)
 
 # Associated nsig/nbkg as expected number of events with sig/bkg
 # _in_the_range_ "signalRange"
-nsig = ROOT.RooRealVar(
-    "nsig", "number of signal events in signalRange", 500, 0., 10000)
-nbkg = ROOT.RooRealVar(
-    "nbkg", "number of background events in signalRange", 500, 0, 10000)
-esig = ROOT.RooExtendPdf(
-    "esig", "extended signal pdf", sig, nsig, "signalRange")
-ebkg = ROOT.RooExtendPdf(
-    "ebkg", "extended background pdf", bkg, nbkg, "signalRange")
+nsig = ROOT.RooRealVar("nsig", "number of signal events in signalRange", 500, 0.0, 10000)
+nbkg = ROOT.RooRealVar("nbkg", "number of background events in signalRange", 500, 0, 10000)
+esig = ROOT.RooExtendPdf("esig", "extended signal pdf", sig, nsig, "signalRange")
+ebkg = ROOT.RooExtendPdf("ebkg", "extended background pdf", bkg, nbkg, "signalRange")
 
 # Sum extended components
 # ---------------------------------------------
@@ -68,5 +62,5 @@ model = ROOT.RooAddPdf("model", "(g1+g2)+a", ROOT.RooArgList(ebkg, esig))
 data = model.generate(ROOT.RooArgSet(x), 1000)
 
 # Perform unbinned extended ML fit to data
-r = model.fitTo(data, ROOT.RooFit.Extended(ROOT.kTRUE), ROOT.RooFit.Save())
+r = model.fitTo(data, Extended=True, Save=True)
 r.Print()

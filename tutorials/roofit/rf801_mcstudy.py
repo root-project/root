@@ -66,13 +66,11 @@ model = ROOT.RooAddPdf(
 mcstudy = ROOT.RooMCStudy(
     model,
     ROOT.RooArgSet(x),
-    ROOT.RooFit.Binned(
-        ROOT.kTRUE),
+    ROOT.RooFit.Binned(True),
     ROOT.RooFit.Silence(),
     ROOT.RooFit.Extended(),
     ROOT.RooFit.FitOptions(
-        ROOT.RooFit.Save(
-            ROOT.kTRUE),
+        ROOT.RooFit.Save(True),
         ROOT.RooFit.PrintEvalErrors(0)))
 
 # Generate and fit events
@@ -89,7 +87,7 @@ mcstudy.generateAndFit(1000)
 frame1 = mcstudy.plotParam(mean, ROOT.RooFit.Bins(40))
 frame2 = mcstudy.plotError(mean, ROOT.RooFit.Bins(40))
 frame3 = mcstudy.plotPull(mean, ROOT.RooFit.Bins(
-    40), ROOT.RooFit.FitGauss(ROOT.kTRUE))
+    40), ROOT.RooFit.FitGauss(True))
 
 # Plot distribution of minimized likelihood
 frame4 = mcstudy.plotNLL(ROOT.RooFit.Bins(40))

@@ -63,7 +63,7 @@ def fillWorkspace(w):
 # but self does not work anymore in CLING.
 # so self tutorial is an example on how to
 # change the code
-w = ROOT.RooWorkspace("w", ROOT.kTRUE)
+w = ROOT.RooWorkspace("w", True)
 
 # Fill workspace with pdf and data in a separate function
 fillWorkspace(w)
@@ -107,8 +107,7 @@ d.plotOn(frame)
 bkg = w.pdf("bkg")
 model.plotOn(frame)
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(frame, ROOT.RooFit.Components(ras_bkg),
-             ROOT.RooFit.LineStyle(ROOT.kDashed))
+model.plotOn(frame, Components = ras_bkg, LineStyle = ROOT.kDashed)
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)

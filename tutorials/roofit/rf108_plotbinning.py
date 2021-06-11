@@ -61,7 +61,7 @@ tbins.addUniform(15, 0, 15)
 # Make plot with specified binning
 dtframe = dt.frame(ROOT.RooFit.Range(-15, 15),
                    ROOT.RooFit.Title("dt distribution with custom binning"))
-data.plotOn(dtframe, ROOT.RooFit.Binning(tbins))
+data.plotOn(dtframe, Binning = tbins)
 bmix.plotOn(dtframe)
 
 # NB: Note that bin density for each bin is adjusted to that of default frame binning as shown
@@ -90,11 +90,10 @@ aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title(
     "mixState asymmetry distribution with custom binning"))
 
 # Plot mixState asymmetry of data with specified customg binning
-data.plotOn(aframe, ROOT.RooFit.Asymmetry(
-    mixState), ROOT.RooFit.Binning(abins))
+data.plotOn(aframe, Asymmetry = mixState, Binning = abins)
 
 # Plot corresponding property of pdf
-bmix.plotOn(aframe, ROOT.RooFit.Asymmetry(mixState))
+bmix.plotOn(aframe, Asymmetry = mixState)
 
 # Adjust vertical range of plot to sensible values for an asymmetry
 aframe.SetMinimum(-1.1)

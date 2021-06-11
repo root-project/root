@@ -63,7 +63,7 @@ modelx = model.createProjection(ROOT.RooArgSet(y))
 data = modelx.generateBinned(ROOT.RooArgSet(x), 1000)
 
 # Fit modelx to toy data
-modelx.fitTo(data, ROOT.RooFit.Verbose())
+modelx.fitTo(data, Verbose = True)
 
 # Plot modelx over data
 frame = x.frame(40)

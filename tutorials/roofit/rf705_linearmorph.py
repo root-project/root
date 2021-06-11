@@ -53,21 +53,21 @@ g2.plotOn(frame1)
 
 # Show interpolated shapes in red
 alpha.setVal(0.125)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.25)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.375)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.50)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.625)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.75)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.875)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 alpha.setVal(0.95)
-lmorph.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+lmorph.plotOn(frame1, LineColor = ROOT.kRed)
 
 # Show 2D distribution of pdf(x,alpha)
 # -----------------------------------------------------------------------
@@ -84,8 +84,8 @@ alpha.setVal(0.8)
 data = lmorph.generate(ROOT.RooArgSet(x), 1000)
 
 # Fit pdf to toy data
-lmorph.setCacheAlpha(ROOT.kTRUE)
-lmorph.fitTo(data, ROOT.RooFit.Verbose(ROOT.kTRUE))
+lmorph.setCacheAlpha(True)
+lmorph.fitTo(data, Verbose = True)
 
 # Plot fitted pdf and data overlaid
 frame2 = x.frame(ROOT.RooFit.Bins(100))
@@ -102,7 +102,7 @@ frame3 = alpha.frame(ROOT.RooFit.Bins(100), ROOT.RooFit.Range(0.1, 0.9))
 nll = ROOT.RooNLLVar("nll", "nll", lmorph, data)
 nll.plotOn(frame3, ROOT.RooFit.ShiftToZero())
 
-lmorph.setCacheAlpha(ROOT.kFALSE)
+lmorph.setCacheAlpha(False)
 
 c = ROOT.TCanvas("rf705_linearmorph", "rf705_linearmorph", 800, 800)
 c.Divide(2, 2)

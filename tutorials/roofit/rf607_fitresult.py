@@ -50,7 +50,7 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 # -------------------------------------------------------------
 
 # Perform fit and save result
-r = model.fitTo(data, ROOT.RooFit.Save())
+r = model.fitTo(data, Save = True)
 
 # Print fit results
 # ---------------------------------
