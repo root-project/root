@@ -929,12 +929,12 @@ void InteractiveFCNm(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
    TMethodCall *m  = gMinuit->GetMethodCall();
    if (!m) return;
 
-   Long_t args[5];
-   args[0] = (Long_t)&npar;
-   args[1] = (Long_t)gin;
-   args[2] = (Long_t)&f;
-   args[3] = (Long_t)u;
-   args[4] = (Long_t)flag;
+   Longptr_t args[5];
+   args[0] = (Longptr_t)&npar;
+   args[1] = (Longptr_t)gin;
+   args[2] = (Longptr_t)&f;
+   args[3] = (Longptr_t)u;
+   args[4] = (Longptr_t)flag;
    m->SetParamPtrs(args);
    Double_t result;
    m->Execute(result);

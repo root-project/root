@@ -458,9 +458,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fData = data;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
+   fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
    fTrainingOwner = true;
-   fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
+   fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
    fTestOwner = true;
    fWeight = "1";
    TString testcut = test;
@@ -473,8 +473,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fManager = 0;
    if (data) {
       BuildNetwork();
-      data->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),training,"goff");
-      data->Draw(Form(">>fTestList_%lu",(ULong_t)this),(const char *)testcut,"goff");
+      data->Draw(Form(">>fTrainingList_%zu",(size_t)this),training,"goff");
+      data->Draw(Form(">>fTestList_%zu",(size_t)this),(const char *)testcut,"goff");
       AttachData();
    }
    else {
@@ -531,9 +531,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fData = data;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
+   fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
    fTrainingOwner = true;
-   fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
+   fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
    fTestOwner = true;
    fWeight = weight;
    TString testcut = test;
@@ -546,8 +546,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fManager = 0;
    if (data) {
       BuildNetwork();
-      data->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),training,"goff");
-      data->Draw(Form(">>fTestList_%lu",(ULong_t)this),(const char *)testcut,"goff");
+      data->Draw(Form(">>fTrainingList_%zu",(size_t)this),training,"goff");
+      data->Draw(Form(">>fTestList_%zu",(size_t)this),(const char *)testcut,"goff");
       AttachData();
    }
    else {
@@ -633,10 +633,10 @@ void TMultiLayerPerceptron::SetTestDataSet(TEventList* test)
 void TMultiLayerPerceptron::SetTrainingDataSet(const char * train)
 {
    if(fTraining && fTrainingOwner) delete fTraining;
-   fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
+   fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
    fTrainingOwner = true;
    if (fData) {
-      fData->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),train,"goff");
+      fData->Draw(Form(">>fTrainingList_%zu",(size_t)this),train,"goff");
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -651,11 +651,11 @@ void TMultiLayerPerceptron::SetTrainingDataSet(const char * train)
 void TMultiLayerPerceptron::SetTestDataSet(const char * test)
 {
    if(fTest && fTestOwner) {delete fTest; fTest=0;}
-   if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%lu",(ULong_t)this),10)) delete fTest;
-   fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
+   if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%zu",(size_t)this),10)) delete fTest;
+   fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
    fTestOwner = true;
    if (fData) {
-      fData->Draw(Form(">>fTestList_%lu",(ULong_t)this),test,"goff");
+      fData->Draw(Form(">>fTestList_%zu",(size_t)this),test,"goff");
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
