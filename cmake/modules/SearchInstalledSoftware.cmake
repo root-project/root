@@ -1600,6 +1600,30 @@ if (vecgeom)
   endif()
 endif()
 
+#---Check for protobuf-------------------------------------------------------------------
+
+if(tmva-sofie)
+  message(STATUS "Looking for Protobuf")
+  find_package(Protobuf)
+  if(NOT Protobuf_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Protobuf libraries not found and they are required (tmva-sofie option enabled)")
+    else()
+      message(STATUS "Protobuf not found. Switching off tmva-sofie option")
+      set(tmva-sofie OFF CACHE BOOL "Disabled because Protobuf not found" FORCE)
+    endif()
+  else()
+    if(Protobuf_VERSION LESS 3.0)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Protobuf libraries found but is less than the version required (3.0) (tmva-sofie option enabled)")
+      else()
+        message(STATUS "Protobuf found but its version is not high enough (>3.0). Switching off tmva-sofie option")
+        set(tmva-sofie OFF CACHE BOOL "Disabled because found Protobuf version is not enough" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
 #---Check for CUDA-----------------------------------------------------------------------
 # if tmva-gpu is off and cuda is on cuda is searched but not used in tmva
 #  if cuda is off but tmva-gpu is on cuda is searched and activated if found !
