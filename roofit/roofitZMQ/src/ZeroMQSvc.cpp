@@ -26,7 +26,7 @@ zmq::context_t& ZeroMQSvc::context() const {
       m_context = new zmq::context_t;
     } catch (zmq::error_t& e) {
       std::cerr << "ERROR: Creating ZeroMQ context failed. This only happens when PGM initialization failed or when a nullptr was returned from zmq_ctx_new because the created context was invalid. Contact ZMQ experts when this happens, because it shouldn't.\n";
-      throw e;
+      throw;
     }
   }
   return *m_context;
@@ -39,7 +39,7 @@ zmq::socket_t ZeroMQSvc::socket(int type) const {
   } catch (zmq::error_t& e) {
     // all zmq errors not recoverable from here, only at call site
     std::cerr << "ERROR in ZeroMQSvc::socket: " << e.what() << " (errno: " << e.num() << ")\n";
-    throw e;
+    throw;
   }
 }
 
@@ -50,7 +50,7 @@ zmq::socket_t* ZeroMQSvc::socket_ptr(int type) const {
   } catch (zmq::error_t& e) {
     // all zmq errors not recoverable from here, only at call site
     std::cerr << "ERROR in ZeroMQSvc::socket_ptr: " << e.what() << " (errno: " << e.num() << ")\n";
-    throw e;
+    throw;
   }
 }
 

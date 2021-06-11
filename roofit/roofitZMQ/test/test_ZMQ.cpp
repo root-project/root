@@ -73,7 +73,7 @@ void elaborate_bind(const ZmqLingeringSocketPtr<>& socket, std::string name) {
           std::cerr
               << "again: address already in use, aborting; please check whether there are any remaining improperly exited processes (zombies) around or whether some other program is using port 6660\n";
         }
-        throw e2;
+        throw;
       }
       // Sometimes, the socket from the previous test needs some time to close, so
       // we introduce a latency here. A more robust and fast approach might be to
@@ -86,7 +86,7 @@ void elaborate_bind(const ZmqLingeringSocketPtr<>& socket, std::string name) {
       // life. If one comes alive, transfer ownership of that pointer to the pointer
       // you want to eventually use (`socket`) and that's it.
     } else {
-      throw e;
+      throw;
     }
   }
 }
