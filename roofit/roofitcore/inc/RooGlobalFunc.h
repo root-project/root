@@ -17,6 +17,7 @@
 #define ROO_GLOBAL_FUNC
 
 #include "RooCmdArg.h"
+#include "RooArgSet.h"
 #include <map>
 #include <string>
 
@@ -29,7 +30,6 @@ class RooRealConstant ;
 class RooMsgService ;
 class RooFormulaVar ;
 class RooAbsData ;
-class RooArgSet ;
 class RooCategory ;
 class RooAbsReal ;
 class RooAbsBinning ;
@@ -206,10 +206,23 @@ RooCmdArg IntegrateBins(double precision);
 RooCmdArg PrefitDataFraction(Double_t data_ratio = 0.0) ;
 RooCmdArg FitOptions(const char* opts) ;
 RooCmdArg Optimize(Int_t flag=2) ;
-RooCmdArg ProjectedObservables(const RooArgSet& set) ; // obsolete, for backward compatibility
-RooCmdArg ProjectedObservables(RooArgSet && set) ; // obsolete, for backward compatibility
-RooCmdArg ConditionalObservables(const RooArgSet& set) ;
-RooCmdArg ConditionalObservables(RooArgSet && set) ;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RooCmdArg to declare conditional observables.
+/// \param[in] argsOrArgSet Can either be one or more RooRealVar with the
+//                          observables or a single RooArgSet containing them.
+template<class... Args_t>
+RooCmdArg ConditionalObservables(Args_t &&... argsOrArgSet) {
+  return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,
+          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}));
+}
+
+// obsolete, for backward compatibility
+template<class... Args_t>
+RooCmdArg ProjectedObservables(Args_t &&... argsOrArgSet) {
+  return ConditionalObservables(std::forward<Args_t>(argsOrArgSet)...);
+}
+
 RooCmdArg Verbose(Bool_t flag=kTRUE) ;
 RooCmdArg Save(Bool_t flag=kTRUE) ;
 RooCmdArg Timer(Bool_t flag=kTRUE) ;
