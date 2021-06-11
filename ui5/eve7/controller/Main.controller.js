@@ -111,8 +111,10 @@ sap.ui.define(['sap/ui/core/Component',
             var vtype = "rootui5.eve7.view.GL";
             if (elem.fName === "Table")
                vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
+            else if (elem.fName === "Lego")
+               vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
             else
-               elem.view_kind = (n==0) ? "3D" : "2D"; // FIXME: should be property of GL view
+               elem.view_kind = (n == 0) ? "3D" : "2D"; // FIXME: should be property of GL view
 
 
             var oOwnerComponent = Component.getOwnerComponentFor(this.getView());

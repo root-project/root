@@ -1,0 +1,21 @@
+<mvc:View
+   class="sapUiSizeCompact"
+   height="100%"
+   controllerName="rootui5.eve7.controller.Lego"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:l="sap.ui.layout"
+   xmlns="sap.m">
+    <Panel id="legoPanel" >
+        <headerToolbar>
+            <OverflowToolbar>
+               <Title text="HELLO"/>
+               <Button text="LEGO" />
+            </OverflowToolbar>
+        </headerToolbar>
+        <content>
+           <l:VerticalLayout width="100%">
+           <FormattedText id="legoX"/>
+           </l:VerticalLayout>
+        </content>
+    </Panel>
+</mvc:View>
