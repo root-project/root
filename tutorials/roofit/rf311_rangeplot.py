@@ -67,10 +67,10 @@ frame2 = x.frame(ROOT.RooFit.Title(
 # For observables that do not have an explicit "sigRegion" range defined (e.g. observable)
 # an implicit definition is used that is identical to the full range (i.e.
 # [-5,5] for x)
-data.plotOn(frame2, ROOT.RooFit.CutRange("sigRegion"))
+data.plotOn(frame2, CutRange = "sigRegion")
 
 # Project model on x, projected observables (y,z) only in "sigRegion"
-model.plotOn(frame2, ROOT.RooFit.ProjectionRange("sigRegion"))
+model.plotOn(frame2, ProjectionRange = "sigRegion")
 
 c = ROOT.TCanvas("rf311_rangeplot", "rf310_rangeplot", 800, 400)
 c.Divide(2)

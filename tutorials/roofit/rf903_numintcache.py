@@ -93,10 +93,7 @@ d = w.pdf("model").generate(
     1000)
 
 # ROOT.This is slow in mode 0, fast in mode 1
-w.pdf("model").fitTo(
-    d, ROOT.RooFit.Verbose(
-        ROOT.kTRUE), ROOT.RooFit.Timer(
-            ROOT.kTRUE))
+w.pdf("model").fitTo(d, Verbose = True, Timer = True)
 
 # Projection on x (always slow as 2D integral over Y, at fitted value of a
 # is not cached)

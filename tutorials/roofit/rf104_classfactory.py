@@ -47,8 +47,8 @@ ROOT.RooClassFactory.makePdf(
     "x,A,B",
     "",
     "A*fabs(x)+pow(x-B,2)",
-    ROOT.kTRUE,
-    ROOT.kFALSE,
+    True,
+    False,
     "x:(A/2)*(pow(x.max(rangeName),2)+pow(x.min(rangeName),2))+(1./3)*(pow(x.max(rangeName)-B,3)-pow(x.min(rangeName)-B,3))")
 
 # Use instance of created class

@@ -68,22 +68,15 @@ model.fitTo(data)
 # rather than observed number of events (==data.numEntries())
 xframe = x.frame(ROOT.RooFit.Title("extended ML fit example"))
 data.plotOn(xframe)
-model.plotOn(xframe, ROOT.RooFit.Normalization(
-    1.0, ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(xframe, Normalization= dict(scaleFactor = 1.0, scaleType = ROOT.RooAbsReal.RelativeExpected))
 
 # Overlay the background component of model with a dashed line
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(
-    xframe, ROOT.RooFit.Components(ras_bkg), ROOT.RooFit.LineStyle(
-        ROOT.kDashed), ROOT.RooFit.Normalization(
-            1.0, ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(xframe,  Components = ras_bkg, LineStyle = ROOT.kDotted, Normalization = dict(scaleFactor = 1.0, scaleType = ROOT.RooAbsReal.RelativeExpected))
 
 # Overlay the background+sig2 components of model with a dotted line
 ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
-model.plotOn(
-    xframe, ROOT.RooFit.Components(ras_bkg_sig2), ROOT.RooFit.LineStyle(
-        ROOT.kDotted), ROOT.RooFit.Normalization(
-            1.0, ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(xframe, Components = ras_bkg_sig2, LineStyle = ROOT.kDotted, Normalization = dict(scaleFactor = 1.0, scaleType = ROOT.RooAbsReal.RelativeExpected))
 
 # Print structure of composite pdf
 model.Print("t")

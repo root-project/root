@@ -12,7 +12,7 @@ import ROOT
 
 
 # Activate ROOT.RooFit memory tracing
-ROOT.RooTrace.active(ROOT.kTRUE)
+ROOT.RooTrace.active(True)
 
 # Construct gauss(x,m,s)
 x = ROOT.RooRealVar("x", "x", -10, 10)
@@ -24,7 +24,7 @@ gauss = ROOT.RooGaussian("g", "g", x, m, s)
 ROOT.RooTrace.dump()
 
 # Activate verbose mode
-ROOT.RooTrace.verbose(ROOT.kTRUE)
+ROOT.RooTrace.verbose(True)
 
 # Construct poly(x,p0)
 p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0., 1.)

@@ -70,13 +70,11 @@ model.plotOn(xframe)
 
 # Overlay the background component of model with a dashed line
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg),
-             ROOT.RooFit.LineStyle(ROOT.kDashed))
+model.plotOn(xframe, Components = ras_bkg, LineStyle = ROOT.kDashed)
 
 # Overlay the background+sig2 components of model with a dotted line
 ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
-model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg_sig2),
-             ROOT.RooFit.LineStyle(ROOT.kDotted))
+model.plotOn(xframe, Components = ras_bkg_sig2, LineStyle = ROOT.kDotted)
 
 # Print structure of composite pdf
 model.Print("t")
@@ -98,7 +96,7 @@ model2 = ROOT.RooAddPdf(
     ROOT.RooArgList(
         bkgfrac,
         sig1frac),
-    ROOT.kTRUE)
+    True)
 
 # NB: Each coefficient is interpreted as the fraction of the
 # left-hand component of the i-th recursive sum, i.e.
@@ -109,15 +107,8 @@ model2 = ROOT.RooAddPdf(
 
 # Plot recursive addition model
 # ---------------------------------------------------------
-model2.plotOn(xframe, ROOT.RooFit.LineColor(ROOT.kRed),
-              ROOT.RooFit.LineStyle(ROOT.kDashed))
-model2.plotOn(
-    xframe,
-    ROOT.RooFit.Components(ras_bkg_sig2),
-    ROOT.RooFit.LineColor(
-        ROOT.kRed),
-    ROOT.RooFit.LineStyle(
-        ROOT.kDashed))
+model2.plotOn(xframe, LineColor = ROOT.kRed, LineStyle = ROOT.kDashed)
+model2.plotOn(xframe, Components = ras_bkg_sig2, LineColor = ROOT.kRed, LineStyle = ROOT.kDashed)
 model2.Print("t")
 
 # Draw the frame on the canvas

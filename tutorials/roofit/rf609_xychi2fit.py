@@ -62,11 +62,10 @@ f.plotOn(frame)
 
 # Alternative: fit chi^2 integrating f(x) over ranges defined by X errors, rather
 # than taking point at center of bin
-f.chi2FitTo(dxy, ROOT.RooFit.YVar(y), ROOT.RooFit.Integrate(ROOT.kTRUE))
+f.chi2FitTo(dxy, ROOT.RooFit.YVar(y), ROOT.RooFit.Integrate(True))
 
 # Overlay alternate fit result
-f.plotOn(frame, ROOT.RooFit.LineStyle(ROOT.kDashed),
-         ROOT.RooFit.LineColor(ROOT.kRed))
+f.plotOn(frame, LineStyle = ROOT.kDashed, LineColor = ROOT.kRed)
 
 # Draw the plot on a canvas
 c = ROOT.TCanvas("rf609_xychi2fit", "rf609_xychi2fit", 600, 600)

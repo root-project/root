@@ -13,7 +13,7 @@
 import ROOT
 
 
-flat = ROOT.kFALSE
+flat = False
 # Construct efficiency function e(x,y)
 # -----------------------------------------------------------------------
 
@@ -89,7 +89,7 @@ data = model.generate(ROOT.RooArgSet(x, y, cut), 10000)
 # --------------------------------------------------------------------------
 
 # Fit conditional efficiency pdf to data
-effPdf.fitTo(data, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(x, y)))
+effPdf.fitTo(data, ConditionalObservables = ROOT.RooArgSet(x, y))
 
 # Plot fitted, data efficiency
 # --------------------------------------------------------
