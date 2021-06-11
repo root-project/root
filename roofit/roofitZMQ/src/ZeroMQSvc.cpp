@@ -1,8 +1,7 @@
-//#include <memory>
+#include "RooFit_ZMQ/ZeroMQSvc.h"
+
 #include <functional>  // std::ref
 #include <ROOT/RMakeUnique.hxx>
-
-#include "RooFit_ZMQ/ZeroMQSvc.h"
 
 ZeroMQSvc& zmqSvc() {
    static std::unique_ptr<ZeroMQSvc> svc;

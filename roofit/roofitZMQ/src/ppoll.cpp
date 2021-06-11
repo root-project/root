@@ -12,6 +12,8 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
+#include <RooFit_ZMQ/ppoll.h>
+
 #include <unistd.h>  // pselect
 #include <time.h>  // timespec
 #include <poll.h>
@@ -21,8 +23,6 @@
 #include "err.hpp"  // zmq_assert
 #include "polling_util.hpp"  // zmq::optimized_fd_set_t, zmq::compute_timeout, zmq::timeout_t
 #include "fd.hpp"  // zmq::fd_t
-
-#include <RooFit_ZMQ/ppoll.h>
 
 
 namespace ZMQ {

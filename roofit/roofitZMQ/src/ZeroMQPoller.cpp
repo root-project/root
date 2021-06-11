@@ -6,10 +6,11 @@
  * The full license is in the file LICENSE, distributed with this software.
  */
 
+#include "RooFit_ZMQ/ZeroMQPoller.h"
+
 #include <iostream>
 
 #include "RooFit_ZMQ/ppoll.h"
-#include "RooFit_ZMQ/ZeroMQPoller.h"
 
 std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
   std::vector<std::pair<size_t, int>> r;
