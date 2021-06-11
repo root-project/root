@@ -36,27 +36,30 @@ void test_snapshot_copyaddresses()
    write_inputs();
 
    const std::string outSuffix = "_out.root";
+   // On Windows, one cannot delete files while they are still used (not released)
+   // by a process. So enclose ROOT::RDataFrame inside braces to make sure the file
+   // handles get out of scope, allowing to properly delete the files
+   {
+      ROOT::RDataFrame df("t", fnamePrefix + std::string("*.root"));
+      auto out_df = df.Snapshot<int, int>("t", fnamePrefix + outSuffix, {"x", "y"});
 
-   ROOT::RDataFrame df("t", fnamePrefix + std::string("*.root"));
-   auto out_df = df.Snapshot<int, int>("t", fnamePrefix + outSuffix, {"x", "y"});
+      int expected = 1;
+      out_df->Foreach(
+         [&](int x, int y) mutable {
+            if (x != expected) {
+               std::cerr << "Expected x == " << expected << ", found " << x << '\n';
+               std::exit(1);
+            }
+            ++expected;
 
-   int expected = 1;
-   out_df->Foreach(
-      [&](int x, int y) mutable {
-         if (x != expected) {
-            std::cerr << "Expected x == " << expected << ", found " << x << '\n';
-            std::exit(1);
-         }
-         ++expected;
-
-         if (y != expected) {
-            std::cerr << "Expected y == " << expected << ", found " << y << '\n';
-            std::exit(2);
-         }
-         ++expected;
-      },
-      {"x", "y"});
-
+            if (y != expected) {
+               std::cerr << "Expected y == " << expected << ", found " << y << '\n';
+               std::exit(2);
+            }
+            ++expected;
+         },
+         {"x", "y"});
+   }
    // clean up files
    for (int i = 0; i < nfiles; ++i) {
       gSystem->Unlink((fnamePrefix + std::to_string(i) + ".root").c_str());
