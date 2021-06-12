@@ -345,6 +345,9 @@ enum {
 typedef uint16_t		daos_oclass_id_t;
 typedef uint16_t		daos_ofeat_t;
 
+int daos_oclass_name2id(const char *name);
+int daos_oclass_id2name(daos_oclass_id_t oc_id, char *name);
+
 
 //////////////////////////////////////////////////////////////////////////////// daos_obj.h
 

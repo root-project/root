@@ -21,6 +21,7 @@
 
 #include <array>
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -240,6 +241,26 @@ void d_rank_list_free(d_rank_list_t *rank_list)
 const char *d_errstr(int rc)
 {
    return rc ? "DER_INVAL" : "Success";
+}
+
+int daos_oclass_name2id(const char *name)
+{
+   if (strcmp(name, "SX") == 0) return OC_SX;
+   if (strcmp(name, "RP_XSF") == 0) return OC_RP_XSF;
+   return OC_UNKNOWN;
+}
+
+int daos_oclass_id2name(daos_oclass_id_t oc_id, char *name)
+{
+   switch (oc_id) {
+   case OC_SX:
+      strcpy(name, "SX"); // NOLINT
+      return 0;
+   case OC_RP_XSF:
+      strcpy(name, "RP_XSF"); // NOLINT
+      return 0;
+   }
+   return -1;
 }
 
 
