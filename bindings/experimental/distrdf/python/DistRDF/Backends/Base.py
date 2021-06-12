@@ -16,6 +16,7 @@ from abc import abstractmethod
 
 import ROOT
 from DistRDF.Backends import Utils
+from DistRDF.HeadNode import TreeHeadNode
 
 # Abstract class declaration
 # This ensures compatibility between Python 2 and 3 versions, since in
@@ -113,10 +114,14 @@ class BaseBackend(ABC):
         """
         headnode = generator.headnode
         computation_graph_callable = generator.get_callable()
-        # Arguments needed to create PyROOT RDF object
-        rdf_args = headnode.args
-        treename = headnode.get_treename()
-        selected_branches = headnode.get_branches()
+
+        if isinstance(headnode, TreeHeadNode):
+            treename = headnode.treename
+            defaultbranches = headnode.defaultbranches
+        else:
+            # Only other head node type is EmptySourceHeadNode at the moment
+            treename = None
+            nentries = headnode.nentries
 
         # Avoid having references to the instance inside the mapper
         initialization = self.initialization
@@ -151,7 +156,7 @@ class BaseBackend(ABC):
             start = int(current_range.start)
             end = int(current_range.end)
 
-            if treename:
+            if treename is not None:
                 # Build TChain of files for this range:
                 chain = ROOT.TChain(treename)
                 for f in current_range.filelist:
@@ -182,12 +187,13 @@ class BaseBackend(ABC):
                         # Finally add friend TChain to the parent
                         chain.AddFriend(friend_chain)
 
-                if selected_branches:
-                    rdf = ROOT.ROOT.RDataFrame(chain, selected_branches)
+                if defaultbranches is not None:
+                    rdf = ROOT.RDataFrame(chain, defaultbranches)
                 else:
-                    rdf = ROOT.ROOT.RDataFrame(chain)
+                    rdf = ROOT.RDataFrame(chain)
             else:
-                rdf = ROOT.ROOT.RDataFrame(*rdf_args)  # PyROOT RDF object
+                # Only other head node type is EmptySourceHeadNode at the moment
+                rdf = ROOT.RDataFrame(nentries)
 
             # # TODO : If we want to run multi-threaded in a Spark node in
             # # the future, use `TEntryList` instead of `Range`
