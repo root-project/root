@@ -47,6 +47,14 @@ ROOT::Experimental::Detail::RDaosPool::~RDaosPool() {
 ////////////////////////////////////////////////////////////////////////////////
 
 
+std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() const
+{
+   char name[kOCNameMaxLength + 1] = {};
+   daos_oclass_id2name(fCid, name);
+   return std::string{name};
+}
+
+
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs&& fua)
   : fDkey(fua.fDkey), fAkey(fua.fAkey),
     fIods{fua.fIods[0]}, fSgls{fua.fSgls[0]}, fIovs(std::move(fua.fIovs)), fEv(fua.fEv)
@@ -74,9 +82,10 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs
 }
 
 ROOT::Experimental::Detail::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid,
-                                                     daos_oclass_id_t cid)
+                                                     ObjClassId cid)
 {
-   daos_obj_generate_id(&oid, DAOS_OF_DKEY_UINT64 | DAOS_OF_AKEY_UINT64 /*| DAOS_OF_ARRAY_BYTE*/, cid, 0);
+   if (!cid.IsUnknown())
+      daos_obj_generate_id(&oid, DAOS_OF_DKEY_UINT64 | DAOS_OF_AKEY_UINT64 /*| DAOS_OF_ARRAY_BYTE*/, cid.fCid, 0);
    if (int err = daos_obj_open(container.fContainerHandle, oid, DAOS_OO_RW, &fObjectHandle, nullptr))
       throw RException(R__FAIL("daos_obj_open: error: " + std::string(d_errstr(err))));
 }
@@ -154,19 +163,21 @@ ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {
 }
 
 int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
-                                                               DistributionKey_t dkey, AttributeKey_t akey)
+                                                               DistributionKey_t dkey, AttributeKey_t akey,
+                                                               ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], buffer, length);
    RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
-   return RDaosObject(*this, oid).Fetch(args);
+   return RDaosObject(*this, oid, cid.fCid).Fetch(args);
 }
 
 int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
-                                                                DistributionKey_t dkey, AttributeKey_t akey)
+                                                                DistributionKey_t dkey, AttributeKey_t akey,
+                                                                ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
    RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
-   return RDaosObject(*this, oid).Update(args);
+   return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
