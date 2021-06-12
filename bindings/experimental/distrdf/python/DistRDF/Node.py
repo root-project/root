@@ -9,9 +9,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
-from __future__ import print_function
-
 import collections
 import glob
 import logging
