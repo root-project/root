@@ -10,7 +10,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 import collections
-import glob
 import logging
 import warnings
 
@@ -234,51 +233,6 @@ class Node(object):
         return self.is_prunable()
 
 
-class FriendInfo(object):
-    """
-    A simple class to hold information about friend trees.
-
-    Attributes:
-        friend_names (list): A list with the names of the `ROOT.TTree` objects
-            which are friends of the main `ROOT.TTree`.
-
-        friend_file_names (list): A list with the paths to the files
-            corresponding to the trees in the `friend_names` attribute. Each
-            element of `friend_names` can correspond to multiple file names.
-    """
-
-    def __init__(self, friend_names=[], friend_file_names=[]):
-        """
-        Create an instance of FriendInfo
-
-        Args:
-            friend_names (list): A list containing the treenames of the friend
-                trees.
-
-            friend_file_names (list): A list containing the file names
-                corresponding to a given treename in friend_names. Each
-                treename can correspond to multiple file names.
-        """
-        self.friend_names = friend_names
-        self.friend_file_names = friend_file_names
-
-    def __bool__(self):
-        """
-        Define the behaviour of FriendInfo instance when boolean evaluated.
-        Both lists have to be non-empty in order to return True.
-
-        Returns:
-            bool: True if both lists are non-empty, False otherwise.
-        """
-        return bool(self.friend_names) and bool(self.friend_file_names)
-
-    def __nonzero__(self):
-        """
-        Python 2 dunder method for __bool__. Kept for compatibility.
-        """
-        return self.__bool__()
-
-
 class RangesBuilder(object):
 
     def __init__(self, headnode):
@@ -299,27 +253,43 @@ class RangesBuilder(object):
     @property
     def nentries(self):
         """Retrieve the total number of entries from the dataset."""
-        return self._headnode.get_num_entries()
+        return self._headnode.nentries
 
     @property
     def treename(self):
         """Retrieve the name of the TTree."""
-        return self._headnode.get_treename()
+        try:
+            return self._headnode.treename
+        except AttributeError:
+            # Ugly, will be fixed when refactoring creation of Ranges in a separate commit
+            return None
 
     @property
     def tree(self):
         """Retrieve the TTree instance."""
-        return self._headnode.get_tree()
+        try:
+            return self._headnode.tree
+        except AttributeError:
+            # Ugly, will be fixed when refactoring creation of Ranges in a separate commit
+            return None
 
     @property
     def inputfiles(self):
         """Retrieve the input files of the dataset."""
-        return self._headnode.get_inputfiles()
+        try:
+            return self._headnode.inputfiles
+        except AttributeError:
+            # Ugly, will be fixed when refactoring creation of Ranges in a separate commit
+            return None
 
     @property
     def friendinfo(self):
         """Retrieve information about friend trees of the dataset."""
-        return self._headnode._get_friend_info()
+        try:
+            return self._headnode.friendinfo
+        except AttributeError:
+            # Ugly, will be fixed when refactoring creation of Ranges in a separate commit
+            return None
 
     def get_clusters(self, treename, filelist):
         """
@@ -590,229 +560,3 @@ class RangesBuilder(object):
             logger.debug(
                 "Building balanced ranges for %d entries.", nentries)
             return self._get_balanced_ranges(nentries)
-
-
-class HeadNode(Node):
-    """
-    The Python equivalent of ROOT C++'s
-    RDataFrame class.
-
-    Attributes:
-        args (list): A list of arguments that were provided to construct
-            the RDataFrame object.
-
-
-    DistRDF's RDataFrame constructor accepts the same arguments as the ROOT's
-    RDataFrame constructor (see
-    `RDataFrame <https://root.cern/doc/master/classROOT_1_1RDataFrame.html>`_)
-    """
-
-    def __init__(self, *args):
-        """
-        Creates a new RDataFrame instance for the given arguments.
-
-        Args:
-            *args (list): Variable length argument list to construct the
-                RDataFrame object.
-        """
-        super(HeadNode, self).__init__(None, None, *args)
-        # Early check of the arguments to RDataFrame constructor
-        df_check_args = ROOT.RDataFrame(*args)
-        self.args = list(args)  # Make args mutable
-
-        # Set at creation of the dataframe, might be optimized by the backend
-        # in optimize_partitions
-        self.npartitions = 2
-
-    def build_ranges(self):
-        """Build the ranges for this dataset."""
-        return RangesBuilder(self).build_ranges()
-
-    def get_branches(self):
-        """Gets list of default branches if passed by the user."""
-        # ROOT Constructor:
-        # RDataFrame(TTree& tree, defaultBranches = {})
-        if len(self.args) == 2 and isinstance(self.args[0], ROOT.TTree):
-            return self.args[1]
-        # ROOT Constructors:
-        # RDataFrame(treeName, filenameglob, defaultBranches = {})
-        # RDataFrame(treename, filenames, defaultBranches = {})
-        # RDataFrame(treeName, dirPtr, defaultBranches = {})
-        if len(self.args) == 3:
-            return self.args[2]
-
-        return None
-
-    def get_num_entries(self):
-        """
-        Gets the number of entries in the given dataset.
-
-        Returns:
-            int: This is the computed number of entries in the input dataset.
-
-        """
-        first_arg = self.args[0]
-        if isinstance(first_arg, int):
-            # If there's only one argument
-            # which is an integer, return it.
-            return first_arg
-        elif isinstance(first_arg, ROOT.TTree):
-            # If the argument is a TTree or TChain,
-            # get the number of entries from it.
-            return first_arg.GetEntries()
-
-        second_arg = self.args[1]
-
-        # Construct a ROOT.TChain object
-        chain = ROOT.TChain(first_arg)
-
-        if isinstance(second_arg, str):
-            # If the second argument is a string
-            chain.Add(second_arg)
-        else:
-            # If the second argument is a list or vector
-            for fname in second_arg:
-                chain.Add(str(fname))  # Possible bug in conversion of string
-
-        return chain.GetEntries()
-
-    def get_treename(self):
-        """
-        Get name of the TTree.
-
-        Returns:
-            (str, None): Name of the TTree, or :obj:`None` if there is no tree.
-
-        """
-        first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TTree):
-            # Get name from a given TTree/TChain
-            return first_arg.GetName()
-        elif isinstance(first_arg, str):
-            # First argument was the name of the tree
-            return first_arg
-        # RDataFrame may have been created without any TTree or TChain
-        return None
-
-    def get_tree(self):
-        """
-        Get ROOT.TTree instance used as an argument to DistRDF.RDataFrame()
-
-        Returns:
-            (ROOT.TTree, None): instance of the tree used to instantiate the
-            RDataFrame, or `None` if another object was used. ROOT.Tchain
-            inherits from ROOT.TTree so that can be the return value as well.
-        """
-        first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TTree):
-            return first_arg
-
-        return None
-
-    def get_inputfiles(self):
-        """
-        Get list of input files.
-
-        Returns:
-            (list, None): List of files, or None if there are no input files.
-        """
-        firstarg = self.args[0]
-        if isinstance(firstarg, ROOT.TChain):
-            # Extract file names from a given TChain
-            chain = firstarg
-            return [chainElem.GetTitle()
-                    for chainElem in chain.GetListOfFiles()]
-        elif isinstance(firstarg, ROOT.TTree):
-            # Retrieve the associated file
-            treefile = firstarg.GetCurrentFile()
-            if not treefile:
-                # The tree has no associated input file
-                raise RuntimeError(("Trees with no associated files are not supported. "
-                                    "Please save your tree to a file and retry."))
-            else:
-                return [treefile.GetName()]
-
-        if len(self.args) > 1:
-            # Second argument can be:
-            # 1. A simple string representing a file or a glob of files
-            # 2. A vector of filename strings
-            # 3. A pointer to a TDirectory (i.e. the file of the dataset)
-            secondarg = self.args[1]
-            if isinstance(secondarg, str):
-                # Expand globbing excluding remote files
-                remote_prefixes = ("root:", "http:", "https:")
-                if not secondarg.startswith(remote_prefixes):
-                    return glob.glob(secondarg)
-                else:
-                    return [secondarg]
-            elif isinstance(secondarg, (list, ROOT.std.vector("string"))):
-                # Make sure this returns a list of Python strings
-                return [str(filename) for filename in secondarg]
-            elif isinstance(secondarg, ROOT.TDirectory):
-                # Return the name of the file
-                return [str(secondarg.GetName())]
-
-        # Since the dataset could be just an empty dataframe with some entries,
-        # aka RDataFrame(ULong64_t numEntries), we still have to return None
-        # here. Would be nice to have separate head nodes for different data
-        # sources to better separate the roles.
-        return None
-
-    def _get_friend_info(self):
-        """
-        Retrieve friend tree names and filenames of a given `ROOT.TTree`
-        object.
-
-        Args:
-            tree (ROOT.TTree): the ROOT.TTree instance used as an argument to
-                DistRDF.RDataFrame(). ROOT.TChain inherits from ROOT.TTree so it
-                is a valid argument too.
-
-        Returns:
-            (FriendInfo): A FriendInfo instance with two lists as variables.
-                The first list holds the names of the friend tree(s), the
-                second list holds the file names of each of the trees in the
-                first list, each tree name can correspond to multiple file
-                names.
-        """
-        friend_names = []
-        friend_file_names = []
-
-        # Retrieve the TTree instance
-        tree = self.get_tree()
-
-        # Early return if the dataframe wasn't constructed from a TTree.
-        if tree is None:
-            return FriendInfo()
-
-        # Get a list of ROOT.TFriendElement objects
-        friends = tree.GetListOfFriends()
-        if not friends:
-            # RDataFrame may have been created with a TTree without
-            # friend trees.
-            return FriendInfo()
-
-        for friend in friends:
-            friend_tree = friend.GetTree()  # ROOT.TTree
-            real_name = friend_tree.GetName()  # Treename as string
-
-            # TChain inherits from TTree
-            if isinstance(friend_tree, ROOT.TChain):
-                cur_friend_files = [
-                    # The title of a TFile is the file name
-                    chain_file.GetTitle()
-                    for chain_file
-                    # Get a list of ROOT.TFile objects
-                    in friend_tree.GetListOfFiles()
-                ]
-
-            else:
-                cur_friend_files = [
-                    friend_tree.
-                    GetCurrentFile().  # ROOT.TFile
-                    GetName()  # Filename as string
-                ]
-            friend_file_names.append(cur_friend_files)
-            friend_names.append(real_name)
-
-        return FriendInfo(friend_names, friend_file_names)
