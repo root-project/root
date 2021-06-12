@@ -153,8 +153,8 @@ ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {
    daos_cont_close(fContainerHandle, nullptr);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::ReadObject(daos_obj_id_t oid, void *buffer, std::size_t length,
-                                                           DistributionKey_t dkey, AttributeKey_t akey)
+int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
+                                                               DistributionKey_t dkey, AttributeKey_t akey)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], buffer, length);
@@ -162,21 +162,11 @@ int ROOT::Experimental::Detail::RDaosContainer::ReadObject(daos_obj_id_t oid, vo
    return RDaosObject(*this, oid).Fetch(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::WriteObject(daos_obj_id_t oid, const void *buffer, std::size_t length,
-                                                            DistributionKey_t dkey, AttributeKey_t akey)
+int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
+                                                                DistributionKey_t dkey, AttributeKey_t akey)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
    RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
    return RDaosObject(*this, oid).Update(args);
-}
-
-std::tuple<daos_obj_id_t, int>
-ROOT::Experimental::Detail::RDaosContainer::WriteObject(const void *buffer, std::size_t length,
-                                                        DistributionKey_t dkey, AttributeKey_t akey)
-{
-   auto ret = std::make_tuple(fSequentialWrOid,
-                              WriteObject(fSequentialWrOid, buffer, length, dkey, akey));
-   fSequentialWrOid.lo++;
-   return ret;
 }

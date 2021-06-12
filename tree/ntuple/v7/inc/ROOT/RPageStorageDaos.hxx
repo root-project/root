@@ -21,6 +21,7 @@
 #include <ROOT/RStringView.hxx>
 
 #include <array>
+#include <atomic>
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -92,6 +93,8 @@ private:
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
    /// after (which calls `daos_pool_disconect()`).
    std::unique_ptr<RDaosContainer> fDaosContainer;
+   /// OID for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
+   std::atomic<std::uint64_t> fOid{0};
    /// \brief A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
    std::string fURI;
 

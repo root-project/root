@@ -101,8 +101,8 @@ public:
 class RDaosContainer {
    friend class RDaosObject;
 public:
-   using DistributionKey_t = std::uint64_t;
-   using AttributeKey_t = std::uint64_t;
+   using DistributionKey_t = RDaosObject::DistributionKey_t;
+   using AttributeKey_t = RDaosObject::AttributeKey_t;
   
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
@@ -132,8 +132,6 @@ private:
    daos_handle_t fContainerHandle{};
    uuid_t fContainerUuid{};
    std::shared_ptr<RDaosPool> fPool;
-   /// OID that will be used by the next call to `WriteObject(const void *, std::size_t, DistributionKey_t, AttributeKey_t)`.
-   daos_obj_id_t fSequentialWrOid{};
 
    /**
      \brief Perform a vector read/write operation on different objects.
@@ -165,37 +163,28 @@ public:
    ~RDaosContainer();
 
    /**
-     \brief Read data from an object in this container to the given buffer.
-     \param oid A 128-bit DAOS object identifier.
+     \brief Read data from a single object attribute key to the given buffer.
      \param buffer The address of a buffer that has capacity for at least `length` bytes.
      \param length Length of the buffer.
-     \param dkey The distribution key used for this operation.
-     \param akey The attribute key used for this operation.
-     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
-     */
-   int ReadObject(daos_obj_id_t oid, void *buffer, std::size_t length, DistributionKey_t dkey, AttributeKey_t akey);
-
-   /**
-     \brief Write the given buffer to an object in this container.
      \param oid A 128-bit DAOS object identifier.
-     \param buffer The address of the source buffer.
-     \param length Length of the buffer.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int WriteObject(daos_obj_id_t oid, const void *buffer, std::size_t length, DistributionKey_t dkey, AttributeKey_t akey);
+   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
+                      DistributionKey_t dkey, AttributeKey_t akey);
 
    /**
-     \brief Write the given buffer to an object in this container and return a generated OID.
+     \brief Write the given buffer to a single object attribute key.
      \param buffer The address of the source buffer.
      \param length Length of the buffer.
+     \param oid A 128-bit DAOS object identifier.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
-     \return A `std::tuple<>` that contains the generated OID and a DAOS error number (0 if the operation succeeded).
+     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   std::tuple<daos_obj_id_t, int>
-   WriteObject(const void *buffer, std::size_t length, DistributionKey_t dkey, AttributeKey_t akey);
+   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
+                       DistributionKey_t dkey, AttributeKey_t akey);
 
    /**
      \brief Perform a vector read operation on (possibly) multiple objects.
