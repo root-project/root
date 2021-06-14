@@ -66,7 +66,7 @@ protected:
 
    void ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member);
 
-   static std::string DetectCssType(const std::shared_ptr<TObject> &obj);
+   static std::string DetectCssType(const TObject *obj);
 
 public:
    // special kinds, see TWebSnapshot enums
@@ -76,16 +76,31 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj))
+   TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj.get()))
    {
       fKind = kObject;
       fObj = obj;
    }
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable(DetectCssType(obj))
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable(DetectCssType(obj.get()))
    {
       fKind = kObject;
       fObj = obj;
+      SetOpt(opt);
+   }
+
+   /// Constructor takes ownership
+   TObjectDrawable(TObject *obj) : RDrawable(DetectCssType(obj))
+   {
+      fKind = kObject;
+      fObj = std::shared_ptr<TObject>(obj);
+   }
+
+   /// Constructor takes ownership
+   TObjectDrawable(TObject *obj, const std::string &opt) : RDrawable(DetectCssType(obj))
+   {
+      fKind = kObject;
+      fObj = std::shared_ptr<TObject>(obj);
       SetOpt(opt);
    }
 
