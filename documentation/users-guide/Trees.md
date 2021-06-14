@@ -2347,7 +2347,7 @@ Same as case 4, but use the method of a data member.
 The same as case 4: a data member of a data member retrieved by a
 method.
 
-7. `**tree->Draw("GetHistogram().GetXaxis().GetXmax()");`**
+7. **`tree->Draw("GetHistogram().GetXaxis().GetXmax()");`**
 
 Same as case 4, but using methods.
 
@@ -2736,7 +2736,7 @@ this entry
 `Iteration$:` return the current iteration over this formula for this
 entry (i.e. varies from 0 to `Length$`).
 
-43. T->Draw("fLastTrack.GetPx():fLastTrack.fPx");`**
+43. **`tree->Draw("fLastTrack.GetPx():fLastTrack.fPx");`**
 
 **`TRef`** and **`TRefArray`** are automatically deferenced and this
 shows the value of the `fPx` of the track referenced by `fLastTrack`. To
@@ -2744,7 +2744,7 @@ access the **`TRef`** object itself use the '`@`' notation (see next
 example). This auto dereferencing can be extended (via an implementation
 of **`TVirtualRefProxy`**) to any reference type.
 
-44. T->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");`**
+44. **`tree->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");`**
 
 Will cast the return value of `GetObject()` (which happens to be
 **`TObject*`** in this case) before requesting the `GetPx()` member
@@ -3393,7 +3393,7 @@ numbers meaning is:
 
 2 lower limit in x-direction
 
-3upper limit in x-direction
+3 upper limit in x-direction
 
 4-6 same for y-direction
 
