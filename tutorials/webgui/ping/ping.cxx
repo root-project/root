@@ -11,6 +11,7 @@
 
 #include <ROOT/RWebWindow.hxx>
 #include <iostream>
+#include <chrono>
 
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
 
@@ -143,10 +144,16 @@ void ping(int nclients = 1, int test_mode = 0)
    if (batch_mode) {
       const int run_limit = 200;
       const double run_time = 50.;
+      auto t1 = std::chrono::high_resolution_clock::now();
       window->WaitFor([=](double tm) { return (current_counter >= run_limit) || (tm > run_time) ? 1 : 0; });
+      auto t2 = std::chrono::high_resolution_clock::now();
+      auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+
       if (current_counter >= run_limit)
-         std::cout << "PING-PONG TEST COMPLETED" << std::endl;
+         std::cout << "PING-PONG TEST COMPLETED";
       else
-         std::cout << "PING-PONG TEST FAIL" << std::endl;
+         std::cout << "PING-PONG TEST FAIL cnt:" << current_counter;
+
+      std::cout << " runs:" << ms_int.count() << "ms" << std::endl;
    }
 }
