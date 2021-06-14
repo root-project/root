@@ -25,6 +25,7 @@
 #include <TString.h>
 
 #include <string>
+#include <unordered_map>
 
 class RooArgSet;
 
@@ -58,7 +59,7 @@ public:
   bool defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=nullptr, bool isArray=false) ;
   bool defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=nullptr) ;
 
-  bool process(const RooCmdArg& arg) ;
+  bool process(const RooCmdArg& arg, bool warnAboutDuplicates=true) ;
   template<class... Args_t>
   bool process(const RooCmdArg& arg, Args_t && ...args);
   bool process(const RooLinkedList& argList) ;
@@ -102,7 +103,7 @@ public:
   static double decodeDoubleOnTheFly(const char* callerID, const char* cmdArgName, int idx, double defVal,
       std::initializer_list<std::reference_wrapper<const RooCmdArg>> args);
 
-protected:
+private:
 
   template<class T>
   struct Var {
@@ -130,6 +131,8 @@ protected:
   TList _mList ; ///< Mutex cmd list
   TList _yList ; ///< Dependency cmd list
   TList _pList ; ///< Processed cmd list
+
+  std::unordered_map<std::string, int> _processedCmdArgNames; ///<!
 
   ClassDefOverride(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
 };
