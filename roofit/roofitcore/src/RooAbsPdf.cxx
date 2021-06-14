@@ -1746,10 +1746,24 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   RooAbsReal* nll=nullptr;
   std::unique_ptr<ROOT::Experimental::RooFitDriver> driver;
-  if (pc.getInt("BatchMode")==0) {
-    nll = createNLL(data,nllCmdList);
-  } else {
-    nll = new ROOT::Experimental::RooNLLVarNew("NewNLLVar","NewNLLVar",*this);
+  std::unique_ptr<RooRealVar> weightVar;
+  if (pc.getInt("BatchMode")==0) nll = createNLL(data,nllCmdList);
+  else
+  {
+    if (data.isWeighted())
+    {
+      std::string weightVarName = "_weight";
+      if(auto * dataSet = dynamic_cast<RooDataSet const*>(&data)) {
+        if(dataSet->weightVar()) weightVarName = dataSet->weightVar()->GetName();
+      }
+      
+      // make a clone of the weight variable (or an initial instance, if it doesn't exist)
+      // the clone will hold the weight value (or values as a batch) and will participate
+      // in the computation graph of the RooFit driver. 
+      weightVar.reset( new RooRealVar(weightVarName.c_str(), "Weight(s) of events", data.weight()) );
+      nll = new ROOT::Experimental::RooNLLVarNew("NewNLLVar", "NewNLLVar", *this, *weightVar.get());
+    }
+    else nll = new ROOT::Experimental::RooNLLVarNew("NewNLLVar", "NewNLLVar", *this);
     driver.reset(new ROOT::Experimental::RooFitDriver( data, static_cast<ROOT::Experimental::RooNLLVarNew&>(*nll), pc.getInt("BatchMode") ));
   }
 
