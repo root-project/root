@@ -26,7 +26,7 @@ public:
    TEveMacro(const char* name);
    virtual ~TEveMacro() {}
 
-   virtual Long_t Exec(const char* params = "0", Int_t* error = 0);
+   virtual Longptr_t Exec(const char* params = "0", Int_t* error = 0);
 
    void ResetRoot();
 

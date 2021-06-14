@@ -957,7 +957,7 @@ void TEveElement::SpawnEditor()
 void TEveElement::ExportToCINT(char* var_name)
 {
    const char* cname = IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)this));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1003,7 +1003,7 @@ void TEveElement::ExportSourceObjectToCINT(char* var_name) const
       throw eh + "source-object not set.";
 
    const char* cname = so->IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)so));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)so));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1702,8 +1702,8 @@ void TEveElement::Destroy()
    static const TEveException eh("TEveElement::Destroy ");
 
    if (fDenyDestroy > 0)
-      throw eh + TString::Format("element '%s' (%s*) 0x%lx is protected against destruction.",
-                                 GetElementName(), IsA()->GetName(), (ULong_t)this);
+      throw eh + TString::Format("element '%s' (%s*) 0x%zx is protected against destruction.",
+                                 GetElementName(), IsA()->GetName(), (size_t)this);
 
    PreDeleteElement();
    delete this;
