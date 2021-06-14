@@ -6934,8 +6934,8 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
 {
    if (gPad->IsBatch()) return 0;
-   return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
-                                           (Long_t)box,text,(Int_t)delayms));
+   return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%zx,\"%s\",%d)",
+                                           (size_t)box,text,(Int_t)delayms));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6945,7 +6945,7 @@ void TPad::DeleteToolTip(TObject *tip)
 {
    // delete tip;
    if (!tip) return;
-   gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
+   gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%zx", (size_t)tip));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6956,8 +6956,8 @@ void TPad::ResetToolTip(TObject *tip)
 {
    if (!tip) return;
    // tip->Reset(this);
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
-                          (Long_t)tip,(Long_t)this));
+   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%zx)->Reset((TPad*)0x%zx)",
+                          (size_t)tip,(size_t)this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6967,7 +6967,7 @@ void TPad::CloseToolTip(TObject *tip)
 {
    if (!tip) return;
    // tip->Hide();
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
+   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%zx)->Hide()",(size_t)tip));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7089,7 +7089,7 @@ Int_t TPad::GetGLDevice()
 
 void TPad::RecordPave(const TObject *obj)
 {
-   Emit("RecordPave(const TObject*)", (Long_t)obj);
+   Emit("RecordPave(const TObject*)", (Longptr_t)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7097,7 +7097,7 @@ void TPad::RecordPave(const TObject *obj)
 
 void TPad::RecordLatex(const TObject *obj)
 {
-   Emit("RecordLatex(const TObject*)", (Long_t)obj);
+   Emit("RecordLatex(const TObject*)", (Longptr_t)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
