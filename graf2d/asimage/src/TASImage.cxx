@@ -4785,7 +4785,7 @@ void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoor
 void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t thick)
 {
    if (!nseg || !seg) {
-      Warning("DrawSegments", "Invalid data nseg=%d seg=0x%lx", nseg, (Long_t)seg);
+      Warning("DrawSegments", "Invalid data nseg=%d seg=0x%zx", nseg, (size_t)seg);
       return;
    }
 
@@ -4828,8 +4828,8 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
    }
 
    if (!npt || !ppt || !widths || (stipple && (!w || !h))) {
-      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%lx col=%s widths=0x%lx stipple=0x%lx w=%d h=%d",
-              npt, (Long_t)ppt, col, (Long_t)widths, (Long_t)stipple, w, h);
+      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%zx col=%s widths=0x%zx stipple=0x%zx w=%d h=%d",
+              npt, (size_t)ppt, col, (size_t)widths, (size_t)stipple, w, h);
       return;
    }
 
@@ -4886,8 +4886,8 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
    }
 
    if (!npt || !ppt || !widths || !tile) {
-      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%lx widths=0x%lx tile=0x%lx",
-              npt, (Long_t)ppt, (Long_t)widths, (Long_t)tile);
+      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%zx widths=0x%zx tile=0x%zx",
+              npt, (size_t)ppt, (size_t)widths, (size_t)tile);
       return;
    }
 
@@ -4940,7 +4940,7 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
    }
 
    if (!npt || !ppt || !widths) {
-      Warning("CropSpans", "No points specified npt=%d ppt=0x%lx widths=0x%lx", npt, (Long_t)ppt, (Long_t)widths);
+      Warning("CropSpans", "No points specified npt=%d ppt=0x%zx widths=0x%zx", npt, (size_t)ppt, (size_t)widths);
       return;
    }
 
@@ -5245,7 +5245,7 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    }
 
    if ((npt < 3) || !ppt) {
-      Warning("GetPolygonSpans", "No points specified npt=%d ppt=0x%lx", npt, (Long_t)ppt);
+      Warning("GetPolygonSpans", "No points specified npt=%d ppt=0x%zx", npt, (size_t)ppt);
       return kFALSE;
    }
 
@@ -5447,7 +5447,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
    }
 
    if ((count < 3) || !ptsIn) {
-      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%lx", count, (Long_t)ptsIn);
+      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%zx", count, (size_t)ptsIn);
       return;
    }
 
@@ -5563,7 +5563,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    }
 
    if ((count < 3) || !ptsIn) {
-      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%lx", count, (Long_t)ptsIn);
+      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%zx", count, (size_t)ptsIn);
       return;
    }
 

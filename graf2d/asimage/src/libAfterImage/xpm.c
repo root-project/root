@@ -822,7 +822,7 @@ build_xpm_colormap( ASXpmFile *xpm_file )
 	{
 		xpm_color_names = create_ashash( 0, casestring_hash_value, casestring_compare, NULL );
 		for( i = 0 ; XpmRGB_Colors[i].name != NULL ; i++ )
-			add_hash_item( xpm_color_names, (ASHashableValue)XpmRGB_Colors[i].name, (void*)((long)XpmRGB_Colors[i].argb) );
+			add_hash_item( xpm_color_names, (ASHashableValue)XpmRGB_Colors[i].name, (void*)((intptr_t)XpmRGB_Colors[i].argb) );
 	}
 
 	for( i = 0 ; i < xpm_file->cmap_size ; ++i )
@@ -865,7 +865,7 @@ LOCAL_DEBUG_OUT( "\t\tcolor = 0x%8.8lX\n",  color );
 		{
 			char *name = mystrndup(xpm_file->str_buf, xpm_file->bpp);
 LOCAL_DEBUG_OUT( "\t\tname = \"%s\"\n", name );
-			add_hash_item( xpm_file->cmap_name_xref, (ASHashableValue)name, (void*)((long)color) );
+			add_hash_item( xpm_file->cmap_name_xref, (ASHashableValue)name, (void*)((intptr_t)color) );
 		}
 #endif
 	}

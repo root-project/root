@@ -100,7 +100,7 @@ public:
    TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h);
    virtual ~TASPaletteEditor();
 
-   Bool_t ProcessMessage(Long_t msg, Long_t param1, Long_t param2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2);
 
    void   UpdateRange();
    void   CloseWindow();
