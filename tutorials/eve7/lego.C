@@ -38,9 +38,58 @@ void lego()
    auto scene = eveMng->SpawnNewScene("Lego", "LegoView");
    auto view = eveMng->SpawnNewViewer("Lego", "");
    view->AddScene(scene);
-   
+
    auto ps = createPointSet(100);
    scene->AddElement(ps);
+
+   {
+      // gROOT->SetBatch();
+
+      // TPad *p = new TPad("LegoPad", "Lego Pad Tit", 0, 0, 1, 1);
+      TPad *p = new TCanvas("LegoPad", "Lego Pad Tit", 800,400);
+
+      // *** Simple TH2
+      /*
+      TH2F* h = new TH2F("Booboo","exampul",128,-5,5,64,-2.5,2.5);
+      TRandom r;
+      for(int i=0;i<1000000;++i) {
+         h->Fill(r.Gaus() - 2, r.Gaus());
+         h->Fill(r.Gaus() + 2, r.Gaus());
+      }
+      for(int i=0;i<6000;++i) {
+         h->Fill(0.1*r.Gaus() - 2, 0.1*r.Gaus());
+         h->Fill(0.1*r.Gaus() + 2, 0.1*r.Gaus());
+      }
+      // h->Draw("LEGO2");
+      p->GetListOfPrimitives()->Add(h, "LEGO2");
+      p->Modified(kTRUE);
+      */
+
+      // *** Load std CMS calo demo
+      const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+      TFile::SetCacheFileDir(".");
+      auto hf = TFile::Open(histFile, "CACHEREAD");
+      auto ecalHist = (TH2F*)hf->Get("ecalLego");
+      auto hcalHist = (TH2F*)hf->Get("hcalLego");
+
+      THStack *s = new THStack("LegoStack", "ECal undt HCal");
+      ecalHist->SetFillColor(kRed);
+      ecalHist->GetXaxis()->SetLabelSize(1);
+      ecalHist->GetYaxis()->SetLabelSize(1);
+      ecalHist->GetZaxis()->SetLabelSize(1);
+      s->Add(ecalHist);
+      hcalHist->SetFillColor(kBlue);
+      s->Add(hcalHist);
+      p->GetListOfPrimitives()->Add(s);
+
+      p->Modified(kTRUE);
+
+      TString json( TBufferJSON::ToJSON(p) );
+
+      ps->SetTitle(TBase64::Encode(json).Data());
+
+      s->Draw();
+   }
 
    eveMng->Show();
 }

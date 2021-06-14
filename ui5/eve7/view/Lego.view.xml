@@ -4,17 +4,20 @@
    controllerName="rootui5.eve7.controller.Lego"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:l="sap.ui.layout"
-   xmlns="sap.m">
+   xmlns="sap.m"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   >
     <Panel id="legoPanel" >
         <headerToolbar>
             <OverflowToolbar>
                <Title text="HELLO"/>
-               <Button text="LEGO" />
+               <Button text="LEGO"/>
             </OverflowToolbar>
         </headerToolbar>
         <content>
-           <l:VerticalLayout width="100%">
+           <l:VerticalLayout>
            <FormattedText id="legoX"/>
+           <html:div id="legoPlotPlace"/>
            </l:VerticalLayout>
         </content>
     </Panel>

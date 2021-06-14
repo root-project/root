@@ -34,20 +34,35 @@ sap.ui.define([
             console.log("viewer", eviewer);
             let sceneInfo = eviewer.childs[0];
             let sceneId = sceneInfo.fSceneId;
-            
+
             this.mgr.RegisterController(this);
             this.mgr.RegisterSceneReceiver(sceneId, this);
 
             let scene = this.mgr.GetElement(sceneId);
             console.log("Lego scene 2", scene);
 
-            let dump = JSON.stringify(scene.childs[0]);
-            var element = this.byId("legoX");
-            element.setHtmlText(dump);
+            let chld = scene.childs[0];
+            // let dump = JSON.stringify();
+            let element = this.byId("legoX");
+            element.setHtmlText("Pointset infected by TCanvas / Lego Stack");
 
+            this.canvas_json = JSROOT.parse( atob(chld.fTitle) );
         },
 
+        // Called when HTML parent/container rendering is complete.
+        onAfterRendering: function()
+        {
+            console.log("onAfterRendering", "view", this.getView(), "dom", this.byId("legoPlotPlace").getDomRef());
 
+            if ( ! this.jst_ptr)
+            {
+                // this.jst_ptr = new JSROOT.ObjectPainter(this.getView().getDomRef(), this.canvas_json);
+
+                console.log(this.canvas_json);
+                this.jst_ptr = 1;
+                JSROOT.draw(this.byId("legoPlotPlace").getDomRef(), this.canvas_json);
+            }
+        },
 
         onSceneCreate: function (element, id) {
             console.log("LEGO onSceneCreate", id);
