@@ -2394,8 +2394,8 @@ void TBranchElement::InitInfo()
                SetOnfileObject(fInfo);
             }
          }
-         if (fType == 3 || fType == 4 || (fType == 0 && fID == -2)) {
-            // Need to add the rule targetting transient members.
+         if (fType == 3 || fType == 4 || (fType == 0 && fID == -2) || fType == 2) {
+            // Need to add the rule targeting transient members.
             TStreamerInfo *localInfo = fInfo;
             if (fType == 3 || fType == 4) {
                // Don't we have real version information?
