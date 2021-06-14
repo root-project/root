@@ -5,7 +5,7 @@
 
 ## Checklist:
 
-- [] tested chnages locally
+- [] tested changes locally
 - [] updated the docs (if necessary)
 
 This PR fixes # 
