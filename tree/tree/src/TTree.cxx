@@ -5566,11 +5566,15 @@ Long64_t TTree::GetEntriesFriend() const
 
 Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 {
-
+	
+   
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kGetEntry & fFriendLockStatus) return 0;
-
+   if (!entry) {
+	  Warning("TTree::GetEntry", "Warning! Long64_t entry is undefined. Please provide a value for entry");
+	  return 0;
+   }
    if (entry < 0 || entry >= fEntries) return 0;
    Int_t i;
    Int_t nbytes = 0;

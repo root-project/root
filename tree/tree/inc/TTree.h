@@ -460,7 +460,7 @@ public:
    virtual Long64_t        GetEntriesFast() const   { return fEntries; }
    virtual Long64_t        GetEntriesFriend() const;
    virtual Long64_t        GetEstimate() const { return fEstimate; }
-   virtual Int_t           GetEntry(Long64_t entry = 0, Int_t getall = 0);
+   virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
            Int_t           GetEvent(Long64_t entry = 0, Int_t getall = 0) { return GetEntry(entry, getall); }
    virtual Int_t           GetEntryWithIndex(Int_t major, Int_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
