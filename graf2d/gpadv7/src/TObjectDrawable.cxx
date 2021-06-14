@@ -18,6 +18,7 @@
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TStyle.h"
+#include "TMethodCall.h"
 
 #include <exception>
 #include <sstream>
@@ -28,10 +29,17 @@ using namespace ROOT::Experimental;
 
 std::string TObjectDrawable::DetectCssType(const TObject *obj)
 {
+   bool ishist = false;
+   // special handling for TH1 classes without linking to libHist
+   if (obj && obj->InheritsFrom("TH1")) {
+      TMethodCall call(obj->IsA(), "SetDirectory", "nullptr");
+      call.Execute((void *)(obj));
+      ishist = true;
+   }
    const char *clname = obj ? obj->ClassName() : "TObject";
-   if (strncmp(clname, "TH1", 3) == 0) return "th1";
-   if (strncmp(clname, "TH2", 3) == 0) return "th2";
    if (strncmp(clname, "TH3", 3) == 0) return "th3";
+   if (strncmp(clname, "TH2", 3) == 0) return "th2";
+   if ((strncmp(clname, "TH1", 3) == 0) || ishist) return "th1";
    if (strncmp(clname, "TGraph", 6) == 0) return "tgraph";
    if (strcmp(clname, "TLine") == 0) return "tline";
    if (strcmp(clname, "TBox") == 0) return "tbox";
