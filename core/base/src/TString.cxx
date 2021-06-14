@@ -131,7 +131,7 @@ TString::TString(const char *cs, Ssiz_t n)
       Zero();
       return;
    }
-   if (strlen(cs) < n) {
+   if (strlen(cs) < (size_t)n) {
       Warning("TString::TString", "Input string is shorter than requested size.");
    }
    char *data = Init(n, n);

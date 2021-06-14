@@ -530,13 +530,13 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fXmax = xmin;
    }
    // Create rep formula (no need to add to gROOT list since we will add the TF1 object)
-
+   const auto formulaLength = strlen(formula);
    // First check if we are making a convolution
-   if (TString(formula, 5) == "CONV(" && formula[strlen(formula) - 1] == ')') {
+   if (strncmp(formula, "CONV(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // Look for single ',' delimiter
       int delimPosition = -1;
       int parenCount = 0;
-      for (unsigned int i = 5; i < strlen(formula) - 1; i++) {
+      for (unsigned int i = 5; i < formulaLength - 1; i++) {
          if (formula[i] == '(')
             parenCount++;
          else if (formula[i] == ')')
@@ -553,7 +553,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       // Having found the delimiter, define the first and second formulas
       TString formula1 = TString(TString(formula)(5, delimPosition - 5));
-      TString formula2 = TString(TString(formula)(delimPosition + 1, strlen(formula) - 1 - (delimPosition + 1)));
+      TString formula2 = TString(TString(formula)(delimPosition + 1, formulaLength - 1 - (delimPosition + 1)));
       // remove spaces from these formulas
       formula1.ReplaceAll(' ', "");
       formula2.ReplaceAll(' ', "");
@@ -605,11 +605,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       }
 
       // Then check if we need NSUM syntax:
-   } else if (TString(formula, 5) == "NSUM(" && formula[strlen(formula) - 1] == ')') {
+   } else if (strncmp(formula, "NSUM(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // using comma as delimiter
       char delimiter = ',';
       // first, remove "NSUM(" and ")" and spaces
-      TString formDense = TString(formula)(5,strlen(formula)-5-1);
+      TString formDense = TString(formula)(5,formulaLength-5-1);
       formDense.ReplaceAll(' ', "");
 
       // make sure standard functions are defined (e.g. gaus, expo)
