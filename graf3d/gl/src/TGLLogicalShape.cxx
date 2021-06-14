@@ -375,7 +375,7 @@ void TGLLogicalShape::Draw(TGLRnrCtx& rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLLogicalShape::Draw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLLogicalShape::Draw", "this %zd (class %s) LOD %d", (size_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
 entry_point:

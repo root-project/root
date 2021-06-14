@@ -509,7 +509,7 @@ void TStructViewerGUI::DrawNode(TStructNode* node)
       for (Float_t i = -(slices-1)/2; i < slices/2; i++) {
          TGeoVolume* sub = gGeoManager->MakeBox(Form("%s_%d", node->GetName(), fgCounter++), fgMedium,0.45*node->GetWidth() * 0.7 / slices, 0.45*node->GetHeight(), fBoxHeightEntry->GetNumber());
          sub->SetLineColor(GetColor(node));
-         fVolumes.Add((Long_t)sub, (Long_t)node);
+         fVolumes.Add((Longptr_t)sub, (Longptr_t)node);
          TGeoTranslation* subtrans = new TGeoTranslation("subtranslation", i * node->GetWidth() / slices, 0, 0);
          vol->AddNodeOverlap(sub, 1, subtrans);
       }
@@ -521,7 +521,7 @@ void TStructViewerGUI::DrawNode(TStructNode* node)
    vol->SetLineWidth(1);
 
    TGeoTranslation* trans = new TGeoTranslation("translation", node->GetCenter(), node->GetMiddle(), -(node->GetLevel() * fLevelDistanceEntry->GetNumber()));
-   fVolumes.Add((Long_t)vol, (Long_t)node);
+   fVolumes.Add((Longptr_t)vol, (Longptr_t)node);
 
    fTopVolume->AddNode(vol,1, trans);
 }
@@ -673,8 +673,8 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
             fSelectedObject = NULL;
             return;
          }
-         Long_t shapeID  = (Long_t)(shape->GetLogical()->ID());
-         Long_t volValue = (Long_t)fVolumes.GetValue(shapeID);
+         Longptr_t shapeID  = (Longptr_t)(shape->GetLogical()->ID());
+         Longptr_t volValue = (Longptr_t)fVolumes.GetValue(shapeID);
          fSelectedObject = (TStructNode*)volValue;
 
          fToolTip->SetText(TString(fSelectedObject->GetName()) + "\n" + fSelectedObject->GetTypeName());

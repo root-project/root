@@ -94,7 +94,7 @@ void TEveWindowManager::DeleteWindow(TEveWindow* window)
 
 void TEveWindowManager::WindowDocked(TEveWindow* window)
 {
-   Emit("WindowDocked(TEveWindow*)", (Long_t)window);
+   Emit("WindowDocked(TEveWindow*)", (Longptr_t)window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ void TEveWindowManager::WindowDocked(TEveWindow* window)
 
 void TEveWindowManager::WindowUndocked(TEveWindow* window)
 {
-   Emit("WindowUndocked(TEveWindow*)", (Long_t)window);
+   Emit("WindowUndocked(TEveWindow*)", (Longptr_t)window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ void TEveWindowManager::WindowUndocked(TEveWindow* window)
 
 void TEveWindowManager::WindowSelected(TEveWindow* window)
 {
-   Emit("WindowSelected(TEveWindow*)", (Long_t)window);
+   Emit("WindowSelected(TEveWindow*)", (Longptr_t)window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ void TEveWindowManager::WindowSelected(TEveWindow* window)
 
 void TEveWindowManager::WindowDeleted(TEveWindow* window)
 {
-   Emit("WindowDeleted(TEveWindow*)", (Long_t)window);
+   Emit("WindowDeleted(TEveWindow*)", (Longptr_t)window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

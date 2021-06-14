@@ -59,8 +59,8 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
       shareList = TGLContextIdentity::GetDefaultContextAny();
 
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
-                                  (ULong_t)this, (ULong_t)wid, (ULong_t)shareList));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->SetContext((TGLWidget *)0x%zx, (TGLContext *)0x%zx)",
+                                  (size_t)this, (size_t)wid, (size_t)shareList));
    } else {
 
       R__LOCKGUARD(gROOTMutex);
@@ -173,7 +173,7 @@ Bool_t TGLContext::MakeCurrent()
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->MakeCurrent()", this)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->MakeCurrent()", (size_t)this)));
    else {
 
       R__LOCKGUARD(gROOTMutex);
@@ -208,7 +208,7 @@ void TGLContext::SwapBuffers()
    }
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SwapBuffers()", this));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->SwapBuffers()", (size_t)this));
    else {
 
       R__LOCKGUARD(gROOTMutex);
@@ -227,7 +227,7 @@ void TGLContext::SwapBuffers()
 void TGLContext::Release()
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->Release()", this));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->Release()", (size_t)this));
       return;
    }
 

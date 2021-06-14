@@ -108,7 +108,7 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
    TGLWidget* glw = new TGLWidget(wid, parent, selectInput);
 
 #ifdef WIN32
-   glw->fWindowIndex = (Int_t) innerData.second;
+   glw->fWindowIndex = (Int_t)(Longptr_t)innerData.second;
 #elif defined(R__HAS_COCOA)
    glw->fWindowIndex = wid;
 #else
@@ -347,8 +347,8 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat& /*form
                                  UInt_t width, UInt_t  height,
                                  std::pair<void *, void *>& innerData)
 {
-   Int_t widx = gVirtualX->InitWindow((ULong_t)parent->GetId());
-   innerData.second = (void*) widx;
+   Int_t widx = gVirtualX->InitWindow((ULongptr_t)parent->GetId());
+   innerData.second = (void*)(Longptr_t)widx;
    Window_t win = gVirtualX->GetWindowID(widx);
    gVirtualX->ResizeWindow(win, width, height);
    return win;
@@ -365,7 +365,7 @@ void TGLWidget::SetFormat()
       return;
    }
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->SetFormat()", this));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->SetFormat()", (size_t)this));
 
    R__LOCKGUARD(gROOTMutex);
 
@@ -566,7 +566,7 @@ void TGLWidget::SetEventHandler(TGEventHandler *eh)
 Bool_t TGLWidget::HandleCrossing(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleCrossing((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleCrossing((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);
@@ -587,7 +587,7 @@ Bool_t TGLWidget::HandleCrossing(Event_t *ev)
 Bool_t TGLWidget::HandleButton(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleButton((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleButton((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);
@@ -603,7 +603,7 @@ Bool_t TGLWidget::HandleButton(Event_t *ev)
 Bool_t TGLWidget::HandleDoubleClick(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleDoubleClick((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleDoubleClick((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);
@@ -619,7 +619,7 @@ Bool_t TGLWidget::HandleDoubleClick(Event_t *ev)
 Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleConfigureNotify((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleConfigureNotify((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);
@@ -638,7 +638,7 @@ Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
 Bool_t TGLWidget::HandleFocusChange(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleFocusChange((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleFocusChange((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);
@@ -654,7 +654,7 @@ Bool_t TGLWidget::HandleFocusChange(Event_t *ev)
 Bool_t TGLWidget::HandleKey(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleKey((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleKey((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);
@@ -670,7 +670,7 @@ Bool_t TGLWidget::HandleKey(Event_t *ev)
 Bool_t TGLWidget::HandleMotion(Event_t *ev)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleMotion((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->HandleMotion((Event_t *)0x%zx)", (size_t)this, (size_t)ev));
       return kTRUE;
    }
    R__LOCKGUARD(gROOTMutex);

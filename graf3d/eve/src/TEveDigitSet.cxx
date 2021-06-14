@@ -397,8 +397,8 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    if (fEmitSignals) {
       SecSelected(this, idx);
    } else {
-      printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%lx\n",
-             idx, qb->fValue, (ULong_t)obj);
+      printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%zx\n",
+             idx, qb->fValue, (size_t)obj);
       if (obj)
          obj->Print();
    }
@@ -410,9 +410,9 @@ void TEveDigitSet::DigitSelected(Int_t idx)
 
 void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 {
-   Long_t args[2];
-   args[0] = (Long_t) qs;
-   args[1] = (Long_t) idx;
+   Longptr_t args[2];
+   args[0] = (Longptr_t) qs;
+   args[1] = (Longptr_t) idx;
 
    Emit("SecSelected(TEveDigitSet*, Int_t)", args);
 }

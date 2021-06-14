@@ -561,7 +561,7 @@ TClass *REveElement::IsA() const
 void REveElement::ExportToCINT(const char *var_name)
 {
    const char* cname = IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)this));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

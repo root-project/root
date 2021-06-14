@@ -48,7 +48,7 @@ TGLSAFrame::~TGLSAFrame()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process GUI message - deferred back up to TGLSAViewer::ProcessFrameMessage()
 
-Bool_t TGLSAFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGLSAFrame::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    return fViewer.ProcessFrameMessage(msg, parm1, parm2);
 }

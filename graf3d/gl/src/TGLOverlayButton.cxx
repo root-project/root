@@ -141,7 +141,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
 
 void TGLOverlayButton::Clicked(TGLViewerBase *viewer)
 {
-   Emit("Clicked(TGLViewerBase*)", (Long_t)viewer);
+   Emit("Clicked(TGLViewerBase*)", (Longptr_t)viewer);
 }
 
 /******************************************************************************/

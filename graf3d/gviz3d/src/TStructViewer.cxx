@@ -154,17 +154,17 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
             continue;
          }
 
-         void** pptr = (void**)((ULong_t)pointer + dm->GetOffset());
+         void** pptr = (void**)((ULongptr_t)pointer + dm->GetOffset());
          ptr = *pptr;
 
          if (!ptr) {
             continue;
          }
 
-         if(fPointers.GetValue((ULong_t)ptr)) {
+         if(fPointers.GetValue((ULongptr_t)ptr)) {
             continue;
          } else {
-            fPointers.Add((ULong_t)ptr, (ULong_t)ptr);
+            fPointers.Add((ULongptr_t)ptr, (ULongptr_t)ptr);
          }
 
          ULong_t size = 0;
@@ -194,7 +194,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          // all members of node = all nodes of parent + nodes of daughter - 1 because node is added twice
          parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount() - 1);
       } else {
-         ptr = (void*)((ULong_t)pointer + dm->GetOffset());
+         ptr = (void*)((ULongptr_t)pointer + dm->GetOffset());
 
          if (!ptr) {
             continue;

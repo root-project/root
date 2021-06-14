@@ -228,7 +228,7 @@ void TEveSelection::RecheckImpliedSetForElement(TEveElement* el)
 
 void TEveSelection::SelectionAdded(TEveElement* el)
 {
-   Emit("SelectionAdded(TEveElement*)", (Long_t)el);
+   Emit("SelectionAdded(TEveElement*)", (Longptr_t)el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ void TEveSelection::SelectionAdded(TEveElement* el)
 
 void TEveSelection::SelectionRemoved(TEveElement* el)
 {
-   Emit("SelectionRemoved(TEveElement*)", (Long_t)el);
+   Emit("SelectionRemoved(TEveElement*)", (Longptr_t)el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ void TEveSelection::SelectionCleared()
 
 void TEveSelection::SelectionRepeated(TEveElement* el)
 {
-   Emit("SelectionRepeated(TEveElement*)", (Long_t)el);
+   Emit("SelectionRepeated(TEveElement*)", (Longptr_t)el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
