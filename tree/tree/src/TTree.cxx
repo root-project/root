@@ -5585,7 +5585,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    // through the friends tree, let return
    if (kGetEntry & fFriendLockStatus) return 0;
    if (!entry) {
-	  Warning("TTree::GetEntry", "Warning! Long64_t entry is undefined. Please provide a value for entry");
+	  Error("TTree::GetEntry", "Warning! Long64_t entry is undefined. Please provide a value for entry");
 	  return 0;
    }
    if (entry < 0 || entry >= fEntries) return 0;
