@@ -64,7 +64,9 @@ protected:
 
    void Execute(const std::string &) final;
 
-   void ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member);
+   static void ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj, const char *class_name, const char *class_member);
+
+   static void ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj);
 
    static std::string DetectCssType(const TObject *obj);
 
