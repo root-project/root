@@ -307,7 +307,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
                strlcpy(&line[kvalue], membertype->AsString(pointer),kline-kvalue);
             }
          else
-            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%zx ", (size_t)pointer);
 
          // Encode data member title
          Int_t ltit = 0;
