@@ -642,7 +642,7 @@ make_reverse_colorhash( unsigned long *cmap, size_t size, int depth, unsigned sh
 	if( hash )
 	{
 		for( i = 0 ; i < size ; i++ )
-			add_hash_item( hash, (ASHashableValue)cmap[i], (void*)((long)MAKE_ARGB32( 0xFF, (i>>(shift<<1))& mask, (i>>(shift))&mask, i&mask)) );
+			add_hash_item( hash, (ASHashableValue)cmap[i], (void*)((intptr_t)MAKE_ARGB32( 0xFF, (i>>(shift<<1))& mask, (i>>(shift))&mask, i&mask)) );
 	}
 	return hash;
 }

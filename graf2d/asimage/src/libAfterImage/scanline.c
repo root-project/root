@@ -69,7 +69,7 @@ prepare_scanline( unsigned int width, unsigned int shift, ASScanline *reusable_m
 		return NULL;
 	}
 
-	sl->xc1 = sl->red 	= (CARD32*)((((long)ptr+7)>>3)*8);
+	sl->xc1 = sl->red 	= (CARD32*)((((intptr_t)ptr+7)>>3)*8);
 	sl->xc2 = sl->green = sl->red   + aligned_width;
 	sl->xc3 = sl->blue 	= sl->green + aligned_width;
 	sl->alpha 	= sl->blue  + aligned_width;
