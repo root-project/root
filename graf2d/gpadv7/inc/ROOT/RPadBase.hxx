@@ -83,7 +83,7 @@ public:
 
    /// Create drawable of specified class T
    template<class T, class... ARGS>
-   auto Draw(ARGS... args)
+   std::shared_ptr<T> Draw(ARGS... args)
    {
       auto drawable = std::make_shared<T>(args...);
 
@@ -95,7 +95,7 @@ public:
    }
 
    /// Add existing drawable instance to canvas
-   auto Draw(std::shared_ptr<RDrawable> &&drawable)
+   std::shared_ptr<RDrawable> Draw(std::shared_ptr<RDrawable> &&drawable)
    {
       TestIfFrameRequired(drawable.get());
 
