@@ -26,7 +26,7 @@
 
 using namespace ROOT::Experimental;
 
-std::string TObjectDrawable::DetectCssType(const std::shared_ptr<TObject> &obj)
+std::string TObjectDrawable::DetectCssType(const TObject *obj)
 {
    const char *clname = obj ? obj->ClassName() : "TObject";
    if (strncmp(clname, "TH1", 3) == 0) return "th1";
