@@ -14,6 +14,8 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
+
 #include "TObject.h"
 
 namespace ROOT {
@@ -61,10 +63,16 @@ public:
       if (fOwner) delete fObject;
    }
 
-   void AddTColor(int color_indx, const std::string &color_value)
+   void AddColor(int color_indx, const std::string &color_value)
    {
-      fColIndex.emplace_back(color_indx);
-      fColValue.emplace_back(color_value);
+      auto pos = std::find(fColIndex.begin(), fColIndex.end(), color_indx);
+      if (pos == fColIndex.end()) {
+         fColIndex.emplace_back(color_indx);
+         fColValue.emplace_back(color_value);
+      } else {
+         auto indx = pos - fColIndex.begin();
+         fColValue[indx] = color_value;
+      }
    }
 
 };

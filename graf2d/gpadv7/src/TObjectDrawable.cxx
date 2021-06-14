@@ -17,6 +17,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TROOT.h"
+#include "TList.h"
 #include "TStyle.h"
 #include "TMethodCall.h"
 
@@ -106,19 +107,41 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
 /// Check if object has specified color value and store it in display item
 /// Ensure that color matches on client side too
 
-void TObjectDrawable::ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member)
+void TObjectDrawable::ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj)
 {
-   TClass *cl = fObj->IsA();
-   if (!cl->GetBaseClass(class_name)) return;
+   TClass *cl = obj->IsA();
 
-   auto offset = cl->GetDataMemberOffset(class_member);
-   if (offset <= 0) return;
+   auto ExtractColor = [&item, cl, obj](const char *class_name, const char *class_member) {
+      if (!cl->GetBaseClass(class_name)) return;
 
-   Color_t *icol = (Color_t *)((char *) fObj.get() + offset);
-   if (*icol < 10) return;
+      auto offset = cl->GetDataMemberOffset(class_member);
+      if (offset <= 0) return;
 
-   TColor *col = gROOT->GetColor(*icol);
-   if (col) item->AddTColor(*icol, col->AsHexString());
+      Color_t *icol = (Color_t *)((char *) obj + offset);
+      if (*icol < 10) return;
+
+      TColor *col = gROOT->GetColor(*icol);
+      if (col) item->AddColor(*icol, col->AsHexString());
+   };
+
+   ExtractColor("TAttLine", "fLineColor");
+   ExtractColor("TAttFill", "fFillColor");
+   ExtractColor("TAttMarker", "fMarkerColor");
+   ExtractColor("TAttText", "fTextColor");
+   ExtractColor("TAttPad", "fFrameFillColor");
+   ExtractColor("TAttPad", "fFrameLineColor");
+   ExtractColor("TAttAxis", "fAxisColor");
+   ExtractColor("TAttAxis", "fLabelColor");
+   ExtractColor("TAttAxis", "fTitleColor");
+
+   if (cl->InheritsFrom("TH1")) {
+      auto offx = cl->GetDataMemberOffset("fXaxis");
+      if (offx > 0) ExtractObjectColors(item, (TObject *) ((char *) obj + offx));
+      auto offy = cl->GetDataMemberOffset("fYaxis");
+      if (offy > 0) ExtractObjectColors(item, (TObject *) ((char *) obj + offy));
+      auto offz = cl->GetDataMemberOffset("fZaxis");
+      if (offz > 0) ExtractObjectColors(item, (TObject *) ((char *) obj + offz));
+   }
 }
 
 
@@ -131,15 +154,24 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
       if ((fKind == kObject) || fObj) {
          auto item = std::make_unique<TObjectDisplayItem>(*this, fKind, fObj.get());
          if ((fKind == kObject) && fObj) {
-            ExtractTColor(item, "TAttLine", "fLineColor");
-            ExtractTColor(item, "TAttFill", "fFillColor");
-            ExtractTColor(item, "TAttMarker", "fMarkerColor");
-            ExtractTColor(item, "TAttText", "fTextColor");
-            ExtractTColor(item, "TAttPad", "fFrameFillColor");
-            ExtractTColor(item, "TAttPad", "fFrameLineColor");
-            ExtractTColor(item, "TAttAxis", "fAxisColor");
-            ExtractTColor(item, "TAttAxis", "fLabelColor");
-            ExtractTColor(item, "TAttAxis", "fTitleColor");
+            ExtractObjectColors(item, fObj.get());
+
+            // special handling of THStack to support any custom colors inside
+            if (strcmp(fObj->ClassName(), "THStack") == 0) {
+               TClass *cl = gROOT->GetClass("THStack");
+               // do not call stack->GetHistogram() to avoid it auto-creation
+               auto off1 = cl->GetDataMemberOffset("fHistogram");
+               if (off1 > 0) ExtractObjectColors(item, *((TObject **) ((char *) fObj.get() + off1)));
+               // here make identic to gHistogram, one also can use TMethodCall
+               auto off2 = cl->GetDataMemberOffset("fHists");
+               if (off2 > 0) {
+                  TIter iter(*(TList **) (((char *) fObj.get() + off1)));
+                  TObject *hist = nullptr;
+                  while ((hist = iter()) != nullptr)
+                     ExtractObjectColors(item, hist);
+               }
+
+            }
          }
 
          return item;
