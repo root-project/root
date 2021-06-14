@@ -356,24 +356,23 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooArgSet* RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList, Bool_t stripDisconnected) const {
-  RooArgSet* allArgs = RooAbsArg::getParameters( depList, stripDisconnected );
+bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList,
+                                                              RooArgSet& outputSet,
+                                                              bool stripDisconnected) const {
+  bool errorInBaseCall = RooAbsArg::getParameters( depList, outputSet, stripDisconnected );
 
-  TIter iter_args = allArgs->createIterator();
-  RooRealVar* arg;
-  while((arg=(RooRealVar*)iter_args.Next())) {
-    std::string arg_name = arg->GetName();
+  for (auto const& arg : outputSet) {
 
     // If there is a gamma in the name,
     // strip it from the list of dependencies
 
-    if( _statUncertParams.find(arg_name.c_str()) != _statUncertParams.end() ) {
-      allArgs->remove( *arg, kTRUE );
+    if( _statUncertParams.find(arg->GetName()) != _statUncertParams.end() ) {
+      outputSet.remove( *arg, true );
     }
 
   }
 
-  return allArgs;
+  return errorInBaseCall || false;
 
 }
 

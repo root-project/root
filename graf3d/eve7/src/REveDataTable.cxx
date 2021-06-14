@@ -73,15 +73,17 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
-void REveDataTable::AddNewColumn(const std::string& expr, const std::string& title, int prec)
+void REveDataTable::AddNewColumn(const std::string &expr, const std::string &title, int prec)
 {
    auto c = new REveDataColumn(title);
-   AddElement(c);
-
    c->SetExpressionAndType(expr, REveDataColumn::FT_Double);
    c->SetPrecision(prec);
+   gROOT->ProcessLine(c->GetFunctionExpressionString().c_str());
 
-   StampObjProps();
+   if (c->hasValidExpression()) {
+      AddElement(c);
+      StampObjProps();
+   }
 }
 
 //==============================================================================
@@ -99,7 +101,27 @@ void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e t
 {
    fExpression = expr;
    fType       = type;
+   fClassType  = icls;
+}
 
+//______________________________________________________________________________
+void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e type)
+{
+   auto table = dynamic_cast<REveDataTable*>(fMother);
+   auto coll = table->GetCollection();
+   auto icls = coll->GetItemClass();
+   SetExpressionAndType(expr, type, icls);
+}
+
+//______________________________________________________________________________
+void REveDataColumn::SetPrecision(Int_t prec)
+{
+   fPrecision = prec;
+}
+
+//______________________________________________________________________________
+std::string REveDataColumn::GetFunctionExpressionString() const
+{
    const char *rtyp   = nullptr;
    const void *fooptr = nullptr;
 
@@ -111,36 +133,27 @@ void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e t
    }
 
    std::stringstream s;
-   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)fooptr
-     << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << fExpression.Data()
-     << "); }";
+   s  << " *((std::function<" << rtyp << "(" << fClassType->GetName() << "*)>*)" 
+     << std::hex << std::showbase << (size_t)fooptr
+     << ") = [](" << fClassType->GetName() << "* p){" << fClassType->GetName() << " &i=*p; return (" << fExpression.Data()
+     << "); };";
 
-   // printf("%s\n", s.str().c_str());
-   try {
-      gROOT->ProcessLine(s.str().c_str());
-   }
-   catch (const std::exception &exc)
-   {
-      std::cerr << "REveDataColumn::SetExpressionAndType" << exc.what();
-   }
+
+  return s.str();
 }
+
 //______________________________________________________________________________
-
-void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e type)
+bool REveDataColumn::hasValidExpression() const
 {
-   auto table = dynamic_cast<REveDataTable*>(fMother);
-   auto coll = table->GetCollection();
-   auto icls = coll->GetItemClass();
-   SetExpressionAndType(expr, type, icls);
+   return (fDoubleFoo || fBoolFoo || fStringFoo);
 }
 
-void REveDataColumn::SetPrecision(Int_t prec)
-{
-   fPrecision = prec;
-}
-
+//______________________________________________________________________________
 std::string REveDataColumn::EvalExpr(void *iptr) const
 {
+   if (!hasValidExpression())
+      return "ErrFunc";
+
    switch (fType)
    {
       case FT_Double:
@@ -158,5 +171,5 @@ std::string REveDataColumn::EvalExpr(void *iptr) const
          return fStringFoo(iptr);
       }
    }
-   return "XYZ";
+   return "Nn";
 }

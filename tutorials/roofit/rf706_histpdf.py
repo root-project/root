@@ -15,8 +15,9 @@ import ROOT
 # ---------------------------------------------
 
 x = ROOT.RooRealVar("x", "x", 0, 20)
-p = ROOT.RooPolynomial("p", "p", x, ROOT.RooArgList(ROOT.RooFit.RooConst(
-    0.01), ROOT.RooFit.RooConst(-0.01), ROOT.RooFit.RooConst(0.0004)))
+p = ROOT.RooPolynomial(
+    "p", "p", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(-0.01), ROOT.RooFit.RooConst(0.0004))
+)
 
 # Create low stats histogram
 # ---------------------------------------------------
@@ -32,8 +33,7 @@ hist1 = data1.binnedClone()
 histpdf1 = ROOT.RooHistPdf("histpdf1", "histpdf1", ROOT.RooArgSet(x), hist1, 0)
 
 # Plot unbinned data and histogram pdf overlaid
-frame1 = x.frame(ROOT.RooFit.Title(
-    "Low statistics histogram pdf"), ROOT.RooFit.Bins(100))
+frame1 = x.frame(ROOT.RooFit.Title("Low statistics histogram pdf"), ROOT.RooFit.Bins(100))
 data1.plotOn(frame1)
 histpdf1.plotOn(frame1)
 
@@ -51,8 +51,7 @@ hist2 = data2.binnedClone()
 histpdf2 = ROOT.RooHistPdf("histpdf2", "histpdf2", ROOT.RooArgSet(x), hist2, 2)
 
 # Plot unbinned data and histogram pdf overlaid
-frame2 = x.frame(ROOT.RooFit.Title(
-    "High stats histogram pdf with interpolation"), ROOT.RooFit.Bins(100))
+frame2 = x.frame(ROOT.RooFit.Title("High stats histogram pdf with interpolation"), ROOT.RooFit.Bins(100))
 data2.plotOn(frame2)
 histpdf2.plotOn(frame2)
 

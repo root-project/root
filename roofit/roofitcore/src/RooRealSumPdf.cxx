@@ -51,6 +51,7 @@ to the fractions of the various functions. **This requires setting the last argu
 #include "RooRealVar.h"
 #include "RooMsgService.h"
 #include "RooNaNPacker.h"
+#include "RunContext.h"
 
 #include <TError.h>
 
@@ -265,6 +266,57 @@ Double_t RooRealSumPdf::evaluate() const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the value for all values of the observable in `evalData`.
+RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
+  // Do running sum of coef/func pairs, calculate lastCoef.
+  RooSpan<double> values;
+  double sumCoeff = 0.;
+  for (unsigned int i = 0; i < _funcList.size(); ++i) {
+    const auto func = static_cast<RooAbsReal*>(&_funcList[i]);
+    const auto coef = static_cast<RooAbsReal*>(i < _coefList.size() ? &_coefList[i] : nullptr);
+    const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
+
+    if (func->isSelectedComp()) {
+      auto funcValues = func->getValues(evalData, nullptr); // No normSet here, because we are summing functions!
+      if (values.empty() || (values.size() == 1 && funcValues.size() > 1)) {
+        const double init = values.empty() ? 0. : values[0];
+        values = evalData.makeBatch(this, funcValues.size());
+        for (unsigned int j = 0; j < values.size(); ++j) {
+          values[j] = init + funcValues[j] * coefVal;
+        }
+      } else {
+        assert(values.size() == funcValues.size());
+        for (unsigned int j = 0; j < values.size(); ++j) {
+          values[j] += funcValues[j] * coefVal;
+        }
+      }
+    }
+
+    // Warn about degeneration of last coefficient
+    if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
+      if (!_haveWarned) {
+        coutW(Eval) << "RooRealSumPdf::evaluateSpan(" << GetName()
+            << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
+            << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
+        _haveWarned = true;
+      }
+      // Signal that we are in an undefined region by handing back one NaN.
+      values[0] = RooNaNPacker::packFloatIntoNaN(100.f * (coefVal < 0. ? -coefVal : coefVal - 1.));
+    }
+
+    sumCoeff += coefVal;
+  }
+
+  // Introduce floor if so requested
+  if (_doFloor || _doFloorGlobal) {
+    for (unsigned int j = 0; j < values.size(); ++j) {
+      values[j] += std::max(0., values[j]);
+    }
+  }
+
+  return values;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -369,10 +421,10 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   if (cache==0) { // revive the (sterilized) cache
     //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-    std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    std::unique_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
+    RooArgSet iset = _normIntMgr.selectFromSet2(*vars, code-1);
+    RooArgSet nset = _normIntMgr.selectFromSet1(*vars, code-1);
     RooArgSet dummy;
-    Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
+    Int_t code2 = getAnalyticalIntegralWN(iset,dummy,&nset,rangeName);
     R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
     cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
     R__ASSERT(cache!=0);

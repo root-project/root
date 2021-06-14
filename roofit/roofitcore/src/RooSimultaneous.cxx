@@ -598,6 +598,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
+  // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
+  // It is not used directly, but the "SliceCat" commands are nested in it.
+  // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
+  pc.defineObject("dummy1","SliceCatMany",0) ;
   pc.defineObject("projSet","Project",0) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("projDataSet","ProjData",0) ;

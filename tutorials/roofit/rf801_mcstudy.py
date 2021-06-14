@@ -28,22 +28,18 @@ sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
 # Build Chebychev polynomial pdf
-a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
-a1 = ROOT.RooRealVar("a1", "a1", -0.2, -1, 1.)
+a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+a1 = ROOT.RooRealVar("a1", "a1", -0.2, -1, 1.0)
 bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
 # Sum the signal components into a composite signal pdf
-sig1frac = ROOT.RooRealVar(
-    "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
-sig = ROOT.RooAddPdf(
-    "sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
+sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
 
 # Sum the composite signal and background
-nbkg = ROOT.RooRealVar(
-    "nbkg", "number of background events, ", 150, 0, 1000)
+nbkg = ROOT.RooRealVar("nbkg", "number of background events, ", 150, 0, 1000)
 nsig = ROOT.RooRealVar("nsig", "number of signal events", 150, 0, 1000)
-model = ROOT.RooAddPdf(
-    "model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(nbkg, nsig))
+model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(nbkg, nsig))
 
 # Create manager
 # ---------------------------
@@ -66,14 +62,11 @@ model = ROOT.RooAddPdf(
 mcstudy = ROOT.RooMCStudy(
     model,
     ROOT.RooArgSet(x),
-    ROOT.RooFit.Binned(
-        ROOT.kTRUE),
+    ROOT.RooFit.Binned(True),
     ROOT.RooFit.Silence(),
     ROOT.RooFit.Extended(),
-    ROOT.RooFit.FitOptions(
-        ROOT.RooFit.Save(
-            ROOT.kTRUE),
-        ROOT.RooFit.PrintEvalErrors(0)))
+    ROOT.RooFit.FitOptions(ROOT.RooFit.Save(True), ROOT.RooFit.PrintEvalErrors(0)),
+)
 
 # Generate and fit events
 # ---------------------------------------------
@@ -88,17 +81,14 @@ mcstudy.generateAndFit(1000)
 # mean
 frame1 = mcstudy.plotParam(mean, ROOT.RooFit.Bins(40))
 frame2 = mcstudy.plotError(mean, ROOT.RooFit.Bins(40))
-frame3 = mcstudy.plotPull(mean, ROOT.RooFit.Bins(
-    40), ROOT.RooFit.FitGauss(ROOT.kTRUE))
+frame3 = mcstudy.plotPull(mean, ROOT.RooFit.Bins(40), ROOT.RooFit.FitGauss(True))
 
 # Plot distribution of minimized likelihood
 frame4 = mcstudy.plotNLL(ROOT.RooFit.Bins(40))
 
 # Make some histograms from the parameter dataset
-hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(
-    mcstudy.fitParDataSet(), "hh", a1, ROOT.RooFit.YVar(sig1frac))
-hh_cor_a0_a1 = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(),
-                                               "hh", a0, ROOT.RooFit.YVar(a1))
+hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a1, ROOT.RooFit.YVar(sig1frac))
+hh_cor_a0_a1 = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a0, ROOT.RooFit.YVar(a1))
 
 # Access some of the saved fit results from individual toys
 corrHist000 = mcstudy.fitResult(0).correlationHist("c000")

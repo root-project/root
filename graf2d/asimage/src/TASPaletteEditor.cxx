@@ -291,7 +291,7 @@ void TASPaletteEditor::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process all editor mouse events
 
-Bool_t TASPaletteEditor::ProcessMessage(Long_t msg, Long_t param1, Long_t param2)
+Bool_t TASPaletteEditor::ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2)
 {
    switch (GET_MSG(msg)) {
 
@@ -451,7 +451,7 @@ void TASPaletteEditor::Save()
       else
          strlcpy(fn, fi.fFilename,512);
 
-      gROOT->ProcessLine(Form("gROOT->SaveObjectAs((TASPaletteEditor*)0x%lx,\"%s\",\"%s\");",(ULong_t)this,fn,"q"));
+      gROOT->ProcessLine(Form("gROOT->SaveObjectAs((TASPaletteEditor*)0x%zx,\"%s\",\"%s\");",(size_t)this,fn,"q"));
    }
 }
 

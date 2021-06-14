@@ -9,7 +9,6 @@
 
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
-#include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Utils/Paths.h"
 #include "cling/Utils/Platform.h"
 #include "cling/Utils/Output.h"
@@ -22,8 +21,7 @@
 #include <sys/stat.h>
 
 namespace cling {
-  DynamicLibraryManager::DynamicLibraryManager(const InvocationOptions& Opts)
-    : m_Opts(Opts) {
+  DynamicLibraryManager::DynamicLibraryManager()  {
     const llvm::SmallVector<const char*, 10> kSysLibraryEnv = {
       "LD_LIBRARY_PATH",
   #if __APPLE__
@@ -43,38 +41,28 @@ namespace cling {
     // Behaviour is to not add paths that don't exist...In an interpreted env
     // does this make sense? Path could pop into existance at any time.
     for (const char* Var : kSysLibraryEnv) {
-      if (Opts.Verbose())
-        cling::log() << "Adding library paths from '" << Var << "':\n";
       if (const char* Env = ::getenv(Var)) {
         llvm::SmallVector<llvm::StringRef, 10> CurPaths;
-        SplitPaths(Env, CurPaths, utils::kPruneNonExistant, platform::kEnvDelim,
-                   Opts.Verbose());
+        SplitPaths(Env, CurPaths, utils::kPruneNonExistant, platform::kEnvDelim);
         for (const auto& Path : CurPaths)
-          m_SearchPaths.push_back({Path.str(), /*IsUser*/true});
+          addSearchPath(Path.str());
       }
     }
+
+    // $CWD is the last user path searched.
+    addSearchPath(".");
 
     llvm::SmallVector<std::string, 64> SysPaths;
     platform::GetSystemLibraryPaths(SysPaths);
 
     for (const std::string& P : SysPaths)
-      m_SearchPaths.push_back({P, /*IsUser*/false});
-
-    // This will currently be the last path searched, should it be pushed to
-    // the front of the line, or even to the front of user paths?
-    m_SearchPaths.push_back({".", /*IsUser*/true});
+      addSearchPath(P, /*IsUser*/ false);
   }
 
   std::string
   DynamicLibraryManager::lookupLibInPaths(llvm::StringRef libStem) const {
-    llvm::SmallVector<SearchPathInfo, 128> Paths;
-    for (const std::string &P : m_Opts.LibSearchPath)
-      Paths.push_back({P, /*IsUser*/true});
-
-    Paths.append(m_SearchPaths.begin(), m_SearchPaths.end());
-
     llvm::SmallString<512> ThisPath;
-    for (const SearchPathInfo& Info : Paths) {
+    for (const SearchPathInfo& Info : m_SearchPaths) {
       ThisPath = Info.Path;
       llvm::sys::path::append(ThisPath, libStem);
       bool exists;
@@ -242,6 +230,17 @@ namespace cling {
     return false;
   }
 
+  void DynamicLibraryManager::dump(llvm::raw_ostream* S /*= nullptr*/) const {
+    llvm::raw_ostream &OS = S ? *S : cling::outs();
+
+    // FIXME: print in a stable order the contents of m_SearchPaths
+    for (const auto& Info : getSearchPaths()) {
+      if (!Info.IsUser)
+        OS << "[system] ";
+      OS << Info.Path.c_str() << "\n";
+    }
+  }
+
   void DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(void* handle) {
     llvm::sys::DynamicLibrary::addPermanentLibrary(const_cast<void*>(handle));
   }
@@ -276,8 +275,10 @@ namespace cling {
       (Magic == file_magic::elf_shared_object)
 #endif
 #elif defined(_WIN32)
-      (Magic == file_magic::pecoff_executable
-       || platform::IsDLL(libFullPath.str()))
+      // We should only include dll libraries without including executables,
+      // object code and others...
+      (Magic == file_magic::pecoff_executable &&
+       platform::IsDLL(libFullPath.str()))
 #else
 # error "Unsupported platform."
 #endif

@@ -37,8 +37,9 @@ model = ROOT.RooExponential("model", "model", t, tau)
 dall = model.generate(ROOT.RooArgSet(t), 10000)
 
 # Generate a (fake) prototype dataset for acceptance limit values
-tmp = ROOT.RooGaussian("gmin", "gmin", tmin, ROOT.RooFit.RooConst(
-    0), ROOT.RooFit.RooConst(0.5)).generate(ROOT.RooArgSet(tmin), 5000)
+tmp = ROOT.RooGaussian("gmin", "gmin", tmin, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.5)).generate(
+    ROOT.RooArgSet(tmin), 5000
+)
 
 # Generate dataset with t values that observe (t>tmin)
 dacc = model.generate(ROOT.RooArgSet(t), ROOT.RooFit.ProtoData(tmp))
@@ -46,15 +47,14 @@ dacc = model.generate(ROOT.RooArgSet(t), ROOT.RooFit.ProtoData(tmp))
 # Fit pdf to data in acceptance region
 # -----------------------------------------------------------------------
 
-r = model.fitTo(dacc, ROOT.RooFit.Save())
+r = model.fitTo(dacc, Save=True)
 
 # Plot fitted pdf on full and accepted data
 # ---------------------------------------------------------------------------------
 
 # Make plot frame, datasets and overlay model
 frame = t.frame(ROOT.RooFit.Title("Fit to data with per-event acceptance"))
-dall.plotOn(frame, ROOT.RooFit.MarkerColor(ROOT.kRed),
-            ROOT.RooFit.LineColor(ROOT.kRed))
+dall.plotOn(frame, MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
 model.plotOn(frame)
 dacc.plotOn(frame)
 

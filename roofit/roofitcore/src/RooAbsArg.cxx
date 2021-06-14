@@ -74,7 +74,6 @@ for single nodes.
 #include "strlcpy.h"
 
 #include "RooSecondMoment.h"
-#include "RooNameSet.h"
 #include "RooWorkspace.h"
 
 #include "RooMsgService.h"
@@ -621,38 +620,54 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
 /// ourself as top node that don't match any of the names the args in the
 /// supplied argset. The caller of this function is responsible
 /// for deleting the returned argset. The complement of this function
-/// is getObservables()
+/// is getObservables().
 
-RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnected) const
+RooArgSet* RooAbsArg::getParameters(const RooArgSet* observables, bool stripDisconnected) const {
+  auto * outputSet = new RooArgSet;
+  getParameters(observables, *outputSet, stripDisconnected);
+  return outputSet;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a list with leaf nodes in the arg tree starting with
+/// ourself as top node that don't match any of the names the args in the
+/// supplied argset. Returns `true` only if something went wrong.
+/// The complement of this function is getObservables().
+/// \param[in] observables Set of leafs to ignore because they are observables and not parameters.
+/// \param[out] outputSet Output set.
+/// \param[in] stripDisconnected Allow pdf to strip parameters from list before adding it.
+
+bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet, bool stripDisconnected) const
 {
+   using RooHelpers::getColonSeparatedNameString;
 
    // Check for cached parameter set
    if (_myws) {
-      RooNameSet nsetObs(nset ? *nset : RooArgSet());
-      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()));
+      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
+      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()));
       if (paramSet) {
-         // cout << " restoring parameter cache from workspace for pdf " << IsA()->GetName() << "::" << GetName() <<
-         // endl ;
-         return new RooArgSet(*paramSet);
+         outputSet.add(*paramSet);
+         return false;
       }
    }
 
-   RooArgSet *parList = new RooArgSet("parameters");
+   outputSet.clear();
+   outputSet.setName("parameters");
 
-   addParameters(*parList, nset, stripDisconnected);
+   addParameters(outputSet, observables, stripDisconnected);
 
-   parList->sort();
+   outputSet.sort();
 
    // Cache parameter set
-   if (_myws && parList->getSize() > 10) {
-      RooNameSet nsetObs(nset ? *nset : RooArgSet());
-      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()), *parList);
+   if (_myws && outputSet.size() > 10) {
+      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
+      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()), outputSet);
       // cout << " caching parameters in workspace for pdf " << IsA()->GetName() << "::" << GetName() << endl ;
    }
 
-   return parList;
+   return false;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -677,12 +692,31 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// for deleting the returned argset. The complement of this function
 /// is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly) const
+RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
 {
-  //cout << "RooAbsArg::getObservables(" << GetName() << ")" << endl ;
+  auto depList = new RooArgSet;
+  getObservables(dataList, *depList, valueOnly);
+  return depList;
+}
 
-  RooArgSet* depList = new RooArgSet("dependents") ;
-  if (!dataList) return depList ;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list of leaf nodes in the arg tree starting with
+/// ourself as top node that match any of the names the args in the
+/// supplied argset.
+/// Returns `true` only if something went wrong.
+/// The complement of this function is getParameters().
+/// \param[in] dataList Set of leaf nodes to match.
+/// \param[out] outputSet Output set.
+/// \param[in] valueOnly If this parameter is true, we only match leafs that
+///                      depend on the value of any arg in `dataList`.
+
+bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outputSet, bool valueOnly) const
+{
+  outputSet.clear();
+  outputSet.setName("dependents");
+
+  if (!dataList) return false;
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
@@ -691,18 +725,18 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
   if (valueOnly) {
     for (const auto arg : leafList) {
       if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
-        depList->add(*arg) ;
+        outputSet.add(*arg) ;
       }
     }
   } else {
     for (const auto arg : leafList) {
       if (arg->dependsOn(*dataList) && arg->isLValue()) {
-        depList->add(*arg) ;
+        outputSet.add(*arg) ;
       }
     }
   }
 
-  return depList ;
+  return false;
 }
 
 
@@ -951,11 +985,12 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 /// \param[in] newSetOrig Set of new servers that should be used instead of the current servers.
 /// \param[in] mustReplaceAll A warning is printed and error status is returned if not all servers could be
 /// substituted successfully.
-/// \param[in] nameChange If false, an object named "x" is replaced with an object named "x" in `newSetOrig`.
-/// If the object in `newSet` is called differently, set `nameChange` to true and use setStringAttribute on the x object:
+/// \param[in] nameChange If false, an object named "x" is only replaced with an object also named "x" in `newSetOrig`.
+/// If the object in `newSet` is called differently, set `nameChange` to true and use setAttribute() on the x object:
 /// ```
-/// objectToReplaceX.setStringAttribute("ORIGNAME", "x")
+/// objectToReplaceX.setAttribute("ORIGNAME:x")
 /// ```
+/// Now, the renamed object will be selected based on the attribute "ORIGNAME:<name>".
 /// \param[in] isRecursionStep Internal switch used when called from recursiveRedirectServers().
 Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
 {
@@ -1071,10 +1106,11 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the new server in the specified set that matches the old server.
-/// Allow a name change if nameChange is kTRUE, in which case the new
-/// server is selected by searching for a new server with an attribute
-/// of "ORIGNAME:<oldName>". Return zero if there is not a unique match.
-
+///
+/// \param[in] newSet Search this set by name for a new server.
+/// \param[in] If true, search for an item with the bool attribute "ORIGNAME:<oldName>" set.
+/// Use `<object>.setAttribute("ORIGNAME:<oldName>")` to set this attribute.
+/// \return Pointer to the new server or `nullptr` if there's no unique match.
 RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
 {
   RooAbsArg *newServer = 0;
@@ -1480,7 +1516,7 @@ void RooAbsArg::printTree(ostream& os, TString /*indent*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Ostream operator
 
-ostream& operator<<(ostream& os, RooAbsArg &arg)
+ostream& operator<<(ostream& os, RooAbsArg const& arg)
 {
   arg.writeToStream(os,kTRUE) ;
   return os ;

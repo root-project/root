@@ -79,7 +79,7 @@ public:
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsValid() const { return fIsValid; }
 
-   Long_t         ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = 0);
+   Longptr_t      ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = 0);
 
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);

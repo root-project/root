@@ -744,7 +744,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          if (node.vect0 === undefined) {
             node.matrix0 = node.matrix.clone();
-            node.minvert = new THREE.Matrix4().getInverse( node.matrixWorld );
+            node.minvert = new THREE.Matrix4().copy(node.matrixWorld).invert();
 
             let box3 = geo.getBoundingBox(mesh, null, true),
                 signz = mesh._flippedMesh ? -1 : 1;
@@ -3969,10 +3969,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       this._main_painter = null;
       this._slave_painters = [];
 
-      if (this._renderer) {
-         if (this._renderer.dispose) this._renderer.dispose();
-         if (this._renderer.forceContextLoss) this._renderer.forceContextLoss();
-      }
+      jsrp.cleanupRender3D(this._renderer);
 
       delete this._scene;
       this._scene_width = 0;

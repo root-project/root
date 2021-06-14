@@ -371,7 +371,7 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
    else {
       xxmin = x[0];
       yymin = x[1];
-      zzmin = function(xx);
+      zzmin = function(x);
    }
    xx[0] = xxmin;
    xx[1] = yymin;
@@ -528,7 +528,7 @@ Double_t TF2::GetRandom(Double_t, Double_t, TRandom *, Option_t *)
 
 void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom, TRandom * rng)
 {
-   //  Check if integral array must be build
+   //  Check if integral array must be built
    Int_t i,j,cell;
    Double_t dx   = (fXmax-fXmin)/fNpx;
    Double_t dy   = (fYmax-fYmin)/fNpy;

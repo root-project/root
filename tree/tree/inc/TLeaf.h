@@ -98,7 +98,8 @@ public:
 
    enum class DeserializeType {
       kInvalid = 0,      // Invalid deserialization information.
-      kDestructive,      // Deserialization of this Leaf requires a separate output buffer.
+      kExternal,         // Deserialization of this Leaf requires a separate output buffer, i.e. the on-disk and in-memory representation are likely to be different sizes.
+      kDestructive = kExternal, // For backward compatibility
       kInPlace,          // Deserialization can be done directly in the input buffer.
       kZeroCopy,         // In-memory and on-disk representation of this object are identical.
    };
@@ -113,7 +114,7 @@ public:
    virtual void     FillBasket(TBuffer &b);
    virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) { return GenerateOffsetArrayBase(base, events); }
    TBranch         *GetBranch() const { return fBranch; }
-   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kDestructive; }
+   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kExternal; }
    virtual TString  GetFullName() const;
    ///  If this leaf stores a variable-sized array or a multi-dimensional array whose last dimension has variable size,
    ///  return a pointer to the TLeaf that stores such size. Return a nullptr otherwise.
@@ -151,11 +152,11 @@ public:
    virtual void     ReadBasket(TBuffer &) {}
    virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
    virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer.
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer
+   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return true; } 
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
-           Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
+           Int_t    ResetAddress(void *add, Bool_t calledFromDestructor = kFALSE);
    virtual void     SetAddress(void *add = 0);
    virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
    virtual void     SetLeafCount(TLeaf *leaf);

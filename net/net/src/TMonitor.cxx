@@ -529,5 +529,5 @@ TList *TMonitor::GetListOfDeActives() const
 
 void TMonitor::Ready(TSocket *sock)
 {
-   Emit("Ready(TSocket*)", (Long_t)sock);
+   Emit("Ready(TSocket*)", (Longptr_t)sock);
 }

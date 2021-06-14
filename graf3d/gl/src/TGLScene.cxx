@@ -570,8 +570,8 @@ void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       TGLSceneInfo* si = rnrCtx.GetSceneInfo();
-      Error("TGLScene::PreDraw", "%s", Form("SceneInfo mismatch (0x%lx, '%s').",
-                                      (ULong_t)si, si ? si->IsA()->GetName() : "<>"));
+      Error("TGLScene::PreDraw", "%s", Form("SceneInfo mismatch (0x%zx, '%s').",
+                                      (size_t)si, si ? si->IsA()->GetName() : "<>"));
       return;
    }
 

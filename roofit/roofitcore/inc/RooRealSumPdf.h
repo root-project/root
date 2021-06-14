@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
-#include <list>
 
 class RooRealSumPdf : public RooAbsPdf {
 public:
@@ -46,12 +45,9 @@ public:
 
   virtual ExtendMode extendMode() const ; 
 
+  /// Return expected number of events for extended likelihood calculation, which
+  /// is the sum of all coefficients.
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return expected number of events for extended likelihood calculation
-    // which is the sum of all coefficients
-    return expectedEvents(&nset) ; 
-  }
 
   virtual Bool_t selfNormalized() const { return getAttribute("BinnedLikelihoodActive") ; }
 
@@ -71,6 +67,7 @@ public:
   virtual void setCacheAndTrackHints(RooArgSet&) ;
 
 protected:
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
   
   class CacheElem : public RooAbsCacheElement {
   public:

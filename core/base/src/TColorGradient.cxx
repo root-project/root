@@ -51,8 +51,8 @@ TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_
                    : fCoordinateMode(mode)
 {
    assert(nPoints != 0 && "TColorGradient, number of points is 0");
-   assert(points != 0 && "TColorGradient, points parameter is null");
-   assert(indices != 0 && "TColorGradient, indices parameter is null");
+   assert(points != nullptr && "TColorGradient, points parameter is null");
+   assert(indices != nullptr && "TColorGradient, indices parameter is null");
 
    ResetColor(nPoints, points, indices);
    RegisterColor(colorIndex);
@@ -67,8 +67,8 @@ TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_
                   : fCoordinateMode(mode)
 {
    assert(nPoints != 0 && "TColorGradient, number of points is 0");
-   assert(points != 0 && "TColorGradient, points parameter is null");
-   assert(colors != 0 && "TColorGradient, colors parameter is null");
+   assert(points != nullptr && "TColorGradient, points parameter is null");
+   assert(colors != nullptr && "TColorGradient, colors parameter is null");
 
    ResetColor(nPoints, points, colors);
    RegisterColor(colorIndex);
@@ -80,8 +80,8 @@ TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_
 void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points, const Color_t *colorIndices)
 {
    assert(nPoints != 0 && "ResetColor, number of points is 0");
-   assert(points != 0 && "ResetColor, points parameter is null");
-   assert(colorIndices != 0 && "ResetColor, colorIndices parameter is null");
+   assert(points != nullptr && "ResetColor, points parameter is null");
+   assert(colorIndices != nullptr && "ResetColor, colorIndices parameter is null");
 
    fColorPositions.assign(points, points + nPoints);
    fColors.resize(nPoints * 4);//4 == rgba.
@@ -114,8 +114,8 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
                                 const Double_t *colors)
 {
    assert(nPoints != 0 && "ResetColor, number of points is 0");
-   assert(points != 0 && "ResetColor, points parameter is null");
-   assert(colors != 0 && "ResetColor, colors parameter is null");
+   assert(points != nullptr && "ResetColor, points parameter is null");
+   assert(colors != nullptr && "ResetColor, colors parameter is null");
 
    fColorPositions.assign(points, points + nPoints);
    fColors.assign(colors, colors + nPoints * 4);

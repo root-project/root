@@ -31,8 +31,7 @@ ROOT.RooClassFactory.makePdf("MyPdfV1", "x,A,B")
 # To use this class,
 #    - Compile and link class with '.x MyPdfV2.cxx+'
 #
-ROOT.RooClassFactory.makePdf(
-    "MyPdfV2", "x,A,B", "", "A*fabs(x)+pow(x-B,2)")
+ROOT.RooClassFactory.makePdf("MyPdfV2", "x,A,B", "", "A*fabs(x)+pow(x-B,2)")
 
 # With added analytical integral expression
 # ---------------------------------------------------------------------------------
@@ -47,9 +46,10 @@ ROOT.RooClassFactory.makePdf(
     "x,A,B",
     "",
     "A*fabs(x)+pow(x-B,2)",
-    ROOT.kTRUE,
-    ROOT.kFALSE,
-    "x:(A/2)*(pow(x.max(rangeName),2)+pow(x.min(rangeName),2))+(1./3)*(pow(x.max(rangeName)-B,3)-pow(x.min(rangeName)-B,3))")
+    True,
+    False,
+    "x:(A/2)*(pow(x.max(rangeName),2)+pow(x.min(rangeName),2))+(1./3)*(pow(x.max(rangeName)-B,3)-pow(x.min(rangeName)-B,3))",
+)
 
 # Use instance of created class
 # ---------------------------------------------------------
@@ -83,11 +83,8 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
 genpdf = ROOT.RooClassFactory.makePdfInstance(
-    "GenPdf",
-    "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))",
-    ROOT.RooArgList(
-        x,
-        alpha))
+    "GenPdf", "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))", ROOT.RooArgList(x, alpha)
+)
 
 # Generate a toy dataset from the interpreted pdf
 data2 = genpdf.generate(ROOT.RooArgSet(x), 50000)

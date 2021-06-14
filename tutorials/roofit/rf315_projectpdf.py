@@ -30,25 +30,18 @@ fy = ROOT.RooPolyVar("fy", "fy", y, ROOT.RooArgList(a0, a1))
 
 # Create gaussx(x,f(y),sx)
 sigmax = ROOT.RooRealVar("sigmax", "width of gaussian", 0.5)
-gaussx = ROOT.RooGaussian(
-    "gaussx", "Gaussian in x with shifting mean in y", x, fy, sigmax)
+gaussx = ROOT.RooGaussian("gaussx", "Gaussian in x with shifting mean in y", x, fy, sigmax)
 
 # Create gaussy(y,0,2)
-gaussy = ROOT.RooGaussian(
-    "gaussy",
-    "Gaussian in y",
-    y,
-    ROOT.RooFit.RooConst(0),
-    ROOT.RooFit.RooConst(2))
+gaussy = ROOT.RooGaussian("gaussy", "Gaussian in y", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
 
 # Create gaussx(x,sx|y) * gaussy(y)
 model = ROOT.RooProdPdf(
     "model",
     "gaussx(x|y)*gaussy(y)",
     ROOT.RooArgSet(gaussy),
-    ROOT.RooFit.Conditional(
-        ROOT.RooArgSet(gaussx),
-        ROOT.RooArgSet(x)))
+    ROOT.RooFit.Conditional(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)),
+)
 
 # Marginalize m(x,y) to m(x)
 # ----------------------------------------------------
@@ -63,7 +56,7 @@ modelx = model.createProjection(ROOT.RooArgSet(y))
 data = modelx.generateBinned(ROOT.RooArgSet(x), 1000)
 
 # Fit modelx to toy data
-modelx.fitTo(data, ROOT.RooFit.Verbose())
+modelx.fitTo(data, Verbose=True)
 
 # Plot modelx over data
 frame = x.frame(40)

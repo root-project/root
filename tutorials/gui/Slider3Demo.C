@@ -195,15 +195,15 @@ void TTripleSliderDemo::DoText(const char * /*text*/)
 
    switch (id) {
       case HId1:
-         fHslider1->SetPosition(atof(fTbh1->GetString()),
-                                fHslider1->GetMaxPosition());
+         fHslider1->SetPosition((Float_t)atof(fTbh1->GetString()),
+                                (Float_t)fHslider1->GetMaxPosition());
          break;
       case HId2:
-         fHslider1->SetPointerPosition(atof(fTbh2->GetString()));
+         fHslider1->SetPointerPosition((Float_t)atof(fTbh2->GetString()));
          break;
       case HId3:
-         fHslider1->SetPosition(fHslider1->GetMinPosition(),
-                                atof(fTbh1->GetString()));
+         fHslider1->SetPosition((Float_t)fHslider1->GetMinPosition(),
+                                (Float_t)atof(fTbh1->GetString()));
          break;
       default:
          break;

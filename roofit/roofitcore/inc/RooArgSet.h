@@ -21,7 +21,11 @@
 
 class RooArgList ;
 
-
+// Use a memory pool for RooArgSet.
+// RooFit assumes (e.g. for caching results) that arg sets that have the same pointer have
+// the same contents. Trying to remove that memory pool lead to wrong results, because the
+// OS *occasionally* returns the same address, and the caching goes wrong.
+// It's hard to track down, so disable this only when e.g. looking for memory leaks!
 #define USEMEMPOOLFORARGSET
 template <class RooSet_t, size_t>
 class MemPoolForRooSets;
@@ -52,24 +56,26 @@ public:
     // Expand parameter pack in C++ 11 way:
     int dummy[] = { 0, (processArg(moreArgsOrName), 0) ... };
     (void)dummy;
-  };
+  }
 
-  /// Construct from iterators.
-  /// \tparam Iterator_t An iterator pointing to RooFit objects or references thereof.
+  /// Construct a (non-owning) RooArgSet from iterators.
+  /// \tparam Iterator_t An iterator pointing to RooFit objects or to pointers/references of those.
   /// \param beginIt Iterator to first element to add.
-  /// \param end Iterator to end of range to be added.
+  /// \param endIt Iterator to end of range to be added.
   /// \param name Optional name of the collection.
   template<typename Iterator_t,
-      typename value_type = typename std::iterator_traits<Iterator_t>::value_type,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>::type,
       typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
   RooArgSet(Iterator_t beginIt, Iterator_t endIt, const char* name="") :
   RooArgSet(name) {
     for (auto it = beginIt; it != endIt; ++it) {
-      add(*it);
+      processArg(*it);
     }
   }
 
   RooArgSet(const RooArgSet& other, const char *name="");
+  /// Move constructor.
+  RooArgSet(RooArgSet && other) : RooAbsCollection(std::move(other)) {}
 
   RooArgSet(const RooArgSet& set1, const RooArgSet& set2,
             const char *name="");
@@ -84,27 +90,18 @@ public:
   TObject* create(const char* newname) const override { return new RooArgSet(newname); }
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
-  using RooAbsCollection::add;
-  Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) override;
-
-  using RooAbsCollection::addOwned;
-  Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
-
-  using RooAbsCollection::addClone;
-  RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) override;
-
   using RooAbsCollection::operator[];
   RooAbsArg& operator[](const TString& str) const;
 
 
   /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
   /// `flagReadAtt` and `section` to 0.
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
+  virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false) {
     // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
   Bool_t readFromStream(std::istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact, const char* section=0) const;  
+  virtual void writeToStream(std::ostream& os, bool compact, const char* section=0) const;
   void writeToFile(const char* fileName) const ;
   Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
 
@@ -126,9 +123,13 @@ public:
 
 protected:
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
+  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const override {
+    return !checkForDup(arg, silent);
+  }
 
 private:
   void processArg(const RooAbsArg& var) { add(var); }
+  void processArg(const RooAbsArg* var) { add(*var); }
   void processArg(const RooArgSet& set) { add(set); if (_name.Length() == 0) _name = set.GetName(); }
   void processArg(const RooArgList& list);
   void processArg(const char* name) { _name = name; }

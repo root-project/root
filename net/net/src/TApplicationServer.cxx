@@ -976,17 +976,17 @@ Int_t TApplicationServer::BrowseFile(const char *fname)
       if (fh) {
          fh->cd();
          TRemoteObject dir(fh->GetName(), fh->GetTitle(), "TFile");
-         TList *keylist = (TList *)gROOT->ProcessLine(Form("((TFile *)0x%lx)->GetListOfKeys();", (ULong_t)fh));
+         TList *keylist = (TList *)gROOT->ProcessLine(Form("((TFile *)0x%zx)->GetListOfKeys();", (size_t)fh));
          TIter nextk(keylist);
          TNamed *key = 0;
          TRemoteObject *robj;
          while ((key = (TNamed *)nextk())) {
             robj = new TRemoteObject(key->GetName(), key->GetTitle(), "TKey");
-            const char *classname = (const char *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->GetClassName();", (ULong_t)key));
+            const char *classname = (const char *)gROOT->ProcessLine(Form("((TKey *)0x%zx)->GetClassName();", (size_t)key));
             robj->SetKeyClassName(classname);
-            Bool_t isFolder = (Bool_t)gROOT->ProcessLine(Form("((TKey *)0x%lx)->IsFolder();", (ULong_t)key));
+            Bool_t isFolder = (Bool_t)gROOT->ProcessLine(Form("((TKey *)0x%zx)->IsFolder();", (size_t)key));
             robj->SetFolder(isFolder);
-            robj->SetRemoteAddress((Long_t) key);
+            robj->SetRemoteAddress((Longptr_t) key);
             list->Add(robj);
          }
          if (list->GetEntries() > 0) {
@@ -1181,7 +1181,7 @@ void TApplicationServer::ErrorHandler(Int_t level, Bool_t abort, const char *loc
 /// statement or an interpreter command starting with a ".".
 /// Return the return value of the command casted to a long.
 
-Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
+Longptr_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
 {
    if (!line || !*line) return 0;
 

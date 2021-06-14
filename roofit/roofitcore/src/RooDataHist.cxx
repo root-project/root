@@ -702,12 +702,6 @@ void initArray(double*& arr, std::size_t n, double val) {
 
 void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 {
-
-  // Save real dimensions of dataset separately
-  for (const auto real : _vars) {
-    if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real);
-  }
-
   _lvvars.clear();
   _lvbins.clear();
 
@@ -818,11 +812,6 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   cloneArray(_errHi, other._errHi, other._arrSize);
   cloneArray(_binv, other._binv, other._arrSize);
   cloneArray(_sumw2, other._sumw2, other._arrSize);
-
-  // Save real dimensions of dataset separately
-  for (const auto arg : _vars) {
-    if (dynamic_cast<RooAbsReal*>(arg) != nullptr) _realVars.add(*arg) ;
-  }
 
   // Fill array of LValue pointers to variables
   for (const auto rvarg : _vars) {
@@ -988,7 +977,7 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, Bool_t fast) const {
 std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast) const
 {
   // With fast, caller promises that layout of "coords" is identical to our internal "vars"
-  assert(!fast || _vars.size() == coords.size());
+  assert(!fast || coords.hasSameLayout(_vars));
 
   if (&_vars == &coords)
     fast = true;
@@ -1076,14 +1065,58 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   return RooAbsData::plotOn(frame,o) ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// A faster version of RooDataHist::weight that assumes the passed arguments
+/// are aligned with the histogram variables.
+/// \param[in] bin Coordinates for which the weight should be calculated.
+///                Has to be aligned with the internal histogram variables.
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation. If zero, the bare weight for
+///                     the bin enclosing the coordinatesis returned.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
+
+double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries)
+{
+  checkInit() ;
+
+  // Handle illegal intOrder values
+  if (intOrder<0) {
+    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
+    return 0 ;
+  }
+
+  // Handle no-interpolation case
+  if (intOrder==0) {
+    const auto idx = calcTreeIndex(bin, true);
+    if (correctForBinSize) {
+      return get_wgt(idx) / _binv[idx];
+    } else {
+      return get_wgt(idx);
+    }
+  }
+
+  // Handle all interpolation cases
+  return weightInterpolated(bin, intOrder, correctForBinSize, cdfBoundaries);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weight at given coordinates with optional interpolation.
 /// \param[in] bin Coordinates for which the weight should be calculated.
-/// \param[in] intOrder If zero, the bare weight for the bin enclosing the coordinatesis returned.
-/// For higher values, the result is interpolated in the real dimensions of the dataset.
-/// \param[in] correctForBinSize
-/// \param[in] cdfBoundaries
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation. If zero, the bare weight for
+///                     the bin enclosing the coordinatesis returned.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
 /// \param[in] oneSafe Ignored.
 
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries, Bool_t /*oneSafe*/)
@@ -1109,49 +1142,71 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // Handle all interpolation cases
   _vars.assignValueOnly(bin) ;
 
-  Double_t wInt(0) ;
-  if (_realVars.getSize()==1) {
+  return weightInterpolated(_vars, intOrder, correctForBinSize, cdfBoundaries);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the weight at given coordinates with interpolation.
+/// \param[in] bin Coordinates for which the weight should be calculated.
+///                Has to be aligned with the internal histogram variables.
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
+
+double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries) {
+  VarInfo const& varInfo = getVarInfo();
+
+  const auto centralIdx = calcTreeIndex(bin, true);
+
+  double wInt{0} ;
+  if (varInfo.nRealVars == 1) {
 
     // 1-dimensional interpolation
-    const auto real = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(0)]);
-    const RooAbsBinning* binning = real->getBinningPtr(0) ;
-    wInt = interpolateDim(*real,binning,((RooAbsReal*)bin.find(*real))->getVal(), intOrder, correctForBinSize, cdfBoundaries) ;
+    auto const& realX = static_cast<RooRealVar const&>(*bin[varInfo.realVarIdx1]);
+    wInt = interpolateDim(varInfo.realVarIdx1, realX.getVal(), centralIdx, intOrder, correctForBinSize, cdfBoundaries) ;
     
-  } else if (_realVars.getSize()==2) {
+  } else if (varInfo.nRealVars == 2) {
 
     // 2-dimensional interpolation
-    const auto realX = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(0)]);
-    const auto realY = static_cast<RooRealVar*>(_realVars[static_cast<std::size_t>(1)]);
-    Double_t xval = ((RooAbsReal*)bin.find(*realX))->getVal() ;
-    Double_t yval = ((RooAbsReal*)bin.find(*realY))->getVal() ;
+    auto const& realX = static_cast<RooRealVar const&>(*bin[varInfo.realVarIdx1]);
+    auto const& realY = static_cast<RooRealVar const&>(*bin[varInfo.realVarIdx2]);
+    double xval = realX.getVal() ;
+    double yval = realY.getVal() ;
+
+    RooAbsBinning const& binningY = realY.getBinning();
     
-    Int_t ybinC = realY->getBin() ;
-    Int_t ybinLo = ybinC-intOrder/2 - ((yval<realY->getBinning().binCenter(ybinC))?1:0) ;
-    Int_t ybinM = realY->numBins() ;
+    int ybinC = binningY.binNumber(yval) ;
+    int ybinLo = ybinC-intOrder/2 - ((yval<binningY.binCenter(ybinC))?1:0) ;
+    int ybinM = binningY.numBins() ;
+
+    auto idxMultY = _idxMult[varInfo.realVarIdx2];
+    auto offsetIdx = centralIdx - idxMultY * ybinC;
     
-    Int_t i ;
-    Double_t yarr[10] ;
-    Double_t xarr[10] ;
-    const RooAbsBinning* binning = realX->getBinningPtr(0) ;
-    for (i=ybinLo ; i<=intOrder+ybinLo ; i++) {
-      Int_t ibin ;
+    double yarr[10] = {} ;
+    double xarr[10] = {} ;
+    for (int i=ybinLo ; i<=intOrder+ybinLo ; i++) {
+      int ibin ;
       if (i>=0 && i<ybinM) {
-	// In range
-	ibin = i ;
-	realY->setBin(ibin) ;
-	xarr[i-ybinLo] = realY->getVal() ;
+        // In range
+        ibin = i ;
+        xarr[i-ybinLo] = binningY.binCenter(ibin) ;
       } else if (i>=ybinM) {
-	// Overflow: mirror
-	ibin = 2*ybinM-i-1 ;
-	realY->setBin(ibin) ;
-	xarr[i-ybinLo] = 2*realY->getMax()-realY->getVal() ;
+        // Overflow: mirror
+        ibin = 2*ybinM-i-1 ;
+        xarr[i-ybinLo] = 2*binningY.highBound()-binningY.binCenter(ibin) ;
       } else {
-	// Underflow: mirror
-	ibin = -i -1;
-	realY->setBin(ibin) ;
-	xarr[i-ybinLo] = 2*realY->getMin()-realY->getVal() ;
+        // Underflow: mirror
+        ibin = -i -1;
+        xarr[i-ybinLo] = 2*binningY.lowBound()-binningY.binCenter(ibin) ;
       }
-      yarr[i-ybinLo] = interpolateDim(*realX,binning,xval,intOrder,correctForBinSize,kFALSE) ;	
+      auto centralIdxX = offsetIdx + idxMultY * ibin;
+      yarr[i-ybinLo] = interpolateDim(varInfo.realVarIdx1,xval,centralIdxX,intOrder,correctForBinSize,kFALSE) ;
     }
 
     if (gDebug>7) {
@@ -1163,20 +1218,18 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
       cout << endl ;
     }
     wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
-    
+
   } else {
 
     // Higher dimensional scenarios not yet implemented
     coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") interpolation in " 
-	 << _realVars.getSize() << " dimensions not yet implemented" << endl ;
-    return weight(bin,0) ;
+                          << varInfo.nRealVars << " dimensions not yet implemented" << endl ;
+    return weightFast(bin,0,correctForBinSize,cdfBoundaries) ;
 
   }
 
   return wInt ;
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1245,67 +1298,72 @@ void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const
 /// Perform boundary safe 'intOrder'-th interpolation of weights in dimension 'dim'
 /// at current value 'xval'
 
-Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) 
+/// \param[in] iDim Index of the histogram dimension along which to interpolate.
+/// \param[in] xval Value of histogram variable at dimension `iDim` for which
+///                 we want to interpolate the histogram weight.
+/// \param[in] centralIdx Index of the bin that the point at which we
+///                       interpolate the histogram weight falls into
+///                       (can be obtained with `RooDataHist::calcTreeIndex`).
+/// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
+///                     used for the interpolation.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+///                          underflow bins are assumed to have weight zero and 
+///                          overflow bins have weight one. Otherwise, the
+///                          histogram is mirrored at the boundaries for the
+///                          interpolation.
+double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) 
 {
+  auto const& binning = static_cast<RooRealVar&>(*_vars[iDim]).getBinning();
+
   // Fill workspace arrays spanning interpolation area
-  Int_t fbinC = dim.getBin(*binning) ;
-  Int_t fbinLo = fbinC-intOrder/2 - ((xval<binning->binCenter(fbinC))?1:0) ;
-  Int_t fbinM = dim.numBins(*binning) ;
+  int fbinC = binning.binNumber(xval) ;
+  int fbinLo = fbinC-intOrder/2 - ((xval<binning.binCenter(fbinC))?1:0) ;
+  int fbinM = binning.numBins() ;
 
+  auto idxMult = _idxMult[iDim];
+  auto offsetIdx = centralIdx - idxMult * fbinC;
 
-  Int_t i ;
-  Double_t yarr[10] ;
-  Double_t xarr[10] ;
-  for (i=fbinLo ; i<=intOrder+fbinLo ; i++) {
-    Int_t ibin ;
+  double yarr[10] ;
+  double xarr[10] ;
+  for (int i=fbinLo ; i<=intOrder+fbinLo ; i++) {
+    int ibin ;
     if (i>=0 && i<fbinM) {
       // In range
       ibin = i ;
-      dim.setBinFast(ibin,*binning) ;
-      //cout << "INRANGE: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
-      xarr[i-fbinLo] = dim.getVal() ;
-      Int_t idx = calcTreeIndex(_vars, true);
+      xarr[i-fbinLo] = binning.binCenter(ibin) ;
+      auto idx = offsetIdx + idxMult * ibin;
       yarr[i - fbinLo] = get_wgt(idx);
       if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
     } else if (i>=fbinM) {
       // Overflow: mirror
       ibin = 2*fbinM-i-1 ;
-      dim.setBinFast(ibin,*binning) ;
-      //cout << "OVERFLOW: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
-      if (cdfBoundaries) {	
-	xarr[i-fbinLo] = dim.getMax()+1e-10*(i-fbinM+1) ;
-	yarr[i-fbinLo] = 1.0 ;
+      if (cdfBoundaries) {
+        xarr[i-fbinLo] = binning.highBound()+1e-10*(i-fbinM+1) ;
+        yarr[i-fbinLo] = 1.0 ;
       } else {
-	Int_t idx = calcTreeIndex(_vars, true) ;
-	xarr[i-fbinLo] = 2*dim.getMax()-dim.getVal() ;
-   yarr[i - fbinLo] = get_wgt(idx);
-   if (correctForBinSize)
-      yarr[i - fbinLo] /= _binv[idx];
+        auto idx = offsetIdx + idxMult * ibin;
+        xarr[i-fbinLo] = 2*binning.highBound()-binning.binCenter(ibin) ;
+        yarr[i - fbinLo] = get_wgt(idx);
+        if (correctForBinSize)
+          yarr[i - fbinLo] /= _binv[idx];
       }
     } else {
       // Underflow: mirror
       ibin = -i - 1 ;
-      dim.setBinFast(ibin,*binning) ;
-      //cout << "UNDERFLOW: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
       if (cdfBoundaries) {
-	xarr[i-fbinLo] = dim.getMin()-ibin*(1e-10) ; ;
-	yarr[i-fbinLo] = 0.0 ;
+        xarr[i-fbinLo] = binning.lowBound()-ibin*(1e-10) ; ;
+        yarr[i-fbinLo] = 0.0 ;
       } else {
-	Int_t idx = calcTreeIndex(_vars, true) ;
-	xarr[i-fbinLo] = 2*dim.getMin()-dim.getVal() ;
-   yarr[i - fbinLo] = get_wgt(idx);
-   if (correctForBinSize)
-      yarr[i - fbinLo] /= _binv[idx];
+        auto idx = offsetIdx + idxMult * ibin;
+        xarr[i-fbinLo] = 2*binning.lowBound()-binning.binCenter(ibin) ;
+        yarr[i - fbinLo] = get_wgt(idx);
+        if (correctForBinSize)
+          yarr[i - fbinLo] /= _binv[idx];
       }
     }
-    //cout << "ibin = " << ibin << endl ;
   }
-//   for (int k=0 ; k<=intOrder ; k++) {
-//     cout << "k=" << k << " x = " << xarr[k] << " y = " << yarr[k] << endl ;
-//   }
-  dim.setBinFast(fbinC,*binning) ;
-  Double_t ret = RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
-  return ret ;
+  return RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
 }
 
 
@@ -2061,7 +2119,8 @@ void RooDataHist::Streamer(TBuffer &R__b) {
       R__b.ReadFastArray(_sumw2,_arrSize);
       delete [] _binv;
       _binv = new Double_t[_arrSize];
-      _realVars.Streamer(R__b);
+      RooArgSet tmpSet;
+      tmpSet.Streamer(R__b);
       double tmp;
       R__b >> tmp; //_curWeight;
       R__b >> tmp; //_curWgtErrLo;
@@ -2081,8 +2140,7 @@ void RooDataHist::Streamer(TBuffer &R__b) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return event weights of all events in range [first, first+len).
-/// If no contiguous structure of weights is stored, an empty batch is be returned.
-/// In this case, the single-value weight() needs to be used to retrieve it.
+/// If cacheValidEntries() has been called, out-of-range events will have a weight of 0.
 RooSpan<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len) const {
   return _maskedWeights.empty() ?
       RooSpan<const double>{_wgt + first, len} :
@@ -2108,4 +2166,47 @@ void RooDataHist::getBatches(RooBatchCompute::RunContext& evalData, std::size_t 
 /// Hand over pointers to our weight arrays to the data store implementation.
 void RooDataHist::registerWeightArraysToDataStore() const {
   _dstore->setExternalWeightArray(_wgt, _errLo, _errHi, _sumw2);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to VarInfo struct with cached histogram variable
+/// information that is frequently used for histogram weights retrieval.
+/// 
+/// If the `_varInfo` struct was not initialized yet, it will be initialized in
+/// this function.
+RooDataHist::VarInfo const& RooDataHist::getVarInfo() {
+
+  if(_varInfo.initialized) return _varInfo;
+
+  auto& info = _varInfo;
+
+  {
+    // count the number of real vars and get their indices
+    info.nRealVars = 0;
+    size_t iVar = 0;
+    for (const auto real : _vars) {
+      if (dynamic_cast<RooRealVar*>(real)) {
+        if(info.nRealVars == 0) info.realVarIdx1 = iVar;
+        if(info.nRealVars == 1) info.realVarIdx2 = iVar;
+        ++info.nRealVars;
+      }
+      ++iVar;
+    }
+  }
+
+  {
+    // assert that the variables are either real values or categories
+    for (unsigned int i=0; i < _vars.size(); ++i) {
+      if (_lvbins[i].get()) {
+        assert(dynamic_cast<const RooAbsReal*>(_vars[i]));
+      } else {
+        assert(dynamic_cast<const RooAbsCategoryLValue*>(_vars[i]));
+      }
+    }
+  }
+
+  info.initialized = true;
+
+  return info;
 }

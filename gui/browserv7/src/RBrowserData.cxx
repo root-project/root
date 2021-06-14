@@ -12,10 +12,17 @@
 
 #include <ROOT/RBrowserData.hxx>
 
+#include <ROOT/Browsable/RGroup.hxx>
+#include <ROOT/Browsable/RWrapper.hxx>
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/TObjectHolder.hxx>
+#include <ROOT/Browsable/RSysFile.hxx>
+
 #include <ROOT/RLogger.hxx>
 
+#include "TFolder.h"
+#include "TROOT.h"
 #include "TBufferJSON.h"
 
 #include <algorithm>
@@ -35,7 +42,6 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
 \brief Way to browse (hopefully) everything in %ROOT
 */
 
-
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
 
@@ -54,6 +60,36 @@ void RBrowserData::SetWorkingPath(const Browsable::RElementPath_t &path)
    fWorkingPath = path;
 
    ResetLastRequestData(true);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Create default elements shown in the RBrowser
+
+void RBrowserData::CreateDefaultElements()
+{
+   auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
+
+   auto seldir = Browsable::RSysFile::ProvideTopEntries(comp);
+
+   std::unique_ptr<Browsable::RHolder> rootfold = std::make_unique<Browsable::TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
+   auto elem_root = Browsable::RProvider::Browse(rootfold);
+   if (elem_root)
+      comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
+
+   std::unique_ptr<Browsable::RHolder> rootfiles = std::make_unique<Browsable::TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
+   auto elem_files = Browsable::RProvider::Browse(rootfiles);
+   if (elem_files) {
+      auto files = std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files);
+      files->SetExpandByDefault(true);
+      comp->Add(files);
+      // if there are any open files, make them visible by default
+      if (elem_files->GetNumChilds() > 0)
+         seldir = {};
+   }
+
+   SetTopElement(comp);
+
+   SetWorkingPath(seldir);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -227,13 +263,25 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
    if (path.empty())
       return fTopElement;
 
+   // first check direct match in cache
+   for (auto &entry : fCache)
+      if (entry.first == path)
+         return entry.second;
+
    // find best possible entry in cache
    int pos = 0;
    auto elem = fTopElement;
 
    for (auto &entry : fCache) {
+      if (entry.first.size() >= path.size())
+         continue;
+
       auto comp = Browsable::RElement::ComparePaths(path, entry.first);
-      if (comp > pos) { pos = comp; elem = entry.second; }
+
+      if ((comp > pos) && (comp == (int) entry.first.size())) {
+         pos = comp;
+         elem = entry.second;
+      }
    }
 
    while (pos < (int) path.size()) {
@@ -259,11 +307,17 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
 
       auto subpath = path;
       subpath.resize(pos+1);
-      fCache[subpath] = elem;
-
+      fCache.emplace_back(subpath, elem);
       pos++; // switch to next element
    }
 
    return elem;
 }
 
+/////////////////////////////////////////////////////////////////////////
+/// Clear internal objects cache
+
+void RBrowserData::ClearCache()
+{
+   fCache.clear();
+}

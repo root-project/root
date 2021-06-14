@@ -8,7 +8,7 @@
 
 #include <ROOT/TObjectDrawable.hxx>
 
-#include <ROOT/RDisplayItem.hxx>
+#include <ROOT/TObjectDisplayItem.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItems.hxx>
 
@@ -22,15 +22,20 @@
 #include <exception>
 #include <sstream>
 #include <iostream>
+#include <cstring>
 
 using namespace ROOT::Experimental;
 
-TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : RDrawable("tobject"), fKind(kind)
+std::string TObjectDrawable::DetectCssType(const std::shared_ptr<TObject> &obj)
 {
-   if (!persistent) return;
-
-   fOpts = "persistent";
-   fObj = CreateSpecials(kind);
+   const char *clname = obj ? obj->ClassName() : "TObject";
+   if (strncmp(clname, "TH1", 3) == 0) return "th1";
+   if (strncmp(clname, "TH2", 3) == 0) return "th2";
+   if (strncmp(clname, "TH3", 3) == 0) return "th3";
+   if (strncmp(clname, "TGraph", 6) == 0) return "tgraph";
+   if (strcmp(clname, "TLine") == 0) return "tline";
+   if (strcmp(clname, "TBox") == 0) return "tbox";
+   return "tobject";
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -89,6 +94,25 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
    return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////
+/// Check if object has specified color value and store it in display item
+/// Ensure that color matches on client side too
+
+void TObjectDrawable::ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, const char *class_name, const char *class_member)
+{
+   TClass *cl = fObj->IsA();
+   if (!cl->GetBaseClass(class_name)) return;
+
+   auto offset = cl->GetDataMemberOffset(class_member);
+   if (offset <= 0) return;
+
+   Color_t *icol = (Color_t *)((char *) fObj.get() + offset);
+   if (*icol < 10) return;
+
+   TColor *col = gROOT->GetColor(*icol);
+   if (col) item->AddTColor(*icol, col->AsHexString());
+}
+
 
 ////////////////////////////////////////////////////////////////////
 /// Create display item which will be delivered to the client
@@ -96,22 +120,41 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
 std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ctxt)
 {
    if (GetVersion() > ctxt.GetLastVersion()) {
-      if ((fKind == kObject) || (fOpts == "persistent"))
-         return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), fOpts);
+      if ((fKind == kObject) || fObj) {
+         auto item = std::make_unique<TObjectDisplayItem>(*this, fKind, fObj.get());
+         if ((fKind == kObject) && fObj) {
+            ExtractTColor(item, "TAttLine", "fLineColor");
+            ExtractTColor(item, "TAttFill", "fFillColor");
+            ExtractTColor(item, "TAttMarker", "fMarkerColor");
+            ExtractTColor(item, "TAttText", "fTextColor");
+            ExtractTColor(item, "TAttPad", "fFrameFillColor");
+            ExtractTColor(item, "TAttPad", "fFrameLineColor");
+            ExtractTColor(item, "TAttAxis", "fAxisColor");
+            ExtractTColor(item, "TAttAxis", "fLabelColor");
+            ExtractTColor(item, "TAttAxis", "fTitleColor");
+         }
+
+         return item;
+      }
 
       auto specials = CreateSpecials(fKind);
-      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), fOpts, true);
+      return std::make_unique<TObjectDisplayItem>(fKind, specials.release());
    }
 
    return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////
+/// fill context menu items for the ROOT class
+
 void TObjectDrawable::PopulateMenu(RMenuItems &items)
 {
-   // fill context menu items for the ROOT class
    if (fKind == kObject)
       items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
 }
+
+////////////////////////////////////////////////////////////////////
+/// Execute object method
 
 void TObjectDrawable::Execute(const std::string &exec)
 {
@@ -132,7 +175,7 @@ void TObjectDrawable::Execute(const std::string &exec)
    }
 
    std::stringstream cmd;
-   cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
+   cmd << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
    std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }

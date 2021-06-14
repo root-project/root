@@ -30,8 +30,9 @@ class RAttrMargins : public RAttrBase {
    RAttrValue<RPadLength>   fRight{this, "right", 0._normal};
    RAttrValue<RPadLength>   fTop{this, "top", 0._normal};
    RAttrValue<RPadLength>   fBottom{this, "bottom", 0._normal};
+   RAttrValue<RPadLength>   fAll{this, "all", 0._normal};
 
-   R__ATTR_CLASS(RAttrMargins, "margin");
+   R__ATTR_CLASS(RAttrMargins, "margins");
 
 public:
 
@@ -46,6 +47,10 @@ public:
 
    RAttrMargins &SetBottom(const RPadLength &len) { fBottom = len; return *this; }
    RPadLength GetBottom() const { return fBottom; }
+
+   RAttrMargins &SetAll(const RPadLength &len) { fAll = len; return *this; }
+   RPadLength GetAll() const { return fAll; }
+
 };
 
 } // namespace Experimental

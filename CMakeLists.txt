@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -55,7 +55,7 @@ if(NOT $ENV{ROOTSYS} STREQUAL "")
   set(ENV{LD_LIBRARY_PATH} "${ENV_LD_LIBRARY_PATH}")
   set(ENV{PYTHONPATH} "${ENV_PYTHONPATH}")
   set(ENV{CMAKE_PREFIX_PATH} "${ENV_CMAKE_PREFIX_PATH}")
-  set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
+  set(ENV{ROOTSYS} ${CMAKE_BINARY_DIR})
 endif()
 
 set(ROOTSYS ${CMAKE_BINARY_DIR})
@@ -134,9 +134,9 @@ include(CheckAssembler)
 include(CheckIntrinsics)
 
 #---Enable asserts------------------------------------------------------------------------------
-if(NOT asserts)
-  set(CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}} -DNDEBUG")
-  set(CMAKE_C_FLAGS_${BUILD_TYPE} "${CMAKE_C_FLAGS_${BUILD_TYPE}} -DNDEBUG")
+if(asserts)
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" "CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}" "${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" "CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}" "${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}")
 endif()
 
 #---Enable CCache ------------------------------------------------------------------------------
@@ -649,11 +649,10 @@ if(testing)
   endif()
 endif()
 
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-  if (${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-    message(FATAL_ERROR "Remove this condition")
-  endif()
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
   cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
+else()
+  set(PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR})
 endif()
 
 message(STATUS "ROOT Configuration \n
@@ -663,8 +662,8 @@ Build type      ${CMAKE_BUILD_TYPE}
 Install path    ${CMAKE_INSTALL_PREFIX}
 Compiler        ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 Compiler flags:
-C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${BUILD_TYPE}}
-C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}
+C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
+C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
 Linker flags:
 Executable      ${CMAKE_EXE_LINKER_FLAGS}
 Module          ${CMAKE_MODULE_LINKER_FLAGS}

@@ -4,6 +4,7 @@
 /// This ROOT 7 example demonstrates how to customize RLine object using RStyle
 /// "normal" coordinates' system.
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2019-10-04
@@ -40,14 +41,14 @@ void lineRStyle()
 
    style->AddBlock(".user_class_1").AddInt("line_style", 4); // all lines with user_class_1 should get style 1
    style->AddBlock(".user_class_2").AddDouble("line_width", 5.); // all lines with user_class_2 should get line width 5
-   style->AddBlock("#obj7").AddString("line_color_rgb", "0000FF"); // line with id obj7 should be red
+   style->AddBlock("#obj7").AddString("line_color", "#0000FF"); // line with id obj7 should be blue
 
-   style->AddBlock("line").AddString("line_color_rgb", "FF0000"); // all lines should get red color
+   style->AddBlock("line").AddString("line_color", "red"); // all lines should get red color
 
    canvas->UseStyle(style);
 
    canvas->Show();
 
-   // after leaving function scope style will be destroyed, one has to preserve it extra
-   RDirectory::Heap().Add("custom_style", style);
+   // after leaving function scope style will be destroyed, one has to preserve it
+   RDirectory::Heap().Add("line_style", style);
 }

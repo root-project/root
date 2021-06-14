@@ -35,13 +35,13 @@ namespace ROOT {
 namespace Experimental {
 
 class RHistDrawableBase : public RDrawable {
-   RAttrValue<std::string>  fKind{this, "kind", ""};        ///<! hist draw kind
-   RAttrValue<int>          fSub{this, "sub", -1};          ///<! hist draw sub kind
-   RAttrLine                fAttrLine{this, "line"};        ///<! hist line attributes
-   RAttrFill                fAttrFill{this, "fill"};        ///<! hist fill attributes
-   RAttrText                fAttrText{this, "text"};        ///<! hist text attributes
-   RAttrMarker              fMarkerAttr{this, "marker"};    ///<! hist marker attributes
-   RAttrValue<bool>         fOptimize{this, "optimize", false}; ///<! optimize drawing
+   RAttrValue<std::string> fKind{this, "kind", ""};     ///<! hist draw kind
+   RAttrValue<int> fSub{this, "sub", -1};               ///<! hist draw sub kind
+   RAttrLine fAttrLine{this, "line"};                   ///<! hist line attributes
+   RAttrFill fAttrFill{this, "fill"};                   ///<! hist fill attributes
+   RAttrText fAttrText{this, "text"};                   ///<! hist text attributes
+   RAttrMarker fMarkerAttr{this, "marker"};             ///<! hist marker attributes
+   RAttrValue<bool> fOptimize{this, "optimize", false}; ///<! optimize drawing
 
 protected:
 
@@ -95,20 +95,16 @@ public:
 
    RHistDrawableBase() : RDrawable("hist") {}
 
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RHistDrawableBase &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   const RAttrLine &AttrLine() const { return fAttrLine; }
    RAttrLine &AttrLine() { return fAttrLine; }
 
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RHistDrawableBase &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
 
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RHistDrawableBase &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RHistDrawableBase &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
+   const RAttrMarker &AttrMarker() const { return fMarkerAttr; }
    RAttrMarker &AttrMarker() { return fMarkerAttr; }
 
    RHistDrawableBase &Optimize(bool on = true) { fOptimize = on; return *this; }
@@ -144,6 +140,8 @@ class RHist1Drawable final : public RHistDrawable<1> {
    RAttrValue<double> fBarOffset{this, "bar_offset", 0.}; ///<!  bar offset
    RAttrValue<double> fBarWidth{this, "bar_width", 1.};   ///<!  bar width
    RAttrValue<bool> fText{this, "text", false};           ///<! draw text
+   RAttrValue<bool> fSecondX{this, "secondx", false};     ///<! is draw second x axis for histogram
+   RAttrValue<bool> fSecondY{this, "secondy", false};     ///<! is draw second y axis for histogram
 
 protected:
    std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
@@ -165,6 +163,18 @@ public:
    RHist1Drawable &Line() { SetDrawKind("l"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
    RHist1Drawable &Text(bool on = true) { fText = on; return *this; }
+   RHist1Drawable &SecondX(bool on = true) { fSecondX = on; return *this; }
+   RHist1Drawable &SecondY(bool on = true) { fSecondY = on; return *this; }
+
+   bool IsBar() const { return GetDrawKind() == "bar"; }
+   bool IsError() const { return GetDrawKind() == "err"; }
+   bool IsMarker() const { return GetDrawKind() == "p"; }
+   bool IsHist() const { return GetDrawKind() == "hist"; }
+   bool IsLine() const { return GetDrawKind() == "l"; }
+   bool IsLego() const { return GetDrawKind() == "lego"; }
+   bool IsText() const { return fText; }
+   bool IsSecondX() const { return fSecondX; }
+   bool IsSecondY() const { return fSecondY; }
 
    double GetBarOffset() const { return fBarOffset; }
    double GetBarWidth() const { return fBarWidth; }

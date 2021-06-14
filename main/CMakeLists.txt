@@ -74,11 +74,10 @@ install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -O -
 configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
-if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} ")
-else()
-  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS ${CLING_CXXFLAGS})
-endif()
+set_source_files_properties(src/rootcling.cxx PROPERTIES
+  COMPILE_FLAGS ${CLING_CXXFLAGS}
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
 

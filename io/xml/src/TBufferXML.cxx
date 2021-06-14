@@ -111,7 +111,7 @@ TString TBufferXML::ConvertToXML(const TObject *obj, Bool_t GenericLayout, Bool_
       if (!clActual)
          clActual = TObject::Class();
       else if (clActual != TObject::Class())
-         ptr = (void *)((Long_t)obj - clActual->GetBaseClassOffset(TObject::Class()));
+         ptr = (void *)((Longptr_t)obj - clActual->GetBaseClassOffset(TObject::Class()));
    }
 
    return ConvertToXML(ptr, clActual, GenericLayout, UseNamespaces);
@@ -528,7 +528,7 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
    if (!ptr) {
       refvalue = xmlio::Null; // null
    } else {
-      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)GetObjectTag(ptr);
+      XMLNodePointer_t refnode = (XMLNodePointer_t)(Longptr_t)GetObjectTag(ptr);
       if (!refnode)
          return kFALSE;
 
@@ -766,7 +766,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, B
    fXML->NewAttr(objnode, nullptr, xmlio::ObjClass, clname);
 
    if (cacheReuse)
-      fMap->Add(Void_Hash(obj), (Long_t)obj, (Long_t)objnode);
+      fMap->Add(Void_Hash(obj), (Longptr_t)obj, (Longptr_t)objnode);
 
    PushStack(objnode);
 

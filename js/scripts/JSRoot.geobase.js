@@ -1813,11 +1813,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    function createHalfSpace(shape, geom) {
       if (!shape || !shape.fN || !shape.fP) return null;
 
-      // shape.fP = [0,0,15]; shape.fN = [0,1,1];
+      let vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
+          normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
 
-      let vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]);
-
-      let normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
       normal.normalize();
 
       let sz = 1e10;
@@ -1829,32 +1827,32 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       // console.log('normal', normal, 'vertex', vertex, 'size', sz);
 
-      let v1 = new THREE.Vector3(-sz, -sz/2, 0),
-          v2 = new THREE.Vector3(0, sz, 0),
-          v3 = new THREE.Vector3(sz, -sz/2, 0),
-          v4 = new THREE.Vector3(0, 0, -sz);
-
-      let geometry = new THREE.Geometry();
-
-      geometry.vertices.push(v1, v2, v3, v4);
-
-      geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
-      geometry.faces.push( new THREE.Face3( 0, 1, 3 ) );
-      geometry.faces.push( new THREE.Face3( 1, 2, 3 ) );
-      geometry.faces.push( new THREE.Face3( 2, 0, 3 ) );
+      let v0 = new THREE.Vector3(-sz, -sz/2, 0),
+          v1 = new THREE.Vector3(0, sz, 0),
+          v2 = new THREE.Vector3(sz, -sz/2, 0),
+          v3 = new THREE.Vector3(0, 0, -sz),
+          geometry = new THREE.BufferGeometry(),
+          positions = new Float32Array([ v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v1.x,v1.y,v1.z,
+                                         v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v3.x,v3.y,v3.z,
+                                         v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
+                                         v2.x,v2.y,v2.z, v0.x,v0.y,v0.z, v3.x,v3.y,v3.z ]);
+      geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+      geometry.computeVertexNormals();
 
       geometry.lookAt(normal);
-      geometry.computeFaceNormals();
+      geometry.computeVertexNormals();
 
-      v1.add(vertex);
-      v2.add(vertex);
-      v3.add(vertex);
-      v4.add(vertex);
+      for(let k=0;k<positions.length;k+=3) {
+         positions[k] = positions[k] + vertex.x;
+         positions[k+1] = positions[k+1] + vertex.y;
+         positions[k+2] = positions[k+2] + vertex.z;
+      }
+
       return geometry;
    }
 
    /** @summary Returns number of faces for provided geometry
-     * @param geom  - can be THREE.Geometry, THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
+     * @param geom  - can be THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
      * @memberof JSROOT.GEO
      * @private */
    function countGeometryFaces(geom) {
@@ -2140,7 +2138,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       let cameraProjectionMatrix = new THREE.Matrix4();
 
       camera.updateMatrixWorld();
-      camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+      camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
       cameraProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse);
 
       return cameraProjectionMatrix;
@@ -2588,7 +2587,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          arg.last = 0;
          arg.CopyStack = function(factor) {
             let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
-            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
+            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
             for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
          };
@@ -3139,7 +3138,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    ClonedNodes.prototype.mergeVisibles = function(current, prev) {
 
       let indx2 = 0, del = [];
-      for (let indx1=0; (indx1<current.length) && (indx2<prev.length); ++indx1) {
+      for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
 
          while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
             del.push(prev[indx2++]); // this entry should be removed
@@ -3152,14 +3151,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // remove rest
-      while (indx2<prev.length)
+      while (indx2 < prev.length)
          del.push(prev[indx2++]);
 
-      return del; //
+      return del;
    }
 
-   /** @summary Collect all uniques shapes which should be build
-    *  @desc Check if same shape used many time for drawing */
+   /** @summary Collect all uniques shapes which should be built
+    *  @desc Check if same shape used many times for drawing */
    ClonedNodes.prototype.collectShapes = function(lst) {
 
       // nothing else - just that single shape

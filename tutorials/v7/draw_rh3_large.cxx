@@ -4,6 +4,7 @@
 /// This macro generates really large RH2D histogram, fills it with predefined pattern and
 /// draw it in a RCanvas, using Optmize() drawing mode
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2020-06-26
@@ -52,7 +53,7 @@ void draw_rh3_large()
    auto frame = canvas->GetOrCreateFrame();
 
    // should we made special style for frame with palette?
-   // frame->Margins().SetRight(0.2_normal);
+   // frame->AttrMargins().SetRight(0.2_normal);
 
    frame->AttrX().SetZoom(nbins*0.1, nbins*0.9);
    frame->AttrY().SetZoom(nbins*0.1, nbins*0.9);

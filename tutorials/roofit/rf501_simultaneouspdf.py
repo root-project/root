@@ -29,9 +29,8 @@ a1 = ROOT.RooRealVar("a1", "a1", 0.004, -1, 1)
 px = ROOT.RooChebychev("px", "px", x, ROOT.RooArgList(a0, a1))
 
 # Construct composite pdf
-f = ROOT.RooRealVar("f", "f", 0.2, 0., 1.)
-model = ROOT.RooAddPdf(
-    "model", "model", ROOT.RooArgList(gx, px), ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.2, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(gx, px), ROOT.RooArgList(f))
 
 # Create model for control sample
 # --------------------------------------------------------------
@@ -44,18 +43,11 @@ gx_ctl = ROOT.RooGaussian("gx_ctl", "gx_ctl", x, mean_ctl, sigma)
 # Construct the background pdf
 a0_ctl = ROOT.RooRealVar("a0_ctl", "a0_ctl", -0.1, -1, 1)
 a1_ctl = ROOT.RooRealVar("a1_ctl", "a1_ctl", 0.5, -0.1, 1)
-px_ctl = ROOT.RooChebychev(
-    "px_ctl", "px_ctl", x, ROOT.RooArgList(a0_ctl, a1_ctl))
+px_ctl = ROOT.RooChebychev("px_ctl", "px_ctl", x, ROOT.RooArgList(a0_ctl, a1_ctl))
 
 # Construct the composite model
-f_ctl = ROOT.RooRealVar("f_ctl", "f_ctl", 0.5, 0., 1.)
-model_ctl = ROOT.RooAddPdf(
-    "model_ctl",
-    "model_ctl",
-    ROOT.RooArgList(
-        gx_ctl,
-        px_ctl),
-    ROOT.RooArgList(f_ctl))
+f_ctl = ROOT.RooRealVar("f_ctl", "f_ctl", 0.5, 0.0, 1.0)
+model_ctl = ROOT.RooAddPdf("model_ctl", "model_ctl", ROOT.RooArgList(gx_ctl, px_ctl), ROOT.RooArgList(f_ctl))
 
 # Generate events for both samples
 # ---------------------------------------------------------------
@@ -78,12 +70,9 @@ combData = ROOT.RooDataSet(
     "combined data",
     ROOT.RooArgSet(x),
     ROOT.RooFit.Index(sample),
-    ROOT.RooFit.Import(
-        "physics",
-        data),
-    ROOT.RooFit.Import(
-        "control",
-        data_ctl))
+    ROOT.RooFit.Import("physics", data),
+    ROOT.RooFit.Import("control", data_ctl),
+)
 
 # Construct a simultaneous pdf in (x, sample)
 # -----------------------------------------------------------------------------------
@@ -109,7 +98,7 @@ simPdf.fitTo(combData)
 frame1 = x.frame(ROOT.RooFit.Bins(30), ROOT.RooFit.Title("Physics sample"))
 
 # Plot all data tagged as physics sample
-combData.plotOn(frame1, ROOT.RooFit.Cut("sample==sample::physics"))
+combData.plotOn(frame1, Cut="sample==sample::physics")
 
 # Plot "physics" slice of simultaneous pdf.
 # NB: You *must* project the sample index category with data using ProjWData
@@ -118,19 +107,19 @@ combData.plotOn(frame1, ROOT.RooFit.Cut("sample==sample::physics"))
 # NB2: The sampleSet *must* be named. It will not work to pass this as a temporary
 # because python will delete it. The same holds for fitTo() and plotOn() below.
 sampleSet = ROOT.RooArgSet(sample)
-simPdf.plotOn(frame1, ROOT.RooFit.Slice(sample, "physics"), ROOT.RooFit.Components(
-    "px"), ROOT.RooFit.ProjWData(sampleSet, combData), ROOT.RooFit.LineStyle(ROOT.kDashed))
+simPdf.plotOn(
+    frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sampleSet, combData), LineStyle=ROOT.kDashed
+)
 
 # The same plot for the control sample slice
 frame2 = x.frame(ROOT.RooFit.Bins(30), ROOT.RooFit.Title("Control sample"))
-combData.plotOn(frame2, ROOT.RooFit.Cut("sample==sample::control"))
-simPdf.plotOn(frame2, ROOT.RooFit.Slice(sample, "control"),
-                ROOT.RooFit.ProjWData(sampleSet, combData))
-simPdf.plotOn(frame2, ROOT.RooFit.Slice(sample, "control"), ROOT.RooFit.Components(
-    "px_ctl"), ROOT.RooFit.ProjWData(sampleSet, combData), ROOT.RooFit.LineStyle(ROOT.kDashed))
+combData.plotOn(frame2, Cut="sample==sample::control")
+simPdf.plotOn(frame2, Slice=(sample, "control"), ProjWData=(sampleSet, combData))
+simPdf.plotOn(
+    frame2, Slice=(sample, "control"), Components="px_ctl", ProjWData=(sampleSet, combData), LineStyle=ROOT.kDashed
+)
 
-c = ROOT.TCanvas("rf501_simultaneouspdf",
-                 "rf501_simultaneouspdf", 800, 400)
+c = ROOT.TCanvas("rf501_simultaneouspdf", "rf501_simultaneouspdf", 800, 400)
 c.Divide(2)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.15)

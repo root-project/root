@@ -24,6 +24,7 @@
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // for GetFileNamesFromTree and GetFriendInfo
 #include "RtypesCore.h" // for ULong64_t
 #include "TDirectory.h"
 #include "TH1.h"        // For Histo actions
@@ -32,10 +33,12 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TStatistic.h"
+#include "TChain.h"     // for checking fLoopManger->GetTree() return type
 
 #include <algorithm>
 #include <cstddef>
 #include <initializer_list>
+#include <iterator> // std::back_insterter
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -544,6 +547,11 @@ public:
    /// single-thread and multi-thread runs is different: in single-thread runs, Snapshot will write out a TTree with
    /// the specified name and zero entries; in multi-thread runs, no TTree object will be written out to disk.
    ///
+   /// \note Snapshot will refuse to process columns with names of the form `#columnname`. These are special columns
+   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
+   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
+   /// Alias(): `df.Alias("nbar", "#bar").Snapshot(..., {"nbar"})`.
+   ///
    /// ### Example invocations:
    ///
    /// ~~~{.cpp}
@@ -585,7 +593,9 @@ public:
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
+      RDFInternal::CheckForDuplicateSnapshotColumns(validCols);
 
       const auto fullTreeName = treename;
       const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
@@ -593,7 +603,7 @@ public:
       const auto &dirname = parsedTreePath.fDirName;
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnList, options});
+         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
 
       ::TDirectory::TContext ctxt;
       auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
@@ -627,11 +637,15 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      // Ignore __rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      ColumnNames_t dsColumnsWithoutSizeColumns;
+      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "__rdf_sizeof_"; });
       ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
+      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumnsWithoutSizeColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
       columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
-      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
@@ -671,6 +685,11 @@ public:
    ///
    /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
    /// fits in memory and that will be accessed many times.
+   ///
+   /// \note Cache will refuse to process columns with names of the form `#columnname`. These are special columns
+   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
+   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
+   /// Alias(): `df.Alias("nbar", "#bar").Cache<std::size_t>(..., {"nbar"})`.
    ///
    /// ### Example usage:
    ///
@@ -723,15 +742,18 @@ public:
                 << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
                 << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
-      const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Cache");
+
+      const auto validColumnNames =
+         GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
       const auto colTypes = GetValidatedArgTypes(validColumnNames, fDefines, fLoopManager->GetTree(), fDataSource,
                                                  "Cache", /*vector2rvec=*/false);
       for (const auto &colType : colTypes)
          cacheCall << colType << ", ";
-      if (!columnList.empty())
+      if (!columnListWithoutSizeColumns.empty())
          cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-                << RDFInternal::PrettyPrintAddr(&columnList) << "));";
+                << RDFInternal::PrettyPrintAddr(&columnListWithoutSizeColumns) << "));";
 
       // book the code to jit with the RLoopManager and trigger the event loop
       fLoopManager->ToJitExec(cacheCall.str());
@@ -753,6 +775,10 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      // Ignore __rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      ColumnNames_t dsColumnsWithoutSizeColumns;
+      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "__rdf_sizeof_"; });
       ColumnNames_t columnNames;
       columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
@@ -1602,10 +1628,16 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
    ///
-   /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
-   /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
-   /// specified columns (these types are passed as template parameters to this method).
-   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object.
+   /// Type T must provide at least:
+   /// - a copy-constructor
+   /// - a `Fill` method that accepts as many arguments and with same types as the column names passed as columnList
+   ///   (these types can also be passed as template parameters to this method)
+   /// - a `Merge` method with signature `Merge(TCollection *)` or `Merge(const std::vector<T *>&)` that merges the
+   ///   objects assed as argument into the object on which `Merge` was called (an analogous of TH1::Merge). Note that
+   ///   if the signature that takes a `TCollection*` is used, then T must inherit from TObject (to allow insertion in
+   ///   the TCollection*).
+   ///
+   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object. Inferred together with OtherColumns if not present.
    /// \tparam OtherColumns A list of the other types of the columns the values of which are used to fill the object.
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
@@ -1620,46 +1652,22 @@ public:
    /// ### Example usage:
    /// ~~~{.cpp}
    /// MyClass obj;
-   /// auto myFilledObj = myDf.Fill<float>(obj, {"col0", "col1"});
-   /// ~~~
-   ///
-   template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
-   RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
-   {
-      auto h = std::make_shared<T>(std::forward<T>(model));
-      if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
-         throw std::runtime_error("The absence of axes limits is not supported yet.");
-      }
-      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*).
-   ///
-   /// This overload infers the types of the columns specified in columnList at runtime and just-in-time compiles the
-   /// method with these types. See previous overload for more information.
-   /// \tparam T The type of the object to fill. Automatically deduced.
-   /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] columnList The name of the columns read to fill the object.
-   /// \return the filled object wrapped in a RResultPtr.
-   ///
-   /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
-   /// previous overload. Check the previous overload for more details on `Fill`.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// MyClass obj;
+   /// // Deduce column types (this invocation needs jitting internally, and in this case
+   /// // MyClass needs to be known to the interpreter)
    /// auto myFilledObj = myDf.Fill(obj, {"col0", "col1"});
+   /// // explicit column types
+   /// auto myFilledObj = myDf.Fill<float, float>(obj, {"col0", "col1"});
    /// ~~~
    ///
-   template <typename T>
+   template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename T>
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
       auto h = std::make_shared<T>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(columnList, h, h, columnList.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h,
+                                                                                       columnList.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1963,8 +1971,10 @@ public:
       }
 
       if (fDataSource) {
-         auto &dsColNames = fDataSource->GetColumnNames();
-         allColumns.insert(allColumns.end(), dsColNames.begin(), dsColNames.end());
+         const auto &dsColNames = fDataSource->GetColumnNames();
+         // ignore columns starting with __rdf_sizeof_
+         std::copy_if(dsColNames.begin(), dsColNames.end(), std::back_inserter(allColumns),
+                                 [](const std::string &s) { return s.rfind("__rdf_sizeof", 0) != 0; });
       }
 
       return allColumns;
@@ -1985,13 +1995,7 @@ public:
    ///
    std::string GetColumnType(std::string_view column)
    {
-      auto col = std::string(column);
-
-      // if "col" is an alias, resolve it before doing anything else
-      const auto aliasMap = fLoopManager->GetAliasMap();
-      const auto it = aliasMap.find(col);
-      if (it != aliasMap.end())
-         col = it->second;
+      const auto col = RDFInternal::ResolveAlias(std::string(column), fLoopManager->GetAliasMap());
 
       RDFDetail::RDefineBase *define = fDefines.HasName(col) ? fDefines.GetColumns().at(col).get() : nullptr;
 
@@ -2005,6 +2009,7 @@ public:
    /// \return information about the dataframe as string
    ///
    /// This convenience function describes the dataframe and combines the following information:
+   /// - Information about the dataset, see DescribeDataset()
    /// - Number of event loops run, see GetNRuns()
    /// - Number of total and defined columns, see GetColumnNames() and GetDefinedColumnNames()
    /// - Column names, see GetColumnNames()
@@ -2028,6 +2033,10 @@ public:
    ///
    std::string Describe()
    {
+      // Put the information from DescribeDataset on the top
+      std::stringstream ss;
+      ss << DescribeDataset() << "\n\n";
+
       // Build set of defined column names to find later in all column names
       // the defined columns more efficiently
       const auto columnNames = GetColumnNames();
@@ -2048,7 +2057,6 @@ public:
       // to the maximum of the string "Value" and all values to be put in this column.
       const auto columnWidthValues =
          std::max(std::max_element(metadataValues.begin(), metadataValues.end())->size(), static_cast<std::size_t>(5u));
-      std::stringstream ss;
       ss << std::left << std::setw(columnWidthProperties) << "Property" << std::setw(columnWidthValues) << "Value\n"
          << std::setw(columnWidthProperties) << "--------" << std::setw(columnWidthValues) << "-----\n";
 
@@ -2191,6 +2199,97 @@ public:
    /// ~~~
    unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
 
+   /// \brief Get descriptive information about the dataset.
+   /// \return Info describing the dataset as a multi-line string
+   ///
+   /// The information returned by this convenience function is meant for interactive
+   /// use. The exact string format should not be parsed automatically and can be subject to change.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame df("Events", "sample.root");
+   /// std::cout << df.DescribeDataset() << std::endl;
+   /// // prints "Dataframe from TTree Events in file sample.root"
+   /// ~~~
+   std::string DescribeDataset() const
+   {
+      // TTree/TChain as input
+      const auto tree = fLoopManager->GetTree();
+      if (tree) {
+         const auto treeName = tree->GetName();
+         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
+         const auto treeType = isTChain ? "TChain" : "TTree";
+         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
+         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
+         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
+         std::stringstream ss;
+         ss << "Dataframe from " << treeType << " " << treeName;
+         if (isInMemory) {
+            ss << " (in-memory)";
+         } else {
+            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
+            const auto numFiles = files.size();
+            if (numFiles == 1) {
+               ss << " in file " << files[0];
+            } else {
+               ss << " in files\n";
+               for (auto i = 0u; i < numFiles; i++) {
+                  ss << "  " << files[i];
+                  if (i < numFiles - 1)
+                     ss << '\n';
+               }
+            }
+         }
+         if (hasFriends) {
+            const auto numFriends = friendInfo.fFriendNames.size();
+            if (numFriends == 1) {
+               ss << "\nwith friend\n";
+            } else {
+               ss << "\nwith friends\n";
+            }
+            for (auto i = 0u; i < numFriends; i++) {
+               const auto nameAlias = friendInfo.fFriendNames[i];
+               const auto files = friendInfo.fFriendFileNames[i];
+               const auto numFiles = files.size();
+               const auto subnames = friendInfo.fFriendChainSubNames[i];
+               ss << "  " << nameAlias.first;
+               if (nameAlias.first != nameAlias.second)
+                  ss << " (" << nameAlias.second << ")";
+               // case: TTree as friend
+               if (numFiles == 1) {
+                   ss << " " << files[0];
+               }
+               // case: TChain as friend
+               else {
+                  ss << '\n';
+                  for (auto j = 0u; j < numFiles; j++) {
+                     ss << "    " << subnames[j] << " " << files[j];
+                     if (j < numFiles - 1)
+                        ss << '\n';
+                  }
+               }
+               if (i < numFriends - 1)
+                  ss << '\n';
+            }
+         }
+         return ss.str();
+      }
+      // Datasource as input
+      else if (fDataSource) {
+         const auto datasourceLabel = fDataSource->GetLabel();
+         return "Dataframe from datasource " + datasourceLabel;
+      }
+      // Trivial/empty datasource
+      else {
+         const auto n = fLoopManager->GetNEmptyEntries();
+         if (n == 1) {
+            return "Empty dataframe filling 1 row";
+         } else {
+            return "Empty dataframe filling " + std::to_string(n) + " rows";
+         }
+      }
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot.
@@ -2287,7 +2386,8 @@ public:
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Book execution of a custom action using a user-defined helper object.
-   /// \tparam ColumnTypes List of types of columns used by this action.
+   /// \tparam FirstColumn The type of the first column used by this action.  Inferred together with OtherColumns if not present.
+   /// \tparam OtherColumns A list of the types of the other columns used by this action
    /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
    /// \param[in] helper The Action Helper to be scheduled.
    /// \param[in] columns The names of the columns on which the helper acts.
@@ -2313,33 +2413,33 @@ public:
    ///   return the value of the partial result of this action for the given 'slot'. Different threads might call this
    ///   method concurrently, but will always pass different 'slot' numbers.
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
-   ///   Result_t). The RResultPtr returned by Book will point to this object.
+   ///   Result_t). The RResultPtr returned by Book will point to this object. Note that this method can be called
+   ///   before Initialize(), because the RResultPtr is constructed before the event loop is started.
+   ///
+   /// In case this is called without specifying column types, jitting is used,
+   /// and the Helper class needs to be known to the interpreter.
    ///
    /// See ActionHelpers.hxx for the helpers used by standard RDF actions.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    // clang-format on
-   template <typename... ColumnTypes, typename Helper>
+
+   template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
-      constexpr auto nColumns = sizeof...(ColumnTypes);
-      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
-
-      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
 
-      using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
-      auto resPtr = helper.GetResultPtr();
+      auto hPtr = std::make_shared<Helper>(std::forward<Helper>(helper));
+      auto resPtr = hPtr->GetResultPtr();
 
-      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColumnTypes...>());
-
-      auto action =
-         std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr, fDefines);
-      fLoopManager->Book(action.get());
-      return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
+      if (std::is_same<FirstColumn, RDFDetail::RInferredType>::value && columns.empty()) {
+         return CallCreateActionWithoutColsIfPossible<Helper>(resPtr, hPtr, TTraits::TypeList<FirstColumn>{});
+      } else {
+         return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr,
+                                                                                          columns.size());
+      }
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2482,7 +2582,7 @@ private:
              typename HelperArgType = ActionResultType,
              typename std::enable_if<!RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg)
+                                             const std::shared_ptr<HelperArgType> &helperArg, const int /*nColumns*/ = -1)
    {
       constexpr auto nColumns = sizeof...(ColTypes);
 
@@ -2494,6 +2594,7 @@ private:
       auto action =
          RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{}, fDefines);
       fLoopManager->Book(action.get());
+      fLoopManager->AddDataBlockCallback(action->GetDataBlockCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
 
@@ -2596,9 +2697,11 @@ private:
    RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view fullTreeName, std::string_view filename,
                                                      const ColumnNames_t &columnList, const RSnapshotOptions &options)
    {
-      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnList.size());
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
 
-      const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnListWithoutSizeColumns.size());
+      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
+      RDFInternal::CheckForDuplicateSnapshotColumns(validCols);
       CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
 
       const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
@@ -2606,7 +2709,7 @@ private:
       const auto &dirname = parsedTreePath.fDirName;
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnList, options});
+         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
 
       ::TDirectory::TContext ctxt;
       auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
@@ -2623,19 +2726,43 @@ private:
    template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...>)
    {
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+
       // Check at compile time that the columns types are copy constructible
       constexpr bool areCopyConstructible =
          RDFInternal::TEvalAnd<std::is_copy_constructible<ColTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
-      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnListWithoutSizeColumns.size());
 
-      auto colHolders = std::make_tuple(Take<ColTypes>(columnList[S])...);
-      auto ds = std::make_unique<RLazyDS<ColTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+      auto colHolders = std::make_tuple(Take<ColTypes>(columnListWithoutSizeColumns[S])...);
+      auto ds = std::make_unique<RLazyDS<ColTypes...>>(
+         std::make_pair(columnListWithoutSizeColumns[S], std::get<S>(colHolders))...);
 
-      RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
+      RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnListWithoutSizeColumns));
 
       return cachedRDF;
+   }
+
+   template <typename Helper, typename ActionResultType>
+   auto CallCreateActionWithoutColsIfPossible(const std::shared_ptr<ActionResultType> &resPtr,
+                                              const std::shared_ptr<Helper> &hPtr,
+                                              TTraits::TypeList<RDFDetail::RInferredType>)
+      -> decltype(hPtr->Exec(0u), RResultPtr<ActionResultType>{})
+   {
+      return CreateAction<RDFInternal::ActionTags::Book>(/*columns=*/{}, resPtr, hPtr, 0u);
+   }
+
+   template <typename Helper, typename ActionResultType, typename... Others>
+   RResultPtr<ActionResultType>
+   CallCreateActionWithoutColsIfPossible(const std::shared_ptr<ActionResultType> &,
+                                         const std::shared_ptr<Helper>& /*hPtr*/,
+                                         Others...)
+   {
+      throw std::logic_error(std::string("An action was booked with no input columns, but the action requires "
+                                         "columns! The action helper type was ") +
+                             typeid(Helper).name());
+      return {};
    }
 
 protected:
@@ -2649,8 +2776,6 @@ protected:
 
    const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
 
-   /// Prepare the call to the GetValidatedColumnNames routine, making sure that GetBranchNames,
-   /// which is expensive in terms of runtime, is called at most once.
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {
       return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fDefines.GetNames(), fDataSource);

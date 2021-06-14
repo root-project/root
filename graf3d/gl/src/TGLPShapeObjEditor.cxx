@@ -514,7 +514,7 @@ namespace {
 void TGLPShapeObjEditor::DrawSphere()const
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", (ULong_t)this));
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%zx)->DrawSphere()", (size_t)this));
       return;
    }
 

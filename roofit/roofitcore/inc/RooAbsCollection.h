@@ -26,6 +26,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ROOT/RSpan.hxx"
+
 class RooCmdArg;
 
 class RooAbsCollection : public TObject, public RooPrintable {
@@ -52,6 +54,9 @@ public:
   RooAbsCollection& assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe=kFALSE) ;
   void assignFast(const RooAbsCollection& other, Bool_t setValDirty=kTRUE) ;
 
+  // Move constructor
+  RooAbsCollection(RooAbsCollection && other);
+
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
@@ -67,6 +72,9 @@ public:
     return _sizeThresholdForMapSearch;
   }
 
+  /// Const access to the underlying stl container.
+  Storage_t const& get() const { return _list; }
+
   // List content management
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
@@ -75,7 +83,23 @@ public:
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
 
-  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) ;
+  template<typename Iterator_t,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>,
+      typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
+  bool add(Iterator_t beginIt, Iterator_t endIt, bool silent=false) {
+    bool result = false ;
+    _list.reserve(_list.size() + std::distance(beginIt, endIt));
+    for (auto it = beginIt; it != endIt; ++it) {
+      result |= add(**it,silent);
+    }
+    return result;
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Add a collection of arguments to this collection by calling add()
+  /// for each element in the source collection
+  bool add(const RooAbsCollection& list, bool silent=kFALSE) {
+    return add(list._list.begin(), list._list.end(), silent);
+  }
   virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE);
   virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE);
   Bool_t replace(const RooAbsCollection &other);
@@ -108,6 +132,12 @@ public:
   RooAbsArg *find(const char *name) const ;
   RooAbsArg *find(const RooAbsArg&) const ;
 
+  /// Find object by name in the collection
+  TObject* FindObject(const char* name) const { return find(name); }
+
+  /// Find object in the collection, Note: matching by object name, like the find() method
+  TObject* FindObject(const TObject* obj) const { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
+
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
   Bool_t contains(const RooAbsArg& var) const { 
@@ -118,10 +148,29 @@ public:
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
+  bool selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
-  Bool_t overlaps(const RooAbsCollection& otherColl) const ;
+  bool hasSameLayout(const RooAbsCollection& other) const;
+
+  template<typename Iterator_t,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>,
+      typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
+  bool overlaps(Iterator_t otherCollBegin, Iterator_t otherCollEnd) const  {
+    for (auto it = otherCollBegin; it != otherCollEnd; ++it) {
+      if (find(**it)) {
+        return true ;
+      }
+    }
+    return false ;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Check if this and other collection have common entries
+  bool overlaps(const RooAbsCollection& otherColl) const {
+    return overlaps(otherColl._list.begin(), otherColl._list.end());
+  }
 
   /// TIterator-style iteration over contained elements.
   /// \note These iterators are slow. Use begin() and end() or
@@ -279,7 +328,10 @@ protected:
 
   void makeStructureTag() ;
   void makeTypedStructureTag() ;
-  
+
+  /// Determine whether it's possible to add a given RooAbsArg to the collection or not.
+  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const = 0;
+
 private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
   mutable std::unique_ptr<std::unordered_map<const TNamed*, Storage_t::value_type>> _nameToItemMap; //!

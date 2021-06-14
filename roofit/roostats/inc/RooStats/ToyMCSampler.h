@@ -13,14 +13,6 @@
 #ifndef ROOSTATS_ToyMCSampler
 #define ROOSTATS_ToyMCSampler
 
-
-#include "Rtypes.h"
-
-#include <vector>
-#include <list>
-#include <string>
-#include <sstream>
-
 #include "RooStats/TestStatSampler.h"
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/TestStatistic.h"
@@ -31,8 +23,13 @@
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
-
 #include "RooDataSet.h"
+
+#include <vector>
+#include <list>
+#include <string>
+#include <sstream>
+#include <memory>
 
 namespace RooStats {
 
@@ -46,14 +43,11 @@ class NuisanceParametersSampler {
          fParams(parameters),
          fNToys(nToys),
          fExpected(asimov),
-         fPoints(NULL),
          fIndex(0)
       {
          if(prior) Refresh();
       }
-      virtual ~NuisanceParametersSampler() {
-         if(fPoints) { delete fPoints; fPoints = NULL; }
-      }
+      virtual ~NuisanceParametersSampler() = default;
 
       void NextPoint(RooArgSet& nuisPoint, Double_t& weight);
 
@@ -66,7 +60,7 @@ class NuisanceParametersSampler {
       Int_t fNToys;
       Bool_t fExpected;
 
-      RooAbsData *fPoints;         // generated nuisance parameter points
+      std::unique_ptr<RooAbsData> fPoints;         // generated nuisance parameter points
       Int_t fIndex;                // current index in fPoints array
 };
 
@@ -155,8 +149,7 @@ class ToyMCSampler: public TestStatSampler {
 
       // Set the Pdf, add to the the workspace if not already there
       virtual void SetParametersForTestStat(const RooArgSet& nullpoi) {
-         if( fParametersForTestStat ) delete fParametersForTestStat;
-         fParametersForTestStat = (const RooArgSet*)nullpoi.snapshot();
+         fParametersForTestStat.reset( nullpoi.snapshot() );
       }
 
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; ClearCache(); }
@@ -249,7 +242,7 @@ class ToyMCSampler: public TestStatSampler {
 
       // densities, snapshots, and test statistics to reweight to
       RooAbsPdf *fPdf; // model (can be alt or null)
-      const RooArgSet* fParametersForTestStat;
+      std::unique_ptr<const RooArgSet> fParametersForTestStat;
       std::vector<TestStatistic*> fTestStatistics;
 
       std::string fSamplingDistName; // name of the model
@@ -283,20 +276,20 @@ class ToyMCSampler: public TestStatSampler {
       mutable NuisanceParametersSampler *fNuisanceParametersSampler; //!
 
       // objects below cache information and are mutable and non-persistent
-      mutable RooArgSet* _allVars ; //!
-      mutable std::list<RooAbsPdf*> _pdfList ; //!
-      mutable std::list<RooArgSet*> _obsList ; //!
-      mutable std::list<RooAbsPdf::GenSpec*> _gsList ; //!
-      mutable RooAbsPdf::GenSpec* _gs1 ; //! GenSpec #1
-      mutable RooAbsPdf::GenSpec* _gs2 ; //! GenSpec #2
-      mutable RooAbsPdf::GenSpec* _gs3 ; //! GenSpec #3
-      mutable RooAbsPdf::GenSpec* _gs4 ; //! GenSpec #4
+      mutable std::unique_ptr<RooArgSet> _allVars; //!
+      mutable std::vector<RooAbsPdf*> _pdfList; //! We don't own those objects
+      mutable std::vector<std::unique_ptr<RooArgSet>> _obsList; //!
+      mutable std::vector<std::unique_ptr<RooAbsPdf::GenSpec>> _gsList; //!
+      mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs1; //! GenSpec #1
+      mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs2; //! GenSpec #2
+      mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs3; //! GenSpec #3
+      mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs4; //! GenSpec #4
 
       static Bool_t fgAlwaysUseMultiGen ;  // Use PrepareMultiGen always
       Bool_t fUseMultiGen ; // Use PrepareMultiGen?
 
    protected:
-   ClassDef(ToyMCSampler,3) // A simple implementation of the TestStatSampler interface
+   ClassDef(ToyMCSampler, 4) // A simple implementation of the TestStatSampler interface
 };
 }
 

@@ -5,6 +5,10 @@ endif()
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_APPEND_VC_REV OFF CACHE BOOL "")
+set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")
+set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
+set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
+set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
@@ -127,6 +131,10 @@ else()
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_C_VISIBILITY_PRESET hidden)
 endif()
+if (NOT MSVC AND NOT APPLE)
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS "-fno-semantic-interposition")
+endif()
+set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
 
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
 if(cxxmodules)
@@ -459,7 +467,7 @@ if (builtin_cling)
     set(CLING_CXXFLAGS " ${LLVM_DEFS} -DNOMINMAX -D_XKEYCHECK_H")
   else()
     # FIXME: Work hard to remove -Wno-shadow and -Wno-unused-parameter
-    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fvisibility=hidden -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
   endif()
 
   # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.

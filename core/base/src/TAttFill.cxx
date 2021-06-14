@@ -32,10 +32,11 @@ attributes.
 ## Fill Area attributes
 Fill Area attributes are:
 
-  - [Fill Area color](#F1)</a>
-  - [Fill Area style](#F2)</a>
+  - [Fill Area color](\ref ATTFILL1)
+  - [Fill Area style](\ref ATTFILL2)
 
-## <a name="F1"></a> Fill Area color
+\anchor ATTFILL1
+## Fill Area color
 The fill area color is a color index (integer) pointing in the ROOT
 color table.
 The fill area color of any class inheriting from `TAttFill` can
@@ -103,7 +104,8 @@ If the current style fill area color is set to 0, then ROOT will force
 a black&white output for all objects with a fill area defined and independently
 of the object fill style.
 
-## <a name="F2"></a> Fill Area style
+\anchor ATTFILL2
+## Fill Area style
 The fill area style defines the pattern used to fill a polygon.
 The fill area style of any class inheriting from `TAttFill` can
 be changed using the method `SetFillStyle` and retrieved using the

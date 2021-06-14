@@ -6,7 +6,7 @@
 
 INCLUDE (CheckCXXSourceCompiles)
 
-#---Define a function to do not polute the top level namespace with unneeded variables-----------------------
+#---Define a function not to pollute the top level namespace with unneeded variables-----------------------
 function(RootConfigure)
 
 #---Define all sort of variables to bridge between the old Module.mk and the new CMake equivalents-----------
@@ -410,11 +410,6 @@ if(vc)
 else()
   set(hasvc undef)
 endif()
-if(vmc)
-  set(hasvmc define)
-else()
-  set(hasvmc undef)
-endif()
 if(vdt)
   set(hasvdt define)
 else()
@@ -638,6 +633,22 @@ if(has_found_attribute_noinline)
    set(has_found_attribute_noinline define)
 else()
    set(has_found_attribute_noinline undef)
+endif()
+
+# We could just check `#ifdef __cpp_lib_hardware_interference_size`, but on at least Mac 11
+# libc++ defines that macro but is missing the actual feature
+# (see https://github.com/llvm/llvm-project/commit/174322c2737d699e199db4762aaf4217305ec465).
+# So we need to "manually" check instead.
+# `#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE` could be substituted by `#ifdef __cpp_lib_hardware_interference_size`
+# when Mac 11's life has ended (assuming the libc++ fix makes it in the next MacOS version).
+CHECK_CXX_SOURCE_COMPILES("
+#include <new>
+using Check_t = char[std::hardware_destructive_interference_size];
+" found_hardware_interference_size)
+if(found_hardware_interference_size)
+   set(hashardwareinterferencesize define)
+else()
+   set(hashardwareinterferencesize undef)
 endif()
 
 if(root7 AND webgui)

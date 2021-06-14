@@ -33,10 +33,8 @@ py = ROOT.RooPolynomial("py", "py", y)
 bkg = ROOT.RooProdPdf("bkg", "bkg", px, py)
 
 # Construct the composite model sig+bkg
-f = ROOT.RooRealVar("f", "f", 0., 1.)
-model = ROOT.RooAddPdf(
-    "model", "model", ROOT.RooArgList(
-        sig, bkg), ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(f))
 
 # Sample 10000 events in (x,y) from the model
 modelData = model.generate(ROOT.RooArgSet(x, y), 10000)
@@ -77,21 +75,18 @@ y.setRange("FULL", -10, +10)
 
 # Perform fit in SideBand1 region (ROOT.RooAddPdf coefficients will be
 # interpreted in full range)
-r_sb1 = model.fitTo(modelData, ROOT.RooFit.Range(
-    "SB1"), ROOT.RooFit.Save())
+r_sb1 = model.fitTo(modelData, Range="SB1", Save=True)
 
 # Perform fit in SideBand2 region (ROOT.RooAddPdf coefficients will be
 # interpreted in full range)
-r_sb2 = model.fitTo(modelData, ROOT.RooFit.Range(
-    "SB2"), ROOT.RooFit.Save())
+r_sb2 = model.fitTo(modelData, Range="SB2", Save=True)
 
 # Perform fits in joint sideband regions
 # -----------------------------------------------------------------------------
 
 # Now perform fit to joint 'L-shaped' sideband region 'SB1|SB2'
 # (ROOT.RooAddPdf coefficients will be interpreted in full range)
-r_sb12 = model.fitTo(modelData, ROOT.RooFit.Range(
-    "SB1,SB2"), ROOT.RooFit.Save())
+r_sb12 = model.fitTo(modelData, Range="SB1,SB2", Save=True)
 
 # Print results for comparison
 r_sb1.Print()

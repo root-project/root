@@ -44,6 +44,8 @@ set(sources
     src/Utility.cxx
 )
 
+file(RELATIVE_PATH PYTHONDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_PYTHONDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+
 foreach(val RANGE ${how_many_pythons})
   list(GET python_include_dirs ${val} python_include_dir)
   list(GET python_under_version_strings ${val} python_under_version_string)
@@ -80,26 +82,19 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-cast-function-type)
   endif()
 
-  # Disables warnings originating from deprecated register keyword in Python
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(${libname} PRIVATE -Wno-register)
-  endif()
-  if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(${libname} PRIVATE -Wno-register)
-    target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
-  endif()
-
   # Disables warnings due to new field tp_vectorcall in Python 3.8
   if(NOT MSVC AND ${python_version_string} VERSION_GREATER_EQUAL "3.8")
     target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
   endif()
 
   target_include_directories(${libname}
+     SYSTEM PUBLIC ${python_include_dir})
+
+  target_include_directories(${libname}
      PRIVATE
         ${CMAKE_SOURCE_DIR}/core/foundation/inc   # needed for string_view backport
         ${CMAKE_BINARY_DIR}/ginclude
      PUBLIC
-        ${python_include_dir}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   )
@@ -113,9 +108,9 @@ foreach(val RANGE ${how_many_pythons})
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
   if (NOT MSVC AND NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
     # add a symlink to ${libname} in CMAKE_INSTALL_PYTHONDIR
-    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink\
-            ${CMAKE_INSTALL_FULL_LIBDIR}/lib${libname}.so\
-            ${CMAKE_INSTALL_FULL_PYTHONDIR}/lib${libname}.so)")
+    set(LIB_FILE_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}${libname}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    install(CODE "file(CREATE_LINK ${PYTHONDIR_TO_LIBDIR}/${LIB_FILE_NAME}
+      \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_PYTHONDIR}/${LIB_FILE_NAME} SYMBOLIC)")
   endif()
 endforeach()
 

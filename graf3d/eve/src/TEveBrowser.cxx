@@ -626,7 +626,7 @@ void TEveBrowser::EveMenu(Int_t id)
       }
       case kNewTextEditor: {
          StartEmbedding(1);
-         gROOT->ProcessLineFast(Form("new TGTextEditor((const char *)0, (const TGWindow *)0x%lx)", (ULong_t)gClient->GetRoot()));
+         gROOT->ProcessLineFast(Form("new TGTextEditor((const char *)0, (const TGWindow *)0x%zx)", (size_t)gClient->GetRoot()));
          StopEmbedding();
          SetTabTitle("Editor", 1);
          break;
@@ -637,7 +637,7 @@ void TEveBrowser::EveMenu(Int_t id)
          {
             StartEmbedding(1);
             gROOT->ProcessLine(Form("new TGHtmlBrowser(\"http://root.cern.ch/root/html/ClassIndex.html\", \
-                              (const TGWindow *)0x%lx)", (ULong_t)gClient->GetRoot()));
+                              (const TGWindow *)0x%zx)", (size_t)gClient->GetRoot()));
             StopEmbedding();
             SetTabTitle("HTML", 1);
          }

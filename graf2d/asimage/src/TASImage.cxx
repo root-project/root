@@ -1729,7 +1729,7 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (imgY < 0)  py = py - imgY;
 
       ASImage *image = fImage;
-      if (fScaledImage) image = fScaledImage->fImage;
+      if (fScaledImage && fScaledImage->fImage) image = fScaledImage->fImage;
 
       if (imgX >= (int)image->width)  px = px - imgX + image->width - 1;
       if (imgY >= (int)image->height) py = py - imgY + image->height - 1;
@@ -4785,7 +4785,7 @@ void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoor
 void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t thick)
 {
    if (!nseg || !seg) {
-      Warning("DrawSegments", "Invalid data nseg=%d seg=0x%lx", nseg, (Long_t)seg);
+      Warning("DrawSegments", "Invalid data nseg=%d seg=0x%zx", nseg, (size_t)seg);
       return;
    }
 
@@ -4828,8 +4828,8 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
    }
 
    if (!npt || !ppt || !widths || (stipple && (!w || !h))) {
-      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%lx col=%s widths=0x%lx stipple=0x%lx w=%d h=%d",
-              npt, (Long_t)ppt, col, (Long_t)widths, (Long_t)stipple, w, h);
+      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%zx col=%s widths=0x%zx stipple=0x%zx w=%d h=%d",
+              npt, (size_t)ppt, col, (size_t)widths, (size_t)stipple, w, h);
       return;
    }
 
@@ -4886,8 +4886,8 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
    }
 
    if (!npt || !ppt || !widths || !tile) {
-      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%lx widths=0x%lx tile=0x%lx",
-              npt, (Long_t)ppt, (Long_t)widths, (Long_t)tile);
+      Warning("FillSpans", "Invalid input data npt=%d ppt=0x%zx widths=0x%zx tile=0x%zx",
+              npt, (size_t)ppt, (size_t)widths, (size_t)tile);
       return;
    }
 
@@ -4940,7 +4940,7 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
    }
 
    if (!npt || !ppt || !widths) {
-      Warning("CropSpans", "No points specified npt=%d ppt=0x%lx widths=0x%lx", npt, (Long_t)ppt, (Long_t)widths);
+      Warning("CropSpans", "No points specified npt=%d ppt=0x%zx widths=0x%zx", npt, (size_t)ppt, (size_t)widths);
       return;
    }
 
@@ -5245,7 +5245,7 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    }
 
    if ((npt < 3) || !ppt) {
-      Warning("GetPolygonSpans", "No points specified npt=%d ppt=0x%lx", npt, (Long_t)ppt);
+      Warning("GetPolygonSpans", "No points specified npt=%d ppt=0x%zx", npt, (size_t)ppt);
       return kFALSE;
    }
 
@@ -5447,7 +5447,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
    }
 
    if ((count < 3) || !ptsIn) {
-      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%lx", count, (Long_t)ptsIn);
+      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%zx", count, (size_t)ptsIn);
       return;
    }
 
@@ -5485,6 +5485,9 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       pETEs = new EdgeTableEntry[count];
       del = kTRUE;
    }
+
+   ET.scanlines.next = nullptr; // to avoid compiler warnings
+   ET.ymin = ET.ymax = 0;       // to avoid compiler warnings
 
    ptsOut = firstPoint;
    width = firstWidth;
@@ -5560,7 +5563,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    }
 
    if ((count < 3) || !ptsIn) {
-      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%lx", count, (Long_t)ptsIn);
+      Warning("DrawFillArea", "No points specified npt=%d ppt=0x%zx", count, (size_t)ptsIn);
       return;
    }
 
@@ -5585,6 +5588,9 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    ScanLineListBlock SLLBlock;     // header for ScanLineList
 
    pETEs = new EdgeTableEntry[count];
+
+   ET.scanlines.next = nullptr; // to avoid compiler warnings
+   ET.ymin = ET.ymax = 0;       // to avoid compiler warnings
 
    ptsOut = firstPoint;
    width = firstWidth;
@@ -5993,8 +5999,11 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
       case TImage::kXpm:
          ret = ASImage2xpmRawBuff(img, (CARD8 **)buffer, size, 0);
          break;
-      default:
+      case TImage::kPng:
          ret = ASImage2PNGBuff(img, (CARD8 **)buffer, size, &params);
+         break;
+      default:
+         ret = kFALSE;
    }
 
    if (!ret) {
@@ -6059,9 +6068,11 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
          }
          break;
       }
-      default:
+      case TImage::kPng:
          fImage = PNGBuff2ASimage((CARD8 *)*buffer, &params);
          break;
+      default:
+         fImage = nullptr;
    }
 
    if (!fImage) {

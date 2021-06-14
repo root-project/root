@@ -115,6 +115,6 @@ TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width,
       return new TInspectorImp(obj, width, height);
    }
 
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%lx);", (ULong_t)obj));
+   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%zx);", (size_t)obj));
    return 0;
 }

@@ -89,6 +89,14 @@ public:
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
+    // Sometimes, the calling code uses an empty RooArgSet to request evaluation
+    // without normalization set instead of following the `nullptr` convention.
+    // To remove this ambiguity which might not always be correctly handled in
+    // downstream code, we set `normalisationSet` to nullptr if it is pointing
+    // to an empty set.
+    if(normalisationSet && normalisationSet->empty()) {
+      normalisationSet = nullptr;
+    }
 #ifdef ROOFIT_CHECK_CACHED_VALUES
     return _DEBUG_getVal(normalisationSet);
 #else
@@ -103,7 +111,13 @@ public:
   }
 
   /// Like getVal(const RooArgSet*), but always requires an argument for normalisation.
-  inline  Double_t getVal(const RooArgSet& normalisationSet) const { return _fast ? _value : getValV(&normalisationSet) ; }
+  inline  Double_t getVal(const RooArgSet& normalisationSet) const {
+    // Sometimes, the calling code uses an empty RooArgSet to request evaluation
+    // without normalization set instead of following the `nullptr` convention.
+    // To remove this ambiguity which might not always be correctly handled in
+    // downstream code, we set `normalisationSet` to nullptr if it is an empty set.
+    return _fast ? _value : getValV(normalisationSet.empty() ? nullptr : &normalisationSet) ;
+  }
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
@@ -295,7 +309,7 @@ public:
   virtual void printValue(std::ostream& os) const ;
   virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  static void setCacheCheck(Bool_t flag) ;
+  inline void setCachedValue(double value, bool notifyClients = true) final;
 
   // Evaluation error logging 
   class EvalError {
@@ -374,7 +388,6 @@ protected:
 
   
  public:
-  const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
@@ -577,6 +590,22 @@ class BatchInterfaceAccessor {
       theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
     }
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overwrite the value stored in this object's cache.
+/// This can be used to fake a computation that resulted in `value`.
+/// \param[in] value Value to write.
+/// \param[in] setValDirty If true, notify users of this object that its value changed.
+/// This is the default.
+void RooAbsReal::setCachedValue(double value, bool notifyClients) {
+  _value = value;
+
+  if (notifyClients) {
+    setValueDirty();
+    _valueDirty = false;
+  }
+}
 
 
 #endif

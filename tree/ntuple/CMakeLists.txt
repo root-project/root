@@ -37,6 +37,8 @@ HEADERS
   ROOT/RPage.hxx
   ROOT/RPageAllocator.hxx
   ROOT/RPagePool.hxx
+  ROOT/RPageSinkBuf.hxx
+  ROOT/RPageSourceFriends.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
 SOURCES
@@ -58,6 +60,8 @@ SOURCES
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
   v7/src/RPagePool.cxx
+  v7/src/RPageSinkBuf.cxx
+  v7/src/RPageSourceFriends.cxx
   v7/src/RPageStorage.cxx
   v7/src/RPageStorageFile.cxx
 LINKDEF
@@ -67,6 +71,23 @@ DEPENDENCIES
   RIO
   ROOTVecOps
 )
+
+# Enable RNTuple support for Intel DAOS
+if(daos OR daos_mock)
+  set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
+  target_sources(ROOTNTuple PRIVATE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx)
+  target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
+
+  target_include_directories(ROOTNTuple PRIVATE ${UUID_INCLUDE_DIR})
+  target_link_libraries(ROOTNTuple PRIVATE ${UUID_LIBRARY})
+  if(daos_mock)
+    target_include_directories(ROOTNTuple PRIVATE v7/inc/ROOT/libdaos_mock/)
+    target_sources(ROOTNTuple PRIVATE v7/src/libdaos_mock/libdaos_mock.cxx)
+  else()
+    target_include_directories(ROOTNTuple PRIVATE ${DAOS_INCLUDE_DIRS})
+    target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES})
+  endif()
+endif()
 
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)

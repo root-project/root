@@ -4,6 +4,7 @@
 /// This macro generates a small V7 TH1D, fills it and draw it in a V7 canvas.
 /// The canvas is display in the web browser
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2015-03-22

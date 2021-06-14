@@ -109,6 +109,7 @@ public:
 class RDrawable {
 
 friend class RPadBase; // to access Display method and IsFrameRequired
+friend class RCanvas; // to access SetDrawableVersion
 friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method

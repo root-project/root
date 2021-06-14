@@ -44,16 +44,17 @@ Making several branches is particularly interesting in the data analysis phase,
 when it is desirable to have a high reading rate and not all columns are equally interesting
 
 ## Table of contents:
-- [Creating a TTree](#creatingattree)
-- [Add a Column of Fundamental Types and Arrays thereof](#addcolumnoffundamentaltypes)
-- [Add a Column of a STL Collection instances](#addingacolumnofstl)
-- [Add a column holding an object](#addingacolumnofobjs)
-- [Add a column holding a TObjectArray](#addingacolumnofobjs)
-- [Fill the tree](#fillthetree)
-- [Add a column to an already existing Tree](#addcoltoexistingtree)
-- [An Example](#fullexample)
+- [Creating a TTree](\ref creatingattree)
+- [Add a Column of Fundamental Types and Arrays thereof](\ref addcolumnoffundamentaltypes)
+- [Add a Column of a STL Collection instances](\ref addingacolumnofstl)
+- [Add a column holding an object](\ref addingacolumnofobjs)
+- [Add a column holding a TObjectArray](\ref addingacolumnofobjs)
+- [Fill the tree](\ref fillthetree)
+- [Add a column to an already existing Tree](\ref addcoltoexistingtree)
+- [An Example](\ref fullexample)
 
-## <a name="creatingattree"></a>Creating a TTree
+\anchor creatingattree
+## Creating a TTree
 
 ~~~ {.cpp}
     TTree tree(name, title)
@@ -67,7 +68,8 @@ structures.
 
 In the following, the details about the creation of different types of branches are given.
 
-## <a name="addcolumnoffundamentaltypes"></a>Add a column (`branch`) of fundamental types and arrays thereof
+\anchor addcolumnoffundamentaltypes
+## Add a column (`branch`) of fundamental types and arrays thereof
 This strategy works also for lists of variables, e.g. to describe simple structures.
 It is strongly recommended to persistify those as objects rather than lists of leaves.
 
@@ -127,7 +129,8 @@ It is strongly recommended to persistify those as objects rather than lists of l
   the standard rules of opaque typedefs annotation are valid. For example, if only
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
 
-## <a name="addingacolumnofstl"></a>Adding a column of STL collection instances (e.g. std::vector, std::list, std::unordered_map)
+\anchor addingacolumnofstl
+## Adding a column of STL collection instances (e.g. std::vector, std::list, std::unordered_map)
 
 ~~~ {.cpp}
     auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
@@ -147,7 +150,8 @@ In case of dynamic structures changing with each entry for example, one must
 redefine the branch address before filling the branch again.
 This is done via the TBranch::SetAddress member function.
 
-## <a name="addingacolumnofobjs">Add a column of objects
+\anchor addingacolumnofobjs
+## Add a column of objects
 
 ~~~ {.cpp}
     MyClass object;
@@ -200,7 +204,8 @@ is not taken over by the TTree.  I.e. even though an object will be allocated
 by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
-## <a name="addingacolumnoftclonesarray">Add a column of TClonesArray instances
+\anchor addingacolumnoftclonesarray
+## Add a column of TClonesArray instances
 
 *It is recommended to use STL containers instead of TClonesArrays*.
 
@@ -213,7 +218,8 @@ For example, if the TClonesArray is an array of TTrack objects,
 this function will create one subbranch for each data member of
 the object TTrack.
 
-## <a name="fillthetree">Fill the Tree:
+\anchor fillthetree
+## Fill the Tree:
 
 A TTree instance is filled with the invocation of the TTree::Fill method:
 ~~~ {.cpp}
@@ -222,7 +228,8 @@ A TTree instance is filled with the invocation of the TTree::Fill method:
 Upon its invocation, a loop on all defined branches takes place that for each branch invokes
 the TBranch::Fill method.
 
-## <a name="addcoltoexistingtree">Add a column to an already existing Tree
+\anchor addcoltoexistingtree
+## Add a column to an already existing Tree
 
 You may want to add a branch to an existing tree. For example,
 if one variable in the tree was computed with a certain algorithm,
@@ -256,7 +263,8 @@ causes a new TTree instance to be written and the previous one to be deleted.
 For this reasons, ROOT offers the concept of friends for TTree and TChain:
 if is good practice to rely on friend trees rather than adding a branch manually.
 
-## <a name="fullexample">An Example
+\anchor fullexample
+## An Example
 
 Begin_Macro
 ../../../tutorials/tree/tree.C
@@ -3248,8 +3256,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch addresses of passed tree equal to ours.
-/// If undo is true, reset the branch address instead of copying them.
-/// This insures 'separation' of a cloned tree from its original
+/// If undo is true, reset the branch addresses instead of copying them.
+/// This ensures 'separation' of a cloned tree from its original.
 
 void TTree::CopyAddresses(TTree* tree, Bool_t undo)
 {
@@ -3353,6 +3361,13 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
             TBranch* br = tree->GetBranch(branch->GetName());
             if (br) {
+               if (br->IsA() != branch->IsA()) {
+                  Error(
+                     "CopyAddresses",
+                     "Branch kind mismatch between input tree '%s' and output tree '%s' for branch '%s': '%s' vs '%s'",
+                     tree->GetName(), br->GetTree()->GetName(), br->GetName(), branch->IsA()->GetName(),
+                     br->IsA()->GetName());
+               }
                // The copy does not own any object allocated by SetAddress().
                // FIXME: We do too much here, br may not be a top-level branch.
                if (br->InheritsFrom(TBranchElement::Class())) {
@@ -6406,10 +6421,10 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
 
 Long64_t TTree::LoadTree(Long64_t entry)
 {
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
+   // We have already been visited while recursively looking
+   // through the friend trees, let's return
    if (kLoadTree & fFriendLockStatus) {
-      // We need to return a negative value to avoid a circular list of friend
+      // We need to return a negative value to avoid a circular list of friends
       // to think that there is always an entry somewhere in the list.
       return -1;
    }

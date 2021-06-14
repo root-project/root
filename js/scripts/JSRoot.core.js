@@ -59,8 +59,7 @@
 
       factory(exports);
 
-      globalThis.JSROOT = exports;
-
+      global.JSROOT = exports;
    } else {
 
       if ((typeof JSROOT != 'undefined') && !JSROOT._workaround)
@@ -105,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "13/04/2021";
+   JSROOT.version_date = "10/06/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -1358,8 +1357,8 @@
    }
 
    // Open ROOT file, defined in JSRoot.io.js
-   JSROOT.openFile = (filename, callback) => {
-      return jsroot_require("io").then(() => JSROOT.openFile(filename, callback));
+   JSROOT.openFile = filename => {
+      return jsroot_require("io").then(() => JSROOT.openFile(filename));
    }
 
    // Draw object, defined in JSRoot.painter.js
@@ -1447,8 +1446,8 @@
             break;
          case 'TAttAxis':
             extend(obj, { fNdivisions: 510, fAxisColor: 1,
-                                 fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
-                                 fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
+                          fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
+                          fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
             break;
          case 'TAxis':
             create("TNamed", obj);

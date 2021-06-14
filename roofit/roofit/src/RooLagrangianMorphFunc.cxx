@@ -82,8 +82,8 @@ ClassImp(RooLagrangianMorphFunc);
 // various preprocessor helpers
 #define NaN std::numeric_limits<double>::quiet_NaN()
 
-static Double_t morphLargestWeight = 10e7;
-static Double_t morphUnityDeviation = 10e-6;
+constexpr static double morphLargestWeight = 10e7;
+constexpr static double morphUnityDeviation = 10e-6;
 
 ///////////////////////////////////////////////////////////////////////////////
 // TEMPLATE MAGIC /////////////////////////////////////////////////////////////
@@ -444,7 +444,7 @@ inline TH1F *getParamHist(TDirectory *file, const std::string &name,
     std::cerr << "unable to retrieve " << objkey << " histogram from folder '"
               << name << "'" << std::endl;
   }
-  return NULL;
+  return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -500,12 +500,12 @@ inline TDirectory *openFile(const std::string &filename) {
 ///////////////////////////////////////////////////////////////////////////////
 /// open the file and return a file pointer
 
-inline void closeFile(TDirectory *&d) {
+inline void closeFile(TDirectory * d) {
   TFile *f = dynamic_cast<TFile *>(d);
   if (f) {
     f->Close();
     delete f;
-    d = NULL;
+    d = nullptr;
   }
 }
 
@@ -852,8 +852,8 @@ void collectCrosssections(
       return;
     }
     TObject *obj = folder->FindObject(varname.c_str());
-    TParameter<T> *xsection = NULL;
-    TParameter<T> *error = NULL;
+    TParameter<T> *xsection = nullptr;
+    TParameter<T> *error = nullptr;
     TParameter<T> *p = dynamic_cast<TParameter<T> *>(obj);
     if (p) {
       xsection = p;
@@ -1176,9 +1176,8 @@ buildFormulas(const char *mfname,
     }
   }
 
-  RooAbsReal *obj1;
   for (auto itr2 : flags) {
-    obj1 = dynamic_cast<RooAbsReal *>(itr2);
+    auto obj1 = dynamic_cast<RooAbsReal *>(itr2);
     int nZero = 0;
     int nNonZero = 0;
     for (auto sampleit : inputFlags) {
@@ -1266,10 +1265,9 @@ buildFormulas(const char *mfname,
     }
     // check and apply flags
     bool removedByFlag = false;
-    RooAbsReal *obj;
 
     for (auto itr : flags) {
-      obj = dynamic_cast<RooAbsReal *>(itr);
+      auto obj = dynamic_cast<RooAbsReal *>(itr);
       if (!obj)
         continue;
       TString sval(obj->getStringAttribute("NP"));
@@ -1770,7 +1768,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname,
                                                     TClass *mode,
                                                     TObject *inputExample) {
   // cxcoutP(ObjectHandling) << "setting up observable" << std::endl;
-  RooRealVar *obs = NULL;
+  RooRealVar *obs = nullptr;
   Bool_t obsExists(false);
   if (this->_observables.at(0) != 0) {
     obs = (RooRealVar *)this->_observables.at(0);
@@ -1779,7 +1777,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname,
 
   if (mode && mode->InheritsFrom(RooHistFunc::Class())) {
     obs = (RooRealVar *)(dynamic_cast<RooHistFunc *>(inputExample)
-                             ->getObservables()
+                             ->getHistObsList()
                              .first());
     obsExists = true;
     this->_observables.add(*obs);
@@ -1948,7 +1946,7 @@ void RooLagrangianMorphFunc::Config::addFolders(const RooArgList &folders) {
 
   TDirectory *file = openFile(this->getFileName());
   TIter next(file->GetList());
-  TObject *obj = NULL;
+  TObject *obj = nullptr;
   while ((obj = (TObject *)next())) {
     auto f = file->Get<TFolder>(obj->GetName());
     if (!f)
@@ -1960,11 +1958,6 @@ void RooLagrangianMorphFunc::Config::addFolders(const RooArgList &folders) {
   }
   closeFile(file);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// default constructor
-
-RooLagrangianMorphFunc::Config::Config() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// parameterised constructor
@@ -2101,44 +2094,7 @@ std::vector<std::vector<const char*> >& nonInterfering){
   }
 }
 */
-////////////////////////////////////////////////////////////////////////////////
-/// default destructor
 
-RooLagrangianMorphFunc::Config::~Config() {}
-
-
-std::string RooLagrangianMorphFunc::Config::getObservableName() const {
-  return this->_obsName;
-}
-
-std::string RooLagrangianMorphFunc::Config::getFileName() const {
-  return this->_fileName;
-}
-
-std::vector<std::vector<RooArgList *>> const&
-RooLagrangianMorphFunc::Config::getDiagrams() const {
-  return this->_configDiagrams;
-}
-
-RooArgList RooLagrangianMorphFunc::Config::getCouplings() const {
-  return this->_couplings;
-}
-
-RooArgList RooLagrangianMorphFunc::Config::getProdCouplings() const {
-  return this->_prodCouplings;
-}
-
-RooArgList RooLagrangianMorphFunc::Config::getDecCouplings() const {
-  return this->_decCouplings;
-}
-
-RooArgList RooLagrangianMorphFunc::Config::getFolders() const {
-  return this->_folderlist;
-}
-
-Bool_t RooLagrangianMorphFunc::Config::IsAllowNegativeYields() const {
-  return this->_allowNegativeYields;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// print all the parameters and their values in the given sample to the console
@@ -2174,17 +2130,6 @@ void RooLagrangianMorphFunc::printPhysics() const {
       continue;
     phys->Print();
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///  return the number of samples in this morphing function
-
-int RooLagrangianMorphFunc::Config::nSamples() const {
-  return this->_folderNames.size();
-}
-
-int RooLagrangianMorphFunc::nSamples() const {
-  return this->_config.getFolderNames().size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2562,7 +2507,7 @@ RooArgSet RooLagrangianMorphFunc::createWeights(
   double condition __attribute__((unused)) =
       (double)(invertMatrix(matrix, inverse));
   RooArgSet retval;
-  ::buildSampleWeights(retval, (const char *)NULL /* name */, inputs, formulas,
+  ::buildSampleWeights(retval, (const char *)nullptr /* name */, inputs, formulas,
                        inverse);
   return retval;
 }
@@ -2604,7 +2549,7 @@ RooProduct *RooLagrangianMorphFunc::getSumElement(const char *name) const {
       return prod;
     }
   }
-  return NULL;
+  return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// return the vector of sample names, used to build the morph func
@@ -2942,7 +2887,7 @@ void RooLagrangianMorphFunc::setParameters(const RooArgList *list) {
 RooRealVar *RooLagrangianMorphFunc::getObservable() const {
   if (this->_observables.getSize() < 1) {
     coutE(InputArguments) << "observable not available!" << std::endl;
-    return NULL;
+    return nullptr;
   }
   return static_cast<RooRealVar *>(this->_observables.at(0));
 }
@@ -2953,7 +2898,7 @@ RooRealVar *RooLagrangianMorphFunc::getObservable() const {
 RooRealVar *RooLagrangianMorphFunc::getBinWidth() const {
   if (this->_binWidths.getSize() < 1) {
     coutE(InputArguments) << "bin width not available!" << std::endl;
-    return NULL;
+    return nullptr;
   }
   return static_cast<RooRealVar *>(this->_binWidths.at(0));
 }
@@ -3168,11 +3113,6 @@ RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getMorphParameters() co
 void RooLagrangianMorphFunc::setParameters(const ParamSet &params) {
   setParams(params, this->_operators, false);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// pdf is self-normalized
-
-Bool_t RooLagrangianMorphFunc::selfNormalized() const { return kTRUE; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (currently similar to cloning the Pdf

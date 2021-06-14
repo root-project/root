@@ -28,20 +28,17 @@ sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
 # Build Chebychev polynomial pdf
-a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
+a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2)
 bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
 # Sum the signal components into a composite signal pdf
-sig1frac = ROOT.RooRealVar(
-    "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
-sig = ROOT.RooAddPdf(
-    "sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
+sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
 
 # Sum the composite signal and background
-bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0., 1.)
-model = ROOT.RooAddPdf(
-    "model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
+bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
 
 # Generate 1000 events
 data = model.generate(ROOT.RooArgSet(x), 1000)
@@ -50,7 +47,7 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 # -------------------------------------------------------------
 
 # Perform fit and save result
-r = model.fitTo(data, ROOT.RooFit.Save())
+r = model.fitTo(data, Save=True)
 
 # Print fit results
 # ---------------------------------
@@ -87,10 +84,8 @@ print("final value of floating parameters")
 r.floatParsFinal().Print("s")
 
 # Access correlation matrix elements
-print("correlation between sig1frac and a0 is  ", r.correlation(
-    sig1frac, a0))
-print("correlation between bkgfrac and mean is ", r.correlation(
-    "bkgfrac", "mean"))
+print("correlation between sig1frac and a0 is  ", r.correlation(sig1frac, a0))
+print("correlation between bkgfrac and mean is ", r.correlation("bkgfrac", "mean"))
 
 # Extract covariance and correlation matrix as ROOT.TMatrixDSym
 cor = r.correlationMatrix()

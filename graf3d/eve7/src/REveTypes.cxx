@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #include <ROOT/REveTypes.hxx>
+#include <ROOT/RLogger.hxx>
+#include <iostream>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -40,3 +42,10 @@ REveException REX::operator+(const REveException &s1,  const char *s2)
 
 REveException REX::operator+(const REveException &s1, ElementId_t x)
 { REveException r(s1); r.append(std::to_string(x)); return r; }
+
+REX::RLogChannel &REX::REveLog()
+{
+   static RLogChannel sLog("ROOT.Eve");
+   return sLog;
+}
+

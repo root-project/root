@@ -1,6 +1,9 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
+/// This ROOT 7 example shows how to create a histogram, fill it  and draw it.
+///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2015-03-22

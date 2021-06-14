@@ -23,6 +23,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
@@ -68,6 +69,7 @@ class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
 private:
    std::unique_ptr<TTaskGroup> fTaskGroup;
 public:
+   RNTupleImtTaskScheduler();
    virtual ~RNTupleImtTaskScheduler() = default;
    void Reset() final;
    void AddTask(const std::function<void(void)> &taskFunc) final;
@@ -85,6 +87,16 @@ An input ntuple provides data from storage as C++ objects. The ntuple model can 
 or it can be imposed by the user. The latter case allows users to read into a specialized ntuple model that covers
 only a subset of the fields in the ntuple. The ntuple model is used when reading complete entries.
 Individual fields can be read as well by instantiating a tree view.
+
+~~~ {.cpp}
+#include <ROOT/RNTuple.hxx>
+using ROOT::Experimental::RNTupleReader;
+
+#include <iostream>
+
+auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
+~~~
 */
 // clang-format on
 class RNTupleReader {
@@ -131,15 +143,42 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
+   /// Used to specify the underlying RNTuples in OpenFriends()
+   struct ROpenSpec {
+      std::string fNTupleName;
+      std::string fStorage;
+      RNTupleReadOptions fOptions;
+
+      ROpenSpec() = default;
+      ROpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
+   };
 
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                               std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// Open an RNTuple for reading.
+   ///
+   /// Throws an RException if there is no RNTuple with the given name.
+   ///
+   /// **Example: open an RNTuple and print the number of entries**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
+   /// ~~~
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
+   /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
+   /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
+   static std::unique_ptr<RNTupleReader> OpenFriends(std::span<ROpenSpec> ntuples);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on
    /// storage.
@@ -158,6 +197,33 @@ public:
    const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
+   ///
+   /// **Example: print summary information to stdout**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleInfo;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// ntuple->PrintInfo();
+   /// // or, equivalently:
+   /// ntuple->PrintInfo(ENTupleInfo::kSummary, std::cout);
+   /// ~~~
+   /// **Example: print detailed column storage data to stderr**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleInfo;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// ntuple->PrintInfo(ENTupleInfo::kStorageDetails, std::cerr);
+   /// ~~~
+   ///
+   /// For use of ENTupleInfo::kMetrics, see #EnableMetrics.
    void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
 
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
@@ -168,20 +234,36 @@ public:
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an exception.
-   void LoadEntry(NTupleSize_t index) { LoadEntry(index, *fModel->GetDefaultEntry()); }
-   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry &entry) {
+   void LoadEntry(NTupleSize_t index) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetDescriptor().GenerateModel();
          ConnectModel(*fModel);
       }
-
+      LoadEntry(index, *fModel->GetDefaultEntry());
+   }
+   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
+   void LoadEntry(NTupleSize_t index, REntry &entry) {
       for (auto& value : entry) {
          value.GetField()->Read(index, &value);
       }
    }
 
+   /// Returns an iterator over the entry indices of the RNTuple.
+   ///
+   /// **Example: iterate over all entries and print each entry in JSON format**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleShowFormat;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// for (auto i : ntuple->GetEntryRange()) {
+   ///    ntuple->Show(i, ENTupleShowFormat::kCompleteJSON);
+   /// }
+   /// ~~~
    RNTupleGlobalRange GetEntryRange() { return RNTupleGlobalRange(0, GetNEntries()); }
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
@@ -189,6 +271,21 @@ public:
    /// field of a collection itself, like GetView<NTupleSize_t>("particle").
    ///
    /// Raises an exception if there is no field with the given name.
+   ///
+   /// **Example: iterate over a field named "pt" of type `float`**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto pt = ntuple->GetView<float>("pt");
+   ///
+   /// for (auto i : ntuple->GetEntryRange()) {
+   ///    std::cout << i << ": " << pt(i) << "\n";
+   /// }
+   /// ~~~
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
@@ -200,7 +297,9 @@ public:
       return RNTupleView<T>(fieldId, fSource.get());
    }
 
-   /// Raises an exception if there is no field with the given name.
+   /// Raises an exception if:
+   /// * there is no field with the given name or,
+   /// * the field is not a collection
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId) {
@@ -214,6 +313,25 @@ public:
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(GetNEntries()); }
 
+   /// Enable performance measurements (decompression time, bytes read from storage, etc.)
+   ///
+   /// **Example: inspect the reader metrics after loading every entry**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::ENTupleInfo;
+   /// using ROOT::Experimental::RNTupleReader;
+   ///
+   /// #include <iostream>
+   ///
+   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// // metrics must be turned on beforehand
+   /// ntuple->EnableMetrics();
+   ///
+   /// for (auto i : ntuple->GetEntryRange()) {
+   ///    ntuple->LoadEntry(i);
+   /// }
+   /// ntuple->PrintInfo(ENTupleInfo::kMetrics);
+   /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
@@ -232,12 +350,13 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class RNTupleWriter {
 private:
-   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 64000;
+   /// The page sink's parallel page compression scheduler if IMT is on.
+   /// Needs to be destructed after the page sink is destructed and so declared before.
+   std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fZipTasks;
    std::unique_ptr<Detail::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
-   NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
    NTupleSize_t fNEntries;
 
@@ -267,7 +386,7 @@ public:
          value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fNEntries % fClusterSizeEntries) == 0)
+      if ((fNEntries % fSink->GetWriteOptions().GetNEntriesPerCluster()) == 0)
          CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage

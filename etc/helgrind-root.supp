@@ -41,6 +41,13 @@
    Helgrind:Race
    fun:_ZN11TBufferFile12WriteVersionEPK6TClassb
 }
+{
+   Due to TApplication::fIsRunning which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:load
+   fun:_ZNKSt6atomicIbEcvbEv
+   fun:_ZNK12TApplication9IsRunningEv
+}
 
 {
    Due to TClass::fLastReadInfo which is an std::atomic ... may hide other problems.

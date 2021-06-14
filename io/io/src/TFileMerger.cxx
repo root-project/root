@@ -557,10 +557,11 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname)
    {
       TDirectory *result = dynamic_cast<TDirectory*>(parent->GetList()->FindObject(name));
-      if (!result)
+      if (!result) {
          result = parent->GetDirectory(pathname);
-      else
-         dirtodelete.Add(result);
+         if (result && result != parent)
+            dirtodelete.Add(result);
+      }
 
       return result;
    };
@@ -683,10 +684,10 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       TList listH;
       TString listHargs;
       if (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*")) {
-         listHargs.Form("(TCollection*)0x%lx,(TFileMergeInfo*)0x%lx",
-                           (ULong_t)&listH, (ULong_t)&info);
+         listHargs.Form("(TCollection*)0x%zx,(TFileMergeInfo*)0x%zx",
+                           (size_t)&listH, (size_t)&info);
       } else if (cl->GetMethodWithPrototype("Merge", "TCollection*")) {
-         listHargs.Form("((TCollection*)0x%lx)", (ULong_t)&listH);
+         listHargs.Form("((TCollection*)0x%zx)", (size_t)&listH);
       } else {
          // pass unmergeable objects through to the output file
          canBeMerged = kFALSE;

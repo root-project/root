@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #---Check for installed packages depending on the build options/components enabled --
+include(CheckCXXSourceCompiles)
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -71,8 +72,11 @@ if(NOT builtin_nlohmannjson)
   if(fail-on-missing)
     find_package(nlohmann_json REQUIRED)
   else()
-    find_package(nlohmann_json)
-    if(NOT nlohmann_json_FOUND)
+    find_package(nlohmann_json QUIET)
+    if(nlohmann_json_FOUND)
+      get_target_property(_nlohmann_json_inlc nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+      message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_inlc} (found version ${nlohmann_json_VERSION})")
+    else()
       message(STATUS "nlohmann/json.hpp not found. Switching on builtin_nlohmannjson option")
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
     endif()
@@ -419,20 +423,18 @@ if(builtin_afterimage)
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
-      set(astepbld "libAfterImage - Win32 Debug")
+      set(astepbld "Debug")
     else()
-      set(astepbld "libAfterImage - Win32 Release")
+      set(astepbld "Release")
     endif()
     ExternalProject_Add(
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      UPDATE_COMMAND ${CMAKE_COMMAND} -E remove_directory zlib
-      CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/builtins/zlib zlib
-      BUILD_COMMAND nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
-                    CFG=${astepbld} NMAKECXXFLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_VERBOSE_MAKEFILE=ON -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${astepbld}
+      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${astepbld}/libAfterImage.lib <INSTALL_DIR>/lib/
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
       TIMEOUT 600
     )
@@ -1191,6 +1193,40 @@ if (uring)
   endif()
 endif()
 
+#---Check for DAOS----------------------------------------------------------------
+if (daos AND daos_mock)
+  message(FATAL_ERROR "Options `daos` and `daos_mock` are mutually exclusive; only one of them should be specified.")
+endif()
+if (testing AND NOT daos AND NOT WIN32)
+  set(daos_mock ON CACHE BOOL "Enable `daos_mock` if `testing` option was set" FORCE)
+endif()
+
+if (daos OR daos_mock)
+  message(STATUS "Looking for libuuid")
+  if(fail-on-missing)
+    find_package(libuuid REQUIRED)
+  else()
+    find_package(libuuid)
+    if(NOT libuuid_FOUND)
+      message(STATUS "libuuid not found. Disabling DAOS support")
+      set(daos OFF CACHE BOOL "Disabled (libuuid not found)" FORCE)
+      set(daos_mock OFF CACHE BOOL "Disabled (libuuid not found)" FORCE)
+    endif()
+  endif()
+endif()
+if (daos)
+  message(STATUS "Looking for DAOS")
+  if(fail-on-missing)
+    find_package(DAOS REQUIRED)
+  else()
+    find_package(DAOS)
+    if(NOT DAOS_FOUND)
+      message(STATUS "libdaos not found. Disabling DAOS support")
+      set(daos OFF CACHE BOOL "Disabled (libdaos not found)" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for TBB---------------------------------------------------------------------
 if(imt AND NOT builtin_tbb)
   message(STATUS "Looking for TBB")
@@ -1203,6 +1239,27 @@ if(imt AND NOT builtin_tbb)
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
     endif()
   endif()
+
+  # Check that the found TBB does not use captured exceptions. If the header
+  # <tbb/tbb_config.h> does not exist, assume that we have oneTBB newer than
+  # version 2021, which does not have captured exceptions anyway.
+  if(TBB_FOUND AND EXISTS "${TBB_INCLUDE_DIRS}/tbb/tbb_config.h")
+    set(CMAKE_REQUIRED_INCLUDES "${TBB_INCLUDE_DIRS}")
+    check_cxx_source_compiles("
+#include <tbb/tbb_config.h>
+#if TBB_USE_CAPTURED_EXCEPTION == 1
+#error TBB uses tbb::captured_exception, not suitable for ROOT!
+#endif
+int main() { return 0; }" tbb_exception_result)
+    if(NOT tbb_exception_result)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Found TBB uses tbb::captured_exception, not suitable for ROOT!")
+      endif()
+      message(STATUS "Found TBB uses tbb::captured_exception, enabling 'builtin_tbb' option")
+      set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled and found TBB is not suitable" FORCE)
+    endif()
+  endif()
+
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
 endif()
 
@@ -1223,6 +1280,11 @@ if(builtin_tbb)
   endif()
   if(MSVC)
     set(vsdir "vs2013")
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      set(tbb_arch x64)
+    else()
+      set(tbb_arch Win32)
+    endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
@@ -1230,16 +1292,16 @@ if(builtin_tbb)
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
+      BUILD_COMMAND devenv.exe /useenv /build "Release|${tbb_arch}" build/${vsdir}/makefile.sln
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
@@ -1534,6 +1596,30 @@ if (vecgeom)
       message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/cmake/VecGeom")
       message(STATUS "              For the time being switching OFF 'vecgeom' option")
       set(vecgeom OFF CACHE BOOL "Disabled because VecGeom not found (${vecgeom_description})" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for protobuf-------------------------------------------------------------------
+
+if(tmva-sofie)
+  message(STATUS "Looking for Protobuf")
+  find_package(Protobuf)
+  if(NOT Protobuf_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Protobuf libraries not found and they are required (tmva-sofie option enabled)")
+    else()
+      message(STATUS "Protobuf not found. Switching off tmva-sofie option")
+      set(tmva-sofie OFF CACHE BOOL "Disabled because Protobuf not found" FORCE)
+    endif()
+  else()
+    if(Protobuf_VERSION LESS 3.0)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Protobuf libraries found but is less than the version required (3.0) (tmva-sofie option enabled)")
+      else()
+        message(STATUS "Protobuf found but its version is not high enough (>3.0). Switching off tmva-sofie option")
+        set(tmva-sofie OFF CACHE BOOL "Disabled because found Protobuf version is not enough" FORCE)
+      endif()
     endif()
   endif()
 endif()
@@ -1851,7 +1937,6 @@ endif()
 # using atomic operations without the help of a library. Only if it can't do we start
 # looking for libatomic for the build.
 #
-include(CheckCXXSourceCompiles)
 check_cxx_source_compiles("
 #include <atomic>
 #include <cstdint>

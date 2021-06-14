@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGX11
-*/
-
 // This file contains the implementation of the GUI methods of the
 // TGX11 class. Most of the methods are used by the machine independent
 // GUI classes (libGUI.so).
@@ -172,16 +169,6 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 {
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
-
-   // force segV. to allow backtracing the error with gdb
-   if (gDebug == (Long_t)gVirtualX) {
-      gSystem->ProcessEvents();
-      ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
-               (UInt_t)err->resourceid, err->request_code);
-      int *kil = (int*)1;
-      delete kil;
-      return 0;
-   }
 
    if (!err->resourceid) return 0;
 

@@ -19,6 +19,9 @@ if(NOT GENERATOR_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
   endif()
 endif()
 
+# Make the build-type check case insensitive. This is variable is used in multiple places:
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE_UPPER)
+
 include(CheckLanguage)
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
 if(fortran)
@@ -240,10 +243,9 @@ int main() {}
 " GLIBCXX_USE_CXX11_ABI)
 
 #---Print the final compiler flags--------------------------------------------------------------------
-string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "ROOT Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
-message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${BUILD_TYPE}}')")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
+message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}')")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")

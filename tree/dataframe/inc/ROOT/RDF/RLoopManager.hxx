@@ -12,6 +12,7 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/RDF/RNodeBase.hxx"
+#include "ROOT/RDF/RDataBlockNotifier.hxx"
 
 #include <functional>
 #include <map>
@@ -95,6 +96,8 @@ class RLoopManager : public RNodeBase {
       }
    };
 
+   friend struct RCallCleanUpTask;
+
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
    std::vector<RDFInternal::RActionBase *> fRunActions;    ///< Non-owning pointers to actions already run
    std::vector<RFilterBase *> fBookedFilters;
@@ -113,6 +116,8 @@ class RLoopManager : public RNodeBase {
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
    std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
+   std::vector<Callback_t> fDataBlockCallbacks; ///< Registered callbacks to call at the beginning of each "data block"
+   RDFInternal::RDataBlockNotifier fDataBlockNotifier;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
    /// Registry of per-slot value pointers for booked data-source columns
@@ -132,8 +137,9 @@ class RLoopManager : public RNodeBase {
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
    void CleanUpNodes();
-   void CleanUpTask(unsigned int slot);
+   void CleanUpTask(TTreeReader *r, unsigned int slot);
    void EvalChildrenCounts();
+   void SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot);
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -190,6 +196,8 @@ public:
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
 
    const ColumnNames_t &GetBranchNames();
+
+   void AddDataBlockCallback(std::function<void(unsigned int)> &&callback);
 };
 
 } // ns RDF

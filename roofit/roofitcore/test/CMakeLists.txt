@@ -7,10 +7,13 @@
 # @author Danilo Piparo CERN, 2018
 
 ROOT_ADD_GTEST(simple simple.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooCacheManager testRooCacheManager.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testWorkspace testWorkspace.cxx LIBRARIES RooFitCore RooFit RooStats)
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooDataHist testRooDataHist.cxx LIBRARIES RooFitCore
-    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv4_ref.root)
+    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv4_ref.root
+                     ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv5_ref.root
+                     ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv6_ref.root)
 endif()
 ROOT_ADD_GTEST(testRooSimPdfBuilder testRooSimPdfBuilder.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooWrapperPdf testRooWrapperPdf.cxx LIBRARIES Gpad RooFitCore)
@@ -19,6 +22,7 @@ ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooAbsCollection testRooAbsCollection.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooDataSet testRooDataSet.cxx LIBRARIES Tree RooFitCore)
 ROOT_ADD_GTEST(testRooFormula testRooFormula.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooProdPdf testRooProdPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testProxiesAndCategories testProxiesAndCategories.cxx
   LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testProxiesAndCategories_1.root
@@ -34,4 +38,5 @@ if(NOT MSVC OR win_broken_tests)
 endif()
 ROOT_ADD_GTEST(testRooProductPdf testRooProductPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testNaNPacker testNaNPacker.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore RooFit)
 

@@ -160,30 +160,15 @@ Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update dependent elements' bounding box and mark scenes
-/// containing element root or its children as requiring a repaint.
+/// Update dependent elements' bounding boxes.
 
-void REveProjectionManager::UpdateDependentElsAndScenes(REveElement * /*root*/)
+void REveProjectionManager::UpdateDependentElements(REveElement * /*root*/)
 {
    for (auto &d: fDependentEls) {
       TAttBBox* bbox = dynamic_cast<TAttBBox *>(d);
       if (bbox)
          bbox->ComputeBBox();
    }
-
-   static int warn_count = 0;
-   if (++warn_count <= 5)
-      Warning("REveProjectionManager::UpdateDependentElsAndScenes",
-              "Figure out if scene stamping is still needed.");
-   /*
-   List_t scenes;
-   root->CollectScenes(scenes);
-   if (root == this)
-      for (auto &n : fNieces)
-         n->CollectScenes(scenes);
-
-   REX::gEve->ScenesChanged(scenes);
-   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -259,7 +244,7 @@ REveElement* REveProjectionManager::ImportElements(REveElement* el,
       AssertBBoxExtents(0.1);
       StampTransBBox();
 
-      UpdateDependentElsAndScenes(new_el);
+      UpdateDependentElements(new_el);
 
       if (ext_list)
          AddNiece(new_el);
@@ -291,7 +276,7 @@ REveElement* REveProjectionManager::SubImportElements(REveElement* el,
       AssertBBoxExtents(0.1);
       StampTransBBox();
 
-      UpdateDependentElsAndScenes(new_el);
+      UpdateDependentElements(new_el);
    }
    return new_el;
 }
@@ -326,7 +311,7 @@ Int_t REveProjectionManager::SubImportChildren(REveElement* el, REveElement* pro
       AssertBBoxExtents(0.1);
       StampTransBBox();
 
-      UpdateDependentElsAndScenes(proj_parent);
+      UpdateDependentElements(proj_parent);
    }
    return (Int_t) new_els.size();
 }
@@ -370,7 +355,7 @@ void REveProjectionManager::ProjectChildren()
    AssertBBoxExtents(0.1);
    StampTransBBox();
 
-   UpdateDependentElsAndScenes(this);
+   UpdateDependentElements(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

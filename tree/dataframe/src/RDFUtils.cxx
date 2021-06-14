@@ -137,7 +137,8 @@ std::string ComposeRVecTypeName(const std::string &valueType)
 
 std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
 {
-   std::string colType = leaf->GetTypeName();
+   const char *colTypeCStr = leaf->GetTypeName();
+   std::string colType = colTypeCStr == nullptr ? "" : colTypeCStr;
    if (colType.empty())
       throw std::runtime_error("Could not deduce type of leaf " + colName);
    if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() == 1) {
@@ -164,7 +165,7 @@ std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
 std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 {
    // look for TLeaf either with GetLeaf(colName) or with GetLeaf(branchName, leafName) (splitting on last dot)
-   auto leaf = t.GetLeaf(colName.c_str());
+   auto *leaf = t.GetLeaf(colName.c_str());
    if (!leaf)
       leaf = t.FindLeaf(colName.c_str()); // try harder
    if (!leaf) {
@@ -178,9 +179,9 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
       }
    }
    if (leaf)
-      return GetLeafTypeName(leaf, colName);
+      return GetLeafTypeName(leaf, std::string(leaf->GetFullName()));
 
-   // we could not find a leaf named colName, so we look for a TBranchElement
+   // we could not find a leaf named colName, so we look for a branch called like this
    auto branch = t.GetBranch(colName.c_str());
    if (!branch)
       branch = t.FindBranch(colName.c_str()); // try harder
@@ -202,10 +203,15 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
             }
             return be->GetClassName();
          }
+      } else if (branch->IsA() == TBranch::Class() && branch->GetListOfLeaves()->GetEntriesUnsafe() == 1) {
+         // normal branch (not a TBranchElement): if it has only one leaf, we pick the type of the leaf:
+         // RDF and TTreeReader allow referring to branch.leaf as just branch if branch has only one leaf
+         leaf = static_cast<TLeaf *>(branch->GetListOfLeaves()->UncheckedAt(0));
+         return GetLeafTypeName(leaf, std::string(leaf->GetFullName()));
       }
    }
 
-   // colName is not a leaf nor a TBranchElement
+   // we could not find a branch or a leaf called colName
    return std::string();
 }
 

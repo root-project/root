@@ -4,6 +4,7 @@
 /// This macro generates two RH1D, fills them and draw with different options in RCanvas.
 /// The canvas is display in the web browser
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2015-03-22
@@ -67,7 +68,7 @@ void draw_rh1()
    subpads[0][1]->Draw(pHist1)->Text(true).AttrText().SetColor(col1);
    subpads[0][1]->Draw(pHist2)->Marker().AttrMarker().SetColor(col2).SetStyle(30).SetSize(1.5);
 
-   // text and marker draw options
+   // bar draw options
    subpads[1][1]->Draw<RFrameTitle>("Bar() draw options");
    subpads[1][1]->Draw(pHist1)->Bar(0,0.5).AttrFill().SetColor(col1);
    subpads[1][1]->Draw(pHist2)->Bar(0.5,0.5,true).AttrFill().SetColor(col2);

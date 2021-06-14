@@ -122,7 +122,7 @@ static int pp_set(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* value)
         ptr = &address;
 
 // actual conversion; return on success
-    if (pyprop->fConverter && pyprop->fConverter->ToMemory(value, ptr))
+    if (pyprop->fConverter && pyprop->fConverter->ToMemory(value, ptr, (PyObject*)pyobj))
         return 0;
 
 // set a python error, if not already done

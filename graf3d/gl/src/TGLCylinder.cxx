@@ -627,8 +627,8 @@ Short_t TGLCylinder::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
 void TGLCylinder::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    if (gDebug > 4) {
-      Info("TGLCylinder::DirectDraw", "this %ld (class %s) LOD %d",
-           (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLCylinder::DirectDraw", "this %zd (class %s) LOD %d",
+           (size_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    // As we are now support display list caching we can create, draw and

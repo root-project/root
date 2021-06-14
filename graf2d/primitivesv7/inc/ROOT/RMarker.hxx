@@ -28,8 +28,10 @@ namespace Experimental {
 
 class RMarker : public RDrawable {
 
-   RPadPos fP;                              ///< position
-   RAttrMarker fMarkerAttr{this, "marker"}; ///<! marker attributes
+   RPadPos fP;                                         ///< position
+   RAttrMarker fAttrMarker{this, "marker"};            ///<! marker attributes
+   RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
+   RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 
 public:
    RMarker() : RDrawable("marker") {}
@@ -43,13 +45,15 @@ public:
    }
    const RPadPos &GetP() const { return fP; }
 
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RMarker &SetAttrMarker(const RAttrMarker &attr)
-   {
-      fMarkerAttr = attr;
-      return *this;
-   }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
+   const RAttrMarker &AttrMarker() const { return fAttrMarker; }
+   RAttrMarker &AttrMarker() { return fAttrMarker; }
+
+   void SetOnFrame(bool on = true) { fOnFrame = on; }
+   bool GetOnFrame() const { return fOnFrame; }
+
+   void SetClipping(bool on = true) { fClipping = on; }
+   bool GetClipping() const { return fClipping; }
+
 };
 
 } // namespace Experimental

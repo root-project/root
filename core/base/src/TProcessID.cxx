@@ -208,7 +208,7 @@ void TProcessID::Cleanup()
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
    delete fgPIDs;
-   fgPIDs = 0;
+   fgPIDs = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +224,7 @@ void TProcessID::Clear(Option_t *)
          if (obj) {
             ULong64_t hash = Void_Hash(obj);
             fgObjPIDs->Remove(hash,(Long64_t)obj);
-            (*fObjects)[i] = 0;
+            (*fObjects)[i] = nullptr;
          }
       }
    }
@@ -268,11 +268,11 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
    Int_t pid = (uid>>24)&0xff;
    if (pid==0xff) {
       // Look up the pid in the table (pointer,pid)
-      if (fgObjPIDs==0) return 0;
+      if (fgObjPIDs==nullptr) return nullptr;
       ULong_t hash = Void_Hash(obj);
 
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
-      pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
+      pid = fgObjPIDs->GetValue(hash,(Longptr_t)obj);
       return (TProcessID*)fgPIDs->At(pid);
    } else {
       auto current = gGetProcessWithUIDCache.load();
@@ -333,7 +333,7 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
 
-   if (fObjects==0 || uid >= fObjects->GetSize()) return 0;
+   if (fObjects==0 || uid >= fObjects->GetSize()) return nullptr;
    return fObjects->UncheckedAt(uid);
 }
 
@@ -364,7 +364,7 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 
    R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   if (fgPIDs==0) return kFALSE;
+   if (fgPIDs==nullptr) return kFALSE;
    if (fgPIDs->IndexOf(pid) >= 0) {
       gIsValidCache = pid;
       return kTRUE;
@@ -394,14 +394,14 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
       // We have more than 255 pids we need to store this
       // pointer in the table(pointer,pid) since there is no
       // more space in fUniqueID
-      if (fgObjPIDs==0) fgObjPIDs = new TExMap;
+      if (fgObjPIDs==nullptr) fgObjPIDs = new TExMap;
       ULong_t hash = Void_Hash(obj);
 
       // We use operator() rather than Add() because
       // if the address has already been registered, we want to
       // update it's uniqueID (this can easily happen when the
       // referenced object have been stored in a TClonesArray.
-      (*fgObjPIDs)(hash, (Long_t)obj) = GetUniqueID();
+      (*fgObjPIDs)(hash, (Longptr_t)obj) = GetUniqueID();
    }
 }
 
@@ -424,7 +424,7 @@ void TProcessID::RecursiveRemove(TObject *obj)
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);
       }
-      (*fObjects)[uid] = 0; // Avoid recalculation of fLast (compared to ->RemoveAt(uid))
+      (*fObjects)[uid] = nullptr; // Avoid recalculation of fLast (compared to ->RemoveAt(uid))
    }
 }
 

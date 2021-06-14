@@ -16,17 +16,17 @@ TEST(Primitives, RBox)
    RCanvas canv;
    auto box = canv.Draw<RBox>(RPadPos(0.1_normal, 0.3_normal), RPadPos(0.3_normal,0.6_normal));
 
-   box->AttrBox().AttrBorder().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
-   box->AttrBox().AttrFill().SetColor(RColor::kBlue).SetStyle(6);
+   box->AttrBorder().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
+   box->AttrFill().SetColor(RColor::kBlue).SetStyle(6);
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(box->GetAttrBox().GetAttrBorder().GetColor(), RColor::kRed);
-   EXPECT_DOUBLE_EQ(box->GetAttrBox().GetAttrBorder().GetWidth(), 5.);
-   EXPECT_EQ(box->GetAttrBox().GetAttrBorder().GetStyle(), 7);
+   EXPECT_EQ(box->AttrBorder().GetColor(), RColor::kRed);
+   EXPECT_DOUBLE_EQ(box->AttrBorder().GetWidth(), 5.);
+   EXPECT_EQ(box->AttrBorder().GetStyle(), 7);
 
-   EXPECT_EQ(box->GetAttrBox().GetAttrFill().GetColor(), RColor::kBlue);
-   EXPECT_EQ(box->GetAttrBox().GetAttrFill().GetStyle(), 6);
+   EXPECT_EQ(box->AttrFill().GetColor(), RColor::kBlue);
+   EXPECT_EQ(box->AttrFill().GetStyle(), 6);
 }
 
 // Test RLine API
@@ -39,9 +39,9 @@ TEST(Primitives, RLine)
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(line->GetAttrLine().GetColor(), RColor::kRed);
-   EXPECT_DOUBLE_EQ(line->GetAttrLine().GetWidth(), 5.);
-   EXPECT_EQ(line->GetAttrLine().GetStyle(), 7);
+   EXPECT_EQ(line->AttrLine().GetColor(), RColor::kRed);
+   EXPECT_DOUBLE_EQ(line->AttrLine().GetWidth(), 5.);
+   EXPECT_EQ(line->AttrLine().GetStyle(), 7);
 }
 
 // Test RMarker API
@@ -54,9 +54,9 @@ TEST(Primitives, RMarker)
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(marker->GetAttrMarker().GetColor(), RColor::kGreen);
-   EXPECT_DOUBLE_EQ(marker->GetAttrMarker().GetSize(), 2.5);
-   EXPECT_EQ(marker->GetAttrMarker().GetStyle(), 7);
+   EXPECT_EQ(marker->AttrMarker().GetColor(), RColor::kGreen);
+   EXPECT_DOUBLE_EQ(marker->AttrMarker().GetSize(), 2.5);
+   EXPECT_EQ(marker->AttrMarker().GetStyle(), 7);
 }
 
 // Test RText API
@@ -71,33 +71,11 @@ TEST(Primitives, RText)
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(text->GetText(), "Hello World");
-   EXPECT_EQ(text->GetAttrText().GetColor(), RColor::kBlack);
-   EXPECT_DOUBLE_EQ(text->GetAttrText().GetSize(), 12.5);
-   EXPECT_DOUBLE_EQ(text->GetAttrText().GetAngle(), 90.);
-   EXPECT_EQ(text->GetAttrText().GetAlign(), 13);
-   EXPECT_EQ(text->GetAttrText().GetFontFamily(), "Arial");
-}
-
-
-// Test same color functionality
-TEST(Primitives, SameColor)
-{
-   RCanvas canv;
-   auto line1 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
-   auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
-   auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
-
-   line1->AttrLine().AttrColor().SetAuto();
-   line2->AttrLine().AttrColor().SetAuto();
-   line3->AttrLine().AttrColor().SetAuto();
-
-   canv.AssignAutoColors();
-
-   EXPECT_EQ(canv.NumPrimitives(), 3u);
-
-   EXPECT_EQ(line1->GetAttrLine().GetColor(), RColor::kRed);
-   EXPECT_EQ(line2->GetAttrLine().GetColor(), RColor::kGreen);
-   EXPECT_EQ(line3->GetAttrLine().GetColor(), RColor::kBlue);
+   EXPECT_EQ(text->AttrText().GetColor(), RColor::kBlack);
+   EXPECT_DOUBLE_EQ(text->AttrText().GetSize(), 12.5);
+   EXPECT_DOUBLE_EQ(text->AttrText().GetAngle(), 90.);
+   EXPECT_EQ(text->AttrText().GetAlign(), 13);
+   EXPECT_EQ(text->AttrText().GetFontFamily(), "Arial");
 }
 
 // Test RLegend API
@@ -123,7 +101,7 @@ TEST(Primitives, RLegend)
 
    EXPECT_EQ(legend->NumEntries(), 3u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
-   EXPECT_EQ(legend->GetAttrFill().GetColor(), RColor::kWhite);
+   EXPECT_EQ(legend->AttrFill().GetColor(), RColor::kWhite);
 }
 
 // Test RPaveText API
@@ -148,15 +126,15 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->GetLine(1), "Second line");
    EXPECT_EQ(text->GetLine(2), "Third line");
 
-   EXPECT_EQ(text->GetAttrText().GetColor(), RColor::kBlack);
-   EXPECT_DOUBLE_EQ(text->GetAttrText().GetSize(), 12);
-   EXPECT_EQ(text->GetAttrText().GetAlign(), 13);
-   EXPECT_EQ(text->GetAttrText().GetFontFamily(), "Times New Roman");
+   EXPECT_EQ(text->AttrText().GetColor(), RColor::kBlack);
+   EXPECT_DOUBLE_EQ(text->AttrText().GetSize(), 12);
+   EXPECT_EQ(text->AttrText().GetAlign(), 13);
+   EXPECT_EQ(text->AttrText().GetFontFamily(), "Times New Roman");
 
-   EXPECT_EQ(text->GetAttrBorder().GetColor(), RColor::kRed);
-   EXPECT_EQ(text->GetAttrBorder().GetWidth(), 3);
+   EXPECT_EQ(text->AttrBorder().GetColor(), RColor::kRed);
+   EXPECT_EQ(text->AttrBorder().GetWidth(), 3);
 
-   EXPECT_EQ(text->GetAttrFill().GetColor(), RColor::kBlue);
-   EXPECT_EQ(text->GetAttrFill().GetStyle(), 3003);
+   EXPECT_EQ(text->AttrFill().GetColor(), RColor::kBlue);
+   EXPECT_EQ(text->AttrFill().GetStyle(), 3003);
 }
 

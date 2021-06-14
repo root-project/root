@@ -531,7 +531,7 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
       if (!clActual)
          clActual = TObject::Class();
       else if (clActual != TObject::Class())
-         ptr = (void *)((Long_t)obj - clActual->GetBaseClassOffset(TObject::Class()));
+         ptr = (void *)((Longptr_t)obj - clActual->GetBaseClassOffset(TObject::Class()));
    }
 
    return ConvertToJSON(ptr, clActual, compact, member_name);
@@ -1218,8 +1218,14 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
 
    switch (special_kind) {
    case 0:
-      if (!base_class)
-         elem_name = elem->GetName();
+      if (base_class) return;
+      elem_name = elem->GetName();
+      if (strcmp(elem_name,"fLineStyle") == 0)
+         if ((strcmp(elem->GetTypeName(),"TString") == 0) && (strcmp(elem->GetFullName(),"fLineStyle[30]") == 0)) {
+            auto st1 = fStack.at(fStack.size() - 2).get();
+            if (st1->IsStreamerInfo() && st1->fInfo && (strcmp(st1->fInfo->GetName(),"TStyle") == 0))
+               elem_name = "fLineStyles";
+         }
       break;
    case TClassEdit::kVector: elem_name = "fVector"; break;
    case TClassEdit::kList: elem_name = "fList"; break;
@@ -4024,10 +4030,9 @@ void TBufferJSON::JsonWriteConstChar(const char *value, Int_t len, const char * 
          len = strlen(value);
 
       for (Int_t n = 0; n < len; n++) {
-         char c = value[n];
-         if (c == 0)
-            break;
+         unsigned char c = value[n];
          switch (c) {
+         case 0: n = len; break;
          case '\n': fValue.Append("\\n"); break;
          case '\t': fValue.Append("\\t"); break;
          case '\"': fValue.Append("\\\""); break;
@@ -4037,10 +4042,26 @@ void TBufferJSON::JsonWriteConstChar(const char *value, Int_t len, const char * 
          case '\r': fValue.Append("\\r"); break;
          case '/': fValue.Append("\\/"); break;
          default:
-            if ((c > 31) && (c < 127))
-               fValue.Append(c);
-            else
+            if (c < 31) {
                fValue.Append(TString::Format("\\u%04x", (unsigned)c));
+            } else if (c < 0x80) {
+               fValue.Append(c);
+            } else if ((n < len - 1) && ((c & 0xe0) == 0xc0) && ((value[n+1] & 0xc0) == 0x80)) {
+               unsigned code = ((unsigned)value[n+1] & 0x3f) | (((unsigned) c & 0x1f) << 6);
+               fValue.Append(TString::Format("\\u%04x", code));
+               n++;
+            } else if ((n < len - 2) &&  ((c & 0xf0) == 0xe0) && ((value[n+1] & 0xc0) == 0x80) && ((value[n+2] & 0xc0) == 0x80)) {
+               unsigned code = ((unsigned)value[n+2] & 0x3f) | (((unsigned) value[n+1] & 0x3f) << 6) | (((unsigned) c & 0x0f) << 12);
+               fValue.Append(TString::Format("\\u%04x", code));
+               n+=2;
+            } else if ((n < len - 3) && ((c & 0xf8) == 0xf0) && ((value[n+1] & 0xc0) == 0x80) && ((value[n+2] & 0xc0) == 0x80) && ((value[n+3] & 0xc0) == 0x80)) {
+               unsigned code = ((unsigned)value[n+3] & 0x3f) | (((unsigned) value[n+2] & 0x3f) << 6) | (((unsigned) value[n+1] & 0x3f) << 12) | (((unsigned) c & 0x07) << 18);
+               // TODO: no idea how to add codes which are higher then 0xFFFF
+               fValue.Append(TString::Format("\\u%04x\\u%04x", code & 0xffff, code >> 16));
+               n+=3;
+            } else {
+               fValue.Append(TString::Format("\\u%04x", (unsigned)c));
+            }
          }
       }
 

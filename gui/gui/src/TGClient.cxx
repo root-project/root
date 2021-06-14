@@ -407,7 +407,7 @@ Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
       status = kFALSE;
    } else if (!gVirtualX->AllocColor(attributes.fColormap, color)) {
       Warning("GetColorByName", "couldn't retrieve color %s.\n"
-              "Please close any other application, like netscape, "
+              "Please close any other application, like web browsers, "
               "that might exhaust\nthe colormap and start ROOT again", name);
       status = kFALSE;
    }

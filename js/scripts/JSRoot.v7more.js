@@ -8,11 +8,12 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawText() {
       let text      = this.getObject(),
           pp        = this.getPadPainter(),
-          use_frame = false,
-          p         = pp.getCoordinate(text.fPos),
+          onframe   = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+          clipping  = onframe ? this.v7EvalAttr("clipping", false) : false,
+          p         = pp.getCoordinate(text.fPos, onframe),
           textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
 
-      this.createG(use_frame);
+      this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
       this.startTextDrawing(textFont, 'font');
 
@@ -21,20 +22,21 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
       return this.finishTextDrawing();
    }
 
-
    // =================================================================================
 
    function drawLine() {
 
        let line         = this.getObject(),
            pp           = this.getPadPainter(),
-           p1           = pp.getCoordinate(line.fP1),
-           p2           = pp.getCoordinate(line.fP2),
+           onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+           clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
+           p1           = pp.getCoordinate(line.fP1, onframe),
+           p2           = pp.getCoordinate(line.fP2, onframe),
            line_width   = this.v7EvalAttr("line_width", 1),
            line_style   = this.v7EvalAttr("line_style", 1),
            line_color   = this.v7EvalColor("line_color", "black");
 
-       this.createG();
+       this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
        this.draw_g
            .append("svg:line")
@@ -54,17 +56,19 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
        let box          = this.getObject(),
            pp           = this.getPadPainter(),
-           p1           = pp.getCoordinate(box.fP1),
-           p2           = pp.getCoordinate(box.fP2),
-           line_width   = this.v7EvalAttr( "box_border_width", 1),
-           line_style   = this.v7EvalAttr( "box_border_style", 1),
-           line_color   = this.v7EvalColor( "box_border_color", "black"),
-           fill_color   = this.v7EvalColor( "box_fill_color", "white"),
-           fill_style   = this.v7EvalAttr( "box_fill_style", 1),
-           round_width  = this.v7EvalAttr( "box_round_width", 0), // not yet exists
-           round_height = this.v7EvalAttr( "box_round_height", 0); // not yet exists
+           onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+           clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
+           p1           = pp.getCoordinate(box.fP1, onframe),
+           p2           = pp.getCoordinate(box.fP2, onframe),
+           line_width   = this.v7EvalAttr("border_width", 1),
+           line_style   = this.v7EvalAttr("border_style", 1),
+           line_color   = this.v7EvalColor("border_color", "black"),
+           fill_color   = this.v7EvalColor("fill_color", "white"),
+           fill_style   = this.v7EvalAttr("fill_style", 1),
+           border_rx    = this.v7EvalAttr("border_rx", 0),
+           border_ry    = this.v7EvalAttr("border_ry", 0);
 
-    this.createG();
+    this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
     if (fill_style == 0) fill_color = "none";
 
@@ -74,8 +78,8 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
         .attr("width", p2.x-p1.x)
         .attr("y", p2.y)
         .attr("height", p1.y-p2.y)
-        .attr("rx", round_width)
-        .attr("ry", round_height)
+        .attr("rx", border_rx || null)
+        .attr("ry", border_ry || null)
         .style("stroke", line_color)
         .attr("stroke-width", line_width)
         .attr("fill", fill_color)
@@ -87,14 +91,16 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawMarker() {
        let marker       = this.getObject(),
            pp           = this.getPadPainter(),
-           p            = pp.getCoordinate(marker.fP),
+           onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+           clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
+           p            = pp.getCoordinate(marker.fP, onframe),
            marker_size  = this.v7EvalAttr( "marker_size", 1),
            marker_style = this.v7EvalAttr( "marker_style", 1),
            marker_color = this.v7EvalColor( "marker_color", "black"),
            att          = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size }),
            path         = att.create(p.x, p.y);
 
-       this.createG();
+       this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
        if (path)
           this.draw_g.append("svg:path")
@@ -106,7 +112,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawLegendContent() {
       let legend     = this.getObject(),
-          textFont  = this.v7EvalFont("legend_text", { size: 12, color: "black", align: 22 }),
+          textFont   = this.v7EvalFont("legend_text", { size: 12, color: "black", align: 22 }),
           width      = this.pave_width,
           height     = this.pave_height,
           nlines     = legend.fEntries.length,

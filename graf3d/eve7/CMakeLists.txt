@@ -135,8 +135,23 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
 
 if(builtin_nlohmannjson)
    target_include_directories(ROOTEve PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
+   target_compile_definitions(ROOTEve INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
 else()
    target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
+
+   get_target_property(inc_dirs nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+   foreach(dir ${inc_dirs})
+      if(EXISTS "${dir}/nlohmann/json_fwd.hpp")
+         set(found_fwd true)
+      endif()
+   endforeach()
+
+   if(found_fwd)
+      target_compile_definitions(ROOTEve INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
+   else()
+      message("-- missing nlohmann/json_fwd.hpp required by eve7")
+   endif()
+
 endif()
 
 # this is required for glew

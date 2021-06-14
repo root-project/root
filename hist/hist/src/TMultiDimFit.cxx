@@ -111,7 +111,7 @@
  where \f$ P_{li}\f$ is the leading power of variable \f$ x_i\f$ in function \f$ F_l\f$ (TMultiDimFit::MakeCandidates).
  So the number of functions increase with \f$ Q\f$ (1, 2 is fine, 5 is way out).
 
- ## Gram-Schmidt Orthogonalisation</A>
+ ## Gram-Schmidt Orthogonalisation
  To further reduce the number of functions in the final expression,
  only those functions that significantly reduce \f$ S\f$ is chosen. What
  `significant' means, is chosen by the user, and will be

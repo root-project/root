@@ -40,7 +40,7 @@ d = ROOT.RooDataSet("d", "d", ROOT.RooArgSet(x, y, c))
 for i in range(1000):
     x.setVal(i / 50 - 10)
     y.setVal(math.sqrt(1.0 * i))
-    if (i % 2):
+    if i % 2:
         c.setLabel("Plus")
     else:
         c.setLabel("Minus")
@@ -116,15 +116,14 @@ y.setBins(10)
 dh = ROOT.RooDataHist("dh", "binned version of d", ROOT.RooArgSet(x, y), d)
 dh.Print("v")
 
-yframe = y.frame(ROOT.RooFit.Bins(10), ROOT.RooFit.Title(
-    "Operations on binned datasets"))
+yframe = y.frame(ROOT.RooFit.Bins(10), ROOT.RooFit.Title("Operations on binned datasets"))
 dh.plotOn(yframe)  # plot projection of 2D binned data on y
 
 # Examine the statistics of a binned dataset
 print(">> number of bins in dh   : ", dh.numEntries())
-print(">> sum of weights in dh   : ", dh.sum(ROOT.kFALSE))
+print(">> sum of weights in dh   : ", dh.sum(False))
 # accounts for bin volume
-print(">> integral over histogram: ", dh.sum(ROOT.kTRUE))
+print(">> integral over histogram: ", dh.sum(True))
 
 # Locate a bin from a set of coordinates and retrieve its properties
 x.setVal(0.3)
@@ -144,8 +143,7 @@ dh2 = dh.reduce(ROOT.RooArgSet(y), "x>0")
 dh2.Print("v")
 
 # Add dh2 to yframe and redraw
-dh2.plotOn(yframe, ROOT.RooFit.LineColor(ROOT.kRed),
-           ROOT.RooFit.MarkerColor(ROOT.kRed))
+dh2.plotOn(yframe, ROOT.RooFit.LineColor(ROOT.kRed), ROOT.RooFit.MarkerColor(ROOT.kRed))
 
 # Saving and loading from file
 # -------------------------------------------------------

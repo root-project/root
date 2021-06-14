@@ -105,7 +105,6 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
    fcntl(pipeHandle[0], F_SETPIPE_SZ, MAX_PIPE_SIZE);
 #endif
    dup2(pipeHandle[1], FILENO);
-   close(pipeHandle[1]);
 }
 
 void JupyROOTExecutorHandler::InitCapture()
@@ -123,6 +122,12 @@ void JupyROOTExecutorHandler::EndCapture()
       Poll();
       dup2(fSaved_stdout, STDOUT_FILENO);
       dup2(fSaved_stderr, STDERR_FILENO);
+      close(fSaved_stdout);
+      close(fSaved_stderr);
+      close(fStdout_pipe[0]);
+      close(fStdout_pipe[1]);
+      close(fStderr_pipe[0]);
+      close(fStderr_pipe[1]);
       fCapturing = false;
    }
 }

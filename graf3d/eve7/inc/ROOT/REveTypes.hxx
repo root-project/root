@@ -17,13 +17,14 @@
 
 #include "TString.h"
 
+#include <sstream>
+#include <iostream>
 class TGeoManager;
-
 namespace ROOT {
 namespace Experimental {
-
 typedef unsigned int ElementId_t;
 
+class RLogChannel;
 
 //==============================================================================
 // Exceptions, string functions
@@ -52,6 +53,9 @@ REveException operator+(const REveException &s1, const std::string &s2);
 REveException operator+(const REveException &s1, const TString &s2);
 REveException operator+(const REveException &s1, const char *s2);
 REveException operator+(const REveException &s1, ElementId_t x);
+
+/// Log channel for Eve diagnostics.
+RLogChannel &REveLog();
 
 } // namespace Experimental
 } // namespace ROOT

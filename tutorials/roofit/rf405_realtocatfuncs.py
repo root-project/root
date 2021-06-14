@@ -16,8 +16,7 @@ import ROOT
 
 # Define a dummy PDF in x
 x = ROOT.RooRealVar("x", "x", 0, 10)
-a = ROOT.RooArgusBG("a", "argus(x)", x, ROOT.RooFit.RooConst(
-    10), ROOT.RooFit.RooConst(-1))
+a = ROOT.RooArgusBG("a", "argus(x)", x, ROOT.RooFit.RooConst(10), ROOT.RooFit.RooConst(-1))
 
 # Generate a dummy dataset
 data = a.generate(ROOT.RooArgSet(x), 10000)
@@ -29,8 +28,7 @@ data = a.generate(ROOT.RooArgSet(x), 10000)
 # input observable observables to state names. At construction time a 'default'
 # state name must be specified to which all values of x are mapped that are not
 # otherwise assigned
-xRegion = ROOT.RooThresholdCategory(
-    "xRegion", "region of x", x, "Background")
+xRegion = ROOT.RooThresholdCategory("xRegion", "region of x", x, "Background")
 
 # Specify thresholds and state assignments one-by-one.
 # Each statement specifies that all values _below_ the given value
@@ -52,18 +50,11 @@ xRegion.addThreshold(9.23, "SideBand")
 data.addColumn(xRegion)
 
 # Make plot of data in x
-xframe = x.frame(ROOT.RooFit.Title(
-    "Demo of threshold and binning mapping functions"))
+xframe = x.frame(ROOT.RooFit.Title("Demo of threshold and binning mapping functions"))
 data.plotOn(xframe)
 
 # Use calculated category to select sideband data
-data.plotOn(
-    xframe,
-    ROOT.RooFit.Cut("xRegion==xRegion::SideBand"),
-    ROOT.RooFit.MarkerColor(
-        ROOT.kRed),
-    ROOT.RooFit.LineColor(
-        ROOT.kRed))
+data.plotOn(xframe, Cut="xRegion==xRegion::SideBand", MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
 
 # Create a binning real -> cat function
 # ----------------------------------------------------------------------
@@ -89,16 +80,12 @@ xbtable.Print("v")
 xb = data.addColumn(xBins)
 
 # Define range "alt" as including bins 1,3,5,7,9
-xb.setRange(
-    "alt",
-    "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9")
+xb.setRange("alt", "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9")
 
 # Construct subset of data matching range "alt" but only for the first
 # 5000 events and plot it on the frame
-dataSel = data.reduce(ROOT.RooFit.CutRange(
-    "alt"), ROOT.RooFit.EventRange(0, 5000))
-dataSel.plotOn(xframe, ROOT.RooFit.MarkerColor(ROOT.kGreen),
-               ROOT.RooFit.LineColor(ROOT.kGreen))
+dataSel = data.reduce(ROOT.RooFit.CutRange("alt"), ROOT.RooFit.EventRange(0, 5000))
+dataSel.plotOn(xframe, MarkerColor=ROOT.kGreen, LineColor=ROOT.kGreen)
 
 c = ROOT.TCanvas("rf405_realtocatfuncs", "rf405_realtocatfuncs", 600, 600)
 xframe.SetMinimum(0.01)

@@ -33,7 +33,7 @@ gauss.plotOn(xframe)
 sigma.setVal(3)
 
 # Plot gauss in frame (i.e. in x) and draw frame on canvas
-gauss.plotOn(xframe, ROOT.RooFit.LineColor(ROOT.kRed))
+gauss.plotOn(xframe, LineColor=ROOT.kRed)
 
 # Generate events
 # -----------------------------
@@ -42,8 +42,7 @@ data = gauss.generate(ROOT.RooArgSet(x), 10000)  # ROOT.RooDataSet
 
 # Make a second plot frame in x and draw both the
 # data and the pdf in the frame
-xframe2 = x.frame(ROOT.RooFit.Title(
-    "Gaussian pdf with data"))  # RooPlot
+xframe2 = x.frame(ROOT.RooFit.Title("Gaussian pdf with data"))  # RooPlot
 data.plotOn(xframe2)
 gauss.plotOn(xframe2)
 

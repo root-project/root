@@ -561,7 +561,7 @@ UInt_t Hash(const char *str)
    UInt_t hv  = len; // Mix in the string length.
    UInt_t i   = hv*sizeof(char)/sizeof(UInt_t);
 
-   if (((ULong_t)str)%sizeof(UInt_t) == 0) {
+   if (((ULongptr_t)str)%sizeof(UInt_t) == 0) {
       // str is word aligned
       const UInt_t *p = (const UInt_t*)str;
 
@@ -1330,7 +1330,7 @@ TString *TString::ReadString(TBuffer &b, const TClass *clReq)
    TString *a;
    if (!clRef) {
 
-      a = 0;
+      a = nullptr;
 
    } else {
 
@@ -2187,7 +2187,7 @@ TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
    }
 
    // computing s_out
-   ULong64_t i = ULong64_t(strtoull(s_in.Data(), 0, base_in));
+   ULong64_t i = ULong64_t(strtoull(s_in.Data(), nullptr, base_in));
    s_out = TString::ULLtoa(i, base_out);
    if (isSigned) s_out.Prepend("-");
    return (s_out);
@@ -2349,7 +2349,7 @@ TString TString::Format(const char *va_(fmt), ...)
 static char *SlowFormat(const char *format, va_list ap, int hint)
 {
    static const int fld_size = 2048;
-   TTHREAD_TLS(char*) slowBuffer(0);
+   TTHREAD_TLS(char*) slowBuffer(nullptr);
    TTHREAD_TLS(int) slowBufferSize(0);
 
    if (hint == -1) hint = fld_size;
@@ -2358,8 +2358,8 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
       slowBufferSize = 2 * hint;
       if (hint < 0 || slowBufferSize < 0) {
          slowBufferSize = 0;
-         slowBuffer = 0;
-         return 0;
+         slowBuffer = nullptr;
+         return nullptr;
       }
       slowBuffer = new char[slowBufferSize];
    }
@@ -2375,7 +2375,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
       if (n == slowBufferSize) n++;
       if (n <= 0) {
          va_end(sap);
-         return 0; // int overflow!
+         return nullptr; // int overflow!
       }
       va_end(ap);
       R__VA_COPY(ap, sap);
@@ -2401,10 +2401,10 @@ static char *Format(const char *format, va_list ap)
 
    // a circular formating buffer
    TTHREAD_TLS_ARRAY(char,cb_size,gFormbuf); // gFormbuf[cb_size]; // some slob for form overflow
-   TTHREAD_TLS(char*) gBfree(0);
-   TTHREAD_TLS(char*) gEndbuf(0);
+   TTHREAD_TLS(char*) gBfree(nullptr);
+   TTHREAD_TLS(char*) gEndbuf(nullptr);
 
-   if (gBfree == 0) {
+   if (gBfree == nullptr) {
       gBfree = gFormbuf;
       gEndbuf = &gFormbuf[cb_size-1];
    }
@@ -2460,7 +2460,7 @@ void Printf(const char *va_(fmt), ...)
    va_list ap;
    va_start(ap,va_(fmt));
    if (gPrintViaErrorHandler)
-      ErrorHandler(kPrint, 0, va_(fmt), ap);
+      ErrorHandler(kPrint, nullptr, va_(fmt), ap);
    else {
       char *b = Format(va_(fmt), ap);
       printf("%s\n", b);
@@ -2475,7 +2475,7 @@ void Printf(const char *va_(fmt), ...)
 
 char *Strip(const char *s, char c)
 {
-   if (!s) return 0;
+   if (!s) return nullptr;
 
    int l = strlen(s);
    char *buf = new char[l+1];
@@ -2526,7 +2526,7 @@ char *StrDup(const char *str)
 
 char *Compress(const char *str)
 {
-   if (!str) return 0;
+   if (!str) return nullptr;
 
    const char *p = str;
    char *s, *s1 = new char[strlen(str)+1];

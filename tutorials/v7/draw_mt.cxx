@@ -31,6 +31,7 @@
 #include "TROOT.h"
 
 #include <thread>
+#include <iostream>
 
 // macro must be here while cling is not capable to load
 // library automatically for outlined function see ROOT-10336
@@ -55,15 +56,17 @@ void draw_canvas(const std::string &title, RColor col)
    }
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create(title + " canvas");
+   auto canvas = RCanvas::Create(title);
+
+   canvas->Draw<RFrameTitle>(title);
    canvas->Draw(pHist)->AttrLine().SetColor(col);
    canvas->Draw(pHist2)->AttrLine().SetColor(RColor::kBlue);
 
-   int maxloop = 50;
+   int maxloop = 100;
 
    canvas->Show();
 
-   printf("%s started\n", title.c_str());
+   std::cout << title << " started" <<std::endl;
 
    for (int loop = 0; loop < maxloop; ++loop) {
 
@@ -76,7 +79,7 @@ void draw_canvas(const std::string &title, RColor col)
       canvas->Modified();
 
       canvas->Update();
-      canvas->Run(0.5); // let run canvas code for next 0.5 seconds
+      canvas->Run(0.2); // let run canvas code for next 0.5 seconds
 
       // if (loop == 0)
       //    canvas->SaveAs(title + "_first.png");
@@ -84,27 +87,41 @@ void draw_canvas(const std::string &title, RColor col)
       //    canvas->SaveAs(title + "_last.png");
    }
 
-   printf("%s completed\n", title.c_str());
+   std::cout << title << " completed" <<std::endl;
 
    // remove from global list, will be destroyed with thread exit
    canvas->Remove();
 }
 
-void draw_mt()
+void draw_mt(bool block_main_thread = true)
 {
-   gEnv->SetValue("WebGui.HttpThrd", "yes");
-   gEnv->SetValue("WebGui.SenderThrds", "yes");
+   if (block_main_thread) {
+      // let use special http thread to process requests, do not need main thread
+      // required while gSystem->ProcessEvents() will be blocked
+      gEnv->SetValue("WebGui.HttpThrd", "yes");
+
+      // let create special threads for data sending, optional
+      gEnv->SetValue("WebGui.SenderThrds", "yes");
+   }
 
    ROOT::EnableThreadSafety();
 
    // create instance in main thread, used to assign thread id as well
    RWebWindowsManager::Instance();
 
-   std::thread thrd1(draw_canvas, "First", RColor::kRed);
-   std::thread thrd2(draw_canvas, "Second", RColor::kBlue);
-   std::thread thrd3(draw_canvas, "Third", RColor::kGreen);
+   std::thread thrd1(draw_canvas, "First canvas", RColor::kRed);
+   std::thread thrd2(draw_canvas, "Second canvas", RColor::kBlue);
+   std::thread thrd3(draw_canvas, "Third canvas", RColor::kGreen);
 
-   thrd1.join();
-   thrd2.join();
-   thrd3.join();
+   if (block_main_thread) {
+      // wait until threads execution finished
+      thrd1.join();
+      thrd2.join();
+      thrd3.join();
+   } else {
+      // detach threads and return to CLING
+      thrd1.detach();
+      thrd2.detach();
+      thrd3.detach();
+   }
 }

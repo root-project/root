@@ -102,6 +102,7 @@ public:
    virtual void        EnableErrorOutput(Bool_t on = kTRUE) { fErrorOut = on; }
 
    virtual Bool_t      StartTransaction();
+   virtual Bool_t      HasTransactionInFlight();
    virtual Bool_t      Commit();
    virtual Bool_t      Rollback();
 
