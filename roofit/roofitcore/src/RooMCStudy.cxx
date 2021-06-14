@@ -592,6 +592,15 @@ void RooMCStudy::resetFitParams()
 }
 
 
+namespace {
+
+void overwriteCmdArg(RooLinkedList& cmdList, RooCmdArg& cmd) {
+  if(auto found = cmdList.FindObject(cmd.GetName())) cmdList.Remove(found);
+  cmdList.Add(&cmd);
+}
+
+} // namespace
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal function. Performs actual fit according to specifications
@@ -615,11 +624,11 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
   RooCmdArg plevel = RooFit::PrintLevel(_silence ? -1 : 1) ;
 
   RooLinkedList fitOptList(_fitOptList) ;
-  fitOptList.Add(&save) ;
+  overwriteCmdArg(fitOptList, save) ;
   if (!_projDeps.empty()) {
-    fitOptList.Add(&condo) ;
+    overwriteCmdArg(fitOptList, condo) ;
   }
-  fitOptList.Add(&plevel) ;
+  overwriteCmdArg(fitOptList, plevel) ;
   RooFitResult* fr = _fitModel->fitTo(*data,fitOptList) ;
 
   return fr ;
