@@ -25,14 +25,23 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf)
 {
 }
 
+RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooAbsReal &weight)
+   : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _weight{"_weight", "_weight", this, weight}
+{
+}
+
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
-   : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}
+   : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _weight{"_weight", this, other._weight}
 {
 }
 
 void RooNLLVarNew::computeBatch(double *output, size_t nEvents, RooBatchCompute::DataMap &dataMap) const
 {
-   RooBatchCompute::dispatch->compute(RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, {&*_pdf});
+   RooBatchCompute::VarVector vars = {&*_pdf};
+   if (_weight.operator->())
+      vars.push_back(&*_weight);
+   RooBatchCompute::ArgVector args = {static_cast<double>(vars.size() - 1)};
+   RooBatchCompute::dispatch->compute(RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
 }
 
 double RooNLLVarNew::reduce(const double *input, size_t nEvents) const

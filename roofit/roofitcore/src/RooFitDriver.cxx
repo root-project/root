@@ -19,6 +19,7 @@
 #include "RooNLLVarNew.h"
 #include "RooRealVar.h"
 #include "RunContext.h"
+#include "RooDataSet.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -43,6 +44,23 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
    std::unordered_map<const TNamed *, const RooAbsReal *> nameResolver;
    for (auto &it : _dataMap)
       nameResolver[it.first->namePtr()] = it.first;
+
+   // Check if there is a batch for weights and if it's already in the dataMap.
+   // If not, we need to put the batch and give as a key a RooRealVar* that has
+   // the same name as RooNLLVarNew's _weight proxy, so that it gets renamed like
+   // every other observable.
+   RooSpan<const double> weights = data.getWeightBatch(0, _nEvents);
+   std::string weightVarName = "_weight";
+   if (auto *dataSet = dynamic_cast<RooDataSet const *>(&data)) {
+      if (dataSet->weightVar())
+         weightVarName = dataSet->weightVar()->GetName();
+   }
+   RooRealVar dummy(weightVarName.c_str(), "dummy", 0.0);
+   const TNamed *pTNamed = dummy.namePtr();
+   if (!weights.empty() && nameResolver.count(pTNamed) == 0) {
+      _dataMap[&dummy] = weights;
+      nameResolver[pTNamed] = &dummy;
+   }
 
    RooBatchCompute::dispatch = RooBatchCompute::dispatchCPU;
    // If cuda mode is on, copy all observable data to device memory
@@ -86,17 +104,17 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
 
          // set nameResolver to nullptr to be able to detect future duplicates
          nameResolver[pAbsReal->namePtr()] = nullptr;
-      } else if (!pRealVar) // this node needs computing, mark it's clients
+      } else if (pRealVar) // this node is a scalar parameter
+      {
+         _dataMap.emplace(pAbsReal, RooSpan<const double>(pRealVar->getValPtr(), 1));
+         pRealVar->setError(0.0);
+      } else // this node needs computing, mark it's clients
       {
          _computeQueue.push(pAbsReal);
          auto clients = pAbsReal->valueClients();
          for (auto *client : clients)
             ++_nServersClients[static_cast<const RooAbsReal *>(client)].first;
          _nServersClients[pAbsReal].second = clients.size();
-      } else // this node is a scalar parameter
-      {
-         _dataMap.emplace(pAbsReal, RooSpan<const double>(pRealVar->getValPtr(), 1));
-         pRealVar->setError(0.0);
       }
    }
 
