@@ -1709,6 +1709,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("sliceCatState","SliceCat",0,"",true) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,Relative) ;
+
+  // for internal use only
+  pc.defineDouble("_scaleFactor","_Normalization",0,1.0) ;
+  pc.defineInt("_scaleType","_Normalization",0,Relative) ;
+
   pc.defineSet("sliceSet","SliceVars",0) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,true) ;
   // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
@@ -1781,8 +1786,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.numee       = pc.getInt("numee") ;
   o.drawOptions = drawOpt.Data();
   o.curveNameSuffix = pc.getString("curveNameSuffix") ;
-  o.scaleFactor = pc.getDouble("scaleFactor") ;
-  o.stype = (ScaleType) pc.getInt("scaleType")  ;
+  bool hasInternalNormalization = argList.FindObject("_Normalization");
+  o.scaleFactor = pc.getDouble(hasInternalNormalization ? "_scaleFactor" : "scaleFactor");
+  o.stype = (ScaleType)(pc.getInt(hasInternalNormalization ? "_scaleType" : "scaleType"));
   o.projData = (const RooAbsData*) pc.getObject("projData") ;
   o.binProjData = pc.getInt("binProjData") ;
   o.projDataSet = pc.getSet("projDataSet");
@@ -2741,12 +2747,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   // Strip any 'internal normalization' arguments from std::list
   RooLinkedList plotArgList ;
   for (auto * cmd : static_range_cast<RooCmdArg*>(plotArgListTmp)) {
-    if (std::string("Normalization")==cmd->GetName()) {
-      if (((RooCmdArg*)cmd)->getInt(1)!=0) {
-      } else {
-   plotArgList.Add(cmd) ;
-      }
-    } else {
+    if (std::string("_Normalization") != cmd->GetName()) {
       plotArgList.Add(cmd) ;
     }
   }
