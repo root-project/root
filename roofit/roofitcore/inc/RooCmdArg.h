@@ -100,8 +100,8 @@ public:
 
   template<class T>
   static T const& take(T && obj) {
-    _nextSharedData.emplace_back(new T{std::move(obj)});
-    return static_cast<T const&>(*_nextSharedData.back());
+    getNextSharedData().emplace_back(new T{std::move(obj)});
+    return static_cast<T const&>(*getNextSharedData().back());
   }
 
 protected:
@@ -128,6 +128,7 @@ private:
 
   // the next RooCmdArg created will take ownership of this data
   static DataCollection _nextSharedData;
+  static DataCollection &getNextSharedData();
   
   ClassDef(RooCmdArg,2) // Generic named argument container
 };
