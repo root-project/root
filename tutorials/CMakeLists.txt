@@ -279,6 +279,7 @@ if(root7)
                  v7/filedialog.cxx
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
+                 v7/df104.py
       )
   if(NOT davix)
     list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
@@ -290,7 +291,7 @@ if(root7)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
   endif()
 else()
-  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C)
+  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C)
   list(APPEND root7_veto ${v7_veto_files})
 endif()
 
