@@ -24,6 +24,8 @@ namespace Experimental {
 
 class RPad: public RPadBase {
 
+   friend class RPadBase; ///< required to set parent
+
    /// Pad containing this pad as a sub-pad.
    RPadBase *fParent{nullptr};             ///< The parent pad, if this pad has one.
 
@@ -32,16 +34,22 @@ class RPad: public RPadBase {
 
    RAttrLine fAttrLine{this, "border"};    ///<! border attributes
 
+   void SetParent(RPadBase *parent) { fParent = parent; }
+
 protected:
 
    std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) final;
 
 public:
    /// Create a topmost, non-paintable pad.
-   RPad() = default;
+   RPad() : RPadBase("pad") {}
 
-   /// Create a child pad.
-   RPad(RPadBase *parent, const RPadPos &pos, const RPadExtent &size): fParent(parent) { fPos = pos; fSize = size; }
+   /// Create a pad.
+   RPad(const RPadPos &pos, const RPadExtent &size) : RPad()
+   {
+      fPos = pos;
+      fSize = size;
+   }
 
    /// Destructor to have a vtable.
    virtual ~RPad();
