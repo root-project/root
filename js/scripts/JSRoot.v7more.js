@@ -112,7 +112,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawLegendContent() {
       let legend     = this.getObject(),
-          textFont   = this.v7EvalFont("legend_text", { size: 12, color: "black", align: 22 }),
+          textFont   = this.v7EvalFont("text", { size: 12, color: "black", align: 22 }),
           width      = this.pave_width,
           height     = this.pave_height,
           nlines     = legend.fEntries.length,
@@ -128,12 +128,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
       this.startTextDrawing(textFont, 'font' );
 
       if (legend.fTitle) {
-         this.drawText({ align: 22, latex: 1,
-                         width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
+         this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
          posy += stepy;
       }
 
-      for (let i=0; i<legend.fEntries.length; ++i) {
+      for (let i = 0; i<legend.fEntries.length; ++i) {
          let objp = null, entry = legend.fEntries[i];
 
          this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
@@ -165,6 +164,15 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
               .attr("y2", Math.round(posy + stepy/2))
               .call(objp.lineatt.func);
 
+         if (objp && entry.fError && objp.lineatt)
+            this.draw_g
+              .append("svg:line")
+              .attr("x1", Math.round(margin_x + width/8))
+              .attr("y1", Math.round(posy + stepy*0.2))
+              .attr("x2", Math.round(margin_x + width/8))
+              .attr("y2", Math.round(posy + stepy*0.8))
+              .call(objp.lineatt.func);
+
          if (objp && entry.fMarker && objp.markeratt)
             this.draw_g.append("svg:path")
                 .attr("d", objp.markeratt.create(margin_x + width/8, posy + stepy/2))
@@ -188,7 +196,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawPaveTextContent() {
       let pavetext  = this.getObject(),
-          textFont  = this.v7EvalFont("pavetext_text", { size: 12, color: "black", align: 22 }),
+          textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 }),
           width     = this.pave_width,
           height    = this.pave_height,
           nlines    = pavetext.fText.length;
@@ -201,7 +209,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
       this.startTextDrawing(textFont, 'font');
 
-      for (let i=0; i < pavetext.fText.length; ++i) {
+      for (let i = 0; i < pavetext.fText.length; ++i) {
          let line = pavetext.fText[i];
 
          this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
