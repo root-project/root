@@ -20,6 +20,7 @@ if os.path.exists(file_path):
     # Ensure batch mode (some tutorials use graphics)
     import ROOT
     ROOT.gROOT.SetBatch(True)
+    ROOT.gROOT.SetWebDisplay("batch")
 
     # Prevent import from generating .pyc files in source directory
     sys.dont_write_bytecode = True
