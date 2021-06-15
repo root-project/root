@@ -121,10 +121,6 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
       coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() << ") coefficient " << coef->GetName() << " is not of type RooAbsReal, ignored" << endl ;
       continue ;
     }
-    if (!dynamic_cast<RooAbsReal*>(pdf)) {
-      coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() << ") pdf " << pdf->GetName() << " is not of type RooAbsPdf, ignored" << endl ;
-      continue ;
-    }
     _pdfList.add(*pdf) ;
     _coefList.add(*coef) ;    
   }
