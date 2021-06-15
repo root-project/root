@@ -171,13 +171,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!dflts) dflts = {}; else
       if (typeof dflts == "number") dflts = { size: dflts };
 
-      let text_size   = this.v7EvalAttr( name + "_size", dflts.size || 12),
-          text_angle  = this.v7EvalAttr( name + "_angle", 0),
-          text_align  = this.v7EvalAttr( name + "_align", dflts.align || "none"),
-          text_color  = this.v7EvalColor( name + "_color", dflts.color || "none"),
-          font_family = this.v7EvalAttr( name + "_font_family", "Arial"),
-          font_style  = this.v7EvalAttr( name + "_font_style", ""),
-          font_weight = this.v7EvalAttr( name + "_font_weight", "");
+      let text_size   = this.v7EvalAttr(name + "_size", dflts.size || 12),
+          text_angle  = this.v7EvalAttr(name + "_angle", 0),
+          text_align  = this.v7EvalAttr(name + "_align", dflts.align || "none"),
+          text_color  = this.v7EvalColor(name + "_color", dflts.color || "none"),
+          font_family = this.v7EvalAttr(name + "_font_family", "Arial"),
+          font_style  = this.v7EvalAttr(name + "_font_style", ""),
+          font_weight = this.v7EvalAttr(name + "_font_weight", "");
 
        if (typeof text_size == "string") text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
@@ -1133,6 +1133,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ticksColor = this.v7EvalColor("ticks_color", "");
       this.ticksWidth = this.v7EvalAttr("ticks_width", 1);
       this.labelsOffset = this.v7EvalLength("labels_offset", this.scaling_size, 0);
+      this.optionUnlab = this.v7EvalAttr("nolabels", false);
 
       this.fTitle = this.v7EvalAttr("title", "");
 
@@ -1166,8 +1167,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.standalone)
          this.drawMainLine(axis_g);
 
-      let optionUnlab = false,  // no labels
-          optionNoopt = false,  // no ticks position optimization
+      let optionNoopt = false,  // no ticks position optimization
           optionInt = false,    // integer labels
           optionNoexp = false;  // do not create exp
 
@@ -1176,10 +1176,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // first draw ticks
       let tgaps = this.drawTicks(axis_g, side, true);
 
-      this.optionUnlab = optionUnlab;
-
       // draw labels
-      let labelsPromise = optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
+      let labelsPromise = this.optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
 
       return labelsPromise.then(lgaps => {
          // when drawing axis on frame, zoom rect should be always outside
@@ -1705,6 +1703,86 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Create x,y objects which maps user coordinates into pixels
+     * @desc Must be used only for v6 objects, see TFramePainter for more details
+     * @private */
+   RFramePainter.prototype.createXY = function(opts) {
+
+      this.cleanXY(); // remove all previous configurations
+
+      if (!opts) opts = {};
+
+      this.v6axes = true;
+      this.swap_xy = opts.swap_xy || false;
+      this.reverse_x = opts.reverse_x || false;
+      this.reverse_y = opts.reverse_y || false;
+
+      this.logx = this.v7EvalAttr("x_log", 0);
+      this.logy = this.v7EvalAttr("y_log", 0);
+
+      let w = this.getFrameWidth(), h = this.getFrameHeight();
+
+      this.scale_xmin = this.xmin;
+      this.scale_xmax = this.xmax;
+
+      this.scale_ymin = this.ymin;
+      this.scale_ymax = this.ymax;
+
+      if (opts.extra_y_space) {
+         let log_scale = this.swap_xy ? this.logx : this.logy;
+         if (log_scale && (this.scale_ymax > 0))
+            this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
+         else
+            this.scale_ymax += (this.scale_ymax - this.scale_ymin)*0.1;
+      }
+
+      if (opts.check_pad_range) {
+         // take zooming out of pad or axis attributes - skip!
+      }
+
+      if ((this.zoom_ymin == this.zoom_ymax) && (opts.zoom_ymin != opts.zoom_ymax) && !this.zoomChangedInteractive("y")) {
+         this.zoom_ymin = opts.zoom_ymin;
+         this.zoom_ymax = opts.zoom_ymax;
+      }
+
+      if (this.zoom_xmin != this.zoom_xmax) {
+         this.scale_xmin = this.zoom_xmin;
+         this.scale_xmax = this.zoom_xmax;
+      }
+
+      if (this.zoom_ymin != this.zoom_ymax) {
+         this.scale_ymin = this.zoom_ymin;
+         this.scale_ymax = this.zoom_ymax;
+      }
+
+      this.x_handle = new JSROOT.TAxisPainter(this.getDom(), this.xaxis, true);
+      this.x_handle.setPadName(this.getPadName());
+      this.x_handle.optionUnlab = this.v7EvalAttr("x_nolabels", false);
+
+      this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
+                                      { reverse: this.reverse_x,
+                                        log: this.swap_xy ? this.logy : this.logx,
+                                        symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
+                                        logcheckmin: this.swap_xy,
+                                        logminfactor: 0.0001 });
+
+      this.x_handle.assignFrameMembers(this,"x");
+
+      this.y_handle = new JSROOT.TAxisPainter(this.getDom(), this.yaxis, true);
+      this.y_handle.setPadName(this.getPadName());
+      this.y_handle.optionUnlab = this.v7EvalAttr("y_nolabels", false);
+
+      this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
+                                      { reverse: this.reverse_y,
+                                        log: this.swap_xy ? this.logx : this.logy,
+                                        symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
+                                        logcheckmin: (opts.ndim < 2) || this.swap_xy,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        logminfactor: 3e-4 });
+
+      this.y_handle.assignFrameMembers(this,"y");
+   }
+
    /** @summary Identify if requested axes are drawn
      * @desc Checks if x/y axes are drawn. Also if second side is already there */
    RFramePainter.prototype.hasDrawnAxes = function(second_x, second_y) {
@@ -1715,12 +1793,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @desc axes can be drawn only for main histogram  */
    RFramePainter.prototype.drawAxes = function() {
 
-      if (this.axes_drawn || (this.xmin==this.xmax) || (this.ymin==this.ymax))
+      if (this.axes_drawn || (this.xmin == this.xmax) || (this.ymin == this.ymax))
          return Promise.resolve(this.axes_drawn);
 
-      this.cleanupAxes();
-
-      this.swap_xy = false;
       let ticksx = this.v7EvalAttr("ticksx", 1),
           ticksy = this.v7EvalAttr("ticksy", 1),
           sidex = 1, sidey = 1;
@@ -1730,48 +1805,56 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let w = this.getFrameWidth(), h = this.getFrameHeight();
 
-      if (this.zoom_xmin != this.zoom_xmax) {
-         this.scale_xmin = this.zoom_xmin;
-         this.scale_xmax = this.zoom_xmax;
-      } else {
-         this.scale_xmin = this.xmin;
-         this.scale_xmax = this.xmax;
+      if (!this.v6axes) {
+         // this is partially same as v6 createXY method
+
+         this.cleanupAxes();
+
+         this.swap_xy = false;
+
+         if (this.zoom_xmin != this.zoom_xmax) {
+            this.scale_xmin = this.zoom_xmin;
+            this.scale_xmax = this.zoom_xmax;
+         } else {
+            this.scale_xmin = this.xmin;
+            this.scale_xmax = this.xmax;
+         }
+
+         if (this.zoom_ymin != this.zoom_ymax) {
+            this.scale_ymin = this.zoom_ymin;
+            this.scale_ymax = this.zoom_ymax;
+         } else {
+            this.scale_ymin = this.ymin;
+            this.scale_ymax = this.ymax;
+         }
+
+         this.recalculateRange(0);
+
+         this.x_handle = new RAxisPainter(this.getDom(), this, this.xaxis, "x_");
+         this.x_handle.setPadName(this.getPadName());
+         this.x_handle.snapid = this.snapid;
+         this.x_handle.draw_swapside = (sidex < 0);
+         this.x_handle.draw_ticks = ticksx;
+
+         this.y_handle = new RAxisPainter(this.getDom(), this, this.yaxis, "y_");
+         this.y_handle.setPadName(this.getPadName());
+         this.y_handle.snapid = this.snapid;
+         this.y_handle.draw_swapside = (sidey < 0);
+         this.y_handle.draw_ticks = ticksy;
+
+         this.z_handle = new RAxisPainter(this.getDom(), this, this.zaxis, "z_");
+         this.z_handle.setPadName(this.getPadName());
+         this.z_handle.snapid = this.snapid;
+
+         this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0,w], w, { reverse: false });
+         this.x_handle.assignFrameMembers(this,"x");
+
+         this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, true, [h,0], -h, { reverse: false });
+         this.y_handle.assignFrameMembers(this,"y");
+
+         // only get basic properties like log scale
+         this.z_handle.configureZAxis("zaxis", this);
       }
-
-      if (this.zoom_ymin != this.zoom_ymax) {
-         this.scale_ymin = this.zoom_ymin;
-         this.scale_ymax = this.zoom_ymax;
-      } else {
-         this.scale_ymin = this.ymin;
-         this.scale_ymax = this.ymax;
-      }
-
-      this.recalculateRange(0);
-
-      this.x_handle = new RAxisPainter(this.getDom(), this, this.xaxis, "x_");
-      this.x_handle.setPadName(this.getPadName());
-      this.x_handle.snapid = this.snapid;
-      this.x_handle.draw_swapside = (sidex < 0);
-      this.x_handle.draw_ticks = ticksx;
-
-      this.y_handle = new RAxisPainter(this.getDom(), this, this.yaxis, "y_");
-      this.y_handle.setPadName(this.getPadName());
-      this.y_handle.snapid = this.snapid;
-      this.y_handle.draw_swapside = (sidey < 0);
-      this.y_handle.draw_ticks = ticksy;
-
-      this.z_handle = new RAxisPainter(this.getDom(), this, this.zaxis, "z_");
-      this.z_handle.setPadName(this.getPadName());
-      this.z_handle.snapid = this.snapid;
-
-      this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0,w], w, { reverse: false });
-      this.x_handle.assignFrameMembers(this,"x");
-
-      this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, true, [h,0], -h, { reverse: false });
-      this.y_handle.assignFrameMembers(this,"y");
-
-      // only get basic properties like log scale
-      this.z_handle.configureZAxis("zaxis", this);
 
       let layer = this.getFrameSvg().select(".axis_layer");
 
@@ -1783,6 +1866,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (pp && pp._fast_drawing) {
          draw_promise = Promise.resolve(true)
+      } else if (this.v6axes) {
+
+         // in v7 ticksx/y values shifted by 1 relative to v6
+         // In v7 ticksx==0 means no ticks, ticksx==1 equivalent to ==0 in v6
+
+         let can_adjust_frame = false, disable_x_draw = false, disable_y_draw = false;
+
+         draw_horiz.disable_ticks = (ticksx <= 0);
+         draw_vertical.disable_ticks = (ticksy <= 0);
+
+         let promise1 = draw_horiz.drawAxis(layer, w, h,
+                                            draw_horiz.invert_side ? undefined : `translate(0,${h})`,
+                                            (ticksx > 1) ? -h : 0, disable_x_draw,
+                                            undefined, false);
+
+         let promise2 = draw_vertical.drawAxis(layer, w, h,
+                                               draw_vertical.invert_side ? `translate(${w},0)` : undefined,
+                                               (ticksy > 1) ? w : 0, disable_y_draw,
+                                               draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+         draw_promise = Promise.all([promise1, promise2]).then(() => this.drawGrids());
+
       } else {
          let promise1 = (ticksx > 0) ? draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : "", sidex) : true;
 
@@ -1904,8 +2008,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.redrawPad();
    }
 
-   /** @summary Remove all axes drawings */
-   RFramePainter.prototype.cleanupAxes = function() {
+   /** @summary Remove all x/y functions
+     * @private */
+   RFramePainter.prototype.cleanXY = function() {
       // remove all axes drawings
       let clean = (name,grname) => {
          if (this[name]) {
@@ -1920,6 +2025,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       clean("z_handle", "grz");
       clean("x2_handle", "grx2");
       clean("y2_handle", "gry2");
+
+      delete this.v6axes; // marker that v6 axes are used
+   }
+
+   /** @summary Remove all axes drawings
+     * @private */
+   RFramePainter.prototype.cleanupAxes = function() {
+      this.cleanXY();
 
       if (this.draw_g) {
          this.draw_g.select(".grid_layer").selectAll("*").remove();
