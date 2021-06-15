@@ -9,6 +9,7 @@
 #include <ROOT/TObjectDrawable.hxx>
 
 #include <ROOT/TObjectDisplayItem.hxx>
+#include <ROOT/RColor.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItems.hxx>
 
@@ -28,19 +29,28 @@
 
 using namespace ROOT::Experimental;
 
-std::string TObjectDrawable::DetectCssType(const TObject *obj)
+////////////////////////////////////////////////////////////////////
+/// Checks object ownership - used for TH1 directory handling
+
+void TObjectDrawable::CheckOwnership(TObject *obj)
 {
-   bool ishist = false;
-   // special handling for TH1 classes without linking to libHist
    if (obj && obj->InheritsFrom("TH1")) {
       TMethodCall call(obj->IsA(), "SetDirectory", "nullptr");
       call.Execute((void *)(obj));
-      ishist = true;
    }
-   const char *clname = obj ? obj->ClassName() : "TObject";
+}
+
+////////////////////////////////////////////////////////////////////
+/// Provide css type
+
+std::string TObjectDrawable::DetectCssType(const TObject *obj)
+{
+   if (!obj) return "tobject";
+
+   const char *clname = obj->ClassName();
    if (strncmp(clname, "TH3", 3) == 0) return "th3";
    if (strncmp(clname, "TH2", 3) == 0) return "th2";
-   if ((strncmp(clname, "TH1", 3) == 0) || ishist) return "th1";
+   if ((strncmp(clname, "TH1", 3) == 0) || obj->InheritsFrom("TH1")) return "th1";
    if (strncmp(clname, "TGraph", 6) == 0) return "tgraph";
    if (strcmp(clname, "TLine") == 0) return "tline";
    if (strcmp(clname, "TBox") == 0) return "tbox";
@@ -48,18 +58,92 @@ std::string TObjectDrawable::DetectCssType(const TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////
+/// Constructor, clones TObject instance
+
+TObjectDrawable::TObjectDrawable(TObject &obj) : RDrawable(DetectCssType(&obj))
+{
+   fKind = kObject;
+   auto clone = obj.Clone();
+   CheckOwnership(clone);
+   fObj = std::shared_ptr<TObject>(clone);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor, clones TObject instance
+
+TObjectDrawable::TObjectDrawable(TObject &obj, const std::string &opt) : TObjectDrawable(obj)
+{
+   SetOpt(opt);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor, takes ownership over the object
+
+TObjectDrawable::TObjectDrawable(TObject *obj) : RDrawable(DetectCssType(obj))
+{
+   fKind = kObject;
+   CheckOwnership(obj);
+   fObj = std::shared_ptr<TObject>(obj);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor, takes ownership over the object
+
+TObjectDrawable::TObjectDrawable(TObject *obj, const std::string &opt) : TObjectDrawable(obj)
+{
+   SetOpt(opt);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor
+
+TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj.get()))
+{
+   fKind = kObject;
+   CheckOwnership(fObj.get());
+   fObj = obj;
+}
+
+
+////////////////////////////////////////////////////////////////////
+/// Constructor
+
+TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : TObjectDrawable(obj)
+{
+   SetOpt(opt);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Creates special kind for for palette or list of colors
+/// One can create persistent, which does not updated to actual values
+
+TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : RDrawable("tobject")
+{
+   fKind = kind;
+
+   if (persistent)
+      fObj = CreateSpecials(kind);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Destructor
+
+TObjectDrawable::~TObjectDrawable() = default;
+
+////////////////////////////////////////////////////////////////////
 /// Convert TColor to RGB string for using with SVG
 
 const char *TObjectDrawable::GetColorCode(TColor *col)
 {
-   static TString code;
+   static std::string code;
 
-   if (col->GetAlpha() == 1)
-      code.Form("rgb(%d,%d,%d)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
-   else
-      code.Form("rgba(%d,%d,%d,%5.3f)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());
+   RColor rcol((uint8_t) (255*col->GetRed()), (uint8_t) (255*col->GetGreen()), (uint8_t) (255*col->GetBlue()));
+   if (col->GetAlpha() != 1)
+      rcol.SetAlphaFloat(col->GetAlpha());
 
-   return code.Data();
+   code = rcol.AsSVG();
+
+   return code.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -48,10 +48,7 @@ void draw_v6()
    auto th1 = new TH1I("gaus", "Example of TH1", nth1points, -5, 5);
    // it is recommended to set directory to nullptr, but it is also automatically done in TObjectDrawable
    // th1->SetDirectory(nullptr);
-   for (int n=0;n<nth1points;++n) {
-      double x = 10.*n/nth1points-5.;
-      th1->SetBinContent(n+1, (int) (1000*TMath::Gaus(x)));
-   }
+   th1->FillRandom("gaus", 5000);
 
    // use std::shared_ptr<TH2I> to let draw same histogram twice with different draw options
    auto th2 = std::make_shared<TH2I>("gaus2", "Example of TH2", nth2points, -5, 5, nth2points, -5, 5);

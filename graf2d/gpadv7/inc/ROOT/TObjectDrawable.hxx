@@ -68,6 +68,8 @@ protected:
 
    static void ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj);
 
+   static void CheckOwnership(TObject *obj);
+
    static std::string DetectCssType(const TObject *obj);
 
 public:
@@ -78,43 +80,14 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj.get()))
-   {
-      fKind = kObject;
-      fObj = obj;
-   }
-
-   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable(DetectCssType(obj.get()))
-   {
-      fKind = kObject;
-      fObj = obj;
-      SetOpt(opt);
-   }
-
-   /// Constructor takes ownership
-   TObjectDrawable(TObject *obj) : RDrawable(DetectCssType(obj))
-   {
-      fKind = kObject;
-      fObj = std::shared_ptr<TObject>(obj);
-   }
-
-   /// Constructor takes ownership
-   TObjectDrawable(TObject *obj, const std::string &opt) : RDrawable(DetectCssType(obj))
-   {
-      fKind = kObject;
-      fObj = std::shared_ptr<TObject>(obj);
-      SetOpt(opt);
-   }
-
-   TObjectDrawable(EKind kind, bool persistent = false) : RDrawable("tobject")
-   {
-      fKind = kind;
-
-      if (persistent)
-         fObj = CreateSpecials(kind);
-   }
-
-   virtual ~TObjectDrawable() = default;
+   TObjectDrawable(TObject &obj);
+   TObjectDrawable(TObject &obj, const std::string &opt);
+   TObjectDrawable(TObject *obj);
+   TObjectDrawable(TObject *obj, const std::string &opt);
+   TObjectDrawable(const std::shared_ptr<TObject> &obj);
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt);
+   TObjectDrawable(EKind kind, bool persistent = false);
+   virtual ~TObjectDrawable();
 
    std::shared_ptr<TObject> GetObject() const { return fObj.get_shared(); }
 
