@@ -172,6 +172,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/RuleFit.h
     TMVA/RuleFitParams.h
     TMVA/Rule.h
+    TMVA/RVariablePlotter.h
     TMVA/SdivSqrtSplusB.h
     TMVA/SeparationBase.h
     TMVA/SimulatedAnnealingFitter.h
@@ -364,6 +365,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/RuleFitAPI.cxx
     src/RuleFit.cxx
     src/RuleFitParams.cxx
+    src/RVariablePlotter.cxx
     src/SdivSqrtSplusB.cxx
     src/SeparationBase.cxx
     src/SimulatedAnnealing.cxx
