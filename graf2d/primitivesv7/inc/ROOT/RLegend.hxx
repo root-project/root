@@ -48,7 +48,7 @@ public:
 
       std::string fLabel; ///< label shown for the entry
 
-      bool fLine{true}, fFill{false}, fMarker{false}; ///< enable line, fill, marker showing
+      bool fLine{true}, fFill{false}, fMarker{false}, fError{false}; ///< enable line, fill, marker, error showing
 
       Internal::RIOShared<RDrawable> fDrawable; ///< reference to RDrawable
 
@@ -84,18 +84,10 @@ public:
          fLabel = lbl;
       }
 
-      REntry &SetLabel(const std::string &lbl)
-      {
-         fLabel = lbl;
-         return *this;
-      }
+      REntry &SetLabel(const std::string &lbl) { fLabel = lbl; return *this; }
       const std::string &GetLabel() const { return fLabel; }
 
-      REntry &SetLine(bool on = true)
-      {
-         fLine = on;
-         return *this;
-      }
+      REntry &SetLine(bool on = true) { fLine = on; return *this; }
       bool GetLine() const { return fLine; }
 
       REntry &SetAttrLine(const RAttrLine &attr)
@@ -114,11 +106,7 @@ public:
          return {};
       }
 
-      REntry &SetFill(bool on = true)
-      {
-         fFill = on;
-         return *this;
-      }
+      REntry &SetFill(bool on = true) { fFill = on; return *this; }
       bool GetFill() const { return fFill; }
 
       REntry &SetAttrFill(const RAttrFill &attr)
@@ -137,11 +125,7 @@ public:
          return {};
       }
 
-      REntry &SetMarker(bool on = true)
-      {
-         fMarker = on;
-         return *this;
-      }
+      REntry &SetMarker(bool on = true) { fMarker = on; return *this; }
       bool GetMarker() const { return fMarker; }
 
       REntry &SetAttrMarker(const RAttrMarker &attr)
@@ -159,6 +143,9 @@ public:
             return RAttrMarker(const_cast<RDrawable *>(fDrawable.get()));
          return {};
       }
+
+      REntry &SetError(bool on = true) { fError = on; return *this; }
+      bool GetError() const { return fError; }
    };
 
 private:
@@ -206,11 +193,15 @@ public:
 
    RLegend(const std::string &title) : RLegend() { SetTitle(title); }
 
-   RLegend &SetTitle(const std::string &title)
+   RLegend(const RPadPos &corner, const RPadExtent &size) : RLegend()
    {
-      fTitle = title;
-      return *this;
+      SetCornerX(corner.Horiz());
+      SetCornerY(corner.Vert());
+      SetWidth(size.Horiz());
+      SetHeight(size.Vert());
    }
+
+   RLegend &SetTitle(const std::string &title) { fTitle = title; return *this; }
    const std::string &GetTitle() const { return fTitle; }
 
    REntry &AddEntry(const std::string &lbl)
@@ -219,11 +210,12 @@ public:
       return fEntries.back();
    }
 
-   REntry &AddEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl)
+   REntry &AddEntry(const std::shared_ptr<RDrawable> &drawable, const std::string &lbl)
    {
       fEntries.emplace_back(drawable, lbl);
       return fEntries.back();
    }
+
 
    auto NumEntries() const { return fEntries.size(); }
 

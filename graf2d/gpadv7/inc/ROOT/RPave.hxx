@@ -15,6 +15,7 @@
 #include <ROOT/RAttrFill.hxx>
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
+#include <ROOT/RPadExtent.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -38,9 +39,13 @@ class RPave : public RDrawable {
    RAttrValue<RPadLength>  fWidth{this, "width", 0.4};       ///<! pave width
    RAttrValue<RPadLength>  fHeight{this, "height", 0.2};     ///<! pave height
 
+protected:
+
+   RPave(const std::string &csstype) : RDrawable(csstype) {}
+
 public:
 
-   RPave(const std::string &csstype = "pave") : RDrawable(csstype) {}
+   RPave() : RPave("pave") {}
 
    RPave &SetCornerX(const RPadLength &pos) { fCornerX = pos; return *this; }
    RPadLength GetCornerX() const { return fCornerX; }

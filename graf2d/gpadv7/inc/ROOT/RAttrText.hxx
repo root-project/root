@@ -74,8 +74,8 @@ class RAttrText : public RAttrBase {
       }
 
       SetFontFamily(family);
-      SetFontWeight(style);
-      SetFontStyle(weight);
+      SetFontWeight(weight);
+      SetFontStyle(style);
 
       return *this;
    }
