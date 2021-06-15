@@ -46,10 +46,11 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
    RAttrValue<RColor> fTicksColor{this, "ticks_color", RColor::kBlack};  ///<! ticks color
    RAttrValue<int> fTicksWidth{this, "ticks_width", 1};                  ///<! ticks width
-   RAttrText fLabelsAttr{this, "labels"};                                ///<! text attributes for labels
+   RAttrValue<bool> fNoLabels{this, "nolabels", false};                  ///<! disable labels drawing
+   RAttrText fAttrLabels{this, "labels"};                                ///<! text attributes for labels
    RAttrValue<RPadLength> fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative
    RAttrValue<bool> fLabelsCenter{this, "labels_center", false};         ///<! center labels
-   RAttrText fTitleAttr{this, "title"};                                  ///<! axis title text attributes
+   RAttrText fAttrTitle{this, "title"};                                  ///<! axis title text attributes
    RAttrValue<std::string> fTitle{this, "title", ""};                    ///<! axis title
    RAttrValue<std::string> fTitlePos{this, "title_position", "right"};   ///<! axis title position - left, right, center
    RAttrValue<RPadLength> fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative
@@ -142,16 +143,17 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetLabelsOffset(const RPadLength &len) { fLabelsOffset = len; return *this; }
    RPadLength GetLabelsOffset() const { return fLabelsOffset; }
 
-   const RAttrText &GetLabelsAttr() const { return fLabelsAttr; }
-   RAttrAxis &SetLabelsAttr(const RAttrText &attr) { fLabelsAttr = attr; return *this; }
-   RAttrText &LabelsAttr() { return fLabelsAttr; }
+   RAttrAxis &SetNoLabels(bool on = true) { fNoLabels = on; return *this; }
+   bool GetNoLabels() const { return fNoLabels; }
+
+   const RAttrText &AttrLabels() const { return fAttrLabels; }
+   RAttrText &AttrLabels() { return fAttrLabels; }
 
    RAttrAxis &SetLabelsCenter(bool on = true) { fLabelsCenter = on; return *this; }
    bool GetLabelsCenter() const { return fLabelsCenter; }
 
-   const RAttrText &GetTitleAttr() const { return fTitleAttr; }
-   RAttrAxis &SetTitleAttr(const RAttrText &attr) { fTitleAttr = attr; return *this; }
-   RAttrText &TitleAttr() { return fTitleAttr; }
+   const RAttrText &AttrTitle() const { return fAttrTitle; }
+   RAttrText &AttrTitle() { return fAttrTitle; }
 
    RAttrAxis &SetTitle(const std::string &title) { fTitle = title; return *this; }
    std::string GetTitle() const { return fTitle; }
