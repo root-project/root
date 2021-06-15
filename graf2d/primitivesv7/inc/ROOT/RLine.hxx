@@ -40,17 +40,8 @@ public:
       fP2 = p2;
    }
 
-   RLine &SetP1(const RPadPos &p1)
-   {
-      fP1 = p1;
-      return *this;
-   }
-
-   RLine &SetP2(const RPadPos &p2)
-   {
-      fP2 = p2;
-      return *this;
-   }
+   RLine &SetP1(const RPadPos &p1) { fP1 = p1; return *this; }
+   RLine &SetP2(const RPadPos &p2) { fP2 = p2; return *this; }
 
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
@@ -58,10 +49,10 @@ public:
    const RAttrLine &AttrLine() const { return fAttrLine; }
    RAttrLine &AttrLine() { return fAttrLine; }
 
-   void SetOnFrame(bool on = true) { fOnFrame = on; }
+   RLine &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
    bool GetOnFrame() const { return fOnFrame; }
 
-   void SetClipping(bool on = true) { fClipping = on; }
+   RLine &SetClipping(bool on = true) { fClipping = on; return *this; }
    bool GetClipping() const { return fClipping; }
 };
 

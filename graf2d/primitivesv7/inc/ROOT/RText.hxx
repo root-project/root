@@ -46,27 +46,19 @@ public:
       fPos = p;
    }
 
-   RText &SetText(const std::string &t)
-   {
-      fText = t;
-      return *this;
-   }
+   RText &SetText(const std::string &t) { fText = t; return *this; }
    const std::string &GetText() const { return fText; }
 
-   RText &SetPos(const RPadPos &p)
-   {
-      fPos = p;
-      return *this;
-   }
+   RText &SetPos(const RPadPos &p) { fPos = p; return *this; }
    const RPadPos &GetPos() const { return fPos; }
 
    const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
-   void SetOnFrame(bool on = true) { fOnFrame = on; }
+   RText &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
    bool GetOnFrame() const { return fOnFrame; }
 
-   void SetClipping(bool on = true) { fClipping = on; }
+   RText &SetClipping(bool on = true) { fClipping = on; return *this; }
    bool GetClipping() const { return fClipping; }
 };
 
