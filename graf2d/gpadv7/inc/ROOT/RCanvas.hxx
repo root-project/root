@@ -76,7 +76,7 @@ public:
    static std::shared_ptr<RCanvas> Create(const std::string &title);
 
    /// Create a temporary RCanvas; for long-lived ones please use Create().
-   RCanvas() = default;
+   RCanvas() : RPadBase("canvas") {}
 
    ~RCanvas() = default;
 

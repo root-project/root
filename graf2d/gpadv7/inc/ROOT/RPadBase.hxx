@@ -58,13 +58,15 @@ private:
 
 protected:
    /// Allow derived classes to default construct a RPadBase.
-   RPadBase() : RDrawable("pad") {}
+   explicit RPadBase(const std::string &csstype) : RDrawable(csstype) {}
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
    void DisplayPrimitives(RPadBaseDisplayItem &paditem, RDisplayContext &ctxt);
 
    void SetDrawableVersion(Version_t vers) override;
+
+   void AddPrimitive(std::shared_ptr<RDrawable> drawable);
 
 public:
 
@@ -81,29 +83,6 @@ public:
    /// \returns vector of vector (ret[x][y]) of created pads.
    std::vector<std::vector<std::shared_ptr<RPad>>> Divide(int nHoriz, int nVert, const RPadExtent &padding = {});
 
-   /// Create drawable of specified class T
-   template<class T, class... ARGS>
-   std::shared_ptr<T> Draw(ARGS... args)
-   {
-      auto drawable = std::make_shared<T>(args...);
-
-      TestIfFrameRequired(drawable.get());
-
-      fPrimitives.emplace_back(drawable);
-
-      return drawable;
-   }
-
-   /// Add existing drawable instance to canvas
-   std::shared_ptr<RDrawable> Draw(std::shared_ptr<RDrawable> &&drawable)
-   {
-      TestIfFrameRequired(drawable.get());
-
-      fPrimitives.emplace_back(std::move(drawable));
-
-      return fPrimitives.back().get_shared();
-   }
-
    /// Add object to be painted.
    /// Correspondent drawable will be created via GetDrawable() function which should be defined and be accessed at calling time.
    /// If required, extra arguments for GetDrawable() function can be provided.
@@ -115,9 +94,34 @@ public:
 
       TestIfFrameRequired(drawable.get());
 
-      fPrimitives.emplace_back(drawable);
+      AddPrimitive(drawable);
 
       return drawable;
+   }
+
+   /// Create drawable of specified class T
+   template<class T, class... ARGS>
+   std::shared_ptr<T> Draw(ARGS... args)
+   {
+      auto drawable = std::make_shared<T>(args...);
+
+      TestIfFrameRequired(drawable.get());
+
+      AddPrimitive(drawable);
+
+      return drawable;
+   }
+
+   /// Add existing drawable instance to canvas
+   std::shared_ptr<RDrawable> Draw(std::shared_ptr<RDrawable> &&drawable)
+   {
+      TestIfFrameRequired(drawable.get());
+
+      auto dr = std::move(drawable);
+
+      AddPrimitive(dr);
+
+      return dr;
    }
 
    /// returns number of primitives in the pad
