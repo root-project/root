@@ -6,6 +6,8 @@
 3. Remove deprecated JSRootCore.js script, one have to use JSRoot.core.js
 4. Upgrade three.js to r127
 5. Upgrade d3.js to 6.7.0
+6. Implement "nozoomx" and "nozoomy" draw options for TPad
+7. Implement "frame" draw option for TGaxis - fix position of axis relative to the frame
 
 
 ## Changes in 6.1.0

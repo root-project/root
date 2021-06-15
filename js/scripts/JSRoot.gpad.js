@@ -515,7 +515,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if ((res.length > 0) && real_draw)
          axis_g.append("svg:path").attr("d", res).call(this.lineatt.func);
 
-      if ((secondShift!==0) && (res2.length>0) && real_draw)
+      if ((secondShift !== 0) && (res2.length > 0) && real_draw)
          axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
    }
 
@@ -666,7 +666,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (is_gaxis) {
          this.createAttLine({ attr: axis });
-         draw_lines = axis.fLineColor != 0;
+         draw_lines = (axis.fLineColor != 0);
          chOpt = axis.fChopt;
          tickSize = axis.fTickSize;
          scaling_size = vertical ? 1.7*h : 0.6*w;
@@ -705,7 +705,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           // optionY = (chOpt.indexOf("Y")>=0),
           // optionUp = (chOpt.indexOf("0")>=0),
           // optionDown = (chOpt.indexOf("O")>=0),
-          optionUnlab = (chOpt.indexOf("U")>=0),  // no labels
+          optionUnlab = (chOpt.indexOf("U")>=0) || this.optionUnlab,  // no labels
           optionNoopt = (chOpt.indexOf("N")>=0),  // no ticks position optimization
           optionInt = (chOpt.indexOf("I")>=0),    // integer labels
           optionNoexp = axis.TestBit(JSROOT.EAxisBits.kNoExponent);
@@ -726,7 +726,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
 
-      this.drawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing);
+      this.drawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
 
       let labelSize0 = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize),
           labeloffset = Math.round(Math.abs(axis.fLabelOffset)*text_scaling_size);
