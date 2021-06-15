@@ -232,3 +232,5 @@ void RooCmdArg::Print(const char*) const {
 }
 
 RooCmdArg::DataCollection RooCmdArg::_nextSharedData = RooCmdArg::DataCollection{};
+
+RooCmdArg::DataCollection &RooCmdArg::getNextSharedData() { return _nextSharedData; }
