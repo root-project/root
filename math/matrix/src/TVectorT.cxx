@@ -1352,8 +1352,8 @@ TVectorT<Element> &TVectorT<Element>::Apply(const TElementPosActionT<Element> &a
 template<class Element>
 void TVectorT<Element>::Draw(Option_t *option)
 {
-   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",
-                           (ULong_t)this, option));
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%zx,\"%s\");",
+                           (size_t)this, option));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
