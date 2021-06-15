@@ -5,8 +5,8 @@
 
 ## Checklist:
 
-- [] tested changes locally
-- [] updated the docs (if necessary)
+- [ ] tested changes locally
+- [ ] updated the docs (if necessary)
 
 This PR fixes # 
 
