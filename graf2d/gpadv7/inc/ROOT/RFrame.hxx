@@ -157,8 +157,8 @@ private:
    RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
    RAttrValue<bool> fSwapX{this, "swapx", false}; ///<! swap position of X axis
    RAttrValue<bool> fSwapY{this, "swapy", false}; ///<! swap position of Y axis
-   RAttrValue<int> fTicksX{this, "ticksx", 1};    ///<! X ticks drawing:
-   RAttrValue<int> fTicksY{this, "ticksy", 1};    ///<! Y ticks drawing
+   RAttrValue<int> fTicksX{this, "ticksx", 1};    ///<! X ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
+   RAttrValue<int> fTicksY{this, "ticksy", 1};    ///<! Y ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
    std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
 
    RFrame(const RFrame &) = delete;
