@@ -1068,9 +1068,9 @@ Double_t TFoam::Eval(Double_t *xRand)
    Double_t result;
 
    if(!fRho) {   //interactive mode
-      Long_t paramArr[3];
-      paramArr[0]=(Long_t)fDim;
-      paramArr[1]=(Long_t)xRand;
+      Longptr_t paramArr[3];
+      paramArr[0]=(Longptr_t)fDim;
+      paramArr[1]=(Longptr_t)xRand;
       fMethodCall->SetParamPtrs(paramArr);
       fMethodCall->Execute(result);
    } else {       //compiled mode
