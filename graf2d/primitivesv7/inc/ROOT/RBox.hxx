@@ -49,17 +49,8 @@ public:
       fP2 = p2;
    }
 
-   RBox &SetP1(const RPadPos &p1)
-   {
-      fP1 = p1;
-      return *this;
-   }
-
-   RBox &SetP2(const RPadPos &p2)
-   {
-      fP2 = p2;
-      return *this;
-   }
+   RBox &SetP1(const RPadPos &p1) { fP1 = p1; return *this; }
+   RBox &SetP2(const RPadPos &p2) { fP2 = p2; return *this; }
 
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
@@ -70,10 +61,10 @@ public:
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
 
-   void SetOnFrame(bool on = true) { fOnFrame = on; }
+   RBox &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
    bool GetOnFrame() const { return fOnFrame; }
 
-   void SetClipping(bool on = true) { fClipping = on; }
+   RBox &SetClipping(bool on = true) { fClipping = on; return *this; }
    bool GetClipping() const { return fClipping; }
 };
 
