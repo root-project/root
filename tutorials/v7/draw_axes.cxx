@@ -46,7 +46,7 @@ void draw_axes()
 
    auto draw4 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.3_normal), false, w1);
    draw4->SetMinMax(TDatime(2020,11,12,9,0,0).Convert(), TDatime(2020,11,12,12,0,0).Convert())
-          .AttrAxis().SetTimeDisplay("%d/%m/%y %H:%M").SetTitle("time display").LabelsAttr().SetSize(0.01).SetColor(RColor::kRed);
+          .AttrAxis().SetTimeDisplay("%d/%m/%y %H:%M").SetTitle("time display").AttrLabels().SetSize(0.01).SetColor(RColor::kRed);
 
    std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
    auto draw5 = canvas->Draw<RAxisLabelsDrawable>(RPadPos(x1, 0.1_normal), false, w1);
@@ -56,7 +56,7 @@ void draw_axes()
    draw6->SetMinMax(0, 10).AttrAxis().SetTitle("vertical negative length").SetEndingArrow();
 
    auto draw7 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.9_normal), false, w2);
-   draw7->SetMinMax(1, 100).AttrAxis().SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
+   draw7->SetMinMax(1, 100).AttrAxis().SetLog(10).SetTitle("log10 scale").SetTitleCenter().AttrTitle().SetFont(12).SetColor(RColor::kGreen);
 
    auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.7_normal), false, w2);
    draw8->SetMinMax(0.125, 128).AttrAxis().SetLog(2).SetTitle("log2 scale").SetTitleCenter();
