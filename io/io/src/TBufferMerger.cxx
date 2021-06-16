@@ -127,7 +127,8 @@ void TBufferMerger::MergeImpl()
       queue.pop();
    }
 
-   fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite | TFileMerger::kKeepCompression);
+   fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite |
+                        TFileMerger::kKeepCompression);
    fMerger.Reset();
 }
 
