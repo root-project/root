@@ -50,6 +50,9 @@ std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer);
 std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val);
 std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val);
 
+std::uint32_t SerializeString(const std::string &val, void *buffer);
+std::uint32_t DeserializeString(const void *buffer, std::string *val);
+
 } // namespace RNTupleSerialization
 
 void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
