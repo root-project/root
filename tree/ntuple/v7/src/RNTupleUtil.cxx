@@ -18,6 +18,7 @@
 #include "ROOT/RLogger.hxx"
 #include "ROOT/RMiniFile.hxx"
 
+#include <cstring>
 #include <iostream>
 
 ROOT::Experimental::RLogChannel &ROOT::Experimental::NTupleLog() {
@@ -124,6 +125,27 @@ std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val)
 std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val)
 {
    return DeserializeInt16(buffer, reinterpret_cast<std::int16_t *>(val));
+}
+
+std::uint32_t SerializeString(const std::string &val, void *buffer)
+{
+   if (buffer != nullptr) {
+      auto pos = reinterpret_cast<unsigned char *>(buffer);
+      pos += SerializeUInt32(val.length(), pos);
+      memcpy(pos, val.data(), val.length());
+   }
+   return SerializeUInt32(val.length(), nullptr) + val.length();
+}
+
+std::uint32_t DeserializeString(const void *buffer, std::string *val)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   std::uint32_t length;
+   bytes += DeserializeUInt32(buffer, &length);
+   val->resize(length);
+   memcpy(&(*val)[0], bytes, length);
+   return bytes + length - base;
 }
 
 } // namespace RNTupleSerialization
