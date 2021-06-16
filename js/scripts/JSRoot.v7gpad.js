@@ -1133,7 +1133,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ticksColor = this.v7EvalColor("ticks_color", "");
       this.ticksWidth = this.v7EvalAttr("ticks_width", 1);
       this.labelsOffset = this.v7EvalLength("labels_offset", this.scaling_size, 0);
-      this.optionUnlab = this.v7EvalAttr("nolabels", false);
+      this.optionUnlab = this.v7EvalAttr("hidelabels", false);
 
       this.fTitle = this.v7EvalAttr("title", "");
 
@@ -1757,7 +1757,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.x_handle = new JSROOT.TAxisPainter(this.getDom(), this.xaxis, true);
       this.x_handle.setPadName(this.getPadName());
-      this.x_handle.optionUnlab = this.v7EvalAttr("x_nolabels", false);
+      this.x_handle.optionUnlab = this.v7EvalAttr("x_hidelabels", false);
 
       this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
                                       { reverse: this.reverse_x,
@@ -1770,7 +1770,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.y_handle = new JSROOT.TAxisPainter(this.getDom(), this.yaxis, true);
       this.y_handle.setPadName(this.getPadName());
-      this.y_handle.optionUnlab = this.v7EvalAttr("y_nolabels", false);
+      this.y_handle.optionUnlab = this.v7EvalAttr("y_hidelabels", false);
 
       this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
                                       { reverse: this.reverse_y,
