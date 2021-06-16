@@ -80,6 +80,7 @@ using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleReadOptions = ROOT::Experimental::RNTupleReadOptions;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
+using RNTupleWriteOptionsDaos = ROOT::Experimental::RNTupleWriteOptionsDaos;
 using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
