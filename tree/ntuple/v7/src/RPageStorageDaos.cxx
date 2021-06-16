@@ -86,8 +86,9 @@ ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buffer) const
       bytes += SerializeUInt32(fLenHeader, bytes);
       bytes += SerializeUInt32(fNBytesFooter, bytes);
       bytes += SerializeUInt32(fLenFooter, bytes);
+      bytes += SerializeString(fObjClass, bytes);
    }
-   return 20;
+   return SerializeString(fObjClass, nullptr) + 20;
 }
 
 std::uint32_t
@@ -100,7 +101,15 @@ ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer)
    bytes += DeserializeUInt32(bytes, &fLenHeader);
    bytes += DeserializeUInt32(bytes, &fNBytesFooter);
    bytes += DeserializeUInt32(bytes, &fLenFooter);
-   return 20;
+   bytes += DeserializeString(bytes, &fObjClass);
+   return SerializeString(fObjClass, nullptr) + 20;
+}
+
+std::uint32_t
+ROOT::Experimental::Detail::RDaosNTupleAnchor::GetSize()
+{
+   return RDaosNTupleAnchor().Serialize(nullptr)
+      + ROOT::Experimental::Detail::RDaosObject::ObjClassId::kOCNameMaxLength;
 }
 
 
@@ -125,9 +134,16 @@ ROOT::Experimental::Detail::RPageSinkDaos::~RPageSinkDaos() = default;
 
 void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & /* model */)
 {
+   auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
+   fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
+   auto oclass = RDaosObject::ObjClassId(fNTupleAnchor.fObjClass);
+   if (oclass.IsUnknown())
+      throw ROOT::Experimental::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
+
    auto args = ParseDaosURI(fURI);
    auto pool = std::make_shared<RDaosPool>(args.fPoolUuid, args.fSvcReplicas);
    fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerUuid, /*create =*/ true);
+   fDaosContainer->SetDefaultObjectClass(oclass);
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szHeader = descriptor.GetHeaderSize();
@@ -294,6 +310,11 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
                                   kAttributeKey, kCidMetadata);
    ntpl.Deserialize(buffer.get());
 
+   auto oclass = RDaosObject::ObjClassId(ntpl.fObjClass);
+   if (oclass.IsUnknown())
+      throw ROOT::Experimental::RException(R__FAIL("Unknown object class " + ntpl.fObjClass));
+   fDaosContainer->SetDefaultObjectClass(oclass);
+
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
    auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
    fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesHeader, kOidHeader, kDistributionKey,
@@ -309,6 +330,12 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    descBuilder.AddClustersFromFooter(buffer.get());
 
    return descBuilder.MoveDescriptor();
+}
+
+
+std::string ROOT::Experimental::Detail::RPageSourceDaos::GetObjectClass() const
+{
+   return fDaosContainer->GetDefaultObjectClass().ToString();
 }
 
 

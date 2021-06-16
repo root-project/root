@@ -75,6 +75,27 @@ public:
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleWriteOptionsDaos
+\ingroup NTuple
+\brief DAOS-specific user-tunable settings for storing ntuples
+*/
+// clang-format on
+class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
+  std::string fObjectClass{"RP_XSF"};
+
+public:
+   virtual ~RNTupleWriteOptionsDaos() = default;
+   std::unique_ptr<RNTupleWriteOptions> Clone() const override
+   { return std::make_unique<RNTupleWriteOptionsDaos>(*this); }
+
+   const std::string &GetObjectClass() const { return fObjectClass; }
+   /// Set the object class used to generate OIDs that relate to user data. Any
+   /// `OC_xxx` constant defined in `daos_obj_class.h` may be used here without
+   /// the OC_ prefix.
+   void SetObjectClass(const std::string &val) { fObjectClass = val; }
+};
 
 // clang-format off
 /**
