@@ -23,10 +23,9 @@ void tmva005_RVariablePlotter()
     auto transform = [](ROOT::RDF::RNode df) { return df.Define("var5", "var1 * var2"); };
     auto sig2 = transform(sig1);
     auto bkg2 = transform(bkg1);
-    //auto sig3 = sig2.Filter("var1 > 0");
+
 
     // Create a variable plotter object giving the dataframes and the class labels.
-    //TMVA::RVariablePlotter plotter({sig2, bkg2, sig3}, {"Signal", "Background", "Signal (var1 > 0)"});
     TMVA::RVariablePlotter plotter({sig2, bkg2}, {"Signal", "Background"});
 
     // Create a canvas with four pads for plotting
@@ -34,7 +33,7 @@ void tmva005_RVariablePlotter()
     c->Divide(3, 2);
 
     
-    // legend
+    // legend vertices
     float minX = 0.7;
     float minY = 0.8;
     float maxX = 0.9;
@@ -47,7 +46,7 @@ void tmva005_RVariablePlotter()
     for (unsigned int i = 0; i < variables.size(); i++) {
         c->cd(i + 1);
         c->Update();
-        gPad->SetGrid(1,1); 
+        gPad->SetGrid(1,1); // plotting a background grid
         plotter.Draw(variables[i]);
         plotter.DrawLegend(minX, minY, maxX, maxY);
         

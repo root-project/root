@@ -81,6 +81,8 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable) {
     clone->SetTitle(variable.c_str());
     clone->GetXaxis()->SetTitle(variable.c_str());
     clone->GetYaxis()->SetTitle("Count");
+    
+        
 }
 
 
