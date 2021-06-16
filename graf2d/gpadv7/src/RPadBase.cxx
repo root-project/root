@@ -39,10 +39,8 @@ void RPadBase::UseStyle(const std::shared_ptr<RStyle> &style)
 
 void RPadBase::AddPrimitive(std::shared_ptr<RDrawable> drawable)
 {
-   if (drawable->GetCssType() == "pad") {
-      auto pad = dynamic_cast<RPad *>(drawable.get());
-      if (pad) pad->SetParent(this);
-   }
+   if (auto pad = dynamic_cast<RPad *>(drawable.get()))
+      pad->SetParent(this);
 
    fPrimitives.emplace_back(drawable);
 }
@@ -201,10 +199,8 @@ std::shared_ptr<RFrame> RPadBase::GetOrCreateFrame()
 const std::shared_ptr<RFrame> RPadBase::GetFrame() const
 {
    for (auto &drawable : fPrimitives) {
-      if (drawable->GetCssType() == "frame") {
-         const std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared());
-         if (frame) return frame;
-      }
+      if (const std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared()))
+        return frame;
    }
    return nullptr;
 }
@@ -215,10 +211,8 @@ const std::shared_ptr<RFrame> RPadBase::GetFrame() const
 std::shared_ptr<RFrame> RPadBase::GetFrame()
 {
    for (auto &drawable : fPrimitives) {
-      if (drawable->GetCssType() == "frame") {
-         std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared());
-         if (frame) return frame;
-      }
+      if (std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared()))
+         return frame;
    }
    return nullptr;
 }
