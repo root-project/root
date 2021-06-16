@@ -229,7 +229,7 @@ void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::st
 
 
 ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
-   : RPageStorage(name), fMetrics(""), fOptions(options)
+   : RPageStorage(name), fMetrics(""), fOptions(options.Clone())
 {
 }
 
@@ -297,7 +297,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       columnRange.fColumnId = i;
       columnRange.fFirstElementIndex = 0;
       columnRange.fNElements = 0;
-      columnRange.fCompressionSettings = fOptions.GetCompression();
+      columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fColumnId = i;

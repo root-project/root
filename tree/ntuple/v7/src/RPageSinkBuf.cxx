@@ -63,7 +63,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    fTaskScheduler->AddTask([this, zipItem, colId = columnHandle.fId] {
       zipItem->fSealedPage = SealPage(zipItem->fPage,
          *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
-         fOptions.GetCompression(), zipItem->fBuf.get()
+         GetWriteOptions().GetCompression(), zipItem->fBuf.get()
       );
    });
 

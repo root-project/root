@@ -52,6 +52,10 @@ class RNTupleWriteOptions {
    bool fUseBufferedWrite = true;
 
 public:
+   virtual ~RNTupleWriteOptions() = default;
+   virtual std::unique_ptr<RNTupleWriteOptions> Clone() const
+   { return std::make_unique<RNTupleWriteOptions>(*this); }
+
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
    void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
