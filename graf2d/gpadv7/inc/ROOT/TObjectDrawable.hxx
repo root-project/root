@@ -50,7 +50,7 @@ private:
    RAttrText fAttrText{this, "text"};          ///<! object text attributes
    RAttrMarker fMarkerAttr{this, "marker"};    ///<! object marker attributes
 
-   const char *GetColorCode(TColor *col);
+   static std::string GetColorCode(TColor *col);
 
    std::unique_ptr<TObject> CreateSpecials(int kind);
 
@@ -80,8 +80,8 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
-   TObjectDrawable(TObject &obj);
-   TObjectDrawable(TObject &obj, const std::string &opt);
+   TObjectDrawable(const TObject &obj);
+   TObjectDrawable(const TObject &obj, const std::string &opt);
    TObjectDrawable(TObject *obj);
    TObjectDrawable(TObject *obj, const std::string &opt);
    TObjectDrawable(const std::shared_ptr<TObject> &obj);
