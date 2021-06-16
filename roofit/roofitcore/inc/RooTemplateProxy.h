@@ -245,10 +245,10 @@ public:
       // let's maybe not support overwriting owned args unless it becomes necessary
       throw std::runtime_error("Error in RooTemplateProxy: emplaceOwnedArg<>() called on a proxy already owning an arg.");
     }
-    auto arg = new U{std::forward<ConstructorArgs>(constructorArgs)...};
-    setArg(*arg);
+    auto ownedArg = new U{std::forward<ConstructorArgs>(constructorArgs)...};
+    setArg(*ownedArg);
     _ownArg = true;
-    return *arg;
+    return *ownedArg;
   }
 
 
@@ -256,13 +256,13 @@ public:
   /// Move a new object held and owned by proxy.
   /// Can only be done if the proxy was non-owning before.
   template<class U>
-  U& putOwnedArg(std::unique_ptr<U> arg) {
+  U& putOwnedArg(std::unique_ptr<U> ownedArg) {
     if(_ownArg) {
       // let's maybe not support overwriting owned args unless it becomes necessary
       throw std::runtime_error("Error in RooTemplateProxy: putOwnedArg<>() called on a proxy already owning an arg.");
     }
-    auto argPtr = arg.get();
-    setArg(*arg.release());
+    auto argPtr = ownedArg.get();
+    setArg(*ownedArg.release());
     _ownArg = true;
     return *argPtr;
   }
