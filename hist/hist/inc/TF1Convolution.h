@@ -35,6 +35,7 @@ class TF1Convolution : public TF1AbsComposition {
    Int_t    fNofPoints;                  ///< Number of point for FFT array
    Bool_t   fFlagFFT;                    ///< Choose FFT or numerical convolution
    Bool_t fFlagGraph = false;            ///<! Tells if the graph is already done or not
+   static Double_t fgExtraRangeFraction; ///<! Additional default fraction of the range used for FFT convolution
 
    Double_t EvalNumConv(Double_t t);
    Double_t EvalFFTConv(Double_t t);
@@ -61,6 +62,8 @@ public:
    void SetExtraRange(Double_t percentage);
    void SetNofPointsFFT(Int_t n);
    void SetNumConv(Bool_t flag = true) { fFlagFFT = !flag; }
+
+   static Double_t SetDefaultExtraRange(Double_t percentage);
 
    Int_t GetNpar() const { return (fNofParams1 + fNofParams2); }
    Double_t GetXmin() const { return fXmin; }
