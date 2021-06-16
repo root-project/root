@@ -67,6 +67,8 @@ static constexpr std::uint64_t kAttributeKey = 0x4243544b5344422d;
 static constexpr daos_obj_id_t kOidAnchor{std::uint64_t(-1), 0};
 static constexpr daos_obj_id_t kOidHeader{std::uint64_t(-2), 0};
 static constexpr daos_obj_id_t kOidFooter{std::uint64_t(-3), 0};
+
+static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 } // namespace
 
 
@@ -202,7 +204,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(
 		const void *data, size_t nbytes, size_t lenHeader)
 {
-   fDaosContainer->WriteSingleAkey(data, nbytes, kOidHeader, kDistributionKey, kAttributeKey);
+   fDaosContainer->WriteSingleAkey(data, nbytes, kOidHeader, kDistributionKey,
+                                   kAttributeKey, kCidMetadata);
    fNTupleAnchor.fLenHeader = lenHeader;
    fNTupleAnchor.fNBytesHeader = nbytes;
 }
@@ -210,7 +213,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(
 		const void *data, size_t nbytes, size_t lenFooter)
 {
-   fDaosContainer->WriteSingleAkey(data, nbytes, kOidFooter, kDistributionKey, kAttributeKey);
+   fDaosContainer->WriteSingleAkey(data, nbytes, kOidFooter, kDistributionKey,
+                                   kAttributeKey, kCidMetadata);
    fNTupleAnchor.fLenFooter = lenFooter;
    fNTupleAnchor.fNBytesFooter = nbytes;
 }
@@ -219,7 +223,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor() {
    const auto ntplSize = RDaosNTupleAnchor::GetSize();
    auto buffer = std::make_unique<unsigned char[]>(ntplSize);
    fNTupleAnchor.Serialize(buffer.get());
-   fDaosContainer->WriteSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey, kAttributeKey);
+   fDaosContainer->WriteSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey,
+                                   kAttributeKey, kCidMetadata);
 }
 
 ROOT::Experimental::Detail::RPage
@@ -285,18 +290,21 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    RDaosNTupleAnchor ntpl;
    const auto ntplSize = RDaosNTupleAnchor::GetSize();
    auto buffer = std::make_unique<unsigned char[]>(ntplSize);
-   fDaosContainer->ReadSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey, kAttributeKey);
+   fDaosContainer->ReadSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey,
+                                  kAttributeKey, kCidMetadata);
    ntpl.Deserialize(buffer.get());
 
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
    auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
-   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesHeader, kOidHeader, kDistributionKey, kAttributeKey);
+   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesHeader, kOidHeader, kDistributionKey,
+                                  kAttributeKey, kCidMetadata);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
    descBuilder.SetFromHeader(buffer.get());
 
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
    zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
-   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesFooter, kOidFooter, kDistributionKey, kAttributeKey);
+   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesFooter, kOidFooter, kDistributionKey,
+                                  kAttributeKey, kCidMetadata);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
    descBuilder.AddClustersFromFooter(buffer.get());
 
