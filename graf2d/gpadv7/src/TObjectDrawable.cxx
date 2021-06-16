@@ -30,12 +30,15 @@
 using namespace ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////
-/// Checks object ownership - used for TH1 directory handling
+/// Checks object ownership - used for TH1 directory handling and TF1 globals lists
 
 void TObjectDrawable::CheckOwnership(TObject *obj)
 {
    if (obj && obj->InheritsFrom("TH1")) {
       TMethodCall call(obj->IsA(), "SetDirectory", "nullptr");
+      call.Execute((void *)(obj));
+   } else if (obj && obj->InheritsFrom("TF1")) {
+      TMethodCall call(obj->IsA(), "AddToGlobalList", "kFALSE");
       call.Execute((void *)(obj));
    }
 }
