@@ -25,7 +25,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
 #include <iostream>
 #include <utility>
 
@@ -63,27 +62,6 @@ std::uint32_t DeserializeClusterSize(const void *buffer, ROOT::Experimental::Clu
    auto nbytes = DeserializeUInt32(buffer, &size);
    *val = size;
    return nbytes;
-}
-
-std::uint32_t SerializeString(const std::string &val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto pos = reinterpret_cast<unsigned char *>(buffer);
-      pos += SerializeUInt32(val.length(), pos);
-      memcpy(pos, val.data(), val.length());
-   }
-   return SerializeUInt32(val.length(), nullptr) + val.length();
-}
-
-std::uint32_t DeserializeString(const void *buffer, std::string *val)
-{
-   auto base = reinterpret_cast<const unsigned char *>(buffer);
-   auto bytes = base;
-   std::uint32_t length;
-   bytes += DeserializeUInt32(buffer, &length);
-   val->resize(length);
-   memcpy(&(*val)[0], bytes, length);
-   return bytes + length - base;
 }
 
 std::uint32_t SerializeLocator(const ROOT::Experimental::RClusterDescriptor::RLocator &val, void *buffer)
