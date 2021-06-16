@@ -56,7 +56,7 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable) {
     
     for (std::size_t i = 0; i < size; i++) {
         // Trigger event loop with computing the histogram
-        auto h = fNodes[i].Histo1D(variable);
+    auto h = fNodes[i].Histo1D(variable);
         histos.push_back(h);
     }
 
@@ -96,6 +96,6 @@ void TMVA::RVariablePlotter::DrawLegend(float minX = 0.8, float minY = 0.8, floa
         histos[i].SetLineColor(i + 1);
         l.AddEntry(&histos[i], fLabels[i].c_str(), "l");
     }
-    l.SetBorderSize(0);
+    l.SetBorderSize(1);
     l.DrawClone();
 }

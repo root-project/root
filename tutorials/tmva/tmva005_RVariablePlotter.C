@@ -10,6 +10,7 @@
 
 using namespace TMVA::Experimental;
 
+
 void tmva005_RVariablePlotter()
 {
     // Initialize ROOT dataframes from signal and background datasets
@@ -31,6 +32,7 @@ void tmva005_RVariablePlotter()
     // Create a canvas with four pads for plotting
     auto c = new TCanvas("", "", 1200, 800);
     c->Divide(3, 2);
+
     
     // legend
     float minX = 0.7;
@@ -43,10 +45,14 @@ void tmva005_RVariablePlotter()
     const std::vector<std::string> variables = {"var1", "var2", "var3", "var4", "var5"};
     
     for (unsigned int i = 0; i < variables.size(); i++) {
-      c->cd(i + 1);
-      c->Update();
-      plotter.Draw(variables[i]);
-      plotter.DrawLegend(minX, minY, maxX, maxY);
+        c->cd(i + 1);
+        c->Update();
+        gPad->SetGrid(1,1); 
+        plotter.Draw(variables[i]);
+        plotter.DrawLegend(minX, minY, maxX, maxY);
+        
     }
 
 }
+
+
