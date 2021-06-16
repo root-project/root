@@ -164,7 +164,7 @@ protected:
    std::unique_ptr<RCounters> fCounters;
    RNTupleMetrics fMetrics;
 
-   RNTupleWriteOptions fOptions;
+   std::unique_ptr<RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
@@ -226,7 +226,7 @@ public:
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
-   const RNTupleWriteOptions &GetWriteOptions() const { return fOptions; }
+   const RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
