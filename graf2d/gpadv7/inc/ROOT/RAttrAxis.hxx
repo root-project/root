@@ -46,7 +46,7 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
    RAttrValue<RColor> fTicksColor{this, "ticks_color", RColor::kBlack};  ///<! ticks color
    RAttrValue<int> fTicksWidth{this, "ticks_width", 1};                  ///<! ticks width
-   RAttrValue<bool> fNoLabels{this, "nolabels", false};                  ///<! disable labels drawing
+   RAttrValue<bool> fHideLabels{this, "hidelabels", false};              ///<! disable labels drawing
    RAttrText fAttrLabels{this, "labels"};                                ///<! text attributes for labels
    RAttrValue<RPadLength> fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative
    RAttrValue<bool> fLabelsCenter{this, "labels_center", false};         ///<! center labels
@@ -143,8 +143,8 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetLabelsOffset(const RPadLength &len) { fLabelsOffset = len; return *this; }
    RPadLength GetLabelsOffset() const { return fLabelsOffset; }
 
-   RAttrAxis &SetNoLabels(bool on = true) { fNoLabels = on; return *this; }
-   bool GetNoLabels() const { return fNoLabels; }
+   RAttrAxis &SetHideLabels(bool on = true) { fHideLabels = on; return *this; }
+   bool GetHideLabels() const { return fHideLabels; }
 
    const RAttrText &AttrLabels() const { return fAttrLabels; }
    RAttrText &AttrLabels() { return fAttrLabels; }
