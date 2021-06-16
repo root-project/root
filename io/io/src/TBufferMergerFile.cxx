@@ -14,7 +14,6 @@
 #include "TBufferFile.h"
 
 namespace ROOT {
-namespace Experimental {
 
 TBufferMergerFile::TBufferMergerFile(TBufferMerger &m)
    : TMemFile(m.fMerger.GetOutputFile()->GetName(), "RECREATE", "",
@@ -58,5 +57,4 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
    return nbytes;
 }
 
-} // namespace Experimental
 } // namespace ROOT
