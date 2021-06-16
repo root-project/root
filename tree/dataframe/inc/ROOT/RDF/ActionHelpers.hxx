@@ -1468,8 +1468,8 @@ public:
 template <typename... ColTypes>
 class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    const unsigned int fNSlots;
-   std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
-   std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
+   std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
+   std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
    const std::string fFileName;           // name of the output file name
@@ -1601,14 +1601,14 @@ public:
       auto out_file = TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs);
       if(!out_file)
          throw std::runtime_error("Snapshot: could not create output file " + fFileName);
-      fMerger = std::make_unique<ROOT::Experimental::TBufferMerger>(std::unique_ptr<TFile>(out_file));
+      fMerger = std::make_unique<ROOT::TBufferMerger>(std::unique_ptr<TFile>(out_file));
    }
 
    void Finalize()
    {
       const bool allNullFiles =
          std::all_of(fOutputFiles.begin(), fOutputFiles.end(),
-                     [](const std::shared_ptr<ROOT::Experimental::TBufferMergerFile> &ptr) { return ptr == nullptr; });
+                     [](const std::shared_ptr<ROOT::TBufferMergerFile> &ptr) { return ptr == nullptr; });
       R__ASSERT(!allNullFiles);
 
       auto fileWritten = false;
