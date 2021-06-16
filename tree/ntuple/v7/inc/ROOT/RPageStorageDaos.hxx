@@ -45,7 +45,8 @@ class RDaosContainer;
 \ingroup NTuple
 \brief Entry point for an RNTuple in a DAOS container. It encodes essential
 information to read the ntuple; currently, it contains (un)compressed size of
-the header/footer blobs.
+the header/footer blobs and the object class for user data OIDs.
+The length of a serialized anchor cannot be greater than the value returned by the `GetSize` function.
 */
 // clang-format on
 struct RDaosNTupleAnchor {
@@ -59,20 +60,22 @@ struct RDaosNTupleAnchor {
    std::uint32_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint32_t fLenFooter = 0;
+   /// The object class for user data OIDs, e.g. `SX`
+   std::string fObjClass{};
 
    bool operator ==(const RDaosNTupleAnchor &other) const {
       return fVersion == other.fVersion &&
          fNBytesHeader == other.fNBytesHeader &&
          fLenHeader == other.fLenHeader &&
          fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter;
+         fLenFooter == other.fLenFooter &&
+         fObjClass == other.fObjClass;
    }
 
    std::uint32_t Serialize(void *buffer) const;
    std::uint32_t Deserialize(const void *buffer);
 
-   static std::uint32_t GetSize()
-   { return RDaosNTupleAnchor().Serialize(nullptr); }
+   static std::uint32_t GetSize();
 };
 
 // clang-format off
@@ -179,6 +182,9 @@ public:
                        RSealedPage &sealedPage) final;
 
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
+
+   /// Return the object class used for user data OIDs in this ntuple.
+   std::string GetObjectClass() const;
 };
 
 
