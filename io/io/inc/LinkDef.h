@@ -53,5 +53,7 @@
 #pragma link C++ class ROOT::Internal::RRawFile+;
 #pragma link C++ class ROOT::Experimental::TBufferMerger;
 #pragma link C++ class ROOT::Experimental::TBufferMergerFile;
+#pragma link C++ class ROOT::TBufferMerger;
+#pragma link C++ class ROOT::TBufferMergerFile;
 
 #endif
