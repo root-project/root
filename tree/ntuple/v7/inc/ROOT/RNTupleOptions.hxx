@@ -83,7 +83,7 @@ public:
 */
 // clang-format on
 class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
-  std::string fObjectClass{"RP_XSF"};
+  std::string fObjectClass{"SX"};
 
 public:
    virtual ~RNTupleWriteOptionsDaos() = default;

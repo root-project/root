@@ -155,7 +155,7 @@ private:
    daos_handle_t fContainerHandle{};
    uuid_t fContainerUuid{};
    std::shared_ptr<RDaosPool> fPool;
-   ObjClassId_t fDefaultObjectClass{OC_RP_XSF};
+   ObjClassId_t fDefaultObjectClass{OC_SX};
 
    /**
      \brief Perform a vector read/write operation on different objects.
