@@ -63,7 +63,7 @@ std::string TObjectDrawable::DetectCssType(const TObject *obj)
 ////////////////////////////////////////////////////////////////////
 /// Constructor, clones TObject instance
 
-TObjectDrawable::TObjectDrawable(TObject &obj) : RDrawable(DetectCssType(&obj))
+TObjectDrawable::TObjectDrawable(const TObject &obj) : RDrawable(DetectCssType(&obj))
 {
    fKind = kObject;
    auto clone = obj.Clone();
@@ -74,7 +74,7 @@ TObjectDrawable::TObjectDrawable(TObject &obj) : RDrawable(DetectCssType(&obj))
 ////////////////////////////////////////////////////////////////////
 /// Constructor, clones TObject instance
 
-TObjectDrawable::TObjectDrawable(TObject &obj, const std::string &opt) : TObjectDrawable(obj)
+TObjectDrawable::TObjectDrawable(const TObject &obj, const std::string &opt) : TObjectDrawable(obj)
 {
    SetOpt(opt);
 }
@@ -103,7 +103,7 @@ TObjectDrawable::TObjectDrawable(TObject *obj, const std::string &opt) : TObject
 TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj.get()))
 {
    fKind = kObject;
-   CheckOwnership(fObj.get());
+   CheckOwnership(obj.get());
    fObj = obj;
 }
 
@@ -136,17 +136,13 @@ TObjectDrawable::~TObjectDrawable() = default;
 ////////////////////////////////////////////////////////////////////
 /// Convert TColor to RGB string for using with SVG
 
-const char *TObjectDrawable::GetColorCode(TColor *col)
+std::string TObjectDrawable::GetColorCode(TColor *col)
 {
-   static std::string code;
-
    RColor rcol((uint8_t) (255*col->GetRed()), (uint8_t) (255*col->GetGreen()), (uint8_t) (255*col->GetBlue()));
    if (col->GetAlpha() != 1)
       rcol.SetAlphaFloat(col->GetAlpha());
 
-   code = rcol.AsSVG();
-
-   return code.c_str();
+   return rcol.AsSVG();
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -164,7 +160,7 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
          for (int n = 0; n <= cols->GetLast(); ++n) {
             auto col = dynamic_cast<TColor *>(cols->At(n));
             if (!col) continue;
-            auto code = TString::Format("%d=%s", n, GetColorCode(col));
+            auto code = TString::Format("%d=%s", n, GetColorCode(col).c_str());
             arr->Add(new TObjString(code));
          }
 
@@ -181,7 +177,7 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
          auto palette = TColor::GetPalette();
          for (int n = 0; n < palette.GetSize(); ++n) {
             auto col = gROOT->GetColor(palette[n]);
-            arr->Add(new TObjString(GetColorCode(col)));
+            arr->Add(new TObjString(GetColorCode(col).c_str()));
          }
 
          return arr;
@@ -208,7 +204,7 @@ void TObjectDrawable::ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &i
       if (*icol < 10) return;
 
       TColor *col = gROOT->GetColor(*icol);
-      if (col) item->AddColor(*icol, col->AsHexString());
+      if (col) item->UpdateColor(*icol, GetColorCode(col));
    };
 
    ExtractColor("TAttLine", "fLineColor");
