@@ -105,6 +105,38 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 
 ds = ROOT.RooDataSet("ds", "ds", ROOT.RooArgSet(x, y), ROOT.RooFit.Import(tree))
 
+# Use ascii import/export for datasets
+# ------------------------------------------------------------------------------------
+
+
+def write_dataset(ds, filename):
+    # Write data to output stream
+    outstream = ROOT.std.ofstream(filename)
+    # Optionally, adjust the stream here (e.g. std::setprecision)
+    ds.write(outstream)
+    outstream.close()
+
+
+write_dataset(ds, "rf102_testData.txt")
+
+# Read data from input stream. The variables of the dataset need to be supplied
+# to the RooDataSet::read() function.
+print("\n-----------------------\nReading data from ASCII")
+dataReadBack = ROOT.RooDataSet.read(
+    "rf102_testData.txt",
+    ROOT.RooArgList(x, y),  # variables to be read. If the file has more fields, these are ignored.
+    "D",  # Prints if a RooFit message stream listens for debug messages. Use Q for quiet.
+)
+
+dataReadBack.Print("V")
+
+print("\nOriginal data, line 20:")
+ds.get(20).Print("V")
+
+print("\nRead-back data, line 20:")
+dataReadBack.get(20).Print("V")
+
+
 # Plot data set with multiple binning choices
 # ------------------------------------------------------------------------------------
 # Print number of events in dataset
@@ -118,9 +150,13 @@ ds.plotOn(frame3)
 frame4 = y.frame(ROOT.RooFit.Title("Unbinned data shown with custom binning"))
 ds.plotOn(frame4, ROOT.RooFit.Binning(20))
 
+frame5 = y.frame(ROOT.RooFit.Title("Unbinned data read back from ASCII file"))
+ds.plotOn(frame5, ROOT.RooFit.Binning(20))
+dataReadBack.plotOn(frame5, ROOT.RooFit.Binning(20), ROOT.RooFit.MarkerColor(ROOT.kRed), ROOT.RooFit.MarkerStyle(5))
+
 # Draw all frames on a canvas
 c = ROOT.TCanvas("rf102_dataimport", "rf102_dataimport", 800, 800)
-c.Divide(2, 2)
+c.Divide(3, 2)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.15)
 frame.GetYaxis().SetTitleOffset(1.4)
@@ -129,13 +165,17 @@ c.cd(2)
 ROOT.gPad.SetLeftMargin(0.15)
 frame2.GetYaxis().SetTitleOffset(1.4)
 frame2.Draw()
-c.cd(3)
+c.cd(4)
 ROOT.gPad.SetLeftMargin(0.15)
 frame3.GetYaxis().SetTitleOffset(1.4)
 frame3.Draw()
-c.cd(4)
+c.cd(5)
 ROOT.gPad.SetLeftMargin(0.15)
 frame4.GetYaxis().SetTitleOffset(1.4)
 frame4.Draw()
+c.cd(6)
+ROOT.gPad.SetLeftMargin(0.15)
+frame4.GetYaxis().SetTitleOffset(1.4)
+frame5.Draw()
 
 c.SaveAs("rf102_dataimport.png")

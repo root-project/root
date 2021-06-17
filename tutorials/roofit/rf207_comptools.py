@@ -26,7 +26,7 @@ sig = ROOT.RooGaussian("sig", "Signal component 1", x, mean, sigma)
 
 # Build Chebychev polynomial p.d.f.
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
-a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
+a1 = ROOT.RooRealVar("a1", "a1", 0.2, 0.0, 1.0)
 bkg1 = ROOT.RooChebychev("bkg1", "Background 1", x, ROOT.RooArgList(a0, a1))
 
 # Build expontential pdf
@@ -95,7 +95,6 @@ sigsum = ROOT.RooAddPdf("sigsum", "sig+sig2", ROOT.RooArgList(sig, sig2), ROOT.R
 cust = ROOT.RooCustomizer(model, "cust")
 
 # Instruct the customizer to replace node 'sig' with node 'sigsum'
-sigsum = ROOT.RooRealVar()  # just define some kind of RooFit type
 cust.replaceArg(sig, sigsum)
 
 # Build a clone of the input pdf according to the above customization
@@ -110,3 +109,9 @@ cust_clone = cust.build(ROOT.kTRUE)
 
 # Print structure of clone of model with sig.sigsum replacement.
 cust_clone.Print("t")
+
+# The RooCustomizer has the be deleted first.
+# Otherwise, it might happen that `sig` or `sigsum` are deleted first, in which
+# case the internal TLists in the RooCustomizer will complain about deleted
+# objects.
+del cust
