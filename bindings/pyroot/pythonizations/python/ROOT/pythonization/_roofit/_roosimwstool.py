@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooSimWSTool
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,15 +21,15 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
+Some member functions of RooSimWSTool that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooSimWSTool::build.
 For example, the following code is equivalent in PyROOT:
 \code{.py}
 # Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
+sct.build("model_sim2", "model", ROOT.RooFit.SplitParam("p0", "c,d"))
 
 # With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
+sct.build("model_sim2", "model", SplitParam=("p0", "c,d"))
 
 \endcode
 
@@ -42,9 +42,9 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooSimWSTool(object):
+    def build(self, *args, **kwargs):
+        # Redefinition of `RooSimWSTool.build` for keyword arguments.
+        # The keywords must correspond to the CmdArg of the `build` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        return self._build(*args, **kwargs)

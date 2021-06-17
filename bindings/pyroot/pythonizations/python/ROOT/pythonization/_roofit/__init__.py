@@ -19,14 +19,49 @@ from ._rooabscollection import RooAbsCollection
 from ._rooabsdata import RooAbsData
 from ._rooabspdf import RooAbsPdf
 from ._rooabsreal import RooAbsReal
+from ._rooabsreallvalue import RooAbsRealLValue
 from ._rooarglist import RooArgList
 from ._rooargset import RooArgSet
-from ._rooworkspace import RooWorkspace
+from ._roochi2var import RooChi2Var
+from ._roodatahist import RooDataHist
+from ._roodataset import RooDataSet
+from ._roodecays import RooDecay, RooBDecay, RooBCPGenDecay, RooBCPEffDecay, RooBMixDecay
+from ._roogenfitstudy import RooGenFitStudy
+from ._roomcstudy import RooMCStudy
+from ._roomsgservice import RooMsgService
+from ._roonllvar import RooNLLVar
+from ._rooprodpdf import RooProdPdf
 from ._roosimultaneous import RooSimultaneous
+from ._roosimwstool import RooSimWSTool
+from ._rooworkspace import RooWorkspace
 
 
 # list of python classes that are used to pythonize RooFit classes
-python_classes = [RooAbsCollection, RooAbsData, RooAbsPdf, RooAbsReal, RooArgList, RooArgSet, RooSimultaneous, RooWorkspace]
+python_classes = [
+    RooAbsCollection,
+    RooAbsData,
+    RooAbsPdf,
+    RooAbsReal,
+    RooAbsRealLValue,
+    RooArgList,
+    RooArgSet,
+    RooBCPGenDecay,
+    RooBCPEffDecay,
+    RooBDecay,
+    RooBMixDecay,
+    RooChi2Var,
+    RooDataHist,
+    RooDataSet,
+    RooDecay,
+    RooGenFitStudy,
+    RooMCStudy,
+    RooMsgService,
+    RooNLLVar,
+    RooProdPdf,
+    RooSimultaneous,
+    RooSimWSTool,
+    RooWorkspace,
+]
 
 # create a dictionary for convenient access to python classes
 python_classes_dict = dict()
