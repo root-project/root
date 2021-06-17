@@ -846,7 +846,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = . \
+INPUT                  = ./mainpage.md \
                          ../../core/base/ \
                          ../../core/dictgen/ \
                          ../../core/cont/ \
@@ -1025,16 +1025,10 @@ EXCLUDE_PATTERNS       = */G__* \
                          */doc/v5* \
                          */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
-                         makeimage.C \
-                         makerootfile.C \
-                         libs.C \
-                         filter.cxx \
                          *gl2ps* \
                          *CsgOps* \
-                         converttonotebook.py \
-                         makeimage.py \
-                         parallelNotebooks.py \
                          LinkDef*.h \
+                         launcher.py \
                          */io/io/res/* \
                          */src/lexertk.hpp
 
