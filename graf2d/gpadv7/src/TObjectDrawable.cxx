@@ -192,6 +192,8 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
 
 void TObjectDrawable::ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj)
 {
+   if (!obj) return;
+
    TClass *cl = obj->IsA();
 
    auto ExtractColor = [&item, cl, obj](const char *class_name, const char *class_member) {
@@ -245,10 +247,10 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
                // do not call stack->GetHistogram() to avoid it auto-creation
                auto off1 = cl->GetDataMemberOffset("fHistogram");
                if (off1 > 0) ExtractObjectColors(item, *((TObject **) ((char *) fObj.get() + off1)));
-               // here make identic to gHistogram, one also can use TMethodCall
+               // here make identical to fHistogram, one also can use TMethodCall
                auto off2 = cl->GetDataMemberOffset("fHists");
                if (off2 > 0) {
-                  TIter iter(*(TList **) (((char *) fObj.get() + off1)));
+                  TIter iter(*(TList **) (((char *) fObj.get() + off2)));
                   TObject *hist = nullptr;
                   while ((hist = iter()) != nullptr)
                      ExtractObjectColors(item, hist);
