@@ -11,7 +11,7 @@
 ///  - the new size (0 erase the label),
 ///  - the new text alignment,
 ///  - the new label color,
-///  = the new label text.
+///  - the new label text.
 ///
 /// \macro_image
 /// \macro_code
@@ -19,7 +19,7 @@
 /// \author  Olivier Couet
 
 void gaxis3() {
-   TCanvas* c1 = new TCanvas("c1","Examples of Gaxis",10,10,800,400);
+   TCanvas* c1 = new TCanvas("c1","Examples of TGaxis",10,10,800,400);
    c1->Range(-6,-0.1,6,0.1);
 
    TGaxis *axis = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
