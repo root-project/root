@@ -29,7 +29,7 @@ gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 data = gauss.generate(ROOT.RooArgSet(x), 10000)
 
 # Change sigma to 3.15
-sigma = 3.15
+sigma.setVal(3.15)
 
 # Plot data and slightly distorted model
 # ---------------------------------------------------------------------------
