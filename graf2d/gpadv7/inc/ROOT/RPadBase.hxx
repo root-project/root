@@ -112,6 +112,19 @@ public:
       return drawable;
    }
 
+   /// Add drawable of specified class T
+   template<class T, class... ARGS>
+   std::shared_ptr<T> Add(ARGS... args)
+   {
+      auto drawable = std::make_shared<T>(args...);
+
+      TestIfFrameRequired(drawable.get());
+
+      AddPrimitive(drawable);
+
+      return drawable;
+   }
+
    /// Add existing drawable instance to canvas
    std::shared_ptr<RDrawable> Draw(std::shared_ptr<RDrawable> &&drawable)
    {

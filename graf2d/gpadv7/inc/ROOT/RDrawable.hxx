@@ -190,6 +190,8 @@ protected:
 
    virtual std::unique_ptr<RDisplayItem> Display(const RDisplayContext &);
 
+   void SetCssType(const std::string &csstype) { fCssType = csstype; }
+
    virtual void OnDisplayItemDestroyed(RDisplayItem *) const {}
 
    virtual void SetDrawableVersion(Version_t vers) { fVersion = vers; }
