@@ -59,7 +59,7 @@ shapePdfY = ROOT.RooPolynomial(
 )
 shapePdf = ROOT.RooProdPdf("shapePdf", "shapePdf", ROOT.RooArgList(shapePdfX, shapePdfY))
 model = ROOT.RooProdPdf(
-    "model", "model", ROOT.RooArgSet(shapePdf), ROOT.RooFit.Conditional(ROOT.RooArgSet(effPdf), ROOT.RooArgSet(cut))
+    "model", "model", ROOT.RooArgSet(shapePdf), Conditional=(ROOT.RooArgSet(effPdf), ROOT.RooArgSet(cut))
 )
 
 # Generate some toy data from model
@@ -75,18 +75,11 @@ effPdf.fitTo(data, ConditionalObservables=ROOT.RooArgSet(x, y))
 # --------------------------------------------------------
 
 # Make 2D histograms of all data, data and efficiency function
-hh_data_all = ROOT.RooAbsData.createHistogram(
-    data, "hh_data_all", x, ROOT.RooFit.Binning(8), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8))
-)
+hh_data_all = ROOT.RooAbsData.createHistogram(data, "hh_data_all", x, Binning=(8), YVar=(y, ROOT.RooFit.Binning(8)))
 hh_data_sel = ROOT.RooAbsData.createHistogram(
-    data,
-    "hh_data_sel",
-    x,
-    ROOT.RooFit.Binning(8),
-    ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8)),
-    ROOT.RooFit.Cut("cut==cut::accept"),
+    data, "hh_data_sel", x, Binning=8, YVar=(y, ROOT.RooFit.Binning(8)), Cut="cut==cut::accept"
 )
-hh_eff = effFunc.createHistogram("hh_eff", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
+hh_eff = effFunc.createHistogram("hh_eff", x, Binning=50, YVar=(y, ROOT.RooFit.Binning(50)))
 
 # Some adjustsment for good visualization
 hh_data_all.SetMinimum(0)

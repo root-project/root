@@ -46,7 +46,7 @@ x.setRange("signal", -5, 5)
 # ROOT.This is the fraction of of pdf gx_Norm[x] which is in the
 # range named "signal"
 xset = ROOT.RooArgSet(x)
-igx_sig = gx.createIntegral(xset, ROOT.RooFit.NormSet(xset), ROOT.RooFit.Range("signal"))
+igx_sig = gx.createIntegral(xset, NormSet=xset, Range="signal")
 print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
 # Construct cumulative distribution function from pdf
@@ -57,7 +57,7 @@ print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 gx_cdf = gx.createCdf(ROOT.RooArgSet(x))
 
 # Plot cdf of gx versus x
-frame = x.frame(ROOT.RooFit.Title("cdf of Gaussian pdf"))
+frame = x.frame(Title="cdf of Gaussian pdf")
 gx_cdf.plotOn(frame)
 
 # Draw plot on canvas

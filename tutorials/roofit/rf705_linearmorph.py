@@ -73,7 +73,7 @@ lmorph.plotOn(frame1, LineColor=ROOT.kRed)
 # -----------------------------------------------------------------------
 
 # Create 2D histogram
-hh = lmorph.createHistogram("hh", x, ROOT.RooFit.Binning(40), ROOT.RooFit.YVar(alpha, ROOT.RooFit.Binning(40)))
+hh = lmorph.createHistogram("hh", x, Binning=40, YVar=(alpha, ROOT.RooFit.Binning(40)))
 hh.SetLineColor(ROOT.kBlue)
 
 # Fit pdf to dataset with alpha=0.8
@@ -88,7 +88,7 @@ lmorph.setCacheAlpha(True)
 lmorph.fitTo(data, Verbose=True)
 
 # Plot fitted pdf and data overlaid
-frame2 = x.frame(ROOT.RooFit.Bins(100))
+frame2 = x.frame(Bins=100)
 data.plotOn(frame2)
 lmorph.plotOn(frame2)
 
@@ -96,7 +96,7 @@ lmorph.plotOn(frame2)
 # -----------------------------------------
 
 # Show scan -log(L) of dataset w.r.t alpha
-frame3 = alpha.frame(ROOT.RooFit.Bins(100), ROOT.RooFit.Range(0.1, 0.9))
+frame3 = alpha.frame(Bins=100, Range=(0.1, 0.9))
 
 # Make 2D pdf of histogram
 nll = ROOT.RooNLLVar("nll", "nll", lmorph, data)

@@ -40,7 +40,7 @@ model = ROOT.RooProdPdf(
     "model",
     "gaussx(x|y)*gaussy(y)",
     ROOT.RooArgSet(gaussy),
-    ROOT.RooFit.Conditional(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)),
+    Conditional=(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)),
 )
 
 # Marginalize m(x,y) to m(x)

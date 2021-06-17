@@ -34,7 +34,7 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.1)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct Bdecay (x) gauss
-bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, type="DoubleSided")
 
 # Sample data from model
 # --------------------------------------------
@@ -58,7 +58,7 @@ tbins.addUniform(60, -15, 0)
 tbins.addUniform(15, 0, 15)
 
 # Make plot with specified binning
-dtframe = dt.frame(ROOT.RooFit.Range(-15, 15), ROOT.RooFit.Title("dt distribution with custom binning"))
+dtframe = dt.frame(Range=(-15, 15), Title="dt distribution with custom binning")
 data.plotOn(dtframe, Binning=tbins)
 bmix.plotOn(dtframe)
 
@@ -84,7 +84,7 @@ abins.addBoundaryPair(4)
 abins.addBoundaryPair(6)
 
 # Create plot frame in dt
-aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title("mixState asymmetry distribution with custom binning"))
+aframe = dt.frame(Range=(-10, 10), Title="mixState asymmetry distribution with custom binning")
 
 # Plot mixState asymmetry of data with specified customg binning
 data.plotOn(aframe, Asymmetry=mixState, Binning=abins)

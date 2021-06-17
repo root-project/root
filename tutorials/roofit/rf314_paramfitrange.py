@@ -42,7 +42,7 @@ tmp = ROOT.RooGaussian("gmin", "gmin", tmin, ROOT.RooFit.RooConst(0), ROOT.RooFi
 )
 
 # Generate dataset with t values that observe (t>tmin)
-dacc = model.generate(ROOT.RooArgSet(t), ROOT.RooFit.ProtoData(tmp))
+dacc = model.generate(ROOT.RooArgSet(t), ProtoData=tmp)
 
 # Fit pdf to data in acceptance region
 # -----------------------------------------------------------------------
@@ -53,7 +53,7 @@ r = model.fitTo(dacc, Save=True)
 # ---------------------------------------------------------------------------------
 
 # Make plot frame, datasets and overlay model
-frame = t.frame(ROOT.RooFit.Title("Fit to data with per-event acceptance"))
+frame = t.frame(Title="Fit to data with per-event acceptance")
 dall.plotOn(frame, MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
 model.plotOn(frame)
 dacc.plotOn(frame)

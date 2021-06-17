@@ -76,5 +76,5 @@ tagCat.addToRange("soso", "NetTagger-1")
 tagCat.addToRange("soso", "NetTagger-2")
 
 # Use category range in dataset reduction specification
-goodData = data.reduce(ROOT.RooFit.CutRange("good"))
+goodData = data.reduce(CutRange="good")
 goodData.table(tagCat).Print("v")

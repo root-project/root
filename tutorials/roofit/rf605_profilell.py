@@ -40,19 +40,17 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 # ---------------------------------------------------
 
 # Construct unbinned likelihood
-nll = model.createNLL(data, ROOT.RooFit.NumCPU(2))
+nll = model.createNLL(data, NumCPU=2)
 
 # Minimize likelihood w.r.t all parameters before making plots
 ROOT.RooMinimizer(nll).migrad()
 
 # Plot likelihood scan frac
-frame1 = frac.frame(ROOT.RooFit.Bins(10), ROOT.RooFit.Range(0.01, 0.95), ROOT.RooFit.Title("LL and profileLL in frac"))
+frame1 = frac.frame(Bins=10, Range=(0.01, 0.95), Title="LL and profileLL in frac")
 nll.plotOn(frame1, ROOT.RooFit.ShiftToZero())
 
 # Plot likelihood scan in sigma_g2
-frame2 = sigma_g2.frame(
-    ROOT.RooFit.Bins(10), ROOT.RooFit.Range(3.3, 5.0), ROOT.RooFit.Title("LL and profileLL in sigma_g2")
-)
+frame2 = sigma_g2.frame(Bins=10, Range=(3.3, 5.0), Title="LL and profileLL in sigma_g2")
 nll.plotOn(frame2, ROOT.RooFit.ShiftToZero())
 
 # Construct profile likelihood in frac

@@ -39,7 +39,7 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.01)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct a decay pdf, with single gaussian resolution model
-bmix_gm1 = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+bmix_gm1 = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, type="DoubleSided")
 
 # Generate BMixing data with above set of event errors
 data = bmix_gm1.generate(ROOT.RooArgSet(dt, tagFlav, mixState), 20000)
@@ -49,7 +49,7 @@ data = bmix_gm1.generate(ROOT.RooArgSet(dt, tagFlav, mixState), 20000)
 
 # Create frame, data and pdf projection (integrated over tagFlav and
 # mixState)
-frame = dt.frame(ROOT.RooFit.Title("Inclusive decay distribution"))
+frame = dt.frame(Title="Inclusive decay distribution")
 data.plotOn(frame)
 bmix_gm1.plotOn(frame)
 
@@ -57,7 +57,7 @@ bmix_gm1.plotOn(frame)
 # -------------------------------------------------------------------------------------------
 
 # Create frame, data (mixed only)
-frame2 = dt.frame(ROOT.RooFit.Title("Decay distribution of mixed events"))
+frame2 = dt.frame(Title="Decay distribution of mixed events")
 data.plotOn(frame2, Cut="mixState==mixState::mixed")
 
 # Position slice in mixState at "mixed" and plot slice of pdf in mixstate
@@ -65,7 +65,7 @@ data.plotOn(frame2, Cut="mixState==mixState::mixed")
 bmix_gm1.plotOn(frame2, Slice=(mixState, "mixed"))
 
 # Create frame, data (unmixed only)
-frame3 = dt.frame(ROOT.RooFit.Title("Decay distribution of unmixed events"))
+frame3 = dt.frame(Title="Decay distribution of unmixed events")
 data.plotOn(frame3, Cut="mixState==mixState::unmixed")
 
 # Position slice in mixState at "unmixed" and plot slice of pdf in

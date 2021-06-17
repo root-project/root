@@ -28,10 +28,10 @@ tau = ROOT.RooRealVar("tau", "tau", 1.548)
 tm = ROOT.RooTruthModel("tm", "truth model", dt)
 
 # Construct decay(t) (x) delta(t)
-decay_tm = ROOT.RooDecay("decay_tm", "decay", dt, tau, tm, ROOT.RooDecay.DoubleSided)
+decay_tm = ROOT.RooDecay("decay_tm", "decay", dt, tau, tm, type="DoubleSided")
 
 # Plot pdf (dashed)
-frame = dt.frame(ROOT.RooFit.Title("Bdecay (x) resolution"))
+frame = dt.frame(Title="Bdecay (x) resolution")
 decay_tm.plotOn(frame, LineStyle=ROOT.kDashed)
 
 # B-physics pdf with Gaussian resolution
@@ -43,7 +43,7 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 1)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct decay(t) (x) gauss1(t)
-decay_gm1 = ROOT.RooDecay("decay_gm1", "decay", dt, tau, gm1, ROOT.RooDecay.DoubleSided)
+decay_gm1 = ROOT.RooDecay("decay_gm1", "decay", dt, tau, gm1, type="DoubleSided")
 
 # Plot pdf
 decay_gm1.plotOn(frame)
