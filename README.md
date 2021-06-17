@@ -51,32 +51,11 @@ These screenshots shows some of the plots (produced using ROOT) presented when t
 
 See more screenshots on our [gallery](https://root.cern/gallery).
 
-## Download and Getting Started
-See [root.cern download page](https://root.cern/downloading-root) for the latest binary releases.
+## Installation and Getting Started
+See https://root.cern/install for installation instructions.
+For instructions on how to build ROOT from these source files, see https://root.cern/install/build_from_source.
 
-[Getting started with ROOT.](https://root.cern/get_started)
-
-## Building
-Clone the repo
-
-    $ git clone https://github.com/root-project/root.git
-
-Make a directory for building
-
-    $ mkdir build
-    $ cd build
-
-Run cmake and make
-
-    $ cmake ../root
-    $ make -j n # where n is the number of cores 
-
-Setup and run ROOT
-
-    $ source bin/thisroot.sh
-    $ root
-
-[More information](https://root.cern/building-root) regarding building.
+Our ["Getting started with ROOT"](https://root.cern/get_started) page is then the perfect place to get familiar with ROOT.
 
 ## Help and Support
 - [Forum](https://root.cern/forum/)
