@@ -20,14 +20,14 @@ def makeFakeDataXY():
     y = ROOT.RooRealVar("y", "y", -10, 10)
     coord = ROOT.RooArgSet(x, y)
 
-    d = ROOT.RooDataSet("d", "d", ROOT.RooArgSet(x, y))
+    d = ROOT.RooDataSet("d", "d", coord)
 
     for i in range(10000):
         tmpy = ROOT.gRandom.Gaus(0, 10)
         tmpx = ROOT.gRandom.Gaus(0.5 * tmpy, 1)
         if (abs(tmpy) < 10) and (abs(tmpx) < 10):
-            x = tmpx
-            y = tmpy
+            x.setVal(tmpx)
+            y.setVal(tmpy)
             d.add(coord)
 
     return d
