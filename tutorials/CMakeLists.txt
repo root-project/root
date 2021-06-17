@@ -310,7 +310,9 @@ set(extra_veto
   tree/h1chain.C
   http/*.C
   eve7/*.C
-  r/rootlogon.C)
+  r/rootlogon.C
+  legacy/thread/threadsh1.C # disabled on 6.22 and 6.24 due to randomic failures on some platforms
+)
 
 set(all_veto hsimple.C
              geom/geometry.C
