@@ -7,6 +7,7 @@
 
 
 #include "TMVA/RVariablePlotter.h"
+#include "TMVA/tmvaglob.h"
 
 using namespace TMVA::Experimental;
 
@@ -42,11 +43,12 @@ void tmva005_RVariablePlotter()
 
     // Place plots on the pads of the canvas
     const std::vector<std::string> variables = {"var1", "var2", "var3", "var4", "var5"};
+    TMVA::TMVAGlob::Initialize(&TMVAGlob::SetTMVAStyle);
     
     for (unsigned int i = 0; i < variables.size(); i++) {
         c->cd(i + 1);
         c->Update();
-        gPad->SetGrid(1,1); // plotting a background grid
+        //gPad->SetGrid(1,1); // plotting a background grid
         plotter.Draw(variables[i]);
         plotter.DrawLegend(minX, minY, maxX, maxY);
         

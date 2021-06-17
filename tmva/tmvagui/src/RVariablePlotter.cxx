@@ -29,6 +29,7 @@ Plotting a single variable
 */
 
 #include "TMVA/RVariablePlotter.h"
+#include "TMVA/tmvaglob.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +52,9 @@ TMVA::RVariablePlotter::RVariablePlotter( const std::vector<ROOT::RDF::RNode>& n
 
 void TMVA::RVariablePlotter::Draw(const std::string& variable) {
    // Make histograms with TH1D
+    
+    //TMVA::TMVAGlob::Initialize(&TMVAGlob::SetTMVAStyle);
+    
     const auto size = fNodes.size();
     std::vector<ROOT::RDF::RResultPtr<TH1D>> histos;
     
@@ -65,7 +69,6 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable) {
     
     for (unsigned int i = 0; i < histos.size(); i++) {
         histos[i]->SetLineColor(i + 1);
-        
         /*if (i == 0) {
          histos[i]->SetTitle("");
          histos[i]->SetStats(false);
@@ -91,6 +94,7 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable) {
 
 void TMVA::RVariablePlotter::DrawLegend(float minX = 0.8, float minY = 0.8, float maxX = 0.9, float maxY = 0.9) {
     // make Legend from TLegend
+     
     TLegend l(minX, minY, maxX, maxY);
     std::vector<TH1D> histos(fLabels.size());
 
