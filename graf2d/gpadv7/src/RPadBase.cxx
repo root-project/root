@@ -183,10 +183,10 @@ RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Get a frame object for the pad.
-/// If frame not exists - creates and add to the end of primitives list
+/// Add a frame object for the pad.
+/// If frame already exists - just return it
 
-std::shared_ptr<RFrame> RPadBase::GetOrCreateFrame()
+std::shared_ptr<RFrame> RPadBase::AddFrame()
 {
    auto frame = GetFrame();
    if (!frame) {

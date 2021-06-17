@@ -157,7 +157,7 @@ ROOT.gROOT.SetStyle("ATLAS")
 
 # Create canvas and configure frame with axis attributes
 c = RCanvas.Create("df105_WBosonAnalysis")
-frame = c.GetOrCreateFrame()
+frame = c.AddFrame()
 frame.AttrMargins().SetTop(0.05).SetLeft(0.16).SetRight(0.05).SetBottom(0.16)
 # c.SetTickx(0)
 # c.SetTicky(0)
