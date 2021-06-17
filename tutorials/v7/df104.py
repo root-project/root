@@ -133,10 +133,12 @@ data.GetYaxis().SetTitleSize(0.05)
 data.SetStats(0)
 data.SetTitle("")
 
-data_drawable = upper_pad.Draw[TObjectDrawable](data, "E")
+data_drawable = upper_pad.Add[TObjectDrawable]()
+data_drawable.Set(data, "E")
 
 # Draw fit
-fit_drawable = upper_pad.Draw[TObjectDrawable](fit, "SAME")
+fit_drawable = upper_pad.Add[TObjectDrawable]()
+fit_drawable.Set(fit, "SAME")
 
 # Draw background
 bkg = ROOT.TF1("bkg", "([0]+[1]*x+[2]*x^2+[3]*x^3)", 105, 160)
@@ -145,7 +147,8 @@ for i in range(4):
 bkg.SetLineColor(4)
 bkg.SetLineStyle(2)
 bkg.SetLineWidth(2)
-bkg_drawable = upper_pad.Draw[TObjectDrawable](bkg, "SAME")
+bkg_drawable = upper_pad.Add[TObjectDrawable]()
+bkg_drawable.Set(bkg, "SAME")
 
 # Scale simulated events with luminosity * cross-section / sum of weights
 # and merge to single Higgs signal
@@ -154,8 +157,8 @@ ggh.Scale(lumi * 0.102 / 55922617.6297)
 vbf.Scale(lumi * 0.008518764 / 3441426.13711)
 higgs = ggh.Clone()
 higgs.Add(vbf)
-higgs_drawable = upper_pad.Draw[TObjectDrawable](higgs, "HIST SAME")
-
+higgs_drawable = upper_pad.Add[TObjectDrawable]()
+higgs_drawable.Set(higgs, "HIST SAME")
 
 # Draw ratio
 
@@ -176,7 +179,7 @@ ratiobkg.GetYaxis().SetTitleOffset(0.7)
 ratiobkg.GetYaxis().SetNdivisions(503, False)
 ratiobkg.GetYaxis().ChangeLabel(-1, -1, 0)
 ratiobkg.GetXaxis().SetTitle("m_{#gamma#gamma} [GeV]")
-lower_pad.Draw[TObjectDrawable](ratiobkg, "AXIS")
+lower_pad.Add[TObjectDrawable]().Set(ratiobkg, "AXIS")
 
 ratiosig = ROOT.TH1F("ratiosig", "ratiosig", 5500, 105, 160)
 ratiosig.Eval(fit)
@@ -184,22 +187,16 @@ ratiosig.SetLineColor(2)
 ratiosig.SetLineStyle(1)
 ratiosig.SetLineWidth(2)
 ratiosig.Add(bkg, -1)
-lower_pad.Draw[TObjectDrawable](ratiosig, "SAME")
+lower_pad.Add[TObjectDrawable]().Set(ratiosig, "SAME")
 
 ratiodata = data.Clone()
 ratiodata.Add(bkg, -1)
 for i in range(1, data.GetNbinsX()):
     ratiodata.SetBinError(i, data.GetBinError(i))
 
-lower_pad.Draw[TObjectDrawable](ratiodata, "E SAME")
+lower_pad.Add[TObjectDrawable]().Set(ratiodata, "E SAME")
 
-# Add legend
-# legend.SetTextFont(42)
-# legend.SetFillStyle(0)
-# legend.SetBorderSize(0)
-# legend.SetTextSize(0.05)
-# legend.SetTextAlign(32)
-
+# Add RLegend
 legend = upper_pad.Draw[RLegend](RPadPos(-0.05, 0.05), RPadExtent(0.3, 0.4))
 legend.AttrText().SetFont(4).SetSize(0.05).SetAlign(32)
 legend.AttrBorder().SetStyle(0).SetWidth(0)
@@ -210,11 +207,9 @@ legend.AddEntry(bkg_drawable, "Background")
 legend.AddEntry(fit_drawable, "Signal + Bkg.")
 legend.AddEntry(higgs_drawable, "Signal")
 
-# Add ATLAS label
+# Add ATLAS labels
 upper_pad.Draw[RText](RPadPos(0.05, 0.88), "ATLAS").SetOnFrame().AttrText().SetFont(7).SetSize(0.05).SetAlign(11)
-
 upper_pad.Draw[RText](RPadPos(0.05 + 0.16, 0.88), "Open Data").SetOnFrame().AttrText().SetFont(4).SetSize(0.05).SetAlign(11)
-
 upper_pad.Draw[RText](RPadPos(0.05, 0.82), "#sqrt{s} = 13 TeV, 10 fb^{-1}").SetOnFrame().AttrText().SetFont(4).SetSize(0.04).SetAlign(11)
 
 # show canvas finally
