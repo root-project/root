@@ -43,7 +43,8 @@ private:
    };
 
    int fKind{kNone};                           ///< object kind
-   Internal::RIOShared<TObject> fObj;          ///< The object to be painted
+   Internal::RIOShared<TObject> fObj;          ///< The object to be painted, owned by the drawable
+   const TObject *fExtObj{nullptr};            ///<! external object, managed outside of the drawable, not persistent
    RAttrValue<std::string> fOpt{this, "opt"};  ///<! object draw options
    RAttrLine fAttrLine{this, "line"};          ///<! object line attributes
    RAttrFill fAttrFill{this, "fill"};          ///<! object fill attributes
@@ -64,9 +65,7 @@ protected:
 
    void Execute(const std::string &) final;
 
-   static void ExtractTColor(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj, const char *class_name, const char *class_member);
-
-   static void ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, TObject *obj);
+   static void ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, const TObject *obj);
 
    static void CheckOwnership(TObject *obj);
 
@@ -80,16 +79,20 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
-   TObjectDrawable(const TObject &obj);
-   TObjectDrawable(const TObject &obj, const std::string &opt);
-   TObjectDrawable(TObject *obj);
-   TObjectDrawable(TObject *obj, const std::string &opt);
+   TObjectDrawable();
+   TObjectDrawable(TObject *obj, bool isowner = false);
+   TObjectDrawable(TObject *obj, const std::string &opt, bool isowner = false);
    TObjectDrawable(const std::shared_ptr<TObject> &obj);
    TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt);
    TObjectDrawable(EKind kind, bool persistent = false);
    virtual ~TObjectDrawable();
 
-   std::shared_ptr<TObject> GetObject() const { return fObj.get_shared(); }
+   void Reset();
+
+   void Set(TObject *obj, bool isowner = false);
+   void Set(TObject *obj, const std::string &opt, bool isowner = false);
+
+   const TObject *Get();
 
    void SetOpt(const std::string &opt) { fOpt = opt; }
    std::string GetOpt() const { return fOpt; }
