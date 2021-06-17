@@ -100,8 +100,8 @@ RooDataSet *makeFakeDataXY()
       Double_t tmpy = gRandom->Gaus(0, 10);
       Double_t tmpx = gRandom->Gaus(0.5 * tmpy, 1);
       if (fabs(tmpy) < 10 && fabs(tmpx) < 10) {
-         x = tmpx;
-         y = tmpy;
+         x.setVal(tmpx);
+         y.setVal(tmpy);
          d->add(coord);
       }
    }
