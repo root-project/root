@@ -244,7 +244,7 @@ namespace ROOT {
        a separate subclass that can do second derivatives (and step sizes, see DoStepSize), but this
        was chosen because of easier integration into the existing Minuit2 / Fitter framework.
       */
-      virtual T DoSecondDerivative(const T */*x*/, unsigned int /*icoord*/) const {
+      virtual T DoSecondDerivative(const T * /*x*/, unsigned int /*icoord*/) const {
         throw std::runtime_error("IGradientMultiDimTempl<T>::DoSecondDerivative not defined!");
       };
 
