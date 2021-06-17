@@ -154,6 +154,8 @@ if(NOT xrootd)
                   dataframe/df105_WBosonAnalysis.py
                   dataframe/df106_HiggsToFourLeptons.py
                   dataframe/df107_SingleTopAnalysis.py
+                  v7/df104.py
+                  v7/df105.py
                   )
 endif()
 
@@ -279,7 +281,6 @@ if(root7)
                  v7/filedialog.cxx
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
-                 v7/df104.py
       )
   if(NOT davix)
     list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
@@ -289,6 +290,8 @@ if(root7)
   if(NOT dataframe)
     list(APPEND root7_veto v7/global_temperatures.cxx)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto v7/df104.py)
+    list(APPEND root7_veto v7/df105.py)
   endif()
 else()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C)
