@@ -103,11 +103,11 @@ c = RCanvas.Create("df104_HiggsToTwoPhotons")
 lower_pad = c.AddPad(RPadPos(0,0.65), RPadExtent(1, 0.35))
 upper_pad = c.AddPad(RPadPos(0,0), RPadExtent(1, 0.65))
 
-upper_frame = upper_pad.GetOrCreateFrame()
+upper_frame = upper_pad.AddFrame()
 upper_frame.AttrMargins().SetBottom(0).SetLeft(0.14).SetRight(0.05)
 upper_frame.AttrX().SetHideLabels()
 
-lower_frame = lower_pad.GetOrCreateFrame()
+lower_frame = lower_pad.AddFrame()
 lower_frame.AttrMargins().SetTop(0).SetLeft(0.14).SetRight(0.05).SetBottom(0.3)
 
 # Fit signal + background model to data

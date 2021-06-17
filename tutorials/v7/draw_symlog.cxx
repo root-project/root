@@ -40,21 +40,21 @@ void draw_symlog()
    auto pads   = canvas->Divide(1, 3);
 
    // first pad with linear scales
-   auto frame1 = pads[0][0]->GetOrCreateFrame();
+   auto frame1 = pads[0][0]->AddFrame();
    frame1->SetDrawAxes(true);
    frame1->AttrX().SetMinMax(-40, 1040).SetTitle("x linear").SetTitleCenter();
    frame1->AttrY().SetMinMax(1,1e4).SetLog().SetTitle("y log").SetTitleCenter();
    pads[0][0]->Draw<RFrameTitle>("linear scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // second pad with log scales, negative values missing
-   auto frame2 = pads[0][1]->GetOrCreateFrame();
+   auto frame2 = pads[0][1]->AddFrame();
    frame2->SetDrawAxes(true);
    frame2->AttrX().SetMinMax(0.05,1.2e3).SetLog().SetTitle("x log").SetTitleCenter();
    frame2->AttrY().SetMinMax(1,1e4).SetLog().SetTitle("y log").SetTitleCenter();
    pads[0][1]->Draw<RFrameTitle>("log scale, missing points")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // third pad with symlog scales
-   auto frame3 = pads[0][2]->GetOrCreateFrame();
+   auto frame3 = pads[0][2]->AddFrame();
    frame3->SetDrawAxes(true);
    // configure synlog scale with 10 for linear range, rest will be logarithmic, including negative
    frame3->AttrX().SetMinMax(-10,1.2e3).SetSymlog(10).SetTitle("x symlog").SetTitleCenter();

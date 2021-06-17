@@ -47,7 +47,7 @@ void draw_rh1_large()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
 
-   auto frame = canvas->GetOrCreateFrame();
+   auto frame = canvas->AddFrame();
 
    frame->SetGridX(true).SetGridY(true);
    frame->AttrX().SetZoom(nbins*0.2, nbins*0.8);

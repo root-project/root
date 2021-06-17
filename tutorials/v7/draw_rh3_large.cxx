@@ -50,7 +50,7 @@ void draw_rh3_large()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
 
-   auto frame = canvas->GetOrCreateFrame();
+   auto frame = canvas->AddFrame();
 
    // should we made special style for frame with palette?
    // frame->AttrMargins().SetRight(0.2_normal);

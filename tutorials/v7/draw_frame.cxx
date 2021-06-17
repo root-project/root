@@ -41,7 +41,7 @@ void draw_frame()
    auto canvas = RCanvas::Create("Canvas Title");
 
    // configure RFrame with direct API calls
-   auto frame = canvas->GetOrCreateFrame();
+   auto frame = canvas->AddFrame();
    // frame->AttrFill().SetColor(RColor::kBlue);
    frame->AttrBorder().SetColor(RColor::kBlue);
    frame->AttrBorder().SetWidth(3);

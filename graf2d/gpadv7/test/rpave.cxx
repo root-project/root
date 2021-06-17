@@ -14,7 +14,7 @@ TEST(Primitives, RPave)
 {
    RCanvas canv;
 
-   auto frame = canv.GetOrCreateFrame();
+   auto frame = canv.AddFrame();
 
    auto pave = canv.Draw<RPave>();
    pave->AttrBorder().SetColor(RColor::kRed).SetWidth(3);

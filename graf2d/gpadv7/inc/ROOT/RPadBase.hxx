@@ -53,7 +53,7 @@ private:
    void TestIfFrameRequired(const RDrawable *drawable)
    {
       if (drawable->IsFrameRequired())
-         GetOrCreateFrame();
+         AddFrame();
    }
 
 protected:
@@ -189,7 +189,7 @@ public:
    /// Wipe the pad by clearing the list of primitives.
    void Wipe() { fPrimitives.clear(); }
 
-   std::shared_ptr<RFrame> GetOrCreateFrame();
+   std::shared_ptr<RFrame> AddFrame();
    std::shared_ptr<RFrame> GetFrame();
    const std::shared_ptr<RFrame> GetFrame() const;
 
