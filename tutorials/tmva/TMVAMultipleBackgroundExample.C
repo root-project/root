@@ -5,10 +5,10 @@
 /// Then in the application a tree is created with all signal and background
 /// events where the true class ID and the three classifier outputs are added
 /// finally with the application tree, the significance is maximized with the
-/// help of the TMVA genetic algrorithm.
+/// help of the TMVA genetic algorithm.
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
-/// - Exectuable: TMVAGAexample
+/// - Executable: TMVAGAexample
 ///
 /// \macro_output
 /// \macro_code
@@ -92,7 +92,7 @@ void Training(){
 
    // Boosted Decision Trees
    factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
-			"!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
+         "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
@@ -128,7 +128,7 @@ void Training(){
 
    // Boosted Decision Trees
    factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
-			"!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
+         "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
@@ -164,7 +164,7 @@ void Training(){
 
    // Boosted Decision Trees
    factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
-			"!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
+         "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" );
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
@@ -246,29 +246,29 @@ void ApplicationCreateCombinedTree(){
    // loop through signal and all background trees
    for( int treeNumber = 0; treeNumber < 4; ++treeNumber ) {
       if( treeNumber == 0 ){
-	 theTree = (TTree*)input->Get("TreeS");
-	 std::cout << "--- Select signal sample" << std::endl;
-//	    theTree->SetBranchAddress( "weight", &weight );
-	 weight = 1;
-	 classID = 0;
+    theTree = (TTree*)input->Get("TreeS");
+    std::cout << "--- Select signal sample" << std::endl;
+//       theTree->SetBranchAddress( "weight", &weight );
+    weight = 1;
+    classID = 0;
       }else if( treeNumber == 1 ){
-	 theTree = (TTree*)input->Get("TreeB0");
-	 std::cout << "--- Select background 0 sample" << std::endl;
-//	    theTree->SetBranchAddress( "weight", &weight );
-	 weight = 1;
-	 classID = 1;
+    theTree = (TTree*)input->Get("TreeB0");
+    std::cout << "--- Select background 0 sample" << std::endl;
+//       theTree->SetBranchAddress( "weight", &weight );
+    weight = 1;
+    classID = 1;
       }else if( treeNumber == 2 ){
-	 theTree = (TTree*)input->Get("TreeB1");
-	 std::cout << "--- Select background 1 sample" << std::endl;
-//	    theTree->SetBranchAddress( "weight", &weight );
-	 weight = 1;
-	 classID = 2;
+    theTree = (TTree*)input->Get("TreeB1");
+    std::cout << "--- Select background 1 sample" << std::endl;
+//       theTree->SetBranchAddress( "weight", &weight );
+    weight = 1;
+    classID = 2;
       }else if( treeNumber == 3 ){
-	 theTree = (TTree*)input->Get("TreeB2");
-	 std::cout << "--- Select background 2 sample" << std::endl;
-//	 theTree->SetBranchAddress( "weight", &weight );
-	 weight = 1;
-	 classID = 3;
+    theTree = (TTree*)input->Get("TreeB2");
+    std::cout << "--- Select background 2 sample" << std::endl;
+//    theTree->SetBranchAddress( "weight", &weight );
+    weight = 1;
+    classID = 3;
       }
 
 
@@ -285,18 +285,18 @@ void ApplicationCreateCombinedTree(){
 //       Int_t nEvent = 100;
       for (Long64_t ievt=0; ievt<nEvent; ievt++) {
 
-	 if (ievt%1000 == 0){
-	    std::cout << "--- ... Processing event: " << ievt << std::endl;
-	 }
+    if (ievt%1000 == 0){
+       std::cout << "--- ... Processing event: " << ievt << std::endl;
+    }
 
-	 theTree->GetEntry(ievt);
+    theTree->GetEntry(ievt);
 
-	 // get the classifiers for each of the signal/background classifications
-	 classifier0 = reader0->EvaluateMVA( method );
-	 classifier1 = reader1->EvaluateMVA( method );
-	 classifier2 = reader2->EvaluateMVA( method );
+    // get the classifiers for each of the signal/background classifications
+    classifier0 = reader0->EvaluateMVA( method );
+    classifier1 = reader1->EvaluateMVA( method );
+    classifier2 = reader2->EvaluateMVA( method );
 
-	 outputTree->Fill();
+    outputTree->Fill();
       }
 
 
@@ -362,17 +362,17 @@ public:
 
       efficiency = 0;
       if( weightsSignal > 0 )
-	 efficiency = weightsTruePositive/weightsSignal;
+    efficiency = weightsTruePositive/weightsSignal;
 
       purity = 0;
       if( weightsTruePositive+weightsFalsePositive > 0 )
-	 purity = weightsTruePositive/(weightsTruePositive+weightsFalsePositive);
+    purity = weightsTruePositive/(weightsTruePositive+weightsFalsePositive);
 
       Float_t effTimesPur = efficiency*purity;
 
       Float_t toMinimize = std::numeric_limits<float>::max(); // set to the highest existing number
       if( effTimesPur > 0 ) // if larger than 0, take 1/x. This is the value to minimize
-	 toMinimize = 1./(effTimesPur); // we want to minimize 1/efficiency*purity
+    toMinimize = 1./(effTimesPur); // we want to minimize 1/efficiency*purity
 
       // Print();
 
@@ -383,11 +383,11 @@ public:
    void Print(){
       std::cout << std::endl;
       std::cout << "======================" << std::endl
-		<< "Efficiency : " << efficiency << std::endl
-		<< "Purity     : " << purity << std::endl << std::endl
-		<< "True positive weights : " << weightsTruePositive << std::endl
-		<< "False positive weights: " << weightsFalsePositive << std::endl
-		<< "Signal weights        : " << weightsSignal << std::endl;
+      << "Efficiency : " << efficiency << std::endl
+      << "Purity     : " << purity << std::endl << std::endl
+      << "True positive weights : " << weightsTruePositive << std::endl
+      << "False positive weights: " << weightsFalsePositive << std::endl
+      << "Signal weights        : " << weightsSignal << std::endl;
    }
 
    Float_t nSignal;
@@ -427,13 +427,13 @@ void MaximizeSignificance(){
         ranges.push_back( new Interval(-1,1) );
         ranges.push_back( new Interval(-1,1) );
 
-	std::cout << "Classifier ranges (defined by the user)" << std::endl;
+   std::cout << "Classifier ranges (defined by the user)" << std::endl;
         for( std::vector<Interval*>::iterator it = ranges.begin(); it != ranges.end(); it++ ){
            std::cout << " range: " << (*it)->GetMin() << "   " << (*it)->GetMax() << std::endl;
         }
 
-	TChain* chain = new TChain("multiBkg");
-	chain->Add("tmva_example_multiple_backgrounds__applied.root");
+   TChain* chain = new TChain("multiBkg");
+   chain->Add("tmva_example_multiple_backgrounds__applied.root");
 
         IFitterTarget* myFitness = new MyFitness( chain );
 
@@ -447,19 +447,19 @@ void MaximizeSignificance(){
         const TString opts( "PopSize=100:Steps=30" );
 
         GeneticFitter mg( *myFitness, name, ranges, opts);
-	// mg.SetParameters( 4, 30, 200, 10,5, 0.95, 0.001 );
+   // mg.SetParameters( 4, 30, 200, 10,5, 0.95, 0.001 );
 
         std::vector<Double_t> result;
         Double_t estimator = mg.Run(result);
 
-	dynamic_cast<MyFitness*>(myFitness)->Print();
-	std::cout << std::endl;
+   dynamic_cast<MyFitness*>(myFitness)->Print();
+   std::cout << std::endl;
 
-	int n = 0;
-	for( std::vector<Double_t>::iterator it = result.begin(); it<result.end(); it++ ){
-	   std::cout << "  cutValue[" << n << "] = " << (*it) << ";"<< std::endl;
-	   n++;
-	}
+   int n = 0;
+   for( std::vector<Double_t>::iterator it = result.begin(); it<result.end(); it++ ){
+      std::cout << "  cutValue[" << n << "] = " << (*it) << ";"<< std::endl;
+      n++;
+   }
 
 
 }

@@ -449,7 +449,7 @@ int TMVAClassification( TString myMethodList = "" )
       // General layout.
       TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
-      // Define Training strategy. One could define multiple stratgey string separated by the "|" delimiter 
+      // Define Training strategy. One could define multiple strategy string separated by the "|" delimiter
 
       TString trainingStrategyString = ("TrainingStrategy=LearningRate=1e-2,Momentum=0.9,"
                                         "ConvergenceSteps=20,BatchSize=100,TestRepetitions=1,"

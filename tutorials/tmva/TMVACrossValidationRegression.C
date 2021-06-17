@@ -4,7 +4,7 @@
 /// This macro provides an example of how to use TMVA for k-folds cross
 /// evaluation.
 ///
-/// As input data is used a toy-MC sample consisting of two guassian
+/// As input data is used a toy-MC sample consisting of two gaussian
 /// distributions.
 ///
 /// The output file "TMVA.root" can be analysed with the use of dedicated
@@ -108,7 +108,7 @@ int TMVACrossValidationRegression()
    TFile * inputFile = getDataFile(infileName);
 
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
-   
+
    dataloader->AddVariable("var1", "Variable 1", "units", 'F');
    dataloader->AddVariable("var2", "Variable 2", "units", 'F');
 
@@ -142,7 +142,7 @@ int TMVACrossValidationRegression()
    // This sets up a CrossValidation class (which wraps a TMVA::Factory
    // internally) for 2-fold cross validation. The data will be split into the
    // two folds randomly if `splitExpr` is `""`.
-   // 
+   //
    // One can also give a deterministic split using spectator variables. An
    // example would be e.g. `"int(fabs([spec1]))%int([NumFolds])"`.
    //
