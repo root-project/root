@@ -5,7 +5,7 @@
 /// within an analysis module
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
-/// - Exectuable: TMVAClassificationApplication
+/// - Executable: TMVAClassificationApplication
 ///
 /// \macro_output
 /// \macro_code
@@ -315,7 +315,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       // Return the MVA outputs and fill into histograms
 
       if (Use["CutsGA"]) {
-         // Cuts is a special case: give the desired signal efficienciy
+         // Cuts is a special case: give the desired signal efficiency
          Bool_t passed = reader->EvaluateMVA( "CutsGA method", effS );
          if (passed) nSelCutsGA++;
       }
@@ -382,7 +382,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["CutsGA"]) {
 
       // test: retrieve cuts for particular signal efficiency
-      // CINT ignores dynamic_casts so we have to use a cuts-secific Reader function to acces the pointer
+      // CINT ignores dynamic_casts so we have to use a cuts-specific Reader function to acces the pointer
       TMVA::MethodCuts* mcuts = reader->FindCutsMVA( "CutsGA method" ) ;
 
       if (mcuts) {
