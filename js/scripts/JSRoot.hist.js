@@ -3122,7 +3122,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          pal = JSROOT.create('TPave');
 
          JSROOT.extend(pal, { _typename: "TPaletteAxis", fName: "TPave", fH: null, fAxis: JSROOT.create('TGaxis'),
-                               fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 } );
+                               fX1NDC: 0.905, fX2NDC: 0.945, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1, $can_move: true } );
 
          let zaxis = this.getHisto().fZaxis;
 
@@ -3140,9 +3140,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       let frame_painter = this.getFramePainter();
 
       // keep palette width
-      if (can_move && frame_painter) {
-         pal.fX2NDC = frame_painter.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
-         pal.fX1NDC = frame_painter.fX2NDC + 0.01;
+      if (can_move && frame_painter && pal.$can_move) {
+         pal.fX2NDC = frame_painter.fX2NDC + 0.005 + (pal.fX2NDC - pal.fX1NDC);
+         pal.fX1NDC = frame_painter.fX2NDC + 0.005;
          pal.fY1NDC = frame_painter.fY1NDC;
          pal.fY2NDC = frame_painter.fY2NDC;
       }
@@ -6670,8 +6670,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
 
          painter._show_empty_bins = false;
-
-         painter._can_move_colz = true;
 
          // special case for root 3D drawings - pad range is wired
          painter.checkPadRange(!painter.options.Mode3D && (painter.options.Contour != 14));

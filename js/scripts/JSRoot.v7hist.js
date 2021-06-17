@@ -2092,8 +2092,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.options.Color = !this.options.Color;
       }
 
-      this._can_move_colz = true; // indicate that next redraw can move Z scale
-
       this.redraw();
    }
 
@@ -3767,8 +3765,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
 
          painter._show_empty_bins = false;
-
-         painter._can_move_colz = true;
 
          painter.scanContent();
 

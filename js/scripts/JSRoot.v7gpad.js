@@ -1708,6 +1708,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    RFramePainter.prototype.createXY = function(opts) {
 
+      if (this.self_drawaxes) return;
+
       this.cleanXY(); // remove all previous configurations
 
       if (!opts) opts = {};
@@ -1755,7 +1757,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.scale_ymax = this.zoom_ymax;
       }
 
-      this.x_handle = new JSROOT.TAxisPainter(this.getDom(), this.xaxis, true);
+      let xaxis = this.xaxis, yaxis = this.yaxis;
+      if (!xaxis || xaxis._typename != "TAxis") xaxis = JSROOT.create("TAxis");
+      if (!yaxis || yaxis._typename != "TAxis") yaxis = JSROOT.create("TAxis");
+
+      this.x_handle = new JSROOT.TAxisPainter(this.getDom(), xaxis, true);
       this.x_handle.setPadName(this.getPadName());
       this.x_handle.optionUnlab = this.v7EvalAttr("x_hidelabels", false);
 
@@ -1768,7 +1774,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.x_handle.assignFrameMembers(this,"x");
 
-      this.y_handle = new JSROOT.TAxisPainter(this.getDom(), this.yaxis, true);
+      this.y_handle = new JSROOT.TAxisPainter(this.getDom(), yaxis, true);
       this.y_handle.setPadName(this.getPadName());
       this.y_handle.optionUnlab = this.v7EvalAttr("y_hidelabels", false);
 
