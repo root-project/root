@@ -14,6 +14,11 @@ from libcppyy import SetOwnership
 
 
 class RooAbsCollection(object):
+
+    def addClone(self, arg, silent=False):
+        clonedArg = self._addClone(arg, silent)
+        SetOwnership(clonedArg, False)
+
     def addOwned(self, arg, silent=False):
         self._addOwned(arg, silent)
         SetOwnership(arg, False)
