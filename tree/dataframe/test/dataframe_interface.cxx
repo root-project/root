@@ -762,7 +762,8 @@ TEST(RDataFrameInterface, MutableForeach)
 
 TEST(RDataFrameInterface, BookWithoutColumns)
 {
-   EXPECT_EQ(ROOT::RDataFrame(3).Book<>(CounterHelper()).GetValue(), 3);
+   CounterHelper ch; // defined as a variable to exercise passing lvalues into Book
+   EXPECT_EQ(ROOT::RDataFrame(3).Book<>(ch).GetValue(), 3);
    EXPECT_THROW(ROOT::RDataFrame(3).Book(MaxSlotHelper(1u)), std::logic_error);
 }
 

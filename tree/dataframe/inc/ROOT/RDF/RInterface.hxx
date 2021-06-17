@@ -1660,9 +1660,9 @@ public:
    /// ~~~
    ///
    template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename T>
-   RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
+   RResultPtr<typename std::decay<T>::type> Fill(T &&model, const ColumnNames_t &columnList)
    {
-      auto h = std::make_shared<T>(std::forward<T>(model));
+      auto h = std::make_shared<typename std::decay<T>::type>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -2424,18 +2424,19 @@ public:
    // clang-format on
 
    template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
-   RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
+   RResultPtr<typename std::decay<Helper>::type::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
+      using HelperT = typename std::decay<Helper>::type;
       // TODO add more static sanity checks on Helper
-      using AH = RDFDetail::RActionImpl<Helper>;
-      static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
+      using AH = RDFDetail::RActionImpl<HelperT>;
+      static_assert(std::is_base_of<AH, HelperT>::value && std::is_convertible<HelperT *, AH *>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
 
-      auto hPtr = std::make_shared<Helper>(std::forward<Helper>(helper));
+      auto hPtr = std::make_shared<HelperT>(std::forward<Helper>(helper));
       auto resPtr = hPtr->GetResultPtr();
 
       if (std::is_same<FirstColumn, RDFDetail::RInferredType>::value && columns.empty()) {
-         return CallCreateActionWithoutColsIfPossible<Helper>(resPtr, hPtr, TTraits::TypeList<FirstColumn>{});
+         return CallCreateActionWithoutColsIfPossible<HelperT>(resPtr, hPtr, TTraits::TypeList<FirstColumn>{});
       } else {
          return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr,
                                                                                           columns.size());

@@ -107,7 +107,7 @@ struct Book{};
 }
 // clang-format on
 
-template <typename T, bool ISV6HISTO = std::is_base_of<TH1, T>::value>
+template <typename T, bool ISV6HISTO = std::is_base_of<TH1, typename std::decay<T>::type>::value>
 struct HistoUtils {
    static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
