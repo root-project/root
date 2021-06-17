@@ -39,7 +39,7 @@ r = model.fitTo(d, Save=True)
 # -------------------------------------
 
 # Make plot frame
-frame = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("P.d.f with visualized 1-sigma error band"))
+frame = x.frame(Bins=40, Title="P.d.f with visualized 1-sigma error band")
 d.plotOn(frame)
 
 # Visualize 1-sigma error encoded in fit result 'r' as orange band using linear error propagation
@@ -97,7 +97,7 @@ frame.SetMinimum(0)
 # ------------------------------------------------------
 
 # Make plot frame
-frame2 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Visualization of 2-sigma partial error from (m,m2)"))
+frame2 = x.frame(Bins=40, Title="Visualization of 2-sigma partial error from (m,m2)")
 
 # Visualize partial error. For partial error visualization the covariance matrix is first reduced as follows
 #        ___                   -1
@@ -119,7 +119,7 @@ model.plotOn(frame2, Components="bkg", LineStyle=ROOT.kDashed)
 frame2.SetMinimum(0)
 
 # Make plot frame
-frame3 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Visualization of 2-sigma partial error from (s,s2)"))
+frame3 = x.frame(Bins=40, Title="Visualization of 2-sigma partial error from (s,s2)")
 
 # Propagate partial error due to yield parameter using linear and sampling
 # method
@@ -131,7 +131,7 @@ model.plotOn(frame3, Components="bkg", LineStyle=ROOT.kDashed)
 frame3.SetMinimum(0)
 
 # Make plot frame
-frame4 = x.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Visualization of 2-sigma partial error from fsig"))
+frame4 = x.frame(Bins=40, Title="Visualization of 2-sigma partial error from fsig")
 
 # Propagate partial error due to yield parameter using linear and sampling
 # method

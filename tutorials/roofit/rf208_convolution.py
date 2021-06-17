@@ -50,7 +50,7 @@ data = lxg.generate(ROOT.RooArgSet(t), 10000)
 lxg.fitTo(data)
 
 # Plot data, pdf, landau (X) gauss pdf
-frame = t.frame(ROOT.RooFit.Title("landau (x) gauss convolution"))
+frame = t.frame(Title="landau (x) gauss convolution")
 data.plotOn(frame)
 lxg.plotOn(frame)
 landau.plotOn(frame, LineStyle=ROOT.kDashed)

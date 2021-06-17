@@ -52,7 +52,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooAr
 data = model.generate(ROOT.RooArgSet(x), 1000)
 
 # Plot data and complete PDF overlaid
-xframe = x.frame(ROOT.RooFit.Title("Component plotting of pdf=(sig1+sig2)+(bkg1+bkg2)"))
+xframe = x.frame(Title="Component plotting of pdf=(sig1+sig2)+(bkg1+bkg2)")
 data.plotOn(xframe)
 model.plotOn(xframe)
 

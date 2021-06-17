@@ -67,14 +67,14 @@ model.fitTo(data)
 params.printLatex()
 
 # Print parameter list in LaTeX for (names values|names values)
-params.printLatex(ROOT.RooFit.Columns(2))
+params.printLatex(Columns=2)
 
 # Print two parameter lists side by side (name values initvalues)
-params.printLatex(ROOT.RooFit.Sibling(initParams))
+params.printLatex(Sibling=initParams)
 
 # Print two parameter lists side by side (name values initvalues|name
 # values initvalues)
-params.printLatex(ROOT.RooFit.Sibling(initParams), ROOT.RooFit.Columns(2))
+params.printLatex(Sibling=initParams, Columns=2)
 
 # Write LaTex table to file
-params.printLatex(ROOT.RooFit.Sibling(initParams), ROOT.RooFit.OutputFile("rf407_latextables.tex"))
+params.printLatex(Sibling=initParams, OutputFile="rf407_latextables.tex")

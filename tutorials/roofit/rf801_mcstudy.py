@@ -62,10 +62,10 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooAr
 mcstudy = ROOT.RooMCStudy(
     model,
     ROOT.RooArgSet(x),
-    ROOT.RooFit.Binned(True),
-    ROOT.RooFit.Silence(),
-    ROOT.RooFit.Extended(),
-    ROOT.RooFit.FitOptions(ROOT.RooFit.Save(True), ROOT.RooFit.PrintEvalErrors(0)),
+    Binned=True,
+    Silence=True,
+    Extended=True,
+    FitOptions=(ROOT.RooFit.Save(True), ROOT.RooFit.PrintEvalErrors(0)),
 )
 
 # Generate and fit events
@@ -79,16 +79,16 @@ mcstudy.generateAndFit(1000)
 
 # Make plots of the distributions of mean, error on mean and the pull of
 # mean
-frame1 = mcstudy.plotParam(mean, ROOT.RooFit.Bins(40))
-frame2 = mcstudy.plotError(mean, ROOT.RooFit.Bins(40))
-frame3 = mcstudy.plotPull(mean, ROOT.RooFit.Bins(40), ROOT.RooFit.FitGauss(True))
+frame1 = mcstudy.plotParam(mean, Bins=40)
+frame2 = mcstudy.plotError(mean, Bins=40)
+frame3 = mcstudy.plotPull(mean, Bins=40, FitGauss=True)
 
 # Plot distribution of minimized likelihood
 frame4 = mcstudy.plotNLL(ROOT.RooFit.Bins(40))
 
 # Make some histograms from the parameter dataset
-hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a1, ROOT.RooFit.YVar(sig1frac))
-hh_cor_a0_a1 = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a0, ROOT.RooFit.YVar(a1))
+hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a1, YVar=sig1frac)
+hh_cor_a0_a1 = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a0, YVar=a1)
 
 # Access some of the saved fit results from individual toys
 corrHist000 = mcstudy.fitResult(0).correlationHist("c000")

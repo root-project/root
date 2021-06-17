@@ -25,7 +25,7 @@ import math
 
 x = ROOT.RooRealVar("x", "x", -11, 11)
 y = ROOT.RooRealVar("y", "y", -10, 200)
-dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), ROOT.RooFit.StoreError(ROOT.RooArgSet(x, y)))
+dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), StoreError=(ROOT.RooArgSet(x, y)))
 
 # Fill an example dataset with X,err(X),Y,err(Y) values
 for i in range(10):
@@ -47,18 +47,18 @@ b = ROOT.RooRealVar("b", "b", 0.0, -100, 100)
 f = ROOT.RooPolyVar("f", "f", x, ROOT.RooArgList(b, a, ROOT.RooFit.RooConst(1)))
 
 # Plot dataset in X-Y interpretation
-frame = x.frame(ROOT.RooFit.Title("Chi^2 fit of function set of (X#pmdX,Y#pmdY) values"))
-dxy.plotOnXY(frame, ROOT.RooFit.YVar(y))
+frame = x.frame(Title="Chi^2 fit of function set of (X#pmdX,Y#pmdY) values")
+dxy.plotOnXY(frame, YVar=y)
 
 # Fit chi^2 using X and Y errors
-f.chi2FitTo(dxy, ROOT.RooFit.YVar(y))
+f.chi2FitTo(dxy, YVar=y)
 
 # Overlay fitted function
 f.plotOn(frame)
 
 # Alternative: fit chi^2 integrating f(x) over ranges defined by X errors, rather
 # than taking point at center of bin
-f.chi2FitTo(dxy, ROOT.RooFit.YVar(y), ROOT.RooFit.Integrate(True))
+f.chi2FitTo(dxy, YVar=y, Integrate=True)
 
 # Overlay alternate fit result
 f.plotOn(frame, LineStyle=ROOT.kDashed, LineColor=ROOT.kRed)

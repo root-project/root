@@ -35,7 +35,7 @@ data = genpdf.generate(ROOT.RooArgSet(x), 10000)
 genpdf.fitTo(data)
 
 # Make a plot of the data and the pdf overlaid
-xframe = x.frame(ROOT.RooFit.Title("Interpreted expression pdf"))
+xframe = x.frame(Title="Interpreted expression pdf")
 data.plotOn(xframe)
 genpdf.plotOn(xframe)
 
@@ -72,7 +72,7 @@ r = g2.fitTo(data2, Save=True)  # ROOT.RooFitResult
 r.Print()
 
 # Plot data on frame and overlay projection of g2
-xframe2 = x.frame(ROOT.RooFit.Title("Tailored Gaussian pdf"))
+xframe2 = x.frame(Title="Tailored Gaussian pdf")
 data2.plotOn(xframe2)
 g2.plotOn(xframe2)
 

@@ -64,7 +64,7 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 pdf = ROOT.MyPdfV3("pdf", "pdf", y, a, b)
 
 # Generate toy data from pdf and plot data and pdf on frame
-frame1 = y.frame(ROOT.RooFit.Title("Compiled class MyPdfV3"))
+frame1 = y.frame(Title="Compiled class MyPdfV3")
 data = pdf.generate(ROOT.RooArgSet(y), 1000)
 pdf.fitTo(data)
 data.plotOn(frame1)
@@ -93,7 +93,7 @@ data2 = genpdf.generate(ROOT.RooArgSet(x), 50000)
 genpdf.fitTo(data2)
 
 # Make a plot of the data and the pdf overlaid
-frame2 = x.frame(ROOT.RooFit.Title("Compiled version of pdf of rf103"))
+frame2 = x.frame(Title="Compiled version of pdf of rf103")
 data2.plotOn(frame2)
 genpdf.plotOn(frame2)
 

@@ -32,18 +32,16 @@ gauss.fitTo(data)
 # -------------------------------
 
 # Make four plot frames to demonstrate various plotting features
-frame1 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("Red Curve / SumW2 Histo errors"), ROOT.RooFit.Bins(20))
-frame2 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("Dashed Curve / No XError bars"), ROOT.RooFit.Bins(20))
-frame3 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("Filled Curve / Blue Histo"), ROOT.RooFit.Bins(20))
-frame4 = x.frame(
-    ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("Partial Range / Filled Bar chart"), ROOT.RooFit.Bins(20)
-)
+frame1 = x.frame(Name="xframe", Title="Red Curve / SumW2 Histo errors", Bins=20)
+frame2 = x.frame(Name="xframe", Title="Dashed Curve / No XError bars", Bins=20)
+frame3 = x.frame(Name="xframe", Title="Filled Curve / Blue Histo", Bins=20)
+frame4 = x.frame(Name="xframe", Title="Partial Range / Filled Bar chart", Bins=20)
 
 # Data plotting styles
 # ---------------------------------------
 
 # Use sqrt(sum(weights^2)) error instead of Poisson errors
-data.plotOn(frame1, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
+data.plotOn(frame1, DataError=ROOT.RooAbsData.SumW2)
 
 # Remove horizontal error bars
 data.plotOn(frame2, XErrorSize=0)

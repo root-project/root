@@ -29,7 +29,7 @@ model = ROOT.RooChebychev(
 ROOT.RooAbsPdf.defaultGeneratorConfig().method1D(False, False).setLabel("RooAcceptReject")
 
 # Generate 10Kevt using ROOT.RooAcceptReject
-data_ar = model.generate(ROOT.RooArgSet(x), 10000, verbose=True)
+data_ar = model.generate(ROOT.RooArgSet(x), 10000, Verbose=True)
 data_ar.Print()
 
 # Adjusting default config for a specific pdf

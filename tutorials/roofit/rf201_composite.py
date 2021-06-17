@@ -60,7 +60,7 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 model.fitTo(data)
 
 # Plot data and PDF overlaid
-xframe = x.frame(ROOT.RooFit.Title("Example of composite pdf=(sig1+sig2)+bkg"))
+xframe = x.frame(Title="Example of composite pdf=(sig1+sig2)+bkg")
 data.plotOn(xframe)
 model.plotOn(xframe)
 

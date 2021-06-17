@@ -42,7 +42,7 @@ data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
 # -------------------------------------------------
 
 # Make plain projection of data and pdf on x observable
-frame = x.frame(ROOT.RooFit.Title("Projection of 3D data and pdf on X"), ROOT.RooFit.Bins(40))
+frame = x.frame(Title="Projection of 3D data and pdf on X", Bins=40)
 data.plotOn(frame)
 model.plotOn(frame)
 
@@ -64,10 +64,10 @@ llratio_func = ROOT.RooFormulaVar("llratio", "log10(@0)-log10(@1)", ROOT.RooArgL
 data.addColumn(llratio_func)
 
 # Extract the subset of data with large signal likelihood
-dataSel = data.reduce(ROOT.RooFit.Cut("llratio>0.7"))
+dataSel = data.reduce(Cut="llratio>0.7")
 
 # Make plot frame
-frame2 = x.frame(ROOT.RooFit.Title("Same projection on X with LLratio(y,z)>0.7"), ROOT.RooFit.Bins(40))
+frame2 = x.frame(Title="Same projection on X with LLratio(y,z)>0.7", Bins=40)
 
 # Plot select data on frame
 dataSel.plotOn(frame2)
@@ -81,7 +81,7 @@ mcprojData = model.generate(ROOT.RooArgSet(x, y, z), 10000)
 # Calculate LL ratio for each generated event and select MC events with
 # llratio)0.7
 mcprojData.addColumn(llratio_func)
-mcprojDataSel = mcprojData.reduce(ROOT.RooFit.Cut("llratio>0.7"))
+mcprojDataSel = mcprojData.reduce(Cut="llratio>0.7")
 
 # Project model on x, projected observables (y,z) with Monte Carlo technique
 # on set of events with the same llratio cut as was applied to data

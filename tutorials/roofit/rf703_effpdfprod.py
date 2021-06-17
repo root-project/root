@@ -36,10 +36,10 @@ modelEff = ROOT.RooEffProd("modelEff", "model with efficiency", model, eff)
 # Plot efficiency, pdf
 # ----------------------------------------
 
-frame1 = t.frame(ROOT.RooFit.Title("Efficiency"))
+frame1 = t.frame(Title="Efficiency")
 eff.plotOn(frame1, LineColor=ROOT.kRed)
 
-frame2 = t.frame(ROOT.RooFit.Title("Pdf with and without efficiency"))
+frame2 = t.frame(Title="Pdf with and without efficiency")
 
 model.plotOn(frame2, LineStyle=ROOT.kDashed)
 modelEff.plotOn(frame2)
@@ -55,7 +55,7 @@ data = modelEff.generate(ROOT.RooArgSet(t), 10000)
 modelEff.fitTo(data)
 
 # Plot generated data and overlay fitted pdf
-frame3 = t.frame(ROOT.RooFit.Title("Fitted pdf with efficiency"))
+frame3 = t.frame(Title="Fitted pdf with efficiency")
 data.plotOn(frame3)
 modelEff.plotOn(frame3)
 

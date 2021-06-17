@@ -116,7 +116,7 @@ y.setBins(10)
 dh = ROOT.RooDataHist("dh", "binned version of d", ROOT.RooArgSet(x, y), d)
 dh.Print("v")
 
-yframe = y.frame(ROOT.RooFit.Bins(10), ROOT.RooFit.Title("Operations on binned datasets"))
+yframe = y.frame(Bins=10, Title="Operations on binned datasets")
 dh.plotOn(yframe)  # plot projection of 2D binned data on y
 
 # Examine the statistics of a binned dataset

@@ -48,7 +48,7 @@ data.plotOn(yframe)
 model.plotOn(yframe)
 
 # Make two-dimensional plot in x vs y
-hh_model = model.createHistogram("hh_model", x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
+hh_model = model.createHistogram("hh_model", x, Binning=50, YVar=(y, ROOT.RooFit.Binning(50)))
 hh_model.SetLineColor(ROOT.kBlue)
 
 # Make canvas and draw ROOT.RooPlots

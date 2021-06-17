@@ -65,7 +65,7 @@ y.setRange("signal", -3, 3)
 # ROOT.This is the fraction of of pdf gxy_Norm[x,y] which is in the
 # range named "signal"
 
-igxy_sig = gxy.createIntegral(x_and_y, ROOT.RooFit.NormSet(x_and_y), ROOT.RooFit.Range("signal"))
+igxy_sig = gxy.createIntegral(x_and_y, NormSet=x_and_y, Range="signal")
 print("gx_Int[x,y|signal]_Norm[x,y] = ", igxy_sig.getVal())
 
 # Construct cumulative distribution function from pdf
@@ -76,7 +76,7 @@ print("gx_Int[x,y|signal]_Norm[x,y] = ", igxy_sig.getVal())
 gxy_cdf = gxy.createCdf(ROOT.RooArgSet(x, y))
 
 # Plot cdf of gx versus x
-hh_cdf = gxy_cdf.createHistogram("hh_cdf", x, ROOT.RooFit.Binning(40), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(40)))
+hh_cdf = gxy_cdf.createHistogram("hh_cdf", x, Binning=40, YVar=(y, ROOT.RooFit.Binning(40)))
 hh_cdf.SetLineColor(ROOT.kBlue)
 
 c = ROOT.TCanvas("rf308_normintegration2d", "rf308_normintegration2d", 600, 600)

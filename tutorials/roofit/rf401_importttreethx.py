@@ -72,10 +72,10 @@ dh = ROOT.RooDataHist(
     "dh",
     "dh",
     ROOT.RooArgList(x),
-    ROOT.RooFit.Index(c),
     ROOT.RooFit.Import("SampleA", hh_1),
     ROOT.RooFit.Import("SampleB", hh_2),
-    ROOT.RooFit.Import("SampleC", hh_3),
+    Import=("SampleC", hh_3),
+    Index=c,
 )
 dh.Print()
 
@@ -100,12 +100,12 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 z = ROOT.RooRealVar("z", "z", -10, 10)
 
 # Import only observables (y,z)
-ds = ROOT.RooDataSet("ds", "ds", ROOT.RooArgSet(x, y), ROOT.RooFit.Import(tree))
+ds = ROOT.RooDataSet("ds", "ds", ROOT.RooArgSet(x, y), Import=tree)
 ds.Print()
 
 # Import observables (x,y,z) but only event for which (y+z<0) is ROOT.True
 # Import observables (x,y,z) but only event for which (y+z<0) is ROOT.True
-ds2 = ROOT.RooDataSet("ds2", "ds2", ROOT.RooArgSet(x, y, z), ROOT.RooFit.Import(tree), ROOT.RooFit.Cut("y+z<0"))
+ds2 = ROOT.RooDataSet("ds2", "ds2", ROOT.RooArgSet(x, y, z), Import=tree, Cut="y+z<0")
 ds2.Print()
 
 # Importing integer ROOT TTree branches
@@ -113,7 +113,7 @@ ds2.Print()
 
 # Import integer tree branch as ROOT.RooRealVar
 i = ROOT.RooRealVar("i", "i", 0, 5)
-ds3 = ROOT.RooDataSet("ds3", "ds3", ROOT.RooArgSet(i, x), ROOT.RooFit.Import(tree))
+ds3 = ROOT.RooDataSet("ds3", "ds3", ROOT.RooArgSet(i, x), Import=tree)
 ds3.Print()
 
 # Define category i
@@ -123,7 +123,7 @@ icat.defineType("State1", 1)
 
 # Import integer tree branch as ROOT.RooCategory (only events with i==0 and i==1
 # will be imported as those are the only defined states)
-ds4 = ROOT.RooDataSet("ds4", "ds4", ROOT.RooArgSet(icat, x), ROOT.RooFit.Import(tree))
+ds4 = ROOT.RooDataSet("ds4", "ds4", ROOT.RooArgSet(icat, x), Import=tree)
 ds4.Print()
 
 # Import multiple RooDataSets into a RooDataSet
@@ -140,10 +140,10 @@ dsABC = ROOT.RooDataSet(
     "dsABC",
     "dsABC",
     ROOT.RooArgSet(x, y),
-    ROOT.RooFit.Index(c),
     ROOT.RooFit.Import("SampleA", dsA),
     ROOT.RooFit.Import("SampleB", dsB),
-    ROOT.RooFit.Import("SampleC", dsC),
+    Index=c,
+    Import=("SampleC", dsC),
 )
 
 dsABC.Print()

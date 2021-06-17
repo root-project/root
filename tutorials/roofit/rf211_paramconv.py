@@ -49,7 +49,7 @@ d = projModel.generateBinned(ROOT.RooArgSet(x), 1000)
 projModel.fitTo(d, Verbose=True)
 
 # Plot data and fitted p.d.f.
-frame = x.frame(ROOT.RooFit.Bins(25))
+frame = x.frame(Bins=25)
 d.plotOn(frame)
 projModel.plotOn(frame)
 
@@ -57,9 +57,9 @@ projModel.plotOn(frame)
 hh = model.createHistogram(
     "hh",
     x,
-    ROOT.RooFit.Binning(50),
-    ROOT.RooFit.YVar(mean, ROOT.RooFit.Binning(50)),
-    ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(mean)),
+    Binning=50,
+    YVar=(mean, ROOT.RooFit.Binning(50)),
+    ConditionalObservables=ROOT.RooArgSet(mean),
 )
 hh.SetTitle("histogram of model(x|mean)")
 hh.SetLineColor(ROOT.kBlue)

@@ -43,7 +43,7 @@ landau = ROOT.RooLandau("landau", "landau", x, ROOT.RooFit.RooConst(0), ROOT.Roo
 
 # Activate debug-level messages for topic integration to be able to follow
 # actions below
-ROOT.RooMsgService.instance().addStream(ROOT.RooFit.DEBUG, ROOT.RooFit.Topic(ROOT.RooFit.Integration))
+ROOT.RooMsgService.instance().addStream(ROOT.RooFit.DEBUG, Topic=ROOT.RooFit.Integration)
 
 # Calculate integral over landau with default choice of numeric integrator
 intLandau = landau.createIntegral(ROOT.RooArgSet(x))
@@ -61,7 +61,7 @@ if integratorGKNotExisting:
     print("WARNING: RooAdaptiveGaussKronrodIntegrator is not existing because ROOT is built without Mathmore support")
 
 # Calculate integral over landau with custom integral specification
-intLandau2 = landau.createIntegral(ROOT.RooArgSet(x), ROOT.RooFit.NumIntConfig(customConfig))
+intLandau2 = landau.createIntegral(ROOT.RooArgSet(x), NumIntConfig=customConfig)
 val2 = intLandau2.getVal()
 print(" [2] int_dx landau(x) = ", val2)
 

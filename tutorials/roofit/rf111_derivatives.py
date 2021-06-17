@@ -37,7 +37,7 @@ d2gdx2 = gauss.derivative(x, 2)
 d3gdx3 = gauss.derivative(x, 3)
 
 # Construct plot frame in 'x'
-xframe = x.frame(ROOT.RooFit.Title("d(Gauss)/dx"))
+xframe = x.frame(Title="d(Gauss)/dx")
 
 # Plot gauss in frame (i.e. in x)
 gauss.plotOn(xframe)
@@ -58,7 +58,7 @@ d2gds2 = gauss.derivative(sigma, 2)
 d3gds3 = gauss.derivative(sigma, 3)
 
 # Construct plot frame in 'sigma'
-sframe = sigma.frame(ROOT.RooFit.Title("d(Gauss)/d(sigma)"), ROOT.RooFit.Range(0.0, 2.0))
+sframe = sigma.frame(Title="d(Gauss)/d(sigma)", Range=(0.0, 2.0))
 
 # Plot gauss in frame (i.e. in x)
 gauss.plotOn(sframe)

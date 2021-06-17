@@ -60,10 +60,10 @@ llratio_func = ROOT.RooFormulaVar("llratio", "log10(@0)-log10(@1)", ROOT.RooArgL
 # Calculate likelihood ratio for each event, subset of events with high
 # signal likelihood
 data.addColumn(llratio_func)
-dataSel = data.reduce(ROOT.RooFit.Cut("llratio>0.7"))
+dataSel = data.reduce(Cut="llratio>0.7")
 
 # Make plot frame and plot data
-frame = x.frame(ROOT.RooFit.Title("Projection on X with LLratio(y,z)>0.7"), ROOT.RooFit.Bins(40))
+frame = x.frame(Title="Projection on X with LLratio(y,z)>0.7", Bins=40)
 dataSel.plotOn(frame)
 
 # Perform parallel projection using MC integration of pdf using given input dataSet.

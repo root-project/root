@@ -50,7 +50,7 @@ xRegion.addThreshold(9.23, "SideBand")
 data.addColumn(xRegion)
 
 # Make plot of data in x
-xframe = x.frame(ROOT.RooFit.Title("Demo of threshold and binning mapping functions"))
+xframe = x.frame(Title="Demo of threshold and binning mapping functions")
 data.plotOn(xframe)
 
 # Use calculated category to select sideband data
@@ -84,7 +84,7 @@ xb.setRange("alt", "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_co
 
 # Construct subset of data matching range "alt" but only for the first
 # 5000 events and plot it on the frame
-dataSel = data.reduce(ROOT.RooFit.CutRange("alt"), ROOT.RooFit.EventRange(0, 5000))
+dataSel = data.reduce(CutRange="alt", EventRange=(0, 5000))
 dataSel.plotOn(xframe, MarkerColor=ROOT.kGreen, LineColor=ROOT.kGreen)
 
 c = ROOT.TCanvas("rf405_realtocatfuncs", "rf405_realtocatfuncs", 600, 600)

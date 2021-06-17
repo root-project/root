@@ -60,7 +60,7 @@ data_psi = Mpsi.generate(ROOT.RooArgSet(psi), 10000)
 Mpsi.fitTo(data_psi)
 
 # Plot cos(psi) frame with Mf(cpsi)
-frame1 = psi.frame(ROOT.RooFit.Title("Cyclical convolution in angle psi"))
+frame1 = psi.frame(Title="Cyclical convolution in angle psi")
 data_psi.plotOn(frame1)
 Mpsi.plotOn(frame1)
 
@@ -93,7 +93,7 @@ psi.setConstant(True)
 Mcpsi.fitTo(data_cpsi)
 
 # Plot cos(psi) frame with Mf(cpsi)
-frame2 = cpsi.frame(ROOT.RooFit.Title("Same convolution in psi, in cos(psi)"))
+frame2 = cpsi.frame(Title="Same convolution in psi, in cos(psi)")
 data_cpsi.plotOn(frame2)
 Mcpsi.plotOn(frame2)
 

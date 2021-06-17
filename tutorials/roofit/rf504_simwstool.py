@@ -62,7 +62,7 @@ sct = ROOT.RooSimWSTool(w)
 #             = model_run2(x) if c=="run2"
 #
 # Returned pdf is owned by the workspace
-model_sim = sct.build("model_sim", "model", ROOT.RooFit.SplitParam("m", "c"))
+model_sim = sct.build("model_sim", "model", SplitParam=("m", "c"))
 
 # Print tree structure of model
 model_sim.Print("t")
@@ -78,7 +78,7 @@ w.Print("v")
 # -----------------------------------------------------------------------------------------
 
 # Build another simultaneous pdf using a composite split in states c X d
-model_sim2 = sct.build("model_sim2", "model", ROOT.RooFit.SplitParam("p0", "c,d"))
+model_sim2 = sct.build("model_sim2", "model", SplitParam=("p0", "c,d"))
 
 # Print tree structure of self model
 model_sim2.Print("t")

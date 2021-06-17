@@ -43,13 +43,13 @@ data = gaussxy.generate(ROOT.RooArgSet(x, y), 10000)
 
 # Plot x distribution of data and projection of gaussxy x = Int(dy)
 # gaussxy(x,y)
-xframe = x.frame(ROOT.RooFit.Title("X projection of gauss(x)*gauss(y)"))
+xframe = x.frame(Title="X projection of gauss(x)*gauss(y)")
 data.plotOn(xframe)
 gaussxy.plotOn(xframe)
 
 # Plot x distribution of data and projection of gaussxy y = Int(dx)
 # gaussxy(x,y)
-yframe = y.frame(ROOT.RooFit.Title("Y projection of gauss(x)*gauss(y)"))
+yframe = y.frame(Title="Y projection of gauss(x)*gauss(y)")
 data.plotOn(yframe)
 gaussxy.plotOn(yframe)
 
