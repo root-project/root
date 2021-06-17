@@ -60,7 +60,7 @@
 /gui/canvaspainter/ @Axel-Naumann @linev
 /ui5/ @linev
 
-/cmake/ @oshadura
-*.cmake @oshadura
-*/CMakeLists.txt @oshadura
-CMakeLists.txt @oshadura
+/cmake/ @bellenot
+*.cmake @bellenot
+*/CMakeLists.txt @bellenot
+CMakeLists.txt @bellenot
