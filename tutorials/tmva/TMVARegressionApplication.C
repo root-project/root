@@ -6,7 +6,7 @@
 ///
 ///  - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 ///  - Package   : TMVA
-///  - Exectuable: TMVARegressionApplication
+///  - Executable: TMVARegressionApplication
 ///
 /// \macro_output
 /// \macro_code
@@ -30,7 +30,7 @@
 
 using namespace TMVA;
 
-void TMVARegressionApplication( TString myMethodList = "" ) 
+void TMVARegressionApplication( TString myMethodList = "" )
 {
    //---------------------------------------------------------------
    // This loads the library
@@ -41,18 +41,18 @@ void TMVARegressionApplication( TString myMethodList = "" )
 
    // --- Mutidimensional likelihood and Nearest-Neighbour methods
    Use["PDERS"]           = 0;
-   Use["PDEFoam"]         = 1; 
+   Use["PDEFoam"]         = 1;
    Use["KNN"]             = 1;
-   // 
+   //
    // --- Linear Discriminant Analysis
-   Use["LD"]		        = 1;
-   // 
+   Use["LD"]              = 1;
+   //
    // --- Function Discriminant analysis
    Use["FDA_GA"]          = 0;
    Use["FDA_MC"]          = 0;
    Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
-   // 
+   //
    // --- Neural Network
    Use["MLP"] = 0;
 #ifdef R__HAS_TMVACPU
@@ -61,10 +61,10 @@ void TMVARegressionApplication( TString myMethodList = "" )
    Use["DNN_CPU"] = 0;
 #endif
 
-   // 
-   // --- Support Vector Machine 
+   //
+   // --- Support Vector Machine
    Use["SVM"]             = 0;
-   // 
+   //
    // --- Boosted Decision Trees
    Use["BDT"]             = 0;
    Use["BDTG"]            = 1;
@@ -95,7 +95,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
 
    // --- Create the Reader object
 
-   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
+   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
 
    // Create a set of variables and declare them to the reader
    // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
@@ -118,10 +118,10 @@ void TMVARegressionApplication( TString myMethodList = "" )
       if (it->second) {
          TString methodName = it->first + " method";
          TString weightfile = dir + prefix + "_" + TString(it->first) + ".weights.xml";
-         reader->BookMVA( methodName, weightfile ); 
+         reader->BookMVA( methodName, weightfile );
       }
    }
-   
+
    // Book output histograms
    TH1* hists[100];
    Int_t nhists = -1;
@@ -130,7 +130,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
       if (it->second) hists[++nhists] = h;
    }
    nhists++;
-   
+
    // Prepare input tree (this must be replaced by your data source)
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
@@ -179,7 +179,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
       for (Int_t ih=0; ih<nhists; ih++) {
          TString title = hists[ih]->GetTitle();
          Float_t val = (reader->EvaluateRegression( title ))[0];
-         hists[ih]->Fill( val );    
+         hists[ih]->Fill( val );
       }
    }
    sw.Stop();
@@ -191,22 +191,22 @@ void TMVARegressionApplication( TString myMethodList = "" )
    for (Int_t ih=0; ih<nhists; ih++) hists[ih]->Write();
    target->Close();
 
-   std::cout << "--- Created root file: \"" << target->GetName() 
+   std::cout << "--- Created root file: \"" << target->GetName()
              << "\" containing the MVA output histograms" << std::endl;
-  
+
    delete reader;
-    
+
    std::cout << "==> TMVARegressionApplication is done!" << std::endl << std::endl;
 }
 
 int main( int argc, char** argv )
 {
    // Select methods (don't look at this code - not of interest)
-   TString methodList; 
+   TString methodList;
    for (int i=1; i<argc; i++) {
       TString regMethod(argv[i]);
       if(regMethod=="-b" || regMethod=="--batch") continue;
-      if (!methodList.IsNull()) methodList += TString(","); 
+      if (!methodList.IsNull()) methodList += TString(",");
       methodList += regMethod;
    }
    TMVARegressionApplication(methodList);

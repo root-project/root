@@ -194,7 +194,7 @@ We define first the DNN layout:
 - **input layout** :   this defines the input data format for the DNN as  ``input depth | height | width``.
    In case of a dense layer as first layer the input layout should be  ``1 | 1 | number of input variables`` (features)
 - **batch layout**  : this defines how are the input batch. It is related to input layout but not the same.
-   If the first layer is dense it should be ``1 | batch size ! number of variables`` (fetures)
+   If the first layer is dense it should be ``1 | batch size ! number of variables`` (features)
 
    *(note the use of the character `|` as  separator of  input parameters for DNN layout)*
 
@@ -208,7 +208,7 @@ complex architectures
 
      *the different layers are separated by the ``","`` *
 
-#### 2. Define Trainining Strategy
+#### 2. Define Training Strategy
 
 We define here the training strategy parameters for the DNN. The parameters are separated by the ``","`` separator.
 One can then concatenate different training strategy with different parameters. The training strategy are separated by
@@ -227,7 +227,7 @@ the ``"|"`` separator.
 
 #### 3. Define general DNN options
 
-We define the general DNN options concateneting in the final string the previously defined layout and training strategy.
+We define the general DNN options concatenating in the final string the previously defined layout and training strategy.
 Note we use the ``":"`` separator to separate the different higher level options, as in the other TMVA methods.
 In addition to input layout, batch layout and training strategy we add now:
 

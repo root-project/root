@@ -73,7 +73,7 @@ void TMVARegression( TString myMethodList = "" )
    Use["KNN"]             = 1;
    //
    // Linear Discriminant Analysis
-   Use["LD"]		        = 1;
+   Use["LD"]              = 1;
    //
    // Function Discriminant analysis
    Use["FDA_GA"]          = 0;
@@ -230,7 +230,7 @@ void TMVARegression( TString myMethodList = "" )
 
    if (Use["PDEFoam"])
        factory->BookMethod( dataloader,  TMVA::Types::kPDEFoam, "PDEFoam",
-			    "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Compress=T:Kernel=None:Nmin=10:VarTransform=None" );
+             "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Compress=T:Kernel=None:Nmin=10:VarTransform=None" );
 
    // K-Nearest Neighbour classifier (KNN)
    if (Use["KNN"])
@@ -242,7 +242,7 @@ void TMVARegression( TString myMethodList = "" )
       factory->BookMethod( dataloader,  TMVA::Types::kLD, "LD",
                            "!H:!V:VarTransform=None" );
 
-	// Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
+   // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
    if (Use["FDA_MC"])
       factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_MC",
                           "!H:!V:Formula=(0)+(1)*x0+(2)*x1:ParRanges=(-100,100);(-100,100);(-100,100):FitMethod=MC:SampleSize=100000:Sigma=0.1:VarTransform=D" );

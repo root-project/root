@@ -23,7 +23,7 @@
 /// we create a signal and background 2D histograms from 2d gaussians
 /// with a location (means in X and Y)  different for each event
 /// The difference between signal and background is in the gaussian width.
-/// The width for the bakground gaussian is slightly larger than the signal width by few % values
+/// The width for the background gaussian is slightly larger than the signal width by few % values
 ///
 ///
 void MakeImagesTree(int n, int nh, int nw)
@@ -48,7 +48,7 @@ void MakeImagesTree(int n, int nh, int nw)
    auto f1 = new TF2("f1", "xygaus");
    auto f2 = new TF2("f2", "xygaus");
    TTree sgn("sig_tree", "signal_tree");
-   TTree bkg("bkg_tree", "bakground_tree");
+   TTree bkg("bkg_tree", "background_tree");
 
    TFile f(fileOutName, "RECREATE");
 
@@ -354,7 +354,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
        - note in this case we are using a filer 3x3 and padding=1 and stride=1 so we get the output dimension of the
    conv layer equal to the input
 
-      - note we use after the first convolutional layer a batch normalization layer. This seems to help significatly the
+      - note we use after the first convolutional layer a batch normalization layer. This seems to help significantly the
    convergence
 
      - For the MaxPool layer:
@@ -419,7 +419,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
       Info("TMVA_CNN_Classification", "Building convolutional keras model");
       // create python script which can be executed
-      // crceate 2 conv2d layer + maxpool + dense
+      // create 2 conv2d layer + maxpool + dense
       TMacro m;
       m.AddLine("import tensorflow");
       m.AddLine("from tensorflow.keras.models import Sequential");

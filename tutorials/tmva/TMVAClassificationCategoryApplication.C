@@ -5,7 +5,7 @@
 /// (with categories) within an analysis module
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
-/// - Exectuable: TMVAClassificationCategoryApplication
+/// - Executable: TMVAClassificationCategoryApplication
 ///
 /// \macro_output
 /// \macro_code
@@ -104,7 +104,7 @@ void TMVAClassificationCategoryApplication()
    //   but of course you can use different ones and copy the values inside the event loop
    //
    TTree* theTree = (TTree*)input->Get("TreeS");
-   std::cout << "--- Use signal sample for evalution" << std::endl;
+   std::cout << "--- Use signal sample for evaluation" << std::endl;
    theTree->SetBranchAddress( "var1", &var1 );
    theTree->SetBranchAddress( "var2", &var2 );
    theTree->SetBranchAddress( "var3", &var3 );

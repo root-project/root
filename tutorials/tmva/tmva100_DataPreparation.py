@@ -2,7 +2,7 @@
 ## \ingroup tutorial_tmva
 ## \notebook -nodraw
 ## This tutorial illustrates how to prepare ROOT datasets to be nicely readable
-## by most machine learning methods. This requires filtering the inital complex
+## by most machine learning methods. This requires filtering the initial complex
 ## datasets and writing the data in a flat format.
 ##
 ## \macro_code

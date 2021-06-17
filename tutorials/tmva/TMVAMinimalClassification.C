@@ -6,11 +6,11 @@
 ///
 /// This is intended as a simple foundation to build on. It assumes you are
 /// familiar with TMVA already. As such concepts like the Factory, the DataLoader
-/// and others are not explained. For descriptions and tutuorials use the TMVA
+/// and others are not explained. For descriptions and tutorials use the TMVA
 /// User's Guide (https://root.cern.ch/root-user-guides-and-manuals under TMVA)
 /// or the more detailed examples provided with TMVA e.g. TMVAClassification.C.
 ///
-/// Sets up a minimal binary classification example with two slighly overlapping
+/// Sets up a minimal binary classification example with two slightly overlapping
 /// 2-D gaussian distributions and trains a BDT classifier to discriminate the
 /// data.
 ///
@@ -63,7 +63,7 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100
 }
 
 //
-// Minimal setup for perfroming binary classification in TMVA.
+// Minimal setup for performing binary classification in TMVA.
 //
 // Modify the setup to your liking and run with
 //    `root -l -b -q TMVAMinimalClassification.C`.
@@ -75,7 +75,7 @@ void TMVAMinimalClassification()
    TString outputFilename = "out.root";
    TFile *outFile = new TFile(outputFilename, "RECREATE");
 
-   // Data generatration
+   // Data generation
    TTree *signalTree = genTree(1000, 0.0, 2.0, 100);
    TTree *backgroundTree = genTree(1000, 1.0, 2.0, 101);
 
