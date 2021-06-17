@@ -2769,6 +2769,7 @@ static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConf
       default:
          break;
    }
+   Error("GetConvertCollectionReadActionFrom", "UNEXPECTED: newtype == %d", newtype);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
@@ -2828,6 +2829,7 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
       default:
          break;
    }
+   Error("GetConvertCollectionReadAction", "UNEXPECTED: oldtype == %d", oldtype);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
