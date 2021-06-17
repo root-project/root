@@ -21,7 +21,7 @@
 
 import ROOT
 import os
-from ROOT.Experimental import RCanvas, RPad, RText, RLegend, RPadPos, RPadExtent, TObjectDrawable
+from ROOT.Experimental import RCanvas, RText, RLegend, RPadPos, RPadExtent, TObjectDrawable
 
 # Enable multi-threading
 ROOT.ROOT.EnableImplicitMT()
@@ -100,8 +100,8 @@ data = hists["data"].GetValue()
 # Create canvas with pads for main plot and data/MC ratio
 c = RCanvas.Create("df104_HiggsToTwoPhotons")
 
-lower_pad = c.Draw[RPad](RPadPos(0,0.65), RPadExtent(1, 0.35))
-upper_pad = c.Draw[RPad](RPadPos(0,0), RPadExtent(1, 0.65))
+lower_pad = c.AddPad(RPadPos(0,0.65), RPadExtent(1, 0.35))
+upper_pad = c.AddPad(RPadPos(0,0), RPadExtent(1, 0.65))
 
 upper_frame = upper_pad.GetOrCreateFrame()
 upper_frame.AttrMargins().SetBottom(0).SetLeft(0.14).SetRight(0.05)

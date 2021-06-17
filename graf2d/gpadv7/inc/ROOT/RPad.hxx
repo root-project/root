@@ -34,14 +34,7 @@ class RPad: public RPadBase {
 
    RAttrLine fAttrLine{this, "border"};    ///<! border attributes
 
-   void SetParent(RPadBase *parent) { fParent = parent; }
-
-protected:
-
-   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) final;
-
-public:
-   /// Create a topmost, non-paintable pad.
+   /// Create default pad
    RPad() : RPadBase("pad") {}
 
    /// Create a pad.
@@ -50,6 +43,19 @@ public:
       fPos = pos;
       fSize = size;
    }
+
+   // Assign parent
+   void SetParent(RPadBase *parent) { fParent = parent; }
+
+protected:
+
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) final;
+
+
+public:
+
+   /// Constructor must be used only for I/O
+   RPad(TRootIOCtor*) : RPad() {}
 
    /// Destructor to have a vtable.
    virtual ~RPad();

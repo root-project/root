@@ -35,17 +35,6 @@ void RPadBase::UseStyle(const std::shared_ptr<RStyle> &style)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// Add primitive
-
-void RPadBase::AddPrimitive(std::shared_ptr<RDrawable> drawable)
-{
-   if (auto pad = dynamic_cast<RPad *>(drawable.get()))
-      pad->SetParent(this);
-
-   fPrimitives.emplace_back(drawable);
-}
-
-///////////////////////////////////////////////////////////////////////////
 /// Find primitive with specified id
 
 std::shared_ptr<RDrawable> RPadBase::FindPrimitive(const std::string &id) const
@@ -144,6 +133,20 @@ void RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem, RDisplayContext &
 }
 
 ///////////////////////////////////////////////////////////////////////////
+/// Add subpad
+
+std::shared_ptr<RPad> RPadBase::AddPad(const RPadPos &pos, const RPadExtent &extent)
+{
+   auto pad = new RPad(pos, extent);
+
+   pad->SetParent(this);
+   std::shared_ptr<RPad> pshared(pad);
+
+   fPrimitives.emplace_back(pshared);
+   return pshared;
+}
+
+///////////////////////////////////////////////////////////////////////////
 /// Divide pad on nHoriz X nVert subpads
 /// Return array of array of pads
 
@@ -171,7 +174,7 @@ RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)
          RPadPos subPos = offset;
          subPos *= {1. * iHoriz, 1. * iVert};
 
-         auto subpad = Draw<RPad>(subPos, size);
+         auto subpad = AddPad(subPos, size);
 
          ret.back().emplace_back(subpad);
       }
