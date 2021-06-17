@@ -66,8 +66,6 @@ protected:
 
    void SetDrawableVersion(Version_t vers) override;
 
-   void AddPrimitive(std::shared_ptr<RDrawable> drawable);
-
 public:
 
    using Primitives_t = std::vector<std::shared_ptr<RDrawable>>;
@@ -75,13 +73,6 @@ public:
    virtual ~RPadBase();
 
    void UseStyle(const std::shared_ptr<RStyle> &style) override;
-
-   /// Divide this pad into a grid of subpads with padding in between.
-   /// \param nHoriz Number of horizontal pads.
-   /// \param nVert Number of vertical pads.
-   /// \param padding Padding between pads.
-   /// \returns vector of vector (ret[x][y]) of created pads.
-   std::vector<std::vector<std::shared_ptr<RPad>>> Divide(int nHoriz, int nVert, const RPadExtent &padding = {});
 
    /// Add object to be painted.
    /// Correspondent drawable will be created via GetDrawable() function which should be defined and be accessed at calling time.
@@ -94,7 +85,7 @@ public:
 
       TestIfFrameRequired(drawable.get());
 
-      AddPrimitive(drawable);
+      fPrimitives.emplace_back(drawable);
 
       return drawable;
    }
@@ -107,7 +98,7 @@ public:
 
       TestIfFrameRequired(drawable.get());
 
-      AddPrimitive(drawable);
+      fPrimitives.emplace_back(drawable);
 
       return drawable;
    }
@@ -120,7 +111,7 @@ public:
 
       TestIfFrameRequired(drawable.get());
 
-      AddPrimitive(drawable);
+      fPrimitives.emplace_back(drawable);
 
       return drawable;
    }
@@ -132,7 +123,7 @@ public:
 
       auto dr = std::move(drawable);
 
-      AddPrimitive(dr);
+      fPrimitives.emplace_back(dr);
 
       return dr;
    }
@@ -201,6 +192,15 @@ public:
    std::shared_ptr<RFrame> GetOrCreateFrame();
    std::shared_ptr<RFrame> GetFrame();
    const std::shared_ptr<RFrame> GetFrame() const;
+
+   std::shared_ptr<RPad> AddPad(const RPadPos &, const RPadExtent &);
+
+   /// Divide this pad into a grid of subpads with padding in between.
+   /// \param nHoriz Number of horizontal pads.
+   /// \param nVert Number of vertical pads.
+   /// \param padding Padding between pads.
+   /// \returns vector of vector (ret[x][y]) of created pads.
+   std::vector<std::vector<std::shared_ptr<RPad>>> Divide(int nHoriz, int nVert, const RPadExtent &padding = {});
 
    /// Access to the top-most canvas, if any (const version).
    virtual const RCanvas *GetCanvas() const = 0;
