@@ -95,7 +95,7 @@ simPdf.fitTo(combData)
 # ----------------------------------------------------------------
 
 # Make a frame for the physics sample
-frame1 = x.frame(ROOT.RooFit.Bins(30), ROOT.RooFit.Title("Physics sample"))
+frame1 = x.frame(Bins=30, Title="Physics sample")
 
 # Plot all data tagged as physics sample
 combData.plotOn(frame1, Cut="sample==sample::physics")
@@ -112,7 +112,7 @@ simPdf.plotOn(
 )
 
 # The same plot for the control sample slice
-frame2 = x.frame(ROOT.RooFit.Bins(30), ROOT.RooFit.Title("Control sample"))
+frame2 = x.frame(Bins=30, Title="Control sample")
 combData.plotOn(frame2, Cut="sample==sample::control")
 simPdf.plotOn(frame2, Slice=(sample, "control"), ProjWData=(sampleSet, combData))
 simPdf.plotOn(

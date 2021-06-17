@@ -40,13 +40,13 @@ kest2 = ROOT.RooKeysPdf("kest2", "kest2", x, data1, ROOT.RooKeysPdf.NoMirror)
 kest3 = ROOT.RooKeysPdf("kest1", "kest1", x, data1, ROOT.RooKeysPdf.MirrorBoth, 2)
 
 # Plot kernel estimation pdfs with and without mirroring over data
-frame = x.frame(ROOT.RooFit.Title("Adaptive kernel estimation pdf with and w/o mirroring"), ROOT.RooFit.Bins(20))
+frame = x.frame(Title="Adaptive kernel estimation pdf with and w/o mirroring", Bins=20)
 data1.plotOn(frame)
 kest1.plotOn(frame)
 kest2.plotOn(frame, LineStyle=ROOT.kDashed, LineColor=ROOT.kRed)
 
 # Plot kernel estimation pdfs with regular and increased bandwidth
-frame2 = x.frame(ROOT.RooFit.Title("Adaptive kernel estimation pdf with regular, bandwidth"))
+frame2 = x.frame(Title="Adaptive kernel estimation pdf with regular, bandwidth")
 kest1.plotOn(frame2)
 kest3.plotOn(frame2, LineColor=ROOT.kMagenta)
 
@@ -75,13 +75,11 @@ kest4 = ROOT.RooNDKeysPdf("kest4", "kest4", ROOT.RooArgList(x, y), data2, "am")
 kest5 = ROOT.RooNDKeysPdf("kest5", "kest5", ROOT.RooArgList(x, y), data2, "am", 2)
 
 # Create a histogram of the data
-hh_data = ROOT.RooAbsData.createHistogram(
-    data2, "hh_data", x, ROOT.RooFit.Binning(10), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(10))
-)
+hh_data = ROOT.RooAbsData.createHistogram(data2, "hh_data", x, Binning=10, YVar=(y, ROOT.RooFit.Binning(10)))
 
 # Create histogram of the 2d kernel estimation pdfs
-hh_pdf = kest4.createHistogram("hh_pdf", x, ROOT.RooFit.Binning(25), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(25)))
-hh_pdf2 = kest5.createHistogram("hh_pdf2", x, ROOT.RooFit.Binning(25), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(25)))
+hh_pdf = kest4.createHistogram("hh_pdf", x, Binning=25, YVar=(y, ROOT.RooFit.Binning(25)))
+hh_pdf2 = kest5.createHistogram("hh_pdf2", x, Binning=25, YVar=(y, ROOT.RooFit.Binning(25)))
 hh_pdf.SetLineColor(ROOT.kBlue)
 hh_pdf2.SetLineColor(ROOT.kMagenta)
 

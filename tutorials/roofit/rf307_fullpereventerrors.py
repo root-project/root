@@ -25,7 +25,7 @@ gm = ROOT.RooGaussModel("gm1", "gauss model scaled bt per-event error", dt, bias
 
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
-decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, ROOT.RooDecay.DoubleSided)
+decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 
 # Construct empirical pdf for per-event error
 # -----------------------------------------------------------------
@@ -44,7 +44,7 @@ pdfErr = ROOT.RooHistPdf("pdfErr", "pdfErr", ROOT.RooArgSet(dterr), expHistDterr
 # Construct production of conditional decay_dm(dt|dterr) with empirical
 # pdfErr(dterr)
 model = ROOT.RooProdPdf(
-    "model", "model", ROOT.RooArgSet(pdfErr), ROOT.RooFit.Conditional(ROOT.RooArgSet(decay_gm), ROOT.RooArgSet(dt))
+    "model", "model", ROOT.RooArgSet(pdfErr), Conditional=(ROOT.RooArgSet(decay_gm), ROOT.RooArgSet(dt))
 )
 
 # (Alternatively you could also use the landau shape pdfDtErr)
@@ -68,13 +68,11 @@ model.fitTo(data)
 # ---------------------------------------------------------------------
 
 # Make two-dimensional plot of conditional pdf in (dt,dterr)
-hh_model = model.createHistogram(
-    "hh_model", dt, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(dterr, ROOT.RooFit.Binning(50))
-)
+hh_model = model.createHistogram("hh_model", dt, Binning=50, YVar=(dterr, ROOT.RooFit.Binning(50)))
 hh_model.SetLineColor(ROOT.kBlue)
 
 # Make projection of data an dt
-frame = dt.frame(ROOT.RooFit.Title("Projection of model(dt|dterr) on dt"))
+frame = dt.frame(Title="Projection of model(dt|dterr) on dt")
 data.plotOn(frame)
 model.plotOn(frame)
 

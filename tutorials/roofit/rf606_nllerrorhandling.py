@@ -35,7 +35,7 @@ data = argus.generate(ROOT.RooArgSet(m), 1000)
 # Plot model and data
 # --------------------------------------
 
-frame1 = m.frame(ROOT.RooFit.Bins(40), ROOT.RooFit.Title("Argus model and data"))
+frame1 = m.frame(Bins=40, Title="Argus model and data")
 data.plotOn(frame1)
 argus.plotOn(frame1)
 
@@ -79,7 +79,7 @@ nll = ROOT.RooNLLVar("nll", "nll", argus, data)
 # but if an likelihood value evaluates with error, corresponding value
 # on the curve will be set to the value given in EvalErrorValue().
 
-frame2 = m0.frame(ROOT.RooFit.Range(5.288, 5.293), ROOT.RooFit.Title("-log(L) scan vs m0, regions masked"))
+frame2 = m0.frame(Range=(5.288, 5.293), Title="-log(L) scan vs m0, regions masked")
 nll.plotOn(
     frame2, ROOT.RooFit.ShiftToZero(), PrintEvalErrors=-1, EvalErrorValue=(nll.getVal() + 10), LineColor=ROOT.kRed
 )

@@ -92,7 +92,7 @@ w.pdf("model").fitTo(d, Verbose=True, Timer=True)
 
 # Projection on x (always slow as 2D integral over Y, at fitted value of a
 # is not cached)
-framex = w.var("x").frame(ROOT.RooFit.Title("Projection of 3D model on X"))
+framex = w.var("x").frame(Title="Projection of 3D model on X")
 d.plotOn(framex)
 w.pdf("model").plotOn(framex)
 

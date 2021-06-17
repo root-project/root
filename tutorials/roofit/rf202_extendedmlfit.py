@@ -55,7 +55,7 @@ model.fitTo(data)
 
 # Plot data and PDF overlaid, expected number of events for pdf projection normalization
 # rather than observed number of events (==data.numEntries())
-xframe = x.frame(ROOT.RooFit.Title("extended ML fit example"))
+xframe = x.frame(Title="extended ML fit example")
 data.plotOn(xframe)
 model.plotOn(xframe, Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected))
 

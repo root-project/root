@@ -33,7 +33,7 @@ hist1 = data1.binnedClone()
 histpdf1 = ROOT.RooHistPdf("histpdf1", "histpdf1", ROOT.RooArgSet(x), hist1, 0)
 
 # Plot unbinned data and histogram pdf overlaid
-frame1 = x.frame(ROOT.RooFit.Title("Low statistics histogram pdf"), ROOT.RooFit.Bins(100))
+frame1 = x.frame(Title="Low statistics histogram pdf", Bins=100)
 data1.plotOn(frame1)
 histpdf1.plotOn(frame1)
 
@@ -51,7 +51,7 @@ hist2 = data2.binnedClone()
 histpdf2 = ROOT.RooHistPdf("histpdf2", "histpdf2", ROOT.RooArgSet(x), hist2, 2)
 
 # Plot unbinned data and histogram pdf overlaid
-frame2 = x.frame(ROOT.RooFit.Title("High stats histogram pdf with interpolation"), ROOT.RooFit.Bins(100))
+frame2 = x.frame(Title="High stats histogram pdf with interpolation", Bins=100)
 data2.plotOn(frame2)
 histpdf2.plotOn(frame2)
 

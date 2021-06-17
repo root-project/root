@@ -25,7 +25,7 @@ gm = ROOT.RooGaussModel("gm1", "gauss model scaled bt per-event error", dt, bias
 
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
-decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, ROOT.RooDecay.DoubleSided)
+decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 
 # Construct fake 'external' data with per-event error
 # ------------------------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
 
 # Specify external dataset with dterr values to use decay_dm as
 # conditional pdf
-data = decay_gm.generate(ROOT.RooArgSet(dt), ROOT.RooFit.ProtoData(expDataDterr))
+data = decay_gm.generate(ROOT.RooArgSet(dt), ProtoData=expDataDterr)
 
 # Fit conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
@@ -51,19 +51,17 @@ decay_gm.fitTo(data, ConditionalObservables=ROOT.RooArgSet(dterr))
 # ---------------------------------------------------------------------
 
 # Make two-dimensional plot of conditional pdf in (dt,dterr)
-hh_decay = decay_gm.createHistogram(
-    "hh_decay", dt, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(dterr, ROOT.RooFit.Binning(50))
-)
+hh_decay = decay_gm.createHistogram("hh_decay", dt, Binning=50, YVar=(dterr, ROOT.RooFit.Binning(50)))
 hh_decay.SetLineColor(ROOT.kBlue)
 
 # Plot decay_gm(dt|dterr) at various values of dterr
-frame = dt.frame(ROOT.RooFit.Title("Slices of decay(dt|dterr) at various dterr"))
+frame = dt.frame(Title="Slices of decay(dt|dterr) at various dterr")
 for ibin in range(0, 100, 20):
     dterr.setBin(ibin)
     decay_gm.plotOn(frame, Normalization=5.0)
 
 # Make projection of data an dt
-frame2 = dt.frame(ROOT.RooFit.Title("Projection of decay(dt|dterr) on dt"))
+frame2 = dt.frame(Title="Projection of decay(dt|dterr) on dt")
 data.plotOn(frame2)
 
 # Make projection of decay(dt|dterr) on dt.

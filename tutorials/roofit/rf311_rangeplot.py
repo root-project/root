@@ -40,7 +40,7 @@ data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
 # -------------------------------------------------
 
 # Make plain projection of data and pdf on x observable
-frame = x.frame(ROOT.RooFit.Title("Projection of 3D data and pdf on X"), ROOT.RooFit.Bins(40))
+frame = x.frame(Title="Projection of 3D data and pdf on X", Bins=40)
 data.plotOn(frame)
 model.plotOn(frame)
 
@@ -52,7 +52,7 @@ y.setRange("sigRegion", -1, 1)
 z.setRange("sigRegion", -1, 1)
 
 # Make plot frame
-frame2 = x.frame(ROOT.RooFit.Title("Same projection on X in signal range of (Y,Z)"), ROOT.RooFit.Bins(40))
+frame2 = x.frame(Title="Same projection on X in signal range of (Y,Z)", Bins=40)
 
 # Plot subset of data in which all observables are inside "sigRegion"
 # For observables that do not have an explicit "sigRegion" range defined (e.g. observable)

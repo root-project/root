@@ -39,7 +39,7 @@ tagFlav.defineType("B0bar", -1)
 tm = ROOT.RooTruthModel("tm", "truth model", dt)
 
 # Construct Bdecay with mixing
-bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, tm, ROOT.RooBMixDecay.DoubleSided)
+bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, tm, type="DoubleSided")
 
 # Plot pdf in various slices
 # ---------------------------------------------------
@@ -50,7 +50,7 @@ data = bmix.generate(ROOT.RooArgSet(dt, mixState, tagFlav), 10000)
 # Plot B0 and B0bar tagged data separately
 # For all plots below B0 and B0 tagged data will look somewhat differently
 # if the flavor tagging mistag rate for B0 and B0 is different (i.e. dw!=0)
-frame1 = dt.frame(ROOT.RooFit.Title("B decay distribution with mixing (B0/B0bar)"))
+frame1 = dt.frame(Title="B decay distribution with mixing (B0/B0bar)")
 
 data.plotOn(frame1, Cut="tagFlav==tagFlav::B0")
 bmix.plotOn(frame1, Slice=(tagFlav, "B0"))
@@ -59,7 +59,7 @@ data.plotOn(frame1, Cut="tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
 bmix.plotOn(frame1, Slice=(tagFlav, "B0bar"), LineColor=ROOT.kCyan)
 
 # Plot mixed slice for B0 and B0bar tagged data separately
-frame2 = dt.frame(ROOT.RooFit.Title("B decay distribution of mixed events (B0/B0bar)"))
+frame2 = dt.frame(Title="B decay distribution of mixed events (B0/B0bar)")
 
 data.plotOn(frame2, Cut="mixState==mixState::mixed&&tagFlav==tagFlav::B0")
 bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0"), Slice=(mixState, "mixed"))
@@ -68,7 +68,7 @@ data.plotOn(frame2, Cut="mixState==mixState::mixed&&tagFlav==tagFlav::B0bar", Ma
 bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0bar"), Slice=(mixState, "mixed"), LineColor=ROOT.kCyan)
 
 # Plot unmixed slice for B0 and B0bar tagged data separately
-frame3 = dt.frame(ROOT.RooFit.Title("B decay distribution of unmixed events (B0/B0bar)"))
+frame3 = dt.frame(Title="B decay distribution of unmixed events (B0/B0bar)")
 
 data.plotOn(frame3, Cut="mixState==mixState::unmixed&&tagFlav==tagFlav::B0")
 bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0"), Slice=(mixState, "unmixed"))
@@ -90,7 +90,7 @@ effR = ROOT.RooRealVar("effR", "B0/B0bar reco efficiency ratio", 1)
 
 # Construct Bdecay with CP violation
 bcp = ROOT.RooBCPEffDecay(
-    "bcp", "bcp", dt, tagFlav, tau, dm, w, CPeigen, absLambda, argLambda, effR, dw, tm, ROOT.RooBCPEffDecay.DoubleSided
+    "bcp", "bcp", dt, tagFlav, tau, dm, w, CPeigen, absLambda, argLambda, effR, dw, tm, type="DoubleSided"
 )
 
 # Plot scenario 1 - sin(2b)=0.7, |l|=1
@@ -100,7 +100,7 @@ bcp = ROOT.RooBCPEffDecay(
 data2 = bcp.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
 
 # Plot B0 and B0bar tagged data separately
-frame4 = dt.frame(ROOT.RooFit.Title("B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)"))
+frame4 = dt.frame(Title="B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)")
 
 data2.plotOn(frame4, Cut="tagFlav==tagFlav::B0")
 bcp.plotOn(frame4, Slice=(tagFlav, "B0"))
@@ -118,7 +118,7 @@ data3 = bcp.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
 
 # Plot B0 and B0bar tagged data separately (sin2b = 0.7 plus direct CPV
 # |l|=0.5)
-frame5 = dt.frame(ROOT.RooFit.Title("B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)"))
+frame5 = dt.frame(Title="B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)")
 
 data3.plotOn(frame5, Cut="tagFlav==tagFlav::B0")
 bcp.plotOn(frame5, Slice=(tagFlav, "B0"))
@@ -150,7 +150,7 @@ fsinh = ROOT.RooFormulaVar("fsinh", "fsinh", "@0", ROOT.RooArgList(Adel))
 
 # Construct generic B decay pdf using above user coefficients
 bcpg = ROOT.RooBDecay(
-    "bcpg", "bcpg", dt, tau, DG, ROOT.RooFit.RooConst(1), fsinh, fcos, fsin, dm, tm, ROOT.RooBDecay.DoubleSided
+    "bcpg", "bcpg", dt, tau, DG, ROOT.RooFit.RooConst(1), fsinh, fcos, fsin, dm, tm, type="DoubleSided"
 )
 
 # Plot - Im(l)=0.7, e(l)=0.7 |l|=1, G/G=0.5
@@ -160,7 +160,7 @@ bcpg = ROOT.RooBDecay(
 data4 = bcpg.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
 
 # Plot B0 and B0bar tagged data separately
-frame6 = dt.frame(ROOT.RooFit.Title("B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)"))
+frame6 = dt.frame(Title="B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)")
 
 data4.plotOn(frame6, Cut="tagFlav==tagFlav::B0")
 bcpg.plotOn(frame6, Slice=(tagFlav, "B0"))

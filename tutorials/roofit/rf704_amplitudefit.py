@@ -68,8 +68,8 @@ pdf.fitTo(data)
 # -------------------------------------------
 
 # Make 2D plots of amplitudes
-hh_cos = ampl1.createHistogram("hh_cos", t, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(cosa, ROOT.RooFit.Binning(50)))
-hh_sin = ampl2.createHistogram("hh_sin", t, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(cosa, ROOT.RooFit.Binning(50)))
+hh_cos = ampl1.createHistogram("hh_cos", t, Binning=50, YVar=(cosa, ROOT.RooFit.Binning(50)))
+hh_sin = ampl2.createHistogram("hh_sin", t, Binning=50, YVar=(cosa, ROOT.RooFit.Binning(50)))
 hh_cos.SetLineColor(ROOT.kBlue)
 hh_sin.SetLineColor(ROOT.kRed)
 

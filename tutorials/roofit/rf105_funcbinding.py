@@ -31,7 +31,7 @@ erf = ROOT.myerf
 erf.Print()
 
 # Plot erf on frame
-frame1 = x.frame(ROOT.RooFit.Title("TMath.Erf bound as ROOT.RooFit function"))
+frame1 = x.frame(Title="TMath.Erf bound as ROOT.RooFit function")
 erf.plotOn(frame1)
 
 # Bind ROOT::Math::beta_pdf C function
@@ -62,7 +62,7 @@ data = beta.generate(ROOT.RooArgSet(x2), 10000)
 beta.fitTo(data)
 
 # Plot data and pdf on frame
-frame2 = x2.frame(ROOT.RooFit.Title("ROOT.Math.Beta bound as ROOT.RooFit pdf"))
+frame2 = x2.frame(Title="ROOT.Math.Beta bound as ROOT.RooFit pdf")
 data.plotOn(frame2)
 beta.plotOn(frame2)
 
@@ -82,7 +82,7 @@ rfa1 = ROOT.RooFit.bindFunction(fa1, x3)
 rfa1.Print()
 
 # Make plot frame in observable, TF1 binding function
-frame3 = x3.frame(ROOT.RooFit.Title("TF1 bound as ROOT.RooFit function"))
+frame3 = x3.frame(Title="TF1 bound as ROOT.RooFit function")
 rfa1.plotOn(frame3)
 
 c = ROOT.TCanvas("rf105_funcbinding", "rf105_funcbinding", 1200, 400)
