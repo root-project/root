@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooMsgService
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,16 +21,17 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
+Some member functions of RooMsgService that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooMsgService::addStream.
 For example, the following code is equivalent in PyROOT:
 \code{.py}
 # Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
+ROOT.RooMsgService.instance().addStream(
+    ROOT.RooFit.DEBUG, ROOT.RooFit.Topic(ROOT.RooFit.Tracing), ROOT.RooFit.ClassName("RooGaussian")
+)
 
 # With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
-
+ROOT.RooMsgService.instance().addStream(ROOT.RooFit.DEBUG, Topic = ROOT.RooFit.Tracing, ClassName = "RooGaussian")
 \endcode
 
 \htmlonly
@@ -42,9 +43,9 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooMsgService(object):
+    def addStream(self, *args, **kwargs):
+        # Redefinition of `RooMsgService.addStream` for keyword arguments.
+        # The keywords must correspond to the CmdArg of the `addStream` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        return self._addStream(*args, **kwargs)

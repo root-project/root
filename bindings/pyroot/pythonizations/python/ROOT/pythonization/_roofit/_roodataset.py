@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooDataSet
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,16 +21,15 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
+Some member functions of RooDataSet that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooDataSet() constructor and RooDataSet::plotOnXY.
 For example, the following code is equivalent in PyROOT:
 \code{.py}
 # Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
+dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), ROOT.RooFit.StoreError(ROOT.RooArgSet(x, y)))
 
 # With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
-
+dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), StoreError=(ROOT.RooArgSet(x, y)))
 \endcode
 
 \htmlonly
@@ -42,9 +41,15 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooDataSet(object):
+    def __init__(self, *args, **kwargs):
+        # Redefinition of `RooDataSet` constructor for keyword arguments.
+        # The keywords must correspond to the CmdArg of the constructor function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        self._init(*args, **kwargs)
+
+    def plotOnXY(self, *args, **kwargs):
+        # Redefinition of `RooDataSet.plotOnXY` for keyword arguments.
+        # The keywords must correspond to the CmdArg of the `plotOnXY` function.
+        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+        return self._plotOnXY(*args, **kwargs)

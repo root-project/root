@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooDataHist
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,16 +21,14 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
+Constructor of RooDataHist takes a RooCmdArg as argument also supports keyword arguments.
 For example, the following code is equivalent in PyROOT:
 \code{.py}
 # Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
+dh = ROOT.RooDataHist("dh", "dh", ROOT.RooArgList(x), ROOT.RooFit.Import("SampleA", histo))
 
 # With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
-
+dh = ROOT.RooDataHist("dh", "dh", ROOT.RooArgList(x), Import=("SampleA", histo))
 \endcode
 
 \htmlonly
@@ -42,9 +40,9 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooDataHist(object):
+    def __init__(self, *args, **kwargs):
+        # Redefinition of `RooDataHist` constructor for keyword arguments.
+        # The keywords must correspond to the CmdArg of the constructor function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        self._init(*args, **kwargs)

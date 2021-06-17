@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooGenFitStudy
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,17 +21,8 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
-For example, the following code is equivalent in PyROOT:
-\code{.py}
-# Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
-
-# With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
-
-\endcode
+Some member functions of RooGenFitStudy that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooGenFitStudy::setGenConfig.
 
 \htmlonly
 </div>
@@ -42,9 +33,9 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooGenFitStudy(object):
+    def setGenConfig(self, *args, **kwargs):
+        # Redefinition of `RooGenFitStudy.setGenConfig` for keyword arguments.
+        # The keywords must correspond to the CmdArg of the `setGenConfig` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        return self._setGenConfig(*args, **kwargs)

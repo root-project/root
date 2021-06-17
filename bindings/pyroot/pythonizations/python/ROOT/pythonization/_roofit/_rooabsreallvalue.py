@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooAbsRealLValue
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,16 +21,15 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
+Some member functions of RooAbsRealLValue that take a RooCmdArg as argument also support keyword arguments.
+So far, this applies to RooAbsRealLValue::createHistogram and RooAbsRealLValue::frame.
 For example, the following code is equivalent in PyROOT:
 \code{.py}
 # Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
+frame = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("RooPlot with decorations"), ROOT.RooFit.Bins(40))
 
 # With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
-
+frame = x.frame(Name="xframe", Title="RooPlot with decorations", Bins=40)
 \endcode
 
 \htmlonly
@@ -42,9 +41,15 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooAbsRealLValue(object):
+    def createHistogram(self, *args, **kwargs):
+        # Redefinition of `RooAbsRealLValue.createHistogram` for keyword arguments.
+        # the keywords must correspond to the CmdArg of the `createHistogram` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        return self._createHistogram(*args, **kwargs)
+
+    def frame(self, *args, **kwargs):
+        # Redefinition of `RooAbsRealLValue.frame` for keyword arguments.
+        # the keywords must correspond to the CmdArg of the `frame` function.
+        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+        return self._frame(*args, **kwargs)

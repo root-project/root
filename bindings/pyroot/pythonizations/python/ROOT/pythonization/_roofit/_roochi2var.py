@@ -13,7 +13,7 @@
 
 r"""
 /**
-\class RooSimultaneous
+\class RooChi2Var
 \brief \parblock \endparblock
 \htmlonly
 <div class="pyrootbox">
@@ -21,17 +21,7 @@ r"""
 
 ## PyROOT
 
-Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooSimultaneous::plotOn.
-For example, the following code is equivalent in PyROOT:
-\code{.py}
-# Directly passing a RooCmdArg:
-pdfSim.fitTo(data, ROOT.RooFit.Range("r1"))
-
-# With keyword arguments:
-pdfSim.fitTo(data, Range="r1")
-
-\endcode
+Constructor of RooChi2Var takes a RooCmdArg as argument also supports keyword arguments.
 
 \htmlonly
 </div>
@@ -42,9 +32,9 @@ pdfSim.fitTo(data, Range="r1")
 from ._utils import _kwargs_to_roocmdargs
 
 
-class RooSimultaneous(object):
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
+class RooChi2Var(object):
+    def __init__(self, *args, **kwargs):
+        # Redefinition of `RooChi2Var` constructor for keyword arguments.
+        # The keywords must correspond to the CmdArg of the constructor function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
+        self._init(*args, **kwargs)

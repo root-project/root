@@ -9,7 +9,7 @@
 ################################################################################
 
 
-r'''
+r"""
 /**
 \class RooWorkspace
 \brief \parblock \endparblock
@@ -31,7 +31,8 @@ workspace.Import(x)
 </div>
 \endhtmlonly
 */
-'''
+"""
+
 
 class RooWorkspace(object):
     def Import(self, *args, **kwargs):
