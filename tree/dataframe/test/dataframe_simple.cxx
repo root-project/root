@@ -962,7 +962,8 @@ TEST_P(RDFSimpleTests, WritingToFundamentalType)
 
 TEST_P(RDFSimpleTests, FillWithCustomClass)
 {
-   auto simplefilled = ROOT::RDataFrame(10).Define("x", [] { return 42.; }).Fill<double>(SimpleFiller{}, {"x"});
+   SimpleFiller sf; // defined as a variable to exercise passing lvalues into `Fill`
+   auto simplefilled = ROOT::RDataFrame(10).Define("x", [] { return 42.; }).Fill<double>(sf, {"x"});
    auto &h = simplefilled->GetHisto();
    EXPECT_DOUBLE_EQ(h.GetMean(), 42.);
    EXPECT_EQ(h.GetEntries(), 10);

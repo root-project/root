@@ -12,7 +12,7 @@ class CounterHelper : public ROOT::Detail::RDF::RActionImpl<CounterHelper> {
 public:
    CounterHelper() : fNCalls(std::make_shared<std::atomic_uint>(0u)) {}
    CounterHelper(CounterHelper &&) = default;
-   CounterHelper(const CounterHelper &) = delete;
+   CounterHelper(const CounterHelper &) = default;
 
    using Result_t = std::atomic_uint;
    std::shared_ptr<std::atomic_uint> GetResultPtr() const { return fNCalls; }
