@@ -29,31 +29,34 @@ void tmva005_RVariablePlotter()
     // Create a variable plotter object giving the dataframes and the class labels.
     TMVA::RVariablePlotter plotter({sig2, bkg2}, {"Signal", "Background"});
 
-    // Create a canvas with four pads for plotting
-    auto c = new TCanvas("", "", 1200, 800);
+    
+    TCanvas *c = new TCanvas("c", "c", 1400, 800);
+    c -> UseCurrentStyle();
+
     c->Divide(3, 2);
 
-    
+
     // legend vertices
     float minX = 0.7;
     float minY = 0.8;
     float maxX = 0.9;
     float maxY = 0.9;
-    
+
 
     // Place plots on the pads of the canvas
     const std::vector<std::string> variables = {"var1", "var2", "var3", "var4", "var5"};
-    TMVA::TMVAGlob::Initialize(&TMVAGlob::SetTMVAStyle);
-    
+
     for (unsigned int i = 0; i < variables.size(); i++) {
         c->cd(i + 1);
         c->Update();
         //gPad->SetGrid(1,1); // plotting a background grid
-        plotter.Draw(variables[i]);
+        plotter.Draw(variables[i], true);
         plotter.DrawLegend(minX, minY, maxX, maxY);
+       
         
     }
 
 }
+
 
 

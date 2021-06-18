@@ -52,8 +52,11 @@ namespace TMVA {
         // constructor
         RVariablePlotter( const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels);
         
+        // use tmva plotting style
+        void InitializeStyle(bool useTMVAStyle);
+        
         // draw variables plot
-        void Draw(const std::string& variable);
+        void Draw(const std::string& variable,  bool useTMVAStyle);
         
         // draw legend
         void DrawLegend(float minX, float minY, float maxX, float maxY);

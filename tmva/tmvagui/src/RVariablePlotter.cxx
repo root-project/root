@@ -47,13 +47,31 @@ TMVA::RVariablePlotter::RVariablePlotter( const std::vector<ROOT::RDF::RNode>& n
 }
 
 
+////////////////
+
+/// set style and keep existing canvas
+void TMVA::RVariablePlotter::InitializeStyle(bool useTMVAStyle ){
+   
+   // set style
+   if (!useTMVAStyle) {
+      gROOT->SetStyle("Plain");
+      gStyle->SetOptStat(0);
+      return;
+   }
+
+   TMVA::TMVAGlob::SetTMVAStyle();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawing variables' plot
 
-void TMVA::RVariablePlotter::Draw(const std::string& variable) {
+void TMVA::RVariablePlotter::Draw(const std::string& variable, bool useTMVAStyle) {
    // Make histograms with TH1D
     
     //TMVA::TMVAGlob::Initialize(&TMVAGlob::SetTMVAStyle);
+    
+    
+    TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
     
     const auto size = fNodes.size();
     std::vector<ROOT::RDF::RResultPtr<TH1D>> histos;
@@ -69,11 +87,6 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable) {
     
     for (unsigned int i = 0; i < histos.size(); i++) {
         histos[i]->SetLineColor(i + 1);
-        /*if (i == 0) {
-         histos[i]->SetTitle("");
-         histos[i]->SetStats(false);
-        }
-        */
         histos[i]->SetTitle(variable.c_str());
         histos[i]->SetStats(true);
         stack.Add(histos[i].GetPtr());
@@ -84,7 +97,7 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable) {
     clone->SetTitle(variable.c_str());
     clone->GetXaxis()->SetTitle(variable.c_str());
     clone->GetYaxis()->SetTitle("Count");
-    
+    clone->GetYaxis()->SetTitleOffset( 1.50 );
         
 }
 
@@ -103,5 +116,6 @@ void TMVA::RVariablePlotter::DrawLegend(float minX = 0.8, float minY = 0.8, floa
         l.AddEntry(&histos[i], fLabels[i].c_str(), "l");
     }
     l.SetBorderSize(1);
+    l.SetMargin( 0.3 );
     l.DrawClone();
 }
