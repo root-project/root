@@ -38,17 +38,9 @@ public:
 
    RAttrValue() = default;
 
-   RAttrValue(RDrawable *drawable, const std::string &name, const T &dflt = T())
-   {
-      AssignDrawable(drawable, name);
-      fDefault = dflt;
-   }
+   RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name), fDefault(dflt) { }
 
-   RAttrValue(RAttrBase *parent, const std::string &name, const T &dflt = T())
-   {
-      AssignParent(parent, name);
-      fDefault = dflt;
-   }
+   RAttrValue(RAttrBase *parent, const char *name, const T &dflt = T()) : RAttrBase(parent, name), fDefault(dflt) { }
 
    RAttrValue(const RAttrValue& src)
    {
@@ -69,7 +61,7 @@ public:
       return fDefault;
    }
 
-   const std::string &GetName() const { return GetPrefix(); }
+   const char *GetName() const { return GetPrefix(); }
 
    void Clear() override { ClearValue(GetName()); }
 

@@ -49,30 +49,6 @@ RAttrMap *RAttrBase::CreateOwnAttr()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Assign drawable object for this RAttrBase
-
-void RAttrBase::AssignDrawable(RDrawable *drawable, const std::string &prefix)
-{
-   ClearData();
-   fKind = kDrawable;
-   fD.drawable = drawable;
-
-   fPrefix = prefix;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Assign parent object for this RAttrBase
-
-void RAttrBase::AssignParent(RAttrBase *parent, const std::string &prefix)
-{
-   ClearData();
-   fKind = kParent;
-   fD.parent = parent;
-
-   fPrefix = prefix;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 /// Clear value if any with specified name
 
 void RAttrBase::ClearValue(const std::string &name)

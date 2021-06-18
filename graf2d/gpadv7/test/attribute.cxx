@@ -30,7 +30,8 @@ protected:
 
    double GetDirect(const std::string &name)
    {
-      RAttrValue<double> direct{this, name, 0.};
+      // CAUTION: name is not duplicated in RAttrValue
+      RAttrValue<double> direct{this, name.c_str(), 0.};
       return direct.Get();
    }
 };

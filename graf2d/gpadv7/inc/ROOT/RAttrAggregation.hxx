@@ -45,6 +45,9 @@ public:
 
    RAttrAggregation(const RAttrAggregation &src) : RAttrBase() { src.CopyTo(*this); }
 
+   RAttrAggregation(RDrawable *drawable, const char *prefix = nullptr) : RAttrBase(drawable, prefix) {}
+   RAttrAggregation(RAttrBase *parent, const char *prefix = nullptr) : RAttrBase(parent, prefix) {}
+
    RAttrAggregation &operator=(const RAttrAggregation &src)
    {
       Clear();
@@ -61,7 +64,7 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#define R__ATTR_CLASS(ClassName,dflt_prefix) \
+#define R__ATTR_CLASS_DERIVED(ClassName,dflt_prefix,BaseClass) \
 protected: \
 const RAttrMap &GetDefaults() const override \
 { \
@@ -70,10 +73,12 @@ const RAttrMap &GetDefaults() const override \
 } \
 public: \
    ClassName() = default; \
-   ClassName(RDrawable *drawable, const std::string &prefix = dflt_prefix) { AssignDrawable(drawable, prefix); } \
-   ClassName(RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
+   ClassName(RDrawable *drawable, const char *prefix = dflt_prefix) : BaseClass(drawable, prefix) {} \
+   ClassName(RAttrBase *parent, const char *prefix = dflt_prefix) : BaseClass(parent, prefix) {} \
    ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
-   ClassName &operator=(const ClassName &src) { Clear(); src.CopyTo(*this); return *this; } \
+   ClassName &operator=(const ClassName &src) { Clear(); src.CopyTo(*this); return *this; }
 
+
+#define R__ATTR_CLASS(ClassName,dflt_prefix) R__ATTR_CLASS_DERIVED(ClassName,dflt_prefix,RAttrAggregation)
 
 #endif
