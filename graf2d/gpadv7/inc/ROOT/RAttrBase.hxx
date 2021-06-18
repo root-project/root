@@ -40,7 +40,7 @@ class RAttrBase {
       RAttrMap  *ownattr;   // or just own container with values
    } fD{nullptr};  ///<!  data
 
-   std::string fPrefix;      ///<! name prefix for all attributes values
+   const char *fPrefix{nullptr}; ///<! name prefix for all attributes values
 
    void ClearData();
    RAttrMap *CreateOwnAttr();
@@ -50,10 +50,6 @@ protected:
    RDrawable *GetDrawable() const { return fKind == kDrawable ? fD.drawable : nullptr; }
    RAttrBase *GetParent() const { return fKind == kParent ? fD.parent : nullptr; }
    RAttrMap *GetOwnAttr() const { return fKind == kOwnAttr ? fD.ownattr : nullptr; }
-
-   void AssignDrawable(RDrawable *drawable, const std::string &prefix);
-
-   void AssignParent(RAttrBase *parent, const std::string &prefix);
 
    virtual void AddDefaultValues(RAttrMap &) const = 0;
 
@@ -72,7 +68,7 @@ protected:
       const RAttrBase *prnt = this;
       std::string fullname = name;
       while (prnt) {
-         if ((prnt != this) && !prnt->fPrefix.empty()) {
+         if ((prnt != this) && prnt->fPrefix) {
             fullname.insert(0, "_");        // fullname = prnt->fPrefix + _ + fullname
             fullname.insert(0, prnt->fPrefix);
          }
@@ -114,7 +110,7 @@ protected:
       auto prnt = this;
       std::string fullname = name;
       while (prnt) {
-         if ((prnt != this) && !prnt->fPrefix.empty()) {
+         if ((prnt != this) && prnt->fPrefix) {
             fullname.insert(0, "_");        // fullname = prnt->fPrefix + _ + fullname
             fullname.insert(0, prnt->fPrefix);
          }
@@ -127,13 +123,23 @@ protected:
       return {nullptr, fullname, nullptr};
    }
 
-   RAttrBase(RDrawable *drawable, const std::string &prefix) { AssignDrawable(drawable, prefix); }
+   RAttrBase(RDrawable *drawable, const char *prefix = nullptr)
+   {
+      fKind = kDrawable;
+      fD.drawable = drawable;
+      fPrefix = prefix;
+   }
 
-   RAttrBase(RAttrBase *parent, const std::string &prefix) { AssignParent(parent, prefix); }
+   RAttrBase(RAttrBase *parent, const char *prefix = nullptr)
+   {
+      fKind = kParent;
+      fD.parent = parent;
+      fPrefix = prefix;
+   }
 
    void SetNoValue(const std::string &name);
 
-   const std::string &GetPrefix() const { return fPrefix; }
+   const char *GetPrefix() const { return fPrefix; }
 
    void ClearValue(const std::string &name);
 
