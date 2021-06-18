@@ -32,34 +32,6 @@ protected:
 
    void AddDefaultValues(RAttrMap &) const override;
 
-   /// Evaluate attribute value
-   template <typename RET_TYPE,typename MATCH_TYPE = void>
-   auto Eval(const std::string &name, bool use_dflts = true) const
-   {
-      if (auto v = AccessValue(name, true))
-         return RAttrMap::Value_t::GetValue<RET_TYPE,MATCH_TYPE>(v.value);
-
-      const RAttrMap::Value_t *rec = nullptr;
-
-      if (use_dflts)
-         rec = GetDefaults().Find(name);
-
-      return RAttrMap::Value_t::GetValue<RET_TYPE,MATCH_TYPE>(rec);
-   }
-
-   template <typename T = void>
-   bool HasValue(const std::string &name, bool check_defaults = false) const
-   {
-      auto res = Eval<const RAttrMap::Value_t *, T>(name, check_defaults);
-      return res ? (res->Kind() != RAttrMap::kNoValue) : false;
-   }
-
-   template <typename T>
-   T GetValue(const std::string &name) const
-   {
-      return Eval<T>(name);
-   }
-
    void CopyTo(RAttrAggregation &tgt, bool use_style = true) const;
 
    bool CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type = true);
