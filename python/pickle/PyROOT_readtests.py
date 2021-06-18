@@ -180,6 +180,21 @@ class PickleReadingComplicationsTestCase( MyTestCase ):
       self.assertEqual(facade.__name__, ROOT.__name__)
       self.assertEqual(facade.__file__, ROOT.__file__)
 
+   def test4CrossInheritanceObject(self):
+      """8438 - Test serialization of a Python object whose class derives from a C++ class"""
+      from derived import Derived, DerivedCustomReduce
+
+      d1 = Derived()
+      attr = 7
+      d2 = DerivedCustomReduce(attr)
+
+      # Generic __reduce__ should raise an exception
+      self.assertRaises(IOError, pickle.dumps, d1)
+
+      # Custom __reduce__ should allow pickling
+      d2_2 = pickle.loads(pickle.dumps(d2))
+      self.assertEqual(d2_2.attr, attr)
+
 
 ## actual test run
 if __name__ == '__main__':
