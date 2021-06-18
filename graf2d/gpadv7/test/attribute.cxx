@@ -154,3 +154,24 @@ TEST(OptsTest, AttribAssign) {
    EXPECT_FLOAT_EQ(attrs1.AttrLine().GetWidth(), 1.);
    EXPECT_FLOAT_EQ(attrs2.AttrLine().GetWidth(), 1.);
 }
+
+TEST(OptsTest, AttribValue) {
+
+   RAttrValue<int> value1;
+
+   EXPECT_EQ(value1.GetDefault(), 0);
+   EXPECT_EQ(value1.Get(), 0);
+
+   value1.Set(5);
+   EXPECT_EQ(value1.Get(), 5);
+
+   RAttrValue<int> value2;
+   EXPECT_NE(value1, value2);
+   EXPECT_NE(value2, value1);
+
+   value2 = value1;
+   EXPECT_EQ(value1, value2);
+   EXPECT_EQ(value2, value1);
+   EXPECT_EQ(value2.Get(), 5);
+
+}

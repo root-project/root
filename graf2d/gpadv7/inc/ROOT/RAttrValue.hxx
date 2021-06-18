@@ -36,7 +36,7 @@ protected:
 
 public:
 
-   RAttrValue() = default;
+   RAttrValue() : RAttrBase(), fDefault() {};
 
    RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name), fDefault(dflt) { }
 
@@ -45,7 +45,10 @@ public:
    RAttrValue(const RAttrValue& src)
    {
       Set(src.Get());
+      fDefault = src.Default();
    }
+
+   T GetDefault() const { return fDefault; }
 
    void Set(const T &v)
    {
@@ -61,7 +64,7 @@ public:
       return fDefault;
    }
 
-   const char *GetName() const { return GetPrefix(); }
+   const char *GetName() const { return GetPrefix() ? GetPrefix() : ""; }
 
    void Clear() override { ClearValue(GetName()); }
 
