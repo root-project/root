@@ -1,8 +1,3 @@
-\defgroup tutorial_proof Proof tutorials
-\ingroup Tutorials
-\brief These examples aim to illustrate the usage of PROOF
-
-
 \defgroup tutorial_ProcFileElements ProcFileElements
 \ingroup tutorial_proof
 \brief Class to hold information about the processed elements of a file
