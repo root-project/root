@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "ROOT/RLogger.hxx"
-#include "ROOT/RAttrBase.hxx"
+#include "ROOT/RAttrAggregation.hxx"
 #include "ROOT/RAttrText.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrLine.hxx"

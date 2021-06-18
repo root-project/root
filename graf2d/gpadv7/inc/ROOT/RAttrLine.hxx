@@ -9,7 +9,7 @@
 #ifndef ROOT7_RAttrLine
 #define ROOT7_RAttrLine
 
-#include <ROOT/RAttrBase.hxx>
+#include <ROOT/RAttrAggregation.hxx>
 #include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
