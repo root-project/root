@@ -1,6 +1,6 @@
 import unittest
 
-from DistRDF import Node
+from DistRDF import HeadNode
 from DistRDF import Proxy
 from DistRDF.Backends import Base
 
@@ -81,7 +81,7 @@ class DistRDataFrameInterface(unittest.TestCase):
         def __init__(self, *args):
             """initialize"""
 
-            self.headnode = Node.HeadNode(*args)
+            self.headnode = HeadNode.get_headnode(*args)
 
             self.headnode.backend = DistRDataFrameInterface.TestBackend()
 
