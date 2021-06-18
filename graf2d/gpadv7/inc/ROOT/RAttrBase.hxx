@@ -123,6 +123,13 @@ protected:
       return {nullptr, fullname, nullptr};
    }
 
+   RAttrBase(const char *prefix)
+   {
+      fKind = kOwnAttr;
+      fD.ownattr = nullptr;
+      fPrefix = prefix;
+   }
+
    RAttrBase(RDrawable *drawable, const char *prefix = nullptr)
    {
       fKind = kDrawable;
