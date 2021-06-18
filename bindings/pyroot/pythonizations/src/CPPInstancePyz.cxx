@@ -83,13 +83,20 @@ PyObject *op_reduce(CPPInstance *self, PyObject * /*args*/)
    if (s_bfClass == self->ObjectIsA()) {
       buff = (TBufferFile *)self->GetObject();
    } else {
+      auto className = Cppyy::GetScopedFinalName(self->ObjectIsA());
+      if (className.find("__cppyy_internal::Dispatcher") == 0) {
+         PyErr_Format(PyExc_IOError, "generic streaming of Python objects whose class derives from a C++ class is not supported. "
+                                     "Please refer to the Python pickle documentation for instructions on how to define "
+                                     "a custom __reduce__ method for the derived Python class");
+         return 0;
+      }
       // no cast is needed, but WriteObject taking a TClass argument is protected,
       // so use WriteObjectAny()
       static TBufferFile s_buff(TBuffer::kWrite);
       s_buff.Reset();
       // to delete
       if (s_buff.WriteObjectAny(self->GetObject(),
-                                TClass::GetClass(Cppyy::GetScopedFinalName(self->ObjectIsA()).c_str())) != 1) {
+                                TClass::GetClass(className.c_str())) != 1) {
          PyErr_Format(PyExc_IOError, "could not stream object of type %s",
                       Cppyy::GetScopedFinalName(self->ObjectIsA()).c_str());
          return 0;
