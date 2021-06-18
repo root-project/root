@@ -152,7 +152,7 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
       TString ss(s);
       TPRegexp dot("\\.");
       dot.Substitute(ss, "\\.", "g");
-      return std::string(std::move(ss));
+      return std::string(ss.Data());
    };
 
    ColumnNames_t varNames;
@@ -176,7 +176,7 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
       replacer.Substitute(exprWithVars, varNames[varIdx], "g");
    }
 
-   return ParsedExpression{std::string(std::move(exprWithVars)), std::move(usedCols), std::move(varNames)};
+   return ParsedExpression{std::string(exprWithVars.Data()), std::move(usedCols), std::move(varNames)};
 }
 
 /// Return the static global map of Filter/Define lambda expressions that have been jitted.

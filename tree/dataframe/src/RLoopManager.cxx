@@ -118,7 +118,7 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
       if (!branchDirectlyFromTree)
          branchDirectlyFromTree = t.FindBranch(fullName.c_str()); // try harder
       if (branchDirectlyFromTree)
-         UpdateList(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName);
+         UpdateList(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName().Data()), friendName);
 
       if (t.GetBranch(subBranchName.c_str()))
          UpdateList(bNamesReg, bNames, subBranchName, friendName);

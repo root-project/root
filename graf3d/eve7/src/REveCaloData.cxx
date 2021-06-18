@@ -264,7 +264,7 @@ Int_t REveCaloData::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    for (auto &s : fSliceInfos)
    {
       nlohmann::json slice = {};
-      slice["name"]     = s.fName;
+      slice["name"]     = s.fName.Data();
       slice["threshold"] = s.fThreshold;
       slice["color"]    = s.fColor;
       sarr.push_back(slice);
