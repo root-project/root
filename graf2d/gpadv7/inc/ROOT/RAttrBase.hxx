@@ -55,12 +55,7 @@ protected:
 
    void AssignParent(RAttrBase *parent, const std::string &prefix);
 
-
-   virtual const RAttrMap &GetDefaults() const;
-
-   bool CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type = true);
-
-   bool IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style = false) const;
+   virtual void AddDefaultValues(RAttrMap &) const = 0;
 
    ///////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +72,10 @@ protected:
       const RAttrBase *prnt = this;
       std::string fullname = name;
       while (prnt) {
-         fullname.insert(0, prnt->fPrefix); // fullname = prnt->fPrefix + fullname
+         if ((prnt != this) && !prnt->fPrefix.empty()) {
+            fullname.insert(0, "_");        // fullname = prnt->fPrefix + _ + fullname
+            fullname.insert(0, prnt->fPrefix);
+         }
          if (auto dr = prnt->GetDrawable())
             return { &dr->fAttr, fullname, dr };
          if (auto attr = prnt->GetOwnAttr())
@@ -116,7 +114,10 @@ protected:
       auto prnt = this;
       std::string fullname = name;
       while (prnt) {
-         fullname.insert(0, prnt->fPrefix); // fullname = prnt->fPrefix + fullname
+         if ((prnt != this) && !prnt->fPrefix.empty()) {
+            fullname.insert(0, "_");        // fullname = prnt->fPrefix + _ + fullname
+            fullname.insert(0, prnt->fPrefix);
+         }
          if (auto dr = prnt->GetDrawable())
             return { &dr->fAttr, fullname, dr };
          if (prnt->fKind != kParent)
@@ -126,8 +127,44 @@ protected:
       return {nullptr, fullname, nullptr};
    }
 
-   /// Evaluate attribute value
+   RAttrBase(RDrawable *drawable, const std::string &prefix) { AssignDrawable(drawable, prefix); }
 
+   RAttrBase(RAttrBase *parent, const std::string &prefix) { AssignParent(parent, prefix); }
+
+   void SetNoValue(const std::string &name);
+   void SetValue(const std::string &name, bool value);
+   void SetValue(const std::string &name, double value);
+   void SetValue(const std::string &name, int value);
+   void SetValue(const std::string &name, const std::string &value);
+   void SetValue(const std::string &name, const RPadLength &value);
+   void SetValue(const std::string &name, const RColor &value);
+
+   const std::string &GetPrefix() const { return fPrefix; }
+
+   void ClearValue(const std::string &name);
+
+   void MoveTo(RAttrBase &tgt);
+
+public:
+   RAttrBase() = default;
+
+   virtual ~RAttrBase() { ClearData(); }
+
+   virtual void Clear() = 0;
+
+};
+
+
+class RAttrAggregation : public RAttrBase {
+
+protected:
+   virtual const RAttrMap &GetDefaults() const;
+
+   virtual RAttrMap CollectDefaults() const;
+
+   void AddDefaultValues(RAttrMap &) const override;
+
+   /// Evaluate attribute value
    template <typename RET_TYPE,typename MATCH_TYPE = void>
    auto Eval(const std::string &name, bool use_dflts = true) const
    {
@@ -142,39 +179,6 @@ protected:
       return RAttrMap::Value_t::GetValue<RET_TYPE,MATCH_TYPE>(rec);
    }
 
-   void CopyTo(RAttrBase &tgt, bool use_style = true) const;
-
-   void MoveTo(RAttrBase &tgt);
-
-   bool IsSame(const RAttrBase &src, bool use_style = true) const;
-
-   RAttrBase(RDrawable *drawable, const std::string &prefix) { AssignDrawable(drawable, prefix); }
-
-   RAttrBase(RAttrBase *parent, const std::string &prefix) { AssignParent(parent, prefix); }
-
-   RAttrBase(const RAttrBase &src) { src.CopyTo(*this); }
-
-   RAttrBase &operator=(const RAttrBase &src)
-   {
-      Clear();
-      src.CopyTo(*this);
-      return *this;
-   }
-
-   void SetNoValue(const std::string &name);
-   void SetValue(const std::string &name, bool value);
-   void SetValue(const std::string &name, double value);
-   void SetValue(const std::string &name, int value);
-   void SetValue(const std::string &name, const std::string &value);
-   void SetValue(const std::string &name, const RPadLength &value);
-   void SetValue(const std::string &name, const RColor &value);
-
-   const std::string &GetPrefix() const { return fPrefix; }
-
-   void ClearValue(const std::string &name);
-
-   void Clear();
-
    template <typename T = void>
    bool HasValue(const std::string &name, bool check_defaults = false) const
    {
@@ -188,18 +192,30 @@ protected:
       return Eval<T>(name);
    }
 
-   virtual RAttrMap CollectDefaults() const;
+   void CopyTo(RAttrAggregation &tgt, bool use_style = true) const;
 
-   virtual bool IsValue() const { return false; }
+   bool CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type = true);
+
+   bool IsSame(const RAttrAggregation &src, bool use_style = true) const;
+
+   bool IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style = false) const;
 
 public:
-   RAttrBase() = default;
+   RAttrAggregation() = default;
 
-   virtual ~RAttrBase() { ClearData(); }
+   RAttrAggregation(const RAttrAggregation &src) : RAttrBase() { src.CopyTo(*this); }
 
-   friend bool operator==(const RAttrBase& lhs, const RAttrBase& rhs) { return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
-   friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs) { return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
+   RAttrAggregation &operator=(const RAttrAggregation &src)
+   {
+      Clear();
+      src.CopyTo(*this);
+      return *this;
+   }
 
+   void Clear() override;
+
+   friend bool operator==(const RAttrAggregation& lhs, const RAttrAggregation& rhs) { return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
+   friend bool operator!=(const RAttrAggregation& lhs, const RAttrAggregation& rhs) { return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
 };
 
 
@@ -218,8 +234,6 @@ public: \
    ClassName(RDrawable *drawable, const std::string &prefix = dflt_prefix) { AssignDrawable(drawable, prefix); } \
    ClassName(RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
    ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
-   ClassName(ClassName &&src) : ClassName() { src.MoveTo(*this); } \
-   ClassName &operator=(ClassName &&src) { src.MoveTo(*this); return *this; } \
    ClassName &operator=(const ClassName &src) { Clear(); src.CopyTo(*this); return *this; } \
 
 #endif

@@ -52,81 +52,6 @@ RAttrMap *RAttrBase::CreateOwnAttr()
    return fD.ownattr;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-/// Return default values for attributes, empty for base class
-
-const RAttrMap &RAttrBase::GetDefaults() const
-{
-   static RAttrMap empty;
-   return empty;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Copy attributes from other object
-
-bool RAttrBase::CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type)
-{
-   if (check_type) {
-      const auto *dvalue = GetDefaults().Find(name);
-      if (!dvalue || !dvalue->CanConvertFrom(value.Kind()))
-         return false;
-   }
-
-   if (auto access = EnsureAttr(name)) {
-      access.attr->Add(access.fullname, value.Copy());
-      return true;
-   }
-
-   return false;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Check if provided value equal to attribute in the map
-
-bool RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style) const
-{
-   if (auto v = AccessValue(name, use_style))
-      return v.value->CanConvertFrom(value.Kind()) && v.value->IsEqual(value);
-
-   return value.Kind() == RAttrMap::kNoValue;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Copy attributes into target object
-
-void RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
-{
-   for (const auto &entry : GetDefaults()) {
-      if (auto v = AccessValue(entry.first, use_style))
-         tgt.CopyValue(entry.first, *v.value);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Move all fields into target object
-
-void RAttrBase::MoveTo(RAttrBase &tgt)
-{
-   std::swap(fKind, tgt.fKind);
-   std::swap(fD, tgt.fD);
-   std::swap(fPrefix, tgt.fPrefix);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Check if all values which are evaluated in this object are exactly the same as in tgt object
-
-bool RAttrBase::IsSame(const RAttrBase &tgt, bool use_style) const
-{
-   for (const auto &entry : GetDefaults()) {
-      if (auto v = AccessValue(entry.first, use_style))
-         if (!tgt.IsValueEqual(entry.first, *v.value, use_style))
-            return false;
-   }
-
-   return true;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /// Assign drawable object for this RAttrBase
 
@@ -137,7 +62,6 @@ void RAttrBase::AssignDrawable(RDrawable *drawable, const std::string &prefix)
    fD.drawable = drawable;
 
    fPrefix = prefix;
-   if (!IsValue() && !fPrefix.empty()) fPrefix.append("_"); // naming convention
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -150,7 +74,6 @@ void RAttrBase::AssignParent(RAttrBase *parent, const std::string &prefix)
    fD.parent = parent;
 
    fPrefix = prefix;
-   if (!IsValue() && !fPrefix.empty()) fPrefix.append("_"); // naming convention
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -231,21 +154,31 @@ void RAttrBase::SetValue(const std::string &name, const RColor &value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Clear all respective values from drawable. Only defaults can be used
+/// Move all fields into target object
 
-void RAttrBase::Clear()
+void RAttrBase::MoveTo(RAttrBase &tgt)
 {
-   for (const auto &entry : GetDefaults())
-      ClearValue(entry.first);
+   std::swap(fKind, tgt.fKind);
+   std::swap(fD, tgt.fD);
+   std::swap(fPrefix, tgt.fPrefix);
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+/// Return default values for attributes, empty for base class
+
+const RAttrMap &RAttrAggregation::GetDefaults() const
+{
+   static RAttrMap empty;
+   return empty;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Collect all attributes in derived class
 /// Works only if such class has dictionary.
 /// In special cases one has to provide special implementation directly
 
-RAttrMap RAttrBase::CollectDefaults() const
+RAttrMap RAttrAggregation::CollectDefaults() const
 {
    RAttrMap res;
 
@@ -265,3 +198,79 @@ RAttrMap RAttrBase::CollectDefaults() const
 
    return res;
 }
+
+void RAttrAggregation::AddDefaultValues(RAttrMap &m) const
+{
+   std::string prefix = GetPrefix();
+   if (!prefix.empty()) prefix.append("_");
+
+   m.AddValuesFrom(prefix, GetDefaults());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Copy attributes into target object
+
+void RAttrAggregation::CopyTo(RAttrAggregation &tgt, bool use_style) const
+{
+   for (const auto &entry : GetDefaults()) {
+      if (auto v = AccessValue(entry.first, use_style))
+         tgt.CopyValue(entry.first, *v.value);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Copy attributes from other object
+
+bool RAttrAggregation::CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type)
+{
+   if (check_type) {
+      const auto *dvalue = GetDefaults().Find(name);
+      if (!dvalue || !dvalue->CanConvertFrom(value.Kind()))
+         return false;
+   }
+
+   if (auto access = EnsureAttr(name)) {
+      access.attr->Add(access.fullname, value.Copy());
+      return true;
+   }
+
+   return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Check if provided value equal to attribute in the map
+
+bool RAttrAggregation::IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style) const
+{
+   if (auto v = AccessValue(name, use_style))
+      return v.value->CanConvertFrom(value.Kind()) && v.value->IsEqual(value);
+
+   return value.Kind() == RAttrMap::kNoValue;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Check if all values which are evaluated in this object are exactly the same as in tgt object
+
+bool RAttrAggregation::IsSame(const RAttrAggregation &tgt, bool use_style) const
+{
+   for (const auto &entry : GetDefaults()) {
+      // R__LOG_DEBUG(0, GPadLog()) << "Comparing entry " << entry.first;
+      if (auto v = AccessValue(entry.first, use_style))
+         if (!tgt.IsValueEqual(entry.first, *v.value, use_style))
+            return false;
+   }
+
+   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Clear all respective values from drawable. Only defaults can be used
+
+void RAttrAggregation::Clear()
+{
+   for (const auto &entry : GetDefaults())
+      ClearValue(entry.first);
+}
+
