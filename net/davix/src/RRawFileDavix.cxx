@@ -14,7 +14,6 @@
 
 #include <TError.h>
 
-#include <cstring> // for memset
 #include <stdexcept>
 
 #include <davix.hpp>
@@ -92,10 +91,9 @@ size_t ROOT::Internal::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, st
 void ROOT::Internal::RRawFileDavix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
    Davix::DavixError *davixErr = NULL;
-   Davix::DavIOVecInput in[nReq];
+   Davix::DavIOVecInput in[nReq] {};
    Davix::DavIOVecOuput out[nReq];
 
-   memset(in, 0, sizeof(Davix::DavIOVecInput) * nReq);
    for (unsigned int i = 0; i < nReq; ++i) {
       in[i].diov_buffer = ioVec[i].fBuffer;
       in[i].diov_offset = ioVec[i].fOffset;
