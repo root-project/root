@@ -57,8 +57,8 @@ public:
 
    void Set(const T &v)
    {
-      // todo - move all SetValue definitions here
-      SetValue(GetName(), v);
+      if (auto access = EnsureAttr(GetName()))
+         access.attr->AddValue(access.fullname, v);
    }
 
    T Get() const

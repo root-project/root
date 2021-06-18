@@ -40,7 +40,7 @@ class RAttrBase {
       RAttrMap  *ownattr;   // or just own container with values
    } fD{nullptr};  ///<!  data
 
-   std::string fPrefix;                ///<! name prefix for all attributes values
+   std::string fPrefix;      ///<! name prefix for all attributes values
 
    void ClearData();
    RAttrMap *CreateOwnAttr();
@@ -132,12 +132,6 @@ protected:
    RAttrBase(RAttrBase *parent, const std::string &prefix) { AssignParent(parent, prefix); }
 
    void SetNoValue(const std::string &name);
-   void SetValue(const std::string &name, bool value);
-   void SetValue(const std::string &name, double value);
-   void SetValue(const std::string &name, int value);
-   void SetValue(const std::string &name, const std::string &value);
-   void SetValue(const std::string &name, const RPadLength &value);
-   void SetValue(const std::string &name, const RColor &value);
 
    const std::string &GetPrefix() const { return fPrefix; }
 
