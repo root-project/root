@@ -18,6 +18,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RDisplayItem.hxx
     ROOT/RAttrMap.hxx
     ROOT/RAttrBase.hxx
+    ROOT/RAttrAggregation.hxx
     ROOT/RAttrAxis.hxx
     ROOT/RAttrBorder.hxx
     ROOT/RAttrLine.hxx
@@ -52,6 +53,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     src/RDrawableRequest.cxx
     src/RAttrMap.cxx
     src/RAttrBase.cxx
+    src/RAttrAggregation.cxx
     src/RPalette.cxx
     src/RStyle.cxx
     src/RPadBase.cxx
