@@ -28,9 +28,7 @@ class RAttrAggregation : public RAttrBase {
 protected:
    virtual const RAttrMap &GetDefaults() const;
 
-   virtual RAttrMap CollectDefaults() const;
-
-   void AddDefaultValues(RAttrMap &) const override;
+   RAttrMap CollectDefaults() const override;
 
    void CopyTo(RAttrAggregation &tgt, bool use_style = true) const;
 

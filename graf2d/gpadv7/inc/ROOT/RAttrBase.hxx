@@ -51,7 +51,7 @@ protected:
    RAttrBase *GetParent() const { return fKind == kParent ? fD.parent : nullptr; }
    RAttrMap *GetOwnAttr() const { return fKind == kOwnAttr ? fD.ownattr : nullptr; }
 
-   virtual void AddDefaultValues(RAttrMap &) const = 0;
+   virtual RAttrMap CollectDefaults() const = 0;
 
    ///////////////////////////////////////////////////////////////////////////////
 

@@ -163,8 +163,6 @@ public:
    }
    RAttrMap &AddDefaults(const RAttrBase &vis);
 
-   void AddValuesFrom(const std::string &prefix, const RAttrMap &map);
-
    RAttrMap &AddValue(const std::string &name, bool value) { return AddBool(name, value); }
    RAttrMap &AddValue(const std::string &name, int value) { return AddInt(name, value); }
    RAttrMap &AddValue(const std::string &name, double value) { return AddDouble(name, value); }

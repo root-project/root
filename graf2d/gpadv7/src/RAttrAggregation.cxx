@@ -43,23 +43,14 @@ RAttrMap RAttrAggregation::CollectDefaults() const
    if (thisClass && baseClass) {
       for (auto data_member: TRangeDynCast<TDataMember>(thisClass->GetListOfDataMembers())) {
          if (data_member && data_member->GetClass() && data_member->GetClass()->InheritsFrom(baseClass) &&
-             (data_member->GetClass()->GetBaseClassOffset(baseClass) == 0)) {
+             (data_member->GetClass()->GetBaseClassOffset(baseClass) == 0))
                res.AddDefaults(*((const RAttrBase *)((char*) this + data_member->GetOffset())));
-         }
       }
    } else {
       R__LOG_ERROR(GPadLog()) << "Missing dictionary for " << info.name() << " class";
    }
 
    return res;
-}
-
-void RAttrAggregation::AddDefaultValues(RAttrMap &m) const
-{
-   std::string prefix = GetPrefix();
-   if (!prefix.empty()) prefix.append("_");
-
-   m.AddValuesFrom(prefix, GetDefaults());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
