@@ -23,7 +23,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrFill : public RAttrBase {
+class RAttrFill : public RAttrAggregation {
 
    RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! fill color
    RAttrValue<int>    fStyle{this, "style", 1};               ///<! fill style

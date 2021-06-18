@@ -23,7 +23,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrText : public RAttrBase {
+class RAttrText : public RAttrAggregation {
 
    RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! text color
    RAttrValue<double> fSize{this, "size", 12.};               ///<! text size

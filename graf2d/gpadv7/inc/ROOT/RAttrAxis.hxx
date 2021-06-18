@@ -27,7 +27,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrAxis : public RAttrBase {
+class RAttrAxis : public RAttrAggregation {
 
    RAttrValue<double> fMin{this, "min", 0.};                             ///<! axis min
    RAttrValue<double> fMax{this, "max", 0.};                             ///<! axis max
