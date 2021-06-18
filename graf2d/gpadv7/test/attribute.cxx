@@ -28,7 +28,11 @@ protected:
    const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
 
-   double GetDirect(const std::string &name) const { return GetValue<double>(name); }
+   double GetDirect(const std::string &name)
+   {
+      RAttrValue<double> direct{this, name, 0.};
+      return direct.Get();
+   }
 };
 
 

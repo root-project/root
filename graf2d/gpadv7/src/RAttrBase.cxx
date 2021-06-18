@@ -92,64 +92,6 @@ void RAttrBase::SetNoValue(const std::string &name)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set boolean value
-
-void RAttrBase::SetValue(const std::string &name, bool value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddBool(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set integer value
-
-void RAttrBase::SetValue(const std::string &name, int value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddInt(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set double value
-
-void RAttrBase::SetValue(const std::string &name, double value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddDouble(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set string value
-
-void RAttrBase::SetValue(const std::string &name, const std::string &value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddString(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set PadLength value
-
-void RAttrBase::SetValue(const std::string &name, const RPadLength &value)
-{
-   if (value.Empty())
-      ClearValue(name);
-   else
-      SetValue(name, value.AsString());
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set RColor value
-
-void RAttrBase::SetValue(const std::string &name, const RColor &value)
-{
-   if (value.IsEmpty())
-      ClearValue(name);
-   else
-      SetValue(name, value.AsString());
-}
-
-///////////////////////////////////////////////////////////////////////////////
 /// Move all fields into target object
 
 void RAttrBase::MoveTo(RAttrBase &tgt)
