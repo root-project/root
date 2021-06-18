@@ -565,7 +565,7 @@ void removeCommon(std::vector<RooAbsArg*> &v, std::span<RooAbsArg * const> other
 
   for (auto const& arg : other) {
     auto namePtrMatch = [&arg](const RooAbsArg* elm) {
-      return elm->namePtr() == arg->namePtr();
+      return elm != nullptr && elm->namePtr() == arg->namePtr();
     };
 
     auto found = std::find_if(v.begin(), v.end(), namePtrMatch);
