@@ -47,13 +47,17 @@ template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::
 
 RAttrMap &RAttrMap::AddDefaults(const RAttrBase &vis)
 {
-   auto prefix = vis.GetPrefix();
-
-   for (const auto &entry : vis.GetDefaults())
-      m[prefix+entry.first] = entry.second->Copy();
+   vis.AddDefaultValues(*this);
 
    return *this;
 }
+
+void RAttrMap::AddValuesFrom(const std::string &prefix, const RAttrMap &map)
+{
+   for (const auto &entry : map)
+      m[prefix+entry.first] = entry.second->Copy();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add attribute, converting to best possible type

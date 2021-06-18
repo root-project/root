@@ -27,11 +27,12 @@ template<typename T>
 class RAttrValue : public RAttrBase {
 protected:
 
-   RAttrMap  fDefaults;    ///<!    map with default values
+   T fDefault;            ///<!    default value
 
-   const RAttrMap &GetDefaults() const override { return fDefaults; }
-
-   bool IsValue() const override { return true; }
+   void AddDefaultValues(RAttrMap &map) const override
+   {
+      map.AddValue(GetName(), fDefault);
+   }
 
 public:
 
@@ -39,24 +40,58 @@ public:
 
    RAttrValue(RDrawable *drawable, const std::string &name, const T &dflt = T())
    {
-      fDefaults.AddValue("", dflt);
       AssignDrawable(drawable, name);
+      fDefault = dflt;
    }
 
    RAttrValue(RAttrBase *parent, const std::string &name, const T &dflt = T())
    {
-      fDefaults.AddValue("", dflt);
       AssignParent(parent, name);
+      fDefault = dflt;
    }
 
-   void Set(const T &v) { SetValue("", v); }
-   T Get() const { return GetValue<T>(""); }
-   void Clear() { ClearValue(""); }
-   bool Has() const { return HasValue<T>(""); }
+   RAttrValue(const RAttrValue& src)
+   {
+      Set(src.Get());
+   }
+
+   void Set(const T &v)
+   {
+      // todo - move all SetValue definitions here
+      SetValue(GetName(), v);
+   }
+
+   T Get() const
+   {
+      if (auto v = AccessValue(GetName(), true))
+        return RAttrMap::Value_t::GetValue<T>(v.value);
+
+      return fDefault;
+   }
+
+   const std::string &GetName() const { return GetPrefix(); }
+
+   void Clear() override { ClearValue(GetName()); }
+
+   bool Has() const
+   {
+      if (auto v = AccessValue(GetName(), true)) {
+         auto res = RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,T>(v.value);
+         return res ? (res->Kind() != RAttrMap::kNoValue) : false;
+      }
+
+      return false;
+   }
 
    RAttrValue &operator=(const T &v) { Set(v); return *this; }
 
+   RAttrValue &operator=(const RAttrValue &v) { Set(v.Get()); return *this; }
+
    operator T() const { return Get(); }
+
+   friend bool operator==(const RAttrValue& lhs, const RAttrValue& rhs) { return lhs.Get() == rhs.Get(); }
+   friend bool operator!=(const RAttrValue& lhs, const RAttrValue& rhs) { return lhs.Get() != rhs.Get(); }
+
 };
 
 } // namespace Experimental

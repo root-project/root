@@ -70,6 +70,7 @@
 #pragma link C++ class ROOT::Experimental::RAttrMap::DoubleValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::StringValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrBase+;
+#pragma link C++ class ROOT::Experimental::RAttrAggregation+;
 #pragma link C++ class ROOT::Experimental::RAttrValue<bool>+;
 #pragma link C++ class ROOT::Experimental::RAttrValue<int>+;
 #pragma link C++ class ROOT::Experimental::RAttrValue<double>+;

@@ -24,7 +24,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrMargins : public RAttrBase {
+class RAttrMargins : public RAttrAggregation {
 
    RAttrValue<RPadLength>   fLeft{this, "left", 0._normal};
    RAttrValue<RPadLength>   fRight{this, "right", 0._normal};

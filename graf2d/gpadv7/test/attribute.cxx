@@ -1,12 +1,14 @@
 #include "gtest/gtest.h"
 
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RAttrBase.hxx"
 #include "ROOT/RAttrText.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrLine.hxx"
 
 using namespace ROOT::Experimental;
 
-class CustomAttrs : public RAttrBase {
+class CustomAttrs : public RAttrAggregation {
    RAttrLine    fAttrLine{this, "line"};    ///<! line attributes
    RAttrFill    fAttrFill{this, "fill"};    ///<! fill attributes
    RAttrText    fAttrText{this, "text"};    ///<! text attributes
@@ -92,6 +94,8 @@ TEST(OptsTest, AttribDiffer) {
    CustomAttrs attrs1;
    CustomAttrs attrs2;
    CustomAttrs attrs3;
+
+   // RLogScopedVerbosity debugThis(GPadLog(), ELogLevel::kDebug);
 
    attrs1.AttrLine().SetWidth(7.);
    EXPECT_NE(attrs1, attrs2);
