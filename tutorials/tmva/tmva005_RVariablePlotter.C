@@ -28,13 +28,9 @@ void tmva005_RVariablePlotter()
 
     // Create a variable plotter object giving the dataframes and the class labels.
     TMVA::RVariablePlotter plotter({sig2, bkg2}, {"Signal", "Background"});
-
     
     TCanvas *c = new TCanvas("c", "c", 1400, 800);
-    c -> UseCurrentStyle();
-
     c->Divide(3, 2);
-
 
     // legend vertices
     float minX = 0.7;
@@ -48,6 +44,7 @@ void tmva005_RVariablePlotter()
 
     for (unsigned int i = 0; i < variables.size(); i++) {
         c->cd(i + 1);
+        gPad->SetMargin(0.2, 0.9, 0.1, 0.9);
         c->Update();
         //gPad->SetGrid(1,1); // plotting a background grid
         plotter.Draw(variables[i], true);

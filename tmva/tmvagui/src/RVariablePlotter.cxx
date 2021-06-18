@@ -33,7 +33,7 @@ Plotting a single variable
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor with nodes (samples) and labels
+/// Constructor with nodes (samples) and labels
 
 TMVA::RVariablePlotter::RVariablePlotter( const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels)
     : fNodes(nodes),
@@ -47,9 +47,8 @@ TMVA::RVariablePlotter::RVariablePlotter( const std::vector<ROOT::RDF::RNode>& n
 }
 
 
-////////////////
-
-/// set style and keep existing canvas
+////////////////////////////////////////////////////////////////////////////////
+/// Set style and keep existing canvas
 void TMVA::RVariablePlotter::InitializeStyle(bool useTMVAStyle ){
    
    // set style
@@ -67,9 +66,6 @@ void TMVA::RVariablePlotter::InitializeStyle(bool useTMVAStyle ){
 
 void TMVA::RVariablePlotter::Draw(const std::string& variable, bool useTMVAStyle) {
    // Make histograms with TH1D
-    
-    //TMVA::TMVAGlob::Initialize(&TMVAGlob::SetTMVAStyle);
-    
     
     TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
     
@@ -100,7 +96,6 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable, bool useTMVAStyle
     clone->GetYaxis()->SetTitleOffset( 1.50 );
         
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawing Legend
