@@ -36,13 +36,13 @@ protected:
 
 public:
 
-   RAttrValue() : RAttrBase(), fDefault() {};
+   RAttrValue() : RAttrBase(""), fDefault() {}
 
-   RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name), fDefault(dflt) { }
+   RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name ? name : ""), fDefault(dflt) { }
 
-   RAttrValue(RAttrBase *parent, const char *name, const T &dflt = T()) : RAttrBase(parent, name), fDefault(dflt) { }
+   RAttrValue(RAttrBase *parent, const char *name, const T &dflt = T()) : RAttrBase(parent, name ? name : ""), fDefault(dflt) { }
 
-   RAttrValue(const RAttrValue& src)
+   RAttrValue(const RAttrValue& src) : RAttrBase("")
    {
       Set(src.Get());
       fDefault = src.Default();
@@ -64,7 +64,7 @@ public:
       return fDefault;
    }
 
-   const char *GetName() const { return GetPrefix() ? GetPrefix() : ""; }
+   const char *GetName() const { return GetPrefix(); }
 
    void Clear() override { ClearValue(GetName()); }
 
