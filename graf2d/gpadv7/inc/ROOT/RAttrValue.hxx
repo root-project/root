@@ -29,10 +29,11 @@ protected:
 
    T fDefault;            ///<!    default value
 
-   void AddDefaultValues(RAttrMap &map) const override
+   RAttrMap CollectDefaults() const override
    {
-      map.AddValue(GetName(), fDefault);
+      return RAttrMap().AddValue(GetName(), fDefault);
    }
+
 
 public:
 
