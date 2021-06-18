@@ -64,7 +64,7 @@ TStatistic::~TStatistic()
 /// sum of squared weights and sum of (value*weight), one extra value is added to the
 /// statistic. For the sum of squared (value*weight) pairs, the function uses formula 1.4
 /// in Chan-Golub, LeVeque : Algorithms for computing the Sample Variance (1983),
-/// genralized by LM for the case of weights:
+/// generalized by LM for the case of weights:
 /// \f[
 ///   \frac{w_j}{\sum_{i=0}^{j} w_i \cdot \sum_{i=0}^{j-1} w_i} \cdot
 ///   \left(
