@@ -32,12 +32,29 @@ class RAttrBase {
 
    friend class RAttrMap;
 
-   RDrawable *fDrawable{nullptr};      ///<! drawable used to store attributes
-   std::unique_ptr<RAttrMap> fOwnAttr; ///<  own instance when deep copy is created, persistent for RColor and similar classes
+   enum {kDrawable, kParent, kOwnAttr} fKind{kDrawable}; ///<!  kind of data
+
+   union {
+      RDrawable *drawable;  // either drawable to which attributes belongs to
+      RAttrBase *parent;    // or aggregation of attributes
+      RAttrMap  *ownattr;   // or just own container with values
+   } fD{nullptr};  ///<!  data
+
    std::string fPrefix;                ///<! name prefix for all attributes values
-   RAttrBase *fParent{nullptr};        ///<! parent attributes, prefix applied to it
+
+   void ClearData();
+   RAttrMap *CreateOwnAttr();
 
 protected:
+
+   RDrawable *GetDrawable() const { return fKind == kDrawable ? fD.drawable : nullptr; }
+   RAttrBase *GetParent() const { return fKind == kParent ? fD.parent : nullptr; }
+   RAttrMap *GetOwnAttr() const { return fKind == kOwnAttr ? fD.ownattr : nullptr; }
+
+   void AssignDrawable(RDrawable *drawable, const std::string &prefix);
+
+   void AssignParent(RAttrBase *parent, const std::string &prefix);
+
 
    virtual const RAttrMap &GetDefaults() const;
 
@@ -46,10 +63,6 @@ protected:
    bool IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style = false) const;
 
    ///////////////////////////////////////////////////////////////////////////////
-
-   void AssignDrawable(RDrawable *drawable, const std::string &prefix);
-
-   void AssignParent(RAttrBase *parent, const std::string &prefix);
 
    struct Rec_t {
       RAttrMap *attr{nullptr};
@@ -65,11 +78,11 @@ protected:
       std::string fullname = name;
       while (prnt) {
          fullname.insert(0, prnt->fPrefix); // fullname = prnt->fPrefix + fullname
-         if (prnt->fDrawable)
-            return {&(prnt->fDrawable->fAttr), fullname, prnt->fDrawable};
-         if (prnt->fOwnAttr)
-            return {prnt->fOwnAttr.get(), fullname, nullptr};
-         prnt = prnt->fParent;
+         if (auto dr = prnt->GetDrawable())
+            return { &dr->fAttr, fullname, dr };
+         if (auto attr = prnt->GetOwnAttr())
+            return { attr, fullname, nullptr };
+         prnt = prnt->GetParent();
       }
       return {nullptr, fullname, nullptr};
    }
@@ -104,13 +117,11 @@ protected:
       std::string fullname = name;
       while (prnt) {
          fullname.insert(0, prnt->fPrefix); // fullname = prnt->fPrefix + fullname
-         if (prnt->fDrawable)
-            return {&(prnt->fDrawable->fAttr), fullname, prnt->fDrawable};
-         if (!prnt->fParent && !prnt->fOwnAttr)
-            prnt->fOwnAttr = std::make_unique<RAttrMap>();
-         if (prnt->fOwnAttr)
-            return {prnt->fOwnAttr.get(), fullname, nullptr};
-         prnt = prnt->fParent;
+         if (auto dr = prnt->GetDrawable())
+            return { &dr->fAttr, fullname, dr };
+         if (prnt->fKind != kParent)
+            return { prnt->CreateOwnAttr(), fullname, nullptr };
+         prnt = prnt->GetParent();
       }
       return {nullptr, fullname, nullptr};
    }
@@ -184,7 +195,7 @@ protected:
 public:
    RAttrBase() = default;
 
-   virtual ~RAttrBase() = default;
+   virtual ~RAttrBase() { ClearData(); }
 
    friend bool operator==(const RAttrBase& lhs, const RAttrBase& rhs) { return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
    friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs) { return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
