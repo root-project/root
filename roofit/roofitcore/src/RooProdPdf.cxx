@@ -633,7 +633,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // once and use it in a lambda function.
     RooArgSet pdfLeafList("leafNodeServerList") ;
     pdf->treeNodeServerList(&pdfLeafList,0,kFALSE,kTRUE,true) ;
-    auto getObservables = [&pdfLeafList](
+    auto getObservablesOfCurrentPdf = [&pdfLeafList](
             std::vector<RooAbsArg*> & out,
             const RooArgSet& dataList) {
       for (const auto arg : pdfLeafList) {
@@ -645,14 +645,14 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Reduce pdfNSet to actual dependents
     if (0 == strcmp("nset", pdfNSetOrig->GetName())) {
-      getObservables(pdfNSet, *pdfNSetOrig);
+      getObservablesOfCurrentPdf(pdfNSet, *pdfNSetOrig);
     } else if (0 == strcmp("cset", pdfNSetOrig->GetName())) {
-      getObservables(pdfNSet, normSet);
+      getObservablesOfCurrentPdf(pdfNSet, normSet);
       removeCommon(pdfNSet, pdfNSetOrig->get());
       pdfCSet = pdfNSetOrig->get();
     } else {
       // Legacy mode. Interpret at NSet for backward compatibility
-      getObservables(pdfNSet, *pdfNSetOrig);
+      getObservablesOfCurrentPdf(pdfNSet, *pdfNSetOrig);
     }
 
 
@@ -660,7 +660,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     pdfAllDeps.clear();
 
     // Make list of all dependents of this PDF
-    getObservables(pdfAllDeps, normSet);
+    getObservablesOfCurrentPdf(pdfAllDeps, normSet);
 
 
 //     cout << GetName() << ": pdf = " << pdf->GetName() << " pdfAllDeps = " << pdfAllDeps << " pdfNSet = " << *pdfNSet << " pdfCSet = " << *pdfCSet << endl;
@@ -677,7 +677,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 //     cout << GetName() << ": pdfNormDeps for " << pdf->GetName() << " = " << pdfNormDeps << endl;
 
     pdfIntSet.clear();
-    getObservables(pdfIntSet, intSet) ;
+    getObservablesOfCurrentPdf(pdfIntSet, intSet) ;
 
     // WVE if we have no norm deps, conditional observables should be taken out of pdfIntSet
     if (pdfNormDeps.empty() && !pdfCSet.empty()) {
