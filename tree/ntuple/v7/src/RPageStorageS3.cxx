@@ -69,14 +69,20 @@ public:
       Davix::Uri uri(fUri + std::string(key));
       Davix::DavFile obj(fCtx, fReqParams, uri);
       // Danger: there are no size limits on the amount of data read into the buffer
-      // throws Davix::DavixException
-      obj.get(nullptr, buf);
+      try {
+         obj.get(nullptr, buf);
+      } catch (const Davix::DavixException &err) {
+         throw ROOT::Experimental::RException(R__FAIL(std::string("S3 read error: ") + err.what()));
+      }
    }
    void WriteObject(std::string_view key, const void *buffer, std::size_t nbytes) {
       Davix::Uri uri(fUri + std::string(key));
       Davix::DavFile target(fCtx, fReqParams, uri);
-      // throws Davix::DavixException
-      target.put(nullptr, static_cast<const char*>(buffer), nbytes);
+      try {
+         target.put(nullptr, static_cast<const char*>(buffer), nbytes);
+      } catch (const Davix::DavixException &err) {
+         throw ROOT::Experimental::RException(R__FAIL(std::string("S3 write error: ") + err.what()));
+      }
    }
 };
 
