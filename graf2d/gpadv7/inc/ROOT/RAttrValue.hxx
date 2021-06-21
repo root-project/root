@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -55,6 +55,8 @@ protected:
 public:
 
    RAttrValue() : RAttrBase(""), fDefault() {}
+
+   RAttrValue(const T &dflt) : RAttrBase(""), fDefault(dflt) {}
 
    RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name ? name : ""), fDefault(dflt) { }
 

@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RAttrAggregation.hxx
     ROOT/RAttrAxis.hxx
     ROOT/RAttrBorder.hxx
+    ROOT/RAttrEnum.hxx
     ROOT/RAttrLine.hxx
     ROOT/RAttrFill.hxx
     ROOT/RAttrMarker.hxx

@@ -2,6 +2,8 @@
 
 #include "ROOT/RLogger.hxx"
 #include "ROOT/RAttrAggregation.hxx"
+#include "ROOT/RAttrValue.hxx"
+#include "ROOT/RAttrEnum.hxx"
 #include "ROOT/RAttrText.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrLine.hxx"
@@ -164,6 +166,7 @@ TEST(OptsTest, AttribValue) {
 
    value1.Set(5);
    EXPECT_EQ(value1.Get(), 5);
+   EXPECT_EQ(value1.GetDefault(), 0);
 
    RAttrValue<int> value2;
    EXPECT_NE(value1, value2);
@@ -173,5 +176,30 @@ TEST(OptsTest, AttribValue) {
    EXPECT_EQ(value1, value2);
    EXPECT_EQ(value2, value1);
    EXPECT_EQ(value2.Get(), 5);
-
+   EXPECT_EQ(value2.GetDefault(), 0);
 }
+
+TEST(OptsTest, EnumValue) {
+
+   enum Style { kNone, kFirst, kSecond, kThird };
+
+   RAttrEnum<Style> value1{kNone, kThird};
+
+   EXPECT_EQ(value1.Get(), kNone);
+   EXPECT_EQ(value1.GetDefault(), kNone);
+
+   value1.Set(kSecond);
+   EXPECT_EQ(value1.Get(), kSecond);
+   EXPECT_EQ(value1.GetDefault(), kNone);
+
+   RAttrEnum<Style> value2{kNone, kThird};
+   EXPECT_NE(value1, value2);
+   EXPECT_NE(value2, value1);
+
+   value2 = value1;
+   EXPECT_EQ(value1, value2);
+   EXPECT_EQ(value2, value1);
+   EXPECT_EQ(value2.Get(), kSecond);
+   EXPECT_EQ(value2.GetDefault(), kNone);
+}
+
