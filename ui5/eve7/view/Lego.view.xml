@@ -1,13 +1,13 @@
 <mvc:View
    class="sapUiSizeCompact"
-   height="100%"
+   height="100%" width="100%"
    controllerName="rootui5.eve7.controller.Lego"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:l="sap.ui.layout"
    xmlns="sap.m"
    xmlns:html="http://www.w3.org/1999/xhtml"
    >
-    <Panel id="legoPanel" >
+    <Panel id="legoPanel" width="100%" height="100%">
         <headerToolbar>
             <OverflowToolbar>
                <Title text="HELLO"/>
@@ -15,10 +15,8 @@
             </OverflowToolbar>
         </headerToolbar>
         <content>
-           <l:VerticalLayout>
            <FormattedText id="legoX"/>
-           <html:div id="legoPlotPlace"/>
-           </l:VerticalLayout>
+           <html:div id="legoPlotPlace" style="position:relative;left:0;right:0;top:0;bottom:0;height:100%;width:100%"/>
         </content>
     </Panel>
 </mvc:View>

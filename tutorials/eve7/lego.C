@@ -72,10 +72,12 @@ void lego()
       auto ecalHist = (TH2F*)hf->Get("ecalLego");
       auto hcalHist = (TH2F*)hf->Get("hcalLego");
 
-      THStack *s = new THStack("LegoStack", "ECal undt HCal");
+      THStack *s = new THStack("LegoStack", ""); // "ECal undt HCal");
       ecalHist->SetFillColor(kRed);
       ecalHist->GetXaxis()->SetLabelSize(1);
+      ecalHist->GetXaxis()->SetTitle("#eta");
       ecalHist->GetYaxis()->SetLabelSize(1);
+      ecalHist->GetYaxis()->SetTitle("#varphi");
       ecalHist->GetZaxis()->SetLabelSize(1);
       s->Add(ecalHist);
       hcalHist->SetFillColor(kBlue);

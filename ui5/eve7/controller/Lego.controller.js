@@ -1,6 +1,7 @@
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
     'sap/ui/core/Component',
+    "sap/ui/core/ResizeHandler",
     'sap/ui/core/UIComponent',
     'sap/ui/model/json/JSONModel',
     'sap/ui/model/Sorter',
@@ -14,7 +15,7 @@ sap.ui.define([
     "sap/ui/layout/HorizontalLayout",
     "sap/ui/table/Column",
     "sap/m/MessageBox"
-], function (Controller, Component, UIComponent, JSONModel, Sorter,
+], function (Controller, Component, ResizeHandler, UIComponent, JSONModel, Sorter,
     mColumn, mColumnListItem, mInput, mLabel, mButton,
     FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
 
@@ -46,21 +47,24 @@ sap.ui.define([
             let element = this.byId("legoX");
             element.setHtmlText("Pointset infected by TCanvas / Lego Stack");
 
+            ResizeHandler.register(this.getView(), this.onResize.bind(this));
+
             this.canvas_json = JSROOT.parse( atob(chld.fTitle) );
         },
 
-        // Called when HTML parent/container rendering is complete.
-        onAfterRendering: function()
+        onResize()
         {
-            console.log("onAfterRendering", "view", this.getView(), "dom", this.byId("legoPlotPlace").getDomRef());
+            let domref = this.byId("legoPlotPlace").getDomRef();
 
             if ( ! this.jst_ptr)
             {
-                // this.jst_ptr = new JSROOT.ObjectPainter(this.getView().getDomRef(), this.canvas_json);
-
-                console.log(this.canvas_json);
                 this.jst_ptr = 1;
-                JSROOT.draw(this.byId("legoPlotPlace").getDomRef(), this.canvas_json);
+                JSROOT.draw(domref, this.canvas_json);
+            }
+            else
+            {
+                // if completely different, call JSROOT.cleanup(dom) first.
+                JSROOT.redraw(domref, this.canvas_json);
             }
         },
 
@@ -81,7 +85,6 @@ sap.ui.define([
         SelectElement: function (selection_obj, element_id, sec_idcs) {
             console.log("LEGO element selected", element_id);
         },
-
 
         UnselectElement: function (selection_obj, element_id) {
         }
