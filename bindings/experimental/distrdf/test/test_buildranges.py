@@ -1,5 +1,5 @@
 from DistRDF.HeadNode import get_headnode
-from DistRDF.Node import RangesBuilder
+from DistRDF import Ranges
 import warnings
 import unittest
 
@@ -28,20 +28,18 @@ class BuildRangesTest(unittest.TestCase):
         number of partitions.
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         nentries_small = 10
+        npartitions_small = 5
         nentries_large = 100
+        npartitions_large = 10
 
         # First case
-        headnode.npartitions = 5
-        rng = builder._get_balanced_ranges(nentries_small)
+        rng = Ranges.get_balanced_ranges(nentries_small, npartitions_small)
         ranges_small = rangesToTuples(rng)
 
         # Second case
-        headnode.npartitions = 10
-        rng = builder._get_balanced_ranges(nentries_large)
+        rng = Ranges.get_balanced_ranges(nentries_large, npartitions_large)
         ranges_large = rangesToTuples(rng)
 
         ranges_small_reqd = [(0, 2), (2, 4), (4, 6), (6, 8), (8, 10)]
@@ -67,21 +65,19 @@ class BuildRangesTest(unittest.TestCase):
         the number of partitions.
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         nentries_1 = 10
-        headnode.npartitions = 4
         nentries_2 = 9
+        npartitions = 4
 
         # Example in which fractional part of
         # (nentries/npartitions) >= 0.5
-        rng = builder._get_balanced_ranges(nentries_1)
+        rng = Ranges.get_balanced_ranges(nentries_1, npartitions)
         ranges_1 = rangesToTuples(rng)
 
         # Example in which fractional part of
         # (nentries/npartitions) < 0.5
-        rng = builder._get_balanced_ranges(nentries_2)
+        rng = Ranges.get_balanced_ranges(nentries_2, npartitions)
         ranges_2 = rangesToTuples(rng)
 
         # Required output pairs
@@ -95,15 +91,12 @@ class BuildRangesTest(unittest.TestCase):
         """
         `BuildRanges` method when the number of entries is smaller than the
         number of partitions.
-
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         nentries = 5
-        headnode.npartitions = 7  # > nentries
+        npartitions = 7  # > nentries
 
-        rng = builder._get_balanced_ranges(nentries)
+        rng = Ranges.get_balanced_ranges(nentries, npartitions)
         ranges = rangesToTuples(rng)
 
         ranges_reqd = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
@@ -116,14 +109,14 @@ class BuildRangesTest(unittest.TestCase):
         contains a single cluster and the number of partitions is 1
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         treename = "TotemNtuple"
         filelist = ["backend/Slimmed_ntuple.root"]
-        headnode.npartitions = 1
+        npartitions = 1
+        clustersinfiles = Ranges.get_clusters(treename, filelist)
+        friendinfo = None
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        crs = Ranges.get_clustered_ranges(clustersinfiles, npartitions, treename, friendinfo)
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [(0, 10)]
@@ -137,18 +130,16 @@ class BuildRangesTest(unittest.TestCase):
 
         """
 
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
-
         treename = "TotemNtuple"
         filelist = ["backend/Slimmed_ntuple.root"]
+        headnode = create_dummy_headnode(treename, filelist)
         headnode.npartitions = 2
 
         ranges_reqd = [(0, 10)]
 
         with warnings.catch_warnings(record=True) as w:
             # Trigger warning
-            crs = builder._get_clustered_ranges(treename, filelist)
+            crs = headnode.build_ranges()
             ranges = rangesToTuples(crs)
 
             # Verify ranges
@@ -164,14 +155,13 @@ class BuildRangesTest(unittest.TestCase):
         different numbers of entries.
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         treename = "myTree"
         filelist = ["backend/2clusters.root"]
+        headnode = create_dummy_headnode(treename, filelist)
         headnode.npartitions = 2
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        crs = headnode.build_ranges()
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
@@ -187,14 +177,13 @@ class BuildRangesTest(unittest.TestCase):
         possible for four partitions
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         treename = "myTree"
         filelist = ["backend/4clusters.root"]
+        headnode = create_dummy_headnode(treename, filelist)
         headnode.npartitions = 4
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        crs = headnode.build_ranges()
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
@@ -212,14 +201,13 @@ class BuildRangesTest(unittest.TestCase):
         possible for four partitions
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         treename = "myTree"
         filelist = ["backend/1000clusters.root"]
+        headnode = create_dummy_headnode(treename, filelist)
         headnode.npartitions = 4
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        crs = headnode.build_ranges()
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
@@ -238,14 +226,13 @@ class BuildRangesTest(unittest.TestCase):
         clusters)
 
         """
-        headnode = create_dummy_headnode(1)
-        builder = RangesBuilder(headnode)
 
         treename = "myTree"
         filelist = ["backend/1000clusters.root"]
+        headnode = create_dummy_headnode(treename, filelist)
         headnode.npartitions = 1000
 
-        crs = builder._get_clustered_ranges(treename, filelist)
+        crs = headnode.build_ranges()
         ranges = rangesToTuples(crs)
 
         start = 0
@@ -264,11 +251,9 @@ class BuildRangesTest(unittest.TestCase):
 
         """
         headnode = create_dummy_headnode("myTree", "backend/1000clusters.root")
-        builder = RangesBuilder(headnode)
-
         headnode.npartitions = 1000
 
-        crs = builder.build_ranges()
+        crs = headnode.build_ranges()
         ranges = rangesToTuples(crs)
 
         start = 0
@@ -287,11 +272,9 @@ class BuildRangesTest(unittest.TestCase):
 
         """
         headnode = create_dummy_headnode(50)
-        builder = RangesBuilder(headnode)
-
         headnode.npartitions = 16
 
-        crs = builder.build_ranges()
+        crs = headnode.build_ranges()
         ranges = rangesToTuples(crs)
 
         ranges_reqd = [
