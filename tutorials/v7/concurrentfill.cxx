@@ -23,7 +23,7 @@
 #include <future>
 #include <random>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 double wasteCPUTime(std::mt19937 &gen)
 {
@@ -33,7 +33,7 @@ double wasteCPUTime(std::mt19937 &gen)
           std::generate_canonical<double, 100>(gen);
 }
 
-using Filler_t = RHistConcurrentFiller<RH2D, 1024>;
+using Filler_t = Experimental::RHistConcurrentFiller<Experimental::RH2D, 1024>;
 
 /// This function is called within each thread: it spends some CPU time and then
 /// fills a number into the histogram, through the Filler_t. This is repeated
@@ -47,7 +47,7 @@ void theTask(Filler_t filler)
 }
 
 /// This example fills a histogram concurrently, from several threads.
-void concurrentHistFill(RH2D &hist)
+void concurrentHistFill(Experimental::RH2D &hist)
 {
    // RHistConcurrentFillManager allows multiple threads to fill the histogram
    // concurrently.
@@ -55,7 +55,7 @@ void concurrentHistFill(RH2D &hist)
    // Details: each thread's Fill() calls are buffered. once the buffer is full,
    // the RHistConcurrentFillManager locks and flushes the buffer into the
    // histogram.
-   RHistConcurrentFillManager<RH2D> fillMgr(hist);
+   Experimental::RHistConcurrentFillManager<Experimental::RH2D> fillMgr(hist);
 
    std::array<std::thread, 8> threads;
 
@@ -73,7 +73,7 @@ void concurrentHistFill(RH2D &hist)
 void concurrentfill()
 {
    // This histogram will be filled from several threads.
-   RH2D hist{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}};
+   Experimental::RH2D hist{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}};
 
    concurrentHistFill(hist);
 
