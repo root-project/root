@@ -5581,7 +5581,6 @@ Long64_t TTree::GetEntriesFriend() const
 
 Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 {
-
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kGetEntry & fFriendLockStatus) return 0;
