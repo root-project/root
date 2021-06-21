@@ -23,8 +23,26 @@ namespace Experimental {
 */
 
 
+
 template<typename T>
 class RAttrValue : public RAttrBase {
+
+   template <typename Q, bool = std::is_enum<Q>::value>
+   struct ValueExtractor {
+      Q Get(const RAttrMap::Value_t *value)
+      {
+         return (Q) RAttrMap::Value_t::GetValue<int>(value);
+      }
+   };
+
+   template <typename Q>
+   struct ValueExtractor<Q, false> {
+      Q Get(const RAttrMap::Value_t *value) {
+         return RAttrMap::Value_t::GetValue<Q>(value);
+      }
+   };
+
+
 protected:
 
    T fDefault;            ///<!    default value
@@ -33,7 +51,6 @@ protected:
    {
       return RAttrMap().AddValue(GetName(), fDefault);
    }
-
 
 public:
 
@@ -46,7 +63,7 @@ public:
    RAttrValue(const RAttrValue& src) : RAttrBase("")
    {
       Set(src.Get());
-      fDefault = src.Default();
+      fDefault = src.GetDefault();
    }
 
    T GetDefault() const { return fDefault; }
@@ -60,8 +77,7 @@ public:
    T Get() const
    {
       if (auto v = AccessValue(GetName(), true))
-        return RAttrMap::Value_t::GetValue<T>(v.value);
-
+         return ValueExtractor<T>().Get(v.value);
       return fDefault;
    }
 
