@@ -69,22 +69,23 @@
 #pragma link C++ class ROOT::Experimental::RAttrMap::IntValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::DoubleValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::StringValue_t+;
-#pragma link C++ class ROOT::Experimental::RAttrBase+;
-#pragma link C++ class ROOT::Experimental::RAttrAggregation+;
-#pragma link C++ class ROOT::Experimental::RAttrValue<bool>+;
-#pragma link C++ class ROOT::Experimental::RAttrValue<int>+;
-#pragma link C++ class ROOT::Experimental::RAttrValue<double>+;
-#pragma link C++ class ROOT::Experimental::RAttrValue<std::string>+;
-#pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RPadLength>+;
-#pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RColor>+;
 
-#pragma link C++ class ROOT::Experimental::RAttrFill+;
-#pragma link C++ class ROOT::Experimental::RAttrLine+;
-#pragma link C++ class ROOT::Experimental::RAttrBorder+;
-#pragma link C++ class ROOT::Experimental::RAttrMarker+;
-#pragma link C++ class ROOT::Experimental::RAttrText+;
-#pragma link C++ class ROOT::Experimental::RAttrAxis+;
-#pragma link C++ class ROOT::Experimental::RAttrMargins+;
+#pragma link C++ class ROOT::Experimental::RAttrBase-;
+#pragma link C++ class ROOT::Experimental::RAttrAggregation-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<bool>-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<int>-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<double>-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<std::string>-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RPadLength>-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RColor>-;
+
+#pragma link C++ class ROOT::Experimental::RAttrFill-;
+#pragma link C++ class ROOT::Experimental::RAttrLine-;
+#pragma link C++ class ROOT::Experimental::RAttrBorder-;
+#pragma link C++ class ROOT::Experimental::RAttrMarker-;
+#pragma link C++ class ROOT::Experimental::RAttrText-;
+#pragma link C++ class ROOT::Experimental::RAttrAxis-;
+#pragma link C++ class ROOT::Experimental::RAttrMargins-;
 
 #pragma link C++ class ROOT::Experimental::RAxisDrawableBase+;
 #pragma link C++ class ROOT::Experimental::RAxisDrawable+;
