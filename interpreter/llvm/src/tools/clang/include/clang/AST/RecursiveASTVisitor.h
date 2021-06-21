@@ -82,6 +82,16 @@ namespace clang {
       return false;                                                            \
   } while (false)
 
+namespace detail {
+
+template <typename T, typename U>
+struct has_same_member_pointer_type : std::false_type {};
+template <typename T, typename U, typename R, typename... P>
+struct has_same_member_pointer_type<R (T::*)(P...), R (U::*)(P...)>
+    : std::true_type {};
+
+} // end namespace detail
+
 /// A class that does preorder or postorder
 /// depth-first traversal on the entire Clang AST and visits each node.
 ///
@@ -319,23 +329,17 @@ public:
   Stmt::child_range getStmtChildren(Stmt *S) { return S->children(); }
 
 private:
-  template<typename T, typename U>
-  struct has_same_member_pointer_type : std::false_type {};
-  template<typename T, typename U, typename R, typename... P>
-  struct has_same_member_pointer_type<R (T::*)(P...), R (U::*)(P...)>
-      : std::true_type {};
-
   // Traverse the given statement. If the most-derived traverse function takes a
   // data recursion queue, pass it on; otherwise, discard it. Note that the
   // first branch of this conditional must compile whether or not the derived
   // class can take a queue, so if we're taking the second arm, make the first
   // arm call our function rather than the derived class version.
 #define TRAVERSE_STMT_BASE(NAME, CLASS, VAR, QUEUE)                            \
-  (has_same_member_pointer_type<decltype(                                      \
-                                    &RecursiveASTVisitor::Traverse##NAME),     \
-                                decltype(&Derived::Traverse##NAME)>::value     \
+  (::clang::detail::has_same_member_pointer_type<                              \
+       decltype(&RecursiveASTVisitor::Traverse##NAME),                         \
+       decltype(&Derived::Traverse##NAME)>::value                              \
        ? static_cast<typename std::conditional<                                \
-             has_same_member_pointer_type<                                     \
+             ::clang::detail::has_same_member_pointer_type<                    \
                  decltype(&RecursiveASTVisitor::Traverse##NAME),               \
                  decltype(&Derived::Traverse##NAME)>::value,                   \
              Derived &, RecursiveASTVisitor &>::type>(*this)                   \
