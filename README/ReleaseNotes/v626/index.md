@@ -63,6 +63,8 @@ The following people have contributed to this new version:
 
 ## Histogram Libraries
 
+- Implement the `SetStats` method for `TGraph` to turn ON or OFF the statistics box display
+  for an individual `TGraph`.
 
 ## Math Libraries
 
