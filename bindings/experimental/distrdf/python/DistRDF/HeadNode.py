@@ -5,6 +5,7 @@ import warnings
 import ROOT
 
 from DistRDF import Node
+from DistRDF import Ranges
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +131,7 @@ class EmptySourceHeadNode(Node.Node):
                    "in the dataframe. Using {1} partition(s)".format(self.npartitions, self.nentries))
             warnings.warn(msg, UserWarning, stacklevel=2)
             self.npartitions = self.nentries
-        return Node.RangesBuilder(self)._get_balanced_ranges(self.nentries)
+        return Ranges.get_balanced_ranges(self.nentries, self.npartitions)
 
 
 class TreeHeadNode(Node.Node):
@@ -389,4 +390,20 @@ class TreeHeadNode(Node.Node):
                 ("Cannot build a distributed RDataFrame with zero entries. "
                  "Distributed computation will fail. "))
 
-        return Node.RangesBuilder(self)._get_clustered_ranges(self.treename, self.inputfiles, self._get_friend_info())
+        logger.debug("Building ranges for tree %s with the "
+                     "following input files:\n%s", self.treename, self.inputfiles)
+
+        # Retrieve a tuple of clusters for all files of the tree
+        clustersinfiles = Ranges.get_clusters(self.treename, self.inputfiles)
+        numclusters = len(clustersinfiles)
+
+        # Restrict `npartitions` if it's greater than clusters of the dataset
+        if self.npartitions > numclusters:
+            msg = ("Number of partitions is greater than number of clusters "
+                   "in the dataset. Using {} partition(s)".format(numclusters))
+            warnings.warn(msg, UserWarning, stacklevel=2)
+            self.npartitions = numclusters
+
+        logger.debug("%s clusters will be split along %s partitions.",
+                     numclusters, self.npartitions)
+        return Ranges.get_clustered_ranges(clustersinfiles, self.npartitions, self.treename, self.friendinfo)
