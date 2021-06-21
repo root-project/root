@@ -649,14 +649,10 @@ if(ROOT_pyroot_FOUND)
                                 tutorial-pyroot-ntuple1-py)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
+  set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
 
   # Avoid a race condition: make sure Python tutorial is ran after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
-
-  # The rf502 rf503 python tests should not be run at the same time as the C++ tests
-  # to avoid a race condidtionrf503_workspace.root file.
-  set(roofit-rf502_wspacewrite-depends tutorial-roofit-rf503_wspaceread)
-  set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.

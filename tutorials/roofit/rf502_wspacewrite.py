@@ -61,4 +61,4 @@ w.Print()
 # -------------------------------------------
 
 # Save the workspace into a ROOT file
-w.writeToFile("rf502_workspace.root")
+w.writeToFile("rf502_workspace_py.root")
