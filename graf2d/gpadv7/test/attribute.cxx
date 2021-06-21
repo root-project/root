@@ -7,6 +7,7 @@
 #include "ROOT/RAttrText.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrLine.hxx"
+#include "ROOT/RAttrMarker.hxx"
 
 using namespace ROOT::Experimental;
 
@@ -39,7 +40,7 @@ protected:
 };
 
 
-TEST(OptsTest, AttribStrings) {
+TEST(RAttrTest, AttribStrings) {
    CustomAttrs attrs;
 
    attrs.AttrLine().SetWidth(42.);
@@ -56,7 +57,7 @@ TEST(OptsTest, AttribStrings) {
    }
 }
 
-TEST(OptsTest, AttribVals) {
+TEST(RAttrTest, AttribVals) {
    CustomAttrs attrs;
 
    attrs.AttrText().SetColor(RColor::kBlue);
@@ -76,14 +77,14 @@ TEST(OptsTest, AttribVals) {
 
 }
 
-TEST(OptsTest, NullAttribCompare) {
+TEST(RAttrTest, NullAttribCompare) {
    RAttrLine al1;
    RAttrLine al2;
    EXPECT_EQ(al1, al2);
    EXPECT_EQ(al2, al1);
 }
 
-TEST(OptsTest, AttribEqual) {
+TEST(RAttrTest, AttribEqual) {
    CustomAttrs attrs;
 
    auto &al1 = attrs.AttrLine();
@@ -97,7 +98,7 @@ TEST(OptsTest, AttribEqual) {
    EXPECT_EQ(al2, al1);
 }
 
-TEST(OptsTest, AttribDiffer) {
+TEST(RAttrTest, AttribDiffer) {
    CustomAttrs attrs1;
    CustomAttrs attrs2;
    CustomAttrs attrs3;
@@ -120,7 +121,7 @@ TEST(OptsTest, AttribDiffer) {
 }
 
 
-TEST(OptsTest, AttribAssign) {
+TEST(RAttrTest, AttribAssign) {
    CustomAttrs attrs1;
    CustomAttrs attrs2;
 
@@ -157,7 +158,7 @@ TEST(OptsTest, AttribAssign) {
    EXPECT_FLOAT_EQ(attrs2.AttrLine().GetWidth(), 1.);
 }
 
-TEST(OptsTest, AttribValue) {
+TEST(RAttrTest, AttribValue) {
 
    RAttrValue<int> value1;
 
@@ -179,7 +180,7 @@ TEST(OptsTest, AttribValue) {
    EXPECT_EQ(value2.GetDefault(), 0);
 }
 
-TEST(OptsTest, EnumValue) {
+TEST(RAttrTest, EnumValue) {
 
    enum Style { kNone, kFirst, kSecond, kThird };
 
@@ -202,4 +203,23 @@ TEST(OptsTest, EnumValue) {
    EXPECT_EQ(value2.Get(), kSecond);
    EXPECT_EQ(value2.GetDefault(), kNone);
 }
+
+
+TEST(RAttrTest, AttrMarker) {
+
+   RAttrMarker attr1;
+   RAttrMarker attr2;
+
+   EXPECT_EQ(attr1, attr2);
+
+   attr1.SetStyle(RAttrMarker::kStar);
+   EXPECT_EQ(attr1.GetStyle(), RAttrMarker::kStar);
+
+   EXPECT_NE(attr1, attr2);
+
+   attr2 = attr1;
+   EXPECT_EQ(attr1, attr2);
+   EXPECT_EQ(attr2.GetStyle(), RAttrMarker::kStar);
+}
+
 

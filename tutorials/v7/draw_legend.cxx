@@ -45,7 +45,7 @@ void draw_legend()
    }
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RLegend example");
 
    // add palette to canvas, it will not be seen on the canvas but used for colors
    canvas->Draw<RPaletteDrawable>(RPalette({{0., RColor::kWhite}, {.3, RColor::kRed}, {.7, RColor::kBlue}, {1., RColor::kBlack}}), false);
@@ -66,7 +66,7 @@ void draw_legend()
 
    legend->AddEntry("test").SetAttrLine(RAttrLine().SetColor(RColor::kGreen).SetWidth(5))
                            .SetAttrFill(RAttrFill().SetColor(RColor::kBlue).SetStyle(3004))
-                           .SetAttrMarker(RAttrMarker().SetColor(RColor::kRed).SetSize(3).SetStyle(28));
+                           .SetAttrMarker(RAttrMarker().SetColor(RColor::kRed).SetSize(3).SetStyle(RAttrMarker::kOpenCross));
 
    canvas->SetSize(1000, 700);
    canvas->Show();

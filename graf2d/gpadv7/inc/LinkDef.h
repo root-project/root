@@ -83,6 +83,9 @@
 #pragma link C++ class ROOT::Experimental::RAttrLine-;
 #pragma link C++ class ROOT::Experimental::RAttrBorder-;
 #pragma link C++ class ROOT::Experimental::RAttrMarker-;
+#pragma link C++ enum ROOT::Experimental::RAttrMarker::EStyle-;
+#pragma link C++ class ROOT::Experimental::RAttrValue<ROOT::Experimental::RAttrMarker::EStyle>-;
+#pragma link C++ class ROOT::Experimental::RAttrEnum<ROOT::Experimental::RAttrMarker::EStyle>-;
 #pragma link C++ class ROOT::Experimental::RAttrText-;
 #pragma link C++ class ROOT::Experimental::RAttrAxis-;
 #pragma link C++ class ROOT::Experimental::RAttrMargins-;

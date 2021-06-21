@@ -20,11 +20,11 @@ void markerStyle()
 {
    using namespace ROOT::Experimental;
 
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RMarker styles");
    double num = 0.3;
-
    double x = 0;
    double dx = 1/16.0;
+
    for (int i=1;i<16;i++) {
       x += dx;
       for (int row=0;row<3;++row) {
@@ -36,7 +36,7 @@ void markerStyle()
          canvas->Draw<RText>(pt, std::to_string(style));
 
          RPadPos pm(RPadLength::Normal(x), .25_normal + 0.3_normal*row);
-         canvas->Draw<RMarker>(pm)->AttrMarker().SetStyle(style).SetSize(2.5);
+         canvas->Draw<RMarker>(pm)->AttrMarker().SetStyle((RAttrMarker::EStyle)style).SetSize(2.5);
       }
    }
 
