@@ -12,6 +12,7 @@
 
 #include <utility>
 
+#include "TROOT.h"
 #include "TList.h"
 #include "TClass.h"
 #include "TDataMember.h"
@@ -42,9 +43,9 @@ RAttrMap RAttrAggregation::CollectDefaults() const
    auto baseClass = TClass::GetClass<RAttrBase>();
    if (thisClass && baseClass) {
       for (auto data_member: TRangeDynCast<TDataMember>(thisClass->GetListOfDataMembers())) {
-         if (data_member && data_member->GetClass() && data_member->GetClass()->InheritsFrom(baseClass) &&
-             (data_member->GetClass()->GetBaseClassOffset(baseClass) == 0))
-               res.AddDefaults(*((const RAttrBase *)((char*) this + data_member->GetOffset())));
+         TClass *cl = data_member && !data_member->IsBasic() && !data_member->IsEnum() ? gROOT->GetClass(data_member->GetFullTypeName()) : nullptr;
+         if (cl && cl->InheritsFrom(baseClass) && (cl->GetBaseClassOffset(baseClass) == 0))
+            res.AddDefaults(*((const RAttrBase *)((char*) this + data_member->GetOffset())));
       }
    } else {
       R__LOG_ERROR(GPadLog()) << "Missing dictionary for " << info.name() << " class";
