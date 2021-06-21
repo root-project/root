@@ -39,7 +39,7 @@ class MemPoolForRooSets {
       : ownedMemory{static_cast<RooSet_t *>(TStorage::ObjectAlloc(2 * POOLSIZE * sizeof(RooSet_t)))},
         memBegin{ownedMemory}, nextItem{ownedMemory},
         memEnd{memBegin + 2 * POOLSIZE},
-        cycle{}
+        cycle{{}}
     {}
 
     Arena(const Arena &) = delete;
@@ -49,7 +49,7 @@ class MemPoolForRooSets {
         refCount{other.refCount},
         totCount{other.totCount},
         assigned{other.assigned},
-        cycle{}
+        cycle{{}}
     {
       // Needed for unique ownership
       other.ownedMemory = nullptr;
@@ -172,7 +172,7 @@ class MemPoolForRooSets {
     std::size_t totCount = 0;
 
     std::bitset<POOLSIZE> assigned = {};
-    std::array<int, POOLSIZE> cycle = {};
+    std::array<int, POOLSIZE> cycle = {{}};
   };
 
 
