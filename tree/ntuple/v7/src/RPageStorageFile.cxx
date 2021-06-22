@@ -96,6 +96,10 @@ int ROOT::Experimental::Detail::RPageSinkFile::UpdateCompression() {
    }
    auto compression = fWriter->GetTFileCompression();
    for (auto &columnRange : RPageSink::fOpenColumnRanges) {
+      // if the compression hasn't changed since last we checked, return
+      if (columnRange.fCompressionSettings == compression) {
+         return compression;
+      }
       columnRange.fCompressionSettings = compression;
    }
    return compression;
