@@ -33,11 +33,10 @@ set(py_sources
   ROOT/pythonization/_drawables.py
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rbdt.py
-  ROOT/pythonization/_rooabscollection.py
-  ROOT/pythonization/_rooworkspace.py
   ROOT/pythonization/_rvec.py
   ROOT/pythonization/_stl_vector.py
   ROOT/pythonization/_tarray.py
+  ROOT/pythonization/_tclass.py
   ROOT/pythonization/_tclonesarray.py
   ROOT/pythonization/_tcollection.py
   ROOT/pythonization/_tcomplex.py
@@ -55,6 +54,27 @@ set(py_sources
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_tvector3.py
   ROOT/pythonization/_tvectort.py
+  ROOT/pythonization/_roofit/__init__.py
+  ROOT/pythonization/_roofit/_rooabscollection.py
+  ROOT/pythonization/_roofit/_rooabsdata.py
+  ROOT/pythonization/_roofit/_rooabspdf.py
+  ROOT/pythonization/_roofit/_rooabsreallvalue.py
+  ROOT/pythonization/_roofit/_rooabsreal.py
+  ROOT/pythonization/_roofit/_rooarglist.py
+  ROOT/pythonization/_roofit/_rooargset.py
+  ROOT/pythonization/_roofit/_roochi2var.py
+  ROOT/pythonization/_roofit/_roodatahist.py
+  ROOT/pythonization/_roofit/_roodataset.py
+  ROOT/pythonization/_roofit/_roodecays.py
+  ROOT/pythonization/_roofit/_roogenfitstudy.py
+  ROOT/pythonization/_roofit/_roomcstudy.py
+  ROOT/pythonization/_roofit/_roomsgservice.py
+  ROOT/pythonization/_roofit/_roonllvar.py
+  ROOT/pythonization/_roofit/_rooprodpdf.py
+  ROOT/pythonization/_roofit/_roosimultaneous.py
+  ROOT/pythonization/_roofit/_roosimwstool.py
+  ROOT/pythonization/_roofit/_rooworkspace.py
+  ROOT/pythonization/_roofit/_utils.py
   ${PYROOT_EXTRA_PYSOURCE}
 )
 
