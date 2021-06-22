@@ -117,9 +117,12 @@ else()
     set(OS_NAME_VERSION Linux-${osid}${osvers}${arch})
   endif()
 endif()
+
 #---Build type---------------------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-  string(TOLOWER .${CMAKE_BUILD_TYPE} BUILD_TYPE_FOR_NAME)
+  if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
+    string(TOLOWER .${CMAKE_BUILD_TYPE} BUILD_TYPE_FOR_NAME)
+  endif()
 endif()
 
 set(CPACK_PACKAGE_RELOCATABLE True)
