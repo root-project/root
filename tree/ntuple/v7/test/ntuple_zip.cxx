@@ -96,8 +96,6 @@ TEST(RNTupleZip, CompressionOverride)
 
 TEST(RNTupleZip, TFilePtrCompressionSettings)
 {
-   // RNTuple added to a newly created TFile using the std::unique_ptr<TFile>&
-   // method will pick up changes to the TFile's compression settings
    FileRaii fileGuard("test_ntuple_zip_tfileptr_comp.root");
    {
       std::unique_ptr<TFile> file = nullptr;
@@ -105,31 +103,30 @@ TEST(RNTupleZip, TFilePtrCompressionSettings)
       auto field = model->MakeField<float>("field");
       auto klassVec = model->MakeField<std::vector<CustomStruct>>("klassVec");
       RNTupleWriteOptions options;
-      options.SetCompression(404);
+      options.SetCompression(407);
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model),
          std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), options, file
       ));
-      for (int i = 0; i < 20000; i++) {
+      for (int i = 0; i < 2; i++) {
          *field = static_cast<float>(i);
          CustomStruct klass;
          klass.s = std::to_string(i);
          *klassVec = {klass};
          ntuple->Fill();
-         if (i == 15000) {
-            ntuple->CommitCluster();
-         }
+         ntuple->CommitCluster();
       }
    }
-   std::ostringstream oss;
-   // ... ntuple0 uses the TFile's compression level
+   // ... ntuple uses the explicitly set compression level
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+   std::ostringstream oss;
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
-   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
-
+   EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 407"));
+#endif
    auto rdField = ntuple->GetView<float>("field");
    auto klassVecField = ntuple->GetView<std::vector<CustomStruct>>("klassVec");
 
-   EXPECT_EQ(20000, ntuple->GetNEntries());
+   EXPECT_EQ(2, ntuple->GetNEntries());
 
    for (auto i : ntuple->GetEntryRange()) {
       ASSERT_EQ(static_cast<float>(i), rdField(i));
@@ -163,7 +160,7 @@ TEST(RNTupleZip, TFileCompressionSettings)
       auto ntuple2 = make_ntuple("ntuple2", RNTupleWriteOptions());
       // ntuple3 has a specific compression setting and will use it
       auto ntuple3 = make_ntuple("ntuple3", overrideCompression);
-      // ntuple4 has the default explicity set to avoid using the file's setting
+      // ntuple4 has the default explicitly set to avoid using the file's setting
       RNTupleWriteOptions defaultCompression;
       defaultCompression.SetCompression(404);
       auto ntuple4 = make_ntuple("ntuple4", defaultCompression);
@@ -173,6 +170,7 @@ TEST(RNTupleZip, TFileCompressionSettings)
    }
    file.reset();
 
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    std::ostringstream oss;
    // ... ntuple1 uses a specific compression level
    auto ntuple1 = RNTupleReader::Open("ntuple1", fileGuard.GetPath());
@@ -194,6 +192,7 @@ TEST(RNTupleZip, TFileCompressionSettings)
    ntuple4->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
    EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
    oss.str("");
+#endif
 }
 
 TEST(RNTupleZip, TFileCompressionUpdated)
@@ -210,8 +209,10 @@ TEST(RNTupleZip, TFileCompressionUpdated)
       file->SetCompressionSettings(404);
       ntuple->Fill();
    }
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    std::ostringstream oss;
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, oss);
    EXPECT_THAT(oss.str(), testing::HasSubstr("Compression: 404"));
+#endif
 }
