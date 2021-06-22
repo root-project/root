@@ -67,6 +67,7 @@ protected:
 public:
    // TGraph status bits
    enum EStatusBits {
+      kNoStats       = BIT(9),   ///< Don't draw stats box
       kClipFrame     = BIT(10),  ///< Clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
       kNotEditable   = BIT(18),  ///< Bit set if graph is non editable
@@ -182,6 +183,7 @@ public:
    virtual void          SetPointY(Int_t i, Double_t y);
    virtual void          SetName(const char *name=""); // *MENU*
    virtual void          SetNameTitle(const char *name="", const char *title="");
+   virtual void          SetStats(Bool_t stats=kTRUE); // *MENU*
    virtual void          SetTitle(const char *title="");    // *MENU*
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
