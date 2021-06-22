@@ -58,6 +58,12 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleReadOptions &options)
 {
+   if (ntupleName.empty()) {
+      throw RException(R__FAIL("empty RNTuple name"));
+   }
+   if (location.empty()) {
+      throw RException(R__FAIL("empty storage location"));
+   }
    if (location.find("daos://") == 0)
 #ifdef R__ENABLE_DAOS
       return std::make_unique<RPageSourceDaos>(ntupleName, location, options);
@@ -240,6 +246,12 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
 {
+   if (ntupleName.empty()) {
+      throw RException(R__FAIL("empty RNTuple name"));
+   }
+   if (location.empty()) {
+      throw RException(R__FAIL("empty storage location"));
+   }
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> realSink;
    if (location.find("daos://") == 0) {
 #ifdef R__ENABLE_DAOS
