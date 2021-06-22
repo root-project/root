@@ -17,7 +17,7 @@
 /** \class RooLagrangianMorphFunc
     \ingroup Roofit
 Class RooLagrangianMorphing is a implementation of the method of Effective
-Lagrangian Morphing, descibed in ATL-PHYS-PUB-2015-047.
+Lagrangian Morphing, described in ATL-PHYS-PUB-2015-047.
 Effective Lagrangian Morphing is a method to construct a continuous signal
 model in the coupling parameter space. Basic assumption is that shape and
 cross section of a physical distribution is proportional to it's
@@ -233,7 +233,7 @@ inline SuperFloat invertMatrix(const Matrix &matrix, Matrix &inverse) {
       ::writeMatrixToStreamT(matrix, ss);
       cxcoutP(Eval) << ss.str << std::endl;
     }
-    // backsubstitute to get the inverse
+    // back-substitute to get the inverse
     lu_substitute(lu, pm, inverse);
   } catch (boost::numeric::ublas::internal_logic &error) {
     // coutE(Eval) << "boost::numberic::ublas error: matrix is not invertible!"
@@ -461,7 +461,7 @@ void readValues(std::map<const std::string, T> & myMap,
 ///////////////////////////////////////////////////////////////////////////////
 /// retrieve the param_hists file and return a map of the parameter values
 /// by providing a list of names, only the param_hists of those subfolders are
-/// read leaving the list empty is interpreted as meaning 'read everyting'
+/// read leaving the list empty is interpreted as meaning 'read everything'
 
 template <class T>
 void readValues(std::map<const std::string, std::map<const std::string, T>> & inputParameters,
@@ -2050,7 +2050,7 @@ void RooLagrangianMorphFunc::Config::setVertices(
 //}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set values to paramerter set (-?-)
+/// set values to parameter set (-?-)
 
 void RooLagrangianMorphFunc::Config::append(
     RooLagrangianMorphFunc::ParamSet &set, const char *str, double val) {
@@ -2121,7 +2121,7 @@ void RooLagrangianMorphFunc::printSamples() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print the current phyiscs values
+/// print the current physics values
 
 void RooLagrangianMorphFunc::printPhysics() const {
   for (const auto &sample : this->_sampleMap) {
@@ -3042,7 +3042,7 @@ int RooLagrangianMorphFunc::nPolynomials() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print the contributing smaples and their respective weights
+/// print the contributing samples and their respective weights
 
 void RooLagrangianMorphFunc::printEvaluation() const {
   auto mf = std::make_unique<RooRealSumFunc>(*(this->getFunc()));
@@ -3194,7 +3194,7 @@ Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet &nset) const {
   return createPdf()->expectedEvents(&nset);
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// return the expected uncertainity for the current parameter set
+/// return the expected uncertainty for the current parameter set
 
 double RooLagrangianMorphFunc::expectedUncertainty() const {
   RooRealVar *observable = this->getObservable();
@@ -3266,7 +3266,7 @@ void RooLagrangianMorphFunc::printCouplings() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retrive the lsit of bin boundaries
+/// retrieve the list of bin boundaries
 
 std::list<Double_t> *
 RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo,
@@ -3275,7 +3275,7 @@ RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retrive the sample Hint
+/// retrieve the sample Hint
 
 std::list<Double_t> *
 RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo,
@@ -3302,7 +3302,7 @@ Double_t RooLagrangianMorphFunc::evaluate() const {
   if (pdf)
     return this->_scale * pdf->getVal(_curNormSet);
   else
-    std::cerr << "unable to aquire in-built function!" << std::endl;
+    std::cerr << "unable to acquire in-built function!" << std::endl;
   return 0.;
 }
 
@@ -3388,7 +3388,7 @@ TMatrixD RooLagrangianMorphFunc::getInvertedMatrix() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reterieve the condition of the coefficient matrix. If the condition number
+/// Retrieve the condition of the coefficient matrix. If the condition number
 /// is very large, then the matrix is ill-conditioned and is almost singular.
 /// The computation of the inverse is prone to large numerical errors
 
