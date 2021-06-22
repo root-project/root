@@ -290,35 +290,33 @@ sap.ui.define([], function() {
 
    //______________________________________________________________________________
 
-   EveManager.prototype.RecursiveRemove = function(elem, delSet)
+   EveManager.prototype.removeElements = function(ids)
    {
-      let elId     = elem.fElementId;
-      let motherId = elem.fMotherId;
-
-      // iterate children
-      if (elem.childs !== undefined) {
-         while (elem.childs.length > 0) {
-            let n = 0;
-            let sub = elem.childs[n];
-            this.RecursiveRemove(sub, delSet);
+      for (let i = 0; i < ids.length; ++i)
+      {
+         let elId = ids[i];
+         let elem = this.GetElement(elId);
+         if (!elem) {
+            console.warning("EveManager.prototype.removeElements REveElement not found in map, id = ", elId);
+            continue;
          }
-      }
 
-      // delete myself from master
-      let mother = this.GetElement(motherId);
-      let mc = mother.childs;
-      for (let i = 0; i < mc.length; ++i) {
+         // remove from parent list of children
+         let mother = this.GetElement(elem.fMotherId);
+         if (mother) {
+            let mc = mother.childs;
+            for (let i = 0; i < mc.length; ++i) {
 
-         if (mc[i].fElementId === elId) {
-            mc.splice(i, 1);
+               if (mc[i].fElementId === elId) {
+                  mc.splice(i, 1);
+               }
+            }
          }
+         else
+            console.warning("EveManager.prototype.removeElements mother not found in map, id = ", elem.fMotherId);
+
+         delete this.map[elId];
       }
-
-      delete this.map[elId];
-      delSet.delete(elId);
-
-     // console.log(" ecursiveRemove END", elId, delSet);
-     // delete elem;
    }
 
    //______________________________________________________________________________
@@ -334,21 +332,9 @@ sap.ui.define([], function() {
       // notify scenes for beginning of changes and
       // notify for element removal
       let removedIds = msg.header["removedElements"]; // AMT empty set should not be sent at the first place
-      if (removedIds.length)
+      if (removedIds.length) {
          this.callSceneReceivers(scene, "elementsRemoved", removedIds);
-
-      let delSet = new Set();
-      for (let r = 0; r < removedIds.length; ++r) {
-         let id  = removedIds[r];
-         delSet.add(id);
-      }
-      // console.log("start with delSet ", delSet);
-      while (delSet.size != 0) {
-         let it = delSet.values();
-         let id = it.next().value;
-         // console.log("going to call RecursiveRemove .... ", this.map[id]);
-         this.RecursiveRemove(this.GetElement(id), delSet);
-         // console.log("complete RecursiveRemove ", delSet);
+         this.removeElements(removedIds);
       }
 
       // wait for binary if needed
