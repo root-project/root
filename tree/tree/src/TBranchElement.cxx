@@ -3753,7 +3753,6 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
             Error("TBranchElement::Print", "Element for id #%d not found in StreamerInfo for %s",
                   id, info->GetName());
             info->ls();
-            TClass::GetClass("PFTauWith")->GetStreamerInfos()->ls();
          }
       } else if (cursor.fNestedIDs) {
          Printf("      Within subobject of type %s offset = %d", cursor.fNestedIDs->fInfo->GetName(), cursor.fNestedIDs->fOffset);
