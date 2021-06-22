@@ -149,6 +149,15 @@ class SparkBackend(Base.BaseBackend):
             self.sc.addFile(filepath)
 
     def make_dataframe(self, *args, **kwargs):
-        """Creates an instance of SparkDataFrame"""
-        headnode = HeadNode.get_headnode(*args)
-        return DataFrame.RDataFrame(headnode, self, **kwargs)
+        """
+        Creates an instance of distributed RDataFrame that can send computations
+        to a Spark cluster.
+        """
+        # Set the number of partitions for this dataframe, one of the following:
+        # 1. User-supplied `npartitions` optional argument
+        # 2. An educated guess according to the backend, using the backend's
+        #    `optimize_npartitions` function
+        # 3. Set `npartitions` to 2
+        npartitions = kwargs.pop("npartitions", self.optimize_npartitions(Base.BaseBackend.MIN_NPARTITIONS))
+        headnode = HeadNode.get_headnode(npartitions, *args)
+        return DataFrame.RDataFrame(headnode, self)
