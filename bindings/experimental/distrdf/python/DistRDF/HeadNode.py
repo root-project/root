@@ -8,7 +8,8 @@ from DistRDF import Node
 
 logger = logging.getLogger(__name__)
 
-def get_headnode(*args):
+
+def get_headnode(npartitions, *args):
     """
     A factory for different kinds of head nodes of the RDataFrame computation
     graph, depending on the arguments to the RDataFrame constructor. Currently
@@ -26,13 +27,13 @@ def get_headnode(*args):
     firstarg = args[0]
     if isinstance(firstarg, int):
         # RDataFrame(ULong64_t numEntries)
-        return EmptySourceHeadNode(firstarg)
+        return EmptySourceHeadNode(npartitions, firstarg)
     elif isinstance(firstarg, (ROOT.TTree, str)):
         # RDataFrame(std::string_view treeName, filenameglob, defaultBranches = {})
         # RDataFrame(std::string_view treename, filenames, defaultBranches = {})
         # RDataFrame(std::string_view treeName, dirPtr, defaultBranches = {})
         # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
-        return TreeHeadNode(*args)
+        return TreeHeadNode(npartitions, *args)
     else:
         raise RuntimeError(
             ("First argument {} of type {} is not recognised as a supported "
@@ -101,19 +102,20 @@ class EmptySourceHeadNode(Node.Node):
             for distributed execution.
     """
 
-    def __init__(self, nentries):
+    def __init__(self, npartitions, nentries):
         """
         Creates a new RDataFrame instance for the given arguments.
 
         Args:
             nentries (int): The number of entries this RDataFrame will process.
+
+            npartitions (int): The number of partitions the dataset will be
+                split in for distributed execution.
         """
         super(EmptySourceHeadNode, self).__init__(None, None)
 
         self.nentries = nentries
-        # Set at creation of the dataframe, might be optimized by the backend
-        # in optimize_partitions
-        self.npartitions = 2
+        self.npartitions = npartitions
 
     def build_ranges(self):
         """Build the ranges for this dataset."""
@@ -149,12 +151,15 @@ class TreeHeadNode(Node.Node):
             for distributed execution.
     """
 
-    def __init__(self, *args):
+    def __init__(self, npartitions, *args):
         """
         Creates a new RDataFrame instance for the given arguments.
 
         Args:
             *args (iterable): Iterable with the arguments to the RDataFrame constructor.
+
+            npartitions (int): Keyword argument with the number of partitions
+                the dataset will be split in for distributed execution.
         """
         super(TreeHeadNode, self).__init__(None, None)
 
@@ -163,9 +168,7 @@ class TreeHeadNode(Node.Node):
         # in different class methods, parse them only once in this function and
         # directly store the appropriate data members
         self.args = args
-        # Set at creation of the dataframe, might be optimized by the backend
-        # in optimize_partitions
-        self.npartitions = 2
+        self.npartitions = npartitions
 
     # TODO: Decide whether to remove/change the property or the getter
     @property

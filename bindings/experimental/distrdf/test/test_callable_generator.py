@@ -58,7 +58,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t = ComputationGraphGeneratorTest.Temp()
 
         # Head node
-        hn = HeadNode.get_headnode(1)
+        hn = HeadNode.get_headnode(1, npartitions=None)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
         node = Proxy.TransformationProxy(hn)
         # Set of operations to build the graph
@@ -91,7 +91,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t = ComputationGraphGeneratorTest.Temp()
 
         # Head node
-        hn = HeadNode.get_headnode(1)
+        hn = HeadNode.get_headnode(1, npartitions=None)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
         node = Proxy.TransformationProxy(hn)
 

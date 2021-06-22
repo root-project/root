@@ -64,6 +64,11 @@ class BaseBackend(ABC):
     headers = set()
     shared_libraries = set()
 
+    # Define a minimum amount of partitions for any distributed RDataFrame.
+    # This is a safe lower limit, to account for backends that may not support
+    # the case where the distributed RDataFrame processes only one partition.
+    MIN_NPARTITIONS = 2
+
     @classmethod
     def register_initialization(cls, fun, *args, **kwargs):
         """
