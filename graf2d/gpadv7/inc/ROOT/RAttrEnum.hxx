@@ -22,11 +22,7 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-#ifdef __CLING__
-template<typename T>
-#else
-template<typename T, typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
-#endif
+template<typename T, class = typename std::enable_if<std::is_enum<T>::value>::type>
 class RAttrEnum : public RAttrValue<T> {
 
 protected:
@@ -43,10 +39,7 @@ public:
 
    RAttrEnum(RAttrBase *parent, const char *name,  T dflt, T max) : RAttrValue<T>(parent, name, dflt), fMaximum(max) { }
 
-   RAttrEnum(const RAttrEnum& src) : RAttrValue<T>(src)
-   {
-      fMaximum = src.GetMaximum();
-   }
+   RAttrEnum(const RAttrEnum& src) = default;
 
    T GetMaximum() const { return fMaximum; }
 

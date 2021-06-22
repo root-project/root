@@ -182,13 +182,20 @@ TEST(RAttrTest, AttribValue) {
 
 TEST(RAttrTest, EnumValue) {
 
-   enum Style { kNone, kFirst, kSecond, kThird };
+   enum Style { kNone, kFirst, kSecond, kThird, kForth };
 
-   RAttrEnum<Style> value1{kNone, kThird};
+   RAttrValue<Style> value0{kNone};
+   // value0.Set(3); // this is invalid syntax
+   value0.Set(kThird);
+   EXPECT_EQ(value0.Get(), kThird);
+   EXPECT_EQ(value0.GetDefault(), kNone);
 
+   RAttrEnum<Style> value1{kNone, kForth};
    EXPECT_EQ(value1.Get(), kNone);
    EXPECT_EQ(value1.GetDefault(), kNone);
+   EXPECT_EQ(value1.GetMaximum(), kForth);
 
+   // value1.Set(2); // this is invalid syntax
    value1.Set(kSecond);
    EXPECT_EQ(value1.Get(), kSecond);
    EXPECT_EQ(value1.GetDefault(), kNone);
@@ -196,12 +203,20 @@ TEST(RAttrTest, EnumValue) {
    RAttrEnum<Style> value2{kNone, kThird};
    EXPECT_NE(value1, value2);
    EXPECT_NE(value2, value1);
+   EXPECT_EQ(value2.GetMaximum(), kThird);
 
    value2 = value1;
    EXPECT_EQ(value1, value2);
    EXPECT_EQ(value2, value1);
    EXPECT_EQ(value2.Get(), kSecond);
    EXPECT_EQ(value2.GetDefault(), kNone);
+   EXPECT_EQ(value2.GetMaximum(), kThird);
+
+   RAttrEnum<Style> value3 = value1;
+   EXPECT_EQ(value1, value3);
+   EXPECT_EQ(value3.Get(), kSecond);
+   EXPECT_EQ(value3.GetDefault(), kNone);
+   EXPECT_EQ(value3.GetMaximum(), kForth);
 }
 
 

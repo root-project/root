@@ -23,7 +23,6 @@ namespace Experimental {
 */
 
 
-
 template<typename T>
 class RAttrValue : public RAttrBase {
 
@@ -42,10 +41,9 @@ class RAttrValue : public RAttrBase {
       }
    };
 
-
 protected:
 
-   T fDefault;            ///<!    default value
+   T fDefault{};         ///<!    default value
 
    RAttrMap CollectDefaults() const override
    {
@@ -65,7 +63,7 @@ public:
    RAttrValue(const RAttrValue& src) : RAttrBase("")
    {
       Set(src.Get());
-      fDefault = src.Default();
+      fDefault = src.GetDefault();
    }
 
    T GetDefault() const { return fDefault; }
