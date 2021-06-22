@@ -1268,7 +1268,7 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
             }
          }
       }
-      if (fit) PaintStats(theGraph, fit);
+      if (fit && !theGraph->TestBit(TGraph::kNoStats)) PaintStats(theGraph, fit);
 
    }
 }

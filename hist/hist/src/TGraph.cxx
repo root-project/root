@@ -2363,6 +2363,30 @@ void TGraph::SetNameTitle(const char *name, const char *title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set statistics option on/off.
+///
+/// By default, the statistics box is drawn.
+/// The paint options can be selected via gStyle->SetOptStats.
+/// This function sets/resets the kNoStats bit in the graph object.
+/// It has priority over the Style option.
+
+void TGraph::SetStats(Bool_t stats)
+{
+   ResetBit(kNoStats);
+   if (!stats) {
+      SetBit(kNoStats);
+      //remove the "stats" object from the list of functions
+      if (fFunctions) {
+         TObject *obj = fFunctions->FindObject("stats");
+         if (obj) {
+            fFunctions->Remove(obj);
+            delete obj;
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// if size*2 <= fMaxSize allocate new arrays of size points,
 /// copy points [0,oend).
 /// Return newarray (passed or new instance if it was zero
