@@ -21,7 +21,7 @@ class BuildRangesTest(unittest.TestCase):
         number of partitions.
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         nentries_small = 10
@@ -60,7 +60,7 @@ class BuildRangesTest(unittest.TestCase):
         the number of partitions.
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         nentries_1 = 10
@@ -90,7 +90,7 @@ class BuildRangesTest(unittest.TestCase):
         number of partitions.
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         nentries = 5
@@ -109,7 +109,7 @@ class BuildRangesTest(unittest.TestCase):
         contains a single cluster and the number of partitions is 1
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         treename = "TotemNtuple"
@@ -130,7 +130,7 @@ class BuildRangesTest(unittest.TestCase):
 
         """
 
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         treename = "TotemNtuple"
@@ -157,7 +157,7 @@ class BuildRangesTest(unittest.TestCase):
         different numbers of entries.
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         treename = "myTree"
@@ -180,7 +180,7 @@ class BuildRangesTest(unittest.TestCase):
         possible for four partitions
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         treename = "myTree"
@@ -205,7 +205,7 @@ class BuildRangesTest(unittest.TestCase):
         possible for four partitions
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         treename = "myTree"
@@ -231,7 +231,7 @@ class BuildRangesTest(unittest.TestCase):
         clusters)
 
         """
-        headnode = get_headnode(1)
+        headnode = get_headnode(1, npartitions=None)
         builder = RangesBuilder(headnode)
 
         treename = "myTree"
@@ -256,7 +256,7 @@ class BuildRangesTest(unittest.TestCase):
         contains clusters.
 
         """
-        headnode = get_headnode("myTree", "backend/1000clusters.root")
+        headnode = get_headnode("myTree", "backend/1000clusters.root", npartitions=None)
         builder = RangesBuilder(headnode)
 
         headnode.npartitions = 1000
@@ -279,7 +279,7 @@ class BuildRangesTest(unittest.TestCase):
         clusters involved.
 
         """
-        headnode = get_headnode(50)
+        headnode = get_headnode(50, npartitions=None)
         builder = RangesBuilder(headnode)
 
         headnode.npartitions = 16
