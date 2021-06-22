@@ -470,6 +470,9 @@ public:
       fOptions = opt;
    }
 
+   /// set only the extra options
+   void SetExtraOptions(const IOptions & extraOptions) { fOptions.SetExtraOptions(extraOptions); }
+
    /// reset the defaut options (defined in MinimizerOptions)
    void SetDefaultOptions() {
       fOptions.ResetToDefaultOptions();
