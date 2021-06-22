@@ -159,36 +159,45 @@ class TreeHeadNode(Node.Node):
         super(TreeHeadNode, self).__init__(None, None)
 
         # Keep the arguments to parse them when needed
+        # TODO: Instead of storing the args here and parsing them various times
+        # in different class methods, parse them only once in this function and
+        # directly store the appropriate data members
         self.args = args
         # Set at creation of the dataframe, might be optimized by the backend
         # in optimize_partitions
         self.npartitions = 2
 
+    # TODO: Decide whether to remove/change the property or the getter
     @property
     def tree(self):
         """Tree instance if present."""
         return self.get_tree()
 
+    # TODO: Decide whether to remove/change the property or the getter
     @property
     def treename(self):
         """Name of the tree."""
         return self.get_treename()
 
+    # TODO: Decide whether to remove/change the property or the getter
     @property
     def nentries(self):
         """Entries of this dataset."""
         return self.get_num_entries()
 
+    # TODO: Decide whether to remove/change the property or the getter
     @property
     def defaultbranches(self):
         """Default branches selected by the user in the constructor."""
         return self.get_branches()
 
+    # TODO: Decide whether to remove/change the property or the getter
     @property
     def inputfiles(self):
         """List of input files of the dataset."""
         return self.get_inputfiles()
 
+    # TODO: Decide whether to remove/change the property or the getter
     @property
     def friendinfo(self):
         """Information about friend trees of the dataset."""
@@ -209,6 +218,8 @@ class TreeHeadNode(Node.Node):
 
         return None
 
+    # TODO: This function is very costly! Make sure to use only once at most, 
+    # or think if it can be avoided altogether.
     def get_num_entries(self):
         """
         Gets the number of entries in the given dataset.

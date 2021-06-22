@@ -232,7 +232,8 @@ class Node(object):
         self.children = children
         return self.is_prunable()
 
-
+# TODO: RangesBuilder class should be removed and its methods should become
+# free functions.
 class RangesBuilder(object):
 
     def __init__(self, headnode):
