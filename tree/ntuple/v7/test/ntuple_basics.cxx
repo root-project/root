@@ -359,6 +359,39 @@ TEST(RNTupleModel, CollectionFieldDescriptions)
    EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
 }
 
+TEST(RNTuple, EmptyString)
+{
+   // empty storage string
+   try {
+      auto model = RNTupleModel::Create();
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "");
+      FAIL() << "empty writer storage location should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
+   }
+   try {
+      auto ntuple = RNTupleReader::Open("myNTuple", "");
+      FAIL() << "empty reader storage location should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
+   }
+
+   // empty RNTuple name
+   try {
+      auto model = RNTupleModel::Create();
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "", "file.root");
+      FAIL() << "empty RNTuple name should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
+   }
+   try {
+      auto ntuple = RNTupleReader::Open("", "file.root");
+      FAIL() << "empty RNTuple name should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
+   }
+}
+
 TEST(RNTuple, NullSafety)
 {
    // RNTupleModel
