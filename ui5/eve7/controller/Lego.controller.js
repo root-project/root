@@ -43,13 +43,13 @@ sap.ui.define([
             console.log("Lego scene 2", scene);
 
             let chld = scene.childs[0];
-            // let dump = JSON.stringify();
             let element = this.byId("legoX");
             element.setHtmlText("Pointset infected by TCanvas / Lego Stack");
 
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
 
             this.canvas_json = JSROOT.parse( atob(chld.fTitle) );
+            // console.log(JSON.stringify(this.canvas_json));
         },
 
         onResize()

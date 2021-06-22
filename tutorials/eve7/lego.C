@@ -47,6 +47,7 @@ void lego()
 
       // TPad *p = new TPad("LegoPad", "Lego Pad Tit", 0, 0, 1, 1);
       TPad *p = new TCanvas("LegoPad", "Lego Pad Tit", 800,400);
+      p->SetMargin(0, 0, 0, 0);
 
       // *** Simple TH2
       /*
@@ -75,14 +76,21 @@ void lego()
       THStack *s = new THStack("LegoStack", ""); // "ECal undt HCal");
       ecalHist->SetFillColor(kRed);
       ecalHist->GetXaxis()->SetLabelSize(1);
-      ecalHist->GetXaxis()->SetTitle("#eta");
+      ecalHist->GetXaxis()->SetTitle(reinterpret_cast<const char *>(u8"\u03B7")); // "#eta");
       ecalHist->GetYaxis()->SetLabelSize(1);
-      ecalHist->GetYaxis()->SetTitle("#varphi");
+      ecalHist->GetYaxis()->SetTitle(reinterpret_cast<const char *>(u8"\u03C6")); // "#varphi");
       ecalHist->GetZaxis()->SetLabelSize(1);
       s->Add(ecalHist);
       hcalHist->SetFillColor(kBlue);
       s->Add(hcalHist);
       p->GetListOfPrimitives()->Add(s);
+
+      TGraph2D *line = new TGraph2D(200);
+      for (int i = 0; i < 200; ++i)
+         line->SetPoint(i, std::cos(i*0.1), std::sin(i*0.1), i*0.25);
+      line->SetLineWidth(5);
+      line->SetLineColor(kCyan - 2);
+      p->GetListOfPrimitives()->Add(line, "LINE");
 
       p->Modified(kTRUE);
 
