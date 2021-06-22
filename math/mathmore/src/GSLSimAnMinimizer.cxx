@@ -35,8 +35,19 @@ GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType 
 {
    // Constructor implementation : create GSLMultiFit wrapper object
 
-   SetMaxIterations(100);
-   SetPrintLevel(0);
+   fOptions.SetPrintLevel(0);
+   fOptions.SetMinimizerType("GSLSimAn");
+   // set dummy values since those are not used
+   fOptions.SetTolerance(-1);
+   fOptions.SetMaxIterations(-1);
+   fOptions.SetMaxFunctionCalls(0);
+   fOptions.SetStrategy(-1);
+   fOptions.SetErrorDef(0);
+   fOptions.SetPrecision(0);
+   fOptions.SetMinimizerAlgorithm("");
+
+   // set extra options
+   DoSetMinimOptions(MinimizerParameters());
 }
 
 GSLSimAnMinimizer::~GSLSimAnMinimizer () {
@@ -46,13 +57,26 @@ GSLSimAnMinimizer::~GSLSimAnMinimizer () {
 bool GSLSimAnMinimizer::Minimize() {
    // set initial parameters of the minimizer
    int debugLevel = PrintLevel();
-
-   if (debugLevel >=1 ) std::cout <<"Minimize using GSLSimAnMinimizer " << std::endl;
+   
+   if (debugLevel >= 1) 
+      std::cout << "Minimize using GSLSimAnMinimizer " << std::endl;
+   
 
    const ROOT::Math::IMultiGenFunction * function = ObjFunction();
    if (function == 0) {
       MATH_ERROR_MSG("GSLSimAnMinimizer::Minimize","Function has not been set");
       return false;
+   }
+
+   // set Sim. An. parameters from existing minimizer options
+   DoSetSimAnParameters(fOptions);
+   if (debugLevel >= 1) {
+      std::cout << "Parameters for simulated annealing: " << std::endl;
+      auto simanOpt = fOptions.ExtraOptions();
+      if (simanOpt)
+         simanOpt->Print();
+      else
+         std::cout << "no simulated annealing options available" << std::endl;
    }
 
    // vector of internal values (copied by default)
@@ -125,21 +149,10 @@ unsigned int GSLSimAnMinimizer::NCalls() const {
    return 0;
 }
 
-ROOT::Math::MinimizerOptions  GSLSimAnMinimizer::Options() const {
-   ROOT::Math::MinimizerOptions opt;
-   opt.SetMinimizerType("GSLSimAn");
-   // set dummy values since those are not used 
-   opt.SetTolerance(-1);
-   opt.SetPrintLevel(0);
-   opt.SetMaxIterations(-1);
-   opt.SetMaxFunctionCalls(0);
-   opt.SetStrategy(-1);
-   opt.SetErrorDef(0);
-   opt.SetPrecision(0);
-   opt.SetMinimizerAlgorithm("");
-   
-   const GSLSimAnParams & params = MinimizerParameters(); 
 
+void GSLSimAnMinimizer::DoSetMinimOptions(const GSLSimAnParams &params)
+{
+   // set the extra minimizer options from GSLSimAnParams
    ROOT::Math::GenAlgoOptions simanOpt;
    simanOpt.SetValue("n_tries",params.n_tries);
    simanOpt.SetValue("iters_fixed_T",params.iters_fixed_T);
@@ -149,32 +162,32 @@ ROOT::Math::MinimizerOptions  GSLSimAnMinimizer::Options() const {
    simanOpt.SetValue("mu_t",params.mu_t);
    simanOpt.SetValue("t_min",params.t_min);
 
-   opt.SetExtraOptions(simanOpt);
-   return opt;
+   fOptions.SetExtraOptions(simanOpt);
 }
 
-void GSLSimAnMinimizer::SetOptions(const ROOT::Math::MinimizerOptions & opt) {
 
-   // get the specific siman options
-   const ROOT::Math::IOptions * simanOpt = opt.ExtraOptions();
+void GSLSimAnMinimizer::DoSetSimAnParameters(const MinimizerOptions & options)
+{
+   // get the specific simulated annealing options from MinimizerOptions
+   const ROOT::Math::IOptions *simanOpt = options.ExtraOptions();
    if (!simanOpt) {
-      MATH_WARN_MSG("GSLSimAnMinimizer::SetOptions", "No specific sim. annealing minimizer options are provided. No options are set");
       return;
    }
-   GSLSimAnParams params; 
-   simanOpt->GetValue("n_tries",params.n_tries);
-   simanOpt->GetValue("iters_fixed_T",params.iters_fixed_T);
-   simanOpt->GetValue("step_size",params.step_size);
-   simanOpt->GetValue("k",params.k);
-   simanOpt->GetValue("t_initial",params.t_initial);
-   simanOpt->GetValue("mu_t",params.mu_t);
-   simanOpt->GetValue("t_min",params.t_min);
+
+   // get the various options. In case they are not defined the default parameters 
+   // will not be modified and will be used
+   GSLSimAnParams params;
+   simanOpt->GetValue("n_tries", params.n_tries);
+   simanOpt->GetValue("iters_fixed_T", params.iters_fixed_T);
+   simanOpt->GetValue("step_size", params.step_size);
+   simanOpt->GetValue("k", params.k);
+   simanOpt->GetValue("t_initial", params.t_initial);
+   simanOpt->GetValue("mu_t", params.mu_t);
+   simanOpt->GetValue("t_min", params.t_min);
 
    SetParameters(params);
-} 
-
+}
 
    } // end namespace Math
 
 } // end namespace ROOT
-
