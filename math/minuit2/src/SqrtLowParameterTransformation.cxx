@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -18,44 +17,34 @@
 
 namespace ROOT {
 
-namespace Minuit2 {
+  namespace Minuit2 {
 
 
 
-long double SqrtLowParameterTransformation::Int2ext(long double value, long double lower) const {
-   /// internal to external transformation
-   long double val = lower - 1. + std::sqrt(value * value + 1.);
-   return val;
-}
+    long double SqrtLowParameterTransformation::Int2ext(long double value, long double lower) const {
+      /// internal to external transformation
+      long double val = lower - 1. + std::sqrt( value*value + 1.);
+      return val;
+    }
 
 
-long double SqrtLowParameterTransformation::Ext2int(long double value, long double lower, const MnMachinePrecision &) const {
-   // external to internal transformation
-   long double yy = value - lower + 1.;
-   long double yy2 = yy * yy;
-   if (yy2 < 1.)
-      return 0;
-   else
-      return std::sqrt(yy2 - 1);
-}
+    long double SqrtLowParameterTransformation::Ext2int(long double value, long double lower, const MnMachinePrecision& ) const {
+      // external to internal transformation
+      long double yy = value - lower + 1.;
+      long double yy2 = yy*yy;
+      if (yy2 < 1. )
+        return 0;
+      else
+        return std::sqrt( yy2 -1);
+    }
 
 
-long double SqrtLowParameterTransformation::DInt2Ext(long double value, long double) const {
-   // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
-   long double val = value / (std::sqrt(value * value + 1.));
-   return val;
-}
+    long double SqrtLowParameterTransformation::DInt2Ext(long double value, long double) const {
+      // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
+      long double val = value/( std::sqrt( value*value + 1.) );
+      return val;
+    }
 
-long double SqrtLowParameterTransformation::D2Int2Ext(long double value, long double) const {
-   // second derivative of internal to external transformation :  d^2 (Int2Ext) / (d Int)^2
-   long double value_sq = value * value;
-   return (1 - value_sq / (value_sq + 1)) / ( sqrt( value_sq + 1.) );
-}
-
-long double SqrtLowParameterTransformation::GStepInt2Ext(long double /*value*/, long double /*lower*/) const {
-   return 1.;
-}
-
-} // namespace Minuit2
+  }  // namespace Minuit2
 
 } // namespace ROOT

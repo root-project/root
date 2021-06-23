@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -158,14 +157,14 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
 
    NegativeG2LineSearch ng2ls;
-   if (ng2ls.HasNegativeG2(dgrad, prec)) {
-      state = ng2ls(fcn, state, gc, prec);
+   if(ng2ls.HasNegativeG2(dgrad, prec)) {
+      Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
+      state = ng2ls(fcn, state, ngc, prec);
    }
 
    if (stra.Strategy() == 2 && !st.HasCovariance()) {
       // calculate full 2nd derivative
       MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
-
       return MinimumSeed(tmpState, st.Trafo());
    }
 

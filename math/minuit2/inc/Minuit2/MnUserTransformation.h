@@ -1,10 +1,9 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -92,8 +91,6 @@ public:
 
    // Index = internal Parameter
    double DInt2Ext(unsigned int, double) const;
-   double D2Int2Ext(unsigned int, double) const;
-   double GStepInt2Ext(unsigned int, double) const;
 
    //   // Index = external Parameter
    //   double dExt2Int(unsigned int, double) const;

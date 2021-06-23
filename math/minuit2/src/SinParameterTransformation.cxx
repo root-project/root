@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -44,26 +43,13 @@ long double SinParameterTransformation::Ext2int(long double Value, long double U
          //       std::cout<<"SinParameterTransformation warning: is at its Upper allowed limit."<<std::endl;
          return vlimhi;
       }
+    }
 
-   } else {
-      return std::asin(yy);
-   }
-}
+    long double SinParameterTransformation::DInt2Ext(long double Value, long double Upper, long double Lower) const {
+      // return the derivative of the transformation d Ext/ d Int
+      return 0.5*((Upper - Lower)*std::cos(Value));
+    }
 
-long double SinParameterTransformation::DInt2Ext(long double Value, long double Upper, long double Lower) const {
-   // return the derivative of the transformation d Ext/ d Int
-   return 0.5 * ((Upper - Lower) * std::cos(Value));
-}
-
-long double SinParameterTransformation::D2Int2Ext(long double Value, long double Upper, long double Lower) const {
-   // return the second derivative of the transformation d^2 Ext/ {d Int}^2
-   return 0.5 * ( (Lower - Upper) * sin(Value) );
-}
-
-long double SinParameterTransformation::GStepInt2Ext(long double /*Value*/, long double /*Upper*/, long double /*Lower*/) const {
-   return 1.;
-}
-
-} // namespace Minuit2
+  }  // namespace Minuit2
 
 } // namespace ROOT

@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -28,30 +27,26 @@ class MnMachinePrecision;
  * This transformation applies for the case of single side Upper Parameter limits
  */
 
-class SqrtUpParameterTransformation /* : public ParameterTransformation */ {
+    class SqrtUpParameterTransformation /* : public ParameterTransformation */ {
 
-public:
+    public:
 
-   // create with user defined precision
-   SqrtUpParameterTransformation() {}
+      // create with user defined precision
+      SqrtUpParameterTransformation() {}
 
-   ~SqrtUpParameterTransformation() {}
+      ~SqrtUpParameterTransformation() {}
 
-   // transformation from internal to external
-   long double Int2ext(long double Value, long double Upper) const;
+      // transformation from internal to external
+      long double Int2ext(long double Value, long double Upper) const;
 
-   // transformation from external to internal
-   long double Ext2int(long double Value, long double Upper, const MnMachinePrecision&) const;
+      // transformation from external to internal
+      long double Ext2int(long double Value, long double Upper, const MnMachinePrecision&) const;
 
-   // derivative of transformation from internal to external
-   long double DInt2Ext(long double Value, long double Upper) const;
+      // derivative of transformation from internal to external
+      long double DInt2Ext(long double Value, long double Upper) const;
 
-   long double D2Int2Ext(long double Value, long double Upper) const;
-   long double GStepInt2Ext(long double Value, long double Upper) const;
-
-private:
-
-};
+    private:
+    };
 
 } // namespace Minuit2
 
