@@ -27,41 +27,20 @@ arguments.
 **/
 
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooConstraintSum.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 
 #include <ROOT/RMakeUnique.hxx>
 
-using namespace std;
-
 ClassImp(RooConstraintSum);
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooConstraintSum::RooConstraintSum()
-{
-
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf
+/// Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf.
 
 RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet) :
   RooAbsReal(name, title),
@@ -71,7 +50,7 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
   for (const auto comp : constraintSet) {
     if (!dynamic_cast<RooAbsPdf*>(comp)) {
       coutE(InputArguments) << "RooConstraintSum::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsPdf" << endl ;
+                            << " is not of type RooAbsPdf" << std::endl ;
       RooErrorHandler::softAbort() ;
     }
     _set1.add(*comp) ;
@@ -81,34 +60,19 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 }
 
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
+/// Copy constructor.
 
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1),
   _paramSet("paramSet",this,other._paramSet)
 {
-
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooConstraintSum::~RooConstraintSum() 
-{
-
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return sum of -log of constraint p.d.f.s
+/// Return sum of -log of constraint p.d.f.s.
 
 Double_t RooConstraintSum::evaluate() const 
 {
@@ -141,14 +105,14 @@ std::unique_ptr<RooArgSet> getGlobalObservables(
 
   if(globalObservablesTag) {
     oocoutI(&pdf, Minimization) << "User-defined specification of global observables definition with tag named '"
-                                <<  globalObservablesTag << "'" << endl;
+                                <<  globalObservablesTag << "'" << std::endl;
   } else {
     // Neither GlobalObservables nor GlobalObservablesTag has been processed -
     // try if a default tag is defined in the head node Check if head not
     // specifies default global observable tag
     if(auto defaultGlobalObservablesTag = pdf.getStringAttribute("DefaultGlobalObservablesTag")) {
       oocoutI(&pdf, Minimization) << "p.d.f. provides built-in specification of global observables definition "
-                                  << "with tag named '" <<  defaultGlobalObservablesTag << "'" << endl;
+                                  << "with tag named '" <<  defaultGlobalObservablesTag << "'" << std::endl;
       globalObservablesTag = defaultGlobalObservablesTag;
     }
   }
@@ -230,9 +194,9 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
 
   if (!allConstraints.empty()) {
 
-    oocoutI(&pdf, Minimization) << " Including the following constraint terms in minimization: " << allConstraints << endl ;
+    oocoutI(&pdf, Minimization) << " Including the following constraint terms in minimization: " << allConstraints << std::endl ;
     if (glObs) {
-      oocoutI(&pdf, Minimization) << "The following global observables have been defined: " << *glObs << endl ;
+      oocoutI(&pdf, Minimization) << "The following global observables have been defined: " << *glObs << std::endl ;
     }
     auto constraintTerm = std::make_unique<RooConstraintSum>(name.c_str(),"nllCons",allConstraints,glObs ? *glObs : cPars) ;
     constraintTerm->setOperMode(RooAbsArg::ADirty) ;
