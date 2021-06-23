@@ -16,8 +16,8 @@ public:
   RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
   virtual TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
-  using RooAbsReal::getParameters;
-  RooArgSet *getParameters(const RooArgSet *depList, Bool_t stripDisconnected = kTRUE) const;
+  using RooAbsArg::getParameters;
+  bool getParameters(const RooArgSet *depList, RooArgSet& outSet, bool stripDisconnected=true) const override;
 
   virtual Double_t defaultErrorLevel() const override
   {
