@@ -19,7 +19,6 @@
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
-#include "TStopwatch.h"
 
 class RooRealVar;
 class RooArgList ;
@@ -27,9 +26,8 @@ class RooArgList ;
 class RooConstraintSum : public RooAbsReal {
 public:
 
-  RooConstraintSum() ;
+  RooConstraintSum() {}
   RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet, const RooArgSet& paramSet) ;
-  virtual ~RooConstraintSum() ;
 
   RooConstraintSum(const RooConstraintSum& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooConstraintSum(*this, newname); }
