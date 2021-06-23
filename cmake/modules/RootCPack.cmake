@@ -145,7 +145,7 @@ endif()
 # Finally, generate the CPack per-generator options file and include the
 # base CPack configuration.
 #
-configure_file(cmake/modules/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
+configure_file(cmake/scripts/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/CMakeCPackOptions.cmake)
 include(CPack)
 
