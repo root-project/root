@@ -118,6 +118,19 @@ else()
   message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
 endif()
 
+#---Try to download a dummy (non-existing) file to check internet connection--------------------
+file(DOWNLOAD https://root.cern/files/dummy.txt ${CMAKE_CURRENT_BINARY_DIR}/dummy.txt
+  TIMEOUT 100 STATUS DOWNLOAD_STATUS
+)
+# Get the status code from the download status
+list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+# Check if download was successful.
+if(${STATUS_CODE} EQUAL 6)
+  # Error 6 is "Couldn't resolve host name", so set the NO_CONNECTION flag
+  set(NO_CONNECTION TRUE)
+else()
+  set(NO_CONNECTION FALSE)
+endif()
 
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
