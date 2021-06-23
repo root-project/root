@@ -1022,7 +1022,7 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
 ////////////////////////////////////////////////////////////////////////////////
 std::string RooDataSet::getWeightVarName() const
 {
-  return std::string( _wgtVar ? _wgtVar->GetName() : "" );
+  return _wgtVar ? _wgtVar->GetName() : "_weight" ;
 }
 
 
