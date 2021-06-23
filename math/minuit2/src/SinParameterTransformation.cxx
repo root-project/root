@@ -56,6 +56,6 @@ long double SinParameterTransformation::DInt2Ext(long double Value, long double 
    return 0.5 * ((Upper - Lower) * std::cos(Value));
 }
 
-}  // namespace Minuit2
+} // namespace Minuit2
 
 } // namespace ROOT

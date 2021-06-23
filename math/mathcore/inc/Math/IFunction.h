@@ -232,7 +232,6 @@ namespace ROOT {
             function to evaluate the derivative with respect each coordinate. To be implemented by the derived class
          */
          virtual T DoDerivative(const T *x, unsigned int icoord) const = 0;
-
       };
 
 //___________________________________________________________________________________
@@ -322,6 +321,7 @@ namespace ROOT {
 
          @ingroup  GenFunc
       */
+
       template <class T>
       class IGradientFunctionMultiDimTempl : virtual public IBaseFunctionMultiDimTempl<T>,
                                              public IGradientMultiDimTempl<T> {
@@ -356,14 +356,11 @@ namespace ROOT {
          */
          virtual void FdF(const T *x, T &f, T *df) const
          {
-           f = BaseFunc::operator()(x);
-           Gradient(x, df);
+            f = BaseFunc::operator()(x);
+            Gradient(x, df);
          }
 
-         virtual bool returnsInMinuit2ParameterSpace() const {
-           return false;
-         }
-
+         virtual bool returnsInMinuit2ParameterSpace() const { return false; }
       };
 
 //___________________________________________________________________________________

@@ -15,30 +15,28 @@
 
 namespace ROOT {
 
-  namespace Minuit2 {
+namespace Minuit2 {
 
-    class FCNGradientBase;
-    class MnUserTransformation;
+class FCNGradientBase;
+class MnUserTransformation;
 
-    class ExternalInternalGradientCalculator : public AnalyticalGradientCalculator {
+class ExternalInternalGradientCalculator : public AnalyticalGradientCalculator {
 
-    public:
+public:
+   ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state)
+      : AnalyticalGradientCalculator(fcn, state)
+   {
+   }
 
-      ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state) :
-          AnalyticalGradientCalculator(fcn, state)
-      {}
+   ~ExternalInternalGradientCalculator() {}
 
-      ~ExternalInternalGradientCalculator() {}
+   virtual FunctionGradient operator()(const MinimumParameters &) const;
 
-      virtual FunctionGradient operator()(const MinimumParameters &) const;
+   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+};
 
-      virtual FunctionGradient operator()(const MinimumParameters &,
-                                          const FunctionGradient &) const;
+} // namespace Minuit2
 
-    };
+} // namespace ROOT
 
-  }  // namespace Minuit2
-
-}  // namespace ROOT
-
-#endif  // ROOT_Minuit2_ExternalInternalGradientCalculator
+#endif // ROOT_Minuit2_ExternalInternalGradientCalculator

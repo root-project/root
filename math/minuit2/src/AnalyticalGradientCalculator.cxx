@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -17,7 +17,6 @@
 
 namespace ROOT {
 namespace Minuit2 {
-
 
 FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameters &par) const
 {
@@ -61,4 +60,5 @@ bool AnalyticalGradientCalculator::CheckGradient() const
 }
 
 } // namespace Minuit2
-}  // namespace ROOT
+
+} // namespace ROOT
