@@ -923,8 +923,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
 
 namespace {
 
-RooAbsReal *createMultiRangeNLLCorrectionTerm(RooAbsPdf const &pdf, RooAbsData const &data, std::string const &baseName,
-                                              std::string const &rangeNames)
+std::unique_ptr<RooAbsReal> createMultiRangeNLLCorrectionTerm(
+        RooAbsPdf const &pdf, RooAbsData const &data, std::string const &baseName, std::string const &rangeNames)
 {
    double sumEntriesTotal = 0.0;
 
@@ -959,8 +959,10 @@ RooAbsReal *createMultiRangeNLLCorrectionTerm(RooAbsPdf const &pdf, RooAbsData c
                                           RooArgList(*integralFull));
 
    termList.add(*fullRangeTerm);
-   return new RooAddition((baseName + "_correction").c_str(), "correction", termList, true);
+   return std::unique_ptr<RooAbsReal>{
+       new RooAddition((baseName + "_correction").c_str(), "correction", termList, true)};
 }
+
 
 } // namespace
 
@@ -994,13 +996,11 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
-//  pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineInt("BatchMode", "BatchMode", 0, 0);
   pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
-//  pc.defineMutex("Constrain","Constrained") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
 
   // Process and check varargs
@@ -1012,7 +1012,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // Decode command line arguments
   const char* rangeName = pc.getString("rangeName",0,kTRUE) ;
   const char* addCoefRangeName = pc.getString("addCoefRange",0,kTRUE) ;
-  const char* globsTag = pc.getString("globstag",0,kTRUE) ;
   Int_t ext      = pc.getInt("ext") ;
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t numcpu_strategy = pc.getInt("interleave");
@@ -1034,40 +1033,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (cloneData==2) {
     cloneData = optConst ;
   }
-
-
-  RooArgSet* cPars = pc.getSet("cPars") ;
-  RooArgSet* glObs = pc.getSet("glObs") ;
-  if (pc.hasProcessed("GlobalObservablesTag")) {
-    if (glObs) delete glObs ;
-    RooArgSet* allVars = getVariables() ;
-    glObs = (RooArgSet*) allVars->selectByAttrib(globsTag,kTRUE) ;
-    coutI(Minimization) << "User-defined specification of global observables definition with tag named '" <<  globsTag << "'" << endl ;
-    delete allVars ;
-  } else if (!pc.hasProcessed("GlobalObservables")) {
-
-    // Neither GlobalObservables nor GlobalObservablesTag has been processed - try if a default tag is defined in the head node
-    // Check if head not specifies default global observable tag
-    const char* defGlobObsTag = getStringAttribute("DefaultGlobalObservablesTag") ;
-    if (defGlobObsTag) {
-      coutI(Minimization) << "p.d.f. provides built-in specification of global observables definition with tag named '" <<  defGlobObsTag << "'" << endl ;
-      if (glObs) delete glObs ;
-      RooArgSet* allVars = getVariables() ;
-      glObs = (RooArgSet*) allVars->selectByAttrib(defGlobObsTag,kTRUE) ;
-    }
-  }
-
-
-  Bool_t doStripDisconnected=kFALSE ;
-
-  // If no explicit list of parameters to be constrained is specified apply default algorithm
-  // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
-  // terms that do contain observables are added as constraints.
-  if (!cPars) {
-    cPars = getParameters(data,kFALSE) ;
-    doStripDisconnected=kTRUE ;
-  }
-  const RooArgSet* extCons = pc.getSet("extCons") ;
 
   // Process automatic extended option
   if (ext==2) {
@@ -1147,70 +1112,32 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       // term to the individual NLLs as done here is mathematicall equivalent
       // to adding the normalization correction terms plus a global extension
       // term.
-      nllList.add(*createMultiRangeNLLCorrectionTerm(*this, data, baseName, rangeName));
+      nllList.add(*createMultiRangeNLLCorrectionTerm(*this, data, baseName, rangeName).release());
     }
 
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,true) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
-  // Collect internal and external constraint specifications
-  RooArgSet allConstraints ;
-
-  if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str()))) {
-
-     // retrieve from cache
-     const RooArgSet *constr =
-        _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str()));
-     coutI(Minimization) << "createNLL picked up cached constraints from workspace with " << constr->getSize()
-                         << " entries" << endl;
-     allConstraints.add(*constr);
-
-  } else {
-
-     if (cPars && cPars->getSize() > 0) {
-        RooArgSet *constraints = getAllConstraints(*data.get(), *cPars, doStripDisconnected);
-        allConstraints.add(*constraints);
-        delete constraints;
-     }
-     if (extCons) {
-        allConstraints.add(*extCons);
-     }
-
-     // write to cache
-     if (_myws) {
-        // cout << "createNLL: creating cache for allconstraints=" << allConstraints << endl ;
-        coutI(Minimization) << "createNLL: caching constraint set under name "
-                            << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str())
-                            << " with " << allConstraints.getSize() << " entries" << endl;
-        _myws->defineSetInternal(
-           Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), getColonSeparatedNameString(*data.get()).c_str()), allConstraints);
-     }
-  }
+  auto constraintTerm = RooConstraintSum::createConstraintTerm(
+          baseName + "_constr", // name
+          *this, // pdf
+          *data.get(), // observables
+          pc.getSet("cPars"), // Constrain RooCmdArg
+          pc.getSet("extCons"), // ExternalConstraints RooCmdArg
+          pc.getSet("glObs"), // GlobalObservables RooCmdArg
+          pc.getString("globstag",0,true) // GlobalObservablesTag RooCmdArg
+  );
 
   // Include constraints, if any, in likelihood
-  RooAbsReal* nllCons(0) ;
-  if (allConstraints.getSize()>0 && cPars) {
-
-    coutI(Minimization) << " Including the following constraint terms in minimization: " << allConstraints << endl ;
-    if (glObs) {
-      coutI(Minimization) << "The following global observables have been defined: " << *glObs << endl ;
-    }
-    nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,glObs ? *glObs : *cPars) ;
-    nllCons->setOperMode(ADirty) ;
+  if (constraintTerm) {
     RooAbsReal* orignll = nll ;
-
-    nll = new RooAddition(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*nll,*nllCons)) ;
-    nll->addOwnedComponents(RooArgSet(*orignll,*nllCons)) ;
+    nll = new RooAddition(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*nll,*constraintTerm)) ;
+    nll->addOwnedComponents(RooArgSet(*orignll,*constraintTerm.release())) ;
   }
-
 
   if (optConst) {
     nll->constOptimizeTestStatistic(RooAbsArg::Activate,optConst>1) ;
-  }
-
-  if (doStripDisconnected) {
-    delete cPars ;
   }
 
   if (doOffset) {
@@ -3718,5 +3645,38 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
   if (_norm) {
     _normMgr.sterilize() ;
     _norm = 0 ;
+  }
+}
+
+
+std::string RooAbsPdf::getConstraintSetCacheName(RooArgSet const& observables) const {
+  auto observableNames = RooHelpers::getColonSeparatedNameString(observables);
+  return std::string("CACHE_CONSTR_OF_PDF_") + GetName() + "_FOR_OBS_" +  observableNames;
+}
+
+
+RooArgSet const* RooAbsPdf::tryToGetConstraintSetFromWorkspace(RooArgSet const& observables) const {
+  if(!_myws) return nullptr;
+
+  const std::string constraintSetCacheName = getConstraintSetCacheName(observables);
+
+  if(_myws->set(constraintSetCacheName.c_str())) {
+    // retrieve from cache
+    const RooArgSet *constr = _myws->set(getConstraintSetCacheName(observables).c_str());
+    coutI(Minimization) << "createNLL picked up cached constraints from workspace with " << constr->size()
+                        << " entries" << endl;
+    return constr;
+  }
+  return nullptr;
+}
+
+
+void RooAbsPdf::tryToCacheConstraintSetInWorkspace(RooArgSet const& observables, RooArgSet const& constraints) const {
+  // write to cache
+  if (_myws) {
+     const std::string constraintSetCacheName = getConstraintSetCacheName(observables);
+     coutI(Minimization) << "createNLL: caching constraint set under name "
+                         << constraintSetCacheName << " with " << constraints.size() << " entries" << endl;
+     _myws->defineSetInternal(constraintSetCacheName.c_str(), constraints);
   }
 }

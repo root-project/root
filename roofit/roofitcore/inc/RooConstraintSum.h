@@ -36,6 +36,15 @@ public:
 
   const RooArgList& list() { return _set1 ; }
 
+  static std::unique_ptr<RooAbsReal> createConstraintTerm(
+        std::string const& name,
+        RooAbsPdf const& pdf,
+        RooArgSet const& observables,
+        RooArgSet const* constrainedParameters,
+        RooArgSet const* externalConstraints,
+        RooArgSet const* globalObservables,
+        const char* globalObservablesTag);
+
 protected:
 
   RooListProxy _set1 ;    // Set of constraint terms

@@ -41,6 +41,8 @@ arguments.
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
 
+#include <ROOT/RMakeUnique.hxx>
+
 using namespace std;
 
 ClassImp(RooConstraintSum);
@@ -119,3 +121,124 @@ Double_t RooConstraintSum::evaluate() const
   return sum;
 }
 
+
+namespace {
+
+std::unique_ptr<RooArgSet> getGlobalObservables(
+        RooAbsPdf const& pdf, RooArgSet const* globalObservables, const char* globalObservablesTag)
+{
+
+  if(globalObservables && globalObservablesTag) {
+    // error!
+    std::string errMsg = "RooAbsPdf::fitTo: GlobalObservables and GlobalObservablesTag options mutually exclusive!";
+    oocoutE(&pdf, Minimization) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
+  }
+  if(globalObservables) {
+    // pass-throught of global observables
+    return std::make_unique<RooArgSet>(*globalObservables);
+  }
+
+  if(globalObservablesTag) {
+    oocoutI(&pdf, Minimization) << "User-defined specification of global observables definition with tag named '"
+                                <<  globalObservablesTag << "'" << endl;
+  } else {
+    // Neither GlobalObservables nor GlobalObservablesTag has been processed -
+    // try if a default tag is defined in the head node Check if head not
+    // specifies default global observable tag
+    if(auto defaultGlobalObservablesTag = pdf.getStringAttribute("DefaultGlobalObservablesTag")) {
+      oocoutI(&pdf, Minimization) << "p.d.f. provides built-in specification of global observables definition "
+                                  << "with tag named '" <<  defaultGlobalObservablesTag << "'" << endl;
+      globalObservablesTag = defaultGlobalObservablesTag;
+    }
+  }
+
+  if(globalObservablesTag) {
+    std::unique_ptr<RooArgSet> allVars{pdf.getVariables()} ;
+    return std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(allVars->selectByAttrib(globalObservablesTag, true))};
+  }
+
+  // no global observables specified
+  return nullptr;
+}
+
+} // namespace
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create the parameter constraint sum to add to the negative log-likelihood.
+/// \param[in] name Name of the created RooConstraintSum object.
+/// \param[in] pdf The pdf model whose parameters should be constrained.
+///            Constraint terms will be extracted from RooProdPdf instances
+///            that are servers of the pdf (internal constraints).
+/// \param[in] observables Observable variables (used to determine which model
+///            variables are parameters).
+/// \param[in] constraints Set of parameters to constrain. If `nullptr`, all
+///            parameters will be considered.
+/// \param[in] externalConstraints Set of constraint terms that are not
+///            embedded in the pdf (external constraints). 
+/// \param[in] globalObservables The normalization set for the constraint terms.
+///            If it is `nullptr`, the set of all constrained parameters will
+///            be used as the normalization set.
+/// \param[in] globalObservablesTag Alternative to define the normalization set
+///            for the constraint terms. All constrained parameters that have
+///            the attribute with the tag defined by `globalObservablesTag` are
+///            used. The `globalObservables` and `globalObservablesTag`
+///            parameters are mutually exclusive, meaning at least one of them
+///            has to be `nullptr`.
+std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
+        std::string const& name,
+        RooAbsPdf const& pdf,
+        RooArgSet const& observables,
+        RooArgSet const* constrainedParameters,
+        RooArgSet const* externalConstraints,
+        RooArgSet const* globalObservables,
+        const char* globalObservablesTag)
+{
+  bool doStripDisconnected = false ;
+
+  // If no explicit list of parameters to be constrained is specified apply default algorithm
+  // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
+  // terms that do contain observables are added as constrainedParameters.
+  RooArgSet cPars;
+  if(constrainedParameters) {
+    cPars.add(*constrainedParameters);
+  } else {
+    pdf.getParameters(&observables,cPars,false);
+    doStripDisconnected = true;
+  }
+
+  // Collect internal and external constraint specifications
+  RooArgSet allConstraints ;
+
+  if (RooArgSet const* constr = pdf.tryToGetConstraintSetFromWorkspace(observables)) {
+    allConstraints.add(*constr);
+  } else {
+
+     if (!cPars.empty()) {
+        std::unique_ptr<RooArgSet> internalConstraints{pdf.getAllConstraints(observables, cPars, doStripDisconnected)};
+        allConstraints.add(*internalConstraints);
+     }
+     if (externalConstraints) {
+        allConstraints.add(*externalConstraints);
+     }
+
+     pdf.tryToCacheConstraintSetInWorkspace(observables, allConstraints);
+  }
+
+  auto glObs = getGlobalObservables(pdf, globalObservables, globalObservablesTag);
+
+  if (!allConstraints.empty()) {
+
+    oocoutI(&pdf, Minimization) << " Including the following constraint terms in minimization: " << allConstraints << endl ;
+    if (glObs) {
+      oocoutI(&pdf, Minimization) << "The following global observables have been defined: " << *glObs << endl ;
+    }
+    auto constraintTerm = std::make_unique<RooConstraintSum>(name.c_str(),"nllCons",allConstraints,glObs ? *glObs : cPars) ;
+    constraintTerm->setOperMode(RooAbsArg::ADirty) ;
+    return constraintTerm;
+  }
+
+  // no constraints
+  return nullptr;
+}
