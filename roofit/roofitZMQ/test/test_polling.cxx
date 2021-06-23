@@ -12,7 +12,6 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
-
 #include "gtest/gtest.h"
 
 #include <unistd.h> // fork, usleep
@@ -24,28 +23,28 @@
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 #include "RooFit_ZMQ/ZeroMQPoller.h"
 
-
 static bool terminated = false;
 
-void handle_sigterm(int signum) {
+void handle_sigterm(int signum)
+{
    terminated = true;
    std::cout << "handled signal " << strsignal(signum) << " on PID " << getpid() << std::endl;
 }
 
-
-TEST(Polling, doublePoll) {
-   pid_t child_pid {0};
+TEST(Polling, doublePoll)
+{
+   pid_t child_pid{0};
    do {
       child_pid = fork();
-   } while (child_pid == -1);  // retry if fork fails
+   } while (child_pid == -1); // retry if fork fails
 
-   if (child_pid > 0) {                // master
+   if (child_pid > 0) { // master
       sigset_t sigmask, sigmask_old;
       sigemptyset(&sigmask);
       sigaddset(&sigmask, SIGCHLD);
       sigprocmask(SIG_BLOCK, &sigmask, &sigmask_old);
 
-//      std::cout << "master PID: " << getpid() << std::endl;
+      //      std::cout << "master PID: " << getpid() << std::endl;
       ZmqLingeringSocketPtr<> pusher, puller;
       pusher.reset(zmqSvc().socket_ptr(zmq::PUSH));
       pusher->bind("ipc:///tmp/ZMQ_test_fork_polling_M2C.ipc");
@@ -84,7 +83,15 @@ TEST(Polling, doublePoll) {
       } while (-1 == pid && EINTR == errno); // retry on interrupted system call
 
       if (0 != status) {
-         if (WIFEXITED(status)) { printf("exited, status=%d\n", WEXITSTATUS(status)); } else if (WIFSIGNALED(status)) { printf("killed by signal %d\n", WTERMSIG(status)); } else if (WIFSTOPPED(status)) { printf("stopped by signal %d\n", WSTOPSIG(status)); } else if (WIFCONTINUED(status)) { printf("continued\n"); }
+         if (WIFEXITED(status)) {
+            printf("exited, status=%d\n", WEXITSTATUS(status));
+         } else if (WIFSIGNALED(status)) {
+            printf("killed by signal %d\n", WTERMSIG(status));
+         } else if (WIFSTOPPED(status)) {
+            printf("stopped by signal %d\n", WSTOPSIG(status));
+         } else if (WIFCONTINUED(status)) {
+            printf("continued\n");
+         }
       }
 
       if (-1 == pid) {
@@ -92,8 +99,8 @@ TEST(Polling, doublePoll) {
       }
 
       sigprocmask(SIG_SETMASK, &sigmask_old, nullptr);
-   } else {                            // child
-//      std::cout << "child PID: " << getpid() << std::endl;
+   } else { // child
+            //      std::cout << "child PID: " << getpid() << std::endl;
 
       sigset_t sigmask, sigmask_old;
       sigemptyset(&sigmask);
@@ -101,7 +108,7 @@ TEST(Polling, doublePoll) {
       sigprocmask(SIG_BLOCK, &sigmask, &sigmask_old);
 
       struct sigaction sa;
-      memset (&sa, '\0', sizeof(sa));
+      memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = handle_sigterm;
 
       if (sigaction(SIGTERM, &sa, NULL) < 0) {
@@ -136,14 +143,14 @@ TEST(Polling, doublePoll) {
 
       sigprocmask(SIG_SETMASK, &sigmask_old, nullptr);
 
-      while (!terminated) {}
+      while (!terminated) {
+      }
 
-//      std::cout << "child terminated" << std::endl;
+      //      std::cout << "child terminated" << std::endl;
 
       puller.reset(nullptr);
       pusher.reset(nullptr);
       zmqSvc().close_context();
       _Exit(0);
    }
-
 }

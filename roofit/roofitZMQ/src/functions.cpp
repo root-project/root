@@ -4,7 +4,8 @@
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 
 namespace ZMQ {
-   size_t stringLength(const char& cs) {
-      return strlen(&cs);
-   }
+size_t stringLength(const char &cs)
+{
+   return strlen(&cs);
 }
+} // namespace ZMQ
