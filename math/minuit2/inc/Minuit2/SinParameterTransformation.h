@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -35,11 +34,7 @@ namespace Minuit2 {
                      const MnMachinePrecision&) const;
       long double DInt2Ext(long double Value, long double Upper, long double Lower) const;
 
-      long double D2Int2Ext(long double Value, long double Upper, long double Lower) const;
-      long double GStepInt2Ext(long double Value, long double Upper, long double Lower) const;
-
     private:
-
     };
 
 } // namespace Minuit2

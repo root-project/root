@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -43,34 +42,7 @@ namespace Minuit2 {
       MnPrint print("AnalyticalGradientCalculator");
       print.Debug("User given gradient in Minuit2", v);
 
-      // check for 2nd derivative and step-size from the external gradient
-      // function and use them if present
-      // N.B.: for the time being we only allow both at the same time, since
-      //       FunctionGradient only has ctors for two cases: 1. gradient only,
-      //       2. grad, g2 & gstep.
-      if (fGradCalc.hasG2ndDerivative() && fGradCalc.hasGStepSize()) {
-        std::vector<double> g2 = fGradCalc.G2ndDerivative(fTransformation(par.Vec()));
-        std::vector<double> gstep = fGradCalc.GStepSize(fTransformation(par.Vec()));
-
-        MnAlgebraicVector vg2(par.Vec().size());
-        MnAlgebraicVector vgstep(par.Vec().size());
-        for(unsigned int i = 0; i < par.Vec().size(); i++) {
-          unsigned int ext = fTransformation.ExtOfInt(i);
-          if(fTransformation.Parameter(ext).HasLimits()) {
-            double int2ext_g2 = fTransformation.D2Int2Ext(i, par.Vec()(i));
-            double int2ext_gstep = fTransformation.GStepInt2Ext(i, par.Vec()(i));
-            vg2(i) = int2ext_g2 * g2[ext];
-            vgstep(i) = int2ext_gstep * gstep[ext];
-          } else {
-            vg2(i) = g2[ext];
-            vgstep(i) = gstep[ext];
-          }
-        }
-
-        return FunctionGradient(v, vg2, vgstep);
-      } else {
-        return FunctionGradient(v);
-      }
+      return FunctionGradient(v);
     }
 
     FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameters& par, const FunctionGradient&) const {

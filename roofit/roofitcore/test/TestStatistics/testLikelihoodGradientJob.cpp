@@ -43,7 +43,7 @@
 class Environment : public testing::Environment {
 public:
    void SetUp() override {
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+//      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
    }
 };
 
@@ -87,8 +87,8 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    m0->setMinimizerType("Minuit2");
 
    m0->setStrategy(0);
-//   m0->setVerbose(true);
-   m0->setPrintLevel(-1);
+   m0->setVerbose(true);
+   m0->setPrintLevel(1);
 
    m0->migrad();
 
@@ -108,8 +108,8 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
-//   m1->setVerbose(true);
-   m1->setPrintLevel(-1);
+   m1->setVerbose(true);
+   m1->setPrintLevel(1);
 
    m1->migrad();
 

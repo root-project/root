@@ -274,57 +274,6 @@ double NumericalDerivatorMinuit2::Ext2int(const ROOT::Fit::ParameterSettings &pa
    return val;
 }
 
-double NumericalDerivatorMinuit2::DInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const
-{
-   // return the derivative of the int->ext transformation: dPext(i) / dPint(i)
-   // for the parameter i with value val
-
-   double dd = 1.;
-   if (parameter.IsBound()) {
-      if (parameter.IsDoubleBound()) {
-         dd = fDoubleLimTrafo.DInt2Ext(val, parameter.UpperLimit(), parameter.LowerLimit());
-      } else if (parameter.HasUpperLimit() && !parameter.HasLowerLimit()) {
-         dd = fUpperLimTrafo.DInt2Ext(val, parameter.UpperLimit());
-      } else {
-         dd = fLowerLimTrafo.DInt2Ext(val, parameter.LowerLimit());
-      }
-   }
-
-   return dd;
-}
-
-double NumericalDerivatorMinuit2::D2Int2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const
-{
-   double dd = 1.;
-   if (parameter.IsBound()) {
-      if (parameter.IsDoubleBound()) {
-         dd = fDoubleLimTrafo.D2Int2Ext(val, parameter.UpperLimit(), parameter.LowerLimit());
-      } else if (parameter.HasUpperLimit() && !parameter.HasLowerLimit()) {
-         dd = fUpperLimTrafo.D2Int2Ext(val, parameter.UpperLimit());
-      } else {
-         dd = fLowerLimTrafo.D2Int2Ext(val, parameter.LowerLimit());
-      }
-   }
-
-   return dd;
-}
-
-double NumericalDerivatorMinuit2::GStepInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const
-{
-   double dd = 1.;
-   if (parameter.IsBound()) {
-      if (parameter.IsDoubleBound()) {
-         dd = fDoubleLimTrafo.GStepInt2Ext(val, parameter.UpperLimit(), parameter.LowerLimit());
-      } else if (parameter.HasUpperLimit() && !parameter.HasLowerLimit()) {
-         dd = fUpperLimTrafo.GStepInt2Ext(val, parameter.UpperLimit());
-      } else {
-         dd = fLowerLimTrafo.GStepInt2Ext(val, parameter.LowerLimit());
-      }
-   }
-
-   return dd;
-}
-
 // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10

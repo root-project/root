@@ -592,7 +592,7 @@ TEST(GradMinimizer, BranchingPDF)
    // test RooMinimizer<RooGradMinimizerFcn> class with an N-dimensional pdf that forms a tree of
    // pdfs, where one subpdf is the parameter of a higher level pdf
 
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+//   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
    int N_events = 1000;
    // produce the same random stuff every time
@@ -684,7 +684,8 @@ TEST(GradMinimizer, BranchingPDF)
    m0.setMinimizerType("Minuit2");
 
    m0.setStrategy(0);
-   m0.setPrintLevel(-1);
+   m0.setPrintLevel(1);
+   m0.setVerbose();
 
    wtimer.start();
    m0.migrad();
@@ -712,7 +713,8 @@ TEST(GradMinimizer, BranchingPDF)
    std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
 
    m1->setStrategy(0);
-   m1->setPrintLevel(-1);
+   m1->setPrintLevel(1);
+   m1->setVerbose();
 
    wtimer.start();
    m1->migrad();

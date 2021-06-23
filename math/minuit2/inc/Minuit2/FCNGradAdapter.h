@@ -1,10 +1,9 @@
 // @(#)root/minuit2:$Id$
-// Authors: L. Moneta, E.G.P. Bos   2006-2017
+// Author: L. Moneta    10/2006
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2006 ROOT Foundation,  CERN/PH-SFT                   *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -24,7 +23,7 @@ namespace Minuit2 {
 
 template wrapped class for adapting to FCNBase signature a IGradFunction
 
-@author Lorenzo Moneta, Patrick Bos
+@author Lorenzo Moneta
 
 @ingroup Minuit
 
@@ -35,12 +34,9 @@ template <class Function>
 class FCNGradAdapter : public FCNGradientBase {
 
 public:
-   FCNGradAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up), fGrad(std::vector<double>(fFunc.NDim())),
-   fG2(fFunc.hasG2ndDerivative() ? std::vector<double>(fFunc.NDim()) : std::vector<double>(0)),
-   fGStep(fFunc.hasGStepSize()   ? std::vector<double>(fFunc.NDim()) : std::vector<double>(0)) {}
+   FCNGradAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up), fGrad(std::vector<double>(fFunc.NDim())) {}
 
-~FCNGradAdapter() {}
-
+   ~FCNGradAdapter() {}
 
    double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
@@ -62,24 +58,6 @@ public:
    // virtual double operator()(int npar, double* params,int iflag = 4) const;
    bool CheckGradient() const override { return false; }
 
-   std::vector<double> G2ndDerivative(const std::vector<double>& v) const override {
-      fFunc.G2ndDerivative(v.data(), fG2.data());
-      return fG2;
-   };
-
-   std::vector<double> GStepSize(const std::vector<double>& v) const override {
-      fFunc.GStepSize(v.data(), fGStep.data());
-      return fGStep;
-   };
-
-   bool hasG2ndDerivative() const override {
-      return fFunc.hasG2ndDerivative();
-   }
-
-   bool hasGStepSize() const override {
-      return fFunc.hasGStepSize();
-   }
-
    GradientParameterSpace gradParameterSpace() const override {
       if (fFunc.returnsInMinuit2ParameterSpace()) {
          return GradientParameterSpace::Internal;
@@ -92,8 +70,6 @@ private:
    const Function &fFunc;
    double fUp;
    mutable std::vector<double> fGrad;
-   mutable std::vector<double> fG2;
-   mutable std::vector<double> fGStep;
 };
 
 } // end namespace Minuit2

@@ -206,20 +206,9 @@ bool MinuitFcnGrad::sync_parameter_values_from_minuit_calls(const double *x, boo
 
 void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
+   printf("Calling MinuitFcnGrad::Gradient\n");
    sync_parameter_values_from_minuit_calls(x, returnsInMinuit2ParameterSpace());
    gradient->fill_gradient(grad);
-}
-
-void MinuitFcnGrad::G2ndDerivative(const double *x, double *g2) const
-{
-   sync_parameter_values_from_minuit_calls(x, returnsInMinuit2ParameterSpace());
-   gradient->fill_second_derivative(g2);
-}
-
-void MinuitFcnGrad::GStepSize(const double *x, double *gstep) const
-{
-   sync_parameter_values_from_minuit_calls(x, returnsInMinuit2ParameterSpace());
-   gradient->fill_step_size(gstep);
 }
 
 ROOT::Math::IMultiGradFunction *MinuitFcnGrad::Clone() const
@@ -230,26 +219,6 @@ ROOT::Math::IMultiGradFunction *MinuitFcnGrad::Clone() const
 double MinuitFcnGrad::DoDerivative(const double * /*x*/, unsigned int /*icoord*/) const
 {
    throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
-}
-
-double MinuitFcnGrad::DoSecondDerivative(const double * /*x*/, unsigned int /*icoord*/) const
-{
-   throw std::runtime_error("MinuitFcnGrad::DoSecondDerivative is not implemented, please use G2ndDerivative instead.");
-}
-
-double MinuitFcnGrad::DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const
-{
-   throw std::runtime_error("MinuitFcnGrad::DoStepSize is not implemented, please use GStepSize instead.");
-}
-
-bool MinuitFcnGrad::hasG2ndDerivative() const
-{
-   return true;
-}
-
-bool MinuitFcnGrad::hasGStepSize() const
-{
-   return true;
 }
 
 unsigned int MinuitFcnGrad::NDim() const

@@ -73,18 +73,6 @@ public:
       return g;
    }
 
-    // G2ndDerivative and GStepSize will not be used since the default hasG2ndDerivative
-    // and hasGStepSize functions that return false are not overridden, but these have to
-    // be defined, since they are pure virtual functions in FCNGradientBase
-    std::vector<double> G2ndDerivative(const std::vector<double>&) const override {
-        std::vector<double> g(0);
-        return g;
-    }
-    std::vector<double> GStepSize(const std::vector<double>&) const override {
-        std::vector<double> g(0);
-        return g;
-    }
-
    double Up() const override { return 1.; }
 
 private:

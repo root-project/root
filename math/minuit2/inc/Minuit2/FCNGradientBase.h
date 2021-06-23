@@ -4,7 +4,6 @@
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -42,18 +41,6 @@ public:
    virtual ~FCNGradientBase() {}
 
    virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
-
-   virtual std::vector<double> G2ndDerivative(const std::vector<double> &) const = 0;
-
-   virtual std::vector<double> GStepSize(const std::vector<double> &) const = 0;
-
-   virtual bool hasG2ndDerivative() const {
-      return false;
-   }
-
-   virtual bool hasGStepSize() const {
-      return false;
-   }
 
    virtual bool CheckGradient() const { return true; }
 

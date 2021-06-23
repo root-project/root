@@ -71,9 +71,6 @@ public:
 
    double Int2ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
    double Ext2int(const ROOT::Fit::ParameterSettings &parameter, double val) const;
-   double DInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
-   double D2Int2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
-   double GStepInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
 
    void SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
                            const std::vector<ROOT::Fit::ParameterSettings> &parameters,

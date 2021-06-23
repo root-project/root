@@ -38,14 +38,10 @@ struct WrapperCalculationCleanFlags {
    // indicate whether that part has been calculated since the last parameter update
    bool likelihood = false;
    bool gradient = false;
-   bool g2 = false;
-   bool gstep = false;
 
    void set_all(bool value) {
       likelihood = value;
       gradient = value;
-      g2 = value;
-      gstep = value;
    }
 };
 
@@ -75,10 +71,6 @@ private:
 
 public:
    void Gradient(const double *x, double *grad) const override;
-   void G2ndDerivative(const double *x, double *g2) const override;
-   void GStepSize(const double *x, double *gstep) const override;
-   bool hasG2ndDerivative() const override;
-   bool hasGStepSize() const override;
 
    // part of IMultiGradFunction interface, used widely both in Minuit and in RooFit:
    unsigned int NDim() const override;
@@ -98,10 +90,8 @@ private:
                  LikelihoodGradientWrapperT * /* used only for template deduction */ =
                     static_cast<RooFit::TestStatistics::LikelihoodGradientJob *>(nullptr));
 
-   // The following three overrides will not actually be used in this class, so they will throw:
+   // The following override will not actually be used in this class, so it will throw:
    double DoDerivative(const double *x, unsigned int icoord) const override;
-   double DoSecondDerivative(const double * /*x*/, unsigned int /*icoord*/) const override;
-   double DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const override;
 
    void optimizeConstantTerms(bool constStatChange, bool constValChange) override;
 

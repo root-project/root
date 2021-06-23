@@ -77,10 +77,6 @@ private:
    // IMultiGradFunction overrides
    double DoEval(const double *x) const override;
    double DoDerivative(const double *x, unsigned int icoord) const override;
-   bool hasG2ndDerivative() const override;
-   double DoSecondDerivative(const double *x, unsigned int icoord) const override;
-   bool hasGStepSize() const override;
-   double DoStepSize(const double *x, unsigned int icoord) const override;
 
    // members
    // mutable because ROOT::Math::IMultiGradFunction::DoDerivative is const

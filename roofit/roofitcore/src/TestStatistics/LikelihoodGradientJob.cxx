@@ -351,8 +351,6 @@ void LikelihoodGradientJob::calculate_all()
 //      printf("wallclock [master] gather_worker_results: %f\n", (t2 - t1) / 1.e9);
 
       calculation_is_clean->gradient = true;
-      calculation_is_clean->g2 = true;
-      calculation_is_clean->gstep = true;
    }
 }
 
@@ -374,7 +372,7 @@ void LikelihoodGradientJob::fill_gradient(double *grad)
 void LikelihoodGradientJob::fill_second_derivative(double *g2)
 {
    if (get_manager()->process_manager().is_master()) {
-      if (!calculation_is_clean->g2) {
+      if (!calculation_is_clean->gradient) {
          calculate_all();
       }
 
@@ -389,7 +387,7 @@ void LikelihoodGradientJob::fill_second_derivative(double *g2)
 void LikelihoodGradientJob::fill_step_size(double *gstep)
 {
    if (get_manager()->process_manager().is_master()) {
-      if (!calculation_is_clean->gstep) {
+      if (!calculation_is_clean->gradient) {
          calculate_all();
       }
 

@@ -232,30 +232,6 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int i_compone
    return _grad[i_component].derivative;
 }
 
-bool RooGradMinimizerFcn::hasG2ndDerivative() const
-{
-   return true;
-}
-
-bool RooGradMinimizerFcn::hasGStepSize() const
-{
-   return true;
-}
-
-double RooGradMinimizerFcn::DoSecondDerivative(const double *x, unsigned int i_component) const
-{
-   sync_parameters(x);
-   run_derivator(i_component);
-   return _grad[i_component].second_derivative;
-}
-
-double RooGradMinimizerFcn::DoStepSize(const double *x, unsigned int i_component) const
-{
-   sync_parameters(x);
-   run_derivator(i_component);
-   return _grad[i_component].step_size;
-}
-
 bool RooGradMinimizerFcn::returnsInMinuit2ParameterSpace() const
 {
    return true;
