@@ -1,0 +1,18 @@
+name: clang-tools code analysis
+
+on:
+  # push:
+  #   branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    env:
+      TRAVIS_BRANCH: ${{ github.base_ref }} 
+      TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: run clang-format script
+      run: .ci/format_script.sh
