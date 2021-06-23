@@ -69,10 +69,10 @@ static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overload does not perform any check on the duplicates.
-/// It is used for TBranch objects.
+/// This overload does not check whether the leaf/branch is already in bNamesReg. In case this is a friend leaf/branch,
+/// `allowDuplicates` controls whether we add both `friendname.bname` and `bname` or just the shorter version.
 static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                             const std::string &friendName)
+                             const std::string &friendName, bool allowDuplicates)
 {
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
@@ -81,8 +81,10 @@ static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bN
          bNames.push_back(friendBName);
    }
 
-   if (bNamesReg.insert(branchName).second)
-      bNames.push_back(branchName);
+   if (allowDuplicates || friendName.empty()) {
+      if (bNamesReg.insert(branchName).second)
+         bNames.push_back(branchName);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,13 +98,13 @@ static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bN
       return;
    }
 
-   InsertBranchName(bNamesReg, bNames, branchName, friendName);
+   InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
 
    foundLeaves.insert(leaf);
 }
 
 static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
-                          std::string prefix, std::string &friendName)
+                          std::string prefix, std::string &friendName, bool allowDuplicates)
 {
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch *>(sb);
@@ -113,16 +115,17 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
       if (!prefix.empty())
          newPrefix = fullName + ".";
 
-      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
+      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName, allowDuplicates);
 
       auto branchDirectlyFromTree = t.GetBranch(fullName.c_str());
       if (!branchDirectlyFromTree)
          branchDirectlyFromTree = t.FindBranch(fullName.c_str()); // try harder
       if (branchDirectlyFromTree)
-         InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName);
+         InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName,
+                          allowDuplicates);
 
       if (t.GetBranch(subBranchName.c_str()))
-         InsertBranchName(bNamesReg, bNames, subBranchName, friendName);
+         InsertBranchName(bNamesReg, bNames, subBranchName, friendName, allowDuplicates);
    }
 }
 
@@ -163,8 +166,8 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
             }
          } else if (branch->IsA() == TBranchObject::Class()) {
             // TBranchObject
-            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
-            InsertBranchName(bNamesReg, bNames, branchName, friendName);
+            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
          } else {
             // TBranchElement
             // Check if there is explicit or implicit dot in the name
@@ -178,11 +181,11 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
                dotIsImplied = true;
 
             if (dotIsImplied || branchName.back() == '.')
-               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName);
+               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName, allowDuplicates);
             else
-               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
+               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
 
-            InsertBranchName(bNamesReg, bNames, branchName, friendName);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
          }
       }
    }
