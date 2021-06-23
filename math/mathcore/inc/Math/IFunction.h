@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Author: L. Moneta    11/2006
+// Authors: L. Moneta    11/2006
 
 /**********************************************************************
  *                                                                    *
@@ -216,22 +216,22 @@ namespace ROOT {
          */
          T Derivative(const T *x, unsigned int icoord = 0) const { return DoDerivative(x, icoord); }
 
-      /**
-          Optimized method to evaluate at the same time the function value and derivative at a point x.
-          Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
-          Derived class should implement this method if performances play an important role and if it is faster to
-          evaluate value and derivative at the same time
+         /**
+             Optimized method to evaluate at the same time the function value and derivative at a point x.
+             Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
+             Derived class should implement this method if performances play an important role and if it is faster to
+             evaluate value and derivative at the same time
 
-      */
-      virtual void FdF(const T *x, T &f, T *df) const = 0;
+         */
+         virtual void FdF(const T *x, T &f, T *df) const = 0;
 
-    private:
+      private:
 
 
-      /**
-         function to evaluate the derivative with respect each coordinate. To be implemented by the derived class
-      */
-      virtual T DoDerivative(const T *x, unsigned int icoord) const = 0;
+         /**
+            function to evaluate the derivative with respect each coordinate. To be implemented by the derived class
+         */
+         virtual T DoDerivative(const T *x, unsigned int icoord) const = 0;
 
       };
 
@@ -322,15 +322,47 @@ namespace ROOT {
 
          @ingroup  GenFunc
       */
-      virtual void FdF(const T *x, T &f, T *df) const
-      {
-        f = BaseFunc::operator()(x);
-        Gradient(x, df);
-      }
+      template <class T>
+      class IGradientFunctionMultiDimTempl : virtual public IBaseFunctionMultiDimTempl<T>,
+                                             public IGradientMultiDimTempl<T> {
 
-      virtual bool returnsInMinuit2ParameterSpace() const {
-        return false;
-      }
+      public:
+         typedef IBaseFunctionMultiDimTempl<T> BaseFunc;
+         typedef IGradientMultiDimTempl<T> BaseGrad;
+
+         /**
+            Virtual Destructor (no operations)
+         */
+         virtual ~IGradientFunctionMultiDimTempl() {}
+
+         /**
+            Evaluate all the vector of function derivatives (gradient)  at a point x.
+            Derived classes must re-implement it if more efficient than evaluting one at a time
+         */
+         virtual void Gradient(const T *x, T *grad) const
+         {
+            unsigned int ndim = NDim();
+            for (unsigned int icoord  = 0; icoord < ndim; ++icoord)
+               grad[icoord] = BaseGrad::Derivative(x, icoord);
+         }
+
+         using  BaseFunc::NDim;
+
+         /**
+            Optimized method to evaluate at the same time the function value and derivative at a point x.
+            Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
+            Derived class should implement this method if performances play an important role and if it is faster to
+            evaluate value and derivative at the same time
+         */
+         virtual void FdF(const T *x, T &f, T *df) const
+         {
+           f = BaseFunc::operator()(x);
+           Gradient(x, df);
+         }
+
+         virtual bool returnsInMinuit2ParameterSpace() const {
+           return false;
+         }
 
       };
 

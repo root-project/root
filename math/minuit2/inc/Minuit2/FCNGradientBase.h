@@ -29,7 +29,7 @@ namespace Minuit2 {
     Minuit does a check of the user Gradient at the beginning, if this is not
     wanted the method "CheckGradient()" has to be overridden to return
     "false".
-  */
+ */
 
 enum class GradientParameterSpace {
   External, Internal

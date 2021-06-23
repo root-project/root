@@ -116,8 +116,10 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    double fcnmin = fcn(x);
    MinimumParameters pa(x, fcnmin);
 
+   InitialGradientCalculator igc(fcn, st.Trafo(), stra);
+   FunctionGradient tmp = igc(pa);
    FunctionGradient grd = gc(pa);
-   FunctionGradient dgrad(grd.Grad(), grd.G2(), grd.Gstep());
+   FunctionGradient dgrad(grd.Grad(), tmp.G2(), tmp.Gstep());
 
    if (gc.CheckGradient()) {
       bool good = true;
@@ -157,7 +159,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
 
    NegativeG2LineSearch ng2ls;
-   if(ng2ls.HasNegativeG2(dgrad, prec)) {
+   if (ng2ls.HasNegativeG2(dgrad, prec)) {
       Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
       state = ng2ls(fcn, state, ngc, prec);
    }

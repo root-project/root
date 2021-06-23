@@ -21,21 +21,19 @@ class MnMachinePrecision;
    Using a sin function one goes from a double-limited parameter range to
    an unlimited one
  */
-    class SinParameterTransformation {
+class SinParameterTransformation {
 
-    public:
+public:
+   SinParameterTransformation() {}
 
-      SinParameterTransformation() {}
+   ~SinParameterTransformation() {}
 
-      ~SinParameterTransformation() {}
+   long double Int2ext(long double Value, long double Upper, long double Lower) const;
+   long double Ext2int(long double Value, long double Upper, long double Lower, const MnMachinePrecision &) const;
+   long double DInt2Ext(long double Value, long double Upper, long double Lower) const;
 
-      long double Int2ext(long double Value, long double Upper, long double Lower) const;
-      long double Ext2int(long double Value, long double Upper, long double Lower,
-                     const MnMachinePrecision&) const;
-      long double DInt2Ext(long double Value, long double Upper, long double Lower) const;
-
-    private:
-    };
+private:
+};
 
 } // namespace Minuit2
 

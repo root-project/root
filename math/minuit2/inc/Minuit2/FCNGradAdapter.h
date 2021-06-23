@@ -21,6 +21,7 @@ namespace Minuit2 {
 
 /**
 
+
 template wrapped class for adapting to FCNBase signature a IGradFunction
 
 @author Lorenzo Moneta
@@ -28,7 +29,6 @@ template wrapped class for adapting to FCNBase signature a IGradFunction
 @ingroup Minuit
 
 */
-
 
 template <class Function>
 class FCNGradAdapter : public FCNGradientBase {

@@ -27,25 +27,24 @@ class MnMachinePrecision;
  * This transformation applies for the case of single side Lower Parameter limits
  */
 
-    class SqrtLowParameterTransformation /* : public ParameterTransformation */ {
+class SqrtLowParameterTransformation /* : public ParameterTransformation */ {
 
-    public:
+public:
+   SqrtLowParameterTransformation() {}
 
-      SqrtLowParameterTransformation() {}
+   ~SqrtLowParameterTransformation() {}
 
-      ~SqrtLowParameterTransformation() {}
+   // transformation from internal to external
+   long double Int2ext(long double Value, long double Lower) const;
 
-      // transformation from internal to external
-      long double Int2ext(long double Value, long double Lower) const;
+   // transformation from external to internal
+   long double Ext2int(long double Value, long double Lower, const MnMachinePrecision &) const;
 
-      // transformation from external to internal
-      long double Ext2int(long double Value, long double Lower, const MnMachinePrecision&) const;
+   // derivative of transformation from internal to external
+   long double DInt2Ext(long double Value, long double Lower) const;
 
-      // derivative of transformation from internal to external
-      long double DInt2Ext(long double Value, long double Lower) const;
-
-    private:
-    };
+private:
+};
 
 } // namespace Minuit2
 
