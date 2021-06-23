@@ -112,8 +112,11 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
       {
          _computeQueue.push(pAbsReal);
          auto clients = pAbsReal->valueClients();
-         for (auto *client : clients)
-            ++_nServersClients[static_cast<const RooAbsReal *>(client)].first;
+         for (auto *client : clients) {
+            if (list.find(*client)) {
+               ++_nServersClients[static_cast<const RooAbsReal *>(client)].first;
+            }
+         }
          _nServersClients[pAbsReal].second = clients.size();
       }
    }
@@ -171,7 +174,8 @@ double RooFitDriver::getVal()
       // check for nodes that have now all their dependencies calculated.
       for (auto *pAbsArg : node->valueClients()) {
          auto client = static_cast<const RooAbsReal *>(pAbsArg);
-         if (--_nRemainingServersClients.at(client).first == 0)
+         if (_nRemainingServersClients.find(client) != _nRemainingServersClients.end() &&
+             --_nRemainingServersClients.at(client).first == 0)
             _computeQueue.push(client);
       }
       // update _nRemainingServersClients of this node's servers
