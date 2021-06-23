@@ -14,5 +14,7 @@ jobs:
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: run clang-format script
       run: .ci/format_script.sh
