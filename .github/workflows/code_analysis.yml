@@ -1,10 +1,10 @@
 name: clang-tools code analysis
 
-on:
+on: pull_request
   # push:
   #   branches: [ $default-branch ]
-  pull_request:
-    branches: [ $default-branch ]
+  # pull_request:
+  #   branches: [ $default-branch ]
 
 jobs:
   clang-format:
