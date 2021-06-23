@@ -8,6 +8,7 @@ set(ZeroMQ_LIBRARIES ${ZeroMQ_LIBRARY} CACHE INTERNAL "" FORCE)
 
 ExternalProject_Add(BUILTIN_ZeroMQ
     URL https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.2.tar.gz
+    URL_HASH SHA256=02ecc88466ae38cf2c8d79f09cfd2675ba299a439680b64ade733e26a349edeb
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
         -DWITH_PERF_TOOL=OFF
@@ -41,7 +42,8 @@ set(ZeroMQ_SOURCE_DIR ${ZeroMQ_PREFIX}/src/BUILTIN_ZeroMQ/src CACHE INTERNAL "" 
 set(ZeroMQ_BUILD_DIR ${ZeroMQ_PREFIX}/src/BUILTIN_ZeroMQ-build CACHE INTERNAL "" FORCE)
 
 ExternalProject_Add(BUILTIN_cppzmq
-    URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.7.1.tar.gz
+    URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.3.0.tar.gz
+    URL_HASH SHA256=27d1f56406ba94ee779e639203218820975cf68174f92fbeae0f645df0fcada4
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${install_dir}
         -DCPPZMQ_BUILD_TESTS=OFF
