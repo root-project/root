@@ -55,7 +55,6 @@ RooExponential::RooExponential(const RooExponential& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///cout << "exp(x=" << x << ",c=" << c << ")=" << exp(c*x) << endl ;
 
 Double_t RooExponential::evaluate() const{
   return exp(c*x);
@@ -88,7 +87,7 @@ Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Exponential distribution.  
+/// Compute multiple values of Exponential distribution.
 RooSpan<double> RooExponential::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   return RooBatchCompute::dispatch->computeExponential(this, evalData, x->getValues(evalData, normSet), c->getValues(evalData, normSet));
 }

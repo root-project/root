@@ -182,7 +182,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   }
   if(bad)
   {
-    cout << "Roo2DKeysPdf::Roo2DKeysPdf Unable to initilize object; incompatible RooDataSet doesn't contain"<<endl;
+    cout << "Roo2DKeysPdf::Roo2DKeysPdf Unable to initialize object; incompatible RooDataSet doesn't contain"<<endl;
     cout << "                           all of the RooAbsReal arguments"<<endl;
     return 1;
   }
