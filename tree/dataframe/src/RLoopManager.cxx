@@ -71,8 +71,8 @@ static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload does not perform any check on the duplicates.
 /// It is used for TBranch objects.
-static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                       const std::string &friendName)
+static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                             const std::string &friendName)
 {
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
@@ -87,15 +87,16 @@ static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, 
 
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload makes sure that the TLeaf has not been already inserted.
-static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                       const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                             const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf,
+                             bool allowDuplicates)
 {
    const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
    if (!canAdd) {
       return;
    }
 
-   UpdateList(bNamesReg, bNames, branchName, friendName);
+   InsertBranchName(bNamesReg, bNames, branchName, friendName);
 
    foundLeaves.insert(leaf);
 }
@@ -118,10 +119,10 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
       if (!branchDirectlyFromTree)
          branchDirectlyFromTree = t.FindBranch(fullName.c_str()); // try harder
       if (branchDirectlyFromTree)
-         UpdateList(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName);
+         InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName);
 
       if (t.GetBranch(subBranchName.c_str()))
-         UpdateList(bNamesReg, bNames, subBranchName, friendName);
+         InsertBranchName(bNamesReg, bNames, subBranchName, friendName);
    }
 }
 
@@ -151,19 +152,19 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntriesUnsafe() == 1) {
                auto leaf = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
-               UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
+               InsertBranchName(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
             }
 
             for (auto leaf : *listOfLeaves) {
                auto castLeaf = static_cast<TLeaf *>(leaf);
                const auto leafName = std::string(leaf->GetName());
                const auto fullName = branchName + "." + leafName;
-               UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
+               InsertBranchName(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
             }
          } else if (branch->IsA() == TBranchObject::Class()) {
             // TBranchObject
             ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
-            UpdateList(bNamesReg, bNames, branchName, friendName);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName);
          } else {
             // TBranchElement
             // Check if there is explicit or implicit dot in the name
@@ -181,7 +182,7 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
             else
                ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
 
-            UpdateList(bNamesReg, bNames, branchName, friendName);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName);
          }
       }
    }
