@@ -1,7 +1,15 @@
 import unittest
 
-from DistRDF import Node, HeadNode, Proxy
+from DistRDF import Node, Proxy
 from DistRDF.Backends import Base
+from DistRDF.HeadNode import get_headnode
+
+
+def create_dummy_headnode(*args):
+    """Create dummy head node instance needed in the test"""
+    # Pass None as `npartitions`. The tests will modify this member
+    # according to needs
+    return get_headnode(None, *args)
 
 
 class TestBackend(Base.BaseBackend):
@@ -30,7 +38,7 @@ class OperationReadTest(unittest.TestCase):
 
     def test_attr_read(self):
         """Function names are read accurately."""
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         func = node.Define  # noqa: avoid PEP8 F841
@@ -38,7 +46,7 @@ class OperationReadTest(unittest.TestCase):
 
     def test_args_read(self):
         """Arguments (unnamed) are read accurately."""
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         newNode = node.Define(1, "b", a="1", b=2)
@@ -46,7 +54,7 @@ class OperationReadTest(unittest.TestCase):
 
     def test_kwargs_read(self):
         """Named arguments are read accurately."""
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         newNode = node.Define(1, "b", a="1", b=2)
@@ -61,7 +69,7 @@ class NodeReturnTest(unittest.TestCase):
 
     def test_action_proxy_return(self):
         """Proxy objects are returned for action nodes."""
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         newNode = node.Count()
@@ -70,7 +78,7 @@ class NodeReturnTest(unittest.TestCase):
 
     def test_transformation_proxy_return(self):
         """Node objects are returned for transformation nodes."""
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         newNode = node.Define(1)
@@ -135,7 +143,7 @@ class DfsTest(unittest.TestCase):
 
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -163,7 +171,7 @@ class DfsTest(unittest.TestCase):
 
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -190,7 +198,7 @@ class DfsTest(unittest.TestCase):
         and no children get pruned recursively.
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -218,7 +226,7 @@ class DfsTest(unittest.TestCase):
 
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -248,7 +256,7 @@ class DfsTest(unittest.TestCase):
 
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -284,7 +292,7 @@ class DfsTest(unittest.TestCase):
 
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -316,7 +324,7 @@ class DunderMethodsTest(unittest.TestCase):
         Node class.
 
         """
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         n1 = node.Define("a", b="c")  # First child node
@@ -341,7 +349,7 @@ class DunderMethodsTest(unittest.TestCase):
 
         """
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -433,7 +441,7 @@ class PickleTest(unittest.TestCase):
 
         # Node definitions
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.TransformationProxy(hn)
         n1 = node.Define("a", b="c")  # First child node

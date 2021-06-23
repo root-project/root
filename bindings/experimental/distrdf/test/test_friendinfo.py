@@ -84,7 +84,8 @@ class FriendInfoTest(unittest.TestCase):
         basetree.AddFriend(friendtree)
 
         # Instantiate head node of the graph with the base TTree
-        headnode = get_headnode(basetree, npartitions=None)
+        # Passing None as `npartitions` since it is not required for the test
+        headnode = get_headnode(None, basetree)
 
         # Retrieve FriendInfo instance
         friend_info = headnode._get_friend_info()

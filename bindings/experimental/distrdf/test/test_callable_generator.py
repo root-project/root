@@ -4,6 +4,13 @@ from DistRDF import ComputationGraphGenerator, HeadNode, Proxy
 from DistRDF.Backends import Base
 
 
+def create_dummy_headnode(*args):
+    """Create dummy head node instance needed in the test"""
+    # Pass None as `npartitions`. The tests will modify this member
+    # according to needs
+    return HeadNode.get_headnode(None, *args)
+
+
 class ComputationGraphGeneratorTest(unittest.TestCase):
     """
     Check mechanism to create a callable function that returns a PyROOT object
@@ -58,7 +65,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t = ComputationGraphGeneratorTest.Temp()
 
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
         node = Proxy.TransformationProxy(hn)
         # Set of operations to build the graph
@@ -91,7 +98,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t = ComputationGraphGeneratorTest.Temp()
 
         # Head node
-        hn = HeadNode.get_headnode(1, npartitions=None)
+        hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
         node = Proxy.TransformationProxy(hn)
 

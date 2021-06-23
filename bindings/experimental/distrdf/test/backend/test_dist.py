@@ -81,7 +81,8 @@ class DistRDataFrameInterface(unittest.TestCase):
         def __init__(self, *args):
             """initialize"""
 
-            self.headnode = HeadNode.get_headnode(*args, npartitions=None)
+            # Passing None as `npartitions`, the tests will change it as needed.
+            self.headnode = HeadNode.get_headnode(None, *args)
 
             self.headnode.backend = DistRDataFrameInterface.TestBackend()
 
