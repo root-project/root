@@ -53,6 +53,8 @@ protected:
 
    virtual RAttrMap CollectDefaults() const = 0;
 
+   virtual bool IsAggregation() const = 0;
+
    ///////////////////////////////////////////////////////////////////////////////
 
    struct Rec_t {
@@ -68,7 +70,7 @@ protected:
       const RAttrBase *prnt = this;
       std::string fullname = name;
       while (prnt) {
-         if ((prnt != this) && prnt->fPrefix) {
+         if (prnt->IsAggregation() && prnt->fPrefix) {
             fullname.insert(0, "_");        // fullname = prnt->fPrefix + _ + fullname
             fullname.insert(0, prnt->fPrefix);
          }
@@ -110,7 +112,7 @@ protected:
       auto prnt = this;
       std::string fullname = name;
       while (prnt) {
-         if ((prnt != this) && prnt->fPrefix) {
+         if (prnt->IsAggregation() && prnt->fPrefix) {
             fullname.insert(0, "_");        // fullname = prnt->fPrefix + _ + fullname
             fullname.insert(0, prnt->fPrefix);
          }
