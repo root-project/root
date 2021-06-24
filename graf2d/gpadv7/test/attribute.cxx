@@ -37,7 +37,7 @@ protected:
 };
 
 
-TEST(OptsTest, AttribStrings) {
+TEST(RAttrTest, AttribStrings) {
    CustomAttrs attrs;
 
    attrs.AttrLine().SetWidth(42.);
@@ -54,7 +54,7 @@ TEST(OptsTest, AttribStrings) {
    }
 }
 
-TEST(OptsTest, AttribVals) {
+TEST(RAttrTest, AttribVals) {
    CustomAttrs attrs;
 
    attrs.AttrText().SetColor(RColor::kBlue);
@@ -74,14 +74,14 @@ TEST(OptsTest, AttribVals) {
 
 }
 
-TEST(OptsTest, NullAttribCompare) {
+TEST(RAttrTest, NullAttribCompare) {
    RAttrLine al1;
    RAttrLine al2;
    EXPECT_EQ(al1, al2);
    EXPECT_EQ(al2, al1);
 }
 
-TEST(OptsTest, AttribEqual) {
+TEST(RAttrTest, AttribEqual) {
    CustomAttrs attrs;
 
    auto &al1 = attrs.AttrLine();
@@ -95,7 +95,7 @@ TEST(OptsTest, AttribEqual) {
    EXPECT_EQ(al2, al1);
 }
 
-TEST(OptsTest, AttribDiffer) {
+TEST(RAttrTest, AttribDiffer) {
    CustomAttrs attrs1;
    CustomAttrs attrs2;
    CustomAttrs attrs3;
@@ -118,7 +118,7 @@ TEST(OptsTest, AttribDiffer) {
 }
 
 
-TEST(OptsTest, AttribAssign) {
+TEST(RAttrTest, AttribAssign) {
    CustomAttrs attrs1;
    CustomAttrs attrs2;
 
@@ -155,7 +155,7 @@ TEST(OptsTest, AttribAssign) {
    EXPECT_FLOAT_EQ(attrs2.AttrLine().GetWidth(), 1.);
 }
 
-TEST(OptsTest, AttribValue) {
+TEST(RAttrTest, AttribValue) {
 
    RAttrValue<int> value1;
 
@@ -174,4 +174,33 @@ TEST(OptsTest, AttribValue) {
    EXPECT_EQ(value2, value1);
    EXPECT_EQ(value2.Get(), 5);
 
+}
+
+TEST(RAttrTest, EnumValue) {
+
+   enum Style { kNone, kFirst, kSecond, kThird, kForth };
+
+   RAttrValue<Style> value0{kFirst};
+   EXPECT_EQ(value0.Get(), kFirst);
+   EXPECT_EQ(value0.GetDefault(), kFirst);
+
+   // value0.Set(3); // this is invalid syntax
+   value0.Set(kThird);
+   EXPECT_EQ(value0.Get(), kThird);
+   EXPECT_EQ(value0.GetDefault(), kFirst);
+
+   RAttrValue<Style> value1{kSecond};
+   EXPECT_NE(value1, value0);
+
+   value1 = value0;
+   EXPECT_EQ(value1, value0);
+   EXPECT_EQ(value1.GetDefault(), kSecond);
+   value1.Clear();
+   EXPECT_NE(value1, value0);
+   EXPECT_EQ(value1.Get(), kSecond);
+
+   RAttrValue<Style> value2 = value0;
+   EXPECT_EQ(value2, value0);
+   EXPECT_EQ(value2.Get(), kThird);
+   EXPECT_EQ(value2.GetDefault(), kFirst);
 }
