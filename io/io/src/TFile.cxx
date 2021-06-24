@@ -4005,7 +4005,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 ///
 /// *The caller is responsible for deleting the pointer.*
 /// In READ mode, a nullptr is returned if the file does not exist or cannot be opened.
-/// In CREATE mode, a nullptr is returned if the file already exists or can not be created.
+/// In CREATE mode, a nullptr is returned if the file already exists or cannot be created.
 /// In RECREATE mode, a nullptr is returned if the file can not be created.
 /// In UPDATE mode, a nullptr is returned if the file cannot be created or opened.
 
