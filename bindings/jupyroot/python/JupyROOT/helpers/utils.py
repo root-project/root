@@ -56,14 +56,14 @@ _jsCode = """
      style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
 </div>
 <script>
-if (typeof require !== 'undefined') {{
+if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
-    require(['scripts/JSRoot.core'],
-        function(Core) {{
-           display_{jsDivId}(Core);
-        }}
-    );
+    requirejs.config({{
+       paths: {{ 'JSRootCore' : [ 'scripts/JSRoot.core', 'https://root.cern/js/6.1.0/scripts/JSRoot.core.min', 'https://jsroot.gsi.de/6.1.0/scripts/JSRoot.core.min' ] }}
+    }})(['JSRootCore'],  function(Core) {{
+       display_{jsDivId}(Core);
+    }});
 
 }} else if (typeof JSROOT !== 'undefined') {{
 
