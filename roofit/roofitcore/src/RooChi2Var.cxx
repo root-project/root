@@ -14,41 +14,37 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////////
 /** \class RooChi2Var
-RooChi2Var implements a simple \f$ \chi^2 \f$ calculation from a binned dataset
-and a PDF. It calculates
-
-\f{align*}{
-  \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2, \\
-  \text{where} \\
-  N_\mathrm{PDF,bin} &=
-    \begin{cases}
-        \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{if normal PDF}\\
-        \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{if extended PDF}
-    \end{cases} \\
-  \text{and} \\
-  \Delta_\mathrm{bin} &=
-    \begin{cases}
-        \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
-        \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
-    \end{cases}
-\f}
-
-If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
-In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
-expected number of events that the PDF predicts.
+ * RooChi2Var implements a simple \f$ \chi^2 \f$ calculation from a binned dataset
+ * and a PDF. It calculates
+ \f{align*}{
+   \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2 \\
+   N_\mathrm{PDF,bin} &=
+     \begin{cases}
+         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}\\
+         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
+     \end{cases} \\
+   \Delta_\mathrm{bin} &=
+     \begin{cases}
+         \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
+         \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
+     \end{cases}
+ \f}
+ * If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
+ * In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
+ * expected number of events that the PDF predicts.
  *
-\note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
-zero error. This leads to messages like:
-```
-  [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
-```
+ * \note If data errors are used, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
+ * zero error. This leads to messages like:
+ * ```
+ * [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
+ * ```
  *
-\note In this case, one can use the expected errors of the PDF instead of the data errors:
-```{.cpp}
-RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
-```
-
+ * \note In this case, one can use the expected errors of the PDF instead of the data errors:
+ * ```{.cpp}
+ * RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
+ * ```
  */
 
 #include "RooFit.h"
@@ -146,7 +142,6 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  RooChi2Var constructor. Optional arguments taken
 ///
@@ -202,7 +197,6 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a chi2 for given p.d.f. with respect given binned
 /// dataset. If cutRange is specified the calculation of the chi2 is
@@ -225,7 +219,6 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
    _etype(etype), _funcMode(extended?ExtendedPdf:Pdf)
 {
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +248,6 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, Ro
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
@@ -267,14 +259,12 @@ RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooChi2Var::~RooChi2Var()
 {
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
