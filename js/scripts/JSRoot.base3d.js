@@ -71,38 +71,32 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          return rect;
       }
 
-      let elem = pad, fp = this.getFramePainter();
-      if (can3d === 0) elem = this.getCanvSvg();
+      let fp = this.getFramePainter(), pp = this.getPadPainter(), size;
 
-      let size = { x: 0, y: 0, width: 100, height: 100, clname: clname, can3d: can3d };
-
-      if (fp && !fp.mode3d) {
-         elem = this.getFrameSvg();
-         size.x = elem.property("draw_x");
-         size.y = elem.property("draw_y");
+      if (fp && fp.mode3d && (can3d > 0)) {
+         size = fp.getFrameRect();
+      } else {
+         let elem = (can3d > 0) ? pad : this.getCanvSvg();
+         size = { x: 0, y: 0, width: elem.property("draw_width"), height: elem.property("draw_height") };
+         if (fp && !fp.mode3d) {
+            elem = this.getFrameSvg();
+            size.x = elem.property("draw_x");
+            size.y = elem.property("draw_y");
+         }
       }
 
-      size.width = elem.property("draw_width");
-      size.height = elem.property("draw_height");
+      size.clname = clname;
+      size.can3d = can3d;
 
-      if ((!fp || fp.mode3d) && (can3d > 0)) {
-         size.x = Math.round(size.x + size.width * JSROOT.gStyle.fPadLeftMargin);
-         size.y = Math.round(size.y + size.height * JSROOT.gStyle.fPadTopMargin);
-         size.width = Math.round(size.width * (1 - JSROOT.gStyle.fPadLeftMargin - JSROOT.gStyle.fPadRightMargin));
-         size.height = Math.round(size.height * (1 - JSROOT.gStyle.fPadTopMargin - JSROOT.gStyle.fPadBottomMargin));
-      }
-
-      let pp = this.getPadPainter(),
-          rect = pp ? pp.getPadRect() : { width: 100, height: 100 },
-          x2 = rect.width - size.x - size.width,
-          y2 = rect.height - size.y - size.height;
-
-      if ((x2 >= 0) && (y2 >= 0)) {
+      let rect = pp ?  pp.getPadRect() : null;
+      if (rect) {
          // while 3D canvas uses area also for the axis labels, extend area relative to normal frame
-         size.x = Math.round(size.x * 0.3);
-         size.y = Math.round(size.y * 0.9);
-         size.width = rect.width - size.x - Math.round(x2 * 0.3);
-         size.height = rect.height - size.y - Math.round(y2 * 0.5);
+         let dx = Math.round(size.width*0.07), dy = Math.round(size.height*0.05);
+
+         size.x = Math.max(0, size.x-dx);
+         size.y = Math.max(0, size.y-dy);
+         size.width = Math.min(size.width + 2*dx, rect.width - size.x);
+         size.height = Math.min(size.height + 2*dy, rect.height - size.y);
       }
 
       if (can3d === 1)

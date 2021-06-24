@@ -1,7 +1,7 @@
 /// @file JSRoot.hist3d.js
 /// histograms 3D graphics
 
-JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
+JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, ltx) => {
 
    "use strict";
 
@@ -32,12 +32,12 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if ((pos.x >= 0) && (pos.y >= 0)) qudrant = 3;
       if ((pos.x >= 0) && (pos.y < 0)) qudrant = 4;
 
-      function testvisible(id, range) {
+      let testvisible = (id, range) => {
          if (id <= qudrant) id+=4;
          return (id > qudrant) && (id < qudrant+range);
-      }
+      };
 
-      for (let n=0;n<top.children.length;++n) {
+      for (let n = 0; n < top.children.length; ++n) {
          let chld = top.children[n];
          if (chld.grid) chld.visible = bb && testvisible(chld.grid, 3); else
          if (chld.zid) chld.visible = testvisible(chld.zid, 2); else
@@ -50,8 +50,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             chld.visible = testvisible(chld.xyboxid + shift, range);
             if (!chld.visible && chld.bottom && bb)
                chld.visible = testvisible(chld.xyboxid, 3);
-         } else
-         if (chld.zboxid) {
+         } else if (chld.zboxid) {
             let range = 2, shift = 0;
             if (fb && bb) range = 5; else
             if (bb && !fb) range = 4; else
@@ -422,7 +421,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          if (tip.y1 === tip.y2) console.warn('same tip Y', tip.y1, tip.y2);
          if (tip.z1 === tip.z2) { tip.z2 = tip.z1 + 0.0001; } // avoid zero faces
 
-         for (let k=0,nn=-3;k<indicies.length;++k) {
+         for (let k = 0,nn = -3; k < indicies.length; ++k) {
             let vert = vertices[indicies[k]];
             pos[k*3]   = tip.x1 + vert.x * (tip.x2 - tip.x1);
             pos[k*3+1] = tip.y1 + vert.y * (tip.y2 - tip.y1);
@@ -547,7 +546,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             is_major = false; lbl = "";
          }
 
-         if (is_major && lbl && (lbl.length>0)) {
+         if (is_major && lbl && (lbl.length > 0)) {
             let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
@@ -573,7 +572,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       }
 
       if (xaxis && xaxis.fTitle) {
-         let text3d = new THREE.TextGeometry(xaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+         let text3d = new THREE.TextGeometry(ltx.translateLaTeX(xaxis.fTitle), { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
          text3d.computeBoundingBox();
          text3d.center = xaxis.TestBit(JSROOT.EAxisBits.kCenterTitle);
          text3d.gry = 2; // factor 2 shift
@@ -786,7 +785,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       }
 
       if (yaxis && yaxis.fTitle) {
-         let text3d = new THREE.TextGeometry(yaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+         let text3d = new THREE.TextGeometry(ltx.translateLaTeX(yaxis.fTitle), { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
          text3d.computeBoundingBox();
          text3d.center = yaxis.TestBit(JSROOT.EAxisBits.kCenterTitle);
          text3d.grx = 2; // factor 2 shift
@@ -941,7 +940,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          });
 
          if (zaxis && zaxis.fTitle) {
-            let text3d = new THREE.TextGeometry(zaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+            let text3d = new THREE.TextGeometry(ltx.translateLaTeX(zaxis.fTitle), { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 // draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y,
@@ -1008,7 +1007,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       }
 
       let linez_geom = jsrp.createLineSegments([0,0,grminz, 0,0,grmaxz], lineMaterial, null, true);
-      for(let n=0;n<4;++n) {
+      for(let n = 0; n < 4; ++n) {
          let line = new THREE.LineSegments(linez_geom, lineMaterial);
          line.zboxid = zcont[n].zid;
          line.position.copy(zcont[n].position);
