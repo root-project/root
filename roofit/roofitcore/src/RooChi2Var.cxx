@@ -35,7 +35,7 @@
  * In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
  * expected number of events that the PDF predicts.
  *
- * \note If data errors are used, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
+ * \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
  * zero error. This leads to messages like:
  * ```
  * [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
