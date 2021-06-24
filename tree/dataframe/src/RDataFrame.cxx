@@ -990,19 +990,25 @@ You see how we created one `double` variable for each thread in the pool, and la
 
 \anchor friends
 ### Friend trees
-Friend trees are supported by RDataFrame.
-In order to deal with friend trees with RDataFrame, the user is required to build
-the tree and its friends and instantiate a RDataFrame with it.
+Friend TTrees are supported by RDataFrame.
+Friend TTrees with a TTreeIndex are supported starting from ROOT v6.24.
+
+To use friend trees in RDataFrame, it's necessary to add the friends directly to
+the tree and instantiate a RDataFrame with the main tree:
+
 ~~~{.cpp}
 TTree t([...]);
 TTree ft([...]);
-t.AddFriend(ft, "myFriend");
+t.AddFriend(&ft, "myFriend");
 
 RDataFrame d(t);
 auto f = d.Filter("myFriend.MyCol == 42");
 ~~~
 
-Friend TTrees with a TTreeIndex are supported from ROOT v6.24.
+Columns coming from the friend trees can be referred to by their full name, like in the example above,
+or the friend tree name can be omitted in case the branch name is not ambiguous (e.g. "MyCol" could be used instead of
+      "myFriend.MyCol" in the example above).
+
 
 \anchor other-file-formats
 ### Reading data formats other than ROOT trees
