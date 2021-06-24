@@ -4004,8 +4004,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
 ///
 /// *The caller is responsible for deleting the pointer.*
-/// In READ mode, a nullptr is returned if the file does not exist,
-/// or if it exists, but can not be opened.
+/// In READ mode, a nullptr is returned if the file does not exist or cannot be opened.
 /// In RECREATE mode, a nullptr is returned if the file can not be created.
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
