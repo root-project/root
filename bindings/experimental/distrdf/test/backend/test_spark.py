@@ -70,7 +70,7 @@ class SparkBackendInitTest(unittest.TestCase):
         sc = pyspark.SparkContext(conf=sconf)
         backend = Backend.SparkBackend(sparkcontext=sc)
 
-        self.assertEqual(backend.optimize_npartitions(1), 10)
+        self.assertEqual(backend.optimize_npartitions(), 10)
 
 
 class OperationSupportTest(unittest.TestCase):

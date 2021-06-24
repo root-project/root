@@ -64,16 +64,16 @@ class SparkBackend(Base.BaseBackend):
         else:
             self.sc = pyspark.SparkContext.getOrCreate()
 
-    def optimize_npartitions(self, npartitions):
+    def optimize_npartitions(self):
         numex = self.sc.getConf().get("spark.executor.instances")
         numcoresperex = self.sc.getConf().get("spark.executor.cores")
 
-        if numex:
-            if numcoresperex:
+        if numex is not None:
+            if numcoresperex is not None:
                 return int(numex) * int(numcoresperex)
             return int(numex)
         else:
-            return npartitions
+            return self.MIN_NPARTITIONS
 
     def ProcessAndMerge(self, ranges, mapper, reducer):
         """
@@ -158,6 +158,6 @@ class SparkBackend(Base.BaseBackend):
         # 2. An educated guess according to the backend, using the backend's
         #    `optimize_npartitions` function
         # 3. Set `npartitions` to 2
-        npartitions = kwargs.pop("npartitions", self.optimize_npartitions(Base.BaseBackend.MIN_NPARTITIONS))
+        npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
         headnode = HeadNode.get_headnode(npartitions, *args)
         return DataFrame.RDataFrame(headnode, self)

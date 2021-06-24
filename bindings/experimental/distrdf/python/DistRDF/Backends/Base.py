@@ -305,12 +305,12 @@ class BaseBackend(ABC):
         """
         pass
 
-    def optimize_npartitions(self, npartitions):
+    def optimize_npartitions(self):
         """
         Distributed backends may optimize the number of partitions of the
         current dataset or leave it as it is.
         """
-        return npartitions
+        return self.MIN_NPARTITIONS
 
     def distribute_files(self, files_paths):
         """
