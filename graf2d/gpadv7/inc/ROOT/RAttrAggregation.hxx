@@ -30,6 +30,8 @@ protected:
 
    RAttrMap CollectDefaults() const override;
 
+   bool IsAggregation() const override { return true; }
+
    void CopyTo(RAttrAggregation &tgt, bool use_style = true) const;
 
    bool CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type = true);
