@@ -120,19 +120,22 @@ endif()
 
 #---Try to download a dummy (non-existing) file to check internet connection--------------------
 message(STATUS "Checking internet connectivity...")
-file(DOWNLOAD https://root.cern/files/dummy.txt ${CMAKE_CURRENT_BINARY_DIR}/dummy.txt
+file(DOWNLOAD https://root.cern/files/test.txt ${CMAKE_CURRENT_BINARY_DIR}/test.txt
   TIMEOUT 5 STATUS DOWNLOAD_STATUS
 )
 # Get the status code from the download status
 list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
 # Check if download was successful.
-if(${STATUS_CODE} EQUAL 6)
-  # Error 6 is "Couldn't resolve host name", so set the NO_CONNECTION flag
-  message(STATUS "No internet connection: will not automatically download external dependencies")
-  set(NO_CONNECTION TRUE)
-else()
+if(${STATUS_CODE} EQUAL 0)
+  # Succcess
   message(STATUS "Yes")
+  # Now let's delete the file
+  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/test.txt)
   set(NO_CONNECTION FALSE)
+else()
+  # Error
+  message(STATUS "No: will not automatically download external dependencies")
+  set(NO_CONNECTION TRUE)
 endif()
 
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
