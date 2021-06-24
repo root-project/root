@@ -172,6 +172,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    let symbolsRegexCache;
 
+   /** @summary Simple replacement of latex letters
+     * @private */
    let translateLaTeX = str => {
 
       while ((str.length > 2) && (str[0] == '{') && (str[str.length - 1] == '}'))
@@ -193,6 +195,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @memberof JSROOT
      * @private */
    let ltx = {};
+
+   ltx.translateLaTeX = translateLaTeX;
 
    /** @summary Just add plain text to the SVG text elements
      * @private */
