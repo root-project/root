@@ -37,11 +37,13 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas,\
  Stefan Wunsch, CERN/SFT
 
-## Deprecation and Removal
+## Deprecation, Removal, Backward Incompatibilities
 
 - The "Virtual MonteCarlo" facility VMC (`montecarlo/vmc`) has been removed from ROOT. The development of this package has moved to a [separate project](https://github.com/vmc-project/). ROOT's copy of VMC was deprecated since v6.18.
 
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
+
+- TTree::GetEntry() and TTree::GetEvent() no longer have 0 as the default value for the first parameter `entry`.
 
 
 ## Core Libraries
