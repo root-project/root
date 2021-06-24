@@ -49,6 +49,8 @@ protected:
       return RAttrMap().AddValue(GetName(), fDefault);
    }
 
+   bool IsAggregation() const override { return false; }
+
 public:
 
    RAttrValue() : RAttrBase(""), fDefault() {}
