@@ -41,7 +41,7 @@ The following people have contributed to this new version:
 
 - The "Virtual MonteCarlo" facility VMC (`montecarlo/vmc`) has been removed from ROOT. The development of this package has moved to a [separate project](https://github.com/vmc-project/). ROOT's copy of VMC was deprecated since v6.18.
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
-- TTree::GetEntry() and TTree::GetEvent() no longer have 0 as the default value for the first parameter `entry`.
+- `TTree::GetEntry()` and `TTree::GetEvent()` no longer have 0 as the default value for the first parameter `entry`. We are not aware of correct uses of this function without providing an entry number. If you have one, please simply pass `0` from now on.
 
 
 ## Core Libraries
@@ -134,4 +134,3 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 
 
 ## Build, Configuration and Testing Infrastructure
-
