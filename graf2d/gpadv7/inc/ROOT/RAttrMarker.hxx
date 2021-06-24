@@ -31,6 +31,47 @@ class RAttrMarker : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrMarker, "marker");
 
+   enum EStyle {
+      kNone = 0,
+      kDot = 1,
+      kPlus = 2,
+      kStar = 3,
+      kCircle = 4,
+      kMultiply = 5,
+      kFullDotSmall = 6,
+      kFullDotMedium = 7,
+      kFullDotLarge = 8,
+      kFullCircle = 20,
+      kFullSquare = 21,
+      kFullTriangleUp = 22,
+      kFullTriangleDown = 23,
+      kOpenCircle = 24,
+      kOpenSquare = 25,
+      kOpenTriangleUp = 26,
+      kOpenDiamond = 27,
+      kOpenCross = 28,
+      kFullStar = 29,
+      kOpenStar = 30,
+      kOpenTriangleDown = 32,
+      kFullDiamond = 33,
+      kFullCross = 34,
+      kOpenDiamondCross = 35,
+      kOpenSquareDiagonal = 36,
+      kOpenThreeTriangles = 37,
+      kOctagonCross = 38,
+      kFullThreeTriangles = 39,
+      kOpenFourTrianglesX = 40,
+      kFullFourTrianglesX = 41,
+      kOpenDoubleDiamond = 42,
+      kFullDoubleDiamond = 43,
+      kOpenFourTrianglesPlus = 44,
+      kFullFourTrianglesPlus = 45,
+      kOpenCrossX = 46,
+      kFullCrossX = 47,
+      kFourSquaresX = 48,
+      kFourSquaresPlus = 49
+   };
+
    RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
    RColor GetColor() const { return fColor; }
 

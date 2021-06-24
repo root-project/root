@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -21,8 +21,6 @@ namespace Experimental {
 \brief Template class to access single value from drawable or other attributes
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
-
-
 
 template<typename T>
 class RAttrValue : public RAttrBase {

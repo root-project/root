@@ -158,7 +158,7 @@ public:
    RHist1Drawable &Bar(double offset, double width, bool mode3d = false) { SetDrawKind("bar", mode3d ? 1 : 0); fBarOffset = offset; fBarWidth = width; return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
-   RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
+   RHist1Drawable &Star() { AttrMarker().SetStyle(RAttrMarker::kStar); return Marker(); }
    RHist1Drawable &Hist() { SetDrawKind("hist"); return *this; }
    RHist1Drawable &Line() { SetDrawKind("l"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
