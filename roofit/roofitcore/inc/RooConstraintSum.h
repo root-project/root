@@ -22,6 +22,7 @@
 
 class RooRealVar;
 class RooArgList ;
+class RooWorkspace ;
 
 class RooConstraintSum : public RooAbsReal {
 public:
@@ -41,7 +42,8 @@ public:
         RooArgSet const* constrainedParameters,
         RooArgSet const* externalConstraints,
         RooArgSet const* globalObservables,
-        const char* globalObservablesTag);
+        const char* globalObservablesTag,
+        RooWorkspace * workspace = nullptr);
 
 protected:
 

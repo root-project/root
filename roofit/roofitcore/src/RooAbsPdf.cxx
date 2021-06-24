@@ -1126,7 +1126,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
           pc.getSet("cPars"), // Constrain RooCmdArg
           pc.getSet("extCons"), // ExternalConstraints RooCmdArg
           pc.getSet("glObs"), // GlobalObservables RooCmdArg
-          pc.getString("globstag",0,true) // GlobalObservablesTag RooCmdArg
+          pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
+          _myws // passing workspace to cache the set of constraints
   );
 
   // Include constraints, if any, in likelihood
@@ -3645,38 +3646,5 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
   if (_norm) {
     _normMgr.sterilize() ;
     _norm = 0 ;
-  }
-}
-
-
-std::string RooAbsPdf::getConstraintSetCacheName(RooArgSet const& observables) const {
-  auto observableNames = RooHelpers::getColonSeparatedNameString(observables);
-  return std::string("CACHE_CONSTR_OF_PDF_") + GetName() + "_FOR_OBS_" +  observableNames;
-}
-
-
-RooArgSet const* RooAbsPdf::tryToGetConstraintSetFromWorkspace(RooArgSet const& observables) const {
-  if(!_myws) return nullptr;
-
-  const std::string constraintSetCacheName = getConstraintSetCacheName(observables);
-
-  if(_myws->set(constraintSetCacheName.c_str())) {
-    // retrieve from cache
-    const RooArgSet *constr = _myws->set(getConstraintSetCacheName(observables).c_str());
-    coutI(Minimization) << "createNLL picked up cached constraints from workspace with " << constr->size()
-                        << " entries" << endl;
-    return constr;
-  }
-  return nullptr;
-}
-
-
-void RooAbsPdf::tryToCacheConstraintSetInWorkspace(RooArgSet const& observables, RooArgSet const& constraints) const {
-  // write to cache
-  if (_myws) {
-     const std::string constraintSetCacheName = getConstraintSetCacheName(observables);
-     coutI(Minimization) << "createNLL: caching constraint set under name "
-                         << constraintSetCacheName << " with " << constraints.size() << " entries" << endl;
-     _myws->defineSetInternal(constraintSetCacheName.c_str(), constraints);
   }
 }

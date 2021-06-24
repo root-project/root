@@ -280,10 +280,6 @@ public:
 
   virtual RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0, 
 					   Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="") const ;
-  
-  std::string getConstraintSetCacheName(RooArgSet const& observables) const;
-  RooArgSet const* tryToGetConstraintSetFromWorkspace(RooArgSet const& observables) const;
-  void tryToCacheConstraintSetInWorkspace(RooArgSet const& observables, RooArgSet const& constraints) const;
 
 private:
 
