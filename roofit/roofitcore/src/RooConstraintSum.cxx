@@ -33,6 +33,8 @@ arguments.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooMsgService.h"
+#include "RooHelpers.h"
+#include "RooWorkspace.h"
 
 #include <ROOT/RMakeUnique.hxx>
 
@@ -126,11 +128,29 @@ std::unique_ptr<RooArgSet> getGlobalObservables(
   return nullptr;
 }
 
+
+RooArgSet const* tryToGetConstraintSetFromWorkspace(
+        RooAbsPdf const& pdf, RooWorkspace * workspace, std::string const& constraintSetCacheName) {
+  if(!workspace) return nullptr;
+
+  if(workspace->set(constraintSetCacheName.c_str())) {
+    // retrieve from cache
+    const RooArgSet *constr = workspace->set(constraintSetCacheName.c_str());
+    oocoutI(&pdf, Minimization)
+        << "createConstraintTerm picked up cached constraints from workspace with " << constr->size()
+        << " entries" << std::endl;
+    return constr;
+  }
+  return nullptr;
+}
+
+
 } // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the parameter constraint sum to add to the negative log-likelihood.
+/// Returns a `nullptr` if the parameters are unconstrained.
 /// \param[in] name Name of the created RooConstraintSum object.
 /// \param[in] pdf The pdf model whose parameters should be constrained.
 ///            Constraint terms will be extracted from RooProdPdf instances
@@ -150,6 +170,7 @@ std::unique_ptr<RooArgSet> getGlobalObservables(
 ///            used. The `globalObservables` and `globalObservablesTag`
 ///            parameters are mutually exclusive, meaning at least one of them
 ///            has to be `nullptr`.
+/// \param[in] workspace RooWorkspace to cache the set of constraints.
 std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         std::string const& name,
         RooAbsPdf const& pdf,
@@ -157,7 +178,8 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         RooArgSet const* constrainedParameters,
         RooArgSet const* externalConstraints,
         RooArgSet const* globalObservables,
-        const char* globalObservablesTag)
+        const char* globalObservablesTag,
+        RooWorkspace * workspace)
 {
   bool doStripDisconnected = false ;
 
@@ -175,7 +197,10 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
 
-  if (RooArgSet const* constr = pdf.tryToGetConstraintSetFromWorkspace(observables)) {
+  auto observableNames = RooHelpers::getColonSeparatedNameString(observables);
+  auto constraintSetCacheName = std::string("CACHE_CONSTR_OF_PDF_") + pdf.GetName() + "_FOR_OBS_" +  observableNames;
+
+  if (RooArgSet const* constr = tryToGetConstraintSetFromWorkspace(pdf, workspace, constraintSetCacheName)) {
     allConstraints.add(*constr);
   } else {
 
@@ -187,7 +212,13 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         allConstraints.add(*externalConstraints);
      }
 
-     pdf.tryToCacheConstraintSetInWorkspace(observables, allConstraints);
+     // write to cache
+     if (workspace) {
+        oocoutI(&pdf, Minimization)
+            << "createConstraintTerm: caching constraint set under name "
+            << constraintSetCacheName << " with " << allConstraints.size() << " entries" << std::endl;
+        workspace->defineSetInternal(constraintSetCacheName.c_str(), allConstraints);
+     }
   }
 
   auto glObs = getGlobalObservables(pdf, globalObservables, globalObservablesTag);
