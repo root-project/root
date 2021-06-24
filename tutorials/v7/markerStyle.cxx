@@ -20,7 +20,7 @@ void markerStyle()
 {
    using namespace ROOT::Experimental;
 
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RMarker styles");
    double num = 0.3;
 
    double x = 0;
