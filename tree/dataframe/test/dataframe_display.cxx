@@ -229,3 +229,19 @@ TEST(RDFDisplayTests, SubBranch)
    const auto expected = "p.a | p.b | \n42  | 84  | \n    |     | \n";
    EXPECT_EQ(res, expected);
 }
+
+// https://github.com/root-project/root/issues/8450
+TEST(RDFDisplayTests, Friends)
+{
+  TTree main("main", "main");
+  main.Fill();
+  TTree fr("friend", "friend");
+  int x = 0;
+  fr.Branch("x", &x);
+  fr.Fill();
+  main.AddFriend(&fr);
+
+  const auto res = ROOT::RDataFrame(main).Display()->AsString();
+  const auto expected = "friend.x | \n0        | \n         | \n";
+  EXPECT_EQ(res, expected);
+}
