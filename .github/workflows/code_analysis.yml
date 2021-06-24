@@ -12,9 +12,8 @@ jobs:
     env:
       TRAVIS_BRANCH: ${{ github.base_ref }} 
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
+      BASE_COMMIT: ${{ github.event.pull_request.head.sha }}
     steps:
     - uses: actions/checkout@v2
-    - name: fetch base branch
-      run: git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin $TRAVIS_BRANCH
     - name: run clang-format script
       run: .ci/format_script.sh
