@@ -42,10 +42,9 @@ class RAttrValue : public RAttrBase {
       }
    };
 
-
 protected:
 
-   T fDefault;            ///<!    default value
+   T fDefault{};          ///<!    default value
 
    RAttrMap CollectDefaults() const override
    {
@@ -55,6 +54,8 @@ protected:
 public:
 
    RAttrValue() : RAttrBase(""), fDefault() {}
+
+   RAttrValue(const T& dflt) : RAttrBase(""), fDefault(dflt) {}
 
    RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name ? name : ""), fDefault(dflt) { }
 
