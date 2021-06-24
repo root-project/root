@@ -319,7 +319,7 @@ def produceCanvasJson(canvas):
 
    ROOT.TColor.DefinedColors()
 
-   canvas_json = ROOT.TBufferJSON.ConvertToJSON(canvas, 3)
+   canvas_json = ROOT.TBufferJSON.ConvertToJSON(canvas, 23)
 
    # Cleanup primitives after conversion
    if style is not None: prim.Remove(style)
