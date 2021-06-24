@@ -165,10 +165,14 @@ static void mod_m(const uint64_t *mul, uint64_t *out)
    // (The assembly implementation shifts by 63, which gives the same result.)
    int64_t t0 = c >> 1;
 
-   // c = 0 -> t2 = 0; c = 1 -> upper 16 bits set; c = -1 -> lower 48 bits set
-   int64_t t2 = t0 - (c << 48);
+   // Left shifting negative values is undefined behavior until C++20, cast to
+   // unsigned.
+   uint64_t c_unsigned = static_cast<uint64_t>(c);
 
-   // c = 0 -> t1 = 0; c = 1 -> all bits set; c = -1 -> t1 = 0
+   // c = 0 -> t2 = 0; c = 1 -> upper 16 bits set; c = -1 -> lower 48 bits set
+   int64_t t2 = t0 - (c_unsigned << 48);
+
+   // c = 0 -> t1 = 0; c = 1 -> all bits set (sign extension); c = -1 -> t1 = 0
    // (The assembly implementation shifts by 63, which gives the same result.)
    int64_t t1 = t2 >> 48;
 
