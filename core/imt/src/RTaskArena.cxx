@@ -43,6 +43,7 @@
 namespace ROOT {
 namespace Internal {
 
+// To honor cgroup quotas if set: see https://github.com/oneapi-src/oneTBB/issues/190
 int LogicalCPUBandwithControl()
 {
 #ifdef R__LINUX
