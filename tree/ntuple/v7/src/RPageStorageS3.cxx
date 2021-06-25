@@ -42,12 +42,15 @@ private:
    Davix::RequestParams fReqParams;
 public:
    RS3Handle() = default;
-   explicit RS3Handle(std::string_view uri) : fUri(uri) {
-      if (fUri.empty()) {
-         throw ROOT::Experimental::RException(R__FAIL("Empty S3 URI"));
+   explicit RS3Handle(std::string_view ntupleName, std::string_view uri) {
+      R__ASSERT(!ntupleName.empty() && !uri.empty());
+      fUri += uri;
+      if (uri.back() != '/') {
+         fUri += '/';
       }
-      if (fUri.back() != '/') {
-         fUri.push_back('/');
+      fUri += ntupleName;
+      if (ntupleName.back() != '/') {
+         fUri += '/';
       }
       const char *s3_sec = getenv("S3_SECRET_KEY");
       const char *s3_acc = getenv("S3_ACCESS_KEY");
@@ -132,8 +135,7 @@ ROOT::Experimental::Detail::RPageSinkS3::RPageSinkS3(std::string_view ntupleName
       "Do not store real data with this version of RNTuple!";
    fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkS3");
-   std::string ntplUri = fUri + std::string(ntupleName);
-   fS3Handle = std::make_unique<RS3Handle>(ntplUri);
+   fS3Handle = std::make_unique<RS3Handle>(ntupleName, fUri);
 }
 
 ROOT::Experimental::Detail::RPageSinkS3::~RPageSinkS3() = default;
@@ -274,8 +276,7 @@ ROOT::Experimental::Detail::RPageSourceS3::RPageSourceS3(
 {
    RPageSource::fDecompressor = std::make_unique<RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceS3");
-   std::string ntplUri = fUri + std::string(ntupleName);
-   fS3Handle = std::make_unique<RS3Handle>(ntplUri);
+   fS3Handle = std::make_unique<RS3Handle>(ntupleName, fUri);
 }
 
 ROOT::Experimental::Detail::RPageSourceS3::~RPageSourceS3() = default;

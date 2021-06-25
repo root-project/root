@@ -2,8 +2,7 @@
 
 TEST(RNTuple, S3Basics)
 {
-   std::string s3Uri("s3://ntpl0.s3.us-east-2.amazonaws.com/");
-
+   std::string s3Uri("s3://ntpl0.s3.us-east-2.amazonaws.com");
    {
       auto model = RNTupleModel::Create();
       auto pt = model->MakeField<float>("pt");
