@@ -5243,7 +5243,7 @@ void TH1::LabelsDeflate(Option_t *ax)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Double the number of bins for axis.
-/// Refill histogram
+/// Refill histogram.
 /// This function is called by TAxis::FindBin(const char *label)
 
 void TH1::LabelsInflate(Option_t *ax)
