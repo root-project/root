@@ -124,6 +124,12 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 ## JavaScript ROOT
 
 
+## Jupyter lab
+
+- Let use created notebooks with viewers like https://nbviewer.jupyter.org/
+- Fix problem with using of local JSROOT version
+
+
 ## Tutorials
 
 
