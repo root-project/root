@@ -53,7 +53,7 @@ protected:
 
    virtual RAttrMap CollectDefaults() const = 0;
 
-   virtual bool IsAggregation() const = 0;
+   virtual bool IsAggregation() const { return false; }
 
    ///////////////////////////////////////////////////////////////////////////////
 

@@ -49,11 +49,9 @@ protected:
       return RAttrMap().AddValue(GetName(), fDefault);
    }
 
-   bool IsAggregation() const override { return false; }
-
 public:
 
-   RAttrValue() : RAttrBase(""), fDefault() {}
+   RAttrValue() : RAttrBase("") {}
 
    RAttrValue(const T& dflt) : RAttrBase(""), fDefault(dflt) {}
 
