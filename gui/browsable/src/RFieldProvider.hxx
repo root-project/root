@@ -90,7 +90,7 @@ public:
       if (bufsize > 10) bufsize-=3; else bufsize = -1;
 
       auto view = tuple->GetView<T>(field_name);
-      for (auto i : tuple->GetEntryRange()) {
+      for (auto i : view.GetFieldRange()) {
          h1->Fill(view(i));
          if (++cnt == bufsize) {
             h1 = TestHistBuffer(h1);
@@ -111,7 +111,7 @@ public:
       int nentries = 0;
 
       auto view = tuple->GetView<std::string>(field_name);
-      for (auto i : tuple->GetEntryRange()) {
+      for (auto i : view.GetFieldRange()) {
           std::string v = view(i);
           nentries++;
           auto iter = values.find(v);
