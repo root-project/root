@@ -30,7 +30,7 @@ protected:
 
    RAttrMap CollectDefaults() const override;
 
-   bool IsAggregation() const override { return true; }
+   bool IsAggregation() const final { return true; }
 
    void CopyTo(RAttrAggregation &tgt, bool use_style = true) const;
 
