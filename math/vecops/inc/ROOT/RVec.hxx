@@ -276,8 +276,10 @@ auto hpt = d.Define("pt", "sqrt(pxs * pxs + pys * pys)[E>200]")
             .Histo1D("pt");
 hpt->Draw();
 ~~~
-<a name="RVecdoxyref"></a>
+\anchor RVecdoxyref
+
 **/
+
 // clang-format on
 template <typename T>
 class RVec {
