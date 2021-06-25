@@ -67,7 +67,7 @@ function script_load_{jsDivId}(src, on_error) {{
     let script = document.createElement('script');
     script.src = src;
     script.onload = function() {{ display_{jsDivId}(JSROOT); }};
-    script.onerror = on_error;
+    script.onerror = function() {{ script.remove(); on_error(); }};
     document.head.appendChild(script);
 }}
 
