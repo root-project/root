@@ -124,7 +124,7 @@ binnedData.Print("v")
 # data using sum-of-weights-squared errors does give correct error
 # estimates
 chi2 = ROOT.RooChi2Var("chi2", "chi2", p2, binnedData, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
-m = ROOT.RooMinuit(chi2)
+m = ROOT.RooMinimizer(chi2)
 m.migrad()
 m.hesse()
 
