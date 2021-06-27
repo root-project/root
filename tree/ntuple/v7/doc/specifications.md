@@ -216,10 +216,10 @@ subfields are ordered from smaller IDs to larger IDs.
 
 The flags field can have one of the following bits set
 
-| Bit      | Meaning                                                                       |
-|----------|-------------------------------------------------------------------------------|
-| 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored     |
-| 0x02     | Alias field, i.e. among the columns referring to this field are alias columns |
+| Bit      | Meaning                                                                    |
+|----------|----------------------------------------------------------------------------|
+| 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
+| 0x02     | Alias field, the columns referring to this field are alias columns         |
 
 The structural role of the field can have on of the following values
 
@@ -292,7 +292,20 @@ The flags field can have one of the following bits set
 
 #### Alias columns
 
-An alias column is just a 32bit integer that references the physical column ID.
+An alias column has the following format
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++                      Physical Column ID                       +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           Field ID                            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+The first 32bit integer references the physical column ID.
+The second 32bit integer references a field that needs to have the "alias field" flag set.
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns.
 In the footer and page list envelopes, only physical column IDs must be referenced.
@@ -305,9 +318,9 @@ The footer envelope has the following structure:
 - Feature flags
 - Header checksum (CRC32)
 - List frame of extension header envelope links
-- List frame of meta-data block envelope links
 - List frame of column group record frames
 - List frame of cluster summary record frames
+- List frame of meta-data block envelope links
 
 The header checksum can be used to cross-check that header and footer belong together.
 
@@ -353,12 +366,12 @@ If flags is zero, the cluster stores the event range of _all_ the columns.
 
 ### Page List Envelope
 
-The page list envelope contains a collection frame where every item corresponds to a column
-and is itself a collection frame where the items correspond to the pages of the column in the cluster.
+The page list envelope contains a list frame where every item corresponds to a column
+and is itself a list frame in which the items correspond to the pages of the column in the cluster.
 The order of the outer items must match the order of the columns as specified in the cluster summary.
 For a complete cluster (covering all columns), the order is given by the column IDs (small to large).
 
-The order of the inner items must match the order of pages / elements.
+The order of the inner items must match the order of pages resp. elements.
 Every inner item (that describes a page) has the following structure:
 
 ```
@@ -441,7 +454,7 @@ TODO(jblomer)
 TODO(jblomer)
 - Ignore unknown column types
 - Backwards compatiblity promised back to version 1
-- Envelope compression algorithm(s) fixed
+- Envelope compression algorithm(s) fixed (zstd or none?)
 - Feature flags
 - Skipping of unknown information (frames, envelopes)
 - Writer version and minimum version
@@ -456,4 +469,4 @@ TODO(jblomer)
   - Take ROOT::Experimental::RNTuple out of experimental?
   - Which locator types should we specify in addition? SHA-1 hash? 128bit UUID?
   - Reference fields
-  - Column types complete? Should we have 128bit floats, ints? 8bit floats?
+  - Column types complete? Should we have 128bit floats, ints? 8bit floats? Interval floats?
