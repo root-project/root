@@ -56,6 +56,18 @@ public:
     }
   }
 
+  /// Construct a non-owning RooArgList from a vector of RooAbsArg pointers.
+  /// This constructor is mainly intended for pyROOT. With cppyy, a Python list
+  /// or tuple can be implicitly converted to an std::vector, and by enabling
+  /// implicit construction of a RooArgList from a std::vector, we indirectly
+  /// enable implicit conversion from a Python list/tuple to RooArgLists.
+  /// \param vec A vector with pointers to the arguments.
+  RooArgList(std::vector<RooAbsArg*> const& vec) {
+    for(auto const& arg : vec) {
+      add(*arg);
+    }
+  }
+
   virtual ~RooArgList();
   // Create a copy of an existing list. New variables cannot be added
   // to a copied list. The variables in the copied list are independent
