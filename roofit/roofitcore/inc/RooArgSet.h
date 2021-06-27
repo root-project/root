@@ -73,6 +73,18 @@ public:
     }
   }
 
+  /// Construct a non-owning RooArgSet from a vector of RooAbsArg pointers.
+  /// This constructor is mainly intended for pyROOT. With cppyy, a Python list
+  /// or tuple can be implicitly converted to an std::vector, and by enabling
+  /// implicit construction of a RooArgSet from a std::vector, we indirectly
+  /// enable implicit conversion from a Python list/tuple to RooArgSets.
+  /// \param vec A vector with pointers to the arguments.
+  RooArgSet(std::vector<RooAbsArg*> const& vec) {
+    for(auto const& arg : vec) {
+      add(*arg);
+    }
+  }
+
   RooArgSet(const RooArgSet& other, const char *name="");
   /// Move constructor.
   RooArgSet(RooArgSet && other) : RooAbsCollection(std::move(other)) {}
