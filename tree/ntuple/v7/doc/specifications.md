@@ -176,13 +176,13 @@ The header consists of the following elements:
  - Feature flag
  - String: name of the ntuple
  - String: description of the ntuple
- - List frame: list of fields
- - List frame: list of columns
- - List frame: list of alias columns
+ - List frame: list of field record frames
+ - List frame: list of column record frames
+ - List frame: list of alias column record frames
 
 #### Field Description
 
-Every element of the list of fields has the following contents
+Every field record frame of the list of fields has the following contents
 
 ```
  0                   1                   2                   3
