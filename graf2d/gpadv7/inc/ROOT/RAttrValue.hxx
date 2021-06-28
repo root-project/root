@@ -103,6 +103,9 @@ public:
    friend bool operator==(const RAttrValue& lhs, const RAttrValue& rhs) { return lhs.Get() == rhs.Get(); }
    friend bool operator!=(const RAttrValue& lhs, const RAttrValue& rhs) { return lhs.Get() != rhs.Get(); }
 
+   friend bool operator==(const RAttrValue& lhs, const T& rhs) { return lhs.Get() == rhs; }
+   friend bool operator!=(const RAttrValue& lhs, const T& rhs) { return lhs.Get() != rhs; }
+
 };
 
 } // namespace Experimental
