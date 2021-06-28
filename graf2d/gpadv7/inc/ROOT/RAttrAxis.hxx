@@ -22,7 +22,7 @@ namespace Experimental {
 /** \class RAttrAxisLabels
 \ingroup GpadROOT7
 \author Sergey Linev <s.linev@gsi.de>
-\date 2020-02-20
+\date 2021-06-28
 \brief Axis labels drawing attributes
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
@@ -38,7 +38,7 @@ class RAttrAxisLabels : public RAttrText {
 /** \class RAttrAxisTitle
 \ingroup GpadROOT7
 \author Sergey Linev <s.linev@gsi.de>
-\date 2020-02-20
+\date 2021-06-28
 \brief Axis title and its drawing attributes
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
@@ -55,6 +55,27 @@ class RAttrAxisTitle : public RAttrText {
    void SetLeft() { position = "left"; }
    void SetCenter() { position = "center"; }
    void SetRight() { position = "right"; }
+};
+
+/** \class RAttrAxisTicks
+\ingroup GpadROOT7
+\author Sergey Linev <s.linev@gsi.de>
+\date 2021-06-28
+\brief Axis ticks attributes
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAttrAxisTicks : public RAttrAggregation {
+   R__ATTR_CLASS(RAttrAxisTicks, "ticks");
+
+   RAttrValue<std::string> side{this, "side", "normal"};     ///<! ticks position - normal, invert, both
+   RAttrValue<RPadLength> size{this, "size", 0.02_normal};   ///<! ticks size
+   RAttrValue<RColor> color{this, "color", RColor::kBlack};  ///<! ticks color
+   RAttrValue<int> width{this, "width", 1};                  ///<! ticks width
+
+   void SetNormal() { side = "normal"; }
+   void SetInvert() { side = "invert"; }
+   void SetBoth() { side = "both"; }
 
 };
 
@@ -67,108 +88,48 @@ class RAttrAxisTitle : public RAttrText {
 */
 
 class RAttrAxis : public RAttrAggregation {
-   RAttrValue<double> fMin{this, "min", 0.};                             ///<! axis min
-   RAttrValue<double> fMax{this, "max", 0.};                             ///<! axis max
-   RAttrValue<double> fZoomMin{this, "zoommin", 0.};                     ///<! axis zoom min
-   RAttrValue<double> fZoomMax{this, "zoommax", 0.};                     ///<! axis zoom max
-   RAttrValue<double> fLog{this, "log", 0};                              ///<! log scale, <1 off, 1 - base10, 2 - base 2, 2.71 - exp, 3, 4, ...
-   RAttrValue<double> fSymlog{this, "symlog", 0};                        ///<! symlog scale constant, 0 - off
-   RAttrValue<bool> fReverse{this, "reverse", false};                    ///<! reverse scale
-   RAttrValue<bool> fTimeDisplay{this, "time", false};                   ///<! time display
-   RAttrValue<double> fTimeOffset{this, "time_offset", 0};               ///<! time offset to display
-   RAttrValue<std::string> fTimeFormat{this, "time_format", ""};         ///<! time format
-   RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};       ///<! axis ending style - none, arrow, circle
-   RAttrValue<RPadLength> fEndingSize{this, "ending_size", 0.02_normal}; ///<! axis ending size
-   RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
-   RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
-   RAttrValue<RColor> fTicksColor{this, "ticks_color", RColor::kBlack};  ///<! ticks color
-   RAttrValue<int> fTicksWidth{this, "ticks_width", 1};                  ///<! ticks width
-
    R__ATTR_CLASS(RAttrAxis, "axis");
 
    RAttrLine line{this, "line"};                                    ///<! line attributes
+   RAttrLineEnding ending{this, "ending"};                          ///<! ending attributes
    RAttrAxisLabels labels{this, "labels"};                          ///<! labels attributes
    RAttrAxisTitle title{this, "title"};                             ///<! title attributes
+   RAttrAxisTicks ticks{this, "ticks"};                             ///<! ticks attributes
+   RAttrValue<double> min{this, "min", 0.};                         ///<! axis min
+   RAttrValue<double> max{this, "max", 0.};                         ///<! axis max
+   RAttrValue<double> zoommin{this, "zoommin", 0.};                 ///<! axis zoom min
+   RAttrValue<double> zoommax{this, "zoommax", 0.};                 ///<! axis zoom max
+   RAttrValue<double> log{this, "log", 0};                          ///<! log scale, <1 off, 1 - base10, 2 - base 2, 2.71 - exp, 3, 4, ...
+   RAttrValue<double> symlog{this, "symlog", 0};                    ///<! symlog scale constant, 0 - off
+   RAttrValue<bool> reverse{this, "reverse", false};                ///<! reverse scale
+   RAttrValue<bool> time{this, "time", false};                      ///<! time scale
+   RAttrValue<double> time_offset{this, "time_offset", 0};          ///<! time offset to display
+   RAttrValue<std::string> time_format{this, "time_format", ""};    ///<! time format
 
-   RAttrAxis &SetMin(double min) { fMin = min; return *this; }
-   RAttrAxis &SetMax(double max) { fMax = max; return *this; }
-   double GetMin() const { return fMin; }
-   double GetMax() const { return fMax; }
-   bool HasMin() const { return fMin.Has(); }
-   bool HasMax() const { return fMax.Has(); }
+   RAttrAxis &SetMinMax(double _min, double _max) { min = _min; max = _max; return *this; }
+   RAttrAxis &ClearMinMax() { min.Clear(); max.Clear(); return *this; }
 
-   RAttrAxis &SetMinMax(double min, double max) { SetMin(min); SetMax(max); return *this; }
-   void ClearMinMax() { fMin.Clear(); fMax.Clear(); }
+   RAttrAxis &SetZoom(double _zoommin, double _zoommax) { zoommin = _zoommin; zoommax = _zoommax; return *this; }
+   RAttrAxis &ClearZoom() { zoommin.Clear(); zoommax.Clear(); return *this; }
 
-   RAttrAxis &SetZoomMin(double min) { fZoomMin = min; return *this; }
-   RAttrAxis &SetZoomMax(double max) { fZoomMax = max; return *this; }
-   double GetZoomMin() const { return fZoomMin; }
-   double GetZoomMax() const { return fZoomMax; }
-   bool HasZoomMin() const { return fZoomMin.Has(); }
-   bool HasZoomMax() const { return fZoomMax.Has(); }
-
-   RAttrAxis &SetZoom(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
-   void ClearZoom() { fZoomMin.Clear(); fZoomMax.Clear(); }
-
-   RAttrAxis &SetLog(double base = 10) { fLog = (base < 1) ? 0 : base; return *this; }
-   double GetLog() const { return fLog; }
-   bool IsLogScale() const { return GetLog() > 0.999999; }
-   bool IsLog10() const { auto l = GetLog(); return (std::fabs(l-1.) < 1e-6) || (std::fabs(l-10.) < 1e-6); }
-   bool IsLog2() const { return std::fabs(GetLog() - 2.) < 1e-6; }
-   bool IsLn() const { return std::fabs(GetLog() - 2.71828) < 0.1; }
-
-   RAttrAxis &SetSymlog(double const_value = 0.01)
-   {
-      if (const_value <= 0.)
-         fSymlog.Clear();
-      else
-         fSymlog = const_value;
-      return *this;
-   }
-   double GetSymlog() const { return fSymlog; }
-   bool HasSymlog() const { return fSymlog.Has(); }
-   void ClearSymlog() { fSymlog.Clear(); }
-
-   RAttrAxis &SetReverse(bool on = true) { fReverse = on; return *this; }
-   bool GetReverse() const { return fReverse; }
+   bool IsLogScale() const { return this->log > 0.999999; }
+   bool IsLog10() const { auto l = this->log; return (std::fabs(l-1.) < 1e-6) || (std::fabs(l-10.) < 1e-6); }
+   bool IsLog2() const { return std::fabs(this->log - 2.) < 1e-6; }
+   bool IsLn() const { return std::fabs(this->log - 2.71828) < 0.1; }
 
    RAttrAxis &SetTimeDisplay(const std::string &fmt = "", double offset = -1)
    {
-      fTimeDisplay = true;
-      if (!fmt.empty()) fTimeFormat = fmt;
-      if (offset >= 0) fTimeOffset = offset;
+      this->time = true;
+      if (!fmt.empty()) time_format = fmt;
+      if (offset >= 0) time_offset = offset;
       return *this;
    }
-   bool GetTimeDisplay() const { return fTimeDisplay; }
    void ClearTimeDisplay()
    {
-      fTimeDisplay.Clear();
-      fTimeOffset.Clear();
-      fTimeFormat.Clear();
+      this->time.Clear();
+      time_offset.Clear();
+      time_format.Clear();
    }
-
-   RAttrAxis &SetEndingSize(const RPadLength &sz) { fEndingSize = sz; return *this; }
-   RPadLength GetEndingSize() const { return fEndingSize; }
-
-   RAttrAxis &SetEndingStyle(const std::string &st) { fEndingStyle = st; return *this; }
-   RAttrAxis &SetEndingArrow() { return SetEndingStyle("arrow"); }
-   RAttrAxis &SetEndingCircle() { return SetEndingStyle("cicrle"); }
-   std::string GetEndingStyle() const { return fEndingStyle; }
-
-   RAttrAxis &SetTicksSize(const RPadLength &sz) { fTicksSize = sz; return *this; }
-   RPadLength GetTicksSize() const { return fTicksSize; }
-
-   RAttrAxis &SetTicksSide(const std::string &side) { fTicksSide = side; return *this; }
-   RAttrAxis &SetTicksNormal() { return SetTicksSide("normal"); }
-   RAttrAxis &SetTicksInvert() { return SetTicksSide("invert"); }
-   RAttrAxis &SetTicksBoth() { return SetTicksSide("both"); }
-   std::string GetTicksSide() const { return fTicksSide; }
-
-   RAttrAxis &SetTicksColor(const RColor &color) { fTicksColor = color; return *this; }
-   RColor GetTicksColor() const { return fTicksColor; }
-
-   RAttrAxis &SetTicksWidth(int width) { fTicksWidth = width; return *this; }
-   int GetTicksWidth() const { return fTicksWidth; }
 
    RAttrAxis &SetTitle(const std::string &_title) { title.value = _title; return *this; }
    std::string GetTitle() const { return title.value; }

@@ -162,17 +162,19 @@ frame.AttrMargins().SetTop(0.05).SetLeft(0.16).SetRight(0.05).SetBottom(0.16)
 # c.SetTickx(0)
 # c.SetTicky(0)
 
-frame.AttrX().SetMinMax(60,180)
-frame.AttrX().title.value = "m_{T}^{W#rightarrow l#nu} [GeV]"
-frame.AttrX().title.size = 0.045
-frame.AttrX().title.offset = 0.01
-frame.AttrX().labels.size = 0.04
+frame.x.min = 60
+frame.x.max = 180
+frame.x.title.value = "m_{T}^{W#rightarrow l#nu} [GeV]"
+frame.x.title.size = 0.045
+frame.x.title.offset = 0.01
+frame.x.labels.size = 0.04
 
-frame.AttrY().SetMinMax(1, 1e10*args.lumi_scale)
-frame.AttrY().SetLog()
-frame.AttrY().title.value = "Events"
-frame.AttrY().title.size = 0.045
-frame.AttrY().labels.size = 0.04
+frame.y.min = 1
+frame.y.max = 1e10*args.lumi_scale
+frame.y.log = 10
+frame.y.title.value = "Events"
+frame.y.title.size = 0.045
+frame.y.labels.size = 0.04
 
 # instruct RFrame to draw axes
 frame.SetDrawAxes(True)

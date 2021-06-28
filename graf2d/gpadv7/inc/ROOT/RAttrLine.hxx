@@ -40,6 +40,27 @@ class RAttrLine : public RAttrAggregation {
 
 };
 
+
+/** \class RAttrLineEnding
+\ingroup GpadROOT7
+\author  Sergey Linev <s.linev@gsi.de>
+\date 2021-06-28
+\brief Attributes for line ending
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAttrLineEnding : public RAttrAggregation {
+
+   R__ATTR_CLASS(RAttrLineEnding, "ending");
+
+   RAttrValue<std::string> style{this, "style", ""};       ///<! axis ending style - none, arrow, circle
+   RAttrValue<RPadLength> size{this, "size", 0.02_normal}; ///<! ending size
+
+   void SetArrow() { style = "arrow"; }
+   void SetCircle() { style = "cicrle"; }
+};
+
+
 } // namespace Experimental
 } // namespace ROOT
 

@@ -51,14 +51,18 @@ void draw_frame()
    // let frame draw axes without need of any histogram
    frame->SetDrawAxes(true);
 
-   frame->AttrX().SetMinMax(0,100);
-   // frame->AttrX().SetLog(2.);
-   frame->AttrX().SetZoom(5.,95.);
-   frame->AttrX().line.color = RColor::kGreen; // or in CSS "x_line_color: green;"
+   frame->x.min = 0;
+   frame->x.max = 100;
+   // frame->x.log = 2.;
+   frame->x.zoommin = 5.;
+   frame->x.zoommax = 95.;
+   frame->x.line.color = RColor::kGreen; // or in CSS "x_line_color: green;"
 
-   frame->AttrY().SetMinMax(0,100);
-   frame->AttrY().SetZoom(5,95);
-   frame->AttrY().line.color = RColor::kBlue; // or in CSS "y_line_color: blue;"
+   frame->y.min = 0;
+   frame->y.max = 100;
+   frame->y.zoommin = 5;
+   frame->y.zoommax = 95;
+   frame->y.line.color = RColor::kBlue; // or in CSS "y_line_color: blue;"
 
    canvas->Draw<RFrameTitle>("Frame title")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 

@@ -55,9 +55,12 @@ void draw_rh3_large()
    // should we made special style for frame with palette?
    // frame->AttrMargins().SetRight(0.2_normal);
 
-   frame->AttrX().SetZoom(nbins*0.1, nbins*0.9);
-   frame->AttrY().SetZoom(nbins*0.1, nbins*0.9);
-   frame->AttrZ().SetZoom(nbins*0.1, nbins*0.9);
+   frame->x.zoommin = nbins*0.1;
+   frame->x.zoommax = nbins*0.9;
+   frame->y.zoommin = nbins*0.1;
+   frame->y.zoommax = nbins*0.9;
+   frame->z.zoommin = nbins*0.1;
+   frame->z.zoommax = nbins*0.9;
 
    canvas->Draw<RFrameTitle>(TString::Format("Large RH3D histogram with %d x %d x %d bins",nbins,nbins,nbins).Data());
 

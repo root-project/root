@@ -61,8 +61,8 @@ void draw_rh1_twoaxes()
    draw2->line.color = col2;
    draw2->line.width = 4;
 
-   canvas->GetFrame()->AttrY().SetTicksColor(col1);
-   canvas->GetFrame()->AttrY2().SetTicksColor(col2);
+   canvas->GetFrame()->y.ticks.color = col1;
+   canvas->GetFrame()->y2.ticks.color = col2;
 
    canvas->SetSize(800, 600);
    canvas->Show();
