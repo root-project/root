@@ -756,6 +756,6 @@ Published on June 28, 2021
 
 ## HEAD of the v6-24-00-patches branch
 
-These changes will be part of a future 6.24/02.
+These changes will be part of a future 6.24/04.
 
 - None so far.
