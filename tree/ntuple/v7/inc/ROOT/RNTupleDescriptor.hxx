@@ -753,6 +753,9 @@ public:
    static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
    static constexpr std::uint16_t kEnvelopeMinVersion = 1;
 
+   static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
+   static constexpr std::uint16_t kFlagAliasField = 0x02;
+
    struct REnvelopeLink {
       std::uint32_t fUnzippedSize = 0;
       RClusterDescriptor::RLocator fLocator;
