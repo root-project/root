@@ -47,7 +47,6 @@ private:
    const TObject *fExtObj{nullptr};            ///<! external object, managed outside of the drawable, not persistent
    RAttrValue<std::string> fOpt{this, "opt"};  ///<! object draw options
    RAttrText fAttrText{this, "text"};          ///<! object text attributes
-   RAttrMarker fMarkerAttr{this, "marker"};    ///<! object marker attributes
 
    static std::string GetColorCode(TColor *col);
 
@@ -79,6 +78,7 @@ public:
 
    RAttrLine line{this, "line"};          ///<! object line attributes
    RAttrFill fill{this, "fill"};          ///<! object fill attributes
+   RAttrMarker marker{this, "marker"};    ///<! object marker attributes
 
    TObjectDrawable();
    TObjectDrawable(TObject *obj, bool isowner = false);
@@ -100,9 +100,6 @@ public:
 
    const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrMarker &AttrMarker() const { return fMarkerAttr; }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
 };
 
 } // namespace Experimental
