@@ -771,11 +771,15 @@ public:
    /// footer serialzation in a second step.
    class RContext {
    private:
+      std::uint32_t fHeaderSize = 0;
+      std::uint32_t fHeaderCrc32 = 0;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
       std::vector<DescriptorId_t> fPhys2MemFieldIDs;
       std::vector<DescriptorId_t> fPhys2MemColumnIDs;
    public:
+      void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
+      void SetHeaderCrc32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
          auto physId = fPhys2MemFieldIDs.size();
          fMem2PhysFieldIDs[memId] = physId;
@@ -817,8 +821,10 @@ public:
    static std::uint32_t SerializeString(const std::string &val, void *buffer);
    static std::uint32_t DeserializeString(const void *buffer, std::uint32_t size, std::string &val);
 
-   /// While we could just interpret the EColumnType enum as an int, we make the translation explicit
-   /// in order to avoid accidentally changing the on-disk numbers when adjusting the EColumnType enum class.
+   /// While we could just interpret the enums as ints, but we make the translation explicit
+   /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
+   static std::uint16_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
+   static std::uint16_t DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
    static std::uint16_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
    static std::uint16_t DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
 
@@ -826,6 +832,9 @@ public:
    static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
    // The size includes the 4 bytes for the final CRC32 checksum.
    static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t bufSize);
+   /// Returns the CRC32 value that is at the end of the envelope buffer pointed to by data
+   /// Does not verify the buffer
+   static std::uint32_t ExtractEnvelopeCRC32(void *data, std::uint32_t bufSize);
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
