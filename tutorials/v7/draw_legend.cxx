@@ -52,19 +52,22 @@ void draw_legend()
 
    // draw first histogram
    auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetWidth(2).SetColor(0.3); // should be red color
+   draw1->line.width = 2.f;
+   draw1->line.color = .3f; // should be red color
 
    // draw second histogram
    auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetWidth(4).SetColor(0.7); // should be blue color
+   draw2->line.width = 4.f;
+   draw2->line.color = .7f; // should be blue color
 
    auto legend = canvas->Draw<RLegend>("Legend title");
    legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
-   legend->AttrBorder().SetWidth(2).SetColor(RColor::kRed);
+   legend->border.color = RColor::kRed;
+   legend->border.width = 2;
    legend->AddEntry(draw1, "histo1");
    legend->AddEntry(draw2, "histo2");
 
-   legend->AddEntry("test").SetAttrLine(RAttrLine().SetColor(RColor::kGreen).SetWidth(5))
+   legend->AddEntry("test").SetAttrLine(RAttrLine(RColor::kGreen, 5., 1))
                            .SetAttrFill(RAttrFill().SetColor(RColor::kBlue).SetStyle(3004))
                            .SetAttrMarker(RAttrMarker().SetColor(RColor::kRed).SetSize(3).SetStyle(RAttrMarker::kOpenCross));
 

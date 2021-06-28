@@ -16,16 +16,14 @@
 using namespace ROOT::Experimental;
 
 class CustomDrawable : public RDrawable {
-   RAttrLine  fAttrLine{this, "line"};         ///<! line attributes
    RAttrFill  fAttrFill{this, "fill"};         ///<! fill attributes
    RAttrText  fAttrText{this, "text"};         ///<! text attributes
    RAttrMargins fAttrMargins{this, "margins"}; ///<! margin attributes
 
 public:
-   CustomDrawable() : RDrawable("custom") {}
+   RAttrLine  line{this, "line"};         ///<! line attributes
 
-   const RAttrLine &AttrLine() const { return fAttrLine; }
-   RAttrLine &AttrLine() { return fAttrLine; }
+   CustomDrawable() : RDrawable("custom") {}
 
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }
@@ -55,7 +53,7 @@ TEST(RStyleTest, CreateStyle)
 
    drawable.UseStyle(style);
 
-   EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 2.);
+   EXPECT_DOUBLE_EQ(drawable.line.width, 2.f);
 
    EXPECT_EQ(drawable.AttrFill().GetStyle(), 5);
 
@@ -77,9 +75,9 @@ TEST(RStyleTest, CreateCss)
 
    drawable.UseStyle(style);
 
-   EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 2.);
+   EXPECT_DOUBLE_EQ(drawable.line.width, 2.f);
 
-   EXPECT_EQ(drawable.AttrLine().GetColor(), RColor::kRed);
+   EXPECT_EQ(drawable.line.color, RColor::kRed);
 
    EXPECT_EQ(drawable.AttrFill().GetStyle(), 5);
 
@@ -116,10 +114,10 @@ TEST(RStyleTest, LostStyle)
       // here weak_ptr will be set, therefore after style is deleted drawable will loose it
       drawable.UseStyle(style);
 
-      EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 2.);
+      EXPECT_DOUBLE_EQ(drawable.line.width, 2.f);
    }
 
    // here style no longer exists
-   EXPECT_DOUBLE_EQ(drawable.AttrLine().GetWidth(), 1.);
+   EXPECT_DOUBLE_EQ(drawable.line.width, 1.f);
 }
 

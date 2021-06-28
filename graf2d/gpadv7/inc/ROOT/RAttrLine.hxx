@@ -17,7 +17,7 @@ namespace Experimental {
 
 /** \class RAttrLine
 \ingroup GpadROOT7
-\author Axel Naumann <axel@cern.ch>
+\authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
 \date 2018-10-12
 \brief Drawing line attributes for different objects.
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -25,23 +25,18 @@ namespace Experimental {
 
 class RAttrLine : public RAttrAggregation {
 
-   RAttrValue<RColor>  fColor{this, "color", RColor::kBlack}; ///<! line color
-   RAttrValue<double>  fWidth{this, "width", 1.};             ///<! line width
-   RAttrValue<int>     fStyle{this, "style", 1};              ///<! line style
-
    R__ATTR_CLASS(RAttrLine, "line");
 
-   ///The width of the line.
-   RAttrLine &SetWidth(double width) { fWidth = width; return *this; }
-   double GetWidth() const { return fWidth; }
+   RAttrValue<RColor>  color{this, "color", RColor::kBlack}; ///<! line color
+   RAttrValue<double>  width{this, "width", 1.};             ///<! line width
+   RAttrValue<int>     style{this, "style", 1};              ///<! line style
 
-   ///The style of the line.
-   RAttrLine &SetStyle(int style) { fStyle = style; return *this; }
-   int GetStyle() const { return fStyle; }
-
-   ///The color of the line.
-   RAttrLine &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
+   RAttrLine(const RColor &_color, double _width, int _style) : RAttrLine()
+   {
+      color = _color;
+      width = _width;
+      style = _style;
+   }
 
 };
 

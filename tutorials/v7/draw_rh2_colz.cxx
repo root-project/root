@@ -68,7 +68,7 @@ void draw_rh2_colz()
    canvas->Draw<RPaletteDrawable>(RPalette::GetPalette(), true);
 
    auto draw = canvas->Draw(pHist);
-   // draw->AttrLine().SetColor(RColor::kLime);
+   // draw->line.color = RColor::kLime;
    // draw->Surf(2); // configure surf4 draw option
    // draw->Lego(2); // configure lego2 draw option
    // draw->Contour(); // configure cont draw option
