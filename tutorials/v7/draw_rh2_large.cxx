@@ -51,7 +51,7 @@ void draw_rh2_large()
    auto frame = canvas->AddFrame();
 
    // should we made special style for frame with palette?
-   // frame->AttrMargins().SetRight(0.2_normal);
+   // frame->margins.right = 0.2_normal;
 
    frame->SetGridX(false).SetGridY(false);
    frame->x.zoommin = nbins*0.2;
