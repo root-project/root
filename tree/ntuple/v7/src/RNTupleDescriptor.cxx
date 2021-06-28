@@ -506,6 +506,81 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeString(
 }
 
 
+std::uint16_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeColumnType(
+   ROOT::Experimental::EColumnType type, void *buffer)
+{
+   using EColumnType = ROOT::Experimental::EColumnType;
+   switch (type) {
+      case EColumnType::kIndex:
+         return SerializeUInt16(0x02, buffer);
+      case EColumnType::kSwitch:
+         return SerializeUInt16(0x03, buffer);
+      case EColumnType::kByte:
+         return SerializeUInt16(0x0D, buffer);
+      case EColumnType::kBit:
+         return SerializeUInt16(0x06, buffer);
+      case EColumnType::kReal64:
+         return SerializeUInt16(0x07, buffer);
+      case EColumnType::kReal32:
+         return SerializeUInt16(0x08, buffer);
+      case EColumnType::kReal16:
+         return SerializeUInt16(0x09, buffer);
+      case EColumnType::kInt64:
+         return SerializeUInt16(0x0A, buffer);
+      case EColumnType::kInt32:
+         return SerializeUInt16(0x0B, buffer);
+      case EColumnType::kInt16:
+         return SerializeUInt16(0x0C, buffer);
+      default:
+         throw RException(R__FAIL("unexpected column type"));
+   }
+}
+
+
+std::uint16_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeColumnType(
+   const void *buffer, ROOT::Experimental::EColumnType &type)
+{
+   using EColumnType = ROOT::Experimental::EColumnType;
+   std::uint16_t onDiskType;
+   auto result = DeserializeUInt16(buffer, onDiskType);
+   switch (onDiskType) {
+      case 0x02:
+         type = EColumnType::kIndex;
+         break;
+      case 0x03:
+         type = EColumnType::kSwitch;
+         break;
+      case 0x06:
+         type = EColumnType::kBit;
+         break;
+      case 0x07:
+         type = EColumnType::kReal64;
+         break;
+      case 0x08:
+         type = EColumnType::kReal32;
+         break;
+      case 0x09:
+         type = EColumnType::kReal16;
+         break;
+      case 0x0A:
+         type = EColumnType::kInt64;
+         break;
+      case 0x0B:
+         type = EColumnType::kInt32;
+         break;
+      case 0x0C:
+         type = EColumnType::kInt16;
+         break;
+      case 0x0D:
+         type = EColumnType::kByte;
+         break;
+      default:
+         throw RException(R__FAIL("unexpected on-disk column type"));
+   }
+   return result;
+}
+
+
 /// Currently all enevelopes have the same version number (1). At a later point, different envelope types
 /// may have different version numbers
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopePreamble(void *buffer)
@@ -917,7 +992,9 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 namespace {
 
 std::uint32_t SerializeFieldV1(
-   const ROOT::Experimental::RFieldDescriptor &val, std::uint32_t physicalParentId, void *buffer)
+   const ROOT::Experimental::RFieldDescriptor &val,
+   const ROOT::Experimental::Internal::RNTupleStreamer::RContext &context,
+   void *buffer)
 {
    using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
@@ -928,7 +1005,7 @@ std::uint32_t SerializeFieldV1(
 
    pos += RNTupleStreamer::SerializeUInt32(val.GetFieldVersion().GetVersionUse(), *where);
    pos += RNTupleStreamer::SerializeUInt32(val.GetTypeVersion().GetVersionUse(), *where);
-   pos += RNTupleStreamer::SerializeUInt32(physicalParentId, *where);
+   pos += RNTupleStreamer::SerializeUInt32(context.GetPhysFieldId(val.GetParentId()), *where);
    pos += RNTupleStreamer::SerializeUInt16(static_cast<int>(val.GetStructure()), *where);
    if (val.GetNRepetitions() > 0) {
       pos += RNTupleStreamer::SerializeUInt16(RNTupleStreamer::kFlagRepetitiveField, *where);
@@ -942,12 +1019,40 @@ std::uint32_t SerializeFieldV1(
    return size;
 }
 
+std::uint32_t SerializeColumnV1(
+   const ROOT::Experimental::RColumnDescriptor &val,
+   const ROOT::Experimental::Internal::RNTupleStreamer::RContext &context,
+   void *buffer)
+{
+   using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
+   using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += RNTupleStreamer::SerializeRecordFramePreamble(*where);
+
+   pos += RNTupleStreamer::SerializeColumnType(val.GetModel().GetType(), *where);
+   pos += RNTupleStreamer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(val.GetModel().GetType()), *where);
+   pos += RNTupleStreamer::SerializeUInt32(context.GetPhysColumnId(val.GetFieldId()), *where);
+   std::uint32_t flags = 0;
+   // TODO(jblomer): add support for descending columns in the column model
+   if (val.GetModel().GetIsSorted())
+      flags |= RNTupleStreamer::kFlagSortAscColumn;
+   pos += RNTupleStreamer::SerializeUInt32(flags, *where);
+
+   auto size = pos - base;
+   pos += RNTupleStreamer::SerializeFramePostscript(base, size);
+   return size;
+}
+
 } // anonymous namespace
 
 
 std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buffer) const
 {
    using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
+   RNTupleStreamer::RContext context;
 
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
@@ -959,20 +1064,20 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buf
    pos += RNTupleStreamer::SerializeString(fName, *where);
    pos += RNTupleStreamer::SerializeString(fDescription, *where);
 
-   std::unordered_map<DescriptorId_t, DescriptorId_t> liveId2DiskId;
-   DescriptorId_t diskId = 0;
-
    auto frame = pos;
    pos += RNTupleStreamer::SerializeListFramePreamble(fFieldDescriptors.size(), *where);
    for (const auto &f : fFieldDescriptors) {
-      liveId2DiskId[f.second.GetId()] = diskId;
-      pos += SerializeFieldV1(f.second, liveId2DiskId[f.second.GetParentId()], *where);
-      diskId++;
+      context.MapFieldId(f.second.GetId());
+      pos += SerializeFieldV1(f.second, context, *where);
    }
    pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
 
    frame = pos;
    pos += RNTupleStreamer::SerializeListFramePreamble(fColumnDescriptors.size(), *where);
+   for (const auto &c : fColumnDescriptors) {
+      context.MapColumnId(c.second.GetId());
+      pos += SerializeColumnV1(c.second, context, *where);
+   }
    pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
 
    // We don't use alias columns yet
