@@ -31,7 +31,6 @@ welcome!
 class RFrameTitle final : public RDrawable {
 
    std::string fText;                                           ///< title to display
-   RAttrText fAttrText{this, "text"};                           ///<! title text attributes
    RAttrValue<RPadLength> fMargin{this, "margin", 0.02_normal}; ///<! title margin
    RAttrValue<RPadLength> fHeight{this, "height", 0.05_normal}; ///<! title height
 
@@ -39,6 +38,8 @@ protected:
    bool IsFrameRequired() const final { return true; }
 
 public:
+   RAttrText text{this, "text"};                           ///<! title text attributes
+
    RFrameTitle() : RDrawable("title") {}
 
    RFrameTitle(const std::string &txt) : RFrameTitle() { fText = txt; }
@@ -63,9 +64,6 @@ public:
       return *this;
    }
    RPadLength GetHeight() const { return fHeight; }
-
-   const RAttrText &AttrText() const { return fAttrText; }
-   RAttrText &AttrText() { return fAttrText; }
 };
 
 } // namespace Experimental

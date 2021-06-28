@@ -163,16 +163,16 @@ frame.AttrMargins().SetTop(0.05).SetLeft(0.16).SetRight(0.05).SetBottom(0.16)
 # c.SetTicky(0)
 
 frame.AttrX().SetMinMax(60,180)
-frame.AttrX().SetTitle("m_{T}^{W#rightarrow l#nu} [GeV]")
-frame.AttrX().AttrTitle().SetSize(0.045)
-frame.AttrX().SetTitleOffset(0.01)
-frame.AttrX().AttrLabels().SetSize(0.04)
+frame.AttrX().title.value = "m_{T}^{W#rightarrow l#nu} [GeV]"
+frame.AttrX().title.size = 0.045
+frame.AttrX().title.offset = 0.01
+frame.AttrX().labels.size = 0.04
 
 frame.AttrY().SetMinMax(1, 1e10*args.lumi_scale)
 frame.AttrY().SetLog()
-frame.AttrY().SetTitle("Events")
-frame.AttrY().AttrTitle().SetSize(0.045)
-frame.AttrY().AttrLabels().SetSize(0.04)
+frame.AttrY().title.value = "Events"
+frame.AttrY().title.size = 0.045
+frame.AttrY().labels.size = 0.04
 
 # instruct RFrame to draw axes
 frame.SetDrawAxes(True)
@@ -211,9 +211,21 @@ legend.AddEntry(singletop, "Single top", "f")
 c.Add[TObjectDrawable]().Set(legend)
 
 # Add ATLAS label
-c.Add[RText](RPadPos(0.05, 0.88), "ATLAS").SetOnFrame().AttrText().SetFont(7).SetSize(0.04).SetAlign(11)
-c.Add[RText](RPadPos(0.05 + 0.20, 0.88), "Open Data").SetOnFrame().AttrText().SetFont(4).SetSize(0.04).SetAlign(11)
-c.Add[RText](RPadPos(0.05, 0.82), "#sqrt{{s}} = 13 TeV, {:.2f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0)).SetOnFrame().AttrText().SetFont(4).SetSize(0.035).SetAlign(11)
+lbl1 = c.Add[RText](RPadPos(0.05, 0.88), "ATLAS")
+lbl1.SetOnFrame()
+lbl1.text.SetFont(7)
+lbl1.text.size = 0.05
+lbl1.text.align = 11
+lbl2 = c.Add[RText](RPadPos(0.05 + 0.20, 0.88), "Open Data")
+lbl2.SetOnFrame()
+lbl2.text.SetFont(4)
+lbl2.text.size = 0.05
+lbl2.text.align = 11
+lbl3 = c.Add[RText](RPadPos(0.05, 0.82), "#sqrt{{s}} = 13 TeV, {:.2f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0))
+lbl3.SetOnFrame()
+lbl3.text.SetFont(4)
+lbl3.text.size = 0.04
+lbl3.text.align = 11
 
 # show canvas finally
 c.SetSize(600, 600)

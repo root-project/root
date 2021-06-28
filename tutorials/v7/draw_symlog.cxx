@@ -42,23 +42,35 @@ void draw_symlog()
    // first pad with linear scales
    auto frame1 = pads[0][0]->AddFrame();
    frame1->SetDrawAxes(true);
-   frame1->AttrX().SetMinMax(-40, 1040).SetTitle("x linear").SetTitleCenter();
-   frame1->AttrY().SetMinMax(1,1e4).SetLog().SetTitle("y log").SetTitleCenter();
+   frame1->AttrX().SetMinMax(-40, 1040);
+   frame1->AttrX().title = "x linear";
+   frame1->AttrX().title.SetCenter();
+   frame1->AttrY().SetMinMax(1,1e4).SetLog();
+   frame1->AttrY().title = "y log";
+   frame1->AttrY().title.SetCenter();
    pads[0][0]->Draw<RFrameTitle>("linear scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // second pad with log scales, negative values missing
    auto frame2 = pads[0][1]->AddFrame();
    frame2->SetDrawAxes(true);
-   frame2->AttrX().SetMinMax(0.05,1.2e3).SetLog().SetTitle("x log").SetTitleCenter();
-   frame2->AttrY().SetMinMax(1,1e4).SetLog().SetTitle("y log").SetTitleCenter();
+   frame2->AttrX().SetMinMax(0.05,1.2e3).SetLog();
+   frame2->AttrX().title = "x log";
+   frame2->AttrX().title.SetCenter();
+   frame2->AttrY().SetMinMax(1,1e4).SetLog();
+   frame2->AttrY().title = "y log";
+   frame2->AttrY().title.SetCenter();
    pads[0][1]->Draw<RFrameTitle>("log scale, missing points")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // third pad with symlog scales
    auto frame3 = pads[0][2]->AddFrame();
    frame3->SetDrawAxes(true);
    // configure synlog scale with 10 for linear range, rest will be logarithmic, including negative
-   frame3->AttrX().SetMinMax(-10,1.2e3).SetSymlog(10).SetTitle("x symlog").SetTitleCenter();
-   frame3->AttrY().SetMinMax(1,1e4).SetLog().SetTitle("y log").SetTitleCenter();
+   frame3->AttrX().SetMinMax(-10,1.2e3).SetSymlog(10);
+   frame3->AttrX().title = "x symlog";
+   frame3->AttrX().title.SetCenter();
+   frame3->AttrY().SetMinMax(1,1e4).SetLog();
+   frame3->AttrY().title = "y log";
+   frame3->AttrY().title.SetCenter();
    pads[0][2]->Draw<RFrameTitle>("symlog scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    for (int n=0;n<100;n++) {

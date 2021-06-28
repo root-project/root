@@ -16,17 +16,14 @@
 using namespace ROOT::Experimental;
 
 class CustomDrawable : public RDrawable {
-   RAttrText  fAttrText{this, "text"};         ///<! text attributes
    RAttrMargins fAttrMargins{this, "margins"}; ///<! margin attributes
 
 public:
    RAttrLine  line{this, "line"};         ///<! line attributes
    RAttrFill  fill{this, "fill"};         ///<! fill attributes
+   RAttrText  text{this, "text"};         ///<! text attributes
 
    CustomDrawable() : RDrawable("custom") {}
-
-   const RAttrText &AttrText() const { return fAttrText; }
-   RAttrText &AttrText() { return fAttrText; }
 
    const RAttrMargins &AttrMargins() const { return fAttrMargins; }
    RAttrMargins &AttrMargins() { return fAttrMargins; }
@@ -53,7 +50,7 @@ TEST(RStyleTest, CreateStyle)
 
    EXPECT_EQ(drawable.fill.style, 5);
 
-   EXPECT_DOUBLE_EQ(drawable.AttrText().GetSize(), 3.);
+   EXPECT_DOUBLE_EQ(drawable.text.size, 3.);
 }
 
 
@@ -77,7 +74,7 @@ TEST(RStyleTest, CreateCss)
 
    EXPECT_EQ(drawable.fill.style, 5);
 
-   EXPECT_DOUBLE_EQ(drawable.AttrText().GetSize(), 3.);
+   EXPECT_DOUBLE_EQ(drawable.text.size, 3.);
 }
 
 
