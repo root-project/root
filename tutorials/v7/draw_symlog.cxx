@@ -42,35 +42,46 @@ void draw_symlog()
    // first pad with linear scales
    auto frame1 = pads[0][0]->AddFrame();
    frame1->SetDrawAxes(true);
-   frame1->AttrX().SetMinMax(-40, 1040);
-   frame1->AttrX().title = "x linear";
-   frame1->AttrX().title.SetCenter();
-   frame1->AttrY().SetMinMax(1,1e4).SetLog();
-   frame1->AttrY().title = "y log";
-   frame1->AttrY().title.SetCenter();
+   frame1->x.min = -40;
+   frame1->x.max = 1040;
+   frame1->x.title = "x linear";
+   frame1->x.title.SetCenter();
+   frame1->y.log = 10.;
+   frame1->y.min = 1;
+   frame1->y.max = 1e4;
+   frame1->y.title = "y log";
+   frame1->y.title.SetCenter();
    pads[0][0]->Draw<RFrameTitle>("linear scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // second pad with log scales, negative values missing
    auto frame2 = pads[0][1]->AddFrame();
    frame2->SetDrawAxes(true);
-   frame2->AttrX().SetMinMax(0.05,1.2e3).SetLog();
-   frame2->AttrX().title = "x log";
-   frame2->AttrX().title.SetCenter();
-   frame2->AttrY().SetMinMax(1,1e4).SetLog();
-   frame2->AttrY().title = "y log";
-   frame2->AttrY().title.SetCenter();
+   frame2->x.log = 10.;
+   frame2->x.min = 0.05;
+   frame2->x.max = 1.2e3;
+   frame2->x.title = "x log";
+   frame2->x.title.SetCenter();
+   frame2->y.log = 10.;
+   frame2->y.min = 1;
+   frame2->y.max = 1e4;
+   frame2->y.title = "y log";
+   frame2->y.title.SetCenter();
    pads[0][1]->Draw<RFrameTitle>("log scale, missing points")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    // third pad with symlog scales
    auto frame3 = pads[0][2]->AddFrame();
    frame3->SetDrawAxes(true);
    // configure synlog scale with 10 for linear range, rest will be logarithmic, including negative
-   frame3->AttrX().SetMinMax(-10,1.2e3).SetSymlog(10);
-   frame3->AttrX().title = "x symlog";
-   frame3->AttrX().title.SetCenter();
-   frame3->AttrY().SetMinMax(1,1e4).SetLog();
-   frame3->AttrY().title = "y log";
-   frame3->AttrY().title.SetCenter();
+   frame3->x.symlog = 10.; // boundary inside which linear scale will be used
+   frame3->x.min = -10;
+   frame3->x.max = 1.2e3;
+   frame3->x.title = "x symlog";
+   frame3->x.title.SetCenter();
+   frame3->y.log = 10.;
+   frame3->y.min = 1;
+   frame3->y.max = 1e4;
+   frame3->y.title = "y log";
+   frame3->y.title.SetCenter();
    pads[0][2]->Draw<RFrameTitle>("symlog scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
    for (int n=0;n<100;n++) {

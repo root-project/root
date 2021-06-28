@@ -145,11 +145,6 @@ public:
 
 private:
    RAttrMargins fAttrMargins{this, "margins"};    ///<! frame margins relative to pad
-   RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
-   RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
-   RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
-   RAttrAxis fAttrX2{this, "x2"};                 ///<! drawing attributes for X2 axis
-   RAttrAxis fAttrY2{this, "y2"};                 ///<! drawing attributes for Y2 axis
    RAttrValue<bool> fDrawAxes{this, "drawaxes", false}; ///<! draw axes by frame
    RAttrValue<bool> fGridX{this, "gridx", false}; ///<! show grid for X axis
    RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
@@ -193,6 +188,11 @@ public:
 
    RAttrBorder border{this, "border"};       ///<! frame border attributes
    RAttrFill fill{this, "fill"};             ///<! frame fill attributes
+   RAttrAxis x{this, "x"};                   ///<! drawing attributes for X axis
+   RAttrAxis y{this, "y"};                   ///<! drawing attributes for Y axis
+   RAttrAxis z{this, "z"};                   ///<! drawing attributes for Z axis
+   RAttrAxis x2{this, "x2"};                 ///<! drawing attributes for X2 axis
+   RAttrAxis y2{this, "y2"};                 ///<! drawing attributes for Y2 axis
 
    RFrame(TRootIOCtor*) : RFrame() {}
 
@@ -201,21 +201,6 @@ public:
 
    const RAttrMargins &AttrMargins() const { return fAttrMargins; }
    RAttrMargins &AttrMargins() { return fAttrMargins; }
-
-   const RAttrAxis &AttrX() const { return fAttrX; }
-   RAttrAxis &AttrX() { return fAttrX; }
-
-   const RAttrAxis &AttrY() const { return fAttrY; }
-   RAttrAxis &AttrY() { return fAttrY; }
-
-   const RAttrAxis &AttrZ() const { return fAttrZ; }
-   RAttrAxis &AttrZ() { return fAttrZ; }
-
-   const RAttrAxis &AttrX2() const { return fAttrX2; }
-   RAttrAxis &AttrX2() { return fAttrX2; }
-
-   const RAttrAxis &AttrY2() const { return fAttrY2; }
-   RAttrAxis &AttrY2() { return fAttrY2; }
 
    RFrame &SetGridX(bool on = true) { fGridX = on; return *this; }
    bool GetGridX() const { return fGridX; }

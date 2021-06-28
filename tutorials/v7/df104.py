@@ -105,7 +105,7 @@ upper_pad = c.AddPad(RPadPos(0,0), RPadExtent(1, 0.65))
 
 upper_frame = upper_pad.AddFrame()
 upper_frame.AttrMargins().SetBottom(0).SetLeft(0.14).SetRight(0.05)
-upper_frame.AttrX().labels.hide = True
+upper_frame.x.labels.hide = True
 
 lower_frame = lower_pad.AddFrame()
 lower_frame.AttrMargins().SetTop(0).SetLeft(0.14).SetRight(0.05).SetBottom(0.3)
