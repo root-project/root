@@ -18,8 +18,8 @@ The following people have contributed to this new version:
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
- Anirudh Dagar, CERN-SFT/GSOC, \
- Hans Dembinski, TU DOrtmund/LHCb,\
+ Anirudh Dagar, CERN-SFT/GSOC,\
+ Hans Dembinski, TU Dortmund/LHCb,\
  Massimiliano Galli, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Hadrien Grasland, IJCLab/LAL,\
@@ -38,10 +38,10 @@ The following people have contributed to this new version:
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
- Andrea Sciandra, SCIPP-UCSC/Atlas, \
+ Andrea Sciandra, SCIPP-UCSC/Atlas,\
  Oksana Shadura, UNL/CMS,\
  Enric Tejedor Saavedra, CERN/SFT,\
- Christian Tacke, GSI, \
+ Christian Tacke, GSI,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
@@ -482,7 +482,7 @@ The following builtins have been updated:
 
 - Deprecate `TTree.AsMatrix` in this release and mark for removal in v6.26. Please use instead `RDataFrame.AsNumpy`.
 
-### Bugs and Issues fixed in this release
+## Bugs and Issues fixed in this release
 
 - [[ROOT-9790](https://sft.its.cern.ch/jira/browse/ROOT-9790)] - [DF] Lazy jitting of Cache and Snapshot
 - [[ROOT-3579](https://sft.its.cern.ch/jira/browse/ROOT-3579)] - `RooTreeDataStore` not Cloning the tree properly (and const correctness)
@@ -715,8 +715,47 @@ The following builtins have been updated:
 - [[#6715](https://github.com/root-project/root/issues/6715)] - [bug] Type overflow in `TMessageHandler`
 - [[#7281](https://github.com/root-project/root/issues/7281)] - Trailing dot dropped in top level branch name
 
+## Release 6.22/02
+
+Published on June 28, 2021
+
+### RDataFrame
+
+- Scaling behavior at high core counts (32+ cores) has been improved (see also [PR #8007](https://github.com/root-project/root/pull/8007)).
+
+### Bugs and Issues fixed in this release
+
+* [[ROOT-9558](https://sft.its.cern.ch/jira/browse/ROOT-9558')] - [DF] RDataFrame Snapshot throws for branches with branch name!=variable name
+* [[ROOT-10625](https://sft.its.cern.ch/jira/browse/ROOT-10625)] - Issues with RDataFrame if name and leaflist of a TBranch are different
+* [[#6881](https://github.com/root-project/root/issues/6881)] - [TTreeReader] Partial leaf/branch names not recognized in cases that TTree::Draw supports
+* [[#7912](https://github.com/root-project/root/issues/7912)] - TStreamerInfo Crash - V5 File Backward incompatibility introduced somewhere since 6.22.00
+* [[#7903](https://github.com/root-project/root/issues/7903)] - Invalid read in `TClassEdit`
+* [[#7890](https://github.com/root-project/root/issues/7890)] - Memory  leak when running FrequentistCalculator scan in RooStats
+* [[#7933](https://github.com/root-project/root/issues/7933)] - Memory leak when using `MemPoolForRooSets`
+* [[#7169](https://github.com/root-project/root/issues/7169)] - RDataFrame and CreatePoxy/TTreeReaderValue error for selection on string branch in Filter method
+* [[#8226](https://github.com/root-project/root/issues/8226)] - [DF] Crash in multi-thread `Snapshot` in sub-directory
+* [[#8276](https://github.com/root-project/root/issues/8276)] - [DF] Possible use after delete of the functor passed to PassAsVec
+* [[#8071](https://github.com/root-project/root/issues/8071)] - Problems compiling root 6.24.00 with gcc 11 on Fedora 34
+* [[#8307](https://github.com/root-project/root/issues/8307)] - Issue with `RooSimultaneous` in 6.24.00 ?
+* [[#8295](https://github.com/root-project/root/issues/8295)] - `TChain::AddClone` failing for sub-branches of branch of type with ClassDef
+* [[#7727](https://github.com/root-project/root/issues/7727)] - `TChain::CopyAddresses`:0 warning in `RDataFrame` `Snapshot` of `TChain` with multiple files with objects
+* [[#6520](https://github.com/root-project/root/issues/6520)] - Integer types not available for Bulk API
+* [[#8317](https://github.com/root-project/root/issues/8317)] - [DF] Compilation failure when a mutable lambda is passed to `Foreach`
+* [[#8155](https://github.com/root-project/root/issues/8155)] - Error opening remote root file LCG_100
+* [[#8280](https://github.com/root-project/root/issues/8280)] - ROOT CMake fails if an external package sets a higher minimum CMake version
+* [[#8281](https://github.com/root-project/root/issues/8281)] - ROOT 6.24 fails to compile with GCC 11.1 in C++11 mode
+* [[#8180](https://github.com/root-project/root/issues/8180)] - ROOT 6.24 breaks Alice O2 due to symbol confusion with system llvm 11
+* [[#8033](https://github.com/root-project/root/issues/8033)] - `StreamerElement` retrieved from file has incorrect element name for (some) arrays.
+* [[#8022](https://github.com/root-project/root/issues/8022)] - TBB exposed in public includes of Thread library
+* [[#7905](https://github.com/root-project/root/issues/7905)] - `sqrt` without `std::` in `Math/GenVector/PxPyPzE4D.h`
+* [[#8196](https://github.com/root-project/root/issues/8196)] - `TUnuranContDist` ctor clones the dpdf but does not use the clone causing a segfault later on
+* [[#8011](https://github.com/root-project/root/issues/8011)] - Bug in `RooAbsPdf::extendedTerm` when expected events is negative
+* [[#8499](https://github.com/root-project/root/issues/8499)] - Dict type alias fwd decl: underlying type not fwd declared
+* [[#6454](https://github.com/root-project/root/issues/6454)] - ROOT fails to parse `<boost/shared_ptr.hpp>` at runtime on macOS
+
+
 ## HEAD of the v6-24-00-patches branch
 
 These changes will be part of a future 6.24/02.
 
-*Nothing so far.*
+- None so far.

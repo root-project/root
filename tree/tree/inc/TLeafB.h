@@ -38,7 +38,7 @@ public:
 
    virtual void    Export(TClonesArray* list, Int_t n);
    virtual void    FillBasket(TBuffer& b);
-   virtual DeserializeType GetDeserializeType() const { return fLeafCount ? DeserializeType::kDestructive : DeserializeType::kZeroCopy; }
+   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kZeroCopy; }
    virtual Int_t   GetMaximum() const { return fMaximum; }
    virtual Int_t   GetMinimum() const { return fMinimum; }
    const char     *GetTypeName() const;
@@ -56,8 +56,7 @@ public:
 
    // Deserialize N events from an input buffer.  Since chars are stored unchanged, there
    // is nothing to do here but return true if we don't have variable-length arrays.
-   virtual bool    ReadBasketFast(TBuffer&, Long64_t) { return !fLeafCount; }
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return !fLeafCount; }
+   virtual bool    ReadBasketFast(TBuffer&, Long64_t) { return true; }
 
    ClassDef(TLeafB,1);  //A TLeaf for an 8 bit Integer data type.
 };

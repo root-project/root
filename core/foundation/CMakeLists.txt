@@ -63,7 +63,10 @@ if(MSVC)
    target_include_directories(Foundation_Stage1 PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
 endif()
 
-set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}")
+set_target_properties(Foundation_Stage1 PROPERTIES
+  COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_INSTALL_HEADERS(${FOUNDATION_HEADER_DIRS})
 ROOT_ADD_TEST_SUBDIRECTORY(test)

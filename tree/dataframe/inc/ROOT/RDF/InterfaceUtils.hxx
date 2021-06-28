@@ -481,6 +481,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
 
    auto actionPtr =
       BuildAction<ColTypes...>(cols, std::move(*helperArgOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
+   loopManager.AddDataBlockCallback(actionPtr->GetDataBlockCallback());
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
@@ -512,7 +513,7 @@ struct RMinReturnType<T, true> {
 template <typename R, typename F, typename... Args>
 std::function<R(unsigned int, Args...)> AddSlotParameter(F &f, TypeList<Args...>)
 {
-   return [f](unsigned int, Args... a) -> R { return f(a...); };
+   return [f](unsigned int, Args... a) mutable -> R { return f(a...); };
 }
 
 template <typename ColType, typename... Rest>

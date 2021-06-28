@@ -21,6 +21,7 @@
 #pragma link C++ namespace ROOT::Detail::RDF;
 #pragma link C++ namespace ROOT::RDF;
 #pragma link C++ class ROOT::Internal::RDF::RActionBase-;
+#pragma link C++ class ROOT::Internal::RDF::RJittedAction-;
 #pragma link C++ class ROOT::Detail::RDF::RFilterBase-;
 #pragma link C++ class ROOT::Detail::RDF::RJittedFilter-;
 #pragma link C++ class ROOT::Detail::RDF::RDefineBase-;
@@ -55,6 +56,7 @@
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TStatistic>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile2D>+;
+#pragma link C++ class TNotifyLink<ROOT::Internal::RDF::RDataBlockFlag>;
 
 #endif
 

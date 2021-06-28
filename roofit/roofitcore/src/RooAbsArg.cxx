@@ -621,38 +621,53 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
 /// ourself as top node that don't match any of the names the args in the
 /// supplied argset. The caller of this function is responsible
 /// for deleting the returned argset. The complement of this function
-/// is getObservables()
+/// is getObservables().
 
-RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnected) const
+RooArgSet* RooAbsArg::getParameters(const RooArgSet* observables, bool stripDisconnected) const {
+  auto * outputSet = new RooArgSet;
+  getParameters(observables, *outputSet, stripDisconnected);
+  return outputSet;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a list with leaf nodes in the arg tree starting with
+/// ourself as top node that don't match any of the names the args in the
+/// supplied argset. Returns `true` only if something went wrong.
+/// The complement of this function is getObservables().
+/// \param[in] observables Set of leafs to ignore because they are observables and not parameters.
+/// \param[out] outputSet Output set.
+/// \param[in] stripDisconnected Allow pdf to strip parameters from list before adding it.
+
+bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet, bool stripDisconnected) const
 {
 
    // Check for cached parameter set
    if (_myws) {
-      RooNameSet nsetObs(nset ? *nset : RooArgSet());
+      RooNameSet nsetObs(observables ? *observables : RooArgSet());
       const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()));
       if (paramSet) {
-         // cout << " restoring parameter cache from workspace for pdf " << IsA()->GetName() << "::" << GetName() <<
-         // endl ;
-         return new RooArgSet(*paramSet);
+         outputSet.add(*paramSet);
+         return false;
       }
    }
 
-   RooArgSet *parList = new RooArgSet("parameters");
+   outputSet.clear();
+   outputSet.setName("parameters");
 
-   addParameters(*parList, nset, stripDisconnected);
+   addParameters(outputSet, observables, stripDisconnected);
 
-   parList->sort();
+   outputSet.sort();
 
    // Cache parameter set
-   if (_myws && parList->getSize() > 10) {
-      RooNameSet nsetObs(nset ? *nset : RooArgSet());
-      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()), *parList);
+   if (_myws && outputSet.getSize() > 10) {
+      RooNameSet nsetObs(observables ? *observables : RooArgSet());
+      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()), outputSet);
       // cout << " caching parameters in workspace for pdf " << IsA()->GetName() << "::" << GetName() << endl ;
    }
 
-   return parList;
+   return false;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -677,12 +692,31 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// for deleting the returned argset. The complement of this function
 /// is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly) const
+RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
 {
-  //cout << "RooAbsArg::getObservables(" << GetName() << ")" << endl ;
+  auto depList = new RooArgSet;
+  getObservables(dataList, *depList, valueOnly);
+  return depList;
+}
 
-  RooArgSet* depList = new RooArgSet("dependents") ;
-  if (!dataList) return depList ;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list of leaf nodes in the arg tree starting with
+/// ourself as top node that match any of the names the args in the
+/// supplied argset.
+/// Returns `true` only if something went wrong.
+/// The complement of this function is getParameters().
+/// \param[in] dataList Set of leaf nodes to match.
+/// \param[out] outputSet Output set.
+/// \param[in] valueOnly If this parameter is true, we only match leafs that
+///                      depend on the value of any arg in `dataList`.
+
+bool RooAbsArg::getObservables(const RooArgSet* dataList, RooArgSet& outputSet, bool valueOnly) const
+{
+  outputSet.clear();
+  outputSet.setName("dependents");
+
+  if (!dataList) return false;
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
@@ -691,18 +725,18 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
   if (valueOnly) {
     for (const auto arg : leafList) {
       if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
-        depList->add(*arg) ;
+        outputSet.add(*arg) ;
       }
     }
   } else {
     for (const auto arg : leafList) {
       if (arg->dependsOn(*dataList) && arg->isLValue()) {
-        depList->add(*arg) ;
+        outputSet.add(*arg) ;
       }
     }
   }
 
-  return depList ;
+  return false;
 }
 
 

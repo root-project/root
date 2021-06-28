@@ -56,14 +56,29 @@ _jsCode = """
      style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
 </div>
 <script>
-if (typeof require !== 'undefined') {{
+
+function display_{jsDivId}(Core) {{
+   let obj = Core.parse({jsonContent});
+   Core.settings.HandleKeys = false;
+   Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+}}
+
+function script_load_{jsDivId}(src, on_error) {{
+    let script = document.createElement('script');
+    script.src = src;
+    script.onload = function() {{ display_{jsDivId}(JSROOT); }};
+    script.onerror = function() {{ script.remove(); on_error(); }};
+    document.head.appendChild(script);
+}}
+
+if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
-    require(['scripts/JSRoot.core'],
-        function(Core) {{
-           display_{jsDivId}(Core);
-        }}
-    );
+    requirejs.config({{
+       paths: {{ 'JSRootCore' : [ 'scripts/JSRoot.core', 'https://root.cern/js/6.1.1/scripts/JSRoot.core.min', 'https://jsroot.gsi.de/6.1.1/scripts/JSRoot.core.min' ] }}
+    }})(['JSRootCore'],  function(Core) {{
+       display_{jsDivId}(Core);
+    }});
 
 }} else if (typeof JSROOT !== 'undefined') {{
 
@@ -81,31 +96,14 @@ if (typeof require !== 'undefined') {{
     }}
 
     // Try loading a local version of requirejs and fallback to cdn if not possible.
-    script_load(base_url + 'static/scripts/JSRoot.core.js', script_success, function(){{
-        console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file')
-        script_load('https://root.cern/js/5.9.0/scripts/JSRootCore.min.js', script_success, function(){{
+    script_load_{jsDivId}(base_url + 'static/scripts/JSRoot.core.js', function(){{
+        console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
+        script_load_{jsDivId}('https://root.cern/js/6.1.1/scripts/JSRoot.core.min.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
 }}
 
-function script_load(src, on_load, on_error) {{
-    var script = document.createElement('script');
-    script.src = src;
-    script.onload = on_load;
-    script.onerror = on_error;
-    document.head.appendChild(script);
-}}
-
-function script_success() {{
-   display_{jsDivId}(JSROOT);
-}}
-
-function display_{jsDivId}(Core) {{
-   var obj = Core.parse({jsonContent});
-   Core.settings.HandleKeys = false;
-   Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
-}}
 </script>
 """
 

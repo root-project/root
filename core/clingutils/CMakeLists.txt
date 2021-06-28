@@ -36,7 +36,10 @@ target_include_directories(ClingUtils PRIVATE
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
 target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
+set_target_properties(ClingUtils PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_INSTALL_HEADERS()
 
@@ -105,9 +108,10 @@ set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 set(custom_modulemaps)
 if (runtime_cxxmodules)
   set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
-  if (Vc_FOUND)
-    set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
-  endif(Vc_FOUND)
+  # FIXME: We should install vc.modulemap only when Vc is found (Vc_FOUND) but
+  # some systems install it under /usr/include/Vc/Vc which allows rootcling to
+  # discover it and assert that the modulemap is not found.
+  set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
   if (NOT libcxx)
     if (MSVC)
       set(custom_modulemaps ${custom_modulemaps} vcruntime.modulemap)
@@ -133,7 +137,9 @@ foreach(file ${custom_modulemaps}
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
         Interpreter/RuntimeOptions.h
-        Interpreter/Value.h)
+        Interpreter/Value.h
+        Interpreter/Visibility.h
+        )
   get_filename_component(path ${file} PATH)
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")

@@ -80,6 +80,8 @@ public:
       with others of the same type.
    */
    virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const = 0;
+
+   virtual std::function<void(unsigned int)> GetDataBlockCallback() = 0;
 };
 } // namespace RDF
 } // namespace Internal

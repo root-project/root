@@ -110,19 +110,19 @@ TLeafElement::~TLeafElement()
 TLeaf::DeserializeType
 TLeafElement::GetDeserializeType() const
 {
-   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
+   if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
       return fDeserializeTypeCache;
 
    TClass *clptr = nullptr;
    EDataType type = EDataType::kOther_t;
    if (fBranch->GetExpectedType(clptr, type)) {  // Returns non-zero in case of failure
-      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-      return DeserializeType::kDestructive;  // I don't know what it is, but we aren't going to use bulk IO.
+      fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+      return DeserializeType::kExternal;  // I don't know what it is, but we aren't going to use bulk IO.
    }
    fDataTypeCache.store(type, std::memory_order_release);
    if (clptr) {  // Something that requires a dictionary to read; skip.
-      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-      return DeserializeType::kDestructive;
+      fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+      return DeserializeType::kExternal;
    }
 
    if ((fType == EDataType::kChar_t) || fType == EDataType::kUChar_t || type == EDataType::kBool_t) {
@@ -135,14 +135,16 @@ TLeafElement::GetDeserializeType() const
       return DeserializeType::kInPlace;
    }
 
-   fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-   return DeserializeType::kDestructive;
+   fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+   return DeserializeType::kExternal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
 Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 {
+   if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
+      GetDeserializeType(); // Set fDataTypeCache if need be.
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
    return input_buf.ByteSwapBuffer(fLen*N, type);
 }

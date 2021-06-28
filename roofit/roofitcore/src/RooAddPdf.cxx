@@ -810,18 +810,11 @@ Double_t RooAddPdf::getValV(const RooArgSet *nset) const
 {
    // special handling in case when an empty set is passed
    // use saved normalization set when it is available
+   //when nset is a nullptr the subsequent call to RooAddPdf::evaluate called from
+   // RooAbsPdf::getValV will result in a warning message since in this case interpretation of coefficient is arbitrary
    if (nset == nullptr) {
       nset = _normSet;
-      // check that nset is not a null pointer
-      // in this case interpretation of coefficient is arbitrary
-      if (!nset) {
-         oocoutW(this, Eval) << "Evaluating RooAddPdf without a defined normalization set. This can lead to ambiguos "
-                                "coefficients definition and incorrect results."
-                             << " Use RooAddPdf::fixCoefNormalization(nset) to provide a normalization set for "
-                                "defining uniquely RooAddPdf coefficients!"
-                             << std::endl;
-      }
-   }
+    }
    return RooAbsPdf::getValV(nset);
 }
 
@@ -833,6 +826,15 @@ Double_t RooAddPdf::evaluate() const
   auto normAndCache = getNormAndCache();
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;
+
+  // nset is obtained from _normSet or if it is a null pointer from _refCoefNorm
+  if (!nset) {
+     oocoutW(this, Eval) << "Evaluating RooAddPdf without a defined normalization set. This can lead to ambiguos "
+        "coefficients definition and incorrect results."
+                         << " Use RooAddPdf::fixCoefNormalization(nset) to provide a normalization set for "
+        "defining uniquely RooAddPdf coefficients!"
+                         << std::endl;
+  }
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   Double_t value(0);

@@ -1738,9 +1738,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("separator");
       }
 
-      menu.addchk(this.isTooltipAllowed(), "Show tooltips", function() {
-         this.setTooltipAllowed("toggle");
-      });
+      menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
       menu.addAttributesMenu(this, alone ? "" : "Frame ");
       menu.add("separator");
       menu.add("Save as frame.png", () => pp.saveAs("png", 'frame', 'frame.png'));
@@ -4354,13 +4352,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       painter.addPadButtons();
 
-      if (nocanvas && opt.indexOf("noframe") < 0)
-         drawFrame(divid, null);
+      let promise = (nocanvas && opt.indexOf("noframe") < 0) ? drawFrame(divid, null) : Promise.resolve(true);
+      return promise.then(() => {
+         // select global reference - required for keys handling
+         jsrp.selectActivePad({ pp: painter, active: true });
 
-      // select global reference - required for keys handling
-      jsrp.selectActivePad({ pp: painter, active: true });
-
-      return painter.drawPrimitives().then(() => {
+         return painter.drawPrimitives();
+      }).then(() => {
          painter.showPadButtons();
          return painter;
       });

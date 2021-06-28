@@ -2130,6 +2130,7 @@ public:
       auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
                                                fDefines);
       fLoopManager->Book(action.get());
+      fLoopManager->AddDataBlockCallback(action->GetDataBlockCallback());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
 
@@ -2286,6 +2287,7 @@ private:
       auto action =
          RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{}, fDefines);
       fLoopManager->Book(action.get());
+      fLoopManager->AddDataBlockCallback(action->GetDataBlockCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
 

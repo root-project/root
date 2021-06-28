@@ -280,17 +280,18 @@ public:
   friend class RooAddPdf ;
   friend class RooAddPdfOrig ;
   RooArgSet* getVariables(Bool_t stripDisconnected=kTRUE) const ;
-  RooArgSet* getParameters(const RooAbsData* data, Bool_t stripDisconnected=kTRUE) const ;
+  RooArgSet* getParameters(const RooAbsData* data, bool stripDisconnected=true) const ;
   /// Return the parameters of this p.d.f when used in conjuction with dataset 'data'
-  RooArgSet* getParameters(const RooAbsData& data, Bool_t stripDisconnected=kTRUE) const {
+  RooArgSet* getParameters(const RooAbsData& data, bool stripDisconnected=true) const {
     return getParameters(&data,stripDisconnected) ;
   }
   /// Return the parameters of the p.d.f given the provided set of observables
-  RooArgSet* getParameters(const RooArgSet& observables, Bool_t stripDisconnected=kTRUE) const {
+  RooArgSet* getParameters(const RooArgSet& observables, bool stripDisconnected=true) const {
     return getParameters(&observables,stripDisconnected);
   }
-  virtual RooArgSet* getParameters(const RooArgSet* depList, Bool_t stripDisconnected=kTRUE) const ;
-  /// Return the observables of this pdf given a set of observables
+  RooArgSet* getParameters(const RooArgSet* observables, bool stripDisconnected=true) const;
+  virtual bool getParameters(const RooArgSet* observables, RooArgSet& outputSet, bool stripDisconnected=true) const;
+  /// Given a set of possible observables, return the observables that this PDF depends on.
   RooArgSet* getObservables(const RooArgSet& set, Bool_t valueOnly=kTRUE) const {
     return getObservables(&set,valueOnly) ;
   }
@@ -299,7 +300,8 @@ public:
   RooArgSet* getObservables(const RooAbsData& data) const {
     return getObservables(&data) ;
   }
-  RooArgSet* getObservables(const RooArgSet* depList, Bool_t valueOnly=kTRUE) const ;
+  RooArgSet* getObservables(const RooArgSet* depList, bool valueOnly=true) const ;
+  bool getObservables(const RooArgSet* depList, RooArgSet& outputSet, bool valueOnly=true) const;
   Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;

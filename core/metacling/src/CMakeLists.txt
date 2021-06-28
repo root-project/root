@@ -8,8 +8,6 @@
 # symbols from libCore.
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
-
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
@@ -61,6 +59,11 @@ target_include_directories(MetaCling PRIVATE
    ${CMAKE_SOURCE_DIR}/core/gui/inc
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_BINARY_DIR}/ginclude
+)
+
+set_target_properties(MetaCling PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
 )
 
 if(MSVC)
@@ -130,29 +133,7 @@ if(MSVC)
       ??$endl@DU?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@@Z
       cling_runtime_internal_throwIfInvalidPointer
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
-      ??1Value@cling@@QAE@XZ
-      ?isValid@Value@cling@@QBE_NXZ
-      ?kEmptyCollection@valuePrinterInternal@cling@@3QBDB
-      ?AssertOnUnsupportedTypeCast@Value@cling@@IBEXXZ
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DM@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DN@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DO@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
-      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
-      ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBI@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBM@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBN@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBH@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBD@Z
-      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBV23@@Z
-      ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
-      ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
-  )
+    )
   if(MSVC_VERSION LESS 1914)
     set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)
   endif()

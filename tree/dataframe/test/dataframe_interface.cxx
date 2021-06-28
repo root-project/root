@@ -1,4 +1,5 @@
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RStringView.hxx"
 #include "ROOT/RTrivialDS.hxx"
 #include "TMemFile.h"
 #include "TSystem.h"
@@ -443,7 +444,7 @@ TEST(RDataFrameInterface, ColumnWithSimpleStruct)
    ROOT::RDataFrame df(t);
    const std::vector<std::string> expected({ "c.a", "a", "c.b", "b", "c" });
    EXPECT_EQ(df.GetColumnNames(), expected);
-   for (const std::string &col : {"c.a", "a"}) {
+   for (std::string_view col : {"c.a", "a"}) {
       EXPECT_DOUBLE_EQ(df.Mean<int>(col).GetValue(), 42.); // compiled
       EXPECT_DOUBLE_EQ(df.Mean(col).GetValue(), 42.); // jitted
    }
@@ -546,4 +547,16 @@ TEST(RDataFrameInterface, GetColumnTypeOfAlias)
       auto df = ROOT::RDataFrame(t).Alias("y", "x");
       EXPECT_EQ(df.GetColumnType("y"), "Int_t");
    }
+}
+
+// https://sft.its.cern.ch/jira/browse/ROOT-9558
+TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
+{
+   TTree t("t", "t");
+   int x = 42;
+   t.Branch("x", &x, "y/I");
+   t.Fill();
+
+   auto m = ROOT::RDataFrame(t).Max<int>("x");
+   EXPECT_EQ(*m, 42);
 }

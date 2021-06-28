@@ -21,6 +21,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <new> // std::hardware_destructive_interference_size
 #include <string>
 #include <type_traits> // std::decay
 #include <vector>
@@ -199,6 +200,24 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context = "
 
 /// Whether custom column with name colName is an "internal" column such as rdfentry_ or rdfslot_
 bool IsInternalColumn(std::string_view colName);
+
+// We could just check `#ifdef __cpp_lib_hardware_interference_size`, but at least on Mac 11
+// libc++ defines that macro but is missing the actual feature, so we use an ad-hoc ROOT macro instead.
+// See the relevant entry in cmake/modules/RootConfiguration.cmake for more info.
+#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
+   // C++17 feature (so we can use inline variables)
+   inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
+#else
+   // safe bet: assume the typical 64 bytes
+   static constexpr std::size_t kCacheLineSize = 64;
+#endif
+
+/// Stepping through CacheLineStep<T> values in a vector<T> brings you to a new cache line.
+/// Useful to avoid false sharing.
+template <typename T>
+constexpr std::size_t CacheLineStep() {
+   return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
+}
 
 } // end NS RDF
 } // end NS Internal

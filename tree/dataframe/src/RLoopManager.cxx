@@ -143,11 +143,8 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
             // Leaf list
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntries() == 1) {
-               auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
-               const auto leafName = std::string(leaf->GetName());
-               if (leafName == branchName) {
-                  UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
-               }
+               auto leaf = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
+               UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
             }
 
             for (auto leaf : *listOfLeaves) {
@@ -290,6 +287,27 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
 
 } // anonymous namespace
 
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+
+/// A RAII object that calls RLoopManager::CleanUpTask at destruction
+struct RCallCleanUpTask {
+   RLoopManager &fLoopManager;
+   unsigned int fArg;
+   TTreeReader *fReader;
+
+   RCallCleanUpTask(RLoopManager &lm, unsigned int arg = 0u, TTreeReader *reader = nullptr)
+      : fLoopManager(lm), fArg(arg), fReader(reader)
+   {
+   }
+   ~RCallCleanUpTask() { fLoopManager.CleanUpTask(fReader, fArg); }
+};
+
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the branches names, including the ones of the friend trees
 ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates)
@@ -305,20 +323,21 @@ ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fDataBlockNotifier(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fDataBlockNotifier(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds))
+     fDataSource(std::move(ds)), fDataBlockNotifier(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -355,6 +374,7 @@ void RLoopManager::RunEmptySourceMT()
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       RSlotRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
+      RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
       R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
@@ -362,12 +382,10 @@ void RLoopManager::RunEmptySourceMT()
             RunAndCheckFilters(slot, currEntry);
          }
       } catch (...) {
-         CleanUpTask(slot);
          // Error might throw in experiment frameworks like CMSSW
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(slot);
    };
 
    ROOT::TThreadExecutor pool;
@@ -381,16 +399,15 @@ void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
+   RCallCleanUpTask cleanup(*this);
    try {
       for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
          RunAndCheckFilters(0, currEntry);
       }
    } catch (...) {
-      CleanUpTask(0u);
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   CleanUpTask(0u);
 }
 
 /// Run event loop over one or multiple ROOT files, in parallel.
@@ -406,6 +423,7 @@ void RLoopManager::RunTreeProcessorMT()
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
       RSlotRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
+      RCallCleanUpTask cleanup(*this, slot, &r);
       InitNodeSlots(&r, slot);
       R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
@@ -417,11 +435,9 @@ void RLoopManager::RunTreeProcessorMT()
             RunAndCheckFilters(slot, count++);
          }
       } catch (...) {
-         CleanUpTask(slot);
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(slot);
    });
 #endif // no-op otherwise (will not be called)
 }
@@ -432,6 +448,7 @@ void RLoopManager::RunTreeReader()
    TTreeReader r(fTree.get(), fTree->GetEntryList());
    if (0 == fTree->GetEntriesFast())
       return;
+   RCallCleanUpTask cleanup(*this, 0u, &r);
    InitNodeSlots(&r, 0);
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
 
@@ -442,7 +459,6 @@ void RLoopManager::RunTreeReader()
          RunAndCheckFilters(0, r.GetCurrentEntry());
       }
    } catch (...) {
-      CleanUpTask(0u);
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
@@ -451,7 +467,6 @@ void RLoopManager::RunTreeReader()
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(r.GetEntryStatus()));
    }
-   CleanUpTask(0u);
 }
 
 /// Run event loop over data accessed through a DataSource, in sequence.
@@ -463,6 +478,7 @@ void RLoopManager::RunDataSource()
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
       fDataSource->InitSlot(0u, 0ull);
+      RCallCleanUpTask cleanup(*this);
       try {
          for (const auto &range : ranges) {
             const auto start = range.first;
@@ -475,11 +491,9 @@ void RLoopManager::RunDataSource()
             }
          }
       } catch (...) {
-         CleanUpTask(0u);
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(0u);
       fDataSource->FinaliseSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
@@ -499,6 +513,7 @@ void RLoopManager::RunDataSourceMT()
       RSlotRAII slotRAII(slotStack);
       const auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
+      RCallCleanUpTask cleanup(*this, slot);
       fDataSource->InitSlot(slot, range.first);
       const auto start = range.first;
       const auto end = range.second;
@@ -510,11 +525,9 @@ void RLoopManager::RunDataSourceMT()
             }
          }
       } catch (...) {
-         CleanUpTask(slot);
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);
    };
 
@@ -532,6 +545,14 @@ void RLoopManager::RunDataSourceMT()
 /// Named filters must be called even if the analysis logic would not require it, lest they report confusing results.
 void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
+   // data-block callbacks run before the rest of the graph
+   if (fDataBlockNotifier.CheckFlag(slot)) {
+      for (auto &callback : fDataBlockCallbacks) {
+         callback(slot);
+      }
+      fDataBlockNotifier.UnsetFlag(slot);
+   }
+
    for (auto &actionPtr : fBookedActions)
       actionPtr->Run(slot, entry);
    for (auto &namedFilterPtr : fBookedNamedFilters)
@@ -545,12 +566,27 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 /// calls their `InitSlot` method, to get them ready for running a task.
 void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
+   SetupDataBlockCallbacks(r, slot);
    for (auto &ptr : fBookedActions)
       ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters)
       ptr->InitSlot(r, slot);
    for (auto &callback : fCallbacksOnce)
       callback(slot);
+}
+
+void RLoopManager::SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot) {
+   if (r != nullptr) {
+      // we need to set a notifier so that we run the callbacks every time we switch to a new TTree
+      // `PrependLink` inserts this notifier into the TTree/TChain's linked list of notifiers
+      fDataBlockNotifier.GetChainNotifyLink(slot).PrependLink(*r->GetTree());
+   }
+   // Whatever the data source, initially set the "new data block" flag:
+   // - for TChains, this ensures that we don't skip the first data block because
+   //   the correct tree is already loaded
+   // - for RDataSources and empty sources, which currently don't have data blocks, this
+   //   ensures that we run once per task
+   fDataBlockNotifier.SetFlag(slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -590,11 +626,14 @@ void RLoopManager::CleanUpNodes()
 
    fCallbacks.clear();
    fCallbacksOnce.clear();
+   fDataBlockCallbacks.clear();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
-void RLoopManager::CleanUpTask(unsigned int slot)
+void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 {
+   if (r != nullptr)
+      fDataBlockNotifier.GetChainNotifyLink(slot).RemoveLink(*r->GetTree());
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
@@ -807,4 +846,10 @@ bool RLoopManager::HasDSValuePtrs(const std::string &col) const
 void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs)
 {
    fDSValuePtrMap[col] = ptrs;
+}
+
+void RLoopManager::AddDataBlockCallback(std::function<void(unsigned int)> &&callback)
+{
+   if (callback)
+      fDataBlockCallbacks.emplace_back(std::move(callback));
 }
