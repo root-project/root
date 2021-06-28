@@ -30,12 +30,14 @@ ClassImp(TWin32Thread);
 /// Win32 threads -- spawn new thread (like pthread_create).
 /// Win32 has a thread handle in addition to the thread ID.
 
-Int_t TWin32Thread::Run(TThread *th)
+Int_t TWin32Thread::Run(TThread *th, const int affinity)
 {
    DWORD  dwThreadId;
    HANDLE hHandle = CreateThread(0, 0,
                                  (LPTHREAD_START_ROUTINE)&TThread::Function,
                                  th, 0, (DWORD*)&dwThreadId);
+   if (affinity >= 0)
+      Warning("Run", "Affinity setting not yet implemented on Win32");
    if (th->fDetached) {
       ::CloseHandle(hHandle);
       th->fHandle = 0L;

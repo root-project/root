@@ -562,10 +562,13 @@ Long_t TThread::SelfId()
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the thread. This starts the static method TThread::Function()
 /// which calls the user function specified in the TThread ctor with
-/// the arg argument. Returns 0 on success, otherwise an error number will
+/// the arg argument. 
+/// If affinity is specified (>=0), a CPU affinity will be associated
+/// with the current thread.
+/// Returns 0 on success, otherwise an error number will
 /// be returned.
 
-Int_t TThread::Run(void *arg)
+Int_t TThread::Run(void *arg, const int affinity)
 {
    if (arg) fThreadArg = arg;
 
@@ -573,7 +576,7 @@ Int_t TThread::Run(void *arg)
    ThreadInternalLock();
    SetComment("Run: MainMutex locked");
 
-   int iret = fgThreadImp->Run(this);
+   int iret = fgThreadImp->Run(this, affinity);
 
    fState = iret ? kInvalidState : kRunningState;
 
