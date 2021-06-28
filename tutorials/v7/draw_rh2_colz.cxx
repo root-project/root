@@ -49,7 +49,7 @@ void draw_rh2_colz()
    auto frame = canvas->AddFrame();
 
    // should we made special style for frame with palette?
-   frame->AttrMargins().SetRight(0.2_normal);
+   frame->margins.right = 0.2_normal;
 
    frame->SetGridX(false).SetGridY(false);
 

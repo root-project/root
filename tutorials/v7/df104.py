@@ -104,11 +104,16 @@ lower_pad = c.AddPad(RPadPos(0,0.65), RPadExtent(1, 0.35))
 upper_pad = c.AddPad(RPadPos(0,0), RPadExtent(1, 0.65))
 
 upper_frame = upper_pad.AddFrame()
-upper_frame.AttrMargins().SetBottom(0).SetLeft(0.14).SetRight(0.05)
+upper_frame.margins.bottom = 0
+upper_frame.margins.left = 0.14
+upper_frame.margins.right = 0.05
 upper_frame.x.labels.hide = True
 
 lower_frame = lower_pad.AddFrame()
-lower_frame.AttrMargins().SetTop(0).SetLeft(0.14).SetRight(0.05).SetBottom(0.3)
+lower_frame.margins.top = 0
+lower_frame.margins.left = 0.14
+lower_frame.margins.right = 0.05
+lower_frame.margins.bottom = 0.3
 
 # Fit signal + background model to data
 fit = ROOT.TF1("fit", "([0]+[1]*x+[2]*x^2+[3]*x^3)+[4]*exp(-0.5*((x-[5])/[6])^2)", 105, 160)

@@ -26,31 +26,21 @@ namespace Experimental {
 
 class RAttrMargins : public RAttrAggregation {
 
-   RAttrValue<RPadLength>   fLeft{this, "left", 0._normal};
-   RAttrValue<RPadLength>   fRight{this, "right", 0._normal};
-   RAttrValue<RPadLength>   fTop{this, "top", 0._normal};
-   RAttrValue<RPadLength>   fBottom{this, "bottom", 0._normal};
-   RAttrValue<RPadLength>   fAll{this, "all", 0._normal};
-
    R__ATTR_CLASS(RAttrMargins, "margins");
 
-public:
+   RAttrValue<RPadLength> left{this, "left", 0._normal};     ///<! left margin
+   RAttrValue<RPadLength> right{this, "right", 0._normal};   ///<! right margin
+   RAttrValue<RPadLength> top{this, "top", 0._normal};       ///<! top margin
+   RAttrValue<RPadLength> bottom{this, "bottom", 0._normal}; ///<! bottom margin
 
-   RAttrMargins &SetLeft(const RPadLength &len) { fLeft = len; return *this; }
-   RPadLength GetLeft() const { return fLeft; }
-
-   RAttrMargins &SetRight(const RPadLength &len) { fRight = len; return *this; }
-   RPadLength GetRight() const { return fRight; }
-
-   RAttrMargins &SetTop(const RPadLength &len) { fTop = len; return *this; }
-   RPadLength GetTop() const { return fTop; }
-
-   RAttrMargins &SetBottom(const RPadLength &len) { fBottom = len; return *this; }
-   RPadLength GetBottom() const { return fBottom; }
-
-   RAttrMargins &SetAll(const RPadLength &len) { fAll = len; return *this; }
-   RPadLength GetAll() const { return fAll; }
-
+   RAttrMargins &operator=(const RPadLength &len)
+   {
+      left = len;
+      right = len;
+      top = len;
+      bottom = len;
+      return *this;
+   }
 };
 
 } // namespace Experimental
