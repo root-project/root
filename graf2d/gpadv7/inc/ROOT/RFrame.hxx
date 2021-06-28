@@ -144,7 +144,6 @@ public:
    };
 
 private:
-   RAttrMargins fAttrMargins{this, "margins"};    ///<! frame margins relative to pad
    RAttrValue<bool> fDrawAxes{this, "drawaxes", false}; ///<! draw axes by frame
    RAttrValue<bool> fGridX{this, "gridx", false}; ///<! show grid for X axis
    RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
@@ -186,6 +185,7 @@ public:
    };
 
 
+   RAttrMargins margins{this, "margins"};    ///<! frame margins relative to pad
    RAttrBorder border{this, "border"};       ///<! frame border attributes
    RAttrFill fill{this, "fill"};             ///<! frame fill attributes
    RAttrAxis x{this, "x"};                   ///<! drawing attributes for X axis
@@ -198,9 +198,6 @@ public:
 
    bool GetDrawAxes() const { return fDrawAxes; }
    RFrame &SetDrawAxes(bool on = true) { fDrawAxes = on; return *this; }
-
-   const RAttrMargins &AttrMargins() const { return fAttrMargins; }
-   RAttrMargins &AttrMargins() { return fAttrMargins; }
 
    RFrame &SetGridX(bool on = true) { fGridX = on; return *this; }
    bool GetGridX() const { return fGridX; }

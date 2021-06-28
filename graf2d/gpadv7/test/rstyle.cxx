@@ -16,17 +16,14 @@
 using namespace ROOT::Experimental;
 
 class CustomDrawable : public RDrawable {
-   RAttrMargins fAttrMargins{this, "margins"}; ///<! margin attributes
 
 public:
    RAttrLine  line{this, "line"};         ///<! line attributes
    RAttrFill  fill{this, "fill"};         ///<! fill attributes
    RAttrText  text{this, "text"};         ///<! text attributes
+   RAttrMargins margins{this, "margins"}; ///<! margins attributes
 
    CustomDrawable() : RDrawable("custom") {}
-
-   const RAttrMargins &AttrMargins() const { return fAttrMargins; }
-   RAttrMargins &AttrMargins() { return fAttrMargins; }
 };
 
 
@@ -80,18 +77,16 @@ TEST(RStyleTest, CreateCss)
 
 TEST(RStyleTest, TestMargins)
 {
-   auto style = RStyle::Parse(" custom { margins_all: 0.3; margins_left: 0.2; margins_right: 0.4; }");
+   auto style = RStyle::Parse(" custom { margins_top: 0.3; margins_left: 0.2; margins_right: 0.4; }");
 
    ASSERT_NE(style, nullptr);
 
    CustomDrawable drawable;
    drawable.UseStyle(style);
 
-   auto &margins = drawable.AttrMargins();
-
-   EXPECT_EQ(margins.GetLeft(), 0.2);
-   EXPECT_EQ(margins.GetRight(), 0.4_normal);
-   EXPECT_EQ(margins.GetAll(), 0.3_normal);
+   EXPECT_EQ(drawable.margins.left, 0.2);
+   EXPECT_EQ(drawable.margins.right, 0.4_normal);
+   EXPECT_EQ(drawable.margins.top, 0.3_normal);
 }
 
 
