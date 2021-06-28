@@ -291,7 +291,7 @@ protected:
    Bool_t           fDone{kFALSE};              //True if eventloop should be finished
    Int_t            fLevel{0};                  //Level of nested eventloops
 
-   TSeqCollection  *fTimers{nullptr};           //List of timers
+   TList           *fTimers{nullptr};           //List of timers
    TSeqCollection  *fSignalHandler{nullptr};    //List of signal handlers
    TSeqCollection  *fFileHandler{nullptr};      //List of file handlers
    TSeqCollection  *fStdExceptionHandler{nullptr}; //List of std::exception handlers
@@ -389,7 +389,7 @@ public:
 
    //---- Time & Date
    virtual TTime           Now();
-   virtual TSeqCollection *GetListOfTimers() const { return fTimers; }
+   virtual TList          *GetListOfTimers() const { return fTimers; }
    virtual void            AddTimer(TTimer *t);
    virtual TTimer         *RemoveTimer(TTimer *t);
    virtual void            ResetTimer(TTimer *) { }
