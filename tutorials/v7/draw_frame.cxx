@@ -49,7 +49,7 @@ void draw_frame()
    frame->margins.top = 0.25_normal;
 
    // let frame draw axes without need of any histogram
-   frame->SetDrawAxes(true);
+   frame->drawaxes = true;
 
    frame->x.min = 0;
    frame->x.max = 100;

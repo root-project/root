@@ -51,13 +51,16 @@ void draw_rh2_colz()
    // should we made special style for frame with palette?
    frame->margins.right = 0.2_normal;
 
-   frame->SetGridX(false).SetGridY(false);
+   frame->gridx = false;
+   frame->gridy = false;
 
    // draw ticks on both sides
-   frame->SetTicksX(2).SetTicksY(2);
+   frame->ticksx = 2;
+   frame->ticksy = 2;
 
    // swap frame side where axes are drawn
-   // frame->SetSwapX(true).SetSwapY(true);
+   // frame->swapx = true;
+   // frame->swapy = true;
 
    frame->x.zoommin = 2;
    frame->x.zoommax = 8;
