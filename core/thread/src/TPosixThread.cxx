@@ -20,6 +20,7 @@
 #include "TPosixThread.h"
 
 #include "TThread.h"
+#include <sched.h>
 
 ClassImp(TPosixThread);
 
