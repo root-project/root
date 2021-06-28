@@ -846,6 +846,19 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
    else                  return prob;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sign Function 
+Double_t TMath::Sign(Double_t x) {
+   if (x < 0) {
+	  return -1;
+   }
+   else if (x == 0) {
+	  return 0;
+   }
+   else {
+	  return 1;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Computation of Voigt function (normalised).
