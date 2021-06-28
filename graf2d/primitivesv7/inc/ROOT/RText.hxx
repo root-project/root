@@ -31,11 +31,12 @@ class RText : public RDrawable {
 
    std::string fText;                                  ///< text to display
    RPadPos fPos;                                       ///< position
-   RAttrText fAttrText{this, "text"};                  ///<! text attributes
    RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
    RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 
 public:
+   RAttrText text{this, "text"};                  ///<! text attributes
+
    RText() : RDrawable("text") {}
 
    RText(const std::string &txt) : RText() { fText = txt; }
@@ -51,9 +52,6 @@ public:
 
    RText &SetPos(const RPadPos &p) { fPos = p; return *this; }
    const RPadPos &GetPos() const { return fPos; }
-
-   const RAttrText &AttrText() const { return fAttrText; }
-   RAttrText &AttrText() { return fAttrText; }
 
    RText &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
    bool GetOnFrame() const { return fOnFrame; }

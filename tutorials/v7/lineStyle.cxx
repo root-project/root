@@ -25,11 +25,12 @@ void lineStyle()
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
-      canvas->Draw<RText>(std::to_string(i))->SetPos({.3_normal, 1_normal*num}).AttrText().SetSize(13).SetAlign(32).SetFont(52);
+      auto text = canvas->Add<RText>(RPadPos{.3_normal, 1_normal*num}, std::to_string(i));
+      text->text.size = 13;
+      text->text.align = 32;
+      text->text.SetFont(5);
 
-      auto draw = canvas->Draw<RLine>();
-      draw->SetP1({.32_normal,1_normal*num});
-      draw->SetP2({.8_normal, 1_normal*num});
+      auto draw = canvas->Add<RLine>(RPadPos{.32_normal,1_normal*num}, RPadPos{.8_normal, 1_normal*num});
       draw->line.style = i;
    }
 

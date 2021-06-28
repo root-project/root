@@ -65,7 +65,7 @@ void draw_frame()
    // draw line over the frame
    auto line0 = canvas->Draw<RLine>(RPadPos(100_px, .9_normal), RPadPos(900_px , .9_normal));
    auto text0 = canvas->Draw<RText>(RPadPos(100_px, .9_normal + 5_px), "Line drawn on pad, fix pixel length");
-   text0->AttrText().SetAlign(11);
+   text0->text.align = 11;
 
    // draw line under the frame
    auto line1 = canvas->Draw<RLine>(RPadPos(.1_normal, .1_normal), RPadPos(.9_normal, .1_normal));
@@ -78,7 +78,8 @@ void draw_frame()
 
    auto text2 = canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
    text2->SetOnFrame(true); // or via CSS "onframe: true;"
-   text2->AttrText().SetAngle(90).SetAlign(11);
+   text2->text.angle = 90;
+   text2->text.align = 11;
 
    // draw on right size of frame, user coordiante, moved and zoomed with frame
    auto line3 = canvas->Draw<RLine>(RPadPos(110_user, -.1_normal), RPadPos(110_user, 1.1_normal));
@@ -87,7 +88,7 @@ void draw_frame()
 
    auto text3 = canvas->Draw<RText>(RPadPos(110_user, -.1_normal), "Line drawn on frame, user coordinates");
    text3->SetOnFrame(true); // or via CSS "onframe: true;"
-   text3->AttrText().SetAngle(90);
+   text3->text.angle = 90;
 
    // draw box before line at same position as line ending with 40x40 px size and clipping on
    auto box4 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 80_user - 20_px), RPadPos(80_user + 20_px, 80_user + 20_px));
@@ -115,7 +116,7 @@ void draw_frame()
 
    auto text5 = canvas->Draw<RText>(RPadPos(20_user, 80_user), "clipping off");
    text5->SetOnFrame(true); // or via CSS "onframe: true;"
-   text5->AttrText().SetAlign(11);
+   text5->text.align = 11;
 
    canvas->UseStyle(frame_style);
 

@@ -37,7 +37,6 @@ namespace Experimental {
 class RHistDrawableBase : public RDrawable {
    RAttrValue<std::string> fKind{this, "kind", ""};     ///<! hist draw kind
    RAttrValue<int> fSub{this, "sub", -1};               ///<! hist draw sub kind
-   RAttrText fAttrText{this, "text"};                   ///<! hist text attributes
    RAttrValue<bool> fOptimize{this, "optimize", false}; ///<! optimize drawing
 
 protected:
@@ -93,11 +92,9 @@ public:
    RAttrLine line{this, "line"};                   ///<! hist line attributes
    RAttrFill fill{this, "fill"};                   ///<! hist fill attributes
    RAttrMarker marker{this, "marker"};             ///<! hist marker attributes
+   RAttrText text{this, "text"};                   ///<! hist text attributes
 
    RHistDrawableBase() : RDrawable("hist") {}
-
-   const RAttrText &AttrText() const { return fAttrText; }
-   RAttrText &AttrText() { return fAttrText; }
 
    RHistDrawableBase &Optimize(bool on = true) { fOptimize = on; return *this; }
 };

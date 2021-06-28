@@ -19,6 +19,45 @@
 namespace ROOT {
 namespace Experimental {
 
+/** \class RAttrAxisLabels
+\ingroup GpadROOT7
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-02-20
+\brief Axis labels drawing attributes
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAttrAxisLabels : public RAttrText {
+   R__ATTR_CLASS_DERIVED(RAttrAxisLabels, "labels", RAttrText)
+
+   RAttrValue<RPadLength> offset{this, "offset", {}};      ///<! labels offset - relative to "default" position
+   RAttrValue<bool> center{this, "center", false};         ///<! center labels
+   RAttrValue<bool> hide{this, "hide", false};             ///<! hide labels
+};
+
+/** \class RAttrAxisTitle
+\ingroup GpadROOT7
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-02-20
+\brief Axis title and its drawing attributes
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAttrAxisTitle : public RAttrText {
+   R__ATTR_CLASS_DERIVED(RAttrAxisTitle, "title", RAttrText)
+
+   RAttrValue<std::string> value{this, "value", ""};            ///<! axis title value
+   RAttrValue<std::string> position{this, "position", "right"};   ///<! axis title position - left, right, center
+   RAttrValue<RPadLength> offset{this, "offset", {}};        ///<! axis title offset - relative to "default" position
+
+   RAttrAxisTitle& operator=(const std::string &_title) { value = _title; return *this; }
+
+   void SetLeft() { position = "left"; }
+   void SetCenter() { position = "center"; }
+   void SetRight() { position = "right"; }
+
+};
+
 /** \class RAttrAxis
 \ingroup GpadROOT7
 \author Sergey Linev <s.linev@gsi.de>
@@ -28,7 +67,6 @@ namespace Experimental {
 */
 
 class RAttrAxis : public RAttrAggregation {
-
    RAttrValue<double> fMin{this, "min", 0.};                             ///<! axis min
    RAttrValue<double> fMax{this, "max", 0.};                             ///<! axis max
    RAttrValue<double> fZoomMin{this, "zoommin", 0.};                     ///<! axis zoom min
@@ -45,18 +83,12 @@ class RAttrAxis : public RAttrAggregation {
    RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
    RAttrValue<RColor> fTicksColor{this, "ticks_color", RColor::kBlack};  ///<! ticks color
    RAttrValue<int> fTicksWidth{this, "ticks_width", 1};                  ///<! ticks width
-   RAttrValue<bool> fHideLabels{this, "hidelabels", false};              ///<! disable labels drawing
-   RAttrText fAttrLabels{this, "labels"};                                ///<! text attributes for labels
-   RAttrValue<RPadLength> fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative
-   RAttrValue<bool> fLabelsCenter{this, "labels_center", false};         ///<! center labels
-   RAttrText fAttrTitle{this, "title"};                                  ///<! axis title text attributes
-   RAttrValue<std::string> fTitle{this, "title", ""};                    ///<! axis title
-   RAttrValue<std::string> fTitlePos{this, "title_position", "right"};   ///<! axis title position - left, right, center
-   RAttrValue<RPadLength> fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative
 
    R__ATTR_CLASS(RAttrAxis, "axis");
 
    RAttrLine line{this, "line"};                                    ///<! line attributes
+   RAttrAxisLabels labels{this, "labels"};                          ///<! labels attributes
+   RAttrAxisTitle title{this, "title"};                             ///<! title attributes
 
    RAttrAxis &SetMin(double min) { fMin = min; return *this; }
    RAttrAxis &SetMax(double max) { fMax = max; return *this; }
@@ -138,32 +170,8 @@ class RAttrAxis : public RAttrAggregation {
    RAttrAxis &SetTicksWidth(int width) { fTicksWidth = width; return *this; }
    int GetTicksWidth() const { return fTicksWidth; }
 
-   RAttrAxis &SetLabelsOffset(const RPadLength &len) { fLabelsOffset = len; return *this; }
-   RPadLength GetLabelsOffset() const { return fLabelsOffset; }
-
-   RAttrAxis &SetHideLabels(bool on = true) { fHideLabels = on; return *this; }
-   bool GetHideLabels() const { return fHideLabels; }
-
-   const RAttrText &AttrLabels() const { return fAttrLabels; }
-   RAttrText &AttrLabels() { return fAttrLabels; }
-
-   RAttrAxis &SetLabelsCenter(bool on = true) { fLabelsCenter = on; return *this; }
-   bool GetLabelsCenter() const { return fLabelsCenter; }
-
-   const RAttrText &AttrTitle() const { return fAttrTitle; }
-   RAttrText &AttrTitle() { return fAttrTitle; }
-
-   RAttrAxis &SetTitle(const std::string &title) { fTitle = title; return *this; }
-   std::string GetTitle() const { return fTitle; }
-
-   RAttrAxis &SetTitlePos(const std::string &pos) { fTitlePos = pos; return *this; }
-   RAttrAxis &SetTitleLeft() { return SetTitlePos("left"); }
-   RAttrAxis &SetTitleCenter() { return SetTitlePos("center"); }
-   RAttrAxis &SetTitleRight() { return SetTitlePos("right"); }
-   std::string GetTitlePos() const { return fTitlePos; }
-
-   RAttrAxis &SetTitleOffset(const RPadLength &len) { fTitleOffset = len; return *this; }
-   RPadLength GetTitleOffset() const { return fTitleOffset; }
+   RAttrAxis &SetTitle(const std::string &_title) { title.value = _title; return *this; }
+   std::string GetTitle() const { return title.value; }
 };
 
 } // namespace Experimental
