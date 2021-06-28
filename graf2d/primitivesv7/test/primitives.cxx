@@ -71,16 +71,20 @@ TEST(Primitives, RText)
 
    auto text = canv.Draw<RText>(RPadPos(0.5_normal, 0.5_normal), "Hello World");
 
-   text->AttrText().SetColor(RColor::kBlack).SetSize(12.5).SetAngle(90.).SetAlign(13).SetFontFamily("Arial");
+   text->text.color = RColor::kBlack;
+   text->text.size = 12.5;
+   text->text.angle = 90.;
+   text->text.align = 13;
+   text->text.font_family = "Arial";
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(text->GetText(), "Hello World");
-   EXPECT_EQ(text->AttrText().GetColor(), RColor::kBlack);
-   EXPECT_DOUBLE_EQ(text->AttrText().GetSize(), 12.5);
-   EXPECT_DOUBLE_EQ(text->AttrText().GetAngle(), 90.);
-   EXPECT_EQ(text->AttrText().GetAlign(), 13);
-   EXPECT_EQ(text->AttrText().GetFontFamily(), "Arial");
+   EXPECT_EQ(text->text.color, RColor::kBlack);
+   EXPECT_DOUBLE_EQ(text->text.size, 12.5);
+   EXPECT_DOUBLE_EQ(text->text.angle, 90.);
+   EXPECT_EQ(text->text.align, 13);
+   EXPECT_EQ(text->text.font_family, "Arial");
 }
 
 // Test RLegend API
@@ -121,7 +125,10 @@ TEST(Primitives, RPaveText)
 
    auto text = canv.Add<RPaveText>();
 
-   text->AttrText().SetColor(RColor::kBlack).SetSize(12).SetAlign(13).SetFontFamily("Times New Roman");
+   text->text.color = RColor::kBlack;
+   text->text.size = 12;
+   text->text.align = 13;
+   text->text.font_family = "Times New Roman";
    text->border.color = RColor::kRed;
    text->border.width = 3;
    text->fill.color = RColor::kBlue;
@@ -138,10 +145,10 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->GetLine(1), "Second line");
    EXPECT_EQ(text->GetLine(2), "Third line");
 
-   EXPECT_EQ(text->AttrText().GetColor(), RColor::kBlack);
-   EXPECT_DOUBLE_EQ(text->AttrText().GetSize(), 12);
-   EXPECT_EQ(text->AttrText().GetAlign(), 13);
-   EXPECT_EQ(text->AttrText().GetFontFamily(), "Times New Roman");
+   EXPECT_EQ(text->text.color, RColor::kBlack);
+   EXPECT_DOUBLE_EQ(text->text.size, 12);
+   EXPECT_EQ(text->text.align, 13);
+   EXPECT_EQ(text->text.font_family, "Times New Roman");
 
    EXPECT_EQ(text->border.color, RColor::kRed);
    EXPECT_EQ(text->border.width, 3);

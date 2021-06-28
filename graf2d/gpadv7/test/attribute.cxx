@@ -9,19 +9,16 @@
 using namespace ROOT::Experimental;
 
 class CustomAttrs : public RAttrAggregation {
-   RAttrText    fAttrText{this, "text"};    ///<! text attributes
 
 protected:
    // required here while dictionary for CustomAttrs not created
-   RAttrMap CollectDefaults() const override { return RAttrMap().AddDefaults(line).AddDefaults(fill).AddDefaults(fAttrText); }
+   RAttrMap CollectDefaults() const override { return RAttrMap().AddDefaults(line).AddDefaults(fill).AddDefaults(text); }
 
    R__ATTR_CLASS(CustomAttrs, "custom");
 
    RAttrLine    line{this, "line"};    ///<! line attributes
    RAttrFill    fill{this, "fill"};    ///<! fill attributes
-
-   const RAttrText &AttrText() const { return fAttrText; }
-   RAttrText &AttrText() { return fAttrText; }
+   RAttrText    text{this, "text"};    ///<! text attributes
 
    double GetDirect(const std::string &name)
    {
@@ -36,7 +33,7 @@ TEST(RAttrTest, AttribDirect) {
    CustomAttrs attrs;
 
    attrs.line.width = 42.;
-   attrs.AttrText().SetSize(1.7);
+   attrs.text.size = 1.7;
 
    {
       auto val = attrs.GetDirect("line_width");
@@ -52,20 +49,11 @@ TEST(RAttrTest, AttribDirect) {
 TEST(RAttrTest, AttribVals) {
    CustomAttrs attrs;
 
-   attrs.AttrText().SetColor(RColor::kBlue);
-   auto &line = attrs.line;
-   line.width = 42.f;
+   attrs.text.color = RColor::kBlue;
+   attrs.line.width = 42.f;
 
-   {
-      // Value was set on this attr, not coming from style:
-      EXPECT_FLOAT_EQ(attrs.line.width, 42.f);
-      EXPECT_FLOAT_EQ(line.width, 42.f);
-   }
-
-   {
-      // Value was set on this attr, not coming from style:
-      EXPECT_EQ(attrs.AttrText().GetColor(), RColor::kBlue);
-   }
+   EXPECT_FLOAT_EQ(attrs.line.width, 42.f);
+   EXPECT_EQ(attrs.text.color, RColor::kBlue);
 
 }
 

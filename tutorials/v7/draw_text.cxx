@@ -33,10 +33,14 @@ void draw_text()
    auto canvas = RCanvas::Create("Canvas Title");
 
    for (int i=0; i<=360; i+=10) {
-      auto text = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
+      auto draw = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
 
       RColor col((int) (0.38*i), (int) (0.64*i), (int) (0.76*i));
-      text->AttrText().SetColor(col).SetSize(10+i/10).SetAngle(i).SetAlign(13).SetFont(42);
+      draw->text.color = col;
+      draw->text.size = 10+i/10;
+      draw->text.angle = i;
+      draw->text.align = 13;
+      draw->text.SetFont(4);
    }
 
    canvas->Show();
