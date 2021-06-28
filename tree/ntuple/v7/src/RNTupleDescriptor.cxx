@@ -916,31 +916,29 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 
 namespace {
 
-std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &val, void *buffer)
+std::uint32_t SerializeFieldV1(
+   const ROOT::Experimental::RFieldDescriptor &val, std::uint32_t physicalParentId, void *buffer)
 {
+   using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   void *ptrSize = nullptr;
-   pos += SerializeFrame(ROOT::Experimental::RFieldDescriptor::kFrameVersionCurrent,
-      ROOT::Experimental::RFieldDescriptor::kFrameVersionMin, *where, &ptrSize);
+   pos += RNTupleStreamer::SerializeRecordFramePreamble(*where);
 
-   pos += SerializeUInt64(val.GetId(), *where);
-   pos += SerializeVersion(val.GetFieldVersion(), *where);
-   pos += SerializeVersion(val.GetTypeVersion(), *where);
-   pos += SerializeString(val.GetFieldName(), *where);
-   pos += SerializeString(val.GetFieldDescription(), *where);
-   pos += SerializeString(val.GetTypeName(), *where);
-   pos += SerializeUInt64(val.GetNRepetitions(), *where);
-   pos += SerializeUInt32(static_cast<int>(val.GetStructure()), *where);
-   pos += SerializeUInt64(val.GetParentId(), *where);
-   pos += SerializeUInt32(val.GetLinkIds().size(), *where);
-   for (const auto& l : val.GetLinkIds())
-      pos += SerializeUInt64(l, *where);
+   pos += RNTupleStreamer::SerializeUInt32(val.GetFieldVersion().GetVersionUse(), *where);
+   pos += RNTupleStreamer::SerializeUInt32(val.GetTypeVersion().GetVersionUse(), *where);
+   pos += RNTupleStreamer::SerializeUInt32(physicalParentId, *where);
+   pos += RNTupleStreamer::SerializeUInt16(static_cast<int>(val.GetStructure()), *where);
+   if (val.GetNRepetitions() > 0) {
+      pos += RNTupleStreamer::SerializeUInt16(RNTupleStreamer::kFlagRepetitiveField, *where);
+      pos += RNTupleStreamer::SerializeUInt64(val.GetNRepetitions(), *where);
+   } else {
+      pos += RNTupleStreamer::SerializeUInt16(0, *where);
+   }
 
    auto size = pos - base;
-   SerializeUInt32(size, ptrSize);
+   pos += RNTupleStreamer::SerializeFramePostscript(base, size);
    return size;
 }
 
@@ -968,7 +966,7 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buf
    pos += RNTupleStreamer::SerializeListFramePreamble(fFieldDescriptors.size(), *where);
    for (const auto &f : fFieldDescriptors) {
       liveId2DiskId[f.second.GetId()] = diskId;
-      pos += SerializeFieldV1(f.second, *where);
+      pos += SerializeFieldV1(f.second, liveId2DiskId[f.second.GetParentId()], *where);
       diskId++;
    }
    pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
