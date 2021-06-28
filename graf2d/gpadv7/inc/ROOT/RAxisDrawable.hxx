@@ -21,91 +21,45 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class RAxisDrawableBase
+/** \class RAxisDrawable
 \ingroup GrafROOT7
-\brief Axis base drawing - only attributes and position.
+\brief Axis drawing
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2020-11-03
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAxisDrawableBase : public RDrawable {
+class RAxisDrawable : public RDrawable {
 
    RPadPos fPos;                          ///< axis start point
    bool fVertical{false};                 ///< is vertical axis
    RPadLength fLength;                    ///< axis length
+   std::vector<std::string> fLabels;      ///< axis labels
+
 public:
 
    RAttrAxis axis{this, "axis"};     ///<! axis attributes
 
-   RAxisDrawableBase() : RDrawable("axis") {}
+   RAxisDrawable() : RDrawable("axis") {}
 
-   RAxisDrawableBase(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase()
+   RAxisDrawable(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawable()
    {
       SetPos(pos);
       SetVertical(vertical);
       SetLength(len);
    }
 
-   RAxisDrawableBase &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
-   RAxisDrawableBase &SetVertical(bool vertical = true) { fVertical = vertical; return *this; }
-   RAxisDrawableBase &SetLength(const RPadLength &len) { fLength = len; return *this; }
+   RAxisDrawable &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
+   RAxisDrawable &SetVertical(bool vertical = true) { fVertical = vertical; return *this; }
+   RAxisDrawable &SetLength(const RPadLength &len) { fLength = len; return *this; }
+   RAxisDrawable &SetLabels(const std::vector<std::string> &lbls) { fLabels = lbls; return *this; }
 
    bool IsVertical() const { return fVertical; }
    const RPadPos& GetPos() const { return fPos; }
    const RPadLength& GetLength() const { return fLength; }
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/** \class RAxisDrawable
-\ingroup GrafROOT7
-\brief Plain axis drawing.
-\author Sergey Linev <S.Linev@gsi.de>
-\date 2020-11-03
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-class RAxisDrawable : public RAxisDrawableBase {
-
-   double fMin{0}, fMax{100};      ///< axis minimum and maximum
-
-public:
-
-   RAxisDrawable() = default;
-
-   RAxisDrawable(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase(pos, vertical, len) {}
-
-   RAxisDrawable &SetMinMax(double min, double max) { fMin = min; fMax = max; return *this; }
-   double GetMin() const { return fMin; }
-   double GetMax() const { return fMax; }
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/** \class RAxisLabelsDrawable
-\ingroup GrafROOT7
-\brief Labels axis drawing.
-\author Sergey Linev <S.Linev@gsi.de>
-\date 2020-11-03
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-class RAxisLabelsDrawable : public RAxisDrawableBase {
-
-   std::vector<std::string> fLabels;      ///< axis labels
-
-public:
-
-   RAxisLabelsDrawable() = default;
-
-   RAxisLabelsDrawable(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase(pos, vertical, len) {}
-
-   RAxisLabelsDrawable &SetLabels(const std::vector<std::string> &lbls) { fLabels = lbls; return *this; }
    const std::vector<std::string> &GetLabels() const { return fLabels; }
 };
+
 
 
 } // namespace Experimental
