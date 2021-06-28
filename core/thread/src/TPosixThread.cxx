@@ -39,7 +39,7 @@ Int_t TPosixThread::Run(TThread *th, const int affinity)
    if (affinity >= 0) {
       cpu_set_t cpuset;
       CPU_ZERO(&cpuset);
-      CPU_SET(affinity,&cpuset);
+      CPU_SET(affinity, &cpuset);
       pthread_attr_setaffinity_np(attr, sizeof(cpu_set_t), &cpuset);
    }
 
