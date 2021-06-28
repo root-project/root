@@ -200,7 +200,7 @@ lower_pad.Add[TObjectDrawable]().Set(ratiodata, "E SAME")
 legend = upper_pad.Draw[RLegend](RPadPos(-0.05, 0.05), RPadExtent(0.3, 0.4))
 legend.text.size = 0.05
 legend.text.align = 32
-legend.text.SetFont(4)
+legend.text.font = 4
 legend.border.style = 0
 legend.border.width = 0
 legend.fill.style = 0
@@ -213,17 +213,17 @@ legend.AddEntry(higgs_drawable, "Signal")
 # Add ATLAS labels
 lbl1 = upper_pad.Draw[RText](RPadPos(0.05, 0.88), "ATLAS")
 lbl1.SetOnFrame()
-lbl1.text.SetFont(7)
+lbl1.text.font = 7
 lbl1.text.size = 0.05
 lbl1.text.align = 11
 lbl2 = upper_pad.Draw[RText](RPadPos(0.05 + 0.16, 0.88), "Open Data")
 lbl2.SetOnFrame()
-lbl2.text.SetFont(4)
+lbl2.text.font = 4
 lbl2.text.size = 0.05
 lbl2.text.align = 11
 lbl3 = upper_pad.Draw[RText](RPadPos(0.05, 0.82), "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 lbl3.SetOnFrame()
-lbl3.text.SetFont(4)
+lbl3.text.font = 4
 lbl3.text.size = 0.04
 lbl3.text.align = 11
 
