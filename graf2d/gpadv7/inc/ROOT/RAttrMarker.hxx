@@ -25,10 +25,6 @@ namespace Experimental {
 
 class RAttrMarker : public RAttrAggregation {
 
-   RAttrValue<RColor>   fColor{this, "color", RColor::kBlack};  ///<! marker color
-   RAttrValue<double>   fSize{this, "size", 1.};                ///<! marker size
-   RAttrValue<int>      fStyle{this, "style", 1};               ///<! marker style
-
    R__ATTR_CLASS(RAttrMarker, "marker");
 
    enum EStyle {
@@ -72,16 +68,16 @@ class RAttrMarker : public RAttrAggregation {
       kFourSquaresPlus = 49
    };
 
-   RAttrMarker &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
+   RAttrValue<RColor> color{this, "color", RColor::kBlack}; ///<! marker color
+   RAttrValue<double> size{this, "size", 1.};               ///<! marker size
+   RAttrValue<int> style{this, "style", 1};                 ///<! marker style
 
-   /// The size of the marker.
-   RAttrMarker &SetSize(double size) { fSize = size; return *this; }
-   double GetSize() const { return fSize; }
-
-   /// The style of the marker.
-   RAttrMarker &SetStyle(int style) { fStyle = style; return *this; }
-   int GetStyle() const { return fStyle; }
+   RAttrMarker(const RColor &_color, double _size, int _style) : RAttrMarker()
+   {
+      color = _color;
+      size = _size;
+      style = _style;
+   }
 
 };
 

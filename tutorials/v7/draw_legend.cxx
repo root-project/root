@@ -69,8 +69,8 @@ void draw_legend()
    legend->AddEntry(draw2, "histo2");
 
    legend->AddEntry("test").SetAttrLine(RAttrLine(RColor::kGreen, 5., 1))
-                           .SetAttrFill(RAttrFill(RColor::kBlue,3004))
-                           .SetAttrMarker(RAttrMarker().SetColor(RColor::kRed).SetSize(3).SetStyle(RAttrMarker::kOpenCross));
+                           .SetAttrFill(RAttrFill(RColor::kBlue, 3004))
+                           .SetAttrMarker(RAttrMarker(RColor::kRed, 3., RAttrMarker::kOpenCross));
 
    canvas->SetSize(1000, 700);
    canvas->Show();

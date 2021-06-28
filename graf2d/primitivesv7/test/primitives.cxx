@@ -55,13 +55,13 @@ TEST(Primitives, RMarker)
    RCanvas canv;
    auto marker = canv.Draw<RMarker>(RPadPos(0.5_normal, 0.5_normal));
 
-   marker->AttrMarker().SetStyle(RAttrMarker::kStar).SetSize(2.5).SetColor(RColor::kGreen);
+   marker->marker = RAttrMarker(RColor::kGreen, 2.5, RAttrMarker::kStar);
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(marker->AttrMarker().GetColor(), RColor::kGreen);
-   EXPECT_DOUBLE_EQ(marker->AttrMarker().GetSize(), 2.5);
-   EXPECT_EQ(marker->AttrMarker().GetStyle(), RAttrMarker::kStar);
+   EXPECT_EQ(marker->marker.color, RColor::kGreen);
+   EXPECT_DOUBLE_EQ(marker->marker.size, 2.5);
+   EXPECT_EQ(marker->marker.style, RAttrMarker::kStar);
 }
 
 // Test RText API

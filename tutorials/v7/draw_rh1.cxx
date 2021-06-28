@@ -70,7 +70,7 @@ void draw_rh1()
    // text and marker draw options
    subpads[0][1]->Draw<RFrameTitle>("Text() and Marker() draw options");
    subpads[0][1]->Draw(pHist1)->Text(true).AttrText().SetColor(col1);
-   subpads[0][1]->Draw(pHist2)->Marker().AttrMarker().SetColor(col2).SetStyle(RAttrMarker::kOpenStar).SetSize(1.5);
+   subpads[0][1]->Draw(pHist2)->Marker().marker = RAttrMarker(col2, 1.5, RAttrMarker::kOpenStar);
 
    // bar draw options
    subpads[1][1]->Draw<RFrameTitle>("Bar() draw options");
