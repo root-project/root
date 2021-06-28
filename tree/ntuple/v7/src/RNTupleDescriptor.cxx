@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <deque>
 #include <iostream>
 #include <utility>
 
@@ -581,6 +582,56 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeColumnTy
 }
 
 
+std::uint16_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeFieldStructure(
+   ROOT::Experimental::ENTupleStructure structure, void *buffer)
+{
+   using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+   switch (structure) {
+      case ENTupleStructure::kLeaf:
+         return SerializeUInt16(0x00, buffer);
+      case ENTupleStructure::kCollection:
+         return SerializeUInt16(0x01, buffer);
+      case ENTupleStructure::kRecord:
+         return SerializeUInt16(0x02, buffer);
+      case ENTupleStructure::kVariant:
+         return SerializeUInt16(0x03, buffer);
+      case ENTupleStructure::kReference:
+         return SerializeUInt16(0x04, buffer);
+      default:
+         throw RException(R__FAIL("unexpected field structure type"));
+   }
+}
+
+
+std::uint16_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFieldStructure(
+   const void *buffer, ROOT::Experimental::ENTupleStructure &structure)
+{
+   using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+   std::uint16_t onDiskValue;
+   auto result = DeserializeUInt16(buffer, onDiskValue);
+   switch (onDiskValue) {
+      case 0x00:
+         structure = ENTupleStructure::kLeaf;
+         break;
+      case 0x01:
+         structure = ENTupleStructure::kCollection;
+         break;
+      case 0x02:
+         structure = ENTupleStructure::kRecord;
+         break;
+      case 0x03:
+         structure = ENTupleStructure::kVariant;
+         break;
+      case 0x04:
+         structure = ENTupleStructure::kReference;
+         break;
+      default:
+         throw RException(R__FAIL("unexpected on-disk field structure value"));
+   }
+   return result;
+}
+
+
 /// Currently all enevelopes have the same version number (1). At a later point, different envelope types
 /// may have different version numbers
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeEnvelopePreamble(void *buffer)
@@ -625,6 +676,17 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope
    }
 
    return sizeof(protocolVersionAtWrite) + sizeof(protocolVersionMinRequired);
+}
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::ExtractEnvelopeCRC32(void *data, std::uint32_t bufSize)
+{
+   if (bufSize < (2 * sizeof(std::uint16_t) + sizeof(std::uint32_t)))
+      throw RException(R__FAIL("invalid envelope, too short"));
+
+   auto bytes = reinterpret_cast<const unsigned char *>(data);
+   std::uint32_t crc32;
+   DeserializeUInt32(bytes - sizeof(crc32), crc32);
+   return crc32;
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeRecordFramePreamble(void *buffer)
@@ -991,58 +1053,94 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 
 namespace {
 
-std::uint32_t SerializeFieldV1(
-   const ROOT::Experimental::RFieldDescriptor &val,
-   const ROOT::Experimental::Internal::RNTupleStreamer::RContext &context,
+std::uint32_t SerializeFieldsV1(
+   const ROOT::Experimental::RNTupleDescriptor &desc,
+   ROOT::Experimental::Internal::RNTupleStreamer::RContext &context,
    void *buffer)
 {
    using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
-   auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += RNTupleStreamer::SerializeRecordFramePreamble(*where);
+   std::deque<ROOT::Experimental::DescriptorId_t> idQueue{desc.GetFieldZeroId()};
+   std::uint32_t size = 0;
 
-   pos += RNTupleStreamer::SerializeUInt32(val.GetFieldVersion().GetVersionUse(), *where);
-   pos += RNTupleStreamer::SerializeUInt32(val.GetTypeVersion().GetVersionUse(), *where);
-   pos += RNTupleStreamer::SerializeUInt32(context.GetPhysFieldId(val.GetParentId()), *where);
-   pos += RNTupleStreamer::SerializeUInt16(static_cast<int>(val.GetStructure()), *where);
-   if (val.GetNRepetitions() > 0) {
-      pos += RNTupleStreamer::SerializeUInt16(RNTupleStreamer::kFlagRepetitiveField, *where);
-      pos += RNTupleStreamer::SerializeUInt64(val.GetNRepetitions(), *where);
-   } else {
-      pos += RNTupleStreamer::SerializeUInt16(0, *where);
+   while (!idQueue.empty()) {
+      auto parentId = idQueue.front();
+      idQueue.pop_front();
+      auto physParentId = context.MapFieldId(parentId);
+
+      for (const auto &f : desc.GetFieldIterable(parentId)) {
+         auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+         auto pos = base;
+         void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+         pos += RNTupleStreamer::SerializeRecordFramePreamble(*where);
+
+         pos += RNTupleStreamer::SerializeUInt32(f.GetFieldVersion().GetVersionUse(), *where);
+         pos += RNTupleStreamer::SerializeUInt32(f.GetTypeVersion().GetVersionUse(), *where);
+         pos += RNTupleStreamer::SerializeUInt32(physParentId, *where);
+         pos += RNTupleStreamer::SerializeFieldStructure(f.GetStructure(), *where);
+         if (f.GetNRepetitions() > 0) {
+            pos += RNTupleStreamer::SerializeUInt16(RNTupleStreamer::kFlagRepetitiveField, *where);
+            pos += RNTupleStreamer::SerializeUInt64(f.GetNRepetitions(), *where);
+         } else {
+            pos += RNTupleStreamer::SerializeUInt16(0, *where);
+         }
+
+         size += pos - base;
+         pos += RNTupleStreamer::SerializeFramePostscript(base, size);
+
+         idQueue.push_back(f.GetId());
+      }
    }
 
-   auto size = pos - base;
-   pos += RNTupleStreamer::SerializeFramePostscript(base, size);
    return size;
 }
 
-std::uint32_t SerializeColumnV1(
-   const ROOT::Experimental::RColumnDescriptor &val,
-   const ROOT::Experimental::Internal::RNTupleStreamer::RContext &context,
+std::uint32_t SerializeColumnsV1(
+   const ROOT::Experimental::RNTupleDescriptor &desc,
+   ROOT::Experimental::Internal::RNTupleStreamer::RContext &context,
    void *buffer)
 {
    using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
-   auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += RNTupleStreamer::SerializeRecordFramePreamble(*where);
+   std::deque<ROOT::Experimental::DescriptorId_t> idQueue{desc.GetFieldZeroId()};
+   std::uint32_t size = 0;
 
-   pos += RNTupleStreamer::SerializeColumnType(val.GetModel().GetType(), *where);
-   pos += RNTupleStreamer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(val.GetModel().GetType()), *where);
-   pos += RNTupleStreamer::SerializeUInt32(context.GetPhysColumnId(val.GetFieldId()), *where);
-   std::uint32_t flags = 0;
-   // TODO(jblomer): add support for descending columns in the column model
-   if (val.GetModel().GetIsSorted())
-      flags |= RNTupleStreamer::kFlagSortAscColumn;
-   pos += RNTupleStreamer::SerializeUInt32(flags, *where);
+   while (!idQueue.empty()) {
+      auto parentId = idQueue.front();
+      idQueue.pop_front();
 
-   auto size = pos - base;
-   pos += RNTupleStreamer::SerializeFramePostscript(base, size);
+      for (const auto &c : desc.GetColumnIterable(parentId)) {
+         auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+         auto pos = base;
+         void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+         pos += RNTupleStreamer::SerializeRecordFramePreamble(*where);
+
+         auto type = c.GetModel().GetType();
+         pos += RNTupleStreamer::SerializeColumnType(type, *where);
+         pos += RNTupleStreamer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(type), *where);
+         pos += RNTupleStreamer::SerializeUInt32(context.GetPhysColumnId(c.GetFieldId()), *where);
+         std::uint32_t flags = 0;
+         // TODO(jblomer): add support for descending columns in the column model
+         if (c.GetModel().GetIsSorted())
+            flags |= RNTupleStreamer::kFlagSortAscColumn;
+         // TODO(jblomer): fix for unsigned integer types
+         if (type == ROOT::Experimental::EColumnType::kIndex)
+            flags |= RNTupleStreamer::kFlagNonNegativeColumn;
+         pos += RNTupleStreamer::SerializeUInt32(flags, *where);
+
+         size += pos - base;
+         pos += RNTupleStreamer::SerializeFramePostscript(base, size);
+
+         context.MapColumnId(c.GetId());
+      }
+
+      for (const auto &f : desc.GetFieldIterable(parentId))
+         idQueue.push_back(f.GetId());
+   }
+
    return size;
 }
 
@@ -1060,24 +1158,18 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buf
 
    pos += RNTupleStreamer::SerializeEnvelopePreamble(*where);
    // So far we don't make use of feature flags
-   pos += RNTupleStreamer::SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += RNTupleStreamer ::SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
    pos += RNTupleStreamer::SerializeString(fName, *where);
    pos += RNTupleStreamer::SerializeString(fDescription, *where);
 
    auto frame = pos;
    pos += RNTupleStreamer::SerializeListFramePreamble(fFieldDescriptors.size(), *where);
-   for (const auto &f : fFieldDescriptors) {
-      context.MapFieldId(f.second.GetId());
-      pos += SerializeFieldV1(f.second, context, *where);
-   }
+   SerializeFieldsV1(*this, context, *where);
    pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
 
    frame = pos;
    pos += RNTupleStreamer::SerializeListFramePreamble(fColumnDescriptors.size(), *where);
-   for (const auto &c : fColumnDescriptors) {
-      context.MapColumnId(c.second.GetId());
-      pos += SerializeColumnV1(c.second, context, *where);
-   }
+   pos += SerializeColumnsV1(*this, context, *where);
    pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
 
    // We don't use alias columns yet
@@ -1087,6 +1179,9 @@ std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buf
 
    std::uint32_t size = pos - base;
    pos += RNTupleStreamer::SerializeEnvelopePostscript(base, size, *where);
+
+   context.SetHeaderSize(size);
+   context.SetHeaderCrc32(RNTupleStreamer::ExtractEnvelopeCRC32(base, size));
    return size;
 }
 
