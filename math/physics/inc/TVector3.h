@@ -76,6 +76,9 @@ public:
 
    Double_t Theta() const;
    // The polar angle.
+   
+   void ToPolar();
+   void ToCartesian();
 
    inline Double_t CosTheta() const;
    // Cosine of the polar angle.
