@@ -247,6 +247,32 @@ Double_t TVector3::Theta() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert the current Cartesian Vector into a polar Vector
+
+void TVector3::ToPolar() {
+
+   Double_t oldfX = fX;
+   Double_t oldfY = fY;
+   Double_t oldfZ = fZ;
+
+   fX = TMath::Sqrt(oldfX * oldfX + oldfY * oldfY + oldfZ * oldfZ);
+   fY = TMath::ATan(oldfY/oldfX);
+   fZ = TMath::ATan(TMath::Sqrt(oldfX * oldfX + oldfY * oldfY) / oldfZ);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Convert the current Polar Vector into a Cartesian Vector
+void TVector3::ToCartesian() {
+   Double_t oldfX = fX;
+   Double_t oldfY = fY;
+   Double_t oldfZ = fZ;
+
+   fX = oldfX * sin(oldfZ) * cos(oldfY);
+   fY = oldfX * sin(oldfY) * sin(oldfZ);
+   fZ = oldfX * cos(oldfZ);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return unit vector parallel to this.
 
 TVector3 TVector3::Unit() const
