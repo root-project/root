@@ -42,7 +42,7 @@ void draw_frame()
 
    // configure RFrame with direct API calls
    auto frame = canvas->AddFrame();
-   // frame->AttrFill().SetColor(RColor::kBlue);
+   // frame->fill.color = RColor::kBlue;
    frame->border.color = RColor::kBlue;
    frame->border.width = 3;
    frame->AttrMargins().SetTop(0.25_normal);
@@ -91,7 +91,7 @@ void draw_frame()
 
    // draw box before line at same position as line ending with 40x40 px size and clipping on
    auto box4 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 80_user - 20_px), RPadPos(80_user + 20_px, 80_user + 20_px));
-   box4->AttrFill().SetColor(RColor::kBlue);
+   box4->fill.color = RColor::kBlue;
    box4->SetClipping(true); // or via CSS "clipping: true;"
    box4->SetOnFrame(true); // or via CSS "onframe: true;"
 
@@ -106,7 +106,7 @@ void draw_frame()
 
    // draw box before line at same position as line ending with 40x40 px size
    auto box5 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 20_user - 20_px), RPadPos(80_user + 20_px, 20_user + 20_px));
-   box5->AttrFill().SetColor(RColor::kYellow);
+   box5->fill.color = RColor::kYellow;
    box5->SetOnFrame(true); // or via CSS "onframe: true;"
 
    // draw line in the frame, but disable default cutting by the frame borders
