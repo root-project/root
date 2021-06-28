@@ -36,7 +36,9 @@ void markerStyle()
          canvas->Draw<RText>(pt, std::to_string(style));
 
          RPadPos pm(RPadLength::Normal(x), .25_normal + 0.3_normal*row);
-         canvas->Draw<RMarker>(pm)->AttrMarker().SetStyle(style).SetSize(2.5);
+         auto draw = canvas->Draw<RMarker>(pm);
+         draw->marker.style = style;
+         draw->marker.size = 2.5;
       }
    }
 
