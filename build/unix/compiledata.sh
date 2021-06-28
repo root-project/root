@@ -66,7 +66,7 @@ COMPILERVERS="$BXX"
 case $BXX in
 g++* | c++*)
    cxxTemp=`$CXX -dumpversion`
-   COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i gcc | sed -n '1p'`"
+   COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i $BXX | sed -n '1p'`"
    COMPILERVERS="gcc"
    if [ `uname` == "Darwin" ]; then
       if [ "x$COMPILERVERSSTR" == "x" ]; then
