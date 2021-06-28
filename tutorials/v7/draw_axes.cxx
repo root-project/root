@@ -51,26 +51,29 @@ void draw_axes()
    draw3->axis.labels.center = true;
 
    auto draw4 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.3_normal), false, w1);
-   draw4->SetMinMax(TDatime(2020,11,12,9,0,0).Convert(), TDatime(2020,11,12,12,0,0).Convert());
+   draw4->axis.min = TDatime(2020,11,12,9,0,0).Convert();
+   draw4->axis.max = TDatime(2020,11,12,12,0,0).Convert();
    draw4->axis.SetTimeDisplay("%d/%m/%y %H:%M");
    draw4->axis.title = "time display";
    draw4->axis.labels.size = 0.01;
    draw4->axis.labels.color = RColor::kRed;
 
    std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
-   auto draw5 = canvas->Draw<RAxisLabelsDrawable>(RPadPos(x1, 0.1_normal), false, w1);
+   auto draw5 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.1_normal), false, w1);
    draw5->SetLabels(labels);
    draw5->axis.ticks.SetInvert();
    draw5->axis.title = "labels, swap ticks side";
    draw5->axis.title.SetLeft();
 
    auto draw6 = canvas->Draw<RAxisDrawable>(RPadPos(0.5_normal,0.9_normal), true, -0.8_normal);
-   draw6->SetMinMax(0, 10);
+   draw6->axis.min = 0;
+   draw6->axis.max = 10;
    draw6->axis.ending.SetArrow();
    draw6->axis.title = "vertical negative length";
 
    auto draw7 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.9_normal), false, w2);
-   draw7->SetMinMax(1, 100);
+   draw7->axis.min = 1;
+   draw7->axis.max = 100;
    draw7->axis.log = 10;
    draw7->axis.title = "log10 scale";
    draw7->axis.title.SetCenter();
@@ -79,13 +82,15 @@ void draw_axes()
    draw7->axis.ending.SetCircle();
 
    auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.7_normal), false, w2);
-   draw8->SetMinMax(0.125, 128);
+   draw8->axis.min = 0.125;
+   draw8->axis.max = 128;
    draw8->axis.log = 2;
    draw8->axis.title = "log2 scale";
    draw8->axis.title.SetCenter();
 
    auto draw9 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.5_normal), false, w2);
-   draw9->SetMinMax(1, 100);
+   draw9->axis.min = 1;
+   draw9->axis.max = 100;
    draw9->axis.log = 2.7182;
    draw9->axis.title = "ln scale";
    draw9->axis.title.SetCenter();
