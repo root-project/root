@@ -39,7 +39,6 @@ class RAttrAxis : public RAttrAggregation {
    RAttrValue<bool> fTimeDisplay{this, "time", false};                   ///<! time display
    RAttrValue<double> fTimeOffset{this, "time_offset", 0};               ///<! time offset to display
    RAttrValue<std::string> fTimeFormat{this, "time_format", ""};         ///<! time format
-   RAttrLine fAttrLine{this, "line"};                                    ///<! line attributes
    RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};       ///<! axis ending style - none, arrow, circle
    RAttrValue<RPadLength> fEndingSize{this, "ending_size", 0.02_normal}; ///<! axis ending size
    RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
@@ -56,6 +55,8 @@ class RAttrAxis : public RAttrAggregation {
    RAttrValue<RPadLength> fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative
 
    R__ATTR_CLASS(RAttrAxis, "axis");
+
+   RAttrLine line{this, "line"};                                    ///<! line attributes
 
    RAttrAxis &SetMin(double min) { fMin = min; return *this; }
    RAttrAxis &SetMax(double max) { fMax = max; return *this; }
@@ -113,9 +114,6 @@ class RAttrAxis : public RAttrAggregation {
       fTimeOffset.Clear();
       fTimeFormat.Clear();
    }
-
-   const RAttrLine &AttrLine() const { return fAttrLine; }
-   RAttrLine &AttrLine() { return fAttrLine; }
 
    RAttrAxis &SetEndingSize(const RPadLength &sz) { fEndingSize = sz; return *this; }
    RPadLength GetEndingSize() const { return fEndingSize; }

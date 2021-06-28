@@ -56,7 +56,7 @@ void draw_rh1_large()
 
    auto draw = canvas->Draw(pHist);
 
-   draw->AttrLine().SetColor(RColor::kLime);
+   draw->line.color = RColor::kLime;
    // draw->AttrFill().SetColor(RColor::kLime);
    // draw->Line(); // configure line draw option
    // draw->Bar(); // configure bar draw option

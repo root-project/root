@@ -37,7 +37,8 @@ void draw_pave()
    // RFrame will be automatically created as well
    auto pave = canvas->Draw<RPave>();
    pave->AttrFill().SetColor(RColor::kBlue);
-   pave->AttrBorder().SetColor(RColor::kGreen).SetWidth(3);
+   pave->border.color = RColor::kGreen;
+   pave->border.width = 3;
    pave->SetCornerY(-0.03_normal);
    pave->SetHeight(0.2_normal);
 

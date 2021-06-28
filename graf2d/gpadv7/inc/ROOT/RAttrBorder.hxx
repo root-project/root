@@ -25,18 +25,11 @@ namespace Experimental {
 
 class RAttrBorder : public RAttrLine {
 
-   RAttrValue<int>     fRx{this, "rx", 0};              ///<! rounding on x coordinate, px
-   RAttrValue<int>     fRy{this, "ry", 0};              ///<! rounding on y coordinate, px
-
    R__ATTR_CLASS_DERIVED(RAttrBorder, "border", RAttrLine)
 
-   ///The rounding on x, px
-   RAttrBorder &SetRx(int rx) { fRx = rx; return *this; }
-   int GetRx() const { return fRx; }
+   RAttrValue<int>     rx{this, "rx", 0};              ///<! rounding on x coordinate, px
+   RAttrValue<int>     ry{this, "ry", 0};              ///<! rounding on y coordinate, px
 
-   ///The rounding on x, px
-   RAttrBorder &SetRy(int ry) { fRy = ry; return *this; }
-   int GetRy() const { return fRy; }
 };
 
 } // namespace Experimental

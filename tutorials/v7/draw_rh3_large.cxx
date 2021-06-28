@@ -63,7 +63,7 @@ void draw_rh3_large()
 
    auto draw = canvas->Draw(pHist);
 
-   draw->AttrLine().SetColor(RColor::kLime);
+   draw->line.color = RColor::kLime;
    // draw->Box(); // configure box draw option (default)
    // draw->Sphere(); // configure sphere draw option
    draw->Scatter(); // configure scatter draw option

@@ -61,7 +61,9 @@ void draw_rh2()
 
    // arrow draw options
    subpads[1][1]->Draw<RFrameTitle>("Arrow() draw option");
-   subpads[1][1]->Draw(pHist)->Arrow().AttrLine().SetColor(RColor::kRed);
+   auto draw11 = subpads[1][1]->Draw(pHist);
+   draw11->Arrow();
+   draw11->line.color = RColor::kRed;
 
    // lego draw options
    subpads[0][2]->Draw<RFrameTitle>("Lego() draw option");

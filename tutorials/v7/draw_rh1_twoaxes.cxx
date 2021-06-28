@@ -53,8 +53,13 @@ void draw_rh1_twoaxes()
 
    // default draw option
    canvas->Draw<RFrameTitle>("Two independent Y axes for histograms");
-   canvas->Draw(pHist1)->AttrLine().SetColor(col1).SetWidth(2);
-   canvas->Draw(pHist2)->SecondY().AttrLine().SetColor(col2).SetWidth(4);
+   auto draw1 = canvas->Draw(pHist1);
+   draw1->line.color = col1;
+   draw1->line.width = 2;
+   auto draw2 = canvas->Draw(pHist2);
+   draw2->SecondY(true);
+   draw2->line.color = col2;
+   draw2->line.width = 4;
 
    canvas->GetFrame()->AttrY().SetTicksColor(col1);
    canvas->GetFrame()->AttrY2().SetTicksColor(col2);

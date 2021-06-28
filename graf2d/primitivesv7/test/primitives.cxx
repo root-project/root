@@ -16,14 +16,16 @@ TEST(Primitives, RBox)
    RCanvas canv;
    auto box = canv.Draw<RBox>(RPadPos(0.1_normal, 0.3_normal), RPadPos(0.3_normal,0.6_normal));
 
-   box->AttrBorder().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
+   box->border.color = RColor::kRed;
+   box->border.width = 5.f;
+   box->border.style = 7;
    box->AttrFill().SetColor(RColor::kBlue).SetStyle(6);
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(box->AttrBorder().GetColor(), RColor::kRed);
-   EXPECT_DOUBLE_EQ(box->AttrBorder().GetWidth(), 5.);
-   EXPECT_EQ(box->AttrBorder().GetStyle(), 7);
+   EXPECT_EQ(box->border.color, RColor::kRed);
+   EXPECT_DOUBLE_EQ(box->border.width, 5.f);
+   EXPECT_EQ(box->border.style, 7);
 
    EXPECT_EQ(box->AttrFill().GetColor(), RColor::kBlue);
    EXPECT_EQ(box->AttrFill().GetStyle(), 6);
@@ -35,13 +37,15 @@ TEST(Primitives, RLine)
    RCanvas canv;
    auto line = canv.Draw<RLine>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal,0.9_normal));
 
-   line->AttrLine().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
+   line->line.color = RColor::kRed;
+   line->line.width = 5.;
+   line->line.style = 7;
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
-   EXPECT_EQ(line->AttrLine().GetColor(), RColor::kRed);
-   EXPECT_DOUBLE_EQ(line->AttrLine().GetWidth(), 5.);
-   EXPECT_EQ(line->AttrLine().GetStyle(), 7);
+   EXPECT_EQ(line->line.color, RColor::kRed);
+   EXPECT_DOUBLE_EQ(line->line.width, 5.f);
+   EXPECT_EQ(line->line.style, 7);
 }
 
 // Test RMarker API
@@ -86,13 +90,14 @@ TEST(Primitives, RLegend)
    auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
    auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
 
-   line1->AttrLine().SetColor(RColor::kRed);
-   line2->AttrLine().SetColor(RColor::kGreen);
-   line3->AttrLine().SetColor(RColor::kBlue);
+   line1->line.color = RColor::kRed;
+   line2->line.color = RColor::kGreen;
+   line3->line.color = RColor::kBlue;
 
    auto legend = canv.Draw<RLegend>("Legend title");
    legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
-   legend->AttrBorder().SetWidth(2).SetColor(RColor::kRed);
+   legend->border.width = 2;
+   legend->border.color = RColor::kRed;
    legend->AddEntry(line1, "RLine 1");
    legend->AddEntry(line2, "RLine 2");
    legend->AddEntry(line3, "RLine 3");
@@ -101,6 +106,8 @@ TEST(Primitives, RLegend)
 
    EXPECT_EQ(legend->NumEntries(), 3u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
+   EXPECT_EQ(legend->border.width, 2);
+   EXPECT_EQ(legend->border.color, RColor::kRed);
    EXPECT_EQ(legend->AttrFill().GetColor(), RColor::kWhite);
 }
 
@@ -109,10 +116,11 @@ TEST(Primitives, RPaveText)
 {
    RCanvas canv;
 
-   auto text = canv.Draw<RPaveText>();
+   auto text = canv.Add<RPaveText>();
 
    text->AttrText().SetColor(RColor::kBlack).SetSize(12).SetAlign(13).SetFontFamily("Times New Roman");
-   text->AttrBorder().SetColor(RColor::kRed).SetWidth(3);
+   text->border.color = RColor::kRed;
+   text->border.width = 3;
    text->AttrFill().SetColor(RColor::kBlue).SetStyle(3003);
 
    text->AddLine("First line");
@@ -131,8 +139,8 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->AttrText().GetAlign(), 13);
    EXPECT_EQ(text->AttrText().GetFontFamily(), "Times New Roman");
 
-   EXPECT_EQ(text->AttrBorder().GetColor(), RColor::kRed);
-   EXPECT_EQ(text->AttrBorder().GetWidth(), 3);
+   EXPECT_EQ(text->border.color, RColor::kRed);
+   EXPECT_EQ(text->border.width, 3);
 
    EXPECT_EQ(text->AttrFill().GetColor(), RColor::kBlue);
    EXPECT_EQ(text->AttrFill().GetStyle(), 3003);

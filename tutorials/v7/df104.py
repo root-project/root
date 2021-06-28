@@ -199,7 +199,8 @@ lower_pad.Add[TObjectDrawable]().Set(ratiodata, "E SAME")
 # Add RLegend
 legend = upper_pad.Draw[RLegend](RPadPos(-0.05, 0.05), RPadExtent(0.3, 0.4))
 legend.AttrText().SetFont(4).SetSize(0.05).SetAlign(32)
-legend.AttrBorder().SetStyle(0).SetWidth(0)
+legend.border.style = 0
+legend.border.width = 0
 legend.AttrFill().SetStyle(0)
 
 legend.AddEntry(data_drawable, "Data")
