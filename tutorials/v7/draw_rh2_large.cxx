@@ -54,8 +54,10 @@ void draw_rh2_large()
    // frame->AttrMargins().SetRight(0.2_normal);
 
    frame->SetGridX(false).SetGridY(false);
-   frame->AttrX().SetZoom(nbins*0.2, nbins*0.8);
-   frame->AttrY().SetZoom(nbins*0.2, nbins*0.8);
+   frame->x.zoommin = nbins*0.2;
+   frame->x.zoommax = nbins*0.8;
+   frame->y.zoommin = nbins*0.2;
+   frame->y.zoommax = nbins*0.8;
 
    canvas->Draw<RFrameTitle>(TString::Format("Large RH2D histogram with %d x %d bins",nbins,nbins).Data());
 

@@ -50,7 +50,8 @@ void draw_rh1_large()
    auto frame = canvas->AddFrame();
 
    frame->SetGridX(true).SetGridY(true);
-   frame->AttrX().SetZoom(nbins*0.2, nbins*0.8);
+   frame->x.zoommin = nbins*0.2;
+   frame->x.zoommax = nbins*0.8;
 
    canvas->Draw<RFrameTitle>(TString::Format("Large RH1D histogram with %d bins",nbins).Data());
 

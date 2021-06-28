@@ -34,9 +34,9 @@ class RAxisDrawableBase : public RDrawable {
    RPadPos fPos;                          ///< axis start point
    bool fVertical{false};                 ///< is vertical axis
    RPadLength fLength;                    ///< axis length
-   RAttrAxis fAttrAxis{this, "axis"};     ///<! axis attributes
-
 public:
+
+   RAttrAxis axis{this, "axis"};     ///<! axis attributes
 
    RAxisDrawableBase() : RDrawable("axis") {}
 
@@ -54,9 +54,6 @@ public:
    bool IsVertical() const { return fVertical; }
    const RPadPos& GetPos() const { return fPos; }
    const RPadLength& GetLength() const { return fLength; }
-
-   const RAttrAxis &AttrAxis() const { return fAttrAxis; }
-   RAttrAxis &AttrAxis() { return fAttrAxis; }
 };
 
 
