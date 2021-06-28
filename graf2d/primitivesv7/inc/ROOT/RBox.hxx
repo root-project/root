@@ -31,7 +31,6 @@ namespace Experimental {
 class RBox : public RDrawable {
 
    RPadPos fP1, fP2;                                   ///< box corners coordinates
-   RAttrFill fAttrFill{this, "fill"};                  ///<! box fill attributes
    RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
    RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 
@@ -42,6 +41,7 @@ protected:
 public:
 
    RAttrBorder border{this, "border"};            ///<! box border attributes
+   RAttrFill fill{this, "fill"};                  ///<! box fill attributes
 
    RBox() : RDrawable("box") {}
 
@@ -56,9 +56,6 @@ public:
 
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
-
-   const RAttrFill &AttrFill() const { return fAttrFill; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 
    RBox &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
    bool GetOnFrame() const { return fOnFrame; }

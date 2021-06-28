@@ -145,7 +145,6 @@ public:
 
 private:
    RAttrMargins fAttrMargins{this, "margins"};    ///<! frame margins relative to pad
-   RAttrFill fAttrFill{this, "fill"};             ///<! frame fill attributes
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
    RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
    RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
@@ -193,6 +192,7 @@ public:
 
 
    RAttrBorder border{this, "border"};       ///<! frame border attributes
+   RAttrFill fill{this, "fill"};             ///<! frame fill attributes
 
    RFrame(TRootIOCtor*) : RFrame() {}
 
@@ -201,9 +201,6 @@ public:
 
    const RAttrMargins &AttrMargins() const { return fAttrMargins; }
    RAttrMargins &AttrMargins() { return fAttrMargins; }
-
-   const RAttrFill &AttrFill() const { return fAttrFill; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 
    const RAttrAxis &AttrX() const { return fAttrX; }
    RAttrAxis &AttrX() { return fAttrX; }
