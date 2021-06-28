@@ -847,7 +847,10 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sign Function 
+/// Sign Function
+///
+/// \param[in] x input number
+
 Double_t TMath::Sign(Double_t x) {
    if (x < 0) {
 	  return -1;

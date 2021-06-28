@@ -78,7 +78,9 @@ public:
    // The polar angle.
    
    void ToPolar();
+   // Convert a Cartesian Vector to a Spherical Vector
    void ToCartesian();
+   // Convert a Spherical Vector to a Cartesian Vector
 
    inline Double_t CosTheta() const;
    // Cosine of the polar angle.
