@@ -21,21 +21,26 @@ from ROOT.Experimental import RCanvas, RBox, RPadPos, RColor
 canvas = RCanvas.Create("RBox drawing")
 
 box1 = canvas.Draw[RBox](RPadPos(0.1, 0.1), RPadPos(0.3, 0.6))
-box1.AttrBorder().SetColor(RColor.kBlue).SetWidth(5)
+box1.border.color.Set(RColor.kBlue)
+box1.border.width.Set(5)
 box1.AttrFill().SetColor(RColor(0, 255, 0, 127)) # 50% opaque
 
 box2 = canvas.Draw[RBox](RPadPos(0.4, 0.2), RPadPos(0.6, 0.7))
-box2.AttrBorder().SetColor(RColor.kRed).SetStyle(2).SetWidth(10)
+box2.border.color = RColor.kRed
+box2.border.width = 10
+box2.border.style = 2
 box2.AttrFill().SetColor(RColor(0, 0, 255, 179)) # 70% opaque
 
 box3 = canvas.Draw[RBox](RPadPos(0.7, 0.4), RPadPos(0.9, 0.6))
-box3.AttrBorder().SetWidth(3)
+box3.border.width = 3
 box3.AttrFill().SetColor(RColor.kBlue)
 
 box4 = canvas.Draw[RBox](RPadPos(0.7, 0.7), RPadPos(0.9, 0.9))
-box4.AttrBorder().SetWidth(4)
+box4.border.width = 4
 
 box5 = canvas.Draw[RBox](RPadPos(0.7, 0.1), RPadPos(0.9, 0.3))
-box5.AttrBorder().SetRx(10).SetRy(10).SetWidth(2)
+box5.border.rx = 10
+box5.border.ry = 10
+box5.border.width = 2
 
 canvas.Show()

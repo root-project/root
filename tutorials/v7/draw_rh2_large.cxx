@@ -61,7 +61,7 @@ void draw_rh2_large()
 
    auto draw = canvas->Draw(pHist);
 
-   draw->AttrLine().SetColor(RColor::kLime);
+   draw->line.color = RColor::kLime;
    // draw->Contour(); // configure cont draw option
    // draw->Scatter(); // configure scatter draw option
    // draw->Arrow(); // configure arrow draw option

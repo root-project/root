@@ -27,7 +27,10 @@ void lineStyle()
 
       canvas->Draw<RText>(std::to_string(i))->SetPos({.3_normal, 1_normal*num}).AttrText().SetSize(13).SetAlign(32).SetFont(52);
 
-      canvas->Draw<RLine>()->SetP1({.32_normal,1_normal*num}).SetP2({.8_normal, 1_normal*num}).AttrLine().SetStyle(i);
+      auto draw = canvas->Draw<RLine>();
+      draw->SetP1({.32_normal,1_normal*num});
+      draw->SetP2({.8_normal, 1_normal*num});
+      draw->line.style = i;
    }
 
    canvas->Show();

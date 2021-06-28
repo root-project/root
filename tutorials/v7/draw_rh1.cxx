@@ -55,12 +55,16 @@ void draw_rh1()
 
    // default draw option
    subpads[0][0]->Draw<RFrameTitle>("Default RH1 drawing");
-   subpads[0][0]->Draw(pHist1)->AttrLine().SetColor(col1).SetWidth(2);
-   subpads[0][0]->Draw(pHist2)->AttrLine().SetColor(col2).SetWidth(4);
+   auto draw001 = subpads[0][0]->Draw(pHist1);
+   draw001->line.color = col1;
+   draw001->line.width = 2;
+   auto draw002 = subpads[0][0]->Draw(pHist2);
+   draw002->line.color = col2;
+   draw002->line.width = 4;
 
    // errors draw options
    subpads[1][0]->Draw<RFrameTitle>("Error() draw options");
-   subpads[1][0]->Draw(pHist1)->Error(1).AttrLine().SetColor(col1);
+   subpads[1][0]->Draw(pHist1)->Error(1).line.color = col1;
    subpads[1][0]->Draw(pHist2)->Error(4).AttrFill().SetColor(col2).SetStyle(3003);
 
    // text and marker draw options
@@ -75,8 +79,12 @@ void draw_rh1()
 
    // line draw option
    subpads[0][2]->Draw<RFrameTitle>("Line() draw option");
-   subpads[0][2]->Draw(pHist1)->Line().AttrLine().SetColor(col1);
-   subpads[0][2]->Draw(pHist2)->Line().AttrLine().SetColor(col2);
+   auto draw021 = subpads[0][2]->Draw(pHist1);
+   draw021->Line();
+   draw021->line.color = col1;
+   auto draw022 = subpads[0][2]->Draw(pHist2);
+   draw022->Line();
+   draw022->line.color = col2;
 
    // lego draw option
    subpads[1][2]->Draw<RFrameTitle>("Lego() draw option");

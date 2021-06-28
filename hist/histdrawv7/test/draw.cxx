@@ -48,7 +48,7 @@ TEST(DrawOptTest, OneD)
    auto h = std::make_shared<RH1D>(xaxis);
    RCanvas canv;
    auto drawable = canv.Draw(h);
-   drawable->AttrLine().SetColor(RColor::kRed);
-   RColor shouldBeRed = drawable->AttrLine().GetColor();
+   drawable->line.color = RColor::kRed;
+   RColor shouldBeRed = drawable->line.color;
    EXPECT_EQ(shouldBeRed, RColor::kRed);
 }

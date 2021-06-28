@@ -26,22 +26,27 @@ void box()
    auto canvas = RCanvas::Create("RBox drawing");
 
    auto box1 = canvas->Draw<RBox>(RPadPos(0.1_normal, 0.3_normal), RPadPos(0.3_normal,0.6_normal));
-   box1->AttrBorder().SetColor(RColor::kBlue).SetWidth(5);
+   box1->border.color = RColor::kBlue;
+   box1->border.width = 5;
    box1->AttrFill().SetColor(RColor(0, 255, 0, 127)); // 50% opaque
 
    auto box2 = canvas->Draw<RBox>(RPadPos(0.4_normal, 0.2_normal), RPadPos(0.6_normal,0.7_normal));
-   box2->AttrBorder().SetColor(RColor::kRed).SetStyle(2).SetWidth(10);
+   box2->border.color = RColor::kRed;
+   box2->border.width = 10.f;
+   box2->border.style = 2;
    box2->AttrFill().SetColor(RColor(0, 0, 255, 179)); // 70% opaque
 
    auto box3 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.4_normal), RPadPos(0.9_normal,0.6_normal));
-   box3->AttrBorder().SetWidth(3);
+   box3->border.width = 3;
    box3->AttrFill().SetColor(RColor::kBlue);
 
    auto box4 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.7_normal), RPadPos(0.9_normal,0.9_normal));
-   box4->AttrBorder().SetWidth(4);
+   box4->border.width = 4;
 
    auto box5 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.1_normal), RPadPos(0.9_normal,0.3_normal));
-   box5->AttrBorder().SetRx(10).SetRy(10).SetWidth(2);
+   box5->border.rx = 10;
+   box5->border.ry = 10;
+   box5->border.width = 2;
 
    canvas->Show();
 }

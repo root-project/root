@@ -55,9 +55,9 @@ TEST(IOTest, OneDOpts)
       auto h = std::make_shared<RH1D>(xaxis);
       RCanvas canv;
       auto drawable1 = canv.Draw(h);
-      drawable1->AttrLine().SetColor(RColor::kRed);
+      drawable1->line.color = RColor::kRed;
       auto drawable2 = canv.Draw(h);
-      drawable2->AttrLine().SetColor(RColor::kBlue);
+      drawable2->line.color = RColor::kBlue;
 
       EXPECT_EQ(canv.NumPrimitives(), 3u);
       EXPECT_NE(canv.GetPrimitive(0).get(), canv.GetPrimitive(1).get());
@@ -85,8 +85,8 @@ TEST(IOTest, OneDOpts)
    ASSERT_NE(dr1, nullptr);
    ASSERT_NE(dr2, nullptr);
 
-   EXPECT_EQ(dr1->AttrLine().GetColor(), RColor::kRed);
-   EXPECT_EQ(dr2->AttrLine().GetColor(), RColor::kBlue);
+   EXPECT_EQ(dr1->line.color, RColor::kRed);
+   EXPECT_EQ(dr2->line.color, RColor::kBlue);
 
    EXPECT_NE(dr1->GetHist(), nullptr);
    EXPECT_NE(dr2->GetHist(), nullptr);

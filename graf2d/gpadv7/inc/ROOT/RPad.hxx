@@ -32,8 +32,6 @@ class RPad: public RPadBase {
    RPadPos fPos;                           ///< pad position
    RPadExtent fSize;                       ///< pad size
 
-   RAttrLine fAttrLine{this, "border"};    ///<! border attributes
-
    /// Create default pad
    RPad() : RPadBase("pad") {}
 
@@ -53,6 +51,8 @@ protected:
 
 
 public:
+
+   RAttrBorder border{this, "border"};    ///<! border attributes
 
    /// Constructor must be used only for I/O
    RPad(TRootIOCtor*) : RPad() {}
@@ -83,9 +83,6 @@ public:
 
    /// Set position
    void SetPos(const RPadPos &p) { fPos = p; }
-
-   const RAttrLine &AttrLine() const { return fAttrLine; }
-   RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 } // namespace Experimental

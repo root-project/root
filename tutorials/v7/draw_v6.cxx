@@ -84,7 +84,8 @@ void draw_v6()
    subpads[0][0]->Draw<TObjectDrawable>(gr, "AL");
 
    // one can change basic attributes via v7 classes, value will be replaced on client side
-   subpads[0][1]->Draw<TObjectDrawable>(th1)->AttrLine().SetColor(RColor::kBlue).SetWidth(3).SetStyle(2);
+   auto drawth1 = subpads[0][1]->Draw<TObjectDrawable>(th1);
+   drawth1->line = RAttrLine(RColor::kBlue, 3., 2);
 
    subpads[1][0]->Draw<TObjectDrawable>(th2, "colz");
 

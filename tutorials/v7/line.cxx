@@ -29,8 +29,10 @@ void line()
    for (double i = 0; i < 360; i+=1) {
       double angle = i * TMath::Pi() / 180;
       RColor col( 50  + (int) i/360*200, 0, 0);
-      canvas->Draw<RLine>()->SetP1({0.5_normal, 0.5_normal})
-                            .SetP2({0.5_normal + 0.3_normal*TMath::Cos(angle), 0.5_normal + 0.3_normal*TMath::Sin(angle)}).AttrLine().SetColor(col);
+      auto draw = canvas->Draw<RLine>();
+      draw->SetP1({0.5_normal, 0.5_normal});
+      draw->SetP2({0.5_normal + 0.3_normal*TMath::Cos(angle), 0.5_normal + 0.3_normal*TMath::Sin(angle)});
+      draw->line.color = col;
     }
 
    canvas->Draw<RLine>()->SetP1({0.0_normal, 0.0_normal}).SetP2({1.0_normal,1.0_normal});

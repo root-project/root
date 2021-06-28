@@ -145,7 +145,6 @@ public:
 
 private:
    RAttrMargins fAttrMargins{this, "margins"};    ///<! frame margins relative to pad
-   RAttrBorder fAttrBorder{this, "border"};       ///<! frame border attributes
    RAttrFill fAttrFill{this, "fill"};             ///<! frame fill attributes
    RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
    RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
@@ -192,6 +191,9 @@ public:
       }
    };
 
+
+   RAttrBorder border{this, "border"};       ///<! frame border attributes
+
    RFrame(TRootIOCtor*) : RFrame() {}
 
    bool GetDrawAxes() const { return fDrawAxes; }
@@ -199,9 +201,6 @@ public:
 
    const RAttrMargins &AttrMargins() const { return fAttrMargins; }
    RAttrMargins &AttrMargins() { return fAttrMargins; }
-
-   const RAttrBorder &AttrBorder() const { return fAttrBorder; }
-   RAttrBorder &AttrBorder() { return fAttrBorder; }
 
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }

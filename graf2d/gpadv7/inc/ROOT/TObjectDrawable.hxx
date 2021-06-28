@@ -46,7 +46,6 @@ private:
    Internal::RIOShared<TObject> fObj;          ///< The object to be painted, owned by the drawable
    const TObject *fExtObj{nullptr};            ///<! external object, managed outside of the drawable, not persistent
    RAttrValue<std::string> fOpt{this, "opt"};  ///<! object draw options
-   RAttrLine fAttrLine{this, "line"};          ///<! object line attributes
    RAttrFill fAttrFill{this, "fill"};          ///<! object fill attributes
    RAttrText fAttrText{this, "text"};          ///<! object text attributes
    RAttrMarker fMarkerAttr{this, "marker"};    ///<! object marker attributes
@@ -79,6 +78,8 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
+   RAttrLine line{this, "line"};          ///<! object line attributes
+
    TObjectDrawable();
    TObjectDrawable(TObject *obj, bool isowner = false);
    TObjectDrawable(TObject *obj, const std::string &opt, bool isowner = false);
@@ -96,9 +97,6 @@ public:
 
    void SetOpt(const std::string &opt) { fOpt = opt; }
    std::string GetOpt() const { return fOpt; }
-
-   const RAttrLine &AttrLine() const { return fAttrLine; }
-   RAttrLine &AttrLine() { return fAttrLine; }
 
    const RAttrFill &AttrFill() const { return fAttrFill; }
    RAttrFill &AttrFill() { return fAttrFill; }

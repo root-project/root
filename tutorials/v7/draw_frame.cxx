@@ -43,8 +43,8 @@ void draw_frame()
    // configure RFrame with direct API calls
    auto frame = canvas->AddFrame();
    // frame->AttrFill().SetColor(RColor::kBlue);
-   frame->AttrBorder().SetColor(RColor::kBlue);
-   frame->AttrBorder().SetWidth(3);
+   frame->border.color = RColor::kBlue;
+   frame->border.width = 3;
    frame->AttrMargins().SetTop(0.25_normal);
    frame->AttrMargins().SetAll(0.2_normal);
 
@@ -54,11 +54,11 @@ void draw_frame()
    frame->AttrX().SetMinMax(0,100);
    // frame->AttrX().SetLog(2.);
    frame->AttrX().SetZoom(5.,95.);
-   frame->AttrX().AttrLine().SetColor(RColor::kGreen); // or in CSS "x_line_color: green;"
+   frame->AttrX().line.color = RColor::kGreen; // or in CSS "x_line_color: green;"
 
    frame->AttrY().SetMinMax(0,100);
    frame->AttrY().SetZoom(5,95);
-   frame->AttrY().AttrLine().SetColor(RColor::kGreen); // or in CSS "x_line_color: blue;"
+   frame->AttrY().line.color = RColor::kBlue; // or in CSS "y_line_color: blue;"
 
    canvas->Draw<RFrameTitle>("Frame title")->SetMargin(0.01_normal).SetHeight(0.1_normal);
 
@@ -74,7 +74,7 @@ void draw_frame()
    // draw on left size of frame, but bound to frame, moved with frame
    auto line2 = canvas->Draw<RLine>(RPadPos(-.2_normal, -.1_normal), RPadPos(-.2_normal , 1.1_normal));
    line2->SetOnFrame(true); // or via CSS "onframe: true;"
-   line2->AttrLine().SetColor(RColor::kRed);
+   line2->line.color = RColor::kRed;
 
    auto text2 = canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
    text2->SetOnFrame(true); // or via CSS "onframe: true;"
@@ -83,7 +83,7 @@ void draw_frame()
    // draw on right size of frame, user coordiante, moved and zoomed with frame
    auto line3 = canvas->Draw<RLine>(RPadPos(110_user, -.1_normal), RPadPos(110_user, 1.1_normal));
    line3->SetOnFrame(true); // or via CSS "onframe: true;"
-   line3->AttrLine().SetColor(RColor::kRed);
+   line3->line.color = RColor::kRed;
 
    auto text3 = canvas->Draw<RText>(RPadPos(110_user, -.1_normal), "Line drawn on frame, user coordinates");
    text3->SetOnFrame(true); // or via CSS "onframe: true;"

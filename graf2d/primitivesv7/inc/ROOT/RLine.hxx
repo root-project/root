@@ -28,10 +28,12 @@ namespace Experimental {
 class RLine : public RDrawable {
 
    RPadPos fP1, fP2;                                   ///< line begin/end
-   RAttrLine fAttrLine{this, "line"};                  ///<! line attributes
    RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
    RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 public:
+
+   RAttrLine line{this, "line"};                  ///<! line attributes
+
    RLine() : RDrawable("line") {}
 
    RLine(const RPadPos &p1, const RPadPos &p2) : RLine()
@@ -45,9 +47,6 @@ public:
 
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
-
-   const RAttrLine &AttrLine() const { return fAttrLine; }
-   RAttrLine &AttrLine() { return fAttrLine; }
 
    RLine &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
    bool GetOnFrame() const { return fOnFrame; }
