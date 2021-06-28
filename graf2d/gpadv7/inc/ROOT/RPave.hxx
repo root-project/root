@@ -32,7 +32,6 @@ namespace Experimental {
 class RPave : public RDrawable {
 
    RAttrText               fAttrText{this, "text"};          ///<! text attributes
-   RAttrFill               fAttrFill{this, "fill"};          ///<! line attributes
    RAttrValue<RPadLength>  fCornerX{this, "cornerx", 0.02};  ///<! X corner
    RAttrValue<RPadLength>  fCornerY{this, "cornery", 0.02};  ///<! Y corner
    RAttrValue<RPadLength>  fWidth{this, "width", 0.4};       ///<! pave width
@@ -45,6 +44,7 @@ protected:
 public:
 
    RAttrBorder             border{this, "border"};      ///<! border attributes
+   RAttrFill               fill{this, "fill"};          ///<! fill attributes
 
    RPave() : RPave("pave") {}
 
@@ -62,9 +62,6 @@ public:
 
    const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrFill &AttrFill() const { return fAttrFill; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 };
 
 } // namespace Experimental

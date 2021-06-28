@@ -19,16 +19,17 @@ TEST(Primitives, RBox)
    box->border.color = RColor::kRed;
    box->border.width = 5.f;
    box->border.style = 7;
-   box->AttrFill().SetColor(RColor::kBlue).SetStyle(6);
+   box->fill.color = RColor::kBlue;
+   box->fill.style = 6;
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(box->border.color, RColor::kRed);
-   EXPECT_DOUBLE_EQ(box->border.width, 5.f);
+   EXPECT_FLOAT_EQ(box->border.width, 5.f);
    EXPECT_EQ(box->border.style, 7);
 
-   EXPECT_EQ(box->AttrFill().GetColor(), RColor::kBlue);
-   EXPECT_EQ(box->AttrFill().GetStyle(), 6);
+   EXPECT_EQ(box->fill.color, RColor::kBlue);
+   EXPECT_EQ(box->fill.style, 6);
 }
 
 // Test RLine API
@@ -95,7 +96,8 @@ TEST(Primitives, RLegend)
    line3->line.color = RColor::kBlue;
 
    auto legend = canv.Draw<RLegend>("Legend title");
-   legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
+   legend->fill.style = 5;
+   legend->fill.color = RColor::kWhite;
    legend->border.width = 2;
    legend->border.color = RColor::kRed;
    legend->AddEntry(line1, "RLine 1");
@@ -106,9 +108,10 @@ TEST(Primitives, RLegend)
 
    EXPECT_EQ(legend->NumEntries(), 3u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
+   EXPECT_EQ(legend->fill.style, 5);
+   EXPECT_EQ(legend->fill.color, RColor::kWhite);
    EXPECT_EQ(legend->border.width, 2);
    EXPECT_EQ(legend->border.color, RColor::kRed);
-   EXPECT_EQ(legend->AttrFill().GetColor(), RColor::kWhite);
 }
 
 // Test RPaveText API
@@ -121,7 +124,8 @@ TEST(Primitives, RPaveText)
    text->AttrText().SetColor(RColor::kBlack).SetSize(12).SetAlign(13).SetFontFamily("Times New Roman");
    text->border.color = RColor::kRed;
    text->border.width = 3;
-   text->AttrFill().SetColor(RColor::kBlue).SetStyle(3003);
+   text->fill.color = RColor::kBlue;
+   text->fill.style = 3003;
 
    text->AddLine("First line");
    text->AddLine("Second line");
@@ -142,7 +146,7 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->border.color, RColor::kRed);
    EXPECT_EQ(text->border.width, 3);
 
-   EXPECT_EQ(text->AttrFill().GetColor(), RColor::kBlue);
-   EXPECT_EQ(text->AttrFill().GetStyle(), 3003);
+   EXPECT_EQ(text->fill.color, RColor::kBlue);
+   EXPECT_EQ(text->fill.style, 3003);
 }
 

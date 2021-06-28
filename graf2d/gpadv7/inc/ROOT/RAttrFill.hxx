@@ -25,19 +25,16 @@ namespace Experimental {
 
 class RAttrFill : public RAttrAggregation {
 
-   RAttrValue<RColor> fColor{this, "color", RColor::kBlack};  ///<! fill color
-   RAttrValue<int>    fStyle{this, "style", 1};               ///<! fill style
-
    R__ATTR_CLASS(RAttrFill, "fill");
 
-   ///The fill style
-   RAttrFill &SetStyle(int style) { fStyle = style; return *this; }
-   int GetStyle() const { return fStyle; }
+   RAttrValue<RColor>  color{this, "color", RColor::kBlack};  ///<! fill color
+   RAttrValue<int>     style{this, "style", 1};               ///<! fill style
 
-   ///The fill color
-   RAttrFill &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor; }
-
+   RAttrFill(RColor _color, int _style) : RAttrFill()
+   {
+      color = _color;
+      style = _style;
+   }
 };
 
 } // namespace Experimental

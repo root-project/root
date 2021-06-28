@@ -51,7 +51,7 @@ void draw_rh3()
 
    // default draw option
    subpads[0][0]->Draw<RFrameTitle>("Box(0) default draw option");
-   subpads[0][0]->Draw(pHist)->Box(0).AttrFill().SetColor(RColor::kBlue);
+   subpads[0][0]->Draw(pHist)->Box(0).fill.color = RColor::kBlue;
 
    // sphere draw options
    subpads[1][0]->Draw<RFrameTitle>("Sphere(1) draw option");
@@ -63,7 +63,7 @@ void draw_rh3()
 
    // arrow draw options
    subpads[1][1]->Draw<RFrameTitle>("Scatter() draw option");
-   subpads[1][1]->Draw(pHist)->Scatter().AttrFill().SetColor(RColor::kBlack);
+   subpads[1][1]->Draw(pHist)->Scatter().fill.color = RColor::kBlack;
 
    canvas->SetSize(1000, 700);
    canvas->Show();

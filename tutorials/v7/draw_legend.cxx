@@ -61,14 +61,15 @@ void draw_legend()
    draw2->line.color = .7f; // should be blue color
 
    auto legend = canvas->Draw<RLegend>("Legend title");
-   legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
+   legend->fill.style = 5;
+   legend->fill.color = RColor::kWhite;
    legend->border.color = RColor::kRed;
    legend->border.width = 2;
    legend->AddEntry(draw1, "histo1");
    legend->AddEntry(draw2, "histo2");
 
    legend->AddEntry("test").SetAttrLine(RAttrLine(RColor::kGreen, 5., 1))
-                           .SetAttrFill(RAttrFill().SetColor(RColor::kBlue).SetStyle(3004))
+                           .SetAttrFill(RAttrFill(RColor::kBlue,3004))
                            .SetAttrMarker(RAttrMarker().SetColor(RColor::kRed).SetSize(3).SetStyle(RAttrMarker::kOpenCross));
 
    canvas->SetSize(1000, 700);

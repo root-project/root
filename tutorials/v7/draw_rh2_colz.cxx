@@ -78,7 +78,7 @@ void draw_rh2_colz()
    draw->Text(true); // configure text drawing (can be enabled with most 2d options)
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
-   stat->AttrFill().SetColor(RColor::kRed);
+   stat->fill.color = RColor::kRed;
 
    canvas->SetSize(1000, 700);
    canvas->Show();

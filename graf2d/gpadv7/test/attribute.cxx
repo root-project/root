@@ -9,19 +9,16 @@
 using namespace ROOT::Experimental;
 
 class CustomAttrs : public RAttrAggregation {
-   RAttrFill    fAttrFill{this, "fill"};    ///<! fill attributes
    RAttrText    fAttrText{this, "text"};    ///<! text attributes
 
 protected:
    // required here while dictionary for CustomAttrs not created
-   RAttrMap CollectDefaults() const override { return RAttrMap().AddDefaults(line).AddDefaults(fAttrFill).AddDefaults(fAttrText); }
+   RAttrMap CollectDefaults() const override { return RAttrMap().AddDefaults(line).AddDefaults(fill).AddDefaults(fAttrText); }
 
    R__ATTR_CLASS(CustomAttrs, "custom");
 
    RAttrLine    line{this, "line"};    ///<! line attributes
-
-   const RAttrFill &AttrFill() const { return fAttrFill; }
-   RAttrFill &AttrFill() { return fAttrFill; }
+   RAttrFill    fill{this, "fill"};    ///<! fill attributes
 
    const RAttrText &AttrText() const { return fAttrText; }
    RAttrText &AttrText() { return fAttrText; }
