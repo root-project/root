@@ -31,7 +31,7 @@ void lineRStyle()
       auto text = canvas->Add<RText>(RPadPos{.3_normal, 1_normal*num}, std::to_string(i));
       text->text.size = 13;
       text->text.align = 32;
-      text->text.SetFont(5);
+      text->text.font = 5;
 
       auto line = canvas->Add<RLine>(RPadPos(.32_normal,1_normal*num), RPadPos(.8_normal, 1_normal*num));
       line->SetId(std::string("obj") + std::to_string(i));

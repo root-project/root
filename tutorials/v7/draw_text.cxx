@@ -40,7 +40,7 @@ void draw_text()
       draw->text.size = 10+i/10;
       draw->text.angle = i;
       draw->text.align = 13;
-      draw->text.SetFont(4);
+      draw->text.font = 4;
    }
 
    canvas->Show();

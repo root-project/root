@@ -70,7 +70,7 @@ void draw_axes()
    draw7->SetMinMax(1, 100).AttrAxis().SetLog(10);
    draw7->AttrAxis().title = "log10 scale";
    draw7->AttrAxis().title.SetCenter();
-   draw7->AttrAxis().title.SetFont(12);
+   draw7->AttrAxis().title.font = 12;
    draw7->AttrAxis().title.color = RColor::kGreen;
 
    auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.7_normal), false, w2);

@@ -75,7 +75,7 @@ TEST(Primitives, RText)
    text->text.size = 12.5;
    text->text.angle = 90.;
    text->text.align = 13;
-   text->text.font_family = "Arial";
+   text->text.font.family = "Arial";
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
@@ -84,7 +84,7 @@ TEST(Primitives, RText)
    EXPECT_DOUBLE_EQ(text->text.size, 12.5);
    EXPECT_DOUBLE_EQ(text->text.angle, 90.);
    EXPECT_EQ(text->text.align, 13);
-   EXPECT_EQ(text->text.font_family, "Arial");
+   EXPECT_EQ(text->text.font.family, "Arial");
 }
 
 // Test RLegend API
@@ -128,7 +128,7 @@ TEST(Primitives, RPaveText)
    text->text.color = RColor::kBlack;
    text->text.size = 12;
    text->text.align = 13;
-   text->text.font_family = "Times New Roman";
+   text->text.font.family = "Times New Roman";
    text->border.color = RColor::kRed;
    text->border.width = 3;
    text->fill.color = RColor::kBlue;
@@ -148,7 +148,7 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->text.color, RColor::kBlack);
    EXPECT_DOUBLE_EQ(text->text.size, 12);
    EXPECT_EQ(text->text.align, 13);
-   EXPECT_EQ(text->text.font_family, "Times New Roman");
+   EXPECT_EQ(text->text.font.family, "Times New Roman");
 
    EXPECT_EQ(text->border.color, RColor::kRed);
    EXPECT_EQ(text->border.width, 3);

@@ -213,17 +213,17 @@ c.Add[TObjectDrawable]().Set(legend)
 # Add ATLAS label
 lbl1 = c.Add[RText](RPadPos(0.05, 0.88), "ATLAS")
 lbl1.SetOnFrame()
-lbl1.text.SetFont(7)
+lbl1.text.font = 7
 lbl1.text.size = 0.05
 lbl1.text.align = 11
 lbl2 = c.Add[RText](RPadPos(0.05 + 0.20, 0.88), "Open Data")
 lbl2.SetOnFrame()
-lbl2.text.SetFont(4)
+lbl2.text.font = 4
 lbl2.text.size = 0.05
 lbl2.text.align = 11
 lbl3 = c.Add[RText](RPadPos(0.05, 0.82), "#sqrt{{s}} = 13 TeV, {:.2f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0))
 lbl3.SetOnFrame()
-lbl3.text.SetFont(4)
+lbl3.text.font = 4
 lbl3.text.size = 0.04
 lbl3.text.align = 11
 
