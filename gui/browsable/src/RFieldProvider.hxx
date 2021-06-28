@@ -71,10 +71,11 @@ class RFieldProvider : public RProvider {
             max += 2;
             if (min > 1) min -= 2;
             int npoints = TMath::Nint(max - min);
-            fHist = std::make_unique<TH1F>(fHist->GetName(), fHist->GetTitle(), npoints, min, max);
-            fHist->SetDirectory(nullptr);
+            std::unique_ptr<TH1> h1 = std::make_unique<TH1F>(fHist->GetName(), fHist->GetTitle(), npoints, min, max);
+            h1->SetDirectory(nullptr);
             for (Int_t n = 0; n < len; ++n)
-               fHist->Fill(buf[2 + 2*n], buf[1 + 2*n]);
+               h1->Fill(buf[2 + 2*n], buf[1 + 2*n]);
+            std::swap(fHist, h1);
          }
       }
 
