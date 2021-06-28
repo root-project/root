@@ -373,6 +373,7 @@ inline Double_t ASin(Double_t);
 inline Double_t ACos(Double_t);
 inline Double_t ATan(Double_t);
 inline Double_t ATan2(Double_t y, Double_t x);
+Double_t Sign(Double_t x);
 Double_t ASinH(Double_t);
 Double_t ACosH(Double_t);
 Double_t ATanH(Double_t);
