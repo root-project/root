@@ -579,6 +579,15 @@ configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_d
 install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
 
 #---install clad header files-------------------------------------------------------------------
+if(clad AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'clad' option")
+    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
+
 if(clad)
    install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/plugins/
       DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/plugins)
