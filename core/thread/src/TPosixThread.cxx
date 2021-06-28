@@ -20,6 +20,7 @@
 #include "TPosixThread.h"
 
 #include "TThread.h"
+#include <sched.h>
 
 ClassImp(TPosixThread);
 
@@ -28,13 +29,20 @@ ClassImp(TPosixThread);
 /// Create a pthread. Returns 0 on success, otherwise an error number will
 /// be returned.
 
-Int_t TPosixThread::Run(TThread *th)
+Int_t TPosixThread::Run(TThread *th, const int affinity)
 {
    int det;
    pthread_t id;
    pthread_attr_t *attr = new pthread_attr_t;
 
    pthread_attr_init(attr);
+   
+   if (affinity >= 0) {
+      cpu_set_t cpuset;
+      CPU_ZERO(&cpuset);
+      CPU_SET(affinity, &cpuset);
+      pthread_attr_setaffinity_np(attr, sizeof(cpu_set_t), &cpuset);
+   }
 
    // Set detach state
    det = (th->fDetached) ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE;

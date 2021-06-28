@@ -122,7 +122,7 @@ public:
    virtual ~TThread();
 
    Int_t            Kill();
-   Int_t            Run(void *arg = nullptr);
+   Int_t            Run(void *arg = nullptr, const int affinity = -1);
    void             SetPriority(EPriority pri);
    void             Delete(Option_t *option="") { TObject::Delete(option); }
    EPriority        GetPriority() const { return fPriority; }

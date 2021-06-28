@@ -40,7 +40,7 @@ public:
 
    virtual Int_t  Join(TThread *th, void **ret);
    virtual Long_t SelfId();
-   virtual Int_t  Run(TThread *th);
+   virtual Int_t  Run(TThread *th, const int affinity = -1);
 
    virtual Int_t  Kill(TThread *th);
    virtual Int_t  SetCancelOff();
