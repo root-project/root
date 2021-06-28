@@ -25,6 +25,7 @@
 #include <chrono>
 #include <functional>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <vector>
@@ -751,14 +752,46 @@ class RNTupleStreamer {
 public:
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
-   static constexpr std::uint16_t kEnvelopeMinVersion = 1;
+   static constexpr std::uint16_t kEnvelopeMinVersion     = 1;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
-   static constexpr std::uint16_t kFlagAliasField = 0x02;
+   static constexpr std::uint16_t kFlagAliasField      = 0x02;
+
+   static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
+   static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
+   static constexpr std::uint32_t kFlagNonNegativeColumn = 0x04;
 
    struct REnvelopeLink {
       std::uint32_t fUnzippedSize = 0;
       RClusterDescriptor::RLocator fLocator;
+   };
+
+   /// The streamer context is used for the piecewise serialization of a descriptor.  During header serialization,
+   /// the mapping of in-memory field and column IDs to physical IDs is built so that it can be used for the
+   /// footer serialzation in a second step.
+   class RContext {
+   private:
+      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
+      std::vector<DescriptorId_t> fPhys2MemFieldIDs;
+      std::vector<DescriptorId_t> fPhys2MemColumnIDs;
+   public:
+      DescriptorId_t MapFieldId(DescriptorId_t memId) {
+         auto physId = fPhys2MemFieldIDs.size();
+         fMem2PhysFieldIDs[memId] = physId;
+         fPhys2MemFieldIDs.push_back(memId);
+         return physId;
+      }
+      DescriptorId_t MapColumnId(DescriptorId_t memId) {
+         auto physId = fPhys2MemColumnIDs.size();
+         fMem2PhysColumnIDs[memId] = physId;
+         fPhys2MemColumnIDs.push_back(memId);
+         return physId;
+      }
+      DescriptorId_t GetPhysFieldId(DescriptorId_t memId) const { return fMem2PhysFieldIDs.at(memId); }
+      DescriptorId_t GetPhysColumnId(DescriptorId_t memId) const { return fMem2PhysColumnIDs.at(memId); }
+      DescriptorId_t GetMemFieldId(DescriptorId_t physId) const { return fPhys2MemFieldIDs[physId]; }
+      DescriptorId_t GetMemColumnId(DescriptorId_t physId) const { return fPhys2MemColumnIDs[physId]; }
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
@@ -783,6 +816,11 @@ public:
 
    static std::uint32_t SerializeString(const std::string &val, void *buffer);
    static std::uint32_t DeserializeString(const void *buffer, std::uint32_t size, std::string &val);
+
+   /// While we could just interpret the EColumnType enum as an int, we make the translation explicit
+   /// in order to avoid accidentally changing the on-disk numbers when adjusting the EColumnType enum class.
+   static std::uint16_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
+   static std::uint16_t DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
 
    static std::uint32_t SerializeEnvelopePreamble(void *buffer);
    static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
@@ -810,7 +848,6 @@ public:
 };
 
 }
-
 
 } // namespace Experimental
 } // namespace ROOT

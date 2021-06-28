@@ -45,10 +45,10 @@ enum class EColumnType {
    kReal64,
    kReal32,
    kReal16,
-   kReal8,
    kInt64,
    kInt32,
    kInt16,
+   kMax,
 };
 
 // clang-format off
