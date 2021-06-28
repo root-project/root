@@ -13,7 +13,7 @@
 import ntpath  # Filename from path (should be platform-independent)
 
 from DistRDF import DataFrame
-from DistRDF import Node
+from DistRDF import HeadNode
 from DistRDF.Backends import Base
 from DistRDF.Backends import Utils
 
@@ -74,10 +74,6 @@ class DaskBackend(Base.BaseBackend):
         progress(final_results)
         return final_results.compute()
 
-    def optimize_npartitions(self, npartitions):
-        """Optimize number of partitions if possible"""
-        return npartitions
-
     def distribute_unique_paths(self, paths):
         """
         Spark supports sending files to the executors via the
@@ -93,6 +89,15 @@ class DaskBackend(Base.BaseBackend):
         pass
 
     def make_dataframe(self, *args, **kwargs):
-        """Creates an instance of RDataFrame that can run on a Dask cluster."""
-        headnode = Node.HeadNode(*args)
-        return DataFrame.RDataFrame(headnode, self, **kwargs)
+        """
+        Creates an instance of distributed RDataFrame that can send computations
+        to a Dask cluster.
+        """
+        # Set the number of partitions for this dataframe, one of the following:
+        # 1. User-supplied `npartitions` optional argument
+        # 2. An educated guess according to the backend, using the backend's
+        #    `optimize_npartitions` function
+        # 3. Set `npartitions` to 2
+        npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
+        headnode = HeadNode.get_headnode(npartitions, *args)
+        return DataFrame.RDataFrame(headnode, self)
