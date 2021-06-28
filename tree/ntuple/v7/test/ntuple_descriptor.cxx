@@ -45,6 +45,33 @@ TEST(RNTuple, StreamString)
    EXPECT_TRUE(s.empty());
 }
 
+TEST(RNTuple, StreamColumnType)
+{
+   EColumnType type = EColumnType::kUnknown;
+   unsigned char buffer[2];
+
+   try {
+      RNTupleStreamer::SerializeColumnType(type, buffer);
+      FAIL() << "unexpected column type should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected column type"));
+   }
+
+   RNTupleStreamer::SerializeUInt16(5000, buffer);
+   try {
+      RNTupleStreamer::DeserializeColumnType(buffer, type);
+      FAIL() << "unexpected on disk column type should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk column type"));
+   }
+
+   for (int i = 1; i < static_cast<int>(EColumnType::kMax); ++i) {
+      RNTupleStreamer::SerializeColumnType(static_cast<EColumnType>(i), buffer);
+      RNTupleStreamer::DeserializeColumnType(buffer, type);
+      EXPECT_EQ(i, static_cast<int>(type));
+   }
+}
+
 TEST(RNTuple, StreamEnvelope)
 {
    try {
