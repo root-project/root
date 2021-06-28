@@ -72,6 +72,33 @@ TEST(RNTuple, StreamColumnType)
    }
 }
 
+TEST(RNTuple, StreamFieldStructure)
+{
+   ENTupleStructure structure = ENTupleStructure::kInvalid;
+   unsigned char buffer[2];
+
+   try {
+      RNTupleStreamer::SerializeFieldStructure(structure, buffer);
+      FAIL() << "unexpected field structure value should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected field structure"));
+   }
+
+   RNTupleStreamer::SerializeUInt16(5000, buffer);
+   try {
+      RNTupleStreamer::DeserializeFieldStructure(buffer, structure);
+      FAIL() << "unexpected on disk field structure value should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk field structure value"));
+   }
+
+   for (int i = 0; i < static_cast<int>(ENTupleStructure::kInvalid); ++i) {
+      RNTupleStreamer::SerializeFieldStructure(static_cast<ENTupleStructure>(i), buffer);
+      RNTupleStreamer::DeserializeFieldStructure(buffer, structure);
+      EXPECT_EQ(i, static_cast<int>(structure));
+   }
+}
+
 TEST(RNTuple, StreamEnvelope)
 {
    try {
@@ -82,10 +109,12 @@ TEST(RNTuple, StreamEnvelope)
    }
 
    struct {
-      std::uint16_t writerVersion = 0;
-      std::uint16_t minVersion = 0;
+      std::uint16_t writerVersion = static_cast<std::uint16_t>(-1);
+      std::uint16_t minVersion = static_cast<std::uint16_t>(-1);
       std::uint32_t crc32 = 0;
    } testEnvelope;
+
+   EXPECT_EQ(0, RNTupleStreamer::ExtractEnvelopeCRC32(&testEnvelope, 8));
 
    try {
       RNTupleStreamer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
@@ -93,6 +122,8 @@ TEST(RNTuple, StreamEnvelope)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32"));
    }
+
+   testEnvelope.writerVersion = testEnvelope.minVersion = 0;
 
    EXPECT_EQ(4u, RNTupleStreamer::SerializeEnvelopePostscript(
       reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
