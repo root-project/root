@@ -195,10 +195,10 @@ public:
 
    RLegend(const RPadPos &corner, const RPadExtent &size) : RLegend()
    {
-      SetCornerX(corner.Horiz());
-      SetCornerY(corner.Vert());
-      SetWidth(size.Horiz());
-      SetHeight(size.Vert());
+      cornerx = corner.Horiz();
+      cornery = corner.Vert();
+      width = size.Horiz();
+      height = size.Vert();
    }
 
    RLegend &SetTitle(const std::string &title) { fTitle = title; return *this; }

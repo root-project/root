@@ -64,7 +64,9 @@ void draw_frame()
    frame->y.zoommax = 95;
    frame->y.line.color = RColor::kBlue; // or in CSS "y_line_color: blue;"
 
-   canvas->Draw<RFrameTitle>("Frame title")->SetMargin(0.01_normal).SetHeight(0.1_normal);
+   auto title = canvas->Draw<RFrameTitle>("Frame title");
+   title->margin = 0.01_normal;
+   title->height = 0.1_normal;
 
    // draw line over the frame
    auto line0 = canvas->Draw<RLine>(RPadPos(100_px, .9_normal), RPadPos(900_px , .9_normal));
