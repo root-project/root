@@ -72,7 +72,7 @@ void draw_rh3_large()
    draw->Scatter(); // configure scatter draw option
    // draw->Color(); // configure color draw option
 
-   draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
+   draw->optimize = true; // enable draw optimization, reduced data set will be send to clients
 
    //auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
    //stat->fill.color = RColor::kBlue;

@@ -81,7 +81,7 @@ void draw_rh2_colz()
    // draw->Scatter(); // configure color draw option (default)
    // draw->Arrow(); // configure arrow draw option
    draw->Color(); // configure color draw option (default)
-   draw->Text(true); // configure text drawing (can be enabled with most 2d options)
+   draw->Text(); // configure text drawing (can be enabled with most 2d options)
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
    stat->fill.color = RColor::kRed;
