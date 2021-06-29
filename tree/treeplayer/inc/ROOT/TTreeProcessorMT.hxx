@@ -85,7 +85,6 @@ private:
    ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{TNumSlots{ROOT::GetThreadPoolSize()}};
 
    std::vector<std::string> FindTreeNames();
-   static unsigned int fgMaxTasksPerFilePerWorker;
    static unsigned int fgTasksPerWorkerHint;
 
 public:
