@@ -45,7 +45,6 @@ private:
    int fKind{kNone};                           ///< object kind
    Internal::RIOShared<TObject> fObj;          ///< The object to be painted, owned by the drawable
    const TObject *fExtObj{nullptr};            ///<! external object, managed outside of the drawable, not persistent
-   RAttrValue<std::string> fOpt{this, "opt"};  ///<! object draw options
 
    static std::string GetColorCode(TColor *col);
 
@@ -79,6 +78,7 @@ public:
    RAttrFill fill{this, "fill"};          ///<! object fill attributes
    RAttrMarker marker{this, "marker"};    ///<! object marker attributes
    RAttrText text{this, "text"};          ///<! object text attributes
+   RAttrValue<std::string> drawopt{this, "drawopt"};  ///<! object draw options
 
    TObjectDrawable();
    TObjectDrawable(TObject *obj, bool isowner = false);
@@ -94,10 +94,6 @@ public:
    void Set(TObject *obj, const std::string &opt, bool isowner = false);
 
    const TObject *Get();
-
-   void SetOpt(const std::string &opt) { fOpt = opt; }
-   std::string GetOpt() const { return fOpt; }
-
 };
 
 } // namespace Experimental
