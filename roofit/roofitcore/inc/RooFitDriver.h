@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 class RooAbsData;
+class RooAbsArg;
 class RooAbsReal;
 
 class RooFitDriver {
@@ -21,23 +22,34 @@ class RooFitDriver {
      RooArgSet const& parameters() const { return _parameters; }
      double errorLevel() const { return topNode.defaultErrorLevel(); }
      
+    struct NodeInfo {
+        int nServers = 0;
+        int nClients = 0;
+    };
+
   private:
+    double* getAvailableBuffer();
+
     std::string _name;
     std::string _title;
     RooArgSet _parameters;
+
     const int batchMode=0;
     double* cudaMemDataset=nullptr;
     // used for preserving static info about the computation graph
     rbc::DataMap dataMap;
-    const RooArgSet* observables=nullptr;
     const RooNLLVarNew& topNode;
     size_t nEvents;
+
+    RooAbsData const* _data = nullptr;
+
     std::queue<const RooAbsReal*> initialQueue;
-    std::unordered_map<const RooAbsReal*,std::pair<int,int>> nServersClients;
+
+    std::unordered_map<const RooAbsArg*,NodeInfo> _nodeInfos;
     // used for dynamically scheduling each step's computations
     std::queue<const RooAbsReal*> computeQueue;
-    std::unordered_map<const RooAbsReal*,std::pair<int,int>> nRemainingServersClients;
-    std::queue<double*> buffers;
+
+    std::queue<double*> _vectorBuffers;
 };
 
 #endif //ROO_FIT_DRIVER_H
