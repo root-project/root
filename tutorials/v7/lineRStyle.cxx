@@ -25,7 +25,7 @@ void lineRStyle()
    auto canvas = RCanvas::Create("Canvas Title");
    double num = 0.3;
 
-   for (int i=10; i>0; i--){
+   for (int i = 10; i > 0; i--){
       num = num + 0.05;
 
       auto text = canvas->Add<RText>(RPadPos{.3_normal, 1_normal*num}, std::to_string(i));
@@ -36,7 +36,6 @@ void lineRStyle()
       auto line = canvas->Add<RLine>(RPadPos(.32_normal,1_normal*num), RPadPos(.8_normal, 1_normal*num));
       line->SetId(std::string("obj") + std::to_string(i));
       line->SetCssClass(std::string("user_class_") + std::to_string(i % 3));
-
    }
 
    auto style = std::make_shared<RStyle>();

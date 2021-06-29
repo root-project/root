@@ -77,49 +77,49 @@ void draw_frame()
 
    // draw on left size of frame, but bound to frame, moved with frame
    auto line2 = canvas->Draw<RLine>(RPadPos(-.2_normal, -.1_normal), RPadPos(-.2_normal , 1.1_normal));
-   line2->SetOnFrame(true); // or via CSS "onframe: true;"
+   line2->onframe = true; // or via CSS "onframe: true;"
    line2->line.color = RColor::kRed;
 
    auto text2 = canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
-   text2->SetOnFrame(true); // or via CSS "onframe: true;"
+   text2->onframe = true; // or via CSS "onframe: true;"
    text2->text.angle = 90;
    text2->text.align = 11;
 
    // draw on right size of frame, user coordiante, moved and zoomed with frame
    auto line3 = canvas->Draw<RLine>(RPadPos(110_user, -.1_normal), RPadPos(110_user, 1.1_normal));
-   line3->SetOnFrame(true); // or via CSS "onframe: true;"
+   line3->onframe = true; // or via CSS "onframe: true;"
    line3->line.color = RColor::kRed;
 
    auto text3 = canvas->Draw<RText>(RPadPos(110_user, -.1_normal), "Line drawn on frame, user coordinates");
-   text3->SetOnFrame(true); // or via CSS "onframe: true;"
+   text3->onframe = true; // or via CSS "onframe: true;"
    text3->text.angle = 90;
 
    // draw box before line at same position as line ending with 40x40 px size and clipping on
    auto box4 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 80_user - 20_px), RPadPos(80_user + 20_px, 80_user + 20_px));
    box4->fill.color = RColor::kBlue;
-   box4->SetClipping(true); // or via CSS "clipping: true;"
-   box4->SetOnFrame(true); // or via CSS "onframe: true;"
+   box4->clipping = true; // or via CSS "clipping: true;"
+   box4->onframe = true; // or via CSS "onframe: true;"
 
    // draw line in the frame, allowed to set user coordinate
    auto line4 = canvas->Draw<RLine>(RPadPos(20_user, 20_user), RPadPos(80_user, 80_user));
-   line4->SetClipping(true); // or via CSS "clipping: true;"
-   line4->SetOnFrame(true); // or via CSS "onframe: true;"
+   line4->clipping = true; // or via CSS "clipping: true;"
+   line4->onframe = true; // or via CSS "onframe: true;"
 
    auto text4 = canvas->Draw<RText>(RPadPos(20_user, 20_user), "clipping on");
-   text4->SetOnFrame(true); // or via CSS "onframe: true;"
-   text4->SetClipping(true); // or via CSS "clipping: true;"
+   text4->onframe = true; // or via CSS "onframe: true;"
+   text4->clipping = true; // or via CSS "clipping: true;"
 
    // draw box before line at same position as line ending with 40x40 px size
    auto box5 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 20_user - 20_px), RPadPos(80_user + 20_px, 20_user + 20_px));
    box5->fill.color = RColor::kYellow;
-   box5->SetOnFrame(true); // or via CSS "onframe: true;"
+   box5->onframe = true; // or via CSS "onframe: true;"
 
    // draw line in the frame, but disable default cutting by the frame borders
    auto line5 = canvas->Draw<RLine>(RPadPos(20_user, 80_user), RPadPos(80_user, 20_user));
-   line5->SetOnFrame(true); // or via CSS "onframe: true;"
+   line5->onframe = true; // or via CSS "onframe: true;"
 
    auto text5 = canvas->Draw<RText>(RPadPos(20_user, 80_user), "clipping off");
-   text5->SetOnFrame(true); // or via CSS "onframe: true;"
+   text5->onframe = true; // or via CSS "onframe: true;"
    text5->text.align = 11;
 
    canvas->UseStyle(frame_style);

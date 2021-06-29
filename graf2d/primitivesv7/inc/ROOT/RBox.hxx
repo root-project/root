@@ -9,13 +9,12 @@
 #ifndef ROOT7_RBox
 #define ROOT7_RBox
 
-#include <ROOT/RDrawable.hxx>
+#include <ROOT/ROnFrameDrawable.hxx>
 #include <ROOT/RAttrFill.hxx>
 #include <ROOT/RAttrBorder.hxx>
 #include <ROOT/RPadPos.hxx>
 
 #include <initializer_list>
-
 
 namespace ROOT {
 namespace Experimental {
@@ -28,22 +27,20 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RBox : public RDrawable {
+class RBox : public ROnFrameDrawable {
 
    RPadPos fP1, fP2;                                   ///< box corners coordinates
-   RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
-   RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 
 protected:
    // constructor for derived classes
-   RBox(const std::string &subtype) : RDrawable(subtype) {}
+   RBox(const std::string &subtype) : ROnFrameDrawable(subtype) {}
 
 public:
 
    RAttrBorder border{this, "border"};            ///<! box border attributes
    RAttrFill fill{this, "fill"};                  ///<! box fill attributes
 
-   RBox() : RDrawable("box") {}
+   RBox() : RBox("box") {}
 
    RBox(const RPadPos &p1, const RPadPos &p2) : RBox()
    {
@@ -56,12 +53,6 @@ public:
 
    const RPadPos &GetP1() const { return fP1; }
    const RPadPos &GetP2() const { return fP2; }
-
-   RBox &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
-   bool GetOnFrame() const { return fOnFrame; }
-
-   RBox &SetClipping(bool on = true) { fClipping = on; return *this; }
-   bool GetClipping() const { return fClipping; }
 };
 
 } // namespace Experimental
