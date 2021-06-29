@@ -2,7 +2,7 @@
 /// \ingroup tutorial_v7
 ///
 /// This macro generates two RH1D, fills them and draw in RCanvas.
-/// Second histogram uses enables SecondY() draw option to draw separate Y axis on right side
+/// Second histogram uses enables "secondy" attribute to draw separate Y axis on right side
 ///
 /// \macro_image (rcanvas_js)
 /// \macro_code
@@ -57,7 +57,7 @@ void draw_rh1_twoaxes()
    draw1->line.color = col1;
    draw1->line.width = 2;
    auto draw2 = canvas->Draw(pHist2);
-   draw2->SecondY(true);
+   draw2->secondy = true;
    draw2->line.color = col2;
    draw2->line.width = 4;
 
