@@ -47,8 +47,8 @@ class RAttrAxisTitle : public RAttrText {
    R__ATTR_CLASS_DERIVED(RAttrAxisTitle, "title", RAttrText)
 
    RAttrValue<std::string> value{this, "value", ""};            ///<! axis title value
-   RAttrValue<std::string> position{this, "position", "right"};   ///<! axis title position - left, right, center
-   RAttrValue<RPadLength> offset{this, "offset", {}};        ///<! axis title offset - relative to "default" position
+   RAttrValue<std::string> position{this, "position", "right"}; ///<! axis title position - left, right, center
+   RAttrValue<RPadLength> offset{this, "offset", {}};           ///<! axis title offset - relative to "default" position
 
    RAttrAxisTitle& operator=(const std::string &_title) { value = _title; return *this; }
 

@@ -31,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPalette.hxx
     ROOT/RPaletteDrawable.hxx
     ROOT/RDrawable.hxx
+    ROOT/ROnFrameDrawable.hxx
     ROOT/RDrawableRequest.hxx
     ROOT/RStyle.hxx
     ROOT/RPadDisplayItem.hxx

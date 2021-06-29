@@ -56,7 +56,7 @@ TEST(RCanvas, SimpleIO)
 
       ASSERT_NE(line, nullptr);
 
-      RColor col( 10 + n*10, 50 + n*5, 90 + n);
+      RColor col(10 + n*10, 50 + n*5, 90 + n);
 
       EXPECT_EQ(line->line.color, col);
    }

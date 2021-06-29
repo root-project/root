@@ -28,7 +28,7 @@ void pad()
 {
    using namespace ROOT::Experimental;
 
-   auto canvas = RCanvas::Create("what to do with a pad!");
+   auto canvas = RCanvas::Create("RCanvas::Divide example");
    auto pads   = canvas->Divide(3, 3);
 
    for (int i = 0; i < 3; ++i)
