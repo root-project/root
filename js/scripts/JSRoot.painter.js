@@ -2915,7 +2915,6 @@ JSROOT.define(['d3'], (d3) => {
          fp.configureUserDblclickHandler(handler);
    }
 
-
    /** @summary Check if user-defined tooltip function was configured
      * @returns {boolean} flag is user tooltip handler was configured */
    ObjectPainter.prototype.hasUserTooltip = function() {

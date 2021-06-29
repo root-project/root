@@ -8,6 +8,14 @@
 5. Upgrade d3.js to 6.7.0
 6. Implement "nozoomx" and "nozoomy" draw options for TPad
 7. Implement "frame" draw option for TGaxis - fix position of axis relative to the frame
+8. Preserve position of TPaletteAxis, if provided with histogram. Make default position like in ROOT.
+9. Support basic TLatex symbols in lego plos axis title
+10. Use frame margins when create 3D lego drawings
+11. Implement "nomargins" draw option for pad/canvas
+12. Support custom mouse click/dblcklick handlers for lego plots
+
+## Changes in 6.1.1
+1. Fix bug in TFrame drawing, some interactive features was not properly working
 
 
 ## Changes in 6.1.0
