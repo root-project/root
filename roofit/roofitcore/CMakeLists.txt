@@ -31,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsIntegrator.h
     RooAbsLValue.h
     RooAbsMCStudyModule.h
+    RooAbsMinimizerFcn.h
     RooAbsMoment.h
     RooAbsNumGenerator.h
     RooAbsOptTestStatistic.h
@@ -253,6 +254,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsIntegrator.cxx
     src/RooAbsLValue.cxx
     src/RooAbsMCStudyModule.cxx
+    src/RooAbsMinimizerFcn.cxx
     src/RooAbsMoment.cxx
     src/RooAbsNumGenerator.cxx
     src/RooAbsOptTestStatistic.cxx
