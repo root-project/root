@@ -37,12 +37,12 @@ TEST(RAttrTest, AttribDirect) {
 
    {
       auto val = attrs.GetDirect("line_width");
-      EXPECT_FLOAT_EQ(val, 42.f);
+      EXPECT_DOUBLE_EQ(val, 42.);
    }
 
    {
       auto val = attrs.GetDirect("text_size");
-      EXPECT_FLOAT_EQ(val, 1.7f);
+      EXPECT_DOUBLE_EQ(val, 1.7);
    }
 }
 
@@ -52,7 +52,7 @@ TEST(RAttrTest, AttribVals) {
    attrs.text.color = RColor::kBlue;
    attrs.line.width = 42.f;
 
-   EXPECT_FLOAT_EQ(attrs.line.width, 42.f);
+   EXPECT_DOUBLE_EQ(attrs.line.width, 42.f);
    EXPECT_EQ(attrs.text.color, RColor::kBlue);
 
 }
@@ -123,19 +123,19 @@ TEST(RAttrTest, AttribAssign) {
    EXPECT_NE(attrs1.line, attrLine1);
    EXPECT_NE(attrs2.line, attrLine2);
 
-   EXPECT_FLOAT_EQ(attrLine1.width, 42.);
-   EXPECT_FLOAT_EQ(attrLine2.width, 42.);
+   EXPECT_DOUBLE_EQ(attrLine1.width, 42.);
+   EXPECT_DOUBLE_EQ(attrLine2.width, 42.);
    // default width return 1
-   EXPECT_FLOAT_EQ(attrs1.line.width, 1.f);
-   EXPECT_FLOAT_EQ(attrs2.line.width, 1.f);
+   EXPECT_DOUBLE_EQ(attrs1.line.width, 1.);
+   EXPECT_DOUBLE_EQ(attrs2.line.width, 1.);
 
    // Are the two attributes disconnected?
    attrLine2.width = 3.;
    EXPECT_EQ(attrs1.line, attrs2.line);
-   EXPECT_FLOAT_EQ(attrLine1.width, 42.f);
-   EXPECT_FLOAT_EQ(attrLine2.width, 3.f);
-   EXPECT_FLOAT_EQ(attrs1.line.width, 1.f);
-   EXPECT_FLOAT_EQ(attrs2.line.width, 1.f);
+   EXPECT_DOUBLE_EQ(attrLine1.width, 42.);
+   EXPECT_DOUBLE_EQ(attrLine2.width, 3.);
+   EXPECT_DOUBLE_EQ(attrs1.line.width, 1.);
+   EXPECT_DOUBLE_EQ(attrs2.line.width, 1.);
 }
 
 TEST(RAttrTest, AttribValue) {
