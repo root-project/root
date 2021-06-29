@@ -65,7 +65,7 @@ void draw_rh1_large()
    // draw->Error(3); // configure error drawing
    draw->Hist();  // configure hist draw option, default
 
-   draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
+   draw->optimize = true; // enable draw optimization, reduced data set will be send to clients
 
    auto stat = canvas->Draw<RHist1StatBox>(pHist, "hist");
    stat->fill.color = RColor::kBlue;

@@ -75,7 +75,7 @@ void draw_rh2_large()
    // draw->Lego(2); // configure lego2 draw option, 3d
    // draw->Error(); // configure error drawing, 3d
 
-   draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
+   draw->optimize = true; // enable draw optimization, reduced data set will be send to clients
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
    stat->fill.color = RColor::kBlue;
