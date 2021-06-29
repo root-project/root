@@ -191,7 +191,8 @@ Bool_t TSystem::Init()
    fSignalHandler       = new TOrdCollection;
    fFileHandler         = new TOrdCollection;
    fStdExceptionHandler = new TOrdCollection;
-   fTimers              = new TOrdCollection;
+   fTimers              = new TList;
+   fTimers->UseRWLock();
 
    fBuildArch     = BUILD_ARCH;
    fBuildCompiler = COMPILER;
@@ -497,7 +498,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 {
    if (!fTimers) return -1;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t, *to = nullptr;
    Long64_t tt, tnow = Now();
    Long_t   timeout = -1;

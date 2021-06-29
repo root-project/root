@@ -2945,7 +2945,7 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
 
    fInsideNotify = kTRUE;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t;
    Bool_t  timedout = kFALSE;
 
