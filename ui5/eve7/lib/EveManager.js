@@ -331,7 +331,7 @@ sap.ui.define([], function() {
 
       // notify scenes for beginning of changes and
       // notify for element removal
-      let removedIds = msg.header["removedElements"]; // AMT empty set should not be sent at the first place
+      let removedIds = msg.header["removedElements"];
       if (removedIds.length) {
          this.callSceneReceivers(scene, "elementsRemoved", removedIds);
          this.removeElements(removedIds);
