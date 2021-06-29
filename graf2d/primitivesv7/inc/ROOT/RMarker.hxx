@@ -9,7 +9,7 @@
 #ifndef ROOT7_RMarker
 #define ROOT7_RMarker
 
-#include <ROOT/RDrawable.hxx>
+#include <ROOT/ROnFrameDrawable.hxx>
 #include <ROOT/RAttrMarker.hxx>
 #include <ROOT/RPadPos.hxx>
 
@@ -26,28 +26,19 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RMarker : public RDrawable {
+class RMarker : public ROnFrameDrawable {
 
    RPadPos fP;                                         ///< position
-   RAttrValue<bool> fOnFrame{this, "onframe", false};  ///<! is drawn on the frame or not
-   RAttrValue<bool> fClipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 
 public:
    RAttrMarker marker{this, "marker"};            ///<! marker attributes
 
-   RMarker() : RDrawable("marker") {}
+   RMarker() : ROnFrameDrawable("marker") {}
 
    RMarker(const RPadPos &p) : RMarker() { fP = p; }
 
    RMarker &SetP(const RPadPos &p) { fP = p; return *this; }
    const RPadPos &GetP() const { return fP; }
-
-   RMarker &SetOnFrame(bool on = true) { fOnFrame = on; return *this; }
-   bool GetOnFrame() const { return fOnFrame; }
-
-   RMarker &SetClipping(bool on = true) { fClipping = on; return *this; }
-   bool GetClipping() const { return fClipping; }
-
 };
 
 } // namespace Experimental
