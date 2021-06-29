@@ -294,8 +294,7 @@ TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
       }
    };
 
-   //const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
-   const unsigned int nslots = 1U;
+   const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
    ROOT::EnableImplicitMT(nslots);
 
    ROOT::TTreeProcessorMT p(filename, treename);
