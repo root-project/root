@@ -18,7 +18,7 @@ TEST(Primitives, RPave)
 
    auto pave = canv.Add<RPave>();
    pave->border.color = RColor::kRed;
-   pave->border.width = 3.f;
+   pave->border.width = 3.;
    pave->fill.color = RColor::kBlue;
    pave->fill.style = 3003;
    pave->cornerx = 0.03_normal;
@@ -30,7 +30,7 @@ TEST(Primitives, RPave)
    EXPECT_EQ(canv.NumPrimitives(), 2u);
 
    EXPECT_EQ(pave->border.color, RColor::kRed);
-   EXPECT_EQ(pave->border.width, 3.f);
+   EXPECT_DOUBLE_EQ(pave->border.width, 3.);
 
    EXPECT_EQ(pave->fill.color, RColor::kBlue);
    EXPECT_EQ(pave->fill.style, 3003);

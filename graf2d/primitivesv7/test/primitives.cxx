@@ -17,7 +17,7 @@ TEST(Primitives, RBox)
    auto box = canv.Draw<RBox>(RPadPos(0.1_normal, 0.3_normal), RPadPos(0.3_normal,0.6_normal));
 
    box->border.color = RColor::kRed;
-   box->border.width = 5.f;
+   box->border.width = 5.;
    box->border.style = 7;
    box->fill.color = RColor::kBlue;
    box->fill.style = 6;
@@ -25,7 +25,7 @@ TEST(Primitives, RBox)
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(box->border.color, RColor::kRed);
-   EXPECT_FLOAT_EQ(box->border.width, 5.f);
+   EXPECT_DOUBLE_EQ(box->border.width, 5.);
    EXPECT_EQ(box->border.style, 7);
 
    EXPECT_EQ(box->fill.color, RColor::kBlue);
@@ -47,7 +47,7 @@ TEST(Primitives, RLine)
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(line->line.color, RColor::kRed);
-   EXPECT_DOUBLE_EQ(line->line.width, 5.f);
+   EXPECT_DOUBLE_EQ(line->line.width, 5.);
    EXPECT_EQ(line->line.style, 7);
    EXPECT_EQ(line->onframe, true);
    EXPECT_EQ(line->clipping, false);
@@ -106,7 +106,7 @@ TEST(Primitives, RLegend)
    auto legend = canv.Draw<RLegend>("Legend title");
    legend->fill.style = 5;
    legend->fill.color = RColor::kWhite;
-   legend->border.width = 2;
+   legend->border.width = 2.;
    legend->border.color = RColor::kRed;
    legend->AddEntry(line1, "RLine 1");
    legend->AddEntry(line2, "RLine 2");
@@ -118,7 +118,7 @@ TEST(Primitives, RLegend)
    EXPECT_EQ(legend->GetTitle(), "Legend title");
    EXPECT_EQ(legend->fill.style, 5);
    EXPECT_EQ(legend->fill.color, RColor::kWhite);
-   EXPECT_EQ(legend->border.width, 2);
+   EXPECT_EQ(legend->border.width, 2.);
    EXPECT_EQ(legend->border.color, RColor::kRed);
 }
 
@@ -134,7 +134,7 @@ TEST(Primitives, RPaveText)
    text->text.align = 13;
    text->text.font.family = "Times New Roman";
    text->border.color = RColor::kRed;
-   text->border.width = 3;
+   text->border.width = 3.;
    text->fill.color = RColor::kBlue;
    text->fill.style = 3003;
 
@@ -155,9 +155,8 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->text.font.family, "Times New Roman");
 
    EXPECT_EQ(text->border.color, RColor::kRed);
-   EXPECT_EQ(text->border.width, 3);
+   EXPECT_DOUBLE_EQ(text->border.width, 3.);
 
    EXPECT_EQ(text->fill.color, RColor::kBlue);
    EXPECT_EQ(text->fill.style, 3003);
 }
-
