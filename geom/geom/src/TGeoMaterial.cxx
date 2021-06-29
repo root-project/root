@@ -800,7 +800,7 @@ void TGeoMixture::AddElement(Double_t a, Double_t z, Double_t weight)
       Fatal("AddElement", "Cannot add element having Z=%d to mixture %s", (Int_t)z, GetName());
    Int_t i;
    for (i=0; i<fNelements; i++) {
-      if (TMath::Abs(z-fZmixture[i])<1.e-6  && TMath::Abs(a-fAmixture[i])<1.e-6) {
+      if (!fElements && TMath::Abs(z-fZmixture[i])<1.e-6  && TMath::Abs(a-fAmixture[i])<1.e-6) {
          fWeights[i] += weight;
          AverageProperties();
          return;
@@ -1057,6 +1057,10 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
    printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g intlen=%g index=%i\n", GetName(), GetTitle(),
           fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
+      if (fElements && fElements->At(i)) {
+         fElements->At(i)->Print();
+         continue;
+      }
       if (fNatoms) printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f natoms=%d\n", i, GetElement(i)->GetName(),fZmixture[i],
              fAmixture[i], fWeights[i], fNatoms[i]);
       else printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f\n", i, GetElement(i)->GetName(),fZmixture[i],
