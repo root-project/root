@@ -31,34 +31,21 @@ namespace Experimental {
 
 class RPave : public RDrawable {
 
-   RAttrValue<RPadLength>  fCornerX{this, "cornerx", 0.02};  ///<! X corner
-   RAttrValue<RPadLength>  fCornerY{this, "cornery", 0.02};  ///<! Y corner
-   RAttrValue<RPadLength>  fWidth{this, "width", 0.4};       ///<! pave width
-   RAttrValue<RPadLength>  fHeight{this, "height", 0.2};     ///<! pave height
-
 protected:
 
    RPave(const std::string &csstype) : RDrawable(csstype) {}
 
 public:
-
-   RAttrBorder             border{this, "border"};      ///<! border attributes
-   RAttrFill               fill{this, "fill"};          ///<! fill attributes
-   RAttrText               text{this, "text"};          ///<! text attributes
+   RAttrBorder border{this, "border"};                    ///<! border attributes
+   RAttrFill fill{this, "fill"};                          ///<! fill attributes
+   RAttrText text{this, "text"};                          ///<! text attributes
+   RAttrValue<RPadLength> cornerx{this, "cornerx", 0.02}; ///<! X corner
+   RAttrValue<RPadLength> cornery{this, "cornery", 0.02}; ///<! Y corner
+   RAttrValue<RPadLength> width{this, "width", 0.4};      ///<! pave width
+   RAttrValue<RPadLength> height{this, "height", 0.2};    ///<! pave height
 
    RPave() : RPave("pave") {}
 
-   RPave &SetCornerX(const RPadLength &pos) { fCornerX = pos; return *this; }
-   RPadLength GetCornerX() const { return fCornerX; }
-
-   RPave &SetCornerY(const RPadLength &pos) { fCornerY = pos; return *this; }
-   RPadLength GetCornerY() const { return fCornerY; }
-
-   RPave &SetWidth(const RPadLength &width) { fWidth = width; return *this; }
-   RPadLength GetWidth() const { return fWidth; }
-
-   RPave &SetHeight(const RPadLength &height) { fHeight = height; return *this; }
-   RPadLength GetHeight() const { return fHeight; }
 };
 
 } // namespace Experimental

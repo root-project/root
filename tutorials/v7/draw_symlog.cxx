@@ -28,6 +28,7 @@
 using namespace ROOT::Experimental;
 
 auto symlog_style = RStyle::Parse("frame { margins_left: 0.1; }"
+                                  "title { margin: 0.01; height: 0.1; }"
                                   "marker { onframe: true; clipping: true; }"
                                   ".group1 { marker_style: 8; marker_color: blue; }"
                                   ".group2 { marker_style: 8; marker_color: orange; }");
@@ -51,7 +52,7 @@ void draw_symlog()
    frame1->y.max = 1e4;
    frame1->y.title = "y log";
    frame1->y.title.SetCenter();
-   pads[0][0]->Draw<RFrameTitle>("linear scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
+   pads[0][0]->Draw<RFrameTitle>("linear scale");
 
    // second pad with log scales, negative values missing
    auto frame2 = pads[0][1]->AddFrame();
@@ -66,7 +67,7 @@ void draw_symlog()
    frame2->y.max = 1e4;
    frame2->y.title = "y log";
    frame2->y.title.SetCenter();
-   pads[0][1]->Draw<RFrameTitle>("log scale, missing points")->SetMargin(0.01_normal).SetHeight(0.1_normal);
+   pads[0][1]->Draw<RFrameTitle>("log scale, missing points");
 
    // third pad with symlog scales
    auto frame3 = pads[0][2]->AddFrame();
@@ -82,7 +83,7 @@ void draw_symlog()
    frame3->y.max = 1e4;
    frame3->y.title = "y log";
    frame3->y.title.SetCenter();
-   pads[0][2]->Draw<RFrameTitle>("symlog scale")->SetMargin(0.01_normal).SetHeight(0.1_normal);
+   pads[0][2]->Draw<RFrameTitle>("symlog scale");
 
    for (int n=0;n<100;n++) {
       auto x1 = TMath::Power(10, gRandom->Uniform(1, 2.9));
