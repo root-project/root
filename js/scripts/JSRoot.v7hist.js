@@ -1921,9 +1921,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
              has_main = !!painter.getMainPainter(),
              o = painter.options;
 
-         o.Text = painter.v7EvalAttr("text", false);
-         o.BarOffset = painter.v7EvalAttr("bar_offset", 0.);
-         o.BarWidth = painter.v7EvalAttr("bar_width", 1.);
+         o.Text = painter.v7EvalAttr("drawtext", false);
+         o.BarOffset = painter.v7EvalAttr("baroffset", 0.);
+         o.BarWidth = painter.v7EvalAttr("barwidth", 1.);
          o.second_x = has_main && painter.v7EvalAttr("secondx", false);
          o.second_y = has_main && painter.v7EvalAttr("secondy", false);
 
@@ -3742,7 +3742,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
              sub = painter.v7EvalAttr("sub", 0),
              o = painter.options;
 
-         o.Text = painter.v7EvalAttr("text", false);
+         o.Text = painter.v7EvalAttr("drawtext", false);
 
          switch(kind) {
             case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;

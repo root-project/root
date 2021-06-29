@@ -64,13 +64,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Decode pad length from string, return pixel value
      * @private */
-   JSROOT.ObjectPainter.prototype.v7EvalLength = function(name, sizepx, dflt, name2) {
+   JSROOT.ObjectPainter.prototype.v7EvalLength = function(name, sizepx, dflt) {
       if (sizepx <= 0) sizepx = 1;
 
       let value = this.v7EvalAttr(name);
-
-      if ((value === undefined) && name2)
-         value = this.v7EvalAttr(name2);
 
       if (value === undefined)
          return Math.round(dflt*sizepx);
@@ -523,7 +520,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       } else {
          let labels = this.getObject().fLabels;
-         if (labels && (indx>=0) && (indx < labels.length))
+         if (labels && (indx >= 0) && (indx < labels.length))
             return labels[indx];
       }
       return null;
@@ -1133,9 +1130,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ticksColor = this.v7EvalColor("ticks_color", "");
       this.ticksWidth = this.v7EvalAttr("ticks_width", 1);
       this.labelsOffset = this.v7EvalLength("labels_offset", this.scaling_size, 0);
-      this.optionUnlab = this.v7EvalAttr("hidelabels", false);
+      this.optionUnlab = this.v7EvalAttr("labels_hide", false);
 
-      this.fTitle = this.v7EvalAttr("title", "");
+      this.fTitle = this.v7EvalAttr("title_value", "");
 
       if (this.max_tick_size && (this.ticksSize > this.max_tick_size)) this.ticksSize = this.max_tick_size;
    }
@@ -1261,8 +1258,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           pos  = pp.getCoordinate(drawable.fPos),
           len  = pp.getPadLength(drawable.fVertical, drawable.fLength),
           reverse = this.v7EvalAttr("reverse", false),
-          min = drawable.fLabels ? 0 : drawable.fMin,
-          max = drawable.fLabels ? drawable.fLabels.length : drawable.fMax;
+          labels_len = drawable.fLabels.length,
+          min = (labels_len > 0) ? 0 : this.v7EvalAttr("min", 0),
+          max = (labels_len > 0) ? labels_len : this.v7EvalAttr("max", 100);
 
       // in vertical direction axis drawn in negative direction
       if (drawable.fVertical) len -= pp.getPadHeight();
@@ -1273,7 +1271,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          smin = min; smax = max;
       }
 
-      this.configureAxis("axis", min, max, smin, smax, drawable.fVertical, undefined, len, { reverse: reverse, labels: !!drawable.fLabels });
+      this.configureAxis("axis", min, max, smin, smax, drawable.fVertical, undefined, len, { reverse: reverse, labels: labels_len > 0 });
 
       this.createG();
 
@@ -1520,10 +1518,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
          let rect = this.getPadPainter().getPadRect();
-         this.fX1NDC = this.v7EvalLength("margins_left", rect.width, JSROOT.settings.FrameNDC.fX1NDC, "margins_all") / rect.width;
-         this.fY1NDC = this.v7EvalLength("margins_bottom", rect.height, JSROOT.settings.FrameNDC.fY1NDC, "margins_all") / rect.height;
-         this.fX2NDC = 1 - this.v7EvalLength("margins_right", rect.width, 1-JSROOT.settings.FrameNDC.fX2NDC, "margins_all") / rect.width;
-         this.fY2NDC = 1 - this.v7EvalLength("margins_top", rect.height, 1-JSROOT.settings.FrameNDC.fY2NDC, "margins_all") / rect.height;
+         this.fX1NDC = this.v7EvalLength("margins_left", rect.width, JSROOT.settings.FrameNDC.fX1NDC) / rect.width;
+         this.fY1NDC = this.v7EvalLength("margins_bottom", rect.height, JSROOT.settings.FrameNDC.fY1NDC) / rect.height;
+         this.fX2NDC = 1 - this.v7EvalLength("margins_right", rect.width, 1-JSROOT.settings.FrameNDC.fX2NDC) / rect.width;
+         this.fY2NDC = 1 - this.v7EvalLength("margins_top", rect.height, 1-JSROOT.settings.FrameNDC.fY2NDC) / rect.height;
       }
 
       if (!this.fillatt)
@@ -1763,7 +1761,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.x_handle = new JSROOT.TAxisPainter(this.getDom(), xaxis, true);
       this.x_handle.setPadName(this.getPadName());
-      this.x_handle.optionUnlab = this.v7EvalAttr("x_hidelabels", false);
+      this.x_handle.optionUnlab = this.v7EvalAttr("x_labels_hide", false);
 
       this.x_handle.configureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
                                       { reverse: this.reverse_x,
@@ -1776,7 +1774,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.y_handle = new JSROOT.TAxisPainter(this.getDom(), yaxis, true);
       this.y_handle.setPadName(this.getPadName());
-      this.y_handle.optionUnlab = this.v7EvalAttr("y_hidelabels", false);
+      this.y_handle.optionUnlab = this.v7EvalAttr("y_labels_hide", false);
 
       this.y_handle.configureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
                                       { reverse: this.reverse_y,
@@ -3382,7 +3380,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       pattr.csstype = snap.fCssType;
       pattr.rstyle = snap.fStyle;
 
-      snap.fOption = pattr.v7EvalAttr("opt", "");
+      snap.fOption = pattr.v7EvalAttr("drawopt", "");
 
       let extract_color = (member_name, attr_name) => {
          let col = pattr.v7EvalColor(attr_name, "");
@@ -5215,7 +5213,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               palette_x = Math.round(fx + fw + palette_margin),
               palette_y = fy;
 
-          palette_width = this.v7EvalLength("size", pw, 0.05);
+          palette_width = this.v7EvalLength("width", pw, 0.05);
           palette_height = fh;
 
           // x,y,width,height attributes used for drag functionality
@@ -5423,7 +5421,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RPaveText", icon: "img_pavetext", prereq: "v7more", func: "JSROOT.v7.drawPaveText", opt: "" });
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: drawRFrame, opt: "" });
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RAxisDrawable", icon: "img_frame", func: drawRAxis, opt: "" });
-   jsrp.addDrawFunc({ name: "ROOT::Experimental::RAxisLabelsDrawable", icon: "img_frame", func: drawRAxis, opt: "" });
 
    JSROOT.v7.RAxisPainter = RAxisPainter;
    JSROOT.v7.RFramePainter = RFramePainter;

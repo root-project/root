@@ -2854,6 +2854,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Try to find painter for specified object
      * @desc can be used to find painter for some special objects, registered as
      * histogram functions
+     * @param {object} selobj - object to which painter should be search, set null to ignore parameter
+     * @param {string} [selname] - object name, set to null to ignore
+     * @param {string} [seltype] - object type, set to null to ignore
+     * @returns {object} - painter for specified object (if any)
      * @private */
    TPadPainter.prototype.findPainterFor = function(selobj, selname, seltype) {
       for (let n = 0; n < this.painters.length; ++n) {
