@@ -27,13 +27,8 @@ namespace Experimental {
 RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, int batchMode)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(data, true))},
-     _batchMode(batchMode), _topNode(topNode)
+     _batchMode(batchMode), _topNode(topNode), _data{&data}
 {
-   // get a set with all the observables as the normalization set
-   // and call getVal to trigger the creation of the integrals.
-   _observables = data.get();
-   _topNode.getPdf()->getVal(_observables);
-
    // fill the RunContext with the observable data and map the observables
    // by namePtr in order to replace their memory addresses later, with
    // the ones from the variables that are actually in the computation graph.
@@ -94,7 +89,6 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
       const RooAbsReal *pClone = nameResolver[pAbsReal->namePtr()];
       if (alreadyExists && !pClone)
          continue; // node included multiple times in the list
-      auto pRealVar = dynamic_cast<RooRealVar *>(&list[i]);
 
       if (pClone) // this node is an observable, update the RunContext and don't add it in `nodes`.
       {
@@ -104,20 +98,16 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
 
          // set nameResolver to nullptr to be able to detect future duplicates
          nameResolver[pAbsReal->namePtr()] = nullptr;
-      } else if (pRealVar) // this node is a scalar parameter
-      {
-         _dataMap.emplace(pAbsReal, RooSpan<const double>(pRealVar->getValPtr(), 1));
-         pRealVar->setError(0.0);
-      } else // this node needs computing, mark it's clients
+      } else // this node needs evaluation, mark it's clients
       {
          _computeQueue.push(pAbsReal);
          auto clients = pAbsReal->valueClients();
          for (auto *client : clients) {
             if (list.find(*client)) {
-               ++_nServersClients[static_cast<const RooAbsReal *>(client)].first;
+               ++_nodeInfos[client].nServers;
+               ++_nodeInfos[pAbsReal].nClients;
             }
          }
-         _nServersClients[pAbsReal].second = clients.size();
       }
    }
 
@@ -125,70 +115,83 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
    while (!_computeQueue.empty()) {
       auto node = _computeQueue.front();
       _computeQueue.pop();
-      if (_nServersClients.at(node).first == 0)
+      if (_nodeInfos.at(node).nServers == 0)
          _initialQueue.push(node);
    }
 }
 
 RooFitDriver::~RooFitDriver()
 {
-   while (!_buffers.empty()) {
-      RooBatchCompute::dispatch->free(_buffers.front());
-      _buffers.pop();
+   while (!_vectorBuffers.empty()) {
+      RooBatchCompute::dispatch->free(_vectorBuffers.front());
+      _vectorBuffers.pop();
    }
    RooBatchCompute::dispatch->free(_cudaMemDataset);
 }
 
 double RooFitDriver::getVal()
 {
+
+   std::vector<double> nonDerivedValues;
+   nonDerivedValues.reserve(_nodeInfos.size()); // to avoid reallocation
+
    _computeQueue = _initialQueue;
-   _nRemainingServersClients = _nServersClients;
+   std::unordered_map<const RooAbsArg *, NodeInfo> remaining = _nodeInfos;
    while (!_computeQueue.empty()) {
       auto node = _computeQueue.front();
       _computeQueue.pop();
 
-      // get an available buffer for storing the comptation results
-      double *buffer;
-      if (_buffers.empty()) {
-         buffer = static_cast<double *>(RooBatchCompute::dispatch->malloc(_nEvents * sizeof(double)));
-         buffer = static_cast<double *>(RooBatchCompute::dispatch->malloc(_nEvents * sizeof(double)));
+      if (!node->isDerived()) {
+         nonDerivedValues.push_back(node->getVal());
+         _dataMap[node] = RooSpan<const double>(&nonDerivedValues.back(), 1);
       } else {
-         buffer = _buffers.front();
-         _buffers.pop();
+
+         // get an available buffer for storing the comptation results
+         double *buffer = getAvailableBuffer();
+
+         // TODO: Put integrals seperately in the computation queue
+         // For now, we just assume they are scalar and assign them some temporary memory
+         double normVal = 1.0;
+         if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
+            if (pAbsPdf) {
+               auto integral = pAbsPdf->getIntegral(*_data->get());
+               normVal = integral->getVal();
+               _dataMap[integral] = RooSpan<const double>(&normVal, 1);
+            }
+         }
+
+         // compute this node and register the result in the dataMap
+         node->computeBatch(buffer, _nEvents, _dataMap);
+         _dataMap[node] = RooSpan<const double>(buffer, _nEvents);
       }
 
-      // TODO: Put integrals seperately in the computation queue
-      // For now, we just assume they are scalar and assign them some temporary memory
-      double normVal = 1.0;
-      auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node);
-      if (pAbsPdf) {
-         normVal = pAbsPdf->getIntegral()->getVal();
-         _dataMap[pAbsPdf->getIntegral()] = RooSpan<const double>(&normVal, 1);
-      }
-
-      // compute this node and register the result in the dataMap
-      node->computeBatch(buffer, _nEvents, _dataMap);
-      _dataMap[node] = RooSpan<const double>(buffer, _nEvents);
-
-      // update _nRemainingServersClients of this node's clients
+      // update remaining of this node's clients
       // check for nodes that have now all their dependencies calculated.
-      for (auto *pAbsArg : node->valueClients()) {
-         auto client = static_cast<const RooAbsReal *>(pAbsArg);
-         if (_nRemainingServersClients.find(client) != _nRemainingServersClients.end() &&
-             --_nRemainingServersClients.at(client).first == 0)
-            _computeQueue.push(client);
+      for (auto *client : node->valueClients()) {
+         if (remaining.find(client) != remaining.end() && --remaining.at(client).nServers == 0)
+            _computeQueue.push(static_cast<RooAbsReal *>(client));
       }
-      // update _nRemainingServersClients of this node's servers
-      // check for nodes whose buffers can now be recycled.
-      for (auto *pAbsArg : node->servers()) {
-         auto server = static_cast<const RooAbsReal *>(pAbsArg);
-         if (--_nRemainingServersClients[server].second == 0)
-            _buffers.push(const_cast<double *>(_dataMap[server].data()));
+      // update remaining of this node's servers
+      // check for nodes whose _vectorBuffers can now be recycled.
+      for (auto *server : node->servers()) {
+         if (--remaining[server].nClients == 0 && server->isDerived())
+            _vectorBuffers.push(const_cast<double *>(_dataMap[static_cast<RooAbsReal *>(server)].data()));
       }
    }
    // recycle the top node's buffer and return the final value
-   _buffers.push(const_cast<double *>(_dataMap[&_topNode].data()));
+   _vectorBuffers.push(const_cast<double *>(_dataMap[&_topNode].data()));
    return _topNode.reduce(_dataMap[&_topNode].data(), _nEvents);
+}
+
+double *RooFitDriver::getAvailableBuffer()
+{
+   if (_vectorBuffers.empty())
+      return static_cast<double *>(RooBatchCompute::dispatch->malloc(_nEvents * sizeof(double)));
+   else {
+      double *buffer = _vectorBuffers.front();
+      _vectorBuffers.pop();
+      return buffer;
+   }
 }
 
 } // namespace Experimental

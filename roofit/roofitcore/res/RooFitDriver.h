@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 class RooAbsData;
+class RooAbsArg;
 class RooAbsReal;
 
 namespace ROOT {
@@ -74,24 +75,34 @@ public:
       return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this}};
    }
 
+   struct NodeInfo {
+      int nServers = 0;
+      int nClients = 0;
+   };
+
 private:
+   double *getAvailableBuffer();
+
    std::string _name;
    std::string _title;
    RooArgSet _parameters;
+
    const int _batchMode = 0;
    double *_cudaMemDataset = nullptr;
 
    // used for preserving static info about the computation graph
    RooBatchCompute::DataMap _dataMap;
-   const RooArgSet *_observables = nullptr;
    const RooNLLVarNew &_topNode;
    size_t _nEvents;
+
+   RooAbsData const *_data = nullptr;
+
    std::queue<const RooAbsReal *> _initialQueue;
-   std::unordered_map<const RooAbsReal *, std::pair<int, int>> _nServersClients;
+
+   std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
    // used for dynamically scheduling each step's computations
    std::queue<const RooAbsReal *> _computeQueue;
-   std::unordered_map<const RooAbsReal *, std::pair<int, int>> _nRemainingServersClients;
-   std::queue<double *> _buffers;
+   std::queue<double *> _vectorBuffers;
 }; // end class RooFitDriver
 } // end namespace Experimental
 } // end namespace ROOT
