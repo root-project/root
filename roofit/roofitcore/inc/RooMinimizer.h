@@ -77,6 +77,9 @@ public:
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
   Bool_t setLogFile(const char* logf=0) { return fitterFcn()->SetLogFile(logf); }
 
+  // necessary from RooAbsMinimizerFcn subclasses
+  Int_t getPrintLevel() const;
+
   void setMinimizerType(const char* type) ;
 
   static void cleanup() ;

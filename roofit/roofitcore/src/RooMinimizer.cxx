@@ -957,3 +957,8 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   return res;
 
 }
+
+Int_t RooMinimizer::getPrintLevel() const
+{
+   return _printLevel;
+}
