@@ -272,7 +272,7 @@ static std::vector<std::vector<Long64_t>> GetFriendEntries(const Internal::TreeU
 
 namespace ROOT {
 
-unsigned int TTreeProcessorMT::fgTasksPerWorkerHint = 24U;
+unsigned int TTreeProcessorMT::fgTasksPerWorkerHint = 10U;
 
 namespace Internal {
 
