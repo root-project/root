@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "23/06/2021";
+   JSROOT.version_date = "29/06/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -651,7 +651,7 @@
 
          if (!m.jsroot || m.extract)
             element.onload = () => finish_loading(m, m.extract ? globalThis[m.extract] : 1); // mark script loaded
-         element.onerror = () => { m.failure = true; req.failed(); }
+         element.onerror = () => { element.remove(); m.failure = true; req.failed(); }
       }
 
       function after_depend_load(req,d,m) {
@@ -1453,7 +1453,7 @@
             create("TNamed", obj);
             create("TAttAxis", obj);
             extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins : [], fFirst: 0, fLast: 0,
-                                 fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null, fModLabs: null });
+                          fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null, fModLabs: null });
             break;
          case 'TAttLine':
             extend(obj, { fLineColor: 1, fLineStyle: 1, fLineWidth: 1 });
@@ -1478,8 +1478,8 @@
          case 'TPave':
             create("TBox", obj);
             extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
-                                 fBorderSize: 0, fInit: 1, fShadowColor: 1,
-                                 fCornerRadius: 0, fOption: "blNDC", fName: "title" });
+                          fBorderSize: 0, fInit: 1, fShadowColor: 1,
+                          fCornerRadius: 0, fOption: "blNDC", fName: "title" });
             break;
          case 'TAttText':
             extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
@@ -1525,19 +1525,13 @@
             create("TAttLine", obj);
             create("TAttFill", obj);
             create("TAttMarker", obj);
-
-            extend(obj, {
-               fBits: 8,
-               fNcells: 0,
-               fXaxis: create("TAxis"),
-               fYaxis: create("TAxis"),
-               fZaxis: create("TAxis"),
-               fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
-               fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
-               fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
-               fSumw2: [], fOption: "",
-               fFunctions: create("TList"),
-               fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
+            extend(obj, { fBits: 8, fNcells: 0,
+                          fXaxis: create("TAxis"), fYaxis: create("TAxis"), fZaxis: create("TAxis"),
+                          fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
+                          fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
+                          fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
+                          fSumw2: [], fOption: "", fFunctions: create("TList"),
+                          fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
             break;
          case 'TH1I':
          case 'TH1F':
@@ -1581,7 +1575,7 @@
             create("TAttFill", obj);
             create("TAttMarker", obj);
             extend(obj, { fFunctions: create("TList"), fHistogram: null,
-                                 fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
+                          fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
             break;
          case 'TGraphAsymmErrors':
             create("TGraph", obj);
@@ -1590,16 +1584,16 @@
          case 'TMultiGraph':
             create("TNamed", obj);
             extend(obj, { fFunctions: create("TList"), fGraphs: create("TList"),
-                                 fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+                          fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
          case 'TGraphPolargram':
             create("TNamed", obj);
             create("TAttText", obj);
             create("TAttLine", obj);
             extend(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
-                                 fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
-                                 fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
-                                 fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
+                          fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
+                          fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
+                          fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
             break;
          case 'TPolyLine':
             create("TObject", obj);
@@ -1611,24 +1605,24 @@
             create("TLine", obj);
             create("TAttText", obj);
             extend(obj, { fChopt: "", fFunctionName: "", fGridLength: 0,
-                                 fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
-                                 fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
-                                 fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
-                                 fWmax: 100, fWmin: 0 });
+                          fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
+                          fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
+                          fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
+                          fWmax: 100, fWmin: 0 });
             break;
          case 'TAttPad':
             extend(obj, { fLeftMargin: gStyle.fPadLeftMargin,
-                                 fRightMargin: gStyle.fPadRightMargin,
-                                 fBottomMargin: gStyle.fPadBottomMargin,
-                                 fTopMargin: gStyle.fPadTopMargin,
-                                 fXfile: 2, fYfile: 2, fAfile: 1, fXstat: 0.99, fYstat: 0.99, fAstat: 2,
-                                 fFrameFillColor: gStyle.fFrameFillColor,
-                                 fFrameFillStyle: gStyle.fFrameFillStyle,
-                                 fFrameLineColor: gStyle.fFrameLineColor,
-                                 fFrameLineWidth: gStyle.fFrameLineWidth,
-                                 fFrameLineStyle: gStyle.fFrameLineStyle,
-                                 fFrameBorderSize: gStyle.fFrameBorderSize,
-                                 fFrameBorderMode: gStyle.fFrameBorderMode });
+                          fRightMargin: gStyle.fPadRightMargin,
+                          fBottomMargin: gStyle.fPadBottomMargin,
+                          fTopMargin: gStyle.fPadTopMargin,
+                          fXfile: 2, fYfile: 2, fAfile: 1, fXstat: 0.99, fYstat: 0.99, fAstat: 2,
+                          fFrameFillColor: gStyle.fFrameFillColor,
+                          fFrameFillStyle: gStyle.fFrameFillStyle,
+                          fFrameLineColor: gStyle.fFrameLineColor,
+                          fFrameLineWidth: gStyle.fFrameLineWidth,
+                          fFrameLineStyle: gStyle.fFrameLineStyle,
+                          fFrameBorderSize: gStyle.fFrameBorderSize,
+                          fFrameBorderMode: gStyle.fFrameBorderMode });
             break;
          case 'TPad':
             create("TObject", obj);
@@ -1636,38 +1630,38 @@
             create("TAttFill", obj);
             create("TAttPad", obj);
             extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
-                                 fXtoPixel: 1, fYtoAbsPixelk: 1, fYtoPixelk: 1, fYtoPixel: 1,
-                                 fUtoAbsPixelk: 1, fUtoPixelk: 1, fUtoPixel: 1, fVtoAbsPixelk: 1,
-                                 fVtoPixelk: 1, fVtoPixel: 1, fAbsPixeltoXk: 1, fPixeltoXk: 1,
-                                 fPixeltoX: 1, fAbsPixeltoYk: 1, fPixeltoYk: 1, fPixeltoY: 1,
-                                 fXlowNDC: 0, fYlowNDC: 0, fXUpNDC: 0, fYUpNDC: 0, fWNDC: 1, fHNDC: 1,
-                                 fAbsXlowNDC: 0, fAbsYlowNDC: 0, fAbsWNDC: 1, fAbsHNDC: 1,
-                                 fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
-                                 fNumber: 0, fLogx: gStyle.fOptLogx, fLogy: gStyle.fOptLogy, fLogz: gStyle.fOptLogz,
-                                 fTickx: gStyle.fPadTickX,
-                                 fTicky: gStyle.fPadTickY,
-                                 fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
-                                 fBorderMode: 0, fModified: false,
-                                 fGridx: gStyle.fPadGridX,
-                                 fGridy: gStyle.fPadGridY,
-                                 fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
-                                 fPrimitives: create("TList"), fExecs: null,
-                                 fName: "pad", fTitle: "canvas" });
+                          fXtoPixel: 1, fYtoAbsPixelk: 1, fYtoPixelk: 1, fYtoPixel: 1,
+                          fUtoAbsPixelk: 1, fUtoPixelk: 1, fUtoPixel: 1, fVtoAbsPixelk: 1,
+                          fVtoPixelk: 1, fVtoPixel: 1, fAbsPixeltoXk: 1, fPixeltoXk: 1,
+                          fPixeltoX: 1, fAbsPixeltoYk: 1, fPixeltoYk: 1, fPixeltoY: 1,
+                          fXlowNDC: 0, fYlowNDC: 0, fXUpNDC: 0, fYUpNDC: 0, fWNDC: 1, fHNDC: 1,
+                          fAbsXlowNDC: 0, fAbsYlowNDC: 0, fAbsWNDC: 1, fAbsHNDC: 1,
+                          fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
+                          fNumber: 0, fLogx: gStyle.fOptLogx, fLogy: gStyle.fOptLogy, fLogz: gStyle.fOptLogz,
+                          fTickx: gStyle.fPadTickX,
+                          fTicky: gStyle.fPadTickY,
+                          fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
+                          fBorderMode: 0, fModified: false,
+                          fGridx: gStyle.fPadGridX,
+                          fGridy: gStyle.fPadGridY,
+                          fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
+                          fPrimitives: create("TList"), fExecs: null,
+                          fName: "pad", fTitle: "canvas" });
 
             break;
          case 'TAttCanvas':
             extend(obj, { fXBetween: 2, fYBetween: 2, fTitleFromTop: 1.2,
-                                 fXdate: 0.2, fYdate: 0.3, fAdate: 1 });
+                          fXdate: 0.2, fYdate: 0.3, fAdate: 1 });
             break;
          case 'TCanvas':
             create("TPad", obj);
             extend(obj, { fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
-                                 fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
-                                 fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
-                                 fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
-                                 fCw: 500, fCh: 300, fCatt: create("TAttCanvas"),
-                                 kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
-                                 fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
+                          fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
+                          fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
+                          fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
+                          fCw: 500, fCh: 300, fCatt: create("TAttCanvas"),
+                          kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
+                          fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
             break;
          case 'TGeoVolume':
             create("TNamed", obj);
