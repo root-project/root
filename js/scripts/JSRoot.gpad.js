@@ -2884,25 +2884,56 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return false;
    }
 
+   /** @summary sync drawing/redrawing/resize of the pad
+     * @returns {Promise} when pad is ready to toperation or false if operation already queued
+     * @private */
+   TPadPainter.prototype.syncDraw = function(kind) {
+      if (this._doing_draw === undefined) {
+         this._doing_draw = [];
+         this._doing_drawf = [];
+         return Promise.resolve(true);
+      }
+      if (!kind) kind = "redraw";
+      // if operation registered, ignore next calls
+      if ((kind !== true) && (this._doing_draw.indexOf(kind) >= 0)) return false;
+      this._doing_draw.push(kind);
+      return new Promise(resolveFunc => {
+         this._doing_drawf.push(resolveFunc);
+      });
+   }
+
+   /** @summary confirms that drawing is completed, may trigger next drawing immediately
+     * @private */
+   TPadPainter.prototype.confirmDraw = function() {
+      if (this._doing_draw === undefined)
+         return console.warn("failure, should not happen");
+      if (this._doing_draw.length == 0) {
+         delete this._doing_draw;
+         delete this._doing_drawf;
+      } else {
+         this._doing_draw.shift();
+         let func = this._doing_drawf.shift();
+         func(); // activate next action
+      }
+   }
+
    /** @summary Draw pad primitives
      * @returns {Promise} when drawing completed
      * @private */
    TPadPainter.prototype.drawPrimitives = function(indx) {
 
-      if (!indx) {
-         indx = 0;
-         // flag used to prevent immediate pad redraw during normal drawing sequence
-         this._doing_pad_draw = true;
-
+      if (indx === undefined) {
          if (this.iscan)
             this._start_tm = this._lasttm_tm = new Date().getTime();
 
          // set number of primitves
          this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr.length : 0;
+
+         // sync to prevent immediate pad redraw during normal drawing sequence
+         return this.syncDraw("draw").then(() => this.drawPrimitives(0));
       }
 
       if (indx >= this._num_primitives) {
-         delete this._doing_pad_draw;
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
             if (spenttm > 1000) console.log("Canvas drawing took " + (spenttm*1e-3).toFixed(2) + "s");
@@ -2910,6 +2941,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             delete this._lasttm_tm;
          }
 
+         this.confirmDraw();
          return Promise.resolve();
       }
 
@@ -3027,19 +3059,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Redraw pad means redraw ourself
      * @returns {Promise} when redrawing ready */
    TPadPainter.prototype.redrawPad = function(reason) {
-      if (this._doing_pad_draw) {
+
+      let sync_promise = this.syncDraw(reason);
+      if (sync_promise === false) {
          console.log('Prevent redrawing', this.pad.fName);
          return Promise.resolve(false);
       }
 
       let showsubitems = true;
-
-      if (this.iscan) {
-         this.createCanvasSvg(2);
-      } else {
-         showsubitems = this.createPadSvg(true);
-      }
-
       let redrawNext = indx => {
          while (indx < this.painters.length) {
             let sub = this.painters[indx++], res = 0;
@@ -3052,7 +3079,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(true);
       };
 
-      return redrawNext(0).then(() => {
+      return sync_promise.then(() => {
+         if (this.iscan) {
+            this.createCanvasSvg(2);
+         } else {
+            showsubitems = this.createPadSvg(true);
+         }
+         return redrawNext(0);
+      }).then(() => {
+         this.confirmDraw();
          if (jsrp.getActivePad() === this) {
             let canp = this.getCanvPainter();
             if (canp) canp.producePadEvent("padredraw", this);
@@ -3080,10 +3115,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return false;
    }
 
-   /** @summary Check resize of canvas */
+   /** @summary Check resize of canvas
+     * @returns {Promise} with result */
    TPadPainter.prototype.checkCanvasResize = function(size, force) {
 
       if (!this.iscan && this.has_canvas) return false;
+
+      let sync_promise = this.syncDraw("canvas_resize");
+      if (sync_promise === false) return false;
 
       if ((size === true) || (size === false)) { force = size; size = null; }
 
@@ -3091,15 +3130,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!force) force = this.needRedrawByResize();
 
-      let changed = this.createCanvasSvg(force ? 2 : 1, size);
+      let changed = false,
+          redrawNext = indx => {
+             if (!changed || (indx >= this.painters.length)) {
+                this.confirmDraw();
+                return changed;
+             }
 
-      // if canvas changed, redraw all its subitems.
-      // If redrawing was forced for canvas, same applied for sub-elements
-      if (changed)
-         for (let i = 0; i < this.painters.length; ++i)
-            this.painters[i].redraw(force ? "redraw" : "resize");
+             let res = this.painters[indx].redraw(force ? "redraw" : "resize");
+             if (!jsrp.isPromise(res)) res = Promise.resolve();
+              return res.then(() => redrawNext(indx+1));
+          };
 
-      return changed;
+      return sync_promise.then(() => {
+
+         changed = this.createCanvasSvg(force ? 2 : 1, size);
+
+         // if canvas changed, redraw all its subitems.
+         // If redrawing was forced for canvas, same applied for sub-elements
+         return redrawNext(0);
+      });
    }
 
    /** @summary Update TPad object */
@@ -3188,8 +3238,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (indx === undefined) {
          indx = -1;
-         // flag used to prevent immediate pad redraw during first draw
-         this._doing_pad_draw = true;
          this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
       }
@@ -3197,7 +3245,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       ++indx; // change to the next snap
 
       if (!lst || (indx >= lst.length)) {
-         delete this._doing_pad_draw;
          delete this._snaps_map;
          return Promise.resolve(this);
       }
@@ -4339,11 +4386,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let snap = JSROOT.parse(msg.substr(6));
 
-         this.redrawPadSnap(snap).then(() => {
+         this.syncDraw(true).then(() => this.redrawPadSnap(snap)).then(() => {
             this.completeCanvasSnapDrawing();
             let ranges = this.getWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ":" + ranges;
             handle.send("READY6:" + snap.fVersion + ranges); // send ready message back when drawing completed
+            this.confirmDraw();
          });
       } else if (msg.substr(0,5)=='MENU:') {
          // this is menu with exact identifier for object
@@ -4738,7 +4786,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       painter.normal_canvas = false;
       painter.addPadButtons();
 
-      return painter.redrawPadSnap(snap).then(() => { painter.showPadButtons(); return painter; });
+      return painter.syncDraw(true)
+                    .then(() => painter.redrawPadSnap(snap))
+                    .then(() => { painter.confirmDraw(); painter.showPadButtons(); return painter; });
    }
 
    JSROOT.TAxisPainter = TAxisPainter;
