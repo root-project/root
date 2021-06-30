@@ -21,8 +21,8 @@ from ROOT.Experimental import RCanvas, RBox, RPadPos, RColor
 canvas = RCanvas.Create("RBox drawing")
 
 box1 = canvas.Draw[RBox](RPadPos(0.1, 0.1), RPadPos(0.3, 0.6))
-box1.border.color.Set(RColor.kBlue)
-box1.border.width.Set(5)
+box1.border.color = RColor.kBlue
+box1.border.width = 5
 box1.fill.color = RColor(0, 255, 0, 127) # 50% opaque
 
 box2 = canvas.Draw[RBox](RPadPos(0.4, 0.2), RPadPos(0.6, 0.7))
