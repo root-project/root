@@ -1,4 +1,0 @@
-
-Processing test/stressIterators.cxx...
-====================================
------> TestContainer_for_each<TList>(list, list.GetSize())

@@ -1,9 +1,0 @@
-
-Processing test/stressRooFit.cxx...
-
-[1mRooFit v2.22 -- Developed by Wouter Verkerke and David Kirkby[0m 
-                Copyright (C) 2000-2007 NIKHEF, University of California & Stanford University
-                All rights reserved, please read http://roofit.sourceforge.net/license.txt
-
-Error: Function stressRooFit() is not defined in current scope  :0:
-*** Interpreter error recovered ***

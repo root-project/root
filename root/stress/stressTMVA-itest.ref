@@ -1,9 +1,0 @@
-
-Processing test/stressTMVA.cxx...
-******************************************************************
-* TMVA - S T R E S S suite *
-******************************************************************
-Test 1: Data Preparation ............... OK
-Test 2: Training Methods ............... OK
-Test 3: Compare to Reference ........... OK
-(int)0
