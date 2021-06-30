@@ -11,6 +11,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import sys
 import cppyy
 
 from ROOT import pythonization
@@ -27,6 +28,20 @@ from ._roodatahist import RooDataHist
 from ._roodataset import RooDataSet
 from ._roodecays import RooDecay, RooBDecay, RooBCPGenDecay, RooBCPEffDecay, RooBMixDecay
 from ._roogenfitstudy import RooGenFitStudy
+from ._rooglobalfunc import (
+    FitOptions,
+    Format,
+    Frame,
+    MultiArg,
+    YVar,
+    ZVar,
+    LineColor,
+    FillColor,
+    MarkerColor,
+    LineStyle,
+    FillStyle,
+    MarkerStyle,
+)
 from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
 from ._roonllvar import RooNLLVar
@@ -61,6 +76,22 @@ python_classes = [
     RooSimultaneous,
     RooSimWSTool,
     RooWorkspace,
+]
+
+# list of python functions that are used to pythonize RooGlobalFunc function in RooFit
+python_roofit_functions = [
+    FitOptions,
+    Format,
+    Frame,
+    MultiArg,
+    YVar,
+    ZVar,
+    LineColor,
+    FillColor,
+    MarkerColor,
+    LineStyle,
+    FillStyle,
+    MarkerStyle,
 ]
 
 # create a dictionary for convenient access to python classes
@@ -130,7 +161,7 @@ def make_func_name_orig(func_name):
 
 
 @pythonization()
-def pythonize_roofit(klass, name):
+def pythonize_roofit_class(klass, name):
     # Parameters:
     # klass: class to pythonize
     # name: string containing the name of the class
@@ -160,3 +191,20 @@ def pythonize_roofit(klass, name):
         rebind_instancemethod(klass, python_klass, func_name)
 
     return
+
+
+def pythonize_roofit_namespace(ns):
+
+    for python_func in python_roofit_functions:
+        func_name = python_func.__name__
+        func_name_orig = "_" + func_name
+
+        if sys.version_info <= (3, 0):
+            # In Python 2 the RooFit is treated like a class and the global
+            # functions in the namespace must be static methods.
+            python_func = staticmethod(python_func)
+
+        setattr(ns, func_name_orig, getattr(ns, func_name))
+        setattr(ns, func_name, python_func)
+
+    return ns
