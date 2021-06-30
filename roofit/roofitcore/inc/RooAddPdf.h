@@ -144,7 +144,7 @@ protected:
 
 private:
   std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* defaultNorm = nullptr) const;
-  mutable RooArgSet const* _pointerToLastUsedNormSet = nullptr; //!
+  mutable UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = UniqueId<RooArgSet>::nullval; //!
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; //!
 
   ClassDef(RooAddPdf,3) // PDF representing a sum of PDFs
