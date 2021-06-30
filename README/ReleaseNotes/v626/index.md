@@ -111,6 +111,11 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 
 ## GUI Libraries
 
+## WebGUI Libraries
+
+- provide `--web=server` mode, which only printout window URLs instead of starting real web browser.
+  Dedicated for the case when ROOT should be running as server application, providing different RWebWindow instances for connection.
+
 
 ## Montecarlo Libraries
 
