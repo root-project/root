@@ -685,7 +685,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::ExtractEnvelopeCRC3
 
    auto bytes = reinterpret_cast<const unsigned char *>(data);
    std::uint32_t crc32;
-   DeserializeUInt32(bytes - sizeof(crc32), crc32);
+   DeserializeUInt32(bytes + bufSize - sizeof(crc32), crc32);
    return crc32;
 }
 
