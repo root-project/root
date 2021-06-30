@@ -427,26 +427,30 @@ include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 include(RootInstallDirs)
 
 #---RPATH options-------------------------------------------------------------------------------
-#  When building, don't use the install RPATH already (but later on when installing)
-set(CMAKE_SKIP_BUILD_RPATH FALSE)         # don't skip the full RPATH for the build tree
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) # use always the build RPATH for the build tree
-set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the build tree to the install RPATH
 
-# Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+# add to RPATH any directories outside the project that are in the linker search path
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 if(rpath)
-  set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR} CACHE INTERNAL "") # install LIBDIR
-  set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
-elseif(APPLE)
-  set(CMAKE_INSTALL_NAME_DIR "@rpath")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
+  file(RELATIVE_PATH BINDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_BINDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+  set(CMAKE_SKIP_RPATH FALSE)
+  set(CMAKE_SKIP_INSTALL_RPATH FALSE)
+
+  if(APPLE)
+    set(CMAKE_MACOSX_RPATH TRUE)
+    set(CMAKE_INSTALL_NAME_DIR "@rpath")
+    set(CMAKE_INSTALL_RPATH "@loader_path/${BINDIR_TO_LIBDIR}")
   else()
-    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")    # self relative LIBDIR
+    set(CMAKE_INSTALL_RPATH "$ORIGIN;$ORIGIN/${BINDIR_TO_LIBDIR}")
   endif()
-  set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
+
+  unset(BINDIR_TO_LIBDIR)
 else()
-  set(CMAKE_SKIP_INSTALL_RPATH TRUE)           # skip the full RPATH for the install tree
+  set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 endif()
 
 #---deal with the DCMAKE_IGNORE_PATH------------------------------------------------------------
