@@ -65,7 +65,7 @@ data_psi.plotOn(frame1)
 Mpsi.plotOn(frame1)
 
 # Overlay comparison to unsmeared physics p.d.f ROOT.T(psi)
-Tpsi.plotOn(frame1, LineColor=ROOT.kRed)
+Tpsi.plotOn(frame1, LineColor="r")
 
 # Construct convolution pdf in cos(psi)
 # --------------------------------------------------------------------------
@@ -98,7 +98,7 @@ data_cpsi.plotOn(frame2)
 Mcpsi.plotOn(frame2)
 
 # Overlay comparison to unsmeared physics p.d.f ROOT.Tf(cpsi)
-Tcpsi.plotOn(frame2, LineColor=ROOT.kRed)
+Tcpsi.plotOn(frame2, LineColor="r")
 
 # Draw frame on canvas
 c = ROOT.TCanvas("rf210_angularconv", "rf210_angularconv", 800, 400)

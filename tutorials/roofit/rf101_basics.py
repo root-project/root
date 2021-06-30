@@ -33,7 +33,7 @@ gauss.plotOn(xframe)
 sigma.setVal(3)
 
 # Plot gauss in frame (i.e. in x) and draw frame on canvas
-gauss.plotOn(xframe, LineColor=ROOT.kRed)
+gauss.plotOn(xframe, LineColor="r")
 
 # Generate events
 # -----------------------------

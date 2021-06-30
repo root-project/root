@@ -80,9 +80,7 @@ nll = ROOT.RooNLLVar("nll", "nll", argus, data)
 # on the curve will be set to the value given in EvalErrorValue().
 
 frame2 = m0.frame(Range=(5.288, 5.293), Title="-log(L) scan vs m0, regions masked")
-nll.plotOn(
-    frame2, ROOT.RooFit.ShiftToZero(), PrintEvalErrors=-1, EvalErrorValue=(nll.getVal() + 10), LineColor=ROOT.kRed
-)
+nll.plotOn(frame2, ShiftToZero=True, PrintEvalErrors=-1, EvalErrorValue=(nll.getVal() + 10), LineColor="r")
 frame2.SetMaximum(15)
 frame2.SetMinimum(0)
 

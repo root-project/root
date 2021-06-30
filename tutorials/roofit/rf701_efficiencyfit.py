@@ -62,12 +62,12 @@ effPdf.fitTo(data, ConditionalObservables=ROOT.RooArgSet(x))
 # Plot distribution of all events and accepted fraction of events on frame
 frame1 = x.frame(Bins=20, Title="Data (all, accepted)")
 data.plotOn(frame1)
-data.plotOn(frame1, Cut="cut==cut::accept", MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
+data.plotOn(frame1, Cut="cut==cut::accept", MarkerColor="r", LineColor="r")
 
 # Plot accept/reject efficiency on data overlay fitted efficiency curve
 frame2 = x.frame(Bins=20, Title="Fitted efficiency")
 data.plotOn(frame2, Efficiency=cut)  # needs ROOT version >= 5.21
-effFunc.plotOn(frame2, LineColor=ROOT.kRed)
+effFunc.plotOn(frame2, LineColor="r")
 
 # Draw all frames on a canvas
 ca = ROOT.TCanvas("rf701_efficiency", "rf701_efficiency", 800, 400)

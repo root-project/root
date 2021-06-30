@@ -63,10 +63,10 @@ model_4 = ROOT.RooGaussian("model_4", "Gaussian with shifting mean", x, fy_4, si
 # ----------------------------
 
 # Make two-dimensional plots in x vs y
-hh_model_1 = model_1.createHistogram("hh_model_1", x, Binning=50, YVar=(y, ROOT.RooFit.Binning(50)))
-hh_model_2 = model_2.createHistogram("hh_model_2", x, Binning=50, YVar=(y, ROOT.RooFit.Binning(50)))
-hh_model_3 = model_3.createHistogram("hh_model_3", x, Binning=50, YVar=(y, ROOT.RooFit.Binning(50)))
-hh_model_4 = model_4.createHistogram("hh_model_4", x, Binning=50, YVar=(y, ROOT.RooFit.Binning(50)))
+hh_model_1 = model_1.createHistogram("hh_model_1", x, Binning=50, YVar=dict(var=y, Binning=50))
+hh_model_2 = model_2.createHistogram("hh_model_2", x, Binning=50, YVar=dict(var=y, Binning=50))
+hh_model_3 = model_3.createHistogram("hh_model_3", x, Binning=50, YVar=dict(var=y, Binning=50))
+hh_model_4 = model_4.createHistogram("hh_model_4", x, Binning=50, YVar=dict(var=y, Binning=50))
 hh_model_1.SetLineColor(ROOT.kBlue)
 hh_model_2.SetLineColor(ROOT.kBlue)
 hh_model_3.SetLineColor(ROOT.kBlue)

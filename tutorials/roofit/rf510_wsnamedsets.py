@@ -117,9 +117,9 @@ model.plotOn(frame)
 
 # Overlay plot with model with reference parameters as stored in snapshots
 w.loadSnapshot("reference_fit")
-model.plotOn(frame, LineColor=ROOT.kRed)
+model.plotOn(frame, LineColor="r")
 w.loadSnapshot("reference_fit_bkgonly")
-model.plotOn(frame, LineColor=ROOT.kRed, LineStyle=ROOT.kDashed)
+model.plotOn(frame, LineColor="r", LineStyle="--")
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf510_wsnamedsets", "rf503_wsnamedsets", 600, 600)

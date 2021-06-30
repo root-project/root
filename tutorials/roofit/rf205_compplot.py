@@ -64,34 +64,34 @@ xframe2 = xframe.Clone("xframe2")
 
 # Plot single background component specified by object reference
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(xframe, Components=ras_bkg, LineColor=ROOT.kRed)
+model.plotOn(xframe, Components=ras_bkg, LineColor="r")
 
 # Plot single background component specified by object reference
 ras_bkg2 = ROOT.RooArgSet(bkg2)
-model.plotOn(xframe, Components=ras_bkg2, LineStyle=ROOT.kDashed, LineColor=ROOT.kRed)
+model.plotOn(xframe, Components=ras_bkg2, LineStyle="--", LineColor="r")
 
 # Plot multiple background components specified by object reference
 # Note that specified components may occur at any level in object tree
 # (e.g bkg is component of 'model' and 'sig2' is component 'sig')
 ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
-model.plotOn(xframe, Components=ras_bkg_sig2, LineStyle=ROOT.kDotted)
+model.plotOn(xframe, Components=ras_bkg_sig2, LineStyle=":")
 
 # Make component by name/regexp
 # ------------------------------------------------------------
 
 # Plot single background component specified by name
-model.plotOn(xframe2, Components="bkg", LineColor=ROOT.kCyan)
+model.plotOn(xframe2, Components="bkg", LineColor="c")
 
 # Plot multiple background components specified by name
-model.plotOn(xframe2, Components="bkg1,sig2", LineStyle=ROOT.kDotted, LineColor=ROOT.kCyan)
+model.plotOn(xframe2, Components="bkg1,sig2", LineStyle=":", LineColor="c")
 
 # Plot multiple background components specified by regular expression on
 # name
-model.plotOn(xframe2, Components="sig*", LineStyle=ROOT.kDashed, LineColor=ROOT.kCyan)
+model.plotOn(xframe2, Components="sig*", LineStyle="--", LineColor="c")
 
 # Plot multiple background components specified by multiple regular
 # expressions on name
-model.plotOn(xframe2, Invisible=True, Components="bkg1,sig*", LineStyle=ROOT.kDashed, LineColor=ROOT.kYellow)
+model.plotOn(xframe2, Invisible=True, Components="bkg1,sig*", LineStyle="--", LineColor="y")
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf205_compplot", "rf205_compplot", 800, 400)

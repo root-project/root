@@ -98,7 +98,7 @@ d.plotOn(frame)
 bkg = w.pdf("bkg")
 model.plotOn(frame)
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(frame, Components=ras_bkg, LineStyle=ROOT.kDashed)
+model.plotOn(frame, Components=ras_bkg, LineStyle="--")
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)

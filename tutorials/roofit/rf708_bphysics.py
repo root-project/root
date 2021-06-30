@@ -55,8 +55,8 @@ frame1 = dt.frame(Title="B decay distribution with mixing (B0/B0bar)")
 data.plotOn(frame1, Cut="tagFlav==tagFlav::B0")
 bmix.plotOn(frame1, Slice=(tagFlav, "B0"))
 
-data.plotOn(frame1, Cut="tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
-bmix.plotOn(frame1, Slice=(tagFlav, "B0bar"), LineColor=ROOT.kCyan)
+data.plotOn(frame1, Cut="tagFlav==tagFlav::B0bar", MarkerColor="c")
+bmix.plotOn(frame1, Slice=(tagFlav, "B0bar"), LineColor="c")
 
 # Plot mixed slice for B0 and B0bar tagged data separately
 frame2 = dt.frame(Title="B decay distribution of mixed events (B0/B0bar)")
@@ -64,8 +64,8 @@ frame2 = dt.frame(Title="B decay distribution of mixed events (B0/B0bar)")
 data.plotOn(frame2, Cut="mixState==mixState::mixed&&tagFlav==tagFlav::B0")
 bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0"), Slice=(mixState, "mixed"))
 
-data.plotOn(frame2, Cut="mixState==mixState::mixed&&tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
-bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0bar"), Slice=(mixState, "mixed"), LineColor=ROOT.kCyan)
+data.plotOn(frame2, Cut="mixState==mixState::mixed&&tagFlav==tagFlav::B0bar", MarkerColor="c")
+bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0bar"), Slice=(mixState, "mixed"), LineColor="c")
 
 # Plot unmixed slice for B0 and B0bar tagged data separately
 frame3 = dt.frame(Title="B decay distribution of unmixed events (B0/B0bar)")
@@ -73,8 +73,8 @@ frame3 = dt.frame(Title="B decay distribution of unmixed events (B0/B0bar)")
 data.plotOn(frame3, Cut="mixState==mixState::unmixed&&tagFlav==tagFlav::B0")
 bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0"), Slice=(mixState, "unmixed"))
 
-data.plotOn(frame3, Cut="mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
-bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0bar"), Slice=(mixState, "unmixed"), LineColor=ROOT.kCyan)
+data.plotOn(frame3, Cut="mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar", MarkerColor="c")
+bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0bar"), Slice=(mixState, "unmixed"), LineColor="c")
 
 # B-decay with CP violation
 # -------------------------
@@ -105,8 +105,8 @@ frame4 = dt.frame(Title="B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0ba
 data2.plotOn(frame4, Cut="tagFlav==tagFlav::B0")
 bcp.plotOn(frame4, Slice=(tagFlav, "B0"))
 
-data2.plotOn(frame4, Cut="tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
-bcp.plotOn(frame4, Slice=(tagFlav, "B0bar"), LineColor=ROOT.kCyan)
+data2.plotOn(frame4, Cut="tagFlav==tagFlav::B0bar", MarkerColor="c")
+bcp.plotOn(frame4, Slice=(tagFlav, "B0bar"), LineColor="c")
 
 # # Plot scenario 2 - sin(2b)=0.7, |l|=0.7
 # -------------------------------------------------------------------------------
@@ -123,8 +123,8 @@ frame5 = dt.frame(Title="B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0
 data3.plotOn(frame5, Cut="tagFlav==tagFlav::B0")
 bcp.plotOn(frame5, Slice=(tagFlav, "B0"))
 
-data3.plotOn(frame5, Cut="tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
-bcp.plotOn(frame5, Slice=(tagFlav, "B0bar"), LineColor=ROOT.kCyan)
+data3.plotOn(frame5, Cut="tagFlav==tagFlav::B0bar", MarkerColor="c")
+bcp.plotOn(frame5, Slice=(tagFlav, "B0bar"), LineColor="c")
 
 
 # Generic B-decay with user coefficients
@@ -165,8 +165,8 @@ frame6 = dt.frame(Title="B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1
 data4.plotOn(frame6, Cut="tagFlav==tagFlav::B0")
 bcpg.plotOn(frame6, Slice=(tagFlav, "B0"))
 
-data4.plotOn(frame6, Cut="tagFlav==tagFlav::B0bar", MarkerColor=ROOT.kCyan)
-bcpg.plotOn(frame6, Slice=(tagFlav, "B0bar"), LineColor=ROOT.kCyan)
+data4.plotOn(frame6, Cut="tagFlav==tagFlav::B0bar", MarkerColor="c")
+bcpg.plotOn(frame6, Slice=(tagFlav, "B0bar"), LineColor="c")
 
 c = ROOT.TCanvas("rf708_bphysics", "rf708_bphysics", 1200, 800)
 c.Divide(3, 2)
