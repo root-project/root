@@ -53,27 +53,27 @@ g2.plotOn(frame1)
 
 # Show interpolated shapes in red
 alpha.setVal(0.125)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.25)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.375)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.50)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.625)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.75)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.875)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 alpha.setVal(0.95)
-lmorph.plotOn(frame1, LineColor=ROOT.kRed)
+lmorph.plotOn(frame1, LineColor="r")
 
 # Show 2D distribution of pdf(x,alpha)
 # -----------------------------------------------------------------------
 
 # Create 2D histogram
-hh = lmorph.createHistogram("hh", x, Binning=40, YVar=(alpha, ROOT.RooFit.Binning(40)))
+hh = lmorph.createHistogram("hh", x, Binning=40, YVar=dict(var=alpha, Binning=40))
 hh.SetLineColor(ROOT.kBlue)
 
 # Fit pdf to dataset with alpha=0.8
@@ -100,7 +100,7 @@ frame3 = alpha.frame(Bins=100, Range=(0.1, 0.9))
 
 # Make 2D pdf of histogram
 nll = ROOT.RooNLLVar("nll", "nll", lmorph, data)
-nll.plotOn(frame3, ROOT.RooFit.ShiftToZero())
+nll.plotOn(frame3, ShiftToZero=True)
 
 lmorph.setCacheAlpha(False)
 

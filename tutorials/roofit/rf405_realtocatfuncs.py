@@ -54,7 +54,7 @@ xframe = x.frame(Title="Demo of threshold and binning mapping functions")
 data.plotOn(xframe)
 
 # Use calculated category to select sideband data
-data.plotOn(xframe, Cut="xRegion==xRegion::SideBand", MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
+data.plotOn(xframe, Cut="xRegion==xRegion::SideBand", MarkerColor="r", LineColor="r")
 
 # Create a binning real -> cat function
 # ----------------------------------------------------------------------
@@ -85,7 +85,7 @@ xb.setRange("alt", "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_co
 # Construct subset of data matching range "alt" but only for the first
 # 5000 events and plot it on the frame
 dataSel = data.reduce(CutRange="alt", EventRange=(0, 5000))
-dataSel.plotOn(xframe, MarkerColor=ROOT.kGreen, LineColor=ROOT.kGreen)
+dataSel.plotOn(xframe, MarkerColor="g", LineColor="g")
 
 c = ROOT.TCanvas("rf405_realtocatfuncs", "rf405_realtocatfuncs", 600, 600)
 xframe.SetMinimum(0.01)

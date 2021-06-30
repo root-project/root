@@ -65,7 +65,7 @@ mcstudy = ROOT.RooMCStudy(
     Binned=True,
     Silence=True,
     Extended=True,
-    FitOptions=(ROOT.RooFit.Save(True), ROOT.RooFit.PrintEvalErrors(0)),
+    FitOptions=dict(Save=True, PrintEvalErrors=0),
 )
 
 # Generate and fit events
@@ -84,7 +84,7 @@ frame2 = mcstudy.plotError(mean, Bins=40)
 frame3 = mcstudy.plotPull(mean, Bins=40, FitGauss=True)
 
 # Plot distribution of minimized likelihood
-frame4 = mcstudy.plotNLL(ROOT.RooFit.Bins(40))
+frame4 = mcstudy.plotNLL(Bins=40)
 
 # Make some histograms from the parameter dataset
 hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(), "hh", a1, YVar=sig1frac)

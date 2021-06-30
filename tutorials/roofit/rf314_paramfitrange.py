@@ -54,7 +54,7 @@ r = model.fitTo(dacc, Save=True)
 
 # Make plot frame, datasets and overlay model
 frame = t.frame(Title="Fit to data with per-event acceptance")
-dall.plotOn(frame, MarkerColor=ROOT.kRed, LineColor=ROOT.kRed)
+dall.plotOn(frame, MarkerColor="r", LineColor="r")
 model.plotOn(frame)
 dacc.plotOn(frame)
 

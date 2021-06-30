@@ -61,7 +61,7 @@ f.plotOn(frame)
 f.chi2FitTo(dxy, YVar=y, Integrate=True)
 
 # Overlay alternate fit result
-f.plotOn(frame, LineStyle=ROOT.kDashed, LineColor=ROOT.kRed)
+f.plotOn(frame, LineStyle="--", LineColor="r")
 
 # Draw the plot on a canvas
 c = ROOT.TCanvas("rf609_xychi2fit", "rf609_xychi2fit", 600, 600)

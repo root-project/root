@@ -58,7 +58,7 @@ hh = model.createHistogram(
     "hh",
     x,
     Binning=50,
-    YVar=(mean, ROOT.RooFit.Binning(50)),
+    YVar=dict(var=mean, Binning=50),
     ConditionalObservables=ROOT.RooArgSet(mean),
 )
 hh.SetTitle("histogram of model(x|mean)")

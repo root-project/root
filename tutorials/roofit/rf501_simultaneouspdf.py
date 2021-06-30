@@ -107,17 +107,13 @@ combData.plotOn(frame1, Cut="sample==sample::physics")
 # NB2: The sampleSet *must* be named. It will not work to pass this as a temporary
 # because python will delete it. The same holds for fitTo() and plotOn() below.
 sampleSet = ROOT.RooArgSet(sample)
-simPdf.plotOn(
-    frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sampleSet, combData), LineStyle=ROOT.kDashed
-)
+simPdf.plotOn(frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sampleSet, combData), LineStyle="--")
 
 # The same plot for the control sample slice
 frame2 = x.frame(Bins=30, Title="Control sample")
 combData.plotOn(frame2, Cut="sample==sample::control")
 simPdf.plotOn(frame2, Slice=(sample, "control"), ProjWData=(sampleSet, combData))
-simPdf.plotOn(
-    frame2, Slice=(sample, "control"), Components="px_ctl", ProjWData=(sampleSet, combData), LineStyle=ROOT.kDashed
-)
+simPdf.plotOn(frame2, Slice=(sample, "control"), Components="px_ctl", ProjWData=(sampleSet, combData), LineStyle="--")
 
 c = ROOT.TCanvas("rf501_simultaneouspdf", "rf501_simultaneouspdf", 800, 400)
 c.Divide(2)

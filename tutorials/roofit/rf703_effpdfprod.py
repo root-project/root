@@ -37,11 +37,11 @@ modelEff = ROOT.RooEffProd("modelEff", "model with efficiency", model, eff)
 # ----------------------------------------
 
 frame1 = t.frame(Title="Efficiency")
-eff.plotOn(frame1, LineColor=ROOT.kRed)
+eff.plotOn(frame1, LineColor="r")
 
 frame2 = t.frame(Title="Pdf with and without efficiency")
 
-model.plotOn(frame2, LineStyle=ROOT.kDashed)
+model.plotOn(frame2, LineStyle="--")
 modelEff.plotOn(frame2)
 
 # Generate toy data, fit model eff to data

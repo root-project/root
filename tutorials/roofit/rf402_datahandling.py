@@ -143,7 +143,7 @@ dh2 = dh.reduce(ROOT.RooArgSet(y), "x>0")
 dh2.Print("v")
 
 # Add dh2 to yframe and redraw
-dh2.plotOn(yframe, ROOT.RooFit.LineColor(ROOT.kRed), ROOT.RooFit.MarkerColor(ROOT.kRed))
+dh2.plotOn(yframe, LineColor="r", MarkerColor="r")
 
 # Saving and loading from file
 # -------------------------------------------------------

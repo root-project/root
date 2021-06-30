@@ -59,7 +59,7 @@ dh = ROOT.RooDataHist("dh", "dh", ROOT.RooArgList(x), ROOT.RooFit.Import(hh))
 # ---------------------------------------------------
 # Make plot of binned dataset showing Poisson error bars (ROOT.RooFit
 # default)
-frame = x.frame(ROOT.RooFit.Title("Imported ROOT.TH1 with Poisson error bars"))
+frame = x.frame(Title="Imported ROOT.TH1 with Poisson error bars")
 dh.plotOn(frame)
 
 # Fit a Gaussian p.d.f to the data
@@ -75,8 +75,8 @@ gauss.plotOn(frame)
 # If histogram has custom error (i.e. its contents is does not originate from a Poisson process
 # but e.g. is a sum of weighted events) you can data with symmetric 'sum-of-weights' error instead
 # (same error bars as shown by ROOT)
-frame2 = x.frame(ROOT.RooFit.Title("Imported ROOT.TH1 with internal errors"))
-dh.plotOn(frame2, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
+frame2 = x.frame(Title="Imported ROOT.TH1 with internal errors")
+dh.plotOn(frame2, DataError=ROOT.RooAbsData.SumW2)
 gauss.plotOn(frame2)
 
 # Please note that error bars shown (Poisson or SumW2) are for visualization only, the are NOT used
@@ -143,16 +143,16 @@ dataReadBack.get(20).Print("V")
 ds.Print()
 
 # Print unbinned dataset with default frame binning (100 bins)
-frame3 = y.frame(ROOT.RooFit.Title("Unbinned data shown in default frame binning"))
+frame3 = y.frame(Title="Unbinned data shown in default frame binning")
 ds.plotOn(frame3)
 
 # Print unbinned dataset with custom binning choice (20 bins)
-frame4 = y.frame(ROOT.RooFit.Title("Unbinned data shown with custom binning"))
-ds.plotOn(frame4, ROOT.RooFit.Binning(20))
+frame4 = y.frame(Title="Unbinned data shown with custom binning")
+ds.plotOn(frame4, Binning=20)
 
-frame5 = y.frame(ROOT.RooFit.Title("Unbinned data read back from ASCII file"))
-ds.plotOn(frame5, ROOT.RooFit.Binning(20))
-dataReadBack.plotOn(frame5, ROOT.RooFit.Binning(20), ROOT.RooFit.MarkerColor(ROOT.kRed), ROOT.RooFit.MarkerStyle(5))
+frame5 = y.frame(Title="Unbinned data read back from ASCII file")
+ds.plotOn(frame5, Binning=20)
+dataReadBack.plotOn(frame5, Binning=20, MarkerColor="r", MarkerStyle=5)
 
 # Draw all frames on a canvas
 c = ROOT.TCanvas("rf102_dataimport", "rf102_dataimport", 800, 800)
