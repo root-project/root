@@ -278,10 +278,14 @@ Bool_t TGCommandPlugin::HandleTimer(TTimer *t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Let user stop the internal timer when there is no need to check for remote.
+/// or start it again later on if needed. (on=False to stop, on=True to start)
 
-void TGCommandPlugin::StopTimer()
+void TGCommandPlugin::ToggleTimer(Bool_t on)
 {
-   fTimer->TurnOff();
+   if (on)
+      fTimer->TurnOn();
+   else
+      fTimer->TurnOff();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
