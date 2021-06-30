@@ -37,6 +37,8 @@ public:
   UniqueId(UniqueId &&) = delete;
   UniqueId &operator=(UniqueId &&) = delete;
 
+  operator Value_t() const { return _val; }
+
   /// Return numerical value of ID.
   /// Use only if necessary, as the UniqueId type information is lost and
   /// copying/moving is not prohibited for the value type.
@@ -47,7 +49,8 @@ public:
   bool operator==(UniqueId const &other) const { return _val == other._val; }
   bool operator<(UniqueId const &other) const { return _val < other._val; }
 
-  static const UniqueId nullid;  /// A value that is less than the ID of any object (similar to nullptr).
+  static const UniqueId nullid;  /// An ID that is less than the ID of any object (similar to nullptr).
+  static constexpr Value_t nullval = 0UL; /// The value of the nullid.
 
 private:
   Value_t _val;  /// Numerical value of the ID.
@@ -56,10 +59,10 @@ private:
 };
 
 template <class Class>
-std::atomic<typename UniqueId<Class>::Value_t> UniqueId<Class>::counter{0UL};
+std::atomic<typename UniqueId<Class>::Value_t> UniqueId<Class>::counter{UniqueId<Class>::nullval};
 
 template <class Class>
-const UniqueId<Class> UniqueId<Class>::nullid{0UL};
+const UniqueId<Class> UniqueId<Class>::nullid{UniqueId<Class>::nullval};
 
 /// A helper function to replace pointer comparisons with UniqueId comparisons.
 /// With pointer comparisons, we can also have `nullptr`. In the UniqueId case,
