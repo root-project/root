@@ -51,6 +51,7 @@ public:
    void           SetHistAdd(Bool_t add = kTRUE);
 
    virtual Bool_t HandleTimer(TTimer *t);
+   void           ToggleTimer(Bool_t on);
 
    ClassDef(TGCommandPlugin, 0) // Command (I/O redirection) plugin for the new ROOT Browser
 };
