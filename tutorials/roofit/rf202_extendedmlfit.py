@@ -64,7 +64,7 @@ ras_bkg = ROOT.RooArgSet(bkg)
 model.plotOn(
     xframe,
     Components=ras_bkg,
-    LineStyle=ROOT.kDotted,
+    LineStyle=":",
     Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected),
 )
 
@@ -73,7 +73,7 @@ ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
 model.plotOn(
     xframe,
     Components=ras_bkg_sig2,
-    LineStyle=ROOT.kDotted,
+    LineStyle=":",
     Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected),
 )
 
