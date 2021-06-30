@@ -518,7 +518,6 @@ public:
    /// TODO(jblomer): instead of runtime testing for nullptr, there should be a template for the case where
    /// only the size of the buffer is required.
    std::uint32_t SerializeHeader(void* buffer) const;
-   std::uint32_t SerializeHeaderV1(void* buffer) const;
    /// Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
    std::uint32_t SerializeFooter(void* buffer) const;
    /// Given kNBytesPostscript bytes, extract the header and footer lengths in bytes
@@ -779,7 +778,8 @@ public:
       std::vector<DescriptorId_t> fPhys2MemColumnIDs;
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
-      void SetHeaderCrc32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
+      void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
+      std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
          auto physId = fPhys2MemFieldIDs.size();
          fMem2PhysFieldIDs[memId] = physId;
@@ -854,6 +854,9 @@ public:
                                            RClusterDescriptor::RLocator &locator);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
    static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
+
+   static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
+   static void SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 }; // class RNTupleStreamer
 
 } // namespace Internal
