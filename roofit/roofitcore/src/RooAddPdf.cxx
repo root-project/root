@@ -810,9 +810,9 @@ std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(co
     // the last-used normalization set needs an update.
     if(nset == nullptr) {
       nset = _copyOfLastNormSet.get();
-    } else if(nset != _pointerToLastUsedNormSet) {
+    } else if(nset->uniqueId() != _idOfLastUsedNormSet) {
       _copyOfLastNormSet = std::make_unique<const RooArgSet>(*nset);
-      _pointerToLastUsedNormSet = nset;
+      _idOfLastUsedNormSet = nset->uniqueId();
     }
 
     // If nset is STILL nullptr, print a warning.
