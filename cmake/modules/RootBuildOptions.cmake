@@ -160,7 +160,7 @@ ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RI
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(webgui ON "Build Web-based UI components of ROOT (requires C++14 standard or higher)")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++14 standard or higher)")
-ROOT_BUILD_OPTION(rpath OFF "Link libraries with built-in RPATH (run-time search path)")
+ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
