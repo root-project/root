@@ -277,6 +277,6 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
 bool TTimer::IsRunning()
 {
    if (gSystem && gSystem->GetListOfTimers())
-      return gSystem->GetListOfTimers()->IndexOf(this)! = -1;
+      return gSystem->GetListOfTimers()->IndexOf(this) != -1;
    return false;
 }
