@@ -3137,24 +3137,56 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return false;
    }
 
+      /** @summary sync drawing/redrawing/resize of the pad
+     * @returns {Promise} when pad is ready to toperation or false if operation already queued
+     * @private */
+   RPadPainter.prototype.syncDraw = function(kind) {
+      if (this._doing_draw === undefined) {
+         this._doing_draw = [];
+         this._doing_drawf = [];
+         return Promise.resolve(true);
+      }
+      if (!kind) kind = "redraw";
+      // if operation registered, ignore next calls
+      if ((kind !== true) && (this._doing_draw.indexOf(kind) >= 0)) return false;
+      this._doing_draw.push(kind);
+      return new Promise(resolveFunc => {
+         this._doing_drawf.push(resolveFunc);
+      });
+   }
+
+   /** @summary confirms that drawing is completed, may trigger next drawing immediately
+     * @private */
+   RPadPainter.prototype.confirmDraw = function() {
+      if (this._doing_draw === undefined)
+         return console.warn("failure, should not happen");
+      if (this._doing_draw.length == 0) {
+         delete this._doing_draw;
+         delete this._doing_drawf;
+      } else {
+         this._doing_draw.shift();
+         let func = this._doing_drawf.shift();
+         func(); // activate next action
+      }
+   }
+
    /** @summary Draw pad primitives
      * @private */
    RPadPainter.prototype.drawPrimitives = function(indx) {
 
-      if (!indx) {
-         indx = 0;
-         // flag used to prevent immediate pad redraw during normal drawing sequence
-         this._doing_pad_draw = true;
-
+      if (indx === undefined) {
          if (this.iscan)
             this._start_tm = new Date().getTime();
 
          // set number of primitves
          this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.length : 0;
+
+         return this.syncDraw("draw").then(() => this.drawPrimitives(0));
       }
 
       if (!this.pad || (indx >= this._num_primitives)) {
-         delete this._doing_pad_draw;
+
+         this.confirmDraw();
 
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
@@ -3259,21 +3291,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @returns {Promise} when redrawing ready */
    RPadPainter.prototype.redrawPad = function(reason) {
 
-      // prevent redrawing
-      if (this._doing_pad_draw) {
+      let sync_promise = this.syncDraw(reason);
+      if (sync_promise === false) {
          console.log('Prevent RPad redrawing');
          return Promise.resolve(false);
       }
 
       let showsubitems = true;
-
-      if (this.iscan) {
-         this.createCanvasSvg(2);
-      } else {
-         showsubitems = this.createPadSvg(true);
-      }
-
-      // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
       let redrawNext = indx => {
          while (indx < this.painters.length) {
             let sub = this.painters[indx++], res = 0;
@@ -3286,11 +3310,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(true);
       };
 
-      return redrawNext(0).then(() => {
+      return sync_promise.then(() => {
+         if (this.iscan) {
+            this.createCanvasSvg(2);
+         } else {
+            showsubitems = this.createPadSvg(true);
+         }
+         return redrawNext(0);
+      }).then(() => {
          if (jsrp.getActivePad() === this) {
             let canp = this.getCanvPainter();
             if (canp) canp.producePadEvent("padredraw", this);
          }
+         this.confirmRedraw();
          return true;
       });
    }
@@ -3319,23 +3351,39 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!this.iscan && this.has_canvas) return false;
 
+      let sync_promise = this.syncDraw("canvas_resize");
+      if (sync_promise === false) return false;
+
       if ((size === true) || (size === false)) { force = size; size = null; }
 
       if (size && (typeof size === 'object') && size.force) force = true;
 
       if (!force) force = this.needRedrawByResize();
 
-      let changed = this.createCanvasSvg(force ? 2 : 1, size);
+      let changed = false,
+          redrawNext = indx => {
+             if (!changed || (indx >= this.painters.length)) {
+                this.confirmDraw();
+                return changed;
+             }
 
-      // if canvas changed, redraw all its subitems.
-      // If redrawing was forced for canvas, same applied for sub-elements
-      if (changed)
-         for (let i = 0; i < this.painters.length; ++i)
-            this.painters[i].redraw(force ? "redraw" : "resize");
+             let res = this.painters[indx].redraw(force ? "redraw" : "resize");
+             if (!jsrp.isPromise(res)) res = Promise.resolve();
+              return res.then(() => redrawNext(indx+1));
+          };
 
-      return changed;
+      return sync_promise.then(() => {
+
+         changed = this.createCanvasSvg(force ? 2 : 1, size);
+
+         // if canvas changed, redraw all its subitems.
+         // If redrawing was forced for canvas, same applied for sub-elements
+         return redrawNext(0);
+      });
    }
 
+   /** @summary update RPad object
+     * @private */
    RPadPainter.prototype.updateObject = function(obj) {
       if (!obj) return false;
 
@@ -3425,7 +3473,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (indx===undefined) {
          indx = -1;
          // flag used to prevent immediate pad redraw during first draw
-         this._doing_pad_draw = true;
          this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
          this._auto_color_cnt = 0;
@@ -3436,7 +3483,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       ++indx; // change to the next snap
 
       if (!lst || indx >= lst.length) {
-         delete this._doing_pad_draw;
          delete this._snaps_map;
          delete this._auto_color_cnt;
          return Promise.resolve(this);
@@ -4368,9 +4414,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let p1 = msg.indexOf(":"),
              snapid = msg.substr(0,p1),
              snap = JSROOT.parse(msg.substr(p1+1));
-         this.redrawPadSnap(snap).then(() => {
-            handle.send("SNAPDONE:" + snapid); // send ready message back when drawing completed
-         });
+         this.syncDraw(true)
+             .then(() => this.redrawPadSnap(snap))
+             .then(() => {
+                 handle.send("SNAPDONE:" + snapid); // send ready message back when drawing completed
+                 this.confirmDraw();
+              });
       } else if (msg.substr(0,4)=='JSON') {
          let obj = JSROOT.parse(msg.substr(4));
          // console.log("get JSON ", msg.length-4, obj._typename);
@@ -4748,7 +4797,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let painter = new RCanvasPainter(divid, null);
       painter.normal_canvas = false;
       painter.batch_mode = JSROOT.batch_mode;
-      return painter.redrawPadSnap(snap).then(() => {
+      return painter.syncDraw(true).then(() => painter.redrawPadSnap(snap)).then(() => {
+         painter.confirmDraw();
          painter.showPadButtons();
          return painter;
       });
