@@ -1085,6 +1085,11 @@ std::uint32_t SerializeFieldsV1(
          } else {
             pos += RNTupleStreamer::SerializeUInt16(0, *where);
          }
+         pos += RNTupleStreamer::SerializeString(f.GetFieldName(), *where);
+         pos += RNTupleStreamer::SerializeString(f.GetTypeName(), *where);
+         pos += RNTupleStreamer::SerializeString(""
+          /* type alias */, *where);
+         pos += RNTupleStreamer::SerializeString(f.GetFieldDescription(), *where);
 
          size += pos - base;
          pos += RNTupleStreamer::SerializeFramePostscript(base, size);
@@ -1147,43 +1152,80 @@ std::uint32_t SerializeColumnsV1(
 } // anonymous namespace
 
 
-std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeaderV1(void* buffer) const
+ROOT::Experimental::Internal::RNTupleStreamer::RContext
+ROOT::Experimental::Internal::RNTupleStreamer::SerializeHeaderV1(
+   void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc)
 {
-   using RNTupleStreamer = ROOT::Experimental::Internal::RNTupleStreamer;
-   RNTupleStreamer::RContext context;
+   RContext context;
 
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += RNTupleStreamer::SerializeEnvelopePreamble(*where);
+   pos += SerializeEnvelopePreamble(*where);
    // So far we don't make use of feature flags
-   pos += RNTupleStreamer ::SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
-   pos += RNTupleStreamer::SerializeString(fName, *where);
-   pos += RNTupleStreamer::SerializeString(fDescription, *where);
+   pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += SerializeString(desc.GetName(), *where);
+   pos += SerializeString(desc.GetDescription(), *where);
 
    auto frame = pos;
-   pos += RNTupleStreamer::SerializeListFramePreamble(fFieldDescriptors.size(), *where);
-   SerializeFieldsV1(*this, context, *where);
-   pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeListFramePreamble(desc.GetNFields(), *where);
+   SerializeFieldsV1(desc, context, *where);
+   pos += SerializeFramePostscript(frame, pos - frame);
 
    frame = pos;
-   pos += RNTupleStreamer::SerializeListFramePreamble(fColumnDescriptors.size(), *where);
-   pos += SerializeColumnsV1(*this, context, *where);
-   pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeListFramePreamble(desc.GetNColumns(), *where);
+   pos += SerializeColumnsV1(desc, context, *where);
+   pos += SerializeFramePostscript(frame, pos - frame);
 
    // We don't use alias columns yet
    frame = pos;
-   pos += RNTupleStreamer::SerializeListFramePreamble(0, *where);
-   pos += RNTupleStreamer::SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeFramePostscript(frame, pos - frame);
 
    std::uint32_t size = pos - base;
-   pos += RNTupleStreamer::SerializeEnvelopePostscript(base, size, *where);
+   pos += SerializeEnvelopePostscript(base, size, *where);
 
    context.SetHeaderSize(size);
-   context.SetHeaderCrc32(RNTupleStreamer::ExtractEnvelopeCRC32(base, size));
-   return size;
+   if (buffer)
+      context.SetHeaderCRC32(ExtractEnvelopeCRC32(base, size));
+   return context;
 }
+
+void ROOT::Experimental::Internal::RNTupleStreamer::SerializeFooterV1(
+   void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc, const RContext &context)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += SerializeEnvelopePreamble(*where);
+
+   // So far we don't make use of feature flags
+   pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += SerializeUInt32(context.GetHeaderCRC32(), *where);
+
+   // So far no support for extension headers
+   auto frame = pos;
+   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeFramePostscript(frame, pos - frame);
+
+   // So far no support for shared clusters (no column groups)
+   frame = pos;
+   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeFramePostscript(frame, pos - frame);
+
+
+
+   // So far no support for meta-data
+   frame = pos;
+   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeFramePostscript(frame, pos - frame);
+
+   std::uint32_t size = pos - base;
+   pos += SerializeEnvelopePostscript(base, size, *where);
+}
+
 
 std::uint32_t ROOT::Experimental::RNTupleDescriptor::SerializeHeader(void* buffer) const
 {
