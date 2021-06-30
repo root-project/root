@@ -854,9 +854,9 @@ public:
                                            RClusterDescriptor::RLocator &locator);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
    static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
-};
+}; // class RNTupleStreamer
 
-}
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT
