@@ -31,6 +31,7 @@
 
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 using namespace ROOT::Experimental;
 
@@ -471,7 +472,8 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
 /// See RWebDisplayArgs::SetBrowserKind() for all available options. Default value for the browser can be configured
-/// when starting root with --web argument like: "root --web=chrome"
+/// when starting root with --web argument like: "root --web=chrome". When root started in web server mode "root --web=server",
+/// no any web browser will be started - just URL will be printout, which can be entered in any running web browser
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
 ///
@@ -561,6 +563,11 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
+
+   if (!args.IsHeadless() && (gROOT->GetWebDisplay() == "server")) {
+      std::cout << "New web window: " << args.GetUrl() << std::endl;
+      return 0;
+   }
 
    if (!normal_http)
       args.SetHttpServer(GetServer());
