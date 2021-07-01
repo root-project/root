@@ -118,7 +118,7 @@ else()
   message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
 endif()
 
-#---Try to download a dummy (non-existing) file to check internet connection--------------------
+#---Try to download a file to check internet connection-----------------------------------------
 message(STATUS "Checking internet connectivity...")
 file(DOWNLOAD https://root.cern/files/test.txt ${CMAKE_CURRENT_BINARY_DIR}/test.txt
   TIMEOUT 5 STATUS DOWNLOAD_STATUS
@@ -579,13 +579,13 @@ configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_d
 install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
 
 #---install clad header files-------------------------------------------------------------------
-if(clad AND NO_CONNECTION)
-  if(fail-on-missing)
+if(NO_CONNECTION)
+  if(clad AND fail-on-missing)
     message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
+  elseif(clad)
     message(STATUS "No internet connection, disabling the 'clad' option")
-    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
   endif()
+  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
 endif()
 
 if(clad)
