@@ -60,13 +60,13 @@ expDataY = expDataXY.reduce(ROOT.RooArgSet(y))
 
 # Generate 10000 events in x obtained from _conditional_ model(x|y) with y
 # values taken from experimental data
-data = model.generate(ROOT.RooArgSet(x), ROOT.RooFit.ProtoData(expDataY))
+data = model.generate(ROOT.RooArgSet(x), ProtoData=expDataY)
 data.Print()
 
 # Fit conditional p.d.f model(x|y) to data
 # ---------------------------------------------------------------------------------------------
 
-model.fitTo(expDataXY, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(y)))
+model.fitTo(expDataXY, ConditionalObservables=ROOT.RooArgSet(y))
 
 # Project conditional p.d.f on x and y dimensions
 # ---------------------------------------------------------------------------------------------
@@ -75,19 +75,17 @@ model.fitTo(expDataXY, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(y)))
 # sum(data(y_i)) model(x;y_i)
 xframe = x.frame()
 expDataXY.plotOn(xframe)
-model.plotOn(xframe, ROOT.RooFit.ProjWData(expDataY))
+model.plotOn(xframe, ProjWData=expDataY)
 
 # Speed up (and approximate) projection by using binned clone of data for
 # projection
 binnedDataY = expDataY.binnedClone()
-model.plotOn(
-    xframe, ROOT.RooFit.ProjWData(binnedDataY), ROOT.RooFit.LineColor(ROOT.kCyan), ROOT.RooFit.LineStyle(ROOT.kDotted)
-)
+model.plotOn(xframe, ProjWData=binnedDataY, LineColor="c", LineStyle=":")
 
 # Show effect of projection with too coarse binning
 (expDataY.get().find("y")).setBins(5)
 binnedDataY2 = expDataY.binnedClone()
-model.plotOn(xframe, ROOT.RooFit.ProjWData(binnedDataY2), ROOT.RooFit.LineColor(ROOT.kRed))
+model.plotOn(xframe, ProjWData=binnedDataY2, LineColor="r")
 
 # Make canvas and draw ROOT.RooPlots
 c = ROOT.TCanvas("rf303_conditional", "rf303_conditional", 600, 460)
