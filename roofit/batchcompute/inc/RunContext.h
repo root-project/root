@@ -26,9 +26,47 @@ class RooArgSet;
 class RooAbsReal;
 class RooArgProxy;
 
+
+namespace RooBatchCompute {
+namespace detail {
+
+template<class T>
+class PointerWrapper {
+public:
+  PointerWrapper(T const* ptr) : _ptr{ptr} {}
+
+  T const& operator*() const { return *_ptr; }
+  T const* operator->() const { return _ptr; }
+
+  T const* get() const { return _ptr; }
+
+  bool operator==(PointerWrapper<T> const &other) const { return _ptr == other._ptr; }
+  bool operator<(PointerWrapper<T> const &other) const { return _ptr < other._ptr; }
+
+private:
+  T const* _ptr = nullptr;
+};
+
+} // namespace detail
+} // namespace RooBatchCompute
+
+
+namespace std {
+  template <class T>
+  struct hash<RooBatchCompute::detail::PointerWrapper<T>> {
+    size_t operator()(const RooBatchCompute::detail::PointerWrapper<T> & x) const {
+      return reinterpret_cast<size_t>(x.get());
+    }
+  };
+}
+
+
 namespace RooBatchCompute {
 
 struct RunContext {
+
+  using AbsRealKey = RooBatchCompute::detail::PointerWrapper<RooAbsReal>;
+
   /// Create an empty RunContext that doesn't have access to any computation results.
   RunContext() { }
   /// Deleted because copying the owned memory is expensive.
@@ -49,9 +87,9 @@ struct RunContext {
   void clear() { spans.clear(); rangeName = nullptr; }
 
   /// Once an object has computed its value(s), the span pointing to the results is registered here.
-  std::unordered_map<const RooAbsReal*, RooSpan<const double>> spans;
+  std::unordered_map<AbsRealKey, RooSpan<const double>> spans;
   /// Memory owned by this struct. It is associated to nodes in the computation graph using their pointers.
-  std::unordered_map<const RooAbsReal*, std::vector<double>> ownedMemory;
+  std::unordered_map<AbsRealKey, std::vector<double>> ownedMemory;
   const char* rangeName{nullptr}; /// If evaluation should only occur in a range, the range name can be passed here.
   std::vector<double> logProbabilities; /// Possibility to register log probabilities.
 };
