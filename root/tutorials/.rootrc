@@ -1,5 +1,0 @@
-Rint.History:            .root_hist
-
-### G.Ganis, 1Dec2011: create the PROOF local dirs under this area, so they may be
-###                    automatically included in cyclic cleanings 
-Proof.Sandbox $PWD/proof
