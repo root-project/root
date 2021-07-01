@@ -115,10 +115,15 @@ extern void Obsolete(const char *function, const char *asOfVers, const char *rem
 R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;
 
-#define R__ASSERT(e)                                                     \
+#ifdef NDEBUG
+# define R__ASSERT(e) (void)0
+#else
+# define R__ASSERT(e)                                                    \
    do {                                                                  \
       if (!(e)) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
+#endif // NDEBUG
+
 #define R__CHECK(e)                                                       \
    do {                                                                   \
       if (!(e)) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
