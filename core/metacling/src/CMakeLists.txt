@@ -90,7 +90,7 @@ endif()
 
 # We need to paste the content of the cling plugins disabling link symbol optimizations.
 set(CLING_PLUGIN_LINK_LIBS)
-if (clad AND NOT NO_CONNECTION)
+if (clad)
   if (APPLE)
     set(CLING_PLUGIN_LINK_LIBS -Wl,-force_load cladPlugin -Wl,-force_load cladDifferentiator)
   elseif(MSVC)

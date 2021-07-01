@@ -138,6 +138,15 @@ else()
   set(NO_CONNECTION TRUE)
 endif()
 
+if(NO_CONNECTION)
+  if(clad AND fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  elseif(clad)
+    message(STATUS "No internet connection, disabling the 'clad' option")
+  endif()
+  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+endif()
+
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
@@ -579,15 +588,6 @@ configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_d
 install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
 
 #---install clad header files-------------------------------------------------------------------
-if(NO_CONNECTION)
-  if(clad AND fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  elseif(clad)
-    message(STATUS "No internet connection, disabling the 'clad' option")
-  endif()
-  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-endif()
-
 if(clad)
    install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/plugins/
       DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/plugins)
