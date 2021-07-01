@@ -865,7 +865,11 @@ TROOT::~TROOT()
 
       // Turn-off the global mutex to avoid recreating mutexes that have
       // already been deleted during the destruction phase
-      gGlobalMutex = nullptr;
+      if (gGlobalMutex) {
+          TVirtualMutex *m = gGlobalMutex;
+          gGlobalMutex = nullptr;
+          delete m;
+      }
 
       // Return when error occurred in TCling, i.e. when setup file(s) are
       // out of date
