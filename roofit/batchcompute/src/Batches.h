@@ -42,7 +42,7 @@ public:
       array = _array;
       isVector = _isVector;
    }
-   inline void advance() { array += isVector * bufferSize; }
+   inline void advance(size_t _nEvents) { array += isVector * _nEvents; }
 #ifdef __CUDACC__
    __device__ constexpr double operator[](size_t i) noexcept { return isVector ? array[i] : scalar; }
 #else
@@ -70,11 +70,11 @@ public:
    __device__ double extraArg(uint8_t i) const { return extraArgs[i]; }
    __device__ Batch operator[](int batchIdx) const { return arrays[batchIdx]; }
    inline void setNEvents(size_t n = bufferSize) { nEvents = n; }
-   inline void advance()
+   inline void advance(size_t _nEvents)
    {
       for (int i = 0; i < nBatches; i++)
-         arrays[i].advance();
-      output += bufferSize;
+         arrays[i].advance(_nEvents);
+      output += _nEvents;
    }
 }; // end class Batches
 } // End namespace RF_ARCH
