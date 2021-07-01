@@ -71,6 +71,22 @@ TH3::TH3()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor for fix bin size 3-D histograms.
+/// Creates the main histogram structure.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///            If title is of the form `stringt;stringx;stringy;stringz`,
+///            the histogram title is set to `stringt`,
+///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins along the X axis
+/// \param[in] xlow low edge of the X axis first bin
+/// \param[in] xup upper edge of the X axis last bin (not included in last bin)
+/// \param[in] nbinsy number of bins along the Y axis
+/// \param[in] ylow low edge of the Y axis first bin
+/// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
+/// \param[in] nbinsz number of bins along the Z axis
+/// \param[in] zlow low edge of the Z axis first bin
+/// \param[in] zup upper edge of the Z axis last bin (not included in last bin)
 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup
@@ -96,7 +112,19 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for Float_t variable bin size 3-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] nbinsz number of bins
+/// \param[in] zbins array of low-edges for each bin. This is an array of size nbinsz+1
 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins
@@ -118,7 +146,19 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for Double_t variable bin size 3-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] nbinsz number of bins
+/// \param[in] zbins array of low-edges for each bin. This is an array of size nbinsz+1
 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins
@@ -141,7 +181,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
-/// The list of functions is not copied. (Use Clone if needed)
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH3::TH3(const TH3 &h) : TH1(), TAtt3D()
 {
@@ -248,12 +288,13 @@ Int_t TH3::BufferEmpty(Int_t action)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// accumulate arguments in buffer. When buffer is full, empty the buffer
-/// fBuffer[0] = number of entries in buffer
-/// fBuffer[1] = w of first entry
-/// fBuffer[2] = x of first entry
-/// fBuffer[3] = y of first entry
-/// fBuffer[4] = z of first entry
+/// Accumulate arguments in buffer. When buffer is full, empty the buffer
+///
+///  - `fBuffer[0]` = number of entries in buffer
+///  - `fBuffer[1]` = w of first entry
+///  - `fBuffer[2]` = x of first entry
+///  - `fBuffer[3]` = y of first entry
+///  - `fBuffer[4]` = z of first entry
 
 Int_t TH3::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
@@ -735,7 +776,6 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ///
 /// N.B. By dfault this methods approximates the integral of the function in each bin with the
 ///      function value at the center of the bin, mutiplied by the bin width
-///
 ///
 ///  One can also call TF1::GetRandom to get a random variate from a function.
 
@@ -3397,7 +3437,8 @@ TH3C::~TH3C()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size 3-D histograms.
+/// Normal constructor for fix bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup
@@ -3890,7 +3931,8 @@ TH3I::~TH3I()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size 3-D histograms.
+/// Normal constructor for fix bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup
@@ -3905,7 +3947,8 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins
@@ -3918,7 +3961,8 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins
@@ -4089,7 +4133,8 @@ TH3F::~TH3F()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size 3-D histograms.
+/// Normal constructor for fix bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup
@@ -4104,7 +4149,8 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins
@@ -4117,7 +4163,8 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins
@@ -4300,7 +4347,8 @@ TH3D::~TH3D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size 3-D histograms.
+/// Normal constructor for fix bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup
@@ -4315,7 +4363,8 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins
@@ -4328,7 +4377,8 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size 3-D histograms.
+/// Normal constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
 
 TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins

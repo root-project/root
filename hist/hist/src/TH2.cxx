@@ -46,7 +46,7 @@ ClassImp(TH2);
 */
 
 /** \class TH2
- Service class for 2-Dim histogram classes
+ Service class for 2-D histogram classes
 
 - TH2C a 2-D histogram with one byte per cell (char)
 - TH2S a 2-D histogram with two bytes per cell (short integer)
@@ -57,7 +57,7 @@ ClassImp(TH2);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// 2-D histogram default constructor.
 
 TH2::TH2()
 {
@@ -68,7 +68,20 @@ TH2::TH2()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Normal constructor for fix bin size 2-D histograms.
+/// Creates the main histogram structure.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///            If title is of the form `stringt;stringx;stringy;stringz`,
+///            the histogram title is set to `stringt`,
+///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins along the X axis
+/// \param[in] xlow low edge of the X axis first bin
+/// \param[in] xup upper edge of the X axis last bin (not included in last bin)
+/// \param[in] nbinsy number of bins along the Y axis
+/// \param[in] ylow low edge of the Y axis first bin
+/// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -84,7 +97,18 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Normal constructor for Double_t variable bin size (along X axis) 2-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] nbinsy number of bins along the Y axis
+/// \param[in] ylow low edge of the Y axis first bin
+/// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -100,7 +124,18 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Normal constructor for Double_t variable bin size (along Y axis) 2-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins along the X axis
+/// \param[in] xlow low edge of the X axis first bin
+/// \param[in] xup upper edge of the X axis last bin (not included in last bin)
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,const Double_t *ybins)
@@ -117,7 +152,17 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Normal constructor for Double_t variable bin size 2-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins)
@@ -134,7 +179,17 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Normal constructor for Float_t variable bin size 2-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins)
@@ -152,7 +207,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
-/// The list of functions is not copied. (Use Clone if needed)
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2::TH2(const TH2 &h) : TH1()
 {
@@ -1088,7 +1143,7 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 2 random numbers along axis x and y distributed according
-/// to the cell-contents of this 2-dim histogram
+/// to the cell-contents of this 2-D histogram
 /// return a NaN if the histogram has a bin with negative content
 ///
 /// @param[out] x  reference to random generated x value
@@ -2750,7 +2805,8 @@ TH2C::~TH2C()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -2764,7 +2820,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -2776,7 +2833,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -2788,7 +2846,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -2800,7 +2859,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3004,7 +3064,8 @@ TH2S::~TH2S()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3018,7 +3079,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3030,7 +3092,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3042,7 +3105,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3054,7 +3118,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3066,7 +3131,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
+/// Copy constructor
 
 TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
@@ -3258,7 +3323,8 @@ TH2I::~TH2I()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3272,7 +3338,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3284,7 +3351,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3296,7 +3364,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3308,7 +3377,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3477,7 +3547,8 @@ TH2F::~TH2F()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3491,7 +3562,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3503,7 +3575,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3515,7 +3588,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3527,7 +3601,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3540,6 +3615,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
+/// Construct a TH2F from a TMatrixFBase
 
 TH2F::TH2F(const TMatrixFBase &m)
 :TH2("TMatrixFBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
@@ -3741,7 +3817,8 @@ TH2D::~TH2D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3755,7 +3832,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3767,7 +3845,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3779,7 +3858,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3791,7 +3871,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3803,7 +3884,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// Construct a 2-D histogram from a TMatrixDBase
 
 TH2D::TH2D(const TMatrixDBase &m)
 :TH2("TMatrixDBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
