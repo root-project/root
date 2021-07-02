@@ -188,7 +188,8 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
+/// Private copy constructor.
+/// One should use the copy constructor of the derived classes (e.g. TH3D, TH3F ...).
 /// The list of functions is not copied. (Use Clone() if needed)
 
 TH3::TH3(const TH3 &h) : TH1(), TAtt3D()
@@ -3490,6 +3491,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH3C::TH3C(const TH3C &h3c) : TH3(), TArrayC()
 {
@@ -3754,6 +3756,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 {
@@ -3989,6 +3992,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 {
@@ -4191,6 +4195,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 {
@@ -4405,6 +4410,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 {

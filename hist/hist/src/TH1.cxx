@@ -735,7 +735,8 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
+/// Private copy constructor.
+/// One should use the copy constructor of the derived classes (e.g. TH1D, TH1F ...).
 /// The list of functions is not copied. (Use Clone() if needed)
 
 TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
@@ -9360,6 +9361,7 @@ TH1C::~TH1C()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
@@ -9541,6 +9543,7 @@ TH1S::~TH1S()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
@@ -9723,6 +9726,7 @@ TH1I::~TH1I()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 {
@@ -9915,6 +9919,7 @@ TH1F::TH1F(const TVectorF &v)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {

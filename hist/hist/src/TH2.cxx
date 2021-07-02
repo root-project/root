@@ -214,7 +214,8 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
+/// Private copy constructor.
+/// One should use the copy constructor of the derived classes (e.g. TH2D, TH2F ...).
 /// The list of functions is not copied. (Use Clone() if needed)
 
 TH2::TH2(const TH2 &h) : TH1()
@@ -2881,6 +2882,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
@@ -3140,6 +3142,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
@@ -3399,6 +3402,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
 {
@@ -3643,6 +3647,7 @@ TH2F::TH2F(const TMatrixFBase &m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
@@ -3914,6 +3919,7 @@ TH2D::TH2D(const TMatrixDBase &m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
