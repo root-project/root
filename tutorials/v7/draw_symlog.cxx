@@ -42,7 +42,7 @@ void draw_symlog()
 
    // first pad with linear scales
    auto frame1 = pads[0][0]->AddFrame();
-   frame1->drawaxes = true;
+   frame1->drawAxes = true;
    frame1->x.min = -40;
    frame1->x.max = 1040;
    frame1->x.title = "x linear";
@@ -56,7 +56,7 @@ void draw_symlog()
 
    // second pad with log scales, negative values missing
    auto frame2 = pads[0][1]->AddFrame();
-   frame2->drawaxes = true;
+   frame2->drawAxes = true;
    frame2->x.log = 10.;
    frame2->x.min = 0.05;
    frame2->x.max = 1.2e3;
@@ -71,7 +71,7 @@ void draw_symlog()
 
    // third pad with symlog scales
    auto frame3 = pads[0][2]->AddFrame();
-   frame3->drawaxes = true;
+   frame3->drawAxes = true;
    // configure symlog scale with 10 for linear range, rest will be logarithmic, including negative
    frame3->x.symlog = 10.; // boundary inside which linear scale will be used
    frame3->x.min = -10;

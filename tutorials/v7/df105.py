@@ -180,7 +180,7 @@ frame.y.title.size = 0.045
 frame.y.labels.size = 0.04
 
 # instruct RFrame to draw axes
-frame.drawaxes = True
+frame.drawAxes = True
 
 # Draw stack with MC contributions
 stack = ROOT.THStack()

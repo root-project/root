@@ -21,9 +21,9 @@ TEST(Primitives, RPave)
    pave->border.width = 3.;
    pave->fill.color = RColor::kBlue;
    pave->fill.style = 3003;
-   pave->cornerx = 0.03_normal;
+   pave->cornerX = 0.03_normal;
    pave->width = 0.4_normal;
-   pave->cornery = -0.03_normal;
+   pave->cornerY = -0.03_normal;
    pave->height = 0.2_normal;
 
    // when adding pave, RFrame is automatically created
@@ -35,9 +35,9 @@ TEST(Primitives, RPave)
    EXPECT_EQ(pave->fill.color, RColor::kBlue);
    EXPECT_EQ(pave->fill.style, 3003);
 
-   EXPECT_EQ(pave->cornerx, 0.03_normal);
+   EXPECT_EQ(pave->cornerX, 0.03_normal);
    EXPECT_EQ(pave->width, 0.4_normal);
-   EXPECT_EQ(pave->cornery, -0.03_normal);
+   EXPECT_EQ(pave->cornerY, -0.03_normal);
    EXPECT_EQ(pave->height, 0.2_normal);
 }
 

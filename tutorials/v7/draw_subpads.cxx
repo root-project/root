@@ -67,10 +67,10 @@ void draw_subpads()
 
    auto style = RStyle::Parse(
         "frame {"              // select type frame for RFrame
-        "   gridx: true;"      // enable grid drawing
-        "   gridy: true;"
-        "   ticksx: 2;"        // enable ticks drawing on both sides
-        "   ticksy: 2;"
+        "   gridX: true;"      // enable grid drawing
+        "   gridY: true;"
+        "   ticksX: 2;"        // enable ticks drawing on both sides
+        "   ticksY: 2;"
         "   x_labels_size: 0.05;" // below 1 is scaling factor for pad height
         "   y_labels_size: 20;"   // just a font size in pixel
         "   y_labels_color: green;"  // and name labels color

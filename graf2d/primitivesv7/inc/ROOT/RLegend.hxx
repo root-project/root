@@ -195,8 +195,8 @@ public:
 
    RLegend(const RPadPos &corner, const RPadExtent &size) : RLegend()
    {
-      cornerx = corner.Horiz();
-      cornery = corner.Vert();
+      cornerX = corner.Horiz();
+      cornerY = corner.Vert();
       width = size.Horiz();
       height = size.Vert();
    }

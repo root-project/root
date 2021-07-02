@@ -39,8 +39,8 @@ public:
    RAttrBorder border{this, "border"};                    ///<! border attributes
    RAttrFill fill{this, "fill"};                          ///<! fill attributes
    RAttrText text{this, "text"};                          ///<! text attributes
-   RAttrValue<RPadLength> cornerx{this, "cornerx", 0.02}; ///<! X corner
-   RAttrValue<RPadLength> cornery{this, "cornery", 0.02}; ///<! Y corner
+   RAttrValue<RPadLength> cornerX{this, "cornerX", 0.02}; ///<! X corner
+   RAttrValue<RPadLength> cornerY{this, "cornerY", 0.02}; ///<! Y corner
    RAttrValue<RPadLength> width{this, "width", 0.4};      ///<! pave width
    RAttrValue<RPadLength> height{this, "height", 0.2};    ///<! pave height
 
