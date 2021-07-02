@@ -28,6 +28,8 @@ class RAttrMargins : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrMargins, "margins");
 
+public:
+
    RAttrValue<RPadLength> left{this, "left", 0._normal};     ///<! left margin
    RAttrValue<RPadLength> right{this, "right", 0._normal};   ///<! right margin
    RAttrValue<RPadLength> top{this, "top", 0._normal};       ///<! top margin
