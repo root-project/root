@@ -28,6 +28,8 @@ class RAttrFont : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrFont, "font");
 
+public:
+
    RAttrValue<std::string> family{this, "family"};  ///<! font family, corresponds to css font-familty attribute
    RAttrValue<std::string> style{this, "style"};    ///<! font style, corresponds to css font-style attribute
    RAttrValue<std::string> weight{this, "weight"};  ///<! font weight, corresponds to css font-weight attribute
@@ -72,14 +74,14 @@ class RAttrText : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrText, "text");
 
+public:
+
    RAttrValue<RColor> color{this, "color", RColor::kBlack};  ///<! text color
    RAttrValue<double> size{this, "size", 12.};               ///<! text size
    RAttrValue<double> angle{this, "angle", 0.};              ///<! text angle
    RAttrValue<int> align{this, "align", 22};                 ///<! text align
    RAttrFont font{this, "font"};                             ///<! text font
 };
-
-
 
 } // namespace Experimental
 } // namespace ROOT

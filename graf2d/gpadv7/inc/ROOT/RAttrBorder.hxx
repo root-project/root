@@ -27,6 +27,8 @@ class RAttrBorder : public RAttrLine {
 
    R__ATTR_CLASS_DERIVED(RAttrBorder, "border", RAttrLine)
 
+public:
+
    RAttrValue<int>     rx{this, "rx", 0};              ///<! rounding on x coordinate, px
    RAttrValue<int>     ry{this, "ry", 0};              ///<! rounding on y coordinate, px
 

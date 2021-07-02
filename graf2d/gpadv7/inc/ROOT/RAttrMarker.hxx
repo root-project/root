@@ -68,6 +68,8 @@ class RAttrMarker : public RAttrAggregation {
       kFourSquaresPlus = 49
    };
 
+public:
+
    RAttrValue<RColor> color{this, "color", RColor::kBlack}; ///<! marker color
    RAttrValue<double> size{this, "size", 1.};               ///<! marker size
    RAttrValue<int> style{this, "style", 1};                 ///<! marker style

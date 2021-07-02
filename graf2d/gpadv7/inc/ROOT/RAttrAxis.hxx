@@ -28,7 +28,10 @@ namespace Experimental {
 */
 
 class RAttrAxisLabels : public RAttrText {
+
    R__ATTR_CLASS_DERIVED(RAttrAxisLabels, "labels", RAttrText)
+
+public:
 
    RAttrValue<RPadLength> offset{this, "offset", {}};      ///<! labels offset - relative to "default" position
    RAttrValue<bool> center{this, "center", false};         ///<! center labels
@@ -44,7 +47,10 @@ class RAttrAxisLabels : public RAttrText {
 */
 
 class RAttrAxisTitle : public RAttrText {
+
    R__ATTR_CLASS_DERIVED(RAttrAxisTitle, "title", RAttrText)
+
+public:
 
    RAttrValue<std::string> value{this, "value", ""};            ///<! axis title value
    RAttrValue<std::string> position{this, "position", "right"}; ///<! axis title position - left, right, center
@@ -66,7 +72,10 @@ class RAttrAxisTitle : public RAttrText {
 */
 
 class RAttrAxisTicks : public RAttrAggregation {
+
    R__ATTR_CLASS(RAttrAxisTicks, "ticks");
+
+public:
 
    RAttrValue<std::string> side{this, "side", "normal"};     ///<! ticks position - normal, invert, both
    RAttrValue<RPadLength> size{this, "size", 0.02_normal};   ///<! ticks size
@@ -88,7 +97,10 @@ class RAttrAxisTicks : public RAttrAggregation {
 */
 
 class RAttrAxis : public RAttrAggregation {
+
    R__ATTR_CLASS(RAttrAxis, "axis");
+
+public:
 
    RAttrLine line{this, "line"};                                    ///<! line attributes
    RAttrLineEnding ending{this, "ending"};                          ///<! ending attributes

@@ -16,6 +16,8 @@ protected:
 
    R__ATTR_CLASS(CustomAttrs, "custom");
 
+public:
+
    RAttrLine    line{this, "line"};    ///<! line attributes
    RAttrFill    fill{this, "fill"};    ///<! fill attributes
    RAttrText    text{this, "text"};    ///<! text attributes

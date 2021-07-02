@@ -37,6 +37,7 @@ protected:
    bool IsFrameRequired() const final { return true; }
 
 public:
+
    RAttrText text{this, "text"};                               ///<! title text attributes
    RAttrValue<RPadLength> margin{this, "margin", 0.02_normal}; ///<! title margin to frame
    RAttrValue<RPadLength> height{this, "height", 0.05_normal}; ///<! title height
