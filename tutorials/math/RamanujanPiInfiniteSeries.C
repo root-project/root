@@ -26,6 +26,6 @@ void RamanujanPiInfiniteSeries() {
 
    Double_t pi = 1/((TMath::Sqrt(8) / 9801) * summation);
 
-      std::cout << std::setprecision(iterations) << pi << std::endl;
+   std::cout << std::setprecision(iterations) << pi << std::endl;
 
 }
