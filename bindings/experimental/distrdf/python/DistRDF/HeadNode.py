@@ -125,6 +125,9 @@ class EmptySourceHeadNode(Node.Node):
             raise RuntimeError(
                 ("Cannot build a distributed RDataFrame with zero entries. "
                  "Distributed computation will fail. "))
+        # TODO: This shouldn't be triggered if entries == 1. The current minimum
+        # amount of partitions is 2. We need a robust reducer that smartly
+        # becomes no-op if npartitions == 1 to avoid this.
         if self.npartitions > self.nentries:
             # Restrict 'npartitions' if it's greater than 'nentries'
             msg = ("Number of partitions {0} is greater than number of entries {1} "
@@ -397,6 +400,9 @@ class TreeHeadNode(Node.Node):
         clustersinfiles = Ranges.get_clusters(self.treename, self.inputfiles)
         numclusters = len(clustersinfiles)
 
+        # TODO: This shouldn't be triggered if len(clustersinfiles) == 1. The
+        # current minimum amount of partitions is 2. We need a robust reducer
+        # that smartly becomes no-op if npartitions == 1 to avoid this.
         # Restrict `npartitions` if it's greater than clusters of the dataset
         if self.npartitions > numclusters:
             msg = ("Number of partitions is greater than number of clusters "

@@ -1,12 +1,112 @@
-import collections
 import logging
+
+from functools import total_ordering
 
 import ROOT
 
 logger = logging.getLogger(__name__)
 
-EmptySourceRange = collections.namedtuple("EmptySourceRange", ["start", "end"])
-TreeRange = collections.namedtuple("TreeRange", ["start", "end", "filelist", "friend_info"])
+
+class EmptySourceRange(object):
+    """
+    Empty source range of entries
+
+    Attributes:
+
+    start (int): Starting entry of this range.
+
+    end (int): Ending entry of this range.
+    """
+
+    def __init__(self, start, end):
+        """set attributes"""
+        self.start = start
+        self.end = end
+
+
+class TreeRange(object):
+    """
+    TTree range of entries. The entries are local with respect to the list of
+    files that are processed with this range. These files are a subset of the
+    global list of input files of the original dataset.
+
+    Attributes:
+
+    start (int): Starting entry of this range.
+
+    end (int): Ending entry of this range.
+
+    filelist (list[str]): List of files to be processed with this range.
+
+    friend_info (DistRDF.HeadNode.FriendInfo): Information about friend trees.
+    """
+
+    def __init__(self, start, end, filelist, friend_info):
+        """set attributes"""
+        self.start = start
+        self.end = end
+        self.filelist = filelist
+        self.friend_info = friend_info
+
+
+class FileAndIndex(object):
+    """
+    This is a pair (filename, index) that represents the index of the current
+    filename in the list of input files of the dataset
+
+    Attributes:
+
+    filename (str): The name of the file.
+
+    index (int): The index of the file in the list of input files.
+    """
+
+    def __init__(self, filename, fileindex):
+        """set attributes"""
+        self.filename = filename
+        self.fileindex = fileindex
+
+
+@total_ordering
+class ChainCluster(object):
+    """
+    Descriptor of a cluster of entries in a TChain. Uses global entries rather
+    than local.
+
+    Attributes:
+
+    start (int): The starting global entry of this cluster in the chain.
+
+    end (int): The ending global entry of this cluster in the chain.
+
+    offset (int): The offset of this cluster in the chain. That is, the starting
+        entry of the file this cluster belongs to in the chain.
+
+    filetuple (FileAndIndex): A pair with the name of the file this cluster
+        belongs to and the index of that file in the chain.
+    """
+
+    def __init__(self, start, end, offset, filetuple):
+        """set attributes"""
+        self.start = start
+        self.end = end
+        self.offset = offset
+        self.filetuple = filetuple
+
+    def __lt__(self, other):
+        """
+        In `get_clustered_ranges` we need to retrieve the minimum and maximum
+        entries in a certain list of clusters.
+        """
+        return self.start < other.start and self.end < other.end
+
+    def __eq__(self, other):
+        """Defined in compliance with total_ordering decorator"""
+        return (self.start == other.start and
+               self.end == other.end and
+               self.offset == other.offset and
+               self.filetuple.filename == other.filetuple.filename and
+               self.filetuple.fileindex == other.filetuple.fileindex)
 
 
 def _n_even_chunks(iterable, n_chunks):
@@ -79,10 +179,7 @@ def get_clusters(treename, filelist):
     """
 
     clusters = []
-    cluster = collections.namedtuple(
-        "cluster", ["start", "end", "offset", "filetuple"])
-    fileandindex = collections.namedtuple("fileandindex",
-                                          ["filename", "index"])
+
     offset = 0
     fileindex = 0
 
@@ -97,8 +194,8 @@ def get_clusters(treename, filelist):
 
         while start < entries:
             end = it()
-            clusters.append(cluster(start + offset, end + offset, offset,
-                                    fileandindex(filename, fileindex)))
+            clusters.append(ChainCluster(start + offset, end + offset, offset,
+                                    FileAndIndex(filename, fileindex)))
             start = end
 
         fileindex += 1
@@ -124,8 +221,8 @@ def get_balanced_ranges(nentries, npartitions):
             should be split in.
 
     Returns:
-        list: List of `EmptySourceRange` namedtuples. Each tuple contains the
-            start and end entry of the corresponding range.
+        list[DistRDF.Ranges.EmptySourceRange]: Each element of the list contains
+            the start and end entry of the corresponding range.
     """
     partition_size = nentries // npartitions
 
@@ -170,8 +267,8 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
             trees.
 
     Returns:
-        list: List of `TreeRange` namedtuples. Each tuple represents one range
-            in which the dataset has been split for distributed execution.
+        list[DistRDF.Ranges.TreeRange]: Each element of the list represents one
+            range in which the dataset has been split for distributed execution.
             Each `TreeRange` contains a starting entry, an ending entry, the
             list of files that are traversed to get all the entries and
             information about friend trees::
@@ -247,18 +344,20 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
     file up until the end of that file (entry number 20000), then switch to
     the third file and read the whole 30000 entries there.
     """
+    # TODO: Make this passage more clear. Maybe split the comprehension in more
+    # parts.
     clustered_ranges = [
         TreeRange(
-            min(clusters)[0] - clusters[0].offset,  # type: int
-            max(clusters)[1] - clusters[0].offset,  # type: int
+            min(clusters).start - clusters[0].offset,  # type: int
+            max(clusters).end - clusters[0].offset,  # type: int
             [
                 filetuple.filename
                 for filetuple in sorted(set([
                     cluster.filetuple for cluster in clusters
-                ]), key=lambda curtuple: curtuple[1])
+                ]), key=lambda curtuple: curtuple.fileindex)
             ],  # type: list[str]
             friend_info  # type: DistRDF.HeadNode.FriendInfo
-        )  # type: collections.namedtuple
+        )  # type: DistRDF.Ranges.TreeRange
         for clusters in _n_even_chunks(clustersinfiles, npartitions)
     ]
 
