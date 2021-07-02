@@ -53,8 +53,8 @@ void draw_rh2_large()
    // should we made special style for frame with palette?
    // frame->margins.right = 0.2_normal;
 
-   frame->gridx = false;
-   frame->gridy = false;
+   frame->gridX = false;
+   frame->gridY = false;
    frame->x.zoomMin = nbins*0.2;
    frame->x.zoomMax = nbins*0.8;
    frame->y.zoomMin = nbins*0.2;
