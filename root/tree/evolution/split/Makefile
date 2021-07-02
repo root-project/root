@@ -72,3 +72,8 @@ missingsplit.log: missingsplit_read_C.$(DllSuf) missingsplit.root
 
 missingsplit: missingsplit.log missingsplit.ref
 	$(TestDiff)
+
+execReadFileFullObjRule.clog: execCreateFileFullObjRule.success
+
+
+
