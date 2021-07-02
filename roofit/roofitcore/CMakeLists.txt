@@ -460,6 +460,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Matrix
     Tree
     Minuit
+    Minuit2
     RIO
     MathCore
     Foam
