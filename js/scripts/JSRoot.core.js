@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "30/06/2021";
+   JSROOT.version_date = "2/07/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -883,7 +883,7 @@
                case "Float64": arr = new Float64Array(value.len); break;
                default: arr = new Array(value.len); break;
             }
-            for (let k=0;k<value.len;++k) arr[k] = dflt;
+            for (let k = 0; k < value.len; ++k) arr[k] = dflt;
 
             if (value.b !== undefined) {
                // base64 coding
@@ -895,7 +895,7 @@
                if (arr.buffer) {
                   let dv = new DataView(arr.buffer, value.o || 0),
                       len = Math.min(buf.length, dv.byteLength);
-                  for (let k=0; k<len; ++k)
+                  for (let k = 0; k < len; ++k)
                      dv.setUint8(k, buf.charCodeAt(k));
                } else {
                   throw new Error('base64 coding supported only for native arrays with binary data');
@@ -1016,7 +1016,7 @@
       if (!json) return null;
       let arr = JSON.parse(json);
       if (arr && arr.length)
-         for (let i=0;i<arr.length;++i)
+         for (let i = 0; i < arr.length; ++i)
             arr[i] = JSROOT.parse(arr[i]);
       return arr;
    }
@@ -1351,7 +1351,7 @@
 
       return new Promise((resolve, reject) => {
          element.onload = () => resolve(true);
-         element.onerror = () => reject(Error(`Fail to load ${url}`));
+         element.onerror = () => { element.remove(); reject(Error(`Fail to load ${url}`)); };
          document.getElementsByTagName("head")[0].appendChild(element);
       });
    }
@@ -1755,7 +1755,7 @@
    JSROOT.createTGraph = (npoints, xpts, ypts) => {
       let graph = extend(create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
 
-      if (npoints>0) {
+      if (npoints > 0) {
          graph.fMaxSize = graph.fNpoints = npoints;
 
          const usex = (typeof xpts == 'object') && (xpts.length === npoints);
@@ -1780,7 +1780,7 @@
      * let stack = JSROOT.createTHStack(h1, h2, h3); */
    JSROOT.createTHStack = function() {
       let stack = create("THStack");
-      for(let i=0; i<arguments.length; ++i)
+      for (let i = 0; i < arguments.length; ++i)
          stack.fHists.Add(arguments[i], "");
       return stack;
    }
@@ -1794,7 +1794,7 @@
      * let mgr = JSROOT.createTMultiGraph(gr1, gr2, gr3); */
    JSROOT.createTMultiGraph = function() {
       let mgraph = create("TMultiGraph");
-      for(let i=0; i<arguments.length; ++i)
+      for (let i = 0; i < arguments.length; ++i)
           mgraph.fGraphs.Add(arguments[i], "");
       return mgraph;
    }
