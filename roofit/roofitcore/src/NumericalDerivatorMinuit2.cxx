@@ -84,49 +84,31 @@ NumericalDerivatorMinuit2::~NumericalDerivatorMinuit2()
 void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
                                                     const std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-
    assert(function != nullptr && "function is a nullptr");
 
-   auto get_time = []() {
-      return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::high_resolution_clock::now().time_since_epoch())
-         .count();
-   };
-   decltype(get_time()) t1, t2, t3, t4, t5, t6, t7, t8;
-
-   t1 = get_time();
    if (vx.size() != function->NDim()) {
       vx.resize(function->NDim());
    }
-   t2 = get_time();
    if (vx_external.size() != function->NDim()) {
       vx_external.resize(function->NDim());
    }
-   t3 = get_time();
    if (vx_fVal_cache.size() != function->NDim()) {
       vx_fVal_cache.resize(function->NDim());
    }
-   t4 = get_time();
    std::copy(cx, cx + function->NDim(), vx.data());
-   t5 = get_time();
 
    // convert to Minuit external parameters
    for (unsigned i = 0; i < function->NDim(); i++) {
       vx_external[i] = Int2ext(parameters[i], vx[i]);
    }
 
-   t6 = get_time();
-
    if (vx != vx_fVal_cache) {
       vx_fVal_cache = vx;
       fVal = (*function)(vx_external.data()); // value of function at given points
    }
-   t7 = get_time();
 
    dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
    vrysml = 8. * precision.Eps() * precision.Eps();
-
-   t8 = get_time();
 }
 
 MinuitDerivatorElement
@@ -280,14 +262,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFuncti
 {
    // set an initial gradient using some given steps
    // (used in the first iteration)
-   auto get_time = []() {
-      return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::high_resolution_clock::now().time_since_epoch())
-         .count();
-   };
-   decltype(get_time()) t1, t2;
-
-   t1 = get_time();
 
    assert(function != nullptr && "function is a nullptr");
 
@@ -343,8 +317,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFuncti
       gradient[ix].second_derivative = g2;
       gradient[ix].step_size = gstep;
    }
-
-   t2 = get_time();
 }
 
 bool NumericalDerivatorMinuit2::always_exactly_mimic_minuit2() const
