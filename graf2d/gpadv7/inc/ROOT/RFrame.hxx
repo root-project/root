@@ -185,13 +185,13 @@ public:
    RAttrAxis z{this, "z"};                             ///<! drawing attributes for Z axis
    RAttrAxis x2{this, "x2"};                           ///<! drawing attributes for X2 axis
    RAttrAxis y2{this, "y2"};                           ///<! drawing attributes for Y2 axis
-   RAttrValue<bool> drawaxes{this, "drawaxes", false}; ///<! draw axes by frame
-   RAttrValue<bool> gridx{this, "gridx", false};       ///<! show grid for X axis
-   RAttrValue<bool> gridy{this, "gridy", false};       ///<! show grid for Y axis
-   RAttrValue<bool> swapx{this, "swapx", false};       ///<! swap position of X axis
-   RAttrValue<bool> swapy{this, "swapy", false};       ///<! swap position of Y axis
-   RAttrValue<int> ticksx{this, "ticksx", 1};          ///<! X ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
-   RAttrValue<int> ticksy{this, "ticksy", 1};          ///<! Y ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
+   RAttrValue<bool> drawAxes{this, "drawAxes", false}; ///<! draw axes by frame
+   RAttrValue<bool> gridX{this, "gridX", false};       ///<! show grid for X axis
+   RAttrValue<bool> gridY{this, "gridY", false};       ///<! show grid for Y axis
+   RAttrValue<bool> swapX{this, "swapX", false};       ///<! swap position of X axis
+   RAttrValue<bool> swapY{this, "swapY", false};       ///<! swap position of Y axis
+   RAttrValue<int> ticksX{this, "ticksX", 1};          ///<! X ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
+   RAttrValue<int> ticksY{this, "ticksY", 1};          ///<! Y ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
 
    RFrame(TRootIOCtor*) : RFrame() {}
 

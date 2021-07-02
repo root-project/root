@@ -39,7 +39,7 @@ void draw_pave()
    pave->fill.color = RColor::kBlue;
    pave->border.color = RColor::kGreen;
    pave->border.width = 3;
-   pave->cornery = -0.03_normal;
+   pave->cornerY = -0.03_normal;
    pave->height = 0.2_normal;
 
    auto text = canvas->Draw<RPaveText>();
@@ -47,7 +47,7 @@ void draw_pave()
    text->AddLine("It can have several lines");
    text->AddLine("It should be positioned below RPave");
    text->fill.color = RColor::kYellow;
-   text->cornery = 0.25_normal;
+   text->cornerY = 0.25_normal;
    text->height = 0.3_normal;
 
    canvas->SetSize(1000, 700);

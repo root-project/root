@@ -51,16 +51,16 @@ void draw_rh2_colz()
    // should we made special style for frame with palette?
    frame->margins.right = 0.2_normal;
 
-   frame->gridx = false;
-   frame->gridy = false;
+   frame->gridX = false;
+   frame->gridY = false;
 
    // draw ticks on both sides
-   frame->ticksx = 2;
-   frame->ticksy = 2;
+   frame->ticksX = 2;
+   frame->ticksY = 2;
 
    // swap frame side where axes are drawn
-   // frame->swapx = true;
-   // frame->swapy = true;
+   // frame->swapX = true;
+   // frame->swapY = true;
 
    frame->x.zoomMin = 2;
    frame->x.zoomMax = 8;

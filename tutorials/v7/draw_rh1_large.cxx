@@ -49,8 +49,8 @@ void draw_rh1_large()
 
    auto frame = canvas->AddFrame();
 
-   frame->gridx = true;
-   frame->gridy = true;
+   frame->gridX = true;
+   frame->gridY = true;
    frame->x.zoomMin = nbins*0.2;
    frame->x.zoomMax = nbins*0.8;
 
