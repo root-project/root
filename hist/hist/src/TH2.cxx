@@ -68,7 +68,7 @@ TH2::TH2()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size 2-D histograms.
+/// Constructor for fix bin size 2-D histograms.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -97,7 +97,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for Double_t variable bin size (along X axis) 2-D histograms.
+/// Constructor for Double_t variable bin size (along X axis) 2-D histograms.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -124,7 +124,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for Double_t variable bin size (along Y axis) 2-D histograms.
+/// Constructor for Double_t variable bin size (along Y axis) 2-D histograms.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -152,7 +152,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for Double_t variable bin size 2-D histograms.
+/// Constructor for Double_t variable bin size 2-D histograms.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -179,7 +179,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for Float_t variable bin size 2-D histograms.
+/// Constructor for Float_t variable bin size 2-D histograms.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
