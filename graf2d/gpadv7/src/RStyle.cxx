@@ -12,6 +12,8 @@
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RLogger.hxx>
 
+#include <algorithm>
+
 using namespace std::string_literals;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -19,9 +21,13 @@ using namespace std::string_literals;
 
 const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable &drawable) const
 {
+   std::string name;
+   for(auto &c : field)
+      name += std::tolower(c);
+
    for (const auto &block : fBlocks) {
       if (drawable.MatchSelector(block.selector)) {
-         auto res = block.map.Find(field);
+         auto res = block.map.Find(name);
          if (res)
             return res;
       }
@@ -35,9 +41,13 @@ const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(co
 
 const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const std::string &selector) const
 {
+   std::string name;
+   for(auto &c : field)
+      name += std::tolower(c);
+
    for (const auto &block : fBlocks) {
       if (block.selector == selector) {
-         auto res = block.map.Find(field);
+         auto res = block.map.Find(name);
          if (res)
             return res;
       }
@@ -154,7 +164,11 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
          while ((pos < len) && check_symbol(is_first)) { shift(); is_first = false; }
 
-         return css_code.substr(pos0, pos-pos0);
+         std::string s = css_code.substr(pos0, pos-pos0);
+         if (!selector)
+            std::transform(s.begin(), s.end(), s.begin(),
+                              [](unsigned char c){ return std::tolower(c); });
+         return s;
       }
 
       std::string scan_value()
