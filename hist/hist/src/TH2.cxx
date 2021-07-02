@@ -97,7 +97,8 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for Double_t variable bin size (along X axis) 2-D histograms.
+/// Constructor for variable bin size (along X axis) 2-D histograms using an input array
+/// of type double.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -183,7 +184,8 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for Float_t variable bin size 2-D histograms.
+/// Constructor for variable bin size (along X and Y axis) 2-D histograms using input
+/// arrays of type float.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.

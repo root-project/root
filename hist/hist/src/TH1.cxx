@@ -690,7 +690,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type float.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -713,7 +713,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type double.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
