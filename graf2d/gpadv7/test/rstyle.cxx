@@ -74,6 +74,32 @@ TEST(RStyleTest, CreateCss)
    EXPECT_DOUBLE_EQ(drawable.text.size, 3.);
 }
 
+TEST(RStyleTest, CaseInsensitive)
+{
+   auto style = RStyle::Parse(" custom { line_Width: 2; Line_coloR: red; }"
+                              " #customID { fill_style: 5; }"
+                              " .custom_Cclass { text_size: 3; }");
+
+   ASSERT_NE(style, nullptr);
+
+   CustomDrawable drawable;
+   drawable.SetId("customid");
+   drawable.SetCssClass("custom_class");
+
+   drawable.UseStyle(style);
+
+   // attribute names should be case insensetive
+   EXPECT_DOUBLE_EQ(drawable.line.width, 2.f);
+
+   EXPECT_EQ(drawable.line.color, RColor::kRed);
+
+   // but id should have exact match
+   EXPECT_NE(drawable.fill.style, 5);
+
+   // and class name should have exact match
+   EXPECT_NE(drawable.text.size, 3.);
+}
+
 
 TEST(RStyleTest, TestMargins)
 {
