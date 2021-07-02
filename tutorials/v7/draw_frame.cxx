@@ -54,14 +54,14 @@ void draw_frame()
    frame->x.min = 0;
    frame->x.max = 100;
    // frame->x.log = 2.;
-   frame->x.zoommin = 5.;
-   frame->x.zoommax = 95.;
+   frame->x.zoomMin = 5.;
+   frame->x.zoomMax = 95.;
    frame->x.line.color = RColor::kGreen; // or in CSS "x_line_color: green;"
 
    frame->y.min = 0;
    frame->y.max = 100;
-   frame->y.zoommin = 5;
-   frame->y.zoommax = 95;
+   frame->y.zoomMin = 5;
+   frame->y.zoomMax = 95;
    frame->y.line.color = RColor::kBlue; // or in CSS "y_line_color: blue;"
 
    auto title = canvas->Draw<RFrameTitle>("Frame title");

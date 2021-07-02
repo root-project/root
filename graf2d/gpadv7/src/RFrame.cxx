@@ -23,11 +23,11 @@ using namespace ROOT::Experimental;
 
 void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
 {
-   if (axis.zoommin.Has())
-      ranges.AssignMin(ndim, axis.zoommin);
+   if (axis.zoomMin.Has())
+      ranges.AssignMin(ndim, axis.zoomMin);
 
-   if (axis.zoommax.Has())
-      ranges.AssignMax(ndim, axis.zoommax);
+   if (axis.zoomMax.Has())
+      ranges.AssignMax(ndim, axis.zoomMax);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -36,13 +36,13 @@ void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ra
 void RFrame::AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &ranges)
 {
    if (ranges.IsUnzoom(ndim)) {
-      axis.zoommin.Clear();
-      axis.zoommax.Clear();
+      axis.zoomMin.Clear();
+      axis.zoomMax.Clear();
    } else {
       if (ranges.HasMin(ndim))
-         axis.zoommin = ranges.GetMin(ndim);
+         axis.zoomMin = ranges.GetMin(ndim);
       if (ranges.HasMax(ndim))
-         axis.zoommax = ranges.GetMax(ndim);
+         axis.zoomMax = ranges.GetMax(ndim);
    }
 }
 
