@@ -17,7 +17,7 @@ namespace Experimental {
 
 /** \class ROnFrameDrawable
 \ingroup GpadROOT7
-\brief Base class for drawable which can be drawn on frame or on pad. Introduces "onframe" and "clipping" attributes. If onframe = true, one can enable clipping of such drawables.
+\brief Base class for drawable which can be drawn on frame or on pad. Introduces "onFrame" and "clipping" attributes. If onFrame = true, one can enable clipping of such drawables.
 Dedicated for classes like RLine, RText, RBox and similar
 \author Sergey Linev <s.linev@gsi.de>
 \date 2021-06-29
@@ -34,7 +34,7 @@ protected:
 public:
    virtual ~ROnFrameDrawable() = default;
 
-   RAttrValue<bool> onframe{this, "onframe", false};  ///<! is drawn on the frame or not
+   RAttrValue<bool> onFrame{this, "onFrame", false};  ///<! is drawn on the frame or not
    RAttrValue<bool> clipping{this, "clipping", false}; ///<! is clipping on when drawn on the frame
 };
 

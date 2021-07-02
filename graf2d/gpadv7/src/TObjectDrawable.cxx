@@ -86,7 +86,7 @@ TObjectDrawable::TObjectDrawable(TObject *obj, bool isowner) : RDrawable(DetectC
 
 TObjectDrawable::TObjectDrawable(TObject *obj, const std::string &opt, bool isowner) : TObjectDrawable(obj, isowner)
 {
-   drawopt = opt;
+   options = opt;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawabl
 
 TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : TObjectDrawable(obj)
 {
-   drawopt = opt;
+   options = opt;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -176,7 +176,7 @@ void TObjectDrawable::Set(TObject *obj, bool isowner)
 void TObjectDrawable::Set(TObject *obj, const std::string &opt, bool isowner)
 {
    Set(obj, isowner);
-   drawopt = opt;
+   options = opt;
 }
 
 ////////////////////////////////////////////////////////////////////
