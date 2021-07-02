@@ -120,11 +120,14 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 ///        the histogram title is set to `stringt`,
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbinsx number of bins
-/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type float and size nbinsx+1
 /// \param[in] nbinsy number of bins
-/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type float and size nbinsy+1
 /// \param[in] nbinsz number of bins
-/// \param[in] zbins array of low-edges for each bin. This is an array of size nbinsz+1
+/// \param[in] zbins array of low-edges for each bin.
+///            This is an array of type float and size nbinsz+1
 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins
@@ -154,11 +157,14 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 ///        the histogram title is set to `stringt`,
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbinsx number of bins
-/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type double and size nbinsx+1
 /// \param[in] nbinsy number of bins
-/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type double and size nbinsy+1
 /// \param[in] nbinsz number of bins
-/// \param[in] zbins array of low-edges for each bin. This is an array of size nbinsz+1
+/// \param[in] zbins array of low-edges for each bin.
+///            This is an array of type double and size nbinsz+1
 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins

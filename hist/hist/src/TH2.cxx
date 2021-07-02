@@ -105,7 +105,8 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 ///        the histogram title is set to `stringt`,
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbinsx number of bins
-/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type double and size nbinsx+1
 /// \param[in] nbinsy number of bins along the Y axis
 /// \param[in] ylow low edge of the Y axis first bin
 /// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
@@ -135,7 +136,8 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 /// \param[in] xlow low edge of the X axis first bin
 /// \param[in] xup upper edge of the X axis last bin (not included in last bin)
 /// \param[in] nbinsy number of bins
-/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type double and size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,const Double_t *ybins)
@@ -160,9 +162,11 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 ///        the histogram title is set to `stringt`,
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbinsx number of bins
-/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type double and size nbinsx+1
 /// \param[in] nbinsy number of bins
-/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type double and size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins)
@@ -187,9 +191,11 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 ///        the histogram title is set to `stringt`,
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbinsx number of bins
-/// \param[in] xbins array of low-edges for each bin. This is an array of size nbinsx+1
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type float and size nbinsx+1
 /// \param[in] nbinsy number of bins
-/// \param[in] ybins array of low-edges for each bin. This is an array of size nbinsy+1
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type float and size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins)

@@ -700,7 +700,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 ///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///            This is an array of size nbins+1
+///            This is an array of type float and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -722,7 +722,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///        This is an array of size nbins+1
+///            This is an array of type double and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
