@@ -78,7 +78,7 @@ public:
    RAttrFill fill{this, "fill"};          ///<! object fill attributes
    RAttrMarker marker{this, "marker"};    ///<! object marker attributes
    RAttrText text{this, "text"};          ///<! object text attributes
-   RAttrValue<std::string> drawopt{this, "drawopt"};  ///<! object draw options
+   RAttrValue<std::string> options{this, "options"};  ///<! object draw options
 
    TObjectDrawable();
    TObjectDrawable(TObject *obj, bool isowner = false);
