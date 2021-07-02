@@ -109,20 +109,20 @@ public:
    RAttrAxisTicks ticks{this, "ticks"};                             ///<! ticks attributes
    RAttrValue<double> min{this, "min", 0.};                         ///<! axis min
    RAttrValue<double> max{this, "max", 0.};                         ///<! axis max
-   RAttrValue<double> zoommin{this, "zoommin", 0.};                 ///<! axis zoom min
-   RAttrValue<double> zoommax{this, "zoommax", 0.};                 ///<! axis zoom max
+   RAttrValue<double> zoomMin{this, "zoomMin", 0.};                 ///<! axis zoom min
+   RAttrValue<double> zoomMax{this, "zoomMax", 0.};                 ///<! axis zoom max
    RAttrValue<double> log{this, "log", 0};                          ///<! log scale, <1 off, 1 - base10, 2 - base 2, 2.71 - exp, 3, 4, ...
    RAttrValue<double> symlog{this, "symlog", 0};                    ///<! symlog scale constant, 0 - off
    RAttrValue<bool> reverse{this, "reverse", false};                ///<! reverse scale
    RAttrValue<bool> time{this, "time", false};                      ///<! time scale
-   RAttrValue<double> time_offset{this, "time_offset", 0};          ///<! time offset to display
-   RAttrValue<std::string> time_format{this, "time_format", ""};    ///<! time format
+   RAttrValue<double> timeOffset{this, "timeOffset", 0};            ///<! offset for time axis values
+   RAttrValue<std::string> timeFormat{this, "timeFormat", ""};      ///<! time format
 
    RAttrAxis &SetMinMax(double _min, double _max) { min = _min; max = _max; return *this; }
    RAttrAxis &ClearMinMax() { min.Clear(); max.Clear(); return *this; }
 
-   RAttrAxis &SetZoom(double _zoommin, double _zoommax) { zoommin = _zoommin; zoommax = _zoommax; return *this; }
-   RAttrAxis &ClearZoom() { zoommin.Clear(); zoommax.Clear(); return *this; }
+   RAttrAxis &SetZoom(double _zoomMin, double _zoomMax) { zoomMin = _zoomMin; zoomMax = _zoomMax; return *this; }
+   RAttrAxis &ClearZoom() { zoomMin.Clear(); zoomMax.Clear(); return *this; }
 
    bool IsLogScale() const { return this->log > 0.999999; }
    bool IsLog10() const { auto l = this->log; return (std::fabs(l-1.) < 1e-6) || (std::fabs(l-10.) < 1e-6); }
@@ -132,15 +132,22 @@ public:
    RAttrAxis &SetTimeDisplay(const std::string &fmt = "", double offset = -1)
    {
       this->time = true;
-      if (!fmt.empty()) time_format = fmt;
-      if (offset >= 0) time_offset = offset;
+      if (!fmt.empty())
+         timeFormat = fmt;
+      else
+         timeFormat.Clear();
+      if (offset >= 0)
+         timeOffset = offset;
+      else
+         timeOffset.Clear();
       return *this;
    }
+
    void ClearTimeDisplay()
    {
       this->time.Clear();
-      time_offset.Clear();
-      time_format.Clear();
+      timeOffset.Clear();
+      timeFormat.Clear();
    }
 
    RAttrAxis &SetTitle(const std::string &_title) { title.value = _title; return *this; }

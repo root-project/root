@@ -62,10 +62,10 @@ void draw_rh2_colz()
    // frame->swapx = true;
    // frame->swapy = true;
 
-   frame->x.zoommin = 2;
-   frame->x.zoommax = 8;
-   frame->y.zoommin = 2;
-   frame->y.zoommax = 8;
+   frame->x.zoomMin = 2;
+   frame->x.zoomMax = 8;
+   frame->y.zoomMin = 2;
+   frame->y.zoomMax = 8;
 
    auto title = canvas->Draw<RFrameTitle>("2D histogram with color palette");
    title->margin = 0.01_normal;
