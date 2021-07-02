@@ -27,6 +27,8 @@ class RAttrFill : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrFill, "fill");
 
+public:
+
    RAttrValue<RColor>  color{this, "color", RColor::kBlack};  ///<! fill color
    RAttrValue<int>     style{this, "style", 1};               ///<! fill style
 

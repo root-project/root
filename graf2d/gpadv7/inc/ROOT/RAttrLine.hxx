@@ -27,6 +27,8 @@ class RAttrLine : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrLine, "line");
 
+public:
+
    RAttrValue<RColor>  color{this, "color", RColor::kBlack}; ///<! line color
    RAttrValue<double>  width{this, "width", 1.};             ///<! line width
    RAttrValue<int>     style{this, "style", 1};              ///<! line style
@@ -52,6 +54,8 @@ class RAttrLine : public RAttrAggregation {
 class RAttrLineEnding : public RAttrAggregation {
 
    R__ATTR_CLASS(RAttrLineEnding, "ending");
+
+public:
 
    RAttrValue<std::string> style{this, "style", ""};       ///<! axis ending style - none, arrow, circle
    RAttrValue<RPadLength> size{this, "size", 0.02_normal}; ///<! ending size
