@@ -8,7 +8,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawText() {
       let text      = this.getObject(),
           pp        = this.getPadPainter(),
-          onframe   = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+          onframe   = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
           clipping  = onframe ? this.v7EvalAttr("clipping", false) : false,
           p         = pp.getCoordinate(text.fPos, onframe),
           textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
@@ -28,7 +28,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
        let line         = this.getObject(),
            pp           = this.getPadPainter(),
-           onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+           onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
            p1           = pp.getCoordinate(line.fP1, onframe),
            p2           = pp.getCoordinate(line.fP2, onframe),
@@ -56,7 +56,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
        let box          = this.getObject(),
            pp           = this.getPadPainter(),
-           onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+           onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
            p1           = pp.getCoordinate(box.fP1, onframe),
            p2           = pp.getCoordinate(box.fP2, onframe),
@@ -91,7 +91,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawMarker() {
        let marker       = this.getObject(),
            pp           = this.getPadPainter(),
-           onframe      = this.v7EvalAttr("onframe", false) ? pp.getFramePainter() : null,
+           onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
            p            = pp.getCoordinate(marker.fP, onframe),
            marker_size  = this.v7EvalAttr( "marker_size", 1),
