@@ -35,8 +35,7 @@ void draw_text()
    for (int i=0; i<=360; i+=10) {
       auto draw = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
 
-      RColor col((int) (0.38*i), (int) (0.64*i), (int) (0.76*i));
-      draw->text.color = col;
+      draw->text.color = RColor((int) (0.38*i), (int) (0.64*i), (int) (0.76*i));
       draw->text.size = 10+i/10;
       draw->text.angle = i;
       draw->text.align = 13;

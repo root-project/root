@@ -41,7 +41,7 @@ TEST(Primitives, RLine)
    line->line.color = RColor::kRed;
    line->line.width = 5.;
    line->line.style = 7;
-   line->onframe = true;
+   line->onFrame = true;
    line->clipping = false;
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
@@ -49,7 +49,7 @@ TEST(Primitives, RLine)
    EXPECT_EQ(line->line.color, RColor::kRed);
    EXPECT_DOUBLE_EQ(line->line.width, 5.);
    EXPECT_EQ(line->line.style, 7);
-   EXPECT_EQ(line->onframe, true);
+   EXPECT_EQ(line->onFrame, true);
    EXPECT_EQ(line->clipping, false);
 }
 
