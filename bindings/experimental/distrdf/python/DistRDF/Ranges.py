@@ -38,7 +38,7 @@ class TreeRange(object):
 
     filelist (list[str]): List of files to be processed with this range.
 
-    friend_info (DistRDF.HeadNode.FriendInfo): Information about friend trees.
+    friend_info (ROOT.Internal.TreeUtils.RFriendInfo): Information about friend trees.
     """
 
     def __init__(self, start, end, filelist, friend_info):
@@ -263,7 +263,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
 
         treename (str): Name of the tree.
 
-        friend_info (DistRDF.HeadNode.FriendInfo): Information about friend
+        friend_info (ROOT.Internal.TreeUtils.RFriendInfo): Information about friend
             trees.
 
     Returns:
@@ -356,7 +356,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
                     cluster.filetuple for cluster in clusters
                 ]), key=lambda curtuple: curtuple.fileindex)
             ],  # type: list[str]
-            friend_info  # type: DistRDF.HeadNode.FriendInfo
+            friend_info  # type: ROOT.Internal.TreeUtils.RFriendInfo
         )  # type: DistRDF.Ranges.TreeRange
         for clusters in _n_even_chunks(clustersinfiles, npartitions)
     ]

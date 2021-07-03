@@ -170,27 +170,40 @@ class BaseBackend(ABC):
                 # We assume 'end' is exclusive
                 chain.SetCacheEntryRange(start, end)
 
-                # Gather information about friend trees
-                friend_info = current_range.friend_info
-                if friend_info:
-                    # Zip together the treenames of the friend trees and the
-                    # respective file names. Each friend treename can have
-                    # multiple corresponding friend file names.
-                    tree_files_names = zip(
-                        friend_info.friend_names,
-                        friend_info.friend_file_names
+                # Gather information about friend trees. Check that we got an
+                # RFriendInfo struct and that it's not empty
+                if (current_range.friend_info is not None and
+                    not current_range.friend_info.fFriendNames.empty()):
+                    # Zip together the information about friend trees. Each
+                    # element of the iterator represents a single friend tree.
+                    # If the friend is a TChain, the zipped information looks like:
+                    # (name, alias), (file1.root, file2.root, ...), (subname1, subname2, ...)
+                    # If the friend is a TTree, the file list is made of
+                    # only one filename and the list of names of the sub trees
+                    # is empty, so the zipped information looks like:
+                    # (name, alias), (filename.root, ), ()
+                    zipped_friend_info = zip(
+                        current_range.friend_info.fFriendNames,
+                        current_range.friend_info.fFriendFileNames,
+                        current_range.friend_info.fFriendChainSubNames
                     )
-                    for friend_treename, friend_filenames in tree_files_names:
+                    for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friend_info:
                         # Start a TChain with the current friend treename
-                        friend_chain = ROOT.TChain(friend_treename)
+                        friend_chain = ROOT.TChain(str(friend_name))
                         # Add each corresponding file to the TChain
-                        for filename in friend_filenames:
-                            friend_chain.Add(filename)
+                        if friend_chainsubnames.empty():
+                            # This friend is a TTree, friend_filenames is a vector of size 1
+                            friend_chain.Add(str(friend_filenames[0]))
+                        else:
+                            # This friend is a TChain, add all files with their tree names
+                            for filename, chainsubname in zip(friend_filenames, friend_chainsubnames):
+                                fullpath = filename + "/" + chainsubname
+                                friend_chain.Add(str(fullpath))
 
                         # Set cache on the same range as the parent TChain
                         friend_chain.SetCacheEntryRange(start, end)
-                        # Finally add friend TChain to the parent
-                        chain.AddFriend(friend_chain)
+                        # Finally add friend TChain to the parent (with alias)
+                        chain.AddFriend(friend_chain, friend_alias)
 
                 if defaultbranches is not None:
                     rdf = ROOT.RDataFrame(chain, defaultbranches)
