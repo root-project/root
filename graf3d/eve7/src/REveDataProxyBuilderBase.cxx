@@ -284,7 +284,15 @@ REveDataProxyBuilderBase::SetupElement(REveElement* el, bool color)
    }
 }
 
+//------------------------------------------------------------------------------
 
+void REveDataProxyBuilderBase::ScaleChanged()
+{
+   for (auto &prod : m_products) {
+      if (!HaveSingleProduct())
+         ScaleProduct(prod->m_elements, prod->m_viewType);
+   }
+}
 //------------------------------------------------------------------------------
 
 void REveDataProxyBuilderBase::Clean()
