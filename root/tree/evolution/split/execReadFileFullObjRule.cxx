@@ -3,6 +3,14 @@ class SomeVector
 public:
    double data[3] = {-1, -1, -1};
    double h;
+
+  SomeVector() = default;
+
+  SomeVector(double x, double y, double z, double inh) : h(inh) {
+    data[0] = x;
+    data[1] = y;
+    data[2] = z;
+  }
 };
 
 class Middle {

@@ -5,6 +5,10 @@ public:
    double dy = 2;
    double dz = 3;
    double h = 4;
+
+   SomeVector() = default;
+
+   SomeVector(double x, double y, double z, double inh) : dx(x), dy(y), dz(z), h(inh) {}
 };
 
 class Middle {
