@@ -6,6 +6,7 @@
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
  *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -16,6 +17,8 @@
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
 
+#include <memory>  // shared_ptr, unique_ptr
+
 #include "TObject.h"
 #include "TStopwatch.h"
 #include <fstream>
@@ -24,8 +27,16 @@
 #include <utility>
 #include "TMatrixDSymfwd.h"
 
-#include "Fit/Fitter.h"
+#include "RooArgList.h" // cannot just use forward decl due to default argument in lastMinuitFit
+
 #include "RooMinimizerFcn.h"
+#include "RooGradMinimizerFcn.h"
+
+#include "RooSentinel.h"
+#include "RooMsgService.h"
+
+#include "Fit/Fitter.h"
+#include <stdexcept> // logic_error
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -37,8 +48,11 @@ class RooPlot ;
 
 class RooMinimizer : public TObject {
 public:
+  enum class FcnMode { classic, gradient };
 
   RooMinimizer(RooAbsReal& function) ;
+  template <typename MinimizerFcn = RooMinimizerFcn>
+  static std::unique_ptr<RooMinimizer> create(RooAbsReal &function);
   virtual ~RooMinimizer() ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
@@ -91,7 +105,10 @@ public:
 
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
-  
+
+  ROOT::Math::IMultiGenFunction* getFitterMultiGenFcn() const;
+  ROOT::Math::IMultiGenFunction* getMultiGenFcn() const;
+
 protected:
 
   friend class RooAbsPdf ;
@@ -100,28 +117,33 @@ protected:
   void profileStart() ;
   void profileStop() ;
 
-  inline Int_t getNPar() const { return fitterFcn()->NDim() ; }
+  inline Int_t getNPar() const { return fitterFcn()->getNDim() ; }
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
-  
-  const RooMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
-  RooMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+
+  const RooAbsMinimizerFcn *fitterFcn() const;
+  RooAbsMinimizerFcn *fitterFcn();
+
+  bool fitFcn() const;
 
 private:
+  template <typename MinimizerFcn = RooMinimizerFcn>
+  RooMinimizer(RooAbsReal &function, MinimizerFcn* /* used only for template deduction */);
 
-  Int_t       _printLevel ;
-  Int_t       _status ;
-  Bool_t      _profile ;
+  Int_t _printLevel = 1;
+  Int_t _status = -99;
+  Bool_t _profile = kFALSE;
 
-  Bool_t      _verbose ;
-  TStopwatch  _timer ;
-  TStopwatch  _cumulTimer ;
-  Bool_t      _profileStart ;
+  Bool_t _verbose = kFALSE;
+  TStopwatch _timer;
+  TStopwatch _cumulTimer;
+  Bool_t _profileStart = kFALSE;
 
-  TMatrixDSym* _extV ;
+  TMatrixDSym *_extV = 0;
 
-  RooMinimizerFcn *_fcn;
-  std::string _minimizerType;
+  RooAbsMinimizerFcn *_fcn;
+  std::string _minimizerType = "Minuit2";
+  FcnMode _fcnMode;
 
   static ROOT::Fit::Fitter *_theFitter ;
 
