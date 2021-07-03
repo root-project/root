@@ -43,51 +43,6 @@ def get_headnode(npartitions, *args):
                 "can be processed distributedly.").format(firstarg, type(firstarg)))
 
 
-class FriendInfo(object):
-    """
-    A simple class to hold information about friend trees.
-
-    Attributes:
-        friend_names (list): A list with the names of the `ROOT.TTree` objects
-            which are friends of the main `ROOT.TTree`.
-
-        friend_file_names (list): A list with the paths to the files
-            corresponding to the trees in the `friend_names` attribute. Each
-            element of `friend_names` can correspond to multiple file names.
-    """
-
-    def __init__(self, friend_names=[], friend_file_names=[]):
-        """
-        Create an instance of FriendInfo
-
-        Args:
-            friend_names (list): A list containing the treenames of the friend
-                trees.
-
-            friend_file_names (list): A list containing the file names
-                corresponding to a given treename in friend_names. Each
-                treename can correspond to multiple file names.
-        """
-        self.friend_names = friend_names
-        self.friend_file_names = friend_file_names
-
-    def __bool__(self):
-        """
-        Define the behaviour of FriendInfo instance when boolean evaluated.
-        Both lists have to be non-empty in order to return True.
-
-        Returns:
-            bool: True if both lists are non-empty, False otherwise.
-        """
-        return bool(self.friend_names) and bool(self.friend_file_names)
-
-    def __nonzero__(self):
-        """
-        Python 2 dunder method for __bool__. Kept for compatibility.
-        """
-        return self.__bool__()
-
-
 class EmptySourceHeadNode(Node.Node):
     """
     The head node of a computation graph where the RDataFrame data source is
@@ -325,62 +280,17 @@ class TreeHeadNode(Node.Node):
 
     def _get_friend_info(self):
         """
-        Retrieve friend tree names and filenames of a given `ROOT.TTree`
-        object.
-
-        Args:
-            tree (ROOT.TTree): the ROOT.TTree instance used as an argument to
-                DistRDF.RDataFrame(). ROOT.TChain inherits from ROOT.TTree so it
-                is a valid argument too.
+        Retrieves information about friend trees of the input tree.
 
         Returns:
-            (FriendInfo): A FriendInfo instance with two lists as variables.
-                The first list holds the names of the friend tree(s), the
-                second list holds the file names of each of the trees in the
-                first list, each tree name can correspond to multiple file
-                names.
+            (ROOT.Internal.TreeUtils.RFriendInfo): A C++ struct holding
+                information about friend trees. If the user did not supply a
+                TTree or TChain as input to the constructor, returns None.
         """
-        friend_names = []
-        friend_file_names = []
-
-        # Retrieve the TTree instance
-        tree = self.get_tree()
-
-        # Early return if the dataframe wasn't constructed from a TTree.
-        if tree is None:
-            return FriendInfo()
-
-        # Get a list of ROOT.TFriendElement objects
-        friends = tree.GetListOfFriends()
-        if not friends:
-            # RDataFrame may have been created with a TTree without
-            # friend trees.
-            return FriendInfo()
-
-        for friend in friends:
-            friend_tree = friend.GetTree()  # ROOT.TTree
-            real_name = friend_tree.GetName()  # Treename as string
-
-            # TChain inherits from TTree
-            if isinstance(friend_tree, ROOT.TChain):
-                cur_friend_files = [
-                    # The title of a TFile is the file name
-                    chain_file.GetTitle()
-                    for chain_file
-                    # Get a list of ROOT.TFile objects
-                    in friend_tree.GetListOfFiles()
-                ]
-
-            else:
-                cur_friend_files = [
-                    friend_tree.
-                    GetCurrentFile().  # ROOT.TFile
-                    GetName()  # Filename as string
-                ]
-            friend_file_names.append(cur_friend_files)
-            friend_names.append(real_name)
-
-        return FriendInfo(friend_names, friend_file_names)
+        if isinstance(self.args[0], ROOT.TTree):
+            return ROOT.Internal.TreeUtils.GetFriendInfo(self.args[0])
+        else:
+            return None
 
     def build_ranges(self):
         """Build the ranges for this dataset."""
