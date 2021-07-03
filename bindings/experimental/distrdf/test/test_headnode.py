@@ -39,7 +39,7 @@ class DataFrameConstructorTests(unittest.TestCase):
             tree.Fill()
 
         headnode = create_dummy_headnode(tree)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ROOT.std.runtime_error):
             # Trees with no associated files are not supported
             headnode.get_inputfiles()
 

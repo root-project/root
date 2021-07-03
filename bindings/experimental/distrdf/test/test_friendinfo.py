@@ -3,7 +3,7 @@ import unittest
 from array import array
 
 import ROOT
-from DistRDF.HeadNode import FriendInfo, get_headnode
+from DistRDF.HeadNode import get_headnode
 
 
 class FriendInfoTest(unittest.TestCase):
@@ -45,24 +45,9 @@ class FriendInfoTest(unittest.TestCase):
         ff.Write()
         ff.Close()
 
-    def test_empty_friend_info(self):
-        """Check that FriendInfo is initialized with two empty lists"""
-
-        friend_info = FriendInfo()
-
-        friend_names = friend_info.friend_names
-        friend_file_names = friend_info.friend_file_names
-
-        # Check that both lists in FriendInfo are empty
-        self.assertTrue(len(friend_names) == 0)
-        self.assertTrue(len(friend_file_names) == 0)
-
-        # Check functioning of __bool__ method
-        self.assertFalse(friend_info)
-
     def test_friend_info_with_ttree(self):
         """
-        Check that FriendInfo correctly stores information about the friend
+        Check that RFriendInfo correctly stores information about the friend
         trees
         """
         self.create_parent_tree()
@@ -87,19 +72,19 @@ class FriendInfoTest(unittest.TestCase):
         # Passing None as `npartitions` since it is not required for the test
         headnode = get_headnode(None, basetree)
 
-        # Retrieve FriendInfo instance
+        # Retrieve RFriendInfo instance
         friend_info = headnode._get_friend_info()
 
-        # Check that FriendInfo has non-empty lists
-        self.assertTrue(friend_info)
+        # Convert to Python collections
+        friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friend_info.fFriendNames]
+        friendfilenames = [[str(filename) for filename in filenames] for filenames in friend_info.fFriendFileNames]
+        friendchainsubnames = [[str(chainsubname) for chainsubname in chainsubnames] for chainsubnames in friend_info.fFriendChainSubNames]
 
         # Check that the two lists with treenames and filenames are populated
         # as expected.
-        self.assertListEqual(friend_info.friend_names, [friend_tree_name])
-        self.assertListEqual(
-            friend_info.friend_file_names,
-            [[friend_tree_filename]]
-        )
+        self.assertListEqual(friendnamesalias, [(friend_tree_name, friend_tree_name)])
+        self.assertListEqual(friendfilenames, [[friend_tree_filename]])
+        self.assertListEqual(friendchainsubnames, [[friend_tree_name]])
 
         # Remove unnecessary .root files
         os.remove(base_tree_filename)
