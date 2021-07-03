@@ -253,19 +253,22 @@ class TreeHeadNode(Node.Node):
 
     def get_treename(self):
         """
-        Get name of the TTree.
+        Get name of the input tree. If the user supplied a string as first
+        argument, that corresponds to the tree name. If the first argument is a
+        TTree or TChain, it retrieves the first full path from the paths
+        returned by ROOT::Internal::TreeUtils::GetTreeFullPaths function.
 
         Returns:
-            (str, None): Name of the TTree, or :obj:`None` if there is no tree.
+            (str): Name of the tree. 
 
         """
-        first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TTree):
-            # Get name from a given TTree/TChain
-            return first_arg.GetName()
-        elif isinstance(first_arg, str):
+        firstarg = self.args[0]
+        if isinstance(firstarg, ROOT.TTree):
+            treefullpaths = ROOT.Internal.TreeUtils.GetTreeFullPaths(firstarg)
+            return treefullpaths[0]
+        elif isinstance(firstarg, str):
             # First argument was the name of the tree
-            return first_arg
+            return firstarg
 
     def get_tree(self):
         """
@@ -284,27 +287,21 @@ class TreeHeadNode(Node.Node):
 
     def get_inputfiles(self):
         """
-        Get list of input files.
+        Get list of input files of the dataset. If the user supplied a TTree or
+        TChain, returns the result of calling the
+        ROOT::Internal::TreeUtils::GetFileNamesFromTree function on that tree.
+        If one of the other tree based constructor arguments of RDataFrame was
+        supplied, this function will parse them and return the name(s) of the
+        corresponding file(s).
 
         Returns:
-            (list): List of input files of the dataset.
+            (list[str]): List of input files of the dataset.
 
         """
-        firstarg = self.args[0]
-        if isinstance(firstarg, ROOT.TChain):
-            # Extract file names from a given TChain
-            chain = firstarg
-            return [chainElem.GetTitle()
-                    for chainElem in chain.GetListOfFiles()]
-        elif isinstance(firstarg, ROOT.TTree):
-            # Retrieve the associated file
-            treefile = firstarg.GetCurrentFile()
-            if not treefile:
-                # The tree has no associated input file
-                raise RuntimeError(("Trees with no associated files are not supported. "
-                                    "Please save your tree to a file and retry."))
-            else:
-                return [treefile.GetName()]
+        if isinstance(self.args[0], ROOT.TTree):
+            # Extract file names from a given TTree or TChain
+            filenames = ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.args[0])
+            return [str(filename) for filename in filenames]
 
         if len(self.args) > 1:
             # Second argument can be:
