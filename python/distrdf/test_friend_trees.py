@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import unittest
 from array import array
@@ -106,6 +107,55 @@ class SparkFriendTreesTest(unittest.TestCase):
         # Remove unnecessary .root files
         os.remove("treeparent.root")
         os.remove("treefriend.root")
+
+    def test_friends_tchain_noname_add_fullpath_addfriend_alias(self):
+        """Test against the reproducer of issue https://github.com/root-project/root/issues/7584"""
+
+        rn1 = "rn1.root"
+        rn2 = "rn2.root"
+        friendsfilename = "friendtrees_spark.root"
+
+        df_1 = ROOT.RDataFrame(10000)
+        df_2 = ROOT.RDataFrame(10000)
+
+        df_1 = df_1.Define("rnd", "gRandom->Gaus(10)")
+        df_2 = df_2.Define("rnd", "gRandom->Gaus(20)")
+
+        df_1.Snapshot("randomNumbers", rn1)
+        df_2.Snapshot("randomNumbersBis", rn2)
+
+        # Put the two trees together in a common file
+        subprocess.run("hadd -f {} {} {}".format(friendsfilename, rn1, rn2),
+                    shell=True, check=True)
+
+        # Test the specific case of a parent chain and friend chain with no
+        # names, that receive one tree each in the form "filename/treename". The
+        # friend is then added to the parent with an alias.
+        chain = ROOT.TChain()
+        chainFriend = ROOT.TChain()
+
+        chain.Add("friendtrees_spark.root/randomNumbers")
+        chainFriend.Add("friendtrees_spark.root/randomNumbersBis")
+
+        chain.AddFriend(chainFriend, "myfriend")
+
+        df = Spark.RDataFrame(chain)
+
+        h_parent = df.Histo1D("rnd")
+        h_friend = df.Histo1D("myfriend.rnd")
+
+        self.assertEqual(h_parent.GetEntries(), 10000)
+        self.assertEqual(h_friend.GetEntries(), 10000)
+
+        self.assertAlmostEqual(h_parent.GetMean(), 10, delta=0.01)
+        self.assertAlmostEqual(h_friend.GetMean(), 20, delta=0.01)
+
+        self.assertAlmostEqual(h_parent.GetStdDev(), 1, delta=0.01)
+        self.assertAlmostEqual(h_friend.GetStdDev(), 1, delta=0.01)
+
+        os.remove(rn1)
+        os.remove(rn2)
+        os.remove(friendsfilename)
 
 
 if __name__ == "__main__":
