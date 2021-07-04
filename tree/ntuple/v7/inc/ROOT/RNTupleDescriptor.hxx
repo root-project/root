@@ -774,8 +774,10 @@ public:
       std::uint32_t fHeaderCrc32 = 0;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterIDs;
       std::vector<DescriptorId_t> fPhys2MemFieldIDs;
       std::vector<DescriptorId_t> fPhys2MemColumnIDs;
+      std::vector<DescriptorId_t> fPhys2MemClusterIDs;
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
@@ -792,10 +794,18 @@ public:
          fPhys2MemColumnIDs.push_back(memId);
          return physId;
       }
+      DescriptorId_t MapClusterId(DescriptorId_t memId) {
+         auto physId = fPhys2MemClusterIDs.size();
+         fMem2PhysClusterIDs[memId] = physId;
+         fPhys2MemClusterIDs.push_back(memId);
+         return physId;
+      }
       DescriptorId_t GetPhysFieldId(DescriptorId_t memId) const { return fMem2PhysFieldIDs.at(memId); }
       DescriptorId_t GetPhysColumnId(DescriptorId_t memId) const { return fMem2PhysColumnIDs.at(memId); }
+      DescriptorId_t GetPhysClusterId(DescriptorId_t memId) const { return fMem2PhysClusterIDs.at(memId); }
       DescriptorId_t GetMemFieldId(DescriptorId_t physId) const { return fPhys2MemFieldIDs[physId]; }
       DescriptorId_t GetMemColumnId(DescriptorId_t physId) const { return fPhys2MemColumnIDs[physId]; }
+      DescriptorId_t GetMemClusterId(DescriptorId_t physId) const { return fPhys2MemClusterIDs[physId]; }
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
@@ -856,6 +866,8 @@ public:
    static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
 
    static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
+   static void SerializeClusterV1(void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster,
+                                  const RContext &context);
    static void SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 }; // class RNTupleStreamer
 

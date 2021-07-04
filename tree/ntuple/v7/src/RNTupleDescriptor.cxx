@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <deque>
 #include <iostream>
+#include <set>
 #include <utility>
 
 namespace {
@@ -1192,6 +1193,38 @@ ROOT::Experimental::Internal::RNTupleStreamer::SerializeHeaderV1(
    return context;
 }
 
+void ROOT::Experimental::Internal::RNTupleStreamer::SerializeClusterV1(
+   void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster, const RContext &context)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += SerializeEnvelopePreamble(*where);
+   auto frame = pos;
+   pos += SerializeListFramePreamble(0, *where);
+
+   // Get an ordered set of physical column ids
+   std::set<DescriptorId_t> physColumnIds;
+   for (auto id : cluster.GetColumnIds())
+      physColumnIds.insert(context.GetPhysClusterId(id));
+   for (auto physId : physColumnIds) {
+      auto id = context.GetMemClusterId(physId);
+
+      auto innerFrame = pos;
+      pos += SerializeListFramePreamble(0, *where);
+      for (const auto &pi : cluster.GetPageRange(id).fPageInfos) {
+         pos += SerializeUInt32(pi.fNElements, *where);
+         pos += SerializeLocator(pi.fLocator, *where);
+      }
+      pos += SerializeFramePostscript(innerFrame, pos - innerFrame);
+   }
+
+   pos += SerializeFramePostscript(frame, pos - frame);
+   std::uint32_t size = pos - base;
+   pos += SerializeEnvelopePostscript(base, size, *where);
+}
+
 void ROOT::Experimental::Internal::RNTupleStreamer::SerializeFooterV1(
    void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc, const RContext &context)
 {
@@ -1214,7 +1247,6 @@ void ROOT::Experimental::Internal::RNTupleStreamer::SerializeFooterV1(
    frame = pos;
    pos += SerializeListFramePreamble(0, *where);
    pos += SerializeFramePostscript(frame, pos - frame);
-
 
 
    // So far no support for meta-data
