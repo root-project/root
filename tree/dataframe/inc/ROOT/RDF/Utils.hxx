@@ -70,7 +70,7 @@ using namespace ROOT::RDF;
 /// generic IsDataContainer<T>.
 template <typename T>
 struct IsDataContainer {
-   using Test_t = typename std::decay<T>::type;
+   using Test_t = std::decay_t<T>;
 
    template <typename A>
    static constexpr bool Test(A *pt, A const *cpt = nullptr, decltype(pt->begin()) * = nullptr,
@@ -166,7 +166,8 @@ struct IsRVec_t<ROOT::VecOps::RVec<T>> : public std::true_type {};
 
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
 // fundamental types
-template <typename T, bool IsDataContainer = IsDataContainer<typename std::decay<T>::type>::value || std::is_same<std::string, T>::value>
+template <typename T,
+          bool IsDataContainer = IsDataContainer<std::decay_t<T>>::value || std::is_same<std::string, T>::value>
 struct ValueType {
    using value_type = typename T::value_type;
 };

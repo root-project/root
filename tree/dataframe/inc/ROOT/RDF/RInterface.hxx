@@ -127,7 +127,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Only enabled when building a RInterface<RLoopManager>.
-   template <typename T = Proxied, typename std::enable_if<std::is_same<T, RLoopManager>::value, int>::type = 0>
+   template <typename T = Proxied, std::enable_if_t<std::is_same<T, RLoopManager>::value, int> = 0>
    RInterface(const std::shared_ptr<Proxied> &proxied)
       : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource())
    {
@@ -187,7 +187,7 @@ public:
    /// // String: it must contain valid C++ except that column names can be used instead of variable names
    /// auto filtered = df.Filter("x*y > 0");
    /// ~~~
-   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+   template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<RDFDetail::RFilter<F, Proxied>, DS_t>
    Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
    {
@@ -212,7 +212,7 @@ public:
    /// \return the filter node of the computation graph.
    ///
    /// Refer to the first overload of this method for the full documentation.
-   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+   template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<RDFDetail::RFilter<F, Proxied>, DS_t> Filter(F f, std::string_view name)
    {
       // The sfinae is there in order to pick up the overloaded method which accepts two strings
@@ -253,7 +253,7 @@ public:
    {
       // deleted by the jitted call to JitFilterHelper
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
+      using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fDefines, fDataSource);
       const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(fLoopManager, name);
 
@@ -293,7 +293,7 @@ public:
    /// // alternatively, we can pass the body of the function as a string, as in Filter:
    /// auto df_with_define = df.Define("newColumn", "x*x + y*y");
    /// ~~~
-   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+   template <typename F, typename std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Define");
@@ -401,7 +401,7 @@ public:
    ///
    /// An exception is thrown in case the column to re-define does not already exist.
    /// See Define() for more information.
-   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+   template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Redefine");
@@ -1660,9 +1660,9 @@ public:
    /// ~~~
    ///
    template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename T>
-   RResultPtr<typename std::decay<T>::type> Fill(T &&model, const ColumnNames_t &columnList)
+   RResultPtr<std::decay_t<T>> Fill(T &&model, const ColumnNames_t &columnList)
    {
-      auto h = std::make_shared<typename std::decay<T>::type>(std::forward<T>(model));
+      auto h = std::make_shared<std::decay_t<T>>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -2350,7 +2350,7 @@ public:
 
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
-      using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
+      using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fLoopManager->GetNSlots()), validColumnNames,
          fProxiedPtr, fDefines);
@@ -2424,9 +2424,9 @@ public:
    // clang-format on
 
    template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
-   RResultPtr<typename std::decay<Helper>::type::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
+   RResultPtr<typename std::decay_t<Helper>::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
-      using HelperT = typename std::decay<Helper>::type;
+      using HelperT = std::decay_t<Helper>;
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<HelperT>;
       static_assert(std::is_base_of<AH, HelperT>::value && std::is_convertible<HelperT *, AH *>::value,
@@ -2581,9 +2581,10 @@ private:
    /// for which the constructor arguments of the action helper are different from the returned value.
    template <typename ActionTag, typename... ColTypes, typename ActionResultType,
              typename HelperArgType = ActionResultType,
-             typename std::enable_if<!RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
-   RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg, const int /*nColumns*/ = -1)
+             std::enable_if_t<!RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
+   RResultPtr<ActionResultType>
+   CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
+                const std::shared_ptr<HelperArgType> &helperArg, const int /*nColumns*/ = -1)
    {
       constexpr auto nColumns = sizeof...(ColTypes);
 
@@ -2605,7 +2606,7 @@ private:
    /// this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes).
    template <typename ActionTag, typename... ColTypes, typename ActionResultType,
              typename HelperArgType = ActionResultType,
-             typename std::enable_if<RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
+             std::enable_if_t<RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
                                              const std::shared_ptr<HelperArgType> &helperArg, const int nColumns = -1)
    {
@@ -2618,7 +2619,7 @@ private:
       auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
+      using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fDefines, fDataSource);
 
       const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
@@ -2633,7 +2634,7 @@ private:
    }
 
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
-   typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>::type
+   std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
    {
       RDFInternal::CheckValidCppVarName(name, where);
@@ -2686,7 +2687,7 @@ private:
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type,
              bool IsFStringConv = std::is_convertible<F, std::string>::value,
              bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
-   typename std::enable_if<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>::type
+   std::enable_if_t<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>
    DefineImpl(std::string_view, F, const ColumnNames_t &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,

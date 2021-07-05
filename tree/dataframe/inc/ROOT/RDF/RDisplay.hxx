@@ -97,7 +97,7 @@ private:
    /// \param[in] element The event to convert to its string representation
    /// \param[in] index To which column the event belongs to
    /// \return false, the event is not a collection
-   template <typename T, typename std::enable_if<!ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    bool AddInterpreterString(std::stringstream &stream, T &element, const int &index)
    {
       stream << "*((std::string*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(fRepresentations[index]))
@@ -113,7 +113,7 @@ private:
    /// \param[in] index To which column the event belongs to
    /// \return true, the event is a collection
    /// This function chains a sequence of call to cling::printValue, one for each element of the collection.
-   template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    bool AddInterpreterString(std::stringstream &stream, T &collection, const int &index)
    {
       size_t collectionSize = std::distance(std::begin(collection), std::end(collection));

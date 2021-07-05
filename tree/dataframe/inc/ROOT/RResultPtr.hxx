@@ -191,8 +191,8 @@ public:
    ///
    /// Useful e.g. to store a number of RResultPtr<TH1D> and RResultPtr<TH2D> in a std::vector<RResultPtr<TH1>>.
    /// The requirements on T2 and T are the same as for conversion between std::shared_ptr<T2> and std::shared_ptr<T>.
-   template <typename T2, typename std::enable_if<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value,
-                                                  int>::type = 0>
+   template <typename T2,
+             std::enable_if_t<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value, int> = 0>
    RResultPtr(const RResultPtr<T2> &r) : fLoopManager(r.fLoopManager), fObjPtr(r.fObjPtr), fActionPtr(r.fActionPtr)
    {
    }

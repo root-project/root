@@ -57,7 +57,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
    using ValuesPerSlot_t =
-      typename std::conditional<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>::type;
+      std::conditional_t<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>;
 
    F fExpression;
    const ColumnNames_t fColumnNames;

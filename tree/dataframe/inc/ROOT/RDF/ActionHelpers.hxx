@@ -136,7 +136,7 @@ public:
 // the thread-local results. In addition, a common definition for the type of the container makes it easy to swap
 // the type of the underlying container if e.g. we see problems with false sharing of the thread-local results..
 template <typename T>
-using Results = typename std::conditional<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>::type;
+using Results = std::conditional_t<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>;
 
 template <typename F>
 class ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
@@ -154,7 +154,7 @@ public:
    void Exec(unsigned int slot, Args &&... args)
    {
       // check that the decayed types of Args are the same as the branch types
-      static_assert(std::is_same<TypeList<typename std::decay<Args>::type...>, ColumnTypes_t>::value, "");
+      static_assert(std::is_same<TypeList<std::decay_t<Args>...>, ColumnTypes_t>::value, "");
       fCallable(slot, std::forward<Args>(args)...);
    }
 
@@ -245,7 +245,7 @@ public:
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value || std::is_same<T, std::string>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value || std::is_same<T, std::string>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       auto &thisBuf = fBuffers[slot];
@@ -256,8 +256,7 @@ public:
       }
    }
 
-   template <typename T, typename W,
-             typename std::enable_if<IsDataContainer<T>::value && IsDataContainer<W>::value, int>::type = 0>
+   template <typename T, typename W, std::enable_if_t<IsDataContainer<T>::value && IsDataContainer<W>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs, const W &ws)
    {
       auto &thisBuf = fBuffers[slot];
@@ -273,8 +272,7 @@ public:
       }
    }
 
-   template <typename T, typename W,
-             typename std::enable_if<IsDataContainer<T>::value && !IsDataContainer<W>::value, int>::type = 0>
+   template <typename T, typename W, std::enable_if_t<IsDataContainer<T>::value && !IsDataContainer<W>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs, const W w)
    {
       auto &thisBuf = fBuffers[slot];
@@ -288,8 +286,7 @@ public:
    }
 
    // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
-   template <typename T, typename W,
-             typename std::enable_if<IsDataContainer<W>::value && !IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, typename W, std::enable_if_t<IsDataContainer<W>::value && !IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int, const T &, const W &)
    {
       throw std::runtime_error(
@@ -334,7 +331,7 @@ class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
    void UnsetDirectoryIfPossible(...) {}
 
    // Merge overload for types with Merge(TCollection*), like TH1s
-   template <typename H, typename = typename std::enable_if<std::is_base_of<TObject, H>::value, int>::type>
+   template <typename H, typename = std::enable_if_t<std::is_base_of<TObject, H>::value, int>>
    auto Merge(std::vector<H *> &objs, int /*toincreaseoverloadpriority*/)
       -> decltype(objs[0]->Merge((TCollection *)nullptr), void())
    {
@@ -396,7 +393,7 @@ public:
       fObjects[slot]->Fill(x0, x1, x2, x3);
    }
 
-   template <typename X0, typename std::enable_if<IsDataContainer<X0>::value || std::is_same<X0, std::string>::value, int>::type = 0>
+   template <typename X0, std::enable_if_t<IsDataContainer<X0>::value || std::is_same<X0, std::string>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s)
    {
       auto thisSlotH = fObjects[slot];
@@ -407,15 +404,15 @@ public:
 
    // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename X0, typename X1,
-             typename std::enable_if<IsDataContainer<X1>::value && !IsDataContainer<X0>::value, int>::type = 0>
-   void Exec(unsigned int , const X0 &, const X1 &)
+             std::enable_if_t<IsDataContainer<X1>::value && !IsDataContainer<X0>::value, int> = 0>
+   void Exec(unsigned int, const X0 &, const X1 &)
    {
       throw std::runtime_error(
         "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
    }
 
    template <typename X0, typename X1,
-             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int>::type = 0>
+             std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
       auto thisSlotH = fObjects[slot];
@@ -431,7 +428,7 @@ public:
    }
 
    template <typename X0, typename W,
-             typename std::enable_if<IsDataContainer<X0>::value && !IsDataContainer<W>::value, int>::type = 0>
+             std::enable_if_t<IsDataContainer<X0>::value && !IsDataContainer<W>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const W w)
    {
       auto thisSlotH = fObjects[slot];
@@ -440,9 +437,9 @@ public:
       }
    }
 
-   template <typename X0, typename X1, typename X2,
-             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value,
-                                     int>::type = 0>
+   template <
+      typename X0, typename X1, typename X2,
+      std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
       auto thisSlotH = fObjects[slot];
@@ -458,9 +455,9 @@ public:
       }
    }
 
-   template <typename X0, typename X1, typename W,
-             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && !IsDataContainer<W>::value,
-                                     int>::type = 0>
+   template <
+      typename X0, typename X1, typename W,
+      std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value && !IsDataContainer<W>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const W w)
    {
       auto thisSlotH = fObjects[slot];
@@ -476,9 +473,9 @@ public:
    }
 
    template <typename X0, typename X1, typename X2, typename X3,
-             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value &&
-                                        IsDataContainer<X3>::value,
-                                     int>::type = 0>
+             std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value &&
+                                 IsDataContainer<X3>::value,
+                              int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {
       auto thisSlotH = fObjects[slot];
@@ -496,9 +493,9 @@ public:
    }
 
    template <typename X0, typename X1, typename X2, typename W,
-             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value &&
-                                        !IsDataContainer<W>::value,
-                                     int>::type = 0>
+             std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value &&
+                                 !IsDataContainer<W>::value,
+                              int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const W w)
    {
       auto thisSlotH = fObjects[slot];
@@ -565,7 +562,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    template <typename X0, typename X1,
-             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int>::type = 0>
+             std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
       if (x0s.size() != x1s.size()) {
@@ -838,7 +835,7 @@ public:
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
@@ -888,7 +885,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, ResultType v) { fMaxs[slot] = std::max(v, fMaxs[slot]); }
 
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
@@ -954,7 +951,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, ResultType v) { fSums[slot] += v; }
 
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
@@ -993,7 +990,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
@@ -1042,7 +1039,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
@@ -1657,13 +1654,13 @@ public:
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   template <bool MustCopyAssign_ = MustCopyAssign, typename std::enable_if<MustCopyAssign_, int>::type = 0>
+   template <bool MustCopyAssign_ = MustCopyAssign, std::enable_if_t<MustCopyAssign_, int> = 0>
    void Exec(unsigned int slot, const T &value)
    {
       fAggregators[slot] = fAggregate(fAggregators[slot], value);
    }
 
-   template <bool MustCopyAssign_ = MustCopyAssign, typename std::enable_if<!MustCopyAssign_, int>::type = 0>
+   template <bool MustCopyAssign_ = MustCopyAssign, std::enable_if_t<!MustCopyAssign_, int> = 0>
    void Exec(unsigned int slot, const T &value)
    {
       fAggregate(fAggregators[slot], value);
@@ -1673,7 +1670,7 @@ public:
 
    template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
              bool MergeAll = std::is_same<void, MergeRet>::value>
-   typename std::enable_if<MergeAll, void>::type Finalize()
+   std::enable_if_t<MergeAll, void> Finalize()
    {
       fMerge(fAggregators);
       *fResult = fAggregators[0];
@@ -1681,7 +1678,7 @@ public:
 
    template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
              bool MergeTwoByTwo = std::is_same<U, MergeRet>::value>
-   typename std::enable_if<MergeTwoByTwo, void>::type Finalize(...) // ... needed to let compiler distinguish overloads
+   std::enable_if_t<MergeTwoByTwo, void> Finalize(...) // ... needed to let compiler distinguish overloads
    {
       for (const auto &acc : fAggregators)
          *fResult = fMerge(*fResult, acc);

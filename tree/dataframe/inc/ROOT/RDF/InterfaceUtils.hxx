@@ -107,7 +107,7 @@ struct Book{};
 }
 // clang-format on
 
-template <typename T, bool ISV6HISTO = std::is_base_of<TH1, typename std::decay<T>::type>::value>
+template <typename T, bool ISV6HISTO = std::is_base_of<TH1, std::decay_t<T>>::value>
 struct HistoUtils {
    static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
@@ -403,7 +403,7 @@ void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    const auto jittedFilter = wkJittedFilter->lock();
 
    // mock Filter logic -- validity checks and Define-ition of RDataSource columns
-   using Callable_t = typename std::decay<F>::type;
+   using Callable_t = std::decay_t<F>;
    using F_t = RFilter<Callable_t, PrevNode>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
@@ -445,7 +445,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
 
    auto jittedDefine = wkJittedDefine->lock();
 
-   using Callable_t = typename std::decay<F>::type;
+   using Callable_t = std::decay_t<F>;
    using NewCol_t = RDefine<Callable_t, CustomColExtraArgs::None>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
@@ -571,7 +571,7 @@ struct RNeedJitting<> {
 /// Check preconditions for RInterface::Aggregate:
 /// - the aggregator callable must have signature `U(U,T)` or `void(U&,T)`.
 /// - the merge callable must have signature `U(U,U)` or `void(std::vector<U>&)`
-template <typename R, typename Merge, typename U, typename T, typename decayedU = typename std::decay<U>::type,
+template <typename R, typename Merge, typename U, typename T, typename decayedU = std::decay_t<U>,
           typename mergeArgsNoDecay_t = typename CallableTraits<Merge>::arg_types_nodecay,
           typename mergeArgs_t = typename CallableTraits<Merge>::arg_types,
           typename mergeRet_t = typename CallableTraits<Merge>::ret_type>

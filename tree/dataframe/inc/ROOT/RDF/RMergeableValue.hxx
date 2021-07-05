@@ -235,7 +235,7 @@ class RMergeableFill final : public RMergeableValue<T> {
    // RDataFrame's generic Fill method supports two possible signatures for Merge.
    // Templated to create a dependent type to SFINAE on - in reality, `U` will always be `T`.
    // This overload handles Merge(TCollection*)...
-   template <typename U, typename = typename std::enable_if<std::is_base_of<TObject, U>::value, int>::type>
+   template <typename U, std::enable_if_t<std::is_base_of<TObject, U>::value, int> = 0>
    auto DoMerge(const RMergeableFill<U> &other, int /*toincreaseoverloadpriority*/)
       -> decltype(((U &)this->fValue).Merge((TCollection *)nullptr), void())
    {
