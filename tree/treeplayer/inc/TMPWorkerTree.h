@@ -96,8 +96,10 @@ private:
    void SendResult();
 
    F  fProcFunc; ///< copy the function to be executed
-   typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type fReducedResult; ///< the results of the executions of fProcFunc merged together
-   bool fCanReduce; ///< true if fReducedResult can be reduced with a new result, false until we have produced one result
+   /// the results of the executions of fProcFunc merged together
+   std::result_of_t<F(std::reference_wrapper<TTreeReader>)> fReducedResult;
+   /// true if fReducedResult can be reduced with a new result, false until we have produced one result
+   bool fCanReduce;
 };
 
 class TMPWorkerTreeSel : public TMPWorkerTree {
@@ -131,8 +133,8 @@ private:
 /// object from the file we are reading the TTree from.
 /// Note: the only sane case in which this should happen is when a TH1F* is
 /// returned.
-template <class T, typename std::enable_if<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
-                                           !std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+template <class T, std::enable_if_t<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
+                                    !std::is_constructible<TCollection *, T>::value> * = nullptr>
 void DetachRes(T res)
 {
    auto th1p = dynamic_cast<TH1*>(res);
@@ -159,8 +161,8 @@ void DetachRes(T res)
 }
 
 // Specialization for TCollections
-template <class T, typename std::enable_if<std::is_pointer<T>::value &&
-                                           std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+template <class T,
+          std::enable_if_t<std::is_pointer<T>::value && std::is_constructible<TCollection *, T>::value> * = nullptr>
 void DetachRes(T res)
 {
    if (res) {
