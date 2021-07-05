@@ -22,7 +22,6 @@
 #include "RooFitResult.h"
 #include "RooAbsRealLValue.h"
 #include "RooGaussian.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "TCanvas.h"
 #include "RooPlot.h"
 #include "RooRandom.h"
@@ -30,6 +29,7 @@
 #include "Math/Util.h"
 #include "RooHelpers.h"
 
+#include <memory>
 #include <numeric>
 #include <ctime>
 #include <chrono>
