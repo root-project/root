@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooHistPdf.h"
 #include "TCanvas.h"
@@ -27,7 +26,7 @@ void rf706_histpdf()
    // ---------------------------------------------
 
    RooRealVar x("x", "x", 0, 20);
-   RooPolynomial p("p", "p", x, RooArgList(RooConst(0.01), RooConst(-0.01), RooConst(0.0004)));
+   RooPolynomial p("p", "p", x, RooArgList(0.01, -0.01, 0.0004));
 
    // C r e a t e   l o w   s t a t s   h i s t o g r a m
    // ---------------------------------------------------

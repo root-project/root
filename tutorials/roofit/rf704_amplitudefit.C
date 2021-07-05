@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooTruthModel.h"
 #include "RooFormulaVar.h"
 #include "RooRealSumPdf.h"
@@ -44,8 +43,8 @@ void rf704_amplitudefit()
    RooAbsReal *sinhGConv = truthModel.convolution(&sinhGBasis, &t);
 
    // Construct polynomial amplitudes in cos(a)
-   RooPolyVar poly1("poly1", "poly1", cosa, RooArgList(RooConst(0.5), RooConst(0.2), RooConst(0.2)), 0);
-   RooPolyVar poly2("poly2", "poly2", cosa, RooArgList(RooConst(1), RooConst(-0.2), RooConst(3)), 0);
+   RooPolyVar poly1("poly1", "poly1", cosa, RooArgList(0.5, 0.2, 0.2), 0);
+   RooPolyVar poly2("poly2", "poly2", cosa, RooArgList(1.0, -0.2, 3.0), 0);
 
    // Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
    RooProduct ampl1("ampl1", "amplitude 1", RooArgSet(poly1, *coshGConv));

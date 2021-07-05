@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooIntegralMorph.h"
 #include "RooNLLVar.h"
@@ -36,7 +35,7 @@ void rf705_linearmorph()
    RooGaussian g1("g1", "g1", x, g1mean, RooConst(2));
 
    // Upper end point shape: a Polynomial
-   RooPolynomial g2("g2", "g2", x, RooArgSet(RooConst(-0.03), RooConst(-0.001)));
+   RooPolynomial g2("g2", "g2", x, RooArgSet(-0.03, -0.001));
 
    // C r e a t e   i n t e r p o l a t i n g   p d f
    // -----------------------------------------------
