@@ -74,12 +74,12 @@ important to check both how much memory is available and the size of the CSV fil
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RCsvDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <TError.h>
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 

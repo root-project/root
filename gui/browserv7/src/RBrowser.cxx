@@ -15,7 +15,6 @@
 #include <ROOT/Browsable/RSysFile.hxx>
 
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RFileDialog.hxx>
 
 #include "RBrowserWidget.hxx"

@@ -11,7 +11,6 @@
 #ifndef ROOT_RDF_RDATABLOCKNOTIFIER
 #define ROOT_RDF_RDATABLOCKNOTIFIER
 
-#include <ROOT/RMakeUnique.hxx>
 #include <TNotifyLink.h>
 
 #include <memory>

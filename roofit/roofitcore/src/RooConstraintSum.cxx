@@ -36,7 +36,7 @@ arguments.
 #include "RooHelpers.h"
 #include "RooWorkspace.h"
 
-#include <ROOT/RMakeUnique.hxx>
+#include <memory>
 
 ClassImp(RooConstraintSum);
 

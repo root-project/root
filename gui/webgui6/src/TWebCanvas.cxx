@@ -37,13 +37,12 @@
 #include "TAtt3D.h"
 #include "TView.h"
 
-#include <ROOT/RMakeUnique.hxx>
-
 #include <cstdio>
 #include <cstring>
-#include <sstream>
 #include <fstream>
 #include <iostream>
+#include <memory>
+#include <sstream>
 
 /** \class TWebCanvas
 \ingroup webgui6

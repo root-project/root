@@ -1,13 +1,11 @@
 #include "RConfigure.h"
 #include "ROOT/RRawFile.hxx"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>

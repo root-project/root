@@ -27,9 +27,7 @@
 #include "RooAbsCacheElement.h"
 #include "RooNameReg.h"
 #include "RooHelpers.h"
-#include "ROOT/RMakeUnique.hxx"
 #include <vector>
-#include <memory>
 
 
 template<class T>

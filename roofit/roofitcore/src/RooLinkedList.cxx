@@ -37,10 +37,10 @@ Use RooAbsCollection derived objects for public use
 #include "Riostream.h"
 #include "TBuffer.h"
 #include "TROOT.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <vector>
 
 using namespace std;

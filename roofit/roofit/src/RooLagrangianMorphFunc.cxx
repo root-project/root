@@ -58,13 +58,13 @@ describe the same process or not.
 #include "TParameter.h"
 #include "TRandom3.h"
 // stl includes
-#include "ROOT/RMakeUnique.hxx"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <limits>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>

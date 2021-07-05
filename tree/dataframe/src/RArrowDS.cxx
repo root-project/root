@@ -29,10 +29,10 @@ arrow::Schema.
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RArrowDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <snprintf.h>
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 #include <string>
 

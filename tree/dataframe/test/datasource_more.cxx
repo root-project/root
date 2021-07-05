@@ -1,5 +1,4 @@
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <TROOT.h>
 #include <TSystem.h>
 
@@ -9,6 +8,8 @@
 
 #include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
+
+#include <memory>
 
 using namespace ROOT::RDF;
 

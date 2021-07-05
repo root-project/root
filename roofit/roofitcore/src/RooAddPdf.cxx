@@ -76,9 +76,8 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooNaNPacker.h"
 #include "RooBatchCompute.h"
 
-#include "ROOT/RMakeUnique.hxx"
-
 #include <algorithm>
+#include <memory>
 #include <sstream>
 #include <set>
 

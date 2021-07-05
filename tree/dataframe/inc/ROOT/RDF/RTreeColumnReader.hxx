@@ -12,7 +12,6 @@
 #define ROOT_RDF_RTREECOLUMNREADER
 
 #include "RColumnReaderBase.hxx"
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RVec.hxx>
 #include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 #include <TTreeReader.h>

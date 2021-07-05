@@ -49,11 +49,10 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooTrace.h"
 #include "RooHelpers.h"
 
-#include "ROOT/RMakeUnique.hxx"
-
 #include "TClass.h"
 
 #include <iostream>
+#include <memory>
 
 using namespace std;
 
