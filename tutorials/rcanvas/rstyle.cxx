@@ -51,5 +51,5 @@ void rstyle()
    canvas->Show();
 
    // after leaving function scope style will be destroyed, one has to preserve it
-   RDirectory::Heap().Add("lineRStyle", style);
+   RDirectory::Heap().Add("rstyle", style);
 }
