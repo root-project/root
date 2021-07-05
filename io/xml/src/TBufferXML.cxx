@@ -46,8 +46,9 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "RZip.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "snprintf.h"
+
+#include <memory>
 
 ClassImp(TBufferXML);
 

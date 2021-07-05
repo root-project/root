@@ -85,7 +85,8 @@
 #include "TError.h"
 #include "TClass.h"
 #include "TVirtualMutex.h"
-#include <ROOT/RMakeUnique.hxx>
+
+#include <memory>
 
 ClassImp(TXMLFile);
 

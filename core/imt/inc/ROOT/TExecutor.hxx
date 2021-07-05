@@ -12,7 +12,6 @@
 #define ROOT_TExecutor
 
 #include "ROOT/RConfig.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/TSequentialExecutor.hxx"

@@ -84,11 +84,11 @@ for advanced uses of categories.
 
 #include "TBuffer.h"
 #include "TString.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "TList.h"
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <memory>
 
 using namespace std;
 

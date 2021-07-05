@@ -12,7 +12,6 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
 
 #include "RConfigure.h"
@@ -25,8 +24,9 @@
 #include "TROOT.h"
 #include "TBase64.h"
 
-#include <regex>
 #include <fstream>
+#include <memory>
+#include <regex>
 
 #ifdef _MSC_VER
 #include <process.h>

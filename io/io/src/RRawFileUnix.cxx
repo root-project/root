@@ -11,7 +11,6 @@
 
 #include "ROOT/RConfig.hxx"
 #include "ROOT/RRawFileUnix.hxx"
-#include "ROOT/RMakeUnique.hxx"
 
 #ifdef R__HAS_URING
   #include "ROOT/RIoUring.hxx"
@@ -21,6 +20,7 @@
 
 #include <cerrno>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>

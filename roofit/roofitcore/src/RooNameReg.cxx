@@ -28,8 +28,8 @@ fast searches and comparisons.
 #include "RooNameReg.h"
 
 #include "RooFit.h"
-#include "ROOT/RMakeUnique.hxx"
 #include <iostream>
+#include <memory>
 using namespace std ;
 
 

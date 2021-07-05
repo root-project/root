@@ -93,14 +93,14 @@ for single nodes.
 #include "RooResolutionModel.h"
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "RooHelpers.h"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstring>
 #include <algorithm>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <sstream>
 
 using namespace std;
 

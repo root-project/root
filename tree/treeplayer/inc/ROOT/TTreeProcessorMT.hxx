@@ -20,12 +20,12 @@
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/InternalTreeUtils.hxx" // RFriendInfo
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 /** \class TTreeView

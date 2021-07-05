@@ -63,7 +63,6 @@
 #include "TStopwatch.h"
 #include "TVectorD.h"
 #include "TMatrixDSym.h"
-#include "ROOT/RMakeUnique.hxx"
 
 // specific to this package
 #include "RooStats/HistFactory/LinInterpVar.h"
@@ -73,6 +72,7 @@
 #include "Helper.h"
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 
 #define VERBOSE

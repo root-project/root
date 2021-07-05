@@ -22,7 +22,6 @@
 #include "RConfigure.h"
 #include "TRegexp.h"
 #include "TObjArray.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include "THttpEngine.h"
 #include "THttpLongPollEngine.h"
@@ -32,11 +31,12 @@
 #include "TCivetweb.h"
 #include "TFastCgi.h"
 
-#include <string>
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <chrono>
+#include <memory>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 

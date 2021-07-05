@@ -12,7 +12,6 @@
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RDF/Utils.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RRawFile.hxx>
 
 #include "TError.h"

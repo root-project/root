@@ -16,7 +16,6 @@
 
 #include <ROOT/RPadLength.hxx>
 #include <ROOT/RColor.hxx>
-#include <ROOT/RMakeUnique.hxx>
 
 namespace ROOT {
 namespace Experimental {

@@ -15,7 +15,6 @@ set(Foundation_dict_headers
   TError.h
   ROOT/RIntegerSequence.hxx
   ROOT/RLogger.hxx
-  ROOT/RMakeUnique.hxx
   ROOT/RNotFn.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx

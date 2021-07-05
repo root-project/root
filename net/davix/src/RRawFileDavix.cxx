@@ -10,10 +10,10 @@
  *************************************************************************/
 
 #include "ROOT/RRawFileDavix.hxx"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <TError.h>
 
+#include <memory>
 #include <stdexcept>
 #include <vector>
 

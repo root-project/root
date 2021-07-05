@@ -26,7 +26,6 @@
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/RDF/RCutFlowReport.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RDF/RDisplay.hxx"

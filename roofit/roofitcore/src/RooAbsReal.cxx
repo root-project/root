@@ -101,7 +101,6 @@
 #include "TF3.h"
 #include "TMatrixD.h"
 #include "TVector.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "strlcpy.h"
 #ifndef NDEBUG
 #include <TSystem.h> // To print stack traces when caching errors are detected

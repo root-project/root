@@ -1,4 +1,3 @@
-#include "ROOT/RMakeUnique.hxx"
 #include "TInterpreter.h"
 #include "TTree.h"
 #include "TTreeReader.h"
@@ -10,6 +9,8 @@
 #include "data.h"
 
 #include "RErrorIgnoreRAII.hxx"
+
+#include <memory>
 
 TEST(TTreeReaderLeafs, LeafListCaseA) {
    // From "Case A" of the TTree class doc:

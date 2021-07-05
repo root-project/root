@@ -22,7 +22,6 @@
 #include <ROOT/RDF/RJittedDefine.hxx>
 #include <ROOT/RDF/RJittedFilter.hxx>
 #include <ROOT/RDF/RLoopManager.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel

@@ -2,7 +2,6 @@
 #define ROOT_RSTREAMINGDS
 
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include <chrono>
 #include <thread>
 #include <type_traits>

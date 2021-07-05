@@ -12,13 +12,13 @@
 #define ROOT_RLAZYDSIMPL
 
 #include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/TSeq.hxx"
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <tuple>
 #include <string>
 #include <typeinfo>

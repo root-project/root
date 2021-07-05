@@ -1,4 +1,3 @@
-#include "ROOT/RMakeUnique.hxx"
 #include "TEntryListArray.h"
 
 #include "TChain.h"
@@ -13,6 +12,7 @@
 
 #include "gtest/gtest.h"
 #include <stdlib.h>
+#include <memory>
 
 #include "RErrorIgnoreRAII.hxx"
 

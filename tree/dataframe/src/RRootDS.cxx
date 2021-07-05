@@ -13,7 +13,6 @@
 #include <TError.h>
 #include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
-#include <ROOT/RMakeUnique.hxx>
 
 #include <algorithm>
 #include <vector>

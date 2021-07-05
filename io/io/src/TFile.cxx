@@ -137,8 +137,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RConcurrentHashColl.hxx"
+#include <memory>
 
 using std::sqrt;
 

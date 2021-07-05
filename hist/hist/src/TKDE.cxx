@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <algorithm>
+#include <memory>
 #include <numeric>
 #include <limits>
 #include <cassert>
@@ -42,9 +43,6 @@
 #include "TH1.h"
 #include "TVirtualPad.h"
 #include "TKDE.h"
-
-// for make_unique
-#include "ROOT/RMakeUnique.hxx"
 
 ClassImp(TKDE);
 

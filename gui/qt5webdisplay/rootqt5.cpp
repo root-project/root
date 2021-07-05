@@ -38,7 +38,6 @@
 #include <memory>
 
 #include <ROOT/RWebDisplayHandle.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
 
 /** \class TQt5Timer

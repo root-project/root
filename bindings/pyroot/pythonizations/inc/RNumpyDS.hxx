@@ -12,13 +12,13 @@
 #include "Python.h"
 
 #include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/RVec.hxx"
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <tuple>
 #include <string>
 #include <typeinfo>

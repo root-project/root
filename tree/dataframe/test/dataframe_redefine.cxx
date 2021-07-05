@@ -1,9 +1,10 @@
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RTrivialDS.hxx>
 #include <TTree.h>
 
 #include <gtest/gtest.h>
+
+#include <memory>
 
 TEST(Redefine, NoJitting)
 {
