@@ -12,10 +12,10 @@
 /// \date 2018-08-16
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
-/// \author Sergey Linev
+/// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
- * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

@@ -30,7 +30,7 @@
 
 using namespace ROOT::Experimental;
 
-auto frame_style = RStyle::Parse("frame { x_ticks_width: 3; y_ticks_width: 3; }"
+auto rframe_style = RStyle::Parse("frame { x_ticks_width: 3; y_ticks_width: 3; }"
                                  "title { margin: 0.02; height: 0.1; text_color: blue; text_size: 0.07; }"
                                  "line { line_width: 2; }"
                                  "text { text_align: 13; text_size: 0.03; }");
@@ -124,7 +124,7 @@ void rframe()
    text5->onFrame = true; // or via CSS "onFrame: true;"
    text5->text.align = 11;
 
-   canvas->UseStyle(frame_style);
+   canvas->UseStyle(rframe_style);
 
    canvas->Show();
 }
