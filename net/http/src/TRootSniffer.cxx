@@ -28,9 +28,9 @@
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <stdlib.h>
+#include <memory>
 #include <vector>
 #include <string.h>
 

@@ -9,10 +9,10 @@
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RTrivialDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <TError.h>
 
 #include <limits>
+#include <memory>
 
 namespace ROOT {
 

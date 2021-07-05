@@ -17,8 +17,6 @@
 #include "TClass.h"
 #include "TRandom.h"
 
-#include <ROOT/RMakeUnique.hxx>
-
 #include "gtest/gtest.h"
 
 #include <memory>

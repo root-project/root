@@ -101,8 +101,6 @@ class Container {
 #include <cstdlib>
 #include <fstream>
 
-#include <ROOT/RMakeUnique.hxx>
-
 #include "Compression.h"
 
 #include "TArrayI.h"

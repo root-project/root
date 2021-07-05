@@ -25,8 +25,9 @@
 #include "TEnv.h"
 #include "TApplication.h"
 
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
+
+#include <memory>
 
 
 class TCefTimer : public TTimer {

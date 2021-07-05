@@ -12,8 +12,8 @@
 #ifndef ROOT_TStreamerInfoActions
 #define ROOT_TStreamerInfoActions
 
+#include <memory>
 #include <vector>
-#include <ROOT/RMakeUnique.hxx>
 
 #include "TStreamerInfo.h"
 #include "TVirtualArray.h"

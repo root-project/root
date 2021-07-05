@@ -15,11 +15,11 @@
 
 #include "ROOT/RLogger.hxx"
 
-#include "ROOT/RMakeUnique.hxx"
 #include "TError.h"
 
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <vector>
 
 using namespace ROOT::Experimental;

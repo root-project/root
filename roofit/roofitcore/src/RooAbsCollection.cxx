@@ -43,13 +43,13 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include <ROOT/RMakeUnique.hxx>
 #include "strlcpy.h"
 
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 using std::endl;
 using std::vector;

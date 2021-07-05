@@ -52,7 +52,6 @@
 #include "RooSentinel.h"
 #include "RooMsgService.h"
 #include "RooConstVar.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "strlcpy.h"
 
 #include <iostream>

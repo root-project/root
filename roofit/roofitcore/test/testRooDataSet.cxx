@@ -15,13 +15,13 @@
 #include <TH1F.h>
 #include <TCut.h>
 #include <TSystem.h>
-#include <ROOT/RMakeUnique.hxx>
 
 #include <TRandom3.h>
 #include <TH1F.h>
 #include <TCut.h>
 
 #include <fstream>
+#include <memory>
 
 #include "gtest/gtest.h"
 

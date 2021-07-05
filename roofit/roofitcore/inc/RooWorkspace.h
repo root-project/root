@@ -24,8 +24,8 @@
 #include "TUUID.h"
 #include <map>
 #include <list>
+#include <memory>
 #include <string>
-#include "ROOT/RMakeUnique.hxx"
 
 class TClass ;
 class RooAbsPdf ;
