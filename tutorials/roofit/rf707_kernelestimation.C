@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooKeysPdf.h"
 #include "RooNDKeysPdf.h"
@@ -31,7 +30,7 @@ void rf707_kernelestimation()
 
    // Create a toy pdf for sampling
    RooRealVar x("x", "x", 0, 20);
-   RooPolynomial p("p", "p", x, RooArgList(RooConst(0.01), RooConst(-0.01), RooConst(0.0004)));
+   RooPolynomial p("p", "p", x, RooArgList(0.01, -0.01, 0.0004));
 
    // Sample 500 events from p
    RooDataSet *data1 = p.generate(x, 200);
@@ -68,7 +67,7 @@ void rf707_kernelestimation()
 
    // Construct a 2D toy pdf for sampling
    RooRealVar y("y", "y", 0, 20);
-   RooPolynomial py("py", "py", y, RooArgList(RooConst(0.01), RooConst(0.01), RooConst(-0.0004)));
+   RooPolynomial py("py", "py", y, RooArgList(0.01, 0.01, -0.0004));
    RooProdPdf pxy("pxy", "pxy", RooArgSet(p, py));
    RooDataSet *data2 = pxy.generate(RooArgSet(x, y), 1000);
 

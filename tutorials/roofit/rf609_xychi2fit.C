@@ -14,7 +14,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooPolyVar.h"
-#include "RooConstVar.h"
 #include "RooChi2Var.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -59,7 +58,7 @@ void rf609_xychi2fit()
    // Make fit function
    RooRealVar a("a", "a", 0.0, -10, 10);
    RooRealVar b("b", "b", 0.0, -100, 100);
-   RooPolyVar f("f", "f", x, RooArgList(b, a, RooConst(1)));
+   RooPolyVar f("f", "f", x, RooArgList(b, a, 1.0));
 
    // Plot dataset in X-Y interpretation
    RooPlot *frame = x.frame(Title("Chi^2 fit of function set of (X#pmdX,Y#pmdY) values"));

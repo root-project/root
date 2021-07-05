@@ -12,7 +12,6 @@
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
-#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -30,7 +29,7 @@ void rf902_numgenconfig()
 
    // Example pdf for use below
    RooRealVar x("x", "x", 0, 10);
-   RooChebychev model("model", "model", x, RooArgList(RooConst(0), RooConst(0.5), RooConst(-0.1)));
+   RooChebychev model("model", "model", x, RooArgList(0, 0.5, -0.1));
 
    // Change global strategy for 1D sampling problems without conditional observable
    // (1st kFALSE) and without discrete observable (2nd kFALSE) from RooFoamGenerator,

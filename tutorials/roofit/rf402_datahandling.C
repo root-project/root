@@ -14,7 +14,6 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "TCanvas.h"
 #include "TAxis.h"
