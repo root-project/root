@@ -2,14 +2,14 @@
 /// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas),
-/// divide on sub-pads and draw histograms there
+/// divide on sub-sub pads and draw histograms there
 ///
 /// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2018-03-13
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-/// \author Sergey Linev
+/// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -40,8 +40,7 @@ void subpads()
   auto pHist2 = std::make_shared<RH1D>(xaxis);
   auto pHist3 = std::make_shared<RH1D>(xaxis);
 
-
-  for (int n=0;n<1000;n++) {
+  for (int n = 0; n < 1000; n++) {
      pHist1->Fill(gRandom->Gaus(3., 0.8));
      pHist2->Fill(gRandom->Gaus(5., 1.));
      pHist3->Fill(gRandom->Gaus(7., 1.2));
