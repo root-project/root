@@ -14,7 +14,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooChebychev.h"
 #include "RooFitResult.h"
