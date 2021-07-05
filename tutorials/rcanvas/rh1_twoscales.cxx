@@ -32,7 +32,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void rh1_twoaxes()
+void rh1_twoscales()
 {
    // Create the histogram.
    RAxisConfig xaxis(25, 0., 10.);
