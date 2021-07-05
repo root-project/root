@@ -5453,6 +5453,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
+   function drawRFont() {
+      let font      = this.getObject(),
+          svg       = this.getCanvSvg(),
+          defs      = svg.select('.canvas_defs'),
+          clname = "custom_font_" + font.fFamily+font.fWeight+font.fStyle;
+
+      if (defs.empty())
+         defs = svg.insert("svg:defs", ":first-child").attr("class", "canvas_defs");
+
+      let entry = defs.select("." + clname);
+      if (entry.empty())
+         entry = defs.append("style").attr("type", "text/css").attr("class", clname);
+
+      entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : "normal"}; font-style: ${font.fStyle ? font.fStyle : "normal"}; src: ${font.fSrc}; }`);
+
+      return true;
+   }
+
+
    // jsrp.addDrawFunc({ name: "ROOT::Experimental::RPadDisplayItem", icon: "img_canvas", func: drawPad, opt: "" });
 
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RHist1Drawable", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
@@ -5470,6 +5489,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "" });
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RPaveText", icon: "img_pavetext", prereq: "v7more", func: "JSROOT.v7.drawPaveText", opt: "" });
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: drawRFrame, opt: "" });
+   jsrp.addDrawFunc({ name: "ROOT::Experimental::RFont", icon: "img_text", func: drawRFont, opt: "", direct: "v7", csstype: "font" });
    jsrp.addDrawFunc({ name: "ROOT::Experimental::RAxisDrawable", icon: "img_frame", func: drawRAxis, opt: "" });
 
    JSROOT.v7.RAxisPainter = RAxisPainter;
@@ -5480,6 +5500,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    JSROOT.v7.RPavePainter = RPavePainter;
    JSROOT.v7.drawRAxis = drawRAxis;
    JSROOT.v7.drawRFrame = drawRFrame;
+   JSROOT.v7.drawRFont = drawRFont;
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawRCanvas = drawRCanvas;
    JSROOT.v7.drawPadSnapshot = drawPadSnapshot;
