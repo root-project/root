@@ -49,7 +49,7 @@ template <std::size_t... N, typename T, typename F>
 class PassAsVecHelper<std::index_sequence<N...>, T, F> {
    template <std::size_t Idx>
    using AlwaysT = T;
-   typename std::decay<F>::type fFunc;
+   std::decay_t<F> fFunc;
 
 public:
    PassAsVecHelper(F &&f) : fFunc(std::forward<F>(f)) {}
@@ -76,8 +76,8 @@ namespace RDFInternal = ROOT::Internal::RDF;
 /// std::not_fn, required for interoperability with RDataFrame.
 // clang-format on
 template <typename F,
-          typename Args = typename ROOT::TypeTraits::CallableTraits<typename std::decay<F>::type>::arg_types_nodecay,
-          typename Ret = typename ROOT::TypeTraits::CallableTraits<typename std::decay<F>::type>::ret_type>
+          typename Args = typename ROOT::TypeTraits::CallableTraits<std::decay_t<F>>::arg_types_nodecay,
+          typename Ret = typename ROOT::TypeTraits::CallableTraits<std::decay_t<F>>::ret_type>
 auto Not(F &&f) -> decltype(RDFInternal::NotHelper(Args(), std::forward<F>(f)))
 {
    static_assert(std::is_same<Ret, bool>::value, "RDF::Not requires a callable that returns a bool.");
