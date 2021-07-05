@@ -11,7 +11,6 @@
 #ifndef ROOT_RLAZYDSIMPL
 #define ROOT_RLAZYDSIMPL
 
-#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/TSeq.hxx"
@@ -22,6 +21,7 @@
 #include <tuple>
 #include <string>
 #include <typeinfo>
+#include <utility> // std::index_sequence
 #include <vector>
 
 namespace ROOT {

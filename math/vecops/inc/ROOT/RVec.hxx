@@ -25,7 +25,6 @@
 #endif
 
 #include <ROOT/RAdoptAllocator.hxx>
-#include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RStringView.hxx>
 #include <TError.h> // R__ASSERT
 #include <ROOT/TypeTraits.hxx>

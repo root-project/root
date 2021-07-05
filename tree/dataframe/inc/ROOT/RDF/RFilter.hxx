@@ -17,13 +17,13 @@
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
-#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"
 
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <utility> // std::index_sequence
 #include <vector>
 
 namespace ROOT {

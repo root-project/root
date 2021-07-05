@@ -15,7 +15,6 @@
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"
@@ -23,6 +22,7 @@
 #include <array>
 #include <deque>
 #include <type_traits>
+#include <utility> // std::index_sequence
 #include <vector>
 
 class TTreeReader;
