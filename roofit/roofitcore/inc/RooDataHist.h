@@ -20,6 +20,8 @@
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 
+#include "ROOT/RStringView.hxx"
+
 #include <map>
 #include <vector>
 #include <string>
@@ -39,15 +41,17 @@ public:
 
   // Constructors, factory methods etc.
   RooDataHist() ; 
-  RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName=0) ;
-  RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, Double_t initWgt=1.0) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dhistMap, Double_t wgt=1.0) ;
+  RooDataHist(std::string_view name, std::string_view title, const RooArgSet& vars, const char* binningName=0) ;
+  RooDataHist(std::string_view name, std::string_view title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
+  RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
+  RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, Double_t initWgt=1.0) ;
+  RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dhistMap, Double_t wgt=1.0) ;
   //RooDataHist(const char *name, const char *title, const RooArgList& vars, Double_t initWgt=1.0) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
+  RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
   RooDataHist& operator=(const RooDataHist&) = delete;
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooDataHist)
 
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   TObject* Clone(const char* newname="") const override {
@@ -227,7 +231,7 @@ protected:
   void setAllWeights(Double_t value) ;
  
   void initialize(const char* binningName=0,Bool_t fillTree=kTRUE) ;
-  RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
+  RooDataHist(std::string_view name, std::string_view title, RooDataHist* h, const RooArgSet& varSubset, 
         const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
                   std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) override;

@@ -217,7 +217,7 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 /// </table>
 ///
 
-RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)  :
   RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataSet::RooDataSet", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
 {
@@ -622,7 +622,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 /// Constructor of an empty data set from a RooArgSet defining the dimensions
 /// of the data space.
 
-RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName) :
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
 //   cout << "RooDataSet::ctor(" << this << ") storageType = " << ((defaultStorageType==Tree)?"Tree":"Vector") << endl ;
@@ -654,7 +654,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 /// subset of an existing data
 ///
 
-RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, RooDataSet *dset, 
 		       const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -695,7 +695,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// uses this constructor, is the most convenient way to create a
 /// subset of an existing data
 
-RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, RooDataSet *dset, 
 		       const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -735,7 +735,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// operating exclusively and directly on the data set dimensions, the equivalent
 /// constructor with a string based cut expression is recommended.
 
-RooDataSet::RooDataSet(const char *name, const char *title, TTree *theTree,
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, TTree *theTree,
     const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -783,7 +783,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *theTree,
 /// If other expressions are needed, such as intermediate formula objects, use
 /// RooDataSet::RooDataSet(const char*,const char*,TTree*,const RooArgSet&,const RooFormulaVar&,const char*)
 /// \param[in] wgtVarName Name of the variable in `vars` that represents an event weight.
-RooDataSet::RooDataSet(const char* name, const char* title, TTree* theTree,
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, TTree* theTree,
     const RooArgSet& vars, const char* cuts, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -824,7 +824,7 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Protected constructor for internal use only
 
-RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, RooDataSet *dset, 
 		       const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		       std::size_t nStart, std::size_t nStop, Bool_t copyCache, const char* wgtVarName) :
   RooAbsData(name,title,vars)
@@ -974,16 +974,17 @@ RooDataSet::~RooDataSet()
 
 RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) const 
 {
-  TString title, name ;
+  std::string title;
+  std::string name;
   if (newName) {
     name = newName ;
   } else {
-    name = Form("%s_binned",GetName()) ;
+    name = std::string(GetName()) + "_binned" ;
   }
   if (newTitle) {
     title = newTitle ;
   } else {
-    title = Form("%s_binned",GetTitle()) ;
+    name = std::string(GetTitle()) + "_binned" ;
   }
 
   return new RooDataHist(name,title,*get(),*this) ;

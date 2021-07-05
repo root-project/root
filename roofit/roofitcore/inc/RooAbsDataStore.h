@@ -19,7 +19,10 @@
 #include "Rtypes.h"
 #include "RooArgSet.h"
 #include "RooAbsData.h"
+
+#include "ROOT/RStringView.hxx"
 #include "TNamed.h"
+
 #include <list>
 #include <vector>
 
@@ -31,13 +34,17 @@ namespace RooBatchCompute {
 struct RunContext;
 }
 
+
 class RooAbsDataStore : public TNamed, public RooPrintable {
 public:
 
   RooAbsDataStore() ; 
-  RooAbsDataStore(const char* name, const char* title, const RooArgSet& vars) ; 
+  RooAbsDataStore(std::string_view name, std::string_view title, const RooArgSet& vars) ;
   RooAbsDataStore(const RooAbsDataStore& other, const char* newname=0) ; 
   RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& vars, const char* newname=0) ; 
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooAbsDataStore)
+
   virtual RooAbsDataStore* clone(const char* newname=0) const = 0 ;
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const = 0 ;
   virtual ~RooAbsDataStore() ;

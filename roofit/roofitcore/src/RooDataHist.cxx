@@ -105,7 +105,7 @@ RooDataHist::RooDataHist()
 /// construct a RooThresholdCategory of the real dimension to be binned variably.
 /// Set the thresholds at the desired bin boundaries, and construct the
 /// data hist as a function of the threshold category instead of the real variable.
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName) : 
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgSet& vars, const char* binningName) : 
   RooAbsData(name,title,vars)
 {
   // Initialize datastore
@@ -142,7 +142,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 /// If the constructed data hist has less dimensions that in source data collection,
 /// all missing dimensions will be projected.
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
   RooAbsData(name,title,vars)
 {
   // Initialize datastore
@@ -168,7 +168,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 /// The RooArgList 'vars' defines the dimensions of the histogram. 
 /// The ranges and number of bins are taken from the input histogram and must be the same in all histograms
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, RooCategory& indexCat, 
 			 map<string,TH1*> histMap, Double_t wgt) :
   RooAbsData(name,title,RooArgSet(vars,&indexCat))
 {
@@ -193,7 +193,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 /// The RooArgList 'vars' defines the dimensions of the histogram. 
 /// The ranges and number of bins are taken from the input histogram and must be the same in all histograms
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, RooCategory& indexCat, 
 			 map<string,RooDataHist*> dhistMap, Double_t wgt) :
   RooAbsData(name,title,RooArgSet(vars,&indexCat))
 {
@@ -215,7 +215,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 /// and number of bins are taken from the input histogram, and the corresponding
 /// values are set accordingly on the arguments in 'vars'
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
   RooAbsData(name,title,vars)
 {
   // Initialize datastore
@@ -271,7 +271,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 /// <tr><td> Import(map<string,TH1*>&) <td> As above, but allows specification of many imports in a single operation
 ///                              
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			 const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
   RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
 {
@@ -839,7 +839,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 /// For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
 /// is the most convenient way to create a subset of an existing data  
 
-RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
+RooDataHist::RooDataHist(std::string_view name, std::string_view title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooAbsData(name,title,varSubset)
 {

@@ -203,9 +203,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   self.preferredObservableScanOrder(*nset2,orderedObs) ;
 
   // Create RooDataHist
-  TString hname = self.inputBaseName() ;
-  hname.Append("_CACHEHIST") ;
-  hname.Append(self.cacheNameSuffix(*nset2)) ;
+  auto hname = std::string(self.inputBaseName()) + "_CACHEHIST" + self.cacheNameSuffix(*nset2).Data();
 
   _hist = new RooDataHist(hname,hname,*nset2,self.binningName()) ;
   _hist->removeSelfFromDir() ;

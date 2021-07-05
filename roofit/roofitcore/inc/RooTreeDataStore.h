@@ -18,6 +18,9 @@
 
 #include "RooAbsDataStore.h"
 #include "RunContext.h"
+
+#include "ROOT/RStringView.hxx"
+
 #include <vector>
 #include <list>
 #include <string>
@@ -35,20 +38,22 @@ public:
   RooTreeDataStore() ; 
   RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName=0) ; 
 
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooTreeDataStore)
+
   // Empty ctor
-  RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName=0) ;
   virtual RooAbsDataStore* clone(const char* newname=0) const { return new RooTreeDataStore(*this,newname) ; }
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const { return new RooTreeDataStore(*this,vars,newname) ; }
 
   // Ctors from TTree
-  RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName=0) ; 
-  RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, TTree& t, const char* selExpr=0, const char* wgtVarName=0) ; 
+  RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName=0) ; 
+  RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, TTree& t, const char* selExpr=0, const char* wgtVarName=0) ; 
 
   // Ctors from DataStore
-  RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName=0) ;
-  RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const RooAbsDataStore& tds, const char* selExpr=0, const char* wgtVarName=0) ;
+  RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName=0) ;
+  RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const RooAbsDataStore& tds, const char* selExpr=0, const char* wgtVarName=0) ;
 
-  RooTreeDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
+  RooTreeDataStore(std::string_view name, std::string_view title, RooAbsDataStore& tds, 
 		   const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		   Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
 
@@ -154,7 +159,7 @@ public:
 
   static Int_t _defTreeBufSize ;  
 
-  void createTree(const char* name, const char* title) ; 
+  void createTree(std::string_view name, std::string_view title) ; 
   TTree *_tree ;           // TTree holding the data points
   TTree *_cacheTree ;      //! TTree holding the cached function values
   const RooAbsArg* _cacheOwner ; //! Object owning cache contents
