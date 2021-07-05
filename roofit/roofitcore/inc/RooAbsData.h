@@ -16,11 +16,14 @@
 #ifndef ROO_ABS_DATA
 #define ROO_ABS_DATA
 
-#include "TNamed.h"
 #include "RooPrintable.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooSpan.h"
+
+#include "ROOT/RStringView.hxx"
+#include "TNamed.h"
+
 #include <map>
 #include <string>
 
@@ -46,13 +49,31 @@ struct RunContext;
 }
 
 
+// Writes a templated constructor for compatibility with ROOT builds using the
+// C++14 standard or earlier, taking `ROOT::Internal::TStringView` instead of
+// `std::string_view`. This means one can still use a `TString` for the name or
+// title parameter. The condition in the following `#if` should be kept in
+// sync with the one in TString.h.
+#if (__cplusplus >= 201700L) && (!defined(__clang_major__) || __clang_major__ > 5)
+#define WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(Class_t) // does nothing
+#else
+#define WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(Class_t)                                             \
+  template<typename ...Args_t>                                                                    \
+  Class_t(ROOT::Internal::TStringView name, ROOT::Internal::TStringView title, Args_t &&... args) \
+    : Class_t(std::string_view(name), std::string_view(title), std::forward<Args_t>(args)...) {}
+#endif
+
+
 class RooAbsData : public TNamed, public RooPrintable {
 public:
 
   // Constructors, factory methods etc.
   RooAbsData() ; 
-  RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
+  RooAbsData(std::string_view name, std::string_view title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooAbsData)
+
   RooAbsData& operator=(const RooAbsData& other);
   virtual ~RooAbsData() ;
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const = 0 ;

@@ -237,7 +237,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    const RooArgSet *aset = GetFitInfo();
    if (aset != NULL) {
-      RooDataSet *dset = new RooDataSet(NULL, NULL, *aset);
+      RooDataSet *dset = new RooDataSet("", "", *aset);
       dset->add(*aset);
       res->SetFitInfo( dset );
    }

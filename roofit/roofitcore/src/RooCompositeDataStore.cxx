@@ -60,7 +60,9 @@ RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _cu
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert map by label to map by index for more efficient internal use
 
-RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
+RooCompositeDataStore::RooCompositeDataStore(
+        std::string_view name, std::string_view title,
+        const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
   RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
   for (const auto& iter : inputData) {
