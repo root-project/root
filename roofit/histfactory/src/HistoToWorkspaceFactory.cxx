@@ -1049,18 +1049,6 @@ namespace HistFactory{
     Double_t* curve_x=curve->GetX();
     delete frame; delete c1;
 
-    //
-    // Verbose output from MINUIT
-    //
-    /*
-    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
-    profile->getVal();
-    RooMinimizer* minuit = ((RooProfileLL*) profile)->minimizer();
-    minuit->setPrintLevel(5) ; // Print MINUIT messages
-    minuit->setVerbose(5) ; // Print RooMinimizer messages with parameter 
-                                // changes (corresponds to the Verbose() option of fitTo()
-    */
-  
     Double_t * x_arr = new Double_t[curve_N];
     Double_t * y_arr_nll = new Double_t[curve_N];
 //     Double_t y_arr_prof_nll[curve_N];

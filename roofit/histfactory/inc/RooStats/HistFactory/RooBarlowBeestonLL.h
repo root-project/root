@@ -36,97 +36,42 @@ public:
   // single gamma in a single channel
   class BarlowCache {
   public:
-    BarlowCache() : hasStatUncert(false), gamma(NULL), 
-		    observables(NULL), bin_center(NULL), 
-		    tau(NULL), nom_pois_mean(NULL),
-		    sumPdf(NULL),  nData(-1), binVolume(0) {}
-    bool hasStatUncert;
-    RooRealVar* gamma;
-    RooArgSet* observables;
-    RooArgSet* bin_center; // Snapshot
-    RooRealVar* tau;
-    RooAbsReal* nom_pois_mean;
-    RooAbsReal* sumPdf;
-    double nData;
-    double binVolume;
+    bool hasStatUncert = false;
+    RooRealVar* gamma = nullptr;
+    RooArgSet* observables = nullptr;
+    RooArgSet* bin_center = nullptr; // Snapshot
+    RooRealVar* tau = nullptr;
+    RooAbsReal* nom_pois_mean = nullptr;
+    RooAbsReal* sumPdf = nullptr;
+    double nData = -1;
+    double binVolume = 0;
     void SetBinCenter() const;
-    /*
-    // Restore original values and constant status of observables
-    TIterator* iter = obsSetOrig->createIterator() ;
-    RooRealVar* var ;
-    while((var=(RooRealVar*)iter->Next())) {
-    RooRealVar* target = (RooRealVar*) _obs.find(var->GetName()) ;
-    target->setVal(var->getVal()) ;
-    target->setConstant(var->isConstant()) ;
-    }
-     */
-
   };
-  
 
   void initializeBarlowCache();
-
   bool getParameters(const RooArgSet* depList, RooArgSet& outputSet, bool stripDisconnected=true) const;
-
-  // void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
-  // Bool_t alwaysStartFromMin() const { return _startFromMin ; }
-
-  //RooMinimizer* minimizer() { return _minimizer ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
-  // const RooArgSet& bestFitParams() const ;
-  // const RooArgSet& bestFitObs() const ;
-
-  //  virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
-  
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
-
-  // void clearAbsMin() { _absMinValid = kFALSE ; }
-
-  // Int_t numEval() const { return _neval ; }
-
+  virtual bool redirectServersHook(const RooAbsCollection& /*newServerList*/,
+                                   bool /*mustReplaceAll*/,
+                                   bool /*nameChange*/,
+                                   bool /*isRecursive*/) ;
   void setPdf(RooAbsPdf* pdf) { _pdf = pdf; }
   void setDataset(RooAbsData* data) { _data = data; }
-  
-  //void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, 
-  //	    RooArgList &obsTerms, RooArgList &constraints) const;
-
 
 protected:
 
-  // void validateAbsMin() const ;
-
-
   RooRealProxy _nll ;    // Input -log(L) function
-  /*
-  RooSetProxy _obs ;     // Parameters of profile likelihood
-  RooSetProxy _par ;     // Marginialized parameters of likelihood
-  */
   RooAbsPdf* _pdf;
   RooAbsData* _data;
   mutable std::map< std::string, std::vector< BarlowCache > > _barlowCache;
   mutable std::set< std::string > _statUncertParams;
-  // Bool_t _startFromMin ; // Always start minimization for global minimum?
-
-  /*
-  TIterator* _piter ; //! Iterator over profile likelihood parameters to be minimized 
-  TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
-  */
-
-  // mutable RooMinimizer* _minimizer ; //! Internal minimizer instance
-
-  // mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
-  // mutable Double_t _absMin ; // absolute minimum of -log(L)
-  // mutable RooArgSet _paramAbsMin ; // Parameter values at absolute minimum
-  // mutable RooArgSet _obsAbsMin ; // Observable values at absolute minimum
   mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
-  // mutable Int_t _neval ; // Number evaluations used in last minimization
   Double_t evaluate() const ;
-  //Double_t evaluate_bad() const ;
-
 
 private:
 
-  ClassDef(RooStats::HistFactory::RooBarlowBeestonLL,0) // Real-valued function representing a Barlow-Beeston minimized profile likelihood of external (likelihood) function
+  // Real-valued function representing a Barlow-Beeston minimized profile likelihood of external (likelihood) function
+  ClassDef(RooStats::HistFactory::RooBarlowBeestonLL,0)
 };
 
   }
