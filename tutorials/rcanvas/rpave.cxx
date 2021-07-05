@@ -48,7 +48,7 @@ void rpave()
    text->height = 0.3_normal;
 
    std::string fname = __FILE__;
-   auto pos = fname.find("draw_pave.cxx");
+   auto pos = fname.find("rpave.cxx");
    if (pos > 0) { fname.resize(pos); fname.append("comic.woff2"); }
            else fname = "comic.woff2";
    canvas->Draw<RFont>("CustomFont", fname);
