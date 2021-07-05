@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_v7
+## \ingroup tutorial_rcanvas
 ##
 ## This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas) and
 ## draw ROOT 7 boxes in it (RBox). It generates a set of boxes using the

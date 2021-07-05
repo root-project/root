@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas) and
 /// and divide it in 9 sub-pads.
@@ -24,7 +24,7 @@
 #include "ROOT/RPad.hxx"
 #include "ROOT/RLine.hxx"
 
-void pad()
+void rpad()
 {
    using namespace ROOT::Experimental;
 

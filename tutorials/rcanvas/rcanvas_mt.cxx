@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro demonstrate usage of ROOT7 graphics from many threads
 /// Three different canvases in three different threads are started and regularly updated.
@@ -93,7 +93,7 @@ void draw_canvas(const std::string &title, RColor col)
    canvas->Remove();
 }
 
-void draw_mt(bool block_main_thread = true)
+void rcanvas_mt(bool block_main_thread = true)
 {
    if (block_main_thread) {
       // let use special http thread to process requests, do not need main thread

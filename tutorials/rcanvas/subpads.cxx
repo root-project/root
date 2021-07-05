@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas),
 /// divide on sub-pads and draw histograms there
@@ -30,7 +30,7 @@
 // library automatically for outlined function see ROOT-10336
 R__LOAD_LIBRARY(libROOTHistDraw)
 
-void draw_subpads()
+void subpads()
 {
   using namespace ROOT::Experimental;
 
@@ -48,7 +48,7 @@ void draw_subpads()
   }
 
   // Create a canvas to be displayed.
-  auto canvas = RCanvas::Create("Canvas Title");
+  auto canvas = RCanvas::Create("Sub-sub pads example");
 
   // Divide canvas on sub-pads
 

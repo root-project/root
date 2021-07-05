@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates two RH1D, fills them and draw in RCanvas.
 /// Second histogram uses enables "secondy" attribute to draw separate Y axis on right side
@@ -32,7 +32,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh1_twoaxes()
+void rh1_twoaxes()
 {
    // Create the histogram.
    RAxisConfig xaxis(25, 0., 10.);

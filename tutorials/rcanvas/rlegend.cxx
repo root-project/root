@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates two TH1D objects and build RLegend
 /// In addition use of auto colors are shown
@@ -32,7 +32,7 @@ R__LOAD_LIBRARY(libROOTGraphicsPrimitives)
 
 using namespace ROOT::Experimental;
 
-void draw_legend()
+void rlegend()
 {
    // Create the histograms.
    RAxisConfig xaxis(25, 0., 10.);

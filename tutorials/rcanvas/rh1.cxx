@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates two RH1D, fills them and draw with different options in RCanvas.
 /// The canvas is display in the web browser
@@ -32,7 +32,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh1()
+void rh1()
 {
    // Create the histogram.
    RAxisConfig xaxis(25, 0., 10.);

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro draw different variants of RPave on the RCanvas.
 /// Also usage of custom font is demonstrated.
@@ -26,7 +26,7 @@
 
 using namespace ROOT::Experimental;
 
-void draw_pave()
+void rpave()
 {
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("RPave example");

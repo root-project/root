@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT7 example demonstrates how to create a RCanvas and
 /// draw several RAxis objects with different options.
@@ -22,7 +22,7 @@
 R__LOAD_LIBRARY(libROOTGpadv7)
 
 
-void draw_axes()
+void raxis()
 {
    using namespace ROOT::Experimental;
 
@@ -118,7 +118,7 @@ void draw_axes()
    canvas->SetSize(1000, 800);
 
    // requires Chrome browser, runs in headless mode
-   // canvas->SaveAs("axes.png");
+   // canvas->SaveAs("raxis.png");
 
    canvas->Show();
 }

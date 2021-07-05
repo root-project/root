@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates RH2D and draw it with different options in RCanvas
 ///
@@ -31,7 +31,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh2()
+void rh2()
 {
    // Create the histogram.
    RAxisConfig xaxis("x", 20, 0., 10.);

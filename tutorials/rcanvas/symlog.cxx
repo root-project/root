@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example shows how to use symlog scale on RAxis
 /// See discussion on forum https://root-forum.cern.ch/t/symlog-scale-for-plotting/ for more details
@@ -33,7 +33,7 @@ auto symlog_style = RStyle::Parse("frame { margins_left: 0.1; }"
                                   ".group1 { marker_style: 8; marker_color: blue; }"
                                   ".group2 { marker_style: 8; marker_color: orange; }");
 
-void draw_symlog()
+void symlog()
 {
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Drawing with symlog");

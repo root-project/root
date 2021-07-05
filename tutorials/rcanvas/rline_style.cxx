@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example shows the various line styles.
 ///
@@ -15,11 +15,11 @@
 #include "ROOT/RText.hxx"
 #include "ROOT/RLine.hxx"
 
-void lineStyle()
+void rline_style()
 {
    using namespace ROOT::Experimental;
 
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("Different RLine styles");
    double num = 0.3;
 
    for (int i=10; i>0; i--){

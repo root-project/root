@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates a small RH3D, fills it with random values and
 /// draw it in RCanvas, using configured web browser
@@ -32,7 +32,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh3()
+void rh3()
 {
    // Create the histogram.
    RAxisConfig xaxis("x", 10, -5., 5.);
