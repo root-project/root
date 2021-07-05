@@ -19,9 +19,10 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooFitResult.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include "gtest/gtest.h"
+
+#include <memory>
 
 class RooAbsPdf;
 
