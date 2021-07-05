@@ -20,7 +20,6 @@
 #define ROOT_RDFOPERATIONS
 
 #include "Compression.h"
-#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
@@ -51,6 +50,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility> // std::index_sequence
 #include <vector>
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper

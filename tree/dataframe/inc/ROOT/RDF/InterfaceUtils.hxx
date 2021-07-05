@@ -17,7 +17,6 @@
 #include <ROOT/RDF/RDefine.hxx>
 #include <ROOT/RDF/RFilter.hxx>
 #include <ROOT/RDF/Utils.hxx>
-#include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RDF/RJittedAction.hxx>
 #include <ROOT/RDF/RJittedDefine.hxx>
 #include <ROOT/RDF/RJittedFilter.hxx>

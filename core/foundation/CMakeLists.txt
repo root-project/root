@@ -13,7 +13,6 @@ set(Foundation_dict_headers
   RStringView.h
   TClassEdit.h
   TError.h
-  ROOT/RIntegerSequence.hxx
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
   ROOT/RSpan.hxx

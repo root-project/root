@@ -16,16 +16,16 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RResultHandle.hxx>
 #include <ROOT/RDF/GraphUtils.hxx>
-#include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm> // std::transform
-#include <functional>
-#include <type_traits>
-#include <vector>
-#include <memory>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <memory>
+#include <type_traits>
+#include <utility> // std::index_sequence
+#include <vector>
 
 namespace ROOT {
 namespace Internal {

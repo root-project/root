@@ -18,7 +18,6 @@
 #include "ROOT/RDF/InterfaceUtils.hxx"
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
@@ -46,6 +45,7 @@
 #include <string>
 #include <type_traits> // is_same, enable_if
 #include <typeinfo>
+#include <utility> // std::index_sequence
 #include <vector>
 #include <set>
 
