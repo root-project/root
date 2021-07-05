@@ -28,7 +28,6 @@
 #include "RooNLLVar.h"
 #include "RooMsgService.h"
 
-#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "Math/MinimizerOptions.h"
 #include "TStopwatch.h"

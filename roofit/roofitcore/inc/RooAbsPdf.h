@@ -32,6 +32,7 @@ class TH1F;
 class TH2F;
 class TList ;
 class RooLinkedList ;
+class RooMinimizer ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
 namespace RooBatchCompute {
@@ -358,11 +359,8 @@ protected:
   static TString _normRangeOverride ; 
 
 private:
-  template<class Minimizer>
-  int calculateAsymptoticCorrectedCovMatrix(Minimizer& minimizer, RooAbsData const& data);
-
-  template<class Minimizer>
-  int calculateSumW2CorrectedCovMatrix(Minimizer& minimizer, RooAbsReal const& nll) const;
+  int calculateAsymptoticCorrectedCovMatrix(RooMinimizer& minimizer, RooAbsData const& data);
+  int calculateSumW2CorrectedCovMatrix(RooMinimizer& minimizer, RooAbsReal const& nll) const;
   
   ClassDef(RooAbsPdf,4) // Abstract PDF with normalization support
 };

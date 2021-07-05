@@ -34,7 +34,6 @@
 #include "RooSimultaneous.h"
 #include "RooMultiVarGaussian.h"
 #include "RooNumIntConfig.h"
-#include "RooMinuit.h"
 #include "RooNLLVar.h"
 #include "RooProfileLL.h"
 #include "RooFitResult.h"
@@ -1056,9 +1055,9 @@ namespace HistFactory{
     /*
     RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
     profile->getVal();
-    RooMinuit* minuit = ((RooProfileLL*) profile)->minuit();
+    RooMinimizer* minuit = ((RooProfileLL*) profile)->minimizer();
     minuit->setPrintLevel(5) ; // Print MINUIT messages
-    minuit->setVerbose(5) ; // Print RooMinuit messages with parameter 
+    minuit->setVerbose(5) ; // Print RooMinimizer messages with parameter 
                                 // changes (corresponds to the Verbose() option of fitTo()
     */
   

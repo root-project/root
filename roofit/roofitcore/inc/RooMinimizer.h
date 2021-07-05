@@ -13,8 +13,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
-
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
 
@@ -134,7 +132,5 @@ private:
   ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
 
-
-#endif
 
 #endif

@@ -148,7 +148,6 @@ called for each data event.
 #include "RooPlot.h"
 #include "RooCurve.h"
 #include "RooNLLVar.h"
-#include "RooMinuit.h"
 #include "RooCategory.h"
 #include "RooNameReg.h"
 #include "RooCmdConfig.h"
@@ -1149,8 +1148,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 }
 
 
-template <class Minimizer>
-int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAbsData const &data)
+int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(RooMinimizer &minimizer, RooAbsData const &data)
 {
    // Calculated corrected errors for weighted likelihood fits
    std::unique_ptr<RooFitResult> rw(minimizer.save());
@@ -1217,8 +1215,7 @@ int RooAbsPdf::calculateAsymptoticCorrectedCovMatrix(Minimizer &minimizer, RooAb
    return rw->covQual();
 }
 
-template <class Minimizer>
-int RooAbsPdf::calculateSumW2CorrectedCovMatrix(Minimizer &minimizer, RooAbsReal const &nll) const
+int RooAbsPdf::calculateSumW2CorrectedCovMatrix(RooMinimizer &minimizer, RooAbsReal const &nll) const
 {
 
    // Make list of RooNLLVar components of FCN
@@ -1344,10 +1341,9 @@ int RooAbsPdf::calculateSumW2CorrectedCovMatrix(Minimizer &minimizer, RooAbsReal
 ///
 /// <tr><th><th> Options to control flow of fit procedure
 /// <tr><td> `Minimizer("<type>", "<algo>")`   <td>  Choose minimization package and optionally the algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
-///                                       but others can be specified (through RooMinimizer interface). Select OldMinuit to use MINUIT through the old RooMinuit interface
+///                                       but others can be specified (through RooMinimizer interface).
 ///   <table>
 ///   <tr><th> Type         <th> Algorithm
-///   <tr><td> OldMinuit    <td>  migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
 ///   <tr><td> Minuit       <td>  migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
 ///   <tr><td> Minuit2      <td>  migrad, simplex, minimize, scan
 ///   <tr><td> GSLMultiMin  <td>  conjugatefr, conjugatepr, bfgs, bfgs2, steepestdescent
@@ -1503,12 +1499,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doSumW2  = pc.getInt("doSumW2") ;
   Int_t doAsymptotic = pc.getInt("doAsymptoticError");
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
-#ifdef __ROOFIT_NOROOMINIMIZER
-  const char* minType =0 ;
-#else
   const char* minType = pc.getString("mintype","Minuit") ;
   const char* minAlg = pc.getString("minalg","minuit") ;
-#endif
 
   if (optConst > 1) {
     // optConst >= 2 is pre-computating values, which are never used when
@@ -1596,192 +1588,95 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Instantiate MINUIT
 
-  if (string(minType)!="OldMinuit") {
+  RooMinimizer m(*nll) ;
 
-#ifndef __ROOFIT_NOROOMINIMIZER
-    RooMinimizer m(*nll) ;
+  m.setMinimizerType(minType) ;
 
-    m.setMinimizerType(minType) ;
+  m.setEvalErrorWall(doEEWall) ;
+  m.setRecoverFromNaNStrength(recoverFromNaN);
+  if (doWarn==0) {
+    // m.setNoWarn() ; WVE FIX THIS
+  }
 
-    m.setEvalErrorWall(doEEWall) ;
-    m.setRecoverFromNaNStrength(recoverFromNaN);
-    if (doWarn==0) {
-      // m.setNoWarn() ; WVE FIX THIS
-    }
+  m.setPrintEvalErrors(numee) ;
+  if (plevel!=1) {
+    m.setPrintLevel(plevel) ;
+  }
 
-    m.setPrintEvalErrors(numee) ;
-    if (plevel!=1) {
-      m.setPrintLevel(plevel) ;
-    }
+  if (optConst) {
+    // Activate constant term optimization
+    m.optimizeConst(optConst) ;
+  }
 
-    if (optConst) {
-      // Activate constant term optimization
-      m.optimizeConst(optConst) ;
-    }
+  if (fitOpt) {
 
-    if (fitOpt) {
-
-      // Play fit options as historically defined
-      ret = m.fit(fitOpt) ;
-
-    } else {
-
-      if (verbose) {
-	// Activate verbose options
-	m.setVerbose(1) ;
-      }
-      if (doTimer) {
-	// Activate timer options
-	m.setProfile(1) ;
-      }
-
-      if (strat!=1) {
-	// Modify fit strategy
-	m.setStrategy(strat) ;
-      }
-
-      if (initHesse) {
-	// Initialize errors with hesse
-	m.hesse() ;
-      }
-
-      // Minimize using chosen algorithm
-      m.minimize(minType,minAlg) ;
-
-      if (hesse) {
-	// Evaluate errors with Hesse
-	m.hesse() ;
-      }
-
-      int corrCovQual = -1;
-
-      //asymptotically correct approach
-      if (doAsymptotic==1 && m.getNPar()>0) {
-        corrCovQual = calculateAsymptoticCorrectedCovMatrix(m, data);
-      }
-
-      if (doSumW2==1 && m.getNPar()>0) {
-         corrCovQual = calculateSumW2CorrectedCovMatrix(m, *nll);
-      }
-
-      if (minos) {
-	// Evaluate errs with Minos
-	if (minosSet) {
-	  m.minos(*minosSet) ;
-	} else {
-	  m.minos() ;
-	}
-      }
-
-      // Optionally return fit result
-      if (doSave) {
-	string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
-	string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
-	ret = m.save(name.c_str(),title.c_str()) ;
-         if((doSumW2==1 || doAsymptotic==1) && m.getNPar()>0) {
-            ret->setCovQual(corrCovQual);
-         }
-      }
-
-    }
-
-    if (optConst) {
-      m.optimizeConst(0) ;
-    }
-
-#endif
+    // Play fit options as historically defined
+    ret = m.fit(fitOpt) ;
 
   } else {
 
-    RooMinuit m(*nll) ;
-
-    m.setEvalErrorWall(doEEWall) ;
-    if (doWarn==0) {
-      m.setNoWarn() ;
+    if (verbose) {
+      // Activate verbose options
+      m.setVerbose(1) ;
+    }
+    if (doTimer) {
+      // Activate timer options
+      m.setProfile(1) ;
     }
 
-    m.setPrintEvalErrors(numee) ;
-    if (plevel!=1) {
-      m.setPrintLevel(plevel) ;
+    if (strat!=1) {
+      // Modify fit strategy
+      m.setStrategy(strat) ;
     }
 
-    if (optConst) {
-      // Activate constant term optimization
-      m.optimizeConst(optConst) ;
+    if (initHesse) {
+      // Initialize errors with hesse
+      m.hesse() ;
     }
 
-    if (fitOpt) {
+    // Minimize using chosen algorithm
+    m.minimize(minType,minAlg) ;
 
-      // Play fit options as historically defined
-      ret = m.fit(fitOpt) ;
-
-    } else {
-
-      if (verbose) {
-	// Activate verbose options
-	m.setVerbose(1) ;
-      }
-      if (doTimer) {
-	// Activate timer options
-	m.setProfile(1) ;
-      }
-
-      if (strat!=1) {
-	// Modify fit strategy
-	m.setStrategy(strat) ;
-      }
-
-      if (initHesse) {
-	// Initialize errors with hesse
-	m.hesse() ;
-      }
-
-      // Minimize using migrad
-      m.migrad() ;
-
-      if (hesse) {
-	// Evaluate errors with Hesse
-	m.hesse() ;
-      }
-
-      int corrCovQual = -1;
-
-      //asymptotically correct approach
-      if (doAsymptotic==1 && m.getNPar()>0) {
-        corrCovQual = calculateAsymptoticCorrectedCovMatrix(m, data);
-      }
-
-      if (doSumW2==1 && m.getNPar()>0) {
-         corrCovQual = calculateSumW2CorrectedCovMatrix(m, *nll);
-      }
-
-      if (minos) {
-	// Evaluate errs with Minos
-	if (minosSet) {
-	  m.minos(*minosSet) ;
-	} else {
-	  m.minos() ;
-	}
-      }
-
-      // Optionally return fit result
-      if (doSave) {
-	string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
-	string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
-	ret = m.save(name.c_str(),title.c_str()) ;
-         if((doSumW2==1 || doAsymptotic==1) && m.getNPar()>0) {
-            ret->setCovQual(corrCovQual);
-         }
-      }
-
+    if (hesse) {
+      // Evaluate errors with Hesse
+      m.hesse() ;
     }
 
-    if (optConst) {
-      m.optimizeConst(0) ;
+    int corrCovQual = -1;
+
+    //asymptotically correct approach
+    if (doAsymptotic==1 && m.getNPar()>0) {
+      corrCovQual = calculateAsymptoticCorrectedCovMatrix(m, data);
+    }
+
+    if (doSumW2==1 && m.getNPar()>0) {
+       corrCovQual = calculateSumW2CorrectedCovMatrix(m, *nll);
+    }
+
+    if (minos) {
+      // Evaluate errs with Minos
+      if (minosSet) {
+        m.minos(*minosSet) ;
+      } else {
+        m.minos() ;
+      }
+    }
+
+    // Optionally return fit result
+    if (doSave) {
+      string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
+      string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
+      ret = m.save(name.c_str(),title.c_str()) ;
+      if((doSumW2==1 || doAsymptotic==1) && m.getNPar()>0) {
+        ret->setCovQual(corrCovQual);
+      }
     }
 
   }
 
+  if (optConst) {
+    m.optimizeConst(0) ;
+  }
 
 
   // Cleanup
