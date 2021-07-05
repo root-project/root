@@ -36,8 +36,6 @@ Various methods are available to control verbosity, profiling,
 automatic PDF optimization.
 **/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
-
 #include "RooFit.h"
 
 #include "TClass.h"
@@ -959,5 +957,3 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   return res;
 
 }
-
-#endif

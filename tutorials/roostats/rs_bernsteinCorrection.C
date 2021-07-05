@@ -44,7 +44,6 @@
 #include "RooAddPdf.h"
 #include "RooGaussian.h"
 #include "RooNLLVar.h"
-#include "RooMinuit.h"
 #include "RooProfileLL.h"
 #include "RooWorkspace.h"
 

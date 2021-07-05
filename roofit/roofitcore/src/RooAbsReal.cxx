@@ -71,7 +71,6 @@
 #include "RooGenFunction.h"
 #include "RooMultiGenFunction.h"
 #include "RooXYChi2Var.h"
-#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "RooChi2Var.h"
 #include "RooFitResult.h"
@@ -4655,12 +4654,8 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 
   // Decode command line arguments
   const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
-#ifdef __ROOFIT_NOROOMINIMIZER
-  const char* minType =0 ;
-#else
   const char* minType = pc.getString("mintype","Minuit") ;
   const char* minAlg = pc.getString("minalg","minuit") ;
-#endif
   Int_t optConst = pc.getInt("optConst") ;
   Int_t verbose  = pc.getInt("verbose") ;
   Int_t doSave   = pc.getInt("doSave") ;
@@ -4676,150 +4671,73 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 
   RooFitResult *ret = 0 ;
 
-#ifdef __ROOFIT_NOROOMINIMIZER
-  if (true) {
-#else
-  if ("OldMinuit" == string(minType)) {
-#endif
-    // Instantiate MINUIT
-    RooMinuit m(fcn) ;
+  // Instantiate MINUIT
+  RooMinimizer m(fcn) ;
+  m.setMinimizerType(minType);
 
-    if (doWarn==0) {
-      m.setNoWarn() ;
-    }
+  if (doWarn==0) {
+    // m.setNoWarn() ; WVE FIX THIS
+  }
 
-    m.setPrintEvalErrors(numee) ;
-    if (plevel!=1) {
-      m.setPrintLevel(plevel) ;
-    }
+  m.setPrintEvalErrors(numee) ;
+  if (plevel!=1) {
+    m.setPrintLevel(plevel) ;
+  }
 
-    if (optConst) {
-      // Activate constant term optimization
-      m.optimizeConst(optConst);
-    }
+  if (optConst) {
+    // Activate constant term optimization
+    m.optimizeConst(optConst);
+  }
 
-    if (fitOpt) {
+  if (fitOpt) {
 
-      // Play fit options as historically defined
-      ret = m.fit(fitOpt) ;
+    // Play fit options as historically defined
+    ret = m.fit(fitOpt) ;
 
-    } else {
-
-      if (verbose) {
-	// Activate verbose options
-	m.setVerbose(1) ;
-      }
-      if (doTimer) {
-	// Activate timer options
-	m.setProfile(1) ;
-      }
-
-      if (strat!=1) {
-	// Modify fit strategy
-	m.setStrategy(strat) ;
-      }
-
-      if (initHesse) {
-	// Initialize errors with hesse
-	m.hesse() ;
-      }
-
-      // Minimize using migrad
-      m.migrad() ;
-
-      if (hesse) {
-	// Evaluate errors with Hesse
-	m.hesse() ;
-      }
-
-      if (minos) {
-	// Evaluate errs with Minos
-	if (minosSet) {
-	  m.minos(*minosSet) ;
-	} else {
-	  m.minos() ;
-	}
-      }
-
-      // Optionally return fit result
-      if (doSave) {
-	string name = Form("fitresult_%s",fcn.GetName()) ;
-	string title = Form("Result of fit of %s ",GetName()) ;
-	ret = m.save(name.c_str(),title.c_str()) ;
-      }
-
-    }
   } else {
-#ifndef __ROOFIT_NOROOMINIMIZER
-    // Instantiate MINUIT
-    RooMinimizer m(fcn) ;
-    m.setMinimizerType(minType);
 
-    if (doWarn==0) {
-      // m.setNoWarn() ; WVE FIX THIS
+    if (verbose) {
+      // Activate verbose options
+      m.setVerbose(1) ;
+    }
+    if (doTimer) {
+      // Activate timer options
+      m.setProfile(1) ;
     }
 
-    m.setPrintEvalErrors(numee) ;
-    if (plevel!=1) {
-      m.setPrintLevel(plevel) ;
+    if (strat!=1) {
+      // Modify fit strategy
+      m.setStrategy(strat) ;
     }
 
-    if (optConst) {
-      // Activate constant term optimization
-      m.optimizeConst(optConst);
+    if (initHesse) {
+      // Initialize errors with hesse
+      m.hesse() ;
     }
 
-    if (fitOpt) {
+    // Minimize using migrad
+    m.minimize(minType, minAlg) ;
 
-      // Play fit options as historically defined
-      ret = m.fit(fitOpt) ;
+    if (hesse) {
+      // Evaluate errors with Hesse
+      m.hesse() ;
+    }
 
-    } else {
-
-      if (verbose) {
-	// Activate verbose options
-	m.setVerbose(1) ;
-      }
-      if (doTimer) {
-	// Activate timer options
-	m.setProfile(1) ;
-      }
-
-      if (strat!=1) {
-	// Modify fit strategy
-	m.setStrategy(strat) ;
-      }
-
-      if (initHesse) {
-	// Initialize errors with hesse
-	m.hesse() ;
-      }
-
-      // Minimize using migrad
-      m.minimize(minType, minAlg) ;
-
-      if (hesse) {
-	// Evaluate errors with Hesse
-	m.hesse() ;
-      }
-
-      if (minos) {
-	// Evaluate errs with Minos
-	if (minosSet) {
-	  m.minos(*minosSet) ;
-	} else {
-	  m.minos() ;
-	}
-      }
-
-      // Optionally return fit result
-      if (doSave) {
-	string name = Form("fitresult_%s",fcn.GetName()) ;
-	string title = Form("Result of fit of %s ",GetName()) ;
-	ret = m.save(name.c_str(),title.c_str()) ;
+    if (minos) {
+      // Evaluate errs with Minos
+      if (minosSet) {
+        m.minos(*minosSet) ;
+      } else {
+        m.minos() ;
       }
     }
-#endif
+
+    // Optionally return fit result
+    if (doSave) {
+      string name = Form("fitresult_%s",fcn.GetName()) ;
+      string title = Form("Result of fit of %s ",GetName()) ;
+      ret = m.save(name.c_str(),title.c_str()) ;
+    }
   }
 
   // Cleanup

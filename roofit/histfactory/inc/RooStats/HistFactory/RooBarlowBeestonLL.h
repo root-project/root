@@ -19,8 +19,6 @@
 #include <string>
 #include <vector>
 
-class RooMinuit ;
-
 namespace RooStats{
   namespace HistFactory{
 
@@ -73,7 +71,7 @@ public:
   // void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   // Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
-  //RooMinuit* minuit() { return _minuit ; }
+  //RooMinimizer* minimizer() { return _minimizer ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   // const RooArgSet& bestFitParams() const ;
   // const RooArgSet& bestFitObs() const ;
@@ -114,7 +112,7 @@ protected:
   TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
   */
 
-  // mutable RooMinuit* _minuit ; //! Internal minuit instance
+  // mutable RooMinimizer* _minimizer ; //! Internal minimizer instance
 
   // mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
   // mutable Double_t _absMin ; // absolute minimum of -log(L)

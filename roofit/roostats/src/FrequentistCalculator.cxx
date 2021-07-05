@@ -13,7 +13,6 @@
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/DetailedOutputAggregator.h"
 #include "RooMinimizer.h"
-#include "RooMinuit.h"
 #include "RooProfileLL.h"
 
 /** \class RooStats::FrequentistCalculator

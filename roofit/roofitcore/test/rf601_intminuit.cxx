@@ -17,7 +17,7 @@
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooNLLVar.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
@@ -60,7 +60,7 @@ public:
   // -------------------------------------------------------------------------------
 
   // Create MINUIT interface object
-  RooMinuit m(nll) ;
+  RooMinimizer m(nll) ;
 
   // Call MIGRAD to minimize the likelihood
   m.migrad() ;

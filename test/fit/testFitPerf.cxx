@@ -44,7 +44,7 @@
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooGaussian.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooChi2Var.h"
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
@@ -518,7 +518,7 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
 #define USE_CHI2_FIT
 #ifdef USE_CHI2_FIT
       RooChi2Var chi2("chi2","chi2",*pdf,data) ;
-      RooMinuit m(chi2) ;
+      RooMinimizer m(chi2) ;
       m.setPrintLevel(-1);
       m.fit("mh") ;
 #else

@@ -27,7 +27,6 @@ as a MIGRAD minimization step is executed for each function evaluation
 #include "RooFit.h"
 #include "RooProfileLL.h" 
 #include "RooAbsReal.h" 
-#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -174,7 +173,7 @@ void RooProfileLL::initializeMinimizer() const
   
   Bool_t smode = RooMsgService::instance().silentMode() ;
   RooMsgService::instance().setSilentMode(kTRUE) ;
-  _minimizer = new MINIMIZER(const_cast<RooAbsReal&>(_nll.arg())) ;
+  _minimizer = new RooMinimizer(const_cast<RooAbsReal&>(_nll.arg())) ;
   if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
   
   //_minimizer->setPrintLevel(-999) ;

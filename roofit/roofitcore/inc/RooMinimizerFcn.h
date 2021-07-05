@@ -11,8 +11,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
-
 #ifndef ROO_MINIMIZER_FCN
 #define ROO_MINIMIZER_FCN
 
@@ -105,5 +103,4 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
 };
 
-#endif
 #endif

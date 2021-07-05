@@ -11,7 +11,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
 
 //////////////////////////////////////////////////////////////////////////////
 /// \class RooMinimizerFcn
@@ -540,5 +539,3 @@ double RooMinimizerFcn::DoEval(const double *x) const {
 
   return fvalue;
 }
-
-#endif
