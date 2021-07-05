@@ -27,21 +27,29 @@ namespace Experimental {
 
 class RFont : public RDrawable  {
 
-   std::string fName;   ///< font name, assigned as "font-family" attribute
-   std::string fSrc;    ///< font source, assigned as "src" attribute
+   std::string fFamily;   ///< font family, assigned as "font-family" attribute
+   std::string fStyle;    ///< font style, assigned as "font-style" attribute, normal by default
+   std::string fWeight;   ///< font weight, assigned as "font-weight" attribute, normal by default
+   std::string fSrc;      ///< font source, assigned as "src" attribute
 
 public:
 
    RFont() : RDrawable("font") {}
 
-   RFont(const std::string &name, const std::string &fname = "", const std::string &fmt = "woff2") : RFont()
+   RFont(const std::string &family, const std::string &fname = "", const std::string &fmt = "woff2") : RFont()
    {
-     SetName(name);
+     SetFamily(family);
      SetFile(fname, fmt);
    }
 
-   void SetName(const std::string &name) { fName = name; }
-   const std::string &GetName() const { return fName; }
+   void SetFamily(const std::string &family) { fFamily = family; }
+   const std::string &GetFamily() const { return fFamily; }
+
+   void SetStyle(const std::string &style) { fStyle = style; }
+   const std::string &GetStyle() const { return fStyle; }
+
+   void SetWeight(const std::string &weight) { fWeight = weight; }
+   const std::string &GetWeight() const { return fWeight; }
 
    void SetUrl(const std::string &url, const std::string &fmt = "woff2");
    void SetFile(const std::string &fname, const std::string &fmt = "woff2");
