@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro shows how ROOT objects like TH1, TH2, TGraph can be drawn in RCanvas.
 ///
@@ -34,7 +34,7 @@ using namespace ROOT::Experimental;
 
 auto v6_style = RStyle::Parse("tgraph { line_width: 3; line_color: red; }");
 
-void draw_v6()
+void tobject()
 {
    static constexpr int npoints = 10;
    static constexpr int nth1points = 100;
@@ -110,8 +110,8 @@ void draw_v6()
    std::cout << "This message appear normally before second async update" << std::endl;
 
    // create SVG file
-   // canvas->SaveAs("draw_v6.svg");
+   // canvas->SaveAs("tobject.svg");
 
    // create PNG file
-   // canvas->SaveAs("draw_v6.png");
+   // canvas->SaveAs("tobject.png");
 }

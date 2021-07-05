@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates a small V7 TH2D, fills it with random values and
 /// draw it in a V7 canvas, using configured web browser
@@ -33,7 +33,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh2_colz()
+void rh2_colz()
 {
    // Create the histogram.
    RAxisConfig xaxis("x", 20, 0., 10.);
@@ -44,7 +44,7 @@ void draw_rh2_colz()
       pHist->Fill({gRandom->Gaus(5.,2.), gRandom->Gaus(5.,2.)});
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RH2 with color palette");
 
    auto frame = canvas->AddFrame();
 

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example shows how to create a frame.
 ///
@@ -35,10 +35,10 @@ auto frame_style = RStyle::Parse("frame { x_ticks_width: 3; y_ticks_width: 3; }"
                                  "line { line_width: 2; }"
                                  "text { text_align: 13; text_size: 0.03; }");
 
-void draw_frame()
+void rframe()
 {
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RFrame with drawAxes enabled");
 
    // configure RFrame with direct API calls
    auto frame = canvas->AddFrame();

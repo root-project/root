@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example demonstrates how to customize RLine object using RStyle
 /// "normal" coordinates' system.
@@ -20,9 +20,9 @@
 
 using namespace ROOT::Experimental;
 
-void lineRStyle()
+void rstyle()
 {
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("Use RStyle for line styling");
    double num = 0.3;
 
    for (int i = 10; i > 0; i--){

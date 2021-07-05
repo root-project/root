@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas) and
 /// draw ROOT 7 lines in it (RLine). It generates a set of lines using the
@@ -19,12 +19,12 @@
 #include <ROOT/RPadPos.hxx>
 #include "TMath.h"
 
-void line()
+void rline()
 {
    using namespace ROOT::Experimental;
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RLine example");
 
    for (double i = 0; i < 360; i+=1) {
       double angle = i * TMath::Pi() / 180;

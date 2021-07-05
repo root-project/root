@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This ROOT 7 example shows the various marker style.
 ///
@@ -16,7 +16,7 @@
 #include "ROOT/RMarker.hxx"
 #include <string>
 
-void markerStyle()
+void rmarker()
 {
    using namespace ROOT::Experimental;
 
