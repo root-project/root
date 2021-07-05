@@ -45,6 +45,7 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooTrace.h"
 #include "RooMsgService.h"
+#include "RooConstVar.h"
 
 #include <stdexcept>
 
@@ -192,3 +193,5 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   return kFALSE ;  
 }
 
+
+void RooArgList::processArg(double value) { processArg(RooFit::RooConst(value)); }

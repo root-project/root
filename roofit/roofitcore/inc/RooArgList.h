@@ -29,16 +29,23 @@ public:
   /// Construct a (non-owning) RooArgList from one or more
   /// RooFit objects.
   /// \param arg A RooFit object to be put in the set.
+  ///            Note that you can also pass a `double` as first argument
+  ///            when constructing a RooArgList, and another templated
+  ///            constructor will be used where a RooConstVar is implicitly
+  ///            created from the `double` value.
   /// \param varsOrName Arbitrary number of
   ///   - RooFit objects deriving from RooAbsArg.
+  ///   - `double`s from which a RooConstVar is implicitly created via `RooFit::RooConst`.
   ///   - A c-string to name the set.
-  template<typename... Arg_t>
-  RooArgList(const RooAbsArg& arg, const Arg_t&... argsOrName)
+  template<typename... Ts>
+  RooArgList(const RooAbsArg& arg, const Ts&... moreArgsOrName)
   /*NB: Making this a delegating constructor led to linker errors with MSVC*/ {
-    processArg(arg);
-    // Expand parameter pack in C++ 11 way:
-    int dummy[] = { 0, (processArg(argsOrName), 0) ... };
-    (void)dummy;
+    processArgs(arg, moreArgsOrName...);
+  }
+
+  template<typename... Ts>
+  explicit RooArgList(double arg, const Ts&... moreArgsOrName) {
+    processArgs(arg, moreArgsOrName...);
   }
 
   /// Construct from iterators.
@@ -103,9 +110,16 @@ protected:
   virtual bool canBeAdded(RooAbsArg const&, bool) const  { return true; }
 
 private:
+  template<typename... Args_t>
+  void processArgs(Args_t &&... args) {
+    // Expand parameter pack in C++ 11 way:
+    int dummy[] = { 0, (processArg(std::forward<Args_t>(args)), 0) ... };
+    (void)dummy;
+  }
   void processArg(const RooAbsArg& arg) { add(arg); }
   void processArg(const RooAbsArg* arg) { add(*arg); }
   void processArg(const char* name) { _name = name; }
+  void processArg(double value);
 
   ClassDef(RooArgList,1) // Ordered list of RooAbsArg objects
 };
