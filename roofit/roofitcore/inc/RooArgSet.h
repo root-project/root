@@ -47,16 +47,24 @@ public:
   /// RooFit objects. The set will not own its contents.
   /// \tparam Ts Parameter pack of objects that derive from RooAbsArg or RooFit collections; or a name.
   /// \param arg A RooFit object.
+  ///            Note that you can also pass a `double` as first argument
+  ///            when constructing a RooArgSet, and another templated
+  ///            constructor will be used where a RooConstVar is implicitly
+  ///            created from the `double` value.
   /// \param moreArgsOrName Arbitrary number of
   /// - Further RooFit objects that derive from RooAbsArg
   /// - RooFit collections of such objects
+  /// - `double`s from which a RooConstVar is implicitly created via `RooFit::RooConst`.
   /// - A name for the set. Given multiple names, the last-given name prevails.
   template<typename... Ts>
-  RooArgSet(const RooAbsArg& arg, const Ts&... moreArgsOrName) {
-    add(arg);
-    // Expand parameter pack in C++ 11 way:
-    int dummy[] = { 0, (processArg(moreArgsOrName), 0) ... };
-    (void)dummy;
+  RooArgSet(const RooAbsArg& arg, const Ts&... moreArgsOrName)
+  /*NB: Making this a delegating constructor led to linker errors with MSVC*/ {
+    processArgs(arg, moreArgsOrName...);
+  }
+
+  template<typename... Ts>
+  explicit RooArgSet(double arg, const Ts&... moreArgsOrName) {
+    processArgs(arg, moreArgsOrName...);
   }
 
   /// Construct a (non-owning) RooArgSet from iterators.
@@ -147,14 +155,21 @@ protected:
   }
 
 private:
-  void processArg(const RooAbsArg& var) { add(var); }
-  void processArg(const RooAbsArg* var) { add(*var); }
+
+  template<typename... Args_t>
+  void processArgs(Args_t &&... args) {
+    // Expand parameter pack in C++ 11 way:
+    int dummy[] = { 0, (processArg(std::forward<Args_t>(args)), 0) ... };
+    (void)dummy;
+  }
+  void processArg(const RooAbsArg& arg) { add(arg); }
+  void processArg(const RooAbsArg* arg) { add(*arg); }
+  void processArg(const char* name) { _name = name; }
+  void processArg(double value);
   void processArg(const RooArgSet& set) { add(set); if (_name.Length() == 0) _name = set.GetName(); }
   void processArg(const RooArgList& list);
-  void processArg(const char* name) { _name = name; }
 
 #ifdef USEMEMPOOLFORARGSET
-private:
   typedef MemPoolForRooSets<RooArgSet, 10*600> MemPool; //600 = about 100 kb
   //Initialise a static mem pool. It has to happen inside a function to solve the
   //static initialisation order fiasco. At the end of the program, this might have
