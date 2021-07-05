@@ -16,8 +16,8 @@
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 #include "ROOT/RVec.hxx"
 #include "RtypesCore.h"
-#include "TError.h" // R_ASSERT
 
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -61,7 +61,7 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ResetReportCount()
    {
-      R__ASSERT(!fName.empty()); // this method is to only be called on named filters
+      assert(!fName.empty()); // this method is to only be called on named filters
       // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
       std::fill(fAccepted.begin(), fAccepted.end(), 0);
       std::fill(fRejected.begin(), fRejected.end(), 0);
