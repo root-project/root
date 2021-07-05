@@ -87,10 +87,11 @@ public:
   /// or tuple can be implicitly converted to an std::vector, and by enabling
   /// implicit construction of a RooArgSet from a std::vector, we indirectly
   /// enable implicit conversion from a Python list/tuple to RooArgSets.
-  /// \param vec A vector with pointers to the arguments.
-  RooArgSet(std::vector<RooAbsArg*> const& vec) {
+  /// \param vec A vector with pointers to the arguments or doubles for RooFit::RooConst().
+  RooArgSet(std::vector<RooAbsArgPtrOrDouble> const& vec) {
     for(auto const& arg : vec) {
-      add(*arg);
+      if(arg.hasPtr) processArg(arg.ptr);
+      else processArg(arg.val);
     }
   }
 
