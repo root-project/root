@@ -129,8 +129,11 @@ RooAbsData::RooAbsData()
 /// Constructor from a set of variables. Only fundamental elements of vars
 /// (RooRealVar,RooCategory etc) are stored as part of the dataset
 
-RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* dstore) :
-  TNamed(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _dstore(dstore)
+RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooArgSet& vars, RooAbsDataStore* dstore) :
+  TNamed(TString{name},TString{title}),
+  _vars("Dataset Variables"),
+  _cachedVars("Cached Variables"),
+  _dstore(dstore)
 {
    if (dynamic_cast<RooTreeDataStore *>(dstore)) {
       storageType = RooAbsData::Tree;

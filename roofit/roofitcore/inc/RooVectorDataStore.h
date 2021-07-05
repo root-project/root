@@ -22,6 +22,8 @@
 #include "RooChangeTracker.h"
 #include "RooRealVar.h"
 
+#include "ROOT/RStringView.hxx"
+
 #include <list>
 #include <vector>
 #include <algorithm>
@@ -40,7 +42,10 @@ public:
   RooVectorDataStore() ; 
 
   // Empty ctor
-  RooVectorDataStore(const char* name, const char* title, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooVectorDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName=0) ;
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooVectorDataStore)
+
   virtual RooAbsDataStore* clone(const char* newname=0) const override { return new RooVectorDataStore(*this,newname) ; }
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooVectorDataStore(*this,vars,newname) ; }
 
@@ -49,7 +54,7 @@ public:
   RooVectorDataStore(const RooVectorDataStore& other, const RooArgSet& vars, const char* newname=0) ;
 
 
-  RooVectorDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
+  RooVectorDataStore(std::string_view name, std::string_view title, RooAbsDataStore& tds, 
 		     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		     std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
 

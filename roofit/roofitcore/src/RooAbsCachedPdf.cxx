@@ -223,12 +223,8 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   }
 
   // Create RooDataHist
-  TString hname = self.GetName() ;
-  hname.Append("_") ;
-  hname.Append(self.inputBaseName()) ;
-  hname.Append("_CACHEHIST") ;
-  hname.Append(self.cacheNameSuffix(orderedObs)) ;
-  hname.Append(self.histNameSuffix()) ;
+  auto hname = std::string(self.GetName()) + "_" + self.inputBaseName() + "_CACHEHIST"
+               + self.cacheNameSuffix(orderedObs).Data() + self.histNameSuffix().Data();
   _hist = new RooDataHist(hname,hname,orderedObs,self.binningName()) ;
   _hist->removeSelfFromDir() ;
 

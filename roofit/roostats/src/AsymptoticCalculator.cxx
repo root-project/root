@@ -1040,7 +1040,8 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
        icat = channelCat->getCurrentIndex();
     }
 
-    RooDataSet *ret = new RooDataSet(TString::Format("CountingAsimovData%d",icat),TString::Format("CountingAsimovData%d",icat), obs);
+    RooDataSet *ret = new RooDataSet(std::string("CountingAsimovData") + std::to_string(icat),
+                                     std::string("CountingAsimovData") + std::to_string(icat), obs);
     ret->add(obs);
     return ret;
 }
@@ -1068,7 +1069,8 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
    RooDataSet* asimovData = 0;
    if (channelCat) {
       int icat = channelCat->getCurrentIndex();
-      asimovData = new RooDataSet(TString::Format("AsimovData%d",icat),TString::Format("combAsimovData%d",icat),
+      asimovData = new RooDataSet(std::string("AsimovData") + std::to_string(icat),
+                                  std::string("combAsimovData") + std::to_string(icat),
                                   RooArgSet(obsAndWeight,*channelCat),RooFit::WeightVar(weightVar));
    }
    else

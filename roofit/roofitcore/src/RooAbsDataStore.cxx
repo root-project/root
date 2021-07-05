@@ -51,8 +51,8 @@ RooAbsDataStore::RooAbsDataStore()
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsDataStore::RooAbsDataStore(const char* name, const char* title, const RooArgSet& vars) : 
-  TNamed(name,title)
+RooAbsDataStore::RooAbsDataStore(std::string_view name, std::string_view title, const RooArgSet& vars) : 
+  TNamed(TString{name},TString{title})
 {
   // clone the fundamentals of the given data set into internal buffer
   _vars.add(vars) ;
