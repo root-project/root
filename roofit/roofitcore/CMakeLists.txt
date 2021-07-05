@@ -137,7 +137,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMCStudy.h
     RooMinimizerFcn.h
     RooMinimizer.h
-    RooMinuit.h
     RooMoment.h
     RooMPSentinel.h
     RooMsgService.h
@@ -229,6 +228,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
     RooFitLegacy/RooHashTable.h
+    RooFitLegacy/RooMinuit.h
     RooFitLegacy/RooNameSet.h
     RooFitLegacy/RooTreeData.h
   SOURCES
@@ -355,7 +355,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMCStudy.cxx
     src/RooMinimizer.cxx
     src/RooMinimizerFcn.cxx
-    src/RooMinuit.cxx
     src/RooMoment.cxx
     src/RooMPSentinel.cxx
     src/RooMsgService.cxx
@@ -443,6 +442,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RooFitLegacy/RooCategorySharedProperties.cxx
     src/RooFitLegacy/RooHashTable.cxx
+    src/RooFitLegacy/RooMinuit.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx
     src/RooFitLegacy/RooNameSet.cxx
   DICTIONARY_OPTIONS
