@@ -21,6 +21,7 @@
 #include "TCanvas.h"
 #include "RooPlot.h"
 #include "RooUnitTest.h"
+#include "RooHelpers.h"
 
 using namespace RooFit ;
 
@@ -2903,17 +2904,23 @@ public:
   // C a l c u l a t e   i n t e g r a l   o f   n o r m a l i z e d   p d f   i n   R
   // ----------------------------------------------------------------------------------
 
-  // Create integral over normalized pdf model over x,y,z in "R" region
-  RooAbsReal* intPdf = pxyz.createIntegral(RooArgSet(x,y,z),RooArgSet(x,y,z),"R") ;
+  // To remove the INFO:NumericIntegration ouput from the stressRooFit output,
+  // chenge the message level locally.
+  {
+    // Create integral over normalized pdf model over x,y,z in "R" region
+    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::INFO, 0u, RooFit::NumIntegration, false};
 
-  // Plot value of integral as function of pdf parameter z0
-  RooPlot* frame = z0.frame(Title("Integral of pxyz over x,y,z in region R")) ;
-  intPdf->plotOn(frame) ;
+    RooAbsReal* intPdf = pxyz.createIntegral(RooArgSet(x,y,z),RooArgSet(x,y,z),"R") ;
+
+    // Plot value of integral as function of pdf parameter z0
+    RooPlot* frame = z0.frame(Title("Integral of pxyz over x,y,z in region R")) ;
+    intPdf->plotOn(frame) ;
 
 
-  regPlot(frame,"rf313_plot1") ;
+    regPlot(frame,"rf313_plot1") ;
 
-  delete intPdf ;
+    delete intPdf ;
+  }
 
   return kTRUE;
   }
