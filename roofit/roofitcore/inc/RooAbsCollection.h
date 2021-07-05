@@ -305,6 +305,17 @@ public:
 
   void useHashMapForFind(bool flag) const;
 
+  // For use in the RooArgList/Set(std::vector<RooAbsArgPtrOrDouble> const&) constructor.
+  // Can be replaced with std::variant when C++17 is the minimum supported standard.
+  struct RooAbsArgPtrOrDouble {
+    RooAbsArgPtrOrDouble(RooAbsArg * arg) : ptr{arg}, hasPtr{true} {}
+    RooAbsArgPtrOrDouble(double x) : val{x}, hasPtr{false} {}
+
+    RooAbsArg * ptr = nullptr;
+    double val = 0.0;
+    bool hasPtr = false;
+  };
+
 protected:
   Storage_t _list; // Actual object storage
   using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
