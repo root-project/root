@@ -40,7 +40,7 @@ void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
    fprintf(fh,"      return new Promise(resolveFunc => {\n");
    fprintf(fh,"         if (typeof JSROOT != 'undefined') return resolveFunc(true);\n");
    fprintf(fh,"         let script = document.createElement('script');\n");
-   fprintf(fh,"         script.src = 'https://root.cern/js/dev/scripts/JSRoot.core.min.js';\n");
+   fprintf(fh,"         script.src = './js/scripts/JSRoot.core.js';\n");
    fprintf(fh,"         script.onload = resolveFunc;\n");
    fprintf(fh,"         document.head.appendChild(script);\n");
    fprintf(fh,"      });\n");
