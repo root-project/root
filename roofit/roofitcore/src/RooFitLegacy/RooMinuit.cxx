@@ -37,6 +37,8 @@ Various methods are available to control verbosity, profiling,
 automatic PDF optimization.
 **/
 
+#include "RooFitLegacy/RooMinuit.h"
+
 #include "RooFit.h"
 
 #include "TClass.h"
@@ -51,7 +53,6 @@ automatic PDF optimization.
 #include "TFitter.h"
 #include "TMinuit.h"
 #include "TMatrixDSym.h"
-#include "RooMinuit.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsReal.h"
