@@ -181,4 +181,15 @@ private:
   ClassDefOverride(RooArgSet,1) // Set of RooAbsArg objects
 };
 
+
+namespace RooFitShortHand {
+
+template<class... Args_t>
+RooArgSet S(Args_t&&... args) {
+  return {std::forward<Args_t>(args)...};
+}
+
+} // namespace RooFitShortHand
+
+
 #endif

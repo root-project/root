@@ -379,38 +379,8 @@ RooConstVar& RooConst(Double_t val) ;
 
 namespace RooFitShortHand {
 
-RooArgSet S(const RooAbsArg& v1) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-            const RooAbsArg& v6) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-            const RooAbsArg& v6, const RooAbsArg& v7) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-            const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-            const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) ;
+RooConstVar& C(Double_t value);
 
-RooArgList L(const RooAbsArg& v1) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-             const RooAbsArg& v6) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-             const RooAbsArg& v6, const RooAbsArg& v7) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-             const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5,
-             const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) ;
-
-RooConstVar& C(Double_t value) ;
-
-} // End namespace ShortHand
-
-class RooGlobalFunc {};
+} // namespace RooFitShortHand
 
 #endif

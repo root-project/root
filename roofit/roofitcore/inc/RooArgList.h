@@ -124,4 +124,15 @@ private:
   ClassDef(RooArgList,1) // Ordered list of RooAbsArg objects
 };
 
+
+namespace RooFitShortHand {
+
+template<class... Args_t>
+RooArgList L(Args_t&&... args) {
+  return {std::forward<Args_t>(args)...};
+}
+
+} // namespace RooFitShortHand
+
+
 #endif
