@@ -12,7 +12,7 @@
 /// \authors Axel Naumann <axel@cern.ch>, Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,11 +28,10 @@
 #include "TMath.h"
 #include "TStyle.h"
 
-#include <iostream>
-
 using namespace ROOT::Experimental;
 
-auto v6_style = RStyle::Parse("tgraph { line_width: 3; line_color: red; }");
+// create RStyle here to keep reference alive after leaving tobject() function scope
+auto tobject_style = RStyle::Parse("tgraph { line_width: 3; line_color: red; }");
 
 void tobject()
 {
@@ -64,7 +63,7 @@ void tobject()
 
    gStyle->SetPalette(kRainBow);
 
-   auto canvas = RCanvas::Create("RCanvas showing a v6 objects");
+   auto canvas = RCanvas::Create("RCanvas showing TObject-derived classes");
 
    // add gStyle object, will be applied on JSROOT side
    // set on the canvas before any other object is drawn
@@ -93,21 +92,10 @@ void tobject()
    subpads[1][1]->Draw<TObjectDrawable>(th2, "lego2");
 
    // add style, here used to configure TGraph attributes, evaluated only on client side
-   canvas->UseStyle(v6_style);
+   canvas->UseStyle(tobject_style);
 
    // new window in web browser should popup and async update will be triggered
    canvas->Show();
-
-   // synchronous, wait until drawing is really finished
-   canvas->Update(false, [](bool res) { std::cout << "First sync update done = " << (res ? "true" : "false") << std::endl; });
-
-   // invalidate canvas and force repainting with next Update()
-   canvas->Modified();
-
-   // call Update again, should return immediately if canvas was not modified
-   canvas->Update(true, [](bool res) { std::cout << "Second async update done = " << (res ? "true" : "false") << std::endl; });
-
-   std::cout << "This message appear normally before second async update" << std::endl;
 
    // create SVG file
    // canvas->SaveAs("tobject.svg");
