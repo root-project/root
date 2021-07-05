@@ -18,7 +18,8 @@
 // root > .x julius.C(5)
 //By default the reader reads only 50% of the rows. This may be changed
 //by changing the default value of fraction in the function jread.
-   
+
+#include "TAxis.h"
 #include "TFile.h"
 #include "TStopwatch.h"
 #include "TTree.h"
