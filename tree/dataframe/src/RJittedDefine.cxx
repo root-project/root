@@ -9,7 +9,6 @@
  *************************************************************************/
 
 #include <ROOT/RDF/RJittedDefine.hxx>
-#include <TError.h> // assert
 
 #include <cassert>
 

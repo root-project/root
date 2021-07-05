@@ -19,7 +19,6 @@
 
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/TypeTraits.hxx>
-#include <TError.h> // R__ASSERT
 #include <TTreeReader.h>
 
 #include <array>
@@ -71,7 +70,7 @@ MakeColumnReadersHelper(unsigned int slot, RDFDetail::RDefineBase *define,
 {
    const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
    const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
-   R__ASSERT(define != nullptr || r != nullptr || DSValuePtrsPtr != nullptr || ds != nullptr);
+   assert(define != nullptr || r != nullptr || DSValuePtrsPtr != nullptr || ds != nullptr);
    return MakeColumnReader<T>(slot, define, r, ds, DSValuePtrsPtr, colName);
 }
 
