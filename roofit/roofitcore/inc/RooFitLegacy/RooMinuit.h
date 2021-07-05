@@ -24,6 +24,8 @@
 #include <string>
 #include <utility>
 
+#include <ROOT/RConfig.hxx>
+
 class RooAbsReal ;
 class RooFitResult ;
 class RooArgList ;
@@ -144,7 +146,7 @@ private:
   RooMinuit(const RooMinuit&) ;
 	
   ClassDef(RooMinuit,0) // RooFit minimizer based on MINUIT
-} ;
+} R__SUGGEST_ALTERNATIVE("Please use RooMinimizer instead of RooMinuit");
 
 
 #endif
