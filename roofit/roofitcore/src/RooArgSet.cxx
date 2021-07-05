@@ -51,6 +51,7 @@
 #include "RooArgList.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+#include "RooConstVar.h"
 #include "ROOT/RMakeUnique.hxx"
 #include "strlcpy.h"
 
@@ -653,3 +654,6 @@ Bool_t RooArgSet::isInRange(const char* rangeSpec)
   delete iter ;
   return kFALSE ;
 }
+
+
+void RooArgSet::processArg(double value) { processArg(RooFit::RooConst(value)); }
