@@ -10,8 +10,9 @@
 RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, int batchMode)
   : _name{topNode.GetName()}, _title{topNode.GetTitle()}
   , _parameters{*std::unique_ptr<RooArgSet>(topNode.getParameters(data, true))}
-  , _batchMode{batchMode}, _topNode{topNode}, _data{&data},
-    _nEvents{static_cast<size_t>( data.numEntries() )}
+  , _batchMode{batchMode}, _topNode{topNode}
+  , _nEvents{static_cast<size_t>( data.numEntries() )}
+  , _data{&data}
 {
   // fill the RunContext with the observable data and map the observables
   // by namePtr in order to replace their memory addresses later, with
@@ -82,7 +83,6 @@ RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, 
     {
       RooArgSet observablesForNode;
       pAbsReal->getObservables(_data->get(), observablesForNode);
-      _nodeInfos[pAbsReal].dependsOnObservables = !observablesForNode.empty();
 
       // If the node doesn't depend on any observables, there is no need to
       // loop over events and we don't need to use the batched evaluation.
