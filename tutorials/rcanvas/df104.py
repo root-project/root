@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_v7
+## \ingroup tutorial_rcanvas
 ## The Higgs to two photons analysis from the ATLAS Open Data 2020 release, with RDataFrame.
 ##
 ## This tutorial is the Higgs to two photons analysis from the ATLAS Open Data release in 2020

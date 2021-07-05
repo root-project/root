@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates really large RH1D histogram, fills it with predefined pattern and
 /// draw it in a RCanvas, using Optmize() drawing mode
@@ -33,7 +33,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh1_large()
+void rh1_large()
 {
    const int nbins = 5000000;
 
@@ -45,7 +45,7 @@ void draw_rh1_large()
       pHist->Fill(1.*i, 1000.*(2+TMath::Sin(100.*i/nbins)));
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("Drawing large RH1");
 
    auto frame = canvas->AddFrame();
 

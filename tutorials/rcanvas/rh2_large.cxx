@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro generates really large RH2D histogram, fills it with predefined pattern and
 /// draw it in a RCanvas, using Optmize() drawing mode
@@ -32,7 +32,7 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh2_large()
+void rh2_large()
 {
    const int nbins = 2000;
 
@@ -46,7 +46,7 @@ void draw_rh2_large()
          pHist->Fill({1.*i,1.*j}, i+j);
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("Large 2000x2000 RH2 drawing");
 
    auto frame = canvas->AddFrame();
 

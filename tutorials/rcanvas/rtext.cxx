@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_rcanvas
 ///
 /// This macro demonstrate the text attributes for RText. Angle, size and color are
 /// changed in a loop. The text alignment and the text font are fixed.
@@ -25,12 +25,12 @@
 #include "ROOT/RText.hxx"
 #include "ROOT/RPadPos.hxx"
 
-void draw_text()
+void rtext()
 {
    using namespace ROOT::Experimental;
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RText example");
 
    for (int i=0; i<=360; i+=10) {
       auto draw = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
