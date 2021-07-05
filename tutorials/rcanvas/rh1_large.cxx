@@ -4,6 +4,7 @@
 /// This macro generates really large RH1D histogram, fills it with predefined pattern and
 /// draw it in a RCanvas, using Optmize() drawing mode
 ///
+/// \macro_image (rcanvas_js)
 /// \macro_code
 ///
 /// \date 2020-07-02
