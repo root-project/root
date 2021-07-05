@@ -3389,7 +3389,7 @@ public:
 #include "RooGenericPdf.h"
 #include "RooPolynomial.h"
 #include "RooChi2Var.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
@@ -3494,7 +3494,7 @@ public:
   // data using sum-of-weights-squared errors does give correct error
   // estimates
   RooChi2Var chi2("chi2","chi2",p2,*binnedData) ;
-  RooMinuit m(chi2) ;
+  RooMinimizer m(chi2) ;
   m.migrad() ;
   m.hesse() ;
 
@@ -4280,7 +4280,7 @@ public:
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooNLLVar.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
@@ -4323,7 +4323,7 @@ public:
   // -------------------------------------------------------------------------------
 
   // Create MINUIT interface object
-  RooMinuit m(nll) ;
+  RooMinimizer m(nll) ;
 
   // Call MIGRAD to minimize the likelihood
   m.migrad() ;
@@ -4395,7 +4395,7 @@ public:
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooChi2Var.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 using namespace RooFit ;
@@ -4447,8 +4447,8 @@ public:
   // by the number of events in the dataset
   RooChi2Var chi2("chi2","chi2",model,*dh) ;
 
-  // Use RooMinuit interface to minimize chi^2
-  RooMinuit m(chi2) ;
+  // Use RooMinimizer interface to minimize chi^2
+  RooMinimizer m(chi2) ;
   m.migrad() ;
   m.hesse() ;
 
@@ -4582,7 +4582,7 @@ public:
 #include "RooAddPdf.h"
 #include "RooNLLVar.h"
 #include "RooProfileLL.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 using namespace RooFit ;
@@ -4623,7 +4623,7 @@ public:
   RooNLLVar nll("nll","nll",model,*data) ;
 
   // Minimize likelihood w.r.t all parameters before making plots
-  RooMinuit(nll).migrad() ;
+  RooMinimizer(nll).migrad() ;
 
   // Plot likelihood scan frac
   RooPlot* frame1 = frac.frame(Bins(10),Range(0.01,0.95),Title("LL and profileLL in frac")) ;
@@ -4891,7 +4891,7 @@ public:
 #include "RooDataSet.h"
 #include "RooPolyVar.h"
 #include "RooChi2Var.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 #include "TRandom.h"
