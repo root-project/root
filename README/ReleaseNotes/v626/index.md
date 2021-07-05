@@ -92,6 +92,12 @@ The definition of such multi-range likelihoods for non-extended fits changes in 
 Previously, the individual likelihoods were normalized separately in each range, which meant that the relative number of events in each sub-range was not used to estimate the PDF parameters.
 From now on, the likelihoods are normalized by the sum of integrals in each range. This implies that the likelihood takes into account all inter-range and intra-range information.
 
+### Deprecation of the `RooMinuit` class
+
+The `RooMinuit` class was the old interface between RooFit and minuit. With ROOT version 5.24, a the more general `RooMinimizer` adapter was introduced, which became the default with ROOT 6.08. 
+
+Before 6.26, it was possible to still use the `RooMinuit` by passing the `Minimizer("OldMinuit", "minimizer")` command argument to `RooAbsPdf::fitTo()`. This option is now removed.
+
 ## 2D Graphics Libraries
 
 - Implement the option `X+` and `Y+` for reverse axis on TGraph.
