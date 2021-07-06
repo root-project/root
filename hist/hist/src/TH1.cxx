@@ -145,12 +145,18 @@ Histograms are created by invoking one of the constructors, e.g.
 ~~~
 Histograms may also be created by:
 
-  -  calling the Clone function, see below
+  -  calling the Clone() function, see below
   -  making a projection from a 2-D or 3-D histogram, see below
   -  reading an histogram from a file
 
  When a histogram is created, a reference to it is automatically added
  to the list of in-memory objects for the current file or directory.
+ Then the pointer to this histogram in the current directory can be found
+ by its name, doing:
+~~~ {.cpp}
+       TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
+~~~
+
  This default behaviour can be changed by:
 ~~~ {.cpp}
        h->SetDirectory(0);          // for the current histogram h
@@ -661,7 +667,7 @@ TH1::~TH1()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size histograms.
+/// Constructor for fix bin size histograms.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -672,14 +678,7 @@ TH1::~TH1()
 /// \param[in] nbins number of bins
 /// \param[in] xlow low edge of first bin
 /// \param[in] xup upper edge of last bin (not included in last bin)
-///
-/// When an histogram is created, it is automatically added to the list
-/// of special objects in the current directory.
-/// To find the pointer to this histogram in the current directory
-/// by its name, do:
-/// ~~~ {.cpp}
-///  TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
-/// ~~~
+
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -691,7 +690,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type float.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -701,7 +700,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 ///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///            This is an array of size nbins+1
+///            This is an array of type float and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -714,7 +713,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type double.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -723,7 +722,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///        This is an array of size nbins+1
+///            This is an array of type double and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -736,8 +735,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-/// The list of functions is not copied. (Use Clone if needed)
+/// Private copy constructor.
+/// One should use the copy constructor of the derived classes (e.g. TH1D, TH1F ...).
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
@@ -9361,6 +9361,7 @@ TH1C::~TH1C()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
@@ -9542,6 +9543,7 @@ TH1S::~TH1S()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
@@ -9724,6 +9726,7 @@ TH1I::~TH1I()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 {
@@ -9916,6 +9919,7 @@ TH1F::TH1F(const TVectorF &v)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
