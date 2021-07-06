@@ -18,6 +18,7 @@
 #pragma link C++ class ROOT::Experimental::RFont+;
 #pragma link C++ class ROOT::Experimental::RFrameTitle+;
 #pragma link C++ class ROOT::Experimental::RLegend+;
+#pragma link C++ class ROOT::Experimental::RLegend::RCustomDrawable+;
 #pragma link C++ class ROOT::Experimental::RLegend::REntry+;
 #pragma link C++ class ROOT::Experimental::RLine+;
 #pragma link C++ class ROOT::Experimental::RPaveText+;

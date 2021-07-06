@@ -108,18 +108,43 @@ TEST(Primitives, RLegend)
    legend->fill.color = RColor::kWhite;
    legend->border.width = 2.;
    legend->border.color = RColor::kRed;
-   legend->AddEntry(line1, "RLine 1");
-   legend->AddEntry(line2, "RLine 2");
-   legend->AddEntry(line3, "RLine 3");
+   legend->AddEntry(line1, "RLine 1", "l");
+   legend->AddEntry(line2, "RLine 2", "l");
+   legend->AddEntry(line3, "RLine 3", "l");
+
+   auto custom = legend->AddEntry("test", "lfm");
+   custom->line.color = RColor::kGreen;
+   custom->line.width = 5.;
+   custom->line.style = 1;
+   custom->fill.color = RColor::kBlue;
+   custom->fill.style = 3004;
+   custom->marker.color = RColor::kRed;
+   custom->marker.size = 3.;
+   custom->marker.style = RAttrMarker::kOpenCross;
 
    EXPECT_EQ(canv.NumPrimitives(), 4u);
 
-   EXPECT_EQ(legend->NumEntries(), 3u);
+   EXPECT_EQ(legend->NumEntries(), 4u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
    EXPECT_EQ(legend->fill.style, 5);
    EXPECT_EQ(legend->fill.color, RColor::kWhite);
    EXPECT_EQ(legend->border.width, 2.);
    EXPECT_EQ(legend->border.color, RColor::kRed);
+
+   EXPECT_EQ(legend->GetEntry(0).GetLine(), true);
+   EXPECT_EQ(legend->GetEntry(1).GetFill(), false);
+   EXPECT_EQ(legend->GetEntry(2).GetMarker(), false);
+
+
+   EXPECT_EQ(legend->GetEntry(3).GetLine(), true);
+   EXPECT_EQ(legend->GetEntry(3).GetFill(), true);
+   EXPECT_EQ(legend->GetEntry(3).GetMarker(), true);
+   auto custom2 = std::dynamic_pointer_cast<RLegend::RCustomDrawable>(legend->GetEntry(3).GetDrawable());
+
+   EXPECT_NE(custom2, nullptr);
+   EXPECT_EQ(custom2->line.color, RColor::kGreen);
+   EXPECT_EQ(custom2->fill.color, RColor::kBlue);
+   EXPECT_EQ(custom2->marker.color, RColor::kRed);
 }
 
 // Test RPaveText API
