@@ -72,6 +72,8 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 {
   using namespace RooFit;
   constexpr bool verbose = false;
+  auto& msg = RooMsgService::instance();
+  msg.getStream(1).removeTopic(RooFit::Minimization);
 
   auto makeFakeDataXY = []() {
     RooRealVar x("x", "x", 0, 10);
