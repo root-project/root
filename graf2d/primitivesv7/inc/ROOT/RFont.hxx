@@ -31,6 +31,7 @@ class RFont : public RDrawable  {
    std::string fStyle;    ///< font style, assigned as "font-style" attribute, normal by default
    std::string fWeight;   ///< font weight, assigned as "font-weight" attribute, normal by default
    std::string fSrc;      ///< font source, assigned as "src" attribute
+   bool fDefault{false};  ///< is font set as default for the pad
 
 public:
 
@@ -50,6 +51,9 @@ public:
 
    void SetWeight(const std::string &weight) { fWeight = weight; }
    const std::string &GetWeight() const { return fWeight; }
+
+   void SetDefault(bool dflt = true) { fDefault = dflt; }
+   bool GetDefault() const { return fDefault; }
 
    void SetUrl(const std::string &url, const std::string &fmt = "woff2");
    void SetFile(const std::string &fname, const std::string &fmt = "woff2");
