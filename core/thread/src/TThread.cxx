@@ -45,7 +45,7 @@ TThreadImp     *TThread::fgThreadImp = nullptr;
 Long_t          TThread::fgMainId = 0;
 TThread        *TThread::fgMain = nullptr;
 TMutex         *TThread::fgMainMutex;
-char  *volatile TThread::fgXAct = nullptr;
+std::atomic<char *> volatile TThread::fgXAct{nullptr};
 TMutex         *TThread::fgXActMutex = nullptr;
 TCondition     *TThread::fgXActCondi = 0;
 void **volatile TThread::fgXArr = nullptr;

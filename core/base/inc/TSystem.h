@@ -283,7 +283,7 @@ protected:
    Int_t            fSigcnt{0};                 //Number of pending signals
    TString          fWdpath;                    //Working directory
    TString          fHostname;                  //Hostname
-   Bool_t           fInsideNotify{kFALSE};      //Used by DispatchTimers()
+   std::atomic<Bool_t> fInsideNotify{kFALSE};   //Used by DispatchTimers()
    Int_t            fBeepFreq{0};               //Used by Beep()
    Int_t            fBeepDuration{0};           //Used by Beep()
 
