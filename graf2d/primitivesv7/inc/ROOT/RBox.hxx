@@ -33,7 +33,7 @@ class RBox : public ROnFrameDrawable {
 
 protected:
    // constructor for derived classes
-   RBox(const std::string &subtype) : ROnFrameDrawable(subtype) {}
+   RBox(const char *csstype) : ROnFrameDrawable(csstype) {}
 
 public:
 

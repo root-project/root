@@ -46,7 +46,7 @@ void TObjectDrawable::CheckOwnership(TObject *obj)
 ////////////////////////////////////////////////////////////////////
 /// Provide css type
 
-std::string TObjectDrawable::DetectCssType(const TObject *obj)
+const char *TObjectDrawable::DetectCssType(const TObject *obj)
 {
    if (!obj) return "tobject";
 

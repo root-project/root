@@ -58,7 +58,7 @@ private:
 
 protected:
    /// Allow derived classes to default construct a RPadBase.
-   explicit RPadBase(const std::string &csstype) : RDrawable(csstype) {}
+   explicit RPadBase(const char *csstype) : RDrawable(csstype) {}
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
 

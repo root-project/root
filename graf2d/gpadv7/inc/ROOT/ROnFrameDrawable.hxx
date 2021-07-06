@@ -29,7 +29,7 @@ protected:
    ROnFrameDrawable(const ROnFrameDrawable &) = delete;
    ROnFrameDrawable &operator=(const ROnFrameDrawable &) = delete;
 
-   explicit ROnFrameDrawable(const std::string &type) : RDrawable(type) {}
+   explicit ROnFrameDrawable(const char *type) : RDrawable(type) {}
 
 public:
    virtual ~ROnFrameDrawable() = default;

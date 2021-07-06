@@ -169,12 +169,12 @@ public:
    };
 
 private:
-   RAttrMap fAttr;               ///< attributes values
-   std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable, not stored when canvas is saved
-   std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
-   std::string fCssClass;        ///< user defined drawable class, can later go inside map
-   std::string fId;              ///< optional object identifier, may be used in CSS as well
-   Version_t fVersion{1};        ///<! drawable version, changed from the canvas
+   RAttrMap fAttr;                ///< attributes values
+   std::weak_ptr<RStyle> fStyle;  ///<! style applied for RDrawable, not stored when canvas is saved
+   const char *fCssType{nullptr}; ///<! drawable type, not stored in the root file, must be initialized in constructor
+   std::string fCssClass;         ///< user-defined CSS class, used for RStyle
+   std::string fId;               ///< user-defined CSS id, used for RStyle
+   Version_t fVersion{1};         ///<! drawable version, changed from the canvas
 
 protected:
 
@@ -189,7 +189,7 @@ protected:
 
    virtual std::unique_ptr<RDisplayItem> Display(const RDisplayContext &);
 
-   void SetCssType(const std::string &csstype) { fCssType = csstype; }
+   void SetCssType(const char *csstype) { fCssType = csstype; }
 
    virtual void OnDisplayItemDestroyed(RDisplayItem *) const {}
 
@@ -205,20 +205,20 @@ protected:
 
 public:
 
-   explicit RDrawable(const std::string &type) : fCssType(type) {}
+   explicit RDrawable(const char *csstype) : fCssType(csstype) {}
 
    virtual ~RDrawable();
 
    virtual void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
    void ClearStyle() { UseStyle(nullptr); }
 
+   const char *GetCssType() const { return fCssType; }
+
    void SetCssClass(const std::string &cl) { fCssClass = cl; }
    const std::string &GetCssClass() const { return fCssClass; }
 
-   const std::string &GetCssType() const { return fCssType; }
-
-   const std::string &GetId() const { return fId; }
    void SetId(const std::string &id) { fId = id; }
+   const std::string &GetId() const { return fId; }
 };
 
 /// Central method to insert drawable in list of pad primitives

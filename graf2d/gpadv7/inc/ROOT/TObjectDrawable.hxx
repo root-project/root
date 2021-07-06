@@ -64,7 +64,7 @@ protected:
 
    static void CheckOwnership(TObject *obj);
 
-   static std::string DetectCssType(const TObject *obj);
+   static const char *DetectCssType(const TObject *obj);
 
 public:
    // special kinds, see TWebSnapshot enums
