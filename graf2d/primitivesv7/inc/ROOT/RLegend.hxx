@@ -193,10 +193,10 @@ public:
 
    RLegend(const std::string &title) : RLegend() { SetTitle(title); }
 
-   RLegend(const RPadPos &corner, const RPadExtent &size) : RLegend()
+   RLegend(const RPadPos &offset, const RPadExtent &size) : RLegend()
    {
-      cornerX = corner.Horiz();
-      cornerY = corner.Vert();
+      offsetX = offset.Horiz();
+      offsetY = offset.Vert();
       width = size.Horiz();
       height = size.Vert();
    }
