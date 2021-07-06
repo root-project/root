@@ -4860,29 +4860,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return Promise.resolve(this);
    }
 
+   const ECorner = { kTopLeft: 1, kTopRight: 2, kBottomLeft: 3, kBottomRight: 4 };
+
    RPavePainter.prototype.drawPave = function() {
 
       let rect = this.getPadPainter().getPadRect(),
-          fp = this.getFramePainter(),
-          fx, fy, fw;
+          fp = this.getFramePainter();
 
-      if (fp) {
-         let frame_rect = fp.getFrameRect();
-         fx = frame_rect.x;
-         fy = frame_rect.y;
-         fw = frame_rect.width;
-         // fh = frame_rect.height;
-      } else {
-         let st = JSROOT.gStyle;
-         fx = Math.round(st.fPadLeftMargin * rect.width);
-         fy = Math.round(st.fPadTopMargin * rect.height);
-         fw = Math.round((1-st.fPadLeftMargin-st.fPadRightMargin) * rect.width);
-         // fh = Math.round((1-st.fPadTopMargin-st.fPadBottomMargin) * rect.height);
-      }
+      this.onFrame = fp && this.v7EvalAttr("onFrame", true);
+      this.corner = this.v7EvalAttr("corner", ECorner.kTopRight);
 
       let visible      = this.v7EvalAttr("visible", true),
-          pave_cornerx = this.v7EvalLength("cornerX", rect.width, 0.02),
-          pave_cornery = this.v7EvalLength("cornerY", rect.height, -0.02),
+          offsetx      = this.v7EvalLength("offsetX", rect.width, 0.02),
+          offsety      = this.v7EvalLength("offsetY", rect.height, 0.02),
           pave_width   = this.v7EvalLength("width", rect.width, 0.3),
           pave_height  = this.v7EvalLength("height", rect.height, 0.3),
           line_width   = this.v7EvalAttr("border_width", 1),
@@ -4901,8 +4891,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (fill_style == 0) fill_color = "none";
 
-      let pave_x = Math.round(fx + fw + pave_cornerx - pave_width),
-          pave_y = Math.round(fy + pave_cornery);
+      let pave_x = 0, pave_y = 0,
+          fr = this.onFrame ? fp.getFrameRect() : rect;
+      switch (this.corner) {
+         case ECorner.kTopLeft:
+            pave_x = fr.x + offsetx;
+            pave_y = fr.y + offsety;
+            break;
+         case ECorner.kBottomLeft:
+            pave_x = fr.x + offsetx;
+            pave_y = fr.y + fr.height - offsety - pave_height;
+            break;
+         case ECorner.kBottomRight:
+            pave_x = fr.x + fr.width - offsetx - pave_width;
+            pave_y = fr.y + fr.height - offsety - pave_height;
+            break;
+         case ECorner.kTopRight:
+         default:
+            pave_x = fr.x + fr.width - offsetx - pave_width;
+            pave_y = fr.y + offsety;
+      }
 
       // x,y,width,height attributes used for drag functionality
       this.draw_g.attr("transform", "translate(" + pave_x + "," + pave_y + ")")
@@ -4950,26 +4958,31 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let pave_x = parseInt(this.draw_g.attr("x")),
           pave_y = parseInt(this.draw_g.attr("y")),
           rect = this.getPadPainter().getPadRect(),
-          fp = this.getFramePainter(),
-          fx, fy, fw;
+          fr = this.onFrame ? this.getFramePainter().getFrameRect() : rect,
+          offsetx = 0, offsety = 0, changes = {};
 
-      if (fp) {
-         let frame_rect = fp.getFrameRect();
-         fx = frame_rect.x;
-         fy = frame_rect.y;
-         fw = frame_rect.width;
-         // fh = frame_rect.height;
-      } else {
-         let st = JSROOT.gStyle;
-         fx = Math.round(st.fPadLeftMargin * rect.width);
-         fy = Math.round(st.fPadTopMargin * rect.height);
-         fw = Math.round((1-st.fPadLeftMargin-st.fPadRightMargin) * rect.width);
-         // fh = Math.round((1-st.fPadTopMargin-st.fPadBottomMargin) * rect.height);
+      switch (this.corner) {
+         case ECorner.kTopLeft:
+            offsetx = pave_x - fr.x;
+            offsety = pave_y - fr.y;
+            break;
+         case ECorner.kBottomLeft:
+            offsetx = pave_x - fr.x;
+            offsety = fr.y + fr.height - pave_y - this.pave_height;
+            break;
+         case ECorner.kBottomRight:
+            offsetx = fr.x + fr.width - pave_x - this.pave_width;
+            offsety = fr.y + fr.height - pave_y - this.pave_height;
+            break;
+         case ECorner.kTopRight:
+         default:
+            offsetx = fr.x + fr.width - pave_x - this.pave_width;
+            offsety = pave_y - fr.y;
       }
 
-      let changes = {};
-      this.v7AttrChange(changes, "cornerX", (pave_x + this.pave_width - fx - fw) / rect.width);
-      this.v7AttrChange(changes, "cornerY", (pave_y - fy) / rect.height);
+
+      this.v7AttrChange(changes, "offsetX", offsetx / rect.width);
+      this.v7AttrChange(changes, "offsetY", offsety / rect.height);
       this.v7AttrChange(changes, "width", this.pave_width / rect.width);
       this.v7AttrChange(changes, "height", this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server

@@ -36,13 +36,23 @@ protected:
    RPave(const std::string &csstype) : RDrawable(csstype) {}
 
 public:
-   RAttrBorder border{this, "border"};                    ///<! border attributes
-   RAttrFill fill{this, "fill"};                          ///<! fill attributes
-   RAttrText text{this, "text"};                          ///<! text attributes
-   RAttrValue<RPadLength> cornerX{this, "cornerX", 0.02}; ///<! X corner
-   RAttrValue<RPadLength> cornerY{this, "cornerY", 0.02}; ///<! Y corner
-   RAttrValue<RPadLength> width{this, "width", 0.4};      ///<! pave width
-   RAttrValue<RPadLength> height{this, "height", 0.2};    ///<! pave height
+
+   enum ECorner {
+      kTopLeft = 1,
+      kTopRight = 2,
+      kBottomLeft = 3,
+      kBottomRight = 4
+   };
+
+   RAttrBorder border{this, "border"};                     ///<! border attributes
+   RAttrFill fill{this, "fill"};                           ///<! fill attributes
+   RAttrText text{this, "text"};                           ///<! text attributes
+   RAttrValue<RPadLength> width{this, "width", 0.4};       ///<! pave width
+   RAttrValue<RPadLength> height{this, "height", 0.2};     ///<! pave height
+   RAttrValue<bool> onFrame{this, "onFrame", true};        ///<! is pave assigned to frame (true) or to pad corner (false)
+   RAttrValue<ECorner> corner{this, "corner", kTopRight};  ///<! frame/pad corner to which pave is bound
+   RAttrValue<RPadLength> offsetX{this, "offsetX", 0.02};  ///<! offset X relative to selected frame or pad corner
+   RAttrValue<RPadLength> offsetY{this, "offsetY", 0.02};  ///<! offset Y relative to selected frame or pad corner
 
    RPave() : RPave("pave") {}
 
