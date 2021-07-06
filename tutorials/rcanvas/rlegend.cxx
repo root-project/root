@@ -65,12 +65,19 @@ void rlegend()
    legend->fill.color = RColor::kWhite;
    legend->border.color = RColor::kRed;
    legend->border.width = 2;
-   legend->AddEntry(draw1, "histo1");
-   legend->AddEntry(draw2, "histo2");
+   legend->AddEntry(draw1, "histo1", "l");
+   legend->AddEntry(draw2, "histo2", "l");
 
-   legend->AddEntry("test").SetAttrLine(RAttrLine(RColor::kGreen, 5., 1))
-                           .SetAttrFill(RAttrFill(RColor::kBlue, 3004))
-                           .SetAttrMarker(RAttrMarker(RColor::kRed, 3., RAttrMarker::kOpenCross));
+   // add custom entry, showing line, fill and marker attributes
+   auto custom = legend->AddEntry("test", "lfm");
+   custom->line.color = RColor::kGreen;
+   custom->line.width = 5.;
+   custom->line.style = 1;
+   custom->fill.color = RColor::kBlue;
+   custom->fill.style = 3004;
+   custom->marker.color = RColor::kRed;
+   custom->marker.size = 3.;
+   custom->marker.style = RAttrMarker::kOpenCross;
 
    canvas->SetSize(1000, 700);
    canvas->Show();
