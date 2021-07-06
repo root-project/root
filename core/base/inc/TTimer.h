@@ -80,6 +80,7 @@ public:
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
    Bool_t         IsInterruptingSyscalls() const { return fIntSyscalls; }
+   Bool_t         IsRunning();
    virtual Bool_t Notify();
    void           Add() { TurnOn(); }
    void           Remove() { TurnOff(); }
