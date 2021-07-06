@@ -81,6 +81,8 @@ public:
    RAttrValue<double> angle{this, "angle", 0.};              ///<! text angle
    RAttrValue<int> align{this, "align", 22};                 ///<! text align
    RAttrFont font{this, "font"};                             ///<! text font
+
+   RAttrText(RDrawable *drawable, const char *prefix, double _size) : RAttrAggregation(drawable, prefix), size(this, "size", _size) {}
 };
 
 } // namespace Experimental

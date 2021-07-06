@@ -5025,7 +5025,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           title_margin = this.v7EvalLength("margin", ph, 0.02),
           title_width  = fw,
           title_height = this.v7EvalLength("height", ph, 0.05),
-          textFont     = this.v7EvalFont("text", { size: 24, color: "black", align: 22 });
+          textFont     = this.v7EvalFont("text", { size: 0.07, color: "black", align: 22 });
 
       this.createG();
 
