@@ -127,7 +127,7 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
     }
 
     EXPECT_TRUE(fitResults[1]->isIdentical(*fitResults[0]));
-    EXPECT_TRUE(hijack.str().empty() != expectFastEvaluationsWarnings[iMean]);
+    EXPECT_TRUE(hijack.str().empty() != expectFastEvaluationsWarnings[iMean]) << "Stream contents: " << hijack.str();
     ++iMean;
   }
 }
