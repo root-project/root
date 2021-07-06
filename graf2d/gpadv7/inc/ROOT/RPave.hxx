@@ -33,7 +33,7 @@ class RPave : public RDrawable {
 
 protected:
 
-   RPave(const std::string &csstype) : RDrawable(csstype) {}
+   RPave(const char *csstype) : RDrawable(csstype) {}
 
 public:
 
