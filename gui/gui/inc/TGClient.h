@@ -56,7 +56,7 @@ protected:
    TGPicturePool  *fPicturePool;      ///< pixmap pool
    TGMimeTypes    *fMimeTypeList;     ///< mimetype list
    Colormap_t      fDefaultColormap;  ///< default colormap
-   Bool_t          fGlobalNeedRedraw; ///< true if at least one window needs to be redrawn
+   std::atomic<Bool_t> fGlobalNeedRedraw; ///< true if at least one window needs to be redrawn
    Bool_t          fForceRedraw;      ///< redraw widgets as soon as possible
    THashList      *fWlist;            ///< list of frames
    TList          *fPlist;            ///< list of popup windows used in HandleMaskEvent()
