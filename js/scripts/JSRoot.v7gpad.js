@@ -168,17 +168,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!dflts) dflts = {}; else
       if (typeof dflts == "number") dflts = { size: dflts };
 
-      let text_size   = this.v7EvalAttr(name + "_size", dflts.size || 12),
+      let pp = this.getPadPainter(),
+          rfont = pp._dfltRFont || { fFamily: "Arial", fStyle: "", fWeight: "" },
+          text_size   = this.v7EvalAttr(name + "_size", dflts.size || 12),
           text_angle  = this.v7EvalAttr(name + "_angle", 0),
           text_align  = this.v7EvalAttr(name + "_align", dflts.align || "none"),
           text_color  = this.v7EvalColor(name + "_color", dflts.color || "none"),
-          font_family = this.v7EvalAttr(name + "_font_family", "Arial"),
-          font_style  = this.v7EvalAttr(name + "_font_style", ""),
-          font_weight = this.v7EvalAttr(name + "_font_weight", "");
+          font_family = this.v7EvalAttr(name + "_font_family", rfont.fFamily || "Arial"),
+          font_style  = this.v7EvalAttr(name + "_font_style", rfont.fStyle || ""),
+          font_weight = this.v7EvalAttr(name + "_font_weight", rfont.fWeight || "");
 
        if (typeof text_size == "string") text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
-       if (!fontScale) fontScale = this.getPadPainter().getPadHeight() || 10;
+       if (!fontScale) fontScale = pp.getPadHeight() || 10;
 
        let handler = new JSROOT.FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
 
@@ -2720,6 +2722,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       delete this._pad_width;
       delete this._pad_height;
       delete this._doing_draw;
+      delete this._dfltRFont;
 
       this.painters = [];
       this.pad = null;
@@ -5454,9 +5457,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    function drawRFont() {
-      let font      = this.getObject(),
-          svg       = this.getCanvSvg(),
-          defs      = svg.select('.canvas_defs'),
+      let font   = this.getObject(),
+          svg    = this.getCanvSvg(),
+          defs   = svg.select('.canvas_defs'),
           clname = "custom_font_" + font.fFamily+font.fWeight+font.fStyle;
 
       if (defs.empty())
@@ -5467,6 +5470,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          entry = defs.append("style").attr("type", "text/css").attr("class", clname);
 
       entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : "normal"}; font-style: ${font.fStyle ? font.fStyle : "normal"}; src: ${font.fSrc}; }`);
+
+      if (font.fDefault)
+         this.getPadPainter()._dfltRFont = font;
 
       return true;
    }
