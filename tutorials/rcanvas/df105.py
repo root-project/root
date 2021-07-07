@@ -24,7 +24,7 @@ import ROOT
 import json
 import argparse
 import os
-from ROOT.Experimental import RCanvas, RText, RPadPos, TObjectDrawable
+from ROOT.Experimental import RCanvas, RText, RAttrText, RPadPos, TObjectDrawable
 
 # Argument parsing
 parser = argparse.ArgumentParser()
@@ -218,18 +218,18 @@ c.Add[TObjectDrawable]().Set(legend)
 lbl1 = c.Add[RText](RPadPos(0.05, 0.88), "ATLAS")
 lbl1.onFrame = True
 lbl1.text.font = 7
-lbl1.text.size = 0.05
-lbl1.text.align = 11
+lbl1.text.size = 0.04
+lbl1.text.align = RAttrText.kLeftBottom
 lbl2 = c.Add[RText](RPadPos(0.05 + 0.20, 0.88), "Open Data")
 lbl2.onFrame = True
 lbl2.text.font = 4
-lbl2.text.size = 0.05
-lbl2.text.align = 11
+lbl2.text.size = 0.04
+lbl2.text.align = RAttrText.kLeftBottom
 lbl3 = c.Add[RText](RPadPos(0.05, 0.82), "#sqrt{{s}} = 13 TeV, {:.2f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0))
 lbl3.onFrame = True
 lbl3.text.font = 4
-lbl3.text.size = 0.04
-lbl3.text.align = 11
+lbl3.text.size = 0.03
+lbl3.text.align = RAttrText.kLeftBottom
 
 # show canvas finally
 c.SetSize(600, 600)
