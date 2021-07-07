@@ -33,7 +33,7 @@ TEST(RStyleTest, CreateStyle)
 
    style->AddBlock("custom").AddDouble("line_width", 2.);
 
-   style->AddBlock("#customid").AddInt("fill_style", 5);
+   style->AddBlock("#customid").AddInt("fill_style", RAttrFill::k3005);
 
    style->AddBlock(".custom_class").AddDouble("text_size", 3.);
 
@@ -45,7 +45,7 @@ TEST(RStyleTest, CreateStyle)
 
    EXPECT_DOUBLE_EQ(drawable.line.width, 2.f);
 
-   EXPECT_EQ(drawable.fill.style, 5);
+   EXPECT_EQ(drawable.fill.style, RAttrFill::k3005);
 
    EXPECT_DOUBLE_EQ(drawable.text.size, 3.);
 }
@@ -54,7 +54,7 @@ TEST(RStyleTest, CreateStyle)
 TEST(RStyleTest, CreateCss)
 {
    auto style = RStyle::Parse(" custom { line_width: 2; line_color: red; }"
-                              " #customid { fill_style: 5; }"
+                              " #customid { fill_style: 3005; }"
                               " .custom_class { text_size: 3; }");
 
    ASSERT_NE(style, nullptr);
@@ -69,7 +69,7 @@ TEST(RStyleTest, CreateCss)
 
    EXPECT_EQ(drawable.line.color, RColor::kRed);
 
-   EXPECT_EQ(drawable.fill.style, 5);
+   EXPECT_EQ(drawable.fill.style, RAttrFill::k3005);
 
    EXPECT_DOUBLE_EQ(drawable.text.size, 3.);
 }
@@ -77,7 +77,7 @@ TEST(RStyleTest, CreateCss)
 TEST(RStyleTest, CaseInsensitive)
 {
    auto style = RStyle::Parse(" custom { line_Width: 2; Line_coloR: red; }"
-                              " #customID { fill_style: 5; }"
+                              " #customID { fill_style: 3005; }"
                               " .custom_Cclass { text_size: 3; }");
 
    ASSERT_NE(style, nullptr);
@@ -94,7 +94,7 @@ TEST(RStyleTest, CaseInsensitive)
    EXPECT_EQ(drawable.line.color, RColor::kRed);
 
    // but id should have exact match
-   EXPECT_NE(drawable.fill.style, 5);
+   EXPECT_NE(drawable.fill.style, RAttrFill::k3005);
 
    // and class name should have exact match
    EXPECT_NE(drawable.text.size, 3.);

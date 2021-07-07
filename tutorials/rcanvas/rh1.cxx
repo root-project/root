@@ -65,7 +65,7 @@ void rh1()
    // errors draw options
    subpads[1][0]->Draw<RFrameTitle>("Error() draw options");
    subpads[1][0]->Draw(pHist1)->Error(1).line.color = col1;
-   subpads[1][0]->Draw(pHist2)->Error(4).fill = RAttrFill(col2, 3003);
+   subpads[1][0]->Draw(pHist2)->Error(4).fill = RAttrFill(col2, RAttrFill::k3003);
 
    // text and marker draw options
    subpads[0][1]->Draw<RFrameTitle>("Text() and Marker() draw options");
@@ -74,8 +74,8 @@ void rh1()
 
    // bar draw options
    subpads[1][1]->Draw<RFrameTitle>("Bar() draw options");
-   subpads[1][1]->Draw(pHist1)->Bar(0,0.5).fill.color = col1;
-   subpads[1][1]->Draw(pHist2)->Bar(0.5,0.5,true).fill.color = col2;
+   subpads[1][1]->Draw(pHist1)->Bar(0,0.5).fill = RAttrFill(col1, RAttrFill::kSolid);
+   subpads[1][1]->Draw(pHist2)->Bar(0.5,0.5,true).fill = RAttrFill(col2, RAttrFill::kSolid);
 
    // line draw option
    subpads[0][2]->Draw<RFrameTitle>("Line() draw option");
@@ -84,7 +84,7 @@ void rh1()
 
    // lego draw option
    subpads[1][2]->Draw<RFrameTitle>("Lego() draw option");
-   subpads[1][2]->Draw(pHist1)->Lego().fill.color = col1;
+   subpads[1][2]->Draw(pHist1)->Lego().fill = RAttrFill(col1, RAttrFill::kSolid);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

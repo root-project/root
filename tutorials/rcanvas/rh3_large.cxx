@@ -74,8 +74,9 @@ void rh3_large()
 
    draw->optimize = true; // enable draw optimization, reduced data set will be send to clients
 
-   //auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
-   //stat->fill.color = RColor::kBlue;
+   // auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
+   // stat->fill.color = RColor::kBlue;
+   // stat->fill.style = RAttrFill::kSolid;
 
    canvas->SetSize(1000, 700);
    canvas->Show();
