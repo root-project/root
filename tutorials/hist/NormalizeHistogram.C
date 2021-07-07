@@ -59,7 +59,7 @@ void NormalizeHistogram()
 
    // Drawing everything
 
-   TCanvas *c1 = new TCanvas("Histogram Normalization Method 1", "Hist Normalization Method 1 ", 1000, 600);
+   TCanvas *c1 = new TCanvas("c1", "Histogram Normalization", 1000, 600);
    c1->Divide(1, 3);
 
    c1->cd(1);
