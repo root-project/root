@@ -4,8 +4,8 @@
 /// Normalizing a Histogram
 ///
 /// Image produced by `.x Normalizing_Histogram.C`
-/// 2 different methods of normalizing Histograms
-/// are shown, each with the original Histogram
+/// Two different methods of normalizing histograms
+/// are shown, each with the original histogram.
 /// next to the normalized one.
 /// \macro_image
 /// \macro_code
