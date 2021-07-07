@@ -44,7 +44,7 @@ void NormalizeHistogram()
 
    // Filling histograms with random entries
 
-   for (int i = 0; i < 1000; i++) {
+   for (int i = 0; i < 1000; ++i) {
       double r = rand->Rndm() * 100;
       hist1->Fill(r);
       hist2->Fill(r);
