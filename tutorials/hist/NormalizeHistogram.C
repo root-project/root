@@ -31,11 +31,11 @@ void NormalizeHistogram()
 
    // all of the histograms
 
-   TH1F *hist1 = new TH1F("Unnormalized Histogram", "Unnormalized Hist", 100, 0, 100);
-   hist1->SetStats(0);
-   TH1F *hist2 = new TH1F("Method 1 Normalized", "Method 1 Normalized", 100, 0, 100);
-   hist2->SetStats(0);
-   TH1F *hist3 = new TH1F("Method 2 Normalized", "Method 2 Normalized", 100, 0, 100);
+   TH1F *orig = new TH1F("orig", "Original histogram before normalization", 100, 0, 100);
+   orig->SetStats(0);
+   TH1F *norm = new TH1F("norm", "Histogram normalized with bin content", 100, 0, 100);
+   norm->SetStats(0);
+   TH1F *normw = new TH1F("normw", "Histogram normalized with bin content times bin width", 100, 0, 100);
    hist3->SetStats(0);
 
    gStyle->SetTitleFontSize(0.1);
