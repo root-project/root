@@ -12,8 +12,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
-
 #ifndef ROO_ABS_MINIMIZER_FCN
 #define ROO_ABS_MINIMIZER_FCN
 
@@ -30,6 +28,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <memory>  // unique_ptr
 
 // forward declaration
 class RooMinimizer;
@@ -39,14 +38,14 @@ class RooAbsMinimizerFcn {
 public:
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context, bool verbose = false);
    RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other);
-   virtual ~RooAbsMinimizerFcn();
+   virtual ~RooAbsMinimizerFcn() = default;
 
-   // inform Minuit through its parameter_settings vector of RooFit parameter properties
-   Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose);
-   // same, but can be overridden to e.g. also include gradient strategy synchronization in subclasses:
+   /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
+   Bool_t synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose);
+   /// Like synchronizeParameterSettings, Synchronize informs Minuit through its parameter_settings vector of RooFit parameter properties,
+   /// but Synchronize can be overridden to e.g. also include gradient strategy synchronization in subclasses.
    virtual Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose);
 
-   // used for export to RooFitResult from Minimizer:
    RooArgList *GetFloatParamList();
    RooArgList *GetConstParamList();
    RooArgList *GetInitFloatParamList();
@@ -69,30 +68,37 @@ public:
    double getOffset() const { return _funcOffset; }
    void SetVerbose(Bool_t flag = kTRUE);
 
-   // put Minuit results back into RooFit objects:
+   /// Put Minuit results back into RooFit objects.
    void BackProp(const ROOT::Fit::FitResult &results);
 
-   // used in several Minimizer functions:
+   /// RooMinimizer sometimes needs the name of the minimized function. Implement this in the derived class.
    virtual std::string getFunctionName() const = 0;
+   /// RooMinimizer sometimes needs the title of the minimized function. Implement this in the derived class.
    virtual std::string getFunctionTitle() const = 0;
 
-   // set different external covariance matrix
+   /// Set different external covariance matrix
    void ApplyCovarianceMatrix(TMatrixDSym &V);
 
    Bool_t SetLogFile(const char *inLogfile);
    std::ofstream *GetLogFile() { return _logfile; }
 
-   unsigned int get_nDim() const { return _nDim; }
+   unsigned int getNDim() const { return _nDim; }
 
-   virtual void setOptimizeConst(Int_t flag) = 0;
+   void setOptimizeConst(Int_t flag);
 
    bool getOptConst();
-   std::vector<double> get_parameter_values() const;
+   std::vector<double> getParameterValues() const;
 
    Bool_t SetPdfParamVal(int index, double value) const;
 
+   /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
+   virtual void setOffsetting(Bool_t flag) = 0;
+
 protected:
-   virtual void optimizeConstantTerms(bool constStatChange, bool constValChange) = 0;
+   void optimizeConstantTerms(bool constStatChange, bool constValChange);
+   /// This function must be overridden in the derived class to pass on constant term optimization configuration
+   /// to the function to be minimized. For a RooAbsArg, this would be RooAbsArg::constOptimizeTestStatistic.
+   virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) = 0;
 
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
    void SetPdfParamErr(Int_t index, Double_t value);
@@ -117,15 +123,14 @@ protected:
 
    Bool_t _optConst = kFALSE;
 
-   RooArgList *_floatParamList;
-   RooArgList *_constParamList;
-   RooArgList *_initFloatParamList;
-   RooArgList *_initConstParamList;
+   std::unique_ptr<RooArgList> _floatParamList;
+   std::unique_ptr<RooArgList> _constParamList;
+   std::unique_ptr<RooArgList> _initFloatParamList;
+   std::unique_ptr<RooArgList> _initConstParamList;
 
    std::ofstream *_logfile = nullptr;
    bool _doEvalErrorWall{true};
    bool _verbose;
 };
 
-#endif
 #endif
