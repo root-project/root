@@ -11,12 +11,17 @@ include_directories(
   ${CLING_INCLUDE_DIRS}
   )
 
+if(root7)
+  set(ROOT7SRC TClingDataMemberInfoTestsROOT7.cxx)
+endif()
+
 ROOT_ADD_GTEST(
   TClingTest
 
   TClingTests.cxx
   TClingCallFuncTests.cxx
   TClingDataMemberInfoTests.cxx
+  ${ROOT7SRC}
   TClingMethodInfoTests.cxx
 
   LIBRARIES
