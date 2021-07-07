@@ -19,6 +19,14 @@ namespace Minuit2 {
 class FCNGradientBase;
 class MnUserTransformation;
 
+/// Similar to the AnalyticalGradientCalculator, the ExternalInternalGradientCalculator
+/// supplies Minuit with an externally calculated gradient. The main difference is that
+/// ExternalInternalGradientCalculator expects that the external gradient calculator does
+/// things in Minuit2-internal parameter space, which means many int2ext and ext2int
+/// transformation steps are not necessary. This avoids loss of precision in some cases,
+/// where trigonometrically transforming parameters back and forth can lose a few bits of
+/// floating point precision on every pass.
+
 class ExternalInternalGradientCalculator : public AnalyticalGradientCalculator {
 
 public:
