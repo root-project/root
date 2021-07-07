@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_rcanvas
 ///
-/// This macro demonstrate the text attributes for RText. Angle, size and color are
-/// changed in a loop. The text alignment and the text font are fixed.
+/// This macro demonstrate the text align attribute for RText.
 ///
 /// \macro_image (rcanvas_js)
 /// \macro_code
@@ -30,7 +29,6 @@ using namespace ROOT::Experimental;
 
 void rtext_align()
 {
-   // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("RText align example");
 
    auto box = canvas->Add<RBox>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal, 0.9_normal));

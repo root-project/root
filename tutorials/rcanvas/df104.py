@@ -21,7 +21,7 @@
 
 import ROOT
 import os
-from ROOT.Experimental import RCanvas, RText, RAttrText, RLegend, RPadPos, RPadExtent, TObjectDrawable
+from ROOT.Experimental import RCanvas, RText, RAttrText, RAttrFont, RLegend, RPadPos, RPadExtent, TObjectDrawable
 
 # Enable multi-threading
 ROOT.ROOT.EnableImplicitMT()
@@ -204,7 +204,7 @@ lower_pad.Add[TObjectDrawable]().Set(ratiodata, "E SAME")
 legend = upper_pad.Draw[RLegend](RPadPos(0.01, 0.01), RPadExtent(0.3, 0.4))
 legend.text.size = 0.05
 legend.text.align = RAttrText.kRightCenter
-legend.text.font = 4
+legend.text.font = RAttrFont.kArial
 legend.border.style = 0
 legend.border.width = 0
 legend.fill.style = 0
@@ -217,17 +217,17 @@ legend.AddEntry(higgs_drawable, "Signal", "l")
 # Add ATLAS labels
 lbl1 = upper_pad.Draw[RText](RPadPos(0.05, 0.88), "ATLAS")
 lbl1.onFrame = True
-lbl1.text.font = 7
+lbl1.text.font = RAttrFont.kArialBoldOblique
 lbl1.text.size = 0.04
 lbl1.text.align = RAttrText.kLeftBottom
 lbl2 = upper_pad.Draw[RText](RPadPos(0.05 + 0.16, 0.88), "Open Data")
 lbl2.onFrame = True
-lbl2.text.font = 4
+lbl2.text.font = RAttrFont.kArial
 lbl2.text.size = 0.04
 lbl2.text.align = RAttrText.kLeftBottom
 lbl3 = upper_pad.Draw[RText](RPadPos(0.05, 0.82), "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 lbl3.onFrame = True
-lbl3.text.font = 4
+lbl3.text.font = RAttrFont.kArial
 lbl3.text.size = 0.03
 lbl3.text.align = RAttrText.kLeftBottom
 

@@ -92,13 +92,15 @@ JSROOT.define(['d3'], (d3) => {
          'bTimes New Roman', 'biTimes New Roman', 'Arial',
          'oArial', 'bArial', 'boArial', 'Courier New',
          'oCourier New', 'bCourier New', 'boCourier New',
-         'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol', 'Verdana'],
+         'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol',
+         'Verdana', 'iVerdana', 'bVerdana', 'biVerdana'],
       // taken from https://www.math.utah.edu/~beebe/fonts/afm-widths.html
       root_fonts_aver_width: [0.537, 0.510,
          0.535, 0.520, 0.537,
          0.54, 0.556, 0.56, 0.6,
          0.6, 0.6, 0.6,
-         0.587, 0.514, 0.896, 0.587, 0.55]
+         0.587, 0.514, 0.896, 0.587,
+         0.55, 0.55, 0.55, 0.55 ]
    };
 
    jsrp.createMenu = function(evnt, handler, menuname) {

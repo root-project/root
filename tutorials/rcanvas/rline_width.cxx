@@ -28,7 +28,7 @@ void rline_width()
       auto text = canvas->Add<RText>(RPadPos(.3_normal, 1_normal*num), std::to_string(i));
       text->text.size = 0.04;
       text->text.align = RAttrText::kRightCenter;
-      text->text.font = 5;
+      text->text.font = RAttrFont::kArialOblique;
 
       auto draw = canvas->Add<RLine>(RPadPos(.32_normal, 1_normal*num), RPadPos(.8_normal, 1_normal*num));
       draw->line.width = i;
