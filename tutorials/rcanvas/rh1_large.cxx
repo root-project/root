@@ -61,6 +61,7 @@ void rh1_large()
 
    draw->line.color = RColor::kLime;
    // draw->fill.color = RColor::kLime;
+   // draw->fill.style = RAttrFill::kSolid;
    // draw->Line(); // configure line draw option
    // draw->Bar(); // configure bar draw option
    // draw->Error(3); // configure error drawing
@@ -70,6 +71,7 @@ void rh1_large()
 
    auto stat = canvas->Draw<RHist1StatBox>(pHist, "hist");
    stat->fill.color = RColor::kBlue;
+   stat->fill.style = RAttrFill::kSolid;
 
    canvas->SetSize(1000, 700);
    canvas->Show();

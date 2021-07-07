@@ -20,7 +20,7 @@ TEST(Primitives, RBox)
    box->border.width = 5.;
    box->border.style = 7;
    box->fill.color = RColor::kBlue;
-   box->fill.style = 6;
+   box->fill.style = RAttrFill::k3006;
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
@@ -29,7 +29,7 @@ TEST(Primitives, RBox)
    EXPECT_EQ(box->border.style, 7);
 
    EXPECT_EQ(box->fill.color, RColor::kBlue);
-   EXPECT_EQ(box->fill.style, 6);
+   EXPECT_EQ(box->fill.style, RAttrFill::k3006);
 }
 
 // Test RLine API
@@ -104,7 +104,7 @@ TEST(Primitives, RLegend)
    line3->line.color = RColor::kBlue;
 
    auto legend = canv.Draw<RLegend>("Legend title");
-   legend->fill.style = 5;
+   legend->fill.style = RAttrFill::k3005;
    legend->fill.color = RColor::kWhite;
    legend->border.width = 2.;
    legend->border.color = RColor::kRed;
@@ -117,7 +117,7 @@ TEST(Primitives, RLegend)
    custom->line.width = 5.;
    custom->line.style = 1;
    custom->fill.color = RColor::kBlue;
-   custom->fill.style = 3004;
+   custom->fill.style = RAttrFill::k3004;
    custom->marker.color = RColor::kRed;
    custom->marker.size = 3.;
    custom->marker.style = RAttrMarker::kOpenCross;
@@ -126,7 +126,7 @@ TEST(Primitives, RLegend)
 
    EXPECT_EQ(legend->NumEntries(), 4u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
-   EXPECT_EQ(legend->fill.style, 5);
+   EXPECT_EQ(legend->fill.style, RAttrFill::k3005);
    EXPECT_EQ(legend->fill.color, RColor::kWhite);
    EXPECT_EQ(legend->border.width, 2.);
    EXPECT_EQ(legend->border.color, RColor::kRed);
@@ -134,7 +134,6 @@ TEST(Primitives, RLegend)
    EXPECT_EQ(legend->GetEntry(0).GetLine(), true);
    EXPECT_EQ(legend->GetEntry(1).GetFill(), false);
    EXPECT_EQ(legend->GetEntry(2).GetMarker(), false);
-
 
    EXPECT_EQ(legend->GetEntry(3).GetLine(), true);
    EXPECT_EQ(legend->GetEntry(3).GetFill(), true);
@@ -144,6 +143,7 @@ TEST(Primitives, RLegend)
    EXPECT_NE(custom2, nullptr);
    EXPECT_EQ(custom2->line.color, RColor::kGreen);
    EXPECT_EQ(custom2->fill.color, RColor::kBlue);
+   EXPECT_EQ(custom2->fill.style, RAttrFill::k3004);
    EXPECT_EQ(custom2->marker.color, RColor::kRed);
 }
 
@@ -161,7 +161,7 @@ TEST(Primitives, RPaveText)
    text->border.color = RColor::kRed;
    text->border.width = 3.;
    text->fill.color = RColor::kBlue;
-   text->fill.style = 3003;
+   text->fill.style = RAttrFill::k3003;
 
    text->AddLine("First line");
    text->AddLine("Second line");
@@ -183,5 +183,5 @@ TEST(Primitives, RPaveText)
    EXPECT_DOUBLE_EQ(text->border.width, 3.);
 
    EXPECT_EQ(text->fill.color, RColor::kBlue);
-   EXPECT_EQ(text->fill.style, 3003);
+   EXPECT_EQ(text->fill.style, RAttrFill::k3003);
 }

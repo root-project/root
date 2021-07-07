@@ -43,9 +43,10 @@ void rframe()
    // configure RFrame with direct API calls
    auto frame = canvas->AddFrame();
    // frame->fill.color = RColor::kBlue;
+   // frame->fill.style = RAttrFill::kSolid;
    frame->border.color = RColor::kBlue;
    frame->border.width = 3;
-   frame->margins = 0.2_normal; // set all mergins first
+   frame->margins = 0.2_normal; // set all margins first
    frame->margins.top = 0.25_normal;
 
    // let frame draw axes without need of any histogram
@@ -99,6 +100,7 @@ void rframe()
    // draw box before line at same position as line ending with 40x40 px size and clipping on
    auto box4 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 80_user - 20_px), RPadPos(80_user + 20_px, 80_user + 20_px));
    box4->fill.color = RColor::kBlue;
+   box4->fill.style = RAttrFill::kSolid;
    box4->clipping = true; // or via CSS "clipping: true;"
    box4->onFrame = true; // or via CSS "onFrame: true;"
 
@@ -114,6 +116,7 @@ void rframe()
    // draw box before line at same position as line ending with 40x40 px size
    auto box5 = canvas->Draw<RBox>(RPadPos(80_user - 20_px, 20_user - 20_px), RPadPos(80_user + 20_px, 20_user + 20_px));
    box5->fill.color = RColor::kYellow;
+   box5->fill.style = RAttrFill::kSolid;
    box5->onFrame = true; // or via CSS "onFrame: true;"
 
    // draw line in the frame, but disable default cutting by the frame borders

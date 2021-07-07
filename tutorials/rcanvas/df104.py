@@ -21,7 +21,7 @@
 
 import ROOT
 import os
-from ROOT.Experimental import RCanvas, RText, RAttrText, RAttrFont, RLegend, RPadPos, RPadExtent, TObjectDrawable
+from ROOT.Experimental import RCanvas, RText, RAttrText, RAttrFont, RAttrFill, RLegend, RPadPos, RPadExtent, TObjectDrawable
 
 # Enable multi-threading
 ROOT.ROOT.EnableImplicitMT()
@@ -207,7 +207,7 @@ legend.text.align = RAttrText.kRightCenter
 legend.text.font = RAttrFont.kArial
 legend.border.style = 0
 legend.border.width = 0
-legend.fill.style = 0
+legend.fill.style = RAttrFill.kHollow
 
 legend.AddEntry(data_drawable, "Data", "lme")
 legend.AddEntry(bkg_drawable, "Background", "l")

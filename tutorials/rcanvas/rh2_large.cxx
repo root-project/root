@@ -79,6 +79,7 @@ void rh2_large()
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
    stat->fill.color = RColor::kBlue;
+   stat->fill.style = RAttrFill::kSolid;
 
    canvas->SetSize(1000, 700);
    canvas->Show();

@@ -61,8 +61,8 @@ void rlegend()
    draw2->line.color = .7f; // should be blue color
 
    auto legend = canvas->Draw<RLegend>("Legend title");
-   legend->fill.style = 5;
-   legend->fill.color = RColor::kWhite;
+   legend->fill.color = RColor(0, 0, 120, 25);
+   legend->fill.style = RAttrFill::k3019;
    legend->border.color = RColor::kRed;
    legend->border.width = 2;
    legend->AddEntry(draw1, "histo1", "l");
@@ -74,7 +74,7 @@ void rlegend()
    custom->line.width = 5.;
    custom->line.style = 1;
    custom->fill.color = RColor::kBlue;
-   custom->fill.style = 3004;
+   custom->fill.style = RAttrFill::k3004;
    custom->marker.color = RColor::kRed;
    custom->marker.size = 3.;
    custom->marker.style = RAttrMarker::kOpenCross;

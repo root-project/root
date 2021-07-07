@@ -20,7 +20,7 @@ TEST(Primitives, RPave)
    pave->border.color = RColor::kRed;
    pave->border.width = 3.;
    pave->fill.color = RColor::kBlue;
-   pave->fill.style = 3003;
+   pave->fill.style = RAttrFill::k3003;
    pave->corner = RPave::kBottomRight;
    pave->onFrame = false;
    pave->offsetX = 0.03_normal;
@@ -35,7 +35,7 @@ TEST(Primitives, RPave)
    EXPECT_DOUBLE_EQ(pave->border.width, 3.);
 
    EXPECT_EQ(pave->fill.color, RColor::kBlue);
-   EXPECT_EQ(pave->fill.style, 3003);
+   EXPECT_EQ(pave->fill.style, RAttrFill::k3003);
 
    EXPECT_EQ(pave->corner, RPave::kBottomRight);
    EXPECT_EQ(pave->onFrame, false);

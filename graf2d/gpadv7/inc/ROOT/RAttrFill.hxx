@@ -29,10 +29,21 @@ class RAttrFill : public RAttrAggregation {
 
 public:
 
-   RAttrValue<RColor>  color{this, "color", RColor::kBlack};  ///<! fill color
-   RAttrValue<int>     style{this, "style", 1};               ///<! fill style
+   enum EStyle {
+      kHollow = 0,
+      kNone = 0,
+      kSolid = 1001,
+      k3001 = 3001, k3002 = 3002, k3003 = 3003, k3004 = 3004, k3005 = 3005,
+      k3006 = 3006, k3007 = 3007, k3008 = 3008, k3009 = 3009, k3010 = 3010,
+      k3011 = 3011, k3012 = 3012, k3013 = 3013, k3014 = 3014, k3015 = 3015,
+      k3016 = 3016, k3017 = 3017, k3018 = 3018, k3019 = 3019, k3020 = 3020,
+      k3021 = 3021, k3022 = 3022, k3023 = 3023, k3024 = 3024, k3025 = 3025
+   };
 
-   RAttrFill(RColor _color, int _style) : RAttrFill()
+   RAttrValue<RColor> color{this, "color", RColor::kBlack};  ///<! fill color
+   RAttrValue<EStyle> style{this, "style", kHollow};         ///<! fill style
+
+   RAttrFill(RColor _color, EStyle _style) : RAttrFill()
    {
       color = _color;
       style = _style;

@@ -59,18 +59,13 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
            p1           = pp.getCoordinate(box.fP1, onframe),
-           p2           = pp.getCoordinate(box.fP2, onframe),
-           line_width   = this.v7EvalAttr("border_width", 1),
-           line_style   = this.v7EvalAttr("border_style", 1),
-           line_color   = this.v7EvalColor("border_color", "black"),
-           fill_color   = this.v7EvalColor("fill_color", "white"),
-           fill_style   = this.v7EvalAttr("fill_style", 1),
-           border_rx    = this.v7EvalAttr("border_rx", 0),
-           border_ry    = this.v7EvalAttr("border_ry", 0);
+           p2           = pp.getCoordinate(box.fP2, onframe);
 
     this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
-    if (fill_style == 0) fill_color = "none";
+    this.createv7AttLine("border_");
+
+    this.createv7AttFill();
 
     this.draw_g
         .append("svg:rect")
@@ -78,12 +73,8 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
         .attr("width", p2.x-p1.x)
         .attr("y", p2.y)
         .attr("height", p1.y-p2.y)
-        .attr("rx", border_rx || null)
-        .attr("ry", border_ry || null)
-        .style("stroke", line_color)
-        .attr("stroke-width", line_width)
-        .attr("fill", fill_color)
-        .style("stroke-dasharray", jsrp.root_line_styles[line_style]);
+        .call(this.lineatt.func)
+        .call(this.fillatt.func);
    }
 
    // =================================================================================

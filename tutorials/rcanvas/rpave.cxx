@@ -34,6 +34,7 @@ void rpave()
    // this pave should be in top left corner
    auto pave = canvas->Draw<RPave>();
    pave->fill.color = RColor::kBlue;
+   pave->fill.style = RAttrFill::k3001;
    pave->border.color = RColor::kGreen;
    pave->border.width = 3;
    pave->corner = RPave::kTopLeft;
@@ -44,6 +45,7 @@ void rpave()
    // this second pave in the bottom left corner
    auto pave2 = canvas->Draw<RPave>();
    pave2->fill.color = RColor::kRed;
+   pave2->fill.style = RAttrFill::k3002;
    pave2->corner = RPave::kBottomLeft;
    pave2->offsetX = pave2->offsetY = 0.05_normal;
    pave2->width = 0.3_normal;
@@ -54,6 +56,7 @@ void rpave()
    text->AddLine("It can have several lines");
    text->AddLine("It should be in top right corner");
    text->fill.color = RColor::kYellow;
+   text->fill.style = RAttrFill::k3003;
    text->corner = RPave::kTopRight;
    text->offsetX = text->offsetY = 0.05_normal;
    text->width = 0.4_normal;
@@ -70,6 +73,7 @@ void rpave()
    text2->AddLine("It loaded from comic.woff2 file");
    text2->AddLine("One also can provide valid URL");
    text2->fill.color = RColor::kGreen;
+   text2->fill.style = RAttrFill::k3004;
    text2->corner = RPave::kBottomRight;
    text2->offsetX = text2->offsetY = 0.05_normal;
    text2->width = 0.4_normal;
