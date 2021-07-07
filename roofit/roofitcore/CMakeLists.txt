@@ -12,7 +12,6 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     Floats.h
-    NumericalDerivatorMinuit2.h
     Roo1DTable.h
     RooAbsAnaConvPdf.h
     RooAbsArg.h
@@ -236,7 +235,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
-    src/NumericalDerivatorMinuit2.cxx
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
     src/RooAbsArg.cxx
