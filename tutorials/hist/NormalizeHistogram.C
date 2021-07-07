@@ -3,7 +3,7 @@
 /// \notebook -js
 /// Normalizing a Histogram
 ///
-/// Image produced by `.x Normalizing_Histogram.C`
+/// Image produced by `.x NormalizeHistogram.C`
 /// Two different methods of normalizing histograms
 /// are shown, each with the original histogram.
 /// next to the normalized one.
