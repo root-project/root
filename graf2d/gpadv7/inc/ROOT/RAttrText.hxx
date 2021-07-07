@@ -34,30 +34,74 @@ public:
    RAttrValue<std::string> style{this, "style"};    ///<! font style, corresponds to css font-style attribute
    RAttrValue<std::string> weight{this, "weight"};  ///<! font weight, corresponds to css font-weight attribute
 
+   enum EFont {
+      kTimesItalic = 1,
+      kTimesBold = 2,
+      kTimesBoldItalic = 3,
+      kArial = 4,
+      kArialOblique = 5,
+      kArialBold = 6,
+      kArialBoldOblique = 7,
+      kCourier = 8,
+      kCourierOblique = 9,
+      kCourierBold = 10,
+      kCourierBoldOblique = 11,
+      // kSymbol = 12, // not supported by web browsers
+      kTimes = 13,
+      // kWingdings = 14,
+      // kSymbolItalic = 15, // not supported by web browsers
+      kVerdana = 16,
+      kVerdanaItalic = 17,
+      kVerdanaBold = 18,
+      kVerdanaBoldItalic = 19
+   };
+
    ///Set text font by id as usually handled in the ROOT (without precision), number should be between 1 and 15
-   RAttrFont &SetFont(int font)
+   RAttrFont &SetFont(EFont font)
    {
       switch(font) {
-      case 1: family = "Times New Roman"; style = "italic"; break;
-      case 2: family = "Times New Roman"; weight = "bold"; break;
-      case 3: family = "Times New Roman"; style = "italic"; weight = "bold"; break;
-      case 4: family = "Arial"; break;
-      case 5: family = "Arial"; style = "oblique"; break;
-      case 6: family = "Arial"; weight = "bold"; break;
-      case 7: family = "Arial"; style = "oblique"; weight = "bold"; break;
-      case 8: family = "Courier New"; break;
-      case 9: family = "Courier New"; style = "oblique"; break;
-      case 10: family = "Courier New"; weight = "bold"; break;
-      case 11: family = "Courier New"; style = "oblique"; weight = "bold"; break;
-      case 12: family = "Symbol"; break;
-      case 13: family = "Times New Roman"; break;
-      case 14: family = "Wingdings"; break;
-      case 15: family = "Symbol"; style = "italic"; break;
+      case kTimesItalic: family = "Times New Roman"; style = "italic"; break;
+      case kTimesBold: family = "Times New Roman"; weight = "bold"; break;
+      case kTimesBoldItalic: family = "Times New Roman"; style = "italic"; weight = "bold"; break;
+      case kArial: family = "Arial"; break;
+      case kArialOblique: family = "Arial"; style = "oblique"; break;
+      case kArialBold: family = "Arial"; weight = "bold"; break;
+      case kArialBoldOblique: family = "Arial"; style = "oblique"; weight = "bold"; break;
+      case kCourier: family = "Courier New"; break;
+      case kCourierOblique: family = "Courier New"; style = "oblique"; break;
+      case kCourierBold: family = "Courier New"; weight = "bold"; break;
+      case kCourierBoldOblique: family = "Courier New"; style = "oblique"; weight = "bold"; break;
+      // case kSymbol: family = "Symbol"; break;
+      case kTimes: family = "Times New Roman"; break;
+      // case kWingdings: family = "Wingdings"; break;
+      // case kSymbolItalic: family = "Symbol"; style = "italic"; break;
+      case kVerdana: family = "Verdana";  break;
+      case kVerdanaItalic: family = "Verdana";  style = "italic";  break;
+      case kVerdanaBold: family = "Verdana";  weight = "bold"; break;
+      case kVerdanaBoldItalic: family = "Verdana";  weight = "bold"; style = "italic"; break;
       }
       return *this;
    }
 
-   RAttrFont &operator=(int id) { SetFont(id); return *this; }
+   /// assign font id, setting all necessary properties
+   RAttrFont &operator=(EFont id) { SetFont(id); return *this; }
+
+   friend bool operator==(const RAttrFont &font, EFont id) { RAttrFont font2; font2.SetFont(id); return font == font2; }
+
+   /// Returns full font name including weight and style
+   std::string GetFullName() const
+   {
+      std::string name = family, s = style, w = weight;
+      if (!w.empty()) {
+         name += " ";
+         name += w;
+      }
+      if (!s.empty()) {
+         name += " ";
+         name += s;
+      }
+      return name;
+   }
 
 };
 
