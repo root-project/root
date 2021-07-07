@@ -21,7 +21,7 @@
 
 import ROOT
 import os
-from ROOT.Experimental import RCanvas, RText, RLegend, RPadPos, RPadExtent, TObjectDrawable
+from ROOT.Experimental import RCanvas, RText, RAttrText, RLegend, RPadPos, RPadExtent, TObjectDrawable
 
 # Enable multi-threading
 ROOT.ROOT.EnableImplicitMT()
@@ -180,7 +180,6 @@ ratiobkg.GetYaxis().SetLabelSize(0.08)
 ratiobkg.GetYaxis().SetTitleSize(0.09)
 ratiobkg.GetYaxis().SetTitle("Data - Bkg.")
 ratiobkg.GetYaxis().CenterTitle()
-ratiobkg.GetYaxis().SetTitleOffset(0.7)
 ratiobkg.GetYaxis().SetNdivisions(503, False)
 ratiobkg.GetYaxis().ChangeLabel(-1, -1, 0)
 ratiobkg.GetXaxis().SetTitle("m_{#gamma#gamma} [GeV]")
@@ -202,35 +201,35 @@ for i in range(1, data.GetNbinsX()):
 lower_pad.Add[TObjectDrawable]().Set(ratiodata, "E SAME")
 
 # Add RLegend
-legend = upper_pad.Draw[RLegend](RPadPos(-0.05, 0.05), RPadExtent(0.3, 0.4))
+legend = upper_pad.Draw[RLegend](RPadPos(0.01, 0.01), RPadExtent(0.3, 0.4))
 legend.text.size = 0.05
-legend.text.align = 32
+legend.text.align = RAttrText.kRightCenter
 legend.text.font = 4
 legend.border.style = 0
 legend.border.width = 0
 legend.fill.style = 0
 
-legend.AddEntry(data_drawable, "Data")
-legend.AddEntry(bkg_drawable, "Background")
-legend.AddEntry(fit_drawable, "Signal + Bkg.")
-legend.AddEntry(higgs_drawable, "Signal")
+legend.AddEntry(data_drawable, "Data", "lme")
+legend.AddEntry(bkg_drawable, "Background", "l")
+legend.AddEntry(fit_drawable, "Signal + Bkg.", "l")
+legend.AddEntry(higgs_drawable, "Signal", "l")
 
 # Add ATLAS labels
 lbl1 = upper_pad.Draw[RText](RPadPos(0.05, 0.88), "ATLAS")
 lbl1.onFrame = True
 lbl1.text.font = 7
-lbl1.text.size = 0.05
-lbl1.text.align = 11
+lbl1.text.size = 0.04
+lbl1.text.align = RAttrText.kLeftBottom
 lbl2 = upper_pad.Draw[RText](RPadPos(0.05 + 0.16, 0.88), "Open Data")
 lbl2.onFrame = True
 lbl2.text.font = 4
-lbl2.text.size = 0.05
-lbl2.text.align = 11
+lbl2.text.size = 0.04
+lbl2.text.align = RAttrText.kLeftBottom
 lbl3 = upper_pad.Draw[RText](RPadPos(0.05, 0.82), "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 lbl3.onFrame = True
 lbl3.text.font = 4
-lbl3.text.size = 0.04
-lbl3.text.align = 11
+lbl3.text.size = 0.03
+lbl3.text.align = RAttrText.kLeftBottom
 
 # show canvas finally
 c.SetSize(700, 780)
