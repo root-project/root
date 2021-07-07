@@ -77,7 +77,6 @@ public:
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
   Bool_t setLogFile(const char* logf=0) { return fitterFcn()->SetLogFile(logf); }
 
-  // necessary from RooAbsMinimizerFcn subclasses
   Int_t getPrintLevel() const;
 
   void setMinimizerType(const char* type) ;
@@ -112,9 +111,7 @@ private:
 
   Int_t       _printLevel ;
   Int_t       _status ;
-  Bool_t      _optConst ;
   Bool_t      _profile ;
-  RooAbsReal* _func ;
 
   Bool_t      _verbose ;
   TStopwatch  _timer ;
@@ -132,7 +129,7 @@ private:
 
   RooMinimizer(const RooMinimizer&) ;
 	
-  ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
+  ClassDef(RooMinimizer,1) // RooFit interface to ROOT::Fit::Fitter
 } ;
 
 
