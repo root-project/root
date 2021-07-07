@@ -13,16 +13,22 @@ class EmptySourceRange(object):
 
     Attributes:
 
+    id (int): Sequential counter to identify this range. It is used to assign
+        a filename to a partial Snapshot in case it was requested. The id is
+        assigned in `get_balanced_ranges` to ensure that each distributed
+        RDataFrame run has a list of ranges with sequential ids starting from
+        zero.
+
     start (int): Starting entry of this range.
 
     end (int): Ending entry of this range.
     """
 
-    def __init__(self, start, end):
+    def __init__(self, rangeid, start, end):
         """set attributes"""
+        self.id = rangeid
         self.start = start
         self.end = end
-
 
 class TreeRange(object):
     """
@@ -31,6 +37,13 @@ class TreeRange(object):
     global list of input files of the original dataset.
 
     Attributes:
+
+    id (int): Sequential counter to identify this range. It is used to assign
+        a filename to a partial Snapshot in case it was requested. The id is
+        assigned in `get_clustered_ranges` to ensure that each distributed
+        RDataFrame run has a list of ranges with sequential ids starting from
+        zero.
+
 
     start (int): Starting entry of this range.
 
@@ -41,8 +54,9 @@ class TreeRange(object):
     friend_info (ROOT.Internal.TreeUtils.RFriendInfo): Information about friend trees.
     """
 
-    def __init__(self, start, end, filelist, friend_info):
+    def __init__(self, rangeid, start, end, filelist, friend_info):
         """set attributes"""
+        self.id = rangeid
         self.start = start
         self.end = end
         self.filelist = filelist
@@ -224,6 +238,7 @@ def get_balanced_ranges(nentries, npartitions):
         list[DistRDF.Ranges.EmptySourceRange]: Each element of the list contains
             the start and end entry of the corresponding range.
     """
+
     partition_size = nentries // npartitions
 
     i = 0  # Iterator
@@ -232,6 +247,7 @@ def get_balanced_ranges(nentries, npartitions):
 
     remainder = nentries % npartitions
 
+    rangeid = 0 # Keep track of the current range id
     while i < nentries:
         # Start value of current range
         start = i
@@ -244,7 +260,8 @@ def get_balanced_ranges(nentries, npartitions):
             end = i = end + 1
             remainder -= 1
 
-        ranges.append(EmptySourceRange(start, end))
+        ranges.append(EmptySourceRange(rangeid, start, end))
+        rangeid += 1
 
     return ranges
 
@@ -344,10 +361,12 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
     file up until the end of that file (entry number 20000), then switch to
     the third file and read the whole 30000 entries there.
     """
+
     # TODO: Make this passage more clear. Maybe split the comprehension in more
     # parts.
     clustered_ranges = [
         TreeRange(
+            rangeid,  # type: int
             min(clusters).start - clusters[0].offset,  # type: int
             max(clusters).end - clusters[0].offset,  # type: int
             [
@@ -358,7 +377,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, treename, friend_info):
             ],  # type: list[str]
             friend_info  # type: ROOT.Internal.TreeUtils.RFriendInfo
         )  # type: DistRDF.Ranges.TreeRange
-        for clusters in _n_even_chunks(clustersinfiles, npartitions)
+        for rangeid, clusters in enumerate(_n_even_chunks(clustersinfiles, npartitions))
     ]
 
     logger.debug("Created following clustered ranges:\n%s",

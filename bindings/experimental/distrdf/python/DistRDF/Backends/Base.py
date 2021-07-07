@@ -218,8 +218,7 @@ class BaseBackend(ABC):
             # rdf_range = rdf.Range(current_range.start, current_range.end)
 
             # Output of the callable
-            resultptr_list = computation_graph_callable(
-                rdf, rdf_range=current_range)
+            resultptr_list = computation_graph_callable(rdf, current_range.id, rdf_range=current_range)
 
             mergeables = [
                 resultptr  # Here resultptr is already the result value
