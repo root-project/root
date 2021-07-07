@@ -39,7 +39,7 @@ void rtext_angle()
       draw->text.size = 0.01 + angle/5000.;
       draw->text.angle = angle;
       draw->text.align = RAttrText::kLeftTop;
-      draw->text.font = 4;
+      draw->text.font = RAttrFont::kArial;
    }
 
    canvas->Show();

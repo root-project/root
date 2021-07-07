@@ -77,7 +77,7 @@ void raxis()
    draw7->axis.log = 10;
    draw7->axis.title = "log10 scale";
    draw7->axis.title.SetCenter();
-   draw7->axis.title.font = 12;
+   draw7->axis.title.font = RAttrFont::kVerdana;
    draw7->axis.title.color = RColor::kGreen;
    draw7->axis.ending.SetCircle();
 
