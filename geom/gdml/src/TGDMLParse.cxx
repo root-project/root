@@ -670,7 +670,7 @@ TString TGDMLParse::GetScale(const char* unit)
 
    if (strcmp(unit, "mm") == 0) {
       retunit = "0.1";
-   } else if (strcmp(unit, "milimeter") == 0) {
+   } else if (strcmp(unit, "millimeter") == 0 || strcmp(unit, "milimeter") == 0) {
       retunit = "0.1";
    } else if (strcmp(unit, "cm") == 0) {
       retunit = "1.0";
@@ -716,8 +716,8 @@ Double_t TGDMLParse::GetScaleVal(const char* sunit)
    TString unit(sunit);
    unit.ToLower();
 
-   if ((unit == "mm") || (unit == "milimeter")) {
-      retunit = 0.1;
+   if ((unit == "mm") || (unit == "millimeter") || (unit == "milimeter")) {
+  	retunit = 0.1;
    } else if ((unit == "cm") || (unit == "centimeter")) {
       retunit = 1.0;
    } else if ((unit == "m") || (unit == "meter")) {
