@@ -278,6 +278,15 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///    exit(-1);
 /// }
 /// ~~~
+/// If you open a file instead with TFile::Open("file.root") use rather
+/// the following code as a nullptr is returned.
+/// ~~~{.cpp}
+/// TFile* f = TFile::Open("file.root");
+/// if (!f) {
+///    std::cout << "Error opening file" << std::endl;
+///    exit(-1);
+/// }
+/// ~~~
 /// When opening the file, the system checks the validity of this directory.
 /// If something wrong is detected, an automatic Recovery is performed. In
 /// this case, the file is scanned sequentially reading all logical blocks
@@ -3983,7 +3992,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// TNetFile use either TNetFile directly or specify as host "localhost".
 /// The netopt argument is only used by TNetFile. For the meaning of the
 /// options and other arguments see the constructors of the individual
-/// file classes. In case of error returns 0.
+/// file classes. In case of error, it returns a nullptr.
 ///
 /// For TFile implementations supporting asynchronous file open, see
 /// TFile::AsyncOpen(...), it is possible to request a timeout with the
@@ -3995,6 +4004,10 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
 ///
 /// *The caller is responsible for deleting the pointer.*
+/// In READ mode, a nullptr is returned if the file does not exist or cannot be opened.
+/// In CREATE mode, a nullptr is returned if the file already exists or cannot be created.
+/// In RECREATE mode, a nullptr is returned if the file can not be created.
+/// In UPDATE mode, a nullptr is returned if the file cannot be created or opened.
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
