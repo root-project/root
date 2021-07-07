@@ -25,20 +25,20 @@
 #include "ROOT/RText.hxx"
 #include "ROOT/RPadPos.hxx"
 
-void rtext()
+using namespace ROOT::Experimental;
+
+void rtext_angle()
 {
-   using namespace ROOT::Experimental;
-
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("RText example");
+   auto canvas = RCanvas::Create("RText angle example");
 
-   for (int i=0; i<=360; i+=10) {
+   for (double angle = 0; angle <= 360; angle += 10) {
       auto draw = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
 
-      draw->text.color = RColor((int) (0.38*i), (int) (0.64*i), (int) (0.76*i));
-      draw->text.size = 10+i/10;
-      draw->text.angle = i;
-      draw->text.align = 13;
+      draw->text.color = RColor((int) (0.38*angle), (int) (0.64*angle), (int) (0.76*angle));
+      draw->text.size = 0.01 + angle/5000.;
+      draw->text.angle = angle;
+      draw->text.align = RAttrText::kLeftTop;
       draw->text.font = 4;
    }
 

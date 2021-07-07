@@ -30,7 +30,10 @@ void rmarker()
       for (int row=0;row<3;++row) {
          int style = i;
 
-         if (row==1) style+=19; else if (row==2) style+=34;
+         if (row == 1)
+            style += 19;
+         else if (row==2)
+            style += 34;
 
          RPadPos pt(RPadLength::Normal(x), .12_normal + 0.3_normal*row);
          canvas->Draw<RText>(pt, std::to_string(style));

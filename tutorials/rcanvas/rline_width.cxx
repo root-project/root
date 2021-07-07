@@ -26,8 +26,8 @@ void rline_width()
       num = num + 0.05;
 
       auto text = canvas->Add<RText>(RPadPos(.3_normal, 1_normal*num), std::to_string(i));
-      text->text.size = 13;
-      text->text.align = 32;
+      text->text.size = 0.04;
+      text->text.align = RAttrText::kRightCenter;
       text->text.font = 5;
 
       auto draw = canvas->Add<RLine>(RPadPos(.32_normal, 1_normal*num), RPadPos(.8_normal, 1_normal*num));

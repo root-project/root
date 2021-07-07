@@ -76,10 +76,22 @@ class RAttrText : public RAttrAggregation {
 
 public:
 
+   enum EAlign {
+      kLeftBottom = 11,
+      kLeftCenter = 12,
+      kLeftTop = 13,
+      kCenterBottom = 21,
+      kCenter = 22,
+      kCenterTop = 23,
+      kRightBottom = 31,
+      kRightCenter = 32,
+      kRightTop = 33
+   };
+
    RAttrValue<RColor> color{this, "color", RColor::kBlack};  ///<! text color
    RAttrValue<double> size{this, "size", 12.};               ///<! text size
    RAttrValue<double> angle{this, "angle", 0.};              ///<! text angle
-   RAttrValue<int> align{this, "align", 22};                 ///<! text align
+   RAttrValue<EAlign> align{this, "align", kCenter};         ///<! text align
    RAttrFont font{this, "font"};                             ///<! text font
 
    RAttrText(RDrawable *drawable, const char *prefix, double _size) : RAttrAggregation(drawable, prefix), size(this, "size", _size) {}

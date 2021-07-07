@@ -71,7 +71,7 @@ void rframe()
    // draw line over the frame
    auto line0 = canvas->Draw<RLine>(RPadPos(100_px, .9_normal), RPadPos(900_px , .9_normal));
    auto text0 = canvas->Draw<RText>(RPadPos(100_px, .9_normal + 5_px), "Line drawn on pad, fix pixel length");
-   text0->text.align = 11;
+   text0->text.align = RAttrText::kLeftBottom;
 
    // draw line under the frame
    auto line1 = canvas->Draw<RLine>(RPadPos(.1_normal, .1_normal), RPadPos(.9_normal, .1_normal));
@@ -85,7 +85,7 @@ void rframe()
    auto text2 = canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
    text2->onFrame = true; // or via CSS "onFrame: true;"
    text2->text.angle = 90;
-   text2->text.align = 11;
+   text2->text.align = RAttrText::kLeftBottom;
 
    // draw on right size of frame, user coordiante, moved and zoomed with frame
    auto line3 = canvas->Draw<RLine>(RPadPos(110_user, -.1_normal), RPadPos(110_user, 1.1_normal));
@@ -122,7 +122,7 @@ void rframe()
 
    auto text5 = canvas->Draw<RText>(RPadPos(20_user, 80_user), "clipping off");
    text5->onFrame = true; // or via CSS "onFrame: true;"
-   text5->text.align = 11;
+   text5->text.align = RAttrText::kLeftBottom;
 
    canvas->UseStyle(rframe_style);
 
