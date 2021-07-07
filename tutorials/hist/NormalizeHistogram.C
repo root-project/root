@@ -40,7 +40,7 @@ void NormalizeHistogram()
 
    gStyle->SetTitleFontSize(0.1);
 
-   TRandom2 *rand = new TRandom2();
+   TRandom2 rand;
 
    // Filling histograms with random entries
 
