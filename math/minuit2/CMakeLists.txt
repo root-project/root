@@ -106,6 +106,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/ModularFunctionMinimizer.h
       Minuit2/NegativeG2LineSearch.h
       Minuit2/Numerical2PGradientCalculator.h
+      Minuit2/NumericalDerivator.h
       Minuit2/ParametricFunction.h
       Minuit2/ScanBuilder.h
       Minuit2/ScanMinimizer.h
@@ -176,6 +177,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/ModularFunctionMinimizer.cxx
       src/NegativeG2LineSearch.cxx
       src/Numerical2PGradientCalculator.cxx
+      src/NumericalDerivator.cxx
       src/ParametricFunction.cxx
       src/ScanBuilder.cxx
       src/SimplexBuilder.cxx
