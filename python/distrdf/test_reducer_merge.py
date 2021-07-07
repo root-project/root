@@ -228,7 +228,7 @@ class ReducerMergeTest(unittest.TestCase):
         # Retrieve list of file from the snapshotted dataframe
         input_files = snapdf.proxied_node.get_inputfiles()
         # Create list of supposed filenames for the intermediary files
-        tmp_files = ["snapFile_0_4.root", "snapFile_5_9.root"]
+        tmp_files = ["snapFile_0.root", "snapFile_1.root"]
         # Check that the two lists are the same
         self.assertListEqual(input_files, tmp_files)
         # Check that the intermediary .root files were created with the right
