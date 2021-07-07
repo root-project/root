@@ -7,13 +7,6 @@
 #include "TListOfDataMembers.h"
 #include "TROOT.h"
 
-// If we have ROOT/RError.hxx (from core/foundation, a dependency of this file)
-// then we also have `ROOT::Experimental::RBox`, needed below - but its header
-// shouldn't become a dependency of this file.
-#if __has_include("ROOT/RError.hxx")
-# define HAVE_RBOX
-#endif
-
 #include "gtest/gtest.h"
 
 TEST(TClingDataMemberInfo, UsingDecls)
@@ -227,14 +220,3 @@ protected:
    auto *dmInnerProtected = (TDataMember*)TClass::GetClass("DMLookup::Outer")->GetListOfDataMembers()->FindObject("InnerProtected");
    EXPECT_EQ(dmInnerProtected->Property(), kIsProtected | kIsClass);
 }
-
-#ifdef HAVE_RBOX
-TEST(TClingDataMemberInfo, issue8553)
-{
-   TClass *clBox = nullptr;
-   ASSERT_TRUE(clBox = TClass::GetClass("ROOT::Experimental::RBox"));
-   TDataMember *dmAttrBorder = nullptr;
-   ASSERT_TRUE(dmAttrBorder = clBox->GetDataMember("border"));
-   EXPECT_NE(dmAttrBorder->GetOffsetCint(), 0);
-}
-#endif
