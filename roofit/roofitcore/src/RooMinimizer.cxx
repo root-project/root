@@ -111,8 +111,6 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
 
   // Store function reference
   _extV = 0 ;
-  _func = &function ;
-  _optConst = kFALSE ;
   _verbose = kFALSE ;
   _profile = kFALSE ;
   _profileStart = kFALSE ;
@@ -121,7 +119,7 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
 
   if (_theFitter) delete _theFitter ;
   _theFitter = new ROOT::Fit::Fitter;
-  _fcn = new RooMinimizerFcn(_func,this,_verbose);
+  _fcn = new RooMinimizerFcn(&function,this,_verbose);
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
   setEps(1.0); // default tolerance
   // default max number of calls
@@ -132,11 +130,11 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
   setPrintLevel(-1) ;
 
   // Use +0.5 for 1-sigma errors
-  setErrorLevel(_func->defaultErrorLevel()) ;
+  setErrorLevel(function.defaultErrorLevel()) ;
 
   // Declare our parameters to MINUIT
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
 
   // Now set default verbosity
   if (RooMsgService::instance().silentMode()) {
@@ -232,7 +230,7 @@ void RooMinimizer::setEps(Double_t eps)
 
 void RooMinimizer::setOffsetting(Bool_t flag) 
 {
-  _func->enableOffsetting(flag) ; 
+  _fcn->setOffsetting(flag);
 }
 
 
@@ -286,7 +284,7 @@ RooFitResult* RooMinimizer::fit(const char* options)
   // Initial configuration
   if (opts.Contains("v")) setVerbose(1) ;
   if (opts.Contains("t")) setProfile(1) ;
-  if (opts.Contains("l")) setLogFile(Form("%s.log",_func->GetName())) ;
+  if (opts.Contains("l")) setLogFile(Form("%s.log",_fcn->getFunctionName().c_str())) ;
   if (opts.Contains("c")) optimizeConst(1) ;
 
   // Fitting steps
@@ -310,7 +308,7 @@ RooFitResult* RooMinimizer::fit(const char* options)
 Int_t RooMinimizer::minimize(const char* type, const char* alg)
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
 
   _minimizerType = type;
   _theFitter->Config().SetMinimizer(type,alg);
@@ -342,7 +340,7 @@ Int_t RooMinimizer::minimize(const char* type, const char* alg)
 Int_t RooMinimizer::migrad()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
@@ -378,7 +376,7 @@ Int_t RooMinimizer::hesse()
   else {
 
     _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
     profileStart() ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooAbsReal::clearEvalErrorLog() ;
@@ -415,7 +413,7 @@ Int_t RooMinimizer::minos()
   else {
 
     _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		      _optConst,_verbose) ;
+		      _fcn->getOptConst(),_verbose) ;
     profileStart() ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooAbsReal::clearEvalErrorLog() ;
@@ -453,7 +451,7 @@ Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
   else if (minosParamList.getSize()>0) {
 
     _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		      _optConst,_verbose) ;
+		      _fcn->getOptConst(),_verbose) ;
     profileStart() ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooAbsReal::clearEvalErrorLog() ;
@@ -505,7 +503,7 @@ Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
 Int_t RooMinimizer::seek()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
@@ -534,7 +532,7 @@ Int_t RooMinimizer::seek()
 Int_t RooMinimizer::simplex()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
@@ -563,7 +561,7 @@ Int_t RooMinimizer::simplex()
 Int_t RooMinimizer::improve()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+		    _fcn->getOptConst(),_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
@@ -600,24 +598,7 @@ Int_t RooMinimizer::setPrintLevel(Int_t newLevel)
 
 void RooMinimizer::optimizeConst(Int_t flag)
 {
-  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-
-  if (_optConst && !flag){
-    if (_printLevel>-1) coutI(Minimization) << "RooMinimizer::optimizeConst: deactivating const optimization" << endl ;
-    _func->constOptimizeTestStatistic(RooAbsArg::DeActivate) ;
-    _optConst = flag ;
-  } else if (!_optConst && flag) {
-    if (_printLevel>-1) coutI(Minimization) << "RooMinimizer::optimizeConst: activating const optimization" << endl ;
-    _func->constOptimizeTestStatistic(RooAbsArg::Activate,flag>1) ;
-    _optConst = flag ;
-  } else if (_optConst && flag) {
-    if (_printLevel>-1) coutI(Minimization) << "RooMinimizer::optimizeConst: const optimization already active" << endl ;
-  } else {
-    if (_printLevel>-1) coutI(Minimization) << "RooMinimizer::optimizeConst: const optimization wasn't active" << endl ;
-  }
-
-  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-
+   _fcn->setOptimizeConst(flag);
 }
 
 
@@ -639,8 +620,8 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
   }
 
   TString name,title ;
-  name = userName ? userName : Form("%s", _func->GetName()) ;
-  title = userTitle ? userTitle : Form("%s", _func->GetTitle()) ;
+  name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str()) ;
+  title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str()) ;
   RooFitResult* fitRes = new RooFitResult(name,title) ;
 
   // Move eventual fixed parameters in floatList to constList
@@ -727,7 +708,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
     coutE(Minimization) << "RooMinimizer::contour(" << GetName()
 			<< ") ERROR: " << var1.GetName()
 			<< " is not a floating parameter of "
-			<< _func->GetName() << endl ;
+			<< _fcn->getFunctionName() << endl ;
     return 0;
   }
 
@@ -736,7 +717,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
     coutE(Minimization) << "RooMinimizer::contour(" << GetName()
 			<< ") ERROR: " << var2.GetName()
 			<< " is not a floating parameter of PDF "
-			<< _func->GetName() << endl ;
+			<< _fcn->getFunctionName() << endl ;
     return 0;
   }
 
@@ -783,7 +764,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 	ycoor[npoints] = ycoor[0];
 	TGraph* graph = new TGraph(npoints+1,xcoor,ycoor);
 
-	graph->SetName(Form("contour_%s_n%f",_func->GetName(),n[ic])) ;
+	graph->SetName(Form("contour_%s_n%f",_fcn->getFunctionName().c_str(),n[ic])) ;
 	graph->SetLineStyle(ic+1) ;
 	graph->SetLineWidth(2) ;
 	graph->SetLineColor(kBlue) ;

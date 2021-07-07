@@ -12,7 +12,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-
 //////////////////////////////////////////////////////////////////////////////
 /// \class RooMinimizerFcn
 /// RooMinimizerFcn is an interface to the ROOT::Math::IBaseFunctionMultiDim,
@@ -59,46 +58,10 @@ ROOT::Math::IBaseFunctionMultiDim* RooMinimizerFcn::Clone() const
   return new RooMinimizerFcn(*this) ;
 }
 
-void RooMinimizerFcn::setOptimizeConst(Int_t flag)
+void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-
-   if (_optConst && !flag) {
-      if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: deactivating const optimization" << endl;
-      _funct->constOptimizeTestStatistic(RooAbsArg::DeActivate, true);
-      _optConst = flag;
-   } else if (!_optConst && flag) {
-      if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: activating const optimization" << endl;
-      _funct->constOptimizeTestStatistic(RooAbsArg::Activate, flag > 1);
-      _optConst = flag;
-   } else if (_optConst && flag) {
-      if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: const optimization already active" << endl;
-   } else {
-      if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: const optimization wasn't active" << endl;
-   }
-
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+   _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
 }
-
-void RooMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constValChange) {
-   if (constStatChange) {
-
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-
-      oocoutI(_context,Minimization) << "RooMinimizerFcn::optimizeConstantTerms: set of constant parameters changed, rerunning const optimizer" << endl ;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange, true) ;
-   } else if (constValChange) {
-      oocoutI(_context,Minimization) << "RooMinimizerFcn::optimizeConstantTerms: constant parameter values changed, rerunning const optimizer" << endl ;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange, true) ;
-   }
-
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-}
-
 
 /// Evaluate function given the parameters in `x`.
 double RooMinimizerFcn::DoEval(const double *x) const {
@@ -156,4 +119,9 @@ std::string RooMinimizerFcn::getFunctionName() const
 std::string RooMinimizerFcn::getFunctionTitle() const
 {
    return _funct->GetTitle();
+}
+
+void RooMinimizerFcn::setOffsetting(Bool_t flag)
+{
+   _funct->enableOffsetting(flag);
 }
