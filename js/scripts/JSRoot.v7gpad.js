@@ -197,11 +197,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!prefix || (typeof prefix != "string")) prefix = "fill_";
 
       let fill_color = this.v7EvalColor(prefix + "color", ""),
-          fill_style = this.v7EvalAttr(prefix + "style", 1001);
+          fill_style = this.v7EvalAttr(prefix + "style", 0);
 
-      this.createAttFill({ pattern: fill_style, color: 0 });
-
-      this.fillatt.setSolidColor(fill_color || "none");
+      this.createAttFill({ pattern: fill_style, color: fill_color,  color_as_svg: true });
    }
 
    /** @summary Create this.lineatt object based on v7 line attributes
@@ -1527,7 +1525,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!this.fillatt)
-         this.createv7AttFill("fill_");
+         this.createv7AttFill();
 
       this.createv7AttLine("border_");
    }
@@ -4874,14 +4872,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           offsetx      = this.v7EvalLength("offsetX", rect.width, 0.02),
           offsety      = this.v7EvalLength("offsetY", rect.height, 0.02),
           pave_width   = this.v7EvalLength("width", rect.width, 0.3),
-          pave_height  = this.v7EvalLength("height", rect.height, 0.3),
-          line_width   = this.v7EvalAttr("border_width", 1),
-          line_style   = this.v7EvalAttr("border_style", 1),
-          line_color   = this.v7EvalColor("border_color", "black"),
-          border_rx    = this.v7EvalAttr("border_rx", 0),
-          border_ry    = this.v7EvalAttr("border_ry", 0),
-          fill_color   = this.v7EvalColor("fill_color", "white"),
-          fill_style   = this.v7EvalAttr("fill_style", 1);
+          pave_height  = this.v7EvalLength("height", rect.height, 0.3);
 
       this.createG();
 
@@ -4889,7 +4880,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!visible) return Promise.resolve(this);
 
-      if (fill_style == 0) fill_color = "none";
+      this.createv7AttLine("border_");
+
+      this.createv7AttFill();
 
       let pave_x = 0, pave_y = 0,
           fr = this.onFrame ? fp.getFrameRect() : rect;
@@ -4924,10 +4917,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  .attr("height", pave_height)
                  .attr("rx", border_rx || null)
                  .attr("ry", border_ry || null)
-                 .style("stroke", line_color)
-                 .attr("stroke-width", line_width)
-                 .style("stroke-dasharray", jsrp.root_line_styles[line_style])
-                 .attr("fill", fill_color);
+                 .call(this.lineatt.func)
+                 .call(this.fillatt.func);
 
       this.pave_width = pave_width;
       this.pave_height = pave_height;

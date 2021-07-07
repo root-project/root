@@ -85,6 +85,7 @@ void rh2_colz()
 
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
    stat->fill.color = RColor::kRed;
+   stat->fill.style = RAttrFill::kSolid;
 
    canvas->SetSize(1000, 700);
    canvas->Show();
