@@ -1,7 +1,6 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST()
+ROOTTEST_ADD_TEST(old-formula
+  PRECMD ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.31000.root
+    ${CMAKE_CURRENT_BINARY_DIR}/hsimple.31000.root
+  MACRO runoldFormulaTest.C
+  OUTREF oldFormulaTest.ref)
