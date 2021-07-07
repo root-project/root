@@ -72,14 +72,16 @@ class ComputationGraphGenerator(object):
         # Prune the graph to check user references
         self.headnode.graph_prune()
 
-        def generate_computation_graph(node_cpp, node_py=None, rdf_range=None):
+        def generate_computation_graph(node_cpp, range_id, node_py=None, rdf_range=None):
             """
             The callable that recurses through the DistRDF nodes and executes
             operations from a starting (PyROOT) RDF node.
 
             Args:
-                node_cpp: The current state's ROOT CPP node. Initially this
-                    should be given in as a PyROOT RDataFrame object.
+                node_cpp (ROOT.RDF.RNode): The current state's ROOT CPP node.
+                    Initially this is the PyROOT RDataFrame object.
+                range_id (int): The id of the current range. Needed to assign a
+                    file name to a partial Snapshot if it was requested.
                 node_py (optional): The current state's DistRDF node. If `None`,
                     it takes the value of `self.headnode`.
                 rdf_range (optional): The current range of the RDataFrame to run
@@ -107,13 +109,10 @@ class ComputationGraphGenerator(object):
                 RDFOperation = getattr(node_cpp, node_py.operation.name)
                 operation = node_py.operation
 
-                if rdf_range and operation.name == "Snapshot":
+                if operation.name == "Snapshot":
                     # Retrieve filename and append range boundaries
                     filename = operation.args[1].partition(".root")[0]
-                    start = str(rdf_range.start)
-                    end = str(rdf_range.end - 1)
-                    path_with_range = "{}_{}_{}.root".format(filename,
-                                                             start, end)
+                    path_with_range = "{}_{}.root".format(filename, range_id)
                     # Create a partial snapshot on the current range
                     operation.args[1] = path_with_range
                 pyroot_node = RDFOperation(*operation.args,
@@ -142,7 +141,7 @@ class ComputationGraphGenerator(object):
             for n in node_py.children:
                 # Recurse through children and get their output
                 prev_vals = generate_computation_graph(
-                    parent_node, node_py=n, rdf_range=rdf_range)
+                    parent_node, range_id, node_py=n, rdf_range=rdf_range)
 
                 # Attach the output of the children node
                 return_vals.extend(prev_vals)
