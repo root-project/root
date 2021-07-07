@@ -188,8 +188,7 @@ class THnSparse: public THnBase {
  THnSparseT<TArrayC>   |  THnSparseC   |  Char_t
  THnSparseT<TArrayS>   |  THnSparseS   |  Short_t
  THnSparseT<TArrayI>   |  THnSparseI   |  Int_t
- THnSparseT<TArrayL>   |  THnSparseL   |  Long_t
- THnSparseT<TArrayL64> |  THnSparseL64 |  Long64_t
+ THnSparseT<TArrayL64> |  THnSparseL   |  Long64_t
  THnSparseT<TArrayF>   |  THnSparseF   |  Float_t
  THnSparseT<TArrayD>   |  THnSparseD   |  Double_t
 
@@ -220,8 +219,7 @@ class THnSparseT: public THnSparse {
 
 typedef THnSparseT<TArrayD> THnSparseD;
 typedef THnSparseT<TArrayF> THnSparseF;
-typedef THnSparseT<TArrayL> THnSparseL;
-typedef THnSparseT<TArrayL64> THnSparseL64;
+typedef THnSparseT<TArrayL64> THnSparseL;
 typedef THnSparseT<TArrayI> THnSparseI;
 typedef THnSparseT<TArrayS> THnSparseS;
 typedef THnSparseT<TArrayC> THnSparseC;

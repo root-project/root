@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TH2L64
-#define ROOT_TH2L64
+#ifndef ROOT_TH2L
+#define ROOT_TH2L
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TH2L64                                                               //
+// TH2L                                                                 //
 //                                                                      //
 // 2-Dim histogram with a 64 bit integer per channel                    //
 //                                                                      //

@@ -576,16 +576,16 @@ TH1I operator/(const TH1I &h1, const TH1I &h2);
 
 //________________________________________________________________________
 
-class TH1L64: public TH1, public TArrayL64 {
+class TH1L: public TH1, public TArrayL64 {
 
 public:
-   TH1L64();
-   TH1L64(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
-   TH1L64(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
-   TH1L64(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-   TH1L64(const TH1L64 &h1i);
-   TH1L64& operator=(const TH1L64 &h1);
-   ~TH1L64() override;
+   TH1L();
+   TH1L(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
+   TH1L(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+   TH1L(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+   TH1L(const TH1L &h1l);
+   TH1L& operator=(const TH1L &h1);
+   ~TH1L() override;
 
    void     AddBinContent(Int_t bin) override;
    void     AddBinContent(Int_t bin, Double_t w) override;
@@ -593,27 +593,27 @@ public:
    void     Reset(Option_t *option="") override;
    void     SetBinsLength(Int_t n=-1) override;
 
-   ClassDefOverride(TH1L64,0)  //1-Dim histograms (one 64 bit integer per channel)
+   ClassDefOverride(TH1L,0)  //1-Dim histograms (one 64 bit integer per channel)
 
-   friend  TH1L64     operator*(Double_t c1, const TH1L64 &h1);
-   friend  TH1L64     operator*(const TH1L64 &h1, Double_t c1);
-   friend  TH1L64     operator+(const TH1L64 &h1, const TH1L64 &h2);
-   friend  TH1L64     operator-(const TH1L64 &h1, const TH1L64 &h2);
-   friend  TH1L64     operator*(const TH1L64 &h1, const TH1L64 &h2);
-   friend  TH1L64     operator/(const TH1L64 &h1, const TH1L64 &h2);
+   friend  TH1L     operator*(Double_t c1, const TH1L &h1);
+   friend  TH1L     operator*(const TH1L &h1, Double_t c1);
+   friend  TH1L     operator+(const TH1L &h1, const TH1L &h2);
+   friend  TH1L     operator-(const TH1L &h1, const TH1L &h2);
+   friend  TH1L     operator*(const TH1L &h1, const TH1L &h2);
+   friend  TH1L     operator/(const TH1L &h1, const TH1L &h2);
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
    void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
 };
 
-TH1L64 operator*(Double_t c1, const TH1L64 &h1);
+TH1L operator*(Double_t c1, const TH1L &h1);
 inline
-TH1L64 operator*(const TH1L64 &h1, Double_t c1) {return operator*(c1,h1);}
-TH1L64 operator+(const TH1L64 &h1, const TH1L64 &h2);
-TH1L64 operator-(const TH1L64 &h1, const TH1L64 &h2);
-TH1L64 operator*(const TH1L64 &h1, const TH1L64 &h2);
-TH1L64 operator/(const TH1L64 &h1, const TH1L64 &h2);
+TH1L operator*(const TH1L &h1, Double_t c1) {return operator*(c1,h1);}
+TH1L operator+(const TH1L &h1, const TH1L &h2);
+TH1L operator-(const TH1L &h1, const TH1L &h2);
+TH1L operator*(const TH1L &h1, const TH1L &h2);
+TH1L operator/(const TH1L &h1, const TH1L &h2);
 
 //________________________________________________________________________
 

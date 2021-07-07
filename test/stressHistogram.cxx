@@ -6269,7 +6269,7 @@ bool testMerge1DWithBuffer(bool allNoLimits)
       x1 = minRange; x2 = maxRange;
    }
 
-   TH1D* h0 = new TH1D("h0", "h1-Title", numberOfBins, 1, 0);
+   TH1D* h0 = new TH1D("h0", "h0-Title", numberOfBins, 1, 0);
    TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, x1, x2);
    TH1D* h2 = new TH1D("h2", "h2-Title", 1,1,0);
    TH1D* h3 = new TH1D("h3", "h3-Title", 1,1,0);
@@ -6952,7 +6952,7 @@ bool testLabelProf2DY()
    // test ordering label in content ascending order
    //h2->LabelsOption("<", "y");
 
-   h2->Clone("h0");
+   //TProfile2D* h0 = static_cast<TProfile2D*> ( h2->Clone("h2clone") );
 
    // then order labels alphabetically
    h2->LabelsOption("a", "y");
@@ -7792,12 +7792,12 @@ bool testH1Extend() {
 bool testH2Extend() {
 
    TH2D * h1 = new TH2D("h1","h1",10,0,10,10,0,10);
-   TH2D * h2 = new TH2D("h2","h0",10,0,10,10,0,20);
+   TH2D * h2 = new TH2D("h2","h2",10,0,10,10,0,20);
    h1->SetCanExtend(TH1::kYaxis);
    for (int i = 0; i < nEvents; ++i) {
       double x = r.Uniform(-1,11);
       double y = r.Gaus(10,3);
-      if (y <= 0 || y >= 20) continue; // do not want overflow in h0
+      if (y <= 0 || y >= 20) continue; // do not want overflow
       h1->Fill(x,y);
       h2->Fill(x,y);
    }
@@ -7832,7 +7832,7 @@ bool testProfile2Extend() {
 
    TProfile2D::Approximate(true);
    TProfile2D * h1 = new TProfile2D("h1","h1",10,0,10,10,0,10);
-   TProfile2D * h2 = new TProfile2D("h2","h0",10,0,10,10,0,20);
+   TProfile2D * h2 = new TProfile2D("h2","h2",10,0,10,10,0,20);
    h1->SetCanExtend(TH1::kYaxis);
    // be sure to have some underflow/overflow before expanding
    // to test that case
@@ -7883,7 +7883,7 @@ bool testConversion1D()
    TH1 *h1c = new TH1C("h1c", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
    TH1 *h1s = new TH1S("h1s", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
    TH1 *h1i = new TH1I("h1i", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
-   TH1 *h1l = new TH1L64("h1l", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
+   TH1 *h1l = new TH1L("h1l", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
    TH1 *h1f = new TH1F("h1f", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
    TH1 *h1d = new TH1D("h1d", "h1-title", nbins[0], minRangeArray[0], maxRangeArray[0]);
 
@@ -7940,6 +7940,7 @@ bool testConversion1D()
    delete n1c;
    delete n1s;
    delete n1i;
+   delete n1l;
    delete n1f;
    delete n1d;
 
@@ -7970,7 +7971,7 @@ bool testConversion2D()
    TH2 *h2i = new TH2I("h2i", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2 *h2l = new TH2L64("h2l", "h2-title",
+   TH2 *h2l = new TH2L("h2l", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
    TH2 *h2f = new TH2F("h2f", "h2-title",
@@ -7990,7 +7991,7 @@ bool testConversion2D()
    THnSparse* s2c = THnSparse::CreateSparse("s2c", "s2cTitle", h2c);
    THnSparse* s2s = THnSparse::CreateSparse("s2s", "s2sTitle", h2s);
    THnSparse* s2i = THnSparse::CreateSparse("s2i", "s2iTitle", h2i);
-   THnSparse* s2l = THnSparse::CreateSparse("s2l", "s2iTitle", h2l);
+   THnSparse* s2l = THnSparse::CreateSparse("s2l", "s2lTitle", h2l);
    THnSparse* s2f = THnSparse::CreateSparse("s2f", "s2fTitle", h2f);
    THnSparse* s2d = THnSparse::CreateSparse("s2d", "s2dTitle", h2d);
 
@@ -8068,7 +8069,7 @@ bool testConversion3D()
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3 *h3l = new TH3L64("h3i", "h3-title",
+   TH3 *h3l = new TH3L("h3l", "h3-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
@@ -8120,7 +8121,7 @@ bool testConversion3D()
    THn* n3c = THn::CreateHn("n3c", "n3cTitle", h3cn);
    THn* n3s = THn::CreateHn("n3s", "n3sTitle", h3sn);
    THn* n3i = THn::CreateHn("n3i", "n3iTitle", h3in);
-   THn* n3l = THn::CreateHn("n3l", "n3iTitle", h3ln);
+   THn* n3l = THn::CreateHn("n3l", "n3lTitle", h3ln);
    THn* n3f = THn::CreateHn("n3f", "n3fTitle", h3fn);
    THn* n3d = THn::CreateHn("n3d", "n3dTitle", h3dn);
 
