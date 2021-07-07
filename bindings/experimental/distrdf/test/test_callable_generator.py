@@ -79,7 +79,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         generator = ComputationGraphGenerator.ComputationGraphGenerator(
             node.proxied_node)
         mapper_func = generator.get_callable()
-        values = mapper_func(t)
+        values = mapper_func(t, 0)
         nodes = generator.get_action_nodes()
 
         reqd_order = [1, 3, 2, 2, 3, 2]
@@ -116,7 +116,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         generator = ComputationGraphGenerator.ComputationGraphGenerator(
             node.proxied_node)
         mapper_func = generator.get_callable()
-        values = mapper_func(t)
+        values = mapper_func(t, 0)
         nodes = generator.get_action_nodes()
 
         reqd_order = [1, 2, 2, 2, 3, 2]
