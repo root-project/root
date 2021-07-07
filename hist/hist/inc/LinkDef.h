@@ -182,6 +182,7 @@
 #pragma link C++ typedef THnSparseD;
 #pragma link C++ typedef THnSparseF;
 #pragma link C++ typedef THnSparseL;
+#pragma link C++ typedef THnSparseL64;
 #pragma link C++ typedef THnSparseI;
 #pragma link C++ typedef THnSparseS;
 #pragma link C++ typedef THnSparseC;
@@ -200,6 +201,7 @@
 #pragma link C++ class THnSparseD;
 #pragma link C++ class THnSparseF;
 #pragma link C++ class THnSparseL;
+#pragma link C++ class THnSparseL64;
 #pragma link C++ class THnSparseI;
 #pragma link C++ class THnSparseS;
 #pragma link C++ class THnSparseC;
