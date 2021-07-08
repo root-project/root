@@ -80,19 +80,18 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            pp           = this.getPadPainter(),
            onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
-           p            = pp.getCoordinate(marker.fP, onframe),
-           marker_size  = this.v7EvalAttr( "marker_size", 1),
-           marker_style = this.v7EvalAttr( "marker_style", 1),
-           marker_color = this.v7EvalColor( "marker_color", "black"),
-           att          = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size }),
-           path         = att.create(p.x, p.y);
+           p            = pp.getCoordinate(marker.fP, onframe);
 
        this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
+
+       this.createv7AttMarker();
+
+       let path = this.markeratt.create(p.x, p.y);
 
        if (path)
           this.draw_g.append("svg:path")
                      .attr("d", path)
-                     .call(att.func);
+                     .call(this.markeratt.func);
    }
 
    // =================================================================================

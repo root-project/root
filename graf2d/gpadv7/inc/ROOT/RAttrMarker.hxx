@@ -72,9 +72,9 @@ public:
 
    RAttrValue<RColor> color{this, "color", RColor::kBlack}; ///<! marker color
    RAttrValue<double> size{this, "size", 1.};               ///<! marker size
-   RAttrValue<int> style{this, "style", 1};                 ///<! marker style
+   RAttrValue<EStyle> style{this, "style", kDot};           ///<! marker style
 
-   RAttrMarker(const RColor &_color, double _size, int _style) : RAttrMarker()
+   RAttrMarker(const RColor &_color, double _size, EStyle _style) : RAttrMarker()
    {
       color = _color;
       size = _size;
