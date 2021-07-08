@@ -15,7 +15,7 @@
 ## \author Sergey Linev
 
 import ROOT
-from ROOT.Experimental import RCanvas, RBox, RPadPos, RColor, RAttrFill
+from ROOT.Experimental import RCanvas, RBox, RPadPos, RColor, RAttrFill, RAttrLine
 
 # Create a canvas to be displayed.
 canvas = RCanvas.Create("RBox drawing")
@@ -29,7 +29,7 @@ box1.fill.style = RAttrFill.kSolid
 box2 = canvas.Draw[RBox](RPadPos(0.4, 0.2), RPadPos(0.6, 0.7))
 box2.border.color = RColor.kRed
 box2.border.width = 10
-box2.border.style = 2
+box2.border.style = RAttrLine.kDashed
 box2.fill.color = RColor(0, 0, 255, 179) # 70% opaque
 box2.fill.style = RAttrFill.kSolid
 

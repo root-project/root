@@ -29,11 +29,30 @@ class RAttrLine : public RAttrAggregation {
 
 public:
 
+   enum EStyle {
+      kNone = 0,
+      kSolid = 1,
+      kDashed = 2,
+      kDotted = 3,
+      kDashDotted = 4,
+      kStyle1 = 1,
+      kStyle2 = 2,
+      kStyle3 = 3,
+      kStyle4 = 4,
+      kStyle5 = 5,
+      kStyle6 = 6,
+      kStyle7 = 7,
+      kStyle8 = 8,
+      kStyle9 = 9,
+      kStyle10 = 10
+   };
+
    RAttrValue<RColor>  color{this, "color", RColor::kBlack}; ///<! line color
    RAttrValue<double>  width{this, "width", 1.};             ///<! line width
-   RAttrValue<int>     style{this, "style", 1};              ///<! line style
+   RAttrValue<EStyle>  style{this, "style", kSolid};         ///<! line style
+   RAttrValue<std::string> pattern{this, "pattern"};         ///<! line pattern like "3,2,3,1,5"
 
-   RAttrLine(const RColor &_color, double _width, int _style) : RAttrLine()
+   RAttrLine(const RColor &_color, double _width, EStyle _style) : RAttrLine()
    {
       color = _color;
       width = _width;
