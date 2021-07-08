@@ -46,7 +46,7 @@ void rmarker()
          auto draw = canvas->Draw<RMarker>(pm);
          draw->marker.style = (RAttrMarker::EStyle) style;
          draw->marker.color = RColor::kBlue;
-         draw->marker.size = 2.5;
+         draw->marker.size = 0.1; // relative to pad height
       }
    }
 
