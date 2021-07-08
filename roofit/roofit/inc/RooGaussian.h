@@ -46,6 +46,7 @@ protected:
 
   Double_t evaluate() const override;
   void computeBatch(double* output, size_t size, RooBatchCompute::DataMap& dataMap) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
