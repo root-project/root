@@ -34,7 +34,7 @@ set -xg ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; se
 
 if not set -q MANPATH
    # Grab the default man path before setting the path to avoid duplicates
-   if which manpath > /dev/null ^ /dev/null
+   if which manpath > /dev/null 2> /dev/null
       set -xg MANPATH (manpath)
    else
       set -xg MANPATH (man -w 2> /dev/null)
