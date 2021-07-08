@@ -31,12 +31,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
            clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
            p1           = pp.getCoordinate(line.fP1, onframe),
-           p2           = pp.getCoordinate(line.fP2, onframe),
-           line_width   = this.v7EvalAttr("line_width", 1),
-           line_style   = this.v7EvalAttr("line_style", 1),
-           line_color   = this.v7EvalColor("line_color", "black");
+           p2           = pp.getCoordinate(line.fP2, onframe);
 
        this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
+
+       this.createv7AttLine();
 
        this.draw_g
            .append("svg:line")
@@ -44,10 +43,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            .attr("y1", p1.y)
            .attr("x2", p2.x)
            .attr("y2", p2.y)
-           .style("stroke", line_color)
-           .attr("stroke-width", line_width)
-//        .attr("stroke-opacity", line_opacity)
-           .style("stroke-dasharray", jsrp.root_line_styles[line_style]);
+           .call(this.lineatt.func);
    }
 
    // =================================================================================

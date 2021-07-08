@@ -32,7 +32,7 @@ void rtext_align()
    auto canvas = RCanvas::Create("RText align example");
 
    auto box = canvas->Add<RBox>(RPadPos(0.1_normal, 0.1_normal), RPadPos(0.9_normal, 0.9_normal));
-   box->border.style = 6;
+   box->border.style = RAttrLine::kStyle6;
 
    auto drawText = [&canvas](double x, double y, RAttrText::EAlign align, const std::string &lbl) {
       auto dbox = canvas->Add<RBox>(RPadPos(x-0.003, y-0.003), RPadPos(x+0.003, y+0.003));

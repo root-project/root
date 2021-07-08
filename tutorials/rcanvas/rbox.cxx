@@ -34,7 +34,7 @@ void rbox()
    auto box2 = canvas->Draw<RBox>(RPadPos(0.4_normal, 0.2_normal), RPadPos(0.6_normal,0.7_normal));
    box2->border.color = RColor::kRed;
    box2->border.width = 10.f;
-   box2->border.style = 2;
+   box2->border.style = RAttrLine::kDashed;
    box2->fill.color = RColor(0, 0, 255, 179); // 70% opaque
    box2->fill.style = RAttrFill::kSolid;
 

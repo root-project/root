@@ -72,7 +72,7 @@ void rlegend()
    auto custom = legend->AddEntry("test", "lfm");
    custom->line.color = RColor::kGreen;
    custom->line.width = 5.;
-   custom->line.style = 1;
+   custom->line.style = RAttrLine::kSolid;
    custom->fill.color = RColor::kBlue;
    custom->fill.style = RAttrFill::k3004;
    custom->marker.color = RColor::kRed;

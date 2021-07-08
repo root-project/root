@@ -84,7 +84,7 @@ void tobject()
 
    // one can change basic attributes via v7 classes, value will be replaced on client side
    auto drawth1 = subpads[0][1]->Draw<TObjectDrawable>(th1);
-   drawth1->line = RAttrLine(RColor::kBlue, 3., 2);
+   drawth1->line = RAttrLine(RColor::kBlue, 3., RAttrLine::kDashed);
 
    subpads[1][0]->Draw<TObjectDrawable>(th2, "colz");
 

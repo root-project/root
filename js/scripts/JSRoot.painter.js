@@ -608,6 +608,7 @@ JSROOT.define(['d3'], (d3) => {
       this.color = (args.width === 0) ? 'none' : args.color;
       this.width = args.width;
       this.style = args.style;
+      this.pattern = args.pattern || jsrp.root_line_styles[this.style] || null;
 
       if (args.can_excl) {
          this.excl_side = this.excl_width = 0;
@@ -638,6 +639,13 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary returns true if line attribute is empty and will not be applied. */
    TAttLineHandler.prototype.empty = function() { return this.color == 'none'; }
 
+   /** @summary set border parameters, used for rect drawing */
+   TAttLineHandler.prototype.setBorder = function(rx, ry) {
+      this.rx = rx;
+      this.ry = ry;
+      this.func = this.applyBorder.bind(this);
+   }
+
    /** @summary Applies line attribute to selection.
      * @param {object} selection - d3.js selection */
    TAttLineHandler.prototype.apply = function(selection) {
@@ -649,19 +657,33 @@ JSROOT.define(['d3'], (d3) => {
       else
          selection.style('stroke', this.color)
                   .style('stroke-width', this.width)
-                  .style('stroke-dasharray', jsrp.root_line_styles[this.style] || null);
-      if (this.rx !== undefined)
-         if (this.empty())
-            selection.attr("rx", null).attr("ry", null);
-         else
-            selection.attr("rx", this.rx || null).attr("ry", this.ry || null);
+                  .style('stroke-dasharray', this.pattern);
+   }
+
+   /** @summary Applies line and border attribute to selection.
+     * @param {object} selection - d3.js selection */
+   TAttLineHandler.prototype.applyBorder = function(selection) {
+      this.used = true;
+      if (this.empty())
+         selection.style('stroke', null)
+                  .style('stroke-width', null)
+                  .style('stroke-dasharray', null)
+                  .attr("rx", null).attr("ry", null);
+      else
+         selection.style('stroke', this.color)
+                  .style('stroke-width', this.width)
+                  .style('stroke-dasharray', this.pattern)
+                  .attr("rx", this.rx || null).attr("ry", this.ry || null);
    }
 
    /** @summary Change line attributes */
    TAttLineHandler.prototype.change = function(color, width, style) {
       if (color !== undefined) this.color = color;
       if (width !== undefined) this.width = width;
-      if (style !== undefined) this.style = style;
+      if (style !== undefined) {
+         this.style = style;
+         this.pattern = jsrp.root_line_styles[this.style] || null;
+      }
       this.changed = true;
    }
 

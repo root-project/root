@@ -21,7 +21,7 @@
 
 import ROOT
 import os
-from ROOT.Experimental import RCanvas, RText, RAttrText, RAttrFont, RAttrFill, RLegend, RPadPos, RPadExtent, TObjectDrawable
+from ROOT.Experimental import RCanvas, RText, RAttrText, RAttrFont, RAttrFill, RAttrLine, RLegend, RPadPos, RPadExtent, TObjectDrawable
 
 # Enable multi-threading
 ROOT.ROOT.EnableImplicitMT()
@@ -205,7 +205,7 @@ legend = upper_pad.Draw[RLegend](RPadPos(0.01, 0.01), RPadExtent(0.3, 0.4))
 legend.text.size = 0.05
 legend.text.align = RAttrText.kRightCenter
 legend.text.font = RAttrFont.kArial
-legend.border.style = 0
+legend.border.style = RAttrLine.kNone
 legend.border.width = 0
 legend.fill.style = RAttrFill.kHollow
 
