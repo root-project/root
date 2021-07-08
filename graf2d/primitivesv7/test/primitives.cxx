@@ -18,7 +18,7 @@ TEST(Primitives, RBox)
 
    box->border.color = RColor::kRed;
    box->border.width = 5.;
-   box->border.style = 7;
+   box->border.style = RAttrLine::kDotted;
    box->fill.color = RColor::kBlue;
    box->fill.style = RAttrFill::k3006;
 
@@ -26,7 +26,7 @@ TEST(Primitives, RBox)
 
    EXPECT_EQ(box->border.color, RColor::kRed);
    EXPECT_DOUBLE_EQ(box->border.width, 5.);
-   EXPECT_EQ(box->border.style, 7);
+   EXPECT_EQ(box->border.style, RAttrLine::kDotted);
 
    EXPECT_EQ(box->fill.color, RColor::kBlue);
    EXPECT_EQ(box->fill.style, RAttrFill::k3006);
@@ -40,7 +40,7 @@ TEST(Primitives, RLine)
 
    line->line.color = RColor::kRed;
    line->line.width = 5.;
-   line->line.style = 7;
+   line->line.style = RAttrLine::kDashDotted;
    line->onFrame = true;
    line->clipping = false;
 
@@ -48,7 +48,7 @@ TEST(Primitives, RLine)
 
    EXPECT_EQ(line->line.color, RColor::kRed);
    EXPECT_DOUBLE_EQ(line->line.width, 5.);
-   EXPECT_EQ(line->line.style, 7);
+   EXPECT_EQ(line->line.style, RAttrLine::kDashDotted);
    EXPECT_EQ(line->onFrame, true);
    EXPECT_EQ(line->clipping, false);
 }
@@ -115,7 +115,7 @@ TEST(Primitives, RLegend)
    auto custom = legend->AddEntry("test", "lfm");
    custom->line.color = RColor::kGreen;
    custom->line.width = 5.;
-   custom->line.style = 1;
+   custom->line.style = RAttrLine::kDashed;
    custom->fill.color = RColor::kBlue;
    custom->fill.style = RAttrFill::k3004;
    custom->marker.color = RColor::kRed;
@@ -142,6 +142,7 @@ TEST(Primitives, RLegend)
 
    EXPECT_NE(custom2, nullptr);
    EXPECT_EQ(custom2->line.color, RColor::kGreen);
+   EXPECT_EQ(custom2->line.style, RAttrLine::kDashed);
    EXPECT_EQ(custom2->fill.color, RColor::kBlue);
    EXPECT_EQ(custom2->fill.style, RAttrFill::k3004);
    EXPECT_EQ(custom2->marker.color, RColor::kRed);
