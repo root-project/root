@@ -71,7 +71,7 @@ class RAttrMarker : public RAttrAggregation {
 public:
 
    RAttrValue<RColor> color{this, "color", RColor::kBlack}; ///<! marker color
-   RAttrValue<double> size{this, "size", 1.};               ///<! marker size
+   RAttrValue<double> size{this, "size", 0.01};             ///<! marker size >1 pixels, <1 relative to pad height
    RAttrValue<EStyle> style{this, "style", kDot};           ///<! marker style
 
    RAttrMarker(const RColor &_color, double _size, EStyle _style) : RAttrMarker()
