@@ -216,22 +216,18 @@ public:
    /// Return a page to the cache for reuse. Page memory ownership is passed to the cache.
    /// If the cache is full, the smallest memory buffer is deallocated.
    void ReturnPage(const RPage &page) {
-      if (fPages.size() < 32) {
-         fPages.push_back(RPage(
-            // Reset column id and element size and reuse buffer with known capacity
-            kInvalidColumnId, page.GetBuffer(), page.GetCapacity(), 0 /* elementSize */
-         ));
+      fPages.push_back(RPage(
+         // Reset column id and element size and reuse buffer with known capacity
+         kInvalidColumnId, page.GetBuffer(), page.GetCapacity(), 0 /* elementSize */
+      ));
+      if (fPages.size() <= 32) {
          return;
       }
-      // If the cache is getting too large, swap out the smallest page
+      // If the cache is getting too large, deallocate the smallest page
       auto min_elt = std::min_element(fPages.begin(), fPages.end(),
          [](const auto &a, const auto &b) { return a.GetCapacity() < b.GetCapacity(); });
-      if (min_elt == fPages.end()) {
-         DeletePage(page);
-         return;
-      }
       DeletePage(*min_elt);
-      *min_elt = page;
+      fPages.erase(min_elt);
    }
 
    /// Request a page from the cache with at least the specified `capacity`. Ownership of the
