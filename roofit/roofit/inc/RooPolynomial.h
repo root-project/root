@@ -51,6 +51,7 @@ protected:
   /// Evaluation
   Double_t evaluate() const;
   void computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
+  inline bool canComputeBatchWithCuda() const { return true; }
 
   ClassDef(RooPolynomial,1) // Polynomial PDF
 };
