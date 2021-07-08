@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RAttrBorder.hxx
     ROOT/RAttrLine.hxx
     ROOT/RAttrFill.hxx
+    ROOT/RAttrFont.hxx
     ROOT/RAttrMarker.hxx
     ROOT/RAttrMargins.hxx
     ROOT/RAttrText.hxx
