@@ -146,6 +146,7 @@ TEST(Primitives, RLegend)
    EXPECT_EQ(custom2->fill.color, RColor::kBlue);
    EXPECT_EQ(custom2->fill.style, RAttrFill::k3004);
    EXPECT_EQ(custom2->marker.color, RColor::kRed);
+   EXPECT_EQ(custom2->marker.style, RAttrMarker::kOpenCross);
 }
 
 // Test RPaveText API
