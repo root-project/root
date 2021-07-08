@@ -76,7 +76,7 @@ void rlegend()
    custom->fill.color = RColor::kBlue;
    custom->fill.style = RAttrFill::k3004;
    custom->marker.color = RColor::kRed;
-   custom->marker.size = 3.;
+   custom->marker.size = 0.03;
    custom->marker.style = RAttrMarker::kOpenCross;
 
    canvas->SetSize(1000, 700);

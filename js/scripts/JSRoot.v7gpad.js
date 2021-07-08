@@ -180,7 +180,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
        if (typeof text_size == "string") text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
-       if (!fontScale) fontScale = pp.getPadHeight() || 10;
+       if (!fontScale) fontScale = pp.getPadHeight() || 100;
 
        let handler = new JSROOT.FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
 
@@ -224,10 +224,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!prefix || (typeof prefix != "string")) prefix = "marker_";
 
       let marker_color = this.v7EvalColor(prefix + "color", "black"),
-          marker_size = this.v7EvalAttr(prefix + "size", 1),
-          marker_style = this.v7EvalAttr(prefix + "style", 1);
+          marker_size = this.v7EvalAttr(prefix + "size", 0.01),
+          marker_style = this.v7EvalAttr(prefix + "style", 1),
+          marker_refsize = 1;
+      if (marker_size < 1) {
+         let pp = this.getPadPainter();
+         marker_refsize = pp ? pp.getPadHeight() : 100;
+      }
 
-      this.createAttMarker({ color: marker_color, size: marker_size, style: marker_style });
+      this.createAttMarker({ color: marker_color, size: marker_size, style: marker_style, refsize: marker_refsize });
    }
 
    /** @summary Create RChangeAttr, which can be applied on the server side

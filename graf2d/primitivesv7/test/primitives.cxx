@@ -59,12 +59,12 @@ TEST(Primitives, RMarker)
    RCanvas canv;
    auto marker = canv.Draw<RMarker>(RPadPos(0.5_normal, 0.5_normal));
 
-   marker->marker = RAttrMarker(RColor::kGreen, 2.5, RAttrMarker::kStar);
+   marker->marker = RAttrMarker(RColor::kGreen, 0.05, RAttrMarker::kStar);
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(marker->marker.color, RColor::kGreen);
-   EXPECT_DOUBLE_EQ(marker->marker.size, 2.5);
+   EXPECT_DOUBLE_EQ(marker->marker.size, 0.05);
    EXPECT_EQ(marker->marker.style, RAttrMarker::kStar);
 }
 
@@ -119,7 +119,7 @@ TEST(Primitives, RLegend)
    custom->fill.color = RColor::kBlue;
    custom->fill.style = RAttrFill::k3004;
    custom->marker.color = RColor::kRed;
-   custom->marker.size = 3.;
+   custom->marker.size = 0.01;
    custom->marker.style = RAttrMarker::kOpenCross;
 
    EXPECT_EQ(canv.NumPrimitives(), 4u);
@@ -147,6 +147,7 @@ TEST(Primitives, RLegend)
    EXPECT_EQ(custom2->fill.style, RAttrFill::k3004);
    EXPECT_EQ(custom2->marker.color, RColor::kRed);
    EXPECT_EQ(custom2->marker.style, RAttrMarker::kOpenCross);
+   EXPECT_DOUBLE_EQ(custom2->marker.size, 0.01);
 }
 
 // Test RPaveText API

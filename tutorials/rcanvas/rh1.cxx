@@ -70,7 +70,7 @@ void rh1()
    // text and marker draw options
    subpads[0][1]->Draw<RFrameTitle>("Text() and Marker() draw options");
    subpads[0][1]->Draw(pHist1)->Text().text.color = col1;
-   subpads[0][1]->Draw(pHist2)->Marker().marker = RAttrMarker(col2, 1.5, RAttrMarker::kOpenStar);
+   subpads[0][1]->Draw(pHist2)->Marker().marker = RAttrMarker(col2, 0.02, RAttrMarker::kOpenStar);
 
    // bar draw options
    subpads[1][1]->Draw<RFrameTitle>("Bar() draw options");
