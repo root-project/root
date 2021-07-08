@@ -50,6 +50,7 @@ protected:
   
   Double_t evaluate() const override;
   void computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooPoisson,3) // A Poisson PDF
 };

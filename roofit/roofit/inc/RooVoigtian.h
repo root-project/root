@@ -48,6 +48,7 @@ protected:
 
   Double_t evaluate() const ;
   void computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
+  inline bool canComputeBatchWithCuda() const { return true; }
 
 private:
 
