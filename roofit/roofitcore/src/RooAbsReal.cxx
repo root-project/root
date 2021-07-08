@@ -4826,7 +4826,7 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
   std::size_t dataSize = 1;
 
   for (auto absArgServer : servers()) {
-    if (absArgServer->IsA()->InheritsFrom(RooAbsReal::Class())) {
+    if (absArgServer->IsA()->InheritsFrom(RooAbsReal::Class()) && absArgServer->isValueServer(*this)) {
       auto server = static_cast<RooAbsReal*>(absArgServer);
       ourServers.push_back({server,
           server->getValues(evalData, normSet),
