@@ -159,7 +159,7 @@ RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooA
 
    // reconnect any parameterized ranges to internal dataset observables
    for (auto var : _vars) {
-      var->attachDataSet(*this);
+      var->attachArgs(_vars);
    }
 
    RooTrace::create(this);
@@ -178,8 +178,8 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _vars.addClone(other._vars) ;
 
   // reconnect any parameterized ranges to internal dataset observables
-  for (const auto var : _vars) {
-    var->attachDataSet(*this) ;
+  for (auto var : _vars) {
+    var->attachArgs(_vars);
   }
 
 
