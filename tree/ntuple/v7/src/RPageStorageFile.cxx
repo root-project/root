@@ -395,28 +395,25 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       sealedPageBuffer = onDiskPage->GetAddress();
    }
 
-   auto newPage = fPageAllocator->NewPage(columnId, elementSize, pageInfo.fNElements);
+   auto nElts = pageInfo.fNElements;
+   auto newPage = fPageAllocator->NewPage(columnId, elementSize, nElts);
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      // UnsealPage {
-      RSealedPage sealedPage(sealedPageBuffer, bytesOnStorage, pageInfo.fNElements);
-      const auto bytesPacked = element->GetPackedSize(sealedPage.fNElements);
-      //auto pageBuffer = std::make_unique<unsigned char[]>(bytesPacked);
-      if (sealedPage.fSize != bytesPacked) {
-         fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, newPage.GetBuffer());
+      const auto bytesPacked = element->GetPackedSize(nElts);
+      if (bytesOnStorage != bytesPacked) {
+         fDecompressor->Unzip(sealedPageBuffer, bytesOnStorage, bytesPacked, newPage.GetBuffer());
       } else {
          // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
          // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
          // Note that usually pages are compressed.
-         memcpy(newPage.GetBuffer(), sealedPage.fBuffer, bytesPacked);
+         memcpy(newPage.GetBuffer(), sealedPageBuffer, bytesPacked);
       }
       if (!element->IsMappable()) {
-         R__ASSERT(false && "implement mappable");
-         //element.Unpack(unpackedBuffer, pageBuffer.get(), sealedPage.fNElements);
-         //newPage = RPage(columnId
-         //pageBuffer = std::unique_ptr<unsigned char []>(unpackedBuffer);
+         auto tmp = fPageAllocator->NewPage(columnId, elementSize, nElts);
+         element->Unpack(tmp.GetBuffer(), newPage.GetBuffer(), nElts);
+         fPageAllocator->DeletePage(newPage);
+         newPage = tmp;
       }
-      // } end UnsealPage
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
 
