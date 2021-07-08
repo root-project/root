@@ -113,29 +113,21 @@ void REveDataProxyBuilderBase::Build()
                   auto parentIt = projectedAsElement->RefChildren().begin();
                   for (auto &prod: elms->RefChildren())
                   {
-                      // reused projected holder
-                     if (cnt < oldSize)
-                     {
-                        /*
-                        // AMT no use case for this at the moment
+                     // reused projected holder
+                     if (cnt < oldSize) {
                         if ((*parentIt)->NumChildren()) {
-                            // update projected (mislleading name)
-                           for ( REveElement::List_i pci = (*parentIt)->BeginChildren(); pci != (*parentIt)->EndChildren(); pci++)
-                               pmgr->ProjectChildrenRecurse(*pci);
+                           // update projected (mislleading name)
+                            for (auto &projHolder: (*parentIt)->RefChildren())
+                              pmgr->ProjectChildrenRecurse(projHolder);
+                        } else {
+                           // import projectable
+                           pmgr->SubImportChildren(prod, *parentIt);
                         }
-                        */
-                        // import projectable
-                        pmgr->SubImportChildren(prod, *parentIt);
-
                         ++parentIt;
-                     }
-                     else if (cnt < itemSize)
-                     {
+                     } else if (cnt < itemSize) {
                         // new product holder
                         pmgr->SubImportElements(prod, projectedAsElement);
-                     }
-                     else
-                     {
+                     } else {
                         break;
                      }
                      ++cnt;
