@@ -318,12 +318,23 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The assignment operator sets the value of any argument in our set
-/// that also appears in the other set.
+/// Assign values from the elements in `other` to our elements.
+/// \warning This is not a conventional assignment operator. To avoid confusion, prefer using RooAbsCollection::assign().
 
 RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 {
-  if (&other==this) return *this ;
+  assign(other);
+  return *this;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the value, cache and constant attribute of any argument in our set
+/// that also appears in the other set.
+
+void RooAbsCollection::assign(const RooAbsCollection& other)
+{
+  if (&other==this) return ;
 
   for (auto elem : _list) {
     auto theirs = other.find(*elem);
@@ -332,24 +343,26 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
     elem->copyCache(theirs) ;
     elem->setAttribute("Constant",theirs->isConstant()) ;
   }
-  return *this;
+  return ;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// The assignment operator sets the value of any argument in our set
-/// that also appears in the other set.
+/// Sets the value of any argument in our set that also appears in the other set.
+/// \param[in] other Collection holding the arguments to syncronize values with.
+/// \param[in] forceIfSizeOne If set to true and both our collection
+///                and the other collection have a size of one, the arguments are
+///                always syncronized without checking if they have the same name.
 
-RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe)
+RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne)
 {
-  if (&other==this) return *this ;
+  if (&other==this) return *this;
 
   // Short cut for 1 element assignment
-  if (getSize()==1 && getSize()==other.getSize() && oneSafe) {
+  if (size()==1 && size() == other.size() && forceIfSizeOne) {
     other.first()->syncCache() ;
     first()->copyCache(other.first(),kTRUE) ;
-    return *this ;
+    return *this;
   }
 
   for (auto elem : _list) {
@@ -364,13 +377,13 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Functional equivalent of operator=() but assumes this and other collection
+/// Functional equivalent of assign() but assumes this and other collection
 /// have same layout. Also no attributes are copied
 
-void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDirty)
+void RooAbsCollection::assignFast(const RooAbsCollection& other, bool setValDirty)
 {
   if (&other==this) return ;
-  assert(_list.size() == other._list.size());
+  assert(hasSameLayout(other));
 
   auto iter2 = other._list.begin();
   for (auto iter1 = _list.begin();

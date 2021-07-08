@@ -51,8 +51,10 @@ public:
   // of the original variables.
   RooAbsCollection(const RooAbsCollection& other, const char *name="");
   RooAbsCollection& operator=(const RooAbsCollection& other);
-  RooAbsCollection& assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe=kFALSE) ;
-  void assignFast(const RooAbsCollection& other, Bool_t setValDirty=kTRUE) ;
+
+  void assign(const RooAbsCollection& other);
+  RooAbsCollection &assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne=false);
+  void assignFast(const RooAbsCollection& other, bool setValDirty=true) ;
 
   // Move constructor
   RooAbsCollection(RooAbsCollection && other);
