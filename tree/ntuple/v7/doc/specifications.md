@@ -16,7 +16,7 @@ for a file embedding, the locator consists of an offset and a size.
 The RNTuple format does _not_ establish a specific order of pages and envelopes.
 
 Every emedding must define an **anchor** that contains the envelope links (location, compressed and uncompressed size)
-of the header envelope and the footer envelope.
+of the header envelope and, optionally, one or multiple extra meta-data envelopes.
 For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
 
 
@@ -320,6 +320,7 @@ The footer envelope has the following structure:
 - List frame of extension header envelope links
 - List frame of column group record frames
 - List frame of cluster summary record frames
+- List frame of cluster group record frames
 - List frame of meta-data block envelope links
 
 The header checksum can be used to cross-check that header and footer belong together.
@@ -339,9 +340,8 @@ The column group record frame consists of a list frame of 32bit integer items.
 Every item denotes a column ID that is part of this particular column group.
 The ID of the column group is given implicitly by the order of column groups.
 
-
 #### Cluster Summary Record Frame
-The cluster summary record frame starts with the entry range:
+The cluster summary record frame contains the entry range:
 
 ```
  0                   1                   2                   3
@@ -357,17 +357,34 @@ The cluster summary record frame starts with the entry range:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-The entry range is followed by the page list envelope link (but see flags).
-
 If flag 0x01 (sharded cluster) is set,
 an additional 32bit integer containing the column group ID follows the flags field.
 If flags is zero, the cluster stores the event range of _all_ the columns.
 
+The order of the cluster summaries defines the cluster IDs, starting from zero.
+
+#### Cluster Group Record Frame
+The cluster group record frame references the page list envelopes for groups of clusters.
+The order and cardinality of the cluster groups corrensponds to the cluster IDs as defined by the cluster summaries.
+A cluster group record frame starts with
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|            Number of Clusters in the Cluster Group            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+Followed by the page list envelope.
 
 ### Page List Envelope
 
-The page list envelope contains a list frame where every item corresponds to a column
-and is itself a list frame in which the items correspond to the pages of the column in the cluster.
+The page list envelope contains a top-most list frame where every item corresponds to a cluster.
+The order of items corresponds to the cluster IDs as defined by the cluster groups and cluster summaries.
+
+Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
+Every item of the outer list frame consists of an an inner list frame
+in which the items correspond to the pages of the column in the cluster.
 The order of the outer items must match the order of the columns as specified in the cluster summary.
 For a complete cluster (covering all columns), the order is given by the column IDs (small to large).
 
