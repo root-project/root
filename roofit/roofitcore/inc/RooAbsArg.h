@@ -310,6 +310,7 @@ public:
 
 
 
+  void attachArgs(const RooAbsCollection &set);
   void attachDataSet(const RooAbsData &set);
   void attachDataStore(const RooAbsDataStore &set);
 
