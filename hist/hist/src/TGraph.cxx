@@ -380,7 +380,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// Graph constructor reading input from filename.
 ///
 /// `filename` is assumed to contain at least two columns of numbers.
-/// the string format is by default `"%lg %lg"`.
+/// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column

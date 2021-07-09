@@ -218,7 +218,7 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 ///
 /// `filename` is assumed to contain at least 2 columns of numbers
 ///
-/// Convention for format (default="%lg %lg %lg %lg)
+/// Convention for format (default=`"%lg %lg %lg %lg"`)
 ///
 ///   - format = `%lg %lg`         read only 2 first columns into X,Y
 ///   - format = `%lg %lg %lg`     read only 3 first columns into X,Y and EY
