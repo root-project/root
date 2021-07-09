@@ -221,8 +221,8 @@ namespace SOFIE{
          if (i.second.type == ETensorType::FLOAT){
          fGC += "float* tensor_" + i.first + ",";
          }
-         fGC.pop_back(); //remove last ","
       }
+      fGC.pop_back(); //remove last ","
       fGC += "){\n";
 
       for (int id = 0; id < fOperators.size() ; id++){
