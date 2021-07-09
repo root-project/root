@@ -360,7 +360,7 @@ namespace ROOT {
             Gradient(x, df);
          }
 
-
+         virtual bool returnsInMinuit2ParameterSpace() const { return false; }
       };
 
 //___________________________________________________________________________________
