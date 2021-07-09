@@ -201,6 +201,14 @@ class RPageCache {
 private:
    // Doubly linked-list for random-access removal
    std::list<RPage> fPages;
+
+   /// Clear the page's column id and element size but reuse the sized buffer.
+   RPage RecyclePage(const RPage &page) const {
+      return RPage(
+         kInvalidColumnId, page.GetBuffer(), page.GetCapacity(), 0 /* elementSize */
+      );
+   }
+
 public:
    RPageCache() = default;
    RPageCache(const RPageCache&) = delete;
@@ -216,10 +224,7 @@ public:
    /// Return a page to the cache for reuse. Page memory ownership is passed to the cache.
    /// If the cache is full, the smallest memory buffer is deallocated.
    void ReturnPage(const RPage &page) {
-      fPages.push_back(RPage(
-         // Reset column id and element size and reuse buffer with known capacity
-         kInvalidColumnId, page.GetBuffer(), page.GetCapacity(), 0 /* elementSize */
-      ));
+      fPages.push_back(RecyclePage(page));
       if (fPages.size() <= 32) {
          return;
       }
@@ -232,20 +237,21 @@ public:
 
    /// Request a page from the cache with at least the specified `capacity`. Ownership of the
    /// page memory is passed to the caller. If there isn't a suitable page in the cache, a
-   /// new allocation is made.
-   RPage RequestPage(ColumnId_t columnId, std::size_t capacity, std::size_t elementSize) {
+   /// new allocation is made. The caller is responsible for properly setting the page's
+   /// column id and element size.
+   RPage RequestPage(std::size_t capacity) {
       auto it = std::find_if(fPages.begin(), fPages.end(), [&](const auto &p) {
          return p.GetCapacity() >= capacity;
       });
       // Cache miss, allocate a new page
       if (it == fPages.end()) {
          auto pageBuffer = std::make_unique<unsigned char[]>(capacity);
-         return RPage(columnId, pageBuffer.release(), capacity, elementSize);
+         return RPage(kInvalidColumnId, pageBuffer.release(), capacity, 0 /* elementSize */);
       }
       // Cache hit, recycle a suitable page
-      auto page = *it;
+      RPage page = *it;
       fPages.erase(it);
-      return RPage(columnId, page.GetBuffer(), page.GetCapacity(), elementSize);
+      return page;
    }
 
    ~RPageCache() {
@@ -277,7 +283,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorFile
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorFile::NewPage(
    ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
 {
-   RPage newPage = fPageCache->RequestPage(columnId, elementSize * nElements, elementSize);
+   RPage recycledPage = fPageCache->RequestPage(elementSize * nElements);
+   RPage newPage(columnId, recycledPage.GetBuffer(), recycledPage.GetCapacity(), elementSize);
    newPage.TryGrow(nElements);
    return newPage;
 }
