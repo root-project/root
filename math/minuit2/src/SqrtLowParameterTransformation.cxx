@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
@@ -19,28 +19,29 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-double SqrtLowParameterTransformation::Int2ext(double value, double lower) const
+long double SqrtLowParameterTransformation::Int2ext(long double value, long double lower) const
 {
    /// internal to external transformation
-   double val = lower - 1. + std::sqrt(value * value + 1.);
+   long double val = lower - 1. + std::sqrt(value * value + 1.);
    return val;
 }
 
-double SqrtLowParameterTransformation::Ext2int(double value, double lower, const MnMachinePrecision &) const
+long double
+SqrtLowParameterTransformation::Ext2int(long double value, long double lower, const MnMachinePrecision &) const
 {
    // external to internal transformation
-   double yy = value - lower + 1.;
-   double yy2 = yy * yy;
+   long double yy = value - lower + 1.;
+   long double yy2 = yy * yy;
    if (yy2 < 1.)
       return 0;
    else
       return std::sqrt(yy2 - 1);
 }
 
-double SqrtLowParameterTransformation::DInt2Ext(double value, double) const
+long double SqrtLowParameterTransformation::DInt2Ext(long double value, long double) const
 {
    // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
-   double val = value / (std::sqrt(value * value + 1.));
+   long double val = value / (std::sqrt(value * value + 1.));
    return val;
 }
 
