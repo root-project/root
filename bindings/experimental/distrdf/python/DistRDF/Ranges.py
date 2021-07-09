@@ -49,6 +49,7 @@ class TreeRange(object):
         self.friend_info = friend_info
 
 
+@total_ordering
 class FileAndIndex(object):
     """
     This is a pair (filename, index) that represents the index of the current
@@ -65,6 +66,21 @@ class FileAndIndex(object):
         """set attributes"""
         self.filename = filename
         self.fileindex = fileindex
+
+    def __lt__(self, other):
+        """Total ordering is defined to be able to sort a set[FileAndIndex]."""
+        return self.fileindex < other.fileindex
+
+    def __eq__(self, other):
+        """Defined in compliance with total_ordering decorator"""
+        return self.fileindex == other.fileindex
+
+    def __hash__(self):
+        """
+        This type needs to be hashable to be part of a set in
+        get_clustered_ranges
+        """
+        return hash(self.filename)
 
 
 @total_ordering
