@@ -23,7 +23,7 @@ void NormalizeHistogram()
    std::array<double, 6> binsx{0, 5, 10, 20, 50, 100};
    TH1F *orig = new TH1F("orig", "Original histogram before normalization", binsx.size() - 1, &binsx[0]);
 
-   gStyle->SetTitleFontSize(0.1);
+   gStyle->SetTitleFontSize(0.06);
 
    TRandom2 rand;
 
