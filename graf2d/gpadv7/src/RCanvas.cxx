@@ -135,6 +135,11 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 
 void ROOT::Experimental::RCanvas::Show(const std::string &where)
 {
+   fShown = true;
+
+   // workaround - in jupyter do not create any painters yet
+   if (gROOT->GetWebDisplay() == "jupyter") return;
+
    if (fPainter) {
       bool isany = (fPainter->NumDisplays() > 0);
 
@@ -179,7 +184,7 @@ void ROOT::Experimental::RCanvas::Hide()
 
 //////////////////////////////////////////////////////////////////////////
 /// Create image file for the canvas
-/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg) and PNG (extension .png)
+/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg), PNG (extension .png) or JSON (extension .json)
 
 bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
 {
@@ -193,6 +198,21 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
    auto height = fSize[1].fVal;
 
    return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Create JSON data for the canvas
+/// Can be used of offline display with JSROOT
+
+std::string ROOT::Experimental::RCanvas::CreateJSON()
+{
+   if (!fPainter)
+      fPainter = Internal::RVirtualCanvasPainter::Create(*this);
+
+   if (!fPainter)
+      return "";
+
+   return fPainter->ProduceJSON();
 }
 
 //////////////////////////////////////////////////////////////////////////
