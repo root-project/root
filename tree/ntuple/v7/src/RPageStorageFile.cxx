@@ -398,7 +398,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       sealedPageBuffer = onDiskPage->GetAddress();
    }
 
-   auto nElts = pageInfo.fNElements;
+   const auto nElts = pageInfo.fNElements;
    auto newPage = fPageAllocator->NewPage(columnId, elementSize, nElts);
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
@@ -644,7 +644,6 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(RCluster *clu
 
                auto newPage = fPageAllocator->NewPage(columnId, pageBuffer.release(), element->GetSize(), nElements);
                newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-
                fPagePool->PreloadPage(newPage,
                   // Thread safety (fPageAllocator->DeletePage):
                   // fPagePool operations are protected by a mutex.
