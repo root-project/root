@@ -63,6 +63,9 @@ private:
    /// a painter.
    std::unique_ptr<Internal::RVirtualCanvasPainter> fPainter; ///<!
 
+   /// indicate if Show() method was called before
+   bool fShown{false}; ///<!
+
    /// Disable copy construction for now.
    RCanvas(const RCanvas &) = delete;
 
@@ -106,6 +109,9 @@ public:
    /// Display the canvas.
    void Show(const std::string &where = "");
 
+   bool IsShown() const { return fShown; }
+   void ClearShown() { fShown = false; }
+
    /// Returns window name used to display canvas
    std::string GetWindowAddr() const;
 
@@ -148,6 +154,9 @@ public:
 
    /// Save canvas in image file
    bool SaveAs(const std::string &filename);
+
+   /// Provide JSON which can be used for offline display
+   std::string CreateJSON();
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }

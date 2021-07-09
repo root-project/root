@@ -60,6 +60,9 @@ public:
    /// produce file output in batch mode like png, jpeg, svg or pdf
    virtual bool ProduceBatchOutput(const std::string &, int, int) = 0;
 
+   /// produce canvas JSON
+   virtual std::string ProduceJSON() = 0;
+
    virtual void NewDisplay(const std::string &where) = 0;
 
    virtual int NumDisplays() const = 0;

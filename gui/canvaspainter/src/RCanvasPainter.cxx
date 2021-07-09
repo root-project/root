@@ -157,6 +157,8 @@ public:
 
    bool ProduceBatchOutput(const std::string &fname, int width, int height) final;
 
+   std::string ProduceJSON() final;
+
    void NewDisplay(const std::string &where) final;
 
    int NumDisplays() const final;
@@ -471,6 +473,17 @@ bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int
    }
 
    return RWebDisplayHandle::ProduceImage(fname, snapshot, width, height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Produce JSON for the canvas
+
+std::string RCanvasPainter::ProduceJSON()
+{
+   RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, 0);
+   ctxt.SetConnection(1, true);
+
+   return CreateSnapshot(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
