@@ -205,7 +205,7 @@ constexpr Double_t Hcgs()
 /// Planck's constant uncertainty.
 constexpr Double_t HUncertainty()
 {
-   // Planck constant is exact according to 2019 redefinition 
+   // Planck constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
@@ -266,7 +266,7 @@ constexpr Double_t Kcgs()
 /// Boltzmann's constant uncertainty.
 constexpr Double_t KUncertainty()
 {
-   // constant is exact according to 2019 redefinition 
+   // constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
@@ -297,7 +297,7 @@ constexpr Double_t Na()
 /// Avogadro constant (Avogadro's Number) uncertainty.
 constexpr Double_t NaUncertainty()
 {
-   // constant is exact according to 2019 redefinition 
+   // constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
@@ -352,7 +352,7 @@ constexpr Double_t Qe()
 /// Elementary charge uncertainty.
 constexpr Double_t QeUncertainty()
 {
-   // constant is exact according to 2019 redefinition 
+   // constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
@@ -393,6 +393,7 @@ inline Double_t Sqrt(Double_t x);
 inline Double_t Exp(Double_t x);
 inline Double_t Ldexp(Double_t x, Int_t exp);
 Double_t Factorial(Int_t i);
+Int_t KroneckerDelta(Double_t a, Double_t b);
 inline LongDouble_t Power(LongDouble_t x, LongDouble_t y);
 inline LongDouble_t Power(LongDouble_t x, Long64_t y);
 inline LongDouble_t Power(Long64_t x, Long64_t y);
@@ -661,13 +662,13 @@ inline Double_t TMath::TanH(Double_t x)
 
 ////////////////////////////////////////////////////////////////////////////////
 inline Double_t TMath::ASin(Double_t x)
-   { 
+   {
      return asin(x);
    }
 
 ////////////////////////////////////////////////////////////////////////////////
 inline Double_t TMath::ACos(Double_t x)
-   { 
+   {
      return acos(x);
    }
 

@@ -257,6 +257,17 @@ Double_t TMath::Factorial(Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Kronecker Delta
+
+Int_t TMath::KroneckerDelta(Double_t a, Double_t b)
+{
+  if (a == b)
+    return 1;
+  else
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Computation of the normal frequency function freq(x).
 /// Freq(x) = (1/sqrt(2pi)) Integral(exp(-t^2/2))dt between -infinity and x.
 ///
