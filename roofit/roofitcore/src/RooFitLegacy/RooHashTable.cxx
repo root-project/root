@@ -22,7 +22,7 @@
 #include "TCollection.h"
 #include "RooLinkedList.h"
 #include "RooAbsArg.h"
-#include "RooSetPair.h"
+#include "RooFitLegacy/RooSetPair.h"
 
 using namespace std;
 
@@ -32,7 +32,7 @@ ClassImp(RooHashTable);
 /**
 \file RooHashTable.cxx
 \class RooHashTable
-\ingroup Roofitcore
+\ingroup Roofitlegacy
 
 RooHashTable implements a hash table for TObjects. The hashing can be
 done on the object addresses, object names, or using the objects

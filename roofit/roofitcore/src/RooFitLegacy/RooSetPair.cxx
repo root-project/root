@@ -17,7 +17,7 @@
 /**
 \file RooSetPair.cxx
 \class RooSetPair
-\ingroup Roofitcore
+\ingroup Roofitlegacy
 
 RooSetPair is a utility class that stores a pair of RooArgSets
 **/
@@ -26,7 +26,7 @@ RooSetPair is a utility class that stores a pair of RooArgSets
 #include "TROOT.h"
 
 #define ROOSETPAIR_CXX
-#include "RooSetPair.h"
+#include "RooFitLegacy/RooSetPair.h"
 
 using namespace std;
 

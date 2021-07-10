@@ -16,12 +16,12 @@
 #ifndef ROO_SET_PAIR
 #define ROO_SET_PAIR
 
-#include <iostream>
 #include "TObject.h"
-#include "RooArgSet.h"
+#include "TString.h"
 
-class RooLinkedListElem ;
-class TBuffer ;
+#include <ROOT/RConfig.hxx>
+
+class RooArgSet;
 
 class RooSetPair : public TObject {
 public:
@@ -48,7 +48,7 @@ protected:
   RooSetPair(const RooSetPair&) ;
 
   ClassDef(RooSetPair,0) // Utility class holding a pair of RooArgSet pointers
-} ;
+} R__SUGGEST_ALTERNATIVE("Please use std::pair<RooArgSet*,RooArgSet*>");
 
 
 

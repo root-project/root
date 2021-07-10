@@ -196,7 +196,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSegmentedIntegrator1D.h
     RooSegmentedIntegrator2D.h
     RooSentinel.h
-    RooSetPair.h
     RooSetProxy.h
     RooSharedProperties.h
     RooSimGenContext.h
@@ -232,6 +231,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitLegacy/RooHashTable.h
     RooFitLegacy/RooMinuit.h
     RooFitLegacy/RooNameSet.h
+    RooFitLegacy/RooSetPair.h
     RooFitLegacy/RooTreeData.h
   SOURCES
     src/BidirMMapPipe.cxx
@@ -414,7 +414,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSegmentedIntegrator1D.cxx
     src/RooSegmentedIntegrator2D.cxx
     src/RooSentinel.cxx
-    src/RooSetPair.cxx
     src/RooSetProxy.cxx
     src/RooSharedProperties.cxx
     src/RooSimGenContext.cxx
@@ -449,6 +448,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFitLegacy/RooMinuit.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx
     src/RooFitLegacy/RooNameSet.cxx
+    src/RooFitLegacy/RooSetPair.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES
