@@ -17,7 +17,7 @@
 /**
 \file RooMinuit.cxx
 \class RooMinuit
-\ingroup Roofitcore
+\ingroup Roofitlegacy
 
 RooMinuit is a wrapper class around TFitter/TMinuit that
 provides a seamless interface between the MINUIT functionality
