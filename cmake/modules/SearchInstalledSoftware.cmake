@@ -942,13 +942,6 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(XROOTD_${suffix} CACHE)
 endforeach()
 
-if(xrootd OR builtin_xrootd)
-  # This is the target that ROOT will use, irrespective of whether XRootD is a builtin or in the system.
-  # All targets should only link to ROOT::XRootD. Refrain from using XRootD variables.
-  add_library(XRootD INTERFACE IMPORTED GLOBAL)
-  add_library(ROOT::XRootD ALIAS XRootD)
-endif()
-
 if(xrootd AND NOT builtin_xrootd)
   message(STATUS "Looking for XROOTD")
   find_package(XRootD)
@@ -997,20 +990,21 @@ if(builtin_xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
 
-# Finalise the XRootD target configuration
-if(TARGET XRootD)
-
-  # The XROOTD_INCLUDE_DIRS provided by XRootD is actually a list with two
-  # paths, like:
+# Backward compatibility for XRootD <v5.8 without CMake targets:
+if(xrootd AND NOT TARGET XRootD::XrdCl)
+  # Before v5.7.0, XROOTD_INCLUDE_DIRS includes private headers, like:
   #   <xrootd_include_dir>;<xrootd_include_dir>/private
-  # We don't need the private headers, and we have to exclude this path from
-  # the build configuration if we don't want it to fail on systems were the
-  # private headers are not installed (most linux distributions).
-  list(GET XROOTD_INCLUDE_DIRS 0 XROOTD_INCLUDE_DIR_PRIMARY)
+  # The private headers are not always installed, so the configure step might fail.
+  # ROOT doesn't need these headers, so it's best to remove them.
+  list(FILTER XROOTD_INCLUDE_DIRS EXCLUDE REGEX .*/private)
 
-  target_include_directories(XRootD SYSTEM INTERFACE "$<BUILD_INTERFACE:${XROOTD_INCLUDE_DIR_PRIMARY}>")
-  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_CLIENT_LIBRARIES}>)
-  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_UTILS_LIBRARIES}>)
+  add_library(XRootD::XrdCl SHARED IMPORTED)
+  set_target_properties(XRootD::XrdCl PROPERTIES IMPORTED_LOCATION ${XROOTD_CLIENT_LIBRARIES})
+  target_link_libraries(XRootD::XrdCl INTERFACE OpenSSL::SSL)
+  target_include_directories(XRootD::XrdCl SYSTEM INTERFACE $<BUILD_INTERFACE:${XROOTD_INCLUDE_DIRS}>)
+
+  add_library(XRootD::XrdUtils SHARED IMPORTED)
+  set_target_properties(XRootD::XrdUtils PROPERTIES IMPORTED_LOCATION ${XROOTD_UTILS_LIBRARIES})
 endif()
 
 #---check if netxng can be built-------------------------------

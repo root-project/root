@@ -26,11 +26,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     Thread
 )
 
-target_link_libraries(NetxNG PRIVATE ROOT::XRootD)
+target_link_libraries(NetxNG PRIVATE XRootD::XrdCl XRootD::XrdUtils)
 target_compile_options(NetxNG PRIVATE -Wno-shadow)
 
 # When linking against the XRootD target, XRootD includes become "-isystem".
 # By linking explicitly here, we suppress a warning during dictionary compilation.
-target_link_libraries(G__NetxNG PRIVATE ROOT::XRootD)
+target_link_libraries(G__NetxNG PRIVATE XRootD::XrdCl)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
