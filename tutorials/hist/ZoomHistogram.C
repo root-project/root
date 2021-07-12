@@ -3,7 +3,7 @@
 /// \notebook -js
 /// Changing the Range on the X-Axis of a Histogram
 ///
-/// Image produced by `.x RangeChange.C`
+/// Image produced by `.x ZoomHistogram.C`
 ///
 /// This demonstrates how to zoom into a Histogram by
 /// changing the range on one of the axes (or both).
@@ -13,19 +13,20 @@
 ///
 /// \author Advait Dhingra
 
-void RangeChange() {
+void ZoomHistogram() {
 
    TH1F *norm = new TH1F("Normal Histogram", "Normal Histogram", 100, 0, 100);
-   TH1F *twozoom = new TH1F("2x Zoom in Histogram", "2x Zoom in Histogram", 100, 0, 100);
-   twozoom->GetXaxis()->SetRangeUser(25, 75);
 
    TRandom2 rand;
 
    for (int i = 0; i < 100; ++i) {
      Double_t j = rand.Gaus(50, 10);
      norm->Fill(j);
-     twozoom->Fill(j);
    }
+
+   TH1F *zoom = (TH1F*) norm->Clone("zoom");
+   zoom->SetTitle("Zoomed-in Histogram");
+   zoom->GetXaxis()->SetRangeUser(50, 100);
 
    TCanvas *c1 = new TCanvas("c1", "Histogram", 1500, 700);
    c1->Divide(2, 1);
@@ -33,5 +34,5 @@ void RangeChange() {
    c1->cd(1);
    norm->Draw();
    c1->cd(2);
-   twozoom->Draw();
+   zoom->Draw();
 }
