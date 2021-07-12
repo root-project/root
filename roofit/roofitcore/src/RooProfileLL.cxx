@@ -170,7 +170,7 @@ Double_t RooProfileLL::evaluate() const
 
   // If requested set initial parameters to those corresponding to absolute minimum
   if (_startFromMin) {
-    const_cast<RooProfileLL&>(*this)._par = _paramAbsMin ;
+    _par.assign(_paramAbsMin) ;
   }
 
   _minimizer->zeroEvalCount() ;
@@ -279,7 +279,7 @@ void RooProfileLL::validateAbsMin() const
     }
 
     // Restore original parameter values
-    const_cast<RooSetProxy&>(_obs) = obsStart ;
+    _obs.assign(obsStart) ;
 
   }
 }

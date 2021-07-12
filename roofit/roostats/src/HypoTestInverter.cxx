@@ -698,7 +698,7 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
    const ModelConfig * sbModel = fCalculator0->GetNullModel();
    RooArgSet poi; poi.add(*sbModel->GetParametersOfInterest());
    // set poi to right values
-   poi = RooArgSet(*fScannedVariable);
+   poi.assign(RooArgSet(*fScannedVariable));
    const_cast<ModelConfig*>(sbModel)->SetSnapshot(poi);
 
    if (fVerbose > 0)
@@ -1096,10 +1096,10 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RebuildDistribution - background snapshot not existing"
                                           << " assume is for POI = 0" << std::endl;
       fScannedVariable->setVal(0);
-      paramPoint = RooArgSet(*fScannedVariable);
+      paramPoint.assign(RooArgSet(*fScannedVariable));
    }
    else
-      paramPoint = *poibkg;
+      paramPoint.assign(*poibkg);
    // generate data at bkg parameter point
 
    ToyMCSampler * toymcSampler = dynamic_cast<ToyMCSampler *>(fCalculator0->GetTestStatSampler() );
@@ -1205,7 +1205,9 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       sbModel->GetSnapshot()->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset
-      if (itoy> 0) *allParams = saveParams;
+      if (itoy> 0) {
+        allParams->assign(saveParams);
+      }
 
       // need to set th epdf to clear the cache in ToyMCSampler
       // pdf we must use is background pdf

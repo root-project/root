@@ -409,8 +409,8 @@ private:
     float fPDF1value, fPDF2value;
     for(Int_t i = 0; i < pSamplingPoints->numEntries(); ++i)
     {
-      *pVars1 = *pSamplingPoints->get(i);
-      *pVars2 = *pSamplingPoints->get(i);
+      pVars1->assign(*pSamplingPoints->get(i));
+      pVars2->assign(*pSamplingPoints->get(i));
 
       fPDF1value = rPDF1.getVal();
       fPDF2value = rPDF2.getVal();
@@ -444,7 +444,7 @@ private:
       return kFALSE;
 
     // check fit result to test data
-    *pVars1 = *pVars2;
+    pVars1->assign(*pVars2);
 
     // do the fit
     std::string minimizerType = "Minuit2";

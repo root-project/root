@@ -585,7 +585,7 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 
     // Transfer contents
     for (Int_t i=0 ; i<dhist->numEntries() ; i++) {
-      _vars = *dhist->get(i) ;
+      _vars.assign(*dhist->get(i)) ;
       add(_vars,dhist->weight()*initWgt, pow(dhist->weightError(SumW2),2) ) ;
     }
 
@@ -1588,7 +1588,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bo
   RooArgSet sliceOnlySet(sliceSet);
   sliceOnlySet.remove(sumSet,true,true) ;
 
-  _vars = sliceOnlySet;
+  _vars.assign(sliceOnlySet);
   std::vector<double> const * pbinv = nullptr;
 
   if(correctForBinSize && inverseBinCor) {
@@ -1634,7 +1634,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bo
     }
   }
 
-  _vars = varSave ;
+  _vars.assign(varSave) ;
 
   return total;
 }
@@ -1667,7 +1667,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   {
     RooArgSet sliceOnlySet(sliceSet);
     sliceOnlySet.remove(sumSet, true, true);
-    _vars = sliceOnlySet;
+    _vars.assign(sliceOnlySet);
   }
 
   // Calculate mask and reference plot bins for non-iterating variables,
@@ -1743,7 +1743,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     total += getBinScale(ibin)*(get_wgt(ibin) * corr * corrPartial);
   }
 
-  _vars = varSave;
+  _vars.assign(varSave);
 
   return total;
 }
@@ -1937,7 +1937,7 @@ void RooDataHist::setAllWeights(Double_t value)
 TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& otherArgs) 
 {
   // Update to current position
-  _vars = otherArgs ;
+  _vars.assign(otherArgs) ;
   _curIndex = calcTreeIndex(_vars, true);
   
   RooAbsArg* intArg = _vars.find(sliceArg) ;

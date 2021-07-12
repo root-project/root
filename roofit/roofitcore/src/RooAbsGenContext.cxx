@@ -235,7 +235,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
       const RooArgSet *subEvent= _prototype->get(actualProtoIdx);
       _nextProtoIndex++;
       if(0 != subEvent) {
-	*_theEvent= *subEvent;
+        _theEvent->assign(*subEvent);
       }
       else {
 	coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "

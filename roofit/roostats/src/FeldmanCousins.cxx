@@ -183,7 +183,7 @@ void FeldmanCousins::CreateParameterPoints() const{
 
     for(Int_t i=0; i<parameterScan->numEntries(); ++i){
       // here's where we figure out the profiled value of nuisance parameters
-      *parameters = *parameterScan->get(i);
+      parameters->assign(*parameterScan->get(i));
       profile->getVal();
       profileConstructionPoints->add(*parameters);
     }

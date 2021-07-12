@@ -1164,7 +1164,7 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt = data;
+  _varsNoWgt.assign(data);
 
   if (_wgtVar) {
     _wgtVar->setVal(wgt) ;
@@ -1216,7 +1216,7 @@ void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weight
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt = indata;
+  _varsNoWgt.assign(indata);
   if (_wgtVar) {
     _wgtVar->setVal(inweight) ;
     _wgtVar->setAsymError(weightErrorLo,weightErrorHi) ;
@@ -1837,7 +1837,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       } else {
         // Read single line
         Bool_t readError = variables.readFromStream(file,kTRUE,verbose) ;
-        data->_vars = variables ;
+        data->_vars.assign(variables) ;
 
         // Stop on read error
         if(!file.good()) {

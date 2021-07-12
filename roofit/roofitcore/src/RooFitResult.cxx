@@ -375,7 +375,7 @@ const RooArgList& RooFitResult::randomizePars() const
   }
   else {
     // reset to the final fit values
-    *_randomPars= *_finalPars;
+    _randomPars->assign(*_finalPars);
   }
 
   // create a vector of unit Gaussian variables
