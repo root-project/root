@@ -426,10 +426,7 @@ def GetGeometryDrawer():
         return NotebookDrawer(vol)
 
 def GetDrawers():
-    drawers = GetCanvasDrawers()
-    rdrawers = GetRCanvasDrawers()
-    for drawer in rdrawers:
-        drawers.append(drawer)
+    drawers = GetCanvasDrawers() + GetRCanvasDrawers()
     geometryDrawer = GetGeometryDrawer()
     if geometryDrawer: drawers.append(geometryDrawer)
     return drawers
@@ -527,7 +524,6 @@ class NotebookDrawer(object):
 
     def _getJsCode(self):
         # produce JSON for the canvas
-        json = ""
         if self.isRCanvas:
             json = self.drawableObject.CreateJSON()
         else:
@@ -546,8 +542,8 @@ class NotebookDrawer(object):
             options = ""
 
         if self.isRCanvas:
-            # height = self.drawableObject.GetSize()[0]
-            # width = self.drawableObject.GetSize()[1]
+            # width = self.drawableObject.GetSize()[0]
+            # height = self.drawableObject.GetSize()[1]
             options = ""
 
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
