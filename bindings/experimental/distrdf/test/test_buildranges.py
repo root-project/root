@@ -287,3 +287,23 @@ class BuildRangesTest(unittest.TestCase):
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
+
+    def test_clustered_ranges_with_two_files(self):
+        """
+        Create two ranges from two files with a different number of clusters.
+        """
+
+        treename = "myTree"
+        filelist = ["backend/2clusters.root", "backend/4clusters.root"]
+        headnode = create_dummy_headnode(treename, filelist)
+        headnode.npartitions = 2
+
+        crs = headnode.build_ranges()
+        ranges = treeranges_to_tuples(crs)
+
+        ranges_reqd = [
+            (0, 1250, ["backend/2clusters.root", "backend/4clusters.root"]),
+            (250, 1000, ["backend/4clusters.root"]),
+        ]
+
+        self.assertListEqual(ranges, ranges_reqd)
