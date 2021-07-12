@@ -125,7 +125,7 @@ Double_t RooJeffreysPrior::evaluate() const
 
   auto& cachedPdf = *cacheElm->_pdf;
   auto& pdfVars = *cacheElm->_pdfVariables;
-  pdfVars = _paramSet;
+  pdfVars.assign(_paramSet);
 
   std::unique_ptr<RooDataHist> data( cachedPdf.generateBinned(_obsSet,ExpectedData()) );
   std::unique_ptr<RooFitResult> res( cachedPdf.fitTo(*data, Save(),PrintLevel(-1),Minos(false),SumW2Error(false)) );

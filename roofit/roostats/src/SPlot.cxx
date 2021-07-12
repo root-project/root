@@ -132,7 +132,7 @@ SPlot::SPlot():
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = NULL;
 
@@ -145,7 +145,7 @@ SPlot::SPlot(const char* name, const char* title):
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = NULL;
 
@@ -160,7 +160,7 @@ SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = (RooDataSet*) &data;
 }

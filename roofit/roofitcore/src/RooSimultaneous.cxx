@@ -1115,7 +1115,7 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
       RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
 
       // Transfer values to output placeholder
-      *globClone = *tmp->get(0) ;
+      globClone->assign(*tmp->get(0)) ;
 
       // Cleanup
       delete globtmp ;

@@ -818,7 +818,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   _theFitter->Config().MinimizerOptions().SetErrorDef(errdef);
 
   // restore parameter values
-  *params = *paramSave ;
+  params->assign(*paramSave) ;
   delete paramSave ;
 
   return frame ;

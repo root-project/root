@@ -301,8 +301,8 @@ void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     Double_t convValSmeared = _cvPdf->getVal() + _cvModel->getVal() ;
     if (_cvOut->isValidReal(convValSmeared)) {
       // Smeared value in acceptance range, transfer values to output set
-      theEvent = *_modelVars ;
-      theEvent = *_pdfVars ;
+      theEvent.assign(*_modelVars) ;
+      theEvent.assign(*_pdfVars) ;
       _cvOut->setVal(convValSmeared) ;
       return ;
     }

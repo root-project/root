@@ -241,7 +241,7 @@ bool AsymptoticCalculator::Initialize() const {
       // assume use current value of nuisance as nominal ones
       if (verbose >= 0)
          oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
-      nominalParams = poiAlt; // set poi to alt value but keep nuisance at the nominal one
+      nominalParams.assign(poiAlt); // set poi to alt value but keep nuisance at the nominal one
       fAsimovData = MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs);
    }
 
@@ -258,7 +258,7 @@ bool AsymptoticCalculator::Initialize() const {
       assert(globObs.getSize() == fAsimovGlobObs.getSize() );
       // store previous snapshot value
       globObs.snapshot(globObsSnapshot);
-      globObs = fAsimovGlobObs;
+      globObs.assign(fAsimovGlobObs);
    }
 
 
@@ -277,7 +277,7 @@ bool AsymptoticCalculator::Initialize() const {
    //poi->Print("v");
 
    // restore previous value
-   globObs = globObsSnapshot;
+   globObs.assign(globObsSnapshot);
 
    // restore number of bins
    if (prevBins > 0 && xobs) xobs->setBins(prevBins);
@@ -509,7 +509,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    }
 
    RooArgSet * allParams = nullPdf->getParameters(*GetData() );
-   *allParams = fBestFitParams;
+   allParams->assign(fBestFitParams);
    delete allParams;
 
    // set the one-side condition
@@ -606,7 +606,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       globObs.add(*GetNullModel()->GetGlobalObservables());
       // store previous snapshot value
       globObs.snapshot(globObsSnapshot);
-      globObs = fAsimovGlobObs;
+      globObs.assign(fAsimovGlobObs);
    }
 
 
@@ -664,7 +664,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
 
    // restore previous value of global observables
-   globObs = globObsSnapshot;
+   globObs.assign(globObsSnapshot);
 
    // now we compute p-values using the asymptotic formulae
    // described in the paper
@@ -1227,7 +1227,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
 
    RooArgSet  poi(*model.GetParametersOfInterest());
-   poi = paramValues;
+   poi.assign(paramValues);
    //RooRealVar *r = dynamic_cast<RooRealVar *>(poi.first());
    // set poi constant for conditional MLE
    // need to fit nuisance parameters at their conditional MLE value
@@ -1321,7 +1321,9 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    RooStats::RemoveConstantParameters( allParams );
 
    // if a RooArgSet of poi is passed , different poi will be used for generating the Asimov data set
-   if (genPoiValues) *allParams = *genPoiValues;
+   if (genPoiValues) {
+    allParams->assign(*genPoiValues);
+   }
 
    // now do the actual generation of the AsimovData Set
    // no need to pass parameters values since we have set them before
@@ -1353,7 +1355,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
    // the nuisance parameter values could be set at their fitted value (the MLE)
    if (allParamValues.getSize() > 0) {
       RooArgSet *  allVars = model.GetPdf()->getVariables();
-      *allVars = allParamValues;
+      allVars->assign(allParamValues);
       delete allVars;
    }
 
@@ -1407,7 +1409,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       if (nuis.getSize() == 0) {
             oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model does not have nuisance parameters but has global observables"
                                             << " set global observables to model values " << endl;
-            asimovGlobObs = gobs;
+            asimovGlobObs.assign(gobs);
             return asimov;
       }
 
@@ -1559,7 +1561,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       gobs.snapshot(asimovGlobObs);
 
       // revert global observables to the data value
-      gobs = snapGlobalObsData;
+      gobs.assign(snapGlobalObsData);
 
       if (verbose>0) {
          std::cout << "Generated Asimov data for global observables ";

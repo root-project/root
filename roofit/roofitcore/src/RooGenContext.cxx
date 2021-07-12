@@ -427,7 +427,7 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       }
       arglv->randomize() ;
     }
-    theEvent = _uniformVars ;
+    theEvent.assign(_uniformVars) ;
   }
 
 }

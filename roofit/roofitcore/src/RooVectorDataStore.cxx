@@ -217,7 +217,7 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
   reserve(other.numEntries());
   for (Int_t i=0 ; i<other.numEntries() ; i++) {
     other.get(i) ;
-    _varsww = other._varsww ;
+    _varsww.assign(other._varsww) ;
     fill() ;
   }
   TRACE_CREATE
@@ -834,12 +834,12 @@ RooAbsDataStore* RooVectorDataStore::merge(const RooArgSet& allVars, list<RooAbs
   for (int i=0 ; i<nevt ; i++) {
 
     // Copy data from self
-    mergedStore->_vars = *get(i) ;
+    mergedStore->_vars.assign(*get(i)) ;
       
     // Copy variables from merge sets
     for (list<RooAbsDataStore*>::iterator iter = dstoreList.begin() ; iter!=dstoreList.end() ; ++iter) {
       const RooArgSet* partSet = (*iter)->get(i) ;
-      mergedStore->_vars = *partSet ;
+      mergedStore->_vars.assign(*partSet) ;
     }
 
     mergedStore->fill() ;
@@ -871,7 +871,7 @@ void RooVectorDataStore::append(RooAbsDataStore& other)
   Int_t nevt = other.numEntries() ;
   reserve(nevt + numEntries());
   for (int i=0 ; i<nevt ; i++) {  
-    _vars = *other.get(i) ;
+    _vars.assign(*other.get(i)) ;
     if (_wgtVar) {
       _wgtVar->setVal(other.weight()) ;
     }

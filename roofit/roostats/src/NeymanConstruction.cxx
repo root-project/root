@@ -134,7 +134,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     point = (RooArgSet*) fPointsToTest->get(i);//->clone("temp");
 
     // set parameters of interest to current point
-    *fPOI = *point;
+    fPOI->assign(*point);
 
     // set test stat sampler to use this point
     fTestStatSampler->SetParametersForTestStat(*fPOI);

@@ -63,7 +63,7 @@ namespace RooStats {
    Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b = 0.0 ); 
 
    inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
-      *paramsToChange=*desiredVals ;
+      paramsToChange->assign(*desiredVals) ;
    }
 
    inline void RemoveConstantParameters(RooArgSet* set){
