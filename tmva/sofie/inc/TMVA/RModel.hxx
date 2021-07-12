@@ -71,9 +71,7 @@ public:
          if ( i == libname) fNeededStdLib.insert(libname);
       }
    }
-   void AddOutputTensorNameList(std::vector<std::string> outputtensornames){
-      fOutputTensorNames = outputtensornames;
-   }
+   void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
    void UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
