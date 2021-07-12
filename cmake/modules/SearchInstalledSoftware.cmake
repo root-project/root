@@ -1533,14 +1533,16 @@ if(vdt OR builtin_vdt)
           set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
         endif()
       endif()
-    endif()
+     else()
+       add_library(VDT ALIAS VDT::VDT)
+     endif()
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.6)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
-      VDT
+      BUILTIN_VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
       INSTALL_DIR ${CMAKE_BINARY_DIR}
@@ -1558,12 +1560,19 @@ if(vdt OR builtin_vdt)
       TIMEOUT 600
     )
     ExternalProject_Add_Step(
-       VDT copy2externals
+       BUILTIN_VDT copy2externals
        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
        DEPENDEES install
     )
     set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
+    if(NOT TARGET VDT)
+      add_library(VDT IMPORTED SHARED)
+      add_dependencies(VDT BUILTIN_VDT)
+      set_target_properties(VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
+      target_include_directories(VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
+    endif()
+
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
