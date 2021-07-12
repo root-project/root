@@ -569,7 +569,7 @@ int HypoTestInverterResult::FindIndex(double xvalue) const
   for (int i=0; i<ArraySize(); i++) {
      double xpoint = fXValues[i];
      if ( (std::abs(xvalue) > 1 && TMath::AreEqualRel( xvalue, xpoint, tol) ) ||
-          (std::abs(xvalue) < 1 && TMath::AreEqualAbs( xvalue, xpoint, tol) ) )
+          (std::abs(xvalue) <= 1 && TMath::AreEqualAbs( xvalue, xpoint, tol) ) )
         return i;
   }
   return -1;
