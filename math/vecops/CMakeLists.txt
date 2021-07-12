@@ -20,10 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
 )
 
 if(builtin_vdt OR vdt)
-  target_link_libraries(ROOTVecOps PUBLIC VDT::VDT)
-endif()
-if(builtin_vdt)
-  add_dependencies(ROOTVecOps VDT)
+  target_link_libraries(ROOTVecOps PUBLIC VDT)
 endif()
 
 include(CheckCXXSymbolExists)
