@@ -186,7 +186,7 @@ Bool_t RooGenFitStudy::initialize()
 
 Bool_t RooGenFitStudy::execute() 
 { 
-  *_params = *_initParams ;
+  _params->assign(*_initParams) ;
   RooDataSet* data = _genPdf->generate(*_genSpec) ;
   RooFitResult* fr  = _fitPdf->fitTo(*data,RooFit::Save(kTRUE),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2)) ;
 

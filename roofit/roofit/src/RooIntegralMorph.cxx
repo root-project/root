@@ -197,7 +197,7 @@ void RooIntegralMorph::fillCacheObject(PdfCacheElem& cache) const
     RooArgSet alphaSet(alpha.arg()) ;
     coutP(Eval) << "RooIntegralMorph::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
     while(slIter->Next()) {
-      alphaSet = (*cache.hist()->get()) ;
+      alphaSet.assign(*cache.hist()->get()) ;
       TIterator* dIter = cache.hist()->sliceIterator((RooAbsArg&)x.arg(),RooArgSet(alpha.arg())) ;
       mcache.calculate(dIter) ;
       ccoutP(Eval) << "." << flush;

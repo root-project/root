@@ -61,8 +61,8 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
 
    // make sure we set the variables attached to this nll
    RooArgSet* attachedSet = fNllNull->getVariables();
-   *attachedSet = *fNullParameters;
-   *attachedSet = nullPOI;
+   attachedSet->assign(*fNullParameters);
+   attachedSet->assign(nullPOI);
    double nullNLL = fNllNull->getVal();
 
    //std::cout << std::endl << "SLRTS: null params:" << std::endl;
@@ -86,7 +86,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    }
    // make sure we set the variables attached to this nll
    attachedSet = fNllAlt->getVariables();
-   *attachedSet = *fAltParameters;
+   attachedSet->assign(*fAltParameters);
    double altNLL = fNllAlt->getVal();
 
    //std::cout << std::endl << "SLRTS: alt params:" << std::endl;

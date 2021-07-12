@@ -514,13 +514,13 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
          RooArgSet * sbparams = fSbModel->getParameters(*fObservables);
          if (sbparams) {
             assert(originalSbParams.getSize() == sbparams->getSize());
-            *sbparams = originalSbParams;
+            sbparams->assign(originalSbParams);
             delete sbparams;
          }
          RooArgSet * bparams = fBModel->getParameters(*fObservables);
          if (bparams) {
             assert(originalBParams.getSize() == bparams->getSize());
-            *bparams = originalBParams;
+            bparams->assign(originalBParams);
             delete bparams;
          }
       }
