@@ -330,9 +330,11 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the value, cache and constant attribute of any argument in our set
-/// that also appears in the other set.
+/// that also appears in the other set. Note that this function changes the
+/// values of the elements in this collection, but is still marked `const` as
+/// it does not change which elements this collection points to.
 
-void RooAbsCollection::assign(const RooAbsCollection& other)
+void RooAbsCollection::assign(const RooAbsCollection& other) const
 {
   if (&other==this) return ;
 
@@ -380,7 +382,7 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
 /// Functional equivalent of assign() but assumes this and other collection
 /// have same layout. Also no attributes are copied
 
-void RooAbsCollection::assignFast(const RooAbsCollection& other, bool setValDirty)
+void RooAbsCollection::assignFast(const RooAbsCollection& other, bool setValDirty) const
 {
   if (&other==this) return ;
   assert(hasSameLayout(other));

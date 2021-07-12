@@ -76,9 +76,9 @@ public:
   RooAbsCollection(const RooAbsCollection& other, const char *name="");
   RooAbsCollection& operator=(const RooAbsCollection& other);
 
-  void assign(const RooAbsCollection& other);
+  void assign(const RooAbsCollection& other) const;
   RooAbsCollection &assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne=false);
-  void assignFast(const RooAbsCollection& other, bool setValDirty=true) ;
+  void assignFast(const RooAbsCollection& other, bool setValDirty=true) const;
 
   // Move constructor
   RooAbsCollection(RooAbsCollection && other);
