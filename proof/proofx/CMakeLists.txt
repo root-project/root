@@ -9,10 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_definitions(${XROOTD_CFLAGS})
-include_directories(${XROOTD_INCLUDE_DIRS})
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/../proofd/inc)
-link_directories(${XROOTD_LIBRARY_DIR})
 set_source_files_properties(src/TXSocket.cxx COMPILE_FLAGS -Wno-address)
 
 if(UNIX)
@@ -43,12 +40,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proofx
     src/TXSocketHandler.cxx
     ${PROOFX_EXTRA_SOURCES}
   LIBRARIES
-    ${XROOTD_LIBRARIES}
+    ROOT::XRootD
     XrdProofd
   DEPENDENCIES
     Net
     Proof
     Thread
-  BUILTINS
-    XROOTD
 )
