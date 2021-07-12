@@ -117,7 +117,9 @@ void REveDataProxyBuilderBase::Build()
                      {
                         pmgr->SubImportChildren(holder, *parentIt);
                         ++parentIt;
-                     } else if (cnt < itemSize) {
+                     }
+                     else if (cnt < itemSize)
+                     {
                         // new product holder
                         pmgr->SubImportElements(holder, projectedProductAsElement);
                      }
