@@ -505,9 +505,7 @@ JSROOT.define(['d3'], (d3) => {
             break;
          case 3: // asterisk
             this.x0 = this.y0 = -size / 2;
-            this.marker = "l" + s1 + "," + s1 +
-               "m0,-" + s1 + "l-" + s1 + "," + s1 +
-               "m0,-" + s2 + "h" + s1 + "m-" + s2 + ",-" + s2 + "v" + s1;
+            this.marker = `l${s1},${s1}m0,-${s1}l-${s1},${s1}m0,-${s2}h${s1}m-${s2},-${s2}v${s1}`;
             break;
          case 4: // circle
             this.x0 = -parseFloat(s2);
@@ -544,10 +542,8 @@ JSROOT.define(['d3'], (d3) => {
             break;
          case 30: // star
             this.y0 = -size / 2;
-            this.marker = "l" + (size / 3).toFixed(this.ndig) + "," + s1 +
-               "l-" + (5/6*size).toFixed(this.ndig) + ",-" + (5/8*size).toFixed(this.ndig) +
-               "h" + s1 +
-               "l-" + (5/6*size).toFixed(this.ndig) + "," + (5/8*size).toFixed(this.ndig) + "z";
+            let s56 = (size*5/6).toFixed(this.ndig), s58 = (size*5/8).toFixed(this.ndig);
+            this.marker = `l${s3},${s1}l-${s56},-${s58}h${s1}l-${s56},${s58}z`;
             break;
          case 32: // triangle-down
             this.y0 = size / 2;

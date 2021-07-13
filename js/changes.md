@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changes in 6.2.0
 1. Support fully interactive second X/Y axis for histograms, graphs, functions and spline
 2. Support X+, Y+, RX, RY draw options for TF1
 3. Remove deprecated JSRootCore.js script, one have to use JSRoot.core.js
@@ -8,11 +8,15 @@
 5. Upgrade d3.js to 6.7.0
 6. Implement "nozoomx" and "nozoomy" draw options for TPad
 7. Implement "frame" draw option for TGaxis - fix position of axis relative to the frame
-8. Preserve position of TPaletteAxis, if provided with histogram. Make default position like in ROOT.
+8. Preserve position of TPaletteAxis, if provided with histogram; make default position like in ROOT
 9. Support basic TLatex symbols in lego plos axis title
 10. Use frame margins when create 3D lego drawings
 11. Implement "nomargins" draw option for pad/canvas
-12. Support custom mouse click/dblcklick handlers for lego plots
+12. Support custom mouse click/dblcklick handlers in lego plots
+13. Implement marker styles 35 - 49
+14. Let switch orthographic camera in geometry via control gui (#217)
+15. Fix drawing of custom markers on 3D, also in node.js (#205)
+
 
 ## Changes in 6.1.1
 1. Fix bug in TFrame drawing, some interactive features was not properly working
