@@ -723,8 +723,10 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
 
       if (r.active && (pad != gPad)) gPad = pad;
 
-      pad->SetTicks(r.tickx, r.ticky);
-      pad->SetGrid(r.gridx, r.gridy);
+      if ((pad->GetTickx() != r.tickx) || (pad->GetTicky() != r.ticky))
+         pad->SetTicks(r.tickx, r.ticky);
+      if ((pad->GetGridx() != r.gridx) || (pad->GetGridy() != r.gridy))
+         pad->SetGrid(r.gridx, r.gridy);
       if (r.logx != pad->GetLogx())
          pad->SetLogx(r.logx);
       if (r.logy != pad->GetLogy())
@@ -800,6 +802,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
       // without special objects no need for explicit update of the pad
       if (fHasSpecials)
          pad->Modified(kTRUE);
+
    }
 
    if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
