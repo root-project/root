@@ -369,6 +369,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       return promise.then(() => JSROOT.require(['interactive'])).then(inter => {
 
+         if (!this.draw_g) {
+            // FIXME: just workaround to prevent glitch because next canvas update triggered before previous is finished
+            console.error('Fix me - canvas update glitch');
+            return this;
+         }
+
          // here all kind of interactive settings
          rect.style("pointer-events", "visibleFill")
              .on("mouseenter", () => this.showObjectStatus());
@@ -2357,7 +2363,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       // case when histogram drawn over other histogram (same option)
       if (!this.isMainPainter() || this.options.Same)
-         return Promise.resolve(true);
+         return Promise.resolve(this);
 
       let histo = this.getHisto(), st = JSROOT.gStyle,
           pp = this.getPadPainter(),
@@ -2376,7 +2382,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (pt) {
          pt.Clear();
          if (draw_title) pt.AddText(histo.fTitle);
-         if (tpainter) tpainter.redraw();
+         if (tpainter) return tpainter.redraw().then(() => this);
       } else if (draw_title && !tpainter && histo.fTitle && !this.options.PadTitle) {
          pt = JSROOT.create("TPaveText");
          pt.fName = "title";
@@ -2389,8 +2395,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          pt.fBorderSize = st.fTitleBorderSize;
 
          pt.AddText(histo.fTitle);
-         return drawPave(this.getDom(), pt, "postitle").then(tpainter => {
-            if (tpainter) tpainter.$secondary = true;
+         return drawPave(this.getDom(), pt, "postitle").then(tp => {
+            if (tp) tp.$secondary = true;
             return this;
          });
       }
@@ -6496,9 +6502,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             // redraw palette till the end when contours are available
             return pp ? pp.drawPave() : true;
          });
-      }).then(() => {
-         return this.drawHistTitle();
-      }).then(() => {
+      }).then(() => this.drawHistTitle()).then(() => {
 
          this.updateStatWebCanvas();
 
