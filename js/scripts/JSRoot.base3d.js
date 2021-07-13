@@ -1310,7 +1310,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       this.pos[this.indx]   = x;
       this.pos[this.indx+1] = y;
       this.pos[this.indx+2] = z;
-      this.indx+=3;
+      this.indx += 3;
    }
 
    /** @summary Create points */
@@ -1326,40 +1326,50 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       // special dots
       if (!args.style) k = 1.1; else
       if (args.style === 1) k = 0.3; else
-      if (args.style === 2) args.style = 3; else // just avoid plot of "+" sign, issue #205
       if (args.style === 6) k = 0.5; else
       if (args.style === 7) k = 0.7;
 
-      let material;
+      let makePoints = (material, skip_promise) => {
+         let pnts = new THREE.Points(this.geom, material);
+         pnts.nvertex = 1;
+         return !args.promise || skip_promise ? pnts : Promise.resolve(pnts);
+      };
 
-      if (!args.style || (k !== 1) || JSROOT.nodejs) {
-         // this is plain creation of points, no texture loading, which does not work in node.js
-         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale * k, color: args.color } );
+      // this is plain creation of points, no need for texture loading
+      if ((k !== 1) || (JSROOT.nodejs && !args.promise))
+         return makePoints(new THREE.PointsMaterial({ size: 3*this.scale * k, color: args.color }));
 
-      } else {
+      let handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 7 }),
+          w = handler.fill ? 1 : 7,
+          dataUrl = 'data:image/svg+xml;utf8,' +
+                    '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
+                    `<path d="${handler.create(32,32)}" stroke="${handler.getStrokeColor()}" stroke-width="${w}" fill="${handler.getFillColor()}"/>` +
+                    '</svg>',
+          loader = new THREE.TextureLoader();
 
-         let handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
+      if (args.promise) {
+         let texture_promise;
+         if (JSROOT.nodejs) {
+            const { createCanvas, loadImage } = require('canvas');
 
-         let plainSVG = '<svg width="70" height="70" xmlns="http://www.w3.org/2000/svg">' +
-                        '<path d="' + handler.create(35,35) + '" stroke="' + handler.getStrokeColor() + '" stroke-width="4" fill="' + handler.getFillColor() + '"/>' +
-                        '</svg>';
+            texture_promise = loadImage(dataUrl).then(img => {
+               const canvas = createCanvas(64, 64);
+               const ctx = canvas.getContext('2d');
+               ctx.drawImage(img, 0, 0, 64, 64);
+               return new THREE.CanvasTexture(canvas);
+             });
 
-         // let need_replace = JSROOT.nodejs && !globalThis.document;
-         // if (need_replace) globalThis.document = JSROOT._.get_document();
+         } else {
+            texture_promise = new Promise(resolveFunc => {
+               loader.load(dataUrl, texture => resolveFunc(texture));
+            });
+         }
 
-         let texture = new THREE.TextureLoader().load( 'data:image/svg+xml;utf8,' + plainSVG);
-
-         // if (need_replace) globalThis.document = undefined;
-
-         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, map: texture, transparent: true } );
+         return texture_promise.then(texture => makePoints(new THREE.PointsMaterial({ size: 3*this.scale, map: texture, transparent: true }), true));
       }
 
-      let pnts = new THREE.Points(this.geom, material);
-      pnts.nvertex = 1;
-
-      return pnts;
+      return makePoints(new THREE.PointsMaterial({ size: 3*this.scale, map: loader.load(dataUrl), transparent: true }));
    }
-
 
    // ==============================================================================
 
