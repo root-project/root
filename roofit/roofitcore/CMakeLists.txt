@@ -12,6 +12,8 @@
 if(roofit_multiprocess)
   set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
   list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
+  #FIXME: The ProcessTimer.h exposes json in its interface:
+  list(APPEND EXTRA_LIBRARIES nlohmann_json::nlohmann_json)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
