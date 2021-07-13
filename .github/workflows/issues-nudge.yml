@@ -1,0 +1,19 @@
+name: Daily nudge about closed issues without a project
+on:
+  schedule:
+    # Run every weekday at 6:00 UTC (7:00 or 8:00 CERN)
+    - cron: '0 6 * * MON-FRI'
+
+jobs:
+  issues-nudge:
+    if: ${{ github.repository == 'root-project/root' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          version: 12
+      - run: npm install octokit
+      - run: node .github/actions/issues-nudge.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
