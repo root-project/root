@@ -29,7 +29,8 @@ class REveTrans;
 
 class REveProjection {
 public:
-   enum EPType_e { kPT_Unknown, kPT_RPhi, kPT_RhoZ, kPT_3D, kPT_End }; // projection type
+   enum EPType_e { kPT_Unknown, kPT_RhoZ, kPT_RPhi,
+                   kPT_XZ, kPT_YZ, kPT_ZX, kPT_ZY, kPT_3D, kPT_End };  // projection type
    enum EPProc_e { kPP_Plane, kPP_Distort, kPP_Full };                 // projection procedure
    enum EGeoMode_e { kGM_Unknown, kGM_Polygons, kGM_Segments };        // strategy for geometry projections
 
@@ -189,6 +190,102 @@ public:
    Bool_t Is3D() const override { return kFALSE; }
 
    void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
+};
+
+//==============================================================================
+// REveXZProjection
+// XZ non-linear projection.
+//==============================================================================
+
+class REveXZProjection : public REveProjection {
+private:
+   REveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   REveXZProjection();
+   virtual ~REveXZProjection() {}
+
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
+
+   void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+
+   void     SetCenter(REveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
+
+   void SetDirectionalVector(Int_t screenAxis, REveVector& vec) override;
+};
+
+//==============================================================================
+// REveYZProjection
+// YZ non-linear projection.
+//==============================================================================
+
+class REveYZProjection : public REveProjection {
+private:
+   REveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   REveYZProjection();
+   virtual ~REveYZProjection() {}
+
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
+
+   void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+
+   void     SetCenter(REveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
+
+   void SetDirectionalVector(Int_t screenAxis, REveVector& vec) override;
+};
+
+//==============================================================================
+// REveZXProjection
+// ZX non-linear projection.
+//==============================================================================
+
+class REveZXProjection : public REveProjection {
+private:
+   REveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   REveZXProjection();
+   virtual ~REveZXProjection() {}
+
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
+
+   void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+
+   void     SetCenter(REveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
+
+   void SetDirectionalVector(Int_t screenAxis, REveVector& vec) override;
+};
+
+//==============================================================================
+// REveZYProjection
+// ZY non-linear projection.
+//==============================================================================
+
+class REveZYProjection : public REveProjection {
+private:
+   REveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   REveZYProjection();
+   virtual ~REveZYProjection() {}
+
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
+
+   void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+
+   void     SetCenter(REveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
+
+   void SetDirectionalVector(Int_t screenAxis, REveVector& vec) override;
 };
 
 //==============================================================================
