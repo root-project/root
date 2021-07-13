@@ -1165,3 +1165,64 @@ TEST(VecOps, MemoryAdoptionAndSBO)
    delete[] values;
    check(v2);
 }
+
+struct ThrowingCtor {
+   ThrowingCtor() { throw std::runtime_error("This exception should have been caught."); }
+};
+
+struct ThrowingMove {
+   ThrowingMove() = default;
+   ThrowingMove(const ThrowingMove &) = default;
+   ThrowingMove &operator=(const ThrowingMove &) = default;
+   ThrowingMove(ThrowingMove &&) { throw std::runtime_error("This exception should have been caught."); }
+   ThrowingMove &operator=(ThrowingMove &&) { throw std::runtime_error("This exception should have been caught."); }
+};
+
+struct ThrowingCopy {
+   ThrowingCopy() = default;
+   ThrowingCopy(const ThrowingCopy &) { throw std::runtime_error("This exception should have been caught."); }
+   ThrowingCopy &operator=(const ThrowingCopy &)
+   {
+      throw std::runtime_error("This exception should have been caught.");
+   }
+   ThrowingCopy(ThrowingCopy &&) = default;
+   ThrowingCopy &operator=(ThrowingCopy &&) = default;
+};
+
+// RVec does not guarantee exception safety, but we still want to test
+// that we don't segfault or otherwise crash if element construction or move throws.
+TEST(VecOps, NoExceptionSafety)
+{
+   EXPECT_NO_THROW(ROOT::RVec<ThrowingCtor>());
+
+   EXPECT_THROW(ROOT::RVec<ThrowingCtor>(1), std::runtime_error);
+   EXPECT_THROW(ROOT::RVec<ThrowingCtor>(42), std::runtime_error);
+   ROOT::RVec<ThrowingCtor> v1;
+   EXPECT_THROW(v1.push_back(ThrowingCtor{}), std::runtime_error);
+   ROOT::RVec<ThrowingCtor> v2;
+   EXPECT_THROW(v2.emplace_back(ThrowingCtor{}), std::runtime_error);
+
+   ROOT::RVec<ThrowingMove> v3(2);
+   ROOT::RVec<ThrowingMove> v4(42);
+   EXPECT_THROW(std::swap(v3, v4), std::runtime_error);
+   ThrowingMove tm;
+   EXPECT_THROW(v3.emplace_back(std::move(tm)), std::runtime_error);
+
+   ROOT::RVec<ThrowingCopy> v7;
+   EXPECT_THROW(std::fill_n(std::back_inserter(v7), 16, ThrowingCopy{}), std::runtime_error);
+
+   // now with memory adoption
+   ThrowingCtor *p1 = new ThrowingCtor[0];
+   ROOT::RVec<ThrowingCtor> v8(p1, 0);
+   EXPECT_THROW(v8.push_back(ThrowingCtor{}), std::runtime_error);
+   delete[] p1;
+
+   ThrowingMove *p2 = new ThrowingMove[2];
+   ROOT::RVec<ThrowingMove> v9(p2, 2);
+   EXPECT_THROW(std::swap(v9, v3), std::runtime_error);
+   delete[] p2;
+
+   ThrowingCopy *p3 = new ThrowingCopy[2];
+   ROOT::RVec<ThrowingCopy> v10(p3, 2);
+   EXPECT_THROW(v10.push_back(*p3), std::runtime_error);
+}
