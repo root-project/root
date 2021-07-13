@@ -26,7 +26,8 @@ class TEveTrans;
 class TEveProjection
 {
 public:
-   enum EPType_e   { kPT_Unknown, kPT_RPhi, kPT_XZ, kPT_RhoZ, kPT_3D, kPT_End }; // projection type
+   enum EPType_e   { kPT_Unknown, kPT_RhoZ, kPT_RPhi, 
+                     kPT_XZ, kPT_YZ, kPT_ZX, kPT_ZY, kPT_3D, kPT_End };  // projection type
    enum EPProc_e   { kPP_Plane, kPP_Distort, kPP_Full };                 // projection procedure
    enum EGeoMode_e { kGM_Unknown, kGM_Polygons, kGM_Segments };          // strategy for geometry projections
 
@@ -227,6 +228,88 @@ public:
 
    ClassDef(TEveXZProjection, 0); // XZ non-linear projection.
 };
+
+
+//==============================================================================
+// TEveYZProjection
+//==============================================================================
+
+class TEveYZProjection : public TEveProjection
+{
+private:
+   TEveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   TEveYZProjection();
+   virtual ~TEveYZProjection() {}
+
+   virtual Bool_t Is2D() const { return kTRUE;  }
+   virtual Bool_t Is3D() const { return kFALSE; }
+
+   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+
+   virtual void     SetCenter(TEveVector& v);
+   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+
+   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+
+   ClassDef(TEveYZProjection, 0); // XY non-linear projection.
+};
+
+
+//==============================================================================
+// TEveZXProjection
+//==============================================================================
+
+class TEveZXProjection : public TEveProjection
+{
+private:
+   TEveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   TEveZXProjection();
+   virtual ~TEveZXProjection() {}
+
+   virtual Bool_t Is2D() const { return kTRUE;  }
+   virtual Bool_t Is3D() const { return kFALSE; }
+
+   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+
+   virtual void     SetCenter(TEveVector& v);
+   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+
+   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+
+   ClassDef(TEveZXProjection, 0); // XZ non-linear projection.
+};
+
+
+//==============================================================================
+// TEveZYProjection
+//==============================================================================
+
+class TEveZYProjection : public TEveProjection
+{
+private:
+   TEveVector   fProjectedCenter; // projected center of distortion.
+
+public:
+   TEveZYProjection();
+   virtual ~TEveZYProjection() {}
+
+   virtual Bool_t Is2D() const { return kTRUE;  }
+   virtual Bool_t Is3D() const { return kFALSE; }
+
+   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+
+   virtual void     SetCenter(TEveVector& v);
+   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+
+   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+
+   ClassDef(TEveZYProjection, 0); // XY non-linear projection.
+};
+
 
 //==============================================================================
 // TEve3DProjection

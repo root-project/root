@@ -199,6 +199,9 @@
 #pragma link C++ class TEveRhoZProjection+;
 #pragma link C++ class TEveRPhiProjection+;
 #pragma link C++ class TEveXZProjection+;
+#pragma link C++ class TEveYZProjection+;
+#pragma link C++ class TEveZXProjection+;
+#pragma link C++ class TEveZYProjection+;
 #pragma link C++ class TEve3DProjection+;
 
 #pragma link C++ class TEveProjectionManager+;
