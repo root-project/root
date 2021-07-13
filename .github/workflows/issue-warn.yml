@@ -1,0 +1,18 @@
+name: Warn about closing issues without a project
+on:
+  issues:
+    types: closed
+
+jobs:
+  issue-warn:
+    if: ${{ github.repository == 'root-project/root' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          version: 12
+      - run: npm install octokit
+      - run: node .github/actions/issue-warn.js ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
