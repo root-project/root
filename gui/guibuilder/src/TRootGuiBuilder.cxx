@@ -1992,7 +1992,7 @@ void TRootGuiBuilder::EraseStatusBar()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Keyborad key binding.
+/// Keyboard key binding.
 
 void TRootGuiBuilder::BindKeys()
 {
