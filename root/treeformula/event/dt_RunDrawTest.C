@@ -1,3 +1,4 @@
+#include "TROOT.h"
 #include "TCanvas.h"
 #include "TClassTable.h"
 #include "TFile.h"
