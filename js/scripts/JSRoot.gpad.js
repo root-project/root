@@ -1117,21 +1117,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return null;
    }
 
-   /** @summary Apply axis zooming to frame painter
-     * @private */
-   TFramePainter.prototype.applyAxisZoom = function(name) {
-      let axis = this.getAxis(name);
-      if (axis && axis.TestBit(JSROOT.EAxisBits.kAxisRange)) {
-         if ((axis.fFirst !== axis.fLast) && ((axis.fFirst > 1) || (axis.fLast < axis.fNbins))) {
-            this['zoom_' + name + 'min'] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
-            this['zoom_' + name + 'max'] = axis.fLast < axis.fNbins ? axis.GetBinLowEdge(axis.fLast+1) : axis.fXmax;
-            // reset user range for main painter
-            axis.InvertBit(JSROOT.EAxisBits.kAxisRange);
-            axis.fFirst = 1; axis.fLast = axis.fNbins
-         }
-      }
-   }
-
    /** @summary Apply axis zooming from pad user range
      * @private */
    TFramePainter.prototype.applyPadUserRange = function(pad, name) {
@@ -1187,7 +1172,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.cleanXY(); // remove all previous configurations
 
-      if (!opts) opts = {};
+      if (!opts) opts = { ndim: 1 };
 
       this.swap_xy = opts.swap_xy || false;
       this.reverse_x = opts.reverse_x || false;
@@ -1216,13 +1201,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (opts.check_pad_range) {
          // take zooming out of pad or axis attributes
 
-         this.zoom_xmin = this.zoom_xmax = 0;
-         this.zoom_ymin = this.zoom_ymax = 0;
-         this.zoom_zmin = this.zoom_zmax = 0;
+         let applyAxisZoom = name => {
+            if (this.zoomChangedInteractive(name)) return;
+            this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
 
-         this.applyAxisZoom('x');
-         if (opts.ndim && (opts.ndim > 1)) this.applyAxisZoom('y');
-         if (opts.ndim && (opts.ndim > 2)) this.applyAxisZoom('z');
+            let axis = this.getAxis(name);
+            if (axis && axis.TestBit(JSROOT.EAxisBits.kAxisRange)) {
+               if ((axis.fFirst !== axis.fLast) && ((axis.fFirst > 1) || (axis.fLast < axis.fNbins))) {
+                  this[`zoom_${name}min`] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
+                  this[`zoom_${name}max`] = axis.fLast < axis.fNbins ? axis.GetBinLowEdge(axis.fLast + 1) : axis.fXmax;
+                  // reset user range for main painter
+                  axis.InvertBit(JSROOT.EAxisBits.kAxisRange);
+                  axis.fFirst = 1; axis.fLast = axis.fNbins;
+               }
+            }
+         };
+
+         applyAxisZoom('x');
+         if (opts.ndim > 1) applyAxisZoom('y');
+         if (opts.ndim > 2) applyAxisZoom('z');
 
          if (opts.check_pad_range === "pad_range") {
             let canp = this.getCanvPainter();
@@ -3375,7 +3372,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @returns {Promise} with pad painter when drawing completed
      * @private */
    TPadPainter.prototype.redrawPadSnap = function(snap) {
-      if (!snap || !snap.fPrimitives) return;
+      if (!snap || !snap.fPrimitives)
+         return Promise.resolve(this);
 
       this.is_active_pad = !!snap.fActive; // enforce boolean flag
       this._readonly = (snap.fReadOnly === undefined) ? true : snap.fReadOnly; // readonly flag

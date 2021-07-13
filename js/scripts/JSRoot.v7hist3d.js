@@ -2498,52 +2498,55 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          }
       }
 
-      let color = this.v7EvalColor("fill_color", "red");
-      let mesh = pnts.createPoints(color);
-      main.toplevel.add(mesh);
+      return pnts.createPoints({ color: this.v7EvalColor("fill_color", "red"), promise: true }).then(mesh => {
+         main.toplevel.add(mesh);
 
-      mesh.bins = bins;
-      mesh.painter = this;
-      mesh.tip_color = 0x00FF00;
+         mesh.bins = bins;
+         mesh.painter = this;
+         mesh.tip_color = 0x00FF00;
 
-      mesh.tooltip = function(intersect) {
-         if (!Number.isInteger(intersect.index)) {
-            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r127');
-            return null;
-         }
+         mesh.tooltip = function(intersect) {
+            if (!Number.isInteger(intersect.index)) {
+               console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r127');
+               return null;
+            }
 
-         let indx = Math.floor(intersect.index / this.nvertex);
-         if ((indx<0) || (indx >= this.bins.length)) return null;
+            let indx = Math.floor(intersect.index / this.nvertex);
+            if ((indx < 0) || (indx >= this.bins.length)) return null;
 
-         let p = this.painter,
-             main = p.getFramePainter(),
-             tip = p.get3DToolTip(this.bins[indx]);
+            let p = this.painter,
+                main = p.getFramePainter(),
+                tip = p.get3DToolTip(this.bins[indx]);
 
-         tip.x1 = main.grx(p.getAxis("x").GetBinLowEdge(tip.ix));
-         tip.x2 = main.grx(p.getAxis("x").GetBinLowEdge(tip.ix+di));
-         tip.y1 = main.gry(p.getAxis("y").GetBinLowEdge(tip.iy));
-         tip.y2 = main.gry(p.getAxis("y").GetBinLowEdge(tip.iy+dj));
-         tip.z1 = main.grz(p.getAxis("z").GetBinLowEdge(tip.iz));
-         tip.z2 = main.grz(p.getAxis("z").GetBinLowEdge(tip.iz+dk));
-         tip.color = this.tip_color;
-         tip.opacity = 0.3;
+            tip.x1 = main.grx(p.getAxis("x").GetBinLowEdge(tip.ix));
+            tip.x2 = main.grx(p.getAxis("x").GetBinLowEdge(tip.ix+di));
+            tip.y1 = main.gry(p.getAxis("y").GetBinLowEdge(tip.iy));
+            tip.y2 = main.gry(p.getAxis("y").GetBinLowEdge(tip.iy+dj));
+            tip.z1 = main.grz(p.getAxis("z").GetBinLowEdge(tip.iz));
+            tip.z2 = main.grz(p.getAxis("z").GetBinLowEdge(tip.iz+dk));
+            tip.color = this.tip_color;
+            tip.opacity = 0.3;
 
-         return tip;
-      };
+            return tip;
+         };
 
-      return true;
+         return true;
+      });
    }
 
    /** @summary Drawing of 3D histogram
      * @private */
    RH3Painter.prototype.draw3DBins = function() {
 
-      if (!this.draw_content) return;
+      if (!this.draw_content)
+         return false;
 
       let handle = this.prepareDraw({ only_indexes: true, extra: -0.5, right_extra: -1 });
 
-      if (this.options.Scatter)
-         if (this.draw3DScatter(handle)) return;
+      if (this.options.Scatter) {
+         let res = this.draw3DScatter(handle);
+         if (res !== false) return res;
+      }
 
       let fillcolor = this.v7EvalColor("fill_color", "red"),
           main = this.getFramePainter(),
@@ -2623,7 +2626,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          this.createContour(main, palette);
       }
 
-      if ((i2<=i1) || (j2<=j1) || (k2<=k1)) return;
+      if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
+         return true;
 
       let xaxis = this.getAxis("x"), yaxis = this.getAxis("y"), zaxis = this.getAxis("z"),
           scalex = (main.grx(xaxis.GetBinCoord(i2)) - main.grx(xaxis.GetBinCoord(i1))) / (i2 - i1) * di,
@@ -2768,7 +2772,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          }
       }
 
-      for(let ncol=0;ncol<cols_size.length;++ncol) {
+      for (let ncol = 0; ncol < cols_size.length; ++ncol) {
          if (!cols_size[ncol]) continue; // ignore dummy colors
 
          let nseq = cols_sequence[ncol];
@@ -2860,15 +2864,12 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       main.set3DOptions(this.options);
       main.drawXYZ(main.toplevel, { zoom: JSROOT.settings.Zooming, ndim: 3 });
 
-      this.drawingBins(reason).then(() => {
-         // called when bins received from server, must be reentrant
-
-         let main = this.getFramePainter();
-
-         this.draw3DBins();
-         main.render3D();
-         main.addKeysHandler();
-      });
+      this.drawingBins(reason)
+          .then(() => this.draw3DBins()) // called when bins received from server, must be reentrant
+          .then(() => {
+             main.render3D();
+             main.addKeysHandler();
+          });
    }
 
    /** @summary Fill pad toolbar with RH3-related functions
