@@ -42,7 +42,7 @@ endif()
 separate_arguments(_R_FLAGS)
 
 target_compile_options(RInterface PUBLIC ${_R_FLAGS})
-target_include_directories(RInterface BEFORE PUBLIC ${R_INCLUDE_DIRS})
+target_include_directories(RInterface SYSTEM BEFORE PUBLIC ${R_INCLUDE_DIRS})
 if(x11)
   target_link_libraries(RInterface PUBLIC ${R_LIBRARIES} ${X11_LIBRARIES} readline)
 elseif()
