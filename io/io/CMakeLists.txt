@@ -65,12 +65,7 @@ ROOT_LINKER_LIBRARY(RIO
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 target_link_libraries(RIO PUBLIC ${ROOT_ATOMIC_LIBS})
-
-if(builtin_nlohmannjson)
-   target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-else()
-   target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
-endif()
+target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
 
 if(uring)
   target_link_libraries(RIO PUBLIC ${LIBURING_LIBRARY})
