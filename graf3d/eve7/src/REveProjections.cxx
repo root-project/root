@@ -751,6 +751,442 @@ void REveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    z = d;
 }
 
+/** \class REveXZProjection
+\ingroup REve
+XZ projection with distortion around given center.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+REveXZProjection::REveXZProjection() :
+   REveProjection()
+{
+   fType    = kPT_XZ;
+   fGeoMode = kGM_Polygons;
+   fName    = "XZ";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
+void REveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                    Float_t d, EPProc_e proc)
+{
+   using namespace TMath;
+
+   if (fDisplaceOrigin)
+   {
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      z  -= fCenter.fZ;
+   }
+
+   // projection
+   if (proc == kPP_Plane || proc == kPP_Full)
+   {
+      y = z;
+      z = d;
+   }
+   if (proc != kPP_Distort || proc == kPP_Full)
+   {
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      if (!fDisplaceOrigin)
+      {
+         x -= fProjectedCenter.fX;
+         y -= fProjectedCenter.fY;
+      }
+
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi);
+      y = r*Sin(phi);
+
+      if (!fDisplaceOrigin)
+      {
+         x += fProjectedCenter.fX;
+         y += fProjectedCenter.fY;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
+void REveXZProjection::SetCenter(REveVector& v)
+{
+   fCenter = v;
+
+   if (fDisplaceOrigin)
+   {
+      fProjectedCenter.Set(0.f, 0.f, 0.f);
+   }
+   else
+   {
+      fProjectedCenter.fX = fCenter.fX;
+      fProjectedCenter.fY = fCenter.fZ;
+      fProjectedCenter.fZ = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class REveProjection.
+
+void REveXZProjection::SetDirectionalVector(Int_t screenAxis, REveVector& vec)
+{
+   if (screenAxis == 0)
+      vec.Set(1.0f, 0.0f, 0.0f);
+   else if (screenAxis == 1)
+      vec.Set(0.0f, 0.0f, 1.0f);
+}
+
+
+/** \class REveYZProjection
+\ingroup REve
+YZ projection with distortion around given center.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+REveYZProjection::REveYZProjection() :
+   REveProjection()
+{
+   fType    = kPT_YZ;
+   fGeoMode = kGM_Polygons;
+   fName    = "YZ";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
+void REveYZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                    Float_t d, EPProc_e proc)
+{
+   using namespace TMath;
+
+   if (fDisplaceOrigin)
+   {
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      z  -= fCenter.fZ;
+   }
+
+   // projection
+   if (proc == kPP_Plane || proc == kPP_Full)
+   {
+      x = y;
+      y = z;
+      z = d;
+   }
+   if (proc != kPP_Distort || proc == kPP_Full)
+   {
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      if (!fDisplaceOrigin)
+      {
+         x -= fProjectedCenter.fX;
+         y -= fProjectedCenter.fY;
+      }
+
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi);
+      y = r*Sin(phi);
+
+      if (!fDisplaceOrigin)
+      {
+         x += fProjectedCenter.fX;
+         y += fProjectedCenter.fY;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
+void REveYZProjection::SetCenter(REveVector& v)
+{
+   fCenter = v;
+
+   if (fDisplaceOrigin)
+   {
+      fProjectedCenter.Set(0.f, 0.f, 0.f);
+   }
+   else
+   {
+      fProjectedCenter.fX = fCenter.fY;
+      fProjectedCenter.fY = fCenter.fZ;
+      fProjectedCenter.fZ = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class REveProjection.
+
+void REveYZProjection::SetDirectionalVector(Int_t screenAxis, REveVector& vec)
+{
+   if (screenAxis == 0)
+      vec.Set(0.0f, 1.0f, 0.0f);
+   else if (screenAxis == 1)
+      vec.Set(0.0f, 0.0f, 1.0f);
+}
+
+/** \class REveZXProjection
+\ingroup REve
+ZX projection with distortion around given center.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+REveZXProjection::REveZXProjection() :
+   REveProjection()
+{
+   fType    = kPT_ZX;
+   fGeoMode = kGM_Polygons;
+   fName    = "ZX";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
+void REveZXProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                    Float_t d, EPProc_e proc)
+{
+   using namespace TMath;
+
+   if (fDisplaceOrigin)
+   {
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      z  -= fCenter.fZ;
+   }
+
+   // projection
+   if (proc == kPP_Plane || proc == kPP_Full)
+   {
+      y = x;
+      x = z;
+      z = d;
+   }
+   if (proc != kPP_Distort || proc == kPP_Full)
+   {
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      if (!fDisplaceOrigin)
+      {
+         x -= fProjectedCenter.fX;
+         y -= fProjectedCenter.fY;
+      }
+
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi);
+      y = r*Sin(phi);
+
+      if (!fDisplaceOrigin)
+      {
+         x += fProjectedCenter.fX;
+         y += fProjectedCenter.fY;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
+void REveZXProjection::SetCenter(REveVector& v)
+{
+   fCenter = v;
+
+   if (fDisplaceOrigin)
+   {
+      fProjectedCenter.Set(0.f, 0.f, 0.f);
+   }
+   else
+   {
+      fProjectedCenter.fX = fCenter.fZ;
+      fProjectedCenter.fY = fCenter.fX;
+      fProjectedCenter.fZ = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class REveProjection.
+
+void REveZXProjection::SetDirectionalVector(Int_t screenAxis, REveVector& vec)
+{
+   if (screenAxis == 0)
+      vec.Set(0.0f, 0.0f, 1.0f);
+   else if (screenAxis == 1)
+      vec.Set(1.0f, 0.0f, 0.0f);
+}
+
+
+/** \class REveZYProjection
+\ingroup REve
+ZY projection with distortion around given center.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+REveZYProjection::REveZYProjection() :
+   REveProjection()
+{
+   fType    = kPT_ZY;
+   fGeoMode = kGM_Polygons;
+   fName    = "ZY";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
+void REveZYProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                    Float_t d, EPProc_e proc)
+{
+   using namespace TMath;
+
+   if (fDisplaceOrigin)
+   {
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      z  -= fCenter.fZ;
+   }
+
+   // projection
+   if (proc == kPP_Plane || proc == kPP_Full)
+   {
+      x = z;
+      z = d;
+   }
+   if (proc != kPP_Distort || proc == kPP_Full)
+   {
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      if (!fDisplaceOrigin)
+      {
+         x -= fProjectedCenter.fX;
+         y -= fProjectedCenter.fY;
+      }
+
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi);
+      y = r*Sin(phi);
+
+      if (!fDisplaceOrigin)
+      {
+         x += fProjectedCenter.fX;
+         y += fProjectedCenter.fY;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
+void REveZYProjection::SetCenter(REveVector& v)
+{
+   fCenter = v;
+
+   if (fDisplaceOrigin)
+   {
+      fProjectedCenter.Set(0.f, 0.f, 0.f);
+   }
+   else
+   {
+      fProjectedCenter.fX = fCenter.fZ;
+      fProjectedCenter.fY = fCenter.fY;
+      fProjectedCenter.fZ = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class REveProjection.
+
+void REveZYProjection::SetDirectionalVector(Int_t screenAxis, REveVector& vec)
+{
+   if (screenAxis == 0)
+      vec.Set(0.0f, 0.0f, 1.0f);
+   else if (screenAxis == 1)
+      vec.Set(0.0f, 1.0f, 0.0f);
+}
+
 /** \class REve3DProjection
 \ingroup REve
 3D scaling projection. One has to use pre-scaling to make any ise of this.
