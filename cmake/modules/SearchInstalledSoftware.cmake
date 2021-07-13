@@ -105,6 +105,16 @@ if(NOT builtin_nlohmannjson)
       set(CMAKE_REQUIRED_QUIET ${_old_CMAKE_REQUIRED_QUIET})
     endif()
   endif()
+
+  # ROOTEve wants to know if it comes with json_fwd.hpp:
+  if(TARGET nlohmann_json::nlohmann_json)
+    get_target_property(inc_dirs nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+    foreach(dir ${inc_dirs})
+      if(EXISTS "${dir}/nlohmann/json_fwd.hpp")
+        target_compile_definitions(nlohmann_json::nlohmann_json INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(builtin_nlohmannjson)
