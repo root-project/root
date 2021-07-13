@@ -129,7 +129,7 @@ private:
 
   RooMinimizer(const RooMinimizer&) ;
 	
-  ClassDef(RooMinimizer,1) // RooFit interface to ROOT::Fit::Fitter
+  ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
 
 
