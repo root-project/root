@@ -474,7 +474,7 @@ if (builtin_cling)
   set(CLING_CXXFLAGS ${CLING_CXXFLAGS} PARENT_SCOPE)
 
   string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
-  if (LLVM_ENABLE_PIC)
+  if (LLVM_ENABLE_PIC AND NOT MSVC)
     # FIXME: LLVM_ENABLE_PIC is ON by default, however not propagated to cling.
     # FIXME: fPIC is required by the linker for libCling. Can we do that using
     # cmake: set_property(TARGET clingInterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)?

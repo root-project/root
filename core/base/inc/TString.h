@@ -298,7 +298,7 @@ public:
 
    // Type conversion
    operator const char*() const { return GetPointer(); }
-#if (__cplusplus >= 201700L) && (!defined(__clang_major__) || __clang_major__ > 5)
+#if (__cplusplus >= 201700L) && !defined(_MSC_VER) && (!defined(__clang_major__) || __clang_major__ > 5)
    // Clang 5.0 support for explicit conversion is still inadequate even in c++17 mode.
    // (It leads to extraneous ambiguous overload errors)
    explicit operator std::string() const { return std::string(GetPointer(),Length()); }
