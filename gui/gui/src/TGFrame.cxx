@@ -1538,12 +1538,12 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
       const Bool_t res = SaveFrameAsCodeOrImage(fi.fFilename);
       if(!res)
       {
-            Int_t retval;
-            new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                         TString::Format("file (%s) cannot be saved with this extension",
-                                         fi.fFilename), kMBIconExclamation,
-                         kMBRetry | kMBCancel, &retval);
-            repeat_save = (retval == kMBRetry);
+         Int_t retval;
+         new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
+                      TString::Format("file (%s) cannot be saved with this extension",
+                                      fi.fFilename),
+                      kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+         repeat_save = (retval == kMBRetry);
       }
    } while (repeat_save);
 
@@ -1562,7 +1562,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString fileName)
 
    const TString fname = gSystem->UnixPathName(fileName);
    if (fname.EndsWith(".C")) {
-	  TGMainFrame *main = (TGMainFrame*)GetMainFrame();
+      TGMainFrame *main = (TGMainFrame*)GetMainFrame();
       main->SaveSource(fname.Data(), "");
    }
    else {
@@ -1590,7 +1590,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString fileName)
       }
       else {
          Error("SaveFrameAsCodeOrImage", "File cannot be saved with this extension");
-		 return kFALSE;
+         return kFALSE;
       }
    }
 
