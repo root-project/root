@@ -18,8 +18,8 @@ void ZoomHistogram() {
    TH1F *norm = new TH1F("Normal Histogram", "Normal Histogram", 100, 0, 100);
 
    for (int i = 0; i < 100; ++i) {
-     Double_t j = gRandom->Gaus(50, 10);
-     norm->Fill(j);
+     Double_t x = gRandom->Gaus(50, 10);
+     norm->Fill(x);
    }
 
    TH1F *zoom = (TH1F*) norm->Clone("zoom");
