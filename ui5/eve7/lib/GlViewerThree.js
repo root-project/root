@@ -83,7 +83,7 @@ sap.ui.define([
          this.scene = new THREE.Scene();
          // this.scene.fog = new THREE.FogExp2( 0xaaaaaa, 0.05 );
 
-         if (this.controller.kind === "3D") {
+         if (this.controller.isEveCameraPerspective()) {
             this.camera = new THREE.PerspectiveCamera(75, w / h, 1, 5000);
          }
          else {

@@ -251,6 +251,18 @@ sap.ui.define([
       /** Called from JSROOT context menu when object selected for browsing */
       invokeBrowseOf: function(obj_id) {
          this.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
+      },
+
+      getEveCameraType : function(){
+          let vo = this.mgr.GetElement(this.eveViewerId);
+          return vo.CameraType;
+      },
+
+      isEveCameraPerspective: function() {
+         let vo = this.mgr.GetElement(this.eveViewerId);
+         console.log("compare ", vo.CameraType,"PerspXOZ" );
+         return vo.CameraType.startsWith("PerspXOZ");
+
       }
 
    });

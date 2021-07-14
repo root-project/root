@@ -139,7 +139,7 @@ sap.ui.define([
          let light_class_3d = RC.PointLight; // RC.DirectionalLight; // RC.PointLight;
          let light_class_2d = RC.DirectionalLight;
 
-         if (this.controller.kind === "3D")
+         if (this.controller.isEveCameraPerspective())
          {
             this.camera = new RC.PerspectiveCamera(75, w / h, 1, 5000);
             this.camera.position = new RC.Vector3(-500, 0, 0);
