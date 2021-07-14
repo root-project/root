@@ -85,4 +85,7 @@ def create_distributed_module(parentmodule):
     distributed.initialize = initialize
     distributed.create_logger = create_logger
 
+    # Set non-optimized default mode
+    distributed.optimized = False
+
     return distributed

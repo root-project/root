@@ -25,7 +25,7 @@ except ImportError:
             return partial(self.func, instance, *(self.args or ()), **(self.keywords or {}))
 
 
-def RDataFrameAsNumpy(df, columns=None, exclude=None):
+def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     """Read-out the RDataFrame as a collection of numpy arrays.
 
     The values of the dataframe are read out as numpy array of the respective type
@@ -45,22 +45,18 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     Parameters:
         columns: If None return all branches as columns, otherwise specify names in iterable.
         exclude: Exclude branches from selection.
+        lazy: Determines whether this action is instant (False, default) or lazy (True).
 
     Returns:
-        dict: Dict with column names as keys and 1D numpy arrays with content as values
+        dict or AsNumpyResult: if instant (default), dict with column names as keys and
+            1D numpy arrays with content as values; if lazy, AsNumpyResult containing
+            the result pointers obtained from the Take actions.
     """
     # Sanitize input arguments
     if isinstance(columns, str):
         raise TypeError("The columns argument requires a list of strings")
     if isinstance(exclude, str):
         raise TypeError("The exclude argument requires a list of strings")
-
-    # Import numpy and numpy.array derived class lazily
-    try:
-        import numpy
-        from ROOT.pythonization._rdf_utils import ndarray
-    except:
-        raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
     # Find all column names in the dataframe if no column are specified
     if not columns:
@@ -77,20 +73,72 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
         column_type = df.GetColumnType(column)
         result_ptrs[column] = df.Take[column_type](column)
 
-    # Convert the C++ vectors to numpy arrays
-    py_arrays = {}
-    for column in columns:
-        cpp_reference = result_ptrs[column].GetValue()
-        if hasattr(cpp_reference, "__array_interface__"):
-            tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
-            py_arrays[column] = ndarray(tmp, result_ptrs[column])
-        else:
-            tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
-            for i, x in enumerate(cpp_reference):
-                tmp[i] = x # This creates only the wrapping of the objects and does not copy.
-            py_arrays[column] = ndarray(tmp, result_ptrs[column])
+    result = AsNumpyResult(result_ptrs, columns)
 
-    return py_arrays
+    if lazy:
+        return result
+    else:
+        return result.GetValue()
+
+
+class AsNumpyResult(object):
+    """Future-like class that represents the result of an AsNumpy call.
+
+    Provides AsNumpy with laziness when it comes to triggering the event loop.
+
+    Attributes:
+        columns (list): list of the names of the columns returned by
+            AsNumpy.
+        py_arrays (dict): results of the AsNumpy action. The key is the
+            column name, the value is the NumPy array for that column.
+        result_ptrs (dict): results of the AsNumpy action. The key is the
+            column name, the value is the result pointer for that column.
+    """
+    def __init__(self, result_ptrs, columns):
+        """Constructs an AsNumpyResult object.
+
+        Parameters:
+            result_ptrs (dict): results of the AsNumpy action. The key is the
+                column name, the value is the result pointer for that column.
+            columns (list): list of the names of the columns returned by
+                AsNumpy.
+        """
+
+        self.result_ptrs = result_ptrs
+        self.columns = columns
+        self.py_arrays = None
+
+    def GetValue(self):
+        """Triggers, if necessary, the event loop to run the Take actions for
+        the requested columns and produce the NumPy arrays as result.
+
+        Returns:
+            dict: key is the column name, value is the NumPy array for that
+                column.
+        """
+
+        if self.py_arrays is None:
+            # Import numpy and numpy.array derived class lazily
+            try:
+                import numpy
+                from ROOT.pythonization._rdf_utils import ndarray
+            except:
+                raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
+
+            # Convert the C++ vectors to numpy arrays
+            self.py_arrays = {}
+            for column in self.columns:
+                cpp_reference = self.result_ptrs[column].GetValue()
+                if hasattr(cpp_reference, "__array_interface__"):
+                    tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
+                    self.py_arrays[column] = ndarray(tmp, self.result_ptrs[column])
+                else:
+                    tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
+                    for i, x in enumerate(cpp_reference):
+                        tmp[i] = x # This creates only the wrapping of the objects and does not copy.
+                    self.py_arrays[column] = ndarray(tmp, self.result_ptrs[column])
+
+        return self.py_arrays
 
 
 def _histo_profile(self, fixed_args, *args):
