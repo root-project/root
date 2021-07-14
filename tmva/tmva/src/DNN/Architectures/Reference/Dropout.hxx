@@ -32,11 +32,9 @@ void TReference<Real_t>::DropoutForward(TMatrixT<Real_t> & B, TDescriptors*, TWo
    m = B.GetNrows();
    n = B.GetNcols();
 
-   TRandom rand(time(nullptr));
-
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         Real_t r = rand.Uniform();
+         Real_t r = gRandom->Uniform();
          if (r >= dropoutProbability) {
             B(i,j) = 0.0;
          } else {
