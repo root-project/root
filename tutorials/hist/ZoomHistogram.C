@@ -17,10 +17,8 @@ void ZoomHistogram() {
 
    TH1F *norm = new TH1F("Normal Histogram", "Normal Histogram", 100, 0, 100);
 
-   TRandom2 rand;
-
    for (int i = 0; i < 100; ++i) {
-     Double_t j = rand.Gaus(50, 10);
+     Double_t j = gRandom->Gaus(50, 10);
      norm->Fill(j);
    }
 
