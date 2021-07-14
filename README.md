@@ -28,6 +28,7 @@ libraries. This makes ROOT a premier platform on which to build data
 acquisition, simulation and data analysis systems.
 
 [![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5060/badge)](https://bestpractices.coreinfrastructure.org/projects/5060)
 
 ## Cite
 
