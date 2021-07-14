@@ -64,7 +64,7 @@ sap.ui.define(['sap/ui/core/Component',
          var name = item.getText();
          if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
-         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind };
+         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
          var oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
@@ -113,16 +113,13 @@ sap.ui.define(['sap/ui/core/Component',
                vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
             else if (elem.fName === "Lego")
                vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
-            else
-               elem.view_kind = (n == 0) ? "3D" : "2D"; // FIXME: should be property of GL view
-
 
             var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
             var view = oOwnerComponent.runAsOwner(function() {
                return new sap.ui.xmlview({
                   id: viewid,
                   viewName: vtype,
-                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind },
+                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId },
                   layoutData: oLd
                });
             });

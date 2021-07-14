@@ -25,7 +25,7 @@ sap.ui.define([
       onInit: function () {
          var viewData = this.getView().getViewData();
          if (viewData) {
-            this.setupManagerAndViewType(viewData.eveViewerId, viewData.kind, viewData.mgr);
+            this.setupManagerAndViewType(viewData.eveViewerId, viewData.mgr);
          }
          else {
              UIComponent.getRouterFor(this).getRoute("Table").attachPatternMatched(this.onTableObjectMatched, this);
@@ -33,19 +33,18 @@ sap.ui.define([
       },
       onTableObjectMatched: function (oEvent) {
          let args = oEvent.getParameter("arguments");
-         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.view_kind, JSROOT.$eve7tmp.mgr );
+         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr );
          delete JSROOT.$eve7tmp;
 
          this.checkViewReady();
       },
-      setupManagerAndViewType: function(eveViewerId, kind, mgr)
+      setupManagerAndViewType: function(eveViewerId, mgr)
       {
          this._load_scripts = true;
          this._render_html = false;
 
          this.mgr = mgr;
          this.eveViewerId = eveViewerId;
-         this.kind = kind;
 
          var rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))

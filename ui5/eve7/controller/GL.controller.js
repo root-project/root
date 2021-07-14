@@ -74,7 +74,6 @@ sap.ui.define([
          if (viewName)
          {
             data.standalone = viewName;
-            data.kind       = viewName;
          }
 
          // console.log("VIEW DATA", data);
@@ -83,7 +82,6 @@ sap.ui.define([
          {
             this.mgr        = moredata.mgr;
             this.eveViewerId  = moredata.eveViewerId;
-            this.kind       = moredata.kind;
             this.standalone = viewName;
             this.checkViewReady();
          }
@@ -97,7 +95,6 @@ sap.ui.define([
          {
             this.mgr       = data.mgr;
             this.eveViewerId = data.eveViewerId;
-            this.kind      = data.kind;
          }
 
          this.mgr.RegisterController(this);
@@ -135,7 +132,6 @@ sap.ui.define([
          if (!found) return;
 
          this.eveViewerId = found.fElementId;
-         this.kind      = (found.fName == "Default Viewer") ? "3D" : "2D";
 
          this.checkViewReady();
       },
