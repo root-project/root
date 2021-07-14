@@ -480,7 +480,7 @@ if (builtin_cling)
     # cmake: set_property(TARGET clingInterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)?
     string(APPEND CMAKE_CXX_FLAGS " -fPIC")
     string(APPEND CMAKE_C_FLAGS " -fPIC")
-  endif(LLVM_ENABLE_PIC)
+  endif(LLVM_ENABLE_PIC AND NOT MSVC)
   # Avoid cling being installed under ROOTSYS/include.
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
