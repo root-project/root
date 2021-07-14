@@ -17,6 +17,7 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TRandom.h"
+#include <time.h>
 
 namespace TMVA
 {
