@@ -117,9 +117,15 @@ class BaseBackend(ABC):
                 given RDataFrame object and a range of entries. The range is
                 needed for the `Snapshot` operation.
         """
-        headnode = generator.headnode
-        computation_graph_callable = generator.get_callable()
+        # Check if the workflow must be generated in optimized mode
+        optimized = ROOT.RDF.Experimental.Distributed.optimized
 
+        if optimized:
+            computation_graph_callable = generator.get_callable_optimized()
+        else:
+            computation_graph_callable = generator.get_callable()
+
+        headnode = generator.headnode
         if isinstance(headnode, TreeHeadNode):
             maintreename = headnode.maintreename
             defaultbranches = headnode.defaultbranches
@@ -228,16 +234,31 @@ class BaseBackend(ABC):
                 # user, then limit processing to the entries in this range.
                 rdf = ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end)
 
+            if optimized:
+                # Create the RDF computation graph and execute it on this ranged
+                # dataset. The results of the actions of the graph and their types
+                # are returned
+                results, res_types = computation_graph_callable(rdf, current_range.id)
 
-            # Output of the callable
-            resultptr_list = computation_graph_callable(rdf, current_range.id)
+                # Get RResultPtrs out of the type-erased RResultHandles by
+                # instantiating with the type of the value
+                mergeables = [
+                    ROOT.ROOT.Detail.RDF.GetMergeableValue(res.GetResultPtr[res_type]())
+                    if isinstance(res, ROOT.RDF.RResultHandle)
+                    else res
+                    for res, res_type in zip(results, res_types)
+                ]
+            else:
+                # Output of the callable
+                resultptr_list = computation_graph_callable(rdf, current_range.id)
 
-            mergeables = [
-                resultptr  # Here resultptr is already the result value
-                if isinstance(resultptr, (dict, list))
-                else ROOT.ROOT.Detail.RDF.GetMergeableValue(resultptr)
-                for resultptr in resultptr_list
-            ]
+                mergeables = [
+                    resultptr  # Here resultptr is already the result value
+                    if isinstance(resultptr, (dict, list))
+                    else ROOT.ROOT.Detail.RDF.GetMergeableValue(resultptr)
+                    for resultptr in resultptr_list
+                ]
+
             return mergeables
 
         def reducer(mergeables_out, mergeables_in):
