@@ -4878,6 +4878,71 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 }
 
 
+void RooAbsReal::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const {
+
+  // Find all servers that are serving real numbers to us, retrieve their batch data,
+  // and switch them into "always clean" operating mode, so they return always the last-set value.
+  struct ServerData {
+    RooAbsReal* server;
+    RooSpan<const double> batch;
+    double oldValue;
+    RooAbsArg::OperMode oldOperMode;
+  };
+  std::vector<ServerData> ourServers;
+  std::size_t dataSize = 1;
+
+  for (auto absArgServer : servers()) {
+    if (absArgServer->IsA()->InheritsFrom(RooAbsReal::Class()) && absArgServer->isValueServer(*this)) {
+      auto server = static_cast<RooAbsReal*>(absArgServer);
+      // maybe we are still missing inhibit dirty here
+      ourServers.push_back({server,
+          dataMap[server],
+          server->_value,
+          server->operMode()});
+      // Prevent the server from evaluating; just return cached result, which we will side load:
+      server->setOperMode(RooAbsArg::AClean);
+      dataSize = std::max(dataSize, ourServers.back().batch.size());
+    }
+  }
+
+
+  // Make sure that we restore all state when we finish:
+  struct RestoreStateRAII {
+    RestoreStateRAII(std::vector<ServerData>& servers) :
+      _servers{servers} { }
+
+    ~RestoreStateRAII() {
+      for (auto& serverData : _servers) {
+        serverData.server->setCachedValue(serverData.oldValue, true);
+        serverData.server->setOperMode(serverData.oldOperMode);
+      }
+    }
+
+    std::vector<ServerData>& _servers;
+  } restoreState{ourServers};
+
+
+  // Advising to implement the batch interface makes only sense if the batch was not a scalar.
+  // Otherwise, there would be no speedup benefit.
+  if(dataSize > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
+        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+  }
+
+
+  // For each event, write temporary values into our servers' caches, and run a single-value computation.
+
+  for (std::size_t i=0; i < nEvents; ++i) {
+    for (auto& serv : ourServers) {
+      serv.server->setCachedValue(serv.batch[std::min(i, serv.batch.size()-1)], /*notifyClients=*/ false);
+    }
+
+    output[i] = evaluate();
+  }
+}
+
+
+
 
 Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 

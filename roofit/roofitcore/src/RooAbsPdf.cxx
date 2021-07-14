@@ -3632,3 +3632,22 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
     _norm = 0 ;
   }
 }
+
+
+void RooAbsPdf::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+{
+  RooAbsReal::computeBatch(output, nEvents, dataMap);
+
+  auto integralSpan = dataMap[_norm];
+
+  if(integralSpan.size() == 1) {
+    double oneOverNorm = 1. / integralSpan[0];
+    for (std::size_t i=0; i < nEvents; ++i) {
+      output[i] *= oneOverNorm;
+    }
+  } else {
+    for (std::size_t i=0; i < nEvents; ++i) {
+      output[i] /= integralSpan[i];
+    }
+  }
+}
