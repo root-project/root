@@ -235,6 +235,17 @@ if(builtin_llvm)
     endif()
   endforeach()
   set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
+
+  #---Make LLVM compilation flags public---------------------------------------------------------------
+  # Extract the compilation flags from LLVM and make them public to the
+  # rest of ROOT so that we can compile against LLVM with matching flags.
+
+  # LLVM doesn't really give us a API to get this with an in-source build
+  # so we just use the normal way of doing this and read the llvm directory
+  # compilation properties.
+  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
+  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
+  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
@@ -249,7 +260,8 @@ else()
       "--prefix"
       "--src-root"
       "--cmakedir"
-      "--build-mode")
+      "--build-mode"
+      "--cppflags")
     execute_process(
       COMMAND ${CONFIG_COMMAND}
       RESULT_VARIABLE HAD_ERROR
@@ -276,6 +288,7 @@ else()
   list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
   list(GET CONFIG_OUTPUT 6 LLVM_CONFIG_CMAKE_PATH)
   list(GET CONFIG_OUTPUT 7 LLVM_BUILD_MODE)
+  list(GET CONFIG_OUTPUT 8 LLVM_DEFS)
 
   message(STATUS "External llvm built in ${LLVM_BUILD_MODE} mode.")
 
@@ -450,16 +463,6 @@ endif()
 add_custom_target(CLING)
 set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")
 if (builtin_cling)
-
-  # Extract the compilation flags from LLVM and make them public to the
-  # rest of ROOT so that we can compile against LLVM with matching flags.
-
-  # LLVM doesn't really give us a API to get this with an in-source build
-  # so we just use the normal way of doing this and read the llvm directory
-  # compilation properties.
-  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
-  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
-  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
 
   # FIXME: Reduce the usage of CLING_CXXFLAGS by adding a cmake routine in
   # RootMacros.cmake for all cling-dependent libraries
