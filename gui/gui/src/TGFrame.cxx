@@ -1468,7 +1468,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fWMInitState = (EInitialState) 0;
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
-                      kKeyControlMask, kTRUE);
+                      kKeyControlMask | kKeyMod2Mask, kTRUE);//grab CTRL+s also if NumLock is active
    if (p == fClient->GetDefaultRoot()) {
       fMWMValue    = kMWMDecorAll;
       fMWMFuncs    = kMWMFuncAll;
@@ -1509,6 +1509,8 @@ TGMainFrame::~TGMainFrame()
       fBindList->Delete();
       delete fBindList;
    }
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
+                      kKeyControlMask | kKeyMod2Mask, kFALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
