@@ -5,7 +5,7 @@
 ///
 /// Image produced by `.x ZoomHistogram.C`
 ///
-/// This demonstrates how to zoom into a Histogram by
+/// This demonstrates how to zoom into a histogram by
 /// changing the range on one of the axes (or both).
 ///
 /// \macro_image
