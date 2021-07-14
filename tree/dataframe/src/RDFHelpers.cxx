@@ -17,6 +17,11 @@
 #endif // R__USE_IMT
 
 #include <set>
+#include <numeric>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+#include <stdio.h>
 
 using ROOT::RDF::RResultHandle;
 
@@ -210,6 +215,17 @@ void ProgressHelper::PrintProgressbar(std::ostream& stream, std::size_t currentE
   if (fUseShellColours) stream << "\e[33m";
   stream << '|' << std::setfill(' ') << std::setw(fBarWidth) << std::left << bars << "|   ";
   if (fUseShellColours) stream << "\e[0m";
+}
+
+std::size_t ROOT::RDF::RetrieveNEvents(const char* treename, const char* fileUrl) {
+  std::unique_ptr<TFile> file( TFile::Open(fileUrl, "READ") );
+  if (!file)
+    return 0u;
+
+  std::unique_ptr<TTree> tree( file->Get<TTree>(treename) );
+  if (tree) return tree->GetEntries();
+
+  return 0u;
 }
 
 } } // namespace ROOT::RDF

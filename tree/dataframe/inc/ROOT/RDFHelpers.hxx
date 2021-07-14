@@ -27,6 +27,11 @@
 #include <type_traits>
 #include <utility> // std::index_sequence
 #include <vector>
+#include <mutex>
+#include <chrono>
+#include <array>
+#include <map>
+
 
 namespace ROOT {
 namespace Internal {
@@ -255,6 +260,114 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 }
 
 } // namespace Experimental
+
+// clang-format off
+/// RDF progress helper.
+/// This class provides callback functions to RDataFrame, which record event statistics
+/// and print them to the terminal every second.
+/// ProgressHelper::operator()(unsigned int, T&) is thread safe, and can be used as callback in MT mode.
+// clang-format on
+class ProgressHelper {
+public:
+  /// Create a progress helper.
+  /// \param increment RDF callbacks are called every `n` events. Pass this `n` here.
+  /// \param progressBarWidth Number of characters the progress bar will occupy.
+  /// \param printInterval Update every stats every `n` seconds.
+  /// \param useShellColors Use shell colour codes to colour the output. Automatically disabled when
+  /// we are not writing to a tty.
+  ProgressHelper(std::size_t increment,
+      unsigned int progressBarWidth = 40,
+      unsigned int printInterval = 1,
+      bool useShellColors = true);
+
+  ~ProgressHelper() = default;
+
+  /// Register a new sample for completion statistics.
+  /// \see ROOT::RDF::RInterface::DefinePerSample()
+  void registerNewSample(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo & id) {
+    std::lock_guard<std::mutex> lock(fSampleStatisticsMutex);
+    fSampleStatistics[id.AsString()] = std::max(id.EntryRange().second, fSampleStatistics[id.AsString()]);
+  }
+
+  // clang-format off
+  /// Thread-safe callback for RDataFrame.
+  /// It will record elapsed times and event statistics, and print a progress bar every second.
+  /// \param slot Ignored.
+  /// \param value Ignored.
+  // clang-format on
+  template<typename T>
+  void operator()(unsigned int /*slot*/, T& value) { operator()(value); }
+
+  // clang-format off
+  /// Thread-safe callback for RDataFrame.
+  /// It will record elapsed times and event statistics, and print a progress bar every second.
+  /// \param value Ignored.
+  // clang-format on
+  template<typename T>
+  void operator()(T& /*value*/) {
+    using namespace std::chrono;
+    // ***************************************************
+    // Warning: Here, everything needs to be thread safe:
+    // ***************************************************
+    fProcessedEvents += fIncrement;
+
+    // We only print every n seconds.
+    if (duration_cast<seconds>(system_clock::now() - fLastPrintTime) < fPrintInterval) return;
+
+    // ***************************************************
+    // Protected by lock from here:
+    // ***************************************************
+    if (!fPrintMutex.try_lock()) return;
+    std::lock_guard<std::mutex> lockGuard(fPrintMutex, std::adopt_lock);
+
+    std::size_t eventCount;
+    seconds elapsedSeconds;
+    std::tie(eventCount, elapsedSeconds) = RecordEvtCountAndTime();
+
+    if (fIsTTY) std::cout << "\r";
+
+    PrintProgressbar(std::cout, eventCount);
+    PrintStats(std::cout, eventCount, elapsedSeconds);
+
+    if (fIsTTY) std::cout << std::flush;
+    else        std::cout << std::endl;
+  }
+
+  std::size_t ComputeMaxEvents() const {
+    std::unique_lock<std::mutex> lock(fSampleStatisticsMutex);
+    std::size_t result = 0;
+    for (const auto & item : fSampleStatistics) result += item.second;
+    return result;
+  }
+
+private:
+  double EvtPerSec() const;
+  std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
+  void PrintStats(std::ostream& stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
+  void PrintProgressbar(std::ostream& stream, std::size_t currentEventCount) const;
+
+  const std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
+  std::chrono::time_point<std::chrono::system_clock> fLastPrintTime = fBeginTime;
+  std::chrono::seconds fPrintInterval{ 1 };
+
+  std::atomic<std::size_t> fProcessedEvents{ 0 };
+  std::size_t fLastProcessedEvents = 0;
+  const std::size_t fIncrement;
+
+  mutable std::mutex fSampleStatisticsMutex;
+  std::map<std::string, ULong64_t> fSampleStatistics;
+
+  std::array<double, 20> fEventsPerSecondStatistics;
+  std::size_t fEventsPerSecondStatisticsIndex = 0;
+
+  const unsigned int fBarWidth;
+
+  std::mutex fPrintMutex;
+  const bool fIsTTY;
+  const bool fUseShellColours;
+};
+
+
 } // namespace RDF
 } // namespace ROOT
 #endif
