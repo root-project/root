@@ -393,10 +393,7 @@ protected:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
-  virtual void computeBatch(double*, size_t, RooBatchCompute::DataMap&) const
-  {
-    throw std::runtime_error("computeBatch not implemented in class " + std::string(ClassName()) );
-  }
+  virtual void computeBatch(double* output, size_t size, RooBatchCompute::DataMap& dataMap) const;
   virtual bool canComputeBatchWithCuda() const { return false; }
 
  protected:
@@ -454,6 +451,7 @@ protected:
 #endif
 
   virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+
 
   //---------- Interface to access batch data ---------------------------
   //
