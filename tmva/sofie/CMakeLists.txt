@@ -11,6 +11,11 @@
 
 #sofie is built only if protobuf is found
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> d3098a7861... Initial Commit for RModelParser_Pytorch
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
@@ -24,6 +29,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   SOURCES
     src/RModel.cxx
     src/SOFIE_common.cxx
+<<<<<<< HEAD
+=======
+  LIBRARIES
+    ${Protobuf_LIBRARIES}
+>>>>>>> d3098a7861... Initial Commit for RModelParser_Pytorch
   DEPENDENCIES
     TMVA
 )
