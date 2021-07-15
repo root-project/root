@@ -18,9 +18,7 @@
 #ifndef ROOT_Minuit2_NumericalDerivator
 #define ROOT_Minuit2_NumericalDerivator
 
-#ifndef ROOT_Math_IFunctionfwd
 #include <Math/IFunctionfwd.h>
-#endif
 
 #include <vector>
 #include "Fit/ParameterSettings.h"

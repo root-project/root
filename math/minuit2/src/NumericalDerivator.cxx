@@ -6,8 +6,8 @@
  * Copyright (c) 2013 , LCG ROOT MathLib Team                         *
  *                                                                    *
  **********************************************************************/
-/*
- * NumericalDerivator.cxx
+/**
+ * \class NumericalDerivator
  *
  *  Original version created on: Aug 14, 2013
  *      Authors: L. Moneta, J. T. Offermann
@@ -78,22 +78,16 @@ void NumericalDerivator::SetErrorLevel(double value)
    fUp = value;
 }
 
-// This function sets internal state based on input parameters. This state
-// setup is used in the actual (partial) derivative calculations.
+/// This function sets internal state based on input parameters. This state
+/// setup is used in the actual (partial) derivative calculations.
 void NumericalDerivator::SetupDifferentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
                                             const std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
    assert(function != nullptr && "function is a nullptr");
 
-   if (fVx.size() != function->NDim()) {
-      fVx.resize(function->NDim());
-   }
-   if (fVxExternal.size() != function->NDim()) {
-      fVxExternal.resize(function->NDim());
-   }
-   if (fVxFValCache.size() != function->NDim()) {
-      fVxFValCache.resize(function->NDim());
-   }
+   fVx.resize(function->NDim());
+   fVxExternal.resize(function->NDim());
+   fVxFValCache.resize(function->NDim());
    std::copy(cx, cx + function->NDim(), fVx.data());
 
    // convert to Minuit external parameters
@@ -251,8 +245,8 @@ double NumericalDerivator::DInt2Ext(const ROOT::Fit::ParameterSettings &paramete
 }
 
 // MODIFIED:
-// This function was not implemented as in Minuit2. Now it copies the behavior
-// of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
+/// This function was not implemented as in Minuit2. Now it copies the behavior
+/// of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
                                             const std::vector<ROOT::Fit::ParameterSettings> &parameters,
                                             std::vector<DerivatorElement> &gradient)
@@ -306,8 +300,7 @@ void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMulti
       double grd = g2 * dirin;
 
       if (parameter->IsBound()) {
-         if (gstep > 0.5)
-            gstep = 0.5;
+         gstep = std::min(gstep, 0.5);
       }
 
       gradient[ix].derivative = grd;
