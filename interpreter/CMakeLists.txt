@@ -442,6 +442,10 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 
   # We are in the case of NOT builtin_llvm
   if (builtin_clang)
+    # remove clang-cpp from CLANG_LINKS_TO_CREATE to avoid clashes with
+    # install-clang-cpp target defined by LLVM's cmake module
+    set(CLANG_LINKS_TO_CREATE clang++ clang-cl)
+
     add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
   endif(builtin_clang)
 
