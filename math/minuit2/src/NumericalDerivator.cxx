@@ -44,39 +44,13 @@ NumericalDerivator::NumericalDerivator(bool always_exactly_mimic_minuit2)
 
 NumericalDerivator::NumericalDerivator(double step_tolerance, double grad_tolerance, unsigned int ncycles,
                                        double error_level, bool always_exactly_mimic_minuit2)
-   : fStepTolerance(step_tolerance), fGradTolerance(grad_tolerance), fNCycles(ncycles), fUp(error_level),
+   : fStepTolerance(step_tolerance), fGradTolerance(grad_tolerance), fUp(error_level), fNCycles(ncycles),
      fAlwaysExactlyMimicMinuit2(always_exactly_mimic_minuit2)
 {
 }
 
-// deep copy constructor
-NumericalDerivator::NumericalDerivator(const NumericalDerivator &other)
-   : fStepTolerance(other.fStepTolerance), fGradTolerance(other.fGradTolerance), fNCycles(other.fNCycles),
-     fUp(other.fUp), fVal(other.fVal), fVx(other.fVx), fVxExternal(other.fVxExternal), fDfmin(other.fDfmin),
-     fVrysml(other.fVrysml), fPrecision(other.fPrecision), fAlwaysExactlyMimicMinuit2(other.fAlwaysExactlyMimicMinuit2),
-     fVxFValCache(other.fVxFValCache)
-{
-}
+NumericalDerivator::NumericalDerivator(const NumericalDerivator &/*other*/) = default;
 
-void NumericalDerivator::SetStepTolerance(double value)
-{
-   fStepTolerance = value;
-}
-
-void NumericalDerivator::SetGradTolerance(double value)
-{
-   fGradTolerance = value;
-}
-
-void NumericalDerivator::SetNCycles(unsigned int value)
-{
-   fNCycles = value;
-}
-
-void NumericalDerivator::SetErrorLevel(double value)
-{
-   fUp = value;
-}
 
 /// This function sets internal state based on input parameters. This state
 /// setup is used in the actual (partial) derivative calculations.
@@ -292,9 +266,9 @@ void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMulti
 
       var2 = Ext2int(*parameter, sav2);
       double vmin = var2 - var;
-      double gsmin = 8. * eps2 * (fabs(var) + eps2);
+      double gsmin = 8. * eps2 * (std::abs(var) + eps2);
       // protect against very small step sizes which can cause dirin to zero and then nan values in grd
-      double dirin = std::max(0.5 * (fabs(vplu) + fabs(vmin)), gsmin);
+      double dirin = std::max(0.5 * (std::abs(vplu) + std::abs(vmin)), gsmin);
       double g2 = 2.0 * fUp / (dirin * dirin);
       double gstep = std::max(gsmin, 0.1 * dirin);
       double grd = g2 * dirin;
@@ -307,16 +281,6 @@ void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMulti
       gradient[ix].second_derivative = g2;
       gradient[ix].step_size = gstep;
    }
-}
-
-bool NumericalDerivator::AlwaysExactlyMimicMinuit2() const
-{
-   return fAlwaysExactlyMimicMinuit2;
-};
-
-void NumericalDerivator::SetAlwaysExactlyMimicMinuit2(bool flag)
-{
-   fAlwaysExactlyMimicMinuit2 = flag;
 }
 
 std::ostream &operator<<(std::ostream &out, const DerivatorElement &value)
