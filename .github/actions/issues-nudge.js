@@ -25,7 +25,7 @@ async function nudge(issue_number) {
   let body = "Hi " + ping + ",\n\n";
   body += "It appears this issue is closed, but wasn't yet added to a project. ";
   body += "Please add upcoming versions that will include the fix, or 'not applicable' otherwise.";
-  body += "\n\nSincerly,\n:robot:\n";
+  body += "\n\nSincerely,\n:robot:\n";
 
   octokit.rest.issues.createComment({
     owner: owner,
