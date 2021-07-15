@@ -542,8 +542,8 @@ class NotebookDrawer(object):
             options = ""
 
         if self.isRCanvas:
-            # width = self.drawableObject.GetSize()[0]
-            # height = self.drawableObject.GetSize()[1]
+            if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
+            if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
             options = ""
 
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
