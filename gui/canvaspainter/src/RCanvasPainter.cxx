@@ -626,14 +626,15 @@ void RCanvasPainter::NewDisplay(const std::string &where)
 {
    CreateWindow();
 
-   auto sz = fCanvas.GetSize();
+   int width = fCanvas.GetWidth();
+   int height = fCanvas.GetHeight();
 
    RWebDisplayArgs args(where);
 
-   if ((sz[0].fVal > 10) && (sz[1].fVal > 10)) {
+   if ((width > 10) && (height > 10)) {
       // extra size of browser window header + ui5 menu
-      args.SetWidth((int) sz[0].fVal + 1);
-      args.SetHeight((int) sz[1].fVal + 40);
+      args.SetWidth(width + 4);
+      args.SetHeight(height + 36);
    }
 
    fWindow->Show(args);
@@ -708,7 +709,7 @@ std::string RCanvasPainter::CreateSnapshot(RDrawable::RDisplayContext &ctxt)
    fCanvas.DisplayPrimitives(*canvitem, ctxt);
 
    canvitem->SetTitle(fCanvas.GetTitle());
-   canvitem->SetWindowSize(fCanvas.GetSize());
+   canvitem->SetWindowSize(fCanvas.GetWidth(), fCanvas.GetHeight());
 
    canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
    canvitem->SetObjectID("canvas"); // for canvas itself use special id
