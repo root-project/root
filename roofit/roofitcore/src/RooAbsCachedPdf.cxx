@@ -75,7 +75,10 @@ double RooAbsCachedPdf::getValV(const RooArgSet* nset) const
   }
 
   // Calculate current unnormalized value of object
-  return _value = getCache(nset)->pdf()->getVal(nset) ;
+  auto * cachedPdf = getCache(nset)->pdf();
+  double value = cachedPdf->getVal(nset) ;
+  _norm = cachedPdf->_norm;
+  return _value = value ;
 }
 
 
