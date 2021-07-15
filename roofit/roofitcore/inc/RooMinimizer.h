@@ -50,10 +50,9 @@ class RooMinimizer : public TObject {
 public:
   enum class FcnMode { classic, gradient };
 
-  RooMinimizer(RooAbsReal& function) ;
-  template <typename MinimizerFcn = RooMinimizerFcn>
-  static std::unique_ptr<RooMinimizer> create(RooAbsReal &function);
-  virtual ~RooMinimizer() ;
+  explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
+  static std::unique_ptr<RooMinimizer> create(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
+  ~RooMinimizer() override;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
@@ -127,9 +126,6 @@ protected:
   bool fitFcn() const;
 
 private:
-  template <typename MinimizerFcn = RooMinimizerFcn>
-  RooMinimizer(RooAbsReal &function, MinimizerFcn* /* used only for template deduction */);
-
   Int_t _printLevel = 1;
   Int_t _status = -99;
   Bool_t _profile = kFALSE;
@@ -153,6 +149,5 @@ private:
 	
   ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
-
 
 #endif
