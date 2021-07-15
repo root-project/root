@@ -61,10 +61,10 @@ public:
                                const DerivatorElement &previous);
 
    double GetValue() const { return fVal; }
-   void SetStepTolerance(double value);
-   void SetGradTolerance(double value);
-   void SetNCycles(unsigned int value);
-   void SetErrorLevel(double value);
+   inline void SetStepTolerance(double value) { fStepTolerance = value; }
+   inline void SetGradTolerance(double value) { fGradTolerance = value; }
+   inline void SetNCycles(unsigned int value) { fNCycles = value; }
+   inline void SetErrorLevel(double value) { fUp = value; }
 
    double Int2ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
    double Ext2int(const ROOT::Fit::ParameterSettings &parameter, double val) const;
@@ -74,9 +74,9 @@ public:
                            const std::vector<ROOT::Fit::ParameterSettings> &parameters,
                            std::vector<DerivatorElement> &gradient);
 
-   bool AlwaysExactlyMimicMinuit2() const;
-   void SetAlwaysExactlyMimicMinuit2(bool flag);
-   
+   inline bool AlwaysExactlyMimicMinuit2() const { return fAlwaysExactlyMimicMinuit2; }
+   inline void SetAlwaysExactlyMimicMinuit2(bool flag) { fAlwaysExactlyMimicMinuit2 = flag; }
+
 private:
    double fStepTolerance = 0.5;
    double fGradTolerance = 0.1;
@@ -99,7 +99,6 @@ private:
 
    unsigned int fNCycles = 2;
    bool fAlwaysExactlyMimicMinuit2;
-
 
 };
 
