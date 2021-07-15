@@ -13,16 +13,14 @@
 #ifndef ROOT_TEST_LIB_H
 #define ROOT_TEST_LIB_H
 
-#include <sstream>
-
-#include <memory>  // make_unique
-
 #include "RooWorkspace.h"
 #include "RooRandom.h"
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h" // for the dynamic cast to have a complete type
 
+#include <sstream>
+#include <memory>  // make_unique
 
 RooAbsPdf * generate_1D_gaussian_pdf(RooWorkspace &w)
 {
@@ -162,23 +160,6 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
   }
 
   return std::make_tuple(std::move(nll), sum, data, std::move(all_values));
-}
-
-
-class Hex {
-public:
-  explicit Hex(double n) : number_(n) {}
-  operator double() const { return number_; }
-  bool operator==(const Hex& other) {
-    return double(*this) == double(other);
-  }
-
-private:
-  double number_;
-};
-
-::std::ostream& operator<<(::std::ostream& os, const Hex& hex) {
-  return os << std::hexfloat << double(hex) << std::defaultfloat;  // whatever needed to print bar to os
 }
 
 

@@ -95,11 +95,66 @@ void RooMinimizer::cleanup()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// Construct MINUIT interface to given function. Function can be anything,
+/// but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
+/// (implemented by RooChi2Var). Other frequent use cases are a RooAddition
+/// of a RooNLLVar plus a penalty or constraint term. This class propagates
+/// all RooFit information (floating parameters, their values and errors)
+/// to MINUIT before each MINUIT call and propagates all MINUIT information
+/// back to the RooFit object at the end of each call (updated parameter
+/// values, their (asymmetric errors) etc. The default MINUIT error level
+/// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
+/// value of the input function.
 
-RooMinimizer::RooMinimizer(RooAbsReal &function) :
-   RooMinimizer::RooMinimizer(function, static_cast<RooMinimizerFcn*>(nullptr))
+RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcnMode)
 {
+   RooSentinel::activate();
+
+   if (_theFitter) {
+      delete _theFitter;
+   }
+   _theFitter = new ROOT::Fit::Fitter;
+   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+   setEps(1.0); // default tolerance
+
+   switch (_fcnMode) {
+   case FcnMode::classic: {
+      _fcn = new RooMinimizerFcn(&function, this, _verbose);
+      break;
+   }
+   case FcnMode::gradient: {
+      _fcn = new RooGradMinimizerFcn(&function, this, _verbose);
+      break;
+   }
+   default: {
+      throw std::logic_error("In RooMinimizer constructor: fcnMode has an unsupported value!");
+   }
+   }
+
+   // default max number of calls
+   _theFitter->Config().MinimizerOptions().SetMaxIterations(500 * _fcn->getNDim());
+   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500 * _fcn->getNDim());
+
+   // Shut up for now
+   setPrintLevel(-1);
+
+   // Use +0.5 for 1-sigma errors
+   setErrorLevel(function.defaultErrorLevel());
+
+   // Declare our parameters to MINUIT
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst(), _verbose);
+
+   // Now set default verbosity
+   if (RooMsgService::instance().silentMode()) {
+      setPrintLevel(-1);
+   } else {
+      setPrintLevel(1);
+   }
+}
+
+// static function
+std::unique_ptr<RooMinimizer> RooMinimizer::create(RooAbsReal &function, FcnMode fcnMode) {
+   return std::make_unique<RooMinimizer>(function, fcnMode);
 }
 
 
@@ -265,17 +320,15 @@ bool RooMinimizer::fitFcn() const {
 
    switch (_fcnMode) {
    case FcnMode::classic: {
-      ret = _theFitter->FitFCN(*static_cast<RooMinimizerFcn *>(_fcn));
+      ret = _theFitter->FitFCN(*dynamic_cast<RooMinimizerFcn *>(_fcn));
       break;
    }
    case FcnMode::gradient: {
-      auto thing = dynamic_cast<RooGradMinimizerFcn *>(_fcn);
-      if (thing != nullptr) {
-         ret = _theFitter->FitFCN(*thing);
-      } else {
-         throw std::logic_error("In RooMinimizer::fitFcn: Minimizer fcnMode was set to gradient, but fit function type does not match RooGradMinimizerFcn!");
-      }
+      ret = _theFitter->FitFCN(*dynamic_cast<RooGradMinimizerFcn *>(_fcn));
       break;
+   }
+   default: {
+      throw std::logic_error("In RooMinimizer::fitFcn: _fcnMode has an unsupported value!");
    }
    }
 
@@ -812,15 +865,13 @@ ROOT::Math::IMultiGenFunction* RooMinimizer::getMultiGenFcn() const
    } else {
       switch (_fcnMode) {
       case FcnMode::classic: {
-         return static_cast<ROOT::Math::IMultiGenFunction *>(static_cast<RooMinimizerFcn *>(_fcn));
+         return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooMinimizerFcn *>(_fcn));
       }
       case FcnMode::gradient: {
-         auto thing = dynamic_cast<RooGradMinimizerFcn *>(_fcn);
-         if (thing != nullptr) {
-            return static_cast<ROOT::Math::IMultiGenFunction *>(thing);
-         } else {
-            throw std::logic_error("In RooMinimizer::fitterFcn: Minimizer fcnMode was set to gradient, but fit function type does not match RooGradMinimizerFcn!");
-         }
+         return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooGradMinimizerFcn *>(_fcn));
+      }
+      default: {
+         throw std::logic_error("In RooMinimizer::getMultiGenFcn: _fcnMode has an unsupported value!");
       }
       }
    }
@@ -832,15 +883,13 @@ const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
    if (getFitterMultiGenFcn()) {
       switch (_fcnMode) {
       case FcnMode::classic: {
-         return static_cast<RooAbsMinimizerFcn *>(static_cast<RooMinimizerFcn *>(getFitterMultiGenFcn()));
+         return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooMinimizerFcn *>(getFitterMultiGenFcn()));
       }
       case FcnMode::gradient: {
-         auto thing = dynamic_cast<RooGradMinimizerFcn *>(getFitterMultiGenFcn());
-         if (thing != nullptr) {
-            return static_cast<RooAbsMinimizerFcn *>(thing);
-         } else {
-            throw std::logic_error("In RooMinimizer::fitterFcn: Minimizer fcnMode was set to gradient, but fit function type does not match RooGradMinimizerFcn!");
-         }
+         return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooGradMinimizerFcn *>(getFitterMultiGenFcn()));
+      }
+      default: {
+         throw std::logic_error("In RooMinimizer::fitterFcn: _fcnMode has an unsupported value!");
       }
       }
    } else {

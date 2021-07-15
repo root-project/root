@@ -71,7 +71,7 @@ TEST(GradMinimizer, Gaussian1D)
 
       *values = *savedValues;
 
-      std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
+      std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
       m1->setMinimizerType("Minuit2");
 
       m1->setStrategy(0);
@@ -132,7 +132,7 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
    // when c++17 support arrives, change to this:
    // auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
    m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
@@ -141,208 +141,6 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
 
    m1->migrad();
 }
-
-/*
-TEST(GradMinimizer, Gaussian2DVarToConst) {
-  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-
-  // produce the same random stuff every time
-  RooRandom::randomGenerator()->SetSeed(1);
-
-  RooWorkspace w = RooWorkspace();
-
-  w.factory("Gaussian::g1(x[-5,5],mu1[0,-3,3],sigma1[1])");
-  RooRealVar *mu1 = w.var("mu1");
-
-  w.factory("Gaussian::g2(x[-5,5],mu2[4,-3,12],sigma2[2.5])");
-  RooRealVar *mu2 = w.var("mu2");
-
-//  RooArgSet pdf_set = w.allPdfs();
-
-  // create event counts for all pdfs
-//  RooArgSet count_set;
-
-  // ... for the gaussians
-  RooRealVar N1("Nsig1", "#signal events component 1", 5000, 0., 20000);
-  w.import(N1);
-  RooRealVar N2("Nsig2", "#signal events component 2", 5000, 0., 20000);
-  w.import(N2);
-//  count_set.add(*w.arg("Nsig1"));
-//  count_set.add(*w.arg("Nsig2"));
-
-  RooAddPdf sum("sum", "2 gaussians", w.allPdfs(), RooArgSet(N1, N2));
-
-  auto x = w.var("x");
-  RooDataSet *data = sum.generate(RooArgSet(*x), 10000);
-  mu1->setVal(-2.9);
-  mu2->setVal(1);
-
-  auto nll = sum.createNLL(*data);
-
-  // save initial values for the start of all minimizations
-  RooArgSet values = RooArgSet(RooArgSet(*mu1, *mu2, N1, N2, sum, *nll), w.allPdfs(), "all values");
-
-  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
-  if (savedValues == nullptr) {
-    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
-  }
-
-  // --------
-
-  RooMinimizer m0(*nll);
-  m0.setMinimizerType("Minuit2");
-
-  m0.setStrategy(0);
-  m0.setPrintLevel(-1);
-
-  m0.migrad();
-
-  values = *savedValues;
-  mu1->setConstant(kTRUE);
-
-  m0.migrad();
-
-  RooFitResult *m0result = m0.lastMinuitFit();
-  double minNll0 = m0result->minNll();
-  double edm0 = m0result->edm();
-  double mu1_0 = mu1->getVal();
-  double muerr1_0 = mu1->getError();
-  double mu2_0 = mu2->getVal();
-  double muerr2_0 = mu2->getError();
-
-  values = *savedValues;
-  mu1->setConstant(kFALSE);
-
-  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
-  m1.setMinimizerType("Minuit2");
-
-  m1.setStrategy(0);
-  m1.setPrintLevel(-1);
-
-  m1.migrad();
-
-  values = *savedValues;
-  mu1->setConstant(kTRUE);
-
-  m1.migrad();
-
-  RooFitResult *m1result = m1.lastMinuitFit();
-  double minNll1 = m1result->minNll();
-  double edm1 = m1result->edm();
-  double mu1_1 = mu1->getVal();
-  double muerr1_1 = mu1->getError();
-  double mu2_1 = mu2->getVal();
-  double muerr2_1 = mu2->getError();
-
-  EXPECT_EQ(minNll0, minNll1);
-  EXPECT_EQ(mu1_0, mu1_1);
-  EXPECT_EQ(muerr1_0, muerr1_1);
-  EXPECT_EQ(mu2_0, mu2_1);
-  EXPECT_EQ(muerr2_0, muerr2_1);
-  EXPECT_EQ(edm0, edm1);
-}
-
-TEST(GradMinimizer, Gaussian2DConstToVar) {
-  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-
-  // produce the same random stuff every time
-  RooRandom::randomGenerator()->SetSeed(1);
-
-  RooWorkspace w = RooWorkspace();
-
-  w.factory("Gaussian::g1(x[-5,5],mu1[0,-3,3],sigma1[1])");
-  RooRealVar *mu1 = w.var("mu1");
-
-  w.factory("Gaussian::g2(x[-5,5],mu2[4,-3,12],sigma2[2.5])");
-  RooRealVar *mu2 = w.var("mu2");
-
-  RooArgSet pdf_set = w.allPdfs();
-
-  // create event counts for all pdfs
-  RooArgSet count_set;
-
-  // ... for the gaussians
-  RooRealVar N1("Nsig1", "#signal events component 1", 5000, 0., 20000);
-  w.import(N1);
-  RooRealVar N2("Nsig2", "#signal events component 2", 5000, 0., 20000);
-  w.import(N2);
-  count_set.add(*w.arg("Nsig1"));
-  count_set.add(*w.arg("Nsig2"));
-
-  RooAddPdf sum("sum", "2 gaussians", pdf_set, count_set);
-
-  auto x = w.var("x");
-  RooDataSet *data = sum.generate(RooArgSet(*x), 10000);
-  mu1->setVal(-2.9);
-  mu2->setVal(1);
-
-  auto nll = sum.createNLL(*data);
-
-  // save initial values for the start of all minimizations
-  RooArgSet values = RooArgSet(*mu1, *mu2, sum, *nll);
-
-  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
-  if (savedValues == nullptr) {
-    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
-  }
-
-  // --------
-
-  RooMinimizer m0(*nll);
-  m0.setMinimizerType("Minuit2");
-
-  m0.setStrategy(0);
-  m0.setPrintLevel(-1);
-
-  mu1->setConstant(kTRUE);
-
-  m0.migrad();
-
-  values = *savedValues;
-  mu1->setConstant(kFALSE);
-
-  m0.migrad();
-
-  RooFitResult *m0result = m0.lastMinuitFit();
-  double minNll0 = m0result->minNll();
-  double edm0 = m0result->edm();
-  double mu1_0 = mu1->getVal();
-  double muerr1_0 = mu1->getError();
-  double mu2_0 = mu2->getVal();
-  double muerr2_0 = mu2->getError();
-
-  values = *savedValues;
-  mu1->setConstant(kTRUE);
-
-  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
-  m1.setMinimizerType("Minuit2");
-
-  m1.setStrategy(0);
-  m1.setPrintLevel(-1);
-
-  m1.migrad();
-
-  values = *savedValues;
-  mu1->setConstant(kFALSE);
-
-  m1.migrad();
-
-  RooFitResult *m1result = m1.lastMinuitFit();
-  double minNll1 = m1result->minNll();
-  double edm1 = m1result->edm();
-  double mu1_1 = mu1->getVal();
-  double muerr1_1 = mu1->getError();
-  double mu2_1 = mu2->getVal();
-  double muerr2_1 = mu2->getError();
-
-  EXPECT_EQ(minNll0, minNll1);
-  EXPECT_EQ(mu1_0, mu1_1);
-  EXPECT_EQ(muerr1_0, muerr1_1);
-  EXPECT_EQ(mu2_0, mu2_1);
-  EXPECT_EQ(muerr2_0, muerr2_1);
-  EXPECT_EQ(edm0, edm1);
-}
-*/
 
 TEST(GradMinimizer, GaussianND)
 {
@@ -405,7 +203,7 @@ TEST(GradMinimizer, GaussianND)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*(nll.get()));
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*(nll.get()), RooMinimizer::FcnMode::gradient);
 
    m1->setStrategy(0);
    m1->setPrintLevel(-1);
@@ -468,7 +266,7 @@ TEST(GradMinimizerReverse, GaussianND)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
 
    m0->setMinimizerType("Minuit2");
 
@@ -652,7 +450,7 @@ TEST(GradMinimizer, BranchingPDF)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
 
    m1->setStrategy(0);
    m1->setPrintLevel(-1);
@@ -769,7 +567,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
    all_values.Print("v");
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
    m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
@@ -840,7 +638,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
    RooDataSet *data = static_cast<RooDataSet *>(w.data(""));
    auto nll = sum.createNLL(*data);
 
-   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
    m0->setMinimizerType("Minuit2");
    m0->setStrategy(0);
    m0->migrad();
