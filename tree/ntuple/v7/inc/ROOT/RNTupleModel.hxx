@@ -37,10 +37,9 @@ class RCollectionNTupleWriter;
 \ingroup NTuple
 \brief The RNTupleModel encapulates the schema of an ntuple.
 
-The ntuple model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
+The ntuple model comprises a collection of hierarchically organized fields. From a model, "entries"
 can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
 that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
-A model needs to be frozen before it can be used to create a live ntuple.
 */
 // clang-format on
 class RNTupleModel {
