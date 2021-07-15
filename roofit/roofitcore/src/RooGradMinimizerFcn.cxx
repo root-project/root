@@ -38,7 +38,7 @@
 #include <iostream>
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList(*funct->getParameters(RooArgSet())), context, verbose),
+   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters({})) ), context, verbose),
      _grad(getNDim()), _grad_params(getNDim()), _funct(funct),
      has_been_calculated(getNDim())
 {
