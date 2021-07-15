@@ -21,25 +21,21 @@
 
 #include "RooGradMinimizerFcn.h"
 
-#include <iostream>
-
-#include "Riostream.h"
-
-#include "TIterator.h"
-#include "TClass.h"
-
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
-
 #include "RooMinimizer.h"
 
+#include "Riostream.h"
+#include "TIterator.h"
+#include "TClass.h"
 #include "Fit/Fitter.h"
 #include "Math/Minimizer.h"
 
 #include <algorithm> // std::equal
+#include <iostream>
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
    : RooAbsMinimizerFcn(RooArgList(*funct->getParameters(RooArgSet())), context, verbose),
@@ -49,9 +45,9 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *contex
    // TODO: added "parameters" after rewrite in april 2020, check if correct
    auto parameters = _context->fitter()->Config().ParamsSettings();
    synchronizeParameterSettings(parameters, kTRUE, verbose);
-   synchronize_gradient_parameter_settings(parameters);
-   set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
-   set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
+   synchronizeGradientParameterSettings(parameters);
+   setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+   setErrorLevel(ROOT::Math::MinimizerOptions::DefaultErrorDef());
 }
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn &other)
@@ -65,7 +61,7 @@ ROOT::Math::IMultiGradFunction *RooGradMinimizerFcn::Clone() const
    return new RooGradMinimizerFcn(*this);
 }
 
-void RooGradMinimizerFcn::synchronize_gradient_parameter_settings(
+void RooGradMinimizerFcn::synchronizeGradientParameterSettings(
    std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const
 {
    _gradf.SetInitialGradient(_context->getMultiGenFcn(), parameter_settings, _grad);
@@ -149,7 +145,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
    return fvalue;
 }
 
-void RooGradMinimizerFcn::reset_has_been_calculated_flags() const
+void RooGradMinimizerFcn::resetHasBeenCalculatedFlags() const
 {
    for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
       *it = false;
@@ -157,7 +153,7 @@ void RooGradMinimizerFcn::reset_has_been_calculated_flags() const
    none_have_been_calculated = true;
 }
 
-bool RooGradMinimizerFcn::sync_parameter(double x, std::size_t ix) const
+bool RooGradMinimizerFcn::syncParameter(double x, std::size_t ix) const
 {
    bool parameter_has_changed = (_grad_params[ix] != x);
 
@@ -168,14 +164,14 @@ bool RooGradMinimizerFcn::sync_parameter(double x, std::size_t ix) const
       SetPdfParamVal(ix, x);
 
       if (!none_have_been_calculated) {
-         reset_has_been_calculated_flags();
+         resetHasBeenCalculatedFlags();
       }
    }
 
    return parameter_has_changed;
 }
 
-bool RooGradMinimizerFcn::sync_parameters(const double *x) const
+bool RooGradMinimizerFcn::syncParameters(const double *x) const
 {
    bool has_been_synced = false;
 
@@ -193,13 +189,13 @@ bool RooGradMinimizerFcn::sync_parameters(const double *x) const
    }
 
    if (has_been_synced) {
-      reset_has_been_calculated_flags();
+      resetHasBeenCalculatedFlags();
    }
 
    return has_been_synced;
 }
 
-void RooGradMinimizerFcn::run_derivator(unsigned int i_component) const
+void RooGradMinimizerFcn::runDerivator(unsigned int i_component) const
 {
    // check whether the derivative was already calculated for this set of parameters
    if (!has_been_calculated[i_component]) {
@@ -214,81 +210,29 @@ void RooGradMinimizerFcn::run_derivator(unsigned int i_component) const
 
 double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int i_component) const
 {
-   sync_parameters(x);
-   run_derivator(i_component);
+   syncParameters(x);
+   runDerivator(i_component);
    return _grad[i_component].derivative;
-}
-
-bool RooGradMinimizerFcn::returnsInMinuit2ParameterSpace() const
-{
-   return true;
-}
-
-unsigned int RooGradMinimizerFcn::NDim() const
-{
-   return getNDim();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooGradMinimizerFcn::set_strategy(int istrat)
+void RooGradMinimizerFcn::setStrategy(int istrat)
 {
    assert(istrat >= 0);
    ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(istrat));
 
-   set_step_tolerance(strategy.GradientStepTolerance());
-   set_grad_tolerance(strategy.GradientTolerance());
-   set_ncycles(strategy.GradientNCycles());
+   setStepTolerance(strategy.GradientStepTolerance());
+   setGradTolerance(strategy.GradientTolerance());
+   setNcycles(strategy.GradientNCycles());
 }
 
 Bool_t
 RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose)
 {
    Bool_t returnee = synchronizeParameterSettings(parameters, optConst, verbose);
-   synchronize_gradient_parameter_settings(parameters);
-   set_strategy(_context->fitter()->Config().MinimizerOptions().Strategy());
-   set_error_level(_context->fitter()->Config().MinimizerOptions().ErrorDef());
+   synchronizeGradientParameterSettings(parameters);
+   setStrategy(_context->fitter()->Config().MinimizerOptions().Strategy());
+   setErrorLevel(_context->fitter()->Config().MinimizerOptions().ErrorDef());
    return returnee;
-}
-
-void RooGradMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
-{
-   _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-}
-
-void RooGradMinimizerFcn::set_step_tolerance(double step_tolerance) const
-{
-   _gradf.set_step_tolerance(step_tolerance);
-}
-void RooGradMinimizerFcn::set_grad_tolerance(double grad_tolerance) const
-{
-   _gradf.set_grad_tolerance(grad_tolerance);
-}
-void RooGradMinimizerFcn::set_ncycles(unsigned int ncycles) const
-{
-   _gradf.set_ncycles(ncycles);
-}
-void RooGradMinimizerFcn::set_error_level(double error_level) const
-{
-   _gradf.set_error_level(error_level);
-}
-
-std::string RooGradMinimizerFcn::getFunctionName() const
-{
-   return _funct->GetName();
-}
-
-std::string RooGradMinimizerFcn::getFunctionTitle() const
-{
-   return _funct->GetTitle();
-}
-
-void RooGradMinimizerFcn::setOffsetting(Bool_t flag)
-{
-   _funct->enableOffsetting(flag);
-}
-
-void RooGradMinimizerFcn::Gradient(const double *x, double *grad) const
-{
-   ROOT::Math::IMultiGradFunction::Gradient(x, grad);
 }
