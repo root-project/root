@@ -120,6 +120,7 @@ else()
   if(MSVC AND NOT win_broken_tests)
     set(roofit_veto roofit/rf104_classfactory.C
                     roofit/rf104_classfactory.py
+                    roofit/rf316_llratioplot.py
                     roofit/rf401_importttreethx.C
                     roofit/rf401_importttreethx.py
                     roofit/rf512_wsfactory_oper.C
