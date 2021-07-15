@@ -174,10 +174,10 @@ std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary
    {
       idx = z;
       data = col->GetDataPtr(idx);
-      res +=  TString::Format("%s %d",  name.c_str(), idx);
+      res +=  std::string(TString::Format("%s %d",  name.c_str(), idx));
       for (auto &t : fTooltipExpressions) {
          std::string eval = t->fTooltipFunction.EvalExpr(data);
-         res +=  TString::Format("\n  %s = %s", t->fTooltipTitle.c_str(), eval.c_str());
+         res +=  std::string(TString::Format("\n  %s = %s", t->fTooltipTitle.c_str(), eval.c_str()));
       }
       res += "\n";
    }
@@ -346,7 +346,7 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
                ms += " ";
                ms += ma->GetName();
             }
-            char* entry = TString::Format("i.%s(%s)",meth->GetName(),ms.Data());
+            std::string entry(TString::Format("i.%s(%s)",meth->GetName(),ms.Data()).Data());
             nlohmann::json jm ;
             jm["f"] = entry;
             jm["r"] = meth->GetReturnTypeName();

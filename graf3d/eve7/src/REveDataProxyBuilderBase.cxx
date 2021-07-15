@@ -181,7 +181,7 @@ REveDataProxyBuilderBase::CreateProduct( const std::string& viewType, const REve
    if (m_collection)
    {
       // debug info in eve browser
-      product->m_elements->SetName(TString::Format("product %s viewtype %s", m_collection->GetCName(), viewType.c_str()));
+      product->m_elements->SetName(TString::Format("product %s viewtype %s", m_collection->GetCName(), viewType.c_str()).Data());
    }
    return product->m_elements;
 }

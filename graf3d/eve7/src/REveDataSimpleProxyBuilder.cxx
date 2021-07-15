@@ -110,7 +110,7 @@ REveCompound *REveDataSimpleProxyBuilder::GetHolder(REveElement *product, int id
       spb->lastChildIdx = idx;
       spb->map.emplace(idx, itemHolder);
       itemHolder->SetMainColor(Collection()->GetDataItem(idx)->GetMainColor());
-      std::string name = TString::Format("%s %d", Collection()->GetCName(), idx);
+      std::string name(TString::Format("%s %d", Collection()->GetCName(), idx));
       itemHolder->SetName(name);
    }
 
