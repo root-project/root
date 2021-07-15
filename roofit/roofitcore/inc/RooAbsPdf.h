@@ -233,13 +233,19 @@ public:
       const RooArgSet* normSet = nullptr) const;
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
+  void computeBatch(double* output, size_t size, RooBatchCompute::DataMap&) const;
+
   /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 
     return getNorm(&nset) ; 
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
   inline const RooAbsReal* getIntegral(RooArgSet const& set) const {
-    if(!_norm) getVal(&set);
+    if(!_norm) {
+      syncNormalization(&set,true) ;
+      getVal(set);
+    }
+    assert(_norm != nullptr);
     return _norm;
   }
 
