@@ -102,7 +102,7 @@ public:
    RCanvasDisplayItem() = default;
    virtual ~RCanvasDisplayItem() = default;
    void SetTitle(const std::string &title) { fTitle = title; }
-   void SetWindowSize(const std::array<RPadLength::Pixel, 2> &win) { fWinSize[0] = (int) win[0].fVal; fWinSize[1] = (int) win[1].fVal; }
+   void SetWindowSize(int width, int height) { fWinSize[0] = width; fWinSize[1] = height; }
 
    void BuildFullId(const std::string &prefix) override
    {

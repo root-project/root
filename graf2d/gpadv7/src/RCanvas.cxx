@@ -194,10 +194,10 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
    if (!fPainter)
       return false;
 
-   auto width = fSize[0].fVal;
-   auto height = fSize[1].fVal;
+   int width = GetWidth();
+   int height = GetHeight();
 
-   return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
+   return fPainter->ProduceBatchOutput(filename, width > 1 ? width : 800, height > 1 ? height : 600);
 }
 
 //////////////////////////////////////////////////////////////////////////

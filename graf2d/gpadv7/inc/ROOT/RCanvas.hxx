@@ -52,8 +52,11 @@ private:
    /// Title of the canvas.
    std::string fTitle;
 
-   /// Size of the canvas in pixels,
-   std::array<RPadLength::Pixel, 2> fSize;
+   /// Width of the canvas in pixels
+   int fWidth{0};
+
+   /// Height of the canvas in pixels
+   int fHeight{0};
 
    /// Modify counter, incremented every time canvas is changed
    Version_t fModified{1}; ///<!
@@ -88,23 +91,24 @@ public:
    /// Access to the top-most canvas, if any (non-const version).
    RCanvas *GetCanvas() override { return this; }
 
-   /// Return canvas pixel size as array with two elements - width and height
-   const std::array<RPadLength::Pixel, 2> &GetSize() const { return fSize; }
-
-   /// Set canvas pixel size as array with two elements - width and height
-   RCanvas &SetSize(const std::array<RPadLength::Pixel, 2> &sz)
-   {
-      fSize = sz;
-      return *this;
-   }
-
    /// Set canvas pixel size - width and height
-   RCanvas &SetSize(const RPadLength::Pixel &width, const RPadLength::Pixel &height)
+   void SetSize(int width, int height)
    {
-      fSize[0] = width;
-      fSize[1] = height;
-      return *this;
+      fWidth = width;
+      fHeight = height;
    }
+
+   /// Set canvas width
+   void SetWidth(int width) { fWidth = width; }
+
+   /// Set canvas height
+   void SetHeight(int height) { fHeight = height; }
+
+   /// Get canvas width
+   int GetWidth() const { return fWidth; }
+
+   /// Get canvas height
+   int GetHeight() const { return fHeight; }
 
    /// Display the canvas.
    void Show(const std::string &where = "");
