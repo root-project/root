@@ -76,14 +76,18 @@ public:
                            const std::vector<ROOT::Fit::ParameterSettings> &parameters,
                            std::vector<DerivatorElement> &gradient);
 
+   bool AlwaysExactlyMimicMinuit2() const;
+   void SetAlwaysExactlyMimicMinuit2(bool flag);
+   
 private:
    double fStepTolerance = 0.5;
    double fGradTolerance = 0.1;
-   unsigned int fNCycles = 2;
    double fUp = 1;
    double fVal = 0;
 
-   std::vector<double> fVx, fVxExternal;
+   std::vector<double> fVx;
+   std::vector<double> fVxExternal;
+   std::vector<double> fVxFValCache;
    double fDfmin;
    double fVrysml;
 
@@ -95,15 +99,10 @@ private:
    ROOT::Minuit2::SqrtUpParameterTransformation fUpperLimTrafo;
    ROOT::Minuit2::SqrtLowParameterTransformation fLowerLimTrafo;
 
-private:
+   unsigned int fNCycles = 2;
    bool fAlwaysExactlyMimicMinuit2;
 
-public:
-   bool AlwaysExactlyMimicMinuit2() const;
-   void SetAlwaysExactlyMimicMinuit2(bool flag);
 
-private:
-   std::vector<double> fVxFValCache;
 };
 
 std::ostream &operator<<(std::ostream &out, const DerivatorElement &value);
