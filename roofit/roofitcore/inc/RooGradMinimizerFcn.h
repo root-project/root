@@ -16,58 +16,55 @@
 #ifndef ROO_GRAD_MINIMIZER_FCN
 #define ROO_GRAD_MINIMIZER_FCN
 
-#include <vector>
+#include "RooAbsMinimizerFcn.h"
 
 #include "Minuit2/MnStrategy.h"
-#include "Minuit2/MnMatrix.h"  // MnAlgebraicVector
-#include "Math/IFunction.h"  // IMultiGradFunction
+#include "Minuit2/MnMatrix.h" // MnAlgebraicVector
+#include "Math/IFunction.h"   // IMultiGradFunction
 #include "Fit/ParameterSettings.h"
 #include "Minuit2/NumericalDerivator.h"
 
-#include "RooAbsMinimizerFcn.h"
+#include <vector>
 
 class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
    RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose = false);
-   RooGradMinimizerFcn(const RooGradMinimizerFcn& other);
+   RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
    ROOT::Math::IMultiGradFunction *Clone() const override;
 
-   ROOT::Minuit2::MnStrategy get_strategy() const;
-   double get_error_def() const;
-   void set_strategy(int istrat);
+   ROOT::Minuit2::MnStrategy getStrategy() const;
+   double getErrorDef() const;
+   void setStrategy(int istrat);
 
    Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst,
                       Bool_t verbose = kFALSE) override;
 
-   void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
+   void synchronizeGradientParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
 
-   bool returnsInMinuit2ParameterSpace() const override;
-
-   unsigned int NDim() const override;
-
-   void set_step_tolerance(double step_tolerance) const;
-   void set_grad_tolerance(double grad_tolerance) const;
-   void set_ncycles(unsigned int ncycles) const;
-   void set_error_level(double error_level) const;
-
-   std::string getFunctionName() const override;
-   std::string getFunctionTitle() const override;
-
-   void setOffsetting(Bool_t flag) override;
+   inline bool returnsInMinuit2ParameterSpace() const override { return true; }
+   inline unsigned int NDim() const override { return getNDim(); }
+   inline void setStepTolerance(double step_tolerance) const { _gradf.SetStepTolerance(step_tolerance); }
+   inline void setGradTolerance(double grad_tolerance) const { _gradf.SetGradTolerance(grad_tolerance); }
+   inline void setNcycles(unsigned int ncycles) const { _gradf.SetNCycles(ncycles); }
+   inline void setErrorLevel(double error_level) const { _gradf.set_error_level(error_level); }
+   inline std::string getFunctionName() const override { return _funct->GetName(); }
+   inline std::string getFunctionTitle() const override { return _funct->GetTitle(); }
+   inline void setOffsetting(Bool_t flag) override { _funct->enableOffsetting(flag); }
 
 private:
-   void run_derivator(unsigned int i_component) const;
+   void runDerivator(unsigned int i_component) const;
 
-   void reset_has_been_calculated_flags() const;
-   bool sync_parameter(double x, std::size_t ix) const;
-   bool sync_parameters(const double *x) const;
+   void resetHasBeenCalculatedFlags() const;
+   bool syncParameter(double x, std::size_t ix) const;
+   bool syncParameters(const double *x) const;
 
-   void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override;
+   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override
+   {
+      _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+   }
 
 public:
-   enum class GradientCalculatorMode {
-      ExactlyMinuit2, AlmostMinuit2
-   };
+   enum class GradientCalculatorMode { ExactlyMinuit2, AlmostMinuit2 };
 
 private:
    // IMultiGradFunction overrides
@@ -79,14 +76,11 @@ private:
 protected:
    mutable std::vector<ROOT::Minuit2::DerivatorElement> _grad;
    mutable std::vector<double> _grad_params;
+
 private:
    mutable ROOT::Minuit2::NumericalDerivator _gradf;
    RooAbsReal *_funct;
    mutable std::vector<bool> has_been_calculated;
    mutable bool none_have_been_calculated = false;
-
-public:
-   // for debugging, wraps ROOT::Math::IMultiGradFunction::Gradient, can be used for further inspection:
-   void Gradient(const double *x, double *grad) const override;
 };
 #endif
