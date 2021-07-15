@@ -41,7 +41,7 @@ Concepts
 
 At the **logical layer**, the user defines a data model using the RNTupleModel class.
 The data model is a collection of serializable C++ types with associated names, similar to branches in a TTree.
-The data model can contain (nested) collection, e.g., a type can be `std::vector<std::vector<float>>`.
+The data model can contain (nested) collections, e.g., a type can be `std::vector<std::vector<float>>`.
 
 Each serializable type is represented by a **field**, concretely by a templated version of RField,
 e.g. `RField<double>`. A field can generate or adopt an associated **value**, which represents a memory location
@@ -59,6 +59,6 @@ decoupled from the high-level C++ logic.  The physical layer implements an abstr
 so that dedicated implementations for key-value stores and other storage systems are conceivable.
 At this point, the only provided backend stores the pages in ROOT files.
 
-NTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
+RNTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
 consecutive entries.  Clusters provide a unit of writing and will provide the means for parallel writing of data
 in a future version of RNTuple.
