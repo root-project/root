@@ -214,7 +214,11 @@ public:
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
   inline const RooAbsReal* getIntegral(RooArgSet const& set) const {
-    if(!_norm) getVal(&set);
+    if(!_norm) {
+      syncNormalization(&set,true) ;
+      getVal(set);
+    }
+    assert(_norm != nullptr);
     return _norm;
   }
 

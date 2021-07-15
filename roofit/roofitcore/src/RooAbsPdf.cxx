@@ -3646,6 +3646,7 @@ void RooAbsPdf::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataM
       output[i] *= oneOverNorm;
     }
   } else {
+    assert(integralSpan.size() == nEvents);
     for (std::size_t i=0; i < nEvents; ++i) {
       output[i] /= integralSpan[i];
     }
