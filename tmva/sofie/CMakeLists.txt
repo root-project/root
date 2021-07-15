@@ -19,9 +19,12 @@ set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRU
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS_Development_Main} ${NUMPY_INCLUDE_DIRS})
 =======
 
+<<<<<<< HEAD
 >>>>>>> 0ee3b32d3a... SOFIE restructured, RModelParser_Common added
 
 >>>>>>> 83a03f946c... [TMVA][ROOT Storage] Initial Commit for PyKeras Converter
+=======
+>>>>>>> 99a0dad996... Modify: Code for model data extraction
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
@@ -53,11 +56,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   LIBRARIES
     ${Protobuf_LIBRARIES}
 <<<<<<< HEAD
+<<<<<<< HEAD
     ${PYTHON_LIBRARIES_Development_Main}
 >>>>>>> 83a03f946c... [TMVA][ROOT Storage] Initial Commit for PyKeras Converter
 =======
 
 >>>>>>> 0ee3b32d3a... SOFIE restructured, RModelParser_Common added
+=======
+>>>>>>> 99a0dad996... Modify: Code for model data extraction
   DEPENDENCIES
     TMVA
 )
