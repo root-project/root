@@ -118,6 +118,34 @@ else()
   message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
 endif()
 
+#---Try to download a file to check internet connection-----------------------------------------
+message(STATUS "Checking internet connectivity...")
+file(DOWNLOAD https://root.cern/files/test.txt ${CMAKE_CURRENT_BINARY_DIR}/test.txt
+  TIMEOUT 5 STATUS DOWNLOAD_STATUS
+)
+# Get the status code from the download status
+list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+# Check if download was successful.
+if(${STATUS_CODE} EQUAL 0)
+  # Succcess
+  message(STATUS "Yes")
+  # Now let's delete the file
+  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/test.txt)
+  set(NO_CONNECTION FALSE)
+else()
+  # Error
+  message(STATUS "No: will not automatically download external dependencies")
+  set(NO_CONNECTION TRUE)
+endif()
+
+if(NO_CONNECTION)
+  if(clad AND fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  elseif(clad)
+    message(STATUS "No internet connection, disabling the 'clad' option")
+  endif()
+  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+endif()
 
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
