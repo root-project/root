@@ -38,14 +38,14 @@ void tmva005_RVariablePlotter()
 
 
     // Place plots on the pads of the canvas
-    const std::vector<std::string> variables = {"var1", "var2", "var3", "var4", "var5"};
+    const std::vector<std::string> vars = {"var1", "var2", "var3", "var4", "var5"};
 
-    for (unsigned int i = 0; i < variables.size(); i++) {
+    for (unsigned int i = 0; i < vars.size(); i++) {
         c->cd(i + 1);
         gPad->SetMargin(0.2, 0.9, 0.1, 0.9);
         c->Update();
         //gPad->SetGrid(1,1); // plotting a background grid
-        plotter.Draw(variables[i], true);
+        plotter.Draw(vars[i], true);
         plotter.DrawLegend(minX, minY, maxX, maxY);
        
         

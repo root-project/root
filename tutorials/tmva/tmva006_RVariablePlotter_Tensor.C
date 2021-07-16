@@ -1,8 +1,8 @@
 //
 /// \file
 /// \ingroup tutorial_tmva
-/// Authors: Simone Azeglio, Lorenzo Moneta , Stefan Wunsch
-/// This tutorial shows how to plot the distribution of variables.
+/// Authors: Simone Azeglio, Lorenzo Moneta, Sitong An, Stefan Wunsch
+/// This tutorial shows how to plot the distribution of variables from RTensor Data
 ///
 
 
@@ -30,7 +30,8 @@ void tmva006_RVariablePlotter_Tensor()
     auto bkg2Tensor = AsTensor<float>(bkg2);
     
     // Place plots on the pads of the canvas - new columns are always added first
-    const std::vector<std::string> variables = {"var5", "var2", "var3", "var4", "var1"};
+    //we should remember it while converting an RTensor to an RNode
+    const std::vector<std::string> vars = {"var5", "var2", "var3", "var4", "var1"};
     
     // Create a variable plotter object giving the Tensors and the class labels.
     TMVA::RVariablePlotter plotter({sig2Tensor, bkg2Tensor}, {"Signal", "Background"});
@@ -48,12 +49,12 @@ void tmva006_RVariablePlotter_Tensor()
 
     
 
-    for (unsigned int i = 0; i < variables.size(); i++) {
+    for (unsigned int i = 0; i < vars.size(); i++) {
         c->cd(i + 1);
         gPad->SetMargin(0.2, 0.9, 0.1, 0.9);
         c->Update();
         //gPad->SetGrid(1,1); // plotting a background grid
-        plotter.DrawTensor(variables[i], true, variables);
+        plotter.DrawTensor(vars[i], vars, true);
         plotter.DrawLegend(minX, minY, maxX, maxY);
     }
 

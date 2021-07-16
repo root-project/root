@@ -67,13 +67,7 @@ namespace TMVA {
         
         
         // draw variables plot - RTensor input
-        void DrawTensor(const std::string& variable, bool useTMVAStyle, const std::vector<std::string>& variables);
-        
-        // convert RTensor to RDataframe
-        ROOT::RDF::RNode TensorToNode(const TMVA::Experimental::RTensor<Float_t>& tensor,  const std::vector<std::string>& variables);
-        
-        // convert vector of RTensors to vector of RDataframes
-        std::vector<ROOT::RDF::RNode> TensorsToNodes(const std::vector<std::string>& variables);
+        void DrawTensor(const std::string& variable,  const std::vector<std::string>& variables,bool useTMVAStyle);
         
         
         // draw legend
@@ -86,6 +80,11 @@ namespace TMVA {
         std::vector<TMVA::Experimental::RTensor<Float_t>> fTensors; //! transient
         std::vector<std::string> fLabels;
         
+        // convert RTensor to RDataframe
+        ROOT::RDF::RNode TensorToNode(const TMVA::Experimental::RTensor<Float_t>& tensor,  const std::vector<std::string>& variables);
+        
+        // convert vector of RTensors to vector of RDataframes
+        std::vector<ROOT::RDF::RNode> TensorsToNodes(const std::vector<std::string>& variables);
         
         
 

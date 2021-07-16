@@ -115,7 +115,7 @@ void TMVA::RVariablePlotter::Draw(const std::string& variable, bool useTMVAStyle
 
 ////////////////////////////////////////////////////////////////
 /// Drawing variables' plot from RTensor input
-void TMVA::RVariablePlotter::DrawTensor(const std::string& variable, bool useTMVAStyle, const std::vector<std::string>& variables) {
+void TMVA::RVariablePlotter::DrawTensor(const std::string& variable, const std::vector<std::string>& variables, bool useTMVAStyle) {
    
     // vector of RNodes
     auto RNodeVec = TMVA::RVariablePlotter::TensorsToNodes(variables);
@@ -181,7 +181,7 @@ ROOT::RDF::RNode TMVA::RVariablePlotter::TensorToNode(const TMVA::Experimental::
     
     // Pivot vector for RTensor to RDataFrame conversion
     //std::vector<float> vecSig;
-    ROOT::VecOps::RVec<Float_t> vecSig;
+    //ROOT::VecOps::RVec<Float_t> vecSig;
     
     // Create a RDataFrame by passing RTensor's data with a pivot vector
     //for (unsigned int i = 0; i< tensor.GetShape()[0]; i++){
