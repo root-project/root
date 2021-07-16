@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Authors: Simone Azeglio, Lorenzo Moneta , Stefan Wunsch
+// Authors: Simone Azeglio, Lorenzo Moneta , Sitong An,  Stefan Wunsch
 
 /*************************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis          *
@@ -12,7 +12,8 @@
  *                                                                                   *
  * Authors (alphabetical):                                                           *
  *      Simone Azeglio, University of Turin (Master Student), CERN (Summer Student)  *
- *      Lorenzo Moneta, CERN                                                         *
+ *      Lorenzo Moneta, CERN
+ *      Sitong An, CERN, CMU                                                        *
  *      Stefan Wunsch                                                                *
  *                                                                                   *
  * Copyright (c) 2021:                                                               *
@@ -43,20 +44,37 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 
+#include "TMVA/RTensor.hxx"
+
+
 namespace TMVA {
   
     class RVariablePlotter {
 
     public:
         
-        // constructor
-        RVariablePlotter( const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels);
+        // constructor - RDataFrame input
+        RVariablePlotter(const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels);
+        
+        // constructor - Tensor input
+        RVariablePlotter( const std::vector<TMVA::Experimental::RTensor<Float_t>>& tensors, const std::vector<std::string>& labels);
         
         // use tmva plotting style
         void InitializeStyle(bool useTMVAStyle);
         
-        // draw variables plot
-        void Draw(const std::string& variable,  bool useTMVAStyle);
+        // draw variables plot - RDataFrame input
+        void Draw(const std::string& variable, bool useTMVAStyle);
+        
+        
+        // draw variables plot - RTensor input
+        void DrawTensor(const std::string& variable, bool useTMVAStyle, const std::vector<std::string>& variables);
+        
+        // convert RTensor to RDataframe
+        ROOT::RDF::RNode TensorToNode(const TMVA::Experimental::RTensor<Float_t>& tensor,  const std::vector<std::string>& variables);
+        
+        // convert vector of RTensors to vector of RDataframes
+        std::vector<ROOT::RDF::RNode> TensorsToNodes(const std::vector<std::string>& variables);
+        
         
         // draw legend
         void DrawLegend(float minX, float minY, float maxX, float maxY);
@@ -64,11 +82,14 @@ namespace TMVA {
 
     private:
         
-        std::vector<ROOT::RDF::RNode> fNodes; //! transient   
+        std::vector<ROOT::RDF::RNode> fNodes; //! transient
+        std::vector<TMVA::Experimental::RTensor<Float_t>> fTensors; //! transient
         std::vector<std::string> fLabels;
+        
+        
+        
 
 
-     // flag if "boundary vector" is owned by the volume of not
    };
 
 } // namespace TMVA

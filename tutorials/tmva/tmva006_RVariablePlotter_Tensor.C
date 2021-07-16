@@ -12,20 +12,29 @@
 using namespace TMVA::Experimental;
 
 
-void tmva005_RVariablePlotter()
+void tmva006_RVariablePlotter_Tensor()
 {
     // Initialize ROOT dataframes from signal and background datasets
     const std::string filename = "http://root.cern.ch/files/tmva_class_example.root";
     ROOT::RDataFrame sig1("TreeS", filename);
     ROOT::RDataFrame bkg1("TreeB", filename);
-
+    
     // Apply transformations on the datasets to be included in the study
     auto transform_ = [](ROOT::RDF::RNode df) { return df.Define("var5", "var1 * var2"); };
     auto sig2 = transform_(sig1);
     auto bkg2 = transform_(bkg1);
 
-    // Create a variable plotter object giving the dataframes and the class labels.
-    TMVA::RVariablePlotter plotter({sig2, bkg2}, {"Signal", "Background"});
+
+    // same data as in tmva005.... , we can transform them in tensors and compare the plots
+    auto sig2Tensor = AsTensor<float>(sig2);
+    auto bkg2Tensor = AsTensor<float>(bkg2);
+    
+    // Place plots on the pads of the canvas - new columns are always added first
+    const std::vector<std::string> variables = {"var5", "var2", "var3", "var4", "var1"};
+    
+    // Create a variable plotter object giving the Tensors and the class labels.
+    TMVA::RVariablePlotter plotter({sig2Tensor, bkg2Tensor}, {"Signal", "Background"});
+    
     
     TCanvas *c = new TCanvas("c", "c", 1400, 800);
     c->Divide(3, 2);
@@ -37,18 +46,15 @@ void tmva005_RVariablePlotter()
     float maxY = 0.9;
 
 
-    // Place plots on the pads of the canvas
-    const std::vector<std::string> variables = {"var1", "var2", "var3", "var4", "var5"};
+    
 
     for (unsigned int i = 0; i < variables.size(); i++) {
         c->cd(i + 1);
         gPad->SetMargin(0.2, 0.9, 0.1, 0.9);
         c->Update();
         //gPad->SetGrid(1,1); // plotting a background grid
-        plotter.Draw(variables[i], true);
+        plotter.DrawTensor(variables[i], true, variables);
         plotter.DrawLegend(minX, minY, maxX, maxY);
-       
-        
     }
 
 }
