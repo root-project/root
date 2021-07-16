@@ -138,7 +138,7 @@ private:
   TMatrixDSym *_extV = 0;
 
   RooAbsMinimizerFcn *_fcn;
-  std::string _minimizerType = "Minuit2";
+  std::string _minimizerType = "Minuit";
   FcnMode _fcnMode;
 
   static ROOT::Fit::Fitter *_theFitter ;

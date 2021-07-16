@@ -204,6 +204,7 @@ TEST(GradMinimizer, GaussianND)
    // --------
 
    std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*(nll.get()), RooMinimizer::FcnMode::gradient);
+   m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
    m1->setPrintLevel(-1);
@@ -451,6 +452,7 @@ TEST(GradMinimizer, BranchingPDF)
    // --------
 
    std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
+   m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
    m1->setPrintLevel(-1);

@@ -21,7 +21,8 @@
 RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
 provides a seamless interface between the minimizer functionality
 and the native RooFit interface.
-By default the Minimizer is MINUIT2.
+By default the Minimizer is MINUIT for classic FcnMode and MINUIT2
+for gradient FcnMode.
 RooMinimizer can minimize any RooAbsReal function with respect to
 its parameters. Usual choices for minimization are RooNLLVar
 and RooChi2Var
@@ -124,6 +125,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    }
    case FcnMode::gradient: {
       _fcn = new RooGradMinimizerFcn(&function, this, _verbose);
+      setMinimizerType("Minuit2");
       break;
    }
    default: {
@@ -254,8 +256,8 @@ class RooGradMinimizerFcn;
 
 void RooMinimizer::setMinimizerType(const char* type)
 {
-  if (dynamic_cast<RooGradMinimizerFcn*>(_fcn) && strcmp(type, "Minuit2") != 0) {
-    throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when using RooGradMinimizerFcn!");
+  if (_fcnMode != FcnMode::classic && strcmp(type, "Minuit2") != 0) {
+    throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!");
   }
   _minimizerType = type;
 }
