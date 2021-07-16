@@ -46,7 +46,7 @@ public:
    inline void setStepTolerance(double step_tolerance) const { _gradf.SetStepTolerance(step_tolerance); }
    inline void setGradTolerance(double grad_tolerance) const { _gradf.SetGradTolerance(grad_tolerance); }
    inline void setNcycles(unsigned int ncycles) const { _gradf.SetNCycles(ncycles); }
-   inline void setErrorLevel(double error_level) const { _gradf.set_error_level(error_level); }
+   inline void setErrorLevel(double error_level) const { _gradf.SetErrorLevel(error_level); }
    inline std::string getFunctionName() const override { return _funct->GetName(); }
    inline std::string getFunctionTitle() const override { return _funct->GetTitle(); }
    inline void setOffsetting(Bool_t flag) override { _funct->enableOffsetting(flag); }
