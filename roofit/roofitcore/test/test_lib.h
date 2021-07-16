@@ -21,6 +21,7 @@
 
 #include <sstream>
 #include <memory>  // make_unique
+#include <vector>
 
 RooAbsPdf * generate_1D_gaussian_pdf(RooWorkspace &w)
 {
@@ -61,7 +62,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
   RooArgSet obs_set;
 
   // create gaussian parameters
-  double mean[n], sigma[n];
+  std::vector<double> mean(n), sigma(n);
   for (unsigned ix = 0; ix < n; ++ix) {
     mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
     sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
