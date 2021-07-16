@@ -31,7 +31,7 @@ void tmva006_RVariablePlotter_Tensor()
     
     // Place plots on the pads of the canvas - new columns are always added first
     //we should remember it while converting an RTensor to an RNode
-    const std::vector<std::string> vars = {"var5", "var2", "var3", "var4", "var1"};
+    const std::vector<std::string> vars = sig2.GetColumnNames(); //{"var5", "var2", "var3", "var4", "var1"};
     
     // Create a variable plotter object giving the Tensors and the class labels.
     TMVA::RVariablePlotter plotter({sig2Tensor, bkg2Tensor}, {"Signal", "Background"});
@@ -45,9 +45,6 @@ void tmva006_RVariablePlotter_Tensor()
     float minY = 0.8;
     float maxX = 0.9;
     float maxY = 0.9;
-
-
-    
 
     for (unsigned int i = 0; i < vars.size(); i++) {
         c->cd(i + 1);

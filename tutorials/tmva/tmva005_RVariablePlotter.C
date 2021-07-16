@@ -4,8 +4,6 @@
 /// Authors: Simone Azeglio, Lorenzo Moneta , Stefan Wunsch
 /// This tutorial shows how to plot the distribution of variables.
 ///
-
-
 #include "TMVA/RVariablePlotter.h"
 #include "TMVA/tmvaglob.h"
 
