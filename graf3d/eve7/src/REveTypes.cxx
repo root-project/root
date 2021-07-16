@@ -16,6 +16,7 @@
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
+
 /** \class REveException
 \ingroup REve
 Exception class thrown by Eve classes and macros.

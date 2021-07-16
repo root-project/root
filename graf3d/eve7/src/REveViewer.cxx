@@ -100,6 +100,21 @@ List of Viewers providing common operations on REveViewer collections.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Stream Camera Info.
+/// Virtual from REveElement.
+int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   std::string ct;
+   switch (fCameraType)
+   {
+      case kCameraPerspXOZ: ct = "PerspXOZ"; break;
+      case kCameraOrthoXOY: ct = "OrthoXOY"; break;
+   }
+   j["CameraType"] = ct;
+   return REveElement::WriteCoreJson(j, rnr_offset);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 REveViewerList::REveViewerList(const std::string &n, const std::string &t) :
    REveElement  (n, t),

@@ -803,6 +803,7 @@ void collection_proxies(bool proj=true)
    g_projMng->SetImportEmpty(true);
 
    auto rhoZView = eveMng->SpawnNewViewer("RhoZ View");
+   rhoZView->SetCameraType(REveViewer::kCameraOrthoXOY);
    rhoZView->AddScene(rhoZEventScene);
    auto pgeoScene = eveMng->SpawnNewScene("Geometry projected");
    rhoZView->AddScene(pgeoScene);

@@ -43,7 +43,7 @@ public:
 
    struct SPBProduct {
       std::map<int, REveCollectionCompound*> map;
-      std::list<REveCollectionCompound*> cache;
+      int lastChildIdx{0};
    }; 
    
    typedef  std::map<REveElement*, std::unique_ptr<SPBProduct*> > EProductMap_t;
@@ -64,16 +64,15 @@ protected:
    REveCollectionCompound* CreateCompound(bool set_color=true, bool propagate_color_to_all_children=false);
 
    //int GetItemIdxForCompound() const;
+   bool VisibilityModelChanges(int idx, REveElement*, const std::string& viewType, const REveViewContext*) override;
+
+   std::map<REveElement*, SPBProduct*> fProductMap;
+   REveCompound* GetHolder(REveElement *product, int idx);
+
 private:
    REveDataSimpleProxyBuilder(const REveDataSimpleProxyBuilder&); // stop default
 
    const REveDataSimpleProxyBuilder& operator=(const REveDataSimpleProxyBuilder&); // stop default
-
-   bool VisibilityModelChanges(int idx, REveElement*, const std::string& viewType, const REveViewContext*) override;
-
- std::map<REveElement*, SPBProduct*> fProductMap;
-   REveCompound* GetHolder(REveElement *product, int idx);
-
 };
 //==============================================================================
 

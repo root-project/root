@@ -60,6 +60,8 @@ public:
    void ModelChanges(const REveDataCollection::Ids_t&);
    void CollectionChanged(const REveDataCollection*);
 
+   virtual void ScaleChanged();
+
    void SetupElement(REveElement* el, bool color = true);
    void SetupAddElement(REveElement* el, REveElement* parent,  bool set_color = true);
 
@@ -80,6 +82,8 @@ protected:
    virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*) = 0;
    virtual void FillImpliedSelected( REveElement::Set_t& /*impSet*/, Product*) {};
    virtual void LocalModelChanges(int idx, REveElement* el, const REveViewContext* ctx);
+
+   virtual void ScaleProduct(REveElement*, const std::string&) {};
 
    virtual void Clean();
    virtual void CleanLocal();

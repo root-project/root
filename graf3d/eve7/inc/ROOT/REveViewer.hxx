@@ -26,9 +26,14 @@ class REveScene;
 
 class REveViewer : public REveElement
 {
+public:
+   enum ECameraType { kCameraPerspXOZ, kCameraOrthoXOY };
+
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
+
+   ECameraType fCameraType{kCameraPerspXOZ};
 
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
@@ -39,8 +44,12 @@ public:
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
+   void SetCameraType(ECameraType t) { fCameraType = t; }
+   ECameraType GetCameraType() const { return fCameraType; }
+
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };
 
 

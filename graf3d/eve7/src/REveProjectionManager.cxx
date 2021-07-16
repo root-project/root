@@ -98,14 +98,34 @@ void REveProjectionManager::SetProjection(REveProjection::EPType_e type)
    {
       switch (type)
       {
+         case REveProjection::kPT_RhoZ:
+         {
+            fProjections[type] = new REveRhoZProjection();
+            break;
+         }
          case REveProjection::kPT_RPhi:
          {
             fProjections[type] = new REveRPhiProjection();
             break;
          }
-         case REveProjection::kPT_RhoZ:
+         case REveProjection::kPT_XZ:
          {
-            fProjections[type] = new REveRhoZProjection();
+            fProjections[type] = new REveXZProjection();
+            break;
+         }
+         case REveProjection::kPT_YZ:
+         {
+            fProjections[type] = new REveYZProjection();
+            break;
+         }
+         case REveProjection::kPT_ZX:
+         {
+            fProjections[type] = new REveZXProjection();
+            break;
+         }
+         case REveProjection::kPT_ZY:
+         {
+            fProjections[type] = new REveZYProjection();
             break;
          }
          case REveProjection::kPT_3D:

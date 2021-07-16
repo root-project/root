@@ -38,6 +38,7 @@ void makeCalo2D(REveCalo3D* calo3d, const char* pname, REveProjection::EPType_e 
    REveElement* geo2d =  mng->ImportElements(eveMng->GetGlobalScene()->FirstChild(), geomScene);
 
    auto view = eveMng->SpawnNewViewer("RPhi View", "");
+   view->SetCameraType(REveViewer::kCameraOrthoXOY);
    view->AddScene(geomScene);
    view->AddScene(eventScene);
 }

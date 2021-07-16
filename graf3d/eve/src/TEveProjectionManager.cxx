@@ -104,6 +104,11 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
    {
       switch (type)
       {
+         case TEveProjection::kPT_RhoZ:
+         {
+            fProjections[type] = new TEveRhoZProjection();
+            break;
+         }
          case TEveProjection::kPT_RPhi:
          {
             fProjections[type] = new TEveRPhiProjection();
@@ -114,9 +119,19 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
             fProjections[type] = new TEveXZProjection();
             break;
          }
-         case TEveProjection::kPT_RhoZ:
+         case TEveProjection::kPT_YZ:
          {
-            fProjections[type] = new TEveRhoZProjection();
+            fProjections[type] = new TEveYZProjection();
+            break;
+         }
+         case TEveProjection::kPT_ZX:
+         {
+            fProjections[type] = new TEveZXProjection();
+            break;
+         }
+         case TEveProjection::kPT_ZY:
+         {
+            fProjections[type] = new TEveZYProjection();
             break;
          }
          case TEveProjection::kPT_3D:

@@ -139,7 +139,7 @@ sap.ui.define([
          let light_class_3d = RC.PointLight; // RC.DirectionalLight; // RC.PointLight;
          let light_class_2d = RC.DirectionalLight;
 
-         if (this.controller.kind === "3D")
+         if (this.controller.isEveCameraPerspective())
          {
             this.camera = new RC.PerspectiveCamera(75, w / h, 1, 5000);
             this.camera.position = new RC.Vector3(-500, 0, 0);
@@ -266,7 +266,7 @@ sap.ui.define([
             {
                this.removeEventListener('mouseup', glc.mouseup_listener);
 
-               if (event.buttons == 1) // Selection on mouseup without move
+               if (event2.buttons == 1) // Selection on mouseup without move
                {
                   glc.handleMouseSelect(event2);
                }
@@ -274,8 +274,7 @@ sap.ui.define([
                {
                   // Was needed for "on press with timeout"
                   // glc.controls.resetMouseDown(event);
-
-                  JSROOT.Painter.createMenu(glc, glc.showContextMenu.bind(glc, event2));
+                  JSROOT.Painter.createMenu(event2, glc).then(menu => { glc.showContextMenu(event2, menu) });
                }
             }
 
