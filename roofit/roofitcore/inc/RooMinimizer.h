@@ -147,7 +147,7 @@ private:
 
   RooMinimizer(const RooMinimizer&) ;
 	
-  ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
+  ClassDefOverride(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
 
 #endif

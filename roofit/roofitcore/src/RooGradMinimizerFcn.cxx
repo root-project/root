@@ -38,7 +38,7 @@
 #include <iostream>
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters({})) ), context, verbose),
+   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters(RooArgSet{})) ), context, verbose),
      _grad(getNDim()), _grad_params(getNDim()), _funct(funct),
      has_been_calculated(getNDim())
 {
@@ -201,8 +201,8 @@ void RooGradMinimizerFcn::runDerivator(unsigned int i_component) const
    if (!has_been_calculated[i_component]) {
       // Calculate the derivative etc for these parameters
       _grad[i_component] =
-         _gradf.partial_derivative(_context->getMultiGenFcn(), _grad_params.data(),
-                                   _context->fitter()->Config().ParamsSettings(), i_component, _grad[i_component]);
+         _gradf.PartialDerivative(_context->getMultiGenFcn(), _grad_params.data(),
+                                  _context->fitter()->Config().ParamsSettings(), i_component, _grad[i_component]);
       has_been_calculated[i_component] = true;
       none_have_been_calculated = false;
    }
