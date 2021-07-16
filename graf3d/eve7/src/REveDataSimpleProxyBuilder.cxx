@@ -40,8 +40,9 @@ void REveDataSimpleProxyBuilder::Clean()
          for (auto &compound : product->RefChildren()) {
             REveCollectionCompound *collComp = dynamic_cast<REveCollectionCompound *>(compound);
             collComp->DestroyElements();
-            (spbIt)->second->cache.push_back(collComp);
          }
+         (spbIt)->second->lastChildIdx=0;
+         (spbIt)->second->map.clear();
       }
    }
 
@@ -91,26 +92,25 @@ REveCompound *REveDataSimpleProxyBuilder::GetHolder(REveElement *product, int id
 
    REveCollectionCompound *itemHolder = nullptr;
 
-   auto hit = spb->map.find(idx);
-   if (hit != spb->map.end()) {
-      itemHolder = hit->second;
+   auto pmIt = spb->map.find(idx);
+   if (pmIt != spb->map.end()) {
+      itemHolder = pmIt->second;
       // printf("GetHolder already in map %d \n", idx);
    } else {
-
-      if (!spb->cache.empty()) {
-         itemHolder = spb->cache.front();
-         spb->cache.pop_front();
+      if (product->NumChildren() > idx) {
+         auto cIt = std::next(product->RefChildren().begin(), idx);
+         itemHolder = dynamic_cast<REveCollectionCompound *>(*cIt);
+         // printf("GetHolder isreused %d \n", idx);
       }
-
       if (!itemHolder) {
          itemHolder = CreateCompound(true, true);
          product->AddElement(itemHolder);
          // printf("Creating new holder\n");
       }
-
+      spb->lastChildIdx = idx;
       spb->map.emplace(idx, itemHolder);
       itemHolder->SetMainColor(Collection()->GetDataItem(idx)->GetMainColor());
-      std::string name = Form("%s %d", Collection()->GetCName(), idx);
+      std::string name(TString::Format("%s %d", Collection()->GetCName(), idx));
       itemHolder->SetName(name);
    }
 
@@ -148,6 +148,7 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
          BuildViewType(collection->GetDataPtr(index), index, itemHolder, viewType, vc);
       }
    }
+   //      printf("END Build view type [%s] product size %d\n",viewType.c_str(), product->NumChildren());
 }
 
 //______________________________________________________________________________

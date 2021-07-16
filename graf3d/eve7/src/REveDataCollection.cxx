@@ -174,10 +174,10 @@ std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary
    {
       idx = z;
       data = col->GetDataPtr(idx);
-      res +=  Form("%s %d",  name.c_str(), idx);
+      res +=  std::string(TString::Format("%s %d",  name.c_str(), idx));
       for (auto &t : fTooltipExpressions) {
-         std::string eval = t.fTooltipFunction.EvalExpr(data);
-         res +=  Form("\n  %s = %s", t.fTooltipTitle.c_str(), eval.c_str());
+         std::string eval = t->fTooltipFunction.EvalExpr(data);
+         res +=  std::string(TString::Format("\n  %s = %s", t->fTooltipTitle.c_str(), eval.c_str()));
       }
       res += "\n";
    }
@@ -185,15 +185,21 @@ std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary
 }
 
 //______________________________________________________________________________
-void REveDataItemList::AddTooltipExpression(const std::string &title, const std::string &expr)
+void REveDataItemList::AddTooltipExpression(const std::string &title, const std::string &expr, bool init)
 {
-   TTip tt;
-   tt.fTooltipTitle = title;
-   tt.fTooltipFunction.SetPrecision(2);
-   auto col = dynamic_cast<REveDataCollection*>(fMother);
+   fTooltipExpressions.push_back(std::unique_ptr<TTip>(new TTip()));
+   TTip *tt = fTooltipExpressions.back().get();
+
+   tt->fTooltipTitle = title;
+   tt->fTooltipFunction.SetPrecision(2);
+   auto col = dynamic_cast<REveDataCollection *>(fMother);
    auto icls = col->GetItemClass();
-   tt.fTooltipFunction.SetExpressionAndType(expr, REveDataColumn::FT_Double, icls);
-   fTooltipExpressions.push_back(tt);
+   tt->fTooltipFunction.SetExpressionAndType(expr, REveDataColumn::FT_Double, icls);
+
+   if (init) {
+      auto re = tt->fTooltipFunction.GetFunctionExpressionString();
+      gROOT->ProcessLine(re.c_str());
+   }
 }
 
 //______________________________________________________________________________
@@ -340,7 +346,7 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
                ms += " ";
                ms += ma->GetName();
             }
-            char* entry = Form("i.%s(%s)",meth->GetName(),ms.Data());
+            std::string entry(TString::Format("i.%s(%s)",meth->GetName(),ms.Data()).Data());
             nlohmann::json jm ;
             jm["f"] = entry;
             jm["r"] = meth->GetReturnTypeName();

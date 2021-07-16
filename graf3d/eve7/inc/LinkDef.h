@@ -158,6 +158,10 @@
 #pragma link C++ typedef ROOT::Experimental::REveProjection::vPreScale_t;
 #pragma link C++ class ROOT::Experimental::REveRhoZProjection+;
 #pragma link C++ class ROOT::Experimental::REveRPhiProjection+;
+#pragma link C++ class ROOT::Experimental::REveXZProjection+;
+#pragma link C++ class ROOT::Experimental::REveYZProjection+;
+#pragma link C++ class ROOT::Experimental::REveZXProjection+;
+#pragma link C++ class ROOT::Experimental::REveZYProjection+;
 #pragma link C++ class ROOT::Experimental::REve3DProjection+;
 
 #pragma link C++ class ROOT::Experimental::REveProjectionManager+;

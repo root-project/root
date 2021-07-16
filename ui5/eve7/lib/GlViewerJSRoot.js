@@ -55,7 +55,7 @@ sap.ui.define([
          let options = "outline";
          options += ", mouse_click"; // process mouse click events
          // options += " black, ";
-         if (this.controller.kind != "3D") options += ", ortho_camera";
+         if (!this.controller.isEveCameraPerspective()) options += ", ortho_camera";
 
          // TODO: should be specified somehow in XML file
          // MT-RCORE - why have I removed this ???

@@ -32,7 +32,6 @@
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveJetCone.hxx>
 #include <ROOT/REveTrans.hxx>
-
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
 
@@ -177,6 +176,7 @@ void createProjectionStuff()
    mngRhoPhi = new REX::REveProjectionManager(REX::REveProjection::kPT_RPhi);
 
    rphiView = eveMng->SpawnNewViewer("RPhi View", "");
+   rphiView->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
    rphiView->AddScene(rPhiGeomScene);
    rphiView->AddScene(rPhiEventScene);
 
@@ -188,6 +188,7 @@ void createProjectionStuff()
    mngRhoZ = new REX::REveProjectionManager(REX::REveProjection::kPT_RhoZ);
 
    rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
+   rhoZView->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
    rhoZView->AddScene(rhoZGeomScene);
    rhoZView->AddScene(rhoZEventScene);
 }

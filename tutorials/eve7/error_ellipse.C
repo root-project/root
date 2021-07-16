@@ -41,6 +41,7 @@ void makeProjected(REveElement* el, const char* pname, REveProjection::EPType_e 
    mng->SetProjection(t);
    mng->ImportElements(el, eventScene);
    auto view = eveMng->SpawnNewViewer(pname);
+   view->SetCameraType(REveViewer::kCameraOrthoXOY);
    view->AddScene(eventScene);
 }
 
