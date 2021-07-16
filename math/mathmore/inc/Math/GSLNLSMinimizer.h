@@ -102,6 +102,14 @@ public:
       double f0 = 0;
       FdF(x,f0,g);
    }
+   /// In some cases, the gradient algorithm will use information from the previous step, these can be passed
+   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+   /// so that these can be passed forward again as well at the call site, if necessary.
+   /// \warning This implementation just calls the two-parameter overload.
+   virtual void Gradient(const double *x, double *g, double */*previous_grad*/, double */*previous_g2*/, double */*previous_gstep*/) const
+   {
+      Gradient(x, g);
+   }
 
    void FdF (const double * x, double & f, double * g) const {
       unsigned int n = NDim();
@@ -128,6 +136,15 @@ private:
       const double kEps = 1.0E-4;
       fX2[icoord] += kEps;
       return ( DoEval(&fX2.front()) - DoEval(x) )/kEps;
+   }
+   /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
+   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+   /// so that these can be passed forward again as well at the call site, if necessary.
+   /// \warning This implementation just calls the two-parameter overload.
+   virtual double DoDerivative(const double *x, unsigned int icoord, double * /*previous_grad*/, double * /*previous_g2*/,
+                               double * /*previous_gstep*/) const
+   {
+      return DoDerivative(x, icoord);
    }
 
    unsigned int fIndex;

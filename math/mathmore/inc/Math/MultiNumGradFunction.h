@@ -122,6 +122,15 @@ private:
 
    // calculate derivative using mathcore derivator
    double DoDerivative (const double * x, unsigned int icoord  ) const;
+   /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
+   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+   /// so that these can be passed forward again as well at the call site, if necessary.
+   /// \warning This implementation just calls the two-parameter overload.
+   virtual double DoDerivative(const double *x, unsigned int icoord, double * /*previous_grad*/, double * /*previous_g2*/,
+                               double * /*previous_gstep*/) const
+   {
+      return DoDerivative(x, icoord);
+   }
 
    // adapat internal function type to IMultiGenFunction needed by derivative calculation
    const IMultiGenFunction * fFunc;

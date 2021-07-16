@@ -169,6 +169,10 @@ public:
          }
       }
    }
+   void Gradient(const double *x, double *g, double */*previous_grad*/, double */*previous_g2*/, double */*previous_gstep*/) const
+   {
+      Gradient(x, g);
+   }
 
 #ifdef USE_FDF
    void FdF(const double *x, double &f, double *g) const
@@ -219,6 +223,11 @@ private:
       std::vector<double> g(fDim);
       Gradient(x, &g[0]);
       return g[i];
+   }
+   double DoDerivative(const double *x, unsigned int icoord, double * /*previous_grad*/, double * /*previous_g2*/,
+                       double * /*previous_gstep*/) const
+   {
+      return DoDerivative(x, icoord);
    }
 
 private:
@@ -286,6 +295,10 @@ public:
          g[j] = 2. * g[j] / double(n);
       }
    }
+   void Gradient(const double *x, double *g, double */*previous_grad*/, double */*previous_g2*/, double */*previous_gstep*/) const
+   {
+      Gradient(x, g);
+   }
 
 private:
    double DoEval(const double *x) const
@@ -305,6 +318,11 @@ private:
       std::vector<double> g(fDim);
       Gradient(x, &g[0]);
       return g[i];
+   }
+   double DoDerivative(const double *x, unsigned int icoord, double * /*previous_grad*/, double * /*previous_g2*/,
+                       double * /*previous_gstep*/) const
+   {
+      return DoDerivative(x, icoord);
    }
 
    void DoCalculatefi(const double *x) const
