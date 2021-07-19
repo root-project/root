@@ -220,7 +220,8 @@ TEST(RNTuple, ClusterEntries)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetNEntriesPerCluster(5);
+      // FIXME(jblomer)
+      //opt.SetNEntriesPerCluster(5);
       auto ntuple = RNTupleWriter::Recreate(
          std::move(model), "ntuple", fileGuard.GetPath(), opt
       );
@@ -234,7 +235,7 @@ TEST(RNTuple, ClusterEntries)
    EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
 }
 
-TEST(RNTuple, ElementsPerPage)
+TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
    auto model = RNTupleModel::Create();
@@ -242,7 +243,7 @@ TEST(RNTuple, ElementsPerPage)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetNElementsPerPage(5);
+      opt.SetMaxUnzippedPageSize(20);
       auto ntuple = RNTupleWriter::Recreate(
          std::move(model), "ntuple", fileGuard.GetPath(), opt
       );
