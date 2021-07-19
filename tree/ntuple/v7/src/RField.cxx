@@ -241,8 +241,10 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
    return clone;
 }
 
-void ROOT::Experimental::Detail::RFieldBase::AppendImpl(const ROOT::Experimental::Detail::RFieldValue& /*value*/) {
+std::size_t ROOT::Experimental::Detail::RFieldBase::AppendImpl(const ROOT::Experimental::Detail::RFieldValue& /*value*/)
+{
    R__ASSERT(false);
+   return 0;
 }
 
 void ROOT::Experimental::Detail::RFieldBase::ReadGlobalImpl(
@@ -716,7 +718,7 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleD
    GenerateColumnsImpl();
 }
 
-void ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Experimental::Detail::RFieldValue& value)
+std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Experimental::Detail::RFieldValue& value)
 {
    auto typedValue = value.Get<std::string>();
    auto length = typedValue->length();
@@ -724,6 +726,7 @@ void ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Experimenta
    fColumns[1]->AppendV(elemChars, length);
    fIndex += length;
    fColumns[0]->Append(fElemIndex);
+   return length + sizeof(ClusterSize_t);
 }
 
 void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
@@ -781,14 +784,16 @@ ROOT::Experimental::RClassField::CloneImpl(std::string_view newName) const
    return std::make_unique<RClassField>(newName, GetType());
 }
 
-void ROOT::Experimental::RClassField::AppendImpl(const Detail::RFieldValue& value) {
+std::size_t ROOT::Experimental::RClassField::AppendImpl(const Detail::RFieldValue& value) {
    TIter next(fClass->GetListOfDataMembers());
+   std::size_t nbytes = 0;
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
       auto memberValue = fSubFields[i]->CaptureValue(value.Get<unsigned char>() + dataMember->GetOffset());
-      fSubFields[i]->Append(memberValue);
+      nbytes += fSubFields[i]->Append(memberValue);
       i++;
    }
+   return nbytes;
 }
 
 void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -897,13 +902,15 @@ ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
    return std::make_unique<RRecordField>(newName, cloneItems);
 }
 
-void ROOT::Experimental::RRecordField::AppendImpl(const Detail::RFieldValue &value) {
+std::size_t ROOT::Experimental::RRecordField::AppendImpl(const Detail::RFieldValue &value) {
+   std::size_t nbytes = 0;
    std::size_t offset = 0;
    for (auto &item : fSubFields) {
       auto memberValue = item->CaptureValue(value.Get<unsigned char>() + offset);
-      item->Append(memberValue);
-      offset +=  GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+      nbytes += item->Append(memberValue);
+      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
    }
+   return nbytes;
 }
 
 void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -992,17 +999,19 @@ ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
    return std::make_unique<RVectorField>(newName, std::move(newItemField));
 }
 
-void ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldValue& value) {
+std::size_t ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldValue& value) {
    auto typedValue = value.Get<std::vector<char>>();
    R__ASSERT((typedValue->size() % fItemSize) == 0);
+   std::size_t nbytes = 0;
    auto count = typedValue->size() / fItemSize;
    for (unsigned i = 0; i < count; ++i) {
       auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
-      fSubFields[0]->Append(itemValue);
+      nbytes += fSubFields[0]->Append(itemValue);
    }
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
+   return nbytes + sizeof(ClusterSize_t);
 }
 
 void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1091,7 +1100,7 @@ ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
    Attach(std::make_unique<RField<bool>>("bool"));
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Detail::RFieldValue& value) {
+std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Detail::RFieldValue& value) {
    auto typedValue = value.Get<std::vector<bool>>();
    auto count = typedValue->size();
    for (unsigned i = 0; i < count; ++i) {
@@ -1102,6 +1111,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Detail::RFi
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
+   return count + sizeof(ClusterSize_t);
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue* value)
@@ -1187,12 +1197,14 @@ ROOT::Experimental::RArrayField::CloneImpl(std::string_view newName) const
    return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
 }
 
-void ROOT::Experimental::RArrayField::AppendImpl(const Detail::RFieldValue& value) {
+std::size_t ROOT::Experimental::RArrayField::AppendImpl(const Detail::RFieldValue& value) {
+   std::size_t nbytes = 0;
    auto arrayPtr = value.Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
       auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
-      fSubFields[0]->Append(itemValue);
+      nbytes += fSubFields[0]->Append(itemValue);
    }
+   return nbytes;
 }
 
 void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1318,18 +1330,20 @@ void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::uint32_t t
    *index = static_cast<char>(tag - 1);
 }
 
-void ROOT::Experimental::RVariantField::AppendImpl(const Detail::RFieldValue& value)
+std::size_t ROOT::Experimental::RVariantField::AppendImpl(const Detail::RFieldValue& value)
 {
    auto tag = GetTag(value.GetRawPtr());
+   std::size_t nbytes = 0;
    auto index = 0;
    if (tag > 0) {
       auto itemValue = fSubFields[tag - 1]->CaptureValue(value.GetRawPtr());
-      fSubFields[tag - 1]->Append(itemValue);
+      nbytes += fSubFields[tag - 1]->Append(itemValue);
       index = fNWritten[tag - 1]++;
    }
    RColumnSwitch varSwitch(ClusterSize_t(index), tag);
    Detail::RColumnElement<RColumnSwitch> elemSwitch(&varSwitch);
    fColumns[0]->Append(elemSwitch);
+   return nbytes + sizeof(RColumnSwitch);
 }
 
 void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
