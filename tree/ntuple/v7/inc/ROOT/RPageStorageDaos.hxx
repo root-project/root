@@ -100,6 +100,8 @@ private:
    std::atomic<std::uint64_t> fOid{0};
    /// \brief A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
    std::string fURI;
+   /// Tracks the number of bytes committed to the current cluster
+   std::uint64_t fNBytesCurrentCluster{0};
 
    RDaosNTupleAnchor fNTupleAnchor;
 
@@ -108,7 +110,7 @@ protected:
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
                                                      const RPageStorage::RSealedPage &sealedPage) final;
-   RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
+   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    void WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
