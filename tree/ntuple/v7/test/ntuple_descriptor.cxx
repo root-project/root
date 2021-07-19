@@ -417,3 +417,29 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
    }
    EXPECT_EQ(3, counter);
 }
+
+TEST(RClusterDescriptor, GetBytesOnStorage)
+{
+   auto model = RNTupleModel::Create();
+   auto fldJets = model->MakeField<std::vector<float>>("jets");
+   auto fldTag = model->MakeField<std::string>("tag");
+
+   FileRaii fileGuard("test_descriptor_bytes_on_storage.root");
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      RNTupleWriter ntuple(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), options));
+      fldJets->push_back(1.0);
+      fldJets->push_back(2.0);
+      *fldTag = "abc";
+      ntuple.Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto &desc = ntuple->GetDescriptor();
+
+   auto clusterID = desc.FindClusterId(0, 0);
+   ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
+   EXPECT_EQ(4 + 8 + 4 + 3, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage());
+}
