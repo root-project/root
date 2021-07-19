@@ -295,8 +295,9 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
 
    fMaxUnzippedClusterSize = fSink->GetWriteOptions().GetMaxUnzippedClusterSize();
    // First estimate is a factor 2 compression if compression is used at all
-   fMinUnzippedClusterSizeEst = (fSink->GetWriteOptions().GetCompression() == 0) ?
-      fSink->GetWriteOptions().GetMinZippedClusterSize() : 2 * fSink->GetWriteOptions().GetMinZippedClusterSize();
+   fUnzippedClusterSizeEst = (fSink->GetWriteOptions().GetCompression() == 0)
+      ? fSink->GetWriteOptions().GetApproxZippedClusterSize()
+      : 2 * fSink->GetWriteOptions().GetApproxZippedClusterSize();
 }
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
@@ -339,8 +340,8 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster()
    float nbytes = fSink->CommitCluster(fNEntries);
    // Cap the compression factor at 1000 to prevent overflow of fMinUnzippedClusterSizeEst
    float compressionFactor = std::min(1000.f, static_cast<float>(fUnzippedClusterSize) / nbytes);
-   fMinUnzippedClusterSizeEst =
-      compressionFactor * static_cast<float>(fSink->GetWriteOptions().GetMinZippedClusterSize());
+   fUnzippedClusterSizeEst =
+      compressionFactor * static_cast<float>(fSink->GetWriteOptions().GetApproxZippedClusterSize());
 
    fLastCommitted = fNEntries;
    fUnzippedClusterSize = 0;
