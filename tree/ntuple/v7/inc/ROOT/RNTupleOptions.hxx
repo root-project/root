@@ -52,6 +52,9 @@ class RNTupleWriteOptions {
    std::size_t fMinZippedClusterSize = 64 * 1000 * 1000;
    /// Approximation of the max compressed cluster size
    std::size_t fMaxZippedClusterSize = 128 * 1000 * 1000;
+   /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
+   /// on how large the I/O buffer can grow during writing.
+   std::size_t fMaxUnzippedClusterSize = 512 * 1000 * 1000;
    /// Should be just large enough so that the compression ratio does not benefit much more from larger pages
    std::size_t fMaxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
@@ -75,6 +78,9 @@ public:
 
    std::size_t GetMaxZippedClusterSize() const { return fMaxZippedClusterSize; }
    void SetMaxZippedClusterSize(std::size_t val) { fMaxZippedClusterSize = val; }
+
+   std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
+   void SetMaxUnzippedClusterSize(std::size_t val) { fMaxUnzippedClusterSize = val; }
 
    std::size_t GetMaxUnzippedPageSize() const { return fMaxUnzippedPageSize; }
    void SetMaxUnzippedPageSize(std::size_t val) {
