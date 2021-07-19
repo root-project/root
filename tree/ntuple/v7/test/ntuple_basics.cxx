@@ -220,13 +220,11 @@ TEST(RNTuple, ClusterEntries)
 
    {
       RNTupleWriteOptions opt;
-      // FIXME(jblomer)
-      //opt.SetNEntriesPerCluster(5);
-      auto ntuple = RNTupleWriter::Recreate(
-         std::move(model), "ntuple", fileGuard.GetPath(), opt
-      );
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 100; i++) {
          ntuple->Fill();
+         if (i && ((i % 5) == 0))
+            ntuple->CommitCluster();
       }
    }
 
@@ -243,18 +241,18 @@ TEST(RNTuple, PageSize)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetMaxUnzippedPageSize(20);
+      opt.SetMaxUnzippedPageSize(200);
       auto ntuple = RNTupleWriter::Recreate(
          std::move(model), "ntuple", fileGuard.GetPath(), opt
       );
-      for (int i = 0; i < 100; i++) {
+      for (int i = 0; i < 1000; i++) {
          ntuple->Fill();
       }
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0);
-   // 100 column elements / 5 elements per page
+   // 1000 column elements / 50 elements per page
    EXPECT_EQ(20, col0_pages.fPageInfos.size());
 }
 

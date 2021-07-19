@@ -84,6 +84,7 @@ TEST(RNTuple, RandomAccess)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
+      options.SetMinZippedClusterSize(nEvents * sizeof(std::int32_t) / 10);
       auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
       for (unsigned int i = 0; i < nEvents; ++i)
          ntuple->Fill();
@@ -92,7 +93,7 @@ TEST(RNTuple, RandomAccess)
    RNTupleReadOptions options;
    options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
-   EXPECT_GT(ntuple->GetDescriptor().GetNClusters(), 10);
+   EXPECT_GE(ntuple->GetDescriptor().GetNClusters(), 10);
 
    auto viewValue = ntuple->GetView<std::int32_t>("value");
 
