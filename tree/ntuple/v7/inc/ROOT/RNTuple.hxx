@@ -363,8 +363,8 @@ private:
    std::size_t fUnzippedClusterSize = 0;
    /// Limit for committing cluster no matter the other tunables
    std::size_t fMaxUnzippedClusterSize;
-   /// Estimator of minimum uncompressed cluster size, taking into account the estimated compression ratio
-   NTupleSize_t fMinUnzippedClusterSizeEst;
+   /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
+   NTupleSize_t fUnzippedClusterSizeEst;
 
 public:
    /// Throws an exception if the model is null.
@@ -392,7 +392,7 @@ public:
          fUnzippedClusterSize += value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fMinUnzippedClusterSizeEst))
+      if ((fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst))
          CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
