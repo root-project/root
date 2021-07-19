@@ -60,7 +60,7 @@ RDaosURI ParseDaosURI(std::string_view uri)
 }
 
 /// \brief Some random distribution/attribute key.  TODO: apply recommended schema, i.e.
-/// an OID for each cluster + a dkey for each page. 
+/// an OID for each cluster + a dkey for each page.
 static constexpr std::uint64_t kDistributionKey = 0x5a3c69f0cafe4a11;
 static constexpr std::uint64_t kAttributeKey = 0x4243544b5344422d;
 
@@ -246,9 +246,9 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor() {
 ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkDaos::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
-   if (nElements == 0)
-      nElements = GetWriteOptions().GetNElementsPerPage();
    auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   if (nElements == 0)
+      nElements = GetWriteOptions().GetMaxUnzippedPageSize() / elementSize;
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }
 
