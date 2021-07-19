@@ -240,8 +240,8 @@ public:
    /// Write a preprocessed page to storage. The column must have been added before.
    /// TODO(jblomer): allow for vector commit of sealed pages
    void CommitSealedPage(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage);
-   /// Finalize the current cluster and create a new one for the following data.
-   void CommitCluster(NTupleSize_t nEntries);
+   /// Finalize the current cluster and create a new one for the following data. Returns the cluster ID.
+   DescriptorId_t CommitCluster(NTupleSize_t nEntries);
    /// Finalize the current cluster and the entrire data set.
    void CommitDataset() { CommitDatasetImpl(); }
 
