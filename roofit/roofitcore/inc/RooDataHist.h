@@ -35,6 +35,11 @@ class RooAbsArg;
 class RooCategory ;
 class RooPlot;
 class RooAbsLValue ;
+namespace RooFit {
+namespace TestStatistics {
+class RooAbsL;
+}
+}
 
 class RooDataHist : public RooAbsData, public RooDirItem {
 public:
@@ -222,6 +227,8 @@ protected:
   friend class RooAbsCachedPdf ;
   friend class RooAbsCachedReal ;
   friend class RooDataHistSliceIter ;
+  // for access into copied dataset:
+  friend class RooFit::TestStatistics::RooAbsL;
 
   std::size_t calcTreeIndex(const RooAbsCollection& coords, bool fast) const;
   /// Legacy overload to calculate the tree index from the current value of `_vars`.
