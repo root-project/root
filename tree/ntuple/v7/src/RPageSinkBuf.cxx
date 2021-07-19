@@ -82,7 +82,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(
    return RClusterDescriptor::RLocator{};
 }
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+std::uint64_t
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
    if (fTaskScheduler) {
@@ -100,10 +100,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
          ReleasePage(bufPage.fPage);
       }
    }
-   fInnerSink->CommitCluster(nEntries);
-   // we're feeding bad locators to fOpenPageRanges but it should not matter
-   // because they never get written out
-   return RClusterDescriptor::RLocator{};
+   return fInnerSink->CommitCluster(nEntries);
 }
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl()

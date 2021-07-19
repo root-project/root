@@ -188,17 +188,17 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
    result.fBytesOnStorage = sealedPage.fSize;
    fCounters->fNPageCommitted.Inc();
    fCounters->fSzWritePayload.Add(sealedPage.fSize);
+   fNBytesCurrentCluster += sealedPage.fSize;
    return result;
 }
 
 
-// TODO(jalopezg): the current byte range arithmetic makes little sense for the
-// object store. We might find out, however, that there are native ways to group
-// clusters in DAOS.
-ROOT::Experimental::RClusterDescriptor::RLocator
+std::uint64_t
 ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
-   return {};
+   auto result = fNBytesCurrentCluster;
+   fNBytesCurrentCluster = 0;
+   return result;
 }
 
 

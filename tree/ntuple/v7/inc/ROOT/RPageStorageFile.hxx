@@ -61,6 +61,8 @@ private:
    std::uint64_t fClusterMinOffset = std::uint64_t(-1);
    /// Byte offset of the end of the last page of the current cluster
    std::uint64_t fClusterMaxOffset = 0;
+   /// Number of bytes committed to storage in the current cluster
+   std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
    RClusterDescriptor::RLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
@@ -71,7 +73,7 @@ protected:
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
                                                      const RPageStorage::RSealedPage &sealedPage) final;
-   RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
+   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
 
 public:
