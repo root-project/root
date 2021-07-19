@@ -49,10 +49,10 @@ class RNTupleWriteOptions {
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
    ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
    /// Approximation of the target compressed cluster size
-   std::size_t fApproxZippedClusterSize = 64 * 1000 * 1000;
+   std::size_t fApproxZippedClusterSize = 50 * 1000 * 1000;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
-   std::size_t fMaxUnzippedClusterSize = 512 * 1000 * 1000;
+   std::size_t fMaxUnzippedClusterSize = 512 * 1024 * 1024;
    /// Should be just large enough so that the compression ratio does not benefit much more from larger pages
    std::size_t fMaxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
