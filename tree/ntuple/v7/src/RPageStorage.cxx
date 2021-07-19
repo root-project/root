@@ -344,7 +344,8 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
 }
 
 
-void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
    auto locator = CommitClusterImpl(nEntries);
 
@@ -363,8 +364,8 @@ void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NT
       range.fColumnId = fullRange.fColumnId;
       fDescriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
    }
-   ++fLastClusterId;
    fPrevClusterNEntries = nEntries;
+   return fLastClusterId++;
 }
 
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
