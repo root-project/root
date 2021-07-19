@@ -48,10 +48,8 @@ All page sink classes need to support the common options.
 class RNTupleWriteOptions {
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
    ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
-   /// Approximation of the minimum compressed cluster size
-   std::size_t fMinZippedClusterSize = 64 * 1000 * 1000;
-   /// Approximation of the max compressed cluster size
-   std::size_t fMaxZippedClusterSize = 128 * 1000 * 1000;
+   /// Approximation of the target compressed cluster size
+   std::size_t fApproxZippedClusterSize = 64 * 1000 * 1000;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
    std::size_t fMaxUnzippedClusterSize = 512 * 1000 * 1000;
@@ -73,11 +71,8 @@ public:
    ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
    void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
 
-   std::size_t GetMinZippedClusterSize() const { return fMinZippedClusterSize; }
-   void SetMinZippedClusterSize(std::size_t val) { fMinZippedClusterSize = val; }
-
-   std::size_t GetMaxZippedClusterSize() const { return fMaxZippedClusterSize; }
-   void SetMaxZippedClusterSize(std::size_t val) { fMaxZippedClusterSize = val; }
+   std::size_t GetApproxZippedClusterSize() const { return fApproxZippedClusterSize; }
+   void SetApproxZippedClusterSize(std::size_t val) { fApproxZippedClusterSize = val; }
 
    std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
    void SetMaxUnzippedClusterSize(std::size_t val) { fMaxUnzippedClusterSize = val; }
