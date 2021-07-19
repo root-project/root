@@ -17,6 +17,7 @@
 #define ROOT7_RNTupleOptions
 
 #include <Compression.h>
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 namespace ROOT {
@@ -47,8 +48,12 @@ All page sink classes need to support the common options.
 class RNTupleWriteOptions {
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
    ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
-   NTupleSize_t fNEntriesPerCluster = 64000;
-   NTupleSize_t fNElementsPerPage = 10000;
+   /// Approximation of the minimum compressed cluster size
+   std::size_t fMinZippedClusterSize = 64 * 1000 * 1000;
+   /// Approximation of the max compressed cluster size
+   std::size_t fMaxZippedClusterSize = 128 * 1000 * 1000;
+   /// Should be just large enough so that the compression ratio does not benefit much more from larger pages
+   std::size_t fMaxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
 
 public:
@@ -65,11 +70,18 @@ public:
    ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
    void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
 
-   NTupleSize_t GetNElementsPerPage() const { return fNElementsPerPage; }
-   void SetNElementsPerPage(NTupleSize_t val) { fNElementsPerPage = val; }
+   std::size_t GetMinZippedClusterSize() const { return fMinZippedClusterSize; }
+   void SetMinZippedClusterSize(std::size_t val) { fMinZippedClusterSize = val; }
 
-   NTupleSize_t GetNEntriesPerCluster() const { return fNEntriesPerCluster; }
-   void SetNEntriesPerCluster(NTupleSize_t val) { fNEntriesPerCluster = val; }
+   std::size_t GetMaxZippedClusterSize() const { return fMaxZippedClusterSize; }
+   void SetMaxZippedClusterSize(std::size_t val) { fMaxZippedClusterSize = val; }
+
+   std::size_t GetMaxUnzippedPageSize() const { return fMaxUnzippedPageSize; }
+   void SetMaxUnzippedPageSize(std::size_t val) {
+      if (val < 64)
+         throw RException(R__FAIL("page size too small"));
+      fMaxUnzippedPageSize = val;
+   }
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }

@@ -4,7 +4,7 @@
 TEST(RNTuple, ReadString)
 {
    const std::string_view ntupleName = "rs";
-   constexpr int numEntries = 2500;
+   constexpr int numEntries = 25000;
    const std::string contentString = "foooooo";
 
    FileRaii fileGuard("test_ntuple_readstring.root");
