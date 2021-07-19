@@ -483,6 +483,18 @@ bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t colum
 }
 
 
+std::uint64_t ROOT::Experimental::RClusterDescriptor::GetBytesOnStorage() const
+{
+   std::uint64_t nbytes = 0;
+   for (const auto &pr : fPageRanges) {
+      for (const auto &pi : pr.second.fPageInfos) {
+         nbytes += pi.fLocator.fBytesOnStorage;
+      }
+   }
+   return nbytes;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
