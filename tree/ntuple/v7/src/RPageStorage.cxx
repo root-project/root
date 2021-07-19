@@ -344,15 +344,15 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
 }
 
 
-ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   auto locator = CommitClusterImpl(nEntries);
+   auto nbytes = CommitClusterImpl(nEntries);
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
                                  ClusterSize_t(nEntries - fPrevClusterNEntries));
-   fDescriptorBuilder.SetClusterLocator(fLastClusterId, locator);
+   // TODO(jblomer): Remove me with the v1 Serialization
+   fDescriptorBuilder.SetClusterLocator(fLastClusterId, RClusterDescriptor::RLocator());
    for (auto &range : fOpenColumnRanges) {
       fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
       range.fFirstElementIndex += range.fNElements;
@@ -365,7 +365,8 @@ ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleS
       fDescriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
    }
    fPrevClusterNEntries = nEntries;
-   return fLastClusterId++;
+   ++fLastClusterId;
+   return nbytes;
 }
 
 ROOT::Experimental::Detail::RPageStorage::RSealedPage

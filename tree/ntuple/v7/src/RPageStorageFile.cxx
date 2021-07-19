@@ -116,6 +116,7 @@ ROOT::Experimental::Detail::RPageSinkFile::WriteSealedPage(
    result.fBytesOnStorage = sealedPage.fSize;
    fCounters->fNPageCommitted.Inc();
    fCounters->fSzWritePayload.Add(sealedPage.fSize);
+   fNBytesCurrentCluster += sealedPage.fSize;
    return result;
 }
 
@@ -147,14 +148,11 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageImpl(
 }
 
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+std::uint64_t
 ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
-   RClusterDescriptor::RLocator result;
-   result.fPosition = fClusterMinOffset;
-   result.fBytesOnStorage = fClusterMaxOffset - fClusterMinOffset;
-   fClusterMinOffset = std::uint64_t(-1);
-   fClusterMaxOffset = 0;
+   auto result = fNBytesCurrentCluster;
+   fNBytesCurrentCluster = 0;
    return result;
 }
 
@@ -380,9 +378,6 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    fCounters->fNClusterLoaded.Inc();
 
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
-   auto clusterLocator = clusterDesc.GetLocator();
-   auto clusterSize = clusterLocator.fBytesOnStorage;
-   R__ASSERT(clusterSize > 0);
 
    struct ROnDiskPageLocator {
       ROnDiskPageLocator() = default;
