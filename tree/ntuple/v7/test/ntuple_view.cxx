@@ -63,7 +63,7 @@ TEST(RNTuple, BulkView)
    auto eltsPerPage = 10'000;
    {
       RNTupleWriteOptions opt;
-      opt.SetNElementsPerPage(eltsPerPage);
+      opt.SetMaxUnzippedPageSize(eltsPerPage * sizeof(float));
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
          fileGuard.GetPath(), opt);
       for (int i = 0; i < 100'000; i++) {
@@ -99,10 +99,10 @@ TEST(RNTuple, BulkViewCollection)
 
    auto model = RNTupleModel::Create();
    auto fieldVec = model->MakeField<std::vector<double>>({"vec", "some data"});
-   auto eltsPerPage = 10'000;
+   auto pageSize = 80 * 1024;
    {
       RNTupleWriteOptions opt;
-      opt.SetNElementsPerPage(eltsPerPage);
+      opt.SetMaxUnzippedPageSize(pageSize);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
          fileGuard.GetPath(), opt);
       for (int i = 0; i < 100'000; i++) {
@@ -116,7 +116,7 @@ TEST(RNTuple, BulkViewCollection)
 
    NTupleSize_t nPageItems = 0;
    const ClusterSize_t *offsets_buf = viewVecOffsets.MapV(0, nPageItems);
-   ASSERT_EQ(eltsPerPage, nPageItems);
+   ASSERT_EQ(pageSize / sizeof(ClusterSize_t), nPageItems);
    std::unique_ptr<ClusterSize_t[]> offsets = std::make_unique<ClusterSize_t[]>(nPageItems + 1);
    auto raw_offsets = offsets.get();
    // offsets implicitly start at zero, RNTuple does not store that information
@@ -126,7 +126,7 @@ TEST(RNTuple, BulkViewCollection)
       ASSERT_EQ((i - 1) % 5, raw_offsets[i] - raw_offsets[i-1]) << i;
    }
    const double *buf = viewVecData.MapV(0, nPageItems);
-   ASSERT_EQ(eltsPerPage, nPageItems);
+   ASSERT_EQ(pageSize / sizeof(double), nPageItems);
    for (NTupleSize_t i = 0; i < nPageItems; i++) {
       ASSERT_EQ(100.0f, buf[i]) << i;
    }

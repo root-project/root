@@ -177,9 +177,9 @@ void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
 ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkFile::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
-   if (nElements == 0)
-      nElements = GetWriteOptions().GetNElementsPerPage();
    auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   if (nElements == 0)
+      nElements = GetWriteOptions().GetMaxUnzippedPageSize() / elementSize;
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }
 

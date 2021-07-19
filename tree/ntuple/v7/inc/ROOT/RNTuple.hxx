@@ -386,7 +386,8 @@ public:
          value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fNEntries % fSink->GetWriteOptions().GetNEntriesPerCluster()) == 0)
+      // FIXME(jblomer)
+      if ((fNEntries % 64000/* fSink->GetWriteOptions().GetNEntriesPerCluster() */) == 0)
          CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
