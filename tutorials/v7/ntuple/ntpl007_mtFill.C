@@ -54,7 +54,7 @@ void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
    static std::mutex gLock;
 
    static std::atomic<std::uint32_t> gThreadId;
-   auto threadId = gThreadId++;
+   const auto threadId = ++gThreadId;
 
    auto prng = std::make_unique<TRandom3>();
    prng->SetSeed();
