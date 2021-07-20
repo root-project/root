@@ -48,18 +48,26 @@ private:
     * the offset column with index 0 and the character value column with index 1.
     */
    std::uint32_t fIndex;
-   RPageSink *fPageSink;
-   RPageSource *fPageSource;
+   RPageSink *fPageSink = nullptr;
+   RPageSource *fPageSource = nullptr;
    RPageStorage::ColumnHandle_t fHandleSink;
    RPageStorage::ColumnHandle_t fHandleSource;
-   /// Open page into which new elements are being written
-   RPage fHeadPage;
+   /// A set of open pages into which new elements are being written. The pages are used
+   /// in rotation. They are 50% bigger than the target size given by the write options.
+   /// The current page is filled until the target size, but it is only committed once the other
+   /// head page is filled at least 50%. If a flush occurs earlier, a slightly oversize, single
+   /// page will be committed.
+   RPage fHeadPage[2];
+   /// Index of the current head page
+   int fHeadPageIdx = 0;
+   /// For writing, the targeted page size as given by the write options
+   std::uint32_t fApproxNElementsPerPage = 0;
    /// The number of elements written resp. available in the column
-   NTupleSize_t fNElements;
+   NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
    RPage fCurrentPage;
    /// The column id is used to find matching pages with content when reading
-   ColumnId_t fColumnIdSource;
+   ColumnId_t fColumnIdSource = kInvalidColumnId;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
@@ -81,26 +89,52 @@ public:
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
 
    void Append(const RColumnElementBase &element) {
-      void *dst = fHeadPage.TryGrow(1);
-      if (dst == nullptr) {
-         Flush();
-         dst = fHeadPage.TryGrow(1);
-         R__ASSERT(dst != nullptr);
+      void *dst = fHeadPage[fHeadPageIdx].TryGrow(1);
+      R__ASSERT(dst != nullptr);
+      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
+         // Current page is at 50% fill level, we can now commit the previously used page
+         auto otherIdx = (fHeadPageIdx + 1) % 2;
+         if (fHeadPage[otherIdx].GetNElements())
+            fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
       }
+
       element.WriteTo(dst, 1);
       fNElements++;
+
+      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage) {
+         // We are at 100% fill level, switch to the other head page
+         fHeadPageIdx = (fHeadPageIdx + 1) % 2;
+         fHeadPage[fHeadPageIdx].Reset(fNElements);
+      }
    }
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
-      void *dst = fHeadPage.TryGrow(count);
-      if (dst == nullptr) {
+      if (fHeadPage[fHeadPageIdx].GetNElements() + count > fApproxNElementsPerPage) {
          for (unsigned i = 0; i < count; ++i) {
             Append(RColumnElementBase(elemArray, i));
          }
          return;
       }
+
+      if ((fHeadPage[fHeadPageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
+          (fHeadPage[fHeadPageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
+      {
+         // Current page jumps over 50% fill level, we can now commit the previously used page
+         auto otherIdx = (fHeadPageIdx + 1) % 2;
+         if (fHeadPage[otherIdx].GetNElements())
+            fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
+      }
+
+      void *dst = fHeadPage[fHeadPageIdx].TryGrow(count);
+      R__ASSERT(dst != nullptr);
       elemArray.WriteTo(dst, count);
       fNElements += count;
+
+      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage) {
+         // We are at 100% fill level, switch to the other head page
+         fHeadPageIdx = (fHeadPageIdx + 1) % 2;
+         fHeadPage[fHeadPageIdx].Reset(fNElements);
+      }
    }
 
    void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
