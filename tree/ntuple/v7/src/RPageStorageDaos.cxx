@@ -246,9 +246,9 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor() {
 ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkDaos::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
-   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    if (nElements == 0)
-      nElements = GetWriteOptions().GetMaxUnzippedPageSize() / elementSize;
+      throw RException(R__FAIL("invalid call: request empty page"));
+   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }
 

@@ -249,7 +249,7 @@ public:
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
-   virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) = 0;
+   virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
    virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
