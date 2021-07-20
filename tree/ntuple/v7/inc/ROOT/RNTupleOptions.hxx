@@ -53,8 +53,11 @@ class RNTupleWriteOptions {
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
    std::size_t fMaxUnzippedClusterSize = 512 * 1024 * 1024;
-   /// Should be just large enough so that the compression ratio does not benefit much more from larger pages
-   std::size_t fMaxUnzippedPageSize = 64 * 1024;
+   /// Should be just large enough so that the compression ratio does not benefit much more from larger pages.
+   /// Unless the cluster is too small to contain a sufficiently large page, pages are
+   /// fApproxUnzippedPageSize in size and tail pages (the last page in a cluster) is between
+   /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 2 in size.
+   std::size_t fApproxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
 
 public:
@@ -77,11 +80,11 @@ public:
    std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
    void SetMaxUnzippedClusterSize(std::size_t val) { fMaxUnzippedClusterSize = val; }
 
-   std::size_t GetMaxUnzippedPageSize() const { return fMaxUnzippedPageSize; }
-   void SetMaxUnzippedPageSize(std::size_t val) {
+   std::size_t GetApproxUnzippedPageSize() const { return fApproxUnzippedPageSize; }
+   void SetApproxUnzippedPageSize(std::size_t val) {
       if (val < 64)
          throw RException(R__FAIL("page size too small"));
-      fMaxUnzippedPageSize = val;
+      fApproxUnzippedPageSize = val;
    }
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }

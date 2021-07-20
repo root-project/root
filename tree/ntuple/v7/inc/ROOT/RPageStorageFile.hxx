@@ -87,7 +87,7 @@ public:
    RPageSinkFile& operator=(RPageSinkFile&&) = default;
    virtual ~RPageSinkFile();
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
+   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
 };
 
