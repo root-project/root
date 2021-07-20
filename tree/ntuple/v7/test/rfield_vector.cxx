@@ -146,6 +146,40 @@ TEST(RNTuple, RVec)
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
 
+TEST(RNTuple, RVecTypeErased)
+{
+   FileRaii fileGuard("test_ntuple_rvec_typeerased.root");
+
+   // write out RVec
+   {
+      ROOT::RVecI rvec = {1, 2, 3};
+
+      auto m = RNTupleModel::Create();
+      auto field = RFieldBase::Create("v", "ROOT::VecOps::RVec<int>").Unwrap();
+      m->AddField(std::move(field));
+      m->Freeze();
+      m->GetDefaultEntry()->CaptureValueUnsafe("v", (void *)&rvec);
+
+      auto w = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
+      w->Fill();
+      rvec.clear();
+      rvec.push_back(42);
+      w->Fill();
+   }
+
+   // read back RVec with type-erased API
+   auto r = RNTupleReader::Open("r", fileGuard.GetPath());
+   auto v = r->GetModel()->Get<ROOT::RVec<int>>("v");
+
+   r->LoadEntry(0);
+   EXPECT_EQ(v->size(), 3);
+   EXPECT_TRUE(All(*v == ROOT::RVec<int>{1, 2, 3}));
+
+   r->LoadEntry(1);
+   EXPECT_EQ(v->size(), 1);
+   EXPECT_EQ(v->at(0), 42);
+}
+
 TEST(RNTuple, BoolVector)
 {
    FileRaii fileGuard("test_ntuple_boolvec.root");
