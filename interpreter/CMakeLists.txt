@@ -495,9 +495,18 @@ if (builtin_cling)
     set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
   endif()
 
+  # Requires the linker to resolve the symbol internally and prevents
+  # conflicts when linked with another software using also LLVM like in
+  # the problem reported for Julia in
+  # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
+  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    string(APPEND CMAKE_SHARED_LINKER_FLAGS " -Wl,-Bsymbolic")
+  endif() 
+
   # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
   set(CLING_CXXFLAGS ${CLING_CXXFLAGS} PARENT_SCOPE)
-
+  
   string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
   if (LLVM_ENABLE_PIC AND NOT MSVC)
     # FIXME: LLVM_ENABLE_PIC is ON by default, however not propagated to cling.
