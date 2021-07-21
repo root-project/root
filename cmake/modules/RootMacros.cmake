@@ -589,6 +589,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
+      if(NOT TARGET G__${dep})
+        # This is a library that doesn't come with dictionary/pcm
+        continue()
+      endif()
+
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
@@ -710,7 +715,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
     add_library(${dictionary} OBJECT ${dictionary}.cxx)
     set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-    target_sources(${ARG_MODULE} PRIVATE $<TARGET_OBJECTS:${dictionary}>)
+    target_link_libraries(${ARG_MODULE} PRIVATE ${dictionary})
 
     target_compile_options(${dictionary} PRIVATE
       $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_OPTIONS>)
@@ -721,8 +726,16 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_compile_features(${dictionary} PRIVATE
       $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_FEATURES>)
 
-    target_include_directories(${dictionary} PRIVATE
-      ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+    target_include_directories(${dictionary} PRIVATE ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+
+    # Above we are copying all include directories of the module, irrespective of whether they are system includes.
+    # CMake copies them as -I even when they should be -isystem.
+    # We can fix this for INTERFACE includes by also copying the respective property.
+    # For PRIVATE includes this doesn't work. In that case, one needs to link both the library as well as the dictionary explicitly:
+    #   target_link_libraries(MODULE PRIVATE dependency)
+    #   target_link_libraries(G__MODULE PRIVATE dependency)
+    set_property(TARGET ${dictionary} APPEND PROPERTY
+      INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${ARG_MODULE},INTERFACE_SYSTEM_INCLUDE_DIRECTORIES>)
   else()
     get_filename_component(dictionary_name ${dictionary} NAME)
     add_custom_target(${dictionary_name} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
