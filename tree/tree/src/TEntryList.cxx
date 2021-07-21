@@ -342,7 +342,21 @@ TEntryList::~TEntryList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add 2 entry lists
+/// \brief Add 2 entry lists.
+///
+/// \param[in] elist The list that should be added to the current one.
+///
+/// \note If you are creating a TEntryList for a TChain and you would like to
+///       have a one to one mapping between the sub lists of the TEntryList and
+///       the sub trees in the TChain, please do not call this function but use
+///       TEntryList::AddSubList instead and pair it with a call to
+///       TChain::SetEntryList with option "sync". See the AddSubList function
+///       documentation for an example usage. This helps for example in a
+///       testing or benchmark scenario where a TChain holds multiple times the
+///       same tree in the same file. In that case, this function would not be
+///       be able to distinguish different sub entry lists that refer to the
+///       same treename and filename. Instead it would create a union of all the
+///       sub entry lists into one list.
 
 void TEntryList::Add(const TEntryList *elist)
 {
