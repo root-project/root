@@ -310,7 +310,7 @@ public:
   // For use in the RooArgList/Set(std::vector<RooAbsArgPtrOrDouble> const&) constructor.
   // Can be replaced with std::variant when C++17 is the minimum supported standard.
   struct RooAbsArgPtrOrDouble {
-    RooAbsArgPtrOrDouble(RooAbsArg * arg) : ptr{arg}, hasPtr{true} {}
+    RooAbsArgPtrOrDouble(RooAbsArg & arg) : ptr{&arg}, hasPtr{true} {}
     RooAbsArgPtrOrDouble(double x) : val{x}, hasPtr{false} {}
 
     RooAbsArg * ptr = nullptr;
