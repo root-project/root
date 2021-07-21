@@ -1398,7 +1398,7 @@ function(ROOT_EXECUTABLE executable)
     set(exe_srcs ${exe_srcs} ${ROOT_RC_SCRIPT})
   endif()
   add_executable(${executable} ${_all} ${exe_srcs})
-  target_link_libraries(${executable} ${ARG_LIBRARIES})
+  target_link_libraries(${executable} PRIVATE ${ARG_LIBRARIES})
 
   if(WIN32 AND ${executable} MATCHES \\.exe)
     set_target_properties(${executable} PROPERTIES SUFFIX "")
@@ -1795,9 +1795,9 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  target_link_libraries(${test_suite} gtest_main gmock gmock_main)
+  target_link_libraries(${test_suite} PRIVATE gtest gtest_main gmock gmock_main)
   if(TARGET ROOT::TestSupport)
-    target_link_libraries(${test_suite} ROOT::TestSupport)
+    target_link_libraries(${test_suite} PRIVATE ROOT::TestSupport)
   else()
     # Since we don't inherit the linkage against gtest from ROOT::TestSupport,
     # we need to link against gtest here.
