@@ -12,7 +12,7 @@
 using namespace TMVA::Experimental;
 
 
-void tmva006_RVariablePlotter_Tensor()
+void tmva006_RVariablePlotter_RTensor()
 {
     // Initialize ROOT dataframes from signal and background datasets
     const std::string filename = "http://root.cern.ch/files/tmva_class_example.root";
