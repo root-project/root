@@ -37,7 +37,7 @@ Plotting a single variable
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for RDataframe with nodes (samples) and labels
 
-TMVA::RVariablePlotter::RVariablePlotter( const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels)
+TMVA::RVariablePlotter::RVariablePlotter(const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels)
     : fNodes(nodes),
     fLabels(labels){
         
@@ -67,22 +67,23 @@ TMVA::RVariablePlotter::RVariablePlotter( const std::vector<TMVA::Experimental::
 ////////////////////////////////////////////////////////////////////////////////
 /// Set style and keep existing canvas
 void TMVA::RVariablePlotter::InitializeStyle(bool useTMVAStyle){
-   
-   // set style
+   // set custom style
    if (!useTMVAStyle) {
       gROOT->SetStyle("Plain");
       gStyle->SetOptStat(0);
+      gPad->SetMargin(0.2, 0.9, 0.1, 0.9);
+      gPad->SetGrid(1,1);
       return;
    }
-
+    
    TMVA::TMVAGlob::SetTMVAStyle();
+   gPad->SetMargin(0.2, 0.9, 0.1, 0.9);
 }
 
 ////////////////////////////////////////////////////////////////
 /// Drawing variables' plot RDataframe
 void TMVA::RVariablePlotter::Draw(const std::string& variable, bool useTMVAStyle) {
    // Make histograms with TH1D
-    
     TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
     
     const auto size = fNodes.size();
