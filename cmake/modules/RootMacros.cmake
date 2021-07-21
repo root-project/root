@@ -891,9 +891,10 @@ endfunction()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
-#                        [NOINSTALL] LIBRARIES library1 library2 ...
-#                        DEPENDENCIES dep1 dep2
-#                        BUILTINS dep1 dep2)
+#                        [NOINSTALL]
+#                        LIBRARIES library1 library2 ... # PRIVATE link dependencies
+#                        DEPENDENCIES dep1 dep2          # PUBLIC link dependencies
+#                        BUILTINS dep1 dep2              # dependencies to builtins)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS"  ${ARGN})
@@ -906,8 +907,7 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   set(library_name ${library})
   if(TARGET ${library})
-    message("Target ${library} already exists. Renaming target name to ${library}_new")
-    set(library ${library}_new)
+    message(FATAL_ERROR "Target ${library} already exists.")
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
     if(MSVC)
@@ -915,37 +915,37 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
-    target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
-    target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
   endif()
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
   endif()
 
+  # Add dependencies passed via LIBRARIES or DEPENDENCIES argument:
+  target_link_libraries(${library} PUBLIC ${ARG_DEPENDENCIES})
+  target_link_libraries(${library} PRIVATE ${ARG_LIBRARIES})
+
+  if(TARGET G__${library})
+    add_dependencies(${library} G__${library})
+  endif()
+  set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
+
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
+
   if(PROJECT_NAME STREQUAL "ROOT")
+    add_dependencies(${library} move_headers)
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
     endif()
   endif()
 
-  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
-
-  if(TARGET G__${library})
-    add_dependencies(${library} G__${library})
-  endif()
-  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    add_dependencies(${library} move_headers)
-  endif()
-  set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
-  set_target_properties(${library} PROPERTIES INTERFACE_LINK_LIBRARIES "${ARG_DEPENDENCIES}")
   target_include_directories(${library} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
