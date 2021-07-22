@@ -205,7 +205,7 @@ constexpr Double_t Hcgs()
 /// Planck's constant uncertainty.
 constexpr Double_t HUncertainty()
 {
-   // Planck constant is exact according to 2019 redefinition
+   // Planck constant is exact according to 2019 redefinition 
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }

@@ -258,6 +258,13 @@ Double_t TMath::Factorial(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Kronecker Delta
+/// This is a function used for example in General Relativity
+/// It returns 1 when two numbers are the same and returns 0
+/// when they are not.
+///
+/// It can be used as a modification to the Pythagorean
+/// theorem to account for non-minkowski space. 
+/// It is closely related to the metric tensor (in 2d space)
 
 Int_t TMath::KroneckerDelta(Double_t a, Double_t b)
 {
