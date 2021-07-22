@@ -233,6 +233,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitLegacy/RooNameSet.h
     RooFitLegacy/RooSetPair.h
     RooFitLegacy/RooTreeData.h
+    TestStatistics/ConstantTermsOptimizer.h
     TestStatistics/LikelihoodGradientWrapper.h
     TestStatistics/LikelihoodWrapper.h
     TestStatistics/LikelihoodSerial.h
@@ -246,7 +247,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     TestStatistics/kahan_sum.h
     TestStatistics/optional_parameter_types.h
     TestStatistics/likelihood_builders.h
-    TestStatistics/optimization.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -463,6 +463,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFitLegacy/RooMultiCatIter.cxx
     src/RooFitLegacy/RooNameSet.cxx
     src/RooFitLegacy/RooSetPair.cxx
+    src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodWrapper.cxx
     src/TestStatistics/LikelihoodSerial.cxx
@@ -476,7 +477,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/optional_parameter_types.cxx
     src/TestStatistics/likelihood_builders.cxx
     src/TestStatistics/kahan_sum.cxx
-    src/TestStatistics/optimization.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES

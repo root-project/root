@@ -25,9 +25,7 @@ namespace TestStatistics {
 RooSubsidiaryL::RooSubsidiaryL(const std::string& parent_pdf_name, const RooArgSet &pdfs, const RooArgSet &parameter_set)
    : RooAbsL(nullptr, nullptr, 0, 0, RooAbsL::Extended::No), parent_pdf_name_(parent_pdf_name)
 {
-   std::unique_ptr<TIterator> inputIter{pdfs.createIterator()};
-   RooAbsArg *comp;
-   while ((comp = (RooAbsArg *)inputIter->Next())) {
+   for (const auto comp : pdfs) {
       if (!dynamic_cast<RooAbsPdf *>(comp)) {
          oocoutE((TObject *)0, InputArguments) << "RooSubsidiaryL::ctor(" << GetName() << ") ERROR: component "
                                                << comp->GetName() << " is not of type RooAbsPdf" << std::endl;
@@ -48,10 +46,8 @@ RooSubsidiaryL::evaluatePartition(RooAbsL::Section events, std::size_t /*compone
    }
 
    double sum = 0, carry = 0;
-   RooAbsReal *comp;
-   RooFIter setIter1 = subsidiary_pdfs_.fwdIterator();
 
-   while ((comp = (RooAbsReal *)setIter1.next())) {
+   for (const auto comp : subsidiary_pdfs_) {
       double term = -((RooAbsPdf *)comp)->getLogVal(&parameter_set_);
       std::tie(sum, carry) = kahan_add(sum, term, carry);
    }

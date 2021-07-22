@@ -17,9 +17,9 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
 
-#include <TestStatistics/RooAbsL.h>
-#include <RooArgList.h>
-#include <RooArgSet.h>
+#include "TestStatistics/RooAbsL.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
 
 namespace RooFit {
 namespace TestStatistics {

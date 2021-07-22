@@ -45,12 +45,6 @@ RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
    : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first)
 {}
 
-
-bool RooUnbinnedL::processEmptyDataSets() const
-{
-   return extended_;
-}
-
 //////////////////////////////////////////////////////////////////////////////////
 
 /// Returns true if value was changed, false otherwise.
@@ -65,11 +59,11 @@ bool RooUnbinnedL::setApplyWeightSquared(bool flag)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-///// Calculate and return likelihood on subset of data from firstEvent to lastEvent
-///// processed with a step size of 'stepSize'. If this an extended likelihood and
-///// and the zero event is processed the extended term is added to the return
-///// likelihood.
-//
+/// Calculate and return likelihood on subset of data from firstEvent to lastEvent
+/// processed with a step size of 'stepSize'. If this an extended likelihood and
+/// and the zero event is processed the extended term is added to the return
+/// likelihood.
+///
 double RooUnbinnedL::evaluatePartition(Section events,
                                         std::size_t /*components_begin*/, std::size_t /*components_end*/)
 {
@@ -79,8 +73,6 @@ double RooUnbinnedL::evaluatePartition(Section events,
    // expensive than that, we tolerate the additional cost...
    Double_t result(0), carry(0);
 
-   //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE));
-   // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
    data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, kTRUE);
 
    Double_t sumWeight(0), sumWeightCarry(0);
@@ -100,7 +92,6 @@ double RooUnbinnedL::evaluatePartition(Section events,
       }
 
       Double_t term = -eventWeight * pdf_->getLogVal(normSet_.get());
-      // TODO: normSet_ should be modified if _projDeps is non-null, connected to TODO above
 
       Double_t y = eventWeight - sumWeightCarry;
       Double_t t = sumWeight + y;
