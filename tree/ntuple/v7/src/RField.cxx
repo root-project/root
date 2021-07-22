@@ -243,7 +243,7 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
 
 std::size_t ROOT::Experimental::Detail::RFieldBase::AppendImpl(const ROOT::Experimental::Detail::RFieldValue& /*value*/)
 {
-   R__ASSERT(false);
+   R__ASSERT(false && "A non-simple RField must implement its own AppendImpl");
    return 0;
 }
 
