@@ -17,8 +17,10 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_likelihood_builders
 #define ROOT_ROOFIT_TESTSTATISTICS_likelihood_builders
 
-#include <TestStatistics/RooAbsL.h>
-#include <TestStatistics/optional_parameter_types.h>
+#include "TestStatistics/RooAbsL.h"
+#include "TestStatistics/optional_parameter_types.h"
+
+#include <memory>
 
 // forward declarations
 class RooAbsPdf;

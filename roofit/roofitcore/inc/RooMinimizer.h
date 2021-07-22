@@ -29,9 +29,8 @@
 
 #include "RooArgList.h" // cannot just use forward decl due to default argument in lastMinuitFit
 
-#include "RooMinimizerFcn.h"
-#include "RooGradMinimizerFcn.h"
 #include "TestStatistics/RooAbsL.h"
+#include "TestStatistics/MinuitFcnGrad.h"
 
 #include "RooSentinel.h"
 #include "RooMsgService.h"
@@ -48,7 +47,6 @@ class TH2F ;
 class RooPlot ;
 namespace RooFit {
 namespace TestStatistics {
-class MinuitFcnGrad;  // this one is necessary due to circular include dependencies
 class LikelihoodSerial;
 class LikelihoodGradientSerial;
 }
@@ -167,8 +165,6 @@ private:
   ClassDefOverride(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
 
-// include here to avoid circular dependency issues in class definitions
-#include "TestStatistics/MinuitFcnGrad.h"
 
 template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
 RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood, LikelihoodWrapperT* /* value unused */,
@@ -183,7 +179,7 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
    setEps(1.0); // default tolerance
 
-   _fcn = RooFit::TestStatistics::MinuitFcnGrad::create<LikelihoodWrapperT, LikelihoodGradientWrapperT>(likelihood, this, _verbose);
+   _fcn = RooFit::TestStatistics::MinuitFcnGrad::create<LikelihoodWrapperT, LikelihoodGradientWrapperT>(likelihood, this, _theFitter->Config().ParamsSettings(), _verbose);
 
    // default max number of calls
    _theFitter->Config().MinimizerOptions().SetMaxIterations(500 * _fcn->getNDim());
@@ -209,8 +205,8 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
 // static function
 template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
 std::unique_ptr<RooMinimizer> RooMinimizer::create(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood) {
-   return std::unique_ptr<RooMinimizer>(new RooMinimizer(likelihood, static_cast<LikelihoodWrapperT*>(nullptr),
-                                                         static_cast<LikelihoodGradientWrapperT*>(nullptr)));
+   return std::make_unique<RooMinimizer>(likelihood, static_cast<LikelihoodWrapperT*>(nullptr),
+                                         static_cast<LikelihoodGradientWrapperT*>(nullptr));
 }
 
 #endif

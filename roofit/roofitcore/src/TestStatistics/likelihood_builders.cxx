@@ -65,7 +65,6 @@ std::unique_ptr<RooSubsidiaryL> buildConstraints(RooAbsPdf *pdf, RooAbsData *dat
    RooArgSet allConstraints;
 
    if (!global_observables_tag.empty()) {
-      std::cout << "DEBUG: global_observables_tag > 0" << std::endl;
       if (global_observables.set.getSize() > 0) {
          global_observables.set.removeAll();
       }
@@ -125,7 +124,7 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
 
    RooAbsCategoryLValue &simCat = (RooAbsCategoryLValue &)sim_pdf->indexCat();
 
-   // FIXME: process_empty_data_sets was previously member function processEmptyDataSets(), which returned extended_ for RooSumL (previously named RooSimultaneousL). See RooAbsL and RooSumL/RooUnbinnedL implementations. I think this should work here, but be careful in other subclasses!
+   // note: this is valid for simultaneous likelihoods, not for other test statistic types (e.g. chi2) for which this should return true.
    bool process_empty_data_sets = RooAbsL::isExtendedHelper(pdf, extended);
 
    TString simCatName(simCat.GetName());
@@ -139,12 +138,10 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
    // Count number of used states
    std::size_t N_components = 0;
 
-   RooCatType *type;
-   std::unique_ptr<TIterator> catIter{simCat.typeIterator()};
-   while ((type = (RooCatType *)catIter->Next())) {
+   for (const auto& catState : simCat) {
       // Retrieve the PDF for this simCat state
-      RooAbsPdf *component_pdf = sim_pdf->getPdf(type->GetName());
-      auto dset = (RooAbsData *)dsetList->FindObject(type->GetName());
+      RooAbsPdf *component_pdf = sim_pdf->getPdf(catState.first.c_str());
+      auto dset = (RooAbsData *)dsetList->FindObject(catState.first.c_str());
 
       if (component_pdf && dset && (0. != dset->sumEntries() || process_empty_data_sets)) {
          ++N_components;
@@ -157,16 +154,16 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
    //   _gofSplitMode.resize(N_components);  // not used, Hybrid mode only, see below
 
    // Create array of regular fit contexts, containing subset of data and single fitCat PDF
-   catIter->Reset();
    std::size_t n = 0;
-   while ((type = (RooCatType *)catIter->Next())) {
+   for (const auto& catState : simCat) {
+      const std::string& catName = catState.first;
       // Retrieve the PDF for this simCat state
-      RooAbsPdf *component_pdf = sim_pdf->getPdf(type->GetName());
-      auto dset = (RooAbsData *)dsetList->FindObject(type->GetName());
+      RooAbsPdf *component_pdf = sim_pdf->getPdf(catName.c_str());
+      auto dset = (RooAbsData *)dsetList->FindObject(catName.c_str());
 
       if (component_pdf && dset && (0. != dset->sumEntries() || process_empty_data_sets)) {
          ooccoutI((TObject *)nullptr, Fitting)
-         << "RooSumL: creating slave calculator #" << n << " for state " << type->GetName() << " ("
+         << "RooSumL: creating slave calculator #" << n << " for state " << catName << " ("
                                                    << dset->numEntries() << " dataset entries)" << std::endl;
 
          // *** START HERE
@@ -180,9 +177,7 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
             binnedL = kTRUE;
          } else if (component_pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
             // Default case: top-level pdf is a product of RRSP and other pdfs
-            RooFIter iter = ((RooProdPdf *)component_pdf)->pdfList().fwdIterator();
-            RooAbsArg *component;
-            while ((component = iter.next())) {
+            for (const auto component : ((RooProdPdf *)component_pdf)->pdfList()) {
                if (component->getAttribute("BinnedLikelihood") &&
                    component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
                   binnedPdf = (RooAbsPdf *)component;
@@ -198,17 +193,6 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
          // WVE END HACK
          // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated
          // elsewhere anyway and omitting them reduces model complexity and associated handling/cloning times
-         //         if (_splitRange && rangeName) {
-         //            _gofArray[n] =
-         //               create(type->GetName(), type->GetName(), (binnedPdf ? *binnedPdf : *component_pdf), *dset,
-         //               *projDeps,
-         //                      Form("%s_%s", rangeName, type->GetName()), addCoefRangeName, _nCPU * (_mpinterl ? -1 :
-         //                      1), _mpinterl, _CPUAffinity, _verbose, _splitRange, binnedL);
-         //         } else {
-         //            _gofArray[n] =
-         //               create(type->GetName(), type->GetName(), (binnedPdf ? *binnedPdf : *component_pdf), *dset,
-         //               *projDeps, rangeName,
-         //                      addCoefRangeName, _nCPU, _mpinterl, _CPUAffinity, _verbose, _splitRange, binnedL);
          if (binnedL) {
             components.push_back(std::make_unique<RooBinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
          } else {
@@ -218,21 +202,6 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
          components.back()->setSimCount(N_components);
          // *** END HERE
 
-         // TODO: left out Hybrid mode for now, evaluate later whether to reinclude (also then change
-         // evaluate_partition)
-         //         // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting
-         //         of all components if (_mpinterl==RooFit::Hybrid) {
-         //            if (dset->numEntries()<10) {
-         //               //cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component
-         //               "<< n << " to SimComponents"<< endl ; _gofSplitMode[n] = RooFit::SimComponents;
-         //               _gofArray[n]->_mpinterl = RooFit::SimComponents;
-         //            } else {
-         //               //cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component
-         //               "<< n << " to BulkPartition"<< endl ; _gofSplitMode[n] = RooFit::BulkPartition;
-         //               _gofArray[n]->_mpinterl = RooFit::BulkPartition;
-         //            }
-         //         }
-         //
          // Servers may have been redirected between instantiation and (deferred) initialization
 
          std::unique_ptr<RooArgSet> actualParams{binnedPdf ? binnedPdf->getParameters(dset)
@@ -247,7 +216,7 @@ buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended 
          ++n;
       } else {
          if ((!dset || (0. != dset->sumEntries() && !process_empty_data_sets)) && component_pdf) {
-            ooccoutD((TObject *)nullptr, Fitting) << "RooSumL: state " << type->GetName()
+            ooccoutD((TObject *)nullptr, Fitting) << "RooSumL: state " << catName
                                                                        << " has no data entries, no slave calculator created" << std::endl;
          }
       }

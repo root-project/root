@@ -34,9 +34,6 @@ public:
 
    void initVars();
 
-   // TODO: implement override if necessary
-//   void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions & options) override;
-
    void evaluate() override;
    inline double getResult() const override { return result; }
 
