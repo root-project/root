@@ -93,7 +93,7 @@ public:
       R__ASSERT(dst != nullptr);
       if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
          // Current page is at 50% fill level, we can now commit the previously used page
-         auto otherIdx = (fHeadPageIdx + 1) % 2;
+         auto otherIdx = 1 - fHeadPageIdx;
          if (fHeadPage[otherIdx].GetNElements())
             fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
       }
