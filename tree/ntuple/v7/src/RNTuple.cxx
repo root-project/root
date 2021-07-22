@@ -295,9 +295,9 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
 
    fMaxUnzippedClusterSize = fSink->GetWriteOptions().GetMaxUnzippedClusterSize();
    // First estimate is a factor 2 compression if compression is used at all
-   fUnzippedClusterSizeEst = (fSink->GetWriteOptions().GetCompression() == 0)
-      ? fSink->GetWriteOptions().GetApproxZippedClusterSize()
-      : 2 * fSink->GetWriteOptions().GetApproxZippedClusterSize();
+   const auto &writeOpts = fSink->GetWriteOptions();
+   int scale = writeOpts.GetCompression() ? 1 : 2;
+   fUnzippedClusterSizeEst = scale * writeOpts.GetApproxZippedClusterSize();
 }
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
