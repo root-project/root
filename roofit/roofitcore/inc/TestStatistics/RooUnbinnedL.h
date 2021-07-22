@@ -38,7 +38,6 @@ public:
                              std::size_t components_end) override;
 
 private:
-   bool processEmptyDataSets() const;
    bool apply_weight_squared = false;            // Apply weights squared?
    mutable bool _first = true;       //!
 };

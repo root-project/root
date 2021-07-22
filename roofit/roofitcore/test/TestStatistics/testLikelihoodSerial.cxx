@@ -18,23 +18,15 @@
 
 #include <RooRandom.h>
 #include <RooWorkspace.h>
-
 #include <RooMinimizer.h>
-#include <RooGradMinimizerFcn.h>
 #include <RooFitResult.h>
-
+#include <RooNLLVar.h>
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
-
-//#include <TestStatistics/LikelihoodGradientJob.h>
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
-#include <TestStatistics/RooSumL.h>
 #include <TestStatistics/optional_parameter_types.h>
 #include <TestStatistics/likelihood_builders.h>
-//#include <RooFit/MultiProcess/JobManager.h>
-//#include <RooFit/MultiProcess/ProcessManager.h> // need to complete type for debugging
-#include <RooNLLVar.h>
 #include <TestStatistics/RooRealL.h>
 #include <TestStatistics/kahan_sum.h>
 
@@ -279,11 +271,7 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
 
    auto nll0 = nll->getVal();
 
-   likelihood =
-//      std::make_shared<RooFit::TestStatistics::RooBinnedL>(pdf, data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")));
-//      std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-//      std::make_shared<RooFit::TestStatistics::RooSumL>(pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs")}));
-      RooFit::TestStatistics::buildUnbinnedConstrainedLikelihood(pdf, data, RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs"))));
+   likelihood = RooFit::TestStatistics::buildUnbinnedConstrainedLikelihood(pdf, data, RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs"))));
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
 
    nll_ts.evaluate();
@@ -327,15 +315,15 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
    w.factory("ExtendPdf::egB(Gaussian::gB(x,mB[-2,-10,10],s),nB[100])") ;
    w.factory("SIMUL::model(index[A,B],A=gA,B=gB)") ;
 
-   RooDataSet* dA = w.pdf("gA")->generate(*w.var("x"),1) ;
-   RooDataSet* dB = w.pdf("gB")->generate(*w.var("x"),1) ;
+   std::unique_ptr<RooDataSet> dA {w.pdf("gA")->generate(*w.var("x"),1)};
+   std::unique_ptr<RooDataSet> dB {w.pdf("gB")->generate(*w.var("x"),1)};
    w.cat("index")->setLabel("A") ;
    dA->addColumn(*w.cat("index")) ;
    w.cat("index")->setLabel("B") ;
    dB->addColumn(*w.cat("index")) ;
 
    data = (RooDataSet*) dA->Clone() ;
-   static_cast<RooDataSet*>(data)->append(*dB) ;
+   dynamic_cast<RooDataSet*>(data)->append(*dB) ;
 
    pdf = w.pdf("model");
 
@@ -365,9 +353,9 @@ protected:
 
       // Generate template histograms
 
-      RooDataHist* h_sigA = w.pdf("gA")->generateBinned(*w.var("x"),1000) ;
-      RooDataHist* h_sigB = w.pdf("gB")->generateBinned(*w.var("x"),1000) ;
-      RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+      std::unique_ptr<RooDataHist> h_sigA {w.pdf("gA")->generateBinned(*w.var("x"),1000)};
+      std::unique_ptr<RooDataHist> h_sigB {w.pdf("gB")->generateBinned(*w.var("x"),1000)};
+      std::unique_ptr<RooDataHist> h_bkg {w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
       w.import(*h_sigA, RooFit::Rename("h_sigA"));
       w.import(*h_sigB, RooFit::Rename("h_sigB"));
@@ -447,6 +435,4 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    EXPECT_EQ(nll0, nll2);
    EXPECT_DOUBLE_EQ(nll1, nll2);
-
-//   printf("nll0: %a\tnll1: %a\tnll2: %a\tnll_ts.getResult(): %a\tnll_ts.offset: %a\tnll_ts.offset_carry: %a\tlikelihood.get_carry: %a\tcarry1: %a\n", nll0, nll1, nll2, nll_ts.getResult(), nll_ts.offset(), nll_ts.offsetCarry(), likelihood->get_carry(), carry1);
 }

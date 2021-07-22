@@ -15,10 +15,13 @@
  *****************************************************************************/
 
 #include <TestStatistics/LikelihoodWrapper.h>
+
 #include <TestStatistics/RooAbsL.h> // need complete type for likelihood->...
 #include <TestStatistics/MinuitFcnGrad.h>
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooSumL.h> // need complete type for dynamic cast
+
+#include "RooMsgService.h"
 
 namespace RooFit {
 namespace TestStatistics {

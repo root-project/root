@@ -17,7 +17,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooRealL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooRealL
 
-#include <RooAbsReal.h>
+#include "RooAbsReal.h"
 #include "RooSetProxy.h"
 
 #include "Rtypes.h" // ClassDef, ClassImp
@@ -27,7 +27,6 @@
 namespace RooFit {
 namespace TestStatistics {
 
-// forward declaration
 class RooAbsL;
 
 class RooRealL : public RooAbsReal {
@@ -35,11 +34,9 @@ public:
    RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL> likelihood);
    RooRealL(const RooRealL &other, const char *name = 0);
 
-   // pure virtual overrides:
    Double_t evaluate() const override;
    inline TObject *clone(const char *newname) const override { return new RooRealL(*this, newname); }
 
-   // virtual overrides:
    inline double globalNormalization() const
    {
       // Default value of global normalization factor is 1.0

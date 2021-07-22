@@ -14,8 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef ROOT_ROOFIT_TESTSTATISTICS_optimization
-#define ROOT_ROOFIT_TESTSTATISTICS_optimization
+#ifndef ROOT_ROOFIT_TESTSTATISTICS_ConstantTermsOptimizer
+#define ROOT_ROOFIT_TESTSTATISTICS_ConstantTermsOptimizer
 
 // forward declarations
 class RooAbsReal;
@@ -37,4 +37,4 @@ struct ConstantTermsOptimizer {
 }
 }
 
-#endif // ROOT_ROOFIT_TESTSTATISTICS_optimization
+#endif // ROOT_ROOFIT_TESTSTATISTICS_ConstantTermsOptimizer

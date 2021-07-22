@@ -59,7 +59,7 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
   for (unsigned int i = 0; i < _floatParamList->size(); ) { // Note: Counting loop, since removing from collection!
     const RooAbsArg* arg = (*_floatParamList).at(i);
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-      oocoutW(_context,Minimization) << "RooMinimizerFcn::RooMinimizerFcn: removing parameter "
+      oocoutW(_context,Minimization) << "RooAbsMinimizerFcn::RooAbsMinimizerFcn: removing parameter "
 				     << arg->GetName() << " from list because it is not of type RooRealVar" << endl;
       _floatParamList->remove(*arg);
     } else {
@@ -424,11 +424,11 @@ void RooAbsMinimizerFcn::printEvalErrors() const {
 
   std::ostringstream msg;
   if (_doEvalErrorWall) {
-    msg << "RooMinimizerFcn: Minimized function has error status." << endl
+    msg << "RooAbsMinimizerFcn: Minimized function has error status." << endl
         << "Returning maximum FCN so far (" << _maxFCN
         << ") to force MIGRAD to back out of this region. Error log follows.\n";
   } else {
-    msg << "RooMinimizerFcn: Minimized function has error status but is ignored.\n";
+    msg << "RooAbsMinimizerFcn: Minimized function has error status but is ignored.\n";
   }
 
   msg << "Parameter values: " ;

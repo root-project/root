@@ -17,8 +17,10 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooSumL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooSumL
 
-#include <TestStatistics/RooAbsL.h>
-#include <TestStatistics/optional_parameter_types.h>
+#include "TestStatistics/RooAbsL.h"
+#include "TestStatistics/optional_parameter_types.h"
+
+#include <tuple>
 
 namespace RooFit {
 namespace TestStatistics {
@@ -39,8 +41,6 @@ public:
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
 private:
-   bool processEmptyDataSets() const;
-
    std::vector<std::unique_ptr<RooAbsL>> components_;
 };
 
