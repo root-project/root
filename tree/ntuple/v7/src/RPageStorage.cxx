@@ -352,7 +352,8 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
                                  ClusterSize_t(nEntries - fPrevClusterNEntries));
    // TODO(jblomer): Remove me with the v1 Serialization
-   fDescriptorBuilder.SetClusterLocator(fLastClusterId, RClusterDescriptor::RLocator());
+   // For now, we set a non-zero locator to make sure current reading code does not choke
+   fDescriptorBuilder.SetClusterLocator(fLastClusterId, RClusterDescriptor::RLocator({0, 1, ""}));
    for (auto &range : fOpenColumnRanges) {
       fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
       range.fFirstElementIndex += range.fNElements;
