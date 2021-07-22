@@ -60,7 +60,7 @@ public:
       bool wasEmpty = fQueue.empty();
       fQueue.emplace_back(std::forward<T>(item));
       if (wasEmpty)
-         fCvHasItems.notify_all();
+         fCvHasItems.notify_one();
    }
 
    /// Retrieves the oldest item in the queue, blocks as long as queue is empty
@@ -74,7 +74,7 @@ public:
       fQueue.pop_front();
 
       if (wasFull)
-         fCvHasSpace.notify_all();
+         fCvHasSpace.notify_one();
 
       return item;
    }
