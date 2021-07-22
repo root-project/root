@@ -1439,6 +1439,8 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [BUILD target] [PROJECT project]
 #                        [PASSREGEX exp] [FAILREGEX epx]
 #                        [PASSRC code]
+#                        [RESOURCE_LOCK lock]
+#                        [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                        [LABELS label1 label2]
 #                        [PYTHON_DEPS numpy numba keras torch ...] # List of python packages required to run this test.
 #                                                              A fixture will be added the tries to import them before the test starts.)
