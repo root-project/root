@@ -31,7 +31,6 @@
    #define _VECOPS_USE_EXTERN_TEMPLATES true
 #endif
 
-#include <ROOT/RStringView.hxx>
 #include <TError.h> // R__ASSERT
 #include <ROOT/TypeTraits.hxx>
 
@@ -77,7 +76,7 @@ template<typename T>
 using RVec = ROOT::VecOps::RVec<T>;
 
 template <typename... T>
-std::size_t GetVectorsSize(std::string_view id, const RVec<T> &... vs)
+std::size_t GetVectorsSize(const std::string &id, const RVec<T> &... vs)
 {
    constexpr const auto nArgs = sizeof...(T);
    const std::size_t sizes[] = {vs.size()...};
