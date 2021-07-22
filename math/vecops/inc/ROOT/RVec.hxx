@@ -32,7 +32,6 @@
 #endif
 
 #include <TError.h> // R__ASSERT
-#include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
 #include <cmath>
