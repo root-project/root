@@ -16,7 +16,7 @@
 #define ROOT_RWorkQueue
 
 #include <condition_variable>
-#include <deque>
+#include <queue>
 #include <mutex>
 #include <utility>
 
@@ -33,9 +33,9 @@ template <typename T>
 class RWorkQueue {
 private:
    /// Maximum number of Ts in the queue. Pushing further will block until items are consumed.
-   std::size_t fLimit;
+   std::size_t fMaxSize;
    /// The queue storage
-   std::deque<T> fQueue;
+   std::queue<T> fQueue;
    /// Protects all internal state
    std::mutex fLock;
    /// Signals if there are items enqueued
@@ -44,21 +44,23 @@ private:
    std::condition_variable fCvHasSpace;
 
 public:
-   explicit RWorkQueue(std::size_t limit) : fLimit(limit) {}
+   explicit RWorkQueue(std::size_t maxSize) : fMaxSize(maxSize) {}
    RWorkQueue(const RWorkQueue &other) = delete;
    RWorkQueue(RWorkQueue &&other) = default;
    RWorkQueue &operator =(const RWorkQueue &other) = delete;
-   RWorkQueue &operator =(RWorkQueue &other) = default;
+   RWorkQueue &operator =(RWorkQueue &&other) = default;
    ~RWorkQueue() = default;
 
    /// Pushes a new item into the queue, blocks as long as queue is full
    void Enqueue(T &&item)
    {
       std::unique_lock<std::mutex> lock(fLock);
-      fCvHasSpace.wait(lock, [&]{ return fQueue.size() < fLimit; });
+      fCvHasSpace.wait(lock, [&]{ return fQueue.size() < fMaxSize; });
 
       bool wasEmpty = fQueue.empty();
-      fQueue.emplace_back(std::forward<T>(item));
+      fQueue.emplace(std::move(item));
+
+      lock.unlock();
       if (wasEmpty)
          fCvHasItems.notify_one();
    }
@@ -69,10 +71,11 @@ public:
       std::unique_lock<std::mutex> lock(fLock);
       fCvHasItems.wait(lock, [&]{ return !fQueue.empty(); });
 
-      bool wasFull = fQueue.size() == fLimit;
+      bool wasFull = fQueue.size() == fMaxSize;
       auto item = std::move(fQueue.front());
-      fQueue.pop_front();
+      fQueue.pop();
 
+      lock.unlock();
       if (wasFull)
          fCvHasSpace.notify_one();
 
@@ -88,7 +91,7 @@ public:
    bool IsFull()
    {
       std::lock_guard<std::mutex> guard(fLock);
-      return fQueue.size() == fLimit;
+      return fQueue.size() == fMaxSize;
    }
 
    std::size_t GetSize()
