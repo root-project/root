@@ -13,3 +13,5 @@ endif()
 ROOT_ADD_GTEST(testTThreadedObject testTThreadedObject.cxx LIBRARIES Hist)
 
 ROOT_ADD_GTEST(testInterpreterLock testInterpreterLock.cxx LIBRARIES Imt REPEATS 50)
+
+ROOT_ADD_GTEST(testWorkQueue testWorkQueue.cxx LIBRARIES Thread)
