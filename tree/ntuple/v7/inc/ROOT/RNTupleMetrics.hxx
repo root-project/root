@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
 
 namespace ROOT {
 namespace Experimental {
@@ -272,7 +273,6 @@ public:
 using RNTuplePlainTimer = RNTupleTimer<RNTuplePlainCounter, RNTupleTickCounter<RNTuplePlainCounter>>;
 using RNTupleAtomicTimer = RNTupleTimer<RNTupleAtomicCounter, RNTupleTickCounter<RNTupleAtomicCounter>>;
 
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RNTupleMetrics
@@ -324,6 +324,41 @@ public:
    void Print(std::ostream &output, const std::string &prefix = "") const;
    void Enable();
    bool IsEnabled() const { return fIsEnabled; }
+};
+
+template<
+   typename HNumber,
+   typename std::enable_if<
+      std::is_arithmetic<HNumber>::value
+   >::type
+>
+class RNTupleHistoCounter {
+private:
+   std::map<HNumber, std::pair<HNumber, RNTupleAtomicCounter*>> bins;
+public:
+   RNTupleHistoCounter(
+      const std::string &name, const std::string &desc,
+      const std::vector<std::pair<HNumber, HNumber>> &intervals,
+      RNTupleMetrics &metrics
+   )
+   {
+      for(auto &elem: intervals) {
+         auto counter = metrics.MakeCounter<RNTupleAtomicCounter*>(name, "", desc);
+         bins[elem.first] = std::make_pair(elem.second, std::move(counter));
+      }
+   }
+
+   void AddValue(const HNumber &n) {
+      auto lower = bins.lower_bound(n);
+
+      if(lower != bins.end()) {
+         auto pair = lower->second;
+
+         if(n <= pair->first) {
+            pair->second->Inc();
+         }
+      }
+   }
 };
 
 } // namespace Detail
