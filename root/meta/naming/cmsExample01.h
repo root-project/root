@@ -11,6 +11,26 @@ namespace reco {
 #include <functional>
 #include <algorithm>
 
+#if defined(_MSC_VER) && __cplusplus > 201402L
+namespace std {
+   // std::unary_function and std::binary_function were both removed
+   // in C++17.
+
+   template <typename Arg1, typename Result>
+   struct unary_function {
+      typedef Arg1 argument_type;
+      typedef Result result_type;
+   };
+
+   template <typename Arg1, typename Arg2, typename Result>
+   struct binary_function {
+      typedef Arg1 first_argument_type;
+      typedef Arg2 second_argument_type;
+      typedef Result result_type;
+   };
+}
+#endif
+
 namespace edm {
    template<typename C, typename T, typename F> class RefVector;
    template<typename T> class RefToBaseVector;

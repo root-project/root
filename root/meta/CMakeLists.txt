@@ -42,6 +42,7 @@ configure_file(typelist.v5.txt . COPYONLY)
 configure_file(typelist.v6.txt . COPYONLY)
 configure_file(typelist_win32.v5.txt . COPYONLY)
 configure_file(typelist_win32.v6.txt . COPYONLY)
+configure_file(typelist_win32.v6.cxx17.txt . COPYONLY)
 
 ROOTTEST_ADD_AUTOMACROS(DEPENDS ANSTmpltInt.C TmpltInt0.C TmpltInt1.C TmpltFloat.C
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST}
