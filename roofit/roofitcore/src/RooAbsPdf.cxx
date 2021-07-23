@@ -156,7 +156,6 @@ called for each data event.
 #include "RooRandom.h"
 #include "RooNumIntConfig.h"
 #include "RooProjectedPdf.h"
-#include "RooInt.h"
 #include "RooCustomizer.h"
 #include "RooConstraintSum.h"
 #include "RooParamBinning.h"
@@ -183,6 +182,7 @@ called for each data event.
 #include "Math/CholeskyDecomp.h"
 #include "RooDerivative.h"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -2246,37 +2246,28 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& pro
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return lookup table with randomized access order for prototype events,
-/// given nProto prototype data events and nGen events that will actually
-/// be accessed
+/// Return lookup table with randomized order for nProto prototype events.
 
 Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto, Int_t, Bool_t resampleProto) const
 {
-  // Make unsorted linked list of indeces
-  RooLinkedList l ;
-  Int_t i ;
-  for (i=0 ; i<nProto ; i++) {
-    l.Add(new RooInt(i)) ;
-  }
-
   // Make output list
   Int_t* lut = new Int_t[nProto] ;
 
-  // Randomly samply input list into output list
+  // Randomly sample input list into output list
   if (!resampleProto) {
     // In this mode, randomization is a strict reshuffle of the order
-    for (i=0 ; i<nProto ; i++) {
-      Int_t iran = RooRandom::integer(nProto-i) ;
-      RooInt* sample = (RooInt*) l.At(iran) ;
-      lut[i] = *sample ;
-      l.Remove(sample) ;
-      delete sample ;
+    std::iota(lut, lut + nProto, 0); // fill the vector with 0 to nProto - 1
+    // Shuffle code taken from https://en.cppreference.com/w/cpp/algorithm/random_shuffle.
+    // The std::random_shuffle function was deprecated in C++17. We could have
+    // used std::shuffle instead, but this is not straight-forward to use with
+    // RooRandom::integer() and we didn't want to change the random number
+    // generator. It might cause unwanted effects like reproducibility problems.
+    for (int i = nProto-1; i > 0; --i) {
+        std::swap(lut[i], lut[RooRandom::integer(i+1)]);
     }
   } else {
     // In this mode, we resample, i.e. events can be used more than once
-    for (i=0 ; i<nProto ; i++) {
-      lut[i] = RooRandom::integer(nProto);
-    }
+    std::generate(lut, lut + nProto, [&]{ return RooRandom::integer(nProto); });
   }
 
 
