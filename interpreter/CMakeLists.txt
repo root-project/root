@@ -497,7 +497,6 @@ if (builtin_cling)
 
   # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
   set(CLING_CXXFLAGS ${CLING_CXXFLAGS} PARENT_SCOPE)
-
   string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
   if (LLVM_ENABLE_PIC AND NOT MSVC)
     # FIXME: LLVM_ENABLE_PIC is ON by default, however not propagated to cling.
