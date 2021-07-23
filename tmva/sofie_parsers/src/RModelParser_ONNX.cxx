@@ -162,9 +162,9 @@ RModel RModelParser_ONNX::Parse(std::string filename){
       sep = '\\';
    #endif
    size_t i = filename.rfind(sep, filename.length());
-   std::string modelname;
+   std::string filename_nodir = filename;
    if (i != std::string::npos){
-      filename = (filename.substr(i+1, filename.length() - i));
+      filename_nodir = (filename.substr(i+1, filename.length() - i));
    }
 
 
@@ -179,7 +179,7 @@ RModel RModelParser_ONNX::Parse(std::string filename){
    GOOGLE_PROTOBUF_VERIFY_VERSION;
    //model I/O
    onnx::ModelProto model;
-   RModel rmodel(filename, parsetime);
+   RModel rmodel(filename_nodir, parsetime);
 
    std::unordered_map<std::string, ETensorType> tensor_type;
 
