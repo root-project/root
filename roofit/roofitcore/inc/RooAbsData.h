@@ -60,7 +60,13 @@ struct RunContext;
 #define WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(Class_t)                                             \
   template<typename ...Args_t>                                                                    \
   Class_t(ROOT::Internal::TStringView name, ROOT::Internal::TStringView title, Args_t &&... args) \
-    : Class_t(std::string_view(name), std::string_view(title), std::forward<Args_t>(args)...) {}
+    : Class_t(std::string_view(name), std::string_view(title), std::forward<Args_t>(args)...) {}  \
+  template<typename ...Args_t>                                                                    \
+  Class_t(ROOT::Internal::TStringView name, std::string_view title, Args_t &&... args)            \
+    : Class_t(std::string_view(name), title, std::forward<Args_t>(args)...) {}                    \
+  template<typename ...Args_t>                                                                    \
+  Class_t(std::string_view name, ROOT::Internal::TStringView title, Args_t &&... args)            \
+    : Class_t(name, std::string_view(title), std::forward<Args_t>(args)...) {}
 #endif
 
 
