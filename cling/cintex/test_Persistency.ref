@@ -1,7 +1,0 @@
-
-ObjectInitialization: OK
-WriteObject:          OK
-ReadObject:           OK
-WriteObjectInTree:    OK
-ReadObjectInTree:     OK
-ReadTransientData:    OK
