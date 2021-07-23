@@ -8373,15 +8373,18 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum value smaller than maxval of bins in the range,
 /// unless the value has been overridden by TH1::SetMaximum,
-/// in which case it returns that value. (This happens, for example,
+/// in which case it returns that value. This happens, for example,
 /// when the histogram is drawn and the y or z axis limits are changed
 ///
 /// To get the maximum value of bins in the histogram regardless of
-/// whether the value has been overridden, use
+/// whether the value has been overridden (using TH1::SetMaximum), use
 ///
 /// ~~~ {.cpp}
 ///  h->GetBinContent(h->GetMaximumBin())
 /// ~~~
+/// 
+/// TH1::GetMaximumBin can be used to get the location of the maximum 
+/// value.
 
 Double_t TH1::GetMaximum(Double_t maxval) const
 {
@@ -8412,6 +8415,8 @@ Double_t TH1::GetMaximum(Double_t maxval) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with maximum value in the range.
+///
+/// TH1::GetMaximum can be used to get the maximum value.
 
 Int_t TH1::GetMaximumBin() const
 {
@@ -8458,15 +8463,18 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return minimum value larger than minval of bins in the range,
 /// unless the value has been overridden by TH1::SetMinimum,
-/// in which case it returns that value. (This happens, for example,
+/// in which case it returns that value. This happens, for example,
 /// when the histogram is drawn and the y or z axis limits are changed
 ///
 /// To get the minimum value of bins in the histogram regardless of
-/// whether the value has been overridden, use
+/// whether the value has been overridden (using TH1::SetMinimum), use
 ///
 /// ~~~ {.cpp}
 /// h->GetBinContent(h->GetMinimumBin())
 /// ~~~
+///
+/// TH1::GetMinimumBin can be used to get the location of the 
+/// minimum value.
 
 Double_t TH1::GetMinimum(Double_t minval) const
 {
