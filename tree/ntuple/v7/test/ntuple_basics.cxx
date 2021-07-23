@@ -369,6 +369,7 @@ TEST(RNTupleModel, GetField)
    EXPECT_EQ(m->GetField("cs.v1")->GetName(), "v1");
    EXPECT_EQ(m->GetField("cs.v1")->GetType(), "std::vector<float>");
    EXPECT_EQ(m->GetField("nonexistent"), nullptr);
+   EXPECT_EQ(m->GetField(""), nullptr);
 }
 
 TEST(RNTuple, EmptyString)
