@@ -79,6 +79,9 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
 
 ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName)
 {
+   if (fieldName.empty())
+      return nullptr;
+
    auto split_on_dot = [](std::string_view in) {
       std::vector<std::string_view> splits;
       for (std::size_t pos = in.find('.'); pos != std::string_view::npos; pos = in.find('.')) {
