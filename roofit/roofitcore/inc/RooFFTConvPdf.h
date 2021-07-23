@@ -73,25 +73,23 @@ protected:
   void calcParams() ;
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
-  Double_t*  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, Double_t shift) const ;
+  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, Double_t shift) const ;
 
   class FFTCacheElem : public PdfCacheElem {
   public:
     FFTCacheElem(const RooFFTConvPdf& self, const RooArgSet* nset) ;
-    ~FFTCacheElem() ;
 
     virtual RooArgList containedArgs(Action) ;
 
-    TVirtualFFT* fftr2c1 ;
-    TVirtualFFT* fftr2c2 ;
-    TVirtualFFT* fftc2r ;
+    std::unique_ptr<TVirtualFFT> fftr2c1;
+    std::unique_ptr<TVirtualFFT> fftr2c2;
+    std::unique_ptr<TVirtualFFT> fftc2r;
 
-    RooAbsPdf* pdf1Clone ;
-    RooAbsPdf* pdf2Clone ;
+    std::unique_ptr<RooAbsPdf> pdf1Clone;
+    std::unique_ptr<RooAbsPdf> pdf2Clone;
 
-    RooAbsBinning* histBinning ;
-    RooAbsBinning* scanBinning ;
-
+    std::unique_ptr<RooAbsBinning> histBinning;
+    std::unique_ptr<RooAbsBinning> scanBinning;
   };
 
   friend class FFTCacheElem ;  
