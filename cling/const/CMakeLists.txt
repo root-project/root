@@ -8,8 +8,6 @@ ROOTTEST_ADD_TEST(run2
                   OUTREF good2.output
                   LABELS roottest regression cling)
 
-get_filename_component(abspath ${CMAKE_CURRENT_SOURCE_DIR}/../../root/ ABSOLUTE)
 ROOTTEST_ADD_TEST(constCharTest
-                  COPY_TO_BUILDDIR constissue.h
-                  MACRO ${abspath}/build.C\(\"constissue.h\"\)
+                  MACRO constissue.C
                   LABELS roottest regression cling)
