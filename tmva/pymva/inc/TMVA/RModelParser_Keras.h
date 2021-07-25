@@ -32,9 +32,15 @@ namespace Experimental{
 namespace SOFIE{
 
 enum class LayerType{
-   DENSE = 0, RELU = 1, TRANSPOSE = 2 //order sensitive
+   DENSE = 0, ACTIVATION = 1, RELU = 2, TRANSPOSE = 3 //order sensitive
 
 };
+
+static std::unordered_map<std::string, ETensorType> dTypeKeras=
+{
+   {"'float32'", ETensorType::FLOAT}
+};
+
 
 namespace INTERNAL{
    std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias,std::string dtype);

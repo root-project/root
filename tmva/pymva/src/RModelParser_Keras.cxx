@@ -7,9 +7,15 @@ namespace SOFIE{
 
 std::unordered_map<std::string, LayerType> Type =
     {
-        {"'dense'", LayerType::DENSE},
+        {"'Dense'", LayerType::DENSE},
+        {"'Activation'", LayerType::ACTIVATION},
+        {"'ReLU'", LayerType::RELU},
+        {"'Permute'", LayerType::TRANSPOSE}
+    };
+
+std::unordered_map<std::string, LayerType> ActivationType =
+    {
         {"'relu'", LayerType::RELU},
-        {"'permute'", LayerType::TRANSPOSE}
     };
 
 
@@ -141,12 +147,17 @@ RModel Parse(std::string filename){
       layer=PyList_GetItem(pModel,modelIterator);
 
       std::string type(PyStringAsString(PyList_GetItem(layer,0)));
+
+      //Ignoring the input layer for models built using Keras Functional API
+      if(type=="'InputLayer'")
+      continue;
+
       attributes=PyList_GetItem(layer,1);
       inputs=PyList_GetItem(layer,2);
       outputs=PyList_GetItem(layer,3);
-      ETensorType dtype = convertStringToType(PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
+      ETensorType dtype = convertStringToType(dTypeKeras, PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
 
-      switch(Type.find(toLower(type))->second){
+      switch(Type.find(type)->second){
          case LayerType::DENSE : {
 
          std::string activation(PyStringAsString(PyDict_GetItemString(attributes,"activation")));
@@ -159,14 +170,14 @@ RModel Parse(std::string filename){
          std::string bias(PyStringAsString(PyList_GetItem(weightNames,1)));
 
                   if(activation != "'linear'"){
-                     rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,name+"_gemm",kernel,bias,dtype)));
+                     rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,name+"Gemm",kernel,bias,dtype)));
 
-                     if(Type.find(toLower(activation))==Type.end())
-                       throw std::runtime_error("Type error: Layer activation type "+toLower(activation)+" not yet registered in TMVA SOFIE");
+                     if(ActivationType.find(activation)==ActivationType.end())
+                       throw std::runtime_error("Type error: Layer activation type "+activation+" not yet registered in TMVA SOFIE");
 
-                     switch(Type.find(toLower(activation))->second){
+                     switch(ActivationType.find(activation)->second){
                         case LayerType::RELU: {
-                           rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(name+"_gemm",output,dtype)));
+                           rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(name+"Gemm",output,dtype)));
                            break;
                         }
                         default: throw std::runtime_error("Activation error: TMVA SOFIE does not yet suppport Activation type"+activation);
@@ -180,11 +191,26 @@ RModel Parse(std::string filename){
                   break;
                }
 
+         case LayerType::ACTIVATION: {
+            std::string activation(PyStringAsString(PyDict_GetItemString(attributes,"activation")));
+            std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
+            std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
+
+            switch(ActivationType.find(activation)->second){
+               case LayerType::RELU: {
+                  rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(input,output,dtype))); break;
+                  }
+               default: throw std::runtime_error("Activation error: TMVA SOFIE does not yet suppport Activation type"+activation);
+               }
+               break;
+         }
+
          case LayerType::RELU: {
             std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
             std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
             rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(input,output,dtype)));  break;
             }
+
          case LayerType::TRANSPOSE: {
             std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
             std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
@@ -225,7 +251,7 @@ RModel Parse(std::string filename){
    for (Py_ssize_t weightIter = 0; weightIter < PyList_Size(pWeight); weightIter++) {
       weightTensor  = PyList_GetItem(pWeight, weightIter);
       std::string weightName(PyStringAsString(PyDict_GetItemString(weightTensor,"name")));
-      ETensorType weightType= convertStringToType(PyStringAsString(PyDict_GetItemString(weightTensor,"dtype")));
+      ETensorType weightType= convertStringToType(dTypeKeras,PyStringAsString(PyDict_GetItemString(weightTensor,"dtype")));
       weightValue   = PyDict_GetItemString(weightTensor,"value");
 
       //Converting numpy array to RTensor
@@ -265,7 +291,7 @@ RModel Parse(std::string filename){
    //For multiple inputs models, the model.input_shape will return a list of tuple, each describing the input tensor shape.
    if(PyTuple_Check(pInputShapes)){
       std::string inputName(PyStringAsString(PyList_GetItem(pInputs,0)));
-      ETensorType inputDType = convertStringToType(PyStringAsString(PyList_GetItem(pInputTypes,0)));
+      ETensorType inputDType = convertStringToType(dTypeKeras, PyStringAsString(PyList_GetItem(pInputTypes,0)));
 
 
       switch(inputDType){
@@ -275,7 +301,7 @@ RModel Parse(std::string filename){
             throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
          }
 
-         std::vector<size_t>inputShape=getShape(pInputShapes);
+         std::vector<size_t>inputShape=getShapeFromTuple(pInputShapes);
          rmodel.AddInputTensorInfo(inputName, ETensorType::FLOAT, inputShape);
          break;
          }
@@ -292,7 +318,7 @@ RModel Parse(std::string filename){
       for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(pInputs);++inputIter){
 
       std::string inputName(PyStringAsString(PyList_GetItem(pInputs,inputIter)));
-      ETensorType inputDType = convertStringToType(PyStringAsString(PyList_GetItem(pInputTypes,inputIter)));
+      ETensorType inputDType = convertStringToType(dTypeKeras, PyStringAsString(PyList_GetItem(pInputTypes,inputIter)));
 
       switch(inputDType){
 
@@ -303,7 +329,7 @@ RModel Parse(std::string filename){
             throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
          }
 
-         std::vector<size_t>inputShape=getShape(shapeTuple);
+         std::vector<size_t>inputShape=getShapeFromTuple(shapeTuple);
          rmodel.AddInputTensorInfo(inputName, ETensorType::FLOAT, inputShape);
          break;
          }
@@ -320,6 +346,7 @@ RModel Parse(std::string filename){
    Py_XDECREF(pInputShapes);
    Py_XDECREF(pInputTypes);
 
+
    //Extracting Output Tensor Names
    PyRunString("outputNames=[]",fGlobalNS,fLocalNS);
    PyRunString("for layerName in model.output_names:\n"
@@ -334,8 +361,6 @@ RModel Parse(std::string filename){
    Py_XDECREF(pOutputs);
    Py_XDECREF(fLocalNS);
    Py_XDECREF(fGlobalNS);
-   Py_XDECREF(main);
-   Py_Finalize();
    return rmodel;
 
      }
