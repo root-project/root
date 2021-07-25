@@ -6,12 +6,10 @@ namespace SOFIE{
 
 std::unordered_map<std::string, NodeType> NType =
     {
-        {"'onnx::gemm'", NodeType::GEMM},
-        {"'onnx::relu'", NodeType::RELU},
-        {"'onnx::transpose'", NodeType::TRANSPOSE}
+        {"'onnx::Gemm'", NodeType::GEMM},
+        {"'onnx::Relu'", NodeType::RELU},
+        {"'onnx::Transpose'", NodeType::TRANSPOSE}
     };
-
-
 
 
 namespace PyTorch{
@@ -38,8 +36,8 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 
     RModel rmodel(filename, parsetime);
 
-
     Py_Initialize();
+
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
@@ -58,8 +56,10 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     PyRunString("import torch",fGlobalNS,fLocalNS);
     PyRunString("print('Torch Version: '+torch.__version__)",fGlobalNS,fLocalNS);
     PyRunString("from torch.onnx.utils import _model_to_graph",fGlobalNS,fLocalNS);
+    PyRunString("from torch.onnx.symbolic_helper import _set_onnx_shape_inference",fGlobalNS,fLocalNS);
     PyRunString(TString::Format("model= torch.jit.load('%s')",filename.c_str()),fGlobalNS,fLocalNS);
     PyRunString("globals().update(locals())",fGlobalNS,fLocalNS);
+    PyRunString("model.cpu()",fGlobalNS,fLocalNS);
     PyRunString("model.eval()",fGlobalNS,fLocalNS);
 
     //Building dummy inputs for the model
@@ -83,8 +83,8 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     PyRunString("output=model(*dummy)",fGlobalNS,fLocalNS);
 
     //Getting the ONNX graph from model using the dummy inputs and example outputs
+    PyRunString("_set_onnx_shape_inference(True)",fGlobalNS,fLocalNS);
     PyRunString("graph=_model_to_graph(model,dummy,example_outputs=output)",fGlobalNS,fLocalNS);
-
 
 
     //Extracting Input tensor info
@@ -107,8 +107,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         }
     Py_XDECREF(pInputs);
 
-
-
     //Extracting the model information in list modelData
     PyRunString("modelData=[]",fGlobalNS,fLocalNS);
     PyRunString("for i in graph[0].nodes():\n"
@@ -128,7 +126,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
                 "    nodeData.append(nodeDType)\n"
                 "    modelData.append(nodeData)",fGlobalNS,fLocalNS);
     Py_ssize_t modelIterator, modelSize;
-    PyObject* pModel =PyDict_GetItemString(fLocalNS,"modelData");
+    PyObject* pModel = PyDict_GetItemString(fLocalNS,"modelData");
     PyObject* node,*attributes,*inputs,*outputs,*nodeDType;
     modelSize = PyList_Size(pModel);
 
@@ -136,15 +134,15 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         node=PyList_GetItem(pModel,modelIterator);
         std::string type(PyStringAsString(PyList_GetItem(node,0)));
 
-        if(NType.find(toLower(type))==NType.end())
+        if(NType.find(type)==NType.end())
             throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+type);
 
         attributes=PyList_GetItem(node,1);
         inputs=PyList_GetItem(node,2);
         outputs=PyList_GetItem(node,3);
-        ETensorType nodeDType=convertStringToType(PyStringAsString(PyList_GetItem(PyList_GetItem(node,4),0)));
+        ETensorType nodeDType=convertStringToType(dTypePyTorch, PyStringAsString(PyList_GetItem(PyList_GetItem(node,4),0)));
 
-        switch(NType.find(toLower(type))->second){
+        switch(NType.find(type)->second){
             case NodeType::GEMM : {
                 float attr_alpha = (float)(PyFloat_AsDouble(PyDict_GetItemString(attributes,"alpha")));
                 float attr_beta = (float)(PyFloat_AsDouble(PyDict_GetItemString(attributes,"beta")));
@@ -223,15 +221,15 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     //Extracting model weights to add the initialized tensors to the RModel
     PyRunString("weightNames=[k for k in graph[1].keys()]",fGlobalNS,fLocalNS);
     PyRunString("weights=[v.numpy() for v in graph[1].values()]",fGlobalNS,fLocalNS);
-    PyRunString("weightDTypes=[v.numpy().dtype.name for v in graph[1].values()]",fGlobalNS,fLocalNS);
-    PyObject* weightNames= PyDict_GetItemString(fLocalNS,"weightNames");
-    PyObject* weightTensors= PyDict_GetItemString(fLocalNS,"weights");
-    PyObject* weightDTypes= PyDict_GetItemString(fLocalNS,"weightDTypes");
+    PyRunString("weightDTypes=[v.type()[6:-6] for v in graph[1].values()]",fGlobalNS,fLocalNS);
+    PyObject* weightNames = PyDict_GetItemString(fLocalNS,"weightNames");
+    PyObject* weightTensors = PyDict_GetItemString(fLocalNS,"weights");
+    PyObject* weightDTypes = PyDict_GetItemString(fLocalNS,"weightDTypes");
     PyObject* weightTensor;
     for(Py_ssize_t weightIter=0; weightIter<PyList_Size(weightNames);++weightIter){
         weightTensor= PyList_GetItem(weightTensors,weightIter);
         std::string weightName(PyStringAsString(PyList_GetItem(weightNames,weightIter)));
-        ETensorType weightDType=convertStringToType(PyStringAsString(PyList_GetItem(weightDTypes,weightIter)));
+        ETensorType weightDType=convertStringToType(dTypePyTorch, PyStringAsString(PyList_GetItem(weightDTypes,weightIter)));
 
         switch(weightDType){
             case ETensorType::FLOAT:{
@@ -252,7 +250,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     Py_XDECREF(weightTensors);
     Py_XDECREF(weightTensor);
 
-
     //Extracting output tensor names
     PyRunString("outputs=[x for x in graph[0].outputs()]",fGlobalNS,fLocalNS);
     PyRunString("outputNames=[x.debugName() for x in outputs]",fGlobalNS,fLocalNS);
@@ -266,9 +263,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     Py_XDECREF(pOutputs);
     Py_XDECREF(fLocalNS);
     Py_XDECREF(fGlobalNS);
-    Py_XDECREF(main);
 
-    Py_Finalize();
     return rmodel;
 }
 

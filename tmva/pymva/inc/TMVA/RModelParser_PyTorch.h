@@ -36,6 +36,11 @@ enum class NodeType{
 
 };
 
+static std::unordered_map<std::string, ETensorType> dTypePyTorch=
+{
+   {"'Float'",ETensorType::FLOAT}
+};
+
 namespace PyTorch{
     RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
     RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);

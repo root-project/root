@@ -23,20 +23,6 @@ namespace Experimental{
 namespace SOFIE{
 
 
-///////////////////////////////////////////////////////////////////////////////
-/// Execute Python code from string
-///
-/// \param[in] code Python code as string
-/// \param[in] fGlobalNS Global Namespace dictionary
-/// \param[in] fLocalNS  Local  Namespace dictionary
-/// \param[in] errorMessage Error message which shall be shown if the execution fails
-/// \param[in] start Start symbol
-///
-/// Helper function to run python code from string in local namespace with
-/// error handling
-/// `start` defines the start symbol defined in PyRun_String (Py_eval_input,
-/// Py_single_input, Py_file_input)
-
 static void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS, TString errorMessage="Failed to run python code", int start=Py_single_input) {
    PyObject *fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
@@ -46,6 +32,7 @@ static void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS, T
       std::cout<<errorMessage;
    }
  }
+
 
 static const char* PyStringAsString(PyObject* str){
    #if PY_MAJOR_VERSION < 3   // for Python2
@@ -61,17 +48,9 @@ static const char* PyStringAsString(PyObject* str){
 return name;
 }
 
-
-static std::unordered_map<std::string, ETensorType> dType=
-{
-   {"'float32'", ETensorType::FLOAT},
-   {"'Float'",ETensorType::FLOAT}
-};
-
-static ETensorType convertStringToType(std::string dtype){
-return dType.find(dtype)->second;
+static ETensorType convertStringToType(std::unordered_map<std::string,ETensorType> dTypeMap,std::string dtype){
+return dTypeMap.find(dtype)->second;
 }
-
 
 static RTensor<float> getArray(PyObject* value){
    //Check and modify the function signature
@@ -90,14 +69,7 @@ static RTensor<float> getArray(PyObject* value){
    return x;
 }
 
-
-
-static std::string toLower(std::string name){
-          std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-          return name;
-}
-
-static std::vector<size_t> getShape(PyObject* shapeTuple){
+static std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple){
 
    std::vector<size_t>inputShape;
    for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(shapeTuple);++tupleIter){
