@@ -30,13 +30,13 @@ p = ROOT.RooPolynomial("p", "p", x)
 
 # Composite model
 f = ROOT.RooRealVar("f", "f", 0.4, 0.0, 1.0)
-sum = ROOT.RooAddPdf("sum", "sum", ROOT.RooArgList(g, p), ROOT.RooArgList(f))
+sum = ROOT.RooAddPdf("sum", "sum", [g, p], [f])
 
 # Construct constraint on parameter f
 fconstraint = ROOT.RooGaussian("fconstraint", "fconstraint", f, ROOT.RooFit.RooConst(0.7), ROOT.RooFit.RooConst(0.1))
 
 # Multiply constraint with p.d.f
-sumc = ROOT.RooProdPdf("sumc", "sum with constraint", ROOT.RooArgList(sum, fconstraint))
+sumc = ROOT.RooProdPdf("sumc", "sum with constraint", [sum, fconstraint])
 
 # Setup toy study with model
 # ---------------------------------------------------

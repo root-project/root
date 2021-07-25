@@ -58,7 +58,7 @@ gm2 = ROOT.RooGaussModel("gm2", "gauss model 2", dt, bias2, sigma2)
 
 # Build a composite resolution model f*gm1+(1-f)*gm2
 gm1frac = ROOT.RooRealVar("gm1frac", "fraction of gm1", 0.5)
-gmsum = ROOT.RooAddModel("gmsum", "sum of gm1 and gm2", ROOT.RooArgList(gm1, gm2), ROOT.RooArgList(gm1frac))
+gmsum = ROOT.RooAddModel("gmsum", "sum of gm1 and gm2", [gm1, gm2], [gm1frac])
 
 # Construct decay(t) (x) (f*gm1 + (1-f)*gm2)
 decay_gmsum = ROOT.RooDecay("decay_gmsum", "decay", dt, tau, gmsum, ROOT.RooDecay.DoubleSided)

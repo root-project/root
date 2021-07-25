@@ -26,11 +26,11 @@ gx = ROOT.RooGaussian("gx", "gx", x, mean, sigma)
 # Construct background pdf
 a0 = ROOT.RooRealVar("a0", "a0", -0.1, -1, 1)
 a1 = ROOT.RooRealVar("a1", "a1", 0.004, -1, 1)
-px = ROOT.RooChebychev("px", "px", x, ROOT.RooArgList(a0, a1))
+px = ROOT.RooChebychev("px", "px", x, [a0, a1])
 
 # Construct composite pdf
 f = ROOT.RooRealVar("f", "f", 0.2, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(gx, px), ROOT.RooArgList(f))
+model = ROOT.RooAddPdf("model", "model", [gx, px], [f])
 
 # Create model for control sample
 # --------------------------------------------------------------
@@ -43,11 +43,11 @@ gx_ctl = ROOT.RooGaussian("gx_ctl", "gx_ctl", x, mean_ctl, sigma)
 # Construct the background pdf
 a0_ctl = ROOT.RooRealVar("a0_ctl", "a0_ctl", -0.1, -1, 1)
 a1_ctl = ROOT.RooRealVar("a1_ctl", "a1_ctl", 0.5, -0.1, 1)
-px_ctl = ROOT.RooChebychev("px_ctl", "px_ctl", x, ROOT.RooArgList(a0_ctl, a1_ctl))
+px_ctl = ROOT.RooChebychev("px_ctl", "px_ctl", x, [a0_ctl, a1_ctl])
 
 # Construct the composite model
 f_ctl = ROOT.RooRealVar("f_ctl", "f_ctl", 0.5, 0.0, 1.0)
-model_ctl = ROOT.RooAddPdf("model_ctl", "model_ctl", ROOT.RooArgList(gx_ctl, px_ctl), ROOT.RooArgList(f_ctl))
+model_ctl = ROOT.RooAddPdf("model_ctl", "model_ctl", [gx_ctl, px_ctl], [f_ctl])
 
 # Generate events for both samples
 # ---------------------------------------------------------------

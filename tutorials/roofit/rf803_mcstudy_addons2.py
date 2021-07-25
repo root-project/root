@@ -32,12 +32,12 @@ sig = ROOT.RooGaussian("sig", "top signal", mjjj, mtop, wtop)
 c0 = ROOT.RooRealVar("c0", "Chebychev coefficient 0", -0.846, -1.0, 1.0)
 c1 = ROOT.RooRealVar("c1", "Chebychev coefficient 1", 0.112, -1.0, 1.0)
 c2 = ROOT.RooRealVar("c2", "Chebychev coefficient 2", 0.076, -1.0, 1.0)
-bkg = ROOT.RooChebychev("bkg", "combinatorial background", mjjj, ROOT.RooArgList(c0, c1, c2))
+bkg = ROOT.RooChebychev("bkg", "combinatorial background", mjjj, [c0, c1, c2])
 
 # Composite model
 nsig = ROOT.RooRealVar("nsig", "number of signal events", 53, 0, 1e3)
 nbkg = ROOT.RooRealVar("nbkg", "number of background events", 103, 0, 5e3)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(nsig, nbkg))
+model = ROOT.RooAddPdf("model", "model", [sig, bkg], [nsig, nbkg])
 
 # Create manager
 # ---------------------------

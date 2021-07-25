@@ -26,7 +26,7 @@ px = ROOT.RooPolynomial("px", "px", x)
 
 # model = f*gx + (1-f)px
 f = ROOT.RooRealVar("f", "f", 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(gx, px), ROOT.RooArgList(f))
+model = ROOT.RooAddPdf("model", "model", [gx, px], [f])
 
 # Generated 10000 events in (x,y) from pdf model
 modelData = model.generate(ROOT.RooArgSet(x), 10000)

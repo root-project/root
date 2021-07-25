@@ -16,9 +16,7 @@ import ROOT
 
 # Create a toy pdf for sampling
 x = ROOT.RooRealVar("x", "x", 0, 20)
-p = ROOT.RooPolynomial(
-    "p", "p", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(-0.01), ROOT.RooFit.RooConst(0.0004))
-)
+p = ROOT.RooPolynomial("p", "p", x, [0.01, -0.01, 0.0004])
 
 # Sample 500 events from p
 data1 = p.generate(ROOT.RooArgSet(x), 200)
@@ -59,20 +57,20 @@ py = ROOT.RooPolynomial(
     "py",
     "py",
     y,
-    ROOT.RooArgList(ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(-0.0004)),
+    [0.01, 0.01, -0.0004],
 )
-pxy = ROOT.RooProdPdf("pxy", "pxy", ROOT.RooArgList(p, py))
+pxy = ROOT.RooProdPdf("pxy", "pxy", [p, py])
 data2 = pxy.generate(ROOT.RooArgSet(x, y), 1000)
 
 # Create 2D kernel estimation pdf
 # ---------------------------------------------------------------
 
 # Create 2D adaptive kernel estimation pdf with mirroring
-kest4 = ROOT.RooNDKeysPdf("kest4", "kest4", ROOT.RooArgList(x, y), data2, "am")
+kest4 = ROOT.RooNDKeysPdf("kest4", "kest4", [x, y], data2, "am")
 
 # Create 2D adaptive kernel estimation pdf with mirroring and double
 # bandwidth
-kest5 = ROOT.RooNDKeysPdf("kest5", "kest5", ROOT.RooArgList(x, y), data2, "am", 2)
+kest5 = ROOT.RooNDKeysPdf("kest5", "kest5", [x, y], data2, "am", 2)
 
 # Create a histogram of the data
 hh_data = ROOT.RooAbsData.createHistogram(data2, "hh_data", x, Binning=10, YVar=dict(var=y, Binning=10))
