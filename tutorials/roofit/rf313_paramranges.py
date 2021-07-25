@@ -22,10 +22,10 @@ z = ROOT.RooRealVar("z", "z", 0, 10)
 
 # Define 3 dimensional pdf
 z0 = ROOT.RooRealVar("z0", "z0", -0.1, 1)
-px = ROOT.RooPolynomial("px", "px", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0)))
-py = ROOT.RooPolynomial("py", "py", y, ROOT.RooArgList(ROOT.RooFit.RooConst(0)))
-pz = ROOT.RooPolynomial("pz", "pz", z, ROOT.RooArgList(z0))
-pxyz = ROOT.RooProdPdf("pxyz", "pxyz", ROOT.RooArgList(px, py, pz))
+px = ROOT.RooPolynomial("px", "px", x, [0.0])
+py = ROOT.RooPolynomial("py", "py", y, [0.0])
+pz = ROOT.RooPolynomial("pz", "pz", z, [z0])
+pxyz = ROOT.RooProdPdf("pxyz", "pxyz", [px, py, pz])
 
 # Defined non-rectangular region R in (x, y, z)
 # -------------------------------------------------------------------------------------
@@ -35,13 +35,13 @@ pxyz = ROOT.RooProdPdf("pxyz", "pxyz", ROOT.RooArgList(px, py, pz))
 #
 
 # Construct range parameterized in "R" in y [ 0.1*x, 0.9*x ]
-ylo = ROOT.RooFormulaVar("ylo", "0.1*x", ROOT.RooArgList(x))
-yhi = ROOT.RooFormulaVar("yhi", "0.9*x", ROOT.RooArgList(x))
+ylo = ROOT.RooFormulaVar("ylo", "0.1*x", [x])
+yhi = ROOT.RooFormulaVar("yhi", "0.9*x", [x])
 y.setRange("R", ylo, yhi)
 
 # Construct parameterized ranged "R" in z [ 0, 0.1*y^2 ]
-zlo = ROOT.RooFormulaVar("zlo", "0.0*y", ROOT.RooArgList(y))
-zhi = ROOT.RooFormulaVar("zhi", "0.1*y*y", ROOT.RooArgList(y))
+zlo = ROOT.RooFormulaVar("zlo", "0.0*y", [y])
+zhi = ROOT.RooFormulaVar("zhi", "0.1*y*y", [y])
 z.setRange("R", zlo, zhi)
 
 # Calculate integral of normalized pdf in R

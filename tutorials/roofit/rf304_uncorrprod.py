@@ -33,7 +33,7 @@ gaussy = ROOT.RooGaussian("gaussy", "gaussian PDF", y, meany, sigmay)
 # -------------------------------------------------------------------
 
 # Multiply gaussx and gaussy into a two-dimensional pdf gaussxy
-gaussxy = ROOT.RooProdPdf("gaussxy", "gaussx*gaussy", ROOT.RooArgList(gaussx, gaussy))
+gaussxy = ROOT.RooProdPdf("gaussxy", "gaussx*gaussy", [gaussx, gaussy])
 
 # Sample pdf, plot projection on x and y
 # ---------------------------------------------------------------------------

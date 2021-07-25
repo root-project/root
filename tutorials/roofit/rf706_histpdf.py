@@ -15,9 +15,7 @@ import ROOT
 # ---------------------------------------------
 
 x = ROOT.RooRealVar("x", "x", 0, 20)
-p = ROOT.RooPolynomial(
-    "p", "p", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0.01), ROOT.RooFit.RooConst(-0.01), ROOT.RooFit.RooConst(0.0004))
-)
+p = ROOT.RooPolynomial("p", "p", x, [0.01, -0.01, 0.0004])
 
 # Create low stats histogram
 # ---------------------------------------------------

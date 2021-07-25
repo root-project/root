@@ -26,12 +26,12 @@ sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
 # Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
-sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], [sig1frac])
 
 # Build Chebychev polynomial pdf
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
-bkg1 = ROOT.RooChebychev("bkg1", "Background 1", x, ROOT.RooArgList(a0, a1))
+bkg1 = ROOT.RooChebychev("bkg1", "Background 1", x, [a0, a1])
 
 # Build expontential pdf
 alpha = ROOT.RooRealVar("alpha", "alpha", -1)
@@ -39,11 +39,11 @@ bkg2 = ROOT.RooExponential("bkg2", "Background 2", x, alpha)
 
 # Sum the background components into a composite background pdf
 bkg1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in background", 0.2, 0.0, 1.0)
-bkg = ROOT.RooAddPdf("bkg", "Signal", ROOT.RooArgList(bkg1, bkg2), ROOT.RooArgList(sig1frac))
+bkg = ROOT.RooAddPdf("bkg", "Signal", [bkg1, bkg2], [sig1frac])
 
 # Sum the composite signal and background
 bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
+model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
 # Set up basic plot with data and full pdf
 # ------------------------------------------------------------------------------

@@ -24,7 +24,7 @@ gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(-2), ROOT.RooFit.RooCo
 gy = ROOT.RooGaussian("gy", "gy", y, ROOT.RooFit.RooConst(+2), ROOT.RooFit.RooConst(2))
 
 # gxy = gx(x)*gy(y)
-gxy = ROOT.RooProdPdf("gxy", "gxy", ROOT.RooArgList(gx, gy))
+gxy = ROOT.RooProdPdf("gxy", "gxy", [gx, gy])
 
 # Retrieve raw & normalized values of RooFit pdfs
 # --------------------------------------------------------------------------------------------------
