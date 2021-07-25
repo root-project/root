@@ -23,8 +23,8 @@ cosa = ROOT.RooRealVar("cosa", "cos(alpha)", -1.0, 1.0)
 tau = ROOT.RooRealVar("tau", "#tau", 1.5)
 deltaGamma = ROOT.RooRealVar("deltaGamma", "deltaGamma", 0.3)
 tm = ROOT.RooTruthModel("tm", "tm", t)
-coshGBasis = ROOT.RooFormulaVar("coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", ROOT.RooArgList(t, tau, deltaGamma))
-sinhGBasis = ROOT.RooFormulaVar("sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", ROOT.RooArgList(t, tau, deltaGamma))
+coshGBasis = ROOT.RooFormulaVar("coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", [t, tau, deltaGamma])
+sinhGBasis = ROOT.RooFormulaVar("sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", [t, tau, deltaGamma])
 coshGConv = tm.convolution(coshGBasis, t)
 sinhGConv = tm.convolution(sinhGBasis, t)
 
@@ -45,8 +45,8 @@ poly2 = ROOT.RooPolyVar(
 )
 
 # Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
-ampl1 = ROOT.RooProduct("ampl1", "amplitude 1", ROOT.RooArgList(poly1, coshGConv))
-ampl2 = ROOT.RooProduct("ampl2", "amplitude 2", ROOT.RooArgList(poly2, sinhGConv))
+ampl1 = ROOT.RooProduct("ampl1", "amplitude 1", [poly1, coshGConv])
+ampl2 = ROOT.RooProduct("ampl2", "amplitude 2", [poly2, sinhGConv])
 
 # Construct amplitude sum pdf
 # -----------------------------------------------------
@@ -56,7 +56,7 @@ f1 = ROOT.RooRealVar("f1", "f1", 1, 0, 2)
 f2 = ROOT.RooRealVar("f2", "f2", 0.5, 0, 2)
 
 # Construct pdf
-pdf = ROOT.RooRealSumPdf("pdf", "pdf", ROOT.RooArgList(ampl1, ampl2), ROOT.RooArgList(f1, f2))
+pdf = ROOT.RooRealSumPdf("pdf", "pdf", [ampl1, ampl2], [f1, f2])
 
 # Generate some toy data from pdf
 data = pdf.generate(ROOT.RooArgSet(t, cosa), 10000)

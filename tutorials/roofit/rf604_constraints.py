@@ -27,7 +27,7 @@ poly = ROOT.RooPolynomial("poly", "poly(x)", x)
 
 # model = f*gauss + (1-f)*poly
 f = ROOT.RooRealVar("f", "f", 0.5, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(gauss, poly), ROOT.RooArgList(f))
+model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 
 # Generate small dataset for use in fitting below
 d = model.generate(ROOT.RooArgSet(x), 50)
@@ -47,7 +47,7 @@ fconstraint = ROOT.RooGaussian("fconstraint", "fconstraint", f, ROOT.RooFit.RooC
 # used
 
 # Multiply constraint with pdf
-modelc = ROOT.RooProdPdf("modelc", "model with constraint", ROOT.RooArgList(model, fconstraint))
+modelc = ROOT.RooProdPdf("modelc", "model with constraint", [model, fconstraint])
 
 # Fit model (without use of constraint term)
 r1 = model.fitTo(d, Save=True)

@@ -33,7 +33,7 @@ data = p0.generate(ROOT.RooArgSet(x), 1000)
 # --------------------------------------------------
 
 # Construct formula to calculate (fake) weight for events
-wFunc = ROOT.RooFormulaVar("w", "event weight", "(x*x+10)", ROOT.RooArgList(x))
+wFunc = ROOT.RooFormulaVar("w", "event weight", "(x*x+10)", [x])
 
 # Add column with variable w to previously generated dataset
 w = data.addColumn(wFunc)
@@ -56,7 +56,7 @@ wdata.Print()
 a0 = ROOT.RooRealVar("a0", "a0", 1)
 a1 = ROOT.RooRealVar("a1", "a1", 0, -1, 1)
 a2 = ROOT.RooRealVar("a2", "a2", 1, 0, 10)
-p2 = ROOT.RooPolynomial("p2", "p2", x, ROOT.RooArgList(a0, a1, a2), 0)
+p2 = ROOT.RooPolynomial("p2", "p2", x, [a0, a1, a2], 0)
 
 # Fit quadratic polynomial to weighted data
 
@@ -98,7 +98,7 @@ p2.plotOn(frame)
 # ---------------------------------------------------------------------
 
 # Construct a pdf with the same shape as p0 after weighting
-genPdf = ROOT.RooGenericPdf("genPdf", "x*x+10", ROOT.RooArgList(x))
+genPdf = ROOT.RooGenericPdf("genPdf", "x*x+10", [x])
 
 # Sample a dataset with the same number of events as data
 data2 = genPdf.generate(ROOT.RooArgSet(x), 1000)

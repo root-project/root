@@ -53,7 +53,7 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 
 # Create a binned dataset that imports contents of ROOT.TH1 and associates
 # its contents to observable 'x'
-dh = ROOT.RooDataHist("dh", "dh", ROOT.RooArgList(x), ROOT.RooFit.Import(hh))
+dh = ROOT.RooDataHist("dh", "dh", [x], Import=hh)
 
 # Plot and fit a RooDataHist
 # ---------------------------------------------------
@@ -124,7 +124,7 @@ write_dataset(ds, "rf102_testData.txt")
 print("\n-----------------------\nReading data from ASCII")
 dataReadBack = ROOT.RooDataSet.read(
     "rf102_testData.txt",
-    ROOT.RooArgList(x, y),  # variables to be read. If the file has more fields, these are ignored.
+    [x, y],  # variables to be read. If the file has more fields, these are ignored.
     "D",  # Prints if a RooFit message stream listens for debug messages. Use Q for quiet.
 )
 

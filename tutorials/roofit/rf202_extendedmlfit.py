@@ -28,11 +28,11 @@ sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 # Build Chebychev polynomial pdf
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
-bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
+bkg = ROOT.RooChebychev("bkg", "Background", x, [a0, a1])
 
 # Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
-sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], [sig1frac])
 
 # Method 1 - Construct extended composite model
 # -------------------------------------------------------------------
@@ -41,7 +41,7 @@ sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgLi
 # nsig*sig+nbkg*bkg
 nsig = ROOT.RooRealVar("nsig", "number of signal events", 500, 0.0, 10000)
 nbkg = ROOT.RooRealVar("nbkg", "number of background events", 500, 0, 10000)
-model = ROOT.RooAddPdf("model", "(g1+g2)+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(nbkg, nsig))
+model = ROOT.RooAddPdf("model", "(g1+g2)+a", [bkg, sig], [nbkg, nsig])
 
 # Sample, fit and plot extended model
 # ---------------------------------------------------------------------
@@ -92,7 +92,7 @@ ebkg = ROOT.RooExtendPdf("ebkg", "extended background pdf", bkg, nbkg)
 # -------------------------------------------------------------------------
 
 # Construct sum of two extended pdf (no coefficients required)
-model2 = ROOT.RooAddPdf("model2", "(g1+g2)+a", ROOT.RooArgList(ebkg, esig))
+model2 = ROOT.RooAddPdf("model2", "(g1+g2)+a", [ebkg, esig])
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf202_extendedmlfit", "rf202_extendedmlfit", 600, 600)

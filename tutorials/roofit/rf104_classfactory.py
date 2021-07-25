@@ -82,9 +82,7 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 # replacement of ROOT.RooGenericPdf
 
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
-genpdf = ROOT.RooClassFactory.makePdfInstance(
-    "GenPdf", "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))", ROOT.RooArgList(x, alpha)
-)
+genpdf = ROOT.RooClassFactory.makePdfInstance("GenPdf", "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))", [x, alpha])
 
 # Generate a toy dataset from the interpreted pdf
 data2 = genpdf.generate(ROOT.RooArgSet(x), 50000)

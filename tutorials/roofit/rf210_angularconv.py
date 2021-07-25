@@ -26,7 +26,7 @@ import ROOT
 psi = ROOT.RooRealVar("psi", "psi", 0, 3.14159268)
 
 # Define physics p.d.f T(psi)
-Tpsi = ROOT.RooGenericPdf("Tpsi", "1+sin(2*@0)", ROOT.RooArgList(psi))
+Tpsi = ROOT.RooGenericPdf("Tpsi", "1+sin(2*@0)", [psi])
 
 # Define resolution R(psi)
 gbias = ROOT.RooRealVar("gbias", "gbias", 0.2, 0.0, 1)
@@ -35,10 +35,10 @@ Rpsi = ROOT.RooGaussian("Rpsi", "Rpsi", psi, gbias, greso)
 
 # Define cos(psi) and function psif that calculates psi from cos(psi)
 cpsi = ROOT.RooRealVar("cpsi", "cos(psi)", -1, 1)
-psif = ROOT.RooFormulaVar("psif", "acos(cpsi)", ROOT.RooArgList(cpsi))
+psif = ROOT.RooFormulaVar("psif", "acos(cpsi)", [cpsi])
 
 # Define physics p.d.f. also as function of cos(psi): T(psif(cpsi)) = T(cpsi)
-Tcpsi = ROOT.RooGenericPdf("T", "1+sin(2*@0)", ROOT.RooArgList(psif))
+Tcpsi = ROOT.RooGenericPdf("T", "1+sin(2*@0)", [psif])
 
 # Construct convolution pdf in psi
 # --------------------------------------------------------------

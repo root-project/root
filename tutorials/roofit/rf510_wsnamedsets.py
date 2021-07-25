@@ -36,15 +36,15 @@ def fillWorkspace(w):
     # Build Chebychev polynomial p.d.f.
     a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
     a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
-    bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
+    bkg = ROOT.RooChebychev("bkg", "Background", x, [a0, a1])
 
     # Sum the signal components into a composite signal p.d.f.
     sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
-    sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+    sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], [sig1frac])
 
     # Sum the composite signal and background
     bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
-    model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
+    model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
     # Import model into p.d.f.
     getattr(w, "import")(model)

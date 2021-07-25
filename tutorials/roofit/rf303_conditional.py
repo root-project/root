@@ -43,7 +43,7 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 # Create function f(y) = a0 + a1*y
 a0 = ROOT.RooRealVar("a0", "a0", -0.5, -5, 5)
 a1 = ROOT.RooRealVar("a1", "a1", -0.5, -1, 1)
-fy = ROOT.RooPolyVar("fy", "fy", y, ROOT.RooArgList(a0, a1))
+fy = ROOT.RooPolyVar("fy", "fy", y, [a0, a1])
 
 # Creat gauss(x,f(y),s)
 sigma = ROOT.RooRealVar("sigma", "width of gaussian", 0.5, 0.1, 2.0)

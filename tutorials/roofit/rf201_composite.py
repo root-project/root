@@ -32,7 +32,7 @@ sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 # Build Chebychev polynomial pdf
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
-bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
+bkg = ROOT.RooChebychev("bkg", "Background", x, [a0, a1])
 
 
 # Method 1 - Two RooAddPdfs
@@ -41,14 +41,14 @@ bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
 # Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
-sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], [sig1frac])
 
 # Add signal and background
 # ------------------------------------------------
 
 # Sum the composite signal and background
 bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
+model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
 # Sample, fit and plot model
 # ---------------------------------------------------
@@ -82,7 +82,7 @@ model.Print("t")
 #
 #   model2 = bkg + (sig1 + sig2)
 #
-model2 = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg, sig1, sig2), ROOT.RooArgList(bkgfrac, sig1frac), True)
+model2 = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig1, sig2], [bkgfrac, sig1frac], True)
 
 # NB: Each coefficient is interpreted as the fraction of the
 # left-hand component of the i-th recursive sum, i.e.

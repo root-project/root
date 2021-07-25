@@ -25,7 +25,7 @@ model = ROOT.RooExponential("model", "model", t, tau)
 # ---------------------------------------------------
 
 # Use error function to simulate turn-on slope
-eff = ROOT.RooFormulaVar("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", ROOT.RooArgList(t))
+eff = ROOT.RooFormulaVar("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", [t])
 
 # Define decay pdf with efficiency
 # ---------------------------------------------------------------

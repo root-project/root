@@ -140,13 +140,13 @@ Amix = ROOT.RooRealVar("Amix", "2Im(l)/[1+abs(l)**2]", 0.7)
 Adel = ROOT.RooRealVar("Adel", "2Re(l)/[1+abs(l)**2]", 0.7)
 
 # Derived input parameters for pdf
-DG = ROOT.RooFormulaVar("DG", "Delta Gamma", "@1/@0", ROOT.RooArgList(tau, DGbG))
+DG = ROOT.RooFormulaVar("DG", "Delta Gamma", "@1/@0", [tau, DGbG])
 
 # Construct coefficient functions for sin,cos, modulations of decay
 # distribution
-fsin = ROOT.RooFormulaVar("fsin", "fsin", "@0*@1*(1-2*@2)", ROOT.RooArgList(Amix, tagFlav, w))
-fcos = ROOT.RooFormulaVar("fcos", "fcos", "@0*@1*(1-2*@2)", ROOT.RooArgList(Adir, tagFlav, w))
-fsinh = ROOT.RooFormulaVar("fsinh", "fsinh", "@0", ROOT.RooArgList(Adel))
+fsin = ROOT.RooFormulaVar("fsin", "fsin", "@0*@1*(1-2*@2)", [Amix, tagFlav, w])
+fcos = ROOT.RooFormulaVar("fcos", "fcos", "@0*@1*(1-2*@2)", [Adir, tagFlav, w])
+fsinh = ROOT.RooFormulaVar("fsinh", "fsinh", "@0", [Adel])
 
 # Construct generic B decay pdf using above user coefficients
 bcpg = ROOT.RooBDecay(

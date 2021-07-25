@@ -32,7 +32,7 @@ bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgSet(a0, a1))
 
 # Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
-sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(sig1, sig2), sig1frac)
+sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], sig1frac)
 
 
 # Extend the pdfs
@@ -46,7 +46,7 @@ nsig = ROOT.RooRealVar("nsig", "number of signal events in signalRange", 500, 0.
 nbkg = ROOT.RooRealVar("nbkg", "number of background events in signalRange", 500, 0, 10000)
 
 # Use AddPdf to extend the model. Giving as many coefficients as pdfs switches on extension.
-model = ROOT.RooAddPdf("model", "(g1+g2)+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(nbkg, nsig))
+model = ROOT.RooAddPdf("model", "(g1+g2)+a", [bkg, sig], [nbkg, nsig])
 
 # Sample data, fit model
 # -------------------------------------------

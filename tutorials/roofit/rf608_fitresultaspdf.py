@@ -27,7 +27,7 @@ sigma_g2 = ROOT.RooRealVar("sigma_g2", "width of g2", 4, 3.0, 5.0)
 g2 = ROOT.RooGaussian("g2", "g2", x, mean, sigma_g2)
 
 frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(g1, g2), ROOT.RooArgList(frac))
+model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac])
 
 # Generate 1000 events
 data = model.generate(ROOT.RooArgSet(x), 1000)

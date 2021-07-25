@@ -44,7 +44,7 @@ for i in range(10):
 # Make fit function
 a = ROOT.RooRealVar("a", "a", 0.0, -10, 10)
 b = ROOT.RooRealVar("b", "b", 0.0, -100, 100)
-f = ROOT.RooPolyVar("f", "f", x, ROOT.RooArgList(b, a, ROOT.RooFit.RooConst(1)))
+f = ROOT.RooPolyVar("f", "f", x, [b, a, 1.0])
 
 # Plot dataset in X-Y interpretation
 frame = x.frame(Title="Chi^2 fit of function set of (X#pmdX,Y#pmdY) values")

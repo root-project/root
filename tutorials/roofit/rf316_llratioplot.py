@@ -24,17 +24,17 @@ z = ROOT.RooRealVar("z", "z", -5, 5)
 gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
 gy = ROOT.RooGaussian("gy", "gy", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
 gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
-sig = ROOT.RooProdPdf("sig", "sig", ROOT.RooArgList(gx, gy, gz))
+sig = ROOT.RooProdPdf("sig", "sig", [gx, gy, gz])
 
 # Create background pdf poly(x)*poly(y)*poly(z)
 px = ROOT.RooPolynomial("px", "px", x, [-0.1, 0.004])
 py = ROOT.RooPolynomial("py", "py", y, [0.1, -0.004])
 pz = ROOT.RooPolynomial("pz", "pz", z)
-bkg = ROOT.RooProdPdf("bkg", "bkg", ROOT.RooArgList(px, py, pz))
+bkg = ROOT.RooProdPdf("bkg", "bkg", [px, py, pz])
 
 # Create composite pdf sig+bkg
 fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(fsig))
+model = ROOT.RooAddPdf("model", "model", [sig, bkg], [fsig])
 
 data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
 
@@ -55,7 +55,7 @@ sigyz = sig.createProjection(ROOT.RooArgSet(x))
 totyz = model.createProjection(ROOT.RooArgSet(x))
 
 # Construct the log of the signal / signal+background probability
-llratio_func = ROOT.RooFormulaVar("llratio", "log10(@0)-log10(@1)", ROOT.RooArgList(sigyz, totyz))
+llratio_func = ROOT.RooFormulaVar("llratio", "log10(@0)-log10(@1)", [sigyz, totyz])
 
 # Plot data with a LL ratio cut
 # -------------------------------------------------------

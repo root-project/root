@@ -23,7 +23,7 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 # it by a numeric integral of the expresssion over x in the range [-20,20]
 #
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
-genpdf = ROOT.RooGenericPdf("genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))", ROOT.RooArgList(x, alpha))
+genpdf = ROOT.RooGenericPdf("genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))", [x, alpha])
 
 # Sample, fit and plot generic pdf
 # ---------------------------------------------------------------
@@ -51,7 +51,7 @@ mean2 = ROOT.RooRealVar("mean2", "mean^2", 10, 0, 200)
 sigma = ROOT.RooRealVar("sigma", "sigma", 3, 0.1, 10)
 
 # Construct interpreted function mean = sqrt(mean^2)
-mean = ROOT.RooFormulaVar("mean", "mean", "sqrt(mean2)", ROOT.RooArgList(mean2))
+mean = ROOT.RooFormulaVar("mean", "mean", "sqrt(mean2)", [mean2])
 
 # Construct a gaussian g2(x,sqrt(mean2),sigma)
 g2 = ROOT.RooGaussian("g2", "h2", x, mean, sigma)

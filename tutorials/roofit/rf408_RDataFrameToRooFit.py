@@ -24,16 +24,14 @@ ROOT.ROOT.EnableImplicitMT()
 
 # We create an RDataFrame with two columns filled with 2 million random numbers.
 d = ROOT.RDataFrame(2000000)
-dd = d.Define("x", "gRandom->Uniform(-5.,  5.)" )\
-      .Define("y", "gRandom->Gaus(1., 3.)")
+dd = d.Define("x", "gRandom->Uniform(-5.,  5.)").Define("y", "gRandom->Gaus(1., 3.)")
 
 
 # We create RooFit variables that will represent the dataset.
-x = ROOT.RooRealVar("x", "x", -5.,   5.)
-y = ROOT.RooRealVar("y", "y", -50., 50.)
+x = ROOT.RooRealVar("x", "x", -5.0, 5.0)
+y = ROOT.RooRealVar("y", "y", -50.0, 50.0)
 x.setBins(10)
 y.setBins(20)
-
 
 
 # Booking the creation of RooDataSet / RooDataHist in RDataFrame
@@ -52,11 +50,10 @@ rooDataSet = dd.Book(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.R
 
 # Method 2:
 # We first declare the RooDataHistMaker
-rdhMaker = ROOT.RooDataSetHelper("dataset","Title of dataset", ROOT.RooArgSet(x, y))
+rdhMaker = ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(x, y))
 
 # Then, we move it into the RDataFrame action:
 rooDataHist = dd.Book(ROOT.std.move(rdhMaker), ("x", "y"))
-
 
 
 # Run it and inspect the results
@@ -72,5 +69,5 @@ for data in [rooDataSet, rooDataHist]:
             print("{0:.3f}".format(var.getVal()))
         print(")\tweight= {0:<10}".format(data.weight()))
 
-    print("mean(x) = {0:.3f}".format(data.mean(x)) + "\tsigma(x) = {0:.3f}".format(math.sqrt(data.moment(x, 2.))))
-    print("mean(y) = {0:.3f}".format(data.mean(y)) + "\tsigma(y) = {0:.3f}\n".format(math.sqrt(data.moment(y, 2.))))
+    print("mean(x) = {0:.3f}".format(data.mean(x)) + "\tsigma(x) = {0:.3f}".format(math.sqrt(data.moment(x, 2.0))))
+    print("mean(y) = {0:.3f}".format(data.mean(y)) + "\tsigma(y) = {0:.3f}\n".format(math.sqrt(data.moment(y, 2.0))))

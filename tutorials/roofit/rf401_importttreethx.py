@@ -71,7 +71,7 @@ c.defineType("SampleC")
 dh = ROOT.RooDataHist(
     "dh",
     "dh",
-    ROOT.RooArgList(x),
+    [x],
     ROOT.RooFit.Import("SampleA", hh_1),
     ROOT.RooFit.Import("SampleB", hh_2),
     Import=("SampleC", hh_3),
@@ -87,7 +87,7 @@ hmap.keepalive = list()
 hmap.insert(hmap.cbegin(), ROOT.std.pair("const std::string,TH1*")("SampleA", hh_1))
 hmap.insert(hmap.cbegin(), ROOT.std.pair("const std::string,TH1*")("SampleB", hh_2))
 hmap.insert(hmap.cbegin(), ROOT.std.pair("const std::string,TH1*")("SampleC", hh_3))
-dh2 = ROOT.RooDataHist("dh", "dh", ROOT.RooArgList(x), c, hmap)
+dh2 = ROOT.RooDataHist("dh", "dh", [x], c, hmap)
 dh2.Print()
 
 # Importing a ROOT TTree into a RooDataSet with cuts
