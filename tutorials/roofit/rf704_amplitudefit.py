@@ -29,20 +29,8 @@ coshGConv = tm.convolution(coshGBasis, t)
 sinhGConv = tm.convolution(sinhGBasis, t)
 
 # Construct polynomial amplitudes in cos(a)
-poly1 = ROOT.RooPolyVar(
-    "poly1",
-    "poly1",
-    cosa,
-    ROOT.RooArgList(ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(0.2), ROOT.RooFit.RooConst(0.2)),
-    0,
-)
-poly2 = ROOT.RooPolyVar(
-    "poly2",
-    "poly2",
-    cosa,
-    ROOT.RooArgList(ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(-0.2), ROOT.RooFit.RooConst(3)),
-    0,
-)
+poly1 = ROOT.RooPolyVar("poly1", "poly1", cosa, [0.5, 0.2, 0.2], 0)
+poly2 = ROOT.RooPolyVar("poly2", "poly2", cosa, [1.0, -0.2, 3.0], 0)
 
 # Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
 ampl1 = ROOT.RooProduct("ampl1", "amplitude 1", [poly1, coshGConv])
