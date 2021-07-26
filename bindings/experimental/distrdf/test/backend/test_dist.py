@@ -1,6 +1,7 @@
 import os
 import unittest
 
+from DistRDF import DataFrame
 from DistRDF import HeadNode
 from DistRDF import Proxy
 from DistRDF.Backends import Base
@@ -236,3 +237,53 @@ class DistRDataFrameInterface(unittest.TestCase):
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
+
+
+class DistRDataFrameInvariants(unittest.TestCase):
+    """
+    The result of distributed execution should not depend on the number of
+    partitions assigned to the dataframe.
+    """
+
+    class TestBackend(Base.BaseBackend):
+        """Dummy backend to test the build_ranges method in Dist class."""
+
+        def ProcessAndMerge(self, ranges, mapper, reducer):
+            """
+            Dummy implementation of ProcessAndMerge.
+            """
+            mergeables_lists = [mapper(range) for range in ranges]
+
+            while len(mergeables_lists) > 1:
+                mergeables_lists.append(
+                    reducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
+
+            return mergeables_lists.pop()
+
+        def distribute_unique_paths(self, includes_list):
+            """
+            Dummy implementation of distribute_unique_paths. Does nothing.
+            """
+            pass
+
+        def make_dataframe(self, *args, **kwargs):
+            """Dummy make_dataframe"""
+            pass
+
+    def test_count_result_invariance(self):
+        """
+        Tests that counting the entries in the dataset does not depend on the
+        number of partitions. This could have happened if we used TEntryList
+        to restrict processing on a certain range of entries of the TChain in a
+        distributed task, but the changes in
+        https://github.com/root-project/root/commit/77bd5aa82e9544811e0d5fce197ab87c739c2e23
+        were not implemented yet.
+        """
+        treename = "entries"
+        filenames = ["1cluster_20entries.root"] * 5
+
+        for npartitions in range(1,6):
+            headnode = HeadNode.get_headnode(npartitions, treename, filenames)
+            backend = DistRDataFrameInvariants.TestBackend()
+            rdf = DataFrame.RDataFrame(headnode, backend)
+            self.assertEqual(rdf.Count().GetValue(), 100)
