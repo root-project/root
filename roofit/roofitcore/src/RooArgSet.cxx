@@ -154,10 +154,10 @@ RooArgSet::RooArgSet() :
 /// Constructor from a RooArgList. If the list contains multiple
 /// objects with the same name, only the first is store in the set.
 /// Warning messages will be printed for dropped items.
-RooArgSet::RooArgSet(const RooArgList& list) :
-  RooAbsCollection(list.GetName())
+RooArgSet::RooArgSet(const RooAbsCollection& coll) :
+  RooAbsCollection(coll.GetName())
 {
-  add(list,kTRUE) ; // verbose to catch duplicate errors
+  add(coll,true) ; // verbose to catch duplicate errors
   TRACE_CREATE
 }
 
