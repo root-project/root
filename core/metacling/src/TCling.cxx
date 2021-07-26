@@ -40,6 +40,7 @@ clang/LLVM technology.
 #include "TClassEdit.h"
 #include "TClassTable.h"
 #include "TClingCallbacks.h"
+#include "TClingDiagnostics.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMemberInspector.h"
@@ -7576,6 +7577,28 @@ void TCling::SetErrmsgcallback(void* p) const
 #endif
 #endif
 }
+
+void TCling::ReportDiagnosticsToErrorHandler(bool enable)
+{
+   if (enable) {
+      auto consumer = new TClingDelegateDiagnosticPrinter(
+         &fInterpreter->getDiagnostics().getDiagnosticOptions(),
+         fInterpreter->getCI()->getLangOpts(),
+         [] (clang::DiagnosticsEngine::Level Level, const std::string &Info) {
+            if (Level == clang::DiagnosticsEngine::Warning) {
+               ::Warning("cling", "%s", Info.c_str());
+            } else if (Level == clang::DiagnosticsEngine::Error
+                       || Level == clang::DiagnosticsEngine::Fatal) {
+               ::Error("cling", "%s", Info.c_str());
+            } else {
+               ::Info("cling", "%s", Info.c_str());
+            }
+         });
+      fInterpreter->replaceDiagnosticConsumer(consumer, /*Own=*/true);
+   } else {
+      fInterpreter->replaceDiagnosticConsumer(nullptr);
+   }
+}  
 
 
 ////////////////////////////////////////////////////////////////////////////////
