@@ -131,7 +131,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/CombinedMinimumBuilder.cxx
       src/DavidonErrorUpdator.cxx
       src/ExternalInternalGradientCalculator.cxx
-      src/FitterUtil.h
       src/FumiliBuilder.cxx
       src/FumiliErrorUpdator.cxx
       src/FumiliGradientCalculator.cxx
