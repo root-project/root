@@ -163,8 +163,8 @@ class BaseBackend(ABC):
 
                 # Build TChain of files for this range:
                 chain = ROOT.TChain(treename)
-                for start, end, filename in zip(current_range.localstarts, current_range.localends,
-                                                              current_range.filelist):
+                for start, end, filename, treenentries in zip(current_range.localstarts, current_range.localends,
+                                                              current_range.filelist, current_range.treesnentries):
                     # Use default constructor of TEntryList rather than the
                     # constructor accepting treename and filename, otherwise
                     # the TEntryList would remove any url or protocol from the
@@ -174,7 +174,7 @@ class BaseBackend(ABC):
                     elist.SetFileName(filename)
                     elist.EnterRange(start, end)
                     elists.AddSubList(elist)
-                    chain.Add(filename)
+                    chain.Add(filename, treenentries)
 
                 # We assume 'end' is exclusive
                 chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
