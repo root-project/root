@@ -1375,7 +1375,7 @@ protected:
       Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
       fNWritten += count;
       fColumns[0]->Append(elemIndex);
-      return nbytes + sizeof(ClusterSize_t);
+      return nbytes + sizeof(elemIndex);
    }
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();
@@ -1469,7 +1469,7 @@ protected:
       Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
       fNWritten += count;
       fColumns[0]->Append(elemIndex);
-      return count + sizeof(ClusterSize_t);
+      return count + sizeof(elemIndex);
    }
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();

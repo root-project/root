@@ -726,7 +726,7 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Expe
    fColumns[1]->AppendV(elemChars, length);
    fIndex += length;
    fColumns[0]->Append(fElemIndex);
-   return length + sizeof(ClusterSize_t);
+   return length + sizeof(fElemIndex);
 }
 
 void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
@@ -1011,7 +1011,7 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldVal
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(ClusterSize_t);
+   return nbytes + sizeof(elemIndex);
 }
 
 void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1111,7 +1111,7 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Deta
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return count + sizeof(ClusterSize_t);
+   return count + sizeof(elemIndex);
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue* value)
