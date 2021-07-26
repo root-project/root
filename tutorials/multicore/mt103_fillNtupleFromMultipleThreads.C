@@ -29,7 +29,7 @@ void mt103_fillNtupleFromMultipleThreads()
 
    // Create the TBufferMerger: this class orchestrates the parallel writing
    auto fileName = "mt103_fillNtupleFromMultipleThreads.root";
-   ROOT::Experimental::TBufferMerger merger(fileName);
+   ROOT::TBufferMerger merger(fileName);
 
    // Define what each worker will do
    // We obtain from a merger a TBufferMergerFile, which is nothing more than
