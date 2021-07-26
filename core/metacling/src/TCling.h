@@ -354,6 +354,7 @@ public: // Public Interface
    virtual int    SetClassAutoparsing(int) ;
            Bool_t IsAutoParsingSuspended() const { return fIsAutoParsingSuspended; }
    virtual void   SetErrmsgcallback(void* p) const;
+   virtual void   ReportDiagnosticsToErrorHandler(bool enable = true);
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
 
