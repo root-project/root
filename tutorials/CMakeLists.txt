@@ -427,7 +427,7 @@ set(hist-hbars-depends  tutorial-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-fit-myfit
-                       tutorial-hist-h1draw
+					   tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
@@ -643,11 +643,11 @@ if(ROOT_pyroot_FOUND)
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
-  set(pyroot-h1draw-depends tutorial-pyroot-hsimple-py)
+  set(pyroot-h1ReadAndDraw-depends tutorial-pyroot-hsimple-py)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple-py
                                 tutorial-pyroot-fit1-py
                                 tutorial-pyroot-na49view-py
-                                tutorial-pyroot-h1draw-py
+								tutorial-pyroot-h1ReadAndDraw-py
                                 tutorial-pyroot-ntuple1-py)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
