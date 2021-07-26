@@ -24,7 +24,7 @@ public:
 
   // Constructors, assignment etc.
   RooArgList();
-  RooArgList(const RooArgSet& set) ;
+  RooArgList(const RooAbsCollection& coll) ;
   explicit RooArgList(const TCollection& tcoll, const char* name="") ;
   explicit RooArgList(const char *name);
   /// Construct a (non-owning) RooArgList from one or more

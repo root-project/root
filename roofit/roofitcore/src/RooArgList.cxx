@@ -66,12 +66,12 @@ RooArgList::RooArgList() :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a RooArgSet. 
+/// Constructor from another RooAbsCollection.
 
-RooArgList::RooArgList(const RooArgSet& set) :
-  RooAbsCollection(set.GetName())
+RooArgList::RooArgList(const RooAbsCollection& coll) :
+  RooAbsCollection(coll.GetName())
 {
-  add(set) ;
+  add(coll) ;
   TRACE_CREATE
 }
 
