@@ -267,6 +267,8 @@ public:
            int    SetClassAutoloading(int a) const { return SetClassAutoLoading(a); }  // Deprecated
    virtual int    SetClassAutoparsing(int) {return 0;};
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
+   /// \brief Report diagnostics to the ROOT error handler (see TError.h).
+   virtual void   ReportDiagnosticsToErrorHandler(bool /*enable*/ = true) {}
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
 
