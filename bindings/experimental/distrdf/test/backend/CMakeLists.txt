@@ -14,6 +14,7 @@ file(COPY 4clusters.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY 1000clusters.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY emptytree.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY Slimmed_ntuple.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY 1cluster_20entries.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_common test_common.py)
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_dist test_dist.py)
