@@ -55,7 +55,7 @@ class TreeRange(object):
     friend_info (ROOT.Internal.TreeUtils.RFriendInfo): Information about friend trees.
     """
 
-    def __init__(self, rangeid, globalstart, globalend, localstarts, localends, filelist, friend_info):
+    def __init__(self, rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, friend_info):
         """set attributes"""
         self.id = rangeid
         self.globalstart = globalstart
@@ -63,6 +63,7 @@ class TreeRange(object):
         self.localstarts = localstarts
         self.localends = localends
         self.filelist = filelist
+        self.treesnentries = treesnentries
         self.friend_info = friend_info
 
 
@@ -120,12 +121,13 @@ class ChainCluster(object):
         belongs to and the index of that file in the chain.
     """
 
-    def __init__(self, start, end, offset, filetuple):
+    def __init__(self, start, end, offset, filetuple, treenentries):
         """set attributes"""
         self.start = start
         self.end = end
         self.offset = offset
         self.filetuple = filetuple
+        self.treenentries = treenentries
 
     def __lt__(self, other):
         """
@@ -229,7 +231,7 @@ def get_clusters(treename, filelist):
         while start < entries:
             end = it()
             clusters.append(ChainCluster(start, end, offset,
-                                    FileAndIndex(filename, fileindex)))
+                                    FileAndIndex(filename, fileindex), entries))
             start = end
 
         fileindex += 1
@@ -357,6 +359,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         localstarts = []
         localends = []
         filelist = []
+        treesnentries = []
 
         for _, clustersinsamefileiter in itertools.groupby(partition, lambda cluster: cluster.filetuple.fileindex):
             # Grab a list of clusters belonging to the same file to give as
@@ -366,6 +369,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
             localstarts.append(min(clustersinsamefilelist).start)
             localends.append(max(clustersinsamefilelist).end)
             filelist.append(clustersinsamefilelist[0].filetuple.filename)
+            treesnentries.append(clustersinsamefilelist[0].treenentries)
 
         # The global start and end entries are retrieved as follows:
         # - Take as start start the `start` attribute of the minimum
@@ -416,7 +420,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         globalstart = firstclusterinpartition.start
         globalend = lastclusterinpartition.end + lastclusterinpartition.offset - partitionoffset
 
-        clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, friendinfo))
+        clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, friendinfo))
         rangeid += 1
 
     return clustered_ranges
