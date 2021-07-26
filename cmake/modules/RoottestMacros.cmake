@@ -442,12 +442,14 @@ endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 # macro ROOTTEST_GENERATE_EXECUTABLE(<executable>
 #                                    [LIBRARIES lib1 lib2 ...]
 #                                    [COMPILE_FLAGS flag1 flag2 ...]
-#                                    [DEPENDS ...]  )
+#                                    [DEPENDS ...]
+#                                    [RESOURCE_LOCK lock]
+#                                    [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...])
 # This macro generates an executable the the building of it becames a test
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_EXECUTABLE executable)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES;COMPILE_FLAGS;DEPENDS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "RESOURCE_LOCK" "LIBRARIES;COMPILE_FLAGS;DEPENDS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
 
   add_executable(${executable} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -491,6 +493,28 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
                                     --target ${executable}${fast}
                                     -- ${always-make})
   set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
+
+  #- provided fixtures and resource lock are set here
+  if (ARG_FIXTURES_SETUP)
+    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY
+      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY
+      FIXTURES_CLEANUP ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY
+      FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
+  endif()
+
+  if (ARG_RESOURCE_LOCK)
+    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY
+      RESOURCE_LOCK ${ARG_RESOURCE_LOCK})
+  endif()
+
   if(MSVC OR CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY RUN_SERIAL true)
   endif()
@@ -640,6 +664,8 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #                            [ERRREF stderr_reference]
 #                            [WORKING_DIR dir]
 #                            [TIMEOUT tmout]
+#                            [RESOURCE_LOCK lock]
+#                            [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                            [COPY_TO_BUILDDIR file1 file2 ...])
 #                            [ENVIRONMENT ENV_VAR1=value1;ENV_VAR2=value2; ...])
 #
@@ -649,8 +675,8 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
-                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT" ${ARGN})
+                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
 
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
@@ -906,6 +932,21 @@ function(ROOTTEST_ADD_TEST testname)
     set(command "${TIMEOUT_BINARY}^-s^USR2^${timeoutTimeout}s^${command}")
   endif()
 
+  if (ARG_FIXTURES_SETUP)
+    set(fixtures_setup ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set(fixtures_cleanup ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set(fixtures_required ${ARG_FIXTURES_REQUIRED})
+  endif()
+
+  if (ARG_RESOURCE_LOCK)
+    set(resource_lock ${ARG_RESOURCE_LOCK})
+  endif()
 
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
@@ -932,7 +973,11 @@ function(ROOTTEST_ADD_TEST testname)
                         ${failregex}
                         ${passregex}
                         ${copy_to_builddir}
-                        DEPENDS ${deplist})
+                        DEPENDS ${deplist}
+                        FIXTURES_SETUP ${fixtures_setup}
+                        FIXTURES_CLEANUP ${fixtures_cleanup}
+                        FIXTURES_REQUIRED ${fixtures_required}
+                        RESOURCE_LOCK ${resource_lock})
 
   if(MSVC)
     if (ARG_OUTCNV OR ARG_OUTCNVCMD)
