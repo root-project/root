@@ -475,7 +475,7 @@ void RLoopManager::RunTreeReader()
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   if (r.GetEntryStatus() != TTreeReader::kEntryNotFound && fNStopsReceived < fNChildren) {
+   if (r.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
       // something went wrong in the TTreeReader event loop
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(r.GetEntryStatus()));
