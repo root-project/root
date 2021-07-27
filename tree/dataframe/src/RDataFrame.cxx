@@ -1114,8 +1114,6 @@ namespace ROOT {
 using ROOT::Detail::RDF::ColumnNames_t;
 using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 
-namespace RDFInternal = ROOT::Internal::RDF;
-
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory

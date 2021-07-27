@@ -36,8 +36,6 @@ class RDataSource;
 }
 
 namespace RDFDetail = ROOT::Detail::RDF;
-namespace RDFInternal = ROOT::Internal::RDF;
-namespace TTraits = ROOT::TypeTraits;
 
 class RDataFrame : public ROOT::RDF::RInterface<RDFDetail::RLoopManager> {
 public:
