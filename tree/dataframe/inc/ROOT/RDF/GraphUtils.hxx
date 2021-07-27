@@ -139,10 +139,6 @@ private:
    {
       auto loopManager = resultPtr.fLoopManager;
 
-      if (std::is_same<T, RInterface<RLoopManager, void>>::value) {
-         return RepresentGraph(loopManager);
-      }
-
       loopManager->Jit();
 
       auto actionPtr = resultPtr.fActionPtr;
