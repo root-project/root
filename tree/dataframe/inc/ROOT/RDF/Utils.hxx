@@ -29,8 +29,13 @@
 class TTree;
 class TTreeReader;
 
-/// \cond HIDDEN_SYMBOLS
+
 namespace ROOT {
+namespace RDF {
+using ColumnNames_t = std::vector<std::string>;
+}
+
+/// \cond HIDDEN_SYMBOLS
 namespace Experimental {
 class RLogChannel;
 }
@@ -41,7 +46,8 @@ class RDataSource;
 
 namespace Detail {
 namespace RDF {
-using ColumnNames_t = std::vector<std::string>;
+
+using ROOT::RDF::ColumnNames_t;
 
 ROOT::Experimental::RLogChannel &RDFLogChannel();
 

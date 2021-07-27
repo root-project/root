@@ -60,7 +60,7 @@ class RDataSource;
 } // namespace ROOT
 
 namespace {
-using ROOT::Detail::RDF::ColumnNames_t;
+using ROOT::RDF::ColumnNames_t;
 
 /// A string expression such as those passed to Filter and Define, digested to a standardized form
 struct ParsedExpression {

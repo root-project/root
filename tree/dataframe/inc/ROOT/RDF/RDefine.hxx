@@ -60,7 +60,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
       std::conditional_t<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>;
 
    F fExpression;
-   const ColumnNames_t fColumnNames;
+   const ROOT::RDF::ColumnNames_t fColumnNames;
    ValuesPerSlot_t fLastResults;
 
    /// Column readers per slot and per input column
@@ -101,7 +101,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    }
 
 public:
-   RDefine(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
+   RDefine(std::string_view name, std::string_view type, F expression, const ROOT::RDF::ColumnNames_t &columns,
            unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
            const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
       : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds), fExpression(std::move(expression)),

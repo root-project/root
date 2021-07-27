@@ -350,8 +350,6 @@ std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, con
 
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
-using ROOT::Detail::RDF::ColumnNames_t;
-
 template <typename T>
 void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSource &ds, RBookedDefines &defines)
 {
