@@ -233,7 +233,7 @@ TEST(TTreeReaderBasic, ZeroEntryRange) {
    // Read beyond end:
    EXPECT_FALSE(tr.Next());
    // As the TTree only has up to entry 19, 20 is kEntryNotFound:
-   EXPECT_EQ(TTreeReader::kEntryNotFound, tr.GetEntryStatus());
+   EXPECT_EQ(TTreeReader::kEntryBeyondEnd, tr.GetEntryStatus());
    EXPECT_EQ(20, tr.GetCurrentEntry());
 }
 
@@ -255,7 +255,7 @@ TEST(TTreeReaderBasic, InvertedEntryRange) {
    // Read beyond end:
    EXPECT_FALSE(tr.Next());
    // As the TTree only has up to entry 19, 20 is kEntryNotFound:
-   EXPECT_EQ(TTreeReader::kEntryNotFound, tr.GetEntryStatus());
+   EXPECT_EQ(TTreeReader::kEntryBeyondEnd, tr.GetEntryStatus());
    EXPECT_EQ(20, tr.GetCurrentEntry());
 }
 
@@ -305,7 +305,7 @@ TEST(TTreeReaderBasic, EntryListBeyondEnd) {
 
    EXPECT_FALSE(aReader.Next());
    EXPECT_EQ(1, aReader.GetCurrentEntry());
-   EXPECT_EQ(TTreeReader::kEntryNotFound, aReader.GetEntryStatus());
+   EXPECT_EQ(TTreeReader::kEntryBeyondEnd, aReader.GetEntryStatus());
 }
 
 // two files treereader_entrylists{1,2}.root with branch "x" and values {0,1} and {2,3}
