@@ -451,6 +451,13 @@ void RLoopManager::RunTreeProcessorMT()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
+      // fNStopsReceived < fNChildren is always true at the moment as we don't support event loop early quitting in
+      // multi-thread runs, but it costs nothing to be safe and future-proof in case we add support for that later.
+      if (r.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
+         // something went wrong in the TTreeReader event loop
+         throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
+                                  std::to_string(r.GetEntryStatus()));
+      }
    });
 #endif // no-op otherwise (will not be called)
 }
