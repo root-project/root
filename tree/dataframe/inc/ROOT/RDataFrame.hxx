@@ -41,7 +41,7 @@ namespace TTraits = ROOT::TypeTraits;
 
 class RDataFrame : public ROOT::RDF::RInterface<RDFDetail::RLoopManager> {
 public:
-   using ColumnNames_t = RDFDetail::ColumnNames_t;
+   using ColumnNames_t = ROOT::RDF::ColumnNames_t;
    RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
    RDataFrame(std::string_view treename, const std::vector<std::string> &filenames,
               const ColumnNames_t &defaultBranches = {});
