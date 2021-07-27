@@ -32,6 +32,6 @@ TEST(RNTuple, RDF)
    auto s = rdf.Take<std::string>("klass.s");
    EXPECT_EQ(1ull, s.GetValue().size());
    EXPECT_EQ(std::string("abc"), s.GetValue()[0]);
-   EXPECT_EQ(2U, *rdf.Min("__rdf_sizeof_jets"));
-   EXPECT_EQ(3U, *rdf.Min("__rdf_sizeof_klass.v1"));
+   EXPECT_EQ(2U, *rdf.Min("R_rdf_sizeof_jets"));
+   EXPECT_EQ(3U, *rdf.Min("R_rdf_sizeof_klass.v1"));
 }

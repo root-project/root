@@ -36,7 +36,7 @@ namespace Internal {
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
-/// `__rdf_sizeof_jets` for a collection named `jets`.
+/// `R_rdf_sizeof_jets` for a collection named `jets`.
 ///
 /// This field owns the collection offset field but instead of exposing the collection offsets it exposes
 /// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
@@ -169,13 +169,13 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    // "event"                             [Event]
    // "event.id"                          [int]
    // "event.tracks"                      [std::vector<Track>]
-   // "__rdf_sizeof_event.tracks"         [unsigned int]
+   // "R_rdf_sizeof_event.tracks"         [unsigned int]
    // "event.tracks.hits"                 [std::vector<std::vector<Hit>>]
-   // "__rdf_sizeof_event.tracks.hits"    [std::vector<unsigned int>]
+   // "R_rdf_sizeof_event.tracks.hits"    [std::vector<unsigned int>]
    // "event.tracks.hits.x"               [std::vector<std::vector<float>>]
-   // "__rdf_sizeof_event.tracks.hits.x"  [std::vector<unsigned int>]
+   // "R_rdf_sizeof_event.tracks.hits.x"  [std::vector<unsigned int>]
    // "event.tracks.hits.y"               [std::vector<std::vector<float>>]
-   // "__rdf_sizeof_event.tracks.hits.y"  [std::vector<unsigned int>]
+   // "R_rdf_sizeof_event.tracks.hits.y"  [std::vector<unsigned int>]
 
    const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
@@ -209,7 +209,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    auto valueField = fieldOrException.Unwrap();
    valueField->SetOnDiskId(fieldId);
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
-   // Collections get the additional "number of" RDF column (e.g. "__rdf_sizeof_tracks")
+   // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!skeinIDs.empty()) {
       cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
       cardinalityField->SetOnDiskId(skeinIDs.back());
@@ -227,7 +227,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    }
 
    if (cardinalityField) {
-      fColumnNames.emplace_back("__rdf_sizeof_" + std::string(colName));
+      fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
       auto cardColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(
          std::move(cardinalityField));

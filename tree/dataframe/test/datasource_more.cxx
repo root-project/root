@@ -40,7 +40,7 @@ TEST(RStreamingDS, MultipleEntryRanges)
 TEST(RArraysDS, ShortSyntaxForCollectionSizes)
 {
    ROOT::RDataFrame df(std::make_unique<RArraysDS>());
-   // GetColumnNames must hide column "__rdf_sizeof_var"...
+   // GetColumnNames must hide column "R_rdf_sizeof_var"...
    EXPECT_EQ(df.GetColumnNames(), std::vector<std::string>{"var"});
    // ...but it must nonetheless be a valid column
    EXPECT_EQ(df.GetColumnType("#var"), "std::size_t");
