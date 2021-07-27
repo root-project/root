@@ -636,10 +636,10 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
-      // Ignore __rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
       std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
-                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "__rdf_sizeof_"; });
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
       ColumnNames_t columnNames;
       columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumnsWithoutSizeColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
@@ -774,10 +774,10 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
-      // Ignore __rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
       std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
-                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "__rdf_sizeof_"; });
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
       ColumnNames_t columnNames;
       columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
@@ -1971,9 +1971,9 @@ public:
 
       if (fDataSource) {
          const auto &dsColNames = fDataSource->GetColumnNames();
-         // ignore columns starting with __rdf_sizeof_
+         // ignore columns starting with R_rdf_sizeof_
          std::copy_if(dsColNames.begin(), dsColNames.end(), std::back_inserter(allColumns),
-                      [](const std::string &s) { return s.rfind("__rdf_sizeof", 0) != 0; });
+                      [](const std::string &s) { return s.rfind("R_rdf_sizeof", 0) != 0; });
       }
 
       return allColumns;
