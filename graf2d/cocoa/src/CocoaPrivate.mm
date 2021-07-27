@@ -92,9 +92,9 @@ NSObject<X11Drawable> *CocoaPrivate::GetDrawable(Drawable_t drawableID)const
 {
    const_drawable_iterator drawableIter = fDrawables.find(drawableID);
 
-#ifdef DEBUG_ROOT_COCOA
    if (drawableIter == fDrawables.end()) {
-      NSLog(@"Fatal error: requested non-existing drawable %lu", drawableID);
+      NSLog(@"Fatal error: requested drawable %lu is not found among currently valid drawables.", drawableID);
+      /*
       //We do not care about efficiency, ROOT's gonna die on assert :)
       std::vector<Drawable_t>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), drawableID);
       if (deletedDrawable != fFreeDrawableIDs.end()) {
@@ -102,9 +102,9 @@ NSObject<X11Drawable> *CocoaPrivate::GetDrawable(Drawable_t drawableID)const
       } else {
          NSLog(@"This drawable not found among allocated/deleted drawables");
       }
+      */
+      return nil;
    }
-#endif
-   assert(drawableIter != fDrawables.end() && "GetDrawable, non-existing drawable requested");
    return drawableIter->second.Get();
 }
 
