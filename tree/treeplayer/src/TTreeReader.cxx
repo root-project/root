@@ -521,7 +521,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
          // don't try to load entries anymore. Can happen in these cases:
          // while (tr.Next()) {something()};
          // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
-         fEntryStatus = kEntryNotFound;
+         fEntryStatus = kEntryBeyondEnd;
          return fEntryStatus;
       }
       if (entry >= 0) {
@@ -574,7 +574,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
                value->NotifyNewTree(fTree->GetTree());
             }
          }
-         fEntryStatus = kEntryNotFound;
+         fEntryStatus = kEntryBeyondEnd;
          return fEntryStatus;
       }
 
