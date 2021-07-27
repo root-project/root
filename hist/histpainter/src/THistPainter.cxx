@@ -4490,6 +4490,10 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
+   // Deflate the labels in case of alphanumeric labels
+   if (fXaxis->GetLabels()) fH->LabelsDeflate("X");
+   if (fYaxis->GetLabels()) fH->LabelsDeflate("Y");
+
    if (Hoption.Pie) {
       if (fH->GetDimension() == 1) {
          if (!fPie) fPie = new TPie(fH);
