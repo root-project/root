@@ -93,7 +93,6 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 template <typename Proxied, typename DataSource = void>
 class RInterface {
    using DS_t = DataSource;
-   using ColumnNames_t = RDFDetail::ColumnNames_t;
    using RFilterBase = RDFDetail::RFilterBase;
    using RRangeBase = RDFDetail::RRangeBase;
    using RLoopManager = RDFDetail::RLoopManager;
