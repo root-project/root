@@ -119,7 +119,7 @@ public:
   RooArgSet(const RooArgSet& set1, const RooArgSet& set2,
             const char *name="");
 
-  RooArgSet(const RooArgList& list) ;
+  RooArgSet(const RooAbsCollection& coll) ;
   RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1);
   explicit RooArgSet(const TCollection& tcoll, const char* name="") ;
   explicit RooArgSet(const char *name);
