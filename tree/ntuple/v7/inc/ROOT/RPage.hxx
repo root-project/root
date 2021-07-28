@@ -128,6 +128,7 @@ public:
    }
 
    bool IsNull() const { return fBuffer == nullptr; }
+   bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }
 };

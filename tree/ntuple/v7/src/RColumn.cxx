@@ -47,6 +47,8 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
       fHandleSink = fPageSink->AddColumn(fieldId, *this);
       fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
+      if (fApproxNElementsPerPage < 2)
+         throw RException(R__FAIL("Page size too small for writing"));
       fHeadPage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
       fHeadPage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
       break;
@@ -63,8 +65,8 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
 
 void ROOT::Experimental::Detail::RColumn::Flush()
 {
-   auto otherIdx = (fHeadPageIdx + 1) % 2;
-   if (fHeadPage[fHeadPageIdx].GetNBytes() == 0 && fHeadPage[otherIdx].GetNBytes() == 0)
+   auto otherIdx = 1 - fHeadPageIdx;
+   if (fHeadPage[fHeadPageIdx].IsEmpty() && fHeadPage[otherIdx].IsEmpty())
       return;
 
    if ((fHeadPage[fHeadPageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
