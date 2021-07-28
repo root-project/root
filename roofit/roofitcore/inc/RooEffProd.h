@@ -20,7 +20,7 @@
 class RooEffProd: public RooAbsPdf {
 public:
   // Constructors, assignment etc
-  inline RooEffProd() : _nset(0), _fixedNset(0) { };
+  inline RooEffProd() : _cacheMgr(this,10), _nset(0), _fixedNset(0) { };
   virtual ~RooEffProd();
   RooEffProd(const char *name, const char *title, RooAbsPdf& pdf, RooAbsReal& efficiency);
   RooEffProd(const RooEffProd& other, const char* name=0);

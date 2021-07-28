@@ -39,7 +39,7 @@ ClassImp(RooMomentMorphFuncND)
 
    //_____________________________________________________________________________
    RooMomentMorphFuncND::RooMomentMorphFuncND()
-   : _curNormSet(0), _M(0), _MSqr(0), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
+   : _cacheMgr(this, 10, true, true), _curNormSet(0), _M(0), _MSqr(0), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
 {
    _parItr = _parList.createIterator();
    _obsItr = _obsList.createIterator();

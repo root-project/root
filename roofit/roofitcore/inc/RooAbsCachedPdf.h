@@ -25,9 +25,8 @@ class RooChangeTracker ;
 class RooAbsCachedPdf : public RooAbsPdf {
 public:
 
-  RooAbsCachedPdf() {
-    // Default constructor
-  } ;
+  // Default constructor
+  RooAbsCachedPdf() : _cacheMgr(this,10) {}
   RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=0) ;
   virtual ~RooAbsCachedPdf() ;
@@ -106,7 +105,7 @@ public:
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager  
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager  
   Int_t _ipOrder ; // Interpolation order for cache histograms 
  
   TString cacheNameSuffix(const RooArgSet& nset) const ;
@@ -132,7 +131,7 @@ private:
 
   Bool_t _disableCache ; // Flag to run object in passthrough (= non-caching mode)
 
-  ClassDef(RooAbsCachedPdf,1) // Abstract base class for cached p.d.f.s
+  ClassDef(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
 };
  
 #endif

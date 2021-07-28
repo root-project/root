@@ -83,7 +83,7 @@ protected:
     RooArgList _highIntList ;
     // will want std::vector<RooRealVar*> for low and high also
   } ;
-  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; ///<! The integration cache manager
 
   RooRealProxy _nominal;           // The nominal value
   RooArgList   _ownedList ;       // List of owned components
@@ -98,7 +98,7 @@ protected:
   Double_t evaluate() const;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
-  ClassDef(PiecewiseInterpolation,3) // Sum of RooAbsReal objects
+  ClassDef(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };
 
 #endif

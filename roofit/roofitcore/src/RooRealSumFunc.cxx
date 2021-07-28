@@ -60,7 +60,7 @@ ClassImp(RooRealSumFunc);
 Bool_t RooRealSumFunc::_doFloorGlobal = kFALSE;
 
 //_____________________________________________________________________________
-RooRealSumFunc::RooRealSumFunc()
+RooRealSumFunc::RooRealSumFunc() : _normIntMgr(this, 10)
 {
    // Default constructor
    // coverity[UNINIT_CTOR]

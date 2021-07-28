@@ -71,7 +71,7 @@ protected:
       RooArgList _funcIntList;
       RooArgList _funcNormList;
    };
-   mutable RooObjCacheManager _normIntMgr; // The integration cache manager
+   mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
    Bool_t _haveLastCoef;
 
@@ -84,7 +84,7 @@ protected:
    static Bool_t _doFloorGlobal; // Global flag for introducing floor at zero in pdf
 
 private:
-   ClassDef(RooRealSumFunc, 3) // PDF constructed from a sum of (non-pdf) functions
+   ClassDef(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

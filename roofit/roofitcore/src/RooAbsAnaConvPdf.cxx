@@ -83,7 +83,8 @@ ClassImp(RooAbsAnaConvPdf);
 /// Default constructor, required for persistence
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
-  _isCopy(kFALSE)
+  _isCopy(false),
+  _coefNormMgr(this,10)
 {
 }
 

@@ -66,6 +66,8 @@ RooAddModel::RooAddModel() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(false),
+  _projCacheMgr(this,10),
+  _intCacheMgr(this,10),
   _codeReg(10),
   _snormList(0),
   _haveLastCoef(false),
