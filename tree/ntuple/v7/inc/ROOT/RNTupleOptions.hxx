@@ -20,6 +20,8 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <memory>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -62,30 +64,25 @@ class RNTupleWriteOptions {
 
 public:
    virtual ~RNTupleWriteOptions() = default;
-   virtual std::unique_ptr<RNTupleWriteOptions> Clone() const
-   { return std::make_unique<RNTupleWriteOptions>(*this); }
+   virtual std::unique_ptr<RNTupleWriteOptions> Clone() const;
 
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
    void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
-     fCompression = CompressionSettings(algorithm, compressionLevel);
+      fCompression = CompressionSettings(algorithm, compressionLevel);
    }
 
    ENTupleContainerFormat GetContainerFormat() const { return fContainerFormat; }
    void SetContainerFormat(ENTupleContainerFormat val) { fContainerFormat = val; }
 
    std::size_t GetApproxZippedClusterSize() const { return fApproxZippedClusterSize; }
-   void SetApproxZippedClusterSize(std::size_t val) { fApproxZippedClusterSize = val; }
+   void SetApproxZippedClusterSize(std::size_t val);
 
    std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
-   void SetMaxUnzippedClusterSize(std::size_t val) { fMaxUnzippedClusterSize = val; }
+   void SetMaxUnzippedClusterSize(std::size_t val);
 
    std::size_t GetApproxUnzippedPageSize() const { return fApproxUnzippedPageSize; }
-   void SetApproxUnzippedPageSize(std::size_t val) {
-      if (val < 64)
-         throw RException(R__FAIL("page size too small"));
-      fApproxUnzippedPageSize = val;
-   }
+   void SetApproxUnzippedPageSize(std::size_t val);
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }

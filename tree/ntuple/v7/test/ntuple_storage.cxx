@@ -71,6 +71,49 @@ TEST(RNTuple, Extended)
    EXPECT_EQ(chksumRead, chksumWrite);
 }
 
+TEST(RNTuple, InvalidWriteOptions) {
+   RNTupleWriteOptions options;
+   try {
+      options.SetApproxUnzippedPageSize(0);
+      FAIL() << "should not allow zero-sized page";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("page size"));
+   }
+   options.SetApproxUnzippedPageSize(10);
+   options.SetApproxZippedClusterSize(50);
+   try {
+      options.SetMaxUnzippedClusterSize(40);
+      FAIL() << "should not allow undersized cluster";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("must not be larger than"));
+   }
+   options.SetApproxZippedClusterSize(5);
+   try {
+      options.SetMaxUnzippedClusterSize(7);
+      FAIL() << "should not allow undersized cluster";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("must not be larger than"));
+   }
+
+   FileRaii fileGuard("test_ntuple_invalid_write_options.root");
+   auto model = RNTupleModel::Create();
+   model->MakeField<std::int16_t>("x");
+   options.SetApproxUnzippedPageSize(3);
+   auto m2 = model->Clone();
+   try {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      FAIL() << "should not allow undersized pages";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("page size too small"));
+   }
+   options.SetApproxUnzippedPageSize(4);
+   try {
+      auto ntuple = RNTupleWriter::Recreate(std::move(m2), "ntpl", fileGuard.GetPath(), options);
+   } catch (const RException &err) {
+      FAIL() << "pages size should be just large enough for 2 elements";
+   }
+}
+
 TEST(RPageSinkBuf, Basics)
 {
    struct TestModel {
