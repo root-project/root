@@ -54,9 +54,9 @@ TEST(RCsvDS, ColNamesNoHeaders)
 TEST(RCsvDS, EmptyFile)
 {
    // Cannot read headers
-   EXPECT_THROW(new RCsvDS(fileName2), std::runtime_error);
+   EXPECT_THROW(RCsvDS{fileName2}, std::runtime_error);
    // Cannot infer column types
-   EXPECT_THROW(new RCsvDS(fileName2, false), std::runtime_error);
+   EXPECT_THROW(RCsvDS(fileName2, false), std::runtime_error);
 }
 
 TEST(RCsvDS, EntryRanges)
