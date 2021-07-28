@@ -114,6 +114,111 @@ TEST(RNTuple, InvalidWriteOptions) {
    }
 }
 
+TEST(RNTuple, PageFilling) {
+   FileRaii fileGuard("test_ntuple_page_filling.root");
+
+   auto model = RNTupleModel::Create();
+   auto fldX = model->MakeField<std::int16_t>("x");
+
+   RNTupleWriteOptions options;
+   // Exercises the page swapping algorithm with pages just big enough to hold 2 elements
+   options.SetApproxUnzippedPageSize(4);
+
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      for (std::int16_t i = 0; i < 8; ++i) {
+         *fldX = i;
+         ntuple->Fill();
+         // Flush half-full pages
+         if (i == 2)
+            ntuple->CommitCluster();
+         // Flush just after automatic flush
+         if (i == 4)
+            ntuple->CommitCluster();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewX = ntuple->GetView<std::int16_t>("x");
+   ASSERT_EQ(8u, ntuple->GetNEntries());
+   for (std::int16_t i = 0; i < 8; ++i)
+      EXPECT_EQ(i, viewX(i));
+
+   const auto &desc = ntuple->GetDescriptor();
+   EXPECT_EQ(3u, desc.GetNClusters());
+   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto &pr1 = cd1.GetPageRange(0);
+   ASSERT_EQ(2u, pr1.fPageInfos.size());
+   EXPECT_EQ(2u, pr1.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
+   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &pr2 = cd2.GetPageRange(0);
+   ASSERT_EQ(1u, pr2.fPageInfos.size());
+   EXPECT_EQ(2u, pr2.fPageInfos[0].fNElements);
+   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &pr3 = cd3.GetPageRange(0);
+   ASSERT_EQ(2u, pr3.fPageInfos.size());
+   EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, pr3.fPageInfos[1].fNElements);
+}
+
+TEST(RNTuple, PageFillingString) {
+   FileRaii fileGuard("test_ntuple_page_filling_string.root");
+
+   auto model = RNTupleModel::Create();
+   // A string column exercises RColumn::AppendV
+   auto fldX = model->MakeField<std::string>("x");
+
+   RNTupleWriteOptions options;
+   options.SetApproxUnzippedPageSize(16);
+
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      // 1 page: 17 characters
+      *fldX = "01234567890123456";
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      // 1 pages: 16 characters
+      *fldX = "0123456789012345";
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      // 0 pages
+      *fldX = "";
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      // 2 pages: 16 and 8 characters
+      *fldX = "012345678901234567890123";
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewX = ntuple->GetView<std::string>("x");
+   ASSERT_EQ(4u, ntuple->GetNEntries());
+   EXPECT_EQ("01234567890123456",        viewX(0));
+   EXPECT_EQ("0123456789012345",         viewX(1));
+   EXPECT_EQ("",                         viewX(2));
+   EXPECT_EQ("012345678901234567890123", viewX(3));
+
+   const auto &desc = ntuple->GetDescriptor();
+   EXPECT_EQ(4u, desc.GetNClusters());
+   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
+   const auto &pr1 = cd1.GetPageRange(1);
+   ASSERT_EQ(1u, pr1.fPageInfos.size());
+   EXPECT_EQ(17u, pr1.fPageInfos[0].fNElements);
+   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &pr2 = cd2.GetPageRange(1);
+   ASSERT_EQ(1u, pr2.fPageInfos.size());
+   EXPECT_EQ(16u, pr2.fPageInfos[0].fNElements);
+   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &pr3 = cd3.GetPageRange(1);
+   ASSERT_EQ(0u, pr3.fPageInfos.size());
+   const auto &cd4 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd3.GetId()));
+   const auto &pr4 = cd4.GetPageRange(1);
+   ASSERT_EQ(2u, pr4.fPageInfos.size());
+   EXPECT_EQ(16u, pr4.fPageInfos[0].fNElements);
+   EXPECT_EQ(8u, pr4.fPageInfos[1].fNElements);
+}
+
 TEST(RPageSinkBuf, Basics)
 {
    struct TestModel {
