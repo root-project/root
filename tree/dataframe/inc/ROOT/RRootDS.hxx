@@ -23,6 +23,8 @@ namespace Internal {
 
 namespace RDF {
 
+/// This class is unused and it has only been implemented as a proof of concept.
+/// It shows how to implement the RDataSource API for a complex kind of source such as TTrees.
 class RRootDS final : public ROOT::RDF::RDataSource {
 private:
    unsigned int fNSlots = 0U;
