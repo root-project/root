@@ -109,6 +109,7 @@ public:
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
       if (fHeadPage[fHeadPageIdx].GetNElements() + count > fApproxNElementsPerPage) {
+         // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
          for (unsigned i = 0; i < count; ++i) {
             Append(RColumnElementBase(elemArray, i));
          }
