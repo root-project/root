@@ -22,7 +22,8 @@ TEST(Pages, Pool)
 
    RPage::RClusterInfo clusterInfo(2, 40);
    page = RPage(1, &page, 1, 10);
-   EXPECT_NE(nullptr, page.TryGrow(10));
+   page.GrowUnchecked(10);
+   EXPECT_EQ(page.GetMaxElements(), page.GetNElements());
    page.SetWindow(50, clusterInfo);
    EXPECT_FALSE(page.IsNull());
    unsigned int nCallDeleter = 0;

@@ -44,7 +44,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
    RPage bufPage = ReservePage(columnHandle, page.GetNElements());
    // make sure the page is aware of how many elements it will have
-   R__ASSERT(bufPage.TryGrow(page.GetNElements()));
+   bufPage.GrowUnchecked(page.GetNElements());
    memcpy(bufPage.GetBuffer(), page.GetBuffer(), page.GetNBytes());
    // Safety: RColumnBuf::iterators are guaranteed to be valid until the
    // element is destroyed. In other words, all buffered page iterators are

@@ -103,11 +103,10 @@ public:
     }
 
    void* GetBuffer() const { return fBuffer; }
-   /// Return a pointer after the last element that has space for nElements new elements. If there is not enough capacity,
-   /// return nullptr
-   void* TryGrow(ClusterSize_t::ValueType nElements) {
-      if (fNElements + nElements > fMaxElements)
-         return nullptr;
+   /// Called during writing: returns a pointer after the last element and increases the element counter
+   /// in anticpation of the caller filling nElements in the page. It is the responsibility of the caller
+   /// to prevent page overflows, i.e. that fNElements + nElements <= fMaxElements
+   void* GrowUnchecked(ClusterSize_t::ValueType nElements) {
       auto offset = GetNBytes();
       fNElements += nElements;
       return static_cast<unsigned char *>(fBuffer) + offset;
