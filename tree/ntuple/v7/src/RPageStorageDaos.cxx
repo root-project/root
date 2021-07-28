@@ -264,8 +264,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::ReleasePage(RPage &page)
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorDaos::NewPage(
    ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
 {
-   RPage newPage(columnId, mem, elementSize, elementSize * nElements);
-   newPage.TryGrow(nElements);
+   RPage newPage(columnId, mem, elementSize, nElements);
+   newPage.GrowUnchecked(nElements);
    return newPage;
 }
 
