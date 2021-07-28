@@ -52,7 +52,7 @@ private:
             return fSealedPage.fBuffer != nullptr;
          }
          void AllocateSealedPageBuf() {
-            fBuf = std::make_unique<unsigned char[]>(fPage.GetSize());
+            fBuf = std::make_unique<unsigned char[]>(fPage.GetNBytes());
          }
       };
    public:

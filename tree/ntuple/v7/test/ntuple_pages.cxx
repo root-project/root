@@ -6,9 +6,9 @@ TEST(Pages, Allocation)
 
    auto page = allocator.NewPage(42, 4, 16);
    EXPECT_FALSE(page.IsNull());
-   EXPECT_EQ(64U, page.GetCapacity());
+   EXPECT_EQ(16U, page.GetMaxElements());
    EXPECT_EQ(0U, page.GetNElements());
-   EXPECT_EQ(0U, page.GetSize());
+   EXPECT_EQ(0U, page.GetNBytes());
    allocator.DeletePage(page);
 }
 
@@ -21,7 +21,7 @@ TEST(Pages, Pool)
    pool.ReturnPage(page); // should not crash
 
    RPage::RClusterInfo clusterInfo(2, 40);
-   page = RPage(1, &page, 10, 1);
+   page = RPage(1, &page, 1, 10);
    EXPECT_NE(nullptr, page.TryGrow(10));
    page.SetWindow(50, clusterInfo);
    EXPECT_FALSE(page.IsNull());

@@ -131,7 +131,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
       sealedPage = SealPage(page, *element, GetWriteOptions().GetCompression());
    }
 
-   fCounters->fSzZip.Add(page.GetSize());
+   fCounters->fSzZip.Add(page.GetNBytes());
    return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
 }
 
@@ -193,7 +193,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorFile::NewPage(
    ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
 {
-   RPage newPage(columnId, mem, elementSize * nElements, elementSize);
+   RPage newPage(columnId, mem, elementSize, elementSize * nElements);
    newPage.TryGrow(nElements);
    return newPage;
 }
