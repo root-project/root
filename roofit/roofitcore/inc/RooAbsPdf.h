@@ -332,7 +332,7 @@ protected:
     virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
     RooAbsReal* _norm ;
   } ;
-  mutable RooObjCacheManager _normMgr ; // The cache manager
+  mutable RooObjCacheManager _normMgr ; //! The cache manager
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
   
@@ -362,7 +362,7 @@ private:
   int calculateAsymptoticCorrectedCovMatrix(RooMinimizer& minimizer, RooAbsData const& data);
   int calculateSumW2CorrectedCovMatrix(RooMinimizer& minimizer, RooAbsReal const& nll) const;
   
-  ClassDef(RooAbsPdf,4) // Abstract PDF with normalization support
+  ClassDef(RooAbsPdf,5) // Abstract PDF with normalization support
 };
 
 

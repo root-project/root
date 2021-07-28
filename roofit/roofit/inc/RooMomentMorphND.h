@@ -121,7 +121,7 @@ protected:
    friend class CacheElem;
    friend class Grid;
 
-   mutable RooObjCacheManager _cacheMgr;
+   mutable RooObjCacheManager _cacheMgr; ///<! Transient cache manager
    mutable RooArgSet *_curNormSet;
 
    RooListProxy _parList;
@@ -142,7 +142,7 @@ protected:
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDef(RooMomentMorphND, 1)
+   ClassDef(RooMomentMorphND, 2)
 };
 
 #endif

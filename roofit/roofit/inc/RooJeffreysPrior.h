@@ -17,7 +17,7 @@ class RooArgList ;
 class RooJeffreysPrior : public RooAbsPdf {
 public:
 
-  RooJeffreysPrior() { };
+  RooJeffreysPrior() : _cacheMgr(this, 1, true, false) {}
   RooJeffreysPrior(const char *name, const char *title, RooAbsPdf& nominal, const RooArgList& paramSet, const RooArgList& obsSet) ;
   virtual ~RooJeffreysPrior() ;
 

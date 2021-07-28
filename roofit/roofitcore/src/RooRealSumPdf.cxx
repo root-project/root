@@ -69,7 +69,7 @@ Bool_t RooRealSumPdf::_doFloorGlobal = kFALSE ;
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooRealSumPdf::RooRealSumPdf() 
+RooRealSumPdf::RooRealSumPdf() : _normIntMgr(this,10)
 {
   _extended = kFALSE ;
   _doFloor = kFALSE ;

@@ -79,6 +79,7 @@ ClassImp(RooProdPdf);
 /// Default constructor
 
 RooProdPdf::RooProdPdf() :
+  _cacheMgr(this,10),
   _cutOff(0),
   _extendedIndex(-1),
   _useDefaultGen(kFALSE),

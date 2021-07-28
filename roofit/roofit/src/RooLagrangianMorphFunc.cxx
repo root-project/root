@@ -2329,7 +2329,8 @@ double RooLagrangianMorphFunc::getScale() { return this->_scale; }
 // default constructor
 
 RooLagrangianMorphFunc::RooLagrangianMorphFunc()
-    : _operators("operators", "set of operators", this, kTRUE, kFALSE),
+    : _cacheMgr(this, 10, true, true),
+      _operators("operators", "set of operators", this, kTRUE, kFALSE),
       _observables("observable", "morphing observable", this, kTRUE, kFALSE),
       _binWidths("binWidths", "set of bin width objects", this, kTRUE, kFALSE) {
   static int counter(0);

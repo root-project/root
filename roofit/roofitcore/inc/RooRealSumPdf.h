@@ -77,7 +77,7 @@ protected:
     RooArgList _funcIntList ;
     RooArgList _funcNormList ;
   } ;
-  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; //! The integration cache manager
 
 
   RooListProxy _funcList ;   //  List of component FUNCs
@@ -94,7 +94,7 @@ private:
     return _funcList.size() == _coefList.size();
   }
 
-  ClassDef(RooRealSumPdf, 4) // PDF constructed from a sum of (non-pdf) functions
+  ClassDef(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

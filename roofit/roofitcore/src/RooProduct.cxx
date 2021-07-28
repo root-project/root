@@ -54,7 +54,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooProduct::RooProduct()
+RooProduct::RooProduct() : _cacheMgr(this,10)
 {
   TRACE_CREATE
 }

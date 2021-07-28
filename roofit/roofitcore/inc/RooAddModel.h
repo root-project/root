@@ -108,7 +108,7 @@ protected:
     virtual RooArgList containedArgs(Action) ;
 
   } ;
-  mutable RooObjCacheManager _projCacheMgr ;  // Manager of cache with coefficient projections and transformations
+  mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
   CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
   void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
 
@@ -121,7 +121,7 @@ protected:
     virtual RooArgList containedArgs(Action) ;
   } ;
   
-  mutable RooObjCacheManager _intCacheMgr ; // Manager of cache with integrals
+  mutable RooObjCacheManager _intCacheMgr ; //! Manager of cache with integrals
  
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
@@ -138,7 +138,7 @@ protected:
 
 private:
 
-  ClassDef(RooAddModel,1) // Resolution model representing a sum of resolution models
+  ClassDef(RooAddModel,2) // Resolution model representing a sum of resolution models
 };
 
 #endif
