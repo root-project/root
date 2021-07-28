@@ -75,6 +75,25 @@ private:
 
    RColumn(const RColumnModel &model, std::uint32_t index);
 
+   /// Used in Append() and AppendV() to switch pages when the main page reached the target size
+   /// The other page has been flushed when the main page reached 50%.
+   void SwapHeadPages() {
+      fHeadPageIdx = 1 - fHeadPageIdx;
+      R__ASSERT(fHeadPage[fHeadPageIdx].IsEmpty());
+      fHeadPage[fHeadPageIdx].Reset(fNElements);
+   }
+
+   /// When the main head page surpasses the 50% fill level, the (full) shadow head page gets flushed
+   void FlushShadowHeadPage() {
+      auto otherIdx = 1 - fHeadPageIdx;
+      if (fHeadPage[otherIdx].IsEmpty())
+         return;
+      fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
+      // Mark the page as flushed; the rangeFirst is zero for now but will be reset to
+      // fNElements in SwapHeadPages() when the pages swap
+      fHeadPage[otherIdx].Reset(0);
+   }
+
 public:
    template <typename CppT, EColumnType ColumnT>
    static RColumn *Create(const RColumnModel &model, std::uint32_t index) {
@@ -92,24 +111,20 @@ public:
 
    void Append(const RColumnElementBase &element) {
       void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(1);
+
       if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
-         // Current page is at 50% fill level, we can now commit the previously used page
-         auto otherIdx = 1 - fHeadPageIdx;
-         if (fHeadPage[otherIdx].GetNElements())
-            fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
+         FlushShadowHeadPage();
       }
 
       element.WriteTo(dst, 1);
       fNElements++;
 
-      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage) {
-         // We are at 100% fill level, switch to the other head page
-         fHeadPageIdx = 1 - fHeadPageIdx;
-         fHeadPage[fHeadPageIdx].Reset(fNElements);
-      }
+      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage)
+         SwapHeadPages();
    }
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
+      // We might not have enough space in the current page. In this case, fall back to one by one filling.
       if (fHeadPage[fHeadPageIdx].GetNElements() + count > fApproxNElementsPerPage) {
          // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
          for (unsigned i = 0; i < count; ++i) {
@@ -118,24 +133,23 @@ public:
          return;
       }
 
-      if ((fHeadPage[fHeadPageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
-          (fHeadPage[fHeadPageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
+      void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(count);
+
+      // The check for flushing the shadow page is more complicated than for the Append() case
+      // because we don't necessarily fill up to exactly fApproxNElementsPerPage / 2 elements;
+      // we might instead jump over the 50% fill level
+      if ((fHeadPage[fHeadPageIdx].GetNElements() <= fApproxNElementsPerPage / 2) &&
+          (fHeadPage[fHeadPageIdx].GetNElements() + count > fApproxNElementsPerPage / 2))
       {
-         // Current page jumps over 50% fill level, we can now commit the previously used page
-         auto otherIdx = 1 - fHeadPageIdx;
-         if (fHeadPage[otherIdx].GetNElements())
-            fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
+         FlushShadowHeadPage();
       }
 
-      void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(count);
       elemArray.WriteTo(dst, count);
       fNElements += count;
 
-      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage) {
-         // We are at 100% fill level, switch to the other head page
-         fHeadPageIdx = (fHeadPageIdx + 1) % 2;
-         fHeadPage[fHeadPageIdx].Reset(fNElements);
-      }
+      // Note that by the very first check, we cannot have filled more than fApproxNElementsPerPage elements
+      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage)
+         SwapHeadPages();
    }
 
    void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
