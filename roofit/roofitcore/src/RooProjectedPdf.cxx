@@ -45,7 +45,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooProjectedPdf::RooProjectedPdf()
+RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
 {
 }
 

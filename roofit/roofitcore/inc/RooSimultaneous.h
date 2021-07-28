@@ -38,7 +38,7 @@ class RooSimultaneous : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooSimultaneous() : _plotCoefNormRange(0) { }
+  inline RooSimultaneous() : _plotCoefNormRange(0), _partIntMgr(this,10) {}
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
@@ -99,7 +99,7 @@ protected:
     RooArgList containedArgs(Action) { return RooArgList(_partIntList) ; }
     RooArgList _partIntList ;
   } ;
-  mutable RooObjCacheManager _partIntMgr ; // Component normalization manager
+  mutable RooObjCacheManager _partIntMgr ; //! Component normalization manager
 
 
   friend class RooSimGenContext ;
@@ -113,7 +113,7 @@ protected:
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
   Int_t    _numPdf ;           // Number of registered PDFs
 
-  ClassDef(RooSimultaneous,2)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
+  ClassDef(RooSimultaneous,3)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
 };
 
 #endif

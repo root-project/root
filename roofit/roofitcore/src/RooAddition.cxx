@@ -49,7 +49,7 @@ ClassImp(RooAddition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Empty constructor
-RooAddition::RooAddition()
+RooAddition::RooAddition() : _cacheMgr(this,10)
 {
 }
 
