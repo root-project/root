@@ -49,6 +49,7 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
       fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
       if (fApproxNElementsPerPage < 2)
          throw RException(R__FAIL("page size too small for writing"));
+      // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
       fHeadPage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
       fHeadPage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
       break;
@@ -69,18 +70,16 @@ void ROOT::Experimental::Detail::RColumn::Flush()
    if (fHeadPage[fHeadPageIdx].IsEmpty() && fHeadPage[otherIdx].IsEmpty())
       return;
 
-   if ((fHeadPage[fHeadPageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
-       fHeadPage[otherIdx].GetNElements())
-   {
-      // Small tail page: merge with previously used page
+   if ((fHeadPage[fHeadPageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fHeadPage[otherIdx].IsEmpty()) {
+      // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
       void *dst = fHeadPage[otherIdx].GrowUnchecked(fHeadPage[fHeadPageIdx].GetNElements());
       RColumnElementBase elem(fHeadPage[fHeadPageIdx].GetBuffer(), fHeadPage[fHeadPageIdx].GetElementSize());
       elem.WriteTo(dst, fHeadPage[fHeadPageIdx].GetNElements());
       fHeadPage[fHeadPageIdx].Reset(0);
-      fHeadPageIdx = otherIdx;
-   } else {
-      fHeadPage[otherIdx].Reset(0);
+      std::swap(fHeadPageIdx, otherIdx);
    }
+
+   R__ASSERT(fHeadPage[otherIdx].IsEmpty());
    fPageSink->CommitPage(fHandleSink, fHeadPage[fHeadPageIdx]);
    fHeadPage[fHeadPageIdx].Reset(fNElements);
 }
