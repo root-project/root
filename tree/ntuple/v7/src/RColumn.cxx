@@ -71,8 +71,7 @@ void ROOT::Experimental::Detail::RColumn::Flush()
        fHeadPage[otherIdx].GetNElements())
    {
       // Small tail page: merge with previously used page
-      void *dst = fHeadPage[otherIdx].TryGrow(fHeadPage[fHeadPageIdx].GetNElements());
-      R__ASSERT(dst != nullptr);
+      void *dst = fHeadPage[otherIdx].GrowUnchecked(fHeadPage[fHeadPageIdx].GetNElements());
       RColumnElementBase elem(fHeadPage[fHeadPageIdx].GetBuffer(), fHeadPage[fHeadPageIdx].GetElementSize());
       elem.WriteTo(dst, fHeadPage[fHeadPageIdx].GetNElements());
       fHeadPage[fHeadPageIdx].Reset(0);

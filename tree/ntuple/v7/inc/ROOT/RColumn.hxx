@@ -89,8 +89,7 @@ public:
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
 
    void Append(const RColumnElementBase &element) {
-      void *dst = fHeadPage[fHeadPageIdx].TryGrow(1);
-      R__ASSERT(dst != nullptr);
+      void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(1);
       if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
          // Current page is at 50% fill level, we can now commit the previously used page
          auto otherIdx = 1 - fHeadPageIdx;
@@ -125,8 +124,7 @@ public:
             fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
       }
 
-      void *dst = fHeadPage[fHeadPageIdx].TryGrow(count);
-      R__ASSERT(dst != nullptr);
+      void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(count);
       elemArray.WriteTo(dst, count);
       fNElements += count;
 
