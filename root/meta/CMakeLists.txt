@@ -14,6 +14,10 @@ ROOTTEST_ADD_TEST(expressiveErrorMessages
                   OUTCNV expressiveErrorMessages_filter.sh
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
+ROOTTEST_ADD_TEST(clingTErrorDiagnostics
+                  MACRO clingTErrorDiagnostics.C
+                  OUTREF clingTErrorDiagnostics.ref)
+
 ROOTTEST_ADD_TEST(rlibmap
                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/rlibmapLauncher.py
                   PASSRC 1
