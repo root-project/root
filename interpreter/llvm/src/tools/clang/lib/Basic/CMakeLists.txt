@@ -99,3 +99,13 @@ add_clang_library(clangBasic
   ${version_inc}
   )
 
+# Some versions of Debian/Ubuntu have a buggy LLVM/Clang package.
+# We workaround this case by defining a preprocessor symbol.
+if (NOT builtin_llvm)
+  file(READ ${LLVM_DIR}/include/llvm/ADT/Triple.h TMPTXT)
+  string(FIND "${TMPTXT}" "KFreeBSD" matchres)
+  if(${matchres} EQUAL -1)
+    set_property(SOURCE Targets.cpp APPEND PROPERTY
+                 COMPILE_DEFINITIONS "KFreeBSD=kFreeBSD")
+  endif ()
+endif()
