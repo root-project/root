@@ -1974,7 +1974,7 @@ public:
          const auto &dsColNames = fDataSource->GetColumnNames();
          // ignore columns starting with __rdf_sizeof_
          std::copy_if(dsColNames.begin(), dsColNames.end(), std::back_inserter(allColumns),
-                                 [](const std::string &s) { return s.rfind("__rdf_sizeof", 0) != 0; });
+                      [](const std::string &s) { return s.rfind("__rdf_sizeof", 0) != 0; });
       }
 
       return allColumns;
