@@ -102,7 +102,7 @@ public:
 
       if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage) {
          // We are at 100% fill level, switch to the other head page
-         fHeadPageIdx = (fHeadPageIdx + 1) % 2;
+         fHeadPageIdx = 1 - fHeadPageIdx;
          fHeadPage[fHeadPageIdx].Reset(fNElements);
       }
    }
@@ -120,7 +120,7 @@ public:
           (fHeadPage[fHeadPageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
       {
          // Current page jumps over 50% fill level, we can now commit the previously used page
-         auto otherIdx = (fHeadPageIdx + 1) % 2;
+         auto otherIdx = 1 - fHeadPageIdx;
          if (fHeadPage[otherIdx].GetNElements())
             fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
       }
