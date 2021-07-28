@@ -376,7 +376,7 @@ ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
 {
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
-   auto packedBytes = page.GetSize();
+   auto packedBytes = page.GetNBytes();
 
    if (!element.IsMappable()) {
       packedBytes = element.GetPackedSize(page.GetNElements());
