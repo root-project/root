@@ -64,7 +64,7 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
 void ROOT::Experimental::Detail::RColumn::Flush()
 {
    auto otherIdx = (fHeadPageIdx + 1) % 2;
-   if (fHeadPage[fHeadPageIdx].GetSize() == 0 && fHeadPage[otherIdx].GetSize() == 0)
+   if (fHeadPage[fHeadPageIdx].GetNBytes() == 0 && fHeadPage[otherIdx].GetNBytes() == 0)
       return;
 
    if ((fHeadPage[fHeadPageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
