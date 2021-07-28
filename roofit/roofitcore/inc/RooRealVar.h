@@ -164,7 +164,7 @@ public:
   
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; //! Shared binnings associated with this instance
 
-  ClassDef(RooRealVar,7) // Real-valued variable
+  ClassDef(RooRealVar,8) // Real-valued variable
 };
 
 

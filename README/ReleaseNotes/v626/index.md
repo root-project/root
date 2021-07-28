@@ -100,6 +100,10 @@ The `RooMinuit` class was the old interface between RooFit and minuit. With ROOT
 
 Before 6.26, it was possible to still use the `RooMinuit` by passing the `Minimizer("OldMinuit", "minimizer")` command argument to `RooAbsPdf::fitTo()`. This option is now removed.
 
+### Increase of the `RooAbsArg` class version
+
+The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In some circumstances, this can cause warnings in `TStreamerInfo` for classes inheriting from `RooAbsArg` when reading older RooFit models from a file. These warnings are harmless and can be avoided by incrementing also the class version of the inheriting class.
+
 ## 2D Graphics Libraries
 
 - Implement the option `X+` and `Y+` for reverse axis on TGraph.
