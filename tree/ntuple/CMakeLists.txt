@@ -56,6 +56,7 @@ SOURCES
   v7/src/RNTupleMerger.cxx
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx
+  v7/src/RNTupleOptions.cxx
   v7/src/RNTupleUtil.cxx
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
