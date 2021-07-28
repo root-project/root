@@ -60,7 +60,9 @@ private:
    RPage fHeadPage[2];
    /// Index of the current head page
    int fHeadPageIdx = 0;
-   /// For writing, the targeted page size as given by the write options
+   /// For writing, the targeted page size as given by the write options.
+   /// We ensure this value to be >= 2 in Connect() so that we have meaningful
+   /// "page full" and "page half full" events when writing the page.
    std::uint32_t fApproxNElementsPerPage = 0;
    /// The number of elements written resp. available in the column
    NTupleSize_t fNElements = 0;
