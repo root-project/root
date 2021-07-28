@@ -179,7 +179,7 @@ RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entri
 
    // Add the first row with the names of the columns
    fTable.push_back(std::vector<DElement_t>(columnNames.size()));
-   for (auto name : columnNames) {
+   for (const auto &name : columnNames) {
       AddToRow(name);
    }
 }

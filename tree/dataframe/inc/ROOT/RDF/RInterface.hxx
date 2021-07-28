@@ -2129,7 +2129,7 @@ public:
 
       auto columns = fDefines.GetColumns();
 
-      for (auto column : columns) {
+      for (const auto &column : columns) {
          if (!RDFInternal::IsInternalColumn(column.first))
             definedColumns.emplace_back(column.first);
       }
