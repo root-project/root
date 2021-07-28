@@ -45,7 +45,7 @@ y.setBins(20)
 # - the column names that RDataFrame should fill into the dataset
 #
 # NOTE: RDataFrame columns are matched to RooFit variables by position, *not by name*!
-rooDataSet = dd.Book(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(x, y)), ("x", "y"))
+rooDataSet = dd.Book(ROOT.std.move(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(x, y))), ("x", "y"))
 
 
 # Method 2:
