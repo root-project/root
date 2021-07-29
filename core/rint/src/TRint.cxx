@@ -747,8 +747,11 @@ Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *e
    if (!error)
       error = &err;
    if (line && line[0] != '.') {
-      TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
-      int res = ProcessLine(lineWithNr + line, kFALSE, error);
+      TString input;
+      if (!fBackslashContinue)
+         input += TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
+      input += line;
+      int res = ProcessLine(input, kFALSE, error);
       if (*error == TInterpreter::kProcessing) {
          if (!fNonContinuePrompt.Length())
             fNonContinuePrompt = fDefaultPrompt;
@@ -757,6 +760,10 @@ Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *e
          SetPrompt(fNonContinuePrompt);
          fNonContinuePrompt.Clear();
       }
+      std::string_view sv(line);
+      auto lastNonSpace = sv.find_last_not_of(" \t");
+      fBackslashContinue = (lastNonSpace != std::string_view::npos
+                            && sv[lastNonSpace] == '\\');
       return res;
    }
    if (line && line[0] == '.' && line[1] == '@') {
