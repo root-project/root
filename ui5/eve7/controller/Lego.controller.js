@@ -47,6 +47,7 @@ sap.ui.define([
 
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
 
+            this.eve_lego = chld;
             this.canvas_json = JSROOT.parse( atob(chld.fTitle) );
             // console.log(JSON.stringify(this.canvas_json));
         },
@@ -76,6 +77,9 @@ sap.ui.define([
         },
 
         endChanges: function (oEvent) {
+            let domref = this.byId("legoPlotPlace").getDomRef();
+            this.canvas_json = JSROOT.parse( atob(this.eve_lego.fTitle) );
+            JSROOT.redraw(domref, this.canvas_json);
         },
 
         elementRemoved: function (elId) {
