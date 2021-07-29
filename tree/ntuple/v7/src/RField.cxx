@@ -190,8 +190,6 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
       auto itemField = Create("_0", itemTypeName);
       result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
-   } else if (normalizedType == "ROOT::VecOps::RVec<bool>") {
-      result = std::make_unique<RField<ROOT::VecOps::RVec<bool>>>(fieldName);
    } else if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create("_0", itemTypeName);
