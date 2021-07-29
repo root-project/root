@@ -15,6 +15,7 @@ set(Foundation_dict_headers
   TError.h
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
+  ROOT/RRangeCast.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx
   ROOT/span.hxx
