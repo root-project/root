@@ -399,6 +399,45 @@ public:
    }
 };
 
+/// The type-erased field for a RVec<Type>
+class RRVecField : public Detail::RFieldBase {
+private:
+   std::size_t fItemSize;
+   ClusterSize_t fNWritten;
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   RRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RRVecField(RRVecField &&) = default;
+   RRVecField &operator=(RRVecField &&) = default;
+   RRVecField(const RRVecField &) = delete;
+   RRVecField &operator=(RRVecField &) = delete;
+   ~RRVecField() = default;
+
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) final;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   void CommitCluster() final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
+};
 
 /// The generic field for fixed size arrays, which do not need an offset column
 class RArrayField : public Detail::RFieldBase {
