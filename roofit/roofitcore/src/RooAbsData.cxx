@@ -2168,26 +2168,22 @@ void RooAbsData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cac
     // Go over all used observables and check if any of them have parameterized
     // ranges in terms of pruned observables. If so, remove those observable
     // from the pruning list
-    TIterator* uIter = usedObs->createIterator() ;
-    RooAbsArg* obs ;
-    while((obs=(RooAbsArg*)uIter->Next())) {
-      RooRealVar* rrv = dynamic_cast<RooRealVar*>(obs) ;
+    for(auto const* rrv : dynamic_range_cast<RooRealVar*>(*usedObs)) {
       if (rrv && !rrv->getBinning().isShareable()) {
-   RooArgSet depObs ;
-   RooAbsReal* loFunc = rrv->getBinning().lowBoundFunc() ;
-   RooAbsReal* hiFunc = rrv->getBinning().highBoundFunc() ;
-   if (loFunc) {
-     loFunc->leafNodeServerList(&depObs,0,kTRUE) ;
-   }
-   if (hiFunc) {
-     hiFunc->leafNodeServerList(&depObs,0,kTRUE) ;
-   }
-   if (depObs.getSize()>0) {
-     pruneSet.remove(depObs,kTRUE,kTRUE) ;
-   }
+        RooArgSet depObs ;
+        RooAbsReal* loFunc = rrv->getBinning().lowBoundFunc() ;
+        RooAbsReal* hiFunc = rrv->getBinning().highBoundFunc() ;
+        if (loFunc) {
+          loFunc->leafNodeServerList(&depObs,0,kTRUE) ;
+        }
+        if (hiFunc) {
+          hiFunc->leafNodeServerList(&depObs,0,kTRUE) ;
+        }
+        if (depObs.getSize()>0) {
+          pruneSet.remove(depObs,kTRUE,kTRUE) ;
+        }
       }
     }
-    delete uIter ;
   }
 
 

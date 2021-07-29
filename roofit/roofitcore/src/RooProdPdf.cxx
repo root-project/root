@@ -376,9 +376,7 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   Int_t numExtended(0) ;
 
   // Process set of full PDFS
-  RooFIter siter = fullPdfSet.fwdIterator() ;
-  RooAbsPdf* pdf ;
-  while((pdf=(RooAbsPdf*)siter.next())) {
+  for(auto const* pdf : static_range_cast<RooAbsPdf*>(fullPdfSet)) {
     _pdfList.add(*pdf) ;
     RooArgSet* nset1 = new RooArgSet("nset") ;
     _pdfNSetList.Add(nset1) ;

@@ -22,12 +22,35 @@
 #include "RooPrintable.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
+
+// The range casts are not used in this file, but if you want to work with
+// RooFit collections you also want to have static_range_cast and
+// dynamic_range_cast available without including RangeCast.h every time.
+#include "ROOT/RRangeCast.hxx"
+
+#include "ROOT/RSpan.hxx"
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <type_traits>
 
-#include "ROOT/RSpan.hxx"
+
+// To make ROOT::RangeStaticCast available under the name static_range_cast.
+template <typename T, typename Range_t>
+ROOT::RRangeCast<T, false, Range_t> static_range_cast(Range_t &&coll)
+{
+   return ROOT::RangeStaticCast<T>(std::forward<Range_t>(coll));
+}
+
+
+// To make ROOT::RangeDynCast available under the dynamic_range_cast.
+template <typename T, typename Range_t>
+ROOT::RRangeCast<T, true, Range_t> dynamic_range_cast(Range_t &&coll)
+{
+   return ROOT::RangeDynCast<T>(std::forward<Range_t>(coll));
+}
+
 
 class RooCmdArg;
 
