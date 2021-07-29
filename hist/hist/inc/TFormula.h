@@ -25,6 +25,10 @@
 
 class TMethodCall;
 
+struct array_ref_interface {
+  Double_t *arr;
+  std::size_t size;
+};
 
 class TFormulaFunction
 {
@@ -124,7 +128,7 @@ private:
    void ReInitializeEvalMethod();
    std::string GetGradientFuncName() const {
       assert(fClingName.Length() && "TFormula is not initialized yet!");
-      return std::string(fClingName.Data()) + "_grad";
+      return std::string(fClingName.Data()) + "_grad_1";
    }
    bool HasGradientGenerationFailed() const {
       return !fGradMethod && !fGradGenerationInput.empty();
