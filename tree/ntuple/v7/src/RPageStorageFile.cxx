@@ -47,7 +47,7 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    : RPageSink(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
 {
-   R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. " <<
+   R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. "
       "Do not store real data with this version of RNTuple!";
    fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkFile");
@@ -80,9 +80,7 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 }
 
 
-ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
-{
-}
+ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile() = default;
 
 
 void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */)
@@ -103,7 +101,7 @@ inline ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkFile::WriteSealedPage(
    const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked)
 {
-   std::uint64_t offsetData;
+   std::uint64_t offsetData = 0;
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
       offsetData = fWriter->WriteBlob(sealedPage.fBuffer, sealedPage.fSize, bytesPacked);
@@ -266,10 +264,12 @@ void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(
    auto pageInfo = clusterDescriptor.GetPageRange(columnId).Find(clusterIndex.GetIndex());
 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   if (sealedPage.fBuffer) {
+      R__ASSERT(sealedPage.fSize >= bytesOnStorage);
+      fReader.ReadBuffer(sealedPage.GetEmptyBuffer(), bytesOnStorage, pageInfo.fLocator.fPosition);
+   }
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
-   if (sealedPage.fBuffer)
-      fReader.ReadBuffer(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, pageInfo.fLocator.fPosition);
 }
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(
@@ -368,10 +368,10 @@ void ROOT::Experimental::Detail::RPageSourceFile::ReleasePage(RPage &page)
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceFile::Clone() const
 {
-   auto clone = new RPageSourceFile(fNTupleName, fOptions);
+   auto clone = std::unique_ptr<RPageSourceFile>(new RPageSourceFile(fNTupleName, fOptions));
    clone->fFile = fFile->Clone();
    clone->fReader = Internal::RMiniFileReader(clone->fFile.get());
-   return std::unique_ptr<RPageSourceFile>(clone);
+   return clone;
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
@@ -421,7 +421,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    // of extra bytes.
    // TODO(jblomer): Eventually we may want to select the parameter at runtime according to link latency and speed,
    // memory consumption, device block size.
-   float maxOverhead = 0.25 * float(activeSize);
+   float maxOverhead = kMaxReadOverheadFactor * float(activeSize);
    std::vector<std::size_t> gaps;
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
       gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
@@ -477,15 +477,16 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    fCounters->fSzReadOverhead.Add(szOverhead);
 
    // Register the on disk pages in a page map
-   auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
-   auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char []>(buffer));
+   auto buffer = std::make_unique<unsigned char []>(reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize);
+   auto offset_ptr = buffer.get();
+   auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::move(buffer));
    for (const auto &s : onDiskPages) {
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-      pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
+      pageMap->Register(key, ROnDiskPage(offset_ptr + s.fBufPos, s.fSize));
    }
    fCounters->fNPageLoaded.Add(onDiskPages.size());
    for (auto &r : readRequests) {
-      r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
+      r.fBuffer = offset_ptr + reinterpret_cast<intptr_t>(r.fBuffer);
    }
 
    auto nReqs = readRequests.size();

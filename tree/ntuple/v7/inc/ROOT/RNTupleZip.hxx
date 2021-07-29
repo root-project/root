@@ -48,23 +48,25 @@ public:
    using Writer_t = std::function<void(const void *buffer, size_t nbytes, size_t offset)>;
    static constexpr size_t kMaxSingleBlock = kMAXZIPBUF;
 
-   RNTupleCompressor() : fZipBuffer(std::unique_ptr<Buffer_t>(new Buffer_t())) {}
-   RNTupleCompressor(const RNTupleCompressor &other) = delete;
-   RNTupleCompressor &operator =(const RNTupleCompressor &other) = delete;
-   RNTupleCompressor(RNTupleCompressor &&other) = default;
-   RNTupleCompressor &operator =(RNTupleCompressor &&other) = default;
+   RNTupleCompressor() : fZipBuffer(std::make_unique<Buffer_t>()) {}
+   RNTupleCompressor(const RNTupleCompressor &) = delete;
+   RNTupleCompressor &operator =(const RNTupleCompressor &) = delete;
+   RNTupleCompressor(RNTupleCompressor &&) = default;
+   RNTupleCompressor &operator =(RNTupleCompressor &&) = default;
+   ~RNTupleCompressor() = default;
 
    /// Returns the size of the compressed data. Data is compressed in 16MB (kMAXZIPBUF) blocks and written
    /// piecewise using the provided writer
    size_t Zip(const void *from, size_t nbytes, int compression, Writer_t fnWriter) {
       R__ASSERT(from != nullptr);
 
-      auto cxLevel = compression % 100;
+      auto cxLevel = compression % 100; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
       if (cxLevel == 0) {
          fnWriter(from, nbytes, 0);
          return nbytes;
       }
 
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
       char *source = const_cast<char *>(static_cast<const char *>(from));
@@ -99,12 +101,13 @@ public:
       R__ASSERT(from != nullptr);
       R__ASSERT(nbytes <= kMAXZIPBUF);
 
-      auto cxLevel = compression % 100;
+      auto cxLevel = compression % 100; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
       if (cxLevel == 0) {
          memcpy(fZipBuffer->data(), from, nbytes);
          return nbytes;
       }
 
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       int szSource = nbytes;
       char *source = const_cast<char *>(static_cast<const char *>(from));
@@ -124,12 +127,13 @@ public:
    static std::size_t Zip(const void *from, std::size_t nbytes, int compression, void *to) {
       R__ASSERT(from != nullptr);
       R__ASSERT(to != nullptr);
-      auto cxLevel = compression % 100;
+      auto cxLevel = compression % 100; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
       if (cxLevel == 0) {
          memcpy(to, from, nbytes);
          return nbytes;
       }
 
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
       char *source = const_cast<char *>(static_cast<const char *>(from));
@@ -174,11 +178,12 @@ private:
    std::unique_ptr<Buffer_t> fUnzipBuffer;
 
 public:
-   RNTupleDecompressor() : fUnzipBuffer(std::unique_ptr<Buffer_t>(new Buffer_t())) {}
-   RNTupleDecompressor(const RNTupleDecompressor &other) = delete;
-   RNTupleDecompressor &operator =(const RNTupleDecompressor &other) = delete;
-   RNTupleDecompressor(RNTupleDecompressor &&other) = default;
-   RNTupleDecompressor &operator =(RNTupleDecompressor &&other) = default;
+   RNTupleDecompressor() : fUnzipBuffer(std::make_unique<Buffer_t>()) {}
+   RNTupleDecompressor(const RNTupleDecompressor &) = delete;
+   RNTupleDecompressor &operator =(const RNTupleDecompressor &) = delete;
+   RNTupleDecompressor(RNTupleDecompressor &&) = default;
+   RNTupleDecompressor &operator =(RNTupleDecompressor &&) = default;
+   ~RNTupleDecompressor() = default;
 
    /**
     * The nbytes parameter provides the size ls of the from buffer. The dataLen gives the size of the uncompressed data.

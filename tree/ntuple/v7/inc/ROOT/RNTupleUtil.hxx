@@ -120,8 +120,11 @@ private:
    ClusterSize_t::ValueType fIndex = kInvalidClusterIndex;
 public:
    RClusterIndex() = default;
-   RClusterIndex(const RClusterIndex &other) = default;
-   RClusterIndex &operator =(const RClusterIndex &other) = default;
+   RClusterIndex(const RClusterIndex &) = default;
+   RClusterIndex &operator =(const RClusterIndex &) = default;
+   RClusterIndex(RClusterIndex &&) = default;
+   RClusterIndex &operator =(RClusterIndex &&) = default;
+   ~RClusterIndex() = default;
    constexpr RClusterIndex(DescriptorId_t clusterId, ClusterSize_t::ValueType index)
       : fClusterId(clusterId), fIndex(index) {}
 

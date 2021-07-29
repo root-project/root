@@ -320,9 +320,8 @@ TEST(PageStorageFile, LoadCluster)
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
-   auto column = std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
-      ROOT::Experimental::Detail::RColumn::Create<float, ROOT::Experimental::EColumnType::kReal32>(
-         ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
+   auto column = ROOT::Experimental::Detail::RColumn::Create<float, ROOT::Experimental::EColumnType::kReal32>(
+      ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0);
    column->Connect(ptId, &source);
    cluster = source.LoadCluster(1, {colId});
    EXPECT_EQ(1U, cluster->GetId());

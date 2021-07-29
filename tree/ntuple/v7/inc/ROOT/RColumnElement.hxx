@@ -102,7 +102,9 @@ public:
 
    void *GetRawContent() const { return fRawContent; }
    std::size_t GetSize() const { return fSize; }
-   std::size_t GetPackedSize(std::size_t nElements) const { return (nElements * GetBitsOnStorage() + 7) / 8; }
+   std::size_t GetPackedSize(std::size_t nElements) const {
+      return (nElements * GetBitsOnStorage() + 7) / 8; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+   }
 };
 
 /**
@@ -115,6 +117,7 @@ public:
    {
       // Do not allow this template to be instantiated unless there is a specialization. The assert needs to depend
       // on the template type or else the static_assert will always fire.
+      // NOLINTNEXTLINE(misc-redundant-expression)
       static_assert(sizeof(CppT) != sizeof(CppT), "No column mapping for this C++ type");
    }
 };

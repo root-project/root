@@ -67,15 +67,17 @@ private:
 
 public:
    template <typename CppT, EColumnType ColumnT>
-   static RColumn *Create(const RColumnModel &model, std::uint32_t index) {
+   static std::unique_ptr<RColumn> Create(const RColumnModel &model, std::uint32_t index) {
       R__ASSERT(model.GetType() == ColumnT);
-      auto column = new RColumn(model, index);
+      auto column = std::unique_ptr<RColumn>(new RColumn(model, index));
       column->fElement = std::unique_ptr<RColumnElementBase>(new RColumnElement<CppT, ColumnT>(nullptr));
       return column;
    }
 
    RColumn(const RColumn&) = delete;
    RColumn &operator =(const RColumn&) = delete;
+   RColumn(RColumn&&) = delete;
+   RColumn &operator =(const RColumn&&) = delete;
    ~RColumn();
 
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
@@ -160,13 +162,13 @@ public:
 
    template <typename CppT>
    CppT *Map(const NTupleSize_t globalIndex) {
-      NTupleSize_t nItems;
+      NTupleSize_t nItems = 0;
       return MapV<CppT>(globalIndex, nItems);
    }
 
    template <typename CppT>
    CppT *Map(const RClusterIndex &clusterIndex) {
-      NTupleSize_t nItems;
+      NTupleSize_t nItems = 0;
       return MapV<CppT>(clusterIndex, nItems);
    }
 

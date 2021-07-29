@@ -217,6 +217,7 @@ public:
 
    std::int64_t GetValueAsInt() const final {
       auto ticks = BaseCounterT::GetValue();
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       return std::uint64_t((double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.));
    }
 
@@ -265,8 +266,10 @@ public:
       fCtrCpuTicks.Add(clock() - fStartTicks);
    }
 
-   RNTupleTimer(const RNTupleTimer &other) = delete;
-   RNTupleTimer &operator =(const RNTupleTimer &other) = delete;
+   RNTupleTimer(const RNTupleTimer &) = delete;
+   RNTupleTimer &operator =(const RNTupleTimer &) = delete;
+   RNTupleTimer(RNTupleTimer &&) = delete;
+   RNTupleTimer &operator =(RNTupleTimer &&) = delete;
 };
 
 using RNTuplePlainTimer = RNTupleTimer<RNTuplePlainCounter, RNTupleTickCounter<RNTuplePlainCounter>>;
@@ -296,10 +299,10 @@ private:
 
 public:
    explicit RNTupleMetrics(const std::string &name) : fName(name) {}
-   RNTupleMetrics(const RNTupleMetrics &other) = delete;
-   RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
-   RNTupleMetrics(RNTupleMetrics &&other) = default;
-   RNTupleMetrics & operator=(RNTupleMetrics &&other) = default;
+   RNTupleMetrics(const RNTupleMetrics &) = delete;
+   RNTupleMetrics & operator=(const RNTupleMetrics &) = delete;
+   RNTupleMetrics(RNTupleMetrics &&) = default;
+   RNTupleMetrics & operator=(RNTupleMetrics &&) = default;
    ~RNTupleMetrics() = default;
 
    // TODO(jblomer): return a reference

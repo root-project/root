@@ -1,1 +1,45 @@
+---
+Checks: -*,
+  ,bugprone-*,
+  ,-bugprone-narrowing-conversions,
+  ,clang-analyzer-*,
+  ,cppcoreguidelines-*,
+  ,-cppcoreguidelines-non-private-member-variables-in-classes,
+  ,-cppcoreguidelines-avoid-c-arrays,
+  ,-cppcoreguidelines-narrowing-conversions,
+  ,-cppcoreguidelines-pro-type-vararg,
+  ,-cppcoreguidelines-pro-type-reinterpret-cast,
+  ,-cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  ,misc-definitions-in-headers,
+  ,misc-redundant-expression,
+  ,misc-static-assert,
+  ,misc-throw-by-value-catch-by-reference,
+  ,misc-unconventional-assign-operator,
+  ,misc-unused-alias-decls,
+  ,misc-unused-using-decls,
+  ,modernize-concat-nested-namespaces,
+  ,modernize-deprecated-headers,
+  ,modernize-make-shared,
+  ,modernize-make-unique,
+  ,modernize-use-bool-literals,
+  ,modernize-use-equals-default,
+  ,modernize-use-equals-delete,
+  ,modernize-use-nullptr,
+  ,modernize-use-override,
+  ,performance-*
+  ,readability-container-size-empty,
+  ,readability-redundant-string-cstr,
+  ,readability-static-definition-in-anonymous-namespace,
+  ,readability-uniqueptr-delete-release,
 WarningsAsErrors: '*'
+HeaderFilterRegex: 'tree/ntuple/.*'
+CheckOptions:
+  - key:    bugprone-assert-side-effect.AssertMacros
+    value:  'R__ASSERT'
+  - key:    bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value:  'int8_t'
+  - key:    cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
+    value:  false
+  - key:    cppcoreguidelines-narrowing-conversions.WarnOnEquivalentBitWidth
+    value:  false
+...
