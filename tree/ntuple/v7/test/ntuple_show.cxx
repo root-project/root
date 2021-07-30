@@ -326,3 +326,106 @@ TEST(RNTupleShow, Collections)
       + "********************************************************************************\n" };
    EXPECT_EQ(outputFields, osFields.str());
 }
+
+TEST(RNTupleShow, RVec)
+{
+   std::string rootFileName{"test_ntuple_show_rvec.root"};
+   std::string ntupleName{"r"};
+   FileRaii fileGuard(rootFileName);
+
+   auto modelWrite = RNTupleModel::Create();
+   auto fieldIntVec = modelWrite->MakeField<ROOT::RVec<int>>("intVec");
+   auto fieldFloatVecVec = modelWrite->MakeField<ROOT::RVec<ROOT::RVec<float>>>("floatVecVec");
+   auto fieldCustomStructVec = modelWrite->MakeField<ROOT::RVec<CustomStruct>>("customStructVec");
+
+   auto modelRead = modelWrite->Clone();
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), ntupleName, rootFileName);
+
+      *fieldIntVec = ROOT::RVec<int>{1, 2, 3};
+      *fieldFloatVecVec = ROOT::RVec<ROOT::RVec<float>>{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
+      *fieldCustomStructVec = ROOT::RVec<CustomStruct>{{}, {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo"}};
+      ntuple->Fill();
+
+      fieldIntVec->emplace_back(4);
+      fieldFloatVecVec->emplace_back(ROOT::RVec<float>{2.1, 2.2});
+      fieldCustomStructVec->emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar"});
+      ntuple->Fill();
+   }
+
+   auto r = RNTupleReader::Open(std::move(modelRead), ntupleName, rootFileName);
+
+   std::ostringstream os;
+   r->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   std::string expected =
+      "{\n  \"intVec\": [1, 2, 3],\n  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n  \"customStructVec\": [{\"a\": 0, "
+      "\"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n}\n";
+   EXPECT_EQ(os.str(), expected);
+
+   std::ostringstream os2;
+   r->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os2);
+   expected =
+      "{\n  \"intVec\": [1, 2, 3, 4],\n  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n  "
+      "\"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], "
+      "[5]], \"s\": \"foo\"}, {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n}\n";
+   EXPECT_EQ(os2.str(), expected);
+}
+
+TEST(RNTupleShow, RVecTypeErased)
+{
+   std::string rootFileName{"test_ntuple_show_rvec_typeerased.root"};
+   std::string ntupleName{"r"};
+   FileRaii fileGuard(rootFileName);
+   {
+      auto m = RNTupleModel::Create();
+
+      auto intVecField = RFieldBase::Create("intVec", "ROOT::VecOps::RVec<int>").Unwrap();
+      m->AddField(std::move(intVecField));
+
+      auto floatVecVecField =
+         RFieldBase::Create("floatVecVec", "ROOT::VecOps::RVec<ROOT::VecOps::RVec<float>>").Unwrap();
+      m->AddField(std::move(floatVecVecField));
+
+      auto customStructField = RFieldBase::Create("customStructVec", "ROOT::VecOps::RVec<CustomStruct>").Unwrap();
+      m->AddField(std::move(customStructField));
+
+      ROOT::RVec<int> intVec = {1, 2, 3};
+      ROOT::RVec<ROOT::RVec<float>> floatVecVec{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
+      ROOT::RVec<CustomStruct> customStructVec{{}, {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo"}};
+
+      m->Freeze();
+      m->GetDefaultEntry()->CaptureValueUnsafe("intVec", &intVec);
+      m->GetDefaultEntry()->CaptureValueUnsafe("floatVecVec", &floatVecVec);
+      m->GetDefaultEntry()->CaptureValueUnsafe("customStructVec", &customStructVec);
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(m), ntupleName, rootFileName);
+
+      ntuple->Fill();
+
+      intVec.emplace_back(4);
+      floatVecVec.emplace_back(ROOT::RVec<float>{2.1, 2.2});
+      customStructVec.emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar"});
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+
+   std::ostringstream os;
+   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
+   std::string fString{std::string("") + "{\n" + "  \"intVec\": [1, 2, 3],\n" +
+                       "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n" +
+                       "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": "
+                       "[2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n" +
+                       "}\n"};
+   EXPECT_EQ(fString, os.str());
+
+   std::ostringstream os1;
+   ntuple->Show(1, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os1);
+   std::string fString1{
+      std::string("") + "{\n" + "  \"intVec\": [1, 2, 3, 4],\n" +
+      "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n" +
+      "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"}, {\"a\": 1, \"v1\": [2, 3], \"v2\": "
+      "[[4], [5]], \"s\": \"foo\"}, {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n" +
+      "}\n"};
+   EXPECT_EQ(fString1, os1.str());
+}

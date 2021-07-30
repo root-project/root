@@ -332,6 +332,10 @@ void ROOT::Experimental::RPrintValueVisitor::VisitVectorBoolField(const RField<s
    PrintCollection(field);
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitRVecField(const RRVecField &field)
+{
+   PrintCollection(field);
+}
 
 //---------------------------- RNTupleFormatter --------------------------------
 
