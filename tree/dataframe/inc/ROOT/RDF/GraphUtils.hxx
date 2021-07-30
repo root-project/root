@@ -138,12 +138,6 @@ private:
    std::string RepresentGraph(const RResultPtr<T> &resultPtr)
    {
       auto loopManager = resultPtr.fLoopManager;
-      if (!loopManager)
-         throw std::runtime_error("Something went wrong");
-
-      if (std::is_same<T, RInterface<RLoopManager, void>>::value) {
-         return RepresentGraph(loopManager);
-      }
 
       loopManager->Jit();
 

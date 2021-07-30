@@ -2062,3 +2062,15 @@ void RooDataSet::convertToTreeStore()
    }
 }
 
+
+// Compile-time test if we can still use TStrings for the constructors of
+// RooDataClasses, either for both name and title or for only one of them.
+namespace {
+  TString tstr = "tstr";
+  const char * cstr = "cstr";
+  RooRealVar x{"x", "x", 1.0};
+  RooArgSet vars{x};
+  RooDataSet d1(tstr, tstr, vars, nullptr);
+  RooDataSet d2(tstr, cstr, vars, nullptr);
+  RooDataSet d3(cstr, tstr, vars, nullptr);
+}

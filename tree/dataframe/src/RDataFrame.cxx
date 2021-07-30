@@ -1111,10 +1111,8 @@ ROOT::RDF::SaveGraph(rd1);
 
 namespace ROOT {
 
-using ROOT::Detail::RDF::ColumnNames_t;
+using ROOT::RDF::ColumnNames_t;
 using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
-
-namespace RDFInternal = ROOT::Internal::RDF;
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
