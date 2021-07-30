@@ -65,7 +65,6 @@ namespace TMVA {
         // draw variables plot - RDataFrame input
         void Draw(const std::string& variable, bool useTMVAStyle);
         
-        
         // draw variables plot - RTensor input
         void DrawTensor(const std::string& variable,  const std::vector<std::string>& variables,bool useTMVAStyle);
         
@@ -73,6 +72,8 @@ namespace TMVA {
         // draw legend
         void DrawLegend(float minX, float minY, float maxX, float maxY);
         
+        // draw ROC Curve 
+        void DrawROCCurve(const std::string& output_variable , bool useTMVAStyle);
 
     private:
         
