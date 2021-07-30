@@ -1439,14 +1439,16 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [BUILD target] [PROJECT project]
 #                        [PASSREGEX exp] [FAILREGEX epx]
 #                        [PASSRC code]
+#                        [RESOURCE_LOCK lock]
+#                        [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                        [LABELS label1 label2]
 #                        [PYTHON_DEPS numpy numba keras torch ...] # List of python packages required to run this test.
 #                                                              A fixture will be added the tries to import them before the test starts.)
 #
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
-                            "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                            "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS;PYTHON_DEPS"
+                            "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC;RESOURCE_LOCK"
+                            "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -1621,6 +1623,27 @@ function(ROOT_ADD_TEST test)
     if (gnuinstall)
       set_property(TEST ${test} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
     endif()
+  endif()
+
+  #- provided fixtures and resource lock are set here
+  if (ARG_FIXTURES_SETUP)
+    set_property(TEST ${test} PROPERTY
+      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set_property(TEST ${test} PROPERTY
+      FIXTURES_CLEANUP ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set_property(TEST ${test} PROPERTY
+      FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
+  endif()
+
+  if (ARG_RESOURCE_LOCK)
+    set_property(TEST ${test} PROPERTY
+      RESOURCE_LOCK ${ARG_RESOURCE_LOCK})
   endif()
 
   set_property(TEST ${test} APPEND PROPERTY ENVIRONMENT ROOT_HIST=0)

@@ -24,17 +24,14 @@ linear = ROOT.RooPolynomial("linear", "linear", E, pol1)
 yieldSig = ROOT.RooRealVar("yieldSig", "yieldSig", 1, 0, 1.0e4)
 yieldBkg = ROOT.RooRealVar("yieldBkg", "yieldBkg", 1, 0, 1.0e4)
 
-model = ROOT.RooAddPdf("model", "S + B model", ROOT.RooArgList(gauss, linear), ROOT.RooArgList(yieldSig, yieldBkg))
+model = ROOT.RooAddPdf("model", "S + B model", [gauss, linear], [yieldSig, yieldBkg])
 
 print("The proto model before customisation:\n")
 model.Print("T")  # "T" prints the model as a tree
 
 
 # Build the categories
-sample = ROOT.RooCategory("sample", "sample")
-sample["Sample1"] = 1
-sample["Sample2"] = 2
-sample["Sample3"] = 3
+sample = ROOT.RooCategory("sample", "sample", {"Sample1": 1, "Sample2": 2, "Sample3": 3})
 
 
 # Start to customise the proto model that was defined above.

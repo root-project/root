@@ -24,15 +24,13 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 a = ROOT.RooRealVar("a", "a", 0.4, 0, 1)
 b = ROOT.RooRealVar("b", "b", 5)
 c = ROOT.RooRealVar("c", "c", -1, -10, 10)
-effFunc = ROOT.RooFormulaVar("effFunc", "(1-a)+a*cos((x-c)/b)", ROOT.RooArgList(a, b, c, x))
+effFunc = ROOT.RooFormulaVar("effFunc", "(1-a)+a*cos((x-c)/b)", [a, b, c, x])
 
 # Construct conditional efficiency pdf E(cut|x)
 # ------------------------------------------------------------------------------------------
 
 # Acceptance state cut (1 or 0)
-cut = ROOT.RooCategory("cut", "cutr")
-cut.defineType("accept", 1)
-cut.defineType("reject", 0)
+cut = ROOT.RooCategory("cut", "cutr", {"accept": 1, "reject": 0})
 
 # Construct efficiency pdf eff(cut|x)
 effPdf = ROOT.RooEfficiency("effPdf", "effPdf", effFunc, cut, "accept")
@@ -42,7 +40,7 @@ effPdf = ROOT.RooEfficiency("effPdf", "effPdf", effFunc, cut, "accept")
 
 # Construct global shape pdf shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
 # (These are _only_ needed to generate some toy MC here to be used later)
-shapePdf = ROOT.RooPolynomial("shapePdf", "shapePdf", x, ROOT.RooArgList(ROOT.RooFit.RooConst(-0.095)))
+shapePdf = ROOT.RooPolynomial("shapePdf", "shapePdf", x, [-0.095])
 model = ROOT.RooProdPdf(
     "model", "model", ROOT.RooArgSet(shapePdf), Conditional=(ROOT.RooArgSet(effPdf), ROOT.RooArgSet(cut))
 )

@@ -34,10 +34,10 @@ public:
 /// A RDataSource to test the #var feature
 class RArraysDS : public ROOT::RDF::RDataSource {
    std::vector<int> fVar = {42};
-   std::vector<std::string> fColumnNames = {"__rdf_sizeof_var", "var"};
+   std::vector<std::string> fColumnNames = {"R_rdf_sizeof_var", "var"};
    std::vector<std::pair<ULong64_t, ULong64_t>> fRanges = {{0ull, 1ull}};
 
-   bool IsSizeColumn(std::string_view colName) const { return colName.substr(0, 13) == "__rdf_sizeof_"; }
+   bool IsSizeColumn(std::string_view colName) const { return colName.substr(0, 13) == "R_rdf_sizeof_"; }
 
 public:
    void SetNSlots(unsigned int) final { }
@@ -46,7 +46,7 @@ public:
 
    bool HasColumn(std::string_view name) const final
    {
-      return name == "var" || name == "__rdf_sizeof_var";
+      return name == "var" || name == "R_rdf_sizeof_var";
    }
 
    std::string GetTypeName(std::string_view name) const final

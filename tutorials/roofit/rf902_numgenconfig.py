@@ -17,9 +17,7 @@ import ROOT
 
 # Example pdf for use below
 x = ROOT.RooRealVar("x", "x", 0, 10)
-model = ROOT.RooChebychev(
-    "model", "model", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(-0.1))
-)
+model = ROOT.RooChebychev("model", "model", x, [0.0, 0.5, -0.1])
 
 # Change global strategy for 1D sampling problems without conditional observable
 # (1st kFALSE) and without discrete observable (2nd kFALSE) from ROOT.RooFoamGenerator,

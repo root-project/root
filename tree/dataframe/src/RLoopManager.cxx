@@ -35,6 +35,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -285,6 +286,7 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
       }
       what.back() = '}';
    } else {
+      assert(tree != nullptr); // to make clang-tidy happy
       const auto treeName = tree->GetName();
       what = std::string("tree \"") + treeName + "\"";
       const auto file = tree->GetCurrentFile();

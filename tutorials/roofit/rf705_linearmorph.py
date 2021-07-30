@@ -27,7 +27,7 @@ g1mean = ROOT.RooRealVar("g1mean", "g1mean", -10)
 g1 = ROOT.RooGaussian("g1", "g1", x, g1mean, ROOT.RooFit.RooConst(2))
 
 # Upper end point shape: a Polynomial
-g2 = ROOT.RooPolynomial("g2", "g2", x, ROOT.RooArgList(ROOT.RooFit.RooConst(-0.03), ROOT.RooFit.RooConst(-0.001)))
+g2 = ROOT.RooPolynomial("g2", "g2", x, [-0.03, -0.001])
 
 # Create interpolating pdf
 # -----------------------------------------------

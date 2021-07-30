@@ -26,7 +26,7 @@ modelx = ROOT.RooGaussian("gx", "gx", x, mean, sigma)
 
 # Block function in mean
 a = ROOT.RooRealVar("a", "a", 2, 1, 10)
-model_mean = ROOT.RooGenericPdf("model_mean", "abs(mean)<a", ROOT.RooArgList(mean, a))
+model_mean = ROOT.RooGenericPdf("model_mean", "abs(mean)<a", [mean, a])
 
 # Convolution in mean model = g(x,mean,sigma) (x) block(mean)
 x.setBins(1000, "cache")

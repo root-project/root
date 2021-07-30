@@ -55,7 +55,7 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
-   const ColumnNames_t fColumnNames;
+   const ROOT::RDF::ColumnNames_t fColumnNames;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
    /// Column readers per slot and per input column
@@ -64,7 +64,7 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
 public:
-   RFilter(FilterF f, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
+   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
            const RDFInternal::RBookedDefines &defines, std::string_view name = "")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), defines),
         fFilter(std::move(f)), fColumnNames(columns), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),

@@ -53,7 +53,7 @@ Asig0 = ROOT.RooRealVar("Asig", "Asig", 1, 0.01, 5000)
 Abkg0 = ROOT.RooRealVar("Abkg", "Abkg", 1, 0.01, 5000)
 
 # Construct the sum model
-model0 = ROOT.RooRealSumPdf("model0", "model0", ROOT.RooArgList(p_h_sig, p_h_bkg), ROOT.RooArgList(Asig0, Abkg0), True)
+model0 = ROOT.RooRealSumPdf("model0", "model0", [p_h_sig, p_h_bkg], [Asig0, Abkg0], True)
 
 
 #  Case 1 - 'Barlow Beeston'
@@ -66,9 +66,7 @@ Asig1 = ROOT.RooRealVar("Asig", "Asig", 1, 0.01, 5000)
 Abkg1 = ROOT.RooRealVar("Abkg", "Abkg", 1, 0.01, 5000)
 
 # Construct the sum of these
-model_tmp = ROOT.RooRealSumPdf(
-    "sp_ph", "sp_ph", ROOT.RooArgList(p_ph_sig1, p_ph_bkg1), ROOT.RooArgList(Asig1, Abkg1), True
-)
+model_tmp = ROOT.RooRealSumPdf("sp_ph", "sp_ph", [p_ph_sig1, p_ph_bkg1], [Asig1, Abkg1], True)
 
 # Construct the subsidiary poisson measurements constraining the histogram parameters
 # These ensure that the bin contents of the histograms are only allowed to vary within
@@ -96,9 +94,7 @@ Asig2 = ROOT.RooRealVar("Asig", "Asig", 1, 0.01, 5000)
 Abkg2 = ROOT.RooRealVar("Abkg", "Abkg", 1, 0.01, 5000)
 
 # As before, construct the sum of signal2 and background2
-model2_tmp = ROOT.RooRealSumPdf(
-    "sp_ph", "sp_ph", ROOT.RooArgList(p_ph_sig2, p_ph_bkg2), ROOT.RooArgList(Asig2, Abkg2), True
-)
+model2_tmp = ROOT.RooRealSumPdf("sp_ph", "sp_ph", [p_ph_sig2, p_ph_bkg2], [Asig2, Abkg2], True)
 
 # Construct the subsidiary poisson measurements constraining the statistical fluctuations
 hc_sigbkg = ROOT.RooHistConstraint("hc_sigbkg", "hc_sigbkg", ROOT.RooArgSet(p_ph_sig2, p_ph_bkg2))

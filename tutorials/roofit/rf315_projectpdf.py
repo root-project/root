@@ -26,7 +26,7 @@ y = ROOT.RooRealVar("y", "y", -2, 2)
 # Create function f(y) = a0 + a1*y
 a0 = ROOT.RooRealVar("a0", "a0", 0)
 a1 = ROOT.RooRealVar("a1", "a1", -1.5, -3, 1)
-fy = ROOT.RooPolyVar("fy", "fy", y, ROOT.RooArgList(a0, a1))
+fy = ROOT.RooPolyVar("fy", "fy", y, [a0, a1])
 
 # Create gaussx(x,f(y),sx)
 sigmax = ROOT.RooRealVar("sigmax", "width of gaussian", 0.5)

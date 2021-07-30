@@ -23,7 +23,7 @@ a1 = ROOT.RooRealVar("a1", "a1", -1.5, -1, 1)
 sigma = ROOT.RooRealVar("sigma", "width of gaussian", 1.5)
 
 # Create interpreted function f(y) = a0 - a1*sqrt(10*abs(y))
-fy = ROOT.RooFormulaVar("fy", "a0-a1*sqrt(10*abs(y))", ROOT.RooArgList(y, a0, a1))
+fy = ROOT.RooFormulaVar("fy", "a0-a1*sqrt(10*abs(y))", [y, a0, a1])
 
 # Create gauss(x,f(y),s)
 model = ROOT.RooGaussian("model", "Gaussian with shifting mean", x, fy, sigma)
@@ -52,7 +52,7 @@ hh_pdf.SetLineColor(ROOT.kBlue)
 z = ROOT.RooRealVar("z", "z", -5, 5)
 
 gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
-model3 = ROOT.RooProdPdf("model3", "model3", ROOT.RooArgList(model, gz))
+model3 = ROOT.RooProdPdf("model3", "model3", [model, gz])
 
 data3 = model3.generate(ROOT.RooArgSet(x, y, z), 10000)
 

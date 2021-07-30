@@ -60,7 +60,7 @@ class RDataSource;
 } // namespace ROOT
 
 namespace {
-using ROOT::Detail::RDF::ColumnNames_t;
+using ROOT::RDF::ColumnNames_t;
 
 /// A string expression such as those passed to Filter and Define, digested to a standardized form
 struct ParsedExpression {
@@ -138,12 +138,12 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
                                            const ColumnNames_t &customColNames, const ColumnNames_t &dataSourceColNames,
                                            const std::map<std::string, std::string> &aliasMap)
 {
-   // transform `#var` into `__rdf_sizeof_var`
+   // transform `#var` into `R_rdf_sizeof_var`
    TString preProcessedExpr(expr);
    // match #varname at beginning of the sentence or after not-a-word, but exclude preprocessor directives like #ifdef
    TPRegexp colSizeReplacer(
       "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
-   colSizeReplacer.Substitute(preProcessedExpr, "$1__rdf_sizeof_$3", "g");
+   colSizeReplacer.Substitute(preProcessedExpr, "$1R_rdf_sizeof_$3", "g");
 
    const auto usedColsAndAliases =
       FindUsedColumns(std::string(preProcessedExpr), treeBranchNames, customColNames, dataSourceColNames, aliasMap);
@@ -259,7 +259,7 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    return ss.str();
 }
 
-/// Declare a lambda expression to the interpreter in namespace __rdf, return the name of the jitted lambda.
+/// Declare a lambda expression to the interpreter in namespace R_rdf, return the name of the jitted lambda.
 /// If the lambda expression is already in GetJittedExprs, return the name for the lambda that has already been jitted.
 static std::string DeclareLambda(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes)
 {
@@ -276,9 +276,9 @@ static std::string DeclareLambda(const std::string &expr, const ColumnNames_t &v
 
    // new expression
    const auto lambdaBaseName = "lambda" + std::to_string(exprMap.size());
-   const auto lambdaFullName = "__rdf::" + lambdaBaseName;
+   const auto lambdaFullName = "R_rdf::" + lambdaBaseName;
 
-   const auto toDeclare = "namespace __rdf {\nauto " + lambdaBaseName + " = " + lambdaExpr + ";\nusing " +
+   const auto toDeclare = "namespace R_rdf {\nauto " + lambdaBaseName + " = " + lambdaExpr + ";\nusing " +
                           lambdaBaseName + "_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(" +
                           lambdaBaseName + ")>::ret_type;\n}";
    ROOT::Internal::RDF::InterpreterDeclare(toDeclare.c_str());
@@ -376,9 +376,9 @@ std::string ResolveAlias(const std::string &col, const std::map<std::string, std
    if (it != aliasMap.end())
       return it->second;
 
-   // #var is an alias for __rdf_sizeof_var
+   // #var is an alias for R_rdf_sizeof_var
    if (col.size() > 1 && col[0] == '#')
-      return "__rdf_sizeof_" + col.substr(1);
+      return "R_rdf_sizeof_" + col.substr(1);
 
    return col;
 }
@@ -790,7 +790,7 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 {
    auto selectedColumns = SelectColumns(nColumns, columns, lm.GetDefaultColumnNames());
 
-   // Resolve aliases and expand `#var` to `__rdf_sizeof_var`
+   // Resolve aliases and expand `#var` to `R_rdf_sizeof_var`
    const auto &aliasMap = lm.GetAliasMap();
 
    for (auto &col : selectedColumns) {

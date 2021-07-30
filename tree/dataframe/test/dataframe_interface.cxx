@@ -714,10 +714,10 @@ TEST(RDataFrameInterface, DescribeDataset)
    EXPECT_EQ(df3.DescribeDataset(), "Dataframe from datasource RCsv");
 }
 
-// #var is a convenience alias for __rdf_sizeof_var.
+// #var is a convenience alias for R_rdf_sizeof_var.
 TEST(RDataFrameInterface, ShortSyntaxForCollectionSizes)
 {
-   auto df = ROOT::RDataFrame(1).Define("__rdf_sizeof_x", [] { return 42; });
+   auto df = ROOT::RDataFrame(1).Define("R_rdf_sizeof_x", [] { return 42; });
    auto m1 = df.Max<int>("#x");
    auto m2 = df.Max("#x");
    auto m3 = df.Define("y", [] (int xs) { return xs; }, {"#x"}).Max<int>("y");
@@ -738,9 +738,9 @@ TEST(RDataFrameInterface, StressShortSyntaxForCollectionSizes)
 {
    gInterpreter->Declare("#define RDF_DO_FILTER 1");
    auto df = ROOT::RDF::RNode(ROOT::RDataFrame(42));
-   // Define __rdf_sizeof_var{1,2,...,100}
+   // Define R_rdf_sizeof_var{1,2,...,100}
    for (int i = 1; i <= 100; ++i)
-      df = df.Define("__rdf_sizeof_var" + std::to_string(i), [] { return 1; });
+      df = df.Define("R_rdf_sizeof_var" + std::to_string(i), [] { return 1; });
 
    // Filter expression is "#var1 + #var2 + ... + #var100 == 100"
    std::string expr = "#var1";
