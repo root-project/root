@@ -181,7 +181,9 @@ class RooDataSet(object):
         # We don't want to miss putting the weight in the output arrays, so we
         # are forced to iterate over the dataset to compute the weight.
         if compute_derived_weight:
-            try:
+            # Check if self.weightVar() is not a nullptr by using implicit
+            # conversion from `nullptr` to Bool.
+            if self.weightVar():
                 wgt_var_name = self.weightVar().GetName()
                 if not wgt_var_name in data:
                     weight_array = np.zeros(self.numEntries(), dtype=np.float64)
@@ -189,9 +191,6 @@ class RooDataSet(object):
                         self.get(i)
                         weight_array[i] = self.weight()
                     data[wgt_var_name] = weight_array
-            except ReferenceError:
-                # self.weightVar() is a nullptr
-                pass
 
         return data
 
@@ -225,7 +224,9 @@ class RooDataSet(object):
         data = {}
         for column in df:
             data[column] = df[column].values
-        return ROOT.RooDataSet.from_numpy(data, variables=variables, name=name, title=title, weight_name=weight_name, clip_to_limits=clip_to_limits)
+        return ROOT.RooDataSet.from_numpy(
+            data, variables=variables, name=name, title=title, weight_name=weight_name, clip_to_limits=clip_to_limits
+        )
 
     def to_pandas(self, compute_derived_weight=False):
         """Export a RooDataSet to a pandas DataFrame.
