@@ -60,6 +60,33 @@ public:
 
   virtual ~RooVectorDataStore() ;
 
+  /// \class ArraysStruct
+  /// Output struct for the RooVectorDataStore::getArrays() helper function.
+  /// Meant to be used for RooFit internal use and might change without warning.
+  struct ArraysStruct {
+
+    template<class T>
+    struct ArrayInfo {
+        ArrayInfo(std::string_view n, T const* d) : name{n}, data{d} {}
+        std::string name;
+        T const* data;
+    };
+
+    std::vector<ArrayInfo<double>> reals;
+    std::vector<ArrayInfo<RooAbsCategory::value_type>> cats;
+
+    std::size_t size;
+  };
+
+  /// \name Internal RooFit interface.
+  /// The classes and functions in the internal RooFit interface are
+  /// implementaion details and not part of the public user interface.
+  /// Everything in this group might change without warning.
+  /// @{
+  ArraysStruct getArrays() const;
+  void recomputeSumWeight();
+  /// @}
+
 private:
   RooArgSet varsNoWeight(const RooArgSet& allVars, const char* wgtName);
   RooRealVar* weightVar(const RooArgSet& allVars, const char* wgtName);
@@ -608,8 +635,6 @@ public:
   std::vector<RealVector*>& realStoreList() { return _realStoreList ; }
   std::vector<RealFullVector*>& realfStoreList() { return _realfStoreList ; }
   std::vector<CatVector*>& catStoreList() { return _catStoreList ; }
-
-  void recomputeSumWeight();
 
  protected:
 
