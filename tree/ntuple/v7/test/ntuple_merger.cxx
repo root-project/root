@@ -67,6 +67,7 @@ TEST(RPageStorage, ReadSealedPages)
    for (const auto &pi : pageRange.fPageInfos) {
       buffer = std::make_unique<unsigned char []>(pi.fLocator.fBytesOnStorage);
       sealedPage.fBuffer = buffer.get();
+      sealedPage.fSize = pi.fLocator.fBytesOnStorage;
       source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
       ASSERT_GE(sealedPage.fSize, 4U);
       EXPECT_EQ(firstElementInPage, ReadRawInt(sealedPage.fBuffer));
