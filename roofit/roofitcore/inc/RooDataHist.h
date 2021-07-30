@@ -223,6 +223,13 @@ public:
     bool initialized = false;
   };
 
+  std::vector<std::unique_ptr<const RooAbsBinning>> const& getBinnings() const { return _lvbins; }
+
+  double const* weightArray()   const { return _wgt; }
+  double const* wgtErrLoArray() const { return _errLo; }
+  double const* wgtErrHiArray() const { return _errHi; }
+  double const* sumW2Array()    const { return _sumw2; }
+
 protected:
 
   friend class RooAbsCachedPdf ;
