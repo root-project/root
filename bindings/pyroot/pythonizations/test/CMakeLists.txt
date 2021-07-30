@@ -133,7 +133,8 @@ if(roofit)
 
   # NumPy compatibility
   if(NOT MSVC OR win_broken_tests)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
   endif()
 
 endif()
