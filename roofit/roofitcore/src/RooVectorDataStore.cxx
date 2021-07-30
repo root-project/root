@@ -1491,8 +1491,7 @@ RooVectorDataStore::RealFullVector* RooVectorDataStore::addRealFull(RooAbsReal* 
 
 /// Trigger a recomputation of the cached weight sums. Meant for use by RooFit
 /// dataset converter functions such as the NumPy converter functions
-/// implemented as pythonizations. Not meant to be part of the public user
-/// interface, so the interface might change without warning.
+/// implemented as pythonizations.
 void RooVectorDataStore::recomputeSumWeight() {
   double const* arr = nullptr;
   if (_extWgtArray) {
@@ -1516,4 +1515,33 @@ void RooVectorDataStore::recomputeSumWeight() {
   auto result = ROOT::Math::KahanSum<double, 4>::Accumulate(arr, arr + size(), 0.0);
   _sumWeight = result.Sum();
   _sumWeightCarry = result.Carry();
+}
+
+
+/// Exports all arrays in this RooVectorDataStore into a simple datastructure
+/// to be used by RooFit internal export functions.
+RooVectorDataStore::ArraysStruct  RooVectorDataStore::getArrays() const {
+  ArraysStruct out;
+  out.size = size();
+
+  for(auto const* real : _realStoreList) {
+    out.reals.emplace_back(real->_nativeReal->GetName(), real->_vec.data());
+  }
+  for(auto const* realf : _realfStoreList) {
+    std::string name = realf->_nativeReal->GetName();
+    out.reals.emplace_back(name, realf->_vec.data());
+    if(realf->_vecE) out.reals.emplace_back(name + "Err", realf->_vecE->data());
+    if(realf->_vecEL) out.reals.emplace_back(name + "ErrLo", realf->_vecEL->data());
+    if(realf->_vecEH) out.reals.emplace_back(name + "ErrHi", realf->_vecEH->data());
+  }
+  for(auto const* cat : _catStoreList) {
+    out.cats.emplace_back(cat->_cat->GetName(), cat->_vec.data());
+  }
+
+  if(_extWgtArray) out.reals.emplace_back("weight", _extWgtArray);
+  if(_extWgtErrLoArray) out.reals.emplace_back("wgtErrLo", _extWgtErrLoArray);
+  if(_extWgtErrHiArray) out.reals.emplace_back("wgtErrHi", _extWgtErrHiArray);
+  if(_extSumW2Array) out.reals.emplace_back("sumW2",_extSumW2Array);
+
+  return out;
 }
