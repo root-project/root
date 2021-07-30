@@ -153,6 +153,47 @@ void TMVA::RVariablePlotter::DrawTensor(const std::string& variable, const std::
         
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Drawing ROC Curve - RTensor input
+void TMVA::RVariablePlotter::DrawROCCurveTensor(const std::string& output_variable, const std::vector<std::string>& output_variables, bool useTMVAStyle){
+
+    // consistency check, i.e. we need signal vs background for the roc curve
+    if (fTensors.size() != 2)
+        std::runtime_error("In order to plot the ROC Curve you need 2 RTensors, corresponding to prediction on signal and background");
+    
+    auto RNodeVec = TensorsToNodes(output_variables);
+
+    // TMVA plotting style
+    TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
+
+    auto sigDf = RNodeVec[0]; 
+    auto bkgDf = RNodeVec[1];
+
+    // extract columns as vectors of float for the selected model (i.e. specified by output_variable)
+    auto sigModel = sigDf.Take<float>(output_variable).GetValue();
+    auto bkgModel = bkgDf.Take<float>(output_variable).GetValue();
+
+    // ROC Curve     
+    auto ROC = TMVA::ROCCurve(sigModel, bkgModel); 
+    auto ROCCurve = ROC.GetROCCurve(); 
+
+    // Graph title 
+    std::string varName = output_variable; 
+    std::string title = varName.append(" ROC Curve");
+
+    auto clone = (TGraph*) ROCCurve; 
+    
+    clone->SetTitle(title.c_str());
+    clone->SetLineColor(2); 
+    // axis of the ROC Curve
+    clone->GetXaxis()->SetTitle("Specificity"); 
+    clone->GetYaxis()->SetTitle("Sensititvy");
+    clone->GetYaxis()->SetTitleOffset(1.0);
+    clone-> DrawClone("AC*"); 
+
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawing Legend
