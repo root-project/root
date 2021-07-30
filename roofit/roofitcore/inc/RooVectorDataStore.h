@@ -630,7 +630,6 @@ public:
   std::vector<RealVector*> _realStoreList ;
   std::vector<RealFullVector*> _realfStoreList ;
   std::vector<CatVector*> _catStoreList ;
-  std::vector<double> _weights;
 
   void setAllBuffersNative() ;
 
@@ -649,7 +648,7 @@ public:
 
   Bool_t _forcedUpdate ; //! Request for forced cache update 
 
-  ClassDefOverride(RooVectorDataStore, 5) // STL-vector-based Data Storage class
+  ClassDefOverride(RooVectorDataStore, 6) // STL-vector-based Data Storage class
 };
 
 
