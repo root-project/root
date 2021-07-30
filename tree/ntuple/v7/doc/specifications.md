@@ -340,8 +340,21 @@ The column group record frame consists of a list frame of 32bit integer items.
 Every item denotes a column ID that is part of this particular column group.
 The ID of the column group is given implicitly by the order of column groups.
 
+The frame hierarchy is as follows
+
+    - Column group outer list frame
+    |
+    |---- Column group 1 record frame
+    |     |---- List frame of column IDs
+    |     |     |---- Column ID 1 [32bit integer]
+    |     |     |---- Column ID 2 [32bit integer]
+    |     |     | ...
+    |
+    |---- Column group 2 record frame
+    | ...
+
 #### Cluster Summary Record Frame
-The cluster summary record frame contains the entry range:
+The cluster summary record frame contains the entry range of a cluster:
 
 ```
  0                   1                   2                   3
@@ -375,7 +388,7 @@ A cluster group record frame starts with
 |            Number of Clusters in the Cluster Group            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-Followed by the page list envelope.
+Followed by the page list envelope link.
 
 ### Page List Envelope
 
@@ -385,7 +398,7 @@ The order of items corresponds to the cluster IDs as defined by the cluster grou
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
 Every item of the outer list frame consists of an an inner list frame
 in which the items correspond to the pages of the column in the cluster.
-The order of the outer items must match the order of the columns as specified in the cluster summary.
+The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
 For a complete cluster (covering all columns), the order is given by the column IDs (small to large).
 
 The order of the inner items must match the order of pages resp. elements.
@@ -409,6 +422,22 @@ For typical page sizes, that should be < 1 per mille.
 Note that we do not need to store the uncompressed size of the page
 because the uncompressed size is given by the number of elements in the page and the element size.
 
+The hierarchical structure of the frames in the page list envelope is as follows:
+
+    - Top-most cluster list frame
+    |
+    |---- Cluster 1 column list frame (outer list frame)
+    |     |---- Column 1 page list frame (inner list frame)
+    |     |     |---- Page 1 description (inner item)
+    |     |     |---- Page 2 description (inner item)
+    |     |     | ...
+    |
+    |---- Cluster 2 column list frame
+    | ...
+
+In order to save space, the page descriptions (inner items) are _not_ in a record frame.
+If at a later point more information per page is needed,
+the page list envelope can be extended by addtional list and record frames.
 
 ### User Meta-data Envelope
 
