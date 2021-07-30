@@ -72,8 +72,11 @@ namespace TMVA {
         // draw legend
         void DrawLegend(float minX, float minY, float maxX, float maxY);
         
-        // draw ROC Curve 
+        // draw ROC Curve - RNode input
         void DrawROCCurve(const std::string& output_variable , bool useTMVAStyle);
+      
+        // draw ROC Curve - RTensor input
+        void DrawROCCurveTensor(const std::string& output_variable, const std::vector<std::string>& output_variables, bool useTMVAStyle);
 
     private:
         
