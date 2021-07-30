@@ -876,7 +876,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
 
          RClusterDescriptor::RPageRange pageRange;
          pageRange.fColumnId = columnId;
-         uint32_t nPages;
+         std::uint32_t nPages;
          pos += DeserializeUInt32(pos, &nPages);
          for (unsigned int k = 0; k < nPages; ++k) {
             RClusterDescriptor::RPageRange::RPageInfo pageInfo;
