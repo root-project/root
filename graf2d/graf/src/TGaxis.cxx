@@ -395,6 +395,11 @@ digits permitted for the axis labels above which the notation with 10^N is used.
 For example, to accept 6 digits number like 900000 on an axis call
 `TGaxis::SetMaxDigits(6)`. The default value is 5.
 `fgMaxDigits` must be greater than 0.
+Warning: even when called on a particular TGaxis* instance, this static function
+changes globally the number of digits for all axes (X, Y, ...) in the canvas.
+If you want to change the maximum number of digits N only of the current TGaxis*,
+and not all the others, use axis->SetNdivisions(N*1000000 + (A1->GetNdiv()%1000000))
+instead of axis->SetMaxDigits(N).
 
 \anchor GA13
 ## Optional grid
@@ -2673,6 +2678,10 @@ void TGaxis::ResetLabelAttributes(TLatex* t)
 /// notation with 10^N is used.For example, to accept 6 digits number like 900000
 /// on an axis call `TGaxis::SetMaxDigits(6)`. The default value is 5.
 /// `fgMaxDigits` must be greater than 0.
+/// Warning: this static function changes the max number of digits in all axes.
+/// If you only want to change the digits of the current TGaxis instance, use
+/// axis->SetNdivisions(N*1000000 + (A1->GetNdiv()%1000000))
+/// instead of axis->SetMaxDigits(N).
 
 void TGaxis::SetMaxDigits(Int_t maxd)
 {
