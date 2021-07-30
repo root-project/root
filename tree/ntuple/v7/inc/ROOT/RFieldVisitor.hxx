@@ -211,6 +211,7 @@ public:
    void VisitRecordField(const RRecordField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
+   void VisitRVecField(const RRVecField &field) final;
 };
 
 
