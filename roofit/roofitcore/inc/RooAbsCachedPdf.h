@@ -18,10 +18,10 @@
 #include "RooHistPdf.h"
 #include "RooObjCacheManager.h"
 #include "RooAICRegistry.h"
+#include "RooChangeTracker.h"
+
 #include <map>
-class RooArgSet ;
-class RooChangeTracker ;
- 
+
 class RooAbsCachedPdf : public RooAbsPdf {
 public:
 
@@ -29,7 +29,6 @@ public:
   RooAbsCachedPdf() : _cacheMgr(this,10) {}
   RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=0) ;
-  virtual ~RooAbsCachedPdf() ;
 
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Bool_t selfNormalized() const { 
@@ -62,24 +61,23 @@ public:
   class PdfCacheElem : public RooAbsCacheElement {
   public:
     PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nset) ;
-    virtual ~PdfCacheElem()  ;
 
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
 
-    RooHistPdf* pdf() { return _pdf ; }
-    RooDataHist* hist() { return _hist ; }
+    RooHistPdf* pdf() { return _pdf.get() ; }
+    RooDataHist* hist() { return _hist.get() ; }
     const RooArgSet& nset() { return _nset ; }
-    RooChangeTracker* paramTracker() { return _paramTracker ; }
+    RooChangeTracker* paramTracker() { return _paramTracker.get() ; }
 
   private:
     // Payload
-    RooHistPdf*  _pdf ;
-    RooChangeTracker* _paramTracker ;
-    RooDataHist* _hist ;
+    std::unique_ptr<RooHistPdf>  _pdf ;
+    std::unique_ptr<RooChangeTracker> _paramTracker ;
+    std::unique_ptr<RooDataHist> _hist ;
     RooArgSet    _nset ;
-    RooAbsReal*  _norm ;
+    std::unique_ptr<RooAbsReal>  _norm ;
 
   } ;
 
