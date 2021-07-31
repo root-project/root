@@ -47,15 +47,21 @@ if __name__ == "__main__":
 
 	if (args.configFile != '' and (args.output != '' or args.inputFiles != [] or args.histoExpr != [] or args.tree != '')):
 		stderr.write("Error: both configuration file and options are provided \n")
-		exit(1)
+		sys.exit(1)
 	if (args.configFile != ''):
 		a = ROOT.TSimpleAnalysis(args.configFile)
 		if a.Configure():
 			a.Run()
 	else:
+		if len(args.inputFiles) == 0:
+			stderr.write("Error: neither configuration file nor input files are provided\n")
+			sys.exit(1)
 		inputfile = ROOT.vector("string")(len(args.inputFiles))
 		for i,s in enumerate(args.inputFiles):
 			inputfile[i] = s
+		if len(args.histoExpr) == 0:
+			stderr.write("Error: neither configuration file nor expression is provided\n")
+			sys.exit(1)
 		expr = ROOT.vector("string")(len(args.histoExpr))
 		for k,l in enumerate(args.histoExpr):
 			expr[k]=l
