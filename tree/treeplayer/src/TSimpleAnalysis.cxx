@@ -250,7 +250,7 @@ bool TSimpleAnalysis::SetTreeName()
    }
    // If fTreeName is empty we try to find the name of the tree through reading
    // of the first input file
-   if (fTreeName.empty())
+   if (fTreeName.empty() && !fInputFiles.empty())
       fTreeName = ExtractTreeName(fInputFiles[0]);
    if (fTreeName.empty())  // No tree name found
       return false;
