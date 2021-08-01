@@ -357,6 +357,86 @@ TEST(RNTuple, StreamEnvelopeLink)
    EXPECT_EQ(link.fLocator, reconstructedLink.fLocator);
 }
 
+TEST(RNTuple, StreamClusterSummary)
+{
+   RNTupleStreamer::RClusterSummary summary;
+   summary.fFirstEntry = 42;
+   summary.fNEntries = 137;
+
+   unsigned char buffer[24];
+   ASSERT_EQ(20u, RNTupleStreamer::SerializeClusterSummary(summary, nullptr));
+   EXPECT_EQ(20u, RNTupleStreamer::SerializeClusterSummary(summary, buffer));
+   RNTupleStreamer::RClusterSummary reco;
+   try {
+      RNTupleStreamer::DeserializeClusterSummary(buffer, 19, reco);
+      FAIL() << "too short cluster summary should fail";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(20u, RNTupleStreamer::DeserializeClusterSummary(buffer, 20, reco));
+   EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
+   EXPECT_EQ(summary.fNEntries, reco.fNEntries);
+   EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
+
+   summary.fColumnGroupID = 13;
+   ASSERT_EQ(24u, RNTupleStreamer::SerializeClusterSummary(summary, nullptr));
+   EXPECT_EQ(24u, RNTupleStreamer::SerializeClusterSummary(summary, buffer));
+   try {
+      RNTupleStreamer::DeserializeClusterSummary(buffer, 23, reco);
+      FAIL() << "too short cluster summary should fail";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(24u, RNTupleStreamer::DeserializeClusterSummary(buffer, 24, reco));
+   EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
+   EXPECT_EQ(summary.fNEntries, reco.fNEntries);
+   EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
+}
+
+TEST(RNTuple, StreamClusterGroup)
+{
+   RNTupleStreamer::RClusterGroup group;
+   group.fNClusters = 42;
+   group.fPageListEnvelopeLink.fUnzippedSize = 42;
+   group.fPageListEnvelopeLink.fLocator.fPosition = 137;
+   group.fPageListEnvelopeLink.fLocator.fBytesOnStorage = 7;
+
+   unsigned char buffer[28];
+   ASSERT_EQ(24u, RNTupleStreamer::SerializeClusterGroup(group, nullptr));
+   EXPECT_EQ(24u, RNTupleStreamer::SerializeClusterGroup(group, buffer));
+   RNTupleStreamer::RClusterGroup reco;
+   try {
+      RNTupleStreamer::DeserializeClusterGroup(buffer, 23, reco);
+      FAIL() << "too short cluster group should fail";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(24u, RNTupleStreamer::DeserializeClusterGroup(buffer, 24, reco));
+   EXPECT_EQ(group.fNClusters, reco.fNClusters);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fPosition, reco.fPageListEnvelopeLink.fLocator.fPosition);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+
+   // Test frame evolution
+   auto pos = buffer;
+   pos += RNTupleStreamer::SerializeRecordFramePreamble(pos);
+   pos += RNTupleStreamer::SerializeUInt32(group.fNClusters, pos);
+   pos += RNTupleStreamer::SerializeEnvelopeLink(group.fPageListEnvelopeLink, pos);
+   pos += RNTupleStreamer::SerializeUInt16(7, pos);
+   pos += RNTupleStreamer::SerializeFramePostscript(buffer, pos - buffer);
+   pos += RNTupleStreamer::SerializeUInt16(13, pos);
+   EXPECT_EQ(26u, RNTupleStreamer::DeserializeClusterGroup(buffer, 26, reco));
+   EXPECT_EQ(group.fNClusters, reco.fNClusters);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fPosition, reco.fPageListEnvelopeLink.fLocator.fPosition);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   std::uint16_t remainder;
+   RNTupleStreamer::DeserializeUInt16(buffer + 24, remainder);
+   EXPECT_EQ(7u, remainder);
+   RNTupleStreamer::DeserializeUInt16(buffer + 26, remainder);
+   EXPECT_EQ(13u, remainder);
+}
+
 TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;

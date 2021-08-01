@@ -731,7 +731,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeFramePosts
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFrame(
-   void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize, std::uint32_t &nitems)
+   const void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize, std::uint32_t &nitems)
 {
    if (bufSize < sizeof(std::int32_t))
       throw RException(R__FAIL("frame too short"));
@@ -762,7 +762,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFrame(
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeFrame(
-   void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize)
+   const void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize)
 {
    std::uint32_t nitems;
    return DeserializeFrame(buffer, bufSize, frameSize, nitems);
@@ -885,14 +885,101 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeEnvelope
       throw RException(R__FAIL("too short locator"));
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   std::uint32_t unzippedSize;
-   bytes += DeserializeUInt32(bytes, unzippedSize);
+   bytes += DeserializeUInt32(bytes, envelopeLink.fUnzippedSize);
    bufSize -= sizeof(std::uint32_t);
-   envelopeLink.fUnzippedSize = unzippedSize;
-   RClusterDescriptor::RLocator locator;
-   bytes += DeserializeLocator(bytes, bufSize, locator);
-   envelopeLink.fLocator = locator;
+   bytes += DeserializeLocator(bytes, bufSize, envelopeLink.fLocator);
    return bytes - reinterpret_cast<const unsigned char *>(buffer);
+}
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeClusterSummary(
+   const RClusterSummary &clusterSummary, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   auto frame = pos;
+   pos += SerializeRecordFramePreamble(*where);
+   pos += SerializeUInt64(clusterSummary.fFirstEntry, *where);
+   if (clusterSummary.fColumnGroupID >= 0) {
+      pos += SerializeInt64(-static_cast<int64_t>(clusterSummary.fNEntries), *where);
+      pos += SerializeUInt32(clusterSummary.fColumnGroupID, *where);
+   } else {
+      pos += SerializeInt64(static_cast<int64_t>(clusterSummary.fNEntries), *where);
+   }
+   auto size = pos - frame;
+   pos += SerializeFramePostscript(frame, size);
+   return size;
+}
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeClusterSummary(
+   const void *buffer, std::uint32_t bufSize, RClusterSummary &clusterSummary)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint32_t frameSize;
+   auto frameHdrSize = DeserializeFrame(bytes, bufSize, frameSize);
+   bytes += frameHdrSize;
+   bufSize = frameSize - frameHdrSize;
+   if (bufSize < 2 * sizeof(std::uint64_t))
+      throw RException(R__FAIL("too short cluster summary"));
+
+   bytes += DeserializeUInt64(bytes, clusterSummary.fFirstEntry);
+   bufSize -= sizeof(std::uint64_t);
+   std::int64_t nEntries;
+   bytes += DeserializeInt64(bytes, nEntries);
+   bufSize -= sizeof(std::int64_t);
+
+   if (nEntries < 0) {
+      if (bufSize < sizeof(std::uint32_t))
+         throw RException(R__FAIL("too short cluster summary"));
+      clusterSummary.fNEntries = -nEntries;
+      std::uint32_t columnGroupID;
+      bytes += DeserializeUInt32(bytes, columnGroupID);
+      clusterSummary.fColumnGroupID = columnGroupID;
+   } else {
+      clusterSummary.fNEntries = nEntries;
+      clusterSummary.fColumnGroupID = -1;
+   }
+
+   return frameSize;
+}
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::SerializeClusterGroup(
+   const RClusterGroup &clusterGroup, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   auto frame = pos;
+   pos += SerializeRecordFramePreamble(*where);
+   pos += SerializeUInt32(clusterGroup.fNClusters, *where);
+   pos += SerializeEnvelopeLink(clusterGroup.fPageListEnvelopeLink, *where);
+   auto size = pos - frame;
+   pos += SerializeFramePostscript(frame, size);
+   return size;
+}
+
+
+std::uint32_t ROOT::Experimental::Internal::RNTupleStreamer::DeserializeClusterGroup(
+   const void *buffer, std::uint32_t bufSize, RClusterGroup &clusterGroup)
+{
+   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
+   std::uint32_t frameSize;
+   auto frameHdrSize = DeserializeFrame(bytes, bufSize, frameSize);
+   bytes += frameHdrSize;
+   bufSize = frameSize - frameHdrSize;
+   if (bufSize < sizeof(std::uint32_t))
+      throw RException(R__FAIL("too short cluster group"));
+
+   bytes += DeserializeUInt32(bytes, clusterGroup.fNClusters);
+   bufSize -= sizeof(std::uint32_t);
+   bytes += DeserializeEnvelopeLink(bytes, bufSize, clusterGroup.fPageListEnvelopeLink);
+
+   return frameSize;
 }
 
 
@@ -1193,6 +1280,46 @@ ROOT::Experimental::Internal::RNTupleStreamer::SerializeHeaderV1(
    return context;
 }
 
+void ROOT::Experimental::Internal::RNTupleStreamer::SerializePageListV1(
+   void *buffer, const RNTupleDescriptor &desc, std::span<DescriptorId_t> physClusterIDs, const RContext &context)
+{
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += SerializeEnvelopePreamble(*where);
+   auto topMostFrame = pos;
+   pos += SerializeListFramePreamble(physClusterIDs.size(), *where);
+
+   for (auto clusterId : physClusterIDs) {
+      const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
+      // Get an ordered set of physical column ids
+      std::set<DescriptorId_t> physColumnIds;
+      for (auto column : clusterDesc.GetColumnIds())
+         physColumnIds.insert(context.GetPhysClusterId(column));
+
+      auto outerFrame = pos;
+      pos += SerializeListFramePreamble(physColumnIds.size(), *where);
+      for (auto physId : physColumnIds) {
+         auto memId = context.GetMemClusterId(physId);
+
+         auto innerFrame = pos;
+         const auto &pageRange = clusterDesc.GetPageRange(memId);
+         pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
+         for (const auto &pi : pageRange.fPageInfos) {
+            pos += SerializeUInt32(pi.fNElements, *where);
+            pos += SerializeLocator(pi.fLocator, *where);
+         }
+         pos += SerializeFramePostscript(innerFrame, pos - innerFrame);
+      }
+      pos += SerializeFramePostscript(outerFrame, pos - outerFrame);
+   }
+
+   pos += SerializeFramePostscript(topMostFrame, pos - topMostFrame);
+   std::uint32_t size = pos - base;
+   pos += SerializeEnvelopePostscript(base, size, *where);
+}
+
 void ROOT::Experimental::Internal::RNTupleStreamer::SerializeClusterV1(
    void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster, const RContext &context)
 {
@@ -1225,6 +1352,7 @@ void ROOT::Experimental::Internal::RNTupleStreamer::SerializeClusterV1(
    pos += SerializeEnvelopePostscript(base, size, *where);
 }
 
+
 void ROOT::Experimental::Internal::RNTupleStreamer::SerializeFooterV1(
    void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc, const RContext &context)
 {
@@ -1248,6 +1376,26 @@ void ROOT::Experimental::Internal::RNTupleStreamer::SerializeFooterV1(
    pos += SerializeListFramePreamble(0, *where);
    pos += SerializeFramePostscript(frame, pos - frame);
 
+   // Cluster summaries
+   const auto nClusters = desc.GetNClusters();
+   frame = pos;
+   pos += SerializeListFramePreamble(nClusters, *where);
+   for (unsigned int i = 0; i < nClusters; ++i) {
+      const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(i));
+      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
+      pos += SerializeClusterSummary(summary, *where);
+   }
+   pos += SerializeFramePostscript(frame, pos - frame);
+
+   // Cluster groups
+   const auto &clusterGroups = context.GetClusterGroups();
+   const auto nClusterGroups = clusterGroups.size();
+   frame = pos;
+   pos += SerializeListFramePreamble(nClusterGroups, *where);
+   for (unsigned int i = 0; i < nClusterGroups; ++i) {
+      pos += SerializeClusterGroup(clusterGroups[i], *where);
+   }
+   pos += SerializeFramePostscript(frame, pos - frame);
 
    // So far no support for meta-data
    frame = pos;

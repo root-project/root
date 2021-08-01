@@ -19,6 +19,7 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <algorithm>
@@ -765,6 +766,18 @@ public:
       RClusterDescriptor::RLocator fLocator;
    };
 
+   struct RClusterSummary {
+      std::uint64_t fFirstEntry = 0;
+      std::uint64_t fNEntries = 0;
+      /// -1 for "all columns"
+      std::int32_t fColumnGroupID = -1;
+   };
+
+   struct RClusterGroup {
+      std::uint32_t fNClusters = 0;
+      REnvelopeLink fPageListEnvelopeLink;
+   };
+
    /// The streamer context is used for the piecewise serialization of a descriptor.  During header serialization,
    /// the mapping of in-memory field and column IDs to physical IDs is built so that it can be used for the
    /// footer serialzation in a second step.
@@ -772,6 +785,7 @@ public:
    private:
       std::uint32_t fHeaderSize = 0;
       std::uint32_t fHeaderCrc32 = 0;
+      std::vector<RClusterGroup> fClusterGroups;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterIDs;
@@ -782,6 +796,12 @@ public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
+      void AddClusterGroup(std::uint32_t nClusters, const REnvelopeLink &pageListEnvelope) {
+         fClusterGroups.push_back({nClusters, pageListEnvelope});
+      }
+      const std::vector<RClusterGroup> &GetClusterGroups() const {
+         return fClusterGroups;
+      }
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
          auto physId = fPhys2MemFieldIDs.size();
          fMem2PhysFieldIDs[memId] = physId;
@@ -831,7 +851,7 @@ public:
    static std::uint32_t SerializeString(const std::string &val, void *buffer);
    static std::uint32_t DeserializeString(const void *buffer, std::uint32_t size, std::string &val);
 
-   /// While we could just interpret the enums as ints, but we make the translation explicit
+   /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
    static std::uint16_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
    static std::uint16_t DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
@@ -849,9 +869,9 @@ public:
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
    static std::uint32_t SerializeFramePostscript(void *frame, std::int32_t size);
-   static std::uint32_t DeserializeFrame(void *buffer, std::uint32_t bufSize,
+   static std::uint32_t DeserializeFrame(const void *buffer, std::uint32_t bufSize,
                                          std::uint32_t &frameSize, std::uint32_t &nitems);
-   static std::uint32_t DeserializeFrame(void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize);
+   static std::uint32_t DeserializeFrame(const void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize);
 
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
@@ -865,7 +885,18 @@ public:
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
    static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
 
+   static std::uint32_t SerializeClusterSummary(const RClusterSummary &clusterSummary, void *buffer);
+   static std::uint32_t DeserializeClusterSummary(const void *buffer, std::uint32_t bufSize,
+                                                  RClusterSummary &clusterSummary);
+   static std::uint32_t SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);
+   static std::uint32_t DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
+                                                RClusterGroup &clusterGroup);
+
    static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
+   static void SerializePageListV1(void *buffer,
+                                   const RNTupleDescriptor &desc,
+                                   std::span<DescriptorId_t> physClusterIDs,
+                                   const RContext &context);
    static void SerializeClusterV1(void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster,
                                   const RContext &context);
    static void SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
