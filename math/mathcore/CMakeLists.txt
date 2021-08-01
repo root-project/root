@@ -106,8 +106,8 @@ if(runtime_cxxmodules)
   # FIXME: Revise after a llvm upgrade or reproduce it outside rootcling.
   list(REMOVE_ITEM HEADERS "Math/Math.h")
 
-  if(veccore)
-    set(dictoptions "-mByproduct" "Vc")
+  if(veccore OR vc)
+    set(dictoptions "-m" "Vc" "-mByproduct" "Vc")
   endif(veccore)
 endif()
 
