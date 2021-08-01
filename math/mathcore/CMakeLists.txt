@@ -107,7 +107,11 @@ if(runtime_cxxmodules)
   list(REMOVE_ITEM HEADERS "Math/Math.h")
 
   if(veccore OR vc)
-    set(dictoptions "-m" "Vc" "-mByproduct" "Vc")
+    # We do not link against libVc.a thus it makes no sense to check for
+    # version compatibility between libraries and header files. This fixes
+    # ROOT-11002 where upon building the modules.idx we run the static ctor
+    # runLibraryAbiCheck which fails to find the corresponding symbol.
+    set(dictoptions "-m" "Vc" "-mByproduct" "Vc" "-D" "Vc_NO_VERSION_CHECK")
   endif(veccore)
 endif()
 
