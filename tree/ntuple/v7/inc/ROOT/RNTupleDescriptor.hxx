@@ -18,6 +18,7 @@
 
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
@@ -45,6 +46,7 @@ class RNTupleModel;
 namespace Detail {
    class RFieldBase;
 }
+
 
 // clang-format off
 /**
@@ -167,20 +169,6 @@ class RClusterDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 public:
-   /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
-   /// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
-   /// and therefore we need to store their actual size.
-   /// TODO(jblomer): should move the RNTUpleDescriptor and should be an std::variant
-   struct RLocator {
-      std::int64_t fPosition = 0;
-      std::uint32_t fBytesOnStorage = 0;
-      std::string fUrl;
-
-      bool operator==(const RLocator &other) const {
-         return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fUrl == other.fUrl;
-      }
-   };
-
    /// The window of element indexes of a particular column in a particular cluster
    struct RColumnRange {
       DescriptorId_t fColumnId = kInvalidDescriptorId;
@@ -213,7 +201,7 @@ public:
          /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
          ClusterSize_t fNElements = kInvalidClusterIndex;
          /// The meaning of fLocator depends on the storage backend.
-         RLocator fLocator;
+         RNTupleLocator fLocator;
 
          bool operator==(const RPageInfo &other) const {
             return fNElements == other.fNElements && fLocator == other.fLocator;
@@ -260,8 +248,6 @@ private:
    /// Clusters can be swapped by adjusting the entry offsets
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
-   /// For pre-fetching / caching an entire contiguous cluster
-   RLocator fLocator;
 
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
@@ -283,7 +269,6 @@ public:
    RNTupleVersion GetVersion() const { return fVersion; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
-   RLocator GetLocator() const { return fLocator; }
    const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
    const RPageRange &GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
    bool ContainsColumn(DescriptorId_t columnId) const;
@@ -721,7 +706,6 @@ public:
 
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
-   void SetClusterLocator(DescriptorId_t clusterId, RClusterDescriptor::RLocator locator);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 

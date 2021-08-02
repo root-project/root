@@ -66,14 +66,13 @@ private:
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RClusterDescriptor::RLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
+   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
                                                 std::size_t bytesPacked);
 
 protected:
    void CreateImpl(const RNTupleModel &model) final;
-   RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
-                                                     const RPageStorage::RSealedPage &sealedPage) final;
+   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
 

@@ -99,7 +99,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & 
 }
 
 
-inline ROOT::Experimental::RClusterDescriptor::RLocator
+inline ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkFile::WriteSealedPage(
    const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked)
 {
@@ -111,7 +111,7 @@ ROOT::Experimental::Detail::RPageSinkFile::WriteSealedPage(
    fClusterMinOffset = std::min(offsetData, fClusterMinOffset);
    fClusterMaxOffset = std::max(offsetData + sealedPage.fSize, fClusterMaxOffset);
 
-   RClusterDescriptor::RLocator result;
+   RNTupleLocator result;
    result.fPosition = offsetData;
    result.fBytesOnStorage = sealedPage.fSize;
    fCounters->fNPageCommitted.Inc();
@@ -121,7 +121,7 @@ ROOT::Experimental::Detail::RPageSinkFile::WriteSealedPage(
 }
 
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
@@ -136,7 +136,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
 }
 
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageImpl(
    DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage)
 {
