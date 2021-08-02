@@ -172,6 +172,21 @@ public:
    NTupleFlags_t GetFlags() const { return fFlags; }
 };
 
+
+/// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
+/// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
+/// and therefore we need to store their actual size.
+/// TODO(jblomer): should move the RNTUpleDescriptor and should be an std::variant
+struct RNTupleLocator {
+   std::int64_t fPosition = 0;
+   std::uint32_t fBytesOnStorage = 0;
+   std::string fUrl;
+
+   bool operator==(const RNTupleLocator &other) const {
+      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fUrl == other.fUrl;
+   }
+};
+
 } // namespace Experimental
 } // namespace ROOT
 

@@ -267,7 +267,7 @@ TEST(RNTuple, SerializeFeatureFlags)
 TEST(RNTuple, SerializeLocator)
 {
    unsigned char buffer[16];
-   RLocator locator;
+   RNTupleLocator locator;
    locator.fPosition = 1;
    locator.fBytesOnStorage = 2;
 

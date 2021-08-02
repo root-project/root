@@ -157,7 +157,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & 
 }
 
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
@@ -172,7 +172,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
 }
 
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
    DescriptorId_t /*columnId*/, const RPageStorage::RSealedPage &sealedPage)
 {
@@ -183,7 +183,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
                                       {offsetData, 0}, kDistributionKey, kAttributeKey);
    }
 
-   RClusterDescriptor::RLocator result;
+   RNTupleLocator result;
    result.fPosition = offsetData;
    result.fBytesOnStorage = sealedPage.fSize;
    fCounters->fNPageCommitted.Inc();
@@ -466,7 +466,6 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       fCounters->fNClusterLoaded.Inc();
 
       const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
-      auto clusterLocator = clusterDesc.GetLocator();
 
       struct RDaosSealedPageLocator {
          RDaosSealedPageLocator() = default;

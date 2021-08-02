@@ -38,7 +38,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
    fInnerSink->Create(*fInnerModel);
 }
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
@@ -53,7 +53,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    RColumnBuf::iterator zipItem =
       fBufferedColumns.at(columnHandle.fId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
-      return RClusterDescriptor::RLocator{};
+      return RNTupleLocator{};
    }
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
@@ -69,17 +69,17 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
 
    // we're feeding bad locators to fOpenPageRanges but it should not matter
    // because they never get written out
-   return RClusterDescriptor::RLocator{};
+   return RNTupleLocator{};
 }
 
-ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(
    DescriptorId_t columnId, const RSealedPage &sealedPage)
 {
    fInnerSink->CommitSealedPage(columnId, sealedPage);
    // we're feeding bad locators to fOpenPageRanges but it should not matter
    // because they never get written out
-   return RClusterDescriptor::RLocator{};
+   return RNTupleLocator{};
 }
 
 std::uint64_t

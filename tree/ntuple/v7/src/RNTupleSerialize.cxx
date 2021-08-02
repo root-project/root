@@ -573,7 +573,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFeatur
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
-   const RClusterDescriptor::RLocator &locator, void *buffer)
+   const RNTupleLocator &locator, void *buffer)
 {
    std::uint32_t size = 0;
    if (!locator.fUrl.empty()) {
@@ -597,7 +597,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::DeserializeLocator(
-   const void *buffer, std::uint32_t bufSize, RClusterDescriptor::RLocator &locator)
+   const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator)
 {
    if (bufSize < sizeof(std::int32_t))
       throw RException(R__FAIL("too short locator"));
