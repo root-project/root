@@ -112,3 +112,20 @@ TEST(Metrics, RNTupleWriter)
    // one page for the int field, one for the float field
    EXPECT_EQ(2, page_counter->GetValueAsInt());
 }
+
+TEST(Metrics, Histogram)
+{
+   RNTupleMetrics inner("inner");
+   std::vector<std::pair<int, int>> intervals = {
+      std::make_pair(10, 20),
+      std::make_pair(21, 30)
+   };
+   RNTupleHistoCounter<int> counter("plain", "example 1", intervals, inner);
+
+   int64_t c = counter.AddValue(15);
+
+   int64_t count = counter.GetMatchingCount(14);
+
+   EXPECT_EQ(c,count);
+   EXPECT_EQ(1,c);
+}

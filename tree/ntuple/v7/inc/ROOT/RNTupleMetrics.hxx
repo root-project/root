@@ -326,15 +326,21 @@ public:
    bool IsEnabled() const { return fIsEnabled; }
 };
 
-template<
-   typename HNumber,
-   typename std::enable_if<
-      std::is_arithmetic<HNumber>::value
-   >::type
->
+template<typename HNumber>
 class RNTupleHistoCounter {
 private:
    std::map<HNumber, std::pair<HNumber, RNTupleAtomicCounter*>> bins;
+
+   RNTupleAtomicCounter* GetMatchingCounter(const HNumber &n) {
+         auto lower = bins.lower_bound(n);
+
+         if(lower != bins.end()
+            && n <= lower->second.first) {
+            return lower->second.second;
+         }
+         else
+            return nullptr;
+   };
 public:
    RNTupleHistoCounter(
       const std::string &name, const std::string &desc,
@@ -342,23 +348,30 @@ public:
       RNTupleMetrics &metrics
    )
    {
+      int i = 0;
+
       for(auto &elem: intervals) {
-         auto counter = metrics.MakeCounter<RNTupleAtomicCounter*>(name, "", desc);
+         auto counter = metrics.MakeCounter<RNTupleAtomicCounter*>(name + std::to_string(i), "", desc);
          bins[elem.first] = std::make_pair(elem.second, std::move(counter));
+         i++;
       }
-   }
+   };
 
-   void AddValue(const HNumber &n) {
-      auto lower = bins.lower_bound(n);
+   uint64_t AddValue(const HNumber &n) {
+      auto counter = GetMatchingCounter(n);
 
-      if(lower != bins.end()) {
-         auto pair = lower->second;
-
-         if(n <= pair->first) {
-            pair->second->Inc();
-         }
+      if(counter != nullptr) {
+         counter->Inc();
+         return counter->GetValue();
       }
-   }
+
+      return 0;
+   };
+
+   int64_t GetMatchingCount(const HNumber &n) {
+      auto counter = GetMatchingCounter(n);
+      return counter == nullptr ? 0 : counter->GetValue();
+   };
 };
 
 } // namespace Detail
