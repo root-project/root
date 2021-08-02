@@ -113,19 +113,73 @@ TEST(Metrics, RNTupleWriter)
    EXPECT_EQ(2, page_counter->GetValueAsInt());
 }
 
-TEST(Metrics, Histogram)
+TEST(Metrics, PresetIntervalHistogram)
 {
    RNTupleMetrics inner("inner");
-   std::vector<std::pair<int, int>> intervals = {
+   std::vector<std::pair<uint64_t, uint64_t>> intervals = {
       std::make_pair(10, 20),
       std::make_pair(21, 30)
    };
-   RNTupleHistoCounter<int> counter("plain", "example 1", intervals, inner);
+   RNTupleHistoCounter counter("plain", "example 1", intervals, inner);
 
-   int64_t c = counter.AddValue(15);
+   EXPECT_FALSE(inner.IsEnabled());
+   inner.Enable();
+   EXPECT_TRUE(inner.IsEnabled());
 
-   int64_t count = counter.GetMatchingCount(14);
+   counter.Add(15);
+   counter.Add(9);
 
-   EXPECT_EQ(c,count);
-   EXPECT_EQ(1,c);
+   // 14 and 20 in same interval as 15
+   EXPECT_EQ(counter.GetMatchingCount(14), 1);
+   EXPECT_EQ(counter.GetMatchingCount(20), 1);
+   
+   counter.Add(20);
+   EXPECT_EQ(counter.GetMatchingCount(19), 2);
+
+   EXPECT_EQ(counter.GetMatchingCount(22), 0);
+
+   counter.Add(35);
+   EXPECT_EQ(counter.GetMatchingCount(34), 0);
+}
+
+TEST(Metrics, LogHistogramUpperBound)
+{
+   RNTupleMetrics inner("inner");
+   
+   RNTupleHistoCounterLog counter("plain", "example 1", inner, 1000);
+
+   auto maxBound = counter.MaxLogUpperBound();
+
+   // int(log2 of 1000) == 9 
+   EXPECT_EQ(maxBound,9);
+}
+
+TEST(Metrics, LogHistogramCount) {
+   RNTupleMetrics inner("inner");
+   RNTupleHistoCounterLog counter("plain", "example 1", inner, 1000);
+
+   EXPECT_FALSE(inner.IsEnabled());
+   inner.Enable();
+   EXPECT_TRUE(inner.IsEnabled());
+
+   counter.Add(2);
+   counter.Add(3);
+   counter.Add(5);
+   counter.Add(6);
+   counter.Add(7);
+   counter.Add(8);
+
+   // 2 entries with 1 exponent
+   EXPECT_EQ(counter.GetExponentCount(1), 2);
+
+   // 3 entries with 2 exponent
+   EXPECT_EQ(counter.GetExponentCount(2), 3);
+
+   // 1 entries with 8 exponent
+   EXPECT_EQ(counter.GetExponentCount(3), 1);
+
+   EXPECT_EQ(counter.GetOverflowCount(), 0);
+   counter.Add(1000);
+   counter.Add(1001);
+   EXPECT_EQ(counter.GetOverflowCount(), 1);
 }

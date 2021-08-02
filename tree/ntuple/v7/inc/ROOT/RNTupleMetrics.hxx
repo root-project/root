@@ -326,52 +326,135 @@ public:
    bool IsEnabled() const { return fIsEnabled; }
 };
 
-template<typename HNumber>
+
 class RNTupleHistoCounter {
 private:
-   std::map<HNumber, std::pair<HNumber, RNTupleAtomicCounter*>> bins;
+   typedef std::pair<uint64_t, uint64_t> IntervalEntry;
+   typedef std::pair<uint64_t, std::pair<uint64_t, RNTupleAtomicCounter*>> MappingEntry;
 
-   RNTupleAtomicCounter* GetMatchingCounter(const HNumber &n) {
-         auto lower = bins.lower_bound(n);
+   std::vector<RNTupleHistoCounter::MappingEntry> bins;
 
-         if(lower != bins.end()
-            && n <= lower->second.first) {
-            return lower->second.second;
+   static bool compareIntervalEntries(IntervalEntry e1, IntervalEntry e2) {
+      return e1.first < e2.first;
+   };
+
+   RNTupleAtomicCounter* GetMatchingCounter(const uint64_t &n) {
+      int64_t l = 0, r = bins.size() - 1, m;
+      
+      while(l <= r) {
+         m = l + (r - l) / 2;
+
+         if(bins[m].first <= n
+            && n <= bins[m].second.first ) {
+            return bins[m].second.second;
          }
-         else
-            return nullptr;
+
+         if(bins[m].first < n) {
+            l = m + 1;
+         }
+         else {
+            r = m - 1;
+         }
+      }
+      
+      return nullptr;
    };
 public:
    RNTupleHistoCounter(
       const std::string &name, const std::string &desc,
-      const std::vector<std::pair<HNumber, HNumber>> &intervals,
+      std::vector<std::pair<uint64_t, uint64_t>> intervals,
       RNTupleMetrics &metrics
    )
    {
-      int i = 0;
+      // sort the intervals according to lower bound
+      std::sort(intervals.begin(), intervals.end(), compareIntervalEntries);
 
-      for(auto &elem: intervals) {
+      for(uint64_t i = 0; i < intervals.size(); i++) {
+         auto elem = intervals[i];
          auto counter = metrics.MakeCounter<RNTupleAtomicCounter*>(name + std::to_string(i), "", desc);
-         bins[elem.first] = std::make_pair(elem.second, std::move(counter));
-         i++;
+         auto auxPair = std::make_pair(elem.second, std::move(counter));
+         bins.push_back(std::make_pair(elem.first, auxPair));
       }
    };
 
-   uint64_t AddValue(const HNumber &n) {
+   void Add(const uint64_t &n) {
       auto counter = GetMatchingCounter(n);
 
       if(counter != nullptr) {
          counter->Inc();
-         return counter->GetValue();
       }
-
-      return 0;
    };
 
-   int64_t GetMatchingCount(const HNumber &n) {
+   int64_t GetMatchingCount(const uint64_t &n) {
       auto counter = GetMatchingCounter(n);
       return counter == nullptr ? 0 : counter->GetValue();
    };
+};
+
+class RNTupleHistoCounterLog {
+private:
+   RNTupleAtomicCounter* slots[66];
+   uint64_t fUpperBound;
+   uint fBitUpperBound;
+
+   uint ulog2(uint64_t n) {
+      uint64_t targetLevel = 0;
+      
+      while (n >>= 1) {
+         ++targetLevel;
+      }
+
+      return targetLevel;
+   };
+public:
+   RNTupleHistoCounterLog(
+      const std::string &name, const std::string &desc, RNTupleMetrics &metrics,
+      const uint64_t upperBound
+   ) : fUpperBound(upperBound), fBitUpperBound(ulog2(upperBound))
+   {
+      for(uint64_t i = 0; i <= fBitUpperBound + 1; i++) {
+         auto counter = metrics.MakeCounter<RNTupleAtomicCounter*>(name + std::to_string(i), "", desc);
+         slots[i] = counter;
+      }
+   };
+
+   uint MaxLogUpperBound() {
+      return fBitUpperBound;
+   }
+
+   void Add(const uint64_t &n) {
+      if(n > fUpperBound) {
+         slots[fBitUpperBound + 1]->Inc();
+      }
+      else {
+         auto binIdx = ulog2(n);
+         slots[binIdx]->Inc();
+      }
+   }
+
+   uint64_t GetExponentCount(const uint &idx) {
+      uint64_t cnt = 0;
+
+      if(idx <= fBitUpperBound) {
+         cnt = slots[idx]->GetValue();
+      }
+
+      return cnt;
+   }
+
+   uint64_t GetOverflowCount() {
+      return slots[fBitUpperBound + 1]->GetValue();
+   }
+
+   uint64_t GetTotalCount() {
+      uint64_t cnt = 0;
+
+      for(uint i = 0; i <= fBitUpperBound + 1; i++) {
+         cnt += slots[i]->GetValue();
+      }
+
+      return cnt;
+   }
 };
 
 } // namespace Detail
