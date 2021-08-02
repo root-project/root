@@ -331,6 +331,7 @@ class RNTupleHistoCounter {
 private:
    typedef std::pair<uint64_t, uint64_t> IntervalEntry;
    typedef std::pair<uint64_t, std::pair<uint64_t, RNTupleAtomicCounter*>> MappingEntry;
+   typedef std::vector<std::pair<std::pair<uint64_t, uint64_t>, uint64_t>> HistoInfo;
 
    std::vector<RNTupleHistoCounter::MappingEntry> bins;
 
@@ -389,6 +390,21 @@ public:
       auto counter = GetMatchingCounter(n);
       return counter == nullptr ? 0 : counter->GetValue();
    };
+
+   HistoInfo GetAll() {
+      uint64_t lowBound, upperBound, count;
+      HistoInfo all;
+
+      for(auto &elem : bins) {
+         lowBound = elem.first;
+         upperBound = elem.second.first;
+         count = elem.second.second->GetValue();
+         auto intervalPair = std::make_pair(lowBound, upperBound);
+         all.push_back(std::make_pair(intervalPair, count));
+      }
+
+      return all;
+   }
 };
 
 class RNTupleHistoCounterLog {
@@ -454,6 +470,18 @@ public:
       }
 
       return cnt;
+   }
+
+   std::vector<std::pair<uint, uint64_t>> GetAll() {
+      uint64_t count;
+      std::vector<std::pair<uint, uint64_t>> all;
+
+      for(uint i = 0; i <= fBitUpperBound; i++) {
+         count = slots[i]->GetValue();
+         all.push_back(std::make_pair(i, count));
+      }
+
+      return all;
    }
 };
 
