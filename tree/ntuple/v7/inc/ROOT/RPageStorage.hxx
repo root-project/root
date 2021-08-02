@@ -186,9 +186,9 @@ protected:
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
    virtual void CreateImpl(const RNTupleModel &model) = 0;
-   virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
-   virtual RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
-                                                             const RPageStorage::RSealedPage &sealedPage) = 0;
+   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId,
+                                               const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
    virtual void CommitDatasetImpl() = 0;
