@@ -16,8 +16,8 @@
 #ifndef ROOT7_RNTupleSerialize
 #define ROOT7_RNTupleSerialize
 
-#include <ROOT/RNTupleDescriptor.hxx> // for RLocator, TODO remove me
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RSpan.hxx>
 
 #include <cstdint>
 #include <map>
@@ -30,6 +30,7 @@ namespace Experimental {
 enum class EColumnType;
 class RClusterDescriptor;
 class RNTupleDescriptor;
+
 
 namespace Internal {
 
@@ -62,7 +63,7 @@ public:
 
    struct REnvelopeLink {
       std::uint32_t fUnzippedSize = 0;
-      RClusterDescriptor::RLocator fLocator;
+      RNTupleLocator fLocator;
    };
 
    struct RClusterSummary {
@@ -178,9 +179,8 @@ public:
    static std::uint32_t DeserializeFeatureFlags(const void *buffer, std::uint32_t size,
                                                 std::vector<std::int64_t> &flags);
 
-   static std::uint32_t SerializeLocator(const RClusterDescriptor::RLocator &locator, void *buffer);
-   static std::uint32_t DeserializeLocator(const void *buffer, std::uint32_t bufSize,
-                                           RClusterDescriptor::RLocator &locator);
+   static std::uint32_t SerializeLocator(const RNTupleLocator &locator, void *buffer);
+   static std::uint32_t DeserializeLocator(const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
    static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
 
