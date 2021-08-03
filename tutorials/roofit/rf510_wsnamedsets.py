@@ -59,9 +59,9 @@ def fillWorkspace(w):
     # of defineSet must be set to import them on the fly. Named sets contain only references
     # to the original variables, the value of observables in named sets already
     # reflect their 'current' value
-    params = model.getParameters(ROOT.RooArgSet(x))
+    params = model.getParameters({x})
     w.defineSet("parameters", params)
-    w.defineSet("observables", ROOT.RooArgSet(x))
+    w.defineSet("observables", {x})
 
     # Encode reference value for parameters in workspace
     # ---------------------------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ def fillWorkspace(w):
 
     # Do a dummy fit to a (supposedly) reference dataset here and store the results
     # of that fit into a snapshot
-    refData = model.generate(ROOT.RooArgSet(x), 10000)
+    refData = model.generate({x}, 10000)
     model.fitTo(refData, PrintLevel=-1)
 
     # The kTRUE flag imports the values of the objects in (*params) into the workspace

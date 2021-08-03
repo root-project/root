@@ -40,7 +40,7 @@ bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
 # Generate a data sample of 1000 events in x from model
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 
 # Create workspace, import data and model
 # -----------------------------------------------------------------------------

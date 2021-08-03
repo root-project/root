@@ -103,7 +103,7 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 # and RRV y defines a range [-10,10] this means that the ROOT.RooDataSet
 # below will have less entries than the ROOT.TTree 'tree'
 
-ds = ROOT.RooDataSet("ds", "ds", ROOT.RooArgSet(x, y), ROOT.RooFit.Import(tree))
+ds = ROOT.RooDataSet("ds", "ds", {x, y}, ROOT.RooFit.Import(tree))
 
 # Use ascii import/export for datasets
 # ------------------------------------------------------------------------------------

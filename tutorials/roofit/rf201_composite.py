@@ -54,7 +54,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 # ---------------------------------------------------
 
 # Generate a data sample of 1000 events in x from model
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 
 # Fit model to data
 model.fitTo(data)
@@ -65,12 +65,10 @@ data.plotOn(xframe)
 model.plotOn(xframe)
 
 # Overlay the background component of model with a dashed line
-ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(xframe, Components=ras_bkg, LineStyle="--")
+model.plotOn(xframe, Components={bkg}, LineStyle="--")
 
 # Overlay the background+sig2 components of model with a dotted line
-ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
-model.plotOn(xframe, Components=ras_bkg_sig2, LineStyle=":")
+model.plotOn(xframe, Components={bkg, sig2}, LineStyle=":")
 
 # Print structure of composite pdf
 model.Print("t")
@@ -94,7 +92,7 @@ model2 = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig1, sig2], [bkgfrac, sig1fra
 # Plot recursive addition model
 # ---------------------------------------------------------
 model2.plotOn(xframe, LineColor="r", LineStyle="--")
-model2.plotOn(xframe, Components=ras_bkg_sig2, LineColor="r", LineStyle="--")
+model2.plotOn(xframe, Components={bkg, sig2}, LineColor="r", LineStyle="--")
 model2.Print("t")
 
 # Draw the frame on the canvas
