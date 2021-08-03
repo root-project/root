@@ -110,8 +110,11 @@ RooCmdArg ShowProgress() ;
 
 // RooAbsPdf::plotOn arguments
 RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) ;
-RooCmdArg Components(const RooArgSet& compSet) ;
-RooCmdArg Components(RooArgSet && compSet) ;
+template<class... Args_t>
+RooCmdArg Components(Args_t &&... argsOrArgSet) {
+  return RooCmdArg("SelectCompSet",0,0,0,0,0,0,
+          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), 0);
+}
 RooCmdArg Components(const char* compSpec) ;
 
 // RooAbsData::plotOn arguments
@@ -310,8 +313,11 @@ RooCmdArg Scaling(Bool_t flag) ;
 RooCmdArg IntrinsicBinning(Bool_t flag=kTRUE) ;
 
 // RooAbsReal::createIntegral arguments
-RooCmdArg NormSet(const RooArgSet& nset) ;
-RooCmdArg NormSet(RooArgSet && nset) ;
+template<class... Args_t>
+RooCmdArg NormSet(Args_t &&... argsOrArgSet) {
+  return RooCmdArg("NormSet",0,0,0,0,0,0,
+          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), 0);
+}
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 
 // RooMCStudy::ctor arguments
