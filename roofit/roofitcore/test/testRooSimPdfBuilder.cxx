@@ -5,12 +5,13 @@
 #include "RooRealVar.h"
 #include "RooArgSet.h"
 #include "RooDataSet.h"
-#include "RooGaussian.h"
+#include "RooGenericPdf.h"
 #include "RooFitResult.h"
 #include "RooExtendPdf.h"
 #include "RooSimultaneous.h"
 #include "RooSimPdfBuilder.h"
 #include "RooStringVar.h"
+#include "RooMsgService.h"
 
 #include <memory>
 
@@ -19,6 +20,9 @@
 TEST(TestRooSimPdfBuilder, Example)
 {
    using namespace RooFit;
+
+   // silence log output
+   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
 
    RooCategory C("C", "C");
    C.defineType("C1");
@@ -40,8 +44,8 @@ TEST(TestRooSimPdfBuilder, Example)
       RooRealVar m("m", "mean of gaussian", 0, -10, 10);
       RooRealVar s_C1("s_C1", "sigma of gaussian C1", 3, 0.1, 10);
       RooRealVar s_C2("s_C2", "sigma of gaussian C2", 5, 0.1, 10);
-      RooGaussian gauss_C1("gauss_C1", "gaussian C1", X, m, s_C1);
-      RooGaussian gauss_C2("gauss_C2", "gaussian C2", X, m, s_C2);
+      RooGenericPdf gauss_C1("gauss_C1", "gaussian C1", "std::exp(-0.5*(X - m)^2/s_C1^2)", {X, m, s_C1});
+      RooGenericPdf gauss_C2("gauss_C2", "gaussian C2", "std::exp(-0.5*(X - m)^2/s_C2^2)", {X, m, s_C2});
 
       RooRealVar N_C1("N_C1", "Extended term C1", 1., 0., 10.);
       RooRealVar N_C2("N_C2", "Extended term C2", 1., 0., 10.);
@@ -69,7 +73,7 @@ TEST(TestRooSimPdfBuilder, Example)
 
       RooRealVar m("m", "mean of gaussian", -10, 10);
       RooRealVar s("s", "sigma of gaussian", 0.1, 10);
-      RooGaussian gauss("gauss", "gaussian", X, m, s);
+      RooGenericPdf gauss("gauss", "gaussian", "std::exp(-0.5*(X - m)^2/s^2)", {X, m, s});
       RooRealVar N("N", "Extended term", 1., 0., 10.);
       RooExtendPdf pdf("pdf", "Extended model", gauss, N, "FULL");
 

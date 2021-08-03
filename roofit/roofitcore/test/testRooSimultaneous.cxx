@@ -5,7 +5,7 @@
 #include "RooConstVar.h"
 #include "RooCategory.h"
 #include "RooDataSet.h"
-#include "RooGaussian.h"
+#include "RooGenericPdf.h"
 #include "RooRealVar.h"
 #include "RooSimultaneous.h"
 #include "RooProdPdf.h"
@@ -21,13 +21,16 @@ TEST(RooSimultaneous, ImportFromTreeWithCut)
 {
    using namespace RooFit;
 
+   // silence log output
+   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, 10);
    RooRealVar mean("mean", "mean", 1., 0, 10);
    RooRealVar width("width", "width", 1, 0.1, 10);
    RooRealVar nsig("nsig", "nsig", 500, 100, 1000);
 
-   RooGaussian gauss1("gauss1", "gauss1", x, mean, width);
-   RooGaussian fconstraint("fconstraint", "fconstraint", mean, RooConst(2.0), RooConst(0.2));
+   RooGenericPdf gauss1("guass1", "gauss1", "std::exp(-0.5*(x - mean)^2/width^2)", {x, mean, width});
+   RooGenericPdf fconstraint("fconstraint", "fconstraint", "std::exp(-0.5*(mean - 2.0)^2/0.2^2)", {mean});
 
    RooAddPdf model("model", "model", RooArgList(gauss1), RooArgList(nsig));
    RooProdPdf modelConstrained("modelConstrained", "modelConstrained", RooArgSet(model, fconstraint));

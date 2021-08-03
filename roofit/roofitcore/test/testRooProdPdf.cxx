@@ -3,7 +3,7 @@
 
 #include "RooArgList.h"
 #include "RooArgSet.h"
-#include "RooPoisson.h"
+#include "RooGenericPdf.h"
 #include "RooProdPdf.h"
 #include "RooRealVar.h"
 
@@ -69,13 +69,13 @@ TEST(RooProdPdf, TestGetPartIntList)
    RooRealVar m2{"m2", "m2", 1., 0, 10};
    RooRealVar m3{"m3", "m3", 1., 0, 10};
 
-   RooPoisson gauss1{"gauss1", "gauss1", x, m1};
-   RooPoisson gauss2{"gauss2", "gauss2", x, m2};
-   RooPoisson gauss3{"gauss3", "gauss3", y, m3};
-   RooPoisson gauss4{"gauss4", "gauss4", z, m1};
-   RooPoisson gauss5{"gauss5", "gauss5", x, m1};
+   RooGenericPdf gauss1{"gauss1", "gauss1", "x+m1", {x, m1}};
+   RooGenericPdf gauss2{"gauss2", "gauss2", "x+m2", {x, m2}};
+   RooGenericPdf gauss3{"gauss3", "gauss3", "y+m3", {y, m3}};
+   RooGenericPdf gauss4{"gauss4", "gauss4", "z+m1", {z, m1}};
+   RooGenericPdf gauss5{"gauss5", "gauss5", "x+m1", {x, m1}};
 
-   // Product of all the Gaussians.
+   // Product of all the pdfs.
    RooProdPdf prod{"prod", "prod", RooArgList{gauss1, gauss2, gauss3, gauss4, gauss5}};
 
    // We hash the string serializations of caches for all possible
