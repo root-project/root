@@ -23,25 +23,25 @@ TEST(RNTuple, SerializeString)
    EXPECT_EQ(7, RNTupleSerializer::SerializeString(s, buffer));
 
    try {
-      RNTupleSerializer::DeserializeString(nullptr, 0, s);
+      RNTupleSerializer::DeserializeString(nullptr, 0, s).Unwrap();
       FAIL() << "too small buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
    try {
-      RNTupleSerializer::DeserializeString(buffer, 6, s);
+      RNTupleSerializer::DeserializeString(buffer, 6, s).Unwrap();
       FAIL() << "too small buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
-   EXPECT_EQ(7, RNTupleSerializer::DeserializeString(buffer, 8, s));
+   EXPECT_EQ(7, RNTupleSerializer::DeserializeString(buffer, 8, s).Unwrap());
    EXPECT_EQ("xyz", s);
    s.clear();
    EXPECT_EQ(4, RNTupleSerializer::SerializeString(s, buffer));
    s = "other content";
-   EXPECT_EQ(4, RNTupleSerializer::DeserializeString(buffer, 8, s));
+   EXPECT_EQ(4, RNTupleSerializer::DeserializeString(buffer, 8, s).Unwrap());
    EXPECT_TRUE(s.empty());
 }
 
@@ -59,7 +59,7 @@ TEST(RNTuple, SerializeColumnType)
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
    try {
-      RNTupleSerializer::DeserializeColumnType(buffer, type);
+      RNTupleSerializer::DeserializeColumnType(buffer, type).Unwrap();
       FAIL() << "unexpected on disk column type should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk column type"));
@@ -86,7 +86,7 @@ TEST(RNTuple, SerializeFieldStructure)
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
    try {
-      RNTupleSerializer::DeserializeFieldStructure(buffer, structure);
+      RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
       FAIL() << "unexpected on disk field structure value should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk field structure value"));
@@ -102,7 +102,7 @@ TEST(RNTuple, SerializeFieldStructure)
 TEST(RNTuple, SerializeEnvelope)
 {
    try {
-      RNTupleSerializer::DeserializeEnvelope(nullptr, 0);
+      RNTupleSerializer::DeserializeEnvelope(nullptr, 0).Unwrap();
       FAIL() << "too small envelope should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
@@ -114,10 +114,8 @@ TEST(RNTuple, SerializeEnvelope)
       std::uint32_t crc32 = 0;
    } testEnvelope;
 
-   EXPECT_EQ(0, RNTupleSerializer::ExtractEnvelopeCRC32(&testEnvelope, 8));
-
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
       FAIL() << "CRC32 mismatch should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32"));
@@ -128,23 +126,26 @@ TEST(RNTuple, SerializeEnvelope)
    EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(
       reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
       FAIL() << "unsupported version should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too old"));
    }
 
    testEnvelope.writerVersion = RNTupleSerializer::kEnvelopeCurrentVersion;
+   std::uint32_t crc32_write;
    RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32);
-   EXPECT_EQ(4u, RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)));
+      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, crc32_write, &testEnvelope.crc32);
+   std::uint32_t crc32_read;
+   EXPECT_EQ(4u, RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), crc32_read).Unwrap());
+   EXPECT_EQ(crc32_write, crc32_read);
 
    testEnvelope.writerVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
    testEnvelope.minVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
    EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(
       reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope));
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
       FAIL() << "unsupported version should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too new"));
@@ -157,7 +158,7 @@ TEST(RNTuple, SerializeFrame)
    std::uint32_t nitems;
 
    try {
-      RNTupleSerializer::DeserializeFrame(nullptr, 0, frameSize);
+      RNTupleSerializer::DeserializeFrame(nullptr, 0, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
@@ -174,12 +175,12 @@ TEST(RNTuple, SerializeFrame)
    EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 6));
 
    try {
-      RNTupleSerializer::DeserializeFrame(buffer, 4, frameSize);
+      RNTupleSerializer::DeserializeFrame(buffer, 4, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(4u, RNTupleSerializer::DeserializeFrame(buffer, 6, frameSize, nitems));
+   EXPECT_EQ(4u, RNTupleSerializer::DeserializeFrame(buffer, 6, frameSize, nitems).Unwrap());
    EXPECT_EQ(6u, frameSize);
    EXPECT_EQ(1u, nitems);
 
@@ -207,12 +208,12 @@ TEST(RNTuple, SerializeFrame)
    EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 12));
 
    try {
-      RNTupleSerializer::DeserializeFrame(buffer, 6, frameSize, nitems);
+      RNTupleSerializer::DeserializeFrame(buffer, 6, frameSize, nitems).Unwrap();
       FAIL() << "too short list frame should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFrame(buffer, 12, frameSize, nitems));
+   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFrame(buffer, 12, frameSize, nitems).Unwrap());
    EXPECT_EQ(12u, frameSize);
    EXPECT_EQ(2u, nitems);
 }
@@ -224,13 +225,13 @@ TEST(RNTuple, SerializeFeatureFlags)
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, nullptr));
    EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer));
-   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 8, flags));
+   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 8, flags).Unwrap());
    ASSERT_EQ(1u, flags.size());
    EXPECT_EQ(0, flags[0]);
 
    flags[0] = 1;
    EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer));
-   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 8, flags));
+   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 8, flags).Unwrap());
    ASSERT_EQ(1u, flags.size());
    EXPECT_EQ(1, flags[0]);
 
@@ -244,20 +245,20 @@ TEST(RNTuple, SerializeFeatureFlags)
 
    flags[1] = 2;
    EXPECT_EQ(16u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer));
-   EXPECT_EQ(16u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 16, flags));
+   EXPECT_EQ(16u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 16, flags).Unwrap());
    ASSERT_EQ(2u, flags.size());
    EXPECT_EQ(1, flags[0]);
    EXPECT_EQ(2, flags[1]);
 
    try {
-      RNTupleSerializer::DeserializeFeatureFlags(nullptr, 0, flags);
+      RNTupleSerializer::DeserializeFeatureFlags(nullptr, 0, flags).Unwrap();
       FAIL() << "too small buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
    try {
-      RNTupleSerializer::DeserializeFeatureFlags(buffer, 12, flags);
+      RNTupleSerializer::DeserializeFeatureFlags(buffer, 12, flags).Unwrap();
       FAIL() << "too small buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
@@ -285,18 +286,18 @@ TEST(RNTuple, SerializeLocator)
    locator.fBytesOnStorage = 0;
    locator.fUrl = "xyz";
    try {
-      RNTupleSerializer::DeserializeLocator(buffer, 3, locator);
+      RNTupleSerializer::DeserializeLocator(buffer, 3, locator).Unwrap();
       FAIL() << "too short locator buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    try {
-      RNTupleSerializer::DeserializeLocator(buffer, 11, locator);
+      RNTupleSerializer::DeserializeLocator(buffer, 11, locator).Unwrap();
       FAIL() << "too short locator buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator));
+   EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
    EXPECT_EQ(1u, locator.fPosition);
    EXPECT_EQ(2u, locator.fBytesOnStorage);
    EXPECT_TRUE(locator.fUrl.empty());
@@ -308,12 +309,12 @@ TEST(RNTuple, SerializeLocator)
    locator.fBytesOnStorage = 42;
    locator.fUrl.clear();
    try {
-      RNTupleSerializer::DeserializeLocator(buffer, 4, locator);
+      RNTupleSerializer::DeserializeLocator(buffer, 4, locator).Unwrap();
       FAIL() << "too short locator buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(5u, RNTupleSerializer::DeserializeLocator(buffer, 5, locator));
+   EXPECT_EQ(5u, RNTupleSerializer::DeserializeLocator(buffer, 5, locator).Unwrap());
    EXPECT_EQ(0u, locator.fPosition);
    EXPECT_EQ(0u, locator.fBytesOnStorage);
    EXPECT_EQ("X", locator.fUrl);
@@ -321,13 +322,13 @@ TEST(RNTuple, SerializeLocator)
    locator.fUrl = "abcdefghijkl";
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer));
    locator.fUrl.clear();
-   EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator));
+   EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
    EXPECT_EQ("abcdefghijkl", locator.fUrl);
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
    *head = (0x3 << 24) | *head;
    try {
-      RNTupleSerializer::DeserializeLocator(buffer, 16, locator);
+      RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap();
       FAIL() << "unsupported locator type should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported locator type"));
@@ -345,14 +346,14 @@ TEST(RNTuple, SerializeEnvelopeLink)
    EXPECT_EQ(16u, RNTupleSerializer::SerializeEnvelopeLink(link, nullptr));
    EXPECT_EQ(16u, RNTupleSerializer::SerializeEnvelopeLink(link, buffer));
    try {
-      RNTupleSerializer::DeserializeEnvelopeLink(buffer, 3, link);
+      RNTupleSerializer::DeserializeEnvelopeLink(buffer, 3, link).Unwrap();
       FAIL() << "too short envelope link buffer should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
    RNTupleSerializer::REnvelopeLink reconstructedLink;
-   EXPECT_EQ(16u, RNTupleSerializer::DeserializeEnvelopeLink(buffer, 16, reconstructedLink));
+   EXPECT_EQ(16u, RNTupleSerializer::DeserializeEnvelopeLink(buffer, 16, reconstructedLink).Unwrap());
    EXPECT_EQ(link.fUnzippedSize, reconstructedLink.fUnzippedSize);
    EXPECT_EQ(link.fLocator, reconstructedLink.fLocator);
 }
@@ -368,12 +369,12 @@ TEST(RNTuple, SerializeClusterSummary)
    EXPECT_EQ(20u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
    RNTupleSerializer::RClusterSummary reco;
    try {
-      RNTupleSerializer::DeserializeClusterSummary(buffer, 19, reco);
+      RNTupleSerializer::DeserializeClusterSummary(buffer, 19, reco).Unwrap();
       FAIL() << "too short cluster summary should fail";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(20u, RNTupleSerializer::DeserializeClusterSummary(buffer, 20, reco));
+   EXPECT_EQ(20u, RNTupleSerializer::DeserializeClusterSummary(buffer, 20, reco).Unwrap());
    EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
    EXPECT_EQ(summary.fNEntries, reco.fNEntries);
    EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
@@ -382,12 +383,12 @@ TEST(RNTuple, SerializeClusterSummary)
    ASSERT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr));
    EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
    try {
-      RNTupleSerializer::DeserializeClusterSummary(buffer, 23, reco);
+      RNTupleSerializer::DeserializeClusterSummary(buffer, 23, reco).Unwrap();
       FAIL() << "too short cluster summary should fail";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco));
+   EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap());
    EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
    EXPECT_EQ(summary.fNEntries, reco.fNEntries);
    EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
@@ -406,12 +407,12 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterGroup(group, buffer));
    RNTupleSerializer::RClusterGroup reco;
    try {
-      RNTupleSerializer::DeserializeClusterGroup(buffer, 23, reco);
+      RNTupleSerializer::DeserializeClusterGroup(buffer, 23, reco).Unwrap();
       FAIL() << "too short cluster group should fail";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterGroup(buffer, 24, reco));
+   EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterGroup(buffer, 24, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
    EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fPosition, reco.fPageListEnvelopeLink.fLocator.fPosition);
@@ -425,7 +426,7 @@ TEST(RNTuple, SerializeClusterGroup)
    pos += RNTupleSerializer::SerializeUInt16(7, pos);
    pos += RNTupleSerializer::SerializeFramePostscript(buffer, pos - buffer);
    pos += RNTupleSerializer::SerializeUInt16(13, pos);
-   EXPECT_EQ(26u, RNTupleSerializer::DeserializeClusterGroup(buffer, 26, reco));
+   EXPECT_EQ(26u, RNTupleSerializer::DeserializeClusterGroup(buffer, 26, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
    EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fPosition, reco.fPageListEnvelopeLink.fLocator.fPosition);
@@ -435,4 +436,23 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(7u, remainder);
    RNTupleSerializer::DeserializeUInt16(buffer + 26, remainder);
    EXPECT_EQ(13u, remainder);
+}
+
+TEST(RNTuple, SerializeHeader)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
+   builder.AddField(RDanglingFieldDescriptor()
+      .FieldId(0)
+      .FieldName("")
+      .Structure(ENTupleStructure::kRecord)
+      .MakeDescriptor()
+      .Unwrap());
+   auto desc = builder.MoveDescriptor();
+   auto context = RNTupleSerializer::SerializeHeaderV1(desc, nullptr);
+   EXPECT_GT(context.GetHeaderSize(), 0);
+   auto buffer = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeaderV1(desc, buffer.get());
+
+   RNTupleSerializer::DeserializeHeaderV1(buffer.get(), context.GetHeaderSize(), builder);
 }
