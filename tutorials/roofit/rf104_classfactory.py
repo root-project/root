@@ -65,7 +65,7 @@ pdf = ROOT.MyPdfV3("pdf", "pdf", y, a, b)
 
 # Generate toy data from pdf and plot data and pdf on frame
 frame1 = y.frame(Title="Compiled class MyPdfV3")
-data = pdf.generate(ROOT.RooArgSet(y), 1000)
+data = pdf.generate({y}, 1000)
 pdf.fitTo(data)
 data.plotOn(frame1)
 pdf.plotOn(frame1)
@@ -85,7 +85,7 @@ alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
 genpdf = ROOT.RooClassFactory.makePdfInstance("GenPdf", "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))", [x, alpha])
 
 # Generate a toy dataset from the interpreted pdf
-data2 = genpdf.generate(ROOT.RooArgSet(x), 50000)
+data2 = genpdf.generate({x}, 50000)
 
 # Fit the interpreted pdf to the generated data
 genpdf.fitTo(data2)

@@ -29,7 +29,7 @@ f = ROOT.RooRealVar("f", "f", 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [gx, px], [f])
 
 # Generated 10000 events in (x,y) from pdf model
-modelData = model.generate(ROOT.RooArgSet(x), 10000)
+modelData = model.generate({x}, 10000)
 
 # Fit full range
 # ---------------------------

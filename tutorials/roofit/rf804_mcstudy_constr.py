@@ -44,8 +44,8 @@ sumc = ROOT.RooProdPdf("sumc", "sum with constraint", [sum, fconstraint])
 # Perform toy study with internal constraint on f
 mcs = ROOT.RooMCStudy(
     sumc,
-    ROOT.RooArgSet(x),
-    ROOT.RooFit.Constrain(ROOT.RooArgSet(f)),
+    {x},
+    ROOT.RooFit.Constrain({f}),
     ROOT.RooFit.Silence(),
     ROOT.RooFit.Binned(),
     ROOT.RooFit.FitOptions(ROOT.RooFit.PrintLevel(-1)),

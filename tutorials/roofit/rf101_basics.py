@@ -38,7 +38,7 @@ gauss.plotOn(xframe, LineColor="r")
 # Generate events
 # -----------------------------
 # Generate a dataset of 1000 events in x from gauss
-data = gauss.generate(ROOT.RooArgSet(x), 10000)  # ROOT.RooDataSet
+data = gauss.generate({x}, 10000)  # ROOT.RooDataSet
 
 # Make a second plot frame in x and draw both the
 # data and the pdf in the frame

@@ -44,7 +44,7 @@ def getWorkspace(mode):
         model.setStringAttribute("CACHEPARMINT", "x:y:z")
 
         # Evaluate pdf once to trigger filling of cache
-        normSet = ROOT.RooArgSet(w["x"], w["y"], w["z"])
+        normSet = {w["x"], w["y"], w["z"]}
         model.getVal(normSet)
         w.writeToFile("rf903_numintcache.root")
 
@@ -87,7 +87,7 @@ if mode == 1:
 # ROOT.This is always slow (need to find maximum function value
 # empirically in 3D space)
 model = w["model"]
-d = model.generate(ROOT.RooArgSet(w["x"], w["y"], w["z"]), 1000)
+d = model.generate({w["x"], w["y"], w["z"]}, 1000)
 
 # ROOT.This is slow in mode 0, fast in mode 1
 model.fitTo(d, Verbose=True, Timer=True)

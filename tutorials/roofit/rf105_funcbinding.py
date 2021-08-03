@@ -58,7 +58,7 @@ beta = ROOT.beta
 beta.Print()
 
 # Generate some events and fit
-data = beta.generate(ROOT.RooArgSet(x2), 10000)
+data = beta.generate({x2}, 10000)
 beta.fitTo(data)
 
 # Plot data and pdf on frame

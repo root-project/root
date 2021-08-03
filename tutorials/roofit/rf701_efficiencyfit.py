@@ -41,18 +41,16 @@ effPdf = ROOT.RooEfficiency("effPdf", "effPdf", effFunc, cut, "accept")
 # Construct global shape pdf shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
 # (These are _only_ needed to generate some toy MC here to be used later)
 shapePdf = ROOT.RooPolynomial("shapePdf", "shapePdf", x, [-0.095])
-model = ROOT.RooProdPdf(
-    "model", "model", ROOT.RooArgSet(shapePdf), Conditional=(ROOT.RooArgSet(effPdf), ROOT.RooArgSet(cut))
-)
+model = ROOT.RooProdPdf("model", "model", {shapePdf}, Conditional=({effPdf}, {cut}))
 
 # Generate some toy data from model
-data = model.generate(ROOT.RooArgSet(x, cut), 10000)
+data = model.generate({x, cut}, 10000)
 
 # Fit conditional efficiency pdf to data
 # --------------------------------------------------------------------------
 
 # Fit conditional efficiency pdf to data
-effPdf.fitTo(data, ConditionalObservables=ROOT.RooArgSet(x))
+effPdf.fitTo(data, ConditionalObservables={x})
 
 # Plot fitted, data efficiency
 # --------------------------------------------------------

@@ -30,7 +30,7 @@ model = ROOT.RooAddPdf("model", "model", [sig, bkg], [fsig])
 
 # Create binned dataset
 x.setBins(25)
-d = model.generateBinned(ROOT.RooArgSet(x), 1000)
+d = model.generateBinned({x}, 1000)
 
 # Perform fit and save fit result
 r = model.fitTo(d, Save=True)
@@ -111,8 +111,8 @@ frame2 = x.frame(Bins=40, Title="Visualization of 2-sigma partial error from (m,
 
 # Propagate partial error due to shape parameters (m,m2) using linear and
 # sampling method
-model.plotOn(frame2, VisualizeError=(r, ROOT.RooArgSet(m, m2), 2), FillColor="c")
-model.plotOn(frame2, Components="bkg", VisualizeError=(r, ROOT.RooArgSet(m, m2), 2), FillColor="c")
+model.plotOn(frame2, VisualizeError=(r, {m, m2}, 2), FillColor="c")
+model.plotOn(frame2, Components="bkg", VisualizeError=(r, {m, m2}, 2), FillColor="c")
 
 model.plotOn(frame2)
 model.plotOn(frame2, Components="bkg", LineStyle="--")
@@ -123,8 +123,8 @@ frame3 = x.frame(Bins=40, Title="Visualization of 2-sigma partial error from (s,
 
 # Propagate partial error due to yield parameter using linear and sampling
 # method
-model.plotOn(frame3, VisualizeError=(r, ROOT.RooArgSet(s, s2), 2), FillColor="g")
-model.plotOn(frame3, Components="bkg", VisualizeError=(r, ROOT.RooArgSet(fsig), 2), FillColor="g")
+model.plotOn(frame3, VisualizeError=(r, {s, s2}, 2), FillColor="g")
+model.plotOn(frame3, Components="bkg", VisualizeError=(r, {fsig}, 2), FillColor="g")
 
 model.plotOn(frame3)
 model.plotOn(frame3, Components="bkg", LineStyle="--")
@@ -135,8 +135,8 @@ frame4 = x.frame(Bins=40, Title="Visualization of 2-sigma partial error from fsi
 
 # Propagate partial error due to yield parameter using linear and sampling
 # method
-model.plotOn(frame4, VisualizeError=(r, ROOT.RooArgSet(fsig), 2), FillColor="m")
-model.plotOn(frame4, Components="bkg", VisualizeError=(r, ROOT.RooArgSet(fsig), 2), FillColor="m")
+model.plotOn(frame4, VisualizeError=(r, {fsig}, 2), FillColor="m")
+model.plotOn(frame4, Components="bkg", VisualizeError=(r, {fsig}, 2), FillColor="m")
 
 model.plotOn(frame4)
 model.plotOn(frame4, Components="bkg", LineStyle="--")

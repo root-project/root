@@ -33,12 +33,12 @@ gxy = ROOT.RooProdPdf("gxy", "gxy", [gx, gy])
 print("gxy = ", gxy.getVal())
 
 # Return value of gxy normalized over x _and_ y in range [-10,10]
-nset_xy = ROOT.RooArgSet(x, y)
+nset_xy = {x, y}
 print("gx_Norm[x,y] = ", gxy.getVal(nset_xy))
 
 # Create object representing integral over gx
 # which is used to calculate  gx_Norm[x,y] == gx / gx_Int[x,y]
-x_and_y = ROOT.RooArgSet(x, y)
+x_and_y = {x, y}
 igxy = gxy.createIntegral(x_and_y)
 print("gx_Int[x,y] = ", igxy.getVal())
 
@@ -46,12 +46,12 @@ print("gx_Int[x,y] = ", igxy.getVal())
 
 # Return value of gxy normalized over x in range [-10,10] (i.e. treating y
 # as parameter)
-nset_x = ROOT.RooArgSet(x)
+nset_x = {x}
 print("gx_Norm[x] = ", gxy.getVal(nset_x))
 
 # Return value of gxy normalized over y in range [-10,10] (i.e. treating x
 # as parameter)
-nset_y = ROOT.RooArgSet(y)
+nset_y = {y}
 print("gx_Norm[y] = ", gxy.getVal(nset_y))
 
 # Integarte normalizes pdf over subrange
@@ -73,7 +73,7 @@ print("gx_Int[x,y|signal]_Norm[x,y] = ", igxy_sig.getVal())
 
 # Create the cumulative distribution function of gx
 # i.e. calculate Int[-10,x] gx(x') dx'
-gxy_cdf = gxy.createCdf(ROOT.RooArgSet(x, y))
+gxy_cdf = gxy.createCdf({x, y})
 
 # Plot cdf of gx versus x
 hh_cdf = gxy_cdf.createHistogram("hh_cdf", x, Binning=40, YVar=dict(var=y, Binning=40))

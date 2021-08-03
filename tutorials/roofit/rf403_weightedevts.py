@@ -27,7 +27,7 @@ x.setBins(40)
 p0 = ROOT.RooPolynomial("px", "px", x)
 
 # Sample 1000 events from pdf
-data = p0.generate(ROOT.RooArgSet(x), 1000)
+data = p0.generate({x}, 1000)
 
 # Calculate weight and make dataset weighted
 # --------------------------------------------------
@@ -101,10 +101,10 @@ p2.plotOn(frame)
 genPdf = ROOT.RooGenericPdf("genPdf", "x*x+10", [x])
 
 # Sample a dataset with the same number of events as data
-data2 = genPdf.generate(ROOT.RooArgSet(x), 1000)
+data2 = genPdf.generate({x}, 1000)
 
 # Sample a dataset with the same number of weights as data
-data3 = genPdf.generate(ROOT.RooArgSet(x), 43000)
+data3 = genPdf.generate({x}, 43000)
 
 # Fit the 2nd order polynomial to both unweighted datasets and save the
 # results for comparison

@@ -34,7 +34,7 @@ frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac])
 
 # Generate 1000 events
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 
 # Construct plain likelihood
 # ---------------------------------------------------
@@ -59,7 +59,7 @@ nll.plotOn(frame2, ShiftToZero=True)
 # The profile likelihood estimator on nll for frac will minimize nll w.r.t
 # all floating parameters except frac for each evaluation
 
-pll_frac = nll.createProfile(ROOT.RooArgSet(frac))
+pll_frac = nll.createProfile({frac})
 
 # Plot the profile likelihood in frac
 pll_frac.plotOn(frame1, LineColor="r")
@@ -73,7 +73,7 @@ frame1.SetMaximum(3)
 
 # The profile likelihood estimator on nll for sigma_g2 will minimize nll
 # w.r.t all floating parameters except sigma_g2 for each evaluation
-pll_sigmag2 = nll.createProfile(ROOT.RooArgSet(sigma_g2))
+pll_sigmag2 = nll.createProfile({sigma_g2})
 
 # Plot the profile likelihood in sigma_g2
 pll_sigmag2.plotOn(frame2, LineColor="r")

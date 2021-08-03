@@ -37,7 +37,7 @@ f = ROOT.RooRealVar("f", "f", 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [sig, bkg], [f])
 
 # Sample 10000 events in (x,y) from the model
-modelData = model.generate(ROOT.RooArgSet(x, y), 10000)
+modelData = model.generate({x, y}, 10000)
 
 # Define signal and sideband regions
 # -------------------------------------------------------------------

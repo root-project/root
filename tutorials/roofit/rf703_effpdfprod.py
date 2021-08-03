@@ -49,7 +49,7 @@ modelEff.plotOn(frame2)
 
 # Generate events. If the input pdf has an internal generator, internal generator
 # is used and an accept/reject sampling on the efficiency is applied.
-data = modelEff.generate(ROOT.RooArgSet(t), 10000)
+data = modelEff.generate({t}, 10000)
 
 # Fit pdf. The normalization integral is calculated numerically.
 modelEff.fitTo(data)

@@ -32,14 +32,14 @@ model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 # Fit model to toy data
 # -----------------------------------------
 
-d = model.generate(ROOT.RooArgSet(x), 1000)
+d = model.generate({x}, 1000)
 model.fitTo(d)
 
 # Write parameters to ASCII file
 # -----------------------------------------------------------
 
 # Obtain set of parameters
-params = model.getParameters(ROOT.RooArgSet(x))
+params = model.getParameters({x})
 
 # Write parameters to file
 params.writeToFile("rf505_asciicfg_example.txt")

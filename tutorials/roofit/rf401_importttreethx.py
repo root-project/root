@@ -84,12 +84,12 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 z = ROOT.RooRealVar("z", "z", -10, 10)
 
 # Import only observables (y,z)
-ds = ROOT.RooDataSet("ds", "ds", ROOT.RooArgSet(x, y), Import=tree)
+ds = ROOT.RooDataSet("ds", "ds", {x, y}, Import=tree)
 ds.Print()
 
 # Import observables (x,y,z) but only event for which (y+z<0) is ROOT.True
 # Import observables (x,y,z) but only event for which (y+z<0) is ROOT.True
-ds2 = ROOT.RooDataSet("ds2", "ds2", ROOT.RooArgSet(x, y, z), Import=tree, Cut="y+z<0")
+ds2 = ROOT.RooDataSet("ds2", "ds2", {x, y, z}, Import=tree, Cut="y+z<0")
 ds2.Print()
 
 # Importing integer ROOT TTree branches
@@ -97,7 +97,7 @@ ds2.Print()
 
 # Import integer tree branch as ROOT.RooRealVar
 i = ROOT.RooRealVar("i", "i", 0, 5)
-ds3 = ROOT.RooDataSet("ds3", "ds3", ROOT.RooArgSet(i, x), Import=tree)
+ds3 = ROOT.RooDataSet("ds3", "ds3", {i, x}, Import=tree)
 ds3.Print()
 
 # Define category i
@@ -105,23 +105,23 @@ icat = ROOT.RooCategory("i", "i", {"State0": 0, "State1": 1})
 
 # Import integer tree branch as ROOT.RooCategory (only events with i==0 and i==1
 # will be imported as those are the only defined states)
-ds4 = ROOT.RooDataSet("ds4", "ds4", ROOT.RooArgSet(icat, x), Import=tree)
+ds4 = ROOT.RooDataSet("ds4", "ds4", {icat, x}, Import=tree)
 ds4.Print()
 
 # Import multiple RooDataSets into a RooDataSet
 # ----------------------------------------------------------------------------------------
 
 # Create three ROOT.RooDataSets in (y,z)
-dsA = ds2.reduce(ROOT.RooArgSet(x, y), "z<-5")
-dsB = ds2.reduce(ROOT.RooArgSet(x, y), "abs(z)<5")
-dsC = ds2.reduce(ROOT.RooArgSet(x, y), "z>5")
+dsA = ds2.reduce({x, y}, "z<-5")
+dsB = ds2.reduce({x, y}, "abs(z)<5")
+dsC = ds2.reduce({x, y}, "z>5")
 
 # Create a dataset that imports contents of all the above datasets mapped
 # by index category c
 dsABC = ROOT.RooDataSet(
     "dsABC",
     "dsABC",
-    ROOT.RooArgSet(x, y),
+    {x, y},
     ROOT.RooFit.Import("SampleA", dsA),
     ROOT.RooFit.Import("SampleB", dsB),
     Index=c,

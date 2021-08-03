@@ -34,7 +34,7 @@ bkg = ROOT.RooProdPdf("bkg", "bkg", [px, py, pz])
 fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [sig, bkg], [fsig])
 
-data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
+data = model.generate({x, y, z}, 20000)
 
 # Project pdf and data on x
 # -------------------------------------------------

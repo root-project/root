@@ -35,7 +35,7 @@ b0flav.Print()
 
 # Generate a dummy dataset
 x = ROOT.RooRealVar("x", "x", 0, 10)
-data = ROOT.RooPolynomial("p", "p", x).generate(ROOT.RooArgSet(x, b0flav, tagCat), 10000)
+data = ROOT.RooPolynomial("p", "p", x).generate({x, b0flav, tagCat}, 10000)
 
 # Print tables of category contents of datasets
 # --------------------------------------------------
@@ -51,7 +51,7 @@ ttable.Print()
 ttable.Print("v")
 
 # Create table for all (tagCat x b0flav) state combinations
-bttable = data.table(ROOT.RooArgSet(tagCat, b0flav))
+bttable = data.table({tagCat, b0flav})
 bttable.Print("v")
 
 # Retrieve number of events from table

@@ -77,7 +77,7 @@ w.Print()
 model = w["model"]
 x = w["x"]
 
-d = model.generate(ROOT.RooArgSet(x), 1000)
+d = model.generate({x}, 1000)
 r = model.fitTo(d)
 
 # old syntax to access the variable x
@@ -97,8 +97,7 @@ d.plotOn(frame)
 # correct syntax
 bkg = w["bkg"]
 model.plotOn(frame)
-ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(frame, Components=ras_bkg, LineStyle="--")
+model.plotOn(frame, Components=bkg, LineStyle="--")
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)

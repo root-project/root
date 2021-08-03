@@ -50,13 +50,13 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 # ----------------------------------------------------------------------------------------
 
 # Make list of model parameters
-params = model.getParameters(ROOT.RooArgSet(x))
+params = model.getParameters({x})
 
 # Save snapshot of prefit parameters
 initParams = params.snapshot()
 
 # Do fit to data, obtain error estimates on parameters
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 model.fitTo(data)
 
 # Print LateX table of parameters of pdf

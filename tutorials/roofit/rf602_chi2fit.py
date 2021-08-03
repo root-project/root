@@ -47,7 +47,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 # Create biuned dataset
 # -----------------------------------------
 
-d = model.generate(ROOT.RooArgSet(x), 10000)
+d = model.generate({x}, 10000)
 dh = d.binnedClone()
 
 # Construct a chi^2 of the data and the model.

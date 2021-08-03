@@ -75,7 +75,7 @@ hc_sig = ROOT.RooHistConstraint("hc_sig", "hc_sig", p_ph_sig1)
 hc_bkg = ROOT.RooHistConstraint("hc_bkg", "hc_bkg", p_ph_bkg1)
 
 # Construct the joint model with template PDFs and constraints
-model1 = ROOT.RooProdPdf("model1", "model1", ROOT.RooArgSet(hc_sig, hc_bkg), Conditional=(model_tmp, x))
+model1 = ROOT.RooProdPdf("model1", "model1", {hc_sig, hc_bkg}, Conditional=(model_tmp, x))
 
 
 #  Case 2 - 'Barlow Beeston' light (one parameter per bin for all samples)
@@ -97,7 +97,7 @@ Abkg2 = ROOT.RooRealVar("Abkg", "Abkg", 1, 0.01, 5000)
 model2_tmp = ROOT.RooRealSumPdf("sp_ph", "sp_ph", [p_ph_sig2, p_ph_bkg2], [Asig2, Abkg2], True)
 
 # Construct the subsidiary poisson measurements constraining the statistical fluctuations
-hc_sigbkg = ROOT.RooHistConstraint("hc_sigbkg", "hc_sigbkg", ROOT.RooArgSet(p_ph_sig2, p_ph_bkg2))
+hc_sigbkg = ROOT.RooHistConstraint("hc_sigbkg", "hc_sigbkg", {p_ph_sig2, p_ph_bkg2})
 
 # Construct the joint model
 model2 = ROOT.RooProdPdf("model2", "model2", hc_sigbkg, Conditional=(model2_tmp, x))
@@ -127,8 +127,8 @@ model0.plotOn(frame, LineColor="b", VisualizeError=result0)
 sumData.plotOn(frame)
 # Plot model components
 model0.plotOn(frame, LineColor="b")
-p_ph_sig_set = ROOT.RooArgSet(p_h_sig)
-p_ph_bkg_set = ROOT.RooArgSet(p_h_bkg)
+p_ph_sig_set = {p_h_sig}
+p_ph_bkg_set = {p_h_bkg}
 model0.plotOn(frame, Components=p_ph_sig_set, LineColor="kAzure")
 model0.plotOn(frame, Components=p_ph_bkg_set, LineColor="r")
 model0.paramOn(frame)
@@ -157,11 +157,11 @@ model1.plotOn(frame, LineColor="b", VisualizeError=result1)
 # Plot data again to show it on top of error bands:
 sumData.plotOn(frame)
 model1.plotOn(frame, LineColor="b")
-p_ph_sig1_set = ROOT.RooArgSet(p_ph_sig1)
-p_ph_bkg1_set = ROOT.RooArgSet(p_ph_bkg1)
+p_ph_sig1_set = {p_ph_sig1}
+p_ph_bkg1_set = {p_ph_bkg1}
 model1.plotOn(frame, Components=p_ph_sig1_set, LineColor="kAzure")
 model1.plotOn(frame, Components=p_ph_bkg1_set, LineColor="r")
-model1.paramOn(frame, Parameters=ROOT.RooArgSet(Asig1, Abkg1))
+model1.paramOn(frame, Parameters={Asig1, Abkg1})
 
 sigData.plotOn(frame, MarkerColor="b")
 frame.Draw()
@@ -189,11 +189,11 @@ model2.plotOn(frame, LineColor="b", VisualizeError=result2)
 # Plot data again to show it on top of model0 error bands:
 sumData.plotOn(frame)
 model2.plotOn(frame, LineColor="b")
-p_ph_sig2_set = ROOT.RooArgSet(p_ph_sig2)
-p_ph_bkg2_set = ROOT.RooArgSet(p_ph_bkg2)
+p_ph_sig2_set = {p_ph_sig2}
+p_ph_bkg2_set = {p_ph_bkg2}
 model2.plotOn(frame, Components=p_ph_sig2_set, LineColor="kAzure")
 model2.plotOn(frame, Components=p_ph_bkg2_set, LineColor="r")
-model2.paramOn(frame, Parameters=ROOT.RooArgSet(Asig2, Abkg2))
+model2.paramOn(frame, Parameters={Asig2, Abkg2})
 
 sigData.plotOn(frame, MarkerColor="b")
 frame.Draw()

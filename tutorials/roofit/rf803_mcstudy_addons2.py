@@ -46,7 +46,7 @@ model = ROOT.RooAddPdf("model", "model", [sig, bkg], [nsig, nbkg])
 # with a Poisson fluctuation on Nobs (Extended())
 mcs = ROOT.RooMCStudy(
     model,
-    ROOT.RooArgSet(mjjj),
+    {mjjj},
     ROOT.RooFit.Binned(),
     ROOT.RooFit.Silence(),
     ROOT.RooFit.Extended(ROOT.kTRUE),
@@ -65,7 +65,7 @@ mcs = ROOT.RooMCStudy(
 # by a single randomizer module
 
 randModule = ROOT.RooRandomizeParamMCSModule()
-randModule.sampleSumUniform(ROOT.RooArgSet(nsig, nbkg), 50, 500)
+randModule.sampleSumUniform({nsig, nbkg}, 50, 500)
 mcs.addModule(randModule)
 
 # Add profile likelihood calculation of significance. Redo each

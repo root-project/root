@@ -41,7 +41,7 @@ bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw,
 # ---------------------------------------------------
 
 # Generate some data
-data = bmix.generate(ROOT.RooArgSet(dt, mixState, tagFlav), 10000)
+data = bmix.generate({dt, mixState, tagFlav}, 10000)
 
 # Plot B0 and B0bar tagged data separately
 # For all plots below B0 and B0 tagged data will look somewhat differently
@@ -93,7 +93,7 @@ bcp = ROOT.RooBCPEffDecay(
 # ---------------------------------------------------------------------------
 
 # Generate some data
-data2 = bcp.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
+data2 = bcp.generate({dt, tagFlav}, 10000)
 
 # Plot B0 and B0bar tagged data separately
 frame4 = dt.frame(Title="B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)")
@@ -110,7 +110,7 @@ bcp.plotOn(frame4, Slice=(tagFlav, "B0bar"), LineColor="c")
 absLambda.setVal(0.7)
 
 # Generate some data
-data3 = bcp.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
+data3 = bcp.generate({dt, tagFlav}, 10000)
 
 # Plot B0 and B0bar tagged data separately (sin2b = 0.7 plus direct CPV
 # |l|=0.5)
@@ -153,7 +153,7 @@ bcpg = ROOT.RooBDecay(
 # -------------------------------------------------------------------------------------
 
 # Generate some data
-data4 = bcpg.generate(ROOT.RooArgSet(dt, tagFlav), 10000)
+data4 = bcpg.generate({dt, tagFlav}, 10000)
 
 # Plot B0 and B0bar tagged data separately
 frame6 = dt.frame(Title="B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)")

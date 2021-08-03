@@ -81,7 +81,7 @@ hh.SetLineColor(ROOT.kBlue)
 
 # Generate a toy dataset alpha = 0.8
 alpha.setVal(0.8)
-data = lmorph.generate(ROOT.RooArgSet(x), 1000)
+data = lmorph.generate({x}, 1000)
 
 # Fit pdf to toy data
 lmorph.setCacheAlpha(True)

@@ -27,7 +27,7 @@ x = ROOT.RooRealVar("x", "x", -15, 15)
 a1 = ROOT.RooRealVar("a1", "a1", -0.5, -10.0, 20.0)
 a2 = ROOT.RooRealVar("a2", "a2", 0.2, -10.0, 20.0)
 a3 = ROOT.RooRealVar("a3", "a3", 0.01)
-pdf = ROOT.RooPolynomial("pol3", "c + a1 * x + a2 * x*x + 0.01 * x*x*x", x, ROOT.RooArgSet(a1, a2, a3))
+pdf = ROOT.RooPolynomial("pol3", "c + a1 * x + a2 * x*x + 0.01 * x*x*x", x, [a1, a2, a3])
 
 # Create toy data with all-positive coefficients:
 data = pdf.generate(x, 10000)
