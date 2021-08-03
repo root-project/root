@@ -73,10 +73,6 @@ public:
          sum += input[i];
       return sum;
    }
-
-   void *malloc(size_t size) override { return std::malloc(size); }
-
-   void free(void *ptr) override { std::free(ptr); }
 }; // End class RooBatchComputeClass
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.

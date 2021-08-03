@@ -75,36 +75,54 @@ public:
       return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this}};
    }
 
-   struct NodeInfo {
-      int nServers = 0;
-      int nClients = 0;
-      bool dependsOnObservables = true;
-      bool computeInScalarMode = false;
-   };
-
 private:
-   double *getAvailableBuffer();
+   struct NodeInfo {
+      int nClients = 0;
+      int nServers = 0;
+      int remClients = 0;
+      int remServers = 0;
+      bool computeInScalarMode = false;
+      bool computeInGPU = false;
+      bool copyAfterEvaluation = false;
+      cudaStream_t *stream = nullptr;
+      cudaEvent_t *event = nullptr;
+      ~NodeInfo()
+      {
+         if (computeInGPU) {
+            RooBatchCompute::dispatchCUDA->deleteCudaEvent(event);
+            RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
+         }
+      }
+   };
+   void updateMyClients(const RooAbsReal *node);
+   void updateMyServers(const RooAbsReal *node);
+   void handleIntegral(const RooAbsReal *node);
+   void markGPUNodes();
+   void assignToGPU(const RooAbsReal *node);
+   double *getAvailableCPUBuffer();
+   double *getAvailableGPUBuffer();
+   double *getAvailablePinnedBuffer();
 
    std::string _name;
    std::string _title;
    RooArgSet _parameters;
 
    const int _batchMode = 0;
-   double *_cudaMemDataset = nullptr;
+   double *_cudaMemDataset;
 
    // used for preserving static info about the computation graph
-   RooBatchCompute::DataMap _dataMap;
+   RooBatchCompute::DataMap _dataMapCPU;
+   RooBatchCompute::DataMap _dataMapCUDA;
    const RooNLLVarNew &_topNode;
-   size_t _nEvents;
+   const RooAbsData *const _data = nullptr;
+   const size_t _nEvents;
+   std::unordered_map<const RooAbsReal *, NodeInfo> _nodeInfos;
 
-   RooAbsData const *_data = nullptr;
-
-   std::queue<const RooAbsReal *> _initialQueue;
-
-   std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
-   // used for dynamically scheduling each step's computations
-   std::queue<const RooAbsReal *> _computeQueue;
-   std::queue<double *> _vectorBuffers;
+   // used for preserving resources
+   std::queue<double *> _cpuBuffers;
+   std::queue<double *> _gpuBuffers;
+   std::queue<double *> _pinnedBuffers;
+   std::vector<double> _nonDerivedValues;
 }; // end class RooFitDriver
 } // end namespace Experimental
 } // end namespace ROOT
