@@ -160,6 +160,7 @@ protected:
       RNTupleAtomicCounter &fTimeWallZip;
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
+      RNTupleHistoCounterLog &fHistoSzWritePayload;
    };
    std::unique_ptr<RCounters> fCounters;
    RNTupleMetrics fMetrics;
@@ -288,6 +289,7 @@ protected:
       RNTupleCalcPerf &fBandwidthUnzip;
       RNTupleCalcPerf &fFractionReadOverhead;
       RNTupleCalcPerf &fCompressionRatio;
+      RNTupleHistoCounterLog &fHistoSzWritePayload;
    };
    std::unique_ptr<RCounters> fCounters;
    /// Wraps the I/O counters and is observed by the RNTupleReader metrics

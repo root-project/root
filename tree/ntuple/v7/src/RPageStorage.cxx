@@ -226,7 +226,8 @@ void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::st
             }
             return {false, -1.};
          }
-      )
+      ),
+      *new RNTupleHistoCounterLog("fHistoSzWritePayload", "log2 histogram of volume written for committed pages", fMetrics, UINT64_MAX)
    });
 }
 
@@ -415,6 +416,7 @@ void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::stri
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
-                                                                        "CPU time spent compressing")
+                                                                        "CPU time spent compressing"),
+      *new RNTupleHistoCounterLog("fHistoSzWritePayload", "log2 histogram of volume written for committed pages", fMetrics, UINT64_MAX)
    });
 }
