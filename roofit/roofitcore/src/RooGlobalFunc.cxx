@@ -115,8 +115,6 @@ namespace RooFit {
   RooCmdArg ShowProgress()                         { return RooCmdArg("ShowProgress",1,0,0,0,0,0,0,0) ; }
   
   // RooAbsPdf::plotOn arguments
-  RooCmdArg Components(const RooArgSet& compSet) { return RooCmdArg("SelectCompSet",0,0,0,0,0,0,&compSet,0) ; }
-  RooCmdArg Components(RooArgSet && compSet) { return Components(RooCmdArg::take(std::move(compSet))); }
   RooCmdArg Components(const char* compSpec) { return RooCmdArg("SelectCompSpec",0,0,0,0,compSpec,0,0,0) ; }
   RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) 
                                                    { return RooCmdArg("Normalization",scaleType,0,scaleFactor,0,0,0,0,0) ; }
@@ -301,8 +299,6 @@ namespace RooFit {
   RooCmdArg IntegratedObservables(RooArgSet && intObs) { return IntegratedObservables(RooCmdArg::take(std::move(intObs))); }
  
   // RooAbsReal::createIntegral arguments
-  RooCmdArg NormSet(const RooArgSet& nset)           { return RooCmdArg("NormSet",0,0,0,0,0,0,&nset,0) ; }
-  RooCmdArg NormSet(RooArgSet && nset) { return NormSet(RooCmdArg::take(std::move(nset))); }
   RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) { return RooCmdArg("NumIntConfig",0,0,0,0,0,0,&cfg,0) ; }
 
   // RooMCStudy::ctor arguments
