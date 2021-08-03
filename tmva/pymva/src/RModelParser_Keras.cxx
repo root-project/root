@@ -5,30 +5,16 @@ namespace Experimental{
 namespace SOFIE{
 
 
-std::unordered_map<std::string, LayerType> Type =
-    {
-        {"'Dense'", LayerType::DENSE},
-        {"'Activation'", LayerType::ACTIVATION},
-        {"'ReLU'", LayerType::RELU},
-        {"'Permute'", LayerType::TRANSPOSE}
-    };
-
-std::unordered_map<std::string, LayerType> ActivationType =
-    {
-        {"'relu'", LayerType::RELU},
-    };
-
-
 namespace INTERNAL{
 
    std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias, ETensorType dtype)
    {
       std::unique_ptr<ROperator> op;
 
-      float attr_alpha =1.0;
-      float attr_beta =1.0;
-      int_t attr_transA =1;
-      int_t attr_transB =0;
+      float attr_alpha = 1.0;
+      float attr_beta  = 1.0;
+      int_t attr_transA = 0;
+      int_t attr_transB = 0;
 
       switch(dtype){
          case ETensorType::FLOAT:
@@ -76,11 +62,9 @@ namespace INTERNAL{
 
 }
 
+namespace PyKeras{
 
-
-namespace PyKeras {
-
-RModel Parse(std::string filename){
+ RModel Parse(std::string filename){
 
    char sep = '/';
    #ifdef _WIN32
@@ -155,9 +139,9 @@ RModel Parse(std::string filename){
       attributes=PyList_GetItem(layer,1);
       inputs=PyList_GetItem(layer,2);
       outputs=PyList_GetItem(layer,3);
-      ETensorType dtype = convertStringToType(dTypeKeras, PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
+      ETensorType dtype = convertStringToType(PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
 
-      switch(Type.find(type)->second){
+      switch(INTERNAL::Type.find(type)->second){
          case LayerType::DENSE : {
 
          std::string activation(PyStringAsString(PyDict_GetItemString(attributes,"activation")));
@@ -172,10 +156,10 @@ RModel Parse(std::string filename){
                   if(activation != "'linear'"){
                      rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,name+"Gemm",kernel,bias,dtype)));
 
-                     if(ActivationType.find(activation)==ActivationType.end())
+                     if(INTERNAL::ActivationType.find(activation)==INTERNAL::ActivationType.end())
                        throw std::runtime_error("Type error: Layer activation type "+activation+" not yet registered in TMVA SOFIE");
 
-                     switch(ActivationType.find(activation)->second){
+                     switch(INTERNAL::ActivationType.find(activation)->second){
                         case LayerType::RELU: {
                            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(name+"Gemm",output,dtype)));
                            break;
@@ -196,7 +180,7 @@ RModel Parse(std::string filename){
             std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
             std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
 
-            switch(ActivationType.find(activation)->second){
+            switch(INTERNAL::ActivationType.find(activation)->second){
                case LayerType::RELU: {
                   rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(input,output,dtype))); break;
                   }
@@ -251,7 +235,7 @@ RModel Parse(std::string filename){
    for (Py_ssize_t weightIter = 0; weightIter < PyList_Size(pWeight); weightIter++) {
       weightTensor  = PyList_GetItem(pWeight, weightIter);
       std::string weightName(PyStringAsString(PyDict_GetItemString(weightTensor,"name")));
-      ETensorType weightType= convertStringToType(dTypeKeras,PyStringAsString(PyDict_GetItemString(weightTensor,"dtype")));
+      ETensorType weightType= convertStringToType(PyStringAsString(PyDict_GetItemString(weightTensor,"dtype")));
       weightValue   = PyDict_GetItemString(weightTensor,"value");
 
       //Converting numpy array to RTensor
@@ -291,7 +275,7 @@ RModel Parse(std::string filename){
    //For multiple inputs models, the model.input_shape will return a list of tuple, each describing the input tensor shape.
    if(PyTuple_Check(pInputShapes)){
       std::string inputName(PyStringAsString(PyList_GetItem(pInputs,0)));
-      ETensorType inputDType = convertStringToType(dTypeKeras, PyStringAsString(PyList_GetItem(pInputTypes,0)));
+      ETensorType inputDType = convertStringToType(PyStringAsString(PyList_GetItem(pInputTypes,0)));
 
 
       switch(inputDType){
@@ -318,7 +302,7 @@ RModel Parse(std::string filename){
       for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(pInputs);++inputIter){
 
       std::string inputName(PyStringAsString(PyList_GetItem(pInputs,inputIter)));
-      ETensorType inputDType = convertStringToType(dTypeKeras, PyStringAsString(PyList_GetItem(pInputTypes,inputIter)));
+      ETensorType inputDType = convertStringToType(PyStringAsString(PyList_GetItem(pInputTypes,inputIter)));
 
       switch(inputDType){
 
@@ -359,12 +343,11 @@ RModel Parse(std::string filename){
    rmodel.AddOutputTensorNameList(outputNames);
 
    Py_XDECREF(pOutputs);
-   Py_XDECREF(fLocalNS);
    Py_XDECREF(fGlobalNS);
    return rmodel;
 
-     }
    }
-}
-}
-}
+ }//PyKeras
+}//SOFIE
+}//Experimental
+}//TMVA

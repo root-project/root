@@ -36,21 +36,29 @@ enum class LayerType{
 
 };
 
-static std::unordered_map<std::string, ETensorType> dTypeKeras=
-{
-   {"'float32'", ETensorType::FLOAT}
-};
-
-
 namespace INTERNAL{
    std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias,std::string dtype);
    std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, std::string dtype);
    std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, std::string dtype);
+   
+   const std::unordered_map<std::string, LayerType> Type =
+    {
+        {"'Dense'", LayerType::DENSE},
+        {"'Activation'", LayerType::ACTIVATION},
+        {"'ReLU'", LayerType::RELU},
+        {"'Permute'", LayerType::TRANSPOSE}
+    };
+
+  const std::unordered_map<std::string, LayerType> ActivationType =
+    {
+        {"'relu'", LayerType::RELU},
+    };
+    
 }
 
-namespace PyKeras{
+namespace PyKeras{ 
     RModel Parse(std::string filepath);
-  }
+  };
 }
 }
 }
