@@ -17,6 +17,17 @@
 
 #include <thrust/reduce.h>
 
+#ifdef __CUDACC__
+#define ERRCHECK(err) __checkCudaErrors((err), __func__, __FILE__, __LINE__)
+inline static void __checkCudaErrors(cudaError_t error, std::string func, std::string file, int line)
+{
+   if (error != cudaSuccess) {
+      Fatal((func + "(), " + file + ":" + std::to_string(line)).c_str(), "%s", cudaGetErrorString(error));
+      throw std::bad_alloc();
+   }
+}
+#endif
+
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
@@ -49,26 +60,68 @@ public:
       Batches batches(output, nEvents, varData, vars, extraArgs);
       _computeFunctions[computer]<<<128, 512>>>(batches);
    }
-
    double sumReduce(InputArr input, size_t n) override { return thrust::reduce(thrust::device, input, input + n, 0.0); }
 
-   void *malloc(size_t size) override
+   // cuda functions
+   virtual void *cudaMalloc(size_t nBytes)
    {
-      void *ret = nullptr;
-      cudaError_t error = cudaMalloc(&ret, size);
-      if (error != cudaSuccess) {
-         Fatal((std::string(__func__) + "(), " + __FILE__ + ":" + std::to_string(__LINE__)).c_str(), "%s",
-               cudaGetErrorString(error));
-         throw std::bad_alloc();
-      } else
-         return ret;
+      void *ret;
+      ERRCHECK(::cudaMalloc(&ret, nBytes));
+      return ret;
    }
-
-   void free(void *ptr) override { cudaFree(ptr); }
-
-   void memcpyToGPU(void *dest, const void *src, size_t n) { cudaMemcpy(dest, src, n, cudaMemcpyHostToDevice); }
-
-   void memcpyToCPU(void *dest, const void *src, size_t n) { cudaMemcpy(dest, src, n, cudaMemcpyDeviceToHost); }
+   virtual void cudaFree(void *ptr) { ERRCHECK(::cudaFree(ptr)); }
+   virtual void *cudaMallocHost(size_t nBytes)
+   {
+      void *ret;
+      ERRCHECK(::cudaMallocHost(&ret, nBytes));
+      return ret;
+   }
+   virtual void cudaFreeHost(void *ptr) { ERRCHECK(::cudaFreeHost(ptr)); }
+   virtual cudaEvent_t *newCudaEvent(bool forTiming)
+   {
+      auto ret = new cudaEvent_t;
+      ERRCHECK(cudaEventCreateWithFlags(ret, forTiming ? 0 : cudaEventDisableTiming));
+      return ret;
+   }
+   virtual void deleteCudaEvent(cudaEvent_t *event)
+   {
+      ERRCHECK(cudaEventDestroy(*event));
+      delete event;
+   }
+   virtual void cudaEventRecord(cudaEvent_t *event, cudaStream_t *stream)
+   {
+      ERRCHECK(::cudaEventRecord(*event, *stream));
+   }
+   virtual cudaStream_t *newCudaStream()
+   {
+      auto ret = new cudaStream_t;
+      ERRCHECK(cudaStreamCreate(ret));
+      return ret;
+   }
+   virtual void deleteCudaStream(cudaStream_t *stream)
+   {
+      ERRCHECK(cudaStreamDestroy(*stream));
+      delete stream;
+   }
+   virtual bool streamIsActive(cudaStream_t *stream) { return cudaStreamQuery(*stream) == cudaErrorNotReady; }
+   virtual void cudaStreamWaitEvent(cudaStream_t *stream, cudaEvent_t *event)
+   {
+      ERRCHECK(::cudaStreamWaitEvent(*stream, *event));
+   }
+   void memcpyToGPU(void *dest, const void *src, size_t n, cudaStream_t *stream) override
+   {
+      if (stream)
+         ERRCHECK(cudaMemcpyAsync(dest, src, n, cudaMemcpyHostToDevice, *stream));
+      else
+         ERRCHECK(cudaMemcpy(dest, src, n, cudaMemcpyHostToDevice));
+   }
+   void memcpyToCPU(void *dest, const void *src, size_t n, cudaStream_t *stream) override
+   {
+      if (stream)
+         ERRCHECK(cudaMemcpyAsync(dest, src, n, cudaMemcpyDeviceToHost, *stream));
+      else
+         ERRCHECK(cudaMemcpy(dest, src, n, cudaMemcpyDeviceToHost));
+   }
 }; // End class RooBatchComputeClass
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.

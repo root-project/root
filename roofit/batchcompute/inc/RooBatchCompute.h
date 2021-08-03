@@ -18,6 +18,7 @@
 #include "RooVDTHeaders.h"
 
 #include "DllImport.h" //for R__EXTERN, needed for windows
+#include "TError.h"
 
 #include <functional>
 #include <unordered_map>
@@ -27,6 +28,8 @@
 #define __device__
 #define __global__
 #define __host__
+struct cudaEvent_t;
+struct cudaStream_t;
 #endif // #ifndef __CUDACC__
 
 /**
@@ -70,10 +73,21 @@ class RooBatchComputeInterface {
     virtual void   init() { throw std::bad_function_call(); }
     virtual void   compute(Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
     virtual double sumReduce(InputArr, size_t) = 0;
-    virtual void*  malloc(size_t) = 0;
-    virtual void   free(void*) = 0;
-    virtual void   memcpyToGPU(void* dest, const void* src, size_t) { (void)dest; (void)src; throw std::bad_function_call(); }
-    virtual void   memcpyToCPU(void* dest, const void* src, size_t) { (void)dest; (void)src; throw std::bad_function_call(); }
+       
+    //cuda functions that need to be interfaced
+    virtual void* cudaMalloc(size_t)                { throw std::bad_function_call(); }
+    virtual void  cudaFree(void*)                   { throw std::bad_function_call(); }
+    virtual void* cudaMallocHost(size_t)            { throw std::bad_function_call(); }
+    virtual void  cudaFreeHost(void*)               { throw std::bad_function_call(); }
+    virtual cudaEvent_t* newCudaEvent(bool /*forTiming*/) { throw std::bad_function_call(); }
+    virtual void  deleteCudaEvent(cudaEvent_t*)     { throw std::bad_function_call(); }
+    virtual cudaStream_t* newCudaStream()           { throw std::bad_function_call(); }
+    virtual void  deleteCudaStream(cudaStream_t*)   { throw std::bad_function_call(); }
+    virtual bool  streamIsActive(cudaStream_t*)     { throw std::bad_function_call(); }
+    virtual void  cudaEventRecord(cudaEvent_t*, cudaStream_t*)     { throw std::bad_function_call(); }
+    virtual void  cudaStreamWaitEvent(cudaStream_t*, cudaEvent_t*) { throw std::bad_function_call(); }
+    virtual void  memcpyToGPU(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+    virtual void  memcpyToCPU(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
 };
 
 /**
