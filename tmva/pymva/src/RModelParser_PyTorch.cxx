@@ -37,7 +37,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     RModel rmodel(filename, parsetime);
 
     Py_Initialize();
-
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
@@ -140,7 +139,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         attributes=PyList_GetItem(node,1);
         inputs=PyList_GetItem(node,2);
         outputs=PyList_GetItem(node,3);
-        ETensorType nodeDType=convertStringToType(dTypePyTorch, PyStringAsString(PyList_GetItem(PyList_GetItem(node,4),0)));
+        ETensorType nodeDType=convertStringToType(PyStringAsString(PyList_GetItem(PyList_GetItem(node,4),0)));
 
         switch(NType.find(type)->second){
             case NodeType::GEMM : {
@@ -229,7 +228,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     for(Py_ssize_t weightIter=0; weightIter<PyList_Size(weightNames);++weightIter){
         weightTensor= PyList_GetItem(weightTensors,weightIter);
         std::string weightName(PyStringAsString(PyList_GetItem(weightNames,weightIter)));
-        ETensorType weightDType=convertStringToType(dTypePyTorch, PyStringAsString(PyList_GetItem(weightDTypes,weightIter)));
+        ETensorType weightDType=convertStringToType(PyStringAsString(PyList_GetItem(weightDTypes,weightIter)));
 
         switch(weightDType){
             case ETensorType::FLOAT:{
@@ -261,7 +260,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     rmodel.AddOutputTensorNameList(outputNames);
 
     Py_XDECREF(pOutputs);
-    Py_XDECREF(fLocalNS);
     Py_XDECREF(fGlobalNS);
 
     return rmodel;

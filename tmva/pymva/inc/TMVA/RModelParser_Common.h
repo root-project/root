@@ -22,7 +22,6 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-
 static void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS, TString errorMessage="Failed to run python code", int start=Py_single_input) {
    PyObject *fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
@@ -48,9 +47,11 @@ static const char* PyStringAsString(PyObject* str){
 return name;
 }
 
-static ETensorType convertStringToType(std::unordered_map<std::string,ETensorType> dTypeMap,std::string dtype){
-return dTypeMap.find(dtype)->second;
+static ETensorType convertStringToType(std::string dtype){
+	if(dtype == "'float32'" || dtype == "'Float'") return ETensorType::FLOAT;
+	else return ETensorType::UNDEFINED; 
 }
+
 
 static RTensor<float> getArray(PyObject* value){
    //Check and modify the function signature
@@ -77,7 +78,6 @@ static std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple){
          }
    return inputShape;
 }
-
 }
 }
 }
