@@ -30,7 +30,7 @@ k = ROOT.RooRealVar("k", "k", -30, -50, -10)
 argus = ROOT.RooArgusBG("argus", "argus", m, m0, k)
 
 # Sample 1000 events in m from argus
-data = argus.generate(ROOT.RooArgSet(m), 1000)
+data = argus.generate({m}, 1000)
 
 # Plot model and data
 # --------------------------------------

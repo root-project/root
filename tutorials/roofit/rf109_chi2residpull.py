@@ -26,7 +26,7 @@ mean = ROOT.RooRealVar("mean", "mean", 0, -10, 10)
 gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 
 # Generate a sample of 1000 events with sigma=3
-data = gauss.generate(ROOT.RooArgSet(x), 10000)
+data = gauss.generate({x}, 10000)
 
 # Change sigma to 3.15
 sigma.setVal(3.15)

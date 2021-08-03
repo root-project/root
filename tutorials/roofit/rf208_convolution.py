@@ -44,7 +44,7 @@ lxg = ROOT.RooFFTConvPdf("lxg", "landau (X) gauss", t, landau, gauss)
 # ----------------------------------------------------------------------
 
 # Sample 1000 events in x from gxlx
-data = lxg.generate(ROOT.RooArgSet(t), 10000)
+data = lxg.generate({t}, 10000)
 
 # Fit gxlx to data
 lxg.fitTo(data)

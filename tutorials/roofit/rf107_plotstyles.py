@@ -23,7 +23,7 @@ mean = ROOT.RooRealVar("mean", "mean", -3, -10, 10)
 gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 
 # Generate a sample of 100 events with sigma=3
-data = gauss.generate(ROOT.RooArgSet(x), 100)
+data = gauss.generate({x}, 100)
 
 # Fit pdf to data
 gauss.fitTo(data)

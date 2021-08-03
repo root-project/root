@@ -32,20 +32,18 @@ decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 
 # Use landau pdf to get empirical distribution with long tail
 pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(0.25))
-expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
+expDataDterr = pdfDtErr.generate({dterr}, 10000)
 
 # Construct a histogram pdf to describe the shape of the dtErr distribution
 expHistDterr = expDataDterr.binnedClone()
-pdfErr = ROOT.RooHistPdf("pdfErr", "pdfErr", ROOT.RooArgSet(dterr), expHistDterr)
+pdfErr = ROOT.RooHistPdf("pdfErr", "pdfErr", {dterr}, expHistDterr)
 
 # Construct conditional product decay_dm(dt|dterr)*pdf(dterr)
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Construct production of conditional decay_dm(dt|dterr) with empirical
 # pdfErr(dterr)
-model = ROOT.RooProdPdf(
-    "model", "model", ROOT.RooArgSet(pdfErr), Conditional=(ROOT.RooArgSet(decay_gm), ROOT.RooArgSet(dt))
-)
+model = ROOT.RooProdPdf("model", "model", {pdfErr}, Conditional=({decay_gm}, {dt}))
 
 # (Alternatively you could also use the landau shape pdfDtErr)
 # ROOT.RooProdPdf model("model", "model",pdfDtErr,
@@ -56,7 +54,7 @@ model = ROOT.RooProdPdf(
 
 # Specify external dataset with dterr values to use model_dm as
 # conditional pdf
-data = model.generate(ROOT.RooArgSet(dt, dterr), 10000)
+data = model.generate({dt, dterr}, 10000)
 
 # Fit conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------

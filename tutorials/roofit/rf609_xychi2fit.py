@@ -25,7 +25,7 @@ import math
 
 x = ROOT.RooRealVar("x", "x", -11, 11)
 y = ROOT.RooRealVar("y", "y", -10, 200)
-dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), StoreError=(ROOT.RooArgSet(x, y)))
+dxy = ROOT.RooDataSet("dxy", "dxy", {x, y}, StoreError={x, y})
 
 # Fill an example dataset with X,err(X),Y,err(Y) values
 for i in range(10):
@@ -36,7 +36,7 @@ for i in range(10):
     y.setVal(x.getVal() * x.getVal() + 4 * abs(ROOT.gRandom.Gaus()))
     y.setError(math.sqrt(y.getVal()))
 
-    dxy.add(ROOT.RooArgSet(x, y))
+    dxy.add({x, y})
 
 # Perform chi2 fit to X +/- dX and Y +/- dY values
 # ---------------------------------------------------------------------------------------

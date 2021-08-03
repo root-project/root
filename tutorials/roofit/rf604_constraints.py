@@ -30,7 +30,7 @@ f = ROOT.RooRealVar("f", "f", 0.5, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 
 # Generate small dataset for use in fitting below
-d = model.generate(ROOT.RooArgSet(x), 50)
+d = model.generate({x}, 50)
 
 # Create constraint pdf
 # -----------------------------------------
@@ -53,7 +53,7 @@ modelc = ROOT.RooProdPdf("modelc", "model with constraint", [model, fconstraint]
 r1 = model.fitTo(d, Save=True)
 
 # Fit modelc with constraint term on parameter f
-r2 = modelc.fitTo(d, Constrain=ROOT.RooArgSet(f), Save=True)
+r2 = modelc.fitTo(d, Constrain={f}, Save=True)
 
 # Method 2 - specify external constraint when fitting
 # ------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ r2 = modelc.fitTo(d, Constrain=ROOT.RooArgSet(f), Save=True)
 fconstext = ROOT.RooGaussian("fconstext", "fconstext", f, ROOT.RooFit.RooConst(0.2), ROOT.RooFit.RooConst(0.1))
 
 # Fit with external constraint
-r3 = model.fitTo(d, ExternalConstraints=ROOT.RooArgSet(fconstext), Save=True)
+r3 = model.fitTo(d, ExternalConstraints={fconstext}, Save=True)
 
 # Print the fit results
 print("fit result without constraint (data generated at f=0.5)")

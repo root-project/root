@@ -36,7 +36,7 @@ bkg = ROOT.RooProdPdf("bkg", "bkg", [px, py, pz])
 fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [sig, bkg], [fsig])
 
-data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
+data = model.generate({x, y, z}, 20000)
 
 # Project pdf and data on x
 # -------------------------------------------------
@@ -51,8 +51,8 @@ model.plotOn(frame)
 
 # Calculate projection of signal and total likelihood on (y,z) observables
 # i.e. integrate signal and composite model over x
-sigyz = sig.createProjection(ROOT.RooArgSet(x))
-totyz = model.createProjection(ROOT.RooArgSet(x))
+sigyz = sig.createProjection({x})
+totyz = model.createProjection({x})
 
 # Construct the log of the signal / signal+background probability
 llratio_func = ROOT.RooFormulaVar("llratio", "log10(@0)-log10(@1)", [sigyz, totyz])
@@ -76,7 +76,7 @@ dataSel.plotOn(frame2)
 # ---------------------------------------------------------------------------------------------
 
 # Generate large number of events for MC integration of pdf projection
-mcprojData = model.generate(ROOT.RooArgSet(x, y, z), 10000)
+mcprojData = model.generate({x, y, z}, 10000)
 
 # Calculate LL ratio for each generated event and select MC events with
 # llratio)0.7
