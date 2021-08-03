@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTupleSerialize
 #define ROOT7_RNTupleSerialize
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 
@@ -30,6 +31,7 @@ namespace Experimental {
 enum class EColumnType;
 class RClusterDescriptor;
 class RNTupleDescriptor;
+class RNTupleDescriptorBuilder;
 
 
 namespace Internal {
@@ -94,6 +96,7 @@ public:
       std::vector<DescriptorId_t> fPhys2MemClusterIDs;
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
+      std::uint32_t GetHeaderSize() const { return fHeaderSize; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
       void AddClusterGroup(std::uint32_t nClusters, const REnvelopeLink &pageListEnvelope) {
@@ -129,9 +132,11 @@ public:
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
-   static std::uint32_t SerializeCRC32(const unsigned char *data, std::uint32_t length, void *buffer);
+   static std::uint32_t SerializeCRC32(const unsigned char *data, std::uint32_t length,
+                                       std::uint32_t &crc32, void *buffer);
    /// Expects a CRC32 checksum in the 4 bytes following data + length and verifies it.
-   static void VerifyCRC32(const unsigned char *data, std::uint32_t length);
+   static RResult<void> VerifyCRC32(const unsigned char *data, std::uint32_t length, std::uint32_t &crc32);
+   static RResult<void> VerifyCRC32(const unsigned char *data, std::uint32_t length);
 
    static std::uint32_t SerializeInt16(std::int16_t val, void *buffer);
    static std::uint32_t DeserializeInt16(const void *buffer, std::int16_t &val);
@@ -149,49 +154,50 @@ public:
    static std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t &val);
 
    static std::uint32_t SerializeString(const std::string &val, void *buffer);
-   static std::uint32_t DeserializeString(const void *buffer, std::uint32_t size, std::string &val);
+   static RResult<std::uint32_t> DeserializeString(const void *buffer, std::uint32_t bufSize, std::string &val);
 
    /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
    static std::uint16_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
-   static std::uint16_t DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
    static std::uint16_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
-   static std::uint16_t DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
+   static RResult<std::uint16_t> DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
+   static RResult<std::uint16_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
 
    static std::uint32_t SerializeEnvelopePreamble(void *buffer);
    static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
-   // The size includes the 4 bytes for the final CRC32 checksum.
-   static std::uint32_t DeserializeEnvelope(void *buffer, std::uint32_t bufSize);
-   /// Returns the CRC32 value that is at the end of the envelope buffer pointed to by data
-   /// Does not verify the buffer
-   static std::uint32_t ExtractEnvelopeCRC32(void *data, std::uint32_t bufSize);
+   static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size,
+                                                    std::uint32_t &crc32, void *buffer);
+   // The bufSize must include the 4 bytes for the final CRC32 checksum.
+   static RResult<std::uint32_t> DeserializeEnvelope(const void *buffer, std::uint32_t bufSize);
+   static RResult<std::uint32_t> DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint32_t &crc32);
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
    static std::uint32_t SerializeFramePostscript(void *frame, std::int32_t size);
-   static std::uint32_t DeserializeFrame(const void *buffer, std::uint32_t bufSize,
-                                         std::uint32_t &frameSize, std::uint32_t &nitems);
-   static std::uint32_t DeserializeFrame(const void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize);
+   static RResult<std::uint32_t> DeserializeFrame(const void *buffer, std::uint32_t bufSize,
+                                                  std::uint32_t &frameSize, std::uint32_t &nitems);
+   static RResult<std::uint32_t> DeserializeFrame(const void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize);
 
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
    static std::uint32_t SerializeFeatureFlags(const std::vector<std::int64_t> &flags, void *buffer);
-   static std::uint32_t DeserializeFeatureFlags(const void *buffer, std::uint32_t size,
-                                                std::vector<std::int64_t> &flags);
+   static RResult<std::uint32_t> DeserializeFeatureFlags(const void *buffer, std::uint32_t bufSize,
+                                                         std::vector<std::int64_t> &flags);
 
    static std::uint32_t SerializeLocator(const RNTupleLocator &locator, void *buffer);
-   static std::uint32_t DeserializeLocator(const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
-   static std::uint32_t DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink);
+   static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator);
+   static RResult<std::uint32_t> DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize,
+                                                         REnvelopeLink &envelopeLink);
 
    static std::uint32_t SerializeClusterSummary(const RClusterSummary &clusterSummary, void *buffer);
-   static std::uint32_t DeserializeClusterSummary(const void *buffer, std::uint32_t bufSize,
-                                                  RClusterSummary &clusterSummary);
    static std::uint32_t SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);
-   static std::uint32_t DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
-                                                RClusterGroup &clusterGroup);
+   static RResult<std::uint32_t> DeserializeClusterSummary(const void *buffer, std::uint32_t bufSize,
+                                                           RClusterSummary &clusterSummary);
+   static RResult<std::uint32_t> DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
+                                                         RClusterGroup &clusterGroup);
 
-   static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
+   static RContext SerializeHeaderV1(const RNTupleDescriptor &desc, void *buffer);
    static void SerializePageListV1(void *buffer,
                                    const RNTupleDescriptor &desc,
                                    std::span<DescriptorId_t> physClusterIDs,
@@ -199,6 +205,10 @@ public:
    static void SerializeClusterV1(void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster,
                                   const RContext &context);
    static void SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
+
+   static RResult<void> DeserializeHeaderV1(const void *buffer,
+                                            std::uint32_t bufSize,
+                                            RNTupleDescriptorBuilder &descBuilder);
 }; // class RNTupleSerializer
 
 } // namespace Internal
