@@ -127,7 +127,7 @@ TEST_P(RooCategoryIO, TestThatRangesAreShared) {
 }
 
 INSTANTIATE_TEST_SUITE_P(IO_SchemaEvol, RooCategoryIO,
-    testing::Values("categories_v620.root", "categories_v621.root", "categories_v622.root"));
+    testing::Values("categories_v620.root", "categories_v621.root", "categories_v622.root", "categories_v624.root"));
 
 
 
