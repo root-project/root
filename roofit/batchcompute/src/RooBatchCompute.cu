@@ -17,8 +17,7 @@ class RooBatchComputeClass : public RooBatchComputeInterface {
   private:
     const std::vector<void(*)(Batches)> _computeFunctions;
   public:
-    RooBatchComputeClass()
-      : _computeFunctions(getFunctions())
+    RooBatchComputeClass() : _computeFunctions(getFunctions())
     {
       dispatch_gpu = this; // Set the dispatch pointer to this instance of the library upon loading
     }
@@ -39,37 +38,65 @@ class RooBatchComputeClass : public RooBatchComputeInterface {
       Batches batches(output, nEvents, varData, vars, extraArgs);
       _computeFunctions[computer]<<<128,512>>>(batches);
     }
-
-    double sumReduce(InputArr input, size_t n) override
-    {
+    double sumReduce(InputArr input, size_t n) override {
       return thrust::reduce(thrust::device, input, input+n, 0.0);
     }
 
-    void* malloc(size_t size) override
-    {
-      void* ret = nullptr;
-      cudaError_t error = cudaMalloc(&ret, size);
-      if (error != cudaSuccess)
-      {
-        Fatal( (std::string(__func__)+"(), "+__FILE__+":"+std::to_string(__LINE__)).c_str(), "%s", cudaGetErrorString(error) );
-        throw std::bad_alloc();
-      }
-      else return ret;
+    //cuda functions
+    virtual void* cudaMalloc(size_t nBytes) {
+      void* ret;
+      ERRCHECK( ::cudaMalloc(&ret, nBytes) );
+      return ret;
     }
-
-    void free(void* ptr) override
-    {
-      cudaFree(ptr);
+    virtual void cudaFree(void* ptr) {
+      ERRCHECK( ::cudaFree(ptr) );
     }
-
-    void memcpyToGPU(void* dest, const void* src, size_t n)
-    {
-      cudaMemcpy(dest, src, n, cudaMemcpyHostToDevice);
+    virtual void* cudaMallocHost(size_t nBytes) {
+      void* ret;
+      ERRCHECK( ::cudaMallocHost(&ret, nBytes) );
+      return ret;
     }
-    
-    void memcpyToCPU(void* dest, const void* src, size_t n)
-    {
-      cudaMemcpy(dest, src, n, cudaMemcpyDeviceToHost);
+    virtual void cudaFreeHost(void* ptr) {
+      ERRCHECK( ::cudaFreeHost(ptr) );
+    }
+    virtual cudaEvent_t* newCudaEvent(bool forTiming) {
+      auto ret = new cudaEvent_t;
+      ERRCHECK( cudaEventCreateWithFlags(ret, forTiming ? 0 : cudaEventDisableTiming) );
+      return ret;
+    }
+    virtual void deleteCudaEvent(cudaEvent_t* event) {
+      ERRCHECK( cudaEventDestroy(*event) );
+      delete event;
+    }
+    virtual void cudaEventRecord(cudaEvent_t* event, cudaStream_t* stream) {
+      ERRCHECK( ::cudaEventRecord(*event, *stream) );
+    }
+    virtual cudaStream_t* newCudaStream() {
+      auto ret = new cudaStream_t;
+      ERRCHECK( cudaStreamCreate(ret) );
+      return ret;
+    }
+    virtual void deleteCudaStream(cudaStream_t* stream) {
+      ERRCHECK( cudaStreamDestroy(*stream) );
+      delete stream;
+    }
+    virtual bool streamIsActive(cudaStream_t* stream) {
+      return cudaStreamQuery(*stream)==cudaErrorNotReady;
+    }
+    virtual void cudaStreamWaitEvent(cudaStream_t* stream, cudaEvent_t* event) {
+      ERRCHECK( ::cudaStreamWaitEvent(*stream, *event) );
+    }
+    void memcpyToGPU(void* dest, const void* src, size_t n, cudaStream_t* stream) override {
+      if (stream)
+        ERRCHECK( cudaMemcpyAsync(dest, src, n, cudaMemcpyHostToDevice, *stream) );
+      else
+        ERRCHECK( cudaMemcpy(dest, src, n, cudaMemcpyHostToDevice) );
+    }
+    void memcpyToCPU(void* dest, const void* src, size_t n, cudaStream_t* stream) override {
+      if (stream)
+        ERRCHECK( cudaMemcpyAsync(dest, src, n, cudaMemcpyDeviceToHost, *stream) );
+      else
+        ERRCHECK( cudaMemcpy(dest, src, n, cudaMemcpyDeviceToHost) );
     }
 }; // End class RooBatchComputeClass
 
