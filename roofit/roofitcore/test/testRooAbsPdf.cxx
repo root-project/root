@@ -48,7 +48,7 @@ TEST(RooAbsPdf, AsymptoticallyCorrectErrors)
   auto result = pdf.fitTo(weightedData, RooFit::Save(), RooFit::AsymptoticError(true), RooFit::PrintLevel(-1));
   const double aError = a.getError();
   a = 1.2;
-  auto result2 = pdf.fitTo(weightedData, RooFit::Save(), RooFit::PrintLevel(-1));
+  auto result2 = pdf.fitTo(weightedData, RooFit::Save(), RooFit::SumW2Error(false), RooFit::PrintLevel(-1));
 
   EXPECT_TRUE(result->isIdentical(*result2)) << "Fit results should be very similar.";
   EXPECT_GT(aError, a.getError()*2.) << "Asymptotically correct errors should be significantly larger.";
