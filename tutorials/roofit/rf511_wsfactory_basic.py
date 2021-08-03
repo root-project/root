@@ -56,7 +56,7 @@ else:
 # class
 
 # Make a dummy dataset pdf 'model' and import it in the workspace
-data = w["model"].generate(ROOT.RooArgSet(w["x"]), 1000)
+data = w["model"].generate({w["x"]}, 1000)
 # Cannot call 'import' directly because this is a python keyword:
 w.Import(data, Rename="data")
 

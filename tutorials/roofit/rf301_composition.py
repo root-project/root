@@ -33,7 +33,7 @@ model = ROOT.RooGaussian("model", "Gaussian with shifting mean", x, fy, sigma)
 # ---------------------------------------------------------------------------------
 
 # Generate 10000 events in x and y from model
-data = model.generate(ROOT.RooArgSet(x, y), 10000)
+data = model.generate({x, y}, 10000)
 
 # Plot x distribution of data and projection of model x = Int(dy)
 # model(x,y)

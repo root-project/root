@@ -22,13 +22,13 @@ p = ROOT.RooPolynomial("p", "p", x, [0.01, -0.01, 0.0004])
 
 # Sample 500 events from p
 x.setBins(20)
-data1 = p.generate(ROOT.RooArgSet(x), 500)
+data1 = p.generate({x}, 500)
 
 # Create a binned dataset with 20 bins and 500 events
 hist1 = data1.binnedClone()
 
 # Represent data in dh as pdf in x
-histpdf1 = ROOT.RooHistPdf("histpdf1", "histpdf1", ROOT.RooArgSet(x), hist1, 0)
+histpdf1 = ROOT.RooHistPdf("histpdf1", "histpdf1", {x}, hist1, 0)
 
 # Plot unbinned data and histogram pdf overlaid
 frame1 = x.frame(Title="Low statistics histogram pdf", Bins=100)
@@ -40,13 +40,13 @@ histpdf1.plotOn(frame1)
 
 # Sample 100000 events from p
 x.setBins(10)
-data2 = p.generate(ROOT.RooArgSet(x), 100000)
+data2 = p.generate({x}, 100000)
 
 # Create a binned dataset with 10 bins and 100K events
 hist2 = data2.binnedClone()
 
 # Represent data in dh as pdf in x, 2nd order interpolation
-histpdf2 = ROOT.RooHistPdf("histpdf2", "histpdf2", ROOT.RooArgSet(x), hist2, 2)
+histpdf2 = ROOT.RooHistPdf("histpdf2", "histpdf2", {x}, hist2, 2)
 
 # Plot unbinned data and histogram pdf overlaid
 frame2 = x.frame(Title="High stats histogram pdf with interpolation", Bins=100)

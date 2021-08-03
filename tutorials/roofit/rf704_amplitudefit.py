@@ -47,7 +47,7 @@ f2 = ROOT.RooRealVar("f2", "f2", 0.5, 0, 2)
 pdf = ROOT.RooRealSumPdf("pdf", "pdf", [ampl1, ampl2], [f1, f2])
 
 # Generate some toy data from pdf
-data = pdf.generate(ROOT.RooArgSet(t, cosa), 10000)
+data = pdf.generate({t, cosa}, 10000)
 
 # Fit pdf to toy data with only amplitude strength floating
 pdf.fitTo(data)
@@ -67,11 +67,8 @@ hh_sin.SetLineColor(ROOT.kRed)
 frame1 = t.frame()
 data.plotOn(frame1)
 pdf.plotOn(frame1)
-# workaround, see https://root.cern.ch/phpBB3/viewtopic.php?t=7764
-ras_ampl1 = ROOT.RooArgSet(ampl1)
-pdf.plotOn(frame1, Components=ras_ampl1, LineStyle="--")
-ras_ampl2 = ROOT.RooArgSet(ampl2)
-pdf.plotOn(frame1, Components=ras_ampl2, LineStyle="--", LineColor="r")
+pdf.plotOn(frame1, Components=ampl1, LineStyle="--")
+pdf.plotOn(frame1, Components=ampl2, LineStyle="--", LineColor="r")
 
 # Make projection on cosa, data, and its components
 # Note that components projection may be larger than sum because
@@ -79,8 +76,8 @@ pdf.plotOn(frame1, Components=ras_ampl2, LineStyle="--", LineColor="r")
 frame2 = cosa.frame()
 data.plotOn(frame2)
 pdf.plotOn(frame2)
-pdf.plotOn(frame2, Components=ras_ampl1, LineStyle="--")
-pdf.plotOn(frame2, Components=ras_ampl2, LineStyle="--", LineColor="r")
+pdf.plotOn(frame2, Components=ampl1, LineStyle="--")
+pdf.plotOn(frame2, Components=ampl2, LineStyle="--", LineColor="r")
 
 c = ROOT.TCanvas("rf704_amplitudefit", "rf704_amplitudefit", 800, 800)
 c.Divide(2, 2)

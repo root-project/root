@@ -48,7 +48,7 @@ z.setRange("R", zlo, zhi)
 # ----------------------------------------------------------------------------------
 
 # Create integral over normalized pdf model over x,y, in "R" region
-intPdf = pxyz.createIntegral(ROOT.RooArgSet(x, y, z), ROOT.RooArgSet(x, y, z), "R")
+intPdf = pxyz.createIntegral({x, y, z}, {x, y, z}, "R")
 
 # Plot value of integral as function of pdf parameter z0
 frame = z0.frame(Title="Integral of pxyz over x,y, in region R")

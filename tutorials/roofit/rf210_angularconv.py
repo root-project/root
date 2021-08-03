@@ -54,7 +54,7 @@ Mpsi.setBufferFraction(0)
 # --------------------------------------------------------------------------------
 
 # Generate some events in observable psi
-data_psi = Mpsi.generate(ROOT.RooArgSet(psi), 10000)
+data_psi = Mpsi.generate({psi}, 10000)
 
 # Fit convoluted model as function of angle psi
 Mpsi.fitTo(data_psi)
@@ -84,7 +84,7 @@ Mcpsi.setBufferFraction(0)
 # --------------------------------------------------------------------------------
 
 # Generate some events
-data_cpsi = Mcpsi.generate(ROOT.RooArgSet(cpsi), 10000)
+data_cpsi = Mcpsi.generate({cpsi}, 10000)
 
 # set psi constant to exclude to be a parameter of the fit
 psi.setConstant(True)
