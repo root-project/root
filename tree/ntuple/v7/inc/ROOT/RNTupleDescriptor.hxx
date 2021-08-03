@@ -647,6 +647,10 @@ public:
       fField.fTypeVersion = typeVersion;
       return *this;
    }
+   RDanglingFieldDescriptor& ParentId(DescriptorId_t id) {
+      fField.fParentId = id;
+      return *this;
+   }
    RDanglingFieldDescriptor& FieldName(const std::string& fieldName) {
       fField.fFieldName = fieldName;
       return *this;
@@ -684,6 +688,7 @@ Used by RPageStorage implementations in order to construct the RNTupleDescriptor
 class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
+   std::uint32_t fHeaderCRC32 = 0;
 
 public:
    /// Checks whether invariants hold:
@@ -695,6 +700,8 @@ public:
 
    void SetNTuple(const std::string_view name, const std::string_view description, const std::string_view author,
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
+   void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCRC32 = crc32; }
+   std::uint32_t GetHeaderCRC32() const { return fHeaderCRC32; }
 
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
