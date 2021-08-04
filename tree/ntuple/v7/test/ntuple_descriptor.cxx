@@ -4,13 +4,13 @@ TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("MyTuple", "Description", "Me", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(1)
       .FieldName("list")
       .TypeName("std::vector<std::int32_t>")
@@ -19,7 +19,7 @@ TEST(RNTuple, Descriptor)
       .Unwrap());
    descBuilder.AddFieldLink(0, 1);
 
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(2)
       .FieldName("list") // at different levels, duplicate names are fine
       .TypeName("std::int32_t")
@@ -28,7 +28,7 @@ TEST(RNTuple, Descriptor)
       .Unwrap());
    descBuilder.AddFieldLink(1, 2);
 
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(42)
       .FieldName("x")
       .TypeName("std::string")
@@ -154,10 +154,10 @@ TEST(RNTuple, Descriptor)
    delete[] headerBuffer;
 }
 
-TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
+TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
-   RFieldDescriptor fieldDesc = RDanglingFieldDescriptor()
+   RFieldDescriptor fieldDesc = RFieldDescriptorBuilder()
       .FieldId(1)
       .Structure(ENTupleStructure::kCollection)
       .FieldName("someField")
@@ -168,19 +168,19 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
    // -- here we check the error cases
 
    // must set field id
-   RResult<RFieldDescriptor> fieldDescRes = RDanglingFieldDescriptor().MakeDescriptor();
+   RResult<RFieldDescriptor> fieldDescRes = RFieldDescriptorBuilder().MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "default constructed dangling descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field id"));
 
    // must set field structure
-   fieldDescRes = RDanglingFieldDescriptor()
+   fieldDescRes = RFieldDescriptorBuilder()
       .FieldId(1)
       .MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "field descriptors without structure should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field structure"));
 
    // must set field name
-   fieldDescRes = RDanglingFieldDescriptor()
+   fieldDescRes = RFieldDescriptorBuilder()
       .FieldId(1)
       .Structure(ENTupleStructure::kCollection)
       .MakeDescriptor();
@@ -191,12 +191,12 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
 TEST(RNTupleDescriptorBuilder, CatchBadLinks)
 {
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(1)
       .FieldName("field")
       .TypeName("int32_t")
