@@ -489,6 +489,9 @@ TEST(RNTuple, SerializeHeader)
    builder.AddFieldLink(0, 42);
    builder.AddFieldLink(0, 137);
    builder.AddFieldLink(137, 13);
+   builder.AddColumn(23, 42, RNTupleVersion(), RColumnModel(EColumnType::kReal32, false), 0);
+   builder.AddColumn(17, 137, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
+   builder.AddColumn(40, 137, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(desc, nullptr);
