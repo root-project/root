@@ -30,9 +30,11 @@ target_include_directories(sofiec PRIVATE
   ../inc
   ${SOFIE_PARSERS_DIR}/inc
   ../../tmva/inc
+  ../../../core/foundation/inc
+  ${CMAKE_BINARY_DIR}/include   # this is for RConfigure.h
   ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
 )
-target_link_libraries(sofiec ${Protobuf_LIBRARIES})
+target_link_libraries(sofiec ${Protobuf_LIBRARIES} ROOTTMVASofie )
 set_target_properties(sofiec PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
