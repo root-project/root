@@ -964,9 +964,9 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
    if (fDescriptor.fFieldDescriptors.count(linkId) == 0) {
       return R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
    }
-   // fail if field already has a valid parent
+   // fail if field already has another valid parent
    auto parentId = fDescriptor.fFieldDescriptors.at(linkId).GetParentId();
-   if (parentId != kInvalidDescriptorId) {
+   if ((parentId != kInvalidDescriptorId) && (parentId != fieldId)) {
       return R__FAIL("field '" + std::to_string(linkId) + "' already has a parent ('" +
          std::to_string(parentId) + ")");
    }
