@@ -12,27 +12,29 @@ namespace SOFIE{
    RModel::RModel(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
+      fOutputTensorNames = other.fOutputTensorNames;
       fOperators = std::move(other.fOperators);
       fInitializedTensors = std::move(other.fInitializedTensors);
       fName = other.fName;
       fFileName = other.fFileName;
       fParseTime = other.fParseTime;
       fGC = other.fGC;
+      fNeededBlasRoutines = other.fNeededBlasRoutines;
       fNeededStdLib = other.fNeededStdLib;
-      fOutputTensorNames = other.fOutputTensorNames;
    }
 
    RModel& RModel::operator=(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
+      fOutputTensorNames = other.fOutputTensorNames;
       fOperators = std::move(other.fOperators);
       fInitializedTensors = std::move(other.fInitializedTensors);
       fName = other.fName;
       fFileName = other.fFileName;
       fParseTime = other.fParseTime;
       fGC = other.fGC;
+      fNeededBlasRoutines = other.fNeededBlasRoutines;
       fNeededStdLib = other.fNeededStdLib;
-      fOutputTensorNames = other.fOutputTensorNames;
       return *this;
    }
 
@@ -169,17 +171,27 @@ namespace SOFIE{
    void RModel::Generate(){
       Initialize();
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
-      for (auto& i: fNeededStdLib){
+      for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
       }
       fGC += ("namespace TMVA_SOFIE_" + fName + "{\n");
-      if (fNeedGemm){
-         fGC += ("namespace BLAS{\n"
-         "\textern \"C\" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,\n"
-         "\t                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,\n"
-         "\t                       const float * beta, float * C, const int * ldc);\n"
-         "}//BLAS\n");
-
+      if (!fNeededBlasRoutines.empty()) {
+         fGC += ("namespace BLAS{\n");
+         for (auto &routine : fNeededBlasRoutines) {
+            if (routine == "Gemm") {
+               fGC += ("\textern \"C\" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,\n"
+                       "\t                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,\n"
+                       "\t                       const float * beta, float * C, const int * ldc);\n");
+            } else if (routine == "Sgemv") {
+               fGC += ("\textern \"C\" void sgemv_(const char * trans, const int * m, const int * n, const float * alpha, const float * A,\n"
+                       "\t                       const int * lda, const float * X, const int * incx, const float * beta, const float * Y, const int * incy);\n");
+            } else if (routine == "Axpy") {
+               fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
+                       "\t                         const int * incx, float * y, const int * incy);\n");
+            }
+         }
+         fGC += ("}//BLAS\n");
+      }
       for (auto& i: fInitializedTensors){
          if (i.second.type == ETensorType::FLOAT){
             size_t length = 1;
@@ -242,7 +254,6 @@ namespace SOFIE{
          fGC += "\treturn ret;\n";
       }
       fGC += "}\n";
-      }
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
    }
 
