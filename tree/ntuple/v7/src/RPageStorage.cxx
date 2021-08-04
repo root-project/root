@@ -284,7 +284,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 
    auto &fieldZero = *model.GetFieldZero();
    fDescriptorBuilder.AddField(
-      RDanglingFieldDescriptor::FromField(fieldZero)
+      RFieldDescriptorBuilder::FromField(fieldZero)
          .FieldId(fLastFieldId)
          .MakeDescriptor()
          .Unwrap()
@@ -293,7 +293,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    for (auto& f : *model.GetFieldZero()) {
       fLastFieldId++;
       fDescriptorBuilder.AddField(
-         RDanglingFieldDescriptor::FromField(f)
+         RFieldDescriptorBuilder::FromField(f)
             .FieldId(fLastFieldId)
             .MakeDescriptor()
             .Unwrap()

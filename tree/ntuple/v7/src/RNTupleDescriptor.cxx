@@ -910,16 +910,16 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
-ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(
+ROOT::Experimental::RFieldDescriptorBuilder::RFieldDescriptorBuilder(
    const RFieldDescriptor& fieldDesc) : fField(fieldDesc.Clone())
 {
    fField.fParentId = kInvalidDescriptorId;
    fField.fLinkIds = {};
 }
 
-ROOT::Experimental::RDanglingFieldDescriptor
-ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase& field) {
-   RDanglingFieldDescriptor fieldDesc;
+ROOT::Experimental::RFieldDescriptorBuilder
+ROOT::Experimental::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase& field) {
+   RFieldDescriptorBuilder fieldDesc;
    fieldDesc.FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
       .FieldName(field.GetName())
@@ -931,7 +931,7 @@ ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RFieldDescriptor>
-ROOT::Experimental::RDanglingFieldDescriptor::MakeDescriptor() const {
+ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
    if (fField.GetId() == kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
    }

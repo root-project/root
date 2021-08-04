@@ -42,7 +42,7 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
    const std::string &virtualName)
 {
    auto virtualFieldId = fNextId++;
-   auto virtualField = RDanglingFieldDescriptor(originField)
+   auto virtualField = RFieldDescriptorBuilder(originField)
       .FieldId(virtualFieldId)
       .FieldName(virtualName)
       .MakeDescriptor().Unwrap();
@@ -65,7 +65,7 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFriends::AttachImpl()
 {
    fBuilder.SetNTuple(fNTupleName, "", "", RNTupleVersion(), RNTupleUuid());
-   fBuilder.AddField(RDanglingFieldDescriptor()
+   fBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()

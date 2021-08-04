@@ -38,7 +38,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RDanglingFieldDescriptor;
+class RFieldDescriptorBuilder;
 class RNTupleDescriptor;
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
@@ -57,7 +57,7 @@ namespace Detail {
 // clang-format on
 class RFieldDescriptor {
    friend class RNTupleDescriptorBuilder;
-   friend class RDanglingFieldDescriptor;
+   friend class RFieldDescriptorBuilder;
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
@@ -605,7 +605,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RDanglingFieldDescriptor
+\class ROOT::Experimental::RFieldDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RFieldDescriptor
 
@@ -617,57 +617,57 @@ Dangling field descriptors can only become actual descriptors when added to an
 RNTupleDescriptorBuilder instance and then linked to other fields.
 */
 // clang-format on
-class RDanglingFieldDescriptor {
+class RFieldDescriptorBuilder {
 private:
    RFieldDescriptor fField = RFieldDescriptor();
 public:
    /// Make an empty dangling field descriptor.
-   RDanglingFieldDescriptor() = default;
-   /// Make a new RDanglingFieldDescriptor based off an existing descriptor.
+   RFieldDescriptorBuilder() = default;
+   /// Make a new RFieldDescriptorBuilder based off an existing descriptor.
    /// Relationship information is lost during the conversion to a
    /// dangling descriptor:
    /// * Parent id is reset to an invalid id.
    /// * Field children ids are forgotten.
    ///
    /// These properties must be set using RNTupleDescriptorBuilder::AddFieldLink().
-   explicit RDanglingFieldDescriptor(const RFieldDescriptor& fieldDesc);
+   explicit RFieldDescriptorBuilder(const RFieldDescriptor& fieldDesc);
 
-   /// Make a new RDanglingFieldDescriptor based off a live NTuple field.
-   static RDanglingFieldDescriptor FromField(const Detail::RFieldBase& field);
+   /// Make a new RFieldDescriptorBuilder based off a live NTuple field.
+   static RFieldDescriptorBuilder FromField(const Detail::RFieldBase& field);
 
-   RDanglingFieldDescriptor& FieldId(DescriptorId_t fieldId) {
+   RFieldDescriptorBuilder& FieldId(DescriptorId_t fieldId) {
       fField.fFieldId = fieldId;
       return *this;
    }
-   RDanglingFieldDescriptor& FieldVersion(const RNTupleVersion& fieldVersion) {
+   RFieldDescriptorBuilder& FieldVersion(const RNTupleVersion& fieldVersion) {
       fField.fFieldVersion = fieldVersion;
       return *this;
    }
-   RDanglingFieldDescriptor& TypeVersion(const RNTupleVersion& typeVersion) {
+   RFieldDescriptorBuilder& TypeVersion(const RNTupleVersion& typeVersion) {
       fField.fTypeVersion = typeVersion;
       return *this;
    }
-   RDanglingFieldDescriptor& ParentId(DescriptorId_t id) {
+   RFieldDescriptorBuilder& ParentId(DescriptorId_t id) {
       fField.fParentId = id;
       return *this;
    }
-   RDanglingFieldDescriptor& FieldName(const std::string& fieldName) {
+   RFieldDescriptorBuilder& FieldName(const std::string& fieldName) {
       fField.fFieldName = fieldName;
       return *this;
    }
-   RDanglingFieldDescriptor& FieldDescription(const std::string& fieldDescription) {
+   RFieldDescriptorBuilder& FieldDescription(const std::string& fieldDescription) {
       fField.fFieldDescription = fieldDescription;
       return *this;
    }
-   RDanglingFieldDescriptor& TypeName(const std::string& typeName) {
+   RFieldDescriptorBuilder& TypeName(const std::string& typeName) {
       fField.fTypeName = typeName;
       return *this;
    }
-   RDanglingFieldDescriptor& NRepetitions(std::uint64_t nRepetitions) {
+   RFieldDescriptorBuilder& NRepetitions(std::uint64_t nRepetitions) {
       fField.fNRepetitions = nRepetitions;
       return *this;
    }
-   RDanglingFieldDescriptor& Structure(const ENTupleStructure& structure) {
+   RFieldDescriptorBuilder& Structure(const ENTupleStructure& structure) {
       fField.fStructure = structure;
       return *this;
    }
