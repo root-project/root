@@ -31,52 +31,64 @@ using RResult = ROOT::Experimental::RResult<T>;
 
 namespace {
 
-std::uint32_t SerializeFieldsV1(
+std::uint32_t SerializeFieldV1(
+   const ROOT::Experimental::RFieldDescriptor &fieldDesc, ROOT::Experimental::DescriptorId_t physParentId, void *buffer)
+{
+   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
+
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+
+   pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetFieldVersion().GetVersionUse(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion().GetVersionUse(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(physParentId, *where);
+   pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where);
+   if (fieldDesc.GetNRepetitions() > 0) {
+      pos += RNTupleSerializer::SerializeUInt16(RNTupleSerializer::kFlagRepetitiveField, *where);
+      pos += RNTupleSerializer::SerializeUInt64(fieldDesc.GetNRepetitions(), *where);
+   } else {
+      pos += RNTupleSerializer::SerializeUInt16(0, *where);
+   }
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
+   pos += RNTupleSerializer::SerializeString("" /* type alias */, *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldDescription(), *where);
+
+   auto size = pos - base;
+   RNTupleSerializer::SerializeFramePostscript(base, size);
+
+   return size;
+}
+
+
+std::uint32_t SerializeFieldTree(
    const ROOT::Experimental::RNTupleDescriptor &desc,
    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
    void *buffer)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    std::deque<ROOT::Experimental::DescriptorId_t> idQueue{desc.GetFieldZeroId()};
-   std::uint32_t size = 0;
+   pos += SerializeFieldV1(desc.GetFieldDescriptor(desc.GetFieldZeroId()), 0, *where);
+   context.MapFieldId(desc.GetFieldZeroId());
 
    while (!idQueue.empty()) {
       auto parentId = idQueue.front();
       idQueue.pop_front();
-      auto physParentId = context.MapFieldId(parentId);
 
       for (const auto &f : desc.GetFieldIterable(parentId)) {
-         auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
-         auto pos = base;
-         void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
-
-         pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
-
-         pos += RNTupleSerializer::SerializeUInt32(f.GetFieldVersion().GetVersionUse(), *where);
-         pos += RNTupleSerializer::SerializeUInt32(f.GetTypeVersion().GetVersionUse(), *where);
-         pos += RNTupleSerializer::SerializeUInt32(physParentId, *where);
-         pos += RNTupleSerializer::SerializeFieldStructure(f.GetStructure(), *where);
-         if (f.GetNRepetitions() > 0) {
-            pos += RNTupleSerializer::SerializeUInt16(RNTupleSerializer::kFlagRepetitiveField, *where);
-            pos += RNTupleSerializer::SerializeUInt64(f.GetNRepetitions(), *where);
-         } else {
-            pos += RNTupleSerializer::SerializeUInt16(0, *where);
-         }
-         pos += RNTupleSerializer::SerializeString(f.GetFieldName(), *where);
-         pos += RNTupleSerializer::SerializeString(f.GetTypeName(), *where);
-         pos += RNTupleSerializer::SerializeString(""
-          /* type alias */, *where);
-         pos += RNTupleSerializer::SerializeString(f.GetFieldDescription(), *where);
-
-         size += pos - base;
-         pos += RNTupleSerializer::SerializeFramePostscript(base, pos - base);
-
+         pos += SerializeFieldV1(f, context.GetPhysFieldId(parentId), *where);
          idQueue.push_back(f.GetId());
+         context.MapFieldId(f.GetId());
       }
    }
 
-   return size;
+   return pos - base;
 }
 
 RResult<std::uint32_t> DeserializeFieldV1(
@@ -85,6 +97,7 @@ RResult<std::uint32_t> DeserializeFieldV1(
    ROOT::Experimental::RDanglingFieldDescriptor &fieldDesc)
 {
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
+   using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -98,7 +111,8 @@ RResult<std::uint32_t> DeserializeFieldV1(
    std::uint32_t fieldVersion;
    std::uint32_t typeVersion;
    std::uint32_t parentId;
-   ROOT::Experimental::ENTupleStructure structure;
+   // initialize properly for call to SerializeFieldStructure()
+   ENTupleStructure structure{ENTupleStructure::kLeaf};
    std::uint16_t flags;
    if (fnFrameSize() < 3 * sizeof(std::uint32_t) +
                        RNTupleSerializer::SerializeFieldStructure(structure, nullptr) +
@@ -900,7 +914,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    auto frame = pos;
    R__ASSERT(desc.GetNFields() > 0); // we must have a zero field, which we don't serialize
    pos += SerializeListFramePreamble(desc.GetNFields() - 1, *where);
-   pos += SerializeFieldsV1(desc, context, *where);
+   pos += SerializeFieldTree(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
@@ -1094,23 +1108,22 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   descBuilder.AddField(RDanglingFieldDescriptor().FieldId(0)
-                                                  .ParentId(0)
-                                                  .Structure(ENTupleStructure::kRecord)
-                                                  .MakeDescriptor().Unwrap());
-   for (std::uint32_t i = 0, fieldId = 1; i < nFields; ++i, ++fieldId) {
+   for (std::uint32_t fieldId = 0; fieldId < nFields; ++fieldId) {
       RDanglingFieldDescriptor fieldBuilder;
       result = DeserializeFieldV1(bytes, fnFrameSize(), fieldBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      fieldBuilder.FieldId(fieldId);
-      auto fieldDesc = fieldBuilder.MakeDescriptor();
+      auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
       if (!fieldDesc)
          return R__FORWARD_ERROR(fieldDesc);
-      descBuilder.AddField(fieldDesc.Inspect());
-      if (fieldDesc.Inspect().GetParentId() != 0)
-         descBuilder.AddFieldLink(fieldDesc.Inspect().GetParentId(), fieldDesc.Inspect().GetId());
+      auto parentId = fieldDesc.Inspect().GetParentId();
+      descBuilder.AddField(fieldDesc.Unwrap());
+      if (fieldId > 0) {
+         auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
+         if (!resVoid)
+            return R__FORWARD_ERROR(resVoid);
+      }
    }
    bytes = frame + frameSize;
 
