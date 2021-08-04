@@ -442,7 +442,7 @@ TEST(RNTuple, SerializeEmptyHeader)
 {
    RNTupleDescriptorBuilder builder;
    builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
-   builder.AddField(RDanglingFieldDescriptor()
+   builder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
@@ -462,25 +462,25 @@ TEST(RNTuple, SerializeHeader)
 {
    RNTupleDescriptorBuilder builder;
    builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
-   builder.AddField(RDanglingFieldDescriptor()
+   builder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
-   builder.AddField(RDanglingFieldDescriptor()
+   builder.AddField(RFieldDescriptorBuilder()
       .FieldId(42)
       .FieldName("pt")
       .Structure(ENTupleStructure::kLeaf)
       .MakeDescriptor()
       .Unwrap());
-   builder.AddField(RDanglingFieldDescriptor()
+   builder.AddField(RFieldDescriptorBuilder()
       .FieldId(137)
       .FieldName("jet")
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
-   builder.AddField(RDanglingFieldDescriptor()
+   builder.AddField(RFieldDescriptorBuilder()
       .FieldId(13)
       .FieldName("eta")
       .Structure(ENTupleStructure::kLeaf)
