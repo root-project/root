@@ -120,6 +120,7 @@ public:
 */
 // clang-format on
 class RColumnDescriptor {
+   friend class RColumnDescriptorBuilder;
    friend class RNTupleDescriptorBuilder;
 
 private:
@@ -145,6 +146,8 @@ public:
    RColumnDescriptor &operator =(RColumnDescriptor &&other) = default;
 
    bool operator==(const RColumnDescriptor &other) const;
+   /// Get a copy of the descriptor
+   RColumnDescriptor Clone() const;
 
    DescriptorId_t GetId() const { return fColumnId; }
    RNTupleVersion GetVersion() const { return fVersion; }
@@ -603,6 +606,46 @@ public:
    void PrintInfo(std::ostream &output) const;
 };
 
+
+// clang-format off
+/**
+\class ROOT::Experimental::RColumnDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RColumnDescriptor
+
+Dangling column descriptors can become actual descriptors when added to an
+RNTupleDescriptorBuilder instance and then linked to their fields.
+*/
+// clang-format on
+class RColumnDescriptorBuilder {
+private:
+   RColumnDescriptor fColumn = RColumnDescriptor();
+public:
+   /// Make an empty column descriptor builder.
+   RColumnDescriptorBuilder() = default;
+
+   RColumnDescriptorBuilder& ColumnId(DescriptorId_t columnId) {
+      fColumn.fColumnId = columnId;
+      return *this;
+   }
+   RColumnDescriptorBuilder& Model(const RColumnModel &model) {
+      fColumn.fModel = model;
+      return *this;
+   }
+   RColumnDescriptorBuilder& FieldId(DescriptorId_t fieldId) {
+      fColumn.fFieldId = fieldId;
+      return *this;
+   }
+   RColumnDescriptorBuilder& Index(std::uint32_t index) {
+      fColumn.fIndex = index;
+      return *this;
+   }
+   /// Attempt to make a column descriptor. This may fail if the column
+   /// was not given enough information to make a proper descriptor.
+   RResult<RColumnDescriptor> MakeDescriptor() const;
+};
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::RFieldDescriptorBuilder
@@ -708,6 +751,7 @@ public:
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
                   const RNTupleVersion &version, const RColumnModel &model, std::uint32_t index);
+   RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    void SetFromHeader(void* headerBuffer);
 

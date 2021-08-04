@@ -432,6 +432,19 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
 }
 
 
+ROOT::Experimental::RColumnDescriptor
+ROOT::Experimental::RColumnDescriptor::Clone() const
+{
+   RColumnDescriptor clone;
+   clone.fColumnId = fColumnId;
+   clone.fVersion = fVersion;
+   clone.fModel = fModel;
+   clone.fFieldId = fFieldId;
+   clone.fIndex = fIndex;
+   return clone;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -910,6 +923,18 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
+ROOT::Experimental::RResult<ROOT::Experimental::RColumnDescriptor>
+ROOT::Experimental::RColumnDescriptorBuilder::MakeDescriptor() const
+{
+   if (fColumn.GetId() == kInvalidDescriptorId)
+      return R__FAIL("invalid column id");
+   if (fColumn.GetModel().GetType() == EColumnType::kUnknown)
+      return R__FAIL("invalid column model");
+   if (fColumn.GetFieldId() == kInvalidDescriptorId)
+      return R__FAIL("invalid field id, dangling column");
+   return fColumn.Clone();
+}
+
 ROOT::Experimental::RFieldDescriptorBuilder::RFieldDescriptorBuilder(
    const RFieldDescriptor& fieldDesc) : fField(fieldDesc.Clone())
 {
@@ -990,6 +1015,23 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
    c.fIndex = index;
    fDescriptor.fColumnDescriptors.emplace(columnId, std::move(c));
 }
+
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
+{
+   if (fDescriptor.fFieldDescriptors.count(columnDesc.GetFieldId()) == 0)
+      return R__FAIL("field with id '" + std::to_string(columnDesc.GetFieldId()) + "' doesn't exist");
+   if (columnDesc.GetIndex() > 0) {
+      if (fDescriptor.FindColumnId(columnDesc.GetFieldId(), columnDesc.GetIndex() - 1) == kInvalidDescriptorId)
+         return R__FAIL("out of bounds column index");
+   }
+
+   fDescriptor.fColumnDescriptors.emplace(columnDesc.GetId(), std::move(columnDesc));
+
+   return RResult<void>::Success();
+}
+
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
    DescriptorId_t clusterId, RNTupleVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)

@@ -166,7 +166,7 @@ RResult<std::uint32_t> DeserializeFieldV1(
    return frameSize;
 }
 
-std::uint32_t SerializeColumnsV1(
+std::uint32_t SerializeColumnListV1(
    const ROOT::Experimental::RNTupleDescriptor &desc,
    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
    void *buffer)
@@ -174,24 +174,24 @@ std::uint32_t SerializeColumnsV1(
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
+   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
    std::deque<ROOT::Experimental::DescriptorId_t> idQueue{desc.GetFieldZeroId()};
-   std::uint32_t size = 0;
 
    while (!idQueue.empty()) {
       auto parentId = idQueue.front();
       idQueue.pop_front();
 
       for (const auto &c : desc.GetColumnIterable(parentId)) {
-         auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
-         auto pos = base;
-         void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
-
+         auto frame = pos;
          pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
          auto type = c.GetModel().GetType();
          pos += RNTupleSerializer::SerializeColumnType(type, *where);
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(type), *where);
-         pos += RNTupleSerializer::SerializeUInt32(context.GetPhysColumnId(c.GetFieldId()), *where);
+         pos += RNTupleSerializer::SerializeUInt32(context.GetPhysFieldId(c.GetFieldId()), *where);
          std::uint32_t flags = 0;
          // TODO(jblomer): add support for descending columns in the column model
          if (c.GetModel().GetIsSorted())
@@ -201,8 +201,7 @@ std::uint32_t SerializeColumnsV1(
             flags |= RNTupleSerializer::kFlagNonNegativeColumn;
          pos += RNTupleSerializer::SerializeUInt32(flags, *where);
 
-         size += pos - base;
-         pos += RNTupleSerializer::SerializeFramePostscript(base, size);
+         pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
          context.MapColumnId(c.GetId());
       }
@@ -211,34 +210,49 @@ std::uint32_t SerializeColumnsV1(
          idQueue.push_back(f.GetId());
    }
 
-   return size;
+   return pos - base;
 }
 
-std::uint32_t DeserializeColumnV1(
+RResult<std::uint32_t> DeserializeColumnV1(
    const void *buffer,
-   std::uint32_t bufSize)
+   std::uint32_t bufSize,
+   ROOT::Experimental::RColumnDescriptorBuilder &columnDesc)
 {
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
+   using EColumnType = ROOT::Experimental::EColumnType;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
    std::uint32_t frameSize;
    auto fnFrameSize = [&]() { return frameSize - static_cast<std::uint32_t>(bytes - base); };
-   bytes += RNTupleSerializer::DeserializeFrame(bytes, bufSize, frameSize).Unwrap();
+   auto result = RNTupleSerializer::DeserializeFrame(bytes, bufSize, frameSize);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
 
-   ROOT::Experimental::EColumnType type;
+   // Initialize properly for SerializeColumnType
+   EColumnType type{EColumnType::kIndex};
    std::uint16_t bitsOnStorage;
    std::uint32_t fieldId;
    std::uint32_t flags;
    if (fnFrameSize() < RNTupleSerializer::SerializeColumnType(type, nullptr) +
                        sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t))
    {
-      throw ROOT::Experimental::RException(R__FAIL("column record frame too short"));
+      return R__FAIL("column record frame too short");
    }
-   bytes += RNTupleSerializer::DeserializeColumnType(bytes, type).Unwrap();
+   auto res16 = RNTupleSerializer::DeserializeColumnType(bytes, type);
+   if (!res16)
+      return R__FORWARD_ERROR(res16);
+   bytes += res16.Unwrap();
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, bitsOnStorage);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldId);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, flags);
+
+   if (ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
+      return R__FAIL("column element size mismatch");
+
+   const bool isSorted = (flags & (RNTupleSerializer::kFlagSortAscColumn | RNTupleSerializer::kFlagSortDesColumn));
+   columnDesc.FieldId(fieldId).Model({type, isSorted});
 
    return frameSize;
 }
@@ -644,7 +658,7 @@ ROOT::Experimental::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTuple
       // Record frame
       nitems = 1;
       if (frameSize < sizeof(std::int32_t))
-         return R__FAIL("corrupt frame size");
+         return R__FAIL("corrupt record frame size");
    } else {
       // List frame
       if (bufSize < 2 * sizeof(std::int32_t))
@@ -653,7 +667,7 @@ ROOT::Experimental::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTuple
       nitems &= (2 << 28) - 1;
       *ssize = -(*ssize);
       if (frameSize < 2 * sizeof(std::int32_t))
-         return R__FAIL("corrupt frame size");
+         return R__FAIL("corrupt list frame size");
    }
 
    if (bufSize < frameSize)
@@ -919,7 +933,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
 
    frame = pos;
    pos += SerializeListFramePreamble(desc.GetNColumns(), *where);
-   pos += SerializeColumnsV1(desc, context, *where);
+   pos += SerializeColumnListV1(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // We don't use alias columns yet
@@ -1133,15 +1147,29 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   std::uint32_t columnId = 0;
-   for (std::uint32_t i = 0; i < nColumns; ++i) {
-      result = DeserializeColumnV1(bytes, fnFrameSize());
+   for (std::uint32_t columnId = 0; columnId < nColumns; ++columnId) {
+      RColumnDescriptorBuilder columnBuilder;
+      result = DeserializeColumnV1(bytes, fnFrameSize(), columnBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      columnId++;
+      auto columnDesc = columnBuilder.ColumnId(columnId).MakeDescriptor();
+      if (!columnDesc)
+         return R__FORWARD_ERROR(columnDesc);
+      auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
+      if (!resVoid)
+         return R__FORWARD_ERROR(resVoid);
    }
    bytes = frame + frameSize;
+
+   std::uint32_t nAliasColumns;
+   frame = bytes;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nAliasColumns);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   if (nAliasColumns > 0)
+      R__LOG_WARNING(NTupleLog()) << "Alias columns are still unsupported! ";
 
    return RResult<void>::Success();
 }
