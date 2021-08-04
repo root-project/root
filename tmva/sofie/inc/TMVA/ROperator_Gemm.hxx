@@ -5,6 +5,7 @@
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
+
 #include <sstream>
 #include <algorithm>
 #include <iterator>
@@ -61,7 +62,6 @@ namespace SOFIE{
             throw std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a gemm operator");
          }
       }
-
 
       std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
          ETensorType out = input[0];
@@ -186,6 +186,9 @@ namespace SOFIE{
           return out.str();
 
          }
+
+
+
    };
 
 

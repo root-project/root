@@ -4,6 +4,7 @@
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
+
 #include <sstream>
 
 namespace TMVA{
@@ -24,7 +25,6 @@ public:
    ROperator_Relu(){}
    ROperator_Relu(std::string nameX, std::string nameY):
       fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
-
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -59,7 +59,6 @@ public:
       out << "\t}\n";
       return out.str();
    }
-
 
 };
 
