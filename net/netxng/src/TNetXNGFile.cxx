@@ -230,7 +230,6 @@ TNetXNGFile::~TNetXNGFile()
 {
    if (IsOpen())
       Close();
-   delete fFile;
    delete fUrl;
    delete fInitCondVar;
 }
@@ -303,7 +302,7 @@ Long64_t TNetXNGFile::GetSize() const
 
 Bool_t TNetXNGFile::IsOpen() const
 {
-   return fFile->IsOpen();
+   return fFile && fFile->IsOpen();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,6 +330,8 @@ void TNetXNGFile::Close(const Option_t */*option*/)
       Error("Close", "%s", status.ToStr().c_str());
       MakeZombie();
    }
+   delete fFile;
+   fFile = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
