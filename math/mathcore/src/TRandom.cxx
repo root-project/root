@@ -19,7 +19,7 @@ This is the base class for the ROOT Random number generators.
 This class defines the ROOT Random number interface and it should not be instantiated directly but used via its derived
 classes. The generator provided in TRandom itself is a LCG (Linear Congruential Generator), the <a
 href="https://www.gnu.org/software/gsl/manual/html_node/Unix-random-number-generators.html">BSD `rand` generator</a>,
-that it should not be used because its period is only 2**31, i.e. approximatly 2 billion events, that can be generated
+that it should not be used because its period is only 2**31, i.e. approximately 2 billion events, that can be generated
 in just few seconds.
 
 To generate random numbers, one should use the derived class, which  are :
