@@ -94,7 +94,7 @@ std::uint32_t SerializeFieldTree(
 RResult<std::uint32_t> DeserializeFieldV1(
    const void *buffer,
    std::uint32_t bufSize,
-   ROOT::Experimental::RDanglingFieldDescriptor &fieldDesc)
+   ROOT::Experimental::RFieldDescriptorBuilder &fieldDesc)
 {
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
@@ -1109,7 +1109,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
    for (std::uint32_t fieldId = 0; fieldId < nFields; ++fieldId) {
-      RDanglingFieldDescriptor fieldBuilder;
+      RFieldDescriptorBuilder fieldBuilder;
       result = DeserializeFieldV1(bytes, fnFrameSize(), fieldBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
