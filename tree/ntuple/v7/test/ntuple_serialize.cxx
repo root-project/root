@@ -438,6 +438,26 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(13u, remainder);
 }
 
+TEST(RNTuple, SerializeEmptyHeader)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
+   builder.AddField(RDanglingFieldDescriptor()
+      .FieldId(0)
+      .FieldName("")
+      .Structure(ENTupleStructure::kRecord)
+      .MakeDescriptor()
+      .Unwrap());
+   auto desc = builder.MoveDescriptor();
+   auto context = RNTupleSerializer::SerializeHeaderV1(desc, nullptr);
+   EXPECT_GT(context.GetHeaderSize(), 0);
+   auto buffer = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeaderV1(desc, buffer.get());
+
+   RNTupleSerializer::DeserializeHeaderV1(buffer.get(), context.GetHeaderSize(), builder);
+}
+
+
 TEST(RNTuple, SerializeHeader)
 {
    RNTupleDescriptorBuilder builder;
@@ -448,6 +468,28 @@ TEST(RNTuple, SerializeHeader)
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
+   builder.AddField(RDanglingFieldDescriptor()
+      .FieldId(42)
+      .FieldName("pt")
+      .Structure(ENTupleStructure::kLeaf)
+      .MakeDescriptor()
+      .Unwrap());
+   builder.AddField(RDanglingFieldDescriptor()
+      .FieldId(137)
+      .FieldName("jet")
+      .Structure(ENTupleStructure::kRecord)
+      .MakeDescriptor()
+      .Unwrap());
+   builder.AddField(RDanglingFieldDescriptor()
+      .FieldId(13)
+      .FieldName("eta")
+      .Structure(ENTupleStructure::kLeaf)
+      .MakeDescriptor()
+      .Unwrap());
+   builder.AddFieldLink(0, 42);
+   builder.AddFieldLink(0, 137);
+   builder.AddFieldLink(137, 13);
+
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(desc, nullptr);
    EXPECT_GT(context.GetHeaderSize(), 0);
