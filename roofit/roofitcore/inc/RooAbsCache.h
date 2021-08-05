@@ -29,15 +29,32 @@ class RooAbsCache {
 public:
 
   RooAbsCache(RooAbsArg* owner=0) ;
+
   RooAbsCache(const RooAbsCache&, RooAbsArg* owner=0 ) ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
-  virtual void operModeHook() ;
-  virtual void optimizeCacheMode(const RooArgSet&, RooArgSet&, RooLinkedList& ) ;
-  virtual void findConstantNodes(const RooArgSet&, RooArgSet& , RooLinkedList&) ;
-  virtual void printCompactTreeHook(std::ostream&, const char *) ;
-  virtual void wireCache() {} ;
-  
+
   virtual ~RooAbsCache() ;
+
+  void setOwner(RooAbsArg* owner);
+
+  /// Interface for server redirect calls.
+  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/,
+                                     bool /*mustReplaceAll*/,
+                                     bool /*nameChange*/,
+                                     bool /*isRecursive*/) { return false; }
+
+  /// Interface for operation mode changes.
+  virtual void operModeHook() {}
+
+  /// Interface for processing of cache mode optimization calls.
+  virtual void optimizeCacheMode(const RooArgSet&, RooArgSet&, RooLinkedList& ) {}
+
+  /// Interface for constant term node finding calls.
+  virtual void findConstantNodes(const RooArgSet&, RooArgSet& , RooLinkedList&) {}
+
+  /// Interface for printing of cache guts in tree mode printing.
+  virtual void printCompactTreeHook(std::ostream&, const char *) {}
+
+  virtual void wireCache() {}
    
 protected:
 
