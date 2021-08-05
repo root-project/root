@@ -1536,8 +1536,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
       dir = fi.fIniDir;
       overwr = fi.fOverwrite;
       const Bool_t res = SaveFrameAsCodeOrImage(fi.fFilename);
-      if(!res)
-      {
+      if (!res) {
          Int_t retval;
          new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
                       TString::Format("file (%s) cannot be saved with this extension",
