@@ -1556,7 +1556,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
 /// If preexisting, the file is overwritten.
 /// Returns kTRUE if something was saved.
 
-Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString fileName)
+Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
 {
    static TString dir(".");
 
