@@ -1586,8 +1586,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
          img->WriteImage(fname, gtype);
          gErrorIgnoreLevel = saver;
          delete img;
-      }
-      else {
+      } else {
          Error("SaveFrameAsCodeOrImage", "File cannot be saved with this extension");
          return kFALSE;
       }
