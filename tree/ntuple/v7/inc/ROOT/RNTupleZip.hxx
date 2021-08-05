@@ -60,13 +60,12 @@ public:
    size_t Zip(const void *from, size_t nbytes, int compression, Writer_t fnWriter) {
       R__ASSERT(from != nullptr);
 
-      auto cxLevel = compression % 100; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+      auto cxLevel = compression % 100;
       if (cxLevel == 0) {
          fnWriter(from, nbytes, 0);
          return nbytes;
       }
 
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
       char *source = const_cast<char *>(static_cast<const char *>(from));
@@ -101,13 +100,12 @@ public:
       R__ASSERT(from != nullptr);
       R__ASSERT(nbytes <= kMAXZIPBUF);
 
-      auto cxLevel = compression % 100; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+      auto cxLevel = compression % 100;
       if (cxLevel == 0) {
          memcpy(fZipBuffer->data(), from, nbytes);
          return nbytes;
       }
 
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       int szSource = nbytes;
       char *source = const_cast<char *>(static_cast<const char *>(from));
@@ -127,13 +125,12 @@ public:
    static std::size_t Zip(const void *from, std::size_t nbytes, int compression, void *to) {
       R__ASSERT(from != nullptr);
       R__ASSERT(to != nullptr);
-      auto cxLevel = compression % 100; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+      auto cxLevel = compression % 100;
       if (cxLevel == 0) {
          memcpy(to, from, nbytes);
          return nbytes;
       }
 
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
       char *source = const_cast<char *>(static_cast<const char *>(from));

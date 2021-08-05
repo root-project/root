@@ -217,7 +217,6 @@ public:
 
    std::int64_t GetValueAsInt() const final {
       auto ticks = BaseCounterT::GetValue();
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
       return std::uint64_t((double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.));
    }
 
