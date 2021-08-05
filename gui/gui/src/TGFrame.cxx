@@ -1563,8 +1563,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
    if (fname.EndsWith(".C")) {
       TGMainFrame *main = (TGMainFrame*)GetMainFrame();
       main->SaveSource(fname.Data(), "");
-   }
-   else {
+   } else {
       TImage::EImageFileTypes gtype = TImage::kUnknown;
       if (fname.EndsWith("gif")) {
          gtype = TImage::kGif;
