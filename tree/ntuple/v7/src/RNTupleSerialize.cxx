@@ -24,6 +24,7 @@
 #include <cstring> // for memcpy
 #include <deque>
 #include <set>
+#include <unordered_map>
 
 template <typename T>
 using RResult = ROOT::Experimental::RResult<T>;
@@ -1147,13 +1148,22 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   std::unordered_map<DescriptorId_t, std::uint32_t> maxIndexes;
    for (std::uint32_t columnId = 0; columnId < nColumns; ++columnId) {
       RColumnDescriptorBuilder columnBuilder;
       result = DeserializeColumnV1(bytes, fnFrameSize(), columnBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      auto columnDesc = columnBuilder.ColumnId(columnId).MakeDescriptor();
+
+      std::uint32_t idx = 0;
+      const auto fieldId = columnBuilder.GetFieldId();
+      auto maxIdx = maxIndexes.find(fieldId);
+      if (maxIdx != maxIndexes.end())
+         idx = maxIdx->second + 1;
+      maxIndexes[fieldId] = idx;
+
+      auto columnDesc = columnBuilder.Index(idx).ColumnId(columnId).MakeDescriptor();
       if (!columnDesc)
          return R__FORWARD_ERROR(columnDesc);
       auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());

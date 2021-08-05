@@ -1020,10 +1020,16 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
 {
-   if (fDescriptor.fFieldDescriptors.count(columnDesc.GetFieldId()) == 0)
-      return R__FAIL("field with id '" + std::to_string(columnDesc.GetFieldId()) + "' doesn't exist");
-   if (columnDesc.GetIndex() > 0) {
-      if (fDescriptor.FindColumnId(columnDesc.GetFieldId(), columnDesc.GetIndex() - 1) == kInvalidDescriptorId)
+   const auto fieldId = columnDesc.GetFieldId();
+   const auto index = columnDesc.GetIndex();
+
+   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0)
+      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist");
+   if (fDescriptor.FindColumnId(fieldId, index) != kInvalidDescriptorId) {
+      return R__FAIL("column index clash");
+   }
+   if (index > 0) {
+      if (fDescriptor.FindColumnId(fieldId, index - 1) == kInvalidDescriptorId)
          return R__FAIL("out of bounds column index");
    }
 
