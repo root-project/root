@@ -65,7 +65,7 @@ p2 = ROOT.RooPolynomial("p2", "p2", x, [a0, a1, a2], 0)
 #       event weights represent Poisson statistics themselves.
 #
 # Fit with 'wrong' errors
-r_ml_wgt = p2.fitTo(wdata, ROOT.RooFit.Save())
+r_ml_wgt = p2.fitTo(wdata, Save=True)
 
 # A first order correction to estimated parameter errors in an
 # (unbinned) ML fit can be obtained by calculating the
@@ -80,7 +80,7 @@ r_ml_wgt = p2.fitTo(wdata, ROOT.RooFit.Save())
 #
 # A fit in self mode can be performed as follows:
 
-r_ml_wgt_corr = p2.fitTo(wdata, ROOT.RooFit.Save(), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+r_ml_wgt_corr = p2.fitTo(wdata, Save=True, SumW2Error=True)
 
 # Plot weighted data and fit result
 # ---------------------------------------------------------------
@@ -108,8 +108,8 @@ data3 = genPdf.generate(ROOT.RooArgSet(x), 43000)
 
 # Fit the 2nd order polynomial to both unweighted datasets and save the
 # results for comparison
-r_ml_unw10 = p2.fitTo(data2, ROOT.RooFit.Save())
-r_ml_unw43 = p2.fitTo(data3, ROOT.RooFit.Save())
+r_ml_unw10 = p2.fitTo(data2, Save=True)
+r_ml_unw43 = p2.fitTo(data3, Save=True)
 
 # Chis2 fit of pdf to binned weighted dataset
 # ---------------------------------------------------------------------------
@@ -130,7 +130,7 @@ m.hesse()
 
 # Plot chi^2 fit result on frame as well
 r_chi2_wgt = m.save()
-p2.plotOn(frame, ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))
+p2.plotOn(frame, LineStyle="--", LineColor="r")
 
 # Compare fit results of chi2, L fits to (un)weighted data
 # ------------------------------------------------------------
