@@ -640,6 +640,7 @@ public:
       fColumn.fIndex = index;
       return *this;
    }
+   DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
    /// Attempt to make a column descriptor. This may fail if the column
    /// was not given enough information to make a proper descriptor.
    RResult<RColumnDescriptor> MakeDescriptor() const;
