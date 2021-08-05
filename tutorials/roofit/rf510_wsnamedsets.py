@@ -47,7 +47,7 @@ def fillWorkspace(w):
     model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
     # Import model into p.d.f.
-    getattr(w, "import")(model)
+    w.Import(model)
 
     # Encode definition of parameters in workspace
     # ---------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ fillWorkspace(w)
 
 # Exploit convention encoded in named set "parameters" and "observables"
 # to use workspace contents w/o need for introspected
-model = w.pdf("model")
+model = w["model"]
 
 # Generate data from p.d.f. in given observables
 data = model.generate(w.set("observables"), 1000)

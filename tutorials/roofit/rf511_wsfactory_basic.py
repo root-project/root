@@ -56,17 +56,17 @@ else:
 # class
 
 # Make a dummy dataset pdf 'model' and import it in the workspace
-data = w.pdf("model").generate(ROOT.RooArgSet(w.var("x")), 1000)
+data = w["model"].generate(ROOT.RooArgSet(w["x"]), 1000)
 # Cannot call 'import' directly because this is a python keyword:
-w.Import(data, ROOT.RooFit.Rename("data"))
+w.Import(data, Rename="data")
 
 # Construct a KEYS pdf passing a dataset name and an enum type defining the
 # mirroring strategy
 # w.factory("KeysPdf::k(x,data,NoMirror,0.2)")
 # Workaround for pyROOT
-x = w.var("x")
+x = w["x"]
 k = ROOT.RooKeysPdf("k", "k", x, data, ROOT.RooKeysPdf.NoMirror, 0.2)
-w.Import(k, ROOT.RooFit.RenameAllNodes("workspace"))
+w.Import(k, RenameAllNodes="workspace")
 
 # Print workspace contents
 w.Print()
