@@ -39,7 +39,7 @@ ClassImp(RooAbsCache);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor. Takes owner as argument and register cache with owner
+/// Constructor. Takes owner as argument and register cache with owner.
 
 RooAbsCache::RooAbsCache(RooAbsArg* owner) : _owner(owner) 
 { 
@@ -49,9 +49,8 @@ RooAbsCache::RooAbsCache(RooAbsArg* owner) : _owner(owner)
 } 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor. Takes owner as argument and registers cache with owne
+/// Copy constructor. Takes owner as argument and registers cache with owne.
 
 RooAbsCache::RooAbsCache(const RooAbsCache&, RooAbsArg* owner ) : _owner(owner) 
 { 
@@ -61,9 +60,8 @@ RooAbsCache::RooAbsCache(const RooAbsCache&, RooAbsArg* owner ) : _owner(owner)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor. Unregisters cache with owner
+/// Destructor. Unregisters cache with owner.
 
 RooAbsCache::~RooAbsCache() 
 { 
@@ -73,48 +71,15 @@ RooAbsCache::~RooAbsCache()
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface for processing of cache mode optimization calls
-
-void RooAbsCache::optimizeCacheMode(const RooArgSet& /*obs*/, RooArgSet&, RooLinkedList& ) 
+/// Reset the owner, triggering the owner to register this cache in its list of caches.
+void RooAbsCache::setOwner(RooAbsArg * owner)
 {
+  if (_owner) {
+    _owner->unRegisterCache(*this) ; 
+  }
+  _owner = owner;
+  if (_owner) {
+    owner->registerCache(*this) ; 
+  }
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface for server redirect calls
-
-Bool_t RooAbsCache::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
-{ 
-  return kFALSE ; 
-} 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface for operation mode changes
-
-void RooAbsCache::operModeHook() 
-{
-} 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface for constant term node finding calls
-
-void RooAbsCache::findConstantNodes(const RooArgSet&, RooArgSet&, RooLinkedList& ) 
-{  
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface for printing of cache guts in tree mode printing
-
-void RooAbsCache::printCompactTreeHook(std::ostream&, const char *)
-{
-}
-
