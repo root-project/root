@@ -29,7 +29,9 @@ Steps to reproduce the behavior:
 2. Operating system
 3. How you obtained ROOT, such as `dnf install` / binary download / you built it yourself.
 -->
-
+```
+MANDATORY: Paste here the output of root -b -q
+```
 ### Additional context
 <!--
 Add any other context about the problem here.
