@@ -74,7 +74,7 @@ def _string_to_root_attribute(value, lookup_map):
             except:
                 raise ValueError(
                     "Unsupported value passed. The value either has to be the name of an attribute of the ROOT module, or match with one of the following values that get translated to ROOT attributes: {}".format(
-                        _lookup_map
+                        lookup_map
                     )
                 )
     else:

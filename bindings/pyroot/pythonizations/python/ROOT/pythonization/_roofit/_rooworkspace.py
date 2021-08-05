@@ -33,10 +33,33 @@ workspace.Import(x)
 */
 """
 
+from ._utils import _kwargs_to_roocmdargs
+
 
 class RooWorkspace(object):
+    def __init__(self, *args, **kwargs):
+        # Redefinition of `RooWorkspace` constructor for keyword arguments.
+        # The keywords must correspond to the CmdArg of the constructor function.
+        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+        self._init(*args, **kwargs)
+
+    def __getitem__(self, key):
+        # To enable accessing objects in the RooWorkspace with dictionary-like syntax.
+        # The key is passed to the general `RooWorkspace::obj()` function.
+        return self.obj(key)
+
     def Import(self, *args, **kwargs):
         """
         Support the C++ `import()` as `Import()` in python
         """
         return getattr(self, "import")(*args, **kwargs)
+
+
+def RooWorkspace_import(self, *args, **kwargs):
+    # Redefinition of `RooWorkspace.import()` for keyword arguments.
+    # The keywords must correspond to the CmdArg of the `import()` function.
+    args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+    return self._import(*args, **kwargs)
+
+
+setattr(RooWorkspace, "import", RooWorkspace_import)
