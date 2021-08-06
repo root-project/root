@@ -135,7 +135,7 @@ namespace SOFIE{
       TensorInfo new_tensor {type, shape};
       fIntermediateTensorInfos[tensor_name] = new_tensor;
    }
-   
+
    void RModel::AddOutputTensorNameList(std::vector<std::string> outputtensornames){
       for(auto& it : outputtensornames){
          fOutputTensorNames.push_back(UTILITY::Clean_name(it));
@@ -372,7 +372,7 @@ namespace SOFIE{
            }
           RModel::Class()->WriteBuffer(R__b, this);
        }
-   }   
+   }
 
 }//SOFIE
 }//Experimental

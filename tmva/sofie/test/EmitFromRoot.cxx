@@ -1,7 +1,7 @@
 // Author: Sanjiban Sengupta, 2021
-// Description: 
+// Description:
 //           This is to test the Serialisation of RModel class
-//           defined in SOFIE. The program is run when the 
+//           defined in SOFIE. The program is run when the
 //           target 'TestCustomModelsFromROOT' is built. The program
 //           generates the required .hxx file after reading a written
 //           ROOT file which stores the object of the RModel class.
@@ -30,6 +30,6 @@ int main(int argc, char *argv[]){
    fileRead.GetObject("model",modelPtr);
    fileRead.Close();
    modelPtr->Generate();
-   modelPtr->OutputGenerated(outname+"_FromROOT.hxx");   
+   modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
    return 0;
-} 
+}

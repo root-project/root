@@ -30,14 +30,12 @@ target_include_directories(emitFromONNX PRIVATE
   ../inc
   ${SOFIE_PARSERS_DIR}/inc
   ../../tmva/inc
+  ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
   ../../../core/foundation/inc
   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
-  ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
-    ../../../core/foundation/inc
-  ${CMAKE_BINARY_DIR}/include   # this is for RConfigure.h
 )
 
-target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie )
+target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie)
 set_target_properties(emitFromONNX PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
@@ -82,7 +80,7 @@ target_include_directories(emitFromROOT PRIVATE
   ../../tmva/inc
   ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
   ../../../core/foundation/inc
-  ${CMAKE_BINARY_DIR}/include   # this is for RConfigure.h
+  ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie)
 set_target_properties(emitFromROOT PROPERTIES
