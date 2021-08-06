@@ -1,12 +1,15 @@
 # libAferImage CMakeLists.txt
 
 PROJECT(AFTERIMAGE)
-if(MSVC)
+if(WIN32)
   # required for the following feature & bug fix:
   # 3.15: Added $<REMOVE_DUPLICATES:list> generator expression
   # 3.16: Bug fix with CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS: the auto-generated exports
   #       are now updated only when the object files providing the symbols are updated
   cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+  # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
+  # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
+  cmake_policy(SET CMP0091 OLD)
 else()
   cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 endif()
