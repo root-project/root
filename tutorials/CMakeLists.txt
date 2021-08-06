@@ -123,8 +123,10 @@ else()
                     roofit/rf316_llratioplot.py
                     roofit/rf401_importttreethx.C
                     roofit/rf401_importttreethx.py
+                    roofit/rf408_RDataFrameToRooFit.py
                     roofit/rf512_wsfactory_oper.C
                     roofit/rf512_wsfactory_oper.py
+                    roofit/rf708_bphysics.py
     )
   endif()
 endif()
