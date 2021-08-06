@@ -6,6 +6,12 @@
 
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
+if(WIN32)
+  # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
+  # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
+  cmake_policy(SET CMP0091 OLD)
+endif()
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR
     " ROOT must be built out-of-source.\n"
