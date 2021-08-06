@@ -927,8 +927,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeString(desc.GetDescription(), *where);
 
    auto frame = pos;
-   R__ASSERT(desc.GetNFields() > 0); // we must have a zero field, which we don't serialize
-   pos += SerializeListFramePreamble(desc.GetNFields() - 1, *where);
+   R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
+   pos += SerializeListFramePreamble(desc.GetNFields(), *where);
    pos += SerializeFieldTree(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 

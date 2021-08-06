@@ -501,3 +501,33 @@ TEST(RNTuple, SerializeHeader)
 
    RNTupleSerializer::DeserializeHeaderV1(buffer.get(), context.GetHeaderSize(), builder);
 }
+
+
+TEST(RNTuple, SerializeFooter)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
+   builder.AddField(RFieldDescriptorBuilder()
+      .FieldId(0)
+      .FieldName("")
+      .Structure(ENTupleStructure::kRecord)
+      .MakeDescriptor()
+      .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+      .FieldId(42)
+      .FieldName("tag")
+      .Structure(ENTupleStructure::kLeaf)
+      .MakeDescriptor()
+      .Unwrap());
+   builder.AddFieldLink(0, 42);
+   builder.AddColumn(17, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
+   builder.AddColumn(40, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
+
+   auto desc = builder.MoveDescriptor();
+   auto context = RNTupleSerializer::SerializeHeaderV1(desc, nullptr);
+   EXPECT_GT(context.GetHeaderSize(), 0);
+   auto buffer = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeaderV1(desc, buffer.get());
+
+   RNTupleSerializer::DeserializeHeaderV1(buffer.get(), context.GetHeaderSize(), builder);
+}
