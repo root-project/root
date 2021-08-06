@@ -109,4 +109,4 @@ ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT) 
+add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
