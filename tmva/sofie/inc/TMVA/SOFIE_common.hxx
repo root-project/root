@@ -3,6 +3,7 @@
 
 #include "TMVA/RTensor.hxx"
 #include "TMVA/Types.h"
+
 #include <type_traits>
 #include <cstdint>
 #include <string>
@@ -47,36 +48,36 @@ struct TensorInfo{
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
 struct InitializedTensor{
-   ETensorType type;
-   std::vector<std::size_t> shape;
-   std::shared_ptr<void> data;     //! Transient
+   ETensorType fType;
+   std::vector<std::size_t> fShape;
+   std::shared_ptr<void> fData;     //! Transient
    Int_t fSize=1;
-   char* pData=nullptr;          //[fSize] Persistent
-   
-   void castSharedToPersistent(){
-      for(auto item:shape){
+   char* fPersistentData=nullptr;   //[fSize] Persistent
+
+   void CastSharedToPersistent(){
+      for(auto item:fShape){
          fSize*=(Int_t)item;
       }
-      switch(type){
+      switch(fType){
          case ETensorType::FLOAT: fSize*=sizeof(float); break;
-         default: 
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(type));
+         default:
+          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
       }
-      pData=(char*)data.get();
+      fPersistentData=(char*)fData.get();
    }
-   void castPersistentToShared(){
-     switch(type){
+   void CastPersistentToShared(){
+     switch(fType){
        case ETensorType::FLOAT: {
       std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
-      std::memcpy(tData.get(), pData,fSize * sizeof(float));
-      data=tData;
+      std::memcpy(tData.get(), fPersistentData,fSize * sizeof(float));
+      fData=tData;
       break;
       }
       default: {
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(type));
+          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
       }
       }
-     } 
+     }
 };
 
 template <typename T>

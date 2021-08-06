@@ -47,7 +47,7 @@ namespace SOFIE{
       }
       auto f2 = fInitializedTensors.find(name);
       if (f2 != fInitializedTensors.end()){
-         return f2->second.shape;
+         return f2->second.fShape;
       }
       auto f3 = fInputTensorInfos.find(name);
       if (f3 != fInputTensorInfos.end()){
@@ -68,7 +68,7 @@ namespace SOFIE{
       }
       auto f2 = fInitializedTensors.find(name);
       if (f2 != fInitializedTensors.end()){
-         return f2->second.type;
+         return f2->second.fType;
       }
       auto f3 = fInputTensorInfos.find(name);
       if (f3 != fInputTensorInfos.end()){
@@ -156,7 +156,7 @@ namespace SOFIE{
       if (f == fInitializedTensors.end()){
          throw std::runtime_error("TMVA-SOFIE: tensor " + tensor_name + " not found when trying to get its data");
       }else{
-         return f->second.data;
+         return f->second.fData;
       }
    }
 
@@ -181,13 +181,13 @@ namespace SOFIE{
          "}//BLAS\n");
 
       for (auto& i: fInitializedTensors){
-         if (i.second.type == ETensorType::FLOAT){
+         if (i.second.fType == ETensorType::FLOAT){
             size_t length = 1;
-            for (auto & dim: i.second.shape){
+            for (auto & dim: i.second.fShape){
                length *= dim;
             }
             fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
-            std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.data);
+            std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.fData);
             std::stringstream floats;
             for (size_t idx = 0; idx < length-1; idx++){
                floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[idx] << ", ";
@@ -282,11 +282,11 @@ namespace SOFIE{
       std::cout << "Model initialized the following tensors:\n";
       for (auto& it: fInitializedTensors){
          std::cout << "Tensor name: \"" << it.first << "\"\t";
-         std::cout << "type: " << ConvertTypeToString(it.second.type) << "\t";
+         std::cout << "type: " << ConvertTypeToString(it.second.fType) << "\t";
          std::cout << "shape: [";
-         for (size_t i = 0; i < it.second.shape.size(); i++){
-            std::cout << it.second.shape[i];
-            if (i < it.second.shape.size() - 1) std::cout << ",";
+         for (size_t i = 0; i < it.second.fShape.size(); i++){
+            std::cout << it.second.fShape[i];
+            if (i < it.second.fShape.size() - 1) std::cout << ",";
          }
          std::cout << "]" << std::endl;
       }
@@ -314,13 +314,13 @@ namespace SOFIE{
       }
 
       std::cout << "Tensor name: " << it->first << "\t";
-      std::cout << "type: " << ConvertTypeToString(it->second.type) << "\t";
+      std::cout << "type: " << ConvertTypeToString(it->second.fType) << "\t";
       int length =1;
       std::cout << "shape: [";
-      for (size_t i = 0; i < it->second.shape.size(); i++){
-         std::cout << it->second.shape[i];
-         length *= it->second.shape[i];
-         if (i < it->second.shape.size() - 1) std::cout << ",";
+      for (size_t i = 0; i < it->second.fShape.size(); i++){
+         std::cout << it->second.fShape[i];
+         length *= it->second.fShape[i];
+         if (i < it->second.fShape.size() - 1) std::cout << ",";
       }
       std::cout << "]" << std::endl;
       bool ellipsis = true;
@@ -332,8 +332,8 @@ namespace SOFIE{
       std::cout << "data: [" << std::endl;
       //switch(it->second.type){
       //   case ETensorType::FLOAT : {
-      if (it->second.type == ETensorType::FLOAT) {
-         auto converted_data = std::static_pointer_cast<float>(it->second.data).get();
+      if (it->second.fType == ETensorType::FLOAT) {
+         auto converted_data = std::static_pointer_cast<float>(it->second.fData).get();
          for (int i =0; i < n_print; i++){
             std::cout << converted_data[i];
             if (i < n_print - 1) std::cout << " ,";
@@ -363,12 +363,12 @@ namespace SOFIE{
        if (R__b.IsReading()) {
            RModel::Class()->ReadBuffer(R__b, this);
            for(auto i=RModel::fInitializedTensors.begin(); i!=RModel::fInitializedTensors.end();++i){
-               i->second.castPersistentToShared();
+               i->second.CastPersistentToShared();
            }
        }
        else {
           for(auto i=RModel::fInitializedTensors.begin(); i!=RModel::fInitializedTensors.end();++i){
-               i->second.castSharedToPersistent();
+               i->second.CastSharedToPersistent();
            }
           RModel::Class()->WriteBuffer(R__b, this);
        }
