@@ -1,4 +1,3 @@
-import glob
 import logging
 import warnings
 
@@ -95,7 +94,8 @@ class EmptySourceHeadNode(Node.Node):
 class TreeHeadNode(Node.Node):
     """
     The head node of a computation graph where the RDataFrame data source is
-    a TTree. This head node is responsible for the following RDataFrame constructor::
+    a TTree or a TChain. This head node is responsible for the following
+    RDataFrame constructors::
 
         RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {})
         RDataFrame(std::string_view treename, const std::vector<std::string> &fileglobs, const ColumnNames_t &defaultBranches = {})
@@ -103,11 +103,26 @@ class TreeHeadNode(Node.Node):
         RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
 
     Attributes:
-        args (iterable): An iterable of arguments that were provided to construct
-            the RDataFrame object.
-
         npartitions (int): The number of partitions the dataset will be split in
             for distributed execution.
+
+        tree (ROOT.TTree, ROOT.TChain): The dataset that will be processed. This
+            is either stored as is if the user passed it as the first argument
+            to the distributed RDataFrame constructor, or created from the
+            arguments of the other constructor overloads.
+
+        treename (str): The name of the dataset.
+
+        inputfiles (list[str]): List of file names where the dataset is stored.
+
+        defaultbranches (ROOT.std.vector[ROOT.std.string], None): Optional list
+            of branches to be read from the tree passed by the user. Defaults to
+            None.
+
+        friendinfo (ROOT.Internal.TreeUtils.RFriendInfo, None): Optional
+            information about friend trees of the dataset. Retrieved only if a
+            TTree or TChain is passed to the constructor. Defaults to None.
+
     """
 
     def __init__(self, npartitions, *args):
@@ -117,185 +132,59 @@ class TreeHeadNode(Node.Node):
         Args:
             *args (iterable): Iterable with the arguments to the RDataFrame constructor.
 
-            npartitions (int): Keyword argument with the number of partitions
-                the dataset will be split in for distributed execution.
+            npartitions (int): The number of partitions the dataset will be
+                split in for distributed execution.
         """
         super(TreeHeadNode, self).__init__(None, None)
 
-        # Keep the arguments to parse them when needed
-        # TODO: Instead of storing the args here and parsing them various times
-        # in different class methods, parse them only once in this function and
-        # directly store the appropriate data members
-        self.args = args
         self.npartitions = npartitions
 
-    # TODO: Decide whether to remove/change the property or the getter
-    @property
-    def tree(self):
-        """Tree instance if present."""
-        return self.get_tree()
+        self.defaultbranches = None
+        self.friendinfo = None
 
-    # TODO: Decide whether to remove/change the property or the getter
-    @property
-    def treename(self):
-        """Name of the tree."""
-        return self.get_treename()
-
-    # TODO: Decide whether to remove/change the property or the getter
-    @property
-    def nentries(self):
-        """Entries of this dataset."""
-        return self.get_num_entries()
-
-    # TODO: Decide whether to remove/change the property or the getter
-    @property
-    def defaultbranches(self):
-        """Default branches selected by the user in the constructor."""
-        return self.get_branches()
-
-    # TODO: Decide whether to remove/change the property or the getter
-    @property
-    def inputfiles(self):
-        """List of input files of the dataset."""
-        return self.get_inputfiles()
-
-    # TODO: Decide whether to remove/change the property or the getter
-    @property
-    def friendinfo(self):
-        """Information about friend trees of the dataset."""
-        return self._get_friend_info()
-
-    def get_branches(self):
-        """Gets list of default branches if passed by the user."""
-        # ROOT Constructor:
-        # RDataFrame(TTree& tree, defaultBranches = {})
-        if len(self.args) == 2 and isinstance(self.args[0], ROOT.TTree):
-            return self.args[1]
-        # ROOT Constructors:
-        # RDataFrame(treeName, filenameglob, defaultBranches = {})
-        # RDataFrame(treename, filenames, defaultBranches = {})
-        # RDataFrame(treeName, dirPtr, defaultBranches = {})
-        if len(self.args) == 3:
-            return self.args[2]
-
-        return None
-
-    # TODO: This function is very costly! Make sure to use only once at most, 
-    # or think if it can be avoided altogether.
-    def get_num_entries(self):
-        """
-        Gets the number of entries in the given dataset.
-
-        Returns:
-            int: This is the computed number of entries in the input dataset.
-
-        """
-        # First argument can be a string or a TTree/TChain
-        firstarg = self.args[0]
-        if isinstance(firstarg, ROOT.TTree):
-            # If the argument is a TTree or TChain,
-            # get the number of entries from it.
-            return firstarg.GetEntries()
-        elif isinstance(firstarg, str):
-            # Construct a ROOT.TChain object with the name of the tree
-            chain = ROOT.TChain(firstarg)
-
-            # Add the list of input files to the chain
-            for fname in self.inputfiles:
-                chain.Add(fname)
-
-            return chain.GetEntries()
-
-    def get_treename(self):
-        """
-        Get name of the input tree. If the user supplied a string as first
-        argument, that corresponds to the tree name. If the first argument is a
-        TTree or TChain, it retrieves the first full path from the paths
-        returned by ROOT::Internal::TreeUtils::GetTreeFullPaths function.
-
-        Returns:
-            (str): Name of the tree. 
-
-        """
-        firstarg = self.args[0]
-        if isinstance(firstarg, ROOT.TTree):
-            treefullpaths = ROOT.Internal.TreeUtils.GetTreeFullPaths(firstarg)
-            return treefullpaths[0]
-        elif isinstance(firstarg, str):
-            # First argument was the name of the tree
-            return firstarg
-
-    def get_tree(self):
-        """
-        Get ROOT.TTree instance given as constructor argument.
-
-        Returns:
-            (ROOT.TTree, None): instance of the tree used to instantiate the
-            RDataFrame, or `None` if another object was used. ROOT.Tchain
-            inherits from ROOT.TTree so that can be the return value as well.
-        """
-        first_arg = self.args[0]
-        if isinstance(first_arg, ROOT.TTree):
-            return first_arg
-
-        return None
-
-    def get_inputfiles(self):
-        """
-        Get list of input files of the dataset. If the user supplied a TTree or
-        TChain, returns the result of calling the
-        ROOT::Internal::TreeUtils::GetFileNamesFromTree function on that tree.
-        If one of the other tree based constructor arguments of RDataFrame was
-        supplied, this function will parse them and return the name(s) of the
-        corresponding file(s).
-
-        Returns:
-            (list[str]): List of input files of the dataset.
-
-        """
-        if isinstance(self.args[0], ROOT.TTree):
-            # Extract file names from a given TTree or TChain
-            filenames = ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.args[0])
-            return [str(filename) for filename in filenames]
-
-        if len(self.args) > 1:
-            # Second argument can be:
-            # 1. A simple string representing a file or a glob of files
-            # 2. A vector of filename strings
-            # 3. A pointer to a TDirectory (i.e. the file of the dataset)
-            secondarg = self.args[1]
-            if isinstance(secondarg, str):
-                # Expand globbing excluding remote files
-                remote_prefixes = ("root:", "http:", "https:")
-                if not secondarg.startswith(remote_prefixes):
-                    return glob.glob(secondarg)
-                else:
-                    return [secondarg]
-            elif isinstance(secondarg, (list, ROOT.std.vector("string"))):
-                # Make sure this returns a list of Python strings
-                return [str(filename) for filename in secondarg]
-            elif isinstance(secondarg, ROOT.TDirectory):
-                # Return the name of the file
-                return [str(secondarg.GetName())]
-
-    def _get_friend_info(self):
-        """
-        Retrieves information about friend trees of the input tree.
-
-        Returns:
-            (ROOT.Internal.TreeUtils.RFriendInfo): A C++ struct holding
-                information about friend trees. If the user did not supply a
-                TTree or TChain as input to the constructor, returns None.
-        """
-        if isinstance(self.args[0], ROOT.TTree):
-            return ROOT.Internal.TreeUtils.GetFriendInfo(self.args[0])
+        # Retrieve the TTree/TChain that will be processed
+        if isinstance(args[0], ROOT.TTree):
+            # RDataFrame(tree, defaultBranches = {})
+            self.tree = args[0]
+            # Retrieve information about friend trees when user passes a TTree
+            # or TChain object.
+            self.friendinfo = ROOT.Internal.TreeUtils.GetFriendInfo(args[0])
+            if len(args) == 2:
+                self.defaultbranches = args[1]
         else:
-            return None
+            if isinstance(args[1], ROOT.TDirectory):
+                # RDataFrame(treeName, dirPtr, defaultBranches = {})
+                # We can assume both the argument TDirectory* and the TTree*
+                # returned from TDirectory::Get are not nullptr since we already
+                # did and early check of the user arguments in get_headnode
+                self.tree = args[1].Get(args[0])
+            elif isinstance(args[1], (str, ROOT.std.string_view)):
+                # RDataFrame(treeName, filenameglob, defaultBranches = {})
+                self.tree = ROOT.TChain(args[0])
+                self.tree.Add(str(args[1]))
+            elif isinstance(args[1], (list, ROOT.std.vector[ROOT.std.string])):
+                # RDataFrame(treename, fileglobs, defaultBranches = {})
+                self.tree = ROOT.TChain(args[0])
+                for filename in args[1]:
+                    self.tree.Add(str(filename))
+            
+            # In any of the three constructors considered in this branch, if
+            # the user supplied three arguments then the third argument is a
+            # list of default branches
+            if len(args) == 3:
+                self.defaultbranches = args[2]
+
+        # Retrieve treename and inputfiles to retrieve cluster list later
+        # TODO: We are still assuming that treename is unique for the whole
+        # dataset even when we're dealing with a TChain. This is wrong and needs
+        # to be fixed, see https://github.com/root-project/root/issues/8750
+        self.treename = ROOT.Internal.TreeUtils.GetTreeFullPaths(self.tree)[0]
+        self.inputfiles = [str(filename) for filename in ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.tree)]
 
     def build_ranges(self):
         """Build the ranges for this dataset."""
         # Empty datasets cannot be processed distributedly
-        if not self.nentries:
+        if self.tree.GetEntries() == 0:
             raise RuntimeError(
                 ("Cannot build a distributed RDataFrame with zero entries. "
                  "Distributed computation will fail. "))
