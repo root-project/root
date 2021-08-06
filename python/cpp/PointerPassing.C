@@ -4,30 +4,30 @@ public:
       static Z z[2];
       return &(z[idx]);
    }
-   static long GimeAddressPtr( void* obj ) {
-      return reinterpret_cast< long >( obj );
+   static unsigned long GimeAddressPtr( void* obj ) {
+      return reinterpret_cast< unsigned long >( obj );
    }
 
-   static long GimeAddressPtrRef( void*& obj ) {
-      return reinterpret_cast< long >( obj );
+   static unsigned long GimeAddressPtrRef( void*& obj ) {
+      return reinterpret_cast< unsigned long >( obj );
    }
 
-   static long SetAddressPtrRef( void*& obj ) {
+   static unsigned long SetAddressPtrRef( void*& obj ) {
       obj = (void*)0x1234;
       return 21;
    }
 
-   static long GimeAddressPtrPtr( void** obj ) {
-      return reinterpret_cast< long >( obj );
+   static unsigned long GimeAddressPtrPtr( void** obj ) {
+      return reinterpret_cast< unsigned long >( obj );
    }
 
-   static long SetAddressPtrPtr( void** obj ) {
+   static unsigned long SetAddressPtrPtr( void** obj ) {
       (*(long**)obj) = (long*)0x4321;
       return 42;
    }
 
-   static long GimeAddressObject( TObject* obj ) {
-      return reinterpret_cast< long >( obj );
+   static unsigned long GimeAddressObject( TObject* obj ) {
+      return reinterpret_cast< unsigned long >( obj );
    }
 
    static bool checkAddressOfZ(Z*& pZ) {
