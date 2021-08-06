@@ -74,8 +74,8 @@ w.Print()
 # r = w.model.fitTo(*d)
 
 # use normal workspace methods
-model = w.pdf("model")
-x = w.var("x")
+model = w["model"]
+x = w["x"]
 
 d = model.generate(ROOT.RooArgSet(x), 1000)
 r = model.fitTo(d)
@@ -95,7 +95,7 @@ d.plotOn(frame)
 # model.plotOn(frame, ROOT.RooFit.Components(bkg), ROOT.RooFit.LineStyle(ROOT.kDashed))
 
 # correct syntax
-bkg = w.pdf("bkg")
+bkg = w["bkg"]
 model.plotOn(frame)
 ras_bkg = ROOT.RooArgSet(bkg)
 model.plotOn(frame, Components=ras_bkg, LineStyle="--")

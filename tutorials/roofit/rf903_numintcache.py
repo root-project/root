@@ -40,11 +40,12 @@ def getWorkspace(mode):
         # applied)
 
         # w.pdf("model").setNormValueCaching(3)
-        w.pdf("model").setStringAttribute("CACHEPARMINT", "x:y:z")
+        model = w["model"]
+        model.setStringAttribute("CACHEPARMINT", "x:y:z")
 
         # Evaluate pdf once to trigger filling of cache
-        normSet = ROOT.RooArgSet(w.var("x"), w.var("y"), w.var("z"))
-        w.pdf("model").getVal(normSet)
+        normSet = ROOT.RooArgSet(w["x"], w["y"], w["z"])
+        model.getVal(normSet)
         w.writeToFile("rf903_numintcache.root")
 
     if mode == 2:
@@ -85,16 +86,17 @@ if mode == 1:
 
 # ROOT.This is always slow (need to find maximum function value
 # empirically in 3D space)
-d = w.pdf("model").generate(ROOT.RooArgSet(w.var("x"), w.var("y"), w.var("z")), 1000)
+model = w["model"]
+d = model.generate(ROOT.RooArgSet(w["x"], w["y"], w["z"]), 1000)
 
 # ROOT.This is slow in mode 0, fast in mode 1
-w.pdf("model").fitTo(d, Verbose=True, Timer=True)
+model.fitTo(d, Verbose=True, Timer=True)
 
 # Projection on x (always slow as 2D integral over Y, at fitted value of a
 # is not cached)
-framex = w.var("x").frame(Title="Projection of 3D model on X")
+framex = w["x"].frame(Title="Projection of 3D model on X")
 d.plotOn(framex)
-w.pdf("model").plotOn(framex)
+model.plotOn(framex)
 
 # Draw x projection on canvas
 c = ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)
