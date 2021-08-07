@@ -28,18 +28,10 @@ by the user to getVal() and on which parameters need to be tracked
 for changes to trigger a refilling of the cache histogram.
 **/
 
-#include "Riostream.h"
-using namespace std ;
-
-#include "RooFit.h"
-#include "TString.h"
 #include "RooAbsCachedPdf.h"
-#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
-#include "RooGlobalFunc.h"
-#include "RooRealVar.h"
 #include "RooExpensiveObjectCache.h"
 
 ClassImp(RooAbsCachedPdf);
@@ -202,7 +194,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
 
   // Create RooDataHist
   auto hname = std::string(self.GetName()) + "_" + self.inputBaseName() + "_CACHEHIST"
-               + self.cacheNameSuffix(orderedObs).Data() + self.histNameSuffix().Data();
+               + self.cacheNameSuffix(orderedObs).c_str() + self.histNameSuffix().Data();
   _hist = std::make_unique<RooDataHist>(hname,hname,orderedObs,self.binningName()) ;
   _hist->removeSelfFromDir() ;
 
@@ -223,16 +215,14 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   }
 
   // Create RooHistPdf
-  TString pdfname = self.inputBaseName() ;
-  pdfname.Append("_CACHE") ;
-  pdfname.Append(self.cacheNameSuffix(pdfFinalObs)) ;
+  auto pdfname = std::string(self.inputBaseName()) + "_CACHE" + self.cacheNameSuffix(pdfFinalObs);
   // add a different name when cache is built in case nsetIn is not an empty list
-  if (nsetIn && nsetIn->getSize() > 0) {
-     pdfname.Append("_NORM");
+  if (nsetIn && !nsetIn->empty()) {
+     pdfname += "_NORM";
      for (auto *arg : *nsetIn)
-        pdfname.Append(TString::Format("_%s", arg->GetName()));
+        pdfname += std::string("_") + arg->GetName();
   }
-  _pdf = std::make_unique<RooHistPdf>(pdfname,pdfname,pdfObs,orderedObs,*_hist,self.getInterpolationOrder()) ;
+  _pdf = std::make_unique<RooHistPdf>(pdfname.c_str(),pdfname.c_str(),pdfObs,orderedObs,*_hist,self.getInterpolationOrder()) ;
   if (nsetIn) {
     _nset.addClone(*nsetIn) ;
   }
@@ -242,7 +232,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   std::unique_ptr<RooArgSet> params{self.actualParameters(pdfFinalObs)};
   params->remove(pdfFinalObs,kTRUE,kTRUE) ;
 
-  string name= Form("%s_CACHEPARAMS",_pdf->GetName()) ;
+  auto name = std::string(_pdf->GetName()) + "_CACHEPARAMS";
   _paramTracker = std::make_unique<RooChangeTracker>(name.c_str(),name.c_str(),*params,kTRUE) ;
   _paramTracker->hasChanged(kTRUE) ; // clear dirty flag as cache is up-to-date upon creation
 
@@ -260,26 +250,24 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
 /// Construct string with unique suffix for cache objects based on
 /// observable names that define cache configuration
 
-TString RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
+std::string RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
 {
-  TString name ;
-  name.Append("_Obs[") ;
-  if (nset.getSize()>0) {
+  std::string name = "_Obs[";
+  if (!nset.empty()) {
     Bool_t first(kTRUE) ;
     for(auto const& arg : nset) {
       if (first) {
-	first=kFALSE ;
+        first=kFALSE ;
       } else {
-	name.Append(",") ;
+        name += ",";
       }
-      name.Append(arg->GetName()) ;
+      name += arg->GetName();
     }
   }
 
-  name.Append("]") ;
-  const char* payloadUS = payloadUniqueSuffix() ;
-  if (payloadUS) {
-    name.Append(payloadUS) ;
+  name += "]";
+  if (const char* payloadUS = payloadUniqueSuffix()) {
+    name += payloadUS;
   }
   return name ;
 }
@@ -326,12 +314,11 @@ void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char
     os << indent << "--- RooAbsCachedPdf begin cache ---" << endl ;
   }
 
-  TString indent2(indent) ;
-  os << Form("[%d] Configuration for observables ",curElem) << _nset << endl ;
-  indent2 += Form("[%d] ",curElem) ;
-  _pdf->printCompactTree(os,indent2) ;
+  os << "[" << curElem << "]" << " Configuration for observables " << _nset << std::endl;
+  auto indent2 = std::string(indent) + "[" + std::to_string(curElem) + "]";
+  _pdf->printCompactTree(os,indent2.c_str()) ;
   if (_norm) {
-    os << Form("[%d] Norm ",curElem) ;
+    os << "[" << curElem << "] Norm ";
     _norm->printStream(os,kName|kArgs,kSingleLine) ;
   }
 

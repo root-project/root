@@ -106,7 +106,7 @@ public:
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager  
   Int_t _ipOrder ; // Interpolation order for cache histograms 
  
-  TString cacheNameSuffix(const RooArgSet& nset) const ;
+  std::string cacheNameSuffix(const RooArgSet& nset) const ;
   virtual TString histNameSuffix() const { return TString("") ; }
   void disableCache(Bool_t flag) { 
     // Flag to disable caching mechanism
