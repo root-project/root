@@ -10,11 +10,11 @@
  *      Functionality for parsing a saved PyTorch .PT model into RModel object    *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Sanjiban Sengupta <sanjiban.sg@gmail.com> - IIIT, Bhubaneswar             *
+ *      Sanjiban Sengupta <sanjiban.sg@gmail.com>                                 *
  *                                                                                *
- * Copyright (c) 2020:                                                            *
+ * Copyright (c) 2021:                                                            *
  *      CERN, Switzerland                                                         *
- *      IIIT, Bhubaneswar                                                         *
+ *                                                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -25,7 +25,19 @@
 #ifndef TMVA_SOFIE_RMODELPARSER_PYTORCH
 #define TMVA_SOFIE_RMODELPARSER_PYTORCH
 
-#include "TMVA/RModelParser_Common.h"
+#include <Python.h>
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
+#include "TMVA/RModel.hxx"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/Types.h"
+#include "TMVA/OperatorList.hxx"
+
+#include "Rtypes.h"
+#include "TString.h"
+
 
 namespace TMVA{
 namespace Experimental{
@@ -37,6 +49,9 @@ enum class NodeType{
 };
 
 namespace PyTorch{
+
+    void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
+    const char* PyStringAsString(PyObject* str);
     RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
     RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
   }

@@ -20,9 +20,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     TMVA/MethodPyRandomForest.h
     TMVA/MethodPyTorch.h
 <<<<<<< HEAD
+<<<<<<< HEAD
     TMVA/RModelParser_Keras.h
 =======
     TMVA/RModelParser_Common.h    
+=======
+>>>>>>> f738b1cda1... Fix: Segmentation violation on multiple calls of Parse() & Improvements
     TMVA/RModelParser_PyTorch.h
 >>>>>>> 740da8da15... Initial Commit for RModelParser_Pytorch
     TMVA/PyMethodBase.h
