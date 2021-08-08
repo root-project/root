@@ -28,12 +28,12 @@ public:
   // Default constructor
   RooAbsCachedPdf() : _cacheMgr(this,10) {}
   RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
-  RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=0) ;
+  RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=nullptr) ;
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
-  virtual Bool_t selfNormalized() const { 
+  virtual double getValV(const RooArgSet* set=nullptr) const ;
+  virtual bool selfNormalized() const {
     // Declare p.d.f self normalized
-    return kTRUE ; 
+    return true ;
   }
 
   RooAbsPdf* getCachePdf(const RooArgSet& nset) const {
@@ -47,15 +47,15 @@ public:
   RooAbsPdf* getCachePdf(const RooArgSet* nset=0) const ;
   RooDataHist* getCacheHist(const RooArgSet* nset=0) const ;
 
-  void setInterpolationOrder(Int_t order) ;
+  void setInterpolationOrder(int order) ;
   Int_t getInterpolationOrder() const { 
     // Set interpolation order in RooHistPdf that represent cached histogram
     return _ipOrder ; 
   }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ; 
-  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  virtual bool forceAnalyticalInt(const RooAbsArg& dep) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
+  virtual double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
 
 
   class PdfCacheElem : public RooAbsCacheElement {
@@ -83,7 +83,7 @@ public:
 
   protected:
    
-  PdfCacheElem* getCache(const RooArgSet* nset, Bool_t recalculate=kTRUE) const ;
+  PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
 
   virtual const char* payloadUniqueSuffix() const { return 0 ; }
@@ -108,7 +108,7 @@ public:
  
   std::string cacheNameSuffix(const RooArgSet& nset) const ;
   virtual TString histNameSuffix() const { return TString("") ; }
-  void disableCache(Bool_t flag) { 
+  void disableCache(bool flag) {
     // Flag to disable caching mechanism
     _disableCache = flag ; 
   }
@@ -119,7 +119,7 @@ public:
     RooArgSet _allVars ;
     RooArgSet _anaVars ;
     const RooArgSet* _nset ;
-    Bool_t    _unitNorm ;
+    bool    _unitNorm ;
   } ;
   mutable std::map<Int_t,AnaIntConfig> _anaIntMap ; //! Map for analytical integration codes
 
@@ -127,7 +127,7 @@ public:
 
 private:
 
-  Bool_t _disableCache ; // Flag to run object in passthrough (= non-caching mode)
+  bool _disableCache = false; // Flag to run object in passthrough (= non-caching mode)
 
   ClassDef(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
 };

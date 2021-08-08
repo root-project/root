@@ -41,11 +41,10 @@ ClassImp(RooAbsCachedPdf);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsCachedPdf::RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder) :
+RooAbsCachedPdf::RooAbsCachedPdf(const char *name, const char *title, int ipOrder) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
-  _ipOrder(ipOrder),
-  _disableCache(kFALSE)
+  _ipOrder(ipOrder)
  {
  }
 
@@ -69,19 +68,14 @@ RooAbsCachedPdf::RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name)
 /// rather than return value of evaluate() which is undefined
 /// for RooAbsCachedPdf
 
-Double_t RooAbsCachedPdf::getValV(const RooArgSet* nset) const
+double RooAbsCachedPdf::getValV(const RooArgSet* nset) const
 {
   if (_disableCache) {
     return RooAbsPdf::getValV(nset) ;
   }
 
   // Calculate current unnormalized value of object
-  PdfCacheElem* cache = getCache(nset) ;
-
-  Double_t value = cache->pdf()->getVal(nset) ;
-
-  _value = value ;
-  return _value ;
+  return _value = getCache(nset)->pdf()->getVal(nset) ;
 }
 
 
@@ -122,17 +116,17 @@ void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const
 /// recalculation of cache contents of existing caches that are marked dirty due to
 /// dependent parameter changes is suppressed.
 
-RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, Bool_t recalculate) const
+RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, bool recalculate) const
 {
   // Check if this configuration was created becfore
-  Int_t sterileIdx(-1) ;
-  PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
+  int sterileIdx = -1 ;
+  auto cache = static_cast<PdfCacheElem*>(_cacheMgr.getObj(nset,0,&sterileIdx));
 
   // Check if we have a cache histogram in the global expensive object cache
   if (cache) {
-    if (cache->paramTracker()->hasChanged(kTRUE) && (recalculate || !cache->pdf()->haveUnitNorm()) ) {
+    if (cache->paramTracker()->hasChanged(true) && (recalculate || !cache->pdf()->haveUnitNorm()) ) {
       cxcoutD(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf "
-		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << endl ;
+		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << std::endl ;
       fillCacheObject(*cache) ;
       cache->pdf()->setValueDirty() ;
     }
@@ -143,7 +137,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   cache = createCache(nset) ;
 
   // Check if we have contents registered already in global expensive object cache
-  RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+  auto htmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
 
   if (htmp) {
 
@@ -154,7 +148,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
     fillCacheObject(*cache) ;
 
-    RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
+    auto eoclone = new RooDataHist(*cache->hist()) ;
     eoclone->removeSelfFromDir() ;
     expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
 
@@ -162,14 +156,14 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
 
   // Store this cache configuration
-  Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
+  int code = _cacheMgr.setObj(nset,0,(static_cast<RooAbsCacheElement*>(cache)),0) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
 		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
   if (htmp) {
     ccoutI(Caching) << " from preexisting content." ;
   }
-  ccoutI(Caching) << endl ;
+  ccoutI(Caching) << std::endl ;
 
   return cache ;
 }
@@ -199,7 +193,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   _hist->removeSelfFromDir() ;
 
   //RooArgSet* observables= self.getObservables(orderedObs) ;
-  // cout << "orderedObs = " << orderedObs << " observables = " << *observables << endl ;
+  // cout << "orderedObs = " << orderedObs << " observables = " << *observables << std::endl ;
 
   // Get set of p.d.f. observable corresponding to set of histogram observables
   RooArgSet pdfObs ;
@@ -230,11 +224,11 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   // Create pseudo-object that tracks changes in parameter values
 
   std::unique_ptr<RooArgSet> params{self.actualParameters(pdfFinalObs)};
-  params->remove(pdfFinalObs,kTRUE,kTRUE) ;
+  params->remove(pdfFinalObs,true,true) ;
 
   auto name = std::string(_pdf->GetName()) + "_CACHEPARAMS";
-  _paramTracker = std::make_unique<RooChangeTracker>(name.c_str(),name.c_str(),*params,kTRUE) ;
-  _paramTracker->hasChanged(kTRUE) ; // clear dirty flag as cache is up-to-date upon creation
+  _paramTracker = std::make_unique<RooChangeTracker>(name.c_str(),name.c_str(),*params,true) ;
+  _paramTracker->hasChanged(true) ; // clear dirty flag as cache is up-to-date upon creation
 
   // Introduce formal dependency of RooHistPdf on parameters so that const optimization code
   // makes the correct decisions
@@ -254,10 +248,10 @@ std::string RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
 {
   std::string name = "_Obs[";
   if (!nset.empty()) {
-    Bool_t first(kTRUE) ;
+    bool first(true) ;
     for(auto const& arg : nset) {
       if (first) {
-        first=kFALSE ;
+        first=false ;
       } else {
         name += ",";
       }
@@ -278,14 +272,12 @@ std::string RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
 /// Change the interpolation order that is used in RooHistPdf cache
 /// representation smoothing the RooDataHist shapes.
 
-void RooAbsCachedPdf::setInterpolationOrder(Int_t order)
+void RooAbsCachedPdf::setInterpolationOrder(int order)
 {
   _ipOrder = order ;
 
-  Int_t i ;
-  for (i=0 ; i<_cacheMgr.cacheSize() ; i++) {
-    PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObjByIndex(i) ;
-    if (cache) {
+  for (int i=0 ; i<_cacheMgr.cacheSize() ; i++) {
+    if (auto cache = static_cast<PdfCacheElem*>(_cacheMgr.getObjByIndex(i))) {
       cache->pdf()->setInterpolationOrder(order) ;
     }
   }
@@ -308,10 +300,10 @@ RooArgList RooAbsCachedPdf::PdfCacheElem::containedArgs(Action)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print contents of cache when printing self as part of object tree
 
-void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem)
+void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(std::ostream& os, const char* indent, int curElem, int maxElem)
 {
   if (curElem==0) {
-    os << indent << "--- RooAbsCachedPdf begin cache ---" << endl ;
+    os << indent << "--- RooAbsCachedPdf begin cache ---" << std::endl ;
   }
 
   os << "[" << curElem << "]" << " Configuration for observables " << _nset << std::endl;
@@ -323,7 +315,7 @@ void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char
   }
 
   if (curElem==maxElem) {
-    os << indent << "--- RooAbsCachedPdf end cache --- " << endl ;
+    os << indent << "--- RooAbsCachedPdf end cache --- " << std::endl ;
   }
 }
 
@@ -333,7 +325,7 @@ void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char
 /// Force RooRealIntegral to offer all our actual observable for internal
 /// integration
 
-Bool_t RooAbsCachedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
+bool RooAbsCachedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 {
   return !std::unique_ptr<RooArgSet>{actualObservables(dep)}->empty();
 }
@@ -345,14 +337,14 @@ Bool_t RooAbsCachedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 /// is forwarded to RooHistPdf cache p.d.f of cache that is used for
 /// given choice of observables
 
-Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const
+int RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const
 {
-  if (allVars.getSize()==0) {
+  if (allVars.empty()) {
     return 0 ;
   }
 
   PdfCacheElem* cache = getCache(normSet?normSet:&allVars) ;
-  Int_t code = cache->pdf()->getAnalyticalIntegralWN(allVars,analVars,normSet,rangeName) ;
+  int code = cache->pdf()->getAnalyticalIntegralWN(allVars,analVars,normSet,rangeName) ;
 
   if (code==0) {
     return 0 ;
@@ -366,15 +358,15 @@ Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   if (normSet) {
     nrm->addClone(*normSet) ;
   }
-  std::vector<Int_t> codeList(2);
+  std::vector<int> codeList(2);
   codeList[0] = code ;
   codeList[1] = cache->pdf()->haveUnitNorm() ? 1 : 0 ;
-  Int_t masterCode = _anaReg.store(codeList,all,ana,nrm)+1 ; // takes ownership of all sets
+  int masterCode = _anaReg.store(codeList,all,ana,nrm)+1 ; // takes ownership of all sets
 
 
   // Mark all observables as internally integrated
   if (cache->pdf()->haveUnitNorm()) {
-    analVars.add(allVars,kTRUE) ;
+    analVars.add(allVars,true) ;
   }
 
   return masterCode ;
@@ -387,21 +379,21 @@ Int_t RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 /// is forwarded to RooHistPdf cache p.d.f of cache that is used for
 /// given choice of observables
 
-Double_t RooAbsCachedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet, const char* rangeName) const
 {
   if (code==0) {
     return getVal(normSet) ;
   }
 
   RooArgSet *allVars(0),*anaVars(0),*normSet2(0),*dummy(0) ;
-  const std::vector<Int_t> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
+  const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
-  PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,kFALSE) ;
-  Double_t ret = cache->pdf()->analyticalIntegralWN(codeList[0],normSet,rangeName) ;
+  PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,false) ;
+  double ret = cache->pdf()->analyticalIntegralWN(codeList[0],normSet,rangeName) ;
 
   if (codeList[1]>0) {
     RooArgSet factObs(*allVars) ;
-    factObs.remove(*anaVars,kTRUE,kTRUE) ;
+    factObs.remove(*anaVars,true,true) ;
     for(auto * arg : dynamic_range_cast<RooAbsLValue*>(factObs)) {
       ret *= arg->volume(rangeName) ;
     }
