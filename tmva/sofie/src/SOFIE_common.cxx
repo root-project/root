@@ -30,6 +30,15 @@ std::string ConvertTypeToString(ETensorType type){
    }
 }
 
+ETensorType ConvertStringToType(std::string type){
+   if(type == "'float32'" || type == "'Float'"){
+     return ETensorType::FLOAT;
+   }
+     else{
+       return ETensorType::UNDEFINED;
+}
+}
+
 namespace{
 template<typename T>
 static inline void copy_vector_data(int_t no_of_copies, int_t input_size, T* input, T* target){  //only visible within this translation unit

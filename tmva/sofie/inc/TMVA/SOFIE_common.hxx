@@ -26,6 +26,7 @@ enum class ETensorType{
 typedef std::int64_t int_t;
 
 std::string ConvertTypeToString(ETensorType type);
+ETensorType ConvertStringToType(std::string type);
 
 struct Dim{
    bool isParam = false;
