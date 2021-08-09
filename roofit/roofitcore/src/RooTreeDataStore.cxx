@@ -49,7 +49,8 @@ RooAbsData::convertToVectorStore().
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooHistError.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include "TTree.h"
 #include "TFile.h"
@@ -572,7 +573,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
 
   std::vector<std::string> ranges;
   if (rangeName) {
-   ranges = RooHelpers::tokenise(rangeName, ",");
+   ranges = ROOT::Split(rangeName, ",");
   }
 
   for (auto i=nStart; i < nevent ; ++i) {

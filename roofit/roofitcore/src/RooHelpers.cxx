@@ -22,6 +22,7 @@
 #include "RooAbsRealLValue.h"
 #include "RooArgList.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "TClass.h"
 
 namespace RooHelpers {
@@ -55,30 +56,6 @@ LocalChangeMsgLevel::~LocalChangeMsgLevel() {
 
   if (fExtraStream > 0)
     msg.deleteStream(fExtraStream);
-}
-
-
-/// Tokenise the string by splitting at the characters in delims.
-/// Consecutive delimiters are collapsed, so that no delimiters will appear in the
-/// tokenised strings, and no emtpy strings are returned.
-/// \param[in] str String to tokenise.
-/// \param[in] delims One or more delimiters used to split the string.
-/// \param[in] returnEmptyToken If the string is empty, return one empty token. Default is to return an empty vector.
-std::vector<std::string> tokenise(const std::string &str, const std::string &delims, bool returnEmptyToken /*= true*/) {
-  if (str.empty())
-    return std::vector<std::string>(returnEmptyToken ? 1 : 0);
-
-  std::vector<std::string> tokens;
-
-  auto beg = str.find_first_not_of(delims, 0);
-  auto end = str.find_first_of(delims, beg);
-  do {
-    tokens.emplace_back(str.substr(beg, end-beg));
-    beg = str.find_first_not_of(delims, end);
-    end = str.find_first_of(delims, beg);
-  } while (beg != std::string::npos);
-
-  return tokens;
 }
 
 
@@ -291,7 +268,7 @@ std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 /// \param[in] arg names The names of the objects to select in a colon-separated string.
 RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
   RooArgSet output;
-  for(auto const& name : tokenise(names, ":")) {
+  for(auto const& name : ROOT::Split(names, ":")) {
     if(auto arg = argSet.find(name.c_str())) output.add(*arg);
   }
   return output;

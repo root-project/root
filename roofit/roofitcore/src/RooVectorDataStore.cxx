@@ -41,9 +41,10 @@ which returns spans pointing directly to the data.
 #include "RooCategory.h"
 #include "RooHistError.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
 #include "RunContext.h"
+#include "RooHelpers.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "TList.h"
 #include "TBuffer.h"
 
@@ -600,7 +601,7 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
 
   std::vector<std::string> ranges;
   if (rangeName) {
-   ranges = RooHelpers::tokenise(rangeName, ",");
+   ranges = ROOT::Split(rangeName, ",");
   }
 
   reserve(numEntries() + (nevent - nStart));
