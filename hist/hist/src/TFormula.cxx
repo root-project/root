@@ -22,6 +22,8 @@
 #include "TFormula.h"
 #include "TRegexp.h"
 
+#include "ROOT/StringUtils.hxx"
+
 #include <array>
 #include <cassert>
 #include <iostream>
@@ -1672,34 +1674,14 @@ void TFormula::HandleExponentiation(TString &formula)
    }
 }
 
-namespace {
-
-// Borrowed from RooHelpers.h, should this go to a central place?
-std::vector<std::string> tokenise(const std::string &str, const std::string &delims, bool returnEmptyToken) {
-  if (str.empty())
-    return std::vector<std::string>(returnEmptyToken ? 1 : 0);
-
-  std::vector<std::string> tokens;
-
-  auto beg = str.find_first_not_of(delims, 0);
-  auto end = str.find_first_of(delims, beg);
-  do {
-    tokens.emplace_back(str.substr(beg, end-beg));
-    beg = str.find_first_not_of(delims, end);
-    end = str.find_first_of(delims, beg);
-  } while (beg != std::string::npos);
-
-  return tokens;
-}
-
-} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle linear functions defined with the operator ++.
 
 void TFormula::HandleLinear(TString &formula)
 {
-   auto terms = tokenise(formula.Data(), "@", false);
+   if(formula.Length() == 0) return;
+   auto terms = ROOT::Split(formula.Data(), "@");
    if(terms.size() <= 1) return; // function is not linear
    // Handle Linear functions identified with "@" operator
    fLinearParts.reserve(terms.size());

@@ -17,6 +17,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/StringUtils.hxx>
 
 #include <cstdlib>
 #include <memory>
@@ -82,20 +83,8 @@ ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetFie
    if (fieldName.empty())
       return nullptr;
 
-   auto split_on_dot = [](std::string_view in) {
-      std::vector<std::string_view> splits;
-      for (std::size_t pos = in.find('.'); pos != std::string_view::npos; pos = in.find('.')) {
-         splits.push_back(in.substr(0, pos));
-         in.remove_prefix(pos + 1);
-      }
-      if (in.size() > 0)
-         splits.emplace_back(in);
-
-      return splits;
-   };
-
    auto *field = static_cast<ROOT::Experimental::Detail::RFieldBase *>(fFieldZero.get());
-   for (auto subfieldName : split_on_dot(fieldName)) {
+   for (auto subfieldName : ROOT::Split(fieldName, ".")) {
       const auto subfields = field->GetSubFields();
       auto it =
          std::find_if(subfields.begin(), subfields.end(), [&](const auto *f) { return f->GetName() == subfieldName; });
