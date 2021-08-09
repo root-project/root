@@ -769,8 +769,10 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
       AddDoublePtrParam();
 
    // We need an extra Double_t* for the gradient return result.
-   if (IsGradient)
-      AddDoublePtrParam();
+   if (IsGradient) {
+      prototypeArguments.Append(",");
+      prototypeArguments.Append("clad::array_ref<Double_t>");
+   }
 
    // Initialize the method call using real function name (cling name) defined
    // by ProcessFormula
@@ -3143,10 +3145,11 @@ bool TFormula::GenerateGradientPar()
          std::string GradReqFuncName = GetGradientFuncName() + "_req";
          // We want to call clad::differentiate(TFormula_id);
          fGradGenerationInput = std::string("#pragma cling optimize(2)\n") +
-            "#pragma clad ON\n" +
-            "void " + GradReqFuncName + "() {\n" +
-            "clad::gradient(" + std::string(fClingName.Data()) + ");\n }\n" +
-            "#pragma clad OFF";
+             "#pragma clad ON\n" +
+             "void " + GradReqFuncName + "() {\n" +
+             "clad::gradient(" + std::string(fClingName.Data())
+             + ", \"p\");\n }\n" +
+             "#pragma clad OFF";
 
          if (!gInterpreter->Declare(fGradGenerationInput.c_str()))
             return false;
@@ -3211,13 +3214,24 @@ void TFormula::GradientPar(const Double_t *x, Double_t *result)
       // __attribute__((used)) extern "C" void __cf_0(void* obj, int nargs, void** args, void* ret)
       // {
       //    ((void (&)(double*, double*,
-      //               double*))TFormula____id_grad)(*(double**)args[0], *(double**)args[1],
-      //                                                                 *(double**)args[2]);
+      //               clad::array_ref<double>))TFormula____id_grad_1)(*(double**)args[0],
+      //                                                             *(double**)args[1],
+      //                                                             *(clad::array_ref<double> *)args[2]);
       //    return;
       // }
       const double *pars = fClingParameters.data();
       args[1] = &pars;
-      args[2] = &result;
+
+      // Using the interpreter to obtain the pointer to clad::array_ref is too
+      // slow and we do not want to expose clad::array_ref to the interpreter
+      // so this struct acts as a lightweight implementation of it
+      struct array_ref_interface {
+        Double_t *arr;
+        std::size_t size;
+      };
+
+      array_ref_interface ari{result, static_cast<size_t>(fNpar)};
+      args[2] = &ari;
       (*fGradFuncPtr)(0, 3, args, /*ret*/nullptr); // We do not use ret in a return-void func.
    }
 }
@@ -3537,7 +3551,9 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
 TString TFormula::GetGradientFormula() const {
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
-   gInterpreter->Evaluate(GetGradientFuncName().c_str(), *v);
+   std::string s("(void (&)(Double_t *, Double_t *, clad::array_ref<Double_t>)) ");
+   s += GetGradientFuncName();
+   gInterpreter->Evaluate(s.c_str(), *v);
    return v->ToString();
 }
 

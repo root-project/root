@@ -1400,6 +1400,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Add include path to etc/cling.
       clingArgsStorage.push_back("-I" + interpInclude + "/cling");
 
+      // Add include path to etc/cling.
+      clingArgsStorage.push_back("-I" + interpInclude + "/cling/plugins/include");
+
       // Add the root include directory and etc/ to list searched by default.
       clingArgsStorage.push_back(std::string(("-I" + TROOT::GetIncludeDir()).Data()));
 
