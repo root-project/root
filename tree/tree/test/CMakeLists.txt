@@ -33,3 +33,4 @@ ROOT_ADD_GTEST(testTTreeTruncatedDatatypes TTreeTruncatedDatatypes.cxx LIBRARIES
 ROOT_ADD_GTEST(testTTreeRegressions TTreeRegressions.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(entrylist_addsublist entrylist_addsublist.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(chain_setentrylist chain_setentrylist.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(entrylist_enterrange entrylist_enterrange.cxx LIBRARIES RIO Tree)
