@@ -176,21 +176,21 @@ TRInterface &TRInterface::Instance()
 Bool_t TRInterface::IsInstalled(TString pkg)
 {
    TString cmd = "is.element('" + pkg + "', installed.packages()[,1])";
-   return fR->parseEval(cmd.Data());
+   return this->Eval(cmd).As<Bool_t>();
 }
 
 //______________________________________________________________________________
 Bool_t TRInterface::Require(TString pkg)
 {
    TString cmd = "require('" + pkg + "',quiet=TRUE)";
-   return fR->parseEval(cmd.Data());
+   return this->Eval(cmd).As<Bool_t>();
 }
 
 //______________________________________________________________________________
 Bool_t TRInterface::Install(TString pkg, TString repos)
 {
    TString cmd = "install.packages('" + pkg + "',repos='" + repos + "',dependencies=TRUE)";
-   fR->parseEval(cmd.Data());
+   this->Eval(cmd);
    return IsInstalled(pkg);
 }
 
