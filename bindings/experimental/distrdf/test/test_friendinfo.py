@@ -73,7 +73,7 @@ class FriendInfoTest(unittest.TestCase):
         headnode = create_dummy_headnode(maintree)
 
         # Retrieve information about friends
-        friend_info = headnode._get_friend_info()
+        friend_info = headnode.friendinfo
 
         # Convert to Python collections
         friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friend_info.fFriendNames]
@@ -123,7 +123,7 @@ class FriendInfoTest(unittest.TestCase):
         headnode = create_dummy_headnode(maintree)
 
         # Retrieve information about friends
-        friend_info = headnode._get_friend_info()
+        friend_info = headnode.friendinfo
 
         # Convert to Python collections
         friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friend_info.fFriendNames]
