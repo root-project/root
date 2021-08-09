@@ -46,7 +46,6 @@ and try reading again.
 **/
 
 #include "RooWorkspace.h"
-#include "RooHelpers.h"
 #include "RooFit.h"
 #include "RooWorkspaceHandle.h"
 #include "RooAbsPdf.h"
@@ -74,6 +73,8 @@ and try reading again.
 #include "TH1.h"
 #include "TClass.h"
 #include "strlcpy.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include <map>
 #include <sstream>
@@ -260,7 +261,7 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
 {
   // Parse file/workspace/objectname specification
-  std::vector<std::string> tokens = RooHelpers::tokenise(fileSpec, ":");
+  std::vector<std::string> tokens = ROOT::Split(fileSpec, ":");
 
   // Check that parsing was successful
   if (tokens.size() != 3) {
@@ -424,8 +425,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (strlen(varChangeIn)>0) {
 
     // Parse comma separated lists into map<string,string>
-    const std::vector<std::string> tokIn = RooHelpers::tokenise(varChangeIn, ", ");
-    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ", ");
+    const std::vector<std::string> tokIn = ROOT::Split(varChangeIn, ", ", /*skipEmpty= */ true);
+    const std::vector<std::string> tokOut = ROOT::Split(varChangeOut, ", ", /*skipEmpty= */ true);
     for (unsigned int i=0; i < tokIn.size(); ++i) {
       varMap.insert(std::make_pair(tokIn[i], tokOut[i]));
     }
@@ -437,7 +438,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   // First convert exception list if provided
   std::set<string> exceptVarNames ;
   if (exceptVars && strlen(exceptVars)) {
-    const std::vector<std::string> toks = RooHelpers::tokenise(exceptVars, ", ");
+    const std::vector<std::string> toks = ROOT::Split(exceptVars, ", ", /*skipEmpty= */ true);
     exceptVarNames.insert(toks.begin(), toks.end());
   }
 
@@ -805,8 +806,8 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   // Process any change in variable names
   if (strlen(varChangeIn)>0) {
     // Parse comma separated lists of variable name changes
-    const std::vector<std::string> tokIn  = RooHelpers::tokenise(varChangeIn, ",");
-    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ",");
+    const std::vector<std::string> tokIn  = ROOT::Split(varChangeIn, ",");
+    const std::vector<std::string> tokOut = ROOT::Split(varChangeOut, ",");
     for (unsigned int i=0; i < tokIn.size(); ++i) {
       if (!silence)
         coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << tokIn[i] << " to " << tokOut[i] << endl ;
@@ -923,7 +924,7 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  for (const std::string& token : RooHelpers::tokenise(contentList, ",")) {
+  for (const std::string& token : ROOT::Split(contentList, ",")) {
     // If missing, either import or report error
     if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
@@ -952,7 +953,7 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  for (const std::string& token : RooHelpers::tokenise(newContents, ",")) {
+  for (const std::string& token : ROOT::Split(newContents, ",")) {
     // If missing, either import or report error
     if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
@@ -1334,7 +1335,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 {
   RooArgSet ret ;
 
-  for (const std::string& token : RooHelpers::tokenise(nameList, ",")) {
+  for (const std::string& token : ROOT::Split(nameList, ",")) {
     RooAbsArg* oneArg = arg(token.c_str()) ;
     if (oneArg) {
       ret.add(*oneArg) ;

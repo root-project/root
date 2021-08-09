@@ -61,11 +61,12 @@ See RooAbsData::plotOn().
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
 #include "RooFormulaVar.h"
 #include "RooFormula.h"
 #include "RooUniformBinning.h"
 #include "RooSpan.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include "TAxis.h"
 #include "TH1.h"
@@ -331,7 +332,7 @@ RooDataHist::RooDataHist(std::string_view name, std::string_view title, const Ro
       // Initialize importing mapped set of TH1s
       map<string,TH1*> hmap ;
       TIter hiter = impSliceHistos.MakeIterator() ;
-      for (const auto& token : RooHelpers::tokenise(impSliceNames, ",")) {
+      for (const auto& token : ROOT::Split(impSliceNames, ",")) {
         auto histo = static_cast<TH1*>(hiter.Next());
         assert(histo);
         hmap[token] = histo;
@@ -342,7 +343,7 @@ RooDataHist::RooDataHist(std::string_view name, std::string_view title, const Ro
       // Initialize importing mapped set of RooDataHists
       map<string,RooDataHist*> dmap ;
       TIter hiter = impSliceDHistos.MakeIterator() ;
-      for (const auto& token : RooHelpers::tokenise(impSliceDNames, ",")) {
+      for (const auto& token : ROOT::Split(impSliceDNames, ",")) {
         dmap[token] = (RooDataHist*) hiter.Next() ;
       }
       importDHistSet(vars,*indexCat,dmap,initWgt) ;

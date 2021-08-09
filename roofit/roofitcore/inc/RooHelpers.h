@@ -91,9 +91,6 @@ class HijackMessageStream{
 };
 
 
-std::vector<std::string> tokenise(const std::string &str, const std::string &delims, bool returnEmptyToken = true);
-
-
 /// Check if the parameters have a range, and warn if the range extends below / above the set limits.
 void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
     double min = -std::numeric_limits<double>::max(), double max = std::numeric_limits<double>::max(),
