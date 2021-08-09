@@ -36,8 +36,7 @@ namespace ROOT {
          <A HREF="http://cran.r-project.org/web/packages/Rcpp/index.html">Rcpp</A> and
          <A HREF="http://cran.r-project.org/web/packages/RInside/index.html">RInside</A>
          <h2>Users Guide </h2>
-         <a href="http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide"> http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide</a><br>
-         <a href="https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface"> https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface</a>
+         <a href="https://oproject.org/pages/ROOT%20R%20Users%20Guide"> https://oproject.org/pages/ROOT R Users Guide</a><br>
 
          \ingroup R
        */
