@@ -67,11 +67,11 @@ namespace PyKeras{
 void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
    PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
-      std::cout<<"Failed to run python code: "<< code <<"\n";
       std::cout<<"Python error message:\n";
       PyErr_Print();
+      throw std::runtime_error("Failed to run python code: "+code);
    }
-}
+ }
 
 const char* PyStringAsString(PyObject* str){
    #if PY_MAJOR_VERSION < 3   // for Python2
