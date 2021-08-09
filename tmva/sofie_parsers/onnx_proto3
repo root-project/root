@@ -713,5 +713,5 @@ message OperatorSetIdProto {
 
 
 // For using protobuf-lite
-option optimize_for = LITE_RUNTIME;
+//option optimize_for = LITE_RUNTIME;
 
