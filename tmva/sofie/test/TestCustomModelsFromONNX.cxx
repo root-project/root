@@ -1,10 +1,10 @@
-#include "Linear_16.hxx"
+#include "Linear_16_FromONNX.hxx"
 #include "input_models/references/Linear_16.ref.hxx"
 
-#include "Linear_32.hxx"
+#include "Linear_32_FromONNX.hxx"
 #include "input_models/references/Linear_32.ref.hxx"
 
-#include "Linear_64.hxx"
+#include "Linear_64_FromONNX.hxx"
 #include "input_models/references/Linear_64.ref.hxx"
 
 #include "gtest/gtest.h"

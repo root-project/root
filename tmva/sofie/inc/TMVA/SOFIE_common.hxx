@@ -2,6 +2,7 @@
 #define TMVA_SOFIE_SOFIE_COMMON
 
 #include "TMVA/RTensor.hxx"
+#include "TMVA/Types.h"
 
 #include <type_traits>
 #include <cstdint>
@@ -20,7 +21,6 @@ enum class ETensorType{
    UNDEFINED = 0, FLOAT = 1, UNINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
-
 
 typedef std::int64_t int_t;
 
@@ -48,10 +48,36 @@ struct TensorInfo{
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
 struct InitializedTensor{
-   ETensorType type;
-   std::vector<std::size_t> shape;
-   std::shared_ptr<void> data;
-   //void* data;
+   ETensorType fType;
+   std::vector<std::size_t> fShape;
+   std::shared_ptr<void> fData;     //! Transient
+   Int_t fSize=1;
+   char* fPersistentData=nullptr;   //[fSize] Persistent
+
+   void CastSharedToPersistent(){
+      for(auto item:fShape){
+         fSize*=(Int_t)item;
+      }
+      switch(fType){
+         case ETensorType::FLOAT: fSize*=sizeof(float); break;
+         default:
+          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
+      }
+      fPersistentData=(char*)fData.get();
+   }
+   void CastPersistentToShared(){
+     switch(fType){
+       case ETensorType::FLOAT: {
+      std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
+      std::memcpy(tData.get(), fPersistentData,fSize * sizeof(float));
+      fData=tData;
+      break;
+      }
+      default: {
+          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
+      }
+      }
+     }
 };
 
 template <typename T>

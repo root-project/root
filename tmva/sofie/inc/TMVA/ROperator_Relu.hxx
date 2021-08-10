@@ -22,7 +22,7 @@ private:
    std::vector<size_t> fShape;
 
 public:
-   ROperator_Relu() = delete;
+   ROperator_Relu(){}
    ROperator_Relu(std::string nameX, std::string nameY):
       fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
 
