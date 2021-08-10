@@ -157,6 +157,8 @@ class BaseBackend(ABC):
                 action nodes in the computational graph.
             """
             import ROOT
+            ROOT.gROOT.SetBatch(True)
+            ROOT.EnableThreadSafety()
 
             # We have to decide whether to do this in Dist or in subclasses
             # Utils.declare_headers(worker_includes)  # Declare headers if any
@@ -252,6 +254,11 @@ class BaseBackend(ABC):
             else:
                 # Output of the callable
                 resultptr_list = computation_graph_callable(rdf, current_range.id)
+                # Release the GIL and run the RDF computation graph
+                # WARNING: This assumes resultptr_list[0] is an actual RResultPtr
+                # does not work with e.g. AsNumpy or Snapshot!
+                resultptr_list[0].GetValue.__release_gil__ = True
+                resultptr_list[0].GetValue()
 
                 mergeables = [
                     resultptr  # Here resultptr is already the result value
