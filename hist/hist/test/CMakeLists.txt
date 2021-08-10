@@ -23,4 +23,5 @@ endif()
 
 if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
+  ROOT_ADD_GTEST(TFormulaHessianTests TFormulaHessianTests.cxx LIBRARIES Core MathCore Hist)
 endif()
