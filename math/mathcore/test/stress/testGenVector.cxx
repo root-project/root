@@ -79,7 +79,7 @@ TYPED_TEST_P(GenVectorTest, TestGenVectors)
    scale = this->fDim * 20;
    if (this->fDim == 3 && this->V2Name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
    if (this->fDim == 4 && ( this->V2Name() == "PtEtaPhiMVector"  || this->V2Name() == "PxPyPzMVector")) {
-#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__))
+#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__) || defined(__s390x__))
       scale *= 1.E7;
 #else
       scale *= 10;
