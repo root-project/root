@@ -9,9 +9,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
-import ntpath  # Filename from path (should be platform-independent)
-
 from DistRDF import DataFrame
 from DistRDF import HeadNode
 from DistRDF.Backends import Base
@@ -72,15 +69,7 @@ class DaskBackend(Base.BaseBackend):
 
     def distribute_unique_paths(self, paths):
         """
-        Spark supports sending files to the executors via the
-        `SparkContext.addFile` method. This method receives in input the path
-        to the file (relative to the path of the current python session). The
-        file is initially added to the Spark driver and then sent to the
-        workers when they are initialized.
-
-        Args:
-            paths (set): A set of paths to files that should be sent to the
-                distributed workers.
+        Not implemented yet!
         """
         pass
 
