@@ -702,8 +702,6 @@ void TFormula::Copy(TObject &obj) const
    // if c++-14 could use std::make_unique
    TMethodCall *m = (fMethod) ? new TMethodCall(*fMethod) : nullptr;
    fnew.fMethod.reset(m);
-   TMethodCall *gm = (fGradMethod) ? new TMethodCall(*fGradMethod) : nullptr;
-   fnew.fGradMethod.reset(gm);
 
    fnew.fFuncPtr = fFuncPtr;
    fnew.fGradGenerationInput = fGradGenerationInput;
@@ -724,7 +722,6 @@ void TFormula::Clear(Option_t * )
    fClingName = "";
 
    fMethod.reset();
-   fGradMethod.reset();
 
    fClingVariables.clear();
    fClingParameters.clear();
@@ -3152,7 +3149,7 @@ void TFormula::IncludeCladRuntime() {
 bool TFormula::GenerateGradientPar()
 {
    // We already have generated the gradient.
-   if (fGradMethod)
+   if (fGradFuncPtr)
       return true;
 
    if (HasGradientGenerationFailed())
@@ -3181,10 +3178,11 @@ bool TFormula::GenerateGradientPar()
    Bool_t hasParameters = (fNpar > 0);
    Bool_t hasVariables = (fNdim > 0);
    std::string GradFuncName = GetGradientFuncName();
-   fGradMethod = prepareMethod(hasParameters, hasVariables,
-                               GradFuncName.c_str(),
-                               fVectorized, /*IsGradient*/ true);
-   fGradFuncPtr = prepareFuncPtr(fGradMethod.get());
+   std::unique_ptr<TMethodCall>
+       gradMethod = prepareMethod(hasParameters, hasVariables,
+                                  GradFuncName.c_str(),
+                                  fVectorized, /*IsGradient*/ true);
+   fGradFuncPtr = prepareFuncPtr(gradMethod.get());
    return true;
 }
 

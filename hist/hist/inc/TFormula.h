@@ -100,7 +100,6 @@ private:
    Bool_t            fAllParametersSetted;         ///<  Flag to control if all parameters are setted
    Bool_t            fLazyInitialization = kFALSE; ///<! Transient flag to control lazy initialization (needed for reading from files)
    std::unique_ptr<TMethodCall> fMethod;           ///<! Pointer to methodcall
-   std::unique_ptr<TMethodCall> fGradMethod;       ///<! Pointer to a methodcall
    TString           fClingName;                   ///<! Unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
    std::string       fSavedInputFormula;           ///<! Unique name used to defined the function and used in the global map (need to be saved in case of lazy initialization)
 
@@ -131,7 +130,7 @@ private:
       return std::string(fClingName.Data()) + "_grad_1";
    }
    bool HasGradientGenerationFailed() const {
-      return !fGradMethod && !fGradGenerationInput.empty();
+      return !fGradFuncPtr && !fGradGenerationInput.empty();
    }
 
 protected:
@@ -217,7 +216,7 @@ public:
 
    // query if TFormula provides gradient computation using AD (CLAD)
    bool HasGeneratedGradient() const {
-      return fGradMethod != nullptr;
+      return fGradFuncPtr != nullptr;
    }
 
    // template <class T>
