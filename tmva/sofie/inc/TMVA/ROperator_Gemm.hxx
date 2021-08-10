@@ -40,7 +40,7 @@ namespace SOFIE{
 
    public:
 
-      ROperator_Gemm() = delete;
+      ROperator_Gemm(){}
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameY):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
          fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY)) {
