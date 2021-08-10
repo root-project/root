@@ -61,6 +61,8 @@ class RooFitDriver {
     const RooNLLVarNew& _topNode;
     const RooAbsData* const _data = nullptr;
     const size_t _nEvents;
+
+    std::vector<const RooAbsReal*> _nodes;
     std::unordered_map<const RooAbsReal*, NodeInfo> _nodeInfos;
 
     //used for preserving resources
