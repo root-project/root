@@ -65,10 +65,6 @@ class DaskBackend(Base.BaseBackend):
             mergeables_lists.append(
                 dreducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
 
-        # Visualize dask graph
-        # if self.config.get("visualize_dask_graph"):
-        #     dask.visualize(mergeables_lists[0])
-
         final_results = mergeables_lists.pop().persist()
 
         progress(final_results)
