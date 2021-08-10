@@ -208,6 +208,8 @@ double RooFitDriver::getVal()
         double* gpuBuffer = getAvailableGPUBuffer();
         _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
         rbc::dispatch_gpu->memcpyToGPU(gpuBuffer, gpuBuffer, _nEvents*sizeof(double), info.stream);
+        _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
+        rbc::dispatch_gpu->memcpyToGPU(gpuBuffer, _dataMapCPU[node].data(), _nEvents*sizeof(double), info.stream);
         rbc::dispatch_gpu->cudaEventRecord(info.event, info.stream);
       }
     }
@@ -264,6 +266,7 @@ void RooFitDriver::assignToGPU(const RooAbsReal* node)
   {
     double* pinnedBuffer = getAvailablePinnedBuffer();
     rbc::dispatch_gpu->memcpyToCPU(pinnedBuffer, buffer, _nEvents*sizeof(double), info.stream);
+    _dataMapCPU[node] = RooSpan<const double>(pinnedBuffer, _nEvents);
   }
   updateMyClients(node);
 }
@@ -315,8 +318,8 @@ void RooFitDriver::markGPUNodes()
   for (auto& item:_nodeInfos)
   {
     if (item.second.computeInScalarMode) continue; // scalar nodes don't need copying
-    for (auto* client : item.first->valueClients())
-      if (item.second.computeInGPU != _nodeInfos.at(static_cast<const RooAbsReal*>(client)).computeInGPU)
+    for (auto* client : static_range_cast<const RooAbsReal*>(item.first->valueClients()))
+      if (_nodeInfos.count(client) > 0 && item.second.computeInGPU != _nodeInfos.at(client).computeInGPU)
       {
         item.second.copyAfterEvaluation = true;
         break;
