@@ -3141,6 +3141,13 @@ static bool functionExists(const string &Name) {
    return gInterpreter->GetFunction(/*cl*/0, Name.c_str());
 }
 
+void TFormula::IncludeCladRuntime() {
+   if (!TFormula::fIsCladRuntimeIncluded) {
+      TFormula::fIsCladRuntimeIncluded = true;
+      gInterpreter->Declare("#include <Math/CladDerivator.h>\n#pragma clad OFF");
+   }
+}
+
 /// returns true on success.
 bool TFormula::GenerateGradientPar()
 {
@@ -3148,41 +3155,37 @@ bool TFormula::GenerateGradientPar()
    if (fGradMethod)
       return true;
 
-   if (!HasGradientGenerationFailed()) {
-      // FIXME: Move this elsewhere
-      if (!TFormula::fIsCladRuntimeIncluded) {
-         TFormula::fIsCladRuntimeIncluded = true;
-         gInterpreter->Declare("#include <Math/CladDerivator.h>\n#pragma clad OFF");
-      }
+   if (HasGradientGenerationFailed())
+      return false;
 
-      // Check if the gradient request was made as part of another TFormula.
-      // This can happen when we create multiple TFormula objects with the same
-      // formula. In that case, the hasher will give identical id and we can
-      // reuse the already generated gradient function.
-      if (!functionExists(GetGradientFuncName())) {
-         std::string GradReqFuncName = GetGradientFuncName() + "_req";
-         // We want to call clad::differentiate(TFormula_id);
-         fGradGenerationInput = std::string("#pragma cling optimize(2)\n") +
-             "#pragma clad ON\n" +
-             "void " + GradReqFuncName + "() {\n" +
-             "clad::gradient(" + std::string(fClingName.Data())
-             + ", \"p\");\n }\n" +
-             "#pragma clad OFF";
+   IncludeCladRuntime();
 
-         if (!gInterpreter->Declare(fGradGenerationInput.c_str()))
-            return false;
-      }
+   // Check if the gradient request was made as part of another TFormula.
+   // This can happen when we create multiple TFormula objects with the same
+   // formula. In that case, the hasher will give identical id and we can
+   // reuse the already generated gradient function.
+   if (!functionExists(GetGradientFuncName())) {
+      std::string GradReqFuncName = GetGradientFuncName() + "_req";
+      // We want to call clad::differentiate(TFormula_id);
+      fGradGenerationInput = std::string("#pragma cling optimize(2)\n") +
+          "#pragma clad ON\n" +
+          "void " + GradReqFuncName + "() {\n" +
+          "clad::gradient(" + std::string(fClingName.Data())
+          + ", \"p\");\n }\n" +
+          "#pragma clad OFF";
 
-      Bool_t hasParameters = (fNpar > 0);
-      Bool_t hasVariables = (fNdim > 0);
-      std::string GradFuncName = GetGradientFuncName();
-      fGradMethod = prepareMethod(hasParameters, hasVariables,
-                                  GradFuncName.c_str(),
-                                  fVectorized, /*IsGradient*/ true);
-      fGradFuncPtr = prepareFuncPtr(fGradMethod.get());
-      return true;
+      if (!gInterpreter->Declare(fGradGenerationInput.c_str()))
+         return false;
    }
-   return false;
+
+   Bool_t hasParameters = (fNpar > 0);
+   Bool_t hasVariables = (fNdim > 0);
+   std::string GradFuncName = GetGradientFuncName();
+   fGradMethod = prepareMethod(hasParameters, hasVariables,
+                               GradFuncName.c_str(),
+                               fVectorized, /*IsGradient*/ true);
+   fGradFuncPtr = prepareFuncPtr(fGradMethod.get());
+   return true;
 }
 
 void TFormula::GradientPar(const Double_t *x, TFormula::GradientStorage& result)

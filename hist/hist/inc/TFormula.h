@@ -199,6 +199,9 @@ public:
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
    Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
 
+   /// Includes the clad header file if not already included
+   void IncludeCladRuntime();
+
    /// Generate gradient computation routine with respect to the parameters.
    /// \returns true if a gradient was generated and GradientPar can be called.
    bool GenerateGradientPar();
