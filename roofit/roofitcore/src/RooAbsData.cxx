@@ -343,10 +343,9 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-   if (storageType == RooAbsData::Tree) {
-      RooVectorDataStore *newStore = new RooVectorDataStore(*(RooTreeDataStore *)_dstore, _vars, GetName());
-      delete _dstore;
-      _dstore = newStore;
+   if (auto treeStore = dynamic_cast<RooTreeDataStore*>(_dstore)) {
+      _dstore = new RooVectorDataStore(*treeStore, _vars, GetName());
+      delete treeStore;
       storageType = RooAbsData::Vector;
    }
 }
