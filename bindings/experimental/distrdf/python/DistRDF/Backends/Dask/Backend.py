@@ -21,7 +21,7 @@ try:
     import dask
     from dask.distributed import Client, progress
 except ImportError:
-    raise ImportError(("cannot import a dask component. Refer to the Apache Spark documentation "
+    raise ImportError(("cannot import a Dask component. Refer to the Dask documentation "
                        "for installation instructions."))
 
 
