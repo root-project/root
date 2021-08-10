@@ -28,7 +28,7 @@ TEST(TFormulaGradientPar, Sanity)
    double p[] = {30, 60};
    f.SetParameters(p);
    double x[] = {1, 2};
-   TFormula::GradientStorage result(2);
+   TFormula::CladStorage result(2);
    f.GradientPar(x, result);
 
    ASSERT_FLOAT_EQ(x[0] * std::cos(30), result[0]);
@@ -40,7 +40,7 @@ TEST(TFormulaGradientPar, ResultUpsize)
    TFormula f("f", "std::sin([1]) - std::cos([0])");
    double p[] = {60, 30};
    f.SetParameters(p);
-   TFormula::GradientStorage result;
+   TFormula::CladStorage result;
    double x[] = {2, 1};
 
    ASSERT_TRUE(0 == result.size());
@@ -59,7 +59,7 @@ TEST(TFormulaGradientPar, ResultDownsize)
    TFormula f("f", "std::sin([0])");
    double p[] = {60};
    f.SetParameters(p);
-   TFormula::GradientStorage result(2);
+   TFormula::CladStorage result(2);
    double x[] = {1};
 
    ASSERT_TRUE(2 == result.size());
@@ -79,10 +79,10 @@ TEST(TFormulaGradientPar, GausCrossCheck)
    double p[] = {3, 1, 2};
    h->SetParameters(p);
    double x[] = {0};
-   TFormula::GradientStorage result_clad(3);
+   TFormula::CladStorage result_clad(3);
    h->GetFormula()->GradientPar(x, result_clad);
 
-   TFormula::GradientStorage result_num(3);
+   TFormula::CladStorage result_num(3);
    h->GradientPar(x, result_num.data());
 
    ASSERT_FLOAT_EQ(result_num[0], result_clad[0]);
@@ -96,10 +96,10 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheck)
    double p[] = {3, 1, 2.1};
    h->SetParameters(p);
    double x[] = {0};
-   TFormula::GradientStorage result_clad(3);
+   TFormula::CladStorage result_clad(3);
    TFormula* formula = h->GetFormula();
    formula->GradientPar(x, result_clad);
-   TFormula::GradientStorage result_num(3);
+   TFormula::CladStorage result_num(3);
    h->GradientPar(x, result_num.data());
 
    ASSERT_FLOAT_EQ(result_num[0], result_clad[0]);
@@ -113,10 +113,10 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
    double p[] = {3, 1, 2};
    h->SetParameters(p);
    double x[] = {0};
-   TFormula::GradientStorage result_clad(3);
+   TFormula::CladStorage result_clad(3);
    TFormula* formula = h->GetFormula();
    formula->GradientPar(x, result_clad);
-   TFormula::GradientStorage result_num(3);
+   TFormula::CladStorage result_num(3);
    h->GradientPar(x, result_num.data());
 
    // This is a classical example why clad is better.
@@ -140,7 +140,7 @@ TEST(TFormulaGradientPar, GetGradFormula)
    std::string s = f.GetGradientFormula().Data();
    // Windows does not support posix regex which are necessary here.
 #ifndef R__WIN32
-   ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad"));
+   ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad_1"));
 #endif // R__WIN32
 }
 
