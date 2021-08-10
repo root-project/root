@@ -26,6 +26,7 @@
 #include "RooRealVar.h"
 
 #include <iostream>
+#include <functional>
 #include <fstream>
 #include <string>
 #include <memory>  // unique_ptr
@@ -36,6 +37,28 @@ class RooMinimizer;
 class RooAbsMinimizerFcn {
 
 public:
+
+   // Adapter class to define the necessary interface and data required by the RooAbsMinimizerFcn.
+   struct Function {
+       std::function<double()> getVal;
+       std::function<void(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)> constOptimizeTestStatistic;
+       const std::string name;
+       const std::string title;
+       RooArgSet parameters;
+       double errorLevel;
+
+       Function(RooAbsReal & absReal)
+         : getVal([&absReal](){ return absReal.getVal(); })
+         , constOptimizeTestStatistic([&absReal](RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt){
+                 absReal.constOptimizeTestStatistic(opcode, doAlsoTrackingOpt); })
+         , name{absReal.GetName()}
+         , title{absReal.GetTitle()}
+         , errorLevel{absReal.defaultErrorLevel()}
+       {
+          absReal.getParameters(nullptr, parameters);
+       }
+   };
+
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context, bool verbose = false);
    RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other);
    virtual ~RooAbsMinimizerFcn() = default;
@@ -72,9 +95,9 @@ public:
    void BackProp(const ROOT::Fit::FitResult &results);
 
    /// RooMinimizer sometimes needs the name of the minimized function. Implement this in the derived class.
-   virtual std::string getFunctionName() const = 0;
+   virtual std::string const& getFunctionName() const = 0;
    /// RooMinimizer sometimes needs the title of the minimized function. Implement this in the derived class.
-   virtual std::string getFunctionTitle() const = 0;
+   virtual std::string const& getFunctionTitle() const = 0;
 
    /// Set different external covariance matrix
    void ApplyCovarianceMatrix(TMatrixDSym &V);
@@ -91,14 +114,9 @@ public:
 
    Bool_t SetPdfParamVal(int index, double value) const;
 
-   /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
-   virtual void setOffsetting(Bool_t flag) = 0;
-
 protected:
    void optimizeConstantTerms(bool constStatChange, bool constValChange);
-   /// This function must be overridden in the derived class to pass on constant term optimization configuration
-   /// to the function to be minimized. For a RooAbsArg, this would be RooAbsArg::constOptimizeTestStatistic.
-   virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) = 0;
+   virtual Function & funct() = 0;
 
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
    void SetPdfParamErr(Int_t index, Double_t value);

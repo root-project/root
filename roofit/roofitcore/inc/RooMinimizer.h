@@ -50,8 +50,10 @@ class RooMinimizer : public TObject {
 public:
   enum class FcnMode { classic, gradient };
 
-  explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
-  static std::unique_ptr<RooMinimizer> create(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
+  using Function = RooAbsMinimizerFcn::Function;
+
+  explicit RooMinimizer(Function && function, FcnMode fcnMode = FcnMode::classic);
+  static std::unique_ptr<RooMinimizer> create(Function && function, FcnMode fcnMode = FcnMode::classic);
   ~RooMinimizer() override;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
@@ -63,7 +65,6 @@ public:
   void setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
   /// \copydoc RooMinimizerFcn::SetRecoverFromNaNStrength()
   void setRecoverFromNaNStrength(double strength) { fitterFcn()->SetRecoverFromNaNStrength(strength); }
-  void setOffsetting(Bool_t flag) ;
   void setMaxIterations(Int_t n) ;
   void setMaxFunctionCalls(Int_t n) ;
 

@@ -28,7 +28,7 @@
 
 class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
-   RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose = false);
+   RooGradMinimizerFcn(Function && funct, RooMinimizer *context, bool verbose = false);
    RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
    ROOT::Math::IMultiGradFunction *Clone() const override;
 
@@ -47,9 +47,8 @@ public:
    inline void setGradTolerance(double grad_tolerance) const { _gradf.SetGradTolerance(grad_tolerance); }
    inline void setNcycles(unsigned int ncycles) const { _gradf.SetNCycles(ncycles); }
    inline void setErrorLevel(double error_level) const { _gradf.SetErrorLevel(error_level); }
-   inline std::string getFunctionName() const override { return _funct->GetName(); }
-   inline std::string getFunctionTitle() const override { return _funct->GetTitle(); }
-   inline void setOffsetting(Bool_t flag) override { _funct->enableOffsetting(flag); }
+   inline std::string const& getFunctionName() const override { return _funct.name; }
+   inline std::string const& getFunctionTitle() const override { return _funct.title; }
 
 private:
    void runDerivator(unsigned int i_component) const;
@@ -58,10 +57,7 @@ private:
    bool syncParameter(double x, std::size_t ix) const;
    bool syncParameters(const double *x) const;
 
-   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override
-   {
-      _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-   }
+   Function & funct() override { return _funct; }
 
 public:
    enum class GradientCalculatorMode { ExactlyMinuit2, AlmostMinuit2 };
@@ -79,7 +75,7 @@ protected:
 
 private:
    mutable ROOT::Minuit2::NumericalDerivator _gradf;
-   RooAbsReal *_funct;
+   Function _funct;
    mutable std::vector<bool> has_been_calculated;
    mutable bool none_have_been_calculated = false;
 };

@@ -19,7 +19,6 @@
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"
 
-#include "RooAbsReal.h"
 #include "RooArgList.h"
 
 #include <fstream>
@@ -36,24 +35,22 @@ class RooMinimizer;
 class RooMinimizerFcn : public RooAbsMinimizerFcn, public ROOT::Math::IBaseFunctionMultiDim {
 
 public:
-   RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose = false);
+   RooMinimizerFcn(Function && funct, RooMinimizer *context, bool verbose = false);
    RooMinimizerFcn(const RooMinimizerFcn &other);
    virtual ~RooMinimizerFcn();
 
    ROOT::Math::IBaseFunctionMultiDim *Clone() const override;
    unsigned int NDim() const override { return getNDim(); }
 
-   std::string getFunctionName() const override;
-   std::string getFunctionTitle() const override;
+   inline std::string const& getFunctionName() const override { return _funct.name; }
+   inline std::string const& getFunctionTitle() const override { return _funct.title; }
 
-   void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override;
-
-   void setOffsetting(Bool_t flag) override;
+   Function & funct() override { return _funct; }
 
 private:
    double DoEval(const double *x) const override;
 
-   RooAbsReal *_funct;
+   Function _funct;
 };
 
 #endif

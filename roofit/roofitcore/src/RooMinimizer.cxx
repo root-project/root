@@ -107,7 +107,7 @@ void RooMinimizer::cleanup()
 /// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
 /// value of the input function.
 
-RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcnMode)
+RooMinimizer::RooMinimizer(Function && function, FcnMode fcnMode) : _fcnMode(fcnMode)
 {
    RooSentinel::activate();
 
@@ -120,11 +120,11 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
 
    switch (_fcnMode) {
    case FcnMode::classic: {
-      _fcn = new RooMinimizerFcn(&function, this, _verbose);
+      _fcn = new RooMinimizerFcn(std::move(function), this, _verbose);
       break;
    }
    case FcnMode::gradient: {
-      _fcn = new RooGradMinimizerFcn(&function, this, _verbose);
+      _fcn = new RooGradMinimizerFcn(std::move(function), this, _verbose);
       setMinimizerType("Minuit2");
       break;
    }
@@ -141,7 +141,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    setPrintLevel(-1);
 
    // Use +0.5 for 1-sigma errors
-   setErrorLevel(function.defaultErrorLevel());
+   setErrorLevel(function.errorLevel);
 
    // Declare our parameters to MINUIT
    _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst(), _verbose);
@@ -155,8 +155,8 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
 }
 
 // static function
-std::unique_ptr<RooMinimizer> RooMinimizer::create(RooAbsReal &function, FcnMode fcnMode) {
-   return std::make_unique<RooMinimizer>(function, fcnMode);
+std::unique_ptr<RooMinimizer> RooMinimizer::create(Function && function, FcnMode fcnMode) {
+   return std::make_unique<RooMinimizer>(std::move(function), fcnMode);
 }
 
 
@@ -236,15 +236,6 @@ void RooMinimizer::setEps(Double_t eps)
 {
   _theFitter->Config().MinimizerOptions().SetTolerance(eps);
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Enable internal likelihood offsetting for enhanced numeric precision
-
-void RooMinimizer::setOffsetting(Bool_t flag) 
-{
-  _fcn->setOffsetting(flag);
 }
 
 

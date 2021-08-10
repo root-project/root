@@ -245,16 +245,6 @@ void RooMinuit::setEps(Double_t eps)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Enable internal likelihood offsetting for enhanced numeric precision
-
-void RooMinuit::setOffsetting(Bool_t flag) 
-{ 
-  _func->enableOffsetting(flag) ; 
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse traditional RooAbsPdf::fitTo driver options
 ///

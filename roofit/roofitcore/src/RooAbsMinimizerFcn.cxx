@@ -502,12 +502,12 @@ void RooAbsMinimizerFcn::setOptimizeConst(Int_t flag)
    if (_optConst && !flag) {
       if (_context->getPrintLevel() > -1)
          oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: deactivating const optimization" << endl;
-      setOptimizeConstOnFunction(RooAbsArg::DeActivate, true);
+      funct().constOptimizeTestStatistic(RooAbsArg::DeActivate, true);
       _optConst = flag;
    } else if (!_optConst && flag) {
       if (_context->getPrintLevel() > -1)
          oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: activating const optimization" << endl;
-      setOptimizeConstOnFunction(RooAbsArg::Activate, flag > 1);
+      funct().constOptimizeTestStatistic(RooAbsArg::Activate, flag > 1);
       _optConst = flag;
    } else if (_optConst && flag) {
       if (_context->getPrintLevel() > -1)
@@ -526,10 +526,10 @@ void RooAbsMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constV
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
       oocoutI(_context,Minimization) << "RooAbsMinimizerFcn::optimizeConstantTerms: set of constant parameters changed, rerunning const optimizer" << endl ;
-      setOptimizeConstOnFunction(RooAbsArg::ConfigChange, true) ;
+      funct().constOptimizeTestStatistic(RooAbsArg::ConfigChange, true) ;
    } else if (constValChange) {
       oocoutI(_context,Minimization) << "RooAbsMinimizerFcn::optimizeConstantTerms: constant parameter values changed, rerunning const optimizer" << endl ;
-      setOptimizeConstOnFunction(RooAbsArg::ValueChange, true) ;
+      funct().constOptimizeTestStatistic(RooAbsArg::ValueChange, true) ;
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;

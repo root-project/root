@@ -20,11 +20,6 @@
 
 #include "RooMinimizerFcn.h"
 
-#include "RooAbsArg.h"
-#include "RooAbsPdf.h"
-#include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 #include "RooNaNPacker.h"
@@ -37,9 +32,9 @@
 
 using namespace std;
 
-RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
+RooMinimizerFcn::RooMinimizerFcn(Function && funct, RooMinimizer* context,
 			   bool verbose) :
-  RooAbsMinimizerFcn(*funct->getParameters(RooArgSet()), context, verbose), _funct(funct)
+  RooAbsMinimizerFcn(funct.parameters, context, verbose), _funct(funct)
 {}
 
 
@@ -58,10 +53,6 @@ ROOT::Math::IBaseFunctionMultiDim* RooMinimizerFcn::Clone() const
   return new RooMinimizerFcn(*this) ;
 }
 
-void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
-{
-   _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-}
 
 /// Evaluate function given the parameters in `x`.
 double RooMinimizerFcn::DoEval(const double *x) const {
@@ -74,7 +65,7 @@ double RooMinimizerFcn::DoEval(const double *x) const {
 
   // Calculate the function for these parameters
   RooAbsReal::setHideOffset(kFALSE) ;
-  double fvalue = _funct->getVal();
+  double fvalue = _funct.getVal();
   RooAbsReal::setHideOffset(kTRUE) ;
 
   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
@@ -101,7 +92,7 @@ double RooMinimizerFcn::DoEval(const double *x) const {
   if (_logfile)
     (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
   if (_verbose) {
-    cout << "\nprevFCN" << (_funct->isOffsetting()?"-offset":"") << " = " << setprecision(10)
+    cout << "\nprevFCN" << " = " << setprecision(10)
          << fvalue << setprecision(4) << "  " ;
     cout.flush() ;
   }
@@ -109,19 +100,4 @@ double RooMinimizerFcn::DoEval(const double *x) const {
   _evalCounter++ ;
 
   return fvalue;
-}
-
-std::string RooMinimizerFcn::getFunctionName() const
-{
-   return _funct->GetName();
-}
-
-std::string RooMinimizerFcn::getFunctionTitle() const
-{
-   return _funct->GetTitle();
-}
-
-void RooMinimizerFcn::setOffsetting(Bool_t flag)
-{
-   _funct->enableOffsetting(flag);
 }

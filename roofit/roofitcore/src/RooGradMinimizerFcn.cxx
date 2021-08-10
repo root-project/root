@@ -21,10 +21,7 @@
 
 #include "RooGradMinimizerFcn.h"
 
-#include "RooAbsArg.h"
-#include "RooAbsPdf.h"
-#include "RooArgSet.h"
-#include "RooRealVar.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 
@@ -37,8 +34,8 @@
 #include <algorithm> // std::equal
 #include <iostream>
 
-RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters(RooArgSet{})) ), context, verbose),
+RooGradMinimizerFcn::RooGradMinimizerFcn(Function && funct, RooMinimizer *context, bool verbose)
+   : RooAbsMinimizerFcn(funct.parameters, context, verbose),
      _grad(getNDim()), _grad_params(getNDim()), _funct(funct),
      has_been_calculated(getNDim())
 {
@@ -81,7 +78,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
 
    // Calculate the function for these parameters
    RooAbsReal::setHideOffset(kFALSE);
-   double fvalue = _funct->getVal();
+   double fvalue = _funct.getVal();
    RooAbsReal::setHideOffset(kTRUE);
 
    if (!parameters_changed) {
@@ -93,31 +90,28 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
       if (_printEvalErrors >= 0) {
 
          if (_doEvalErrorWall) {
-            oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
+            oocoutW(static_cast<TObject *>(nullptr), Eval)
                << "RooGradMinimizerFcn: Minimized function has error status." << std::endl
                << "Returning maximum FCN so far (" << _maxFCN
                << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
          } else {
-            oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
+            oocoutW(static_cast<TObject *>(nullptr), Eval)
                << "RooGradMinimizerFcn: Minimized function has error status but is ignored" << std::endl;
          }
 
-         TIterator *iter = _floatParamList->createIterator();
-         RooRealVar *var;
          Bool_t first(kTRUE);
-         ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << "Parameter values: ";
-         while ((var = (RooRealVar *)iter->Next())) {
+         ooccoutW(static_cast<TObject *>(nullptr), Eval) << "Parameter values: ";
+         for(auto const * var : static_range_cast<RooAbsReal*>(*_floatParamList)) {
             if (first) {
                first = kFALSE;
             } else
-               ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << ", ";
-            ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << var->GetName() << "=" << var->getVal();
+               ooccoutW(static_cast<TObject *>(nullptr), Eval) << ", ";
+            ooccoutW(static_cast<TObject *>(nullptr), Eval) << var->GetName() << "=" << var->getVal();
          }
-         delete iter;
-         ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << std::endl;
+         ooccoutW(static_cast<TObject *>(nullptr), Eval) << std::endl;
 
-         RooAbsReal::printEvalErrors(ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval), _printEvalErrors);
-         ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << std::endl;
+         RooAbsReal::printEvalErrors(ooccoutW(static_cast<TObject *>(nullptr), Eval), _printEvalErrors);
+         ooccoutW(static_cast<TObject *>(nullptr), Eval) << std::endl;
       }
 
       if (_doEvalErrorWall) {
@@ -132,7 +126,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
 
    // Optional logging
    if (_verbose) {
-      std::cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10) << fvalue
+      std::cout << "\nprevFCN" << " = " << std::setprecision(10) << fvalue
                 << std::setprecision(4) << "  ";
       std::cout.flush();
    }
