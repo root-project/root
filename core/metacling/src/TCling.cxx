@@ -1233,9 +1233,14 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       // FIXME: Hist is not a core module but is very entangled to MathCore and
       // causes issues.
       std::vector<std::string> FIXMEModules = {"Hist"};
+      clang::CompilerInstance &CI = *clingInterp.getCI();
+      clang::Preprocessor &PP = CI.getPreprocessor();
+      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
+      if (MMap.findModule("RInterface"))
+         FIXMEModules.push_back("RInterface");
+
       LoadModules(FIXMEModules, clingInterp);
 
-      clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
       // Conservatively enable platform by platform.
       bool supportedPlatform =
@@ -1274,10 +1279,8 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
 
-      clang::Preprocessor &PP = CI.getPreprocessor();
       std::vector<std::string> PendingModules;
       PendingModules.reserve(256);
-      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
       for (auto I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
          clang::Module *M = I->second;
          assert(M);
