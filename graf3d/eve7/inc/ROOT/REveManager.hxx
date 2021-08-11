@@ -83,6 +83,9 @@ public:
       std::condition_variable fCV{};
 
       EServerState fVal{Waiting};
+
+      std::time_t fMIRTime{std::time(nullptr)};
+      std::time_t fDisconnectTime{std::time(nullptr)};
    };
 
    class MIR
@@ -266,6 +269,8 @@ public:
    void Show(const RWebDisplayArgs &args = "");
 
    std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
+
+   void GetClientActivityTime(std::time_t& lastMIR, std::time_t& lastDisconnect);
 };
 
 R__EXTERN REveManager* gEve;
