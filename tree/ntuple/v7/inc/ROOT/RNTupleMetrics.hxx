@@ -518,6 +518,166 @@ public:
    }
 };
 
+class RNTupleHistoActiveLearn : RNTupleHistogram {
+private:
+   uint64_t fNumBins;
+   uint fLearningPhaseSize;
+   
+   std::vector<uint64_t> learningSamples;
+   uint64_t minSample = UINT64_MAX;
+   uint64_t maxSample = 0;
+   uint64_t widthSample = 0;
+   bool hasFlushed = false;
+
+   std::vector<std::atomic<uint64_t>*> bins;
+   std::atomic<uint64_t> underflow{0};
+   std::atomic<uint64_t> overflow{0};
+
+   void Flush() {
+      if(!hasFlushed && learningSamples.size() >= fLearningPhaseSize) {
+         widthSample = (maxSample - minSample + 1) / fNumBins;
+         hasFlushed = true;
+
+         for(auto &elem: learningSamples) {
+            Fill(elem);
+         }
+      }
+   }
+
+   uint64_t GetMatchingIdx(const uint64_t &n) {
+      auto idx = (n - minSample) / widthSample;
+
+      if(idx >= fNumBins) {
+         idx = fNumBins - 1;
+      }
+
+      return idx;
+   }
+public:
+   RNTupleHistoActiveLearn(
+      const std::string &name, const std::string &unit, const std::string &desc,
+      const uint64_t &numBins, const uint &learningPhaseSize
+   ) : RNTupleHistogram(name, unit, desc), fNumBins(numBins), fLearningPhaseSize(learningPhaseSize)
+   {
+      bins.resize(fNumBins);
+
+      for(uint i = 0; i < fNumBins; i++) {
+         bins[i] = new std::atomic<uint64_t>{0};
+      }
+   };
+
+   void Fill(const uint64_t &n) {
+      Flush();
+
+      if(!hasFlushed) {
+         if(n < minSample) {
+            minSample = n;
+         }
+         
+         if(n > maxSample) {
+            maxSample = n;
+         }
+
+         learningSamples.push_back(n);
+      }
+      else {
+         if(n < minSample) {
+            ++underflow;
+         }
+         else if(n > maxSample) {
+            ++overflow;
+         }
+         else {
+            auto idx = GetMatchingIdx(n);
+
+            ++(*bins[idx]);
+         }
+      }
+   }
+
+   bool IsFlushed() {
+      return hasFlushed;
+   }
+
+   uint64_t GetMin() {
+      return minSample;
+   }
+
+   uint64_t GetMax() {
+      return maxSample;
+   }
+
+   uint64_t GetUnderflow() {
+      return underflow.load();
+   }
+
+   uint64_t GetOverflow() {
+      return overflow.load();
+   }
+
+   uint64_t GetBinContent(const uint64_t &n) {
+      uint64_t cnt = 0;
+
+      if(n < minSample) {
+         cnt = underflow.load();
+      }
+      else {
+         if(n > maxSample) {
+            cnt = overflow.load();
+         }
+         else {
+            auto idx = GetMatchingIdx(n);
+            cnt = bins[idx]->load();
+         }
+      }
+
+      return cnt;
+   };
+
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+      uint64_t lowB, upperB;
+      std::vector<RNTupleHistogram::HistoInterval> all;
+
+      // add underflow if necessary
+      if(minSample > 0) {
+         lowB = 0;
+         upperB = minSample - 1;
+         auto interval = std::make_pair(lowB, upperB);
+         all.push_back(std::make_pair(interval, underflow.load()));
+      }
+
+      // add leading bins
+      for(uint i = 0; i < fNumBins; i++) {
+         lowB = minSample + widthSample*i;
+         upperB = lowB + widthSample - 1;
+
+         if(i == fNumBins - 1) {
+            upperB = maxSample;
+         }
+
+         auto interval = std::make_pair(lowB, upperB);
+         all.push_back(std::make_pair(interval, bins[i]->load()));
+      }
+
+      // add overflow
+      lowB = maxSample + 1;
+      upperB = UINT64_MAX;
+      auto interval = std::make_pair(lowB, upperB);
+      all.push_back(std::make_pair(interval, overflow.load()));      
+
+      return all;
+   }
+
+   std::int64_t GetValueAsInt() const override {
+      return 0;
+   }
+
+   std::string GetValueAsString() const override {
+      return "";
+   }
+};
+
+
 } // namespace Detail
 } // namespace Experimental
 } // namespace ROOT

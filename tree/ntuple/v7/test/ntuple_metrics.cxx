@@ -183,3 +183,69 @@ TEST(Metrics, LogHistogramCount) {
    counter.Fill(1001);
    EXPECT_EQ(counter.GetOverflowCount(), 1);
 }
+
+TEST(Metrics, ActiveLearningHistogram) {
+   RNTupleHistoActiveLearn counter("plain", "", "example 1", 10, 100);
+
+   for(uint64_t i = 10; i < 110; i++) {
+      counter.Fill(i);
+      
+      EXPECT_EQ(i, counter.GetMax());
+   }
+
+   // min fits bounds
+   EXPECT_EQ(10, counter.GetMin());
+
+   // max fits bounds
+   EXPECT_EQ(109, counter.GetMax());
+
+   // not yet flushed
+   EXPECT_EQ(false, counter.IsFlushed());
+   counter.Fill(109);
+
+   // flush after 101th entry
+   EXPECT_EQ(true, counter.IsFlushed());
+
+   // 10 elems in range [70,79]
+   EXPECT_EQ(10, counter.GetBinContent(77));
+
+   // 12 bins created: 10 intervals + underflow + overflow
+   EXPECT_EQ(10 + 2, counter.GetAll().size());
+
+   // intervals match expected
+   std::vector<std::pair<uint64_t, uint64_t>> intervals = {
+      std::make_pair(0,9),
+      std::make_pair(10, 19),
+      std::make_pair(20, 29),
+      std::make_pair(30, 39),
+      std::make_pair(40, 49),
+      std::make_pair(50, 59),
+      std::make_pair(60, 69),
+      std::make_pair(70, 79),
+      std::make_pair(80, 89),
+      std::make_pair(90, 99),
+      std::make_pair(100, 109),
+      std::make_pair(110, UINT64_MAX)
+   };
+
+   auto vcs = counter.GetAll();
+
+   for(uint i = 1; i < vcs.size() - 1; i++) {
+      EXPECT_EQ(intervals[i], vcs[i].first);
+      EXPECT_EQ(10 + (i == 10), vcs[i].second);
+   }
+
+   // underflows are accounted for
+   EXPECT_EQ(0, counter.GetUnderflow());
+   for(uint i = 0; i < 10; i++) {
+      counter.Fill(i);
+   }
+   EXPECT_EQ(10, counter.GetUnderflow());
+
+   // overflows are accounted for
+   EXPECT_EQ(0, counter.GetOverflow());
+   for(uint i = 200; i < 220; i++) {
+      counter.Fill(i);
+   }
+   EXPECT_EQ(20, counter.GetOverflow());
+}
