@@ -83,7 +83,17 @@ public:
    RNTupleHistogram(const std::string &name, const std::string &unit, const std::string &desc)
       : RNTuplePerfCounter(name, unit, desc) {}
 
-   virtual std::vector<RNTupleHistogram::HistoInterval> GetAll() const = 0;
+   std::int64_t GetValueAsInt() const override {
+      return 0;
+   }
+
+   std::string GetValueAsString() const override {
+      return "";
+   }
+
+   virtual void Fill(const uint64_t &n) = 0;
+   virtual uint64_t GetBinContent(const uint64_t &n) = 0;
+   virtual std::vector<RNTupleHistogram::HistoInterval> GetAll() = 0;
 };
 
 
@@ -350,7 +360,7 @@ private:
       return e1.first < e2.first;
    };
 
-   std::atomic<std::uint64_t>* GetMatchingCounter(const uint64_t &n) {
+   std::atomic<std::uint64_t>* GetMatchingCounter(const uint64_t &n) const {
       int64_t l = 0, r = bins.size() - 1, m;
       
       while(l <= r) {
@@ -389,7 +399,7 @@ public:
       }
    };
 
-   void Fill(const uint64_t &n) {
+   void Fill(const uint64_t &n) override {
       auto counter = GetMatchingCounter(n);
 
       if(counter != nullptr) {
@@ -397,20 +407,12 @@ public:
       }
    };
 
-   int64_t GetBinContent(const uint64_t &n) {
+   uint64_t GetBinContent(const uint64_t &n) override {
       auto counter = GetMatchingCounter(n);
       return counter == nullptr ? 0 : counter->load();
    };
 
-   std::int64_t GetValueAsInt() const override {
-      return 0;
-   }
-
-   std::string GetValueAsString() const override {
-      return "";
-   }
-
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() override {
       uint64_t lowBound, upperBound, count;
       std::vector<RNTupleHistogram::HistoInterval> all;
 
@@ -432,7 +434,7 @@ private:
    uint64_t fUpperBound;
    uint fBitUpperBound;
 
-   uint ulog2(uint64_t n) {
+   uint ulog2(uint64_t n) const {
       uint64_t targetLevel = 0;
       
       while (n >>= 1) {
@@ -461,7 +463,7 @@ public:
       return fBitUpperBound;
    }
 
-   void Fill(const uint64_t &n) {
+   void Fill(const uint64_t &n) override {
       if(n > fUpperBound) {
          ++(*slots[fBitUpperBound + 1]);
       }
@@ -471,7 +473,20 @@ public:
       }
    }
 
-   uint64_t GetExponentCount(const uint &idx) {
+   uint64_t GetBinContent(const uint64_t &n) override {
+      uint64_t cnt = 0;
+
+      if(n > fUpperBound) {
+         cnt = GetOverflowCount();
+      }
+      else {
+         cnt = GetExponentCount(ulog2(n));
+      }
+
+      return cnt;
+   }
+
+   uint64_t GetExponentCount(const uint &idx) const {
       uint64_t cnt = 0;
 
       if(idx <= fBitUpperBound) {
@@ -481,7 +496,7 @@ public:
       return cnt;
    }
 
-   uint64_t GetOverflowCount() {
+   uint64_t GetOverflowCount() const {
       return slots[fBitUpperBound + 1]->load();
    }
 
@@ -495,7 +510,7 @@ public:
       return cnt;
    }
 
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() override {
       uint64_t lowB, upperB;
       std::vector<RNTupleHistogram::HistoInterval> all;
 
@@ -507,14 +522,6 @@ public:
       }
 
       return all;
-   }
-
-   std::int64_t GetValueAsInt() const override {
-      return 0;
-   }
-
-   std::string GetValueAsString() const override {
-      return "";
    }
 };
 
@@ -544,7 +551,7 @@ private:
       }
    }
 
-   uint64_t GetMatchingIdx(const uint64_t &n) {
+   uint64_t GetMatchingIdx(const uint64_t &n) const {
       auto idx = (n - minSample) / widthSample;
 
       if(idx >= fNumBins) {
@@ -566,7 +573,7 @@ public:
       }
    };
 
-   void Fill(const uint64_t &n) {
+   void Fill(const uint64_t &n) override {
       Flush();
 
       if(!hasFlushed) {
@@ -615,7 +622,7 @@ public:
       return overflow.load();
    }
 
-   uint64_t GetBinContent(const uint64_t &n) {
+   uint64_t GetBinContent(const uint64_t &n) override {
       uint64_t cnt = 0;
 
       if(n < minSample) {
@@ -634,7 +641,7 @@ public:
       return cnt;
    };
 
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() override {
       uint64_t lowB, upperB;
       std::vector<RNTupleHistogram::HistoInterval> all;
 
@@ -667,13 +674,91 @@ public:
 
       return all;
    }
+};
 
-   std::int64_t GetValueAsInt() const override {
-      return 0;
+class RNTupleFixedWidthHistogram : RNTupleHistogram {
+private:
+   uint64_t fWidth;
+   uint64_t fOffset;
+
+   std::unordered_map<int64_t, std::atomic<uint64_t>*> bins;
+
+
+   int64_t GetMatchingKey(const uint64_t &n) const {
+      int64_t idx = 0;
+
+      if(n < fOffset) {
+         idx = -(int64_t)((fOffset - n) / fWidth);
+      }
+      else {
+         idx = (int64_t)((fOffset - n) / fWidth);
+      }
+
+      return idx;
    }
 
-   std::string GetValueAsString() const override {
-      return "";
+   bool ExistsKey(const int64_t &key) const {
+      return bins.find(key) != bins.end();
+   }
+public:
+   RNTupleFixedWidthHistogram(
+      const std::string &name, const std::string &unit, const std::string &desc,
+      const uint64_t &width, const uint &offset
+   ) : RNTupleHistogram(name, unit, desc), fWidth(width), fOffset(offset)
+   {
+      
+   }
+
+   uint64_t GetWidth() {
+      return fWidth;
+   }
+
+   uint64_t GetOffset() {
+      return fOffset;
+   }
+
+   void Fill(const uint64_t &n) override {
+      auto key = GetMatchingKey(n);
+
+      if(!ExistsKey(key)) {
+         bins[key] = new std::atomic<uint64_t>{1};
+      }
+      else {
+         ++(*bins[key]);
+      }
+   }
+
+   uint64_t GetBinContent(const uint64_t &n) override {
+      auto key = GetMatchingKey(n);
+      uint64_t cnt = 0;
+
+      if(ExistsKey(key)) {
+         cnt = bins[key]->load();
+      }
+
+      return cnt;
+   }
+
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() override {
+      std::vector<RNTupleHistogram::HistoInterval> all;
+      std::map<int64_t, std::atomic<uint64_t>*> ordered(bins.begin(), bins.end());
+      uint64_t lowB, upperB;
+      
+      for(auto it = ordered.begin(); it != ordered.end(); ++it) {
+         if(it->first < 0) {
+            lowB = fOffset - (uint64_t)(-it->first)*fWidth;
+            lowB = fOffset - ((uint64_t)(-it->first) + 1)*fWidth - 1;
+         }
+         else {
+            lowB = fOffset + (uint64_t)(it->first)*fWidth;
+            upperB = fOffset + ((uint64_t)(it->first)+1)*fWidth - 1;
+         }
+
+         auto interval = std::make_pair(lowB, upperB);
+         all.push_back(std::make_pair(interval, it->second->load()));
+      }
+
+      return all;
    }
 };
 
