@@ -697,6 +697,7 @@ void REveManager::WindowConnect(unsigned connid)
        fServerState.fCV.wait(lock);
    }
 
+   fServerState.fDisconnectTime = 0;
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
 
@@ -763,6 +764,10 @@ void REveManager::WindowDisconnect(unsigned connid)
       }
       fWorld->RemoveSubscriber(connid);
    }
+
+   if (fConnList.empty())
+      fServerState.fDisconnectTime = std::time(nullptr);
+
    fServerState.fCV.notify_all();
 }
 
@@ -828,6 +833,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
+   fServerState.fMIRTime = std::time(nullptr);
    fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype)));
    if (fServerState.fVal == ServerState::Waiting)
       fServerState.fCV.notify_all();
@@ -1087,6 +1093,15 @@ void REveManager::EndChange()
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
    fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
    fServerState.fCV.notify_all();
+}
+
+
+//____________________________________________________________________
+void REveManager::GetClientActivityTime(std::time_t& lastMIR, std::time_t& lastDisconnect)
+{
+   std::unique_lock<std::mutex> lock(fServerState.fMutex);
+   lastMIR = fServerState.fMIRTime;
+   lastDisconnect = fServerState.fDisconnectTime;
 }
 
 /** \class REveManager::ChangeGuard
