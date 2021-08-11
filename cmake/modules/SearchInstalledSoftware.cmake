@@ -14,7 +14,11 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
 macro(find_package)
   if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
-    _find_package(${ARGV})
+    if("${ARGV0}" MATCHES "c-ares" OR "${ARGV0}" MATCHES "re2")
+      _find_package(${ARGV} QUIET)
+    else()
+      _find_package(${ARGV})
+    endif()
   endif()
 endmacro()
 
