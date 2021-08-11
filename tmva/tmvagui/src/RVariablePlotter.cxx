@@ -37,7 +37,6 @@ Plotting a single variable
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for RDataframe with nodes (samples) and labels
-
 TMVA::RVariablePlotter::RVariablePlotter(const std::vector<ROOT::RDF::RNode>& nodes, const std::vector<std::string>& labels)
     : fNodes(nodes),
     fLabels(labels){
@@ -170,6 +169,57 @@ void TMVA::RVariablePlotter::DrawLegend(float minX = 0.8, float minY = 0.8, floa
     l.DrawClone();
 }
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Drawing ROC Curve - RNode input, single model 
+void TMVA::RVariablePlotter::DrawROCCurve(const std::string& output_variable , bool useTMVAStyle){
+
+    // consistency check, i.e. we need signal vs background for the roc curve
+    if (fNodes.size() != 2)
+        std::runtime_error("In order to plot the ROC Curve you need 2 RNodes, corresponding to prediction on signal and background");
+    
+    // TMVA plotting style
+    TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
+
+    auto sigDf = fNodes[0]; 
+    auto bkgDf = fNodes[1];
+
+    // extract columns as vectors of float for the selected model (i.e. specified by output_variable)
+    auto sigModel = sigDf.Take<float>(output_variable).GetValue();
+    auto bkgModel = bkgDf.Take<float>(output_variable).GetValue();
+
+    // ROC Curve     
+    auto ROC = TMVA::ROCCurve(sigModel, bkgModel); 
+    auto ROCCurve = ROC.GetROCCurve(); 
+
+    // ROC AUC Score as Legend's Label
+    std::string AUC = std::to_string(ROC.GetROCIntegral()); 
+    std::string legend = "AUC = "; 
+    const std::string legendStr = legend.append(AUC); 
+    const char *ROCAUCLabel = legendStr.c_str(); 
+
+    // Graph title 
+    std::string varName = output_variable; 
+    std::string title = varName.append(" ROC Curve");
+
+    auto clone = (TGraph*) ROCCurve; 
+    
+    clone->SetTitle(title.c_str());
+    clone->SetLineColor(1); 
+    // axis of the ROC Curve
+    clone->GetXaxis()->SetTitle("Specificity"); 
+    clone->GetYaxis()->SetTitle("Sensititvy");
+    clone->GetYaxis()->SetTitleOffset(1.0);
+    clone->DrawClone("AC"); 
+
+    TLegend lROC(0.5, 0.8, 0.95, 0.9);
+    lROC.AddEntry("clone", ROCAUCLabel, "lROC"); 
+    lROC.DrawClone(); 
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawing ROC Curve - RNode input, multiple models
 void TMVA::RVariablePlotter::DrawMultiROCCurve(const std::vector<std::string>& output_variables, bool useTMVAStyle){
@@ -240,56 +290,6 @@ void TMVA::RVariablePlotter::DrawMultiROCCurve(const std::vector<std::string>& o
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Drawing ROC Curve - RTensor input, multiple models, toDo waiting for legend bug to be solved
-
-////////////////////////////////////////////////////////////////////////////////
-/// Drawing ROC Curve - RNode input, single model 
-void TMVA::RVariablePlotter::DrawROCCurve(const std::string& output_variable , bool useTMVAStyle){
-
-    // consistency check, i.e. we need signal vs background for the roc curve
-    if (fNodes.size() != 2)
-        std::runtime_error("In order to plot the ROC Curve you need 2 RNodes, corresponding to prediction on signal and background");
-    
-    // TMVA plotting style
-    TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
-
-    auto sigDf = fNodes[0]; 
-    auto bkgDf = fNodes[1];
-
-    // extract columns as vectors of float for the selected model (i.e. specified by output_variable)
-    auto sigModel = sigDf.Take<float>(output_variable).GetValue();
-    auto bkgModel = bkgDf.Take<float>(output_variable).GetValue();
-
-    // ROC Curve     
-    auto ROC = TMVA::ROCCurve(sigModel, bkgModel); 
-    auto ROCCurve = ROC.GetROCCurve(); 
-
-    // ROC AUC Score as Legend's Label
-    std::string AUC = std::to_string(ROC.GetROCIntegral()); 
-    std::string legend = "AUC = "; 
-    const std::string legendStr = legend.append(AUC); 
-    const char *ROCAUCLabel = legendStr.c_str(); 
-
-    // Graph title 
-    std::string varName = output_variable; 
-    std::string title = varName.append(" ROC Curve");
-
-    auto clone = (TGraph*) ROCCurve; 
-    
-    clone->SetTitle(title.c_str());
-    clone->SetLineColor(1); 
-    // axis of the ROC Curve
-    clone->GetXaxis()->SetTitle("Specificity"); 
-    clone->GetYaxis()->SetTitle("Sensititvy");
-    clone->GetYaxis()->SetTitleOffset(1.0);
-    clone->DrawClone("AC"); 
-
-    TLegend lROC(0.5, 0.8, 0.95, 0.9);
-    lROC.AddEntry("clone", ROCAUCLabel, "lROC"); 
-    lROC.DrawClone(); 
-
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawing ROC Curve - RTensor input, single model 
@@ -341,10 +341,87 @@ void TMVA::RVariablePlotter::DrawROCCurveTensor(const std::string& output_variab
 
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Drawing ROC Curve - RTensor input, multiple models, toDo waiting for legend bug to be solved
+
+void TMVA::RVariablePlotter::DrawMultiROCCurveTensor(const std::vector<std::string>& output_variables, bool useTMVAStyle){
+
+    // consistency check, i.e. we need signal vs background for the roc curve
+    if (fTensors.size() != 2)
+        std::runtime_error("In order to plot the ROC Curve you need 2 RTensors, corresponding to prediction on signal and background");
+    
+    auto RNodeVec = TensorsToNodes(output_variables);
+    
+    // TMVA plotting style
+    TMVA::RVariablePlotter::InitializeStyle(useTMVAStyle);
+    
+    auto sigDf = RNodeVec[0]; 
+    auto bkgDf = RNodeVec[1];
+
+    // here we can store signals and backgrounds from each model
+    std::vector<std::vector<float>> sigModels; 
+    std::vector<std::vector<float>> bkgModels; 
+
+    for (unsigned int i = 0; i < output_variables.size(); i++){
+        // extract columns as vectors of float for the selected model (i.e. specified by output_variable)
+        sigModels.push_back(sigDf.Take<float>(output_variables[i]).GetValue());
+        bkgModels.push_back(bkgDf.Take<float>(output_variables[i]).GetValue());
+    }
+
+   std::string title = "ROC Curves";
+
+    // ROC first curve 
+    auto ROC = TMVA::ROCCurve(sigModels[0], bkgModels[0]); 
+    // Label = AUC Score for each model as sequence of char
+    std::string AUC = std::to_string(ROC.GetROCIntegral()); 
+    std::string legend = " AUC = "; 
+    std::string legendStr = legend.append(AUC); 
+    std::string out_var = output_variables[0];
+    std::string labelName = out_var.append(legendStr); 
+    const char *ROCAUCLabel = labelName.c_str();
+
+    auto clone = (TGraph*) ROC.GetROCCurve(); 
+    clone->SetTitle(title.c_str());
+    clone->SetLineColor(1); 
+    // axis of the ROC Curve
+    clone->GetXaxis()->SetTitle("Specificity"); 
+    clone->GetYaxis()->SetTitle("Sensititvy");
+    clone->GetYaxis()->SetTitleOffset(1.0);
+    clone->DrawClone("AC");  
+
+    // Legend
+    auto lROC = new TLegend(0.65, 0.75, 0.90, 0.90);
+    lROC->AddEntry(clone, ROCAUCLabel, "l");
+    lROC->DrawClone(); 
+
+    for (unsigned int i = 1; i < sigModels.size(); i++){
+        // ROC instance
+        auto ROC = TMVA::ROCCurve(sigModels[i], bkgModels[i]); 
+        // Label = AUC Score for each model as sequence of char
+        std::string AUC = std::to_string(ROC.GetROCIntegral()); 
+        std::string legend = " AUC = "; 
+        std::string legendStr = legend.append(AUC); 
+        std::string out_var = output_variables[i];
+        std::string labelName = out_var.append(legendStr); 
+        const char *ROCAUCLabel = labelName.c_str();
+
+        auto clone = (TGraph*) ROC.GetROCCurve(); 
+        clone->SetLineColor(i + 1); 
+        clone->DrawClone("CP");  
+        lROC->AddEntry(clone, ROCAUCLabel, "l");
+        lROC->DrawClone();
+    }    
+
+}
+
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// RTensor to RNode Converter (Static Function - Private)
-
-// add variables argument for custom variables
 ROOT::RDF::RNode TMVA::RVariablePlotter::TensorToNode(const TMVA::Experimental::RTensor<Float_t>& tensor,  const std::vector<std::string>& variables){
         
     // shape check
