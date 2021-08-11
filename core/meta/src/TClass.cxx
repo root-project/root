@@ -3624,7 +3624,9 @@ const char *TClass::GetSharedLibs()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return list containing the TBaseClass(es) of a class.
+/// Return list containing the \b direct TBaseClass(es) of a class. This
+/// function does not include all base classes in the inheritance chain of the
+/// class. For that behaviour, see TClass::GetListOfAllBases .
 
 TList *TClass::GetListOfBases()
 {
@@ -3657,6 +3659,23 @@ TList *TClass::GetListOfBases()
       }
    }
    return fBase;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return list containing all base classes of this class, considering the full
+/// inheritance chain.
+
+TList *TClass::GetListOfAllBases()
+{
+   TList *allbases = new TList;
+   for (TObject *baseclass_tobject: *GetListOfBases()){
+      auto baseclass_tbaseclass = static_cast<TBaseClass *>(baseclass_tobject);
+      allbases->Add(baseclass_tbaseclass);
+      TClass *baseclass_tclass = baseclass_tbaseclass->GetClassPointer();
+      allbases->AddAll(baseclass_tclass->GetListOfAllBases());
+   }
+
+   return allbases;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

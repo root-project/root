@@ -1192,7 +1192,7 @@ bool Cppyy::HasComplexHierarchy(TCppType_t klass)
     size_t nbases = 0;
 
     TClassRef& cr = type_from_handle(klass);
-    if (cr.GetClass() && cr->GetListOfBases() != 0)
+    if (cr.GetClass() && cr->GetListOfAllBases() != 0)
         nbases = GetNumBases(klass);
 
     if (1 < nbases)
@@ -1200,7 +1200,7 @@ bool Cppyy::HasComplexHierarchy(TCppType_t klass)
     else if (nbases == 0)
         is_complex = 0;
     else {         // one base class only
-        TBaseClass* base = (TBaseClass*)cr->GetListOfBases()->At(0);
+        TBaseClass* base = (TBaseClass*)cr->GetListOfAllBases()->At(0);
         if (base->Property() & kIsVirtualBase)
             is_complex = 1;       // TODO: verify; can be complex, need not be.
         else
@@ -1214,15 +1214,15 @@ Cppyy::TCppIndex_t Cppyy::GetNumBases(TCppType_t klass)
 {
 // Get the total number of base classes that this class has.
     TClassRef& cr = type_from_handle(klass);
-    if (cr.GetClass() && cr->GetListOfBases() != 0)
-        return (TCppIndex_t)cr->GetListOfBases()->GetSize();
+    if (cr.GetClass() && cr->GetListOfAllBases() != 0)
+        return (TCppIndex_t)cr->GetListOfAllBases()->GetSize();
     return (TCppIndex_t)0;
 }
 
 std::string Cppyy::GetBaseName(TCppType_t klass, TCppIndex_t ibase)
 {
     TClassRef& cr = type_from_handle(klass);
-    return ((TBaseClass*)cr->GetListOfBases()->At((int)ibase))->GetName();
+    return ((TBaseClass*)cr->GetListOfAllBases()->At((int)ibase))->GetName();
 }
 
 bool Cppyy::IsSubtype(TCppType_t derived, TCppType_t base)

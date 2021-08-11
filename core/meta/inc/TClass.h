@@ -445,6 +445,7 @@ public:
    TList             *GetListOfEnums(Bool_t load = kTRUE);
    TList             *GetListOfFunctionTemplates(Bool_t load = kTRUE);
    TList             *GetListOfBases();
+   TList             *GetListOfAllBases();
    TList             *GetListOfMethods(Bool_t load = kTRUE);
    TCollection       *GetListOfMethodOverloads(const char* name) const;
    TList             *GetListOfRealData() const { return fRealData; }
