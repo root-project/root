@@ -692,12 +692,14 @@ void REveManager::QuitRoot()
 void REveManager::WindowConnect(unsigned connid)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
+
+   fServerState.fMIRTime = std::time(nullpt);
+   fServerState.fDisconnectTime = 0;
    while (fServerState.fVal == ServerState::UpdatingScenes)
    {
        fServerState.fCV.wait(lock);
    }
 
-   fServerState.fDisconnectTime = 0;
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
 
