@@ -14,6 +14,8 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
 macro(find_package)
   if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
+    # this is a workaround to silence some cmake warnings coming from FindArrow.cmake when it
+    # looks for transitive dependencies, see also https://issues.apache.org/jira/browse/ARROW-11890
     if("${ARGV0}" MATCHES "c-ares" OR "${ARGV0}" MATCHES "re2")
       _find_package(${ARGV} QUIET)
     else()
