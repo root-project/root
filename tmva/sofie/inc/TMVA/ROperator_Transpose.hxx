@@ -28,7 +28,7 @@ private:
 
 public:
 
-   ROperator_Transpose() = delete;
+   ROperator_Transpose(){}
    ROperator_Transpose(std::vector<int_t> attr_perm, std::string nameData, std::string nameOutput):
       fAttrPerm(attr_perm), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
    }
