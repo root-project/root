@@ -120,33 +120,33 @@ TEST(Metrics, PresetIntervalHistogram)
       std::make_pair(10, 20),
       std::make_pair(21, 30)
    };
-   RNTupleHistoCounter counter("plain", "example 1", intervals, inner);
+   RNTupleHistoInterval counter("plain", "", "example 1", intervals);
 
    EXPECT_FALSE(inner.IsEnabled());
    inner.Enable();
    EXPECT_TRUE(inner.IsEnabled());
 
-   counter.Add(15);
-   counter.Add(9);
+   counter.Fill(15);
+   counter.Fill(9);
 
    // 14 and 20 in same interval as 15
-   EXPECT_EQ(counter.GetMatchingCount(14), 1);
-   EXPECT_EQ(counter.GetMatchingCount(20), 1);
+   EXPECT_EQ(counter.GetBinContent(14), 1);
+   EXPECT_EQ(counter.GetBinContent(20), 1);
    
-   counter.Add(20);
-   EXPECT_EQ(counter.GetMatchingCount(19), 2);
+   counter.Fill(20);
+   EXPECT_EQ(counter.GetBinContent(19), 2);
 
-   EXPECT_EQ(counter.GetMatchingCount(22), 0);
+   EXPECT_EQ(counter.GetBinContent(22), 0);
 
-   counter.Add(35);
-   EXPECT_EQ(counter.GetMatchingCount(34), 0);
+   counter.Fill(35);
+   EXPECT_EQ(counter.GetBinContent(34), 0);
 }
 
 TEST(Metrics, LogHistogramUpperBound)
 {
    RNTupleMetrics inner("inner");
    
-   RNTupleHistoCounterLog counter("plain", "example 1", inner, 1000);
+   RNTupleHistoCounterLog counter("plain", "", "example 1", 1000);
 
    auto maxBound = counter.MaxLogUpperBound();
 
@@ -156,18 +156,18 @@ TEST(Metrics, LogHistogramUpperBound)
 
 TEST(Metrics, LogHistogramCount) {
    RNTupleMetrics inner("inner");
-   RNTupleHistoCounterLog counter("plain", "example 1", inner, 1000);
+   RNTupleHistoCounterLog counter("plain", "", "example 1", 1000);
 
    EXPECT_FALSE(inner.IsEnabled());
    inner.Enable();
    EXPECT_TRUE(inner.IsEnabled());
 
-   counter.Add(2);
-   counter.Add(3);
-   counter.Add(5);
-   counter.Add(6);
-   counter.Add(7);
-   counter.Add(8);
+   counter.Fill(2);
+   counter.Fill(3);
+   counter.Fill(5);
+   counter.Fill(6);
+   counter.Fill(7);
+   counter.Fill(8);
 
    // 2 entries with 1 exponent
    EXPECT_EQ(counter.GetExponentCount(1), 2);
@@ -179,7 +179,7 @@ TEST(Metrics, LogHistogramCount) {
    EXPECT_EQ(counter.GetExponentCount(3), 1);
 
    EXPECT_EQ(counter.GetOverflowCount(), 0);
-   counter.Add(1000);
-   counter.Add(1001);
+   counter.Fill(1000);
+   counter.Fill(1001);
    EXPECT_EQ(counter.GetOverflowCount(), 1);
 }
