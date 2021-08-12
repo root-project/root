@@ -44,6 +44,7 @@ which returns spans pointing directly to the data.
 #include "RunContext.h"
 #include "RooHelpers.h"
 
+#include "Math/Util.h"
 #include "ROOT/StringUtils.hxx"
 #include "TList.h"
 #include "TBuffer.h"
@@ -1485,4 +1486,34 @@ RooVectorDataStore::RealFullVector* RooVectorDataStore::addRealFull(RooAbsReal* 
   _realfStoreList.push_back(new RealFullVector(real)) ;
 
   return _realfStoreList.back() ;
+}
+
+
+/// Trigger a recomputation of the cached weight sums. Meant for use by RooFit
+/// dataset converter functions such as the NumPy converter functions
+/// implemented as pythonizations. Not meant to be part of the public user
+/// interface, so the interface might change without warning.
+void RooVectorDataStore::recomputeSumWeight() {
+  double const* arr = nullptr;
+  if (_extWgtArray) {
+    arr = _extWgtArray;
+  }
+  if (_wgtVar) {
+    const std::string wgtName = _wgtVar->GetName();
+    for(auto const* real : _realStoreList) {
+      if(wgtName == real->_nativeReal->GetName())
+        arr = real->_vec.data();
+    }
+    for(auto const* real : _realfStoreList) {
+      if(wgtName == real->_nativeReal->GetName())
+        arr = real->_vec.data();
+    }
+  }
+  if(arr == nullptr) {
+    _sumWeight = size();
+    return;
+  }
+  auto result = ROOT::Math::KahanSum<double, 4>::Accumulate(arr, arr + size(), 0.0);
+  _sumWeight = result.Sum();
+  _sumWeightCarry = result.Carry();
 }

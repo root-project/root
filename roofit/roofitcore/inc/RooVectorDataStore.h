@@ -295,6 +295,8 @@ public:
       return _vec;
     }
 
+    std::vector<double>& data() { return _vec; }
+
   protected:
     std::vector<double> _vec;
 
@@ -480,6 +482,10 @@ public:
       if (_vecEH) _vecEH->reserve(siz);
     }
 
+    std::vector<double>* dataE() { return _vecE; }
+    std::vector<double>* dataEL() { return _vecEL; }
+    std::vector<double>* dataEH() { return _vecEH; }
+
   private:
     friend class RooVectorDataStore ;
     Double_t *_bufE ; //!
@@ -588,6 +594,8 @@ public:
     void setBufArg(RooAbsCategory* arg) { _cat = arg; }
     const RooAbsCategory* bufArg() const { return _cat; }
 
+    std::vector<RooAbsCategory::value_type>& data() { return _vec; }
+
   private:
     friend class RooVectorDataStore ;
     RooAbsCategory* _cat;
@@ -597,15 +605,17 @@ public:
     ClassDef(CatVector,2) // STL-vector-based Data Storage class
   } ;
   
+  std::vector<RealVector*>& realStoreList() { return _realStoreList ; }
+  std::vector<RealFullVector*>& realfStoreList() { return _realfStoreList ; }
+  std::vector<CatVector*>& catStoreList() { return _catStoreList ; }
+
+  void recomputeSumWeight();
 
  protected:
 
   friend class RooAbsReal ;
   friend class RooAbsCategory ;
   friend class RooRealVar ;
-  std::vector<RealVector*>& realStoreList() { return _realStoreList ; }
-  std::vector<RealFullVector*>& realfStoreList() { return _realfStoreList ; }
-  std::vector<CatVector*>& catStoreList() { return _catStoreList ; }
 
   CatVector* addCategory(RooAbsCategory* cat);
 
