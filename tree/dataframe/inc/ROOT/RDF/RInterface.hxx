@@ -17,6 +17,8 @@
 #include "ROOT/RDF/HistoModels.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 #include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RDefine.hxx"
+#include "ROOT/RDF/RFilter.hxx"
 #include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
