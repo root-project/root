@@ -1,4 +1,4 @@
-import os 
+import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import keras
@@ -19,6 +19,3 @@ y_train=np.random.rand(4,6)
 model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
 model.fit(x_train, y_train, epochs=10, batch_size=4)
 model.save('KerasModelSequential.h5')
-
-
-
