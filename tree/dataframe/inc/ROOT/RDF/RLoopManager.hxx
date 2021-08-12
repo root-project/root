@@ -147,6 +147,8 @@ class RLoopManager : public RNodeBase {
    void CleanUpTask(TTreeReader *r, unsigned int slot);
    void EvalChildrenCounts();
    void SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot);
+   void UpdateDataBlockID(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
+   void UpdateDataBlockID(unsigned int slot, TTreeReader &r);
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
