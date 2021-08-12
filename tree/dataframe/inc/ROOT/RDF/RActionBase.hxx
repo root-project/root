@@ -12,6 +12,7 @@
 #define ROOT_RACTIONBASE
 
 #include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RDataBlockID.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 #include "RtypesCore.h"
 
@@ -81,7 +82,7 @@ public:
    */
    virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const = 0;
 
-   virtual std::function<void(unsigned int)> GetDataBlockCallback() = 0;
+   virtual ROOT::RDF::DataBlockCallback_t GetDataBlockCallback() = 0;
 };
 } // namespace RDF
 } // namespace Internal
