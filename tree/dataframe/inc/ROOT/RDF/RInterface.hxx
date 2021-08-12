@@ -18,6 +18,7 @@
 #include "ROOT/RDF/InterfaceUtils.hxx"
 #include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/RDefine.hxx"
+#include "ROOT/RDF/RDefinePerSample.hxx"
 #include "ROOT/RDF/RFilter.hxx"
 #include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RDF/RRange.hxx"
@@ -475,6 +476,38 @@ public:
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
+      return newInterface;
+   }
+
+   // TODO we could SFINAE on F's signature to provide friendlier compilation errors in case of signature mismatch
+   template <typename F>
+   RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, F expression)
+   {
+      RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
+      RDFInternal::CheckForRedefinition("DefinePerSample", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                        fLoopManager->GetBranchNames(),
+                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+
+      using RetType_t = typename TTraits::CallableTraits<F>::ret_type;
+      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType_t));
+      if (retTypeName.empty()) {
+         // The type is not known to the interpreter.
+         // We must not error out here, but if/when this column is used in jitted code
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType_t));
+         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
+      }
+
+      auto newColumn = std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression),
+                                                                        fLoopManager->GetNSlots());
+
+      auto updateDefinePerSample = [newColumn](unsigned int slot, const ROOT::RDF::RDataBlockID &id) {
+         newColumn->Update(slot, id);
+      };
+      fLoopManager->AddDataBlockCallback(std::move(updateDefinePerSample));
+
+      RDFInternal::RBookedDefines newCols(fDefines);
+      newCols.AddColumn(std::move(newColumn), name);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, newCols, fDataSource);
       return newInterface;
    }
 
