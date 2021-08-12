@@ -3668,10 +3668,13 @@ TList *TClass::GetListOfBases()
 TList *TClass::GetListOfAllBases()
 {
    TList *allbases = new TList;
+   if (!GetListOfBases()) return allbases;
    for (TObject *baseclass_tobject: *GetListOfBases()){
       auto baseclass_tbaseclass = static_cast<TBaseClass *>(baseclass_tobject);
+      if (!baseclass_tbaseclass) continue;
       allbases->Add(baseclass_tbaseclass);
       TClass *baseclass_tclass = baseclass_tbaseclass->GetClassPointer();
+      if (!baseclass_tclass) continue;
       allbases->AddAll(baseclass_tclass->GetListOfAllBases());
    }
 
