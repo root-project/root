@@ -54,6 +54,7 @@ points for its contents and provides an iterator over its elements
 #include "RooHist.h"
 #include "RooHelpers.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "TMatrixDSym.h"
 #include "TPaveText.h"
 #include "TH1.h"
@@ -551,7 +552,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
   // Parse list of variable names
-  const auto varNames = RooHelpers::tokenise(varNameList, ",:");
+  const auto varNames = ROOT::Split(varNameList, ",:");
   RooLinkedList argList;
   RooRealVar* vars[3] = {nullptr, nullptr, nullptr};
 
@@ -1349,7 +1350,7 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Parse cutRange specification
-  const auto cutVec = RooHelpers::tokenise(cutRange ? cutRange : "", ",", /*returnEmptyToken =*/ false);
+  const auto cutVec = ROOT::Split(cutRange ? cutRange : "", ",");
 
   // Loop over events and fill the histogram
   if (hist->GetSumw2()->fN==0) {
@@ -1373,9 +1374,8 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     if (cutRange) {
       for (const auto arg : _vars) {
         Bool_t selectThisArg = kFALSE ;
-        UInt_t icut ;
-        for (icut=0 ; icut<cutVec.size() ; icut++) {
-          if (arg->inRange(cutVec[icut].c_str())) {
+        for (auto const& cut : cutVec) {
+          if (!cut.empty() && arg->inRange(cut.c_str())) {
             selectThisArg = kTRUE ;
             break ;
           }
@@ -2168,26 +2168,22 @@ void RooAbsData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cac
     // Go over all used observables and check if any of them have parameterized
     // ranges in terms of pruned observables. If so, remove those observable
     // from the pruning list
-    TIterator* uIter = usedObs->createIterator() ;
-    RooAbsArg* obs ;
-    while((obs=(RooAbsArg*)uIter->Next())) {
-      RooRealVar* rrv = dynamic_cast<RooRealVar*>(obs) ;
+    for(auto const* rrv : dynamic_range_cast<RooRealVar*>(*usedObs)) {
       if (rrv && !rrv->getBinning().isShareable()) {
-   RooArgSet depObs ;
-   RooAbsReal* loFunc = rrv->getBinning().lowBoundFunc() ;
-   RooAbsReal* hiFunc = rrv->getBinning().highBoundFunc() ;
-   if (loFunc) {
-     loFunc->leafNodeServerList(&depObs,0,kTRUE) ;
-   }
-   if (hiFunc) {
-     hiFunc->leafNodeServerList(&depObs,0,kTRUE) ;
-   }
-   if (depObs.getSize()>0) {
-     pruneSet.remove(depObs,kTRUE,kTRUE) ;
-   }
+        RooArgSet depObs ;
+        RooAbsReal* loFunc = rrv->getBinning().lowBoundFunc() ;
+        RooAbsReal* hiFunc = rrv->getBinning().highBoundFunc() ;
+        if (loFunc) {
+          loFunc->leafNodeServerList(&depObs,0,kTRUE) ;
+        }
+        if (hiFunc) {
+          hiFunc->leafNodeServerList(&depObs,0,kTRUE) ;
+        }
+        if (depObs.getSize()>0) {
+          pruneSet.remove(depObs,kTRUE,kTRUE) ;
+        }
       }
     }
-    delete uIter ;
   }
 
 

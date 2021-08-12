@@ -32,7 +32,7 @@
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() { TRACE_CREATE }
+  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE }
   RooAddPdf(const char *name, const char *title=0);
   RooAddPdf(const char *name, const char *title,
             RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -117,7 +117,7 @@ protected:
     virtual RooArgList containedArgs(Action) ;
 
   } ;
-  mutable RooObjCacheManager _projCacheMgr ;  // Manager of cache with coefficient projections and transformations
+  mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
   CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
   void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
 
@@ -150,7 +150,7 @@ private:
 
   void finalizeConstruction();
 
-  ClassDefOverride(RooAddPdf,3) // PDF representing a sum of PDFs
+  ClassDefOverride(RooAddPdf,4) // PDF representing a sum of PDFs
 };
 
 #endif

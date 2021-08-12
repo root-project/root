@@ -85,6 +85,7 @@
 #include "RunContext.h"
 #include "ValueChecking.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "Compression.h"
 #include "Math/IFunction.h"
 #include "TMath.h"
@@ -595,7 +596,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   // Integral over multiple ranges
   RooArgSet components ;
 
-  auto tokens = RooHelpers::tokenise(rangeName, ",");
+  auto tokens = ROOT::Split(rangeName, ",");
 
   for (const std::string& token : tokens) {
     RooAbsReal* compIntegral = createIntObj(iset,nset,cfg, token.c_str());
@@ -1722,7 +1723,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     std::vector<string> rlist;
 
     // Separate named ranges using strtok
-    for (const std::string& rangeNameToken : RooHelpers::tokenise(rcmd->getString(0), ",")) {
+    for (const std::string& rangeNameToken : ROOT::Split(rcmd->getString(0), ",")) {
       rlist.emplace_back(rangeNameToken);
     }
 
@@ -1842,7 +1843,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     }
 
     // Loop over all categories provided by (multiple) Slice() arguments
-    auto catTokens = RooHelpers::tokenise(sliceCatState, ",");
+    auto catTokens = ROOT::Split(sliceCatState, ",");
     std::unique_ptr<TIterator> iter( sliceCatList.MakeIterator() );
     for (unsigned int i=0; i < catTokens.size(); ++i) {
       auto scat = static_cast<RooCategory*>(iter->Next());

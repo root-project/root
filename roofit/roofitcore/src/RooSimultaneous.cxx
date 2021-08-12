@@ -68,7 +68,8 @@ in each category.
 #include "RooDataHist.h"
 #include "RooRandom.h"
 #include "RooArgSet.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include <iostream>
 
@@ -635,7 +636,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
 
     // Prepare comma separated label list for parsing
-    auto catTokens = RooHelpers::tokenise(sliceCatState, ",");
+    auto catTokens = ROOT::Split(sliceCatState, ",");
 
     // Loop over all categories provided by (multiple) Slice() arguments
     TIterator* iter = sliceCatList.MakeIterator() ;

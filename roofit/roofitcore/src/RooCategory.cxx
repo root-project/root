@@ -82,6 +82,8 @@ for advanced uses of categories.
 #include "RooFitLegacy/RooCategorySharedProperties.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
+#include "ROOT/StringUtils.hxx"
+
 #include "TBuffer.h"
 #include "TString.h"
 #include "TList.h"
@@ -376,7 +378,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   }
 
   // Parse list of state names, verify that each is valid and add them to the list
-  for (const auto& token : RooHelpers::tokenise(stateNameList, ",")) {
+  for (const auto& token : ROOT::Split(stateNameList, ",")) {
     const value_type idx = lookupIndex(token);
     if (idx != invalidCategory().second) {
       addToRange(name, idx);

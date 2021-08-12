@@ -152,7 +152,7 @@ private:
     void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
     void writeToStream(std::ostream& os) const ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
   CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;
@@ -183,7 +183,7 @@ private:
   
 private:
 
-  ClassDef(RooProdPdf,4) // PDF representing a product of PDFs
+  ClassDef(RooProdPdf,5) // PDF representing a product of PDFs
 };
 
 

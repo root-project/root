@@ -163,13 +163,6 @@ struct RemoveFirstTwoParametersIf<true, TypeList> {
 template <bool MustRemove, typename TypeList>
 using RemoveFirstTwoParametersIf_t = typename RemoveFirstTwoParametersIf<MustRemove, TypeList>::type;
 
-/// Detect whether a type is an instantiation of RVec<T>
-template <typename>
-struct IsRVec_t : public std::false_type {};
-
-template <typename T>
-struct IsRVec_t<ROOT::VecOps::RVec<T>> : public std::true_type {};
-
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
 // fundamental types
 template <typename T,

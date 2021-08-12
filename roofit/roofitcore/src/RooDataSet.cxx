@@ -92,7 +92,8 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooCompositeDataStore.h"
 #include "RooSentinel.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include "Math/Util.h"
 #include "TTree.h"
@@ -377,7 +378,7 @@ RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooA
     map<string,RooDataSet*> hmap ;  
     if (indexCat) {
       TIterator* hiter = impSliceData.MakeIterator() ;
-      for (const auto& token : RooHelpers::tokenise(impSliceNames, ",")) {
+      for (const auto& token : ROOT::Split(impSliceNames, ",")) {
         hmap[token] = (RooDataSet*) hiter->Next() ;
       }
       delete hiter ;
@@ -1771,7 +1772,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
   // Loop over all names in comma separated list
   Int_t fileSeqNum(0);
-  for (const auto& filename : RooHelpers::tokenise(std::string(fileList), ", ")) {
+  for (const auto& filename : ROOT::Split(std::string(fileList), ", ")) {
     // Determine index category number, if this option is active
     if (indexCat) {
 

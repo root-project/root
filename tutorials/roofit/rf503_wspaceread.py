@@ -30,9 +30,9 @@ w = f.Get("w")
 # -----------------------------------------------------------------
 
 # Retrieve x, and data from workspace
-x = w.var("x")
-model = w.pdf("model")
-data = w.data("modelData")
+x = w["x"]
+model = w["model"]
+data = w["modelData"]
 
 # Print structure of composite p.d.f.
 model.Print("t")
@@ -44,15 +44,15 @@ model.Print("t")
 model.fitTo(data)
 
 # Plot data and PDF overlaid
-xframe = x.frame(ROOT.RooFit.Title("Model and data read from workspace"))
+xframe = x.frame(Title="Model and data read from workspace")
 data.plotOn(xframe)
 model.plotOn(xframe)
 
 # Overlay the background component of model with a dashed line
-model.plotOn(xframe, ROOT.RooFit.Components("bkg"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+model.plotOn(xframe, Components="bkg", LineStyle="--")
 
 # Overlay the background+sig2 components of model with a dotted line
-model.plotOn(xframe, ROOT.RooFit.Components("bkg,sig2"), ROOT.RooFit.LineStyle(ROOT.kDotted))
+model.plotOn(xframe, Components="bkg,sig2", LineStyle=":")
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf503_wspaceread", "rf503_wspaceread", 600, 600)

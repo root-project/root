@@ -21,12 +21,16 @@
 #include "TInterpreterValue.h"
 #include "TFormula.h"
 #include "TRegexp.h"
+
+#include "ROOT/StringUtils.hxx"
+
 #include <array>
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
 #include <functional>
 #include <set>
+#include <sstream>
 
 using namespace std;
 
@@ -1670,55 +1674,37 @@ void TFormula::HandleExponentiation(TString &formula)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle linear functions defined with the operator ++.
 
 void TFormula::HandleLinear(TString &formula)
 {
+   if(formula.Length() == 0) return;
+   auto terms = ROOT::Split(formula.Data(), "@");
+   if(terms.size() <= 1) return; // function is not linear
    // Handle Linear functions identified with "@" operator
-   Int_t linPos = formula.Index("@");
-   if (linPos == kNPOS ) return;  // function is not linear
-   Int_t nofLinParts = formula.CountChar((int)'@');
-   assert(nofLinParts > 0);
-   fLinearParts.reserve(nofLinParts + 1);
-   Int_t Nlinear = 0;
-   bool first = true;
-   while (linPos != kNPOS && !IsAParameterName(formula, linPos)) {
+   fLinearParts.reserve(terms.size());
+   TString expandedFormula = "";
+   int delimeterPos = 0;
+   for(std::size_t iTerm = 0; iTerm < terms.size(); ++iTerm) {
+      // determine the position of the "@" operator in the formula
+      delimeterPos += terms[iTerm].size() + (iTerm == 0);
+      if(IsAParameterName(formula, delimeterPos)) {
+         // append the current term and the remaining formula unchanged to the expanded formula
+         expandedFormula += terms[iTerm];
+         expandedFormula += formula(delimeterPos, formula.Length() - (delimeterPos + 1));
+         break;
+      }
       SetBit(kLinear, 1);
-      // analyze left part only the first time
-      Int_t temp = 0;
-      TString left;
-      if (first) {
-         temp = linPos - 1;
-         while (temp >= 0 && formula[temp] != '@') {
-            temp--;
-         }
-         left = formula(temp + 1, linPos - (temp + 1));
-      }
-      temp = linPos + 1;
-      while (temp < formula.Length() && formula[temp] != '@') {
-         temp++;
-      }
-      TString right = formula(linPos + 1, temp - (linPos + 1));
-
-      TString pattern =
-         (first) ? TString::Format("%s@%s", left.Data(), right.Data()) : TString::Format("@%s", right.Data());
-      TString replacement =
-         (first) ? TString::Format("([%d]*(%s))+([%d]*(%s))", Nlinear, left.Data(), Nlinear + 1, right.Data())
-                 : TString::Format("+([%d]*(%s))", Nlinear, right.Data());
-      Nlinear += (first) ? 2 : 1;
-
-      formula.ReplaceAll(pattern, replacement);
-      if (first) {
-         TFormula *lin1 = new TFormula("__linear1", left, false);
-         fLinearParts.push_back(lin1);
-      }
-      TFormula *lin2 = new TFormula("__linear2", right, false);
-      fLinearParts.push_back(lin2);
-
-      linPos = formula.Index("@");
-      first = false;
+      auto termName = std::string("__linear") + std::to_string(iTerm+1);
+      fLinearParts.push_back(new TFormula(termName.c_str(), terms[iTerm].c_str(), false));
+      std::stringstream ss;
+      ss << "([" << iTerm << "]*(" << terms[iTerm] << "))";
+      expandedFormula += ss.str();
+      if(iTerm < terms.size() - 1) expandedFormula += "+";
    }
+   formula = expandedFormula;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

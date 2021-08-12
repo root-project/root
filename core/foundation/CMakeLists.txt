@@ -15,8 +15,10 @@ set(Foundation_dict_headers
   TError.h
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
+  ROOT/RRangeCast.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx
+  ROOT/StringUtils.hxx
   ROOT/span.hxx
   ROOT/TypeTraits.hxx
   PARENT_SCOPE
@@ -26,6 +28,7 @@ set(FOUNDATION_SOURCES
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx
   src/RLogger.cxx
+  src/StringUtils.cxx
   src/TClassEdit.cxx
   src/TError.cxx
 )

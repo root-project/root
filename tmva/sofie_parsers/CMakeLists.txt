@@ -17,7 +17,6 @@ set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRU
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
   HEADERS
    TMVA/RModelParser_ONNX.hxx
-   ${PROTO_HDRS}
   SOURCES
     src/RModelParser_ONNX.cxx
     ${PROTO_SRCS}

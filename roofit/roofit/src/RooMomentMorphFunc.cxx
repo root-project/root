@@ -28,9 +28,9 @@ using namespace std;
 
 ClassImp(RooMomentMorphFunc)
 
-   //_____________________________________________________________________________
-   RooMomentMorphFunc::RooMomentMorphFunc()
-   : _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
+//_____________________________________________________________________________
+RooMomentMorphFunc::RooMomentMorphFunc()
+   : _cacheMgr(this, 10, true, true), _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
 {
    // coverity[UNINIT_CTOR]
    _varItr = _varList.createIterator();

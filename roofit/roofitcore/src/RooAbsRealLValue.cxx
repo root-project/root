@@ -46,7 +46,8 @@ interpreted as a parameter.
 #include "RooAbsData.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include "TH1.h"
 #include "TH2.h"
@@ -510,7 +511,7 @@ Bool_t RooAbsRealLValue::inRange(const char* name) const
     return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
   }
 
-  const auto& ranges = RooHelpers::tokenise(name, ",");
+  const auto& ranges = ROOT::Split(name, ",");
   return std::any_of(ranges.begin(), ranges.end(), [val,epsilon,this](const std::string& range){
     const auto minMax = this->getRange(range.c_str());
     return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
