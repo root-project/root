@@ -1,7 +1,7 @@
 #include "JSONParser.h"
 #include <sstream>
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 // TJSONTree interface
 

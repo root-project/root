@@ -8,6 +8,8 @@
 #include <RooRealVar.h>
 #include <RooAbsCategory.h>
 #include <RooRealProxy.h>
+#include <RooListProxy.h>
+#include <RooAbsProxy.h>
 #include <RooStats/ModelConfig.h>
 
 #include "TROOT.h"
