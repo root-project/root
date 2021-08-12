@@ -337,20 +337,21 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fDataBlockNotifier(fNSlots)
+     fDataBlockNotifier(fNSlots), fDataBlockIDs(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fDataBlockNotifier(fNSlots)
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fDataBlockNotifier(fNSlots),
+     fDataBlockIDs(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fDataBlockNotifier(fNSlots)
+     fDataSource(std::move(ds)), fDataBlockNotifier(fNSlots), fDataBlockIDs(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -568,7 +569,7 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
    // data-block callbacks run before the rest of the graph
    if (fDataBlockNotifier.CheckFlag(slot)) {
       for (auto &callback : fDataBlockCallbacks) {
-         callback(slot);
+         callback(slot, fDataBlockIDs[slot]);
       }
       fDataBlockNotifier.UnsetFlag(slot);
    }
@@ -868,7 +869,7 @@ void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void
    fDSValuePtrMap[col] = ptrs;
 }
 
-void RLoopManager::AddDataBlockCallback(std::function<void(unsigned int)> &&callback)
+void RLoopManager::AddDataBlockCallback(DataBlockCallback_t &&callback)
 {
    if (callback)
       fDataBlockCallbacks.emplace_back(std::move(callback));
