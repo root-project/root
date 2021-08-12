@@ -24,6 +24,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/RDataBlockID.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/TypeTraits.hxx"
@@ -80,7 +81,7 @@ public:
       throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
    }
 
-   virtual std::function<void(unsigned int)> GetDataBlockCallback() { return {}; }
+   virtual ROOT::RDF::DataBlockCallback_t GetDataBlockCallback() { return {}; }
 };
 
 } // namespace RDF
@@ -1454,9 +1455,9 @@ public:
 
    std::string GetActionName() { return "Snapshot"; }
 
-   std::function<void(unsigned int)> GetDataBlockCallback() final
+   ROOT::RDF::DataBlockCallback_t GetDataBlockCallback() final
    {
-      return [this](unsigned int) mutable { fBranchAddressesNeedReset = true; };
+      return [this](unsigned int, const RDataBlockID &) mutable { fBranchAddressesNeedReset = true; };
    }
 };
 
@@ -1628,9 +1629,9 @@ public:
 
    std::string GetActionName() { return "Snapshot"; }
 
-   std::function<void(unsigned int)> GetDataBlockCallback() final
+   ROOT::RDF::DataBlockCallback_t GetDataBlockCallback() final
    {
-      return [this](unsigned int slot) mutable { fBranchAddressesNeedReset[slot] = 1; };
+      return [this](unsigned int slot, const RDataBlockID &) mutable { fBranchAddressesNeedReset[slot] = 1; };
    }
 };
 

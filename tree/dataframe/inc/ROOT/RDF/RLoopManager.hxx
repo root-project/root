@@ -13,6 +13,7 @@
 
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RDataBlockNotifier.hxx"
+#include "ROOT/RDF/RDataBlockID.hxx"
 
 #include <functional>
 #include <map>
@@ -121,8 +122,9 @@ class RLoopManager : public RNodeBase {
    /// Registered callbacks to invoke just once before running the loop
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
    /// Registered callbacks to call at the beginning of each "data block"
-   std::vector<RDFInternal::Callback_t> fDataBlockCallbacks;
+   std::vector<ROOT::RDF::DataBlockCallback_t> fDataBlockCallbacks;
    RDFInternal::RDataBlockNotifier fDataBlockNotifier;
+   std::vector<ROOT::RDF::RDataBlockID> fDataBlockIDs;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
    /// Registry of per-slot value pointers for booked data-source columns
@@ -202,7 +204,7 @@ public:
 
    const ColumnNames_t &GetBranchNames();
 
-   void AddDataBlockCallback(std::function<void(unsigned int)> &&callback);
+   void AddDataBlockCallback(ROOT::RDF::DataBlockCallback_t &&callback);
 };
 
 } // ns RDF
