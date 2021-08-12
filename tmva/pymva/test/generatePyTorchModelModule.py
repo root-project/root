@@ -24,6 +24,7 @@ optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
 x_train=torch.randn(2,6,requires_grad=True)
 y_train=torch.randn(12,2,requires_grad=True)
 
+#Training the model
 for i in range(2000):
     y_pred = model(x_train)
     loss = criterion(y_pred,y_train)
@@ -31,6 +32,7 @@ for i in range(2000):
     loss.backward()
     optimizer.step()
 
+#Saving the traind model
 model.eval()
 m = torch.jit.script(model)
 torch.jit.save(m,"PyTorchModelModule.pt")

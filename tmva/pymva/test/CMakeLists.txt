@@ -13,6 +13,7 @@ project(pymva-tests)
 
 set(Libraries Core MathCore TMVA PyMVA)
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
+set(SOFIE ../../sofie)
 
 # Look for needed python modules
 find_python_module(torch QUIET)
@@ -26,7 +27,9 @@ if(PY_TORCH_FOUND)
    configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
    configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
    configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
-   # Test PyTorch: Binary classification
+   configure_file(generatePyTorchModelModule.py generatePyTorchModelModule.py COPYONLY)
+   configure_file(generatePyTorchModelSequential.py generatePyTorchModelSequential.py COPYONLY)
+   # Test PyTorch: Binary classification${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS}
    ROOT_EXECUTABLE(testPyTorchClassification testPyTorchClassification.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Torch-Classification COMMAND testPyTorchClassification)
@@ -40,6 +43,38 @@ if(PY_TORCH_FOUND)
    ROOT_EXECUTABLE(testPyTorchMulticlass testPyTorchMulticlass.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Torch-Multiclass COMMAND testPyTorchMulticlass)
+
+   # Test RModelParser_PyTorch
+   add_executable(emitFromPyTorch
+                 EmitFromPyTorch.cxx
+                 ../src/RModelParser_PyTorch.cxx
+                 ../../sofie/src/RModel.cxx
+                 ../../sofie/src/SOFIE_common.cxx
+                 )
+   target_link_libraries(emitFromPyTorch ${PYTHON_LIBRARIES} ${Libraries})
+   target_include_directories(emitFromPyTorch PRIVATE
+                 ../inc
+                 ${SOFIE}/inc
+                 ../../tmva/inc
+                 ../../../core/foundation/inc
+                 ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+               )
+   set_target_properties(emitFromPyTorch PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+   add_custom_target(SofieCompileModels_PyTorch)
+   add_dependencies(SofieCompileModels_PyTorch emitFromPyTorch)
+   add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
+		COMMAND ./emitFromPyTorch
+		USES_TERMINAL
+	)
+   ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
+    LIBRARIES
+    ROOTTMVASofie
+    blas
+    ${PYTHON_LIBRARIES}
+    INCLUDE_DIRS
+    ${CMAKE_CURRENT_BINARY_DIR}
+   )
+   add_dependencies(TestRModelParserPyTorch SofieCompileModels_PyTorch)
 endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))

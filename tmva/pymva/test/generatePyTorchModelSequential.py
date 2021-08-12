@@ -15,6 +15,7 @@ optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
 x=torch.randn(2,4)
 y=torch.randn(2,6)
 
+#Training the model
 for i in range(2000):
     y_pred = model(x)
     loss = criterion(y_pred,y)
@@ -22,6 +23,7 @@ for i in range(2000):
     loss.backward()
     optimizer.step()
 
+#Saving the trained model
 model.eval()
 m = torch.jit.script(model)
 torch.jit.save(m,"PyTorchModelSequential.pt")
