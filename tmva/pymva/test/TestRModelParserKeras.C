@@ -82,7 +82,7 @@ TEST(RModelParser_Keras, FUNCTIONAL)
     PyRun_String("model=load_model('KerasModelFunctional.h5')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.60828574, 0.50069386, 0.75186709, 0.14968806, 0.7692464 ,0.77027585, 0.75095316, 0.96651197," 
                                     "0.38536308, 0.95565917, 0.62796356, 0.13818375, 0.65484891,0.89220363, 0.23879365, 0.00635323]).reshape(2,8)",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("output=model(ip).numpy()",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
     std::size_t pOutputFunctionalSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
     

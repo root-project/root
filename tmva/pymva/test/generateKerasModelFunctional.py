@@ -15,8 +15,9 @@ x=Dense(4)(x)
 output=ReLU()(x)
 model=Model(inputs=input,outputs=output)
 
-x_train=np.random.rand(2,8)
-y_train=np.random.rand(2,4)
+randomGenerator=np.random.RandomState(0)
+x_train=randomGenerator.rand(2,8)
+y_train=randomGenerator.rand(2,4)
 
 model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
 model.fit(x_train, y_train, epochs=10, batch_size=2)

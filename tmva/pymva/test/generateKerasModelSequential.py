@@ -13,8 +13,9 @@ model.add(Activation('relu'))
 model.add(Dense(6))
 model.add(ReLU())
 
-x_train=np.random.rand(4,8)
-y_train=np.random.rand(4,6)
+randomGenerator=np.random.RandomState(0)
+x_train=randomGenerator.rand(4,8)
+y_train=randomGenerator.rand(4,6)
 
 model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
 model.fit(x_train, y_train, epochs=10, batch_size=4)
