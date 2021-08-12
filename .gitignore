@@ -9,7 +9,7 @@ project.xcworkspace
 # MacOS metadata
 .DS_Store
 
-# Visual Code
+# VS Code
 .vs/
 .vscode
 .build
