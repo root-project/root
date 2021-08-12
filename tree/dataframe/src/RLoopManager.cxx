@@ -9,6 +9,7 @@
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // GetTreeFullPaths
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
@@ -392,6 +393,7 @@ void RLoopManager::RunEmptySourceMT()
       InitNodeSlots(nullptr, slot);
       R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
+         UpdateDataBlockID(slot, range);
          for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
             RunAndCheckFilters(slot, currEntry);
          }
@@ -415,6 +417,7 @@ void RLoopManager::RunEmptySource()
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
    RCallCleanUpTask cleanup(*this);
    try {
+      UpdateDataBlockID(/*slot*/0, {0, fNEmptyEntries});
       for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
          RunAndCheckFilters(0, currEntry);
       }
@@ -446,6 +449,9 @@ void RLoopManager::RunTreeProcessorMT()
       try {
          // recursive call to check filters and conditionally execute actions
          while (r.Next()) {
+            if (fDataBlockNotifier.CheckFlag(slot)) {
+               UpdateDataBlockID(slot, r);
+            }
             RunAndCheckFilters(slot, count++);
          }
       } catch (...) {
@@ -477,6 +483,9 @@ void RLoopManager::RunTreeReader()
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
    try {
       while (r.Next() && fNStopsReceived < fNChildren) {
+         if (fDataBlockNotifier.CheckFlag(0)) {
+            UpdateDataBlockID(/*slot*/0, r);
+         }
          RunAndCheckFilters(0, r.GetCurrentEntry());
       }
    } catch (...) {
@@ -608,6 +617,21 @@ void RLoopManager::SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot) {
    // - for RDataSources and empty sources, which currently don't have data blocks, this
    //   ensures that we run once per task
    fDataBlockNotifier.SetFlag(slot);
+}
+
+void RLoopManager::UpdateDataBlockID(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range) {
+   fDataBlockIDs[slot] =
+      RDataBlockID("Empty source, range: {" + std::to_string(range.first) + ", " + std::to_string(range.second) + "}");
+}
+
+void RLoopManager::UpdateDataBlockID(unsigned int slot, TTreeReader &r) {
+   // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
+   auto *tree = r.GetTree()->GetTree();
+   R__ASSERT(tree != nullptr);
+   const std::string treename = ROOT::Internal::TreeUtils::GetTreeFullPaths(*tree)[0];
+   auto *file = tree->GetCurrentFile();
+   const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
+   fDataBlockIDs[slot] = RDataBlockID(fname + "/" + treename);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
