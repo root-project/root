@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RCUSTOMCOLUMN
-#define ROOT_RCUSTOMCOLUMN
+#ifndef ROOT_RDF_RDEFINE
+#define ROOT_RDF_RDEFINE
 
 #include "ROOT/RDF/ColumnReaderUtils.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
@@ -159,4 +159,4 @@ public:
 } // ns Detail
 } // ns ROOT
 
-#endif // ROOT_RCUSTOMCOLUMN
+#endif // ROOT_RDF_RDEFINE
