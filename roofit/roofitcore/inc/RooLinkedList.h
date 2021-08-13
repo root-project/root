@@ -25,6 +25,7 @@
 #include <unordered_map>
 
 class RooLinkedListIter ;
+class RooLinkedListIterImpl ;
 class RooFIter;
 class TIterator ;
 class RooAbsArg ;
@@ -60,6 +61,8 @@ public:
   virtual ~RooLinkedList() ;
 
   Int_t GetSize() const { return _size ; }
+  std::size_t size() const { return _size ; }
+  bool empty() const { return _size == 0 ; }
 
   virtual void Add(TObject* arg) { Add(arg,1) ; }
   virtual Bool_t Remove(TObject* arg) ;
@@ -68,6 +71,10 @@ public:
   TIterator* MakeIterator(Bool_t forward = kTRUE) const ;
   RooLinkedListIter iterator(Bool_t forward = kTRUE) const ;
   RooFIter fwdIterator() const ;
+  RooLinkedListIterImpl begin() const;
+  RooLinkedListIterImpl end() const;
+  RooLinkedListIterImpl rbegin() const;
+  RooLinkedListIterImpl rend() const;
 
   void Clear(Option_t *o=0) ;
   void Delete(Option_t *o=0) ;

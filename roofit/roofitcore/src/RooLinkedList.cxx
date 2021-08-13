@@ -752,6 +752,22 @@ RooFIter RooLinkedList::fwdIterator() const {
   return RooFIter(std::move(iterImpl));
 }
 
+RooLinkedListIterImpl RooLinkedList::begin() const {
+  return {this, true};
+}
+
+RooLinkedListIterImpl RooLinkedList::end() const {
+  return {this, nullptr, true};
+}
+
+RooLinkedListIterImpl RooLinkedList::rbegin() const {
+  return {this, false};
+}
+
+RooLinkedListIterImpl RooLinkedList::rend() const {
+  return {this, nullptr, false};
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooLinkedList::Sort(Bool_t ascend) 
