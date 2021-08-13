@@ -248,6 +248,11 @@ RooWorkspace::~RooWorkspace()
   // WVE named sets too?
 
   _genObjects.Delete() ;
+
+   _embeddedDataList.Delete();
+   _views.Delete();
+   _studyMods.Delete();
+
 }
 
 
