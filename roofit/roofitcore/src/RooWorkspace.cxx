@@ -184,22 +184,14 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
 
   // Copy datasets
-  TIterator* iter = other._dataList.MakeIterator() ;
-  TObject* data2 ;
-  while((data2=iter->Next())) {
-    _dataList.Add(data2->Clone()) ;
-  }
-  delete iter ;
+  for(TObject *data2 : other._dataList) _dataList.Add(data2->Clone());
 
   // Copy snapshots
-  TIterator* iter2 = other._snapshots.MakeIterator() ;
-  RooArgSet* snap ;
-  while((snap=(RooArgSet*)iter2->Next())) {
-    RooArgSet* snapClone = (RooArgSet*) snap->snapshot() ;
+  for(auto * snap : static_range_cast<RooArgSet*>(other._snapshots)) {
+    auto snapClone = static_cast<RooArgSet*>(snap->snapshot());
     snapClone->setName(snap->GetName()) ;
     _snapshots.Add(snapClone) ;
   }
-  delete iter2 ;
 
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
