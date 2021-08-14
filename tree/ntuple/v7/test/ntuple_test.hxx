@@ -74,6 +74,7 @@ using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
 using RNTupleHistoInterval = ROOT::Experimental::Detail::RNTupleHistoInterval;
 using RNTupleHistoCounterLog = ROOT::Experimental::Detail::RNTupleHistoCounterLog;
 using RNTupleHistoActiveLearn = ROOT::Experimental::Detail::RNTupleHistoActiveLearn;
+using RNTupleFixedWidthHistogram = ROOT::Experimental::Detail::RNTupleFixedWidthHistogram;
 using RNTupleCompressor = ROOT::Experimental::Detail::RNTupleCompressor;
 using RNTupleDecompressor = ROOT::Experimental::Detail::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;

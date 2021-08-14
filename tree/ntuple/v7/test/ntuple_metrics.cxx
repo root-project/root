@@ -249,3 +249,21 @@ TEST(Metrics, ActiveLearningHistogram) {
    }
    EXPECT_EQ(20, counter.GetOverflow());
 }
+
+TEST(Metrics, FixedWidthIntervalHistogramZeroOffset) {
+   RNTupleFixedWidthHistogram counter("a","","", 100, 199);
+
+   counter.Fill(10);
+
+   EXPECT_EQ(counter.GetBinContent(0), 0);
+   EXPECT_EQ(counter.GetBinContent(49), 0);
+   EXPECT_EQ(counter.GetBinContent(99), 0);
+   EXPECT_EQ(counter.GetBinContent(100), 0);
+   EXPECT_EQ(counter.GetBinContent(101), 0);
+   EXPECT_EQ(counter.GetBinContent(199), 0);
+   EXPECT_EQ(counter.GetBinContent(200), 0);
+   EXPECT_EQ(counter.GetBinContent(201), 0);
+   EXPECT_EQ(counter.GetBinContent(299), 0);
+   EXPECT_EQ(counter.GetBinContent(300), 0);
+   EXPECT_EQ(counter.GetBinContent(301), 0);
+}
