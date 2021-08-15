@@ -521,13 +521,31 @@ TEST(RNTuple, SerializeFooter)
       .Unwrap());
    builder.AddFieldLink(0, 42);
    builder.AddColumn(17, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
-   builder.AddColumn(40, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
+
+   ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
+   ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   builder.AddCluster(0, RNTupleVersion(), 0, ROOT::Experimental::ClusterSize_t(100));
+   columnRange.fColumnId = 17;
+   columnRange.fFirstElementIndex = 0;
+   columnRange.fNElements = 100;
+   builder.AddClusterColumnRange(0, columnRange);
+   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
+   pageRange.fColumnId = 17;
+   pageInfo.fNElements = 100;
+   pageInfo.fLocator.fPosition = 0;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   builder.AddClusterPageRange(0, std::move(pageRange));
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(desc, nullptr);
    EXPECT_GT(context.GetHeaderSize(), 0);
-   auto buffer = std::make_unique<unsigned char []>(context.GetHeaderSize());
-   context = RNTupleSerializer::SerializeHeaderV1(desc, buffer.get());
+   auto bufHeader = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeaderV1(desc, bufHeader.get());
 
-   RNTupleSerializer::DeserializeHeaderV1(buffer.get(), context.GetHeaderSize(), builder);
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (const auto &c : desc.GetClusterIterable()) {
+      physClusterIDs.emplace_back(context.MapClusterId(c.GetId()));
+   }
+
+   RNTupleSerializer::SerializePageListV1(nullptr, desc, physClusterIDs, context);
 }

@@ -967,26 +967,26 @@ void ROOT::Experimental::Internal::RNTupleSerializer::SerializePageListV1(
       // Get an ordered set of physical column ids
       std::set<DescriptorId_t> physColumnIds;
       for (auto column : clusterDesc.GetColumnIds())
-         physColumnIds.insert(context.GetPhysClusterId(column));
+         physColumnIds.insert(context.GetPhysColumnId(column));
 
       auto outerFrame = pos;
       pos += SerializeListFramePreamble(physColumnIds.size(), *where);
       for (auto physId : physColumnIds) {
-         auto memId = context.GetMemClusterId(physId);
+         auto memId = context.GetMemColumnId(physId);
+         const auto &pageRange = clusterDesc.GetPageRange(memId);
 
          auto innerFrame = pos;
-         const auto &pageRange = clusterDesc.GetPageRange(memId);
          pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
          for (const auto &pi : pageRange.fPageInfos) {
             pos += SerializeUInt32(pi.fNElements, *where);
             pos += SerializeLocator(pi.fLocator, *where);
          }
-         pos += SerializeFramePostscript(innerFrame, pos - innerFrame);
+         pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);
       }
-      pos += SerializeFramePostscript(outerFrame, pos - outerFrame);
+      pos += SerializeFramePostscript(buffer ? outerFrame : nullptr, pos - outerFrame);
    }
 
-   pos += SerializeFramePostscript(topMostFrame, pos - topMostFrame);
+   pos += SerializeFramePostscript(buffer ? topMostFrame : nullptr, pos - topMostFrame);
    std::uint32_t size = pos - base;
    pos += SerializeEnvelopePostscript(base, size, *where);
 }
