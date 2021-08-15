@@ -35,7 +35,6 @@ private:
    std::string fFileName; //file name of original model file for identification
    std::string fParseTime; //UTC date and time string at parsing
 
-
    std::string fGC; //generated code
    std::unordered_set<std::string> fNeededBlasRoutines;
 
