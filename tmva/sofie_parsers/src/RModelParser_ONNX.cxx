@@ -342,9 +342,9 @@ RModel RModelParser_ONNX::Parse(std::string filename){
 
    for (int i=0; i < graph.node_size(); i++){
       rmodel.AddOperator(INTERNAL::make_ROperator(i, graph, tensor_type));
-     std::string op_type = graph.node(i).op_type();
+      std::string op_type = graph.node(i).op_type();
       if (op_type == "Gemm") {
-         rmodel.AddBlasRoutines({"Gemm", "Sgemv"});
+         rmodel.AddBlasRoutines({"Gemm", "Gemv"});
       } else if (op_type == "Conv") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       }

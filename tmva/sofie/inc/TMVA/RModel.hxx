@@ -65,8 +65,10 @@ public:
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
-   void AddBlasRoutines(std::initializer_list<std::string> routines) {
-      for (auto &routine : routines) fNeededBlasRoutines.insert(routine);
+   void AddBlasRoutines(std::vector<std::string> routines) {
+      for (auto &routine : routines) {
+         fNeededBlasRoutines.insert(routine);
+      }
    }
    void AddNeededStdLib(std::string libname){
       for (auto& i: fAllowedStdLib){

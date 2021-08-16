@@ -1,15 +1,13 @@
 #ifndef TMVA_SOFIE_ROPERATOR_CONV
 #define TMVA_SOFIE_ROPERATOR_CONV
 
-#include "SOFIE_common.hxx"
-#include "ROperator.hxx"
-#include "RModel.hxx"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator.hxx"
+#include "TMVA/RModel.hxx"
 
 #include <memory>
 #include <sstream>
 #include <algorithm>
-#include <iterator>
-#include <iomanip>
 #include <stdexcept>
 #include <vector>
 
@@ -369,10 +367,8 @@ public:
 
 };
 
-
-
-}
-}
-}
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
 #endif
