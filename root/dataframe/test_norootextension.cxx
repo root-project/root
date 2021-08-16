@@ -1,5 +1,4 @@
 #include <ROOT/RDataFrame.hxx>
-#include <ROOTUnitTestSupport.h>
 #include <TROOT.h>
 #include <TSystem.h>
 
