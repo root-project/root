@@ -18,6 +18,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rtools
     Core
     MathCore
     RInterface
+  NO_CXXMODULE
 )
 
 target_include_directories(Rtools PRIVATE ${R_INCLUDE_DIRS})
