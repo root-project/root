@@ -218,6 +218,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/TreeInference/BranchlessTree.hxx
     TMVA/TreeInference/Forest.hxx
     TMVA/TreeInference/Objectives.hxx
+    TMVA/RootStorageBDT.h
     #  TMVA/DNN/Adadelta.h
     #  TMVA/DNN/Adagrad.h
     #  TMVA/DNN/Adam.h
@@ -411,6 +412,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/DNN/Architectures/Cpu.cxx
     src/DNN/Architectures/Cpu/CpuBuffer.cxx
     src/DNN/Architectures/Cpu/CpuMatrix.cxx
+    src/RootStorageBDT.cxx
     ${TMVA_EXTRA_SOURCES}
   DEPENDENCIES
     TreePlayer

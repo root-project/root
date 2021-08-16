@@ -75,5 +75,8 @@
 // BDT inference
 #pragma link C++ class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessForest<float>>;
 #pragma link C++ class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessJittedForest<float>>;
+#pragma link C++ class TMVA::Experimental::RootStorage::BDT+;
+#pragma link C++ struct TMVA::Experimental::RootStorage::fSlowTreeNode+;
+
 #endif
 #endif
