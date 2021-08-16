@@ -620,8 +620,8 @@ void RLoopManager::SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot) {
 }
 
 void RLoopManager::UpdateDataBlockID(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range) {
-   fDataBlockIDs[slot] =
-      RDataBlockID("Empty source, range: {" + std::to_string(range.first) + ", " + std::to_string(range.second) + "}");
+   fDataBlockIDs[slot] = RDataBlockID(
+      "Empty source, range: {" + std::to_string(range.first) + ", " + std::to_string(range.second) + "}", range);
 }
 
 void RLoopManager::UpdateDataBlockID(unsigned int slot, TTreeReader &r) {
@@ -631,7 +631,15 @@ void RLoopManager::UpdateDataBlockID(unsigned int slot, TTreeReader &r) {
    const std::string treename = ROOT::Internal::TreeUtils::GetTreeFullPaths(*tree)[0];
    auto *file = tree->GetCurrentFile();
    const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
-   fDataBlockIDs[slot] = RDataBlockID(fname + "/" + treename);
+
+
+   std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
+   R__ASSERT(range.first >= 0);
+   if (range.second == -1) {
+      range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
+   }
+
+   fDataBlockIDs[slot] = RDataBlockID(fname + "/" + treename, range);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
