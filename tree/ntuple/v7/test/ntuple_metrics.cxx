@@ -251,19 +251,104 @@ TEST(Metrics, ActiveLearningHistogram) {
 }
 
 TEST(Metrics, FixedWidthIntervalHistogramZeroOffset) {
-   RNTupleFixedWidthHistogram counter("a","","", 100, 199);
+   RNTupleFixedWidthHistogram counter("a","","", 100, 50);
 
    counter.Fill(10);
+   counter.Fill(23);
+   counter.Fill(47);
+   counter.Fill(49);
 
-   EXPECT_EQ(counter.GetBinContent(0), 0);
-   EXPECT_EQ(counter.GetBinContent(49), 0);
-   EXPECT_EQ(counter.GetBinContent(99), 0);
-   EXPECT_EQ(counter.GetBinContent(100), 0);
-   EXPECT_EQ(counter.GetBinContent(101), 0);
-   EXPECT_EQ(counter.GetBinContent(199), 0);
-   EXPECT_EQ(counter.GetBinContent(200), 0);
-   EXPECT_EQ(counter.GetBinContent(201), 0);
+   counter.Fill(50);
+   counter.Fill(54);
+   counter.Fill(77);
+   counter.Fill(78);
+   counter.Fill(149);
+   counter.Fill(148);
+
+   counter.Fill(152);
+   counter.Fill(151);
+
+   EXPECT_EQ(counter.GetBinContent(0), 4);
+   EXPECT_EQ(counter.GetBinContent(49), 4);
+   EXPECT_EQ(counter.GetBinContent(99), 6);
+   EXPECT_EQ(counter.GetBinContent(100), 6);
+   EXPECT_EQ(counter.GetBinContent(101), 6);
+   EXPECT_EQ(counter.GetBinContent(199), 2);
+   EXPECT_EQ(counter.GetBinContent(200), 2);
+   EXPECT_EQ(counter.GetBinContent(201), 2);
    EXPECT_EQ(counter.GetBinContent(299), 0);
    EXPECT_EQ(counter.GetBinContent(300), 0);
    EXPECT_EQ(counter.GetBinContent(301), 0);
+}
+
+TEST(Metrics, MatchingFixedWidthHistogramInterval1) {
+   RNTupleFixedWidthHistogram counter("a","","", 100, 70);
+
+   counter.Fill(23);
+   counter.Fill(149);
+   counter.Fill(190);
+   counter.Fill(410);
+
+   // intervals match expected
+   std::vector<std::pair<uint64_t, uint64_t>> intervals = {
+      std::make_pair(0,69),
+      std::make_pair(70,169),
+      std::make_pair(170,269),
+      //std::make_pair(270,369),
+      std::make_pair(370,469),
+   };
+
+   auto vcs = counter.GetAll();
+
+   for(uint i = 0; i < vcs.size(); i++) {
+      EXPECT_EQ(intervals[i], vcs[i].first);
+   }
+}
+
+TEST(Metrics, MatchingFixedWidthHistogramInterval2) {
+   RNTupleFixedWidthHistogram counter("a","","", 100, 0);
+
+   counter.Fill(23);
+   counter.Fill(149);
+   counter.Fill(190);
+   counter.Fill(410);
+
+   // intervals match expected
+   std::vector<std::pair<uint64_t, uint64_t>> intervals = {
+      std::make_pair(0,99),
+      std::make_pair(100,199),
+      std::make_pair(400,499),
+   };
+
+   auto vcs = counter.GetAll();
+
+   for(uint i = 0; i < vcs.size(); i++) {
+      EXPECT_EQ(intervals[i], vcs[i].first);
+   }
+}
+
+TEST(Metrics, MatchingFixedWidthHistogramInterval3) {
+   RNTupleFixedWidthHistogram counter("a","","", 100, 201);
+
+   counter.Fill(0);
+   counter.Fill(23);
+   counter.Fill(149);
+   counter.Fill(190);
+   counter.Fill(330);
+   counter.Fill(410);
+
+   // intervals match expected
+   std::vector<std::pair<uint64_t, uint64_t>> intervals = {
+      std::make_pair(0, 0),
+      std::make_pair(1, 100),
+      std::make_pair(101, 200),
+      std::make_pair(301, 400),
+      std::make_pair(401, 500),
+   };
+
+   auto vcs = counter.GetAll();
+
+   for(uint i = 0; i < vcs.size(); i++) {
+      EXPECT_EQ(intervals[i], vcs[i].first);
+   }
 }

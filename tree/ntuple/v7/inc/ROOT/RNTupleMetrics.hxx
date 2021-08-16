@@ -698,10 +698,9 @@ private:
    
    std::unordered_map<uint64_t, std::atomic<uint64_t>*> bins;
 
-
    uint64_t GetMatchingKey(const uint64_t &n) const {
       uint64_t idx = 0;
-
+      
       if(n < fOffset) {
          idx = fBinsOffsetd - (fOffset - n) / fWidth;
       }
@@ -709,7 +708,6 @@ private:
          idx = (n - fOffset) / fWidth + fBinsOffsetd + 1;
       }
 
-      printf("%ld => key is %ld:::binsize=%ld\n" , n, idx, fBinsOffsetd);
       return idx;
    }
 
@@ -758,16 +756,30 @@ public:
    std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
       std::vector<RNTupleHistogram::HistoInterval> all;
       std::map<uint64_t, std::atomic<uint64_t>*> ordered(bins.begin(), bins.end());
-      uint64_t lowB, upperB;
+      uint64_t lowB, upperB, disp;
       
+      // below offset part
       for(auto it = ordered.begin(); it != ordered.end(); ++it) {
-         lowB = fOffset + (uint64_t)(it->first)*fWidth;
-         upperB = fOffset + ((uint64_t)(it->first)+1)*fWidth - 1;
+         if(it->first > fBinsOffsetd) {
+            lowB = fOffset + (it->first - fBinsOffsetd - 1)*fWidth;
+            upperB = fOffset + (it->first - fBinsOffsetd)*fWidth - 1;
+         }
+         else {
+            disp = fBinsOffsetd - it->first;
+            if (fOffset < fWidth*(disp+1)) {
+               lowB = 0;
+            }
+            else {
+               lowB = fOffset - fWidth*(disp+1);
+            }
+            upperB = fOffset - 1 - fWidth*disp;
+         }
       
-
          auto interval = std::make_pair(lowB, upperB);
          all.push_back(std::make_pair(interval, it->second->load()));
       }
+
+      // above offset part
 
       return all;
    }
