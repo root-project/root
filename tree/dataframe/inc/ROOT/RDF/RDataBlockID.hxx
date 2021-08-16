@@ -12,6 +12,7 @@
 #define ROOT_RDF_RDATABLOCKID
 
 #include <ROOT/RStringView.hxx>
+#include <Rtypes.h>
 
 #include <functional>
 #include <stdexcept>
@@ -25,9 +26,13 @@ namespace RDF {
 class RDataBlockID {
    // Currently backed by a simple string, might change in the future as we get usage experience.
    std::string fID;
+   std::pair<ULong64_t, ULong64_t> fEntryRange;
 
 public:
-   explicit RDataBlockID(std::string_view id) : fID(id) {}
+   explicit RDataBlockID(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange)
+      : fID(id), fEntryRange(entryRange)
+   {
+   }
    RDataBlockID() = default;
    RDataBlockID(const RDataBlockID &) = default;
    RDataBlockID &operator=(const RDataBlockID &) = default;
@@ -49,6 +54,10 @@ public:
    {
       return fID;
    }
+
+   std::pair<ULong64_t, ULong64_t> EntryRange() const { return fEntryRange; }
+
+   ULong64_t NEntries() const { return fEntryRange.second - fEntryRange.first; }
 
    bool operator==(const RDataBlockID &other) const { return fID == other.fID; }
    bool operator!=(const RDataBlockID &other) const { return !(*this == other); }
