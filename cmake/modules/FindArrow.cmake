@@ -203,7 +203,9 @@ endmacro()
 #
 # Find package by CMake package configuration.
 macro(arrow_find_package_cmake_package_configuration)
-  find_package(${cmake_package_name} CONFIG)
+  # the QUIET option is a workaround to silence some cmake warnings coming from FindArrow.cmake when it
+  # looks for transitive dependencies, see also https://issues.apache.org/jira/browse/ARROW-11890
+  find_package(${cmake_package_name} CONFIG QUIET)
   if(${cmake_package_name}_FOUND)
     set(${prefix}_USE_CMAKE_PACKAGE_CONFIG TRUE PARENT_SCOPE)
     if(TARGET ${target_shared})
