@@ -83,9 +83,6 @@ public:
       std::condition_variable fCV{};
 
       EServerState fVal{Waiting};
-
-      std::time_t fMIRTime{std::time(nullptr)};
-      std::time_t fDisconnectTime{std::time(nullptr)};
    };
 
    class MIR
@@ -114,6 +111,13 @@ public:
       }
 
       ~Logger() { RLogManager::Get().Remove(fHandler); }
+   };
+
+   struct ClientStatus
+   {
+      int        fNConnections{-1};
+      std::time_t fMIRTime{std::time(nullptr)};
+      std::time_t fDisconnectTime{std::time(nullptr)};
    };
 
 protected:
@@ -158,6 +162,7 @@ protected:
    std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
 
    Logger            fLogger;
+   ClientStatus    fClientStatus; 
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
@@ -270,7 +275,7 @@ public:
 
    std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
 
-   void GetClientActivityTime(std::time_t& lastMIR, std::time_t& lastDisconnect);
+   void GetClientStatus(ClientStatus&);
 };
 
 R__EXTERN REveManager* gEve;
