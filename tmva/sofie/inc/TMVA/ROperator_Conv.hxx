@@ -40,7 +40,7 @@ private:
 
 public:
 
-   ROperator_Conv() = delete;
+   ROperator_Conv() {}
 
    ROperator_Conv(std::string autopad, std::vector<size_t> dilations,
       size_t group, std::vector<size_t> kernelShape, std::vector<size_t> pads,
