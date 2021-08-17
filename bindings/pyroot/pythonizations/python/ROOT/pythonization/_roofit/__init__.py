@@ -117,7 +117,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
     blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__"]
 
     if not consider_base_classes:
-        return [attr for attr in klass.__dict__.keys() if attr not in blacklist]
+        return sorted([attr for attr in klass.__dict__.keys() if attr not in blacklist])
 
     # get a list of this class and all its base classes, excluding `object`
     method_resolution_order = klass.mro()
@@ -137,7 +137,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
 
         return in_any_dict
 
-    return [attr for attr in dir(klass) if is_defined(attr)]
+    return sorted([attr for attr in dir(klass) if is_defined(attr)])
 
 
 def rebind_instancemethod(to_class, from_class, func_name):
