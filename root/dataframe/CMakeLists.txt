@@ -226,4 +226,4 @@ ROOTTEST_ADD_TEST(test_progressiveCSV
 ROOTTEST_ADD_TEST(test_nested_rvec_snapshot MACRO test_nested_rvec_snapshot.C+)
 ROOTTEST_ADD_TEST(test_snapshot_copyaddresses MACRO test_snapshot_copyaddresses.C+)
 
-ROOT_ADD_GTEST(test_norootextension test_norootextension.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(test_norootextension test_norootextension.cxx LIBRARIES ROOT::ROOTDataFrame)
