@@ -303,6 +303,13 @@ public:
 
   static StorageType getDefaultStorageType();
 
+  /// Returns snapshot of global observables stored in this data.
+  /// \return Pointer to a RooArgSet with the snapshot of global observables
+  ///         stored in the data. Can be `nullptr` if no global observales are
+  ///         stored.
+  RooArgSet const* getGlobalObservables() const { return _globalObservables.get(); }
+  void setGlobalObservables(RooArgSet const& globalObservables);
+
 protected:
 
   static StorageType defaultStorageType ;
@@ -350,8 +357,12 @@ protected:
 
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
+  std::unique_ptr<RooArgSet> _globalObservables; // Snapshot of global observables
+
 private:
-   ClassDef(RooAbsData, 5) // Abstract data collection
+  void copyGlobalObservables(const RooAbsData& other);
+
+   ClassDef(RooAbsData, 6) // Abstract data collection
 };
 
 #endif
