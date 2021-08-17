@@ -10,7 +10,7 @@
 ############################################################################
 
 
-set(SOFIE_PARSERS_DIR ../../sofie_parsers)
+set(SOFIE_PARSERS_DIR ${CMAKE_SOURCE_DIR}/tmva/sofie_parsers)
 
 if (NOT ONNX_MODELS_DIR)
   set(ONNX_MODELS_DIR input_models)
@@ -21,18 +21,18 @@ set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRU
 
 add_executable(emitFromONNX
    EmitFromONNX.cxx
-   ../src/SOFIE_common.cxx
-   ../src/RModel.cxx
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
    ${SOFIE_PARSERS_DIR}/src/RModelParser_ONNX.cxx
    ${PROTO_SRCS}
 )
 target_include_directories(emitFromONNX PRIVATE
-   ../inc
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
    ${SOFIE_PARSERS_DIR}/inc
-   ../../tmva/inc
+   ${CMAKE_SOURCE_DIR}/tmva/inc
    ${Protobuf_INCLUDE_DIRS}
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
-   ../../../core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
    ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 
@@ -70,18 +70,18 @@ add_dependencies(TestCustomModelsFromONNX SofieCompileModels_ONNX)
 #For testing serialisation of RModel object
 add_executable(emitFromROOT
    EmitFromRoot.cxx
-   ../src/SOFIE_common.cxx
-   ../src/RModel.cxx
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
    ${SOFIE_PARSERS_DIR}/src/RModelParser_ONNX.cxx
    ${PROTO_SRCS}
 )
 target_include_directories(emitFromROOT PRIVATE
-   ../inc
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
    ${SOFIE_PARSERS_DIR}/inc
-   ../../tmva/inc
+   ${CMAKE_SOURCE_DIR}/tmva/inc
    ${Protobuf_INCLUDE_DIRS}
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
-   ../../../core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
    ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie)
