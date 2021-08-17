@@ -9,22 +9,22 @@
 #include "Linear_64_FromONNX.hxx"
 #include "input_models/references/Linear_64.ref.hxx"
 
-#include "ConvWithPadding.hxx"
+#include "ConvWithPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
 
-#include "ConvWithoutPadding.hxx"
+#include "ConvWithoutPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithoutPadding.ref.hxx"
 
-#include "ConvWithAutopadSameLower.hxx"
+#include "ConvWithAutopadSameLower_FromONNX.hxx"
 #include "input_models/references/ConvWithAutopadSameLower.ref.hxx"
 
-#include "ConvWithStridesPadding.hxx"
+#include "ConvWithStridesPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithStridesPadding.ref.hxx"
 
-#include "ConvWithStridesNoPadding.hxx"
+#include "ConvWithStridesNoPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithStridesNoPadding.ref.hxx"
 
-#include "ConvWithAsymmetricPadding.hxx"
+#include "ConvWithAsymmetricPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
 
 #include "gtest/gtest.h"
