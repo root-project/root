@@ -61,7 +61,9 @@ private:
 
 public:
    RNTuplePerfCounter(const std::string &name, const std::string &unit, const std::string &desc)
-      : fName(name), fUnit(unit), fDescription(desc) {}
+      : fName(name), fUnit(unit), fDescription(desc)
+   {
+   }
    virtual ~RNTuplePerfCounter();
    void Enable() { fIsEnabled = true; }
    bool IsEnabled() const { return fIsEnabled; }
@@ -74,24 +76,28 @@ public:
    std::string ToString() const;
 };
 
-
 class RNTupleHistogram {
 public:
    /// Interval type
-   typedef std::pair<std::pair<uint64_t,uint64_t>,uint64_t> HistoInterval;
+   typedef std::pair<std::pair<uint64_t, uint64_t>, uint64_t> HistoInterval;
 
    std::string fName;
    std::string fUnit;
    std::string fDescription;
 
-   RNTupleHistogram(const std::string &name, const std::string &unit, const std::string &desc) 
-      : fName(name), fUnit(unit), fDescription(desc) {}
-      
-   std::string ToString() const {
+   RNTupleHistogram(const std::string &name, const std::string &unit, const std::string &desc)
+      : fName(name), fUnit(unit), fDescription(desc)
+   {
+   }
+
+   virtual ~RNTupleHistogram(){};
+
+   std::string ToString() const
+   {
       auto all = GetAll();
       std::string res = "";
 
-      for(auto &elem : all) {
+      for (auto &elem : all) {
          auto l = elem.first.first;
          auto u = elem.first.second;
          auto c = elem.second;
@@ -109,7 +115,6 @@ public:
    virtual uint64_t GetBinContent(const uint64_t &n) = 0;
    virtual std::vector<RNTupleHistogram::HistoInterval> GetAll() const = 0;
 };
-
 
 // clang-format off
 /**
@@ -137,7 +142,6 @@ public:
    std::string GetValueAsString() const override { return std::to_string(fCounter); }
 };
 
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RNTupleAtomicCounter
@@ -151,42 +155,50 @@ private:
 
 public:
    RNTupleAtomicCounter(const std::string &name, const std::string &unit, const std::string &desc)
-      : RNTuplePerfCounter(name, unit, desc) { }
+      : RNTuplePerfCounter(name, unit, desc)
+   {
+   }
 
    R__ALWAYS_INLINE
-   void Inc() {
+   void Inc()
+   {
       if (R__unlikely(IsEnabled()))
          ++fCounter;
    }
 
    R__ALWAYS_INLINE
-   void Dec() {
+   void Dec()
+   {
       if (R__unlikely(IsEnabled()))
          --fCounter;
    }
 
    R__ALWAYS_INLINE
-   void Add(int64_t delta) {
+   void Add(int64_t delta)
+   {
       if (R__unlikely(IsEnabled()))
          fCounter += delta;
    }
 
    R__ALWAYS_INLINE
-   int64_t XAdd(int64_t delta) {
+   int64_t XAdd(int64_t delta)
+   {
       if (R__unlikely(IsEnabled()))
          return fCounter.fetch_add(delta);
       return 0;
    }
 
    R__ALWAYS_INLINE
-   int64_t GetValue() const {
+   int64_t GetValue() const
+   {
       if (R__unlikely(IsEnabled()))
          return fCounter.load();
       return 0;
    }
 
    R__ALWAYS_INLINE
-   void SetValue(int64_t val) {
+   void SetValue(int64_t val)
+   {
       if (R__unlikely(IsEnabled()))
          fCounter.store(val);
    }
@@ -194,7 +206,6 @@ public:
    std::int64_t GetValueAsInt() const override { return GetValue(); }
    std::string GetValueAsString() const override { return std::to_string(GetValue()); }
 };
-
 
 // clang-format off
 /**
@@ -212,26 +223,23 @@ private:
    const MetricFunc_t fFunc;
 
 public:
-   RNTupleCalcPerf(const std::string &name, const std::string &unit, const std::string &desc,
-                   RNTupleMetrics &metrics, MetricFunc_t &&func)
+   RNTupleCalcPerf(const std::string &name, const std::string &unit, const std::string &desc, RNTupleMetrics &metrics,
+                   MetricFunc_t &&func)
       : RNTuplePerfCounter(name, unit, desc), fMetrics(metrics), fFunc(std::move(func))
    {
    }
 
-   double GetValue() const {
+   double GetValue() const
+   {
       auto ret = fFunc(fMetrics);
       if (ret.first)
          return ret.second;
       return std::numeric_limits<double>::quiet_NaN();
    }
 
-   std::int64_t GetValueAsInt() const override {
-      return static_cast<std::int64_t>(GetValue());
-   }
+   std::int64_t GetValueAsInt() const override { return static_cast<std::int64_t>(GetValue()); }
 
-   std::string GetValueAsString() const override {
-      return std::to_string(GetValue());
-   }
+   std::string GetValueAsString() const override { return std::to_string(GetValue()); }
 };
 
 // clang-format off
@@ -252,16 +260,14 @@ public:
       R__ASSERT(unit == "ns");
    }
 
-   std::int64_t GetValueAsInt() const final {
+   std::int64_t GetValueAsInt() const final
+   {
       auto ticks = BaseCounterT::GetValue();
       return std::uint64_t((double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.));
    }
 
-   std::string GetValueAsString() const final {
-      return std::to_string(GetValueAsInt());
-   }
+   std::string GetValueAsString() const final { return std::to_string(GetValueAsInt()); }
 };
-
 
 // clang-format off
 /**
@@ -285,8 +291,7 @@ private:
    clock_t fStartTicks = 0;
 
 public:
-   RNTupleTimer(WallTimeT &ctrWallTime, CpuTimeT &ctrCpuTicks)
-      : fCtrWallTime(ctrWallTime), fCtrCpuTicks(ctrCpuTicks)
+   RNTupleTimer(WallTimeT &ctrWallTime, CpuTimeT &ctrCpuTicks) : fCtrWallTime(ctrWallTime), fCtrCpuTicks(ctrCpuTicks)
    {
       if (!fCtrWallTime.IsEnabled())
          return;
@@ -294,7 +299,8 @@ public:
       fStartTicks = clock();
    }
 
-   ~RNTupleTimer() {
+   ~RNTupleTimer()
+   {
       if (!fCtrWallTime.IsEnabled())
          return;
       auto wallTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(Clock_t::now() - fStartTime);
@@ -303,7 +309,7 @@ public:
    }
 
    RNTupleTimer(const RNTupleTimer &other) = delete;
-   RNTupleTimer &operator =(const RNTupleTimer &other) = delete;
+   RNTupleTimer &operator=(const RNTupleTimer &other) = delete;
 };
 
 using RNTuplePlainTimer = RNTupleTimer<RNTuplePlainCounter, RNTupleTickCounter<RNTuplePlainCounter>>;
@@ -324,6 +330,7 @@ private:
    static constexpr char kNamespaceSeperator = '.';
 
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
+   std::vector<std::unique_ptr<RNTupleHistogram>> fHistograms;
    std::vector<RNTupleMetrics *> fObservedMetrics;
    std::string fName;
    bool fIsEnabled = false;
@@ -333,14 +340,14 @@ private:
 public:
    explicit RNTupleMetrics(const std::string &name) : fName(name) {}
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
-   RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
+   RNTupleMetrics &operator=(const RNTupleMetrics &other) = delete;
    RNTupleMetrics(RNTupleMetrics &&other) = default;
-   RNTupleMetrics & operator=(RNTupleMetrics &&other) = default;
+   RNTupleMetrics &operator=(RNTupleMetrics &&other) = default;
    ~RNTupleMetrics() = default;
 
    // TODO(jblomer): return a reference
    template <typename CounterPtrT, class... Args>
-   CounterPtrT MakeCounter(const std::string &name, Args&&... args)
+   CounterPtrT MakeCounter(const std::string &name, Args &&...args)
    {
       R__ASSERT(!Contains(name));
       auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
@@ -348,7 +355,17 @@ public:
       fCounters.emplace_back(std::move(counter));
       return ptrCounter;
    }
-  
+
+   template <typename HistogramPtrT, class... Args>
+   HistogramPtrT MakeHistogram(const std::string &name, Args &&...args)
+   {
+      R__ASSERT(!Contains(name));
+      auto histogram = std::make_unique<std::remove_pointer_t<HistogramPtrT>>(name, std::forward<Args>(args)...);
+      auto ptrHistogram = histogram.get();
+      fHistograms.emplace_back(std::move(histogram));
+      return ptrHistogram;
+   }
+
    /// Searches counters registered in this object only. Returns nullptr if `name` is not found.
    const RNTuplePerfCounter *GetLocalCounter(std::string_view name) const;
    /// Searches this object and all the observed sub metrics. `name` must start with the prefix used
@@ -362,50 +379,46 @@ public:
    bool IsEnabled() const { return fIsEnabled; }
 };
 
-
-class RNTupleHistoInterval : RNTupleHistogram{
+class RNTupleHistoInterval : RNTupleHistogram {
 private:
    typedef std::pair<uint64_t, uint64_t> IntervalEntry;
-   typedef std::pair<uint64_t, std::pair<uint64_t, std::atomic<std::uint64_t>*>> MappingEntry;
+   typedef std::pair<uint64_t, std::pair<uint64_t, std::atomic<std::uint64_t> *>> MappingEntry;
 
    std::vector<RNTupleHistoInterval::MappingEntry> bins;
 
-   static bool compareIntervalEntries(IntervalEntry e1, IntervalEntry e2) {
-      return e1.first < e2.first;
-   };
+   static bool compareIntervalEntries(IntervalEntry e1, IntervalEntry e2) { return e1.first < e2.first; };
 
-   std::atomic<std::uint64_t>* GetMatchingCounter(const uint64_t &n) const {
+   std::atomic<std::uint64_t> *GetMatchingCounter(const uint64_t &n) const
+   {
       int64_t l = 0, r = bins.size() - 1, m;
-      
-      while(l <= r) {
+
+      while (l <= r) {
          m = l + (r - l) / 2;
 
-         if(bins[m].first <= n
-            && n <= bins[m].second.first ) {
+         if (bins[m].first <= n && n <= bins[m].second.first) {
             return bins[m].second.second;
          }
 
-         if(bins[m].first < n) {
+         if (bins[m].first < n) {
             l = m + 1;
-         }
-         else {
+         } else {
             r = m - 1;
          }
       }
-      
+
       return nullptr;
    };
+
 public:
-   RNTupleHistoInterval(
-      const std::string &name, const std::string &unit, const std::string &desc,
-      std::vector<std::pair<uint64_t, uint64_t>> intervals
-   ) : RNTupleHistogram(name, unit, desc)
+   RNTupleHistoInterval(const std::string &name, const std::string &unit, const std::string &desc,
+                        std::vector<std::pair<uint64_t, uint64_t>> intervals)
+      : RNTupleHistogram(name, unit, desc)
    {
       std::atomic<uint64_t> *counter = nullptr;
       // sort the intervals according to lower bound
       std::sort(intervals.begin(), intervals.end(), compareIntervalEntries);
 
-      for(uint64_t i = 0; i < intervals.size(); i++) {
+      for (uint64_t i = 0; i < intervals.size(); i++) {
          auto elem = intervals[i];
          counter = new std::atomic<uint64_t>{0};
          auto auxPair = std::make_pair(elem.second, counter);
@@ -413,24 +426,27 @@ public:
       }
    };
 
-   void Fill(const uint64_t &n) override {
+   void Fill(const uint64_t &n) override
+   {
       auto counter = GetMatchingCounter(n);
 
-      if(counter != nullptr) {
+      if (counter != nullptr) {
          ++(*counter);
       }
    };
 
-   uint64_t GetBinContent(const uint64_t &n) override {
+   uint64_t GetBinContent(const uint64_t &n) override
+   {
       auto counter = GetMatchingCounter(n);
       return counter == nullptr ? 0 : counter->load();
    };
 
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override
+   {
       uint64_t lowBound, upperBound, count;
       std::vector<RNTupleHistogram::HistoInterval> all;
 
-      for(auto &elem : bins) {
+      for (auto &elem : bins) {
          lowBound = elem.first;
          upperBound = elem.second.first;
          count = elem.second.second->load();
@@ -444,13 +460,14 @@ public:
 
 class RNTupleHistoCounterLog : RNTupleHistogram {
 private:
-   std::atomic<uint64_t>* slots[66];
+   std::atomic<uint64_t> *slots[66];
    uint64_t fUpperBound;
    uint fBitUpperBound;
 
-   uint ulog2(uint64_t n) const {
+   uint ulog2(uint64_t n) const
+   {
       uint64_t targetLevel = 0;
-      
+
       while (n >>= 1) {
          ++targetLevel;
       }
@@ -458,77 +475,77 @@ private:
       return targetLevel;
    };
 
-   uint64_t pow2(uint exp) const {
+   uint64_t pow2(uint exp) const
+   {
       uint64_t base = 1;
       return base << exp;
    }
+
 public:
-   RNTupleHistoCounterLog(
-      const std::string &name, const std::string &unit, const std::string &desc,
-      const uint64_t upperBound
-   ) : RNTupleHistogram(name, unit, desc), fUpperBound(upperBound), fBitUpperBound(ulog2(upperBound))
+   RNTupleHistoCounterLog(const std::string &name, const std::string &unit, const std::string &desc,
+                          const uint64_t upperBound)
+      : RNTupleHistogram(name, unit, desc), fUpperBound(upperBound), fBitUpperBound(ulog2(upperBound))
    {
-      for(uint64_t i = 0; i <= fBitUpperBound + 1; i++) {
+      for (uint64_t i = 0; i <= fBitUpperBound + 1; i++) {
          slots[i] = new std::atomic<uint64_t>{0};
       }
    };
 
-   uint MaxLogUpperBound() {
-      return fBitUpperBound;
-   }
+   uint MaxLogUpperBound() { return fBitUpperBound; }
 
-   void Fill(const uint64_t &n) override {
-      if(n > fUpperBound) {
+   void Fill(const uint64_t &n) override
+   {
+      if (n > fUpperBound) {
          ++(*slots[fBitUpperBound + 1]);
-      }
-      else {
+      } else {
          auto binIdx = ulog2(n);
          ++(*slots[binIdx]);
       }
    }
 
-   uint64_t GetBinContent(const uint64_t &n) override {
+   uint64_t GetBinContent(const uint64_t &n) override
+   {
       uint64_t cnt = 0;
 
-      if(n > fUpperBound) {
+      if (n > fUpperBound) {
          cnt = GetOverflowCount();
-      }
-      else {
+      } else {
          cnt = GetExponentCount(ulog2(n));
       }
 
       return cnt;
    }
 
-   uint64_t GetExponentCount(const uint &idx) const {
+   uint64_t GetExponentCount(const uint &idx) const
+   {
       uint64_t cnt = 0;
 
-      if(idx <= fBitUpperBound) {
+      if (idx <= fBitUpperBound) {
          cnt = slots[idx]->load();
       }
 
       return cnt;
    }
 
-   uint64_t GetOverflowCount() const {
-      return slots[fBitUpperBound + 1]->load();
-   }
+   uint64_t GetOverflowCount() const { return slots[fBitUpperBound + 1]->load(); }
 
-   uint64_t GetTotalCount() {
+   uint64_t GetTotalCount()
+   {
       uint64_t cnt = 0;
 
-      for(uint i = 0; i <= fBitUpperBound + 1; i++) {
+      for (uint i = 0; i <= fBitUpperBound + 1; i++) {
          cnt += slots[i]->load();
       }
 
       return cnt;
    }
 
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override
+   {
       uint64_t lowB, upperB;
       std::vector<RNTupleHistogram::HistoInterval> all;
 
-      for(uint i = 0; i <= fBitUpperBound; i++) {
+      for (uint i = 0; i <= fBitUpperBound; i++) {
          lowB = pow2(i);
          upperB = pow2(i + 1) - 1;
          auto interval = std::make_pair(lowB, upperB);
@@ -543,72 +560,72 @@ class RNTupleHistoActiveLearn : RNTupleHistogram {
 private:
    uint64_t fNumBins;
    uint fLearningPhaseSize;
-   
+
    std::vector<uint64_t> learningSamples;
    uint64_t minSample = UINT64_MAX;
    uint64_t maxSample = 0;
    uint64_t widthSample = 0;
    bool hasFlushed = false;
 
-   std::vector<std::atomic<uint64_t>*> bins;
+   std::vector<std::atomic<uint64_t> *> bins;
    std::atomic<uint64_t> underflow{0};
    std::atomic<uint64_t> overflow{0};
 
-   void Flush() {
-      if(!hasFlushed && learningSamples.size() >= fLearningPhaseSize) {
+   void Flush()
+   {
+      if (!hasFlushed && learningSamples.size() >= fLearningPhaseSize) {
          widthSample = (maxSample - minSample + 1) / fNumBins;
          hasFlushed = true;
 
-         for(auto &elem: learningSamples) {
+         for (auto &elem : learningSamples) {
             Fill(elem);
          }
       }
    }
 
-   uint64_t GetMatchingIdx(const uint64_t &n) const {
+   uint64_t GetMatchingIdx(const uint64_t &n) const
+   {
       auto idx = (n - minSample) / widthSample;
 
-      if(idx >= fNumBins) {
+      if (idx >= fNumBins) {
          idx = fNumBins - 1;
       }
 
       return idx;
    }
+
 public:
-   RNTupleHistoActiveLearn(
-      const std::string &name, const std::string &unit, const std::string &desc,
-      const uint64_t &numBins, const uint &learningPhaseSize
-   ) : RNTupleHistogram(name, unit, desc), fNumBins(numBins), fLearningPhaseSize(learningPhaseSize)
+   RNTupleHistoActiveLearn(const std::string &name, const std::string &unit, const std::string &desc,
+                           const uint64_t &numBins, const uint &learningPhaseSize)
+      : RNTupleHistogram(name, unit, desc), fNumBins(numBins), fLearningPhaseSize(learningPhaseSize)
    {
       bins.resize(fNumBins);
 
-      for(uint i = 0; i < fNumBins; i++) {
+      for (uint i = 0; i < fNumBins; i++) {
          bins[i] = new std::atomic<uint64_t>{0};
       }
    };
 
-   void Fill(const uint64_t &n) override {
+   void Fill(const uint64_t &n) override
+   {
       Flush();
 
-      if(!hasFlushed) {
-         if(n < minSample) {
+      if (!hasFlushed) {
+         if (n < minSample) {
             minSample = n;
          }
-         
-         if(n > maxSample) {
+
+         if (n > maxSample) {
             maxSample = n;
          }
 
          learningSamples.push_back(n);
-      }
-      else {
-         if(n < minSample) {
+      } else {
+         if (n < minSample) {
             ++underflow;
-         }
-         else if(n > maxSample) {
+         } else if (n > maxSample) {
             ++overflow;
-         }
-         else {
+         } else {
             auto idx = GetMatchingIdx(n);
 
             ++(*bins[idx]);
@@ -616,37 +633,26 @@ public:
       }
    }
 
-   bool IsFlushed() {
-      return hasFlushed;
-   }
+   bool IsFlushed() { return hasFlushed; }
 
-   uint64_t GetMin() {
-      return minSample;
-   }
+   uint64_t GetMin() { return minSample; }
 
-   uint64_t GetMax() {
-      return maxSample;
-   }
+   uint64_t GetMax() { return maxSample; }
 
-   uint64_t GetUnderflow() {
-      return underflow.load();
-   }
+   uint64_t GetUnderflow() { return underflow.load(); }
 
-   uint64_t GetOverflow() {
-      return overflow.load();
-   }
+   uint64_t GetOverflow() { return overflow.load(); }
 
-   uint64_t GetBinContent(const uint64_t &n) override {
+   uint64_t GetBinContent(const uint64_t &n) override
+   {
       uint64_t cnt = 0;
 
-      if(n < minSample) {
+      if (n < minSample) {
          cnt = underflow.load();
-      }
-      else {
-         if(n > maxSample) {
+      } else {
+         if (n > maxSample) {
             cnt = overflow.load();
-         }
-         else {
+         } else {
             auto idx = GetMatchingIdx(n);
             cnt = bins[idx]->load();
          }
@@ -655,12 +661,13 @@ public:
       return cnt;
    };
 
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override
+   {
       uint64_t lowB, upperB;
       std::vector<RNTupleHistogram::HistoInterval> all;
 
       // add underflow if necessary
-      if(minSample > 0) {
+      if (minSample > 0) {
          lowB = 0;
          upperB = minSample - 1;
          auto interval = std::make_pair(lowB, upperB);
@@ -668,11 +675,11 @@ public:
       }
 
       // add leading bins
-      for(uint i = 0; i < fNumBins; i++) {
-         lowB = minSample + widthSample*i;
+      for (uint i = 0; i < fNumBins; i++) {
+         lowB = minSample + widthSample * i;
          upperB = lowB + widthSample - 1;
 
-         if(i == fNumBins - 1) {
+         if (i == fNumBins - 1) {
             upperB = maxSample;
          }
 
@@ -684,7 +691,7 @@ public:
       lowB = maxSample + 1;
       upperB = UINT64_MAX;
       auto interval = std::make_pair(lowB, upperB);
-      all.push_back(std::make_pair(interval, overflow.load()));      
+      all.push_back(std::make_pair(interval, overflow.load()));
 
       return all;
    }
@@ -695,86 +702,79 @@ private:
    uint64_t fWidth;
    uint64_t fOffset;
    uint64_t fBinsOffsetd;
-   
-   std::unordered_map<uint64_t, std::atomic<uint64_t>*> bins;
 
-   uint64_t GetMatchingKey(const uint64_t &n) const {
+   std::unordered_map<uint64_t, std::atomic<uint64_t> *> bins;
+
+   uint64_t GetMatchingKey(const uint64_t &n) const
+   {
       uint64_t idx = 0;
-      
-      if(n < fOffset) {
+
+      if (n < fOffset) {
          idx = fBinsOffsetd - (fOffset - n) / fWidth;
-      }
-      else {
+      } else {
          idx = (n - fOffset) / fWidth + fBinsOffsetd + 1;
       }
 
       return idx;
    }
 
-   bool ExistsKey(const int64_t &key) const {
-      return bins.find(key) != bins.end();
-   }
+   bool ExistsKey(const int64_t &key) const { return bins.find(key) != bins.end(); }
+
 public:
-   RNTupleFixedWidthHistogram(
-      const std::string &name, const std::string &unit, const std::string &desc,
-      const uint64_t &width, const uint &offset
-   ) : RNTupleHistogram(name, unit, desc), fWidth(width), fOffset(offset), fBinsOffsetd(offset / width + 1)
+   RNTupleFixedWidthHistogram(const std::string &name, const std::string &unit, const std::string &desc,
+                              const uint64_t &width, const uint &offset)
+      : RNTupleHistogram(name, unit, desc), fWidth(width), fOffset(offset), fBinsOffsetd(offset / width + 1)
    {
-      
    }
 
-   uint64_t GetWidth() {
-      return fWidth;
-   }
+   uint64_t GetWidth() { return fWidth; }
 
-   uint64_t GetOffset() {
-      return fOffset;
-   }
+   uint64_t GetOffset() { return fOffset; }
 
-   void Fill(const uint64_t &n) override {
+   void Fill(const uint64_t &n) override
+   {
       auto key = GetMatchingKey(n);
 
-      if(!ExistsKey(key)) {
+      if (!ExistsKey(key)) {
          bins[key] = new std::atomic<uint64_t>{1};
-      }
-      else {
+      } else {
          ++(*bins[key]);
       }
    }
 
-   uint64_t GetBinContent(const uint64_t &n) override {
+   uint64_t GetBinContent(const uint64_t &n) override
+   {
       auto key = GetMatchingKey(n);
       uint64_t cnt = 0;
 
-      if(ExistsKey(key)) {
+      if (ExistsKey(key)) {
          cnt = bins[key]->load();
       }
 
       return cnt;
    }
 
-   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override {
+   std::vector<RNTupleHistogram::HistoInterval> GetAll() const override
+   {
       std::vector<RNTupleHistogram::HistoInterval> all;
-      std::map<uint64_t, std::atomic<uint64_t>*> ordered(bins.begin(), bins.end());
+      std::map<uint64_t, std::atomic<uint64_t> *> ordered(bins.begin(), bins.end());
       uint64_t lowB, upperB, disp;
-      
+
       // below offset part
-      for(auto it = ordered.begin(); it != ordered.end(); ++it) {
-         if(it->first > fBinsOffsetd) {
-            lowB = fOffset + (it->first - fBinsOffsetd - 1)*fWidth;
-            upperB = fOffset + (it->first - fBinsOffsetd)*fWidth - 1;
-         }
-         else {
+      for (auto it = ordered.begin(); it != ordered.end(); ++it) {
+         if (it->first > fBinsOffsetd) {
+            lowB = fOffset + (it->first - fBinsOffsetd - 1) * fWidth;
+            upperB = fOffset + (it->first - fBinsOffsetd) * fWidth - 1;
+         } else {
             disp = fBinsOffsetd - it->first;
-            if (fOffset < fWidth*(disp+1)) {
+            if (fOffset < fWidth * (disp + 1)) {
                lowB = 0;
+            } else {
+               lowB = fOffset - fWidth * (disp + 1);
             }
-            else {
-               lowB = fOffset - fWidth*(disp+1);
-            }
-            upperB = fOffset - 1 - fWidth*disp;
+            upperB = fOffset - 1 - fWidth * disp;
          }
-      
+
          auto interval = std::make_pair(lowB, upperB);
          all.push_back(std::make_pair(interval, it->second->load()));
       }
@@ -784,7 +784,6 @@ public:
       return all;
    }
 };
-
 
 } // namespace Detail
 } // namespace Experimental
