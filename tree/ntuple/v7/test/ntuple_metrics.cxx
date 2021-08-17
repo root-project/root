@@ -114,35 +114,35 @@ TEST(Metrics, PresetIntervalHistogram)
 {
    RNTupleMetrics inner("inner");
    std::vector<std::pair<uint64_t, uint64_t>> intervals = {std::make_pair(10, 20), std::make_pair(21, 30)};
-   RNTupleHistoInterval counter("plain", "", "example 1", intervals);
+   RNTupleHistoInterval *counter = inner.MakeHistogram<RNTupleHistoInterval *>("plain", "", "example 1", intervals);
 
    EXPECT_FALSE(inner.IsEnabled());
    inner.Enable();
    EXPECT_TRUE(inner.IsEnabled());
 
-   counter.Fill(15);
-   counter.Fill(9);
+   counter->Fill(15);
+   counter->Fill(9);
 
    // 14 and 20 in same interval as 15
-   EXPECT_EQ(counter.GetBinContent(14), 1);
-   EXPECT_EQ(counter.GetBinContent(20), 1);
+   EXPECT_EQ(counter->GetBinContent(14), 1);
+   EXPECT_EQ(counter->GetBinContent(20), 1);
 
-   counter.Fill(20);
-   EXPECT_EQ(counter.GetBinContent(19), 2);
+   counter->Fill(20);
+   EXPECT_EQ(counter->GetBinContent(19), 2);
 
-   EXPECT_EQ(counter.GetBinContent(22), 0);
+   EXPECT_EQ(counter->GetBinContent(22), 0);
 
-   counter.Fill(35);
-   EXPECT_EQ(counter.GetBinContent(34), 0);
+   counter->Fill(35);
+   EXPECT_EQ(counter->GetBinContent(34), 0);
 }
 
 TEST(Metrics, LogHistogramUpperBound)
 {
    RNTupleMetrics inner("inner");
 
-   RNTupleHistoCounterLog counter("plain", "", "example 1", 1000);
+   RNTupleHistoCounterLog *counter = inner.MakeHistogram<RNTupleHistoCounterLog *>("plain", "", "example 1", 1000);
 
-   auto maxBound = counter.MaxLogUpperBound();
+   auto maxBound = counter->MaxLogUpperBound();
 
    // int(log2 of 1000) == 9
    EXPECT_EQ(maxBound, 9);
@@ -181,32 +181,33 @@ TEST(Metrics, LogHistogramCount)
 
 TEST(Metrics, ActiveLearningHistogram)
 {
-   RNTupleHistoActiveLearn counter("plain", "", "example 1", 10, 100);
+   RNTupleMetrics inner("inner");
+   RNTupleHistoActiveLearn *counter = inner.MakeHistogram<RNTupleHistoActiveLearn *>("plain", "", "example 1", 10, 100);
 
    for (uint64_t i = 10; i < 110; i++) {
-      counter.Fill(i);
+      counter->Fill(i);
 
-      EXPECT_EQ(i, counter.GetMax());
+      EXPECT_EQ(i, counter->GetMax());
    }
 
    // min fits bounds
-   EXPECT_EQ(10, counter.GetMin());
+   EXPECT_EQ(10, counter->GetMin());
 
    // max fits bounds
-   EXPECT_EQ(109, counter.GetMax());
+   EXPECT_EQ(109, counter->GetMax());
 
    // not yet flushed
-   EXPECT_EQ(false, counter.IsFlushed());
-   counter.Fill(109);
+   EXPECT_EQ(false, counter->IsFlushed());
+   counter->Fill(109);
 
    // flush after 101th entry
-   EXPECT_EQ(true, counter.IsFlushed());
+   EXPECT_EQ(true, counter->IsFlushed());
 
    // 10 elems in range [70,79]
-   EXPECT_EQ(10, counter.GetBinContent(77));
+   EXPECT_EQ(10, counter->GetBinContent(77));
 
    // 12 bins created: 10 intervals + underflow + overflow
-   EXPECT_EQ(10 + 2, counter.GetAll().size());
+   EXPECT_EQ(10 + 2, counter->GetAll().size());
 
    // intervals match expected
    std::vector<std::pair<uint64_t, uint64_t>> intervals = {
@@ -214,7 +215,7 @@ TEST(Metrics, ActiveLearningHistogram)
       std::make_pair(40, 49), std::make_pair(50, 59), std::make_pair(60, 69),   std::make_pair(70, 79),
       std::make_pair(80, 89), std::make_pair(90, 99), std::make_pair(100, 109), std::make_pair(110, UINT64_MAX)};
 
-   auto vcs = counter.GetAll();
+   auto vcs = counter->GetAll();
 
    for (uint i = 1; i < vcs.size() - 1; i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);
@@ -222,60 +223,64 @@ TEST(Metrics, ActiveLearningHistogram)
    }
 
    // underflows are accounted for
-   EXPECT_EQ(0, counter.GetUnderflow());
+   EXPECT_EQ(0, counter->GetUnderflow());
    for (uint i = 0; i < 10; i++) {
-      counter.Fill(i);
+      counter->Fill(i);
    }
-   EXPECT_EQ(10, counter.GetUnderflow());
+   EXPECT_EQ(10, counter->GetUnderflow());
 
    // overflows are accounted for
-   EXPECT_EQ(0, counter.GetOverflow());
+   EXPECT_EQ(0, counter->GetOverflow());
    for (uint i = 200; i < 220; i++) {
-      counter.Fill(i);
+      counter->Fill(i);
    }
-   EXPECT_EQ(20, counter.GetOverflow());
+   EXPECT_EQ(20, counter->GetOverflow());
 }
 
 TEST(Metrics, FixedWidthIntervalHistogramZeroOffset)
 {
-   RNTupleFixedWidthHistogram counter("a", "", "", 100, 50);
+   RNTupleMetrics inner("inner");
+   RNTupleFixedWidthHistogram *counter =
+      inner.MakeHistogram<RNTupleFixedWidthHistogram *>("plain", "", "example 1", 100, 50);
 
-   counter.Fill(10);
-   counter.Fill(23);
-   counter.Fill(47);
-   counter.Fill(49);
+   counter->Fill(10);
+   counter->Fill(23);
+   counter->Fill(47);
+   counter->Fill(49);
 
-   counter.Fill(50);
-   counter.Fill(54);
-   counter.Fill(77);
-   counter.Fill(78);
-   counter.Fill(149);
-   counter.Fill(148);
+   counter->Fill(50);
+   counter->Fill(54);
+   counter->Fill(77);
+   counter->Fill(78);
+   counter->Fill(149);
+   counter->Fill(148);
 
-   counter.Fill(152);
-   counter.Fill(151);
+   counter->Fill(152);
+   counter->Fill(151);
 
-   EXPECT_EQ(counter.GetBinContent(0), 4);
-   EXPECT_EQ(counter.GetBinContent(49), 4);
-   EXPECT_EQ(counter.GetBinContent(99), 6);
-   EXPECT_EQ(counter.GetBinContent(100), 6);
-   EXPECT_EQ(counter.GetBinContent(101), 6);
-   EXPECT_EQ(counter.GetBinContent(199), 2);
-   EXPECT_EQ(counter.GetBinContent(200), 2);
-   EXPECT_EQ(counter.GetBinContent(201), 2);
-   EXPECT_EQ(counter.GetBinContent(299), 0);
-   EXPECT_EQ(counter.GetBinContent(300), 0);
-   EXPECT_EQ(counter.GetBinContent(301), 0);
+   EXPECT_EQ(counter->GetBinContent(0), 4);
+   EXPECT_EQ(counter->GetBinContent(49), 4);
+   EXPECT_EQ(counter->GetBinContent(99), 6);
+   EXPECT_EQ(counter->GetBinContent(100), 6);
+   EXPECT_EQ(counter->GetBinContent(101), 6);
+   EXPECT_EQ(counter->GetBinContent(199), 2);
+   EXPECT_EQ(counter->GetBinContent(200), 2);
+   EXPECT_EQ(counter->GetBinContent(201), 2);
+   EXPECT_EQ(counter->GetBinContent(299), 0);
+   EXPECT_EQ(counter->GetBinContent(300), 0);
+   EXPECT_EQ(counter->GetBinContent(301), 0);
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval1)
 {
-   RNTupleFixedWidthHistogram counter("a", "", "", 100, 70);
+   RNTupleMetrics inner("inner");
+   RNTupleFixedWidthHistogram *counter =
+      inner.MakeHistogram<RNTupleFixedWidthHistogram *>("plain", "", "example 1", 100, 70);
 
-   counter.Fill(23);
-   counter.Fill(149);
-   counter.Fill(190);
-   counter.Fill(410);
+   counter->Fill(23);
+   counter->Fill(149);
+   counter->Fill(190);
+   counter->Fill(410);
 
    // intervals match expected
    std::vector<std::pair<uint64_t, uint64_t>> intervals = {
@@ -286,7 +291,7 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval1)
       std::make_pair(370, 469),
    };
 
-   auto vcs = counter.GetAll();
+   auto vcs = counter->GetAll();
 
    for (uint i = 0; i < vcs.size(); i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);
@@ -295,12 +300,14 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval1)
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval2)
 {
-   RNTupleFixedWidthHistogram counter("a", "", "", 100, 0);
+   RNTupleMetrics inner("inner");
+   RNTupleFixedWidthHistogram *counter =
+      inner.MakeHistogram<RNTupleFixedWidthHistogram *>("plain", "", "example 1", 100, 0);
 
-   counter.Fill(23);
-   counter.Fill(149);
-   counter.Fill(190);
-   counter.Fill(410);
+   counter->Fill(23);
+   counter->Fill(149);
+   counter->Fill(190);
+   counter->Fill(410);
 
    // intervals match expected
    std::vector<std::pair<uint64_t, uint64_t>> intervals = {
@@ -309,7 +316,7 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval2)
       std::make_pair(400, 499),
    };
 
-   auto vcs = counter.GetAll();
+   auto vcs = counter->GetAll();
 
    for (uint i = 0; i < vcs.size(); i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);
@@ -318,14 +325,16 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval2)
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval3)
 {
-   RNTupleFixedWidthHistogram counter("a", "", "", 100, 201);
+   RNTupleMetrics inner("inner");
+   RNTupleFixedWidthHistogram *counter =
+      inner.MakeHistogram<RNTupleFixedWidthHistogram *>("plain", "", "example 1", 100, 201);
 
-   counter.Fill(0);
-   counter.Fill(23);
-   counter.Fill(149);
-   counter.Fill(190);
-   counter.Fill(330);
-   counter.Fill(410);
+   counter->Fill(0);
+   counter->Fill(23);
+   counter->Fill(149);
+   counter->Fill(190);
+   counter->Fill(330);
+   counter->Fill(410);
 
    // intervals match expected
    std::vector<std::pair<uint64_t, uint64_t>> intervals = {
@@ -333,7 +342,7 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval3)
       std::make_pair(301, 400), std::make_pair(401, 500),
    };
 
-   auto vcs = counter.GetAll();
+   auto vcs = counter->GetAll();
 
    for (uint i = 0; i < vcs.size(); i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);

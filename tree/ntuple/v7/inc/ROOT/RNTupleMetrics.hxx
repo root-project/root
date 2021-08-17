@@ -90,7 +90,7 @@ public:
    {
    }
 
-   virtual ~RNTupleHistogram(){};
+   virtual ~RNTupleHistogram() = default;
 
    std::string ToString() const
    {
@@ -379,7 +379,7 @@ public:
    bool IsEnabled() const { return fIsEnabled; }
 };
 
-class RNTupleHistoInterval : RNTupleHistogram {
+class RNTupleHistoInterval : public RNTupleHistogram {
 private:
    typedef std::pair<uint64_t, uint64_t> IntervalEntry;
    typedef std::pair<uint64_t, std::pair<uint64_t, std::atomic<std::uint64_t> *>> MappingEntry;
@@ -410,6 +410,9 @@ private:
    };
 
 public:
+   RNTupleHistoInterval(const std::string &name, const std::string &unit, const std::string &desc)
+      : RNTupleHistogram(name, unit, desc){};
+
    RNTupleHistoInterval(const std::string &name, const std::string &unit, const std::string &desc,
                         std::vector<std::pair<uint64_t, uint64_t>> intervals)
       : RNTupleHistogram(name, unit, desc)
@@ -458,12 +461,12 @@ public:
    }
 };
 
-class RNTupleHistoCounterLog : RNTupleHistogram {
+class RNTupleHistoCounterLog : public RNTupleHistogram {
 private:
+public:
    std::atomic<uint64_t> *slots[66];
    uint64_t fUpperBound;
    uint fBitUpperBound;
-
    uint ulog2(uint64_t n) const
    {
       uint64_t targetLevel = 0;
@@ -481,7 +484,9 @@ private:
       return base << exp;
    }
 
-public:
+   RNTupleHistoCounterLog(const std::string &name, const std::string &unit, const std::string &desc)
+      : RNTupleHistogram(name, unit, desc){};
+
    RNTupleHistoCounterLog(const std::string &name, const std::string &unit, const std::string &desc,
                           const uint64_t upperBound)
       : RNTupleHistogram(name, unit, desc), fUpperBound(upperBound), fBitUpperBound(ulog2(upperBound))
@@ -556,7 +561,7 @@ public:
    }
 };
 
-class RNTupleHistoActiveLearn : RNTupleHistogram {
+class RNTupleHistoActiveLearn : public RNTupleHistogram {
 private:
    uint64_t fNumBins;
    uint fLearningPhaseSize;
@@ -697,7 +702,7 @@ public:
    }
 };
 
-class RNTupleFixedWidthHistogram : RNTupleHistogram {
+class RNTupleFixedWidthHistogram : public RNTupleHistogram {
 private:
    uint64_t fWidth;
    uint64_t fOffset;
