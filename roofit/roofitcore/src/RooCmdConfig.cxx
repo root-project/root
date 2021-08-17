@@ -476,12 +476,9 @@ void RooCmdConfig::print()
 Bool_t RooCmdConfig::process(const RooLinkedList& argList) 
 {
   Bool_t ret(kFALSE) ;
-  TIterator* iter = argList.MakeIterator() ;
-  RooCmdArg* arg ;
-  while((arg=(RooCmdArg*)iter->Next())) {
+  for(auto * arg : static_range_cast<RooCmdArg*>(argList)) {
     ret |= process(*arg) ;
   }
-  delete iter ;
   return ret ;
 }
 

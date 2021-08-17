@@ -28,6 +28,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Max Orok, U Ottawa,\
+ Alexander Penev, University of Plovdiv,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
@@ -43,6 +44,7 @@ The following people have contributed to this new version:
 - The "Virtual MonteCarlo" facility VMC (`montecarlo/vmc`) has been removed from ROOT. The development of this package has moved to a [separate project](https://github.com/vmc-project/). ROOT's copy of VMC was deprecated since v6.18.
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
 - `TTree::GetEntry()` and `TTree::GetEvent()` no longer have 0 as the default value for the first parameter `entry`. We are not aware of correct uses of this function without providing an entry number. If you have one, please simply pass `0` from now on.
+- `TBufferMerger` is now out of the `Experimental` namespace (`ROOT::Experimental::TBufferMerger` is deprecated, please use `ROOT::TBufferMerger` instead)
 
 
 ## Core Libraries
@@ -53,6 +55,8 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
 
+- `TTreeReader::GetEntryStatus` now always reports `kEntryBeyondEnd` after an event loop correctly completes. In previous versions, it could sometime return `kEntryNotFound` even for well-behaved event loops.
+
 ## RDataFrame
 
 ### New features
@@ -61,6 +65,11 @@ The following people have contributed to this new version:
 - Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
 - Add `DescribeDataset` to the `RDataFrame` interface, which allows to get information about the dataset (subset of the output of Describe()).
 - `Book` now suports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
+- As an aid to `RDataSource` implementations with which collection sizes can be retrieved more efficiently than the full collection, `#var` can now be used as a short-hand notation for column name `R_rdf_sizeof_var`
+
+### Other improvements
+
+- The scaling to a large amount of threads of computation graphs with many simple `Filter`s or `Define`s has been greatly improved, see also [this talk](https://indico.cern.ch/event/1036730/#1-a-performance-study-of-the-r) for more details
 
 ## Histogram Libraries
 
@@ -68,6 +77,8 @@ The following people have contributed to this new version:
   for an individual `TGraph`.
 
 ## Math Libraries
+
+- I/O support of `RVec` objects has been optimized. As a side-effect, `RVec`s can now be read back as `std::vector`s and vice-versa.
 
 
 ## RooFit Libraries
@@ -98,6 +109,10 @@ From now on, the likelihoods are normalized by the sum of integrals in each rang
 The `RooMinuit` class was the old interface between RooFit and minuit. With ROOT version 5.24, a the more general `RooMinimizer` adapter was introduced, which became the default with ROOT 6.08. 
 
 Before 6.26, it was possible to still use the `RooMinuit` by passing the `Minimizer("OldMinuit", "minimizer")` command argument to `RooAbsPdf::fitTo()`. This option is now removed.
+
+### Increase of the `RooAbsArg` class version
+
+The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In some circumstances, this can cause warnings in `TStreamerInfo` for classes inheriting from `RooAbsArg` when reading older RooFit models from a file. These warnings are harmless and can be avoided by incrementing also the class version of the inheriting class.
 
 ## 2D Graphics Libraries
 

@@ -672,6 +672,24 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 
 }
 
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Enter all entries in a range in the TEntryList.
+/// \param[in] start starting entry to enter.
+/// \param[in] end ending entry to enter.
+/// \param[in] tree passed as is to TEntryList::Enter.
+/// \param[in] step step increase of the loop entering the entries.
+///
+/// This is a helper function that enters all entries between \p start
+/// (inclusive) and \p end (exclusive) to the TEntryList in a loop. It
+/// is useful also in PyROOT to avoid having to do the same in a Python loop.
+
+void TEntryList::EnterRange(Long64_t start, Long64_t end, TTree *tree, UInt_t step)
+{
+   for (auto entry = start; entry < end; entry += step) {
+      this->Enter(entry, tree);
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove entry \#entry from the list
 /// - When tree = 0, removes from the current list

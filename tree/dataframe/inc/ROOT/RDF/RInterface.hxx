@@ -11,28 +11,30 @@
 #ifndef ROOT_RDF_TINTERFACE
 #define ROOT_RDF_TINTERFACE
 
+#include "ROOT/InternalTreeUtils.hxx" // for GetFileNamesFromTree and GetFriendInfo
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/ActionHelpers.hxx"
-#include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/HistoModels.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
+#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RDefine.hxx"
+#include "ROOT/RDF/RFilter.hxx"
+#include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/InternalTreeUtils.hxx" // for GetFileNamesFromTree and GetFriendInfo
-#include "RtypesCore.h" // for ULong64_t
+#include "RtypesCore.h"               // for ULong64_t
+#include "TChain.h" // for checking fLoopManger->GetTree() return type
 #include "TDirectory.h"
-#include "TH1.h"        // For Histo actions
-#include "TH2.h"        // For Histo actions
-#include "TH3.h"        // For Histo actions
+#include "TH1.h" // For Histo actions
+#include "TH2.h" // For Histo actions
+#include "TH3.h" // For Histo actions
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TStatistic.h"
-#include "TChain.h"     // for checking fLoopManger->GetTree() return type
 
 #include <algorithm>
 #include <cstddef>
@@ -40,6 +42,7 @@
 #include <iterator> // std::back_insterter
 #include <limits>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -47,7 +50,6 @@
 #include <typeinfo>
 #include <utility> // std::index_sequence
 #include <vector>
-#include <set>
 
 class TGraph;
 

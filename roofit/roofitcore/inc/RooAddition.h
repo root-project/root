@@ -69,11 +69,11 @@ protected:
       RooArgList _I ;
       virtual RooArgList containedArgs(Action) ;
   };
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
   Double_t evaluate() const;
 
-  ClassDef(RooAddition,2) // Sum of RooAbsReal objects
+  ClassDef(RooAddition,3) // Sum of RooAbsReal objects
 };
 
 #endif

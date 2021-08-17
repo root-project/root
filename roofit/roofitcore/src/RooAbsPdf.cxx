@@ -172,7 +172,9 @@ called for each data event.
 #include "RooHelpers.h"
 #include "RooBatchCompute.h"
 #include "RooFormulaVar.h"
+#include "RooDerivative.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "TClass.h"
 #include "TMath.h"
 #include "TPaveText.h"
@@ -180,7 +182,6 @@ called for each data event.
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
 #include "Math/CholeskyDecomp.h"
-#include "RooDerivative.h"
 
 #include <algorithm>
 #include <iostream>
@@ -203,7 +204,7 @@ TString RooAbsPdf::_normRangeOverride;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _specGeneratorConfig(0)
+RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _normMgr(this,10), _specGeneratorConfig(0)
 {
   _errorCount = 0 ;
   _negCount = 0 ;
@@ -930,7 +931,7 @@ std::unique_ptr<RooAbsReal> createMultiRangeNLLCorrectionTerm(
    RooArgList termList;
    RooArgList integralList;
 
-   for (const auto &currentRangeName : RooHelpers::tokenise(rangeNames, ",")) {
+   for (const auto &currentRangeName : ROOT::Split(rangeNames, ",")) {
       const std::string currentName = baseName + "_" + currentRangeName;
 
       auto sumEntriesCurrent = data.sumEntries("1", currentRangeName.c_str());
@@ -1090,7 +1091,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
-    auto tokens = RooHelpers::tokenise(rangeName, ",");
+    auto tokens = ROOT::Split(rangeName, ",");
     if (RooHelpers::checkIfRangesOverlap(*this, data, tokens)) {
       throw std::runtime_error(
               std::string("Error in RooAbsPdf::createNLL! The ranges ") + rangeName + " are overlapping!");
@@ -1783,7 +1784,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
 
     // Composite case: multiple ranges
     RooArgList chi2List ;
-    for (std::string& token : RooHelpers::tokenise(rangeName, ",")) {
+    for (std::string& token : ROOT::Split(rangeName, ",")) {
       RooCmdArg subRangeCmd = RooFit::Range(token.c_str()) ;
       // Construct chi2 while substituting original RangeWithName argument with subrange argument created above
       RooAbsReal* chi2Comp = new RooChi2Var(Form("%s_%s", baseName.c_str(), token.c_str()), "chi^2", *this, data,
@@ -2690,9 +2691,16 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 /// <tr><td> `Invisible(Bool_t flag)`           <td>  Add curve to frame, but do not display. Useful in combination AddTo()
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)`
 ///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma.
+///                                       The linear method is fast but may not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and Gaussian approximations made.
+///                                       Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations, but may take (much) longer to calculate
+///                                  \note To include the uncertainty from the expected number of events,
+///                                        the Normalization() argument with `ScaleType` `RooAbsReal::RelativeExpected` has to be passed, e.g.
+/// ```{.cpp}
+///   pdf.plotOn(frame, VisualizeError(fitResult), Normalization(1.0, RooAbsReal::RelativeExpected));
+/// ```
 ///
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE)`
-///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma.
+///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma
 /// </table>
 
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
@@ -2820,7 +2828,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
       } else if (pc.hasProcessed("RangeWithName")) {
 
-        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName", "", false), ",", /*returnEmptyToken=*/true)) {
+        for (const std::string& rangeNameToken : ROOT::Split(pc.getString("rangeName", "", false), ",")) {
           const char* thisRangeName = rangeNameToken.empty() ? nullptr : rangeNameToken.c_str();
           if (thisRangeName && !frame->getPlotVar()->hasRange(thisRangeName)) {
             coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
@@ -2844,7 +2852,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       // Specification of a normalization range override those in a regular range
       if (pc.hasProcessed("NormRange")) {
         rangeLim.clear();
-        for (const auto& rangeNameToken : RooHelpers::tokenise(pc.getString("normRangeName", "", false), ",", /*returnEmptyToken=*/true)) {
+        for (const auto& rangeNameToken : ROOT::Split(pc.getString("normRangeName", "", false), ",")) {
           const char* thisRangeName = rangeNameToken.empty() ? nullptr : rangeNameToken.c_str();
           if (thisRangeName && !frame->getPlotVar()->hasRange(thisRangeName)) {
             coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
@@ -3189,7 +3197,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
 
   // add the optional label if specified
   if (showLabel) {
-    for (const auto& line : RooHelpers::tokenise(label, "\n")) {
+    for (const auto& line : ROOT::Split(label, "\n")) {
       box->AddText(line.c_str());
     }
   }

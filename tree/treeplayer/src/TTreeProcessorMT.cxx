@@ -83,7 +83,7 @@ ConvertToElistClusters(std::vector<std::vector<EntryCluster>> &&clusters, TEntry
       // we need `chain` to be able to convert local entry numbers to global entry numbers in `Next`
       chain.reset(new TChain());
       for (auto i = 0u; i < nFiles; ++i)
-         chain->Add((fileNames[i] + "/" + treeNames[i]).c_str(), entriesPerFile[i]);
+         chain->Add((fileNames[i] + "?query#" + treeNames[i]).c_str(), entriesPerFile[i]);
       Next = [](Long64_t &elEntry, TEntryList &elist, TChain *ch) {
          ++elEntry;
          int treenum = -1;
@@ -295,7 +295,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
    fChain.reset(new TChain());
    const auto nFiles = fileNames.size();
    for (auto i = 0u; i < nFiles; ++i) {
-      fChain->Add((fileNames[i] + "/" + treeNames[i]).c_str(), nEntries[i]);
+      fChain->Add((fileNames[i] + "?query#" + treeNames[i]).c_str(), nEntries[i]);
    }
    fChain->ResetBit(TObject::kMustCleanup);
 
@@ -312,17 +312,17 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
       // Build a friend chain
       auto frChain = std::make_unique<TChain>(thisFriendName.c_str());
       const auto nFileNames = friendFileNames[i].size();
-      // If there are no chain subnames, the friend was a TTree. It's safe
-      // to add to the chain the filename directly.
       if (thisFriendChainSubNames.empty()) {
+         // If there are no chain subnames, the friend was a TTree. It's safe
+         // to add to the chain the filename directly.
          for (auto j = 0u; j < nFileNames; ++j) {
             frChain->Add(thisFriendFiles[j].c_str(), thisFriendEntries[j]);
          }
+      } else {
          // Otherwise, the new friend chain needs to be built using the nomenclature
          // "filename/treename" as argument to `TChain::Add`
-      } else {
          for (auto j = 0u; j < nFileNames; ++j) {
-            frChain->Add((thisFriendFiles[j] + "/" + thisFriendChainSubNames[j]).c_str(), thisFriendEntries[j]);
+            frChain->Add((thisFriendFiles[j] + "?query#" + thisFriendChainSubNames[j]).c_str(), thisFriendEntries[j]);
          }
       }
 

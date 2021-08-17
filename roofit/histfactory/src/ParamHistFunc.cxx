@@ -58,7 +58,8 @@ ClassImp(ParamHistFunc);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ParamHistFunc::ParamHistFunc() : _numBins(0)
+ParamHistFunc::ParamHistFunc()
+  : _normIntMgr(this), _numBins(0)
 {
   _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
 }
@@ -79,6 +80,7 @@ ParamHistFunc::ParamHistFunc() : _numBins(0)
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet) :
   RooAbsReal(name, title),
+  _normIntMgr(this),
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
@@ -123,6 +125,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 			     const RooArgList& vars, const RooArgList& paramSet,
 			     const TH1* Hist ) :
   RooAbsReal(name, title),
+  _normIntMgr(this),
   //  _dataVar("!dataVar","data Var", this, (RooRealVar&) var),
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
@@ -170,6 +173,7 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
 
 ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   RooAbsReal(other, name), 
+  _normIntMgr(other._normIntMgr, this),
   _dataVars("!dataVars", this, other._dataVars ),
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),

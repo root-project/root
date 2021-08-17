@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iterator>
 #include <iomanip>
+#include <limits>
 
 namespace TMVA{
 namespace Experimental{
@@ -39,7 +40,7 @@ namespace SOFIE{
 
    public:
 
-      ROperator_Gemm() = delete;
+      ROperator_Gemm(){}
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameY):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
          fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY)) {
@@ -120,7 +121,7 @@ namespace SOFIE{
             fShapeC = model.GetTensorShape(fNC);
 
             bool broadcast_needed = false;
-            for (int i =0; i < fShapeC.size(); i++){
+            for (size_t i =0; i < fShapeC.size(); i++){
                if (fShapeC[i]!=fShapeY[i]){
                   broadcast_needed = true;
                   break;

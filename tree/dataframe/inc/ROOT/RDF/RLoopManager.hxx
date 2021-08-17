@@ -41,6 +41,47 @@ class GraphNode;
 namespace GraphDrawing {
 class GraphCreatorHelper;
 } // ns GraphDrawing
+
+using Callback_t = std::function<void(unsigned int)>;
+
+class RCallback {
+   const Callback_t fFun;
+   const ULong64_t fEveryN;
+   std::vector<ULong64_t> fCounters;
+
+public:
+   RCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
+      : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
+   {
+   }
+
+   void operator()(unsigned int slot)
+   {
+      auto &c = fCounters[slot];
+      ++c;
+      if (c == fEveryN) {
+         c = 0ull;
+         fFun(slot);
+      }
+   }
+};
+
+class ROneTimeCallback {
+   const Callback_t fFun;
+   std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
+
+public:
+   ROneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
+
+   void operator()(unsigned int slot)
+   {
+      if (fHasBeenCalled[slot] == 1)
+         return;
+      fFun(slot);
+      fHasBeenCalled[slot] = 1;
+   }
+};
+
 } // ns RDF
 } // ns Internal
 
@@ -57,44 +98,6 @@ using ROOT::RDF::RDataSource;
 class RLoopManager : public RNodeBase {
    using ColumnNames_t = std::vector<std::string>;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
-   using Callback_t = std::function<void(unsigned int)>;
-   class TCallback {
-      const Callback_t fFun;
-      const ULong64_t fEveryN;
-      std::vector<ULong64_t> fCounters;
-
-   public:
-      TCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
-         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
-      {
-      }
-
-      void operator()(unsigned int slot)
-      {
-         auto &c = fCounters[slot];
-         ++c;
-         if (c == fEveryN) {
-            c = 0ull;
-            fFun(slot);
-         }
-      }
-   };
-
-   class TOneTimeCallback {
-      const Callback_t fFun;
-      std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
-
-   public:
-      TOneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
-
-      void operator()(unsigned int slot)
-      {
-         if (fHasBeenCalled[slot] == 1)
-            return;
-         fFun(slot);
-         fHasBeenCalled[slot] = 1;
-      }
-   };
 
    friend struct RCallCleanUpTask;
 
@@ -114,9 +117,11 @@ class RLoopManager : public RNodeBase {
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
-   std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
-   std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
-   std::vector<Callback_t> fDataBlockCallbacks; ///< Registered callbacks to call at the beginning of each "data block"
+   std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
+   /// Registered callbacks to invoke just once before running the loop
+   std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
+   /// Registered callbacks to call at the beginning of each "data block"
+   std::vector<RDFInternal::Callback_t> fDataBlockCallbacks;
    RDFInternal::RDataBlockNotifier fDataBlockNotifier;
    unsigned int fNRuns{0}; ///< Number of event loops run
 

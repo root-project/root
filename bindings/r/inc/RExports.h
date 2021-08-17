@@ -50,7 +50,6 @@
 //Some useful typedefs
 typedef std::vector<TString> TVectorString;
 
-
 #include<RcppCommon.h>
 namespace ROOT {
    namespace R {
@@ -123,10 +122,12 @@ namespace Rcpp {
       } ;
    }
 }
+
 //added to fix bug in last version of Rcpp on mac
 #if !defined(R_Version)
 #define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
 #endif
+
 #include<Rcpp.h>//this headers should be called after templates definitions
 #include<Rcpp/Named.h>
 #undef HAVE_UINTPTR_T

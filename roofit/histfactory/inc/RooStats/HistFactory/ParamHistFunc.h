@@ -80,7 +80,7 @@ protected:
     RooArgList _highIntList ;
     // will want std::vector<RooRealVar*> for low and high also
   } ;
-  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; //! The integration cache manager
 
   RooListProxy _dataVars;       // The RooRealVars
   RooListProxy _paramSet ;            // interpolation parameters
@@ -110,7 +110,7 @@ protected:
 private:
   static NumBins getNumBinsPerDim(RooArgSet const& vars);
 
-  ClassDefOverride(ParamHistFunc, 6)
+  ClassDefOverride(ParamHistFunc, 7)
 };
 
 #endif

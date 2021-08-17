@@ -1,8 +1,12 @@
 // Tests for the RooCacheManager
 // Author: Jonas Rembser, CERN, May 2021
 
+#include "RooAbsPdf.h"
+#include "RooGenericPdf.h"
 #include "RooObjCacheManager.h"
 #include "RooRealVar.h"
+
+#include "TFile.h"
 
 #include "gtest/gtest.h"
 
@@ -39,9 +43,6 @@ TEST(RooCacheManager, TestSelectFromArgSet)
    int idx1 = mgr.setObj(&nset1, &iset1, new CacheElem);
    int idx2 = mgr.setObj(&nset2, &iset2, new CacheElem);
 
-   std::cout << idx1 << std::endl;
-   std::cout << idx2 << std::endl;
-
    auto sel11 = mgr.selectFromSet1({vars[0], vars[4]}, idx1);
    auto sel12 = mgr.selectFromSet2({vars[2], vars[4]}, idx1);
 
@@ -59,4 +60,45 @@ TEST(RooCacheManager, TestSelectFromArgSet)
    EXPECT_TRUE(sel12.containsInstance(vars[2]));
    EXPECT_TRUE(sel12.containsInstance(vars[4]));
    EXPECT_TRUE(sel21.containsInstance(vars[6]));
+}
+
+TEST(RooCacheManager, TestAbsArgCacheListConsistency)
+{
+   // Every instance of a RooAbsCache or inherigin class that is the member of
+   // a RooFit arg is automatically added to the RooAbsArg::_cacheList data
+   // member by reference.
+   //
+   // This test makes sure that the _cacheList still has the correct pointers
+   // after reading back a RooFit model. Now that the RooAbsCache and child
+   // classes don't take part in the IO anymore it should be no problem, but in
+   // the past there were inconsistencies.
+   {
+      RooRealVar x("x", "x", 0, -10, 10);
+      RooGenericPdf pdf("pdf", "pdf", "x", RooArgList(x));
+
+      uintptr_t pdfAddr = (uintptr_t)&pdf;
+      uintptr_t cacheAddr = (uintptr_t)pdf.getCache(0);
+      // Check if the cache pointer actually points to a data member of the pdf.
+      // We can't get the actual address of the private _normMgr member, but we
+      // can still check if the cache points to a member by checking the range
+      // of the address.
+      EXPECT_TRUE(cacheAddr >= pdfAddr && cacheAddr < pdfAddr + sizeof(RooGenericPdf));
+      EXPECT_EQ(pdf.numCaches(), 1);
+
+      TFile f1("testRooCacheManager_1.root", "RECREATE");
+
+      x.Write();
+      pdf.Write();
+   }
+
+   {
+      TFile f1("testRooCacheManager_1.root", "READ");
+      auto pdf = f1.Get<RooAbsPdf>("pdf");
+
+      uintptr_t pdfAddr = (uintptr_t)pdf;
+      uintptr_t cacheAddr = (uintptr_t)pdf->getCache(0);
+      // Same trick to check if the cache points to a pdf data member as above.
+      EXPECT_TRUE(cacheAddr >= pdfAddr && cacheAddr < pdfAddr + sizeof(RooGenericPdf));
+      EXPECT_EQ(pdf->numCaches(), 1);
+   }
 }

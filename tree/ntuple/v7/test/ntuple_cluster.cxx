@@ -14,6 +14,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -294,7 +295,7 @@ TEST(PageStorageFile, LoadCluster)
 
    auto modelWrite = ROOT::Experimental::RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrTag = modelWrite->MakeField<int32_t>("tag", 0);
+   auto wrTag = modelWrite->MakeField<std::int32_t>("tag", 0);
 
    {
       ROOT::Experimental::RNTupleWriter ntuple(

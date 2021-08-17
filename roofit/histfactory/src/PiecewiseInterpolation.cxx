@@ -47,7 +47,7 @@ ClassImp(PiecewiseInterpolation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PiecewiseInterpolation::PiecewiseInterpolation()
+PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 {
   _positiveDefinite=false;
   TRACE_CREATE
@@ -73,6 +73,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 					       const RooArgList& paramSet,
 					       Bool_t takeOwnership) :
   RooAbsReal(name, title),
+  _normIntMgr(this),
   _nominal("!nominal","nominal value", this, (RooAbsReal&)nominal),
   _lowSet("!lowSet","low-side variation",this),
   _highSet("!highSet","high-side variation",this),
@@ -142,6 +143,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 
 PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name) :
   RooAbsReal(other, name), 
+  _normIntMgr(other._normIntMgr, this),
   _nominal("!nominal",this,other._nominal),
   _lowSet("!lowSet",this,other._lowSet),
   _highSet("!highSet",this,other._highSet),
