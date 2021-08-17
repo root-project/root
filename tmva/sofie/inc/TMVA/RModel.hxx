@@ -34,8 +34,9 @@ private:
    std::string fFileName; //file name of original model file for identification
    std::string fParseTime; //UTC date and time string at parsing
 
+
    std::string fGC; //generated code
-   std::set<std::string> fNeededBlasRoutines = {};
+   bool fNeedGemm = true;
 
    const std::vector<std::string> fAllowedStdLib = {"algorithm"};
    std::set<std::string> fNeededStdLib = {"vector"};
