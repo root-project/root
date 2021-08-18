@@ -28,6 +28,7 @@ arguments.
 
 
 #include "RooConstraintSum.h"
+#include "RooAbsData.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
@@ -35,6 +36,8 @@ arguments.
 #include "RooMsgService.h"
 #include "RooHelpers.h"
 #include "RooWorkspace.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
 
 #include <memory>
 
@@ -155,8 +158,10 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 /// \param[in] pdf The pdf model whose parameters should be constrained.
 ///            Constraint terms will be extracted from RooProdPdf instances
 ///            that are servers of the pdf (internal constraints).
-/// \param[in] observables Observable variables (used to determine which model
-///            variables are parameters).
+/// \param[in] data Dataset used in the fit with the constraint sum. It is
+///            used to figure out which are the observables and also to get the
+///            global observables definition and values if they are stored in
+///            the dataset.
 /// \param[in] constraints Set of parameters to constrain. If `nullptr`, all
 ///            parameters will be considered.
 /// \param[in] externalConstraints Set of constraint terms that are not
@@ -174,13 +179,15 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         std::string const& name,
         RooAbsPdf const& pdf,
-        RooArgSet const& observables,
+        RooAbsData const& data,
         RooArgSet const* constrainedParameters,
         RooArgSet const* externalConstraints,
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
         RooWorkspace * workspace)
 {
+  RooArgSet const& observables = *data.get();
+
   bool doStripDisconnected = false ;
 
   // If no explicit list of parameters to be constrained is specified apply default algorithm
@@ -221,17 +228,59 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
      }
   }
 
-  auto glObs = getGlobalObservables(pdf, globalObservables, globalObservablesTag);
-
   if (!allConstraints.empty()) {
 
-    oocoutI(&pdf, Minimization) << " Including the following constraint terms in minimization: " << allConstraints << std::endl ;
-    if (glObs) {
-      oocoutI(&pdf, Minimization) << "The following global observables have been defined: " << *glObs << std::endl ;
+    oocoutI(&pdf, Minimization) << " Including the following constraint terms in minimization: "
+                                << allConstraints << std::endl ;
+
+    // Identify global observables in the model.
+    auto glObs = getGlobalObservables(pdf, globalObservables, globalObservablesTag);
+    if(data.getGlobalObservables()) {
+      if(!glObs) {
+        // There were no global observables specified, but there are some in the
+        // dataset. We will just take them from the dataset.
+        oocoutI(&pdf, Minimization)
+            << "The following global observables have been automatically defined according to the dataset "
+            << "which also provides their values: " << *data.getGlobalObservables() << std::endl;
+        glObs = std::make_unique<RooArgSet>(*data.getGlobalObservables());
+      } else {
+        // There are global observables specified by the user and also some in
+        // the dataset.
+        RooArgSet globalsFromDataset;
+        data.getGlobalObservables()->selectCommon(*glObs, globalsFromDataset);
+        oocoutI(&pdf, Minimization)
+            << "The following global observables have been defined: " << *glObs
+            << "," << " with the values of " << globalsFromDataset << " obtained from the dataset." << std::endl;
+      }
+    } else if(glObs) {
+      oocoutI(&pdf, Minimization)
+          << "The following global observables have been defined: " << *glObs << std::endl;
     }
-    auto constraintTerm = std::make_unique<RooConstraintSum>(name.c_str(),"nllCons",allConstraints,glObs ? *glObs : cPars) ;
-    constraintTerm->setOperMode(RooAbsArg::ADirty) ;
-    return constraintTerm;
+
+    // The constraint terms need to be cloned, because the global observables
+    // might be changed to have the same values as stored in data.
+    RooConstraintSum constraintTerm{name.c_str(),"nllCons", allConstraints, glObs ? *glObs : cPars};
+    std::unique_ptr<RooAbsReal> constraintTermClone{static_cast<RooAbsReal*>(constraintTerm.cloneTree())};
+
+    // Set the global observables values from the dataset if applicable
+    // Redirect the global observables to the ones from the dataset if applicable.
+    if(data.getGlobalObservables()) {
+      constraintTermClone->recursiveRedirectServers(*data.getGlobalObservables()) ;
+    }
+
+    // The parameters that are not connected to global observables from data
+    // need to be redirected to the original args to get the changes made by
+    // the minimizer. This excludes the global observables, where we take the
+    // clones with the values set to the values from the dataset if available.
+    RooArgSet allOriginalParams;
+    constraintTerm.getParameters(data.getGlobalObservables(),allOriginalParams);
+    constraintTermClone->recursiveRedirectServers(allOriginalParams) ;
+
+    // The computation graph for the constraints is very small, no need to do
+    // the tracking of clean and dirty nodes here.
+    constraintTermClone->setOperMode(RooAbsArg::ADirty) ;
+
+    return constraintTermClone;
   }
 
   // no constraints
