@@ -21,7 +21,13 @@ __all__ = [
    'Cpp3UsingDeclarations',
 ]
 
-
+IS_WINDOWS = 0
+if 'win32' in sys.platform:
+    import platform
+    if '64' in platform.architecture()[0]:
+        IS_WINDOWS = 64
+    else:
+        IS_WINDOWS = 32
 
 ### C++ language constructs test cases =======================================
 class Cpp1LanguageFeatureTestCase( MyTestCase ):
@@ -244,7 +250,9 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( pZ , Z.getZ(1) )
 
       import array
-      if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
+      # Not supported in p2.2
+      # and no 8-byte integer type array on Windows 64b
+      if hasattr( array.array, 'buffer_info' ) and IS_WINDOWS != 64:
          if not self.legacy_pyroot:
             # New cppyy uses unsigned long to represent void* returns, as in DynamicCast.
             # To prevent an overflow error when converting the Python integer returned by
