@@ -185,3 +185,15 @@ def _decaytype_string_to_enum(caller, kwargs):
                 raise exception
 
     return kwargs
+
+
+def cpp_signature(sig):
+    """Decorator to set the `_cpp_signature` attribute of a function.
+    This information can be used to generate the documentation.
+    """
+
+    def decorator(func):
+        func._cpp_signature = sig
+        return func
+
+    return decorator
