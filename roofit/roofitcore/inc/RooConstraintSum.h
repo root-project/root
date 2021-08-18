@@ -38,7 +38,7 @@ public:
   static std::unique_ptr<RooAbsReal> createConstraintTerm(
         std::string const& name,
         RooAbsPdf const& pdf,
-        RooArgSet const& observables,
+        RooAbsData const& data,
         RooArgSet const* constrainedParameters,
         RooArgSet const* externalConstraints,
         RooArgSet const* globalObservables,
