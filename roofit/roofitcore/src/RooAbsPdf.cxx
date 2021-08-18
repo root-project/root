@@ -1122,7 +1122,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   auto constraintTerm = RooConstraintSum::createConstraintTerm(
           baseName + "_constr", // name
           *this, // pdf
-          *data.get(), // observables
+          data, // data
           pc.getSet("cPars"), // Constrain RooCmdArg
           pc.getSet("extCons"), // ExternalConstraints RooCmdArg
           pc.getSet("glObs"), // GlobalObservables RooCmdArg
