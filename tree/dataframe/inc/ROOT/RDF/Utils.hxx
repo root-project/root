@@ -35,7 +35,6 @@ namespace RDF {
 using ColumnNames_t = std::vector<std::string>;
 }
 
-/// \cond HIDDEN_SYMBOLS
 namespace Experimental {
 class RLogChannel;
 }
@@ -225,7 +224,5 @@ constexpr std::size_t CacheLineStep() {
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
-
-/// \endcond
 
 #endif // RDFUTILS
