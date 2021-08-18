@@ -7,7 +7,6 @@
 #include "RooRealVar.h"
 #include "RunContext.h"
 
-#include <chrono>
 #include <thread>
 
 RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, int batchMode)
@@ -86,16 +85,22 @@ RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, 
   if (!rbc::dispatch_gpu) 
     throw std::runtime_error(std::string("In: ")+__func__+"(), "+__FILE__+":"+__LINE__+": Cuda implementation of the computing library is not available\n");
 
-  markGPUNodes();
-
   // copy observable data to the gpu
   _cudaMemDataset = static_cast<double*>(rbc::dispatch_gpu->cudaMalloc( _nEvents*_dataMapCPU.size()*sizeof(double) ));
   size_t idx=0;
   for (auto& record:_dataMapCPU)
   {
     _dataMapCUDA[record.first] = RooSpan<double>(_cudaMemDataset+idx, _nEvents);
-    rbc::dispatch_gpu->memcpyToGPU(_cudaMemDataset+idx, record.second.data(), _nEvents*sizeof(double));
+    rbc::dispatch_gpu->memcpyToCUDA(_cudaMemDataset+idx, record.second.data(), _nEvents*sizeof(double));
     idx += _nEvents;
+  }
+
+  // create events and streams for every node
+  for (auto& item:_nodeInfos)
+  {
+    item.second.event = rbc::dispatch_gpu->newCudaEvent(true);
+    item.second.eventStart = rbc::dispatch_gpu->newCudaEvent(true);
+    item.second.stream = rbc::dispatch_gpu->newCudaStream();
   }
 }
 
@@ -144,6 +149,9 @@ double* RooFitDriver::getAvailablePinnedBuffer() {
 
 double RooFitDriver::getVal()
 {
+  if (_batchMode==-1 && ++_getValInvocations<=3)
+    markGPUNodes();
+  
   for (auto& item:_nodeInfos) {
     item.second.remClients = item.second.nClients;
     item.second.remServers = item.second.nServers;
@@ -164,6 +172,10 @@ double RooFitDriver::getVal()
       for (auto& it:_nodeInfos)
         if (it.second.remServers==-1 && !rbc::dispatch_gpu->streamIsActive(it.second.stream))
         {
+          if (_getValInvocations==2) {
+            float ms = rbc::dispatch_gpu->cudaEventElapsedTime(it.second.eventStart, it.second.event);
+            it.second.cudaTime += std::chrono::microseconds{int(1000.0*ms)};
+          }
           it.second.remServers=-2;
           nNodes--;
           updateMyClients(it.first);
@@ -198,15 +210,19 @@ double RooFitDriver::getVal()
       _dataMapCPU[node] = RooSpan<const double>(buffer, _nEvents);
       handleIntegral(node);
       rbc::dispatch = rbc::dispatch_cpu;
-      node->computeBatch(buffer, _nEvents, _dataMapCPU);
+      if (_getValInvocations==1) {
+        using namespace std::chrono;
+        auto start = steady_clock::now();
+        node->computeBatch(buffer, _nEvents, _dataMapCPU);
+        info.cpuTime = duration_cast<microseconds>( steady_clock::now()-start );
+      }
+      else node->computeBatch(buffer, _nEvents, _dataMapCPU);
       rbc::dispatch = nullptr;
       if (info.copyAfterEvaluation) 
       {
         double* gpuBuffer = getAvailableGPUBuffer();
         _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
-        rbc::dispatch_gpu->memcpyToGPU(gpuBuffer, gpuBuffer, _nEvents*sizeof(double), info.stream);
-        _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
-        rbc::dispatch_gpu->memcpyToGPU(gpuBuffer, _dataMapCPU[node].data(), _nEvents*sizeof(double), info.stream);
+        rbc::dispatch_gpu->memcpyToCUDA(gpuBuffer, buffer, _nEvents*sizeof(double), info.stream);
         rbc::dispatch_gpu->cudaEventRecord(info.event, info.stream);
       }
     }
@@ -256,7 +272,15 @@ void RooFitDriver::assignToGPU(const RooAbsReal* node)
   _dataMapCUDA[node] = RooSpan<const double>(buffer, _nEvents);
   handleIntegral(node);
   rbc::dispatch = rbc::dispatch_gpu;
-  node->computeBatch(buffer, _nEvents, _dataMapCUDA);
+  // measure launching overhead (add computation time later)
+  if (_getValInvocations==2) {
+    using namespace std::chrono;
+    rbc::dispatch_gpu->cudaEventRecord(info.eventStart, info.stream);
+    auto start = steady_clock::now();
+    node->computeBatch(buffer, _nEvents, _dataMapCUDA);
+    info.cudaTime = duration_cast<microseconds>( steady_clock::now()-start );
+  }
+  else node->computeBatch(buffer, _nEvents, _dataMapCUDA);
   rbc::dispatch = nullptr;
   rbc::dispatch_gpu->cudaEventRecord(info.event, info.stream);
   if (info.copyAfterEvaluation)
@@ -307,26 +331,135 @@ void RooFitDriver::updateMyServers(const RooAbsReal* node)
   }
 }
 
+std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFitDriver::memcpyBenchmark()
+{
+  using namespace std::chrono;
+  std::pair<microseconds, microseconds> ret;
+  auto hostArr=static_cast<double*>(rbc::dispatch_gpu->cudaMallocHost( _nEvents*sizeof(double) ));
+  auto deviArr=static_cast<double*>(rbc::dispatch_gpu->cudaMalloc(     _nEvents*sizeof(double) ));
+  for (int i=0; i<5; i++)
+  {
+    auto start = steady_clock::now();
+    rbc::dispatch_gpu->memcpyToCUDA(deviArr, hostArr, _nEvents*sizeof(double));
+    ret.first += duration_cast<microseconds>( steady_clock::now()-start );
+    start = steady_clock::now();
+    rbc::dispatch_gpu->memcpyToCPU(hostArr, deviArr, _nEvents*sizeof(double));
+    ret.second += duration_cast<microseconds>( steady_clock::now()-start );
+  }
+  rbc::dispatch_gpu->cudaFreeHost(hostArr);
+  rbc::dispatch_gpu->cudaFree(deviArr);
+  ret.first /= 5;
+  ret.second /= 5;
+  return ret;
+}
+
 void RooFitDriver::markGPUNodes()
 {
-  for (auto& item:_nodeInfos)
-    item.second.computeInGPU = item.first->canComputeBatchWithCuda();
-
-  for (auto& item:_nodeInfos)
-  {
-    if (item.second.computeInScalarMode) continue; // scalar nodes don't need copying
-    for (auto* client : static_range_cast<const RooAbsReal*>(item.first->valueClients()))
-      if (_nodeInfos.count(client) > 0 && item.second.computeInGPU != _nodeInfos.at(client).computeInGPU)
-      {
-        item.second.copyAfterEvaluation = true;
-        break;
-      }
+  if (_getValInvocations==1) return; // leave everything to be computed (and timed) in cpu
+  else if (_getValInvocations==2) { // compute (and time) as much as possible in gpu
+    for (auto& item:_nodeInfos)
+      if (!item.second.computeInScalarMode)
+        item.second.computeInGPU = item.first->canComputeBatchWithCuda();
   }
+  else // assign nodes to gpu using a greedy algorithm
+  {
+    // initialization and deletion of the timing events
+    for (auto& item:_nodeInfos)
+    {
+      item.second.computeInGPU = item.second.copyAfterEvaluation = false;
+      rbc::dispatch_gpu->deleteCudaEvent(item.second.event);
+      rbc::dispatch_gpu->deleteCudaEvent(item.second.eventStart);
+      item.second.event = item.second.eventStart = nullptr;
+    }
+    
+    using namespace std::chrono;
+    auto transferTimes = memcpyBenchmark();
+    microseconds h2dTime=transferTimes.first;
+    microseconds d2hTime=transferTimes.second;
+    
+    const RooAbsReal *cpuNode=nullptr, *cudaNode=nullptr;
+    microseconds simulatedTime{0};
+    int nNodes = _nodeInfos.size();
+    while (nNodes)
+    {
+      microseconds minDiff=microseconds::max(), maxDiff=-minDiff; //diff = cpuTime - cudaTime
+      const RooAbsReal *cpuCandidate=nullptr, *cudaCandidate=nullptr;
+      microseconds cpuDelay, cudaDelay;
+      for (auto& it:_nodeInfos)
+      {
+        if (it.second.timeLaunched >= microseconds{0}) continue; //already launched
+        microseconds diff{it.second.cpuTime-it.second.cudaTime}, cpuWait{0}, cudaWait{0};
+
+        for (auto* server : it.first->servers())
+        {
+          auto pServer = static_cast<const RooAbsReal*>(server);
+          if (_nodeInfos.count(pServer)==0) continue;
+          auto& info = _nodeInfos.at(pServer);
+          
+          //dependencies not computed yet
+          if (info.timeLaunched < microseconds{0}) goto nextCandidate; 
+          if (info.computeInGPU)
+            cpuWait=std::max(cpuWait, info.timeLaunched+info.cudaTime+d2hTime-simulatedTime);
+          else
+            cudaWait=std::max(cudaWait, info.timeLaunched+info.cpuTime+h2dTime-simulatedTime);
+        }
+
+        diff += cpuWait-cudaWait;
+        if (diff < minDiff) {
+          minDiff = diff;
+          cpuDelay = cpuWait;
+          cpuCandidate = it.first;
+        }
+        if (diff > maxDiff) {
+          maxDiff = diff;
+          cudaDelay = cudaWait;
+          cudaCandidate = it.first;
+        }
+        nextCandidate: ;
+      } // for (auto& it:_nodeInfos)
+
+      // don't compute same node twice
+      if (cpuCandidate==cudaCandidate && !cpuNode && !cudaNode) {
+        if (minDiff < microseconds{0}) cudaCandidate=nullptr;
+        else cpuCandidate=nullptr;
+      }
+      if (cpuCandidate && !cpuNode) {
+        cpuNode = cpuCandidate;
+        _nodeInfos.at(cpuNode).timeLaunched = simulatedTime+cpuDelay;
+        nNodes--;
+      }
+      if (cudaCandidate && !cudaNode) {
+        cudaNode = cudaCandidate;
+        _nodeInfos.at(cudaNode).timeLaunched = simulatedTime+cudaDelay;
+        _nodeInfos.at(cudaNode).computeInGPU = true;
+        nNodes--;
+      }
+      
+      microseconds etaCPU{microseconds::max()}, etaCUDA{microseconds::max()};
+      if (cpuNode) etaCPU = _nodeInfos[cpuNode].timeLaunched + _nodeInfos[cpuNode].cpuTime;
+      if (cudaNode) etaCUDA = _nodeInfos[cudaNode].timeLaunched + _nodeInfos[cudaNode].cudaTime;
+      simulatedTime = std::min(etaCPU, etaCUDA);
+      if (etaCPU < etaCUDA) cpuNode=nullptr;
+      else cudaNode=nullptr;
+    } // while(nNodes)
+  } // else (_getValInvocations > 2)
 
   for (auto& item:_nodeInfos)
-    if (item.second.computeInGPU || item.second.copyAfterEvaluation)
-    {
-      item.second.event = rbc::dispatch_gpu->newCudaEvent(false);
-      item.second.stream = rbc::dispatch_gpu->newCudaStream();
-    }
+    if (!item.second.computeInScalarMode) // scalar nodes don't need copying
+      for (auto* client : item.first->valueClients())
+      {
+        auto pClient = static_cast<const RooAbsReal*>(client);
+        if (_nodeInfos.count(pClient)==0) continue;
+        auto& info = _nodeInfos.at(pClient);
+        if (item.second.computeInGPU != info.computeInGPU) {
+          item.second.copyAfterEvaluation = true;
+          break;
+        }
+      }
+
+  // restore a cudaEventDisableTiming event when necessary
+  if (_getValInvocations==3)
+    for (auto& item:_nodeInfos)
+      if (item.second.computeInGPU || item.second.copyAfterEvaluation)
+        item.second.event = rbc::dispatch_gpu->newCudaEvent(false);
 }

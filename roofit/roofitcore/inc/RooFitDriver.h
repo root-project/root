@@ -4,6 +4,7 @@
 #include "RooBatchCompute.h"
 #include "RooNLLVarNew.h"
 
+#include <chrono>
 #include <queue>
 #include <unordered_map>
 
@@ -23,6 +24,12 @@ class RooFitDriver {
      
   private:
     struct NodeInfo {
+      cudaEvent_t* event = nullptr;
+      cudaEvent_t* eventStart = nullptr;
+      cudaStream_t* stream = nullptr; 
+      std::chrono::microseconds cpuTime{0};
+      std::chrono::microseconds cudaTime{std::chrono::microseconds::max()};
+      std::chrono::microseconds timeLaunched{-1};
       int nClients = 0;
       int nServers = 0;
       int remClients = 0;
@@ -30,18 +37,16 @@ class RooFitDriver {
       bool computeInScalarMode = false;
       bool computeInGPU = false;
       bool copyAfterEvaluation = false;
-      cudaStream_t* stream = nullptr;
-      cudaEvent_t* event = nullptr;
       ~NodeInfo() {
-        if (computeInGPU) {
-          rbc::dispatch_gpu->deleteCudaEvent(event);
-          rbc::dispatch_gpu->deleteCudaStream(stream);
-        }
+        if (event)      rbc::dispatch_gpu->deleteCudaEvent(event);
+        if (eventStart) rbc::dispatch_gpu->deleteCudaEvent(eventStart);
+        if (stream)     rbc::dispatch_gpu->deleteCudaStream(stream);
       }
     };
     void updateMyClients(const RooAbsReal* node);
     void updateMyServers(const RooAbsReal* node);
     void handleIntegral(const RooAbsReal* node);
+    std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
     void markGPUNodes();
     void assignToGPU(const RooAbsReal* node);
     double* getAvailableCPUBuffer();
@@ -53,14 +58,15 @@ class RooFitDriver {
     RooArgSet _parameters;
 
     const int _batchMode = 0;
-    double* _cudaMemDataset;
+    int _getValInvocations = 0;
+    double* _cudaMemDataset = nullptr;
 
     // used for preserving static info about the computation graph
     rbc::DataMap _dataMapCPU;
     rbc::DataMap _dataMapCUDA;
     const RooNLLVarNew& _topNode;
     const RooAbsData* const _data = nullptr;
-    const size_t _nEvents;
+    const size_t _nEvents = 0;
     std::unordered_map<const RooAbsReal*, NodeInfo> _nodeInfos;
 
     //used for preserving resources

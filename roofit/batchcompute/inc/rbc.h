@@ -26,7 +26,7 @@ namespace RooBatchCompute {
   {
     if (error != cudaSuccess)
       {
-        Fatal( (func+"(), "+file+":"+std::to_string(line)).c_str(), "%s", cudaGetErrorString(error) );
+        Fatal( (func+"(), "+file+":"+std::to_string(line)).c_str(), "%s(%d)", cudaGetErrorString(error), error );
         throw std::bad_alloc();
       }
   }      

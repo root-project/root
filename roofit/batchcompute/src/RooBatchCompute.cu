@@ -81,22 +81,31 @@ class RooBatchComputeClass : public RooBatchComputeInterface {
       delete stream;
     }
     virtual bool streamIsActive(cudaStream_t* stream) {
-      return cudaStreamQuery(*stream)==cudaErrorNotReady;
+      cudaError_t err = cudaStreamQuery(*stream);
+      if (err==cudaErrorNotReady) return true;
+      else if (err==cudaSuccess) return false;
+      ERRCHECK(err);
+      return false;
     }
     virtual void cudaStreamWaitEvent(cudaStream_t* stream, cudaEvent_t* event) {
       ERRCHECK( ::cudaStreamWaitEvent(*stream, *event) );
     }
-    void memcpyToGPU(void* dest, const void* src, size_t n, cudaStream_t* stream) override {
-      if (stream)
-        ERRCHECK( cudaMemcpyAsync(dest, src, n, cudaMemcpyHostToDevice, *stream) );
-      else
-        ERRCHECK( cudaMemcpy(dest, src, n, cudaMemcpyHostToDevice) );
+    virtual float cudaEventElapsedTime(cudaEvent_t* begin, cudaEvent_t* end) {
+      float ret;
+      ERRCHECK( ::cudaEventElapsedTime(&ret, *begin, *end) );
+      return ret;
     }
-    void memcpyToCPU(void* dest, const void* src, size_t n, cudaStream_t* stream) override {
+    void memcpyToCUDA(void* dest, const void* src, size_t nBytes, cudaStream_t* stream) override {
       if (stream)
-        ERRCHECK( cudaMemcpyAsync(dest, src, n, cudaMemcpyDeviceToHost, *stream) );
+        ERRCHECK( cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyHostToDevice, *stream) );
       else
-        ERRCHECK( cudaMemcpy(dest, src, n, cudaMemcpyDeviceToHost) );
+        ERRCHECK( cudaMemcpy(dest, src, nBytes, cudaMemcpyHostToDevice) );
+    }
+    void memcpyToCPU(void* dest, const void* src, size_t nBytes, cudaStream_t* stream) override {
+      if (stream)
+        ERRCHECK( cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToHost, *stream) );
+      else
+        ERRCHECK( cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost) );
     }
 }; // End class RooBatchComputeClass
 
