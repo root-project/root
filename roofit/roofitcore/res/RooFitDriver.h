@@ -17,6 +17,7 @@
 #include "RooBatchCompute.h"
 #include "RooNLLVarNew.h"
 
+#include <chrono>
 #include <queue>
 #include <unordered_map>
 
@@ -77,6 +78,12 @@ public:
 
 private:
    struct NodeInfo {
+      cudaEvent_t *event = nullptr;
+      cudaEvent_t *eventStart = nullptr;
+      cudaStream_t *stream = nullptr;
+      std::chrono::microseconds cpuTime{0};
+      std::chrono::microseconds cudaTime{std::chrono::microseconds::max()};
+      std::chrono::microseconds timeLaunched{-1};
       int nClients = 0;
       int nServers = 0;
       int remClients = 0;
@@ -84,19 +91,20 @@ private:
       bool computeInScalarMode = false;
       bool computeInGPU = false;
       bool copyAfterEvaluation = false;
-      cudaStream_t *stream = nullptr;
-      cudaEvent_t *event = nullptr;
       ~NodeInfo()
       {
-         if (computeInGPU) {
+         if (event)
             RooBatchCompute::dispatchCUDA->deleteCudaEvent(event);
+         if (eventStart)
+            RooBatchCompute::dispatchCUDA->deleteCudaEvent(eventStart);
+         if (stream)
             RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
-         }
       }
    };
    void updateMyClients(const RooAbsReal *node);
    void updateMyServers(const RooAbsReal *node);
    void handleIntegral(const RooAbsReal *node);
+   std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
    void markGPUNodes();
    void assignToGPU(const RooAbsReal *node);
    double *getAvailableCPUBuffer();
@@ -108,14 +116,15 @@ private:
    RooArgSet _parameters;
 
    const int _batchMode = 0;
-   double *_cudaMemDataset;
+   int _getValInvocations = 0;
+   double *_cudaMemDataset = nullptr;
 
    // used for preserving static info about the computation graph
    RooBatchCompute::DataMap _dataMapCPU;
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooNLLVarNew &_topNode;
    const RooAbsData *const _data = nullptr;
-   const size_t _nEvents;
+   const size_t _nEvents = 0;
    std::unordered_map<const RooAbsReal *, NodeInfo> _nodeInfos;
 
    // used for preserving resources
