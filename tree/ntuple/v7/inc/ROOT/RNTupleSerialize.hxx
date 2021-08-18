@@ -197,14 +197,12 @@ public:
    static RResult<std::uint32_t> DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
                                                          RClusterGroup &clusterGroup);
 
-   static RContext SerializeHeaderV1(const RNTupleDescriptor &desc, void *buffer);
-   static void SerializePageListV1(void *buffer,
-                                   const RNTupleDescriptor &desc,
-                                   std::span<DescriptorId_t> physClusterIDs,
-                                   const RContext &context);
-   static void SerializeClusterV1(void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster,
-                                  const RContext &context);
-   static void SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
+   static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
+   static std::uint32_t SerializePageListV1(void *buffer,
+                                            const RNTupleDescriptor &desc,
+                                            std::span<DescriptorId_t> physClusterIDs,
+                                            const RContext &context);
+   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void> DeserializeHeaderV1(const void *buffer,
                                             std::uint32_t bufSize,
