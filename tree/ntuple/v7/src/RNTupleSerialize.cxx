@@ -912,7 +912,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 
 ROOT::Experimental::Internal::RNTupleSerializer::RContext
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
-   const ROOT::Experimental::RNTupleDescriptor &desc, void *buffer)
+   void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc)
 {
    RContext context;
 
@@ -951,7 +951,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    return context;
 }
 
-void ROOT::Experimental::Internal::RNTupleSerializer::SerializePageListV1(
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageListV1(
    void *buffer, const RNTupleDescriptor &desc, std::span<DescriptorId_t> physClusterIDs, const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
@@ -988,43 +988,11 @@ void ROOT::Experimental::Internal::RNTupleSerializer::SerializePageListV1(
 
    pos += SerializeFramePostscript(buffer ? topMostFrame : nullptr, pos - topMostFrame);
    std::uint32_t size = pos - base;
-   pos += SerializeEnvelopePostscript(base, size, *where);
+   size += SerializeEnvelopePostscript(base, size, *where);
+   return size;
 }
 
-void ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterV1(
-   void *buffer, const ROOT::Experimental::RClusterDescriptor &cluster, const RContext &context)
-{
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
-   auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
-
-   pos += SerializeEnvelopePreamble(*where);
-   auto frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
-
-   // Get an ordered set of physical column ids
-   std::set<DescriptorId_t> physColumnIds;
-   for (auto id : cluster.GetColumnIds())
-      physColumnIds.insert(context.GetPhysClusterId(id));
-   for (auto physId : physColumnIds) {
-      auto id = context.GetMemClusterId(physId);
-
-      auto innerFrame = pos;
-      pos += SerializeListFramePreamble(0, *where);
-      for (const auto &pi : cluster.GetPageRange(id).fPageInfos) {
-         pos += SerializeUInt32(pi.fNElements, *where);
-         pos += SerializeLocator(pi.fLocator, *where);
-      }
-      pos += SerializeFramePostscript(innerFrame, pos - innerFrame);
-   }
-
-   pos += SerializeFramePostscript(frame, pos - frame);
-   std::uint32_t size = pos - base;
-   pos += SerializeEnvelopePostscript(base, size, *where);
-}
-
-
-void ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
    void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc, const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
@@ -1040,12 +1008,12 @@ void ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
    // So far no support for extension headers
    auto frame = pos;
    pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // So far no support for shared clusters (no column groups)
    frame = pos;
    pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster summaries
    const auto nClusters = desc.GetNClusters();
@@ -1056,7 +1024,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
       RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
       pos += SerializeClusterSummary(summary, *where);
    }
-   pos += SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster groups
    const auto &clusterGroups = context.GetClusterGroups();
@@ -1066,15 +1034,16 @@ void ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
    for (unsigned int i = 0; i < nClusterGroups; ++i) {
       pos += SerializeClusterGroup(clusterGroups[i], *where);
    }
-   pos += SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // So far no support for meta-data
    frame = pos;
    pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(frame, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    std::uint32_t size = pos - base;
-   pos += SerializeEnvelopePostscript(base, size, *where);
+   size += SerializeEnvelopePostscript(base, size, *where);
+   return size;
 }
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeaderV1(
