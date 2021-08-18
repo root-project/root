@@ -32,6 +32,8 @@ struct cudaEvent_t;
 struct cudaStream_t;
 #endif // #ifndef __CUDACC__
 
+class RooAbsReal;
+
 /**
  * Namespace for dispatching RooFit computations to various backends.
  *
@@ -46,6 +48,7 @@ struct cudaStream_t;
  */
 namespace RooBatchCompute {
 
+struct RunContext;
 typedef std::unordered_map<const RooAbsReal *, RooSpan<const double>> DataMap;
 typedef std::vector<const RooAbsReal *> VarVector;
 typedef std::vector<double> ArgVector;
@@ -86,8 +89,9 @@ class RooBatchComputeInterface {
     virtual bool  streamIsActive(cudaStream_t*)     { throw std::bad_function_call(); }
     virtual void  cudaEventRecord(cudaEvent_t*, cudaStream_t*)     { throw std::bad_function_call(); }
     virtual void  cudaStreamWaitEvent(cudaStream_t*, cudaEvent_t*) { throw std::bad_function_call(); }
-    virtual void  memcpyToGPU(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
-    virtual void  memcpyToCPU(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+    virtual float cudaEventElapsedTime(cudaEvent_t*, cudaEvent_t*) { throw std::bad_function_call(); }
+    virtual void  memcpyToCUDA(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+    virtual void  memcpyToCPU (void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
 };
 
 /**
