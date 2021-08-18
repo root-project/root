@@ -1,0 +1,142 @@
+# -------------------------------------------------------------------------------
+#  Author: Jonas Rembser <jonas.rembser@cern.ch> CERN
+# -------------------------------------------------------------------------------
+
+################################################################################
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
+# All rights reserved.                                                         #
+#                                                                              #
+# For the licensing terms see $ROOTSYS/LICENSE.                                #
+# For the list of contributors see $ROOTSYS/README/CREDITS.                    #
+################################################################################
+
+# Creates the doxygen documentation for the RooFit pythonizations, which includes:
+#   - a PyROOT box for each pythonized class or member function
+#   - a separate page for the RoofitPythonizations group where all the RooFit
+#     pythonization documentation is aggregated
+
+import inspect
+
+
+def write_pyroot_block_for_class(klass):
+
+    if klass.__doc__ is None:
+        return
+
+    print("\class " + klass.__name__)
+    print("\\brief \parblock \endparblock")
+    print("\htmlonly")
+    print('<div class="pyrootbox">')
+    print("\endhtmlonly")
+    print("## PyROOT")
+
+    print(inspect.cleandoc(klass.__doc__))
+
+    print("\htmlonly")
+    print("</div>")
+    print("\endhtmlonly")
+    print("")
+
+
+def write_pyroot_block_for_member_func(func):
+
+    if func.__doc__ is None or not hasattr(func, "_cpp_signature"):
+        return
+
+    sigs = func._cpp_signature
+    if isinstance(sigs, str):
+        sigs = [sigs]
+
+    for sig in sigs:
+        print("\\fn " + func._cpp_signature)
+        print("\\brief \parblock \endparblock")
+        print("\htmlonly")
+        print('<div class="pyrootbox">')
+        print("\endhtmlonly")
+        print("## PyROOT")
+
+        print(inspect.cleandoc(func.__doc__))
+
+        print("\htmlonly")
+        print("</div>")
+        print("\endhtmlonly")
+        print("")
+
+
+def print_roofit_pythonization_page():
+    """Prints the doxygen code for the RooFit pythonization page."""
+    import ROOT.pythonization as pyz
+
+    # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
+    print("\defgroup RoofitPythonizations")
+    print("\ingroup Roofitmain")
+    print("# RooFit pythonizations")
+    for python_klass in pyz._roofit.python_classes:
+        if python_klass.__doc__ is None:
+            continue
+        class_name = python_klass.__name__
+        print("- [" + class_name + "](\\ref _" + class_name.lower() + ")")
+
+        func_names = pyz._roofit.get_defined_attributes(python_klass)
+
+        for func_name in func_names:
+            func = getattr(python_klass, func_name)
+            if func.__doc__ is None:
+                continue
+            print("  - [" + func.__name__ + "](\\ref _" + (python_klass.__name__ + "_" + func.__name__).lower() + ")")
+
+    print("")
+
+    # ...and then iterating over all pythonized classes and functions
+    for python_klass in pyz._roofit.python_classes:
+        if python_klass.__doc__ is None:
+            continue
+
+        print("\\anchor _" + python_klass.__name__.lower())
+        print("## " + python_klass.__name__)
+        print("\see " + python_klass.__name__)
+        print("")
+        print(inspect.cleandoc(python_klass.__doc__))
+        print("")
+
+        func_names = pyz._roofit.get_defined_attributes(python_klass)
+
+        for func_name in func_names:
+            func = getattr(python_klass, func_name)
+            if func.__doc__ is None:
+                continue
+            print("\\anchor _" + (python_klass.__name__ + "_" + func.__name__).lower())
+            print("### " + python_klass.__name__ + "." + func.__name__)
+            print(inspect.cleandoc(func.__doc__))
+            print("")
+            if hasattr(func, "_cpp_signature"):
+                sigs = func._cpp_signature
+                if isinstance(sigs, str):
+                    sigs = [sigs]
+                for sig in sigs:
+                    print("\see " + sig)
+                    print("")
+
+
+def print_pyroot_blocks_for_cpp_docs():
+    """Print PyROOT blocks for the RooFit C++ documentation."""
+    import ROOT.pythonization as pyz
+
+    for python_klass in pyz._roofit.python_classes:
+
+        write_pyroot_block_for_class(python_klass)
+
+        func_names = pyz._roofit.get_defined_attributes(python_klass)
+
+        for func_name in func_names:
+            func = getattr(python_klass, func_name)
+            write_pyroot_block_for_member_func(func)
+
+
+if __name__ == "__main__":
+
+    print("/**")
+    print_roofit_pythonization_page()
+    print("")
+    print_pyroot_blocks_for_cpp_docs()
+    print("*/")

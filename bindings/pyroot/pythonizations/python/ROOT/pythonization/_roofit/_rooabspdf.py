@@ -10,42 +10,31 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r"""
-/**
-\class RooAbsPdf
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-
-## PyROOT
-
-Some member functions of RooAbsPdf that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooAbsPdf::fitTo, RooAbsPdf::plotOn, RooAbsPdf::generate, RooAbsPdf::paramOn, RooAbsPdf::createCdf,
-RooAbsPdf::generateBinned, RooAbsPdf::createChi2, RooAbsPdf::prepareMultiGen and RooAbsPdf::createNLL.
-For example, the following code is equivalent in PyROOT:
-\code{.py}
-# Directly passing a RooCmdArg:
-pdf.fitTo(data, ROOT.RooFit.Range("r1"))
-
-# With keyword arguments:
-pdf.fitTo(data, Range="r1")
-\endcode
-
-\htmlonly
-</div>
-\endhtmlonly
-*/
-"""
 
 from ._rooabsreal import RooAbsReal
-from ._utils import _kwargs_to_roocmdargs
+from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooAbsPdf(RooAbsReal):
+    """Some member functions of RooAbsPdf that take a RooCmdArg as argument also support keyword arguments.
+    So far, this applies to RooAbsPdf::fitTo, RooAbsPdf::plotOn, RooAbsPdf::generate, RooAbsPdf::paramOn, RooAbsPdf::createCdf,
+    RooAbsPdf::generateBinned, RooAbsPdf::createChi2, RooAbsPdf::prepareMultiGen and RooAbsPdf::createNLL.
+    For example, the following code is equivalent in PyROOT:
+    \code{.py}
+    # Directly passing a RooCmdArg:
+    pdf.fitTo(data, ROOT.RooFit.Range("r1"))
+
+    # With keyword arguments:
+    pdf.fitTo(data, Range="r1")
+    \endcode"""
+
+    @cpp_signature(
+        "RooAbsPdf::fitTo(RooAbsData&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)"
+    )
     def fitTo(self, *args, **kwargs):
-        # Redefinition of `RooAbsPdf.fitTo` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `fitTo` function.
+        """This function is pythonized with the command argument pythonization.
+        The keywords must correspond to the CmdArgs of the RooAbsPdf::fitTo() function.
+        """
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         return self._fitTo(*args, **kwargs)
 
