@@ -74,7 +74,8 @@ TEST_P(DefinePerSample, Tree)
    ROOT::RDataFrame df("t", prefix + "*");
 
    int counter = 0;
-   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &) {
+   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &db) {
+      EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
       ++counter;
       return 42;
    });
@@ -93,7 +94,8 @@ TEST_P(DefinePerSample, TChain)
    ROOT::RDataFrame df("t", prefix + "*");
 
    int counter = 0;
-   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &) {
+   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &db) {
+      EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
       ++counter;
       return 42;
    });
