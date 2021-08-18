@@ -20,7 +20,7 @@ import inspect
 
 def write_pyroot_block_for_class(klass):
 
-    if not hasattr(klass, "_doxygen"):
+    if klass.__doc__ is None:
         return
 
     print("\class " + klass.__name__)
@@ -30,7 +30,7 @@ def write_pyroot_block_for_class(klass):
     print("\endhtmlonly")
     print("## PyROOT")
 
-    print(inspect.cleandoc(klass._doxygen))
+    print(inspect.cleandoc(klass.__doc__))
 
     print("\htmlonly")
     print("</div>")
@@ -40,35 +40,39 @@ def write_pyroot_block_for_class(klass):
 
 def write_pyroot_block_for_member_func(func):
 
-    if not hasattr(func, "_doxygen") or not hasattr(func, "_cpp_signature"):
+    if func.__doc__ is None or not hasattr(func, "_cpp_signature"):
         return
 
-    print("\\fn " + func._cpp_signature)
-    print("\\brief \parblock \endparblock")
-    print("\htmlonly")
-    print('<div class="pyrootbox">')
-    print("\endhtmlonly")
-    print("## PyROOT")
+    sigs = func._cpp_signature
+    if isinstance(sigs, str):
+        sigs = [sigs]
 
-    print(inspect.cleandoc(func._doxygen))
+    for sig in sigs:
+        print("\\fn " + func._cpp_signature)
+        print("\\brief \parblock \endparblock")
+        print("\htmlonly")
+        print('<div class="pyrootbox">')
+        print("\endhtmlonly")
+        print("## PyROOT")
 
-    print("\htmlonly")
-    print("</div>")
-    print("\endhtmlonly")
-    print("")
+        print(inspect.cleandoc(func.__doc__))
+
+        print("\htmlonly")
+        print("</div>")
+        print("\endhtmlonly")
+        print("")
 
 
-if __name__ == "__main__":
-
+def print_roofit_pythonization_page():
+    """Prints the doxygen code for the RooFit pythonization page."""
     import ROOT.pythonization as pyz
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
-    print("/**")
     print("\defgroup RoofitPythonizations")
     print("\ingroup Roofitmain")
     print("# RooFit pythonizations")
     for python_klass in pyz._roofit.python_classes:
-        if not hasattr(python_klass, "_doxygen"):
+        if python_klass.__doc__ is None:
             continue
         class_name = python_klass.__name__
         print("- [" + class_name + "](\\ref _" + class_name.lower() + ")")
@@ -77,7 +81,7 @@ if __name__ == "__main__":
 
         for func_name in func_names:
             func = getattr(python_klass, func_name)
-            if not hasattr(func, "_doxygen"):
+            if func.__doc__ is None:
                 continue
             print("  - [" + func.__name__ + "](\\ref _" + (python_klass.__name__ + "_" + func.__name__).lower() + ")")
 
@@ -85,32 +89,39 @@ if __name__ == "__main__":
 
     # ...and then iterating over all pythonized classes and functions
     for python_klass in pyz._roofit.python_classes:
-        if not hasattr(python_klass, "_doxygen"):
+        if python_klass.__doc__ is None:
             continue
 
         print("\\anchor _" + python_klass.__name__.lower())
         print("## " + python_klass.__name__)
         print("\see " + python_klass.__name__)
         print("")
-        print(inspect.cleandoc(python_klass._doxygen))
+        print(inspect.cleandoc(python_klass.__doc__))
         print("")
 
         func_names = pyz._roofit.get_defined_attributes(python_klass)
 
         for func_name in func_names:
             func = getattr(python_klass, func_name)
-            if not hasattr(func, "_doxygen"):
+            if func.__doc__ is None:
                 continue
             print("\\anchor _" + (python_klass.__name__ + "_" + func.__name__).lower())
             print("### " + python_klass.__name__ + "." + func.__name__)
-            print(inspect.cleandoc(func._doxygen))
+            print(inspect.cleandoc(func.__doc__))
             print("")
             if hasattr(func, "_cpp_signature"):
-                print("\see " + func._cpp_signature)
-            print("")
-    print("")
+                sigs = func._cpp_signature
+                if isinstance(sigs, str):
+                    sigs = [sigs]
+                for sig in sigs:
+                    print("\see " + sig)
+                    print("")
 
-    # Add PyROOT blocks to existing documentation
+
+def print_pyroot_blocks_for_cpp_docs():
+    """Print PyROOT blocks for the RooFit C++ documentation."""
+    import ROOT.pythonization as pyz
+
     for python_klass in pyz._roofit.python_classes:
 
         write_pyroot_block_for_class(python_klass)
@@ -121,4 +132,11 @@ if __name__ == "__main__":
             func = getattr(python_klass, func_name)
             write_pyroot_block_for_member_func(func)
 
+
+if __name__ == "__main__":
+
+    print("/**")
+    print_roofit_pythonization_page()
+    print("")
+    print_pyroot_blocks_for_cpp_docs()
     print("*/")
