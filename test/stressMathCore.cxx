@@ -1120,7 +1120,7 @@ int testVector(int ngen, bool testio=false) {
    scale = Dim*20;
    if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
    if (Dim==4 && ( VecType<V2>::name() == "PtEtaPhiMVector" || VecType<V2>::name() == "PxPyPzMVector")) {
-#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__))
+#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__) || defined(__s390x__))
       scale *= 1.E7;
 #else
       scale *= 10;

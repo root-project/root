@@ -1,13 +1,19 @@
+import os
 import unittest
 
+from DistRDF import DataFrame
 from DistRDF import HeadNode
 from DistRDF import Proxy
 from DistRDF.Backends import Base
 
 
-def rangesToTuples(ranges):
-    """Convert range objects to tuples with the shape (start, end)"""
-    return list(map(lambda r: (r.start, r.end), ranges))
+def emptysourceranges_to_tuples(ranges):
+    """Convert EmptySourceRange objects to tuples with the shape (start, end)"""
+    return [(r.start, r.end) for r in ranges]
+
+def treeranges_to_tuples(ranges):
+    """Convert TreeRange objects to tuples with the shape (start, end, filelist)"""
+    return [(r.globalstart, r.globalend, r.localstarts, r.localends, r.filelist) for r in ranges]
 
 
 class BaseBackendInitTest(unittest.TestCase):
@@ -92,10 +98,10 @@ class DistRDataFrameInterface(unittest.TestCase):
             """getattr"""
             return getattr(self.headproxy, attr)
 
-    def get_ranges_from_rdataframe(self, rdf):
+    def get_ranges_from_empty_rdataframe(self, rdf):
         """
-        Common test setup to create ranges out of an RDataFrame instance based
-        on its parameters.
+        Common test setup to create ranges out of an empty source based
+        RDataFrame instance.
         """
         headnode = rdf.headnode
         headnode.npartitions = 2
@@ -108,7 +114,26 @@ class DistRDataFrameInterface(unittest.TestCase):
         # the RDataFrame head node
         hist.GetValue()
 
-        ranges = rangesToTuples(headnode.build_ranges())
+        ranges = emptysourceranges_to_tuples(headnode.build_ranges())
+        return ranges
+
+    def get_ranges_from_tree_rdataframe(self, rdf):
+        """
+        Common test setup to create ranges out of an TTree based RDataFrame
+        instance.
+        """
+        headnode = rdf.headnode
+        headnode.npartitions = 2
+
+        hist = rdf.Define("b1", "tdfentry_")\
+                  .Histo1D("b1")
+
+        # Trigger call to `execute` where number of entries, treename
+        # and input files are extracted from the arguments passed to
+        # the RDataFrame head node
+        hist.GetValue()
+
+        ranges = treeranges_to_tuples(headnode.build_ranges())
         return ranges
 
     def test_empty_rdataframe_with_number_of_entries(self):
@@ -119,7 +144,7 @@ class DistRDataFrameInterface(unittest.TestCase):
         """
         rdf = DistRDataFrameInterface.TestDataFrame(10)
 
-        ranges = self.get_ranges_from_rdataframe(rdf)
+        ranges = self.get_ranges_from_empty_rdataframe(rdf)
         ranges_reqd = [(0, 5), (5, 10)]
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -133,23 +158,28 @@ class DistRDataFrameInterface(unittest.TestCase):
         filename = "2clusters.root"
         rdf = DistRDataFrameInterface.TestDataFrame(treename, filename)
 
-        ranges = self.get_ranges_from_rdataframe(rdf)
-        ranges_reqd = [(0, 777), (777, 1000)]
+        ranges = self.get_ranges_from_tree_rdataframe(rdf)
+        ranges_reqd = [(0, 777, [0], [777], ["2clusters.root"]),
+                       (777, 1000, [777], [1000], ["2clusters.root"])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
     def test_rdataframe_with_treename_and_filename_with_globbing(self):
         """
-        Check clustered ranges produced when the input dataset is a single ROOT
-        file with globbing.
+        Check clustered ranges produced by the distributed RDataFrame when the
+        input dataset is glob that expands to a single ROOT file in the same
+        folder.
 
         """
         treename = "myTree"
         filename = "2cluste*.root"
         rdf = DistRDataFrameInterface.TestDataFrame(treename, filename)
 
-        ranges = self.get_ranges_from_rdataframe(rdf)
-        ranges_reqd = [(0, 777), (777, 1000)]
+        # Need absolute path because TChain globbing expands to full paths
+        expected_inputfiles = [os.path.join(os.getcwd(), "2clusters.root")]
+        ranges = self.get_ranges_from_tree_rdataframe(rdf)
+        ranges_reqd = [(0, 777, [0], [777], expected_inputfiles),
+                       (777, 1000, [777], [1000], expected_inputfiles)]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -163,8 +193,9 @@ class DistRDataFrameInterface(unittest.TestCase):
         filelist = ["2clusters.root"]
         rdf = DistRDataFrameInterface.TestDataFrame(treename, filelist)
 
-        ranges = self.get_ranges_from_rdataframe(rdf)
-        ranges_reqd = [(0, 777), (777, 1000)]
+        ranges = self.get_ranges_from_tree_rdataframe(rdf)
+        ranges_reqd = [(0, 777, [0], [777], ["2clusters.root"]),
+                       (777, 1000, [777], [1000], ["2clusters.root"])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -199,7 +230,60 @@ class DistRDataFrameInterface(unittest.TestCase):
 
         rdf = DistRDataFrameInterface.TestDataFrame(treename, filelist)
 
-        ranges = self.get_ranges_from_rdataframe(rdf)
-        ranges_reqd = [(0, 1250), (250, 1000)]
+        ranges = self.get_ranges_from_tree_rdataframe(rdf)
+        ranges_reqd = [
+            (0, 1250, [0, 0], [1000, 250], ["2clusters.root", "4clusters.root"]),
+            (250, 1000, [250], [1000], ["4clusters.root"]),
+        ]
 
         self.assertListEqual(ranges, ranges_reqd)
+
+
+class DistRDataFrameInvariants(unittest.TestCase):
+    """
+    The result of distributed execution should not depend on the number of
+    partitions assigned to the dataframe.
+    """
+
+    class TestBackend(Base.BaseBackend):
+        """Dummy backend to test the build_ranges method in Dist class."""
+
+        def ProcessAndMerge(self, ranges, mapper, reducer):
+            """
+            Dummy implementation of ProcessAndMerge.
+            """
+            mergeables_lists = [mapper(range) for range in ranges]
+
+            while len(mergeables_lists) > 1:
+                mergeables_lists.append(
+                    reducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
+
+            return mergeables_lists.pop()
+
+        def distribute_unique_paths(self, includes_list):
+            """
+            Dummy implementation of distribute_unique_paths. Does nothing.
+            """
+            pass
+
+        def make_dataframe(self, *args, **kwargs):
+            """Dummy make_dataframe"""
+            pass
+
+    def test_count_result_invariance(self):
+        """
+        Tests that counting the entries in the dataset does not depend on the
+        number of partitions. This could have happened if we used TEntryList
+        to restrict processing on a certain range of entries of the TChain in a
+        distributed task, but the changes in
+        https://github.com/root-project/root/commit/77bd5aa82e9544811e0d5fce197ab87c739c2e23
+        were not implemented yet.
+        """
+        treename = "entries"
+        filenames = ["1cluster_20entries.root"] * 5
+
+        for npartitions in range(1,6):
+            headnode = HeadNode.get_headnode(npartitions, treename, filenames)
+            backend = DistRDataFrameInvariants.TestBackend()
+            rdf = DataFrame.RDataFrame(headnode, backend)
+            self.assertEqual(rdf.Count().GetValue(), 100)
