@@ -4491,8 +4491,9 @@ void THistPainter::Paint(Option_t *option)
    }
 
    // Deflate the labels in case of alphanumeric labels
-   if (fXaxis->GetLabels()) fH->LabelsDeflate("X");
-   if (fYaxis->GetLabels()) fH->LabelsDeflate("Y");
+   if (fXaxis->CanExtend() && fXaxis->IsAlphanumeric()) fH->LabelsDeflate("X");
+   if (fYaxis->CanExtend() && fYaxis->IsAlphanumeric()) fH->LabelsDeflate("Y");
+   if (fZaxis->CanExtend() && fZaxis->IsAlphanumeric()) fH->LabelsDeflate("Z");
 
    if (Hoption.Pie) {
       if (fH->GetDimension() == 1) {
