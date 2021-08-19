@@ -41,7 +41,7 @@
 #include "TTabCom.h"
 #include <cstdlib>
 #include <algorithm>
-
+#include <iostream>
 #include "Getline.h"
 #include "strlcpy.h"
 #include "snprintf.h"
@@ -146,6 +146,16 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    TApplication(appClassName, argc, argv, options, numOptions),
    fCaughtSignal(-1)
 {
+
+   if (*argc > 1) {
+      // Early exit if there are remaining unrecognized options
+      for (auto n = 1; n < *argc; n++) {
+         std::cerr << "root: unrecognized option '" << argv[n] << "'\n";
+      }
+      std::cerr << "Try 'root --help' for more information.\n";
+      TApplication::Terminate(0);
+   }
+
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
    fInterrupt     = kFALSE;
