@@ -174,11 +174,10 @@ class TreeHeadNode(Node.Node):
             if len(args) == 3:
                 self.defaultbranches = args[2]
 
-        # Retrieve treename and inputfiles to retrieve cluster list later
-        # TODO: We are still assuming that treename is unique for the whole
-        # dataset even when we're dealing with a TChain. This is wrong and needs
-        # to be fixed, see https://github.com/root-project/root/issues/8750
-        self.treename = ROOT.Internal.TreeUtils.GetTreeFullPaths(self.tree)[0]
+        # maintreename: name of the tree or main name of the chain
+        self.maintreename = self.tree.GetName()
+        # subtreenames: names of all subtrees in the chain or full path to the tree in the file it belongs to
+        self.subtreenames = [str(treename) for treename in ROOT.Internal.TreeUtils.GetTreeFullPaths(self.tree)]
         self.inputfiles = [str(filename) for filename in ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.tree)]
 
     def build_ranges(self):
@@ -189,11 +188,13 @@ class TreeHeadNode(Node.Node):
                 ("Cannot build a distributed RDataFrame with zero entries. "
                  "Distributed computation will fail. "))
 
-        logger.debug("Building ranges for tree %s with the "
-                     "following input files:\n%s", self.treename, self.inputfiles)
+        logger.debug("Building ranges from dataset info:\n"
+                     "main treename: %s\n"
+                     "names of subtrees: %s\n"
+                     "input files: %s\n", self.maintreename, self.subtreenames, self.inputfiles)
 
         # Retrieve a tuple of clusters for all files of the tree
-        clustersinfiles = Ranges.get_clusters(self.treename, self.inputfiles)
+        clustersinfiles = Ranges.get_clusters(self.subtreenames, self.inputfiles)
         numclusters = len(clustersinfiles)
 
         # TODO: This shouldn't be triggered if len(clustersinfiles) == 1. The
