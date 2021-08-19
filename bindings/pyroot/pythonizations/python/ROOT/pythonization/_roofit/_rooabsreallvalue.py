@@ -11,45 +11,46 @@
 ################################################################################
 
 
-r"""
-/**
-\class RooAbsRealLValue
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-
-## PyROOT
-
-Some member functions of RooAbsRealLValue that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooAbsRealLValue::createHistogram and RooAbsRealLValue::frame.
-For example, the following code is equivalent in PyROOT:
-\code{.py}
-# Directly passing a RooCmdArg:
-frame = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("RooPlot with decorations"), ROOT.RooFit.Bins(40))
-
-# With keyword arguments:
-frame = x.frame(Name="xframe", Title="RooPlot with decorations", Bins=40)
-\endcode
-
-\htmlonly
-</div>
-\endhtmlonly
-*/
-"""
-
-from ._utils import _kwargs_to_roocmdargs
+from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooAbsRealLValue(object):
+    """Some member functions of RooAbsRealLValue that take a RooCmdArg as argument also support keyword arguments.
+    So far, this applies to RooAbsRealLValue::createHistogram and RooAbsRealLValue::frame.
+    For example, the following code is equivalent in PyROOT:
+    \code{.py}
+    # Directly passing a RooCmdArg:
+    frame = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("RooPlot with decorations"), ROOT.RooFit.Bins(40))
+
+    # With keyword arguments:
+    frame = x.frame(Name="xframe", Title="RooPlot with decorations", Bins=40)
+    \endcode
+    """
+
+    @cpp_signature(
+        "TH1 *RooAbsRealLValue::createHistogram(const char *name,"
+        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
+        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
+        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
+        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+    )
     def createHistogram(self, *args, **kwargs):
+        """The RooAbsRealLValue::createHistogram() function is pythonized with the command argument pythonization.
+        The keywords must correspond to the CmdArgs of the function.
+        """
         # Redefinition of `RooAbsRealLValue.createHistogram` for keyword arguments.
-        # the keywords must correspond to the CmdArg of the `createHistogram` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         return self._createHistogram(*args, **kwargs)
 
+    @cpp_signature(
+        "RooPlot *RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
+        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),"
+        "    const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+    )
     def frame(self, *args, **kwargs):
+        """The RooAbsRealLValue::frame() function is pythonized with the command argument pythonization.
+        The keywords must correspond to the CmdArgs of the function.
+        """
         # Redefinition of `RooAbsRealLValue.frame` for keyword arguments.
-        # the keywords must correspond to the CmdArg of the `frame` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         return self._frame(*args, **kwargs)

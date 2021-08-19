@@ -11,42 +11,29 @@
 ################################################################################
 
 
-r"""
-/**
-\class RooCategory
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-
-## PyROOT
-
-Constructor of RooCategory takes a map as an argument also supports python dictionaries.
-For example, the following code is equivalent in PyROOT:
-\code{.py}
-# Default bindings :
-mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state")
-mixState.defineType("mixed", -1)
-mixState.defineType("unmixed", 1)
-
-# With pythonization :
-mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state", {"mixed" : -1, "unmixed" : 1})
-
-\endcode
-
-\htmlonly
-</div>
-\endhtmlonly
-*/
-"""
-
-from ._utils import _dict_to_std_map
+from ._utils import _dict_to_std_map, cpp_signature
 
 
 class RooCategory(object):
+    """Constructor of RooCategory takes a map as an argument also supports python dictionaries.
+    For example, the following code is equivalent in PyROOT:
+    \code{.py}
+    # Default bindings :
+    mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state")
+    mixState.defineType("mixed", -1)
+    mixState.defineType("unmixed", 1)
+
+    # With pythonization :
+    mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state", {"mixed" : -1, "unmixed" : 1})
+    \endcode
+    """
+
+    @cpp_signature("RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates);")
     def __init__(self, *args, **kwargs):
+        """The RooCategory constructor is pythonized for converting python dict to std::map.
+        The instances in the dict must correspond to the template argument in std::map of the constructor.
+        """
         # Redefinition of `RooCategory` constructor for converting python dict to std::map.
-        # The instances in the dict must correspond to the template argument in std::map of the constructor.
         if len(args) > 2 and isinstance(args[2], dict):
             args = list(args)
             args[2] = _dict_to_std_map(args[2], {"std::string": "int"})
