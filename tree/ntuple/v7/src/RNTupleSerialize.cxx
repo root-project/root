@@ -1152,3 +1152,85 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
 
    return RResult<void>::Success();
 }
+
+
+ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooterV1(
+  const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   auto fnBufSize = [&]() { return bufSize - (bytes - base); };
+   RResult<std::uint32_t> result{0};
+
+   result = DeserializeEnvelope(bytes, fnBufSize());
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+
+   std::vector<std::int64_t> featureFlags;
+   result = DeserializeFeatureFlags(bytes, fnBufSize(), featureFlags);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   for (auto f: featureFlags) {
+      if (f)
+         R__LOG_WARNING(NTupleLog()) << "Unsupported feature flag! " << f;
+   }
+
+   std::uint32_t crc32{0};
+   if (fnBufSize() < static_cast<int>(sizeof(std::uint32_t)))
+      return R__FAIL("footer too short");
+   bytes += DeserializeUInt32(bytes, crc32);
+   if (crc32 != descBuilder.GetHeaderCRC32())
+      return R__FAIL("CRC32 mismatch between header and footer");
+
+   std::uint32_t frameSize;
+   auto frame = bytes;
+   auto fnFrameSize = [&]() { return frameSize - (bytes - frame); };
+
+   std::uint32_t nXHeaders;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nXHeaders);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   if (nXHeaders > 0)
+      R__LOG_WARNING(NTupleLog()) << "extension headers are still unsupported";
+   bytes = frame + frameSize;
+
+   std::uint32_t nColumnGroups;
+   frame = bytes;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nColumnGroups);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   if (nColumnGroups > 0)
+      R__LOG_WARNING(NTupleLog()) << "sharded clusters are still unsupported";
+   bytes = frame + frameSize;
+
+   std::uint32_t nClusterSummaries;
+   frame = bytes;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nClusterSummaries);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   if (nClusterSummaries > 0)
+      R__LOG_WARNING(NTupleLog()) << "cluster summaries are still unsupported";
+   bytes = frame + frameSize;
+
+   std::uint32_t nClusterGroups;
+   frame = bytes;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nClusterGroups);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   if (nClusterGroups > 0)
+      R__LOG_WARNING(NTupleLog()) << "cluster groups are still unsupported";
+   bytes = frame + frameSize;
+
+   std::uint32_t nMDBlocks;
+   frame = bytes;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nMDBlocks);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   if (nMDBlocks > 0)
+      R__LOG_WARNING(NTupleLog()) << "meta-data blocks are still unsupported";
+   bytes = frame + frameSize;
+
+   return RResult<void>::Success();
+}
