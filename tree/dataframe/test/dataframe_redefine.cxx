@@ -139,7 +139,7 @@ TEST(Redefine, OriginalDefineAsInputJitted)
 {
    auto r = ROOT::RDataFrame(1)
                .Define("x", [] { return 1; })
-               .Redefine("x", [](int x) { return x * 42; }, {"x"})
+               .Redefine("x", "x*42")
                .Max<int>("x");
    EXPECT_EQ(*r, 42);
 }
