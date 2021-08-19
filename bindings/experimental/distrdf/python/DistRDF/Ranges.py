@@ -67,7 +67,7 @@ class TreeRange(object):
         provided a TTree or TChain in the distributed RDataFrame constructor.
     """
 
-    def __init__(self, rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, friendinfo):
+    def __init__(self, rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo):
         """set attributes"""
         self.id = rangeid
         self.globalstart = globalstart
@@ -76,6 +76,7 @@ class TreeRange(object):
         self.localends = localends
         self.filelist = filelist
         self.treesnentries = treesnentries
+        self.treenames = treenames
         self.friendinfo = friendinfo
 
 
@@ -136,13 +137,14 @@ class ChainCluster(object):
         belongs to.
     """
 
-    def __init__(self, start, end, offset, filetuple, treenentries):
+    def __init__(self, start, end, offset, filetuple, treenentries, treename):
         """set attributes"""
         self.start = start
         self.end = end
         self.offset = offset
         self.filetuple = filetuple
         self.treenentries = treenentries
+        self.treename = treename
 
     def __lt__(self, other):
         """
@@ -201,13 +203,14 @@ def _n_even_chunks(iterable, n_chunks):
         last = cur
 
 
-def get_clusters(treename, filelist):
+def get_clusters(treenames, filenames):
     """
-    Extract a list of cluster boundaries for the given tree and files
+    Extract a list of cluster boundaries for the given tree or chain.
 
     Args:
-        treename (str): Name of the TTree split into one or more files.
-        filelist (list): List of one or more ROOT filenames.
+        tree (ROOT.TTree, ROOT.TChain): The dataset where the clusters are.
+            Depending on the type, the logic to retrieve the clusters is
+            different.
 
     Returns:
         list[ChainCluster]: Tuples with cluster boundaries and some metadata.
@@ -232,7 +235,7 @@ def get_clusters(treename, filelist):
     offset = 0
     fileindex = 0
 
-    for filename in filelist:
+    for treename, filename in zip(treenames, filenames):
         f = ROOT.TFile.Open(filename)
         t = f.Get(treename)
 
@@ -243,15 +246,11 @@ def get_clusters(treename, filelist):
 
         while start < entries:
             end = it()
-            clusters.append(ChainCluster(start, end, offset,
-                                    FileAndIndex(filename, fileindex), entries))
+            clusters.append(ChainCluster(start, end, offset, FileAndIndex(filename, fileindex), entries, treename))
             start = end
 
         fileindex += 1
         offset += entries
-
-    logger.debug("Returning files with their clusters:\n%s",
-                 "\n\n".join(map(str, clusters)))
 
     return clusters
 
@@ -376,6 +375,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         localends = []
         filelist = []
         treesnentries = []
+        treenames = []
 
         for _, clustersinsamefileiter in itertools.groupby(partition, lambda cluster: cluster.filetuple.fileindex):
             # Grab a list of clusters belonging to the same file to give as
@@ -386,6 +386,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
             localends.append(max(clustersinsamefilelist).end)
             filelist.append(clustersinsamefilelist[0].filetuple.filename)
             treesnentries.append(clustersinsamefilelist[0].treenentries)
+            treenames.append(clustersinsamefilelist[0].treename)
 
         # The global start and end entries are retrieved as follows:
         # - Take as start start the `start` attribute of the first
@@ -440,7 +441,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         globalstart = firstclusterinpartition.start
         globalend = lastclusterinpartition.end + lastclusterinpartition.offset - partitionoffset
 
-        clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, friendinfo))
+        clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo))
         rangeid += 1
 
     return clustered_ranges

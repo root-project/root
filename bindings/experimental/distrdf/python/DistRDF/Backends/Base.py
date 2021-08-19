@@ -121,11 +121,11 @@ class BaseBackend(ABC):
         computation_graph_callable = generator.get_callable()
 
         if isinstance(headnode, TreeHeadNode):
-            treename = headnode.treename
+            maintreename = headnode.maintreename
             defaultbranches = headnode.defaultbranches
         else:
             # Only other head node type is EmptySourceHeadNode at the moment
-            treename = None
+            maintreename = None
             nentries = headnode.nentries
 
         # Avoid having references to the instance inside the mapper
@@ -157,24 +157,24 @@ class BaseBackend(ABC):
             # environment
             initialization()
 
-            if treename is not None:
+            if maintreename is not None:
                 # Build TEntryList for this range:
                 elists = ROOT.TEntryList()
 
                 # Build TChain of files for this range:
-                chain = ROOT.TChain(treename)
-                for start, end, filename, treenentries in zip(current_range.localstarts, current_range.localends,
-                                                              current_range.filelist, current_range.treesnentries):
+                chain = ROOT.TChain(maintreename)
+                for start, end, filename, treenentries, subtreename in zip(current_range.localstarts, current_range.localends,
+                                                              current_range.filelist, current_range.treesnentries, current_range.treenames):
                     # Use default constructor of TEntryList rather than the
                     # constructor accepting treename and filename, otherwise
                     # the TEntryList would remove any url or protocol from the
                     # file name.
                     elist = ROOT.TEntryList()
-                    elist.SetTreeName(treename)
+                    elist.SetTreeName(subtreename)
                     elist.SetFileName(filename)
                     elist.EnterRange(start, end)
                     elists.AddSubList(elist)
-                    chain.Add(filename, treenentries)
+                    chain.Add(filename + "?#" + subtreename, treenentries)
 
                 # We assume 'end' is exclusive
                 chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
