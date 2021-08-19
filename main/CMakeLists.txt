@@ -75,7 +75,7 @@ configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
 set_source_files_properties(src/rootcling.cxx PROPERTIES
-  COMPILE_FLAGS ${CLING_CXXFLAGS}
+  COMPILE_FLAGS "${CLING_CXXFLAGS}"
   VISIBILITY_INLINES_HIDDEN "ON"
 )
 
