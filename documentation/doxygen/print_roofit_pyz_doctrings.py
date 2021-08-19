@@ -18,6 +18,52 @@
 import inspect
 
 
+def clean_cpp_signature(sig):
+    """Clean everything from the C++ signature that prohibits doxygen from automatically creating the correct link."""
+
+    def strip_defaults_from_param_sig(param_sig):
+        # strip default parameter values
+        split_was_at_equal_sign = [False]
+        for c in param_sig:
+            if c == "=":
+                split_was_at_equal_sign.append(True)
+            elif c == ",":
+                split_was_at_equal_sign.append(False)
+        l = param_sig.replace("=", ",").split(",")
+        l = [l for l, was in zip(l, split_was_at_equal_sign) if not was]
+        return ",".join(l)
+
+    def strip_defaults(sig):
+        pbegin = sig.index("(") + 1
+        pend = sig.rindex(")")
+        param_sig = sig[pbegin:pend]
+        return sig[:pbegin] + strip_defaults_from_param_sig(param_sig) + sig[pend:]
+
+    def strip_output(sig):
+        beg = sig.index("(")
+        tmp = sig[:beg].replace("*", "").replace("&", "")
+        return tmp.strip().split(" ")[-1] + sig[beg:]
+
+    # replace new lines
+    sig = sig.replace("\n", " ")
+
+    # remove semicolons
+    sig = sig.replace(";", "")
+
+    # remove default parameters in the signature
+    sig = strip_defaults(sig)
+
+    # remove output parameter from signature
+    sig = strip_output(sig)
+
+    # remove double whitespaces
+    while "  " in sig:
+        sig = sig.replace("  ", " ")
+
+    # return processed signature with whitespaces stripped from beginning and end
+    return sig.strip()
+
+
 def write_pyroot_block_for_class(klass):
 
     if klass.__doc__ is None:
@@ -48,7 +94,7 @@ def write_pyroot_block_for_member_func(func):
         sigs = [sigs]
 
     for sig in sigs:
-        print("\\fn " + func._cpp_signature)
+        print("\\fn " + clean_cpp_signature(sig))
         print("\\brief \parblock \endparblock")
         print("\htmlonly")
         print('<div class="pyrootbox">')
@@ -114,7 +160,7 @@ def print_roofit_pythonization_page():
                 if isinstance(sigs, str):
                     sigs = [sigs]
                 for sig in sigs:
-                    print("\see " + sig)
+                    print("\see " + clean_cpp_signature(sig))
                     print("")
 
 
