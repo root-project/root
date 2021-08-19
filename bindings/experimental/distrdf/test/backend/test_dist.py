@@ -6,6 +6,7 @@ from DistRDF import HeadNode
 from DistRDF import Proxy
 from DistRDF.Backends import Base
 
+import ROOT
 
 def emptysourceranges_to_tuples(ranges):
     """Convert EmptySourceRange objects to tuples with the shape (start, end)"""
@@ -13,7 +14,7 @@ def emptysourceranges_to_tuples(ranges):
 
 def treeranges_to_tuples(ranges):
     """Convert TreeRange objects to tuples with the shape (start, end, filelist)"""
-    return [(r.globalstart, r.globalend, r.localstarts, r.localends, r.filelist) for r in ranges]
+    return [(r.globalstart, r.globalend, r.localstarts, r.localends, r.filelist, r.treenames) for r in ranges]
 
 
 class BaseBackendInitTest(unittest.TestCase):
@@ -159,8 +160,8 @@ class DistRDataFrameInterface(unittest.TestCase):
         rdf = DistRDataFrameInterface.TestDataFrame(treename, filename)
 
         ranges = self.get_ranges_from_tree_rdataframe(rdf)
-        ranges_reqd = [(0, 777, [0], [777], ["2clusters.root"]),
-                       (777, 1000, [777], [1000], ["2clusters.root"])]
+        ranges_reqd = [(0, 777, [0], [777], [filename], [treename]),
+                       (777, 1000, [777], [1000], [filename], [treename])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -178,8 +179,8 @@ class DistRDataFrameInterface(unittest.TestCase):
         # Need absolute path because TChain globbing expands to full paths
         expected_inputfiles = [os.path.join(os.getcwd(), "2clusters.root")]
         ranges = self.get_ranges_from_tree_rdataframe(rdf)
-        ranges_reqd = [(0, 777, [0], [777], expected_inputfiles),
-                       (777, 1000, [777], [1000], expected_inputfiles)]
+        ranges_reqd = [(0, 777, [0], [777], expected_inputfiles, [treename]),
+                       (777, 1000, [777], [1000], expected_inputfiles, [treename])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -194,8 +195,8 @@ class DistRDataFrameInterface(unittest.TestCase):
         rdf = DistRDataFrameInterface.TestDataFrame(treename, filelist)
 
         ranges = self.get_ranges_from_tree_rdataframe(rdf)
-        ranges_reqd = [(0, 777, [0], [777], ["2clusters.root"]),
-                       (777, 1000, [777], [1000], ["2clusters.root"])]
+        ranges_reqd = [(0, 777, [0], [777], filelist, [treename]),
+                       (777, 1000, [777], [1000], filelist, [treename])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -232,10 +233,36 @@ class DistRDataFrameInterface(unittest.TestCase):
 
         ranges = self.get_ranges_from_tree_rdataframe(rdf)
         ranges_reqd = [
-            (0, 1250, [0, 0], [1000, 250], ["2clusters.root", "4clusters.root"]),
-            (250, 1000, [250], [1000], ["4clusters.root"]),
+            (0, 1250, [0, 0], [1000, 250], ["2clusters.root", "4clusters.root"], [treename, treename]),
+            (250, 1000, [250], [1000], ["4clusters.root"], [treename]),
         ]
 
+        self.assertListEqual(ranges, ranges_reqd)
+
+    def test_rdataframe_with_notreename_and_chain_with_subtrees(self):
+        """
+        Checks that we retrieve all the information to process a TChain with
+        sub trees with different names in a distributed task.
+        """
+        # Create two dummy files
+        treename1, filename1 = "entries_1","entries_1.root"
+        treename2, filename2 = "entries_2","entries_2.root"
+        ROOT.RDataFrame(10).Define("x","rdfentry_").Snapshot(treename1, filename1)
+        ROOT.RDataFrame(10).Define("x","rdfentry_").Snapshot(treename2, filename2)
+
+        chain = ROOT.TChain()
+        chain.Add(str(filename1 + "/" + treename1))
+        chain.Add(str(filename2 + "/" + treename2))
+
+        rdf = DistRDataFrameInterface.TestDataFrame(chain)
+        ranges = self.get_ranges_from_tree_rdataframe(rdf)
+        ranges_reqd = [
+            (0, 10, [0], [10], [filename1], [treename1]),
+            (0, 10, [0], [10], [filename2], [treename2])
+        ]
+
+        os.remove(filename1)
+        os.remove(filename2)
         self.assertListEqual(ranges, ranges_reqd)
 
 
