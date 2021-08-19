@@ -11,45 +11,46 @@
 ################################################################################
 
 
-r"""
-/**
-\class RooDataSet
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-
-## PyROOT
-
-Some member functions of RooDataSet that take a RooCmdArg as argument also support keyword arguments.
-So far, this applies to RooDataSet() constructor and RooDataSet::plotOnXY.
-For example, the following code is equivalent in PyROOT:
-\code{.py}
-# Directly passing a RooCmdArg:
-dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), ROOT.RooFit.StoreError(ROOT.RooArgSet(x, y)))
-
-# With keyword arguments:
-dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), StoreError=(ROOT.RooArgSet(x, y)))
-\endcode
-
-\htmlonly
-</div>
-\endhtmlonly
-*/
-"""
-
-from ._utils import _kwargs_to_roocmdargs
+from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooDataSet(object):
+    """Some member functions of RooDataSet that take a RooCmdArg as argument also support keyword arguments.
+    So far, this applies to RooDataSet() constructor and RooDataSet::plotOnXY.
+    For example, the following code is equivalent in PyROOT:
+    \code{.py}
+    # Directly passing a RooCmdArg:
+    dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), ROOT.RooFit.StoreError(ROOT.RooArgSet(x, y)))
+
+    # With keyword arguments:
+    dxy = ROOT.RooDataSet("dxy", "dxy", ROOT.RooArgSet(x, y), StoreError=(ROOT.RooArgSet(x, y)))
+    \endcode
+    """
+
+    @cpp_signature(
+        "RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(),"
+        "    const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),"
+        "    const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;"
+    )
     def __init__(self, *args, **kwargs):
+        """The RooDataSet constructor is pythonized with the command argument pythonization.
+        The keywords must correspond to the CmdArgs of the constructor.
+        """
         # Redefinition of `RooDataSet` constructor for keyword arguments.
-        # The keywords must correspond to the CmdArg of the constructor function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         self._init(*args, **kwargs)
 
+    @cpp_signature(
+        "RooPlot *RooDataSet::plotOnXY(RooPlot* frame,"
+        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
+        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
+        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
+        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+    )
     def plotOnXY(self, *args, **kwargs):
+        """The RooDataSet::plotOnXY() function is pythonized with the command argument pythonization.
+        The keywords must correspond to the CmdArgs of the function.
+        """
         # Redefinition of `RooDataSet.plotOnXY` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOnXY` function.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         return self._plotOnXY(*args, **kwargs)
