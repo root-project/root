@@ -71,6 +71,12 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, con
    for (const auto &c : fCounters) {
       output << prefix << fName << kNamespaceSeperator << c->ToString() << std::endl;
    }
+
+   for (const auto &c : fHistograms) {
+      output << prefix << fName << kNamespaceSeperator << c->ToString() << std::endl;
+      c->Dump();
+   }
+
    for (const auto c : fObservedMetrics) {
       c->Print(output, prefix + fName + ".");
    }

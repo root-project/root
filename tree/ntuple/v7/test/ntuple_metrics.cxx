@@ -134,6 +134,8 @@ TEST(Metrics, PresetIntervalHistogram)
 
    counter->Fill(35);
    EXPECT_EQ(counter->GetBinContent(34), 0);
+
+   EXPECT_EQ(counter->GetFilledBins(), 1);
 }
 
 TEST(Metrics, LogHistogramUpperBound)
@@ -146,6 +148,8 @@ TEST(Metrics, LogHistogramUpperBound)
 
    // int(log2 of 1000) == 9
    EXPECT_EQ(maxBound, 9);
+
+   EXPECT_EQ(counter->GetFilledBins(), 0);
 }
 
 TEST(Metrics, LogHistogramCount)
@@ -173,10 +177,14 @@ TEST(Metrics, LogHistogramCount)
    // 1 entries with 8 exponent
    EXPECT_EQ(counter->GetExponentCount(3), 1);
 
+   EXPECT_EQ(counter->GetFilledBins(), 3);
+
    EXPECT_EQ(counter->GetOverflowCount(), 0);
    counter->Fill(1000);
    counter->Fill(1001);
    EXPECT_EQ(counter->GetOverflowCount(), 1);
+
+   EXPECT_EQ(counter->GetFilledBins(), 5);
 }
 
 TEST(Metrics, ActiveLearningHistogram)
@@ -235,6 +243,7 @@ TEST(Metrics, ActiveLearningHistogram)
       counter->Fill(i);
    }
    EXPECT_EQ(20, counter->GetOverflow());
+   EXPECT_EQ(counter->GetFilledBins(), 12);
 }
 
 TEST(Metrics, FixedWidthIntervalHistogramZeroOffset)
@@ -269,6 +278,8 @@ TEST(Metrics, FixedWidthIntervalHistogramZeroOffset)
    EXPECT_EQ(counter->GetBinContent(299), 0);
    EXPECT_EQ(counter->GetBinContent(300), 0);
    EXPECT_EQ(counter->GetBinContent(301), 0);
+
+   EXPECT_EQ(counter->GetFilledBins(), 3);
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval1)
@@ -296,6 +307,8 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval1)
    for (uint i = 0; i < vcs.size(); i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);
    }
+
+   EXPECT_EQ(counter->GetFilledBins(), 4);
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval2)
@@ -321,6 +334,8 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval2)
    for (uint i = 0; i < vcs.size(); i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);
    }
+
+   EXPECT_EQ(counter->GetFilledBins(), 3);
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval3)
@@ -347,4 +362,6 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval3)
    for (uint i = 0; i < vcs.size(); i++) {
       EXPECT_EQ(intervals[i], vcs[i].first);
    }
+
+   EXPECT_EQ(counter->GetFilledBins(), 5);
 }

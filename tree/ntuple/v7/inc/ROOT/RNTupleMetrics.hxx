@@ -33,6 +33,7 @@
 #include <vector>
 #include <utility>
 #include <map>
+#include <fstream>
 
 namespace ROOT {
 namespace Experimental {
@@ -92,19 +93,39 @@ public:
 
    virtual ~RNTupleHistogram() = default;
 
-   std::string ToString() const
+   bool Dump() const
+   {
+      bool r = false;
+      std::ofstream outfile;
+      outfile.open(fName + ".csv");
+
+      if (outfile) {
+         r = true;
+         outfile << ToCSV();
+         outfile.close();
+      }
+
+      return r;
+   }
+
+   std::string ToCSV() const
    {
       auto all = GetAll();
-      std::string res = "";
+      std::string res = "lower_bound,upper_bound,count\n";
 
       for (auto &elem : all) {
          auto l = elem.first.first;
          auto u = elem.first.second;
          auto c = elem.second;
-         res += std::to_string(l) + "," + std::to_string(u) + "," + std::to_string(c) + ";";
+         res += std::to_string(l) + "," + std::to_string(u) + "," + std::to_string(c) + "\n";
       }
 
       return res;
+   }
+
+   std::string ToString()
+   {
+      return fName + "|" + fUnit + "|" + fDescription + "|" + std::to_string(GetFilledBins()) + " bins filled";
    }
 
    std::string GetName() const { return fName; }
@@ -112,6 +133,7 @@ public:
    std::string GetUnit() const { return fUnit; }
 
    virtual void Fill(const uint64_t &n) = 0;
+   virtual uint64_t GetFilledBins() = 0;
    virtual uint64_t GetBinContent(const uint64_t &n) = 0;
    virtual std::vector<RNTupleHistogram::HistoInterval> GetAll() const = 0;
 };
@@ -438,6 +460,21 @@ public:
       }
    };
 
+   uint64_t GetFilledBins() override
+   {
+      uint64_t count = 0;
+
+      for (auto &elem : bins) {
+         auto tmp_cnt = elem.second.second->load();
+
+         if (tmp_cnt > 0) {
+            ++count;
+         }
+      }
+
+      return count;
+   }
+
    uint64_t GetBinContent(const uint64_t &n) override
    {
       auto counter = GetMatchingCounter(n);
@@ -506,6 +543,18 @@ public:
          auto binIdx = ulog2(n);
          ++(*slots[binIdx]);
       }
+   }
+
+   uint64_t GetFilledBins() override
+   {
+      uint64_t count = 0;
+
+      for (uint i = 0; i <= fBitUpperBound + 1; i++) {
+         if (slots[i]->load() > 0)
+            ++count;
+      }
+
+      return count;
    }
 
    uint64_t GetBinContent(const uint64_t &n) override
@@ -638,6 +687,24 @@ public:
       }
    }
 
+   uint64_t GetFilledBins() override
+   {
+      uint64_t count = 0;
+
+      if (underflow.load() > 0)
+         ++count;
+
+      if (overflow.load() > 0)
+         ++count;
+
+      for (uint64_t i = 0; i < fNumBins; i++) {
+         if (bins[i]->load() > 0)
+            ++count;
+      }
+
+      return count;
+   }
+
    bool IsFlushed() { return hasFlushed; }
 
    uint64_t GetMin() { return minSample; }
@@ -746,6 +813,8 @@ public:
          ++(*bins[key]);
       }
    }
+
+   uint64_t GetFilledBins() override { return bins.size(); }
 
    uint64_t GetBinContent(const uint64_t &n) override
    {
