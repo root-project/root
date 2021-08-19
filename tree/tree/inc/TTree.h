@@ -161,6 +161,7 @@ private:
    void             SortBranchesByTime();
    Int_t            FlushBasketsImpl() const;
    void             MarkEventCluster();
+   Long64_t         GetMedianClusterSize();
 
 protected:
    virtual void     KeepCircular();
