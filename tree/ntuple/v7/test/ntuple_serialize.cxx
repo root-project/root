@@ -560,4 +560,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_GT(sizeFooter, 0);
    auto bufFooter = std::make_unique<unsigned char []>(sizeFooter);
    EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooterV1(bufFooter.get(), desc, context));
+
+   RNTupleSerializer::DeserializeHeaderV1(bufHeader.get(), context.GetHeaderSize(), builder);
+   RNTupleSerializer::DeserializeFooterV1(bufFooter.get(), sizeFooter, builder);
 }
