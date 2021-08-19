@@ -129,7 +129,7 @@ TEST(Redefine, OriginalBranchAsInputJitted)
 TEST(Redefine, OriginalDefineAsInput)
 {
    auto r = ROOT::RDataFrame(1)
-               .Define("x", [] { return 1; })
+               .Define("x", [] (ULong64_t e) { return int(e + 1); }, {"rdfentry_"})
                .Redefine("x", [](int x) { return x * 42; }, {"x"})
                .Max<int>("x");
    EXPECT_EQ(*r, 42);
