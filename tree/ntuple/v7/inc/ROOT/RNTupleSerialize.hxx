@@ -207,6 +207,9 @@ public:
    static RResult<void> DeserializeHeaderV1(const void *buffer,
                                             std::uint32_t bufSize,
                                             RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void> DeserializeFooterV1(const void *buffer,
+                                            std::uint32_t bufSize,
+                                            RNTupleDescriptorBuilder &descBuilder);
 }; // class RNTupleSerializer
 
 } // namespace Internal
