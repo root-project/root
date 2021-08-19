@@ -5354,7 +5354,7 @@ Int_t TTree::GetBranchStyle()
 /// A cache sizing factor is taken from the configuration. If this yields zero
 /// and withDefault is true the historical algorithm for default size is used.
 
-Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
+Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
    const char *stcs;
    Double_t cacheFactor = 0.0;
@@ -5371,9 +5371,14 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 
    Long64_t cacheSize = 0;
 
-   if (fAutoFlush < 0) cacheSize = Long64_t(-cacheFactor*fAutoFlush);
-   else if (fAutoFlush == 0) cacheSize = 0;
-   else cacheSize = Long64_t(cacheFactor*1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
+   if (fAutoFlush < 0) {
+      cacheSize = Long64_t(-cacheFactor * fAutoFlush);
+   } else if (fAutoFlush == 0) {
+      const auto medianClusterSize = GetMedianClusterSize();
+      cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+   } else {
+      cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+   }
 
    if (cacheSize >= (INT_MAX / 4)) {
       cacheSize = INT_MAX / 4;
@@ -5384,9 +5389,14 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    }
 
    if (cacheSize == 0 && withDefault) {
-      if (fAutoFlush < 0) cacheSize = -fAutoFlush;
-      else if (fAutoFlush == 0) cacheSize = 0;
-      else cacheSize = Long64_t(1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
+      if (fAutoFlush < 0) {
+         cacheSize = -fAutoFlush;
+      } else if (fAutoFlush == 0) {
+         const auto medianClusterSize = GetMedianClusterSize();
+         cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+      } else {
+         cacheSize = Long64_t(1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+      }
    }
 
    return cacheSize;
