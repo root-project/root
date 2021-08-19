@@ -1,7 +1,8 @@
+import unittest
+import warnings
+
 from DistRDF.HeadNode import get_headnode
 from DistRDF import Ranges
-import warnings
-import unittest
 
 
 def emptysourceranges_to_tuples(ranges):
@@ -113,10 +114,10 @@ class BuildRangesTest(unittest.TestCase):
 
         """
 
-        treename = "TotemNtuple"
-        filelist = ["backend/Slimmed_ntuple.root"]
+        treenames = ["TotemNtuple"]
+        filenames = ["backend/Slimmed_ntuple.root"]
         npartitions = 1
-        clustersinfiles = Ranges.get_clusters(treename, filelist)
+        clustersinfiles = Ranges.get_clusters(treenames, filenames)
         friendinfo = None
 
         crs = Ranges.get_clustered_ranges(clustersinfiles, npartitions, friendinfo)

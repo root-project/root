@@ -86,7 +86,7 @@ class DataFrameConstructorTests(unittest.TestCase):
         hn_3 = create_dummy_headnode("treename", reqd_vec)
 
         for hn in (hn_1, hn_2, hn_3):
-            self.assertEqual(hn.treename, "treename")
+            self.assertEqual(hn.maintreename, "treename")
 
         self.assertListEqual(hn_1.inputfiles, ["file.root"])
         self.assertListEqual(hn_2.inputfiles, rdf_2_files)
@@ -110,7 +110,7 @@ class DataFrameConstructorTests(unittest.TestCase):
         hn_2 = create_dummy_headnode("treename", "file.root", reqd_vec)
 
         for hn in (hn_1, hn_2):
-            self.assertEqual(hn.treename, "treename")
+            self.assertEqual(hn.maintreename, "treename")
             self.assertListEqual(hn.inputfiles, ["file.root"])
 
         self.assertListEqual(hn_1.defaultbranches, rdf_branches)
@@ -149,7 +149,7 @@ class DataFrameConstructorTests(unittest.TestCase):
         hn_4 = create_dummy_headnode("treename", reqd_files_vec, reqd_branches_vec)
 
         for hn in (hn_1, hn_2, hn_3, hn_4):
-            self.assertEqual(hn.treename, "treename")
+            self.assertEqual(hn.maintreename, "treename")
             self.assertListEqual(hn.inputfiles, rdf_files)
             self.assertListEqual(list(hn.defaultbranches), rdf_branches)
 
