@@ -119,6 +119,8 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       if (!fIsInitialized[slot]) {
+         for (auto &define : fDefines.GetColumns())
+            define.second->InitSlot(r, slot);
          fIsInitialized[slot] = true;
          RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs, fDataSource};
          fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
