@@ -176,7 +176,7 @@ protected:
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
    virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
-   Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE) const;
+   Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE);
    char             GetNewlineValue(std::istream &inputStream);
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
