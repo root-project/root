@@ -193,8 +193,23 @@ def pythonize_roofit_class(klass, name):
         if hasattr(klass, func_name):
             # new name for original function
             func_name_orig = make_func_name_orig(func_name)
+            func_orig = getattr(klass, func_name)
+            func_new = getattr(python_klass, func_name)
 
-            setattr(klass, func_name_orig, getattr(klass, func_name))
+            import inspect
+
+            if func_new.__doc__ is None:
+                func_new.__doc__ = func_orig.__doc__
+            elif not func_orig.__doc__ is None:
+                python_docstring = func_new.__doc__
+                func_new.__doc__ = "Pythonization info\n"
+                func_new.__doc__ += "==============\n\n"
+                func_new.__doc__ += inspect.cleandoc(python_docstring) + "\n\n"
+                func_new.__doc__ += "Documentation of original cppyy.CPPOverload object\n"
+                func_new.__doc__ += "==================================================\n\n"
+                func_new.__doc__ += func_orig.__doc__
+
+            setattr(klass, func_name_orig, func_orig)
 
         rebind_instancemethod(klass, python_klass, func_name)
 

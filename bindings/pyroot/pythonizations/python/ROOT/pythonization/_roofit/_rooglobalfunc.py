@@ -37,7 +37,7 @@ ROOT.RooMCStudy(model, ROOT.RooArgSet(x), FitOptions=dict(Save=True, PrintEvalEr
 */
 """
 
-from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute, _dict_to_std_map
+from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute, _dict_to_std_map, cpp_signature
 
 
 # Color and Style dictionary to define matplotlib conventions
@@ -54,18 +54,33 @@ _color_map = {
 _style_map = {"-": "kSolid", "--": "kDashed", ":": "kDotted", "-.": "kDashDotted"}
 
 
+@cpp_signature(
+    "FitOptions(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
+    "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
+    "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
+)
 def FitOptions(*args, **kwargs):
+    """The FitOptions() function is pythonized with the command argument pythonization.
+    The keywords must correspond to the CmdArg of the function.
+    """
     # Redefinition of `FitOptions` for keyword arguments.
-    # The keywords must correspond to the CmdArg of the `FitOptions` function.
     from cppyy.gbl import RooFit
 
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._FitOptions(*args, **kwargs)
 
 
+@cpp_signature(
+    "Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
+    "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
+    "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
+    "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
+)
 def Format(*args, **kwargs):
+    """The Format() function is pythonized with the command argument pythonization.
+    The keywords must correspond to the CmdArg of the function.
+    """
     # Redefinition of `Format` for keyword arguments.
-    # The keywords must correspond to the CmdArg of the `Format` function.
     from cppyy.gbl import RooFit
 
     if "what" in kwargs:
@@ -75,27 +90,45 @@ def Format(*args, **kwargs):
     return RooFit._Format(*args, **kwargs)
 
 
+@cpp_signature(
+    "Frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
+    "const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
+    "const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none()) ;"
+)
 def Frame(*args, **kwargs):
+    """The Frame() function is pythonized with the command argument pythonization.
+    The keywords must correspond to the CmdArg of the function.
+    """
     # Redefinition of `Frame` for keyword arguments.
-    # The keywords must correspond to the CmdArg of the `Frame` function.
     from cppyy.gbl import RooFit
 
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._Frame(*args, **kwargs)
 
 
+@cpp_signature(
+    "MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,"
+    "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
+    "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
+    "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
+)
 def MultiArg(*args, **kwargs):
+    """The MultiArg() function is pythonized with the command argument pythonization.
+    The keywords must correspond to the CmdArg of the function.
+    """
     # Redefinition of `MultiArg` for keyword arguments.
-    # The keywords must correspond to the CmdArg of the `MultiArg` function.
     from cppyy.gbl import RooFit
 
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._MultiArg(*args, **kwargs)
 
 
+@cpp_signature("YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
 def YVar(*args, **kwargs):
+    """The YVar() function is pythonized with the command argument pythonization.
+    The keywords must correspond to the CmdArg of the function.
+    """
     # Redefinition of `YVar` for keyword arguments.
-    # The keywords must correspond to the CmdArg of the `YVar` function.
     from cppyy.gbl import RooFit
 
     if "var" in kwargs:
@@ -105,9 +138,12 @@ def YVar(*args, **kwargs):
     return RooFit._YVar(*args, **kwargs)
 
 
+@cpp_signature("ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
 def ZVar(*args, **kwargs):
+    """The ZVar() function is pythonized with the command argument pythonization.
+    The keywords must correspond to the CmdArg of the function.
+    """
     # Redefinition of `ZVar` for keyword arguments.
-    # The keywords must correspond to the CmdArg of the `ZVar` function.
     from cppyy.gbl import RooFit
 
     if "var" in kwargs:
@@ -117,10 +153,13 @@ def ZVar(*args, **kwargs):
     return RooFit._ZVar(*args, **kwargs)
 
 
+@cpp_signature("Slice(std::map<RooCategory*, std::string> const&) ;")
 def Slice(*args, **kwargs):
+    """The Slice function is pythonized for converting python dict to std::map.
+    The keywords must correspond to the CmdArg of the function.
+    The instances in the dict must correspond to the template argument in std::map of the function.
+    """
     # Redefinition of `Slice` for keyword arguments and converting python dict to std::map.
-    # The keywords must correspond to the CmdArg of the `Slice` function.
-    # The instances in the dict must correspond to the template argument in std::map of the `Slice` function.
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
@@ -131,10 +170,19 @@ def Slice(*args, **kwargs):
     return RooFit._Slice(*args, **kwargs)
 
 
+@cpp_signature(
+    [
+        "Import(const std::map<std::string,RooDataSet*>& ) ;",
+        "Import(const std::map<std::string,TH1*>&) ;",
+        "Import(const std::map<std::string,RooDataHist*>&) ;",
+    ]
+)
 def Import(*args, **kwargs):
+    """The Import function is pythonized for converting python dict to std::map.
+    The keywords must correspond to the CmdArg of the function.
+    The instances in the dict must correspond to the template argument in std::map of the function.
+    """
     # Redefinition of `Import` for keyword arguments and converting python dict to std::map.
-    # The keywords must correspond to the CmdArg of the `Import` function.
-    # The instances in the dict must correspond to the template argument in std::map of the `Import` function.
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
@@ -145,10 +193,13 @@ def Import(*args, **kwargs):
     return RooFit._Import(*args, **kwargs)
 
 
+@cpp_signature("Link(const std::map<std::string,RooAbsData*>&) ;")
 def Link(*args, **kwargs):
+    """The Link function is pythonized for converting python dict to std::map.
+    The keywords must correspond to the CmdArg of the function.
+    The instances in the dict must correspond to the template argument in std::map of the function.
+    """
     # Redefinition of `Link` for keyword arguments and converting python dict to std::map.
-    # The keywords must correspond to the CmdArg of the `Link` function.
-    # The instances in the dict must correspond to the template argument in std::map of the `Link` function.
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
@@ -159,6 +210,7 @@ def Link(*args, **kwargs):
     return RooFit._Link(*args, **kwargs)
 
 
+@cpp_signature("LineColor(Color_t color) ;")
 def LineColor(color):
     # Redefinition of `LineColor` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -166,6 +218,7 @@ def LineColor(color):
     return RooFit._LineColor(_string_to_root_attribute(color, _color_map))
 
 
+@cpp_signature("FillColor(Color_t color) ;")
 def FillColor(color):
     # Redefinition of `FillColor` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -173,6 +226,7 @@ def FillColor(color):
     return RooFit._FillColor(_string_to_root_attribute(color, _color_map))
 
 
+@cpp_signature("MarkerColor(Color_t color) ;")
 def MarkerColor(color):
     # Redefinition of `MarkerColor` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -180,6 +234,7 @@ def MarkerColor(color):
     return RooFit._MarkerColor(_string_to_root_attribute(color, _color_map))
 
 
+@cpp_signature("LineStyle(Style_t style) ;")
 def LineStyle(style):
     # Redefinition of `LineStyle` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -187,6 +242,7 @@ def LineStyle(style):
     return RooFit._LineStyle(_string_to_root_attribute(style, _style_map))
 
 
+@cpp_signature("FillStyle(Style_t style) ;")
 def FillStyle(style):
     # Redefinition of `FillStyle` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -194,6 +250,7 @@ def FillStyle(style):
     return RooFit._FillStyle(_string_to_root_attribute(style, {}))
 
 
+@cpp_signature("MarkerStyle(Style_t style) ;")
 def MarkerStyle(style):
     # Redefinition of `MarkerStyle` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
