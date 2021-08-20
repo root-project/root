@@ -598,8 +598,8 @@ void TRatioPlot::Draw(Option_t *option)
 
    fUpperPad->cd();
 
-   fConfidenceInterval2->SetFillColor(fCi1Color);
-   fConfidenceInterval1->SetFillColor(fCi2Color);
+   fConfidenceInterval1->SetFillColor(fCi1Color);
+   fConfidenceInterval2->SetFillColor(fCi2Color);
 
    if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
