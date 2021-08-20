@@ -93,8 +93,8 @@ protected:
    TGraph *fRatioGraph = 0; ///< Stores the lower plot's graph
    TGraphErrors *fConfidenceInterval1 = 0; ///< Stores the graph for the 1 sigma band
    TGraphErrors *fConfidenceInterval2 = 0; ///< Stores the graph for the 2 sigma band
-   Color_t fCi1Color = kGreen; ///< Stores the color for the 1 sigma band
-   Color_t fCi2Color = kYellow; ///< Stores the color for the 2 sigma band
+   Color_t fCi1Color = kYellow; ///< Stores the color for the 1 sigma band
+   Color_t fCi2Color = kGreen; ///< Stores the color for the 2 sigma band
 
    Bool_t fShowConfidenceIntervals = kTRUE; ///< Stores whether to show the confidence interval bands. From Draw option
 
@@ -256,7 +256,7 @@ public:
    virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines);
    virtual void SetGridlines(std::vector<double> gridlines);
 
-   void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
+   void SetConfidenceIntervalColors(Color_t ci1 = kYellow, Color_t ci2 = kGreen);
 
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }
