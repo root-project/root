@@ -141,6 +141,8 @@ public:
    void SetFilterExpr(const char* filter);
    void ApplyFilter();
 
+   const char* GetFilterExpr(){return fFilterExpr.Data();}
+
    Int_t GetNItems() const { return (Int_t) fItemList->fItems.size(); }
    void *GetDataPtr(Int_t i) const { return  fItemList->fItems[i]->GetDataPtr(); }
    const REveDataItem* GetDataItem(Int_t i) const { return  fItemList->fItems[i]; }
