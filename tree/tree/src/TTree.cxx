@@ -5379,7 +5379,10 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
       cacheSize = Long64_t(-cacheFactor * fAutoFlush);
    } else if (fAutoFlush == 0) {
       const auto medianClusterSize = GetMedianClusterSize();
-      cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+      if (medianClusterSize > 0)
+         cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+      else
+         cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
    } else {
       cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
    }
@@ -5397,7 +5400,10 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
          cacheSize = -fAutoFlush;
       } else if (fAutoFlush == 0) {
          const auto medianClusterSize = GetMedianClusterSize();
-         cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+         if (medianClusterSize > 0)
+            cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+         else
+            cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
       } else {
          cacheSize = Long64_t(1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
       }
