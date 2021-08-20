@@ -46,7 +46,7 @@ class FriendInfoTest(unittest.TestCase):
         ff.Write()
         ff.Close()
 
-    def test_friend_info_with_ttree(self):
+    def test_friendinfo_with_ttree(self):
         """
         Check that RFriendInfo correctly stores information about the friend
         trees
@@ -73,12 +73,12 @@ class FriendInfoTest(unittest.TestCase):
         headnode = create_dummy_headnode(maintree)
 
         # Retrieve information about friends
-        friend_info = headnode.friendinfo
+        friendinfo = headnode.friendinfo
 
         # Convert to Python collections
-        friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friend_info.fFriendNames]
-        friendfilenames = [[str(filename) for filename in filenames] for filenames in friend_info.fFriendFileNames]
-        friendchainsubnames = [[str(chainsubname) for chainsubname in chainsubnames] for chainsubnames in friend_info.fFriendChainSubNames]
+        friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friendinfo.fFriendNames]
+        friendfilenames = [[str(filename) for filename in filenames] for filenames in friendinfo.fFriendFileNames]
+        friendchainsubnames = [[str(chainsubname) for chainsubname in chainsubnames] for chainsubnames in friendinfo.fFriendChainSubNames]
 
         # Check that the three lists with treenames, filenames and subnames are populated
         # as expected.
@@ -91,7 +91,7 @@ class FriendInfoTest(unittest.TestCase):
         os.remove(friend_tree_filename)
 
 
-    def test_friend_info_chain_with_subnames(self):
+    def test_friendinfo_chain_with_subnames(self):
         """
         Check that RFriendInfo correctly stores information about the friend
         trees
@@ -123,12 +123,12 @@ class FriendInfoTest(unittest.TestCase):
         headnode = create_dummy_headnode(maintree)
 
         # Retrieve information about friends
-        friend_info = headnode.friendinfo
+        friendinfo = headnode.friendinfo
 
         # Convert to Python collections
-        friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friend_info.fFriendNames]
-        friendfilenames = [[str(filename) for filename in filenames] for filenames in friend_info.fFriendFileNames]
-        friendchainsubnames = [[str(chainsubname) for chainsubname in chainsubnames] for chainsubnames in friend_info.fFriendChainSubNames]
+        friendnamesalias = [(str(pair.first), str(pair.second)) for pair in friendinfo.fFriendNames]
+        friendfilenames = [[str(filename) for filename in filenames] for filenames in friendinfo.fFriendFileNames]
+        friendchainsubnames = [[str(chainsubname) for chainsubname in chainsubnames] for chainsubnames in friendinfo.fFriendChainSubNames]
 
         # Check that the three lists with treenames, filenames and subnames are populated
         # as expected.

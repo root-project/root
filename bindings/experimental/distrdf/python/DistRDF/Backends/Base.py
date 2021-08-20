@@ -184,8 +184,8 @@ class BaseBackend(ABC):
 
                 # Gather information about friend trees. Check that we got an
                 # RFriendInfo struct and that it's not empty
-                if (current_range.friend_info is not None and
-                    not current_range.friend_info.fFriendNames.empty()):
+                if (current_range.friendinfo is not None and
+                    not current_range.friendinfo.fFriendNames.empty()):
                     # Zip together the information about friend trees. Each
                     # element of the iterator represents a single friend tree.
                     # If the friend is a TChain, the zipped information looks like:
@@ -194,12 +194,12 @@ class BaseBackend(ABC):
                     # only one filename and the list of names of the sub trees
                     # is empty, so the zipped information looks like:
                     # (name, alias), (filename.root, ), ()
-                    zipped_friend_info = zip(
-                        current_range.friend_info.fFriendNames,
-                        current_range.friend_info.fFriendFileNames,
-                        current_range.friend_info.fFriendChainSubNames
+                    zipped_friendinfo = zip(
+                        current_range.friendinfo.fFriendNames,
+                        current_range.friendinfo.fFriendFileNames,
+                        current_range.friendinfo.fFriendChainSubNames
                     )
-                    for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friend_info:
+                    for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
                         # Start a TChain with the current friend treename
                         friend_chain = ROOT.TChain(str(friend_name))
                         # Add each corresponding file to the TChain
