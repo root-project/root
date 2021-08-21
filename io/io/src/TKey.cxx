@@ -325,6 +325,12 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       actualStart = obj;
    }
 
+   if (clActual->InheritsFrom("TNamed")){
+      // This object has its own title, overwrite default one
+      auto namedobj = static_cast<const TNamed *>(clActual->DynamicCast(TNamed::Class(), obj));
+      SetTitle(namedobj->GetTitle());
+   }
+
    Build(motherDir, clActual->GetName(), -1);
 
    fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
