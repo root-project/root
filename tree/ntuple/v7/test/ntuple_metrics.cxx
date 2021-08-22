@@ -136,6 +136,7 @@ TEST(Metrics, PresetIntervalHistogram)
    EXPECT_EQ(counter->GetBinContent(34), 0);
 
    EXPECT_EQ(counter->GetFilledBins(), 1);
+   EXPECT_EQ(counter->GetTotal(), 79);
 }
 
 TEST(Metrics, LogHistogramUpperBound)
@@ -150,6 +151,7 @@ TEST(Metrics, LogHistogramUpperBound)
    EXPECT_EQ(maxBound, 9);
 
    EXPECT_EQ(counter->GetFilledBins(), 0);
+   EXPECT_EQ(counter->GetTotal(), 0);
 }
 
 TEST(Metrics, LogHistogramCount)
@@ -185,16 +187,18 @@ TEST(Metrics, LogHistogramCount)
    EXPECT_EQ(counter->GetOverflowCount(), 1);
 
    EXPECT_EQ(counter->GetFilledBins(), 5);
+   EXPECT_EQ(counter->GetTotal(), 2032);
 }
 
 TEST(Metrics, ActiveLearningHistogram)
 {
+   uint64_t total = 0;
    RNTupleMetrics inner("inner");
    RNTupleHistoActiveLearn *counter = inner.MakeHistogram<RNTupleHistoActiveLearn *>("plain", "", "example 1", 10, 100);
 
    for (uint64_t i = 10; i < 110; i++) {
       counter->Fill(i);
-
+      total += i;
       EXPECT_EQ(i, counter->GetMax());
    }
 
@@ -207,6 +211,7 @@ TEST(Metrics, ActiveLearningHistogram)
    // not yet flushed
    EXPECT_EQ(false, counter->IsFlushed());
    counter->Fill(109);
+   total += 109;
 
    // flush after 101th entry
    EXPECT_EQ(true, counter->IsFlushed());
@@ -234,6 +239,7 @@ TEST(Metrics, ActiveLearningHistogram)
    EXPECT_EQ(0, counter->GetUnderflow());
    for (uint i = 0; i < 10; i++) {
       counter->Fill(i);
+      total += i;
    }
    EXPECT_EQ(10, counter->GetUnderflow());
 
@@ -241,9 +247,11 @@ TEST(Metrics, ActiveLearningHistogram)
    EXPECT_EQ(0, counter->GetOverflow());
    for (uint i = 200; i < 220; i++) {
       counter->Fill(i);
+      total += i;
    }
    EXPECT_EQ(20, counter->GetOverflow());
    EXPECT_EQ(counter->GetFilledBins(), 12);
+   EXPECT_EQ(counter->GetTotal(), total);
 }
 
 TEST(Metrics, FixedWidthIntervalHistogramZeroOffset)
@@ -280,6 +288,8 @@ TEST(Metrics, FixedWidthIntervalHistogramZeroOffset)
    EXPECT_EQ(counter->GetBinContent(301), 0);
 
    EXPECT_EQ(counter->GetFilledBins(), 3);
+   EXPECT_EQ(counter->GetTotal(), 988);
+
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval1)
@@ -309,6 +319,7 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval1)
    }
 
    EXPECT_EQ(counter->GetFilledBins(), 4);
+   EXPECT_EQ(counter->GetTotal(), 772);
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval2)
@@ -336,6 +347,7 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval2)
    }
 
    EXPECT_EQ(counter->GetFilledBins(), 3);
+   EXPECT_EQ(counter->GetTotal(), 772);
 }
 
 TEST(Metrics, MatchingFixedWidthHistogramInterval3)
@@ -364,4 +376,5 @@ TEST(Metrics, MatchingFixedWidthHistogramInterval3)
    }
 
    EXPECT_EQ(counter->GetFilledBins(), 5);
+   EXPECT_EQ(counter->GetTotal(), 1102);
 }

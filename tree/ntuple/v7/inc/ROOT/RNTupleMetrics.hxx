@@ -85,6 +85,7 @@ public:
    std::string fName;
    std::string fUnit;
    std::string fDescription;
+   std::atomic<uint64_t> fTotal{0};
 
    RNTupleHistogram(const std::string &name, const std::string &unit, const std::string &desc)
       : fName(name), fUnit(unit), fDescription(desc)
@@ -92,6 +93,10 @@ public:
    }
 
    virtual ~RNTupleHistogram() = default;
+
+   void AddToTotal(const uint64_t &n) {
+      fTotal += n;
+   }
 
    bool Dump() const
    {
@@ -125,12 +130,13 @@ public:
 
    std::string ToString()
    {
-      return fName + "|" + fUnit + "|" + fDescription + "|" + std::to_string(GetFilledBins()) + " bins filled";
+      return fName + "|" + fUnit + "|" + fDescription + "|integral is " + std::to_string(GetTotal());
    }
 
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
    std::string GetUnit() const { return fUnit; }
+   uint64_t GetTotal() { return fTotal.load(); }
 
    virtual void Fill(const uint64_t &n) = 0;
    virtual uint64_t GetFilledBins() = 0;
@@ -451,8 +457,9 @@ public:
       }
    };
 
-   void Fill(const uint64_t &n) override
+   void Fill(const uint64_t &n) override 
    {
+      AddToTotal(n);
       auto counter = GetMatchingCounter(n);
 
       if (counter != nullptr) {
@@ -537,6 +544,7 @@ public:
 
    void Fill(const uint64_t &n) override
    {
+      AddToTotal(n);
       if (n > fUpperBound) {
          ++(*slots[fBitUpperBound + 1]);
       } else {
@@ -684,6 +692,7 @@ public:
 
             ++(*bins[idx]);
          }
+         AddToTotal(n);
       }
    }
 
@@ -805,6 +814,7 @@ public:
 
    void Fill(const uint64_t &n) override
    {
+      AddToTotal(n);
       auto key = GetMatchingKey(n);
 
       if (!ExistsKey(key)) {
