@@ -42,40 +42,47 @@
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
-
-enum class LayerType{
-   DENSE = 0, ACTIVATION = 1, RELU = 2, TRANSPOSE = 3 //order sensitive
-
-};
+namespace PyKeras{
 
 namespace INTERNAL{
-   std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias,std::string dtype);
-   std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, std::string dtype);
-   std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, std::string dtype);
+   std::unique_ptr<ROperator> AddKerasLayer(PyObject* fLayer);
+   std::unique_ptr<ROperator> AddKerasActivation(PyObject* fLayer);
+   std::unique_ptr<ROperator> AddKerasReLU(PyObject* fLayer);
+   std::unique_ptr<ROperator> AddKerasPermute(PyObject* fLayer);
 
-   const std::unordered_map<std::string, LayerType> Type =
+   std::pair<std::unique_ptr<ROperator>,std::unique_ptr<ROperator>> AddKerasLayerWithActivation(PyObject* fLayer);
+   std::unique_ptr<ROperator> AddKerasDense(PyObject* fLayer);
+   //std::unique_ptr<ROperator> AddKerasConv(PyObject* fLayer);
+
+   using KerasMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fLayer)>;
+   using KerasMethodMapWithActivation = std::unordered_map<std::string, std::unique_ptr<ROperator>(*)(PyObject* fLayer)>;
+
+   const KerasMethodMap mapKerasLayer =
     {
-        {"'Dense'", LayerType::DENSE},
-        {"'Activation'", LayerType::ACTIVATION},
-        {"'ReLU'", LayerType::RELU},
-        {"'Permute'", LayerType::TRANSPOSE}
+        {"'Activation'", &AddKerasActivation},
+        {"'Permute'", &AddKerasPermute},
+
+        //For activation layers
+        {"'ReLU'", &AddKerasReLU},
+
+        //For layers with activation attributes
+        {"'relu'", &AddKerasReLU}
     };
 
-  const std::unordered_map<std::string, LayerType> ActivationType =
+    const KerasMethodMapWithActivation mapKerasLayerWithActivation =
     {
-        {"'relu'", LayerType::RELU},
+        {"'Dense'", &AddKerasDense},
+        //{"'Convolution'",&add_keras_conv}
     };
+}//INTERNAL
 
-}
 
-namespace PyKeras{
     void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
     const char* PyStringAsString(PyObject* str);
     std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple);
     RModel Parse(std::string filepath);
-  };
-}
-}
-}
-
+}//PyKeras
+}//SOFIE
+}//Experimental
+}//TMVA
 #endif //TMVA_PYMVA_RMODELPARSER_KERAS

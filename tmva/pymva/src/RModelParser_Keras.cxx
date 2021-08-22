@@ -3,12 +3,64 @@
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
-
+namespace PyKeras{
 
 namespace INTERNAL{
 
-   std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias, ETensorType dtype)
-   {
+    std::unique_ptr<ROperator> AddKerasLayer(PyObject* fLayer){
+      std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
+      auto findLayer = mapKerasLayer.find(fLayerType);
+      if(findLayer == mapKerasLayer.end()){
+         throw std::runtime_error("TMVA::SOFIE - Parsing Keras layer " + fLayerType + " is not yet supported");
+      }
+      return (findLayer->second)(fLayer);
+   }
+
+   std::pair<std::unique_ptr<ROperator>,std::unique_ptr<ROperator>> AddKerasLayerWithActivation(PyObject* fLayer){
+      std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
+      auto findLayer = mapKerasLayerWithActivation.find(fLayerType);
+      if(findLayer == mapKerasLayerWithActivation.end()){
+         throw std::runtime_error("TMVA::SOFIE - Parsing Keras layer " + fLayerType + " is not yet supported");
+      }
+      std::pair<std::unique_ptr<ROperator>,std::unique_ptr<ROperator>> op;
+      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
+      std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
+      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fLayer,"name"));
+
+      if(fLayerActivation != "'linear'"){
+
+         std::string fLayerOutputName = PyStringAsString(PyDict_GetItemString(fLayer,"layerOutput"));
+         PyDict_SetItemString(fLayer,"layerOutput",PyUnicode_FromString((fLayerName+fLayerType).c_str()));
+         op.first = (findLayer->second)(fLayer);
+
+         PyDict_SetItemString(fLayer,"layerInput",PyDict_GetItemString(fLayer,"layerOutput"));
+         PyDict_SetItemString(fLayer,"layerOutput",PyUnicode_FromString(fLayerOutputName.c_str()));
+
+         auto findActivationLayer = mapKerasLayer.find(fLayerActivation);
+         if(findActivationLayer == mapKerasLayer.end()){
+            throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
+         }
+         op.second = (findActivationLayer->second)(fLayer);
+      }
+      else{
+         op.first=(findLayer->second)(fLayer);
+         op.second=nullptr;
+      }
+      return op;
+   }
+
+   std::unique_ptr<ROperator> AddKerasDense(PyObject* fLayer){
+      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+
+      std::string fLayerInput  = PyKeras::PyStringAsString(fInputs);
+      std::string fLayerOutput = PyKeras::PyStringAsString(fOutputs);
+
+      PyObject* fWeightsNames = PyDict_GetItemString(fLayer,"layerWeight");
+      std::string kernel = PyKeras::PyStringAsString(PyList_GetItem(fWeightsNames,0));
+      std::string bias   = PyKeras::PyStringAsString(PyList_GetItem(fWeightsNames,1));
+
       std::unique_ptr<ROperator> op;
 
       float attr_alpha = 1.0;
@@ -16,53 +68,81 @@ namespace INTERNAL{
       int_t attr_transA = 0;
       int_t attr_transB = 0;
 
-      switch(dtype){
+      switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
-         op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, input, kernel, bias, output));
+         op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, fLayerInput, kernel, bias, fLayerOutput));
          break;
 
          default:
-         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + ConvertTypeToString(dtype));
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + fLayerDType);
          }
-
          return op;
    }
 
-   std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, ETensorType dtype)
+   std::unique_ptr<ROperator> AddKerasActivation(PyObject* fLayer){
+      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
+      std::string fLayerActivation = PyKeras::PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
+      auto findLayer = mapKerasLayer.find(fLayerActivation);
+      if(findLayer == mapKerasLayer.end()){
+         throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
+      }
+      return (findLayer->second)(fLayer);
+   }
+
+
+   std::unique_ptr<ROperator> AddKerasReLU(PyObject* fLayer)
    {
+      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      std::string fLayerDType = PyKeras::PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+
+      std::string fLayerInput  = PyKeras::PyStringAsString(fInputs);
+      std::string fLayerOutput = PyKeras::PyStringAsString(fOutputs);
       std::unique_ptr<ROperator> op;
-      switch(dtype){
+      switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
-         op.reset(new ROperator_Relu<float>(input, output));
+         op.reset(new ROperator_Relu<float>(fLayerInput, fLayerOutput));
          break;
          default:
-         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + ConvertTypeToString(dtype));
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + fLayerDType);
          }
    return op;
    }
 
-   std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, ETensorType dtype)
+   std::unique_ptr<ROperator> AddKerasPermute(PyObject* fLayer)
    {
+      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+
+      std::string fLayerInput      = PyKeras::PyStringAsString(fInputs);
+      std::string fLayerOutput     = PyKeras::PyStringAsString(fOutputs);
+      PyObject* fAttributePermute=PyDict_GetItemString(fAttributes,"dims");
+      std::vector<int_t>fPermuteDims;
+      for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(fAttributePermute);++tupleIter){
+
+         fPermuteDims.push_back((int_t)PyLong_AsLong(PyTuple_GetItem(fAttributePermute,tupleIter)));
+      }
       std::unique_ptr<ROperator> op;
-      std::vector<int_t> attr_perm=dims;
-      switch(dtype){
+      switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
-            if (!attr_perm.empty()){
-               op.reset(new ROperator_Transpose<float>(attr_perm, input, output));
+            if (!fPermuteDims.empty()){
+               op.reset(new ROperator_Transpose<float>(fPermuteDims, fLayerInput, fLayerInput));
                }
             else{
-               op.reset(new ROperator_Transpose<float> (input, output));
+               op.reset(new ROperator_Transpose<float> (fLayerInput, fLayerInput));
                }
          break;
          default:
-            throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + ConvertTypeToString(dtype));
+            throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + fLayerDType);
             }
    return op;
    }
 
-}
+}//INTERNAL
 
-namespace PyKeras{
+
 
 void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
    PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
@@ -146,110 +226,44 @@ std::vector<size_t> GetShapeFromTuple(PyObject* shapeTuple){
    PyRunString("for idx in range(len(model.layers)):\n"
             "  layer=model.get_layer(index=idx)\n"
             "  globals().update(locals())\n"
-            "  layerData=[]\n"
-            "  layerData.append(layer.__class__.__name__)\n"
-            "  layerData.append(layer.get_config())\n"
-            "  layerData.append(layer.input)\n"
-            "  layerData.append(layer.output)\n"
-            "  layerData.append([x.name for x in layer.weights])\n"
+            "  layerData={}\n"
+            "  layerData['layerType']=layer.__class__.__name__\n"
+            "  layerData['layerAttributes']=layer.get_config()\n"
+            "  layerData['layerInput']=[x.name for x in layer.input] if isinstance(layer.input,list) else [layer.input.name]\n"
+            "  layerData['layerOutput']=[x.name for x in layer.output] if isinstance(layer.output,list) else [layer.output.name]\n"
+            "  layerData['layerDType']=layer.dtype\n"
+            "  layerData['layerWeight']=[x.name for x in layer.weights]\n"
             "  modelData.append(layerData)",fGlobalNS,fLocalNS);
 
 
    PyObject* fPModel = PyDict_GetItemString(fLocalNS,"modelData");
-   PyObject *fLayer,*fAttributes,*fInputs,*fOutputs, *fWeightsNames;
+   PyObject *fLayer;
    Py_ssize_t fModelSize = PyList_Size(fPModel);
-   std::string fLayerName, fLayerType, fLayerActivation, fLayerInput, fLayerOutput;
-   ETensorType fLayerDType;
+   std::string fLayerType;
 
    for(Py_ssize_t fModelIterator=0;fModelIterator<fModelSize;++fModelIterator){
       fLayer     = PyList_GetItem(fPModel,fModelIterator);
-      fLayerType = PyStringAsString(PyList_GetItem(fLayer,0));
+      fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
 
       //Ignoring the input layer for models built using Keras Functional API
       if(fLayerType == "'InputLayer'")
       continue;
 
-      fAttributes=PyList_GetItem(fLayer,1);
-      fInputs=PyList_GetItem(fLayer,2);
-      fOutputs=PyList_GetItem(fLayer,3);
-      fLayerDType = ConvertStringToType(PyStringAsString(PyDict_GetItemString(fAttributes,"dtype")));
-
-      switch(INTERNAL::Type.find(fLayerType)->second){
-
-         case LayerType::DENSE : {
-
-            fLayerName       = PyStringAsString(PyDict_GetItemString(fAttributes,"name"));
-            fLayerInput      = PyStringAsString(PyObject_GetAttrString(fInputs,"name"));
-            fLayerOutput     = PyStringAsString(PyObject_GetAttrString(fOutputs,"name"));
-            fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
-
-            fWeightsNames = PyList_GetItem(fLayer,4);
-            std::string kernel = PyStringAsString(PyList_GetItem(fWeightsNames,0));
-            std::string bias   = PyStringAsString(PyList_GetItem(fWeightsNames,1));
-
-                  if(fLayerActivation != "'linear'"){
-                     rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(fLayerInput,fLayerName+"Gemm",kernel,bias,fLayerDType)));
-
-                     if(INTERNAL::ActivationType.find(fLayerActivation)==INTERNAL::ActivationType.end())
-                       throw std::runtime_error("Type error: Layer activation type "+fLayerActivation+" not yet registered in TMVA SOFIE");
-
-                     switch(INTERNAL::ActivationType.find(fLayerActivation)->second){
-                        case LayerType::RELU: {
-                           rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(fLayerName+"Gemm",fLayerOutput,fLayerDType)));
-                           break;
-                        }
-                        default: throw std::runtime_error("Activation error: TMVA SOFIE does not yet suppport Activation type"+fLayerActivation);
-                        }
-                        }
-                  else{
-                     rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(fLayerInput,fLayerOutput,kernel,bias,fLayerDType)));
-                  }
-
-                  break;
-               }
-
-         case LayerType::ACTIVATION: {
-            fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
-            fLayerInput      = PyStringAsString(PyObject_GetAttrString(fInputs,"name"));
-            fLayerOutput     = PyStringAsString(PyObject_GetAttrString(fOutputs,"name"));
-
-            switch(INTERNAL::ActivationType.find(fLayerActivation)->second){
-               case LayerType::RELU: {
-                  rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(fLayerInput,fLayerOutput,fLayerDType)));
-                  break;
-                  }
-               default: throw std::runtime_error("Activation error: TMVA SOFIE does not yet suppport Activation type"+fLayerActivation);
-               }
-               break;
-         }
-
-         case LayerType::RELU: {
-            fLayerInput  = PyStringAsString(PyObject_GetAttrString(fInputs,"name"));
-            fLayerOutput = PyStringAsString(PyObject_GetAttrString(fOutputs,"name"));
-            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(fLayerInput,fLayerOutput,fLayerDType)));
-            break;
-            }
-
-         case LayerType::TRANSPOSE: {
-            fLayerInput  = PyStringAsString(PyObject_GetAttrString(fInputs,"name"));
-            fLayerOutput = PyStringAsString(PyObject_GetAttrString(fOutputs,"name"));
-            PyObject* fAttributePermute=PyDict_GetItemString(fAttributes,"dims");
-            std::vector<int_t>fPermuteDims;
-            for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(fAttributePermute);++tupleIter){
-
-               fPermuteDims.push_back((int_t)PyLong_AsLong(PyTuple_GetItem(fAttributePermute,tupleIter)));
-            }
-            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Transpose(fLayerInput,fLayerOutput,fPermuteDims,fLayerDType)));
-            break;
-            }
-         default: throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+fLayerType);
-         }
-         }
-
+      if(INTERNAL::mapKerasLayerWithActivation.find(fLayerType)==INTERNAL::mapKerasLayerWithActivation.end()){
+         rmodel.AddOperator(INTERNAL::AddKerasLayer(fLayer));
+      }
+      else{
+          std::pair<std::unique_ptr<ROperator>,std::unique_ptr<ROperator>> fLayerWithActivation = INTERNAL::AddKerasLayerWithActivation(fLayer);
+          rmodel.AddOperator(std::move(fLayerWithActivation.first));
+          if(fLayerWithActivation.second!=nullptr)
+          rmodel.AddOperator(std::move(fLayerWithActivation.second));
+      }
+   }
 
    //Extracting model's weights
    //For every initialized tensor, weightProp will have its name and dtype in string
    //and value in numpy array
+   PyRunString("globals().update(locals())",fGlobalNS,fLocalNS);
    PyRunString("weight=[]",fGlobalNS,fLocalNS);
    PyRunString("for idx in range(len(model.get_weights())):\n"
                "  weightProp={}\n"
