@@ -1062,6 +1062,18 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
    fDescriptor.fClusterDescriptors[clusterId].fPageRanges.emplace(pageRange.fColumnId, std::move(pageRange));
 }
 
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(
+   Internal::RNTupleSerializer::RClusterSummary &clusterSummary)
+{
+   fClusterSummaries.push_back(clusterSummary);
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
+   Internal::RNTupleSerializer::RClusterGroup &clusterGroup)
+{
+   fClusterGroups.push_back(clusterGroup);
+}
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
 {
    fDescriptor.fName = "";

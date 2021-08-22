@@ -733,6 +733,8 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    std::uint32_t fHeaderCRC32 = 0;
+   std::vector<Internal::RNTupleSerializer::RClusterSummary> fClusterSummaries;
+   std::vector<Internal::RNTupleSerializer::RClusterGroup> fClusterGroups;
 
 public:
    /// Checks whether invariants hold:
@@ -762,6 +764,9 @@ public:
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
+
+   void AddClusterSummary(Internal::RNTupleSerializer::RClusterSummary &clusterSummary);
+   void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
