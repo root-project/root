@@ -1202,7 +1202,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    if (nColumnGroups > 0)
-      R__LOG_WARNING(NTupleLog()) << "sharded clusters are still unsupported";
+      return R__FAIL("sharded clusters are still unsupported");
    bytes = frame + frameSize;
 
    std::uint32_t nClusterSummaries;
@@ -1210,8 +1210,17 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    result = DeserializeFrame(bytes, fnBufSize(), frameSize, nClusterSummaries);
    if (!result)
       return R__FORWARD_ERROR(result);
-   if (nClusterSummaries > 0)
-      R__LOG_WARNING(NTupleLog()) << "cluster summaries are still unsupported";
+   bytes += result.Unwrap();
+   for (std::uint32_t clusterId = 0; clusterId < nClusterSummaries; ++clusterId) {
+      RClusterSummary clusterSummary;
+      result = DeserializeClusterSummary(bytes, fnFrameSize(), clusterSummary);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+      if (clusterSummary.fColumnGroupID >= 0)
+         return R__FAIL("sharded clusters are still unsupported");
+      descBuilder.AddClusterSummary(clusterSummary);
+   }
    bytes = frame + frameSize;
 
    std::uint32_t nClusterGroups;
@@ -1219,8 +1228,15 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    result = DeserializeFrame(bytes, fnBufSize(), frameSize, nClusterGroups);
    if (!result)
       return R__FORWARD_ERROR(result);
-   if (nClusterGroups > 0)
-      R__LOG_WARNING(NTupleLog()) << "cluster groups are still unsupported";
+   bytes += result.Unwrap();
+   for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
+      RClusterGroup clusterGroup;
+      result = DeserializeClusterGroup(bytes, fnFrameSize(), clusterGroup);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+      descBuilder.AddClusterGroup(clusterGroup);
+   }
    bytes = frame + frameSize;
 
    std::uint32_t nMDBlocks;
