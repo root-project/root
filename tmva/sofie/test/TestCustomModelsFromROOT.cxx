@@ -27,9 +27,30 @@
 #include "ConvWithAsymmetricPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
 
+#include "RNNBatchwise_FromROOT.hxx"
+#include "input_models/references/RNNBatchwise.ref.hxx"
+
+#include "RNNBidirectional_FromROOT.hxx"
+#include "input_models/references/RNNBidirectional.ref.hxx"
+
+#include "RNNBidirectionalBatchwise_FromROOT.hxx"
+#include "input_models/references/RNNBidirectionalBatchwise.ref.hxx"
+
+#include "RNNDefaults_FromROOT.hxx"
+#include "input_models/references/RNNDefaults.ref.hxx"
+
+#include "RNNSeqLength_FromROOT.hxx"
+#include "input_models/references/RNNSeqLength.ref.hxx"
+
+#include "RNNSequence_FromROOT.hxx"
+#include "input_models/references/RNNSequence.ref.hxx"
+
+#include "RNNSequenceBatchwise_FromROOT.hxx"
+#include "input_models/references/RNNSequenceBatchwise.ref.hxx"
+
 #include "gtest/gtest.h"
 
-constexpr float DEFAULT_TOLERANCE = 1e-6f;
+constexpr float DEFAULT_TOLERANCE = 1e-3f;
 
 TEST(ROOT, Linear16)
 {
@@ -216,5 +237,240 @@ TEST(ROOT, ConvWithAsymmetricPadding)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNBatchwise)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBatchwise::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), sizeof(RNNBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = RNNBatchwise_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNBidirectional)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({0.,    0.01, 0.02, 0.03, 0.04, 0.05,
+                             0.06, 0.07, 0.08, 0.09, 0.1,  0.11,
+                             0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBidirectional::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNBidirectional_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = RNNBidirectional_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(RNNBidirectional_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = RNNBidirectional_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNBidirectionalBatchwise)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({
+      0,    0.01, 0.06, 0.07, 0.12, 0.13,
+      0.02, 0.03, 0.08, 0.09, 0.14, 0.15,
+      0.04, 0.05, 0.1,  0.11, 0.16, 0.17});
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBidirectionalBatchwise::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNBidirectionalBatchwise_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = RNNBidirectionalBatchwise_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(RNNBidirectionalBatchwise_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = RNNBidirectionalBatchwise_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNDefaults)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(9);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNDefaults::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNDefaults_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = RNNDefaults_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(RNNDefaults_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = RNNDefaults_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNSeqLength)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(18);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSeqLength::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNSeqLength_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = RNNSeqLength_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(RNNSeqLength_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = RNNSeqLength_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNSequence)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({
+      0.01,   -0.01,   0.08,    0.09,  0.001,
+      0.09,   -0.7,   -0.35,    0.0,   0.001,
+      0.16,   -0.19,   0.003,   0.0,   0.0001,
+      0.05,   -0.09,   0.013,   0.5,   0.005,
+      0.2,    -0.05,   0.062,  -0.04, -0.04,
+      0.0,     0.0,    0.0,     0.0,   0.0,
+      0.06,    0.087,  0.01,    0.3,  -0.001,
+      0.0,     0.0,    0.0,     0.0,   0.0,
+      0.0,     0.0,    0.0,     0.0,   0.0});
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSequence::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNSequence_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = RNNSequence_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(RNNSequence_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = RNNSequence_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RNNSequenceBatchwise)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({
+      0.01,  -0.01,   0.08,   0.09,  0.001,
+      0.05,  -0.09,   0.013,  0.5,   0.005,
+      0.06,   0.087,  0.01,   0.3,  -0.001,
+      0.09,   -0.7,  -0.35,   0.0,   0.001,
+      0.2,    -0.05,  0.062, -0.04, -0.04,
+      0.0,     0.0,   0.0,    0.0,   0.0,
+      0.16,  -0.19,   0.003,  0.0,   0.0001,
+      0.0,     0.0,   0.0,    0.0,   0.0,
+      0.0,     0.0,   0.0,    0.0,   0.0});
+   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSequenceBatchwise::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(RNNSequenceBatchwise_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = RNNSequenceBatchwise_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(RNNSequenceBatchwise_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = RNNSequenceBatchwise_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
