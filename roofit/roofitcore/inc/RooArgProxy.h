@@ -61,6 +61,8 @@ public:
 
 protected:
 
+  friend class RooRealIntegral;
+
   bool changePointer(const RooAbsCollection& newServerSet, bool nameChange=false, bool factoryInitMode=false) override ;
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;

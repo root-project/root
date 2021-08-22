@@ -102,8 +102,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _anaList("!anaList","Variables to be integrated analytically",this,false,false),
   _jacList("!jacList","Jacobian product term",this,false,false),
   _facList("!facList","Variables independent of function",this,false,true),
-  _function("!func","Function to be integrated",this,
-       const_cast<RooAbsReal&>(function),false,false),
+  _function("!func","Function to be integrated",this,false,false),
   _iconfig((RooNumIntConfig*)config),
   _sumCat("!sumCat","SuperCategory for summation",this,false,false),
   _mode(0),
@@ -406,7 +405,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet anIntDepList ;
 
   RooArgSet *anaSet = new RooArgSet( _anaList, Form("UniqueCloneOf_%s",_anaList.GetName()));
-  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,*anaSet,_funcNormSet,RooNameReg::str(_rangeName)) ;
+  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,*anaSet,_funcNormSet,RooNameReg::str(_rangeName)) ;
   _anaList.removeAll() ;
   _anaList.add(*anaSet);
   delete anaSet;
@@ -539,9 +538,13 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     // Purely analytical integration
     _intOperMode = Analytic ;
   } else {
-    // No integration performed
+    // No integration performed, where the function is a direct value server
     _intOperMode = PassThrough ;
+    _function._valueServer = true;
   }
+  // We are only setting the function proxy now that it's clear if it's a value
+  // server or not.
+  _function.setArg(const_cast<RooAbsReal&>(function));
 
   // Determine auto-dirty status
   autoSelectDirtyMode() ;
@@ -884,6 +887,10 @@ double RooRealIntegral::evaluate() const
 
   case PassThrough:
     {
+      // In pass through mode, the RooRealIntegral should have registered the
+      // function as a value server, because we directly depend on its value.
+      assert(_function.isValueServer());
+
       //setDirtyInhibit(true) ;
       retVal= _function.arg().getVal(_funcNormSet) ;
       //setDirtyInhibit(false) ;
