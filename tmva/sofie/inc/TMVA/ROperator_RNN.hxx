@@ -44,7 +44,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
    std::string fType;
 
  public:
-   ROperator_RNN() = delete;
+   ROperator_RNN() {}
 
    ROperator_RNN(std::vector<float> activation_alpha,
                  std::vector<float> activation_beta,
