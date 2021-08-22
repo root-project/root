@@ -59,6 +59,8 @@ public:
 
 protected:
 
+  friend class RooRealIntegral;
+
   RooAbsArg* _owner ;       // Pointer to owner of proxy
   RooAbsArg* _arg ;         // Pointer to content of proxy
 
