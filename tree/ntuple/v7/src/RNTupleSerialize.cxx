@@ -1291,7 +1291,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       bytes += result.Unwrap();
 
       for (std::uint32_t j = 0; j < nColumns; ++j) {
-         if (fnOuterFrameSize() < sizeof(std::uint64_t))
+         if (fnOuterFrameSize() < static_cast<int>(sizeof(std::uint64_t)))
             return R__FAIL("outer frame too short");
          std::uint64_t columnOffset;
          bytes += DeserializeUInt64(bytes, columnOffset);
@@ -1306,6 +1306,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
             return R__FORWARD_ERROR(result);
          bytes += result.Unwrap();
 
+         RClusterDescriptor::RPageRange pageRange;
+         pageRange.fColumnId = j;
          for (std::uint32_t k = 0; k < nPages; ++k) {
             if (fnInnerFrameSize() < static_cast<int>(sizeof(std::uint32_t)))
                return R__FAIL("inner frame too short");
@@ -1315,8 +1317,11 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
             result = DeserializeLocator(bytes, fnInnerFrameSize(), locator);
             if (!result)
                return R__FORWARD_ERROR(result);
+            pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
             bytes += result.Unwrap();
          }
+         clusterBuilder.AddPageRange(pageRange);
+         clusterBuilder.CommitColumnRange(j, columnOffset);
 
          bytes = innerFrame + innerFrameSize;
       }

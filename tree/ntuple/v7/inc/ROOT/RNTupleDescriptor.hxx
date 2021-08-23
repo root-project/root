@@ -743,13 +743,21 @@ public:
       fCluster.fClusterId = clusterId;
       return *this;
    }
+   RClusterDescriptorBuilder& FirstEntryIndex(std::uint64_t firstEntryIndex) {
+      fCluster.fFirstEntryIndex = firstEntryIndex;
+      return *this;
+   }
+   RClusterDescriptorBuilder& NEntries(std::uint64_t nEntries) {
+      fCluster.fNEntries = nEntries;
+      return *this;
+   }
 
    RResult<void> AddPageRange(const RClusterDescriptor::RPageRange &pageRange);
-   RResult<void> CommitColumnRange(DescriptorId_t columnId);
+   RResult<void> CommitColumnRange(DescriptorId_t columnId, std::uint64_t firstElementIndex);
 
    /// Attempt to make a cluster descriptor. This may fail if the cluster
    /// was not given enough information to make a proper descriptor.
-   RResult<RClusterDescriptor> MakeDescriptor() const;
+   RResult<RClusterDescriptor> MoveDescriptor();
 };
 
 
@@ -800,6 +808,10 @@ public:
 
    void AddClusterSummary(Internal::RNTupleSerializer::RClusterSummary &clusterSummary);
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
+   Internal::RNTupleSerializer::RClusterSummary GetClusterSummary(std::uint32_t id) const
+   {
+      return fClusterSummaries.at(id);
+   }
    Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
