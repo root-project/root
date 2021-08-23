@@ -16,12 +16,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/OperatorList.hxx
    TMVA/RModel.hxx
    TMVA/ROperator.hxx
+   TMVA/ROperator_BatchNormalization.hxx
+   TMVA/ROperator_Conv.hxx
    TMVA/ROperator_Gemm.hxx
    TMVA/ROperator_Relu.hxx
    TMVA/ROperator_Selu.hxx
    TMVA/ROperator_Sigmoid.hxx
    TMVA/ROperator_Transpose.hxx
-   TMVA/ROperator_Conv.hxx
    TMVA/SOFIE_common.hxx
   SOURCES
     src/RModel.cxx
