@@ -372,7 +372,8 @@ The cluster summary record frame contains the entry range of a cluster:
 
 If flag 0x01 (sharded cluster) is set,
 an additional 32bit integer containing the column group ID follows the flags field.
-If flags is zero, the cluster stores the event range of _all_ the columns.
+If flags is zero, the cluster stores the event range of _all_ the original columns
+_excluding_ the columns from extension headers.
 
 The order of the cluster summaries defines the cluster IDs, starting from zero.
 
@@ -396,10 +397,10 @@ The page list envelope contains a top-most list frame where every item correspon
 The order of items corresponds to the cluster IDs as defined by the cluster groups and cluster summaries.
 
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
-Every item of the outer list frame consists of an an inner list frame
-in which the items correspond to the pages of the column in the cluster.
+Every item of the outer list frame consists of a 64bit unsigned integer element offset
+followed by an inner list frame in which the items correspond to the pages of the column in the cluster.
 The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
-For a complete cluster (covering all columns), the order is given by the column IDs (small to large).
+For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).
 
 The order of the inner items must match the order of pages resp. elements.
 Every inner item (that describes a page) has the following structure:
@@ -413,24 +414,30 @@ Every inner item (that describes a page) has the following structure:
 ```
 
 Followed by a locator for the page.
-If flag 0x01 is set, a CRC32 page checksum is stored just after the page.
+If flag 0x01 is set, a CRC32 checksum of the uncompressed page data is stored just after the page.
+Note that columns might be empty, i.e. the number of pages is zero.
 
 Depending on the number of pages per column per cluster, every page induces
-a total of 16-24 Bytes of data to be stored in the page list envelope.
+a total of 24-32 Bytes of data to be stored in the page list envelope.
 For typical page sizes, that should be < 1 per mille.
 
 Note that we do not need to store the uncompressed size of the page
 because the uncompressed size is given by the number of elements in the page and the element size.
+We do need, however, the per-column and per-cluster element offset in order to read a certain event range
+without inspecting the meta-data of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
 
     - Top-most cluster list frame
     |
     |---- Cluster 1 column list frame (outer list frame)
+    |     |---- Column 1 element offset
     |     |---- Column 1 page list frame (inner list frame)
     |     |     |---- Page 1 description (inner item)
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
+    |     |---- Column 2 element offset
+    |     | ...
     |
     |---- Cluster 2 column list frame
     | ...
