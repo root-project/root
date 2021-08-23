@@ -30,6 +30,7 @@ namespace Experimental {
 
 enum class EColumnType;
 class RClusterDescriptor;
+class RClusterDescriptorBuilder;
 class RNTupleDescriptor;
 class RNTupleDescriptorBuilder;
 
@@ -210,6 +211,9 @@ public:
    static RResult<void> DeserializeFooterV1(const void *buffer,
                                             std::uint32_t bufSize,
                                             RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void> DeserializePageListV1(const void *buffer,
+                                              std::uint32_t bufSize,
+                                              std::vector<RClusterDescriptorBuilder> &clusters);
 }; // class RNTupleSerializer
 
 } // namespace Internal
