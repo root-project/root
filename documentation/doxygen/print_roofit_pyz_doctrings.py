@@ -111,19 +111,19 @@ def write_pyroot_block_for_member_func(func):
 
 def print_roofit_pythonization_page():
     """Prints the doxygen code for the RooFit pythonization page."""
-    import ROOT.pythonization as pyz
+    from ROOT.pythonization import _roofit
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
     print("\defgroup RoofitPythonizations")
     print("\ingroup Roofitmain")
     print("# RooFit pythonizations")
-    for python_klass in pyz._roofit.python_classes:
+    for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None:
             continue
         class_name = python_klass.__name__
         print("- [" + class_name + "](\\ref _" + class_name.lower() + ")")
 
-        func_names = pyz._roofit.get_defined_attributes(python_klass)
+        func_names = _roofit.get_defined_attributes(python_klass)
 
         for func_name in func_names:
             func = getattr(python_klass, func_name)
@@ -134,7 +134,7 @@ def print_roofit_pythonization_page():
     print("")
 
     # ...and then iterating over all pythonized classes and functions
-    for python_klass in pyz._roofit.python_classes:
+    for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None:
             continue
 
@@ -145,7 +145,7 @@ def print_roofit_pythonization_page():
         print(inspect.cleandoc(python_klass.__doc__))
         print("")
 
-        func_names = pyz._roofit.get_defined_attributes(python_klass)
+        func_names = _roofit.get_defined_attributes(python_klass)
 
         for func_name in func_names:
             func = getattr(python_klass, func_name)
@@ -166,13 +166,13 @@ def print_roofit_pythonization_page():
 
 def print_pyroot_blocks_for_cpp_docs():
     """Print PyROOT blocks for the RooFit C++ documentation."""
-    import ROOT.pythonization as pyz
+    from ROOT.pythonization import _roofit
 
-    for python_klass in pyz._roofit.python_classes:
+    for python_klass in _roofit.python_classes:
 
         write_pyroot_block_for_class(python_klass)
 
-        func_names = pyz._roofit.get_defined_attributes(python_klass)
+        func_names = _roofit.get_defined_attributes(python_klass)
 
         for func_name in func_names:
             func = getattr(python_klass, func_name)
