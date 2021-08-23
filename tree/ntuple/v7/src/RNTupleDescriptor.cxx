@@ -767,6 +767,40 @@ ROOT::Experimental::RClusterDescriptorBuilder::AddPageRange(const RClusterDescri
 }
 
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(
+   DescriptorId_t columnId, std::uint64_t firstElementIndex)
+{
+   RClusterDescriptor::RColumnRange columnRange{columnId, firstElementIndex, RClusterSize(0)};
+   auto iter = fCluster.fPageRanges.find(columnId);
+   if (iter != fCluster.fPageRanges.end()) {
+      for (const auto &pi : iter->second.fPageInfos) {
+         columnRange.fNElements += pi.fNElements;
+      }
+   }
+   fCluster.fColumnRanges[columnId] = columnRange;
+   return RResult<void>::Success();
+}
+
+
+ROOT::Experimental::RResult<ROOT::Experimental::RClusterDescriptor>
+ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
+{
+   if (fCluster.fClusterId == kInvalidDescriptorId)
+      return R__FAIL("unset cluster ID");
+   if (fCluster.fNEntries == 0)
+      return R__FAIL("empty cluster");
+   for (const auto &pr : fCluster.fPageRanges) {
+      if (fCluster.fColumnRanges.count(pr.first) == 0) {
+         return R__FAIL("missing column range");
+      }
+   }
+   RClusterDescriptor result;
+   std::swap(result, fCluster);
+   return result;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

@@ -575,4 +575,11 @@ TEST(RNTuple, SerializeFooter)
 
    std::vector<RClusterDescriptorBuilder> clusters;
    RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, clusters);
+   EXPECT_EQ(physClusterIDs.size(), clusters.size());
+   for (std::size_t i = 0; i < clusters.size(); ++i) {
+      clusters[i].ClusterId(i)
+                 .FirstEntryIndex(builder.GetClusterSummary(i).fFirstEntry)
+                 .NEntries(builder.GetClusterSummary(i).fNEntries);
+      clusters[i].MoveDescriptor();
+   }
 }
