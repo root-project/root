@@ -554,6 +554,9 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(sizePageList, RNTupleSerializer::SerializePageListV1(bufPageList.get(), desc, physClusterIDs, context));
 
    RNTupleSerializer::REnvelopeLink pageListEnvelope;
+   pageListEnvelope.fUnzippedSize = 137;
+   pageListEnvelope.fLocator.fPosition = 1337;
+   pageListEnvelope.fLocator.fBytesOnStorage = 42;
    context.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooterV1(nullptr, desc, context);
@@ -563,4 +566,13 @@ TEST(RNTuple, SerializeFooter)
 
    RNTupleSerializer::DeserializeHeaderV1(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooterV1(bufFooter.get(), sizeFooter, builder);
+
+   auto cg = builder.GetClusterGroup(0);
+   EXPECT_EQ(1u, cg.fNClusters);
+   EXPECT_EQ(137u, cg.fPageListEnvelopeLink.fUnzippedSize);
+   EXPECT_EQ(1337u, cg.fPageListEnvelopeLink.fLocator.fPosition);
+   EXPECT_EQ(42u, cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+
+   std::vector<RClusterDescriptorBuilder> clusters;
+   RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, clusters);
 }

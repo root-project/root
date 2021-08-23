@@ -1250,3 +1250,73 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
 
    return RResult<void>::Success();
 }
+
+
+ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListV1(
+   const void *buffer, std::uint32_t bufSize, std::vector<RClusterDescriptorBuilder> &clusters)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   auto fnBufSize = [&]() { return bufSize - (bytes - base); };
+   RResult<std::uint32_t> result{0};
+
+   result = DeserializeEnvelope(bytes, fnBufSize());
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+
+   std::uint32_t topMostFrameSize;
+   auto topMostFrame = bytes;
+   auto fnTopMostFrameSize = [&]() { return topMostFrameSize - (bytes - topMostFrame); };
+
+   std::uint32_t nClusters;
+   result = DeserializeFrame(bytes, fnBufSize(), topMostFrameSize, nClusters);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+
+   for (std::uint32_t i = 0; i < nClusters; ++i) {
+      std::uint32_t outerFrameSize;
+      auto outerFrame = bytes;
+      auto fnOuterFrameSize = [&]() { return outerFrameSize - (bytes - outerFrame); };
+
+      RClusterDescriptorBuilder clusterBuilder;
+
+      std::uint32_t nColumns;
+      result = DeserializeFrame(bytes, fnTopMostFrameSize(), outerFrameSize, nColumns);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+
+      for (std::uint32_t j = 0; j < nColumns; ++j) {
+         std::uint32_t innerFrameSize;
+         auto innerFrame = bytes;
+         auto fnInnerFrameSize = [&]() { return innerFrameSize - (bytes - innerFrame); };
+
+         std::uint32_t nPages;
+         result = DeserializeFrame(bytes, fnOuterFrameSize(), innerFrameSize, nPages);
+         if (!result)
+            return R__FORWARD_ERROR(result);
+         bytes += result.Unwrap();
+
+         for (std::uint32_t k = 0; k < nPages; ++k) {
+            if (fnInnerFrameSize() < static_cast<int>(sizeof(std::uint32_t)))
+               return R__FAIL("inner frame too short");
+            std::uint32_t nElements;
+            RNTupleLocator locator;
+            bytes += DeserializeUInt32(bytes, nElements);
+            result = DeserializeLocator(bytes, fnInnerFrameSize(), locator);
+            if (!result)
+               return R__FORWARD_ERROR(result);
+            bytes += result.Unwrap();
+         }
+
+         bytes = innerFrame + innerFrameSize;
+      }
+
+      clusters.emplace_back(std::move(clusterBuilder));
+      bytes = outerFrame + outerFrameSize;
+   }
+
+   return RResult<void>::Success();
+}
