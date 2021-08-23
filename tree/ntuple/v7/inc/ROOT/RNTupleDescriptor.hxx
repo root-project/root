@@ -744,7 +744,7 @@ public:
       return *this;
    }
 
-   RResult<void> AddPageRange(DescriptorId_t columnId, const RClusterDescriptor::RPageRange &pageRange);
+   RResult<void> AddPageRange(const RClusterDescriptor::RPageRange &pageRange);
    RResult<void> CommitColumnRange(DescriptorId_t columnId);
 
    /// Attempt to make a cluster descriptor. This may fail if the cluster
