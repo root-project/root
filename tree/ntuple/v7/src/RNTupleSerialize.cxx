@@ -973,8 +973,10 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
       pos += SerializeListFramePreamble(physColumnIds.size(), *where);
       for (auto physId : physColumnIds) {
          auto memId = context.GetMemColumnId(physId);
+         const auto &columnRange = clusterDesc.GetColumnRange(memId);
          const auto &pageRange = clusterDesc.GetPageRange(memId);
 
+         pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
          auto innerFrame = pos;
          pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
          for (const auto &pi : pageRange.fPageInfos) {
@@ -1289,6 +1291,11 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       bytes += result.Unwrap();
 
       for (std::uint32_t j = 0; j < nColumns; ++j) {
+         if (fnOuterFrameSize() < sizeof(std::uint64_t))
+            return R__FAIL("outer frame too short");
+         std::uint64_t columnOffset;
+         bytes += DeserializeUInt64(bytes, columnOffset);
+
          std::uint32_t innerFrameSize;
          auto innerFrame = bytes;
          auto fnInnerFrameSize = [&]() { return innerFrameSize - (bytes - innerFrame); };
