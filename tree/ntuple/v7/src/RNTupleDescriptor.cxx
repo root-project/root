@@ -757,6 +757,18 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RClusterDescriptorBuilder::AddPageRange(const RClusterDescriptor::RPageRange &pageRange)
+{
+   if (fCluster.fPageRanges.count(pageRange.fColumnId) > 0)
+      return R__FAIL("column ID conflict");
+   fCluster.fPageRanges[pageRange.fColumnId] = pageRange.Clone();
+   return RResult<void>::Success();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
