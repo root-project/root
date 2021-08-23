@@ -41,7 +41,7 @@ images:
 
 pyzdoc:
 	$(PYTHON_EXECUTABLE) extract_docstrings.py $(PYZ_DIR)
-	$(PYTHON_EXECUTABLE) print_roofit_pyz_doctrings.py > $(PYZ_DIR)/_roofit.pyzdoc
+	#$(PYTHON_EXECUTABLE) print_roofit_pyz_doctrings.py > $(PYZ_DIR)/_roofit.pyzdoc
 
 doxygen: filter pyzdoc
 	$(call MkDir,$(DOXYGEN_OUTPUT_DIRECTORY))
