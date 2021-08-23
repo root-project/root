@@ -170,6 +170,7 @@ in some cases they can describe only a subset of the columns, for instance when 
 // clang-format on
 class RClusterDescriptor {
    friend class RNTupleDescriptorBuilder;
+   friend class RClusterDescriptorBuilder;
 
 public:
    /// The window of element indexes of a particular column in a particular cluster
@@ -720,6 +721,38 @@ public:
    RResult<RFieldDescriptor> MakeDescriptor() const;
 };
 
+
+// clang-format off
+/**
+\class ROOT::Experimental::RClusterDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RClusterDescriptor
+
+Dangling cluster descriptors can become actual descriptors when added to an
+RNTupleDescriptorBuilder instance.
+*/
+// clang-format on
+class RClusterDescriptorBuilder {
+private:
+   RClusterDescriptor fCluster = RClusterDescriptor();
+public:
+   /// Make an empty column descriptor builder.
+   RClusterDescriptorBuilder() = default;
+
+   RClusterDescriptorBuilder& ClusterId(DescriptorId_t clusterId) {
+      fCluster.fClusterId = clusterId;
+      return *this;
+   }
+
+   RResult<void> AddPageRange(DescriptorId_t columnId, const RClusterDescriptor::RPageRange &pageRange);
+   RResult<void> CommitColumnRange(DescriptorId_t columnId);
+
+   /// Attempt to make a cluster descriptor. This may fail if the cluster
+   /// was not given enough information to make a proper descriptor.
+   RResult<RClusterDescriptor> MakeDescriptor() const;
+};
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleDescriptorBuilder
@@ -767,6 +800,7 @@ public:
 
    void AddClusterSummary(Internal::RNTupleSerializer::RClusterSummary &clusterSummary);
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
+   Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
