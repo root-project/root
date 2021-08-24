@@ -229,6 +229,8 @@ template <typename T> class ROperator_RNN final : public ROperator {
             fAttrActivations = {"Tanh"};
          }
       }
+      // Add needed standard library headers
+      model.AddNeededStdLib("cmath");
    }
 
    std::string Generate(std::string OpName) {
@@ -428,13 +430,13 @@ template <typename T> class ROperator_RNN final : public ROperator {
          } else if (fAttrActivations[direction] == "Tanh") {
             out << "\t" << "\t" << "for (size_t i = offset; i < offset + size; i++) {\n";
             if (fType == "float") {
-               out << "\t" << "\t" << "\t" << "float ex = exp(-2 * " << OpName << "_hidden_state[i]);\n";
+               out << "\t" << "\t" << "\t" << "float ex = std::exp(-2 * " << OpName << "_hidden_state[i]);\n";
             }
             out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = (1. - ex) / (1. + ex);\n";
             out << "\t" << "\t" << "}\n";
          } else if (fAttrActivations[direction] == "Sigmoid") {
             out << "\t" << "\t" << "for (size_t i = offset; i < offset + size; i++) {\n";
-            out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = 1. / (1. + exp(-" << OpName
+            out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = 1. / (1. + std::exp(-" << OpName
                 << "_hidden_state[i]));\n";
             out << "\t" << "\t" << "}\n";
          } else if (fAttrActivations[direction] == "Affine") {
@@ -445,7 +447,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
          } else if (fAttrActivations[direction] == "ScaledTanh") {
             out << "\t" << "\t" << "for (size_t i = offset; i < offset + size; i++) {\n";
             if (fType == "float") {
-               out << "\t" << "\t" << "\t" << "float ex = exp(-2 * " << fAttrActivationBeta[direction]
+               out << "\t" << "\t" << "\t" << "float ex = std::exp(-2 * " << fAttrActivationBeta[direction]
                    << " * "<< OpName << "_hidden_state[i]);\n";
                }
                out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = " << fAttrActivationAlpha[direction]
@@ -476,7 +478,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
             out << "\t" << "\t" << "for (size_t i = offset; i < offset + size; i++) {\n";
             out << "\t" << "\t" << "\t" << "if (" << OpName << "_hidden_state[i] < 0.)\n";
             out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = " << fAttrActivationAlpha[direction]
-                << " * exp(" << OpName << "_hidden_state[i] - 1.);\n";
+                << " * std::exp(" << OpName << "_hidden_state[i] - 1.);\n";
             out << "\t" << "\t" << "}\n";
          } else if (fAttrActivations[direction] == "Softsign") {
             out << "\t" << "\t" << "for (size_t i = offset; i < offset + size; i++) {\n";
@@ -485,7 +487,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
             out << "\t" << "\t" << "}\n";
          } else { // fAttrActivations[direction] = Softplus
             out << "\t" << "\t" << "for (size_t i = offset; i < offset + size; i++) {\n";
-            out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = log(1. + exp("
+            out << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[i] = log(1. + std::exp("
                 << OpName << "_hidden_state[i]));\n";
             out << "\t" << "\t" << "}\n";
             out << "\t" << "}\n";
