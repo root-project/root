@@ -19,6 +19,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -88,14 +89,15 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szHeader = descriptor.GetHeaderSize();
-   auto buffer = std::make_unique<unsigned char[]>(szHeader);
-   descriptor.SerializeHeader(buffer.get());
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
+   auto buffer = std::make_unique<unsigned char []>(fSerializationContext.GetHeaderSize());
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
 
-   auto zipBuffer = std::make_unique<unsigned char[]>(szHeader);
-   auto szZipHeader = fCompressor->Zip(buffer.get(), szHeader, GetWriteOptions().GetCompression(),
-      [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
-   fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, szHeader);
+   auto zipBuffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
+   auto szZipHeader =
+      fCompressor->Zip(buffer.get(), fSerializationContext.GetHeaderSize(), GetWriteOptions().GetCompression(),
+         [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
+   fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, fSerializationContext.GetHeaderSize());
 }
 
 
@@ -160,14 +162,37 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental:
 void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szFooter = descriptor.GetFooterSize();
-   auto buffer = std::make_unique<unsigned char []>(szFooter);
-   descriptor.SerializeFooter(buffer.get());
 
-   auto zipBuffer = std::make_unique<unsigned char []>(szFooter);
-   auto szZipFooter = fCompressor->Zip(buffer.get(), szFooter, GetWriteOptions().GetCompression(),
-      [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
-   fWriter->WriteNTupleFooter(zipBuffer.get(), szZipFooter, szFooter);
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (const auto &c : descriptor.GetClusterIterable()) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(c.GetId()));
+   }
+
+   auto szPageList = Internal::RNTupleSerializer::SerializePageListV1(
+      nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto bufPageList = std::make_unique<unsigned char []>(szPageList);
+   Internal::RNTupleSerializer::SerializePageListV1(
+      bufPageList.get(), descriptor, physClusterIDs, fSerializationContext);
+
+   auto bufPageListZip = std::make_unique<unsigned char []>(szPageList);
+   auto szPageListZip = fCompressor->Zip(bufPageList.get(), szPageList, GetWriteOptions().GetCompression(),
+      [&bufPageListZip](const void *b, size_t n, size_t o){ memcpy(bufPageListZip.get() + o, b, n); } );
+   auto offPageList = fWriter->WriteBlob(bufPageListZip.get(), szPageListZip, szPageList);
+
+   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
+   pageListEnvelope.fUnzippedSize = szPageList;
+   pageListEnvelope.fLocator.fPosition = offPageList;
+   pageListEnvelope.fLocator.fBytesOnStorage = szPageListZip;
+   fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
+
+   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
+   auto bufFooter = std::make_unique<unsigned char []>(szFooter);
+   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
+
+   auto bufFooterZip = std::make_unique<unsigned char []>(szFooter);
+   auto szFooterZip = fCompressor->Zip(bufFooter.get(), szFooter, GetWriteOptions().GetCompression(),
+      [&bufFooterZip](const void *b, size_t n, size_t o){ memcpy(bufFooterZip.get() + o, b, n); } );
+   fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, szFooter);
    fWriter->Commit();
 }
 
@@ -243,13 +268,30 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
    fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fSeekHeader);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
-   descBuilder.SetFromHeader(buffer.get());
+   Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), ntpl.fLenHeader, descBuilder);
 
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
    zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
    fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fSeekFooter);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
-   descBuilder.AddClustersFromFooter(buffer.get());
+   Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), ntpl.fLenFooter, descBuilder);
+
+   auto cg = descBuilder.GetClusterGroup(0);
+   buffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fUnzippedSize);
+   zipBuffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   fReader.ReadBuffer(zipBuffer.get(),
+                      cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
+                      cg.fPageListEnvelopeLink.fLocator.fPosition);
+   fDecompressor->Unzip(zipBuffer.get(),
+                        cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
+                        cg.fPageListEnvelopeLink.fUnzippedSize,
+                        buffer.get());
+
+   std::vector<RClusterDescriptorBuilder> clusters;
+   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cg.fPageListEnvelopeLink.fUnzippedSize, clusters);
+   for (std::size_t i = 0; i < clusters.size(); ++i) {
+      descBuilder.AddCluster(i, std::move(clusters[i]));
+   }
 
    return descBuilder.MoveDescriptor();
 }

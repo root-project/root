@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageFile
 
 #include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawFile.hxx>
@@ -64,6 +65,7 @@ private:
    std::uint64_t fClusterMaxOffset = 0;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
+   Internal::RNTupleSerializer::RContext fSerializationContext;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
    RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
