@@ -1120,6 +1120,25 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
    fClusterGroups.push_back(clusterGroup);
 }
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
+   DescriptorId_t clusterId, RClusterDescriptorBuilder &&partialCluster)
+{
+   if (clusterId >= fClusterSummaries.size())
+      return R__FAIL("unknown cluster id");
+   if (fDescriptor.fClusterDescriptors.count(clusterId) != 0)
+      return R__FAIL("cluster clash");
+   const auto &summary = fClusterSummaries.at(clusterId);
+   partialCluster.ClusterId(clusterId)
+                 .FirstEntryIndex(summary.fFirstEntry)
+                 .NEntries(summary.fNEntries);
+   auto cluster = partialCluster.MoveDescriptor();
+   if (!cluster)
+      return R__FORWARD_ERROR(cluster);
+   fDescriptor.fClusterDescriptors.emplace(clusterId, cluster.Unwrap());
+   return RResult<void>::Success();
+}
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
 {
    fDescriptor.fName = "";
