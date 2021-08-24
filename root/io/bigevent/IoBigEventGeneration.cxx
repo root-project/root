@@ -62,6 +62,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
+#include "TLine.h"
 #include "TRandom.h"
 #include "TDirectory.h"
 #include "TAttLine.h"
@@ -178,7 +179,7 @@ Event::Event()
 }
 
 //______________________________________________________________________________
-Event::Event(Int_t enumber)
+Event::Event(Int_t /*enumber*/)
 {
    // Create an Event object.
    // When the constructor is invoked for the first time, the class static
@@ -266,7 +267,7 @@ void Event::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t *option)
+void Event::Reset(Option_t * /*option*/)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);

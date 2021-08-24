@@ -115,7 +115,6 @@ int main(int argc, char **argv)
 
 
    TFile *hfile;
-   TTree *tree;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -136,7 +135,7 @@ int main(int argc, char **argv)
 //         Read case
    if (read) {
       hfile = new TFile("Event.root");
-      tree = (TTree*)hfile->Get("T");
+      TTree *tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
