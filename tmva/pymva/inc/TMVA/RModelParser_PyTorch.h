@@ -42,21 +42,34 @@
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
-
-enum class NodeType{
-   GEMM = 0, RELU = 1, TRANSPOSE = 2 //order sensitive
-
-};
-
 namespace PyTorch{
 
-    void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
-    const char* PyStringAsString(PyObject* str);
-    RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
-    RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
-  }
-}
-}
-}
+namespace INTERNAL{
+   std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode);
+   std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode);
+   std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode);
+   std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode);
+
+   using PyTorchMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fNode)>;
+
+   const PyTorchMethodMap mapPyTorchNode =
+    {
+        {"'onnx::Gemm'",      &MakePyTorchGemm},
+        {"'onnx::Relu'",      &MakePyTorchRelu},
+        {"'onnx::Transpose'", &MakePyTorchTranspose}
+    };
+
+}//INTERNAL
+
+
+const char* PyStringAsString(PyObject* str);
+void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
+
+RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
+RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
+}//PyTorch
+}//SOFIE
+}//Experimental
+}//TMVA
 
 #endif //TMVA_PYMVA_RMODELPARSER_PYTORCH

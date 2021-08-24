@@ -4,16 +4,104 @@
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
-
-std::unordered_map<std::string, NodeType> NType =
-    {
-        {"'onnx::Gemm'", NodeType::GEMM},
-        {"'onnx::Relu'", NodeType::RELU},
-        {"'onnx::Transpose'", NodeType::TRANSPOSE}
-    };
-
-
 namespace PyTorch{
+
+namespace INTERNAL{
+    std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode){
+        std::string fNodeType = PyStringAsString(PyDict_GetItemString(fNode,"nodeType"));
+        auto findNode = mapPyTorchNode.find(fNodeType);
+        if(findNode == mapPyTorchNode.end()){
+            throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+fNodeType);
+        }
+        return (findNode->second)(fNode);
+    }
+
+    std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+
+        float attr_alpha = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"alpha")));
+        float attr_beta = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"beta")));
+        int_t attr_transA;
+        int_t attr_transB;
+
+        if(PyDict_Contains(fAttributes,PyUnicode_FromString("transB"))){
+            attr_transB=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transB")));
+            attr_transA=!attr_transB;
+        }
+        else{
+            attr_transA=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transA")));
+            attr_transB=!attr_transA;
+        }
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fInputs,1)), PyStringAsString(PyList_GetItem(fInputs,2)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                break;
+                }
+                default:
+                    throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + fNodeDType);
+                }
+        return op;
+    }
+
+    std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Relu<float>(PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + fNodeDType);
+        }
+        return op;
+    }
+
+    std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+
+        std::vector<int_t> fAttributePermute;
+        PyObject* fPermute=PyDict_GetItemString(fAttributes,"perm");
+        for(Py_ssize_t permIter=0; permIter<PyList_Size(fPermute);++permIter){
+            fAttributePermute.push_back((int_t)PyLong_AsLong(PyList_GetItem(fPermute,permIter)));
+        }
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Transpose<float>(fAttributePermute, PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                break;
+            }
+            default:
+            throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + fNodeDType);
+        }
+        return op;
+    }
+}//INTERNAL
+
+
+const char* PyStringAsString(PyObject* str){
+   #if PY_MAJOR_VERSION < 3
+      const char *str_const = PyBytes_AsString(str);
+      const char * returnString = TString::Format("'%s'",str_const).Data();
+   #else
+      PyObject* repr = PyObject_Repr(str);
+      PyObject* stra = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
+      const char *returnString = PyBytes_AsString(stra);
+   #endif
+   return returnString;
+}
 
 void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
    PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
@@ -22,20 +110,6 @@ void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
       PyErr_Print();
       throw std::runtime_error("Failed to run python code: "+code);
    }
- }
-
-const char* PyStringAsString(PyObject* str){
-   #if PY_MAJOR_VERSION < 3   // for Python2
-      const char *stra_name = PyBytes_AsString(str);
-      // need to add string delimiter for Python2
-      TString sname = TString::Format("'%s'",stra_name);
-      const char * name = sname.Data();
-   #else   // for Python3
-      PyObject* repr = PyObject_Repr(str);
-      PyObject* stra = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
-      const char *name = PyBytes_AsString(stra);
-   #endif
-return name;
 }
 
 
@@ -142,104 +216,36 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     PyRunString("modelData=[]",fGlobalNS,fLocalNS);
     PyRunString("for i in graph[0].nodes():\n"
                 "    globals().update(locals())\n"
-                "    nodeData=[]\n"
-                "    nodeData.append(i.kind())\n"
+                "    nodeData={}\n"
+                "    nodeData['nodeType']=i.kind()\n"
                 "    nodeAttributeNames=[x for x in i.attributeNames()]\n"
                 "    nodeAttributes={j:i[j] for j in nodeAttributeNames}\n"
-                "    nodeData.append(nodeAttributes)\n"
+                "    nodeData['nodeAttributes']=nodeAttributes\n"
                 "    nodeInputs=[x for x in i.inputs()]\n"
                 "    nodeInputNames=[x.debugName() for x in nodeInputs]\n"
-                "    nodeData.append(nodeInputNames)\n"
+                "    nodeData['nodeInputs']=nodeInputNames\n"
                 "    nodeOutputs=[x for x in i.outputs()]\n"
                 "    nodeOutputNames=[x.debugName() for x in nodeOutputs]\n"
-                "    nodeData.append(nodeOutputNames)\n"
+                "    nodeData['nodeOutputs']=nodeOutputNames\n"
                 "    nodeDType=[x.type().scalarType() for x in nodeOutputs]\n"
-                "    nodeData.append(nodeDType)\n"
+                "    nodeData['nodeDType']=nodeDType\n"
                 "    modelData.append(nodeData)",fGlobalNS,fLocalNS);
 
     PyObject* fPModel = PyDict_GetItemString(fLocalNS,"modelData");
     Py_ssize_t fPModelSize = PyList_Size(fPModel);
-    PyObject *fNode,*fAttributes,*fInputs,*fOutputs;
+    PyObject *fNode;
     std::string fNodeType;
-    ETensorType fNodeDType;
+
+    //Adding operators into the RModel object
     for(Py_ssize_t fModelIterator=0;fModelIterator<fPModelSize;++fModelIterator){
         fNode     = PyList_GetItem(fPModel,fModelIterator);
-        fNodeType = PyStringAsString(PyList_GetItem(fNode,0));
+        fNodeType = PyStringAsString(PyDict_GetItemString(fNode,"nodeType"));
 
-        if(NType.find(fNodeType)==NType.end())
-            throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+fNodeType);
-
-        fAttributes = PyList_GetItem(fNode,1);
-        fInputs     = PyList_GetItem(fNode,2);
-        fOutputs    = PyList_GetItem(fNode,3);
-        fNodeDType  = ConvertStringToType(PyStringAsString(PyList_GetItem(PyList_GetItem(fNode,4),0)));
-
-        switch(NType.find(fNodeType)->second){
-            case NodeType::GEMM : {
-                float attr_alpha = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"alpha")));
-                float attr_beta = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"beta")));
-                int_t attr_transA;
-                int_t attr_transB;
-
-                if(PyDict_Contains(fAttributes,PyUnicode_FromString("transB"))){
-                         attr_transB=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transB")));
-                         attr_transA=!attr_transB;
-                    }
-                else{
-                        attr_transA=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transA")));
-                        attr_transB=!attr_transA;
-                    }
-                switch(fNodeDType){
-                case ETensorType::FLOAT: {
-                    std::unique_ptr<ROperator> op;
-                    op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fInputs,1)), PyStringAsString(PyList_GetItem(fInputs,2)), PyStringAsString(PyList_GetItem(fOutputs,0))));
-                    rmodel.AddOperator(std::move(op));
-                    break;
-                    }
-                default:
-                    throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + ConvertTypeToString(fNodeDType));
-
-                }
-                break;
-                }
-
-            case NodeType::RELU : {
-                switch(fNodeDType){
-                    case ETensorType::FLOAT: {
-                        std::unique_ptr<ROperator> op;
-                        op.reset(new ROperator_Relu<float>(PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
-                        rmodel.AddOperator(std::move(op));
-                        break;
-                    }
-                    default:
-                    throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + ConvertTypeToString(fNodeDType));
-                }
-                break;
-                }
-
-            case NodeType::TRANSPOSE:{
-                std::vector<int_t> fAttributePermute;
-                PyObject* fPPermute=PyDict_GetItemString(fAttributes,"perm");
-                for(Py_ssize_t permIter=0; permIter<PyList_Size(fPPermute);++permIter){
-                    fAttributePermute.push_back((int_t)PyLong_AsLong(PyList_GetItem(fPPermute,permIter)));
-                }
-                switch(fNodeDType){
-                case ETensorType::FLOAT: {
-                std::unique_ptr<ROperator> op;
-                op.reset(new ROperator_Transpose<float>(fAttributePermute, PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
-                rmodel.AddOperator(std::move(op));
-                break;
-                }
-                default:
-                    throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + ConvertTypeToString(fNodeDType));
-                }
-                break;
-                }
-
-            default:
-                throw std::runtime_error("Node Error: TMVA SOFIE does not yet support node type " + fNodeType);
-            }
-            }
+        if(fNodeType == "'onnx::Gemm'"){
+            rmodel.AddBlasRoutines({"Gemm", "Gemv"});
+        }
+        rmodel.AddOperator(INTERNAL::MakePyTorchNode(fNode));
+    }
 
 
     //Extracting model weights to add the initialized tensors to the RModel
@@ -295,8 +301,8 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes){
       std::vector<ETensorType> dtype(inputShapes.size(),ETensorType::FLOAT);
       return Parse(filepath,inputShapes,dtype);
-    }
 }
-}
-}
-}
+}//PyTorch
+}//SOFIE
+}//Experimental
+}//TMVA
