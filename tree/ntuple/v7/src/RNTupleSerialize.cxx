@@ -75,17 +75,16 @@ std::uint32_t SerializeFieldTree(
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    std::deque<ROOT::Experimental::DescriptorId_t> idQueue{desc.GetFieldZeroId()};
-   pos += SerializeFieldV1(desc.GetFieldDescriptor(desc.GetFieldZeroId()), 0, *where);
-   context.MapFieldId(desc.GetFieldZeroId());
 
    while (!idQueue.empty()) {
       auto parentId = idQueue.front();
       idQueue.pop_front();
 
       for (const auto &f : desc.GetFieldIterable(parentId)) {
-         pos += SerializeFieldV1(f, context.GetPhysFieldId(parentId), *where);
+         auto physFieldId = context.MapFieldId(f.GetId());
+         auto physParentId = (parentId == desc.GetFieldZeroId()) ? physFieldId : context.GetPhysFieldId(parentId);
+         pos += SerializeFieldV1(f, physParentId, *where);
          idQueue.push_back(f.GetId());
-         context.MapFieldId(f.GetId());
       }
    }
 
@@ -928,7 +927,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
 
    auto frame = pos;
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
-   pos += SerializeListFramePreamble(desc.GetNFields(), *where);
+   pos += SerializeListFramePreamble(desc.GetNFields() - 1, *where);
    pos += SerializeFieldTree(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
@@ -1094,12 +1093,20 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   // Zero field
+   descBuilder.AddField(RFieldDescriptorBuilder()
+      .FieldId(kZeroFieldId)
+      .Structure(ENTupleStructure::kRecord)
+      .MakeDescriptor()
+      .Unwrap());
    for (std::uint32_t fieldId = 0; fieldId < nFields; ++fieldId) {
       RFieldDescriptorBuilder fieldBuilder;
       result = DeserializeFieldV1(bytes, fnFrameSize(), fieldBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
+      if (fieldId == fieldBuilder.GetParentId())
+         fieldBuilder.ParentId(kZeroFieldId);
       auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
       if (!fieldDesc)
          return R__FORWARD_ERROR(fieldDesc);

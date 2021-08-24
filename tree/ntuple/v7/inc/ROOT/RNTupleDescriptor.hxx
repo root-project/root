@@ -716,6 +716,7 @@ public:
       fField.fStructure = structure;
       return *this;
    }
+   DescriptorId_t GetParentId() const { return fField.fParentId; }
    /// Attempt to make a field descriptor. This may fail if the dangling field
    /// was not given enough information to make a proper descriptor.
    RResult<RFieldDescriptor> MakeDescriptor() const;

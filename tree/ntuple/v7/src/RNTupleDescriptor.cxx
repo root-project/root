@@ -1010,7 +1010,7 @@ ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
       return R__FAIL("invalid field structure");
    }
    // FieldZero is usually named "" and would be a false positive here
-   if (fField.GetId() != DescriptorId_t(0)) {
+   if (fField.GetParentId() != kInvalidDescriptorId) {
       auto validName = Detail::RFieldBase::EnsureValidFieldName(fField.GetFieldName());
       if (!validName) {
          return R__FORWARD_ERROR(validName);
