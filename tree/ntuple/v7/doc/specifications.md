@@ -213,6 +213,7 @@ The block of integers is followed by a list of strings:
 The order of fields matters: every field gets an implicit field ID
 which is equal the zero-based index of the field in the serialized list;
 subfields are ordered from smaller IDs to larger IDs.
+Top-level fields have their own field ID set as parent ID.
 
 The flags field can have one of the following bits set
 
