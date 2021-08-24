@@ -524,17 +524,17 @@ TEST(RNTuple, SerializeFooter)
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   builder.AddCluster(0, RNTupleVersion(), 0, ROOT::Experimental::ClusterSize_t(100));
+   builder.AddCluster(84, RNTupleVersion(), 0, ROOT::Experimental::ClusterSize_t(100));
    columnRange.fColumnId = 17;
    columnRange.fFirstElementIndex = 0;
    columnRange.fNElements = 100;
-   builder.AddClusterColumnRange(0, columnRange);
+   builder.AddClusterColumnRange(84, columnRange);
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
    pageRange.fColumnId = 17;
    pageInfo.fNElements = 100;
-   pageInfo.fLocator.fPosition = 0;
+   pageInfo.fLocator.fPosition = 7000;
    pageRange.fPageInfos.emplace_back(pageInfo);
-   builder.AddClusterPageRange(0, std::move(pageRange));
+   builder.AddClusterPageRange(84, std::move(pageRange));
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, desc);
@@ -577,9 +577,22 @@ TEST(RNTuple, SerializeFooter)
    RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, clusters);
    EXPECT_EQ(physClusterIDs.size(), clusters.size());
    for (std::size_t i = 0; i < clusters.size(); ++i) {
-      clusters[i].ClusterId(i)
-                 .FirstEntryIndex(builder.GetClusterSummary(i).fFirstEntry)
-                 .NEntries(builder.GetClusterSummary(i).fNEntries);
-      clusters[i].MoveDescriptor();
+      builder.AddCluster(i, std::move(clusters[i]));
    }
+
+   desc = builder.MoveDescriptor();
+   EXPECT_EQ(1u, desc.GetNClusters());
+   const auto &clusterDesc = desc.GetClusterDescriptor(0);
+   EXPECT_EQ(0, clusterDesc.GetFirstEntryIndex());
+   EXPECT_EQ(100, clusterDesc.GetNEntries());
+   auto columnIds = clusterDesc.GetColumnIds();
+   EXPECT_EQ(1u, columnIds.size());
+   EXPECT_EQ(1u, columnIds.count(0));
+   columnRange = clusterDesc.GetColumnRange(0);
+   EXPECT_EQ(100u, columnRange.fNElements);
+   EXPECT_EQ(0u, columnRange.fFirstElementIndex);
+   pageRange = clusterDesc.GetPageRange(0).Clone();
+   EXPECT_EQ(1u, pageRange.fPageInfos.size());
+   EXPECT_EQ(100u, pageRange.fPageInfos[0].fNElements);
+   EXPECT_EQ(7000u, pageRange.fPageInfos[0].fLocator.fPosition);
 }

@@ -808,11 +808,8 @@ public:
 
    void AddClusterSummary(Internal::RNTupleSerializer::RClusterSummary &clusterSummary);
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
-   Internal::RNTupleSerializer::RClusterSummary GetClusterSummary(std::uint32_t id) const
-   {
-      return fClusterSummaries.at(id);
-   }
    Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
+   RResult<void> AddCluster(DescriptorId_t clusterId, RClusterDescriptorBuilder &&partialCluster);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
