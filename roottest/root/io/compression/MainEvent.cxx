@@ -279,7 +279,6 @@ int main(int argc, char **argv)
    filename << "Event" << comp << ".root";
 
    TFile *hfile;
-   TTree *tree;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -300,7 +299,7 @@ int main(int argc, char **argv)
 //         Read case
    if (read) {
       hfile = new TFile(filename.str().c_str());
-      tree = (TTree*)hfile->Get("T");
+      TTree *tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
@@ -372,7 +371,7 @@ int main(int argc, char **argv)
       hfile = new TFile(filename.str().c_str(),"RECREATE","TTree benchmark ROOT file");
 
       // Test get and set functions in TFile
-      int testValue = -2;
+      testValue = -2;
       hfile->SetCompressionSettings(testValue);
       if (hfile->GetCompressionSettings() != -1) exit(1);
       if (hfile->GetCompressionAlgorithm() != -1) exit(2);
