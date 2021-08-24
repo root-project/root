@@ -1,6 +1,7 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
+#include <unordered_set>
 #include <vector>
 #include <unordered_map>
 #include <iostream>
@@ -38,8 +39,8 @@ private:
    std::string fGC; //generated code
    bool fNeedGemm = true;
 
-   const std::vector<std::string> fAllowedStdLib = {"algorithm"};
-   std::set<std::string> fNeededStdLib = {"vector"};
+   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
+   std::unordered_set<std::string> fNeededStdLib = {"vector"};
 
 
 
@@ -71,9 +72,9 @@ public:
          fNeededBlasRoutines.insert(routine);
       }
    }
-   void AddNeededStdLib(std::string libname){
-      for (auto& i: fAllowedStdLib){
-         if ( i == libname) fNeededStdLib.insert(libname);
+   void AddNeededStdLib(std::string libname) {
+      if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
+         fNeededStdLib.insert(libname);
       }
    }
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
