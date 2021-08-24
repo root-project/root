@@ -268,87 +268,108 @@ Int_t TChain::Add(TChain* chain)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a new file to this chain.
+/// \brief Add a new file to this chain.
 ///
-/// Argument name may have either of two set of formats. The first:
-/// ~~~ {.cpp}
-///     [//machine]/path/file_name[?query[#tree_name]]
-///  or [//machine]/path/file_name.root[.oext][/tree_name]
+/// \param[in] name The path to the file to be added. See below for details.
+/// \param[in] nentries Number of entries in the file. This can be an estimate
+///            or queried from the file. See below for details.
+/// \returns There are different possible return values:
+/// - If nentries>0 (including the default of TTree::kMaxEntries) and no
+///   wildcarding is used, ALWAYS returns 1 irrespective of whether the file
+///   exists or contains the correct tree.
+/// - If wildcarding is used, regardless of the value of \p nentries, returns
+///   the number of files matching the name irrespective of whether they contain
+///   the correct tree.
+/// - If nentries<=0 and wildcarding is not used, returns 1 if the file
+///  exists and contains the correct tree and 0 otherwise.
+///
+/// <h4>Details of the name parameter</h4>
+/// There are two sets of formats accepted for the parameter \p name . The first
+/// one is:
+///
+/// ~~~{.cpp}
+///    [//machine]/path/file_name[?[query][#tree_name]]
+/// or [//machine]/path/file_name.root[.oext][/tree_name]
 /// ~~~
-/// If tree_name is missing the chain name will be assumed. Tagging the
-/// tree_name with a slash [/tree_name] is only supported for backward
-/// compatibility; it requires the file name to contain the string '.root'
-/// and its use is deprecated.
-/// Wildcard treatment is triggered by the any of the special characters []*?
-/// which may be used in the file name, eg. specifying "xxx*.root" adds
-/// all files starting with xxx in the current file system directory.
 ///
-/// Alternatively name may have the format of a url, eg.
+/// Note the following:
+/// - If the \p tree_name part is missing, it will be assumed that
+///   the file contains a tree with the same name as the chain.
+/// - Tagging the name of the tree with a slash (e.g. \p /tree_name ) is only
+///   supported for backward compatibility; it requires the file name to contain
+///   the string '.root' and its use is deprecated. Instead, use the form
+///   \p ?#tree_name (that is an "?" followed by an empty query), for example:
+///   ~~~{.cpp}
+///   TChain c;
+///   // DO NOT DO THIS
+///   // c.Add("myfile.root/treename");
+///   // DO THIS INSTEAD
+///   c.Add("myfile.root?#treename");
+///   ~~~
+/// - Wildcard treatment is triggered by any of the special characters:
+///   <b>[]*?</b> which may be used in the file name, eg. specifying "xxx*.root"
+///   adds all files starting with xxx in the current file system directory.
+///
+/// The second format accepted for \p name may have the form of a URL, e.g.:
+///
 /// ~~~ {.cpp}
-///         root://machine/path/file_name[?query[#tree_name]]
+///         root://machine/path/file_name[?[query][#tree_name]]
 ///     or  root://machine/path/file_name
 ///     or  root://machine/path/file_name.root[.oext]/tree_name
 ///     or  root://machine/path/file_name.root[.oext]/tree_name?query
 /// ~~~
-/// where "query" is to be interpreted by the remote server. Wildcards may be
-/// supported in urls, depending on the protocol plugin and the remote server.
-/// http or https urls can contain a query identifier without tree_name, but
-/// generally urls can not be written with them because of ambiguity with the
-/// wildcard character. (Also see the documentation for TChain::AddFile,
-/// which does not support wildcards but allows the url name to contain query).
-/// Again, tagging the tree_name with a slash [/tree_name] is only supported
-/// for backward compatibility; it requires the file name ot contain the string
-/// '.root' and its use is deprecated.
 ///
-/// NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
+/// Note the following:
+/// - The optional "query" token is to be interpreted by the remote server.
+/// - Wildcards may be supported in URLs, depending on the protocol plugin and
+///   the remote server.
+/// - \p http or \p https URLs can contain a query identifier without
+///   \p tree_name, but generally URLs can not be written with them because of
+///   ambiguity with the wildcard character. (Also see the documentation for
+///   TChain::AddFile, which does not support wildcards but allows the URL name
+///   to contain a query).
+/// - The rules for tagging the name of the tree in the file are the same as
+///   in the format above.
 ///
-/// A. if nentries <= 0, the file is connected and the tree header read
-///    in memory to get the number of entries.
+/// <h4>Details of the nentries parameter</h4>
+/// Depending on the value of the parameter, the number of entries in the file
+/// is retrieved differently:
+/// - If <tt>nentries <= 0</tt>, the file is connected and the tree header read
+///   in memory to get the number of entries.
+/// - If <tt>nentries > 0</tt>, the file is not connected, \p nentries is
+///   assumed to be the number of entries in the file. In this case, no check is
+///   made that the file exists and that the corresponding tree exists as well.
+///   This second mode is interesting in case the number of entries in the file
+///   is already stored in a run data base for example.
+/// - If <tt>nentries == TTree::kMaxEntries</tt> (default), the file is not
+///   connected. The number of entries in each file will be read only when the
+///   file will need to be connected to read an entry. This option is the
+///   default and very efficient if one processes the chain sequentially. Note
+///   that in case TChain::GetEntry(entry) is called and entry refers to an
+///   entry in the 3rd file, for example, this forces the tree headers in the
+///   first and second file to be read to find the number of entries in these
+///   files. Note that calling TChain::GetEntriesFast after having
+///   created a chain with this default returns TTree::kMaxEntries ! Using
+///   TChain::GetEntries instead will force all the tree headers in the chain to
+///   be read to get the number of entries in each tree.
 ///
-/// B. if (nentries > 0, the file is not connected, nentries is assumed to be
-///    the number of entries in the file. In this case, no check is made that
-///    the file exists and the Tree existing in the file. This second mode
-///    is interesting in case the number of entries in the file is already stored
-///    in a run data base for example.
-///
-/// C. if (nentries == TTree::kMaxEntries) (default), the file is not connected.
-///    the number of entries in each file will be read only when the file
-///    will need to be connected to read an entry.
-///    This option is the default and very efficient if one process
-///    the chain sequentially. Note that in case TChain::GetEntry(entry)
-///    is called and entry refers to an entry in the 3rd file, for example,
-///    this forces the Tree headers in the first and second file
-///    to be read to find the number of entries in these files.
-///    Note that if one calls TChain::GetEntriesFast() after having created
-///    a chain with this default, GetEntriesFast will return TTree::kMaxEntries!
-///    TChain::GetEntries will force of the Tree headers in the chain to be
-///    read to read the number of entries in each Tree.
-///
-/// D. The TChain data structure
-///    Each TChainElement has a name equal to the tree name of this TChain
-///    and a title equal to the file name. So, to loop over the
-///    TFiles that have been added to this chain:
+/// <h4>The %TChain data structure</h4>
+/// Each element of the chain is a TChainElement object. It has a name equal to
+/// the tree name of this chain (or the name of the specific tree in the added
+/// file if it was explicitly tagged) and a title equal to the file name. So, to
+/// loop over the files that have been added to this chain:
 /// ~~~ {.cpp}
-///        TObjArray *fileElements=chain->GetListOfFiles();
-///        TIter next(fileElements);
-///        TChainElement *chEl=0;
-///        while (( chEl=(TChainElement*)next() )) {
-///           TFile f(chEl->GetTitle());
-///           ... do something with f ...
-///        }
+///  TObjArray *fileElements=chain->GetListOfFiles();
+///  for (TObject *op: *fileElements) {
+///     auto chainElement = static_cast<TChainElement *>(op);
+///     TFile f{chainElement->GetTitle()};
+///     TTree *tree = f.Get<TTree>(chainElement->GetName());
+///     // Do something with the file or the tree
+///  }
 /// ~~~
-/// Return value:
 ///
-/// - If nentries>0 (including the default of TTree::kMaxEntries) and no
-///   wildcarding is used, ALWAYS returns 1 without regard to whether
-///   the file exists or contains the correct tree.
-///
-/// - If wildcarding is used, regardless of the value of nentries,
-///   returns the number of files matching the name without regard to
-///   whether they contain the correct tree.
-///
-/// - If nentries<=0 and wildcarding is not used, return 1 if the file
-///  exists and contains the correct tree and 0 otherwise.
+/// \note To add all the files of a another \p TChain to this one, use
+///       TChain::Add(TChain* chain).
 
 Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */)
 {
