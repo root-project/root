@@ -64,6 +64,8 @@ public:
    static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
    static constexpr std::uint32_t kFlagNonNegativeColumn = 0x04;
 
+   static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
+
    struct REnvelopeLink {
       std::uint32_t fUnzippedSize = 0;
       RNTupleLocator fLocator;
