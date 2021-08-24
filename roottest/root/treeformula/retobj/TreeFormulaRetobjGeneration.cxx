@@ -185,7 +185,7 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 }
 
 //______________________________________________________________________________
-void Event::Clear(Option_t *option)
+void Event::Clear(Option_t * /*option*/)
 {
    fTracks->Clear("C"); //will also call Track::Clear
    fHighPt->Delete();
@@ -193,7 +193,7 @@ void Event::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t *option)
+void Event::Reset(Option_t * /*option*/)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);
