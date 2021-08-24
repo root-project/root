@@ -500,10 +500,16 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
       add_custom_command(TARGET ${targetname_libgen} POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${ARG_LIBNAME}.dll
                                           ${CMAKE_CURRENT_BINARY_DIR}/${ARG_LIBNAME}.dll)
+      add_custom_command(TARGET ${targetname_libgen} POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${ARG_LIBNAME}.lib
+                                          ${CMAKE_CURRENT_BINARY_DIR}/${ARG_LIBNAME}.lib)
     else()
       add_custom_command(TARGET ${targetname_libgen} POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${dictionary}_dictrflx.dll
                                           ${CMAKE_CURRENT_BINARY_DIR}/lib${dictionary}_dictrflx.dll)
+      add_custom_command(TARGET ${targetname_libgen} POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${dictionary}libgen.lib
+                                          ${CMAKE_CURRENT_BINARY_DIR}/lib${dictionary}libgen.lib)
     endif()
   endif()
 
