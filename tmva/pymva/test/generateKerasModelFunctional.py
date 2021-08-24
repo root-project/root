@@ -1,11 +1,10 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import keras
 import numpy as np
-from keras.models import Model
-from keras.layers import Input,Dense,Activation,ReLU
-from keras.optimizers import SGD
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input,Dense,Activation,ReLU
+from tensorflow.keras.optimizers import SGD
 
 input=Input(shape=(8,),batch_size=2)
 x=Dense(16)(input)

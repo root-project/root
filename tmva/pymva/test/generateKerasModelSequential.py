@@ -1,11 +1,10 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import keras
 import numpy as np
-from keras.models import Sequential
-from keras.layers import Dense,Activation,ReLU
-from keras.optimizers import SGD
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,Activation,ReLU
+from tensorflow.keras.optimizers import SGD
 
 model=Sequential()
 model.add(Dense(8,batch_size=4))

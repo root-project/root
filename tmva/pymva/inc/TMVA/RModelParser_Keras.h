@@ -44,14 +44,14 @@ namespace Experimental{
 namespace SOFIE{
 namespace PyKeras{
 
-namespace INTERNAL{
-   std::unique_ptr<ROperator> AddKerasLayer(PyObject* fLayer);
-   std::unique_ptr<ROperator> AddKerasActivation(PyObject* fLayer);
-   std::unique_ptr<ROperator> AddKerasReLU(PyObject* fLayer);
-   std::unique_ptr<ROperator> AddKerasPermute(PyObject* fLayer);
 
-   std::pair<std::unique_ptr<ROperator>,std::unique_ptr<ROperator>> AddKerasLayerWithActivation(PyObject* fLayer);
-   std::unique_ptr<ROperator> AddKerasDense(PyObject* fLayer);
+namespace INTERNAL{
+   void AddKerasLayer(RModel& rmodel, PyObject* fLayer);
+   std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer);
+   std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer);
+   std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer);
+
+   std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer);
    //std::unique_ptr<ROperator> AddKerasConv(PyObject* fLayer);
 
    using KerasMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fLayer)>;
@@ -59,28 +59,30 @@ namespace INTERNAL{
 
    const KerasMethodMap mapKerasLayer =
     {
-        {"'Activation'", &AddKerasActivation},
-        {"'Permute'", &AddKerasPermute},
+        {"'Activation'", &MakeKerasActivation},
+        {"'Permute'", &MakeKerasPermute},
 
         //For activation layers
-        {"'ReLU'", &AddKerasReLU},
+        {"'ReLU'", &MakeKerasReLU},
 
         //For layers with activation attributes
-        {"'relu'", &AddKerasReLU}
+        {"'relu'", &MakeKerasReLU}
     };
 
     const KerasMethodMapWithActivation mapKerasLayerWithActivation =
     {
-        {"'Dense'", &AddKerasDense},
+        {"'Dense'", &MakeKerasDense},
         //{"'Convolution'",&add_keras_conv}
     };
+
+    std::vector<size_t> GetShapeFromTuple(PyObject* shapeTuple);
+
 }//INTERNAL
+const char* PyStringAsString(PyObject* str);
+void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
 
+RModel Parse(std::string filepath);
 
-    void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
-    const char* PyStringAsString(PyObject* str);
-    std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple);
-    RModel Parse(std::string filepath);
 }//PyKeras
 }//SOFIE
 }//Experimental
