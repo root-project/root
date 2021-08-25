@@ -16,7 +16,9 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
    if (find == mapOptypeOperator.end()){
       throw std::runtime_error("TMVA::SOFIE - Operator type " + nodeproto.op_type() + " is not yet supported");
    }else{
-      return (find->second)(nodeproto, graphproto, tensor_type);
+      auto op = (find->second)(nodeproto, graphproto, tensor_type);
+      op->name = nodeproto.name();
+      return op;
    }
 }
 

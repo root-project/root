@@ -21,7 +21,7 @@ namespace SOFIE{
 
 class RModel: public TObject{
 
-private:
+protected:
 
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
