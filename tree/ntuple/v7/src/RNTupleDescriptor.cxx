@@ -1026,14 +1026,14 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescript
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
-   if (linkId == DescriptorId_t(0)) {
-      return R__FAIL("cannot make FieldZero a child field");
-   }
    if (fDescriptor.fFieldDescriptors.count(fieldId) == 0) {
       return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist in NTuple");
    }
    if (fDescriptor.fFieldDescriptors.count(linkId) == 0) {
       return R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
+   }
+   if (linkId == fDescriptor.GetFieldZeroId()) {
+      return R__FAIL("cannot make FieldZero a child field");
    }
    // fail if field already has another valid parent
    auto parentId = fDescriptor.fFieldDescriptors.at(linkId).GetParentId();
