@@ -25,7 +25,7 @@
 
 void h1ReadAndDraw()
 {
-   // Generate the ROOT File
+   // Fetch and open the hsimple.root File
    TFile *example = TFile::Open(gROOT->GetTutorialDir() + "/hsimple.root");
 
    example->ls(); // Show the file contents
