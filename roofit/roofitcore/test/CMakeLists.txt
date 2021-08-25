@@ -44,6 +44,6 @@ ROOT_ADD_GTEST(testRooProductPdf testRooProductPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testNaNPacker testNaNPacker.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooGradMinimizerFcn testRooGradMinimizerFcn.cxx LIBRARIES RooFitCore)
-
 ROOT_ADD_GTEST(testLikelihoodSerial TestStatistics/testLikelihoodSerial.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/RooRealL.cpp LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testGlobalObservables testGlobalObservables.cxx LIBRARIES RooFit)
