@@ -29,7 +29,7 @@ void demos() {
    bar->AddButton("fillrandom", ".x hist/fillrandom.C",    "Histograms with Random Numbers from a Function");
    bar->AddButton("fit1",       ".x fit/fit1.C",           "A Simple Fitting Example");
    bar->AddButton("multifit",   ".x fit/multifit.C",       "Fitting in Subranges of Histograms");
-   bar->AddButton("h1draw",     ".x hist/h1draw.C",        "Drawing Options for 1D Histograms");
+   bar->AddButton("h1ReadAndDraw",     ".x hist/h1ReadAndDraw.C",        "Drawing Options for 1D Histograms");
    bar->AddButton("graph",      ".x graphs/graph.C",       "Example of a Simple Graph");
    bar->AddButton("gerrors",    ".x graphs/gerrors.C",     "Example of a Graph with Error Bars");
    bar->AddButton("tornado",    ".x graphics/tornado.C",   "Examples of 3-D PolyMarkers");

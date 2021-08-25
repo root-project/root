@@ -15,7 +15,7 @@ ROOT.SetSignalPolicy( ROOT.kSignalFast )
 ## macro files
 macros = [
    'framework.py', 'hsimple.py', 'hsum.py', 'formula1.py',
-   'fillrandom.py','fit1.py', 'h1draw.py', 'graph.py',
+   'fillrandom.py','fit1.py', 'h1ReadAndDraw.py', 'graph.py',
    'gerrors.py', 'tornado.py', 'surfaces.py', 'zdemo.py',
    'geometry.py', 'na49view.py', 'file.py',
    'ntuple1.py', 'rootmarks.py' ]

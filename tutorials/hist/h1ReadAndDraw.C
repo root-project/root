@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// 1-D histogram drawing options.
+/// Read a 1-D histogram from a ROOT File and draw it.
 /// We attach (or generate) the ROOT file in `$ROOTSYS/tutorials/hsimple.root`
 /// or `$PWD/hsimple.root`
 /// We draw one histogram in different formats.
@@ -23,17 +23,15 @@
 #include "TSystem.h"
 #include "TInterpreter.h"
 
-void h1draw()
+void h1ReadAndDraw()
 {
-   TString dir = gROOT->GetTutorialDir();
-   dir.Append("/hsimple.C");
-   dir.ReplaceAll("/./","/");
-   if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
-   TFile *example = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
-   if (!example) return;
+   // Fetch and open the hsimple.root File
+   TFile *example = TFile::Open(gROOT->GetTutorialDir() + "/hsimple.root");
 
-   example->ls();
-   TH1 *hpx = (TH1*)example->Get("hpx");
+   example->ls(); // Show the file contents
+   // Get the histogram from the ROOT File
+   TH1 *hpx = nullptr; // pointer to base class TH1 is enough
+   example->GetObject("hpx", hpx);
 
    TCanvas *c1 = new TCanvas("c1","Histogram Drawing Options",200,10,700,900);
    TPad *pad1 = new TPad("pad1",
