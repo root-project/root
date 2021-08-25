@@ -235,7 +235,7 @@ TEST(MiniFile, FailOnForwardIncompatibility)
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("ntuple").Inspect();
    // Construct incompatible version numbers in little-endian binary format
-   std::uint16_t futureVersion = RNTupleDescriptor::kFrameVersionMin + 1;
+   std::uint16_t futureVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
    unsigned char futureVersionLE[2];
    futureVersionLE[0] = (futureVersion & 0x00FF);
    futureVersionLE[1] = (futureVersion & 0xFF00) >> 8;
@@ -252,6 +252,6 @@ TEST(MiniFile, FailOnForwardIncompatibility)
       auto readerFail = RNTupleReader::Open("ntuple", fileGuard.GetPath());
       FAIL() << "unsupported minimum version number should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("RNTuple version too new"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTuple format is too new"));
    }
 }

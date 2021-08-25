@@ -575,9 +575,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       return R__FAIL("invalid envelope, too short");
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   auto result = VerifyCRC32(bytes, bufSize - 4, crc32);
-   if (!result)
-      return R__FORWARD_ERROR(result);
+   auto base = bytes;
 
    std::uint16_t protocolVersionAtWrite;
    std::uint16_t protocolVersionMinRequired;
@@ -591,6 +589,11 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       return R__FAIL(std::string("The RNTuple format is too new (version ") +
                                  std::to_string(protocolVersionMinRequired) + ")");
    }
+
+   // We defer the CRC32 check to the end to faciliate testing of forward/backward incompatibilities
+   auto result = VerifyCRC32(base, bufSize - 4, crc32);
+   if (!result)
+      return R__FORWARD_ERROR(result);
 
    return sizeof(protocolVersionAtWrite) + sizeof(protocolVersionMinRequired);
 }
@@ -1112,11 +1115,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          return R__FORWARD_ERROR(fieldDesc);
       auto parentId = fieldDesc.Inspect().GetParentId();
       descBuilder.AddField(fieldDesc.Unwrap());
-      if (fieldId > 0) {
-         auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
-         if (!resVoid)
-            return R__FORWARD_ERROR(resVoid);
-      }
+      auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
+      if (!resVoid)
+         return R__FORWARD_ERROR(resVoid);
    }
    bytes = frame + frameSize;
 

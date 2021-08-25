@@ -109,8 +109,8 @@ TEST(RNTuple, SerializeEnvelope)
    }
 
    struct {
-      std::uint16_t writerVersion = static_cast<std::uint16_t>(-1);
-      std::uint16_t minVersion = static_cast<std::uint16_t>(-1);
+      std::uint16_t writerVersion = static_cast<std::uint16_t>(1);
+      std::uint16_t minVersion = static_cast<std::uint16_t>(1);
       std::uint32_t crc32 = 0;
    } testEnvelope;
 
