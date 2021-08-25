@@ -91,6 +91,19 @@ Double_t RooConstraintSum::evaluate() const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Replace the variables in this RooConstraintSum with the global observables
+/// in the dataset if they match by name. This function will do nothing if this
+/// RooConstraintSum is configured to not use the global observables stored in
+/// datasets.
+bool RooConstraintSum::setData(RooAbsData const& data, bool /*cloneData=true*/) {
+  if(data.getGlobalObservables()) {
+    this->recursiveRedirectServers(*data.getGlobalObservables()) ;
+  }
+  return true;
+}
+
+
 namespace {
 
 std::unique_ptr<RooArgSet> getGlobalObservables(
@@ -262,19 +275,16 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
     RooConstraintSum constraintTerm{name.c_str(),"nllCons", allConstraints, glObs ? *glObs : cPars};
     std::unique_ptr<RooAbsReal> constraintTermClone{static_cast<RooAbsReal*>(constraintTerm.cloneTree())};
 
-    // Set the global observables values from the dataset if applicable
-    // Redirect the global observables to the ones from the dataset if applicable.
-    if(data.getGlobalObservables()) {
-      constraintTermClone->recursiveRedirectServers(*data.getGlobalObservables()) ;
-    }
-
     // The parameters that are not connected to global observables from data
     // need to be redirected to the original args to get the changes made by
     // the minimizer. This excludes the global observables, where we take the
     // clones with the values set to the values from the dataset if available.
     RooArgSet allOriginalParams;
-    constraintTerm.getParameters(data.getGlobalObservables(),allOriginalParams);
+    constraintTerm.getParameters(nullptr,allOriginalParams);
     constraintTermClone->recursiveRedirectServers(allOriginalParams) ;
+
+    // Redirect the global observables to the ones from the dataset if applicable.
+    static_cast<RooConstraintSum*>(constraintTermClone.get())->setData(data, false) ;
 
     // The computation graph for the constraints is very small, no need to do
     // the tracking of clean and dirty nodes here.
