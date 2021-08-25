@@ -5354,7 +5354,7 @@ Int_t TTree::GetBranchStyle()
 /// A cache sizing factor is taken from the configuration. If this yields zero
 /// and withDefault is true the historical algorithm for default size is used.
 
-Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
+Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
    const char *stcs;
    Double_t cacheFactor = 0.0;
@@ -5371,9 +5371,17 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 
    Long64_t cacheSize = 0;
 
-   if (fAutoFlush < 0) cacheSize = Long64_t(-cacheFactor*fAutoFlush);
-   else if (fAutoFlush == 0) cacheSize = 0;
-   else cacheSize = Long64_t(cacheFactor*1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
+   if (fAutoFlush < 0) {
+      cacheSize = Long64_t(-cacheFactor * fAutoFlush);
+   } else if (fAutoFlush == 0) {
+      const auto medianClusterSize = GetMedianClusterSize();
+      if (medianClusterSize > 0)
+         cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+      else
+         cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
+   } else {
+      cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+   }
 
    if (cacheSize >= (INT_MAX / 4)) {
       cacheSize = INT_MAX / 4;
@@ -5384,9 +5392,17 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    }
 
    if (cacheSize == 0 && withDefault) {
-      if (fAutoFlush < 0) cacheSize = -fAutoFlush;
-      else if (fAutoFlush == 0) cacheSize = 0;
-      else cacheSize = Long64_t(1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
+      if (fAutoFlush < 0) {
+         cacheSize = -fAutoFlush;
+      } else if (fAutoFlush == 0) {
+         const auto medianClusterSize = GetMedianClusterSize();
+         if (medianClusterSize > 0)
+            cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+         else
+            cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
+      } else {
+         cacheSize = Long64_t(1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+      }
    }
 
    return cacheSize;
@@ -8215,6 +8231,40 @@ void TTree::MarkEventCluster()
         fClusterSize[fNClusterRange] = fClusterRangeEnd[fNClusterRange] - fClusterRangeEnd[fNClusterRange-1];
     }
     ++fNClusterRange;
+}
+
+/// Estimate the median cluster size for the TTree.
+/// This value provides e.g. a reasonable cache size default if other heuristics fail.
+/// Clusters with size 0 and the very last cluster range, that might not have been committed to fClusterSize yet,
+/// are ignored for the purposes of the calculation.
+Long64_t TTree::GetMedianClusterSize()
+{
+   std::vector<Long64_t> clusterSizesPerRange;
+   clusterSizesPerRange.reserve(fNClusterRange);
+
+   // We ignore cluster sizes of 0 for the purposes of this function.
+   // We also ignore the very last cluster range which might not have been committed to fClusterSize.
+   std::copy_if(fClusterSize, fClusterSize + fNClusterRange, std::back_inserter(clusterSizesPerRange),
+                [](Long64_t size) { return size != 0; });
+
+   std::vector<double> nClustersInRange; // we need to store doubles because of the signature of TMath::Median
+   nClustersInRange.reserve(clusterSizesPerRange.size());
+
+   auto clusterRangeStart = 0ll;
+   for (int i = 0; i < fNClusterRange; ++i) {
+      const auto size = fClusterSize[i];
+      R__ASSERT(size >= 0);
+      if (fClusterSize[i] == 0)
+         continue;
+      const auto nClusters = (1 + fClusterRangeEnd[i] - clusterRangeStart) / fClusterSize[i];
+      nClustersInRange.emplace_back(nClusters);
+      clusterRangeStart = fClusterRangeEnd[i] + 1;
+   }
+
+   R__ASSERT(nClustersInRange.size() == clusterSizesPerRange.size());
+   const auto medianClusterSize =
+      TMath::Median(nClustersInRange.size(), clusterSizesPerRange.data(), nClustersInRange.data());
+   return medianClusterSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

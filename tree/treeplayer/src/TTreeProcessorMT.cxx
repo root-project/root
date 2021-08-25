@@ -83,7 +83,7 @@ ConvertToElistClusters(std::vector<std::vector<EntryCluster>> &&clusters, TEntry
       // we need `chain` to be able to convert local entry numbers to global entry numbers in `Next`
       chain.reset(new TChain());
       for (auto i = 0u; i < nFiles; ++i)
-         chain->Add((fileNames[i] + "/" + treeNames[i]).c_str(), entriesPerFile[i]);
+         chain->Add((fileNames[i] + "?query#" + treeNames[i]).c_str(), entriesPerFile[i]);
       Next = [](Long64_t &elEntry, TEntryList &elist, TChain *ch) {
          ++elEntry;
          int treenum = -1;
@@ -310,7 +310,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
    fChain.reset(new TChain());
    const auto nFiles = fileNames.size();
    for (auto i = 0u; i < nFiles; ++i) {
-      fChain->Add((fileNames[i] + "/" + treeNames[i]).c_str(), nEntries[i]);
+      fChain->Add((fileNames[i] + "?query#" + treeNames[i]).c_str(), nEntries[i]);
    }
    fChain->ResetBit(TObject::kMustCleanup);
 
