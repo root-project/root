@@ -15,14 +15,14 @@ Envelopes can reference other envelopes and pages by means of a **locator** or a
 for a file embedding, the locator consists of an offset and a size.
 The RNTuple format does _not_ establish a specific order of pages and envelopes.
 
-Every emedding must define an **anchor** that contains the envelope links (location, compressed and uncompressed size)
-of the header envelope and, optionally, one or multiple extra meta-data envelopes.
+Every embedding must define an **anchor** that contains the envelope links (location, compressed and uncompressed size)
+of the header and footer envelopes.
 For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
 
 
 ## Compression Block
 
-RNTuple envelopes and pages are wrapped into compression blocks.
+RNTuple envelopes and pages are wrapped in compression blocks.
 In order to deserialize a page or an envelope, its compressed and ucompressed size needs to be known.
 
 TODO(jblomer): reference or describe the compression block format.
@@ -50,7 +50,7 @@ The meta-data envelope defines additional basic types (see below).
 Feature flags are 64bit integers where every bit represents a certain feature that is used
 in the binary format of the RNTuple at hand.
 The most significant bit is used to indicate that there are more than 63 features to specify.
-That means that readers need to continue reading feature flags as long as their integer value is negative.
+That means that readers need to continue reading feature flags as long as their signed integer value is negative.
 
 
 ### Frames
@@ -129,7 +129,7 @@ followed by a locator.
 
 ## Envelopes
 
-Envelopes are continuous data blocks containing information that describe the RNTuple data.
+An Envelope is a data block containing information that describe the RNTuple data.
 The following envelope types exist
 
 | Type              | Contents                                                          |
@@ -159,7 +159,7 @@ _Envelope version_: Envelope types are versioned independently from each other.
 The envelope version is the version that the writer used to build the envelope.
 
 _Minimum version_:
-: A reader must support at least this version in order to extract meaningful data from the envelope.
+A reader must support at least this version in order to extract meaningful data from the envelope.
 If the envelope version is larger than the minimum version, there might be additional data in the envelope
 that older readers can safely ignore.
 
