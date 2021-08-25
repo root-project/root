@@ -137,6 +137,29 @@ ClassImp(TFormula);
     This class is not anymore the base class for the function classes `TF1`, but it has now
     a data member of TF1 which can be accessed via `TF1::GetFormula`.
 
+    TFormula supports gradient and hessian calculations through clad.
+    To calculate the gradient one needs to first declare a `CladStorage` of the
+    same size as the number of parameters and then pass the variables and the
+    created `CladStorage`:
+
+    ```
+    TFormula f("f", "x*[0] - y*[1]");
+    Double_t p[] = {40, 30};
+    Double_t x[] = {1, 2};
+    f.SetParameters(p);
+    TFormula::CladStorage grad(2);
+    f.GradientPar(x, grad);
+    ```
+
+    The process is similar for hessians, except that the size of the created
+    CladStorage should be the square of the number of parameters because
+    `HessianPar` returns a flattened matrix:
+
+    ```
+    TFormula::CladStorage hess(4);
+    f.HessianPar(x, hess);
+    ```
+
     \anchor FormulaFuncs
     ### List of predefined functions
 
