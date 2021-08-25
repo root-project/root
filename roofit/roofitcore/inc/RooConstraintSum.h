@@ -31,7 +31,7 @@ public:
   RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet, const RooArgSet& paramSet) ;
 
   RooConstraintSum(const RooConstraintSum& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooConstraintSum(*this, newname); }
+  virtual TObject* clone(const char* newname) const override { return new RooConstraintSum(*this, newname); }
 
   const RooArgList& list() { return _set1 ; }
 
@@ -45,14 +45,20 @@ public:
         const char* globalObservablesTag,
         RooWorkspace * workspace = nullptr);
 
+  bool setData(RooAbsData const& data, bool cloneData=true);
+  /// \copydoc setData(RooAbsData const&, bool)
+  bool setData(RooAbsData& data, bool cloneData=true) override {
+    return setData(static_cast<RooAbsData const&>(data), cloneData);
+  }
+
 protected:
 
   RooListProxy _set1 ;    // Set of constraint terms
   RooSetProxy _paramSet ; // Set of parameters to which constraints apply
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooConstraintSum,2) // sum of -log of set of RooAbsPdf representing parameter constraints
+  ClassDefOverride(RooConstraintSum,2) // sum of -log of set of RooAbsPdf representing parameter constraints
 };
 
 #endif
