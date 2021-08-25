@@ -182,6 +182,7 @@ TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
    // must set field name
    fieldDescRes = RFieldDescriptorBuilder()
       .FieldId(1)
+      .ParentId(1)
       .Structure(ENTupleStructure::kCollection)
       .MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
