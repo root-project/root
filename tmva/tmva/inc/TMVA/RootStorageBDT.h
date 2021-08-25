@@ -28,7 +28,6 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <optional>
 #include <string>
 #include <type_traits>
 #include <vector>
