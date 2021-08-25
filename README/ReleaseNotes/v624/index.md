@@ -754,6 +754,19 @@ Published on June 28, 2021
 * [[#6454](https://github.com/root-project/root/issues/6454)] - ROOT fails to parse `<boost/shared_ptr.hpp>` at runtime on macOS
 
 
+## Release 6.22/04
+
+Published on August 25, 2021
+
+### Bugs and Issues fixed in this release
+
+* [[#8503](https://github.com/root-project/root/issues/8503)] - ranluxpp code is using left shift of negative value -1 which is undefined per the C standard
+* [[#8641](https://github.com/root-project/root/issues/8641)] - RooStats::HypoTestInverterResult::FindIndex fails if xvalue == 1
+* [[#8767](https://github.com/root-project/root/issues/8767)] - [netxng] Crash in on-exit destruction of an TNetXNGFile object
+* [[#8739](https://github.com/root-project/root/issues/8739)] - [DF] Cannot read files that don't have a `.root` extension with IMT on
+* [[#8713](https://github.com/root-project/root/issues/8713)] - [tree] TTreeCache is turned off when `fAutoFlush == 0`
+
+
 ## HEAD of the v6-24-00-patches branch
 
 These changes will be part of a future 6.24/04.
