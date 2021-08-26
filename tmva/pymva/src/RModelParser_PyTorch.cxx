@@ -11,7 +11,7 @@ namespace INTERNAL{
         std::string fNodeType = PyStringAsString(PyDict_GetItemString(fNode,"nodeType"));
         auto findNode = mapPyTorchNode.find(fNodeType);
         if(findNode == mapPyTorchNode.end()){
-            throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+fNodeType);
+            throw std::runtime_error("TMVA::SOFIE - Parsing PyTorch node " +fNodeType+" is not yet supported ");
         }
         return (findNode->second)(fNode);
     }
@@ -89,28 +89,6 @@ namespace INTERNAL{
         return op;
     }
 }//INTERNAL
-
-
-const char* PyStringAsString(PyObject* str){
-   #if PY_MAJOR_VERSION < 3
-      const char *str_const = PyBytes_AsString(str);
-      const char * returnString = TString::Format("'%s'",str_const).Data();
-   #else
-      PyObject* repr = PyObject_Repr(str);
-      PyObject* stra = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
-      const char *returnString = PyBytes_AsString(stra);
-   #endif
-   return returnString;
-}
-
-void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
-   PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
-   if (!fPyReturn) {
-      std::cout<<"Python error message:\n";
-      PyErr_Print();
-      throw std::runtime_error("Failed to run python code: "+code);
-   }
-}
 
 
 RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> inputDTypes){
@@ -241,7 +219,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         fNode     = PyList_GetItem(fPModel,fModelIterator);
         fNodeType = PyStringAsString(PyDict_GetItemString(fNode,"nodeType"));
 
-        if(fNodeType == "'onnx::Gemm'"){
+        if(fNodeType == "onnx::Gemm"){
             rmodel.AddBlasRoutines({"Gemm", "Gemv"});
         }
         rmodel.AddOperator(INTERNAL::MakePyTorchNode(fNode));

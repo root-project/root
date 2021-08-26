@@ -35,6 +35,8 @@
 #include "TMVA/Types.h"
 #include "TMVA/OperatorList.hxx"
 
+#include "TMVA/PyMethodBase.h"
+
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -43,6 +45,9 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 namespace PyTorch{
+
+static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
+static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
 
 namespace INTERNAL{
    std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode);
@@ -54,16 +59,12 @@ namespace INTERNAL{
 
    const PyTorchMethodMap mapPyTorchNode =
     {
-        {"'onnx::Gemm'",      &MakePyTorchGemm},
-        {"'onnx::Relu'",      &MakePyTorchRelu},
-        {"'onnx::Transpose'", &MakePyTorchTranspose}
+        {"onnx::Gemm",      &MakePyTorchGemm},
+        {"onnx::Relu",      &MakePyTorchRelu},
+        {"onnx::Transpose", &MakePyTorchTranspose}
     };
 
 }//INTERNAL
-
-
-const char* PyStringAsString(PyObject* str);
-void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
 
 RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
 RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
