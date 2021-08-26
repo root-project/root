@@ -286,8 +286,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(libprefix "")
   endif()
 
-   # list of include directories for dictionary generation
-   set(incdirs)
+  # list of include directories for dictionary generation
+  set(incdirs)
 
   if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
     set(headerdirs)
