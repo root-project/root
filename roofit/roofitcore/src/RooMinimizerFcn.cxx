@@ -37,9 +37,24 @@
 
 using namespace std;
 
+
+namespace {
+
+// Helper function that wraps RooAbsArg::getParameters and directly returns the
+// output RooArgSet. To be used in the initializer list of the RooMinimizerFcn
+// constructor.
+RooArgSet getParameters(RooAbsReal const& funct) {
+    RooArgSet out;
+    funct.getParameters(nullptr, out);
+    return out;
+}
+
+} // namespace
+
+
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
 			   bool verbose) :
-  RooAbsMinimizerFcn(*funct->getParameters(RooArgSet()), context, verbose), _funct(funct)
+  RooAbsMinimizerFcn(getParameters(*funct), context, verbose), _funct(funct)
 {}
 
 
