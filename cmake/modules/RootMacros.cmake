@@ -609,11 +609,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     # get target properties added after call to ROOT_GENERATE_DICTIONARY()
     if(TARGET ${ARG_MODULE})
-      if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
-        set(module_incs $<REMOVE_DUPLICATES:$<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>>)
-      else()
-        set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
-      endif()
+      # NOTE that module_sysincs is already part of ${module_sysincs}. But -isystem "wins",
+      # and list exclusion for generator expressions is too complex.
+      set(module_incs $<REMOVE_DUPLICATES:$<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>>)
+      set(module_sysincs $<REMOVE_DUPLICATES:$<TARGET_PROPERTY:${ARG_MODULE},INTERFACE_SYSTEM_INCLUDE_DIRECTORIES>>)
       set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
     endif()
   endif()
@@ -627,11 +626,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
      endforeach()
   endif()
 
+  set(compIncPaths)
+  foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
+    list(APPEND compIncPaths "-compilerI${implinc}")
+  endforeach()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS}
                                         ${definitions} "$<$<BOOL:${module_defs}>:-D$<JOIN:${module_defs},;-D>>"
+                                        ${compIncPaths}
+                                        "$<$<BOOL:${module_sysincs}>:-isystem;$<JOIN:${module_sysincs},;-isystem;>>"
                                         ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
                                         ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
