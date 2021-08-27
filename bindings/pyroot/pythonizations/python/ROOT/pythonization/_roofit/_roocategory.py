@@ -15,7 +15,7 @@ from ._utils import _dict_to_std_map, cpp_signature
 
 
 class RooCategory(object):
-    """Constructor of RooCategory takes a map as an argument also supports python dictionaries.
+    r"""Constructor of RooCategory takes a map as an argument also supports python dictionaries.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
     # Default bindings :
@@ -30,7 +30,7 @@ class RooCategory(object):
 
     @cpp_signature("RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates);")
     def __init__(self, *args, **kwargs):
-        """The RooCategory constructor is pythonized for converting python dict to std::map.
+        r"""The RooCategory constructor is pythonized for converting python dict to std::map.
         The instances in the dict must correspond to the template argument in std::map of the constructor.
         """
         # Redefinition of `RooCategory` constructor for converting python dict to std::map.

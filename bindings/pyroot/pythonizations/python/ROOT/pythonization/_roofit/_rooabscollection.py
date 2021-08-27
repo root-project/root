@@ -16,7 +16,7 @@ from libcppyy import SetOwnership
 
 
 class RooAbsCollection(object):
-    """Some member functions of RooAbsCollection that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooAbsCollection that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooAbsCollection::printLatex. For example, the following code is equivalent in PyROOT:
     \code{.py}
     # Directly passing a RooCmdArg:
@@ -29,7 +29,7 @@ class RooAbsCollection(object):
 
     @cpp_signature("RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;")
     def addClone(self, arg, silent=False):
-        """The RooAbsCollection::addClone() function is pythonized with the command argument pythonization.
+        r"""The RooAbsCollection::addClone() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         clonedArg = self._addClone(arg, silent)
@@ -37,7 +37,7 @@ class RooAbsCollection(object):
 
     @cpp_signature("Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent=kFALSE);")
     def addOwned(self, arg, silent=False):
-        """The RooAbsCollection::addOwned() function is pythonized with the command argument pythonization.
+        r"""The RooAbsCollection::addOwned() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function."""
         self._addOwned(arg, silent)
         SetOwnership(arg, False)
@@ -46,10 +46,10 @@ class RooAbsCollection(object):
         "RooAbsCollection::printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),"
         "                        const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),"
         "                        const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),"
-        "	                    const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;"
+        "                        const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;"
     )
     def printLatex(self, *args, **kwargs):
-        """The RooAbsCollection::printLatex() function is pythonized with the command argument pythonization.
+        r"""The RooAbsCollection::printLatex() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsCollection.printLatex` for keyword arguments.
