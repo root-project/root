@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooSimultaneous(object):
-    """Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooSimultaneous that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooSimultaneous::plotOn.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -36,7 +36,7 @@ class RooSimultaneous(object):
         "    const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const;"
     )
     def plotOn(self, *args, **kwargs):
-        """The RooSimultaneous::plotOn() function is pythonized with the command argument pythonization.
+        r"""The RooSimultaneous::plotOn() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooSimultaneous.plotOn` for keyword arguments.

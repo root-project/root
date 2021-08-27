@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooAbsRealLValue(object):
-    """Some member functions of RooAbsRealLValue that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooAbsRealLValue that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooAbsRealLValue::createHistogram and RooAbsRealLValue::frame.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -35,7 +35,7 @@ class RooAbsRealLValue(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
     )
     def createHistogram(self, *args, **kwargs):
-        """The RooAbsRealLValue::createHistogram() function is pythonized with the command argument pythonization.
+        r"""The RooAbsRealLValue::createHistogram() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsRealLValue.createHistogram` for keyword arguments.
@@ -48,7 +48,7 @@ class RooAbsRealLValue(object):
         "    const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
     )
     def frame(self, *args, **kwargs):
-        """The RooAbsRealLValue::frame() function is pythonized with the command argument pythonization.
+        r"""The RooAbsRealLValue::frame() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsRealLValue.frame` for keyword arguments.

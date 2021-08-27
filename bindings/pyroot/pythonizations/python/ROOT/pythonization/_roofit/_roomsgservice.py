@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooMsgService(object):
-    """Some member functions of RooMsgService that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooMsgService that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooMsgService::addStream.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -31,7 +31,7 @@ class RooMsgService(object):
         "    const RooCmdArg& arg4=RooCmdArg(), const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg());"
     )
     def addStream(self, *args, **kwargs):
-        """The RooMsgService::addStream() function is pythonized with the command argument pythonization.
+        r"""The RooMsgService::addStream() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function.
         """
         # Redefinition of `RooMsgService.addStream` for keyword arguments.

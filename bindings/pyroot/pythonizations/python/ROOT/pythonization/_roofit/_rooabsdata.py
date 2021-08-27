@@ -16,7 +16,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooAbsData(object):
-    """Some member functions of RooAbsData that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooAbsData that take a RooCmdArg as argument also support keyword arguments.
     This applies to RooAbsData::plotOn, RooAbsData::createHistogram, RooAbsData::reduce, RooAbsData::statOn.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -36,7 +36,7 @@ class RooAbsData(object):
         "			  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
     )
     def plotOn(self, *args, **kwargs):
-        """The RooAbsData::plotOn() function is pythonized with the command argument pythonization.
+        r"""The RooAbsData::plotOn() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsData.plotOn` for keyword arguments.
@@ -51,7 +51,7 @@ class RooAbsData(object):
         "                       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
     )
     def createHistogram(self, *args, **kwargs):
-        """The RooAbsData::createHistogram() function is pythonized with the command argument pythonization.
+        r"""The RooAbsData::createHistogram() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsData.createHistogram` for keyword arguments.
@@ -65,7 +65,7 @@ class RooAbsData(object):
         "                   const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;"
     )
     def reduce(self, *args, **kwargs):
-        """The RooAbsData::reduce() function is pythonized with the command argument pythonization.
+        r"""The RooAbsData::reduce() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsData.reduce` for keyword arguments.
@@ -80,7 +80,7 @@ class RooAbsData(object):
         "                          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def statOn(self, *args, **kwargs):
-        """The RooAbsData::statOn() function is pythonized with the command argument pythonization.
+        r"""The RooAbsData::statOn() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsData.statOn` for keyword arguments.
