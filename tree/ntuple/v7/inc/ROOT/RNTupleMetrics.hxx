@@ -34,6 +34,7 @@
 #include <utility>
 #include <map>
 #include <fstream>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
