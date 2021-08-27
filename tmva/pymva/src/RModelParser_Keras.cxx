@@ -18,7 +18,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
       return;
    }
 
-   //For layers like Dense & Conv which have additional activation attribute
+   //For layers like Dense & Conv which has additional activation attribute
    else if(mapKerasLayerWithActivation.find(fLayerType) != mapKerasLayerWithActivation.end()){
       findLayer = mapKerasLayerWithActivation.find(fLayerType);
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
@@ -27,13 +27,20 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
       std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
 
       //Checking if additional attribute exixts
-      if(fLayerActivation != "'linear'"){
-         std::string fLayerOutputName = PyStringAsString(PyDict_GetItemString(fLayer,"layerOutput"));
-         PyDict_SetItemString(fLayer,"layerOutput",PyUnicode_FromString((fLayerName+fLayerType).c_str()));
+      if(fLayerActivation != "linear"){
+         PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+         PyObject* fInputs = PyDict_GetItemString(fLayer,"layerInput");
+         std::string fActivationLayerOutput = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+         PyList_SetItem(fOutputs,0,PyUnicode_FromString((fLayerName+fLayerType).c_str()));
+         PyDict_SetItemString(fLayer,"layerOutput",fOutputs);
          rmodel.AddOperator((findLayer->second)(fLayer));
 
-         PyDict_SetItemString(fLayer,"layerInput",PyDict_GetItemString(fLayer,"layerOutput"));
-         PyDict_SetItemString(fLayer,"layerOutput",PyUnicode_FromString(fLayerOutputName.c_str()));
+         std::string fActivationLayerInput = PyStringAsString(PyList_GetItem(fOutputs,0));
+         PyList_SetItem(fInputs,0,PyUnicode_FromString(fActivationLayerInput.c_str()));
+         PyList_SetItem(fOutputs,0,PyUnicode_FromString(fActivationLayerOutput.c_str()));
+         PyDict_SetItemString(fLayer,"layerInput",fInputs);
+         PyDict_SetItemString(fLayer,"layerOutput",fOutputs);
 
          auto findActivationLayer = mapKerasLayer.find(fLayerActivation);
          if(findActivationLayer == mapKerasLayer.end()){
@@ -59,8 +66,8 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
       PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
       std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
 
-      std::string fLayerInputName  = PyStringAsString(fInputs);
-      std::string fLayerOutputName = PyStringAsString(fOutputs);
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
 
       PyObject* fWeightNames = PyDict_GetItemString(fLayer,"layerWeight");
       std::string fKernelName = PyStringAsString(PyList_GetItem(fWeightNames,0));
@@ -89,6 +96,7 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
       std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
+
       auto findLayer = mapKerasLayer.find(fLayerActivation);
       if(findLayer == mapKerasLayer.end()){
          throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
@@ -104,8 +112,9 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
       PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
 
       std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
-      std::string fLayerInputName  = PyStringAsString(fInputs);
-      std::string fLayerOutputName = PyStringAsString(fOutputs);
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
       std::unique_ptr<ROperator> op;
       switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
@@ -125,8 +134,8 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
       PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
 
       std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
-      std::string fLayerInputName      = PyStringAsString(fInputs);
-      std::string fLayerOutputName     = PyStringAsString(fOutputs);
+      std::string fLayerInputName      = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName     = PyStringAsString(PyList_GetItem(fOutputs,0));
 
       PyObject* fAttributePermute=PyDict_GetItemString(fAttributes,"dims");
       std::vector<int_t>fPermuteDims;
@@ -159,28 +168,6 @@ std::vector<size_t> GetShapeFromTuple(PyObject* shapeTuple){
    return inputShape;
 }
 }//INTERNAL
-
-const char* PyStringAsString(PyObject* str){
-   #if PY_MAJOR_VERSION < 3
-      const char *str_const = PyBytes_AsString(str);
-      const char * returnString = TString::Format("'%s'",str_const).Data();
-   #else
-      PyObject* repr = PyObject_Repr(str);
-      PyObject* stra = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
-      const char *returnString = PyBytes_AsString(stra);
-   #endif
-   return returnString;
-}
-
-void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
-   PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
-   if (!fPyReturn) {
-      std::cout<<"Python error message:\n";
-      PyErr_Print();
-      throw std::runtime_error("Failed to run python code: "+code);
-   }
-}
-
 
 
 RModel Parse(std::string filename){
@@ -253,9 +240,9 @@ RModel Parse(std::string filename){
       fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
 
       //Ignoring the input layer for models built using Keras Functional API
-      if(fLayerType == "'InputLayer'")
+      if(fLayerType == "InputLayer")
          continue;
-      else if(fLayerType == "'Dense'")
+      else if(fLayerType == "Dense")
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 

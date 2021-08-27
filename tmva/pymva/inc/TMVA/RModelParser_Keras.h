@@ -35,6 +35,8 @@
 #include "TMVA/Types.h"
 #include "TMVA/OperatorList.hxx"
 
+#include "TMVA/PyMethodBase.h"
+
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -44,6 +46,8 @@ namespace Experimental{
 namespace SOFIE{
 namespace PyKeras{
 
+static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
+static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
 
 namespace INTERNAL{
    void AddKerasLayer(RModel& rmodel, PyObject* fLayer);
@@ -52,34 +56,32 @@ namespace INTERNAL{
    std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer);
 
    std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer);
-   //std::unique_ptr<ROperator> AddKerasConv(PyObject* fLayer);
+   //std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer);
 
    using KerasMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fLayer)>;
    using KerasMethodMapWithActivation = std::unordered_map<std::string, std::unique_ptr<ROperator>(*)(PyObject* fLayer)>;
 
    const KerasMethodMap mapKerasLayer =
     {
-        {"'Activation'", &MakeKerasActivation},
-        {"'Permute'", &MakeKerasPermute},
+        {"Activation", &MakeKerasActivation},
+        {"Permute", &MakeKerasPermute},
 
         //For activation layers
-        {"'ReLU'", &MakeKerasReLU},
+        {"ReLU", &MakeKerasReLU},
 
         //For layers with activation attributes
-        {"'relu'", &MakeKerasReLU}
+        {"relu", &MakeKerasReLU}
     };
 
     const KerasMethodMapWithActivation mapKerasLayerWithActivation =
     {
-        {"'Dense'", &MakeKerasDense},
-        //{"'Convolution'",&add_keras_conv}
+        {"Dense", &MakeKerasDense},
+        //{"'Convolution'",&MakeKerasConv}
     };
 
     std::vector<size_t> GetShapeFromTuple(PyObject* shapeTuple);
 
 }//INTERNAL
-const char* PyStringAsString(PyObject* str);
-void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
 
 RModel Parse(std::string filepath);
 

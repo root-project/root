@@ -130,6 +130,10 @@ namespace TMVA {
       static PyObject *fGlobalNS; // global namesapace
       PyObject *fLocalNS; // local namesapace
 
+   public:
+      static void PyRunString(TString code, PyObject *fGlobalNS, PyObject* fLocalNS);
+      static const char* PyStringAsString(PyObject *string);
+
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 
    };
