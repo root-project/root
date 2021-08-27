@@ -149,7 +149,7 @@ def rebind_instancemethod(to_class, from_class, func_name):
 
     import sys
 
-    if sys.version_info > (3, 0):
+    if sys.version_info >= (3, 0):
         to_method = from_method
     else:
         import new
@@ -197,6 +197,10 @@ def pythonize_roofit_class(klass, name):
             func_new = getattr(python_klass, func_name)
 
             import inspect
+            import sys
+
+            if sys.version_info < (3, 0):
+                func_new = func_new.__func__
 
             if func_new.__doc__ is None:
                 func_new.__doc__ = func_orig.__doc__
