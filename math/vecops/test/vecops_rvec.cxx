@@ -35,6 +35,13 @@ void CheckEqual(const RVec<double> &a, const RVec<double> &b, std::string_view m
    }
 }
 
+void CheckEqual(const ROOT::Math::PtEtaPhiMVector &a, const ROOT::Math::PtEtaPhiMVector &b) {
+   EXPECT_DOUBLE_EQ(a.Pt(), b.Pt());
+   EXPECT_DOUBLE_EQ(a.Eta(), b.Eta());
+   EXPECT_DOUBLE_EQ(a.Phi(), b.Phi());
+   EXPECT_DOUBLE_EQ(a.M(), b.M());
+}
+
 template <typename T, typename V>
 void CheckEqual(const T &a, const V &b, std::string_view msg = "")
 {
@@ -741,6 +748,27 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(ArgMin(v4), 2);
    ASSERT_DOUBLE_EQ(Var(v4), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v4), 1.);
+
+   ROOT::VecOps::RVec<int> v5 {2, 3, 1, 4};
+   ASSERT_DOUBLE_EQ(Sum(v5), 10);
+   ASSERT_DOUBLE_EQ(Mean(v5), 2.5);
+   ASSERT_DOUBLE_EQ(Max(v5), 4);
+   ASSERT_DOUBLE_EQ(Min(v5), 1);
+   ASSERT_DOUBLE_EQ(ArgMax(v5), 3);
+   ASSERT_DOUBLE_EQ(ArgMin(v5), 2);
+   ASSERT_DOUBLE_EQ(Var(v5), 5./3);
+   ASSERT_DOUBLE_EQ(StdDev(v5), std::sqrt(5./3));
+
+   const ROOT::Math::PtEtaPhiMVector lv0 {15.5f, .3f, .1f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector lv1 {34.32f, 2.2f, 3.02f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector lv2 {12.95f, 1.32f, 2.2f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector lv_sum_ref = lv0 + lv1 + lv2;
+   const ROOT::Math::PtEtaPhiMVector lv_mean_ref = lv_sum_ref / 3;
+   ROOT::VecOps::RVec<ROOT::Math::PtEtaPhiMVector> v6 {lv0, lv1, lv2};
+   const ROOT::Math::PtEtaPhiMVector lv_sum = ROOT::VecOps::Sum(v6, ROOT::Math::PtEtaPhiMVector());
+   const ROOT::Math::PtEtaPhiMVector lv_mean = ROOT::VecOps::Mean(v6, ROOT::Math::PtEtaPhiMVector());
+   CheckEqual(lv_sum, lv_sum_ref);
+   CheckEqual(lv_mean, lv_mean_ref);
 }
 
 TEST(VecOps, Any)
