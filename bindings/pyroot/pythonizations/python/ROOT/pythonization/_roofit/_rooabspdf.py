@@ -16,7 +16,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooAbsPdf(RooAbsReal):
-    """Some member functions of RooAbsPdf that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooAbsPdf that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooAbsPdf::fitTo, RooAbsPdf::plotOn, RooAbsPdf::generate, RooAbsPdf::paramOn, RooAbsPdf::createCdf,
     RooAbsPdf::generateBinned, RooAbsPdf::createChi2, RooAbsPdf::prepareMultiGen and RooAbsPdf::createNLL.
     For example, the following code is equivalent in PyROOT:
@@ -32,7 +32,7 @@ class RooAbsPdf(RooAbsReal):
         "RooAbsPdf::fitTo(RooAbsData&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)"
     )
     def fitTo(self, *args, **kwargs):
-        """The RooAbsPdf::fitTo() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::fitTo() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.fitTo` for keyword arguments.
@@ -49,7 +49,7 @@ class RooAbsPdf(RooAbsReal):
         ") const;"
     )
     def plotOn(self, *args, **kwargs):
-        """The RooAbsPdf::plotOn() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::plotOn() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.plotOn` for keyword arguments.
@@ -63,7 +63,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
     )
     def generate(self, *args, **kwargs):
-        """The RooAbsPdf::generate() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::generate() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.generate` for keyword arguments.
@@ -78,7 +78,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def paramOn(self, *args, **kwargs):
-        """The RooAbsPdf::paramOn() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::paramOn() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.paramOn` for keyword arguments.
@@ -91,7 +91,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def createNLL(self, *args, **kwargs):
-        """The RooAbsPdf::createNLL() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::createNLL() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.createNLL` for keyword arguments.
@@ -104,7 +104,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def createChi2(self, *args, **kwargs):
-        """The RooAbsPdf::createChi2() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::createChi2() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.createChi2` for keyword arguments.
@@ -118,7 +118,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def createCdf(self, *args, **kwargs):
-        """The RooAbsPdf::createCdf() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::createCdf() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.createCdf` for keyword arguments.
@@ -132,7 +132,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) const;"
     )
     def generateBinned(self, *args, **kwargs):
-        """The RooAbsPdf::generateBinned() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::generateBinned() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.generateBinned` for keyword arguments.
@@ -146,7 +146,7 @@ class RooAbsPdf(RooAbsReal):
         "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
     )
     def prepareMultiGen(self, *args, **kwargs):
-        """The RooAbsPdf::prepareMultiGen() function is pythonized with the command argument pythonization.
+        r"""The RooAbsPdf::prepareMultiGen() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.prepareMultiGen` for keyword arguments.

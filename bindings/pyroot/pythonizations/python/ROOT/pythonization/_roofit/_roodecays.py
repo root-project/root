@@ -15,7 +15,7 @@ from ._utils import _decaytype_string_to_enum, cpp_signature
 
 
 class RooDecay(object):
-    """Some constructors of classes like RooDecay, RooBDecay, RooBCPGenDecay, RooBCPEffDecay and RooBMixDecay that take an enum
+    r"""Some constructors of classes like RooDecay, RooBDecay, RooBCPGenDecay, RooBCPEffDecay and RooBMixDecay that take an enum
     DecayType as argument also support keyword arguments.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -31,7 +31,7 @@ class RooDecay(object):
         "RooDecay(const char *name, const char *title, RooRealVar& t, RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooDecay constructor is pythonized with enum values."""
+        r"""The RooDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
 
@@ -44,7 +44,7 @@ class RooBDecay(object):
         "    const RooResolutionModel& model,   DecayType type);"
     )
     def __init__(self, *args, **kwargs):
-        """The RooBDecay constructor is pythonized with enum values."""
+        r"""The RooBDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
 
@@ -56,7 +56,7 @@ class RooBCPGenDecay(object):
         "    RooAbsReal& delMistag, RooAbsReal& mu, const RooResolutionModel& model, DecayType type=DoubleSided) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooBCPGenDecay constructor is pythonized with enum values."""
+        r"""The RooBCPGenDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
 
@@ -69,7 +69,7 @@ class RooBCPEffDecay(object):
         "    const RooResolutionModel& model, DecayType type=DoubleSided) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooBCPEffDecay constructor is pythonized with enum values."""
+        r"""The RooBCPEffDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
 
@@ -81,6 +81,6 @@ class RooBMixDecay(object):
         "    RooAbsReal& delMistag, const RooResolutionModel& model, DecayType type=DoubleSided) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooBMixDecay constructor is pythonized with enum values."""
+        r"""The RooBMixDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)

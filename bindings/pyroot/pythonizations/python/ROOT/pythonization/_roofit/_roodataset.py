@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooDataSet(object):
-    """Some member functions of RooDataSet that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooDataSet that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooDataSet() constructor and RooDataSet::plotOnXY.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -33,7 +33,7 @@ class RooDataSet(object):
         "    const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooDataSet constructor is pythonized with the command argument pythonization.
+        r"""The RooDataSet constructor is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the constructor.
         """
         # Redefinition of `RooDataSet` constructor for keyword arguments.
@@ -48,7 +48,7 @@ class RooDataSet(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
     )
     def plotOnXY(self, *args, **kwargs):
-        """The RooDataSet::plotOnXY() function is pythonized with the command argument pythonization.
+        r"""The RooDataSet::plotOnXY() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooDataSet.plotOnXY` for keyword arguments.

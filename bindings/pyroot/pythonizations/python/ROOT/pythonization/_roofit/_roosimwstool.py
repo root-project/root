@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooSimWSTool(object):
-    """Some member functions of RooSimWSTool that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooSimWSTool that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooSimWSTool::build.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -34,7 +34,7 @@ class RooSimWSTool(object):
         "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
     )
     def build(self, *args, **kwargs):
-        """The RooSimWSTool::build() function is pythonized with the command argument pythonization.
+        r"""The RooSimWSTool::build() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooSimWSTool.build` for keyword arguments.

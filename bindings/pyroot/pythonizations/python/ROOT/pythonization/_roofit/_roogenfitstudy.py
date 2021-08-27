@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooGenFitStudy(object):
-    """Some member functions of RooGenFitStudy that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooGenFitStudy that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooGenFitStudy::setGenConfig.
     """
 
@@ -26,7 +26,7 @@ class RooGenFitStudy(object):
         ]
     )
     def setGenConfig(self, *args, **kwargs):
-        """The RooGenFitStudy::setGenConfig() function is pythonized with the command argument pythonization.
+        r"""The RooGenFitStudy::setGenConfig() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function.
         """
         # Redefinition of `RooGenFitStudy.setGenConfig` for keyword arguments.

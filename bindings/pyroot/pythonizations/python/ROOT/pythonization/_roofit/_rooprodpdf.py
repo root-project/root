@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooProdPdf(object):
-    """RooProdPdf() constructor takes a RooCmdArg as argument also supports keyword arguments.
+    r"""RooProdPdf() constructor takes a RooCmdArg as argument also supports keyword arguments.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
     # Directly passing a RooCmdArg:
@@ -38,7 +38,7 @@ class RooProdPdf(object):
         "    const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooProdPdf constructor is pythonized with the command argument pythonization.
+        r"""The RooProdPdf constructor is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the constructor.
         """
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)

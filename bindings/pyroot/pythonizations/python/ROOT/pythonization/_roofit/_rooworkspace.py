@@ -13,7 +13,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooWorkspace(object):
-    """The RooWorkspace::import function can't be used in PyROOT because `import` is a reserved python keyword.
+    r"""The RooWorkspace::import function can't be used in PyROOT because `import` is a reserved python keyword.
     For this reason, an alternative with a capitalized name is provided:
     \code{.py}
     workspace.Import(x)
@@ -27,7 +27,7 @@ class RooWorkspace(object):
         "    const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooWorkspace constructor is pythonized with the command argument pythonization.
+        r"""The RooWorkspace constructor is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the constructor.
         """
         # Redefinition of `RooWorkspace` constructor for keyword arguments.
@@ -56,14 +56,14 @@ class RooWorkspace(object):
         ]
     )
     def Import(self, *args, **kwargs):
-        """
+        r"""
         Support the C++ `import()` as `Import()` in python
         """
         return getattr(self, "import")(*args, **kwargs)
 
 
 def RooWorkspace_import(self, *args, **kwargs):
-    """The RooWorkspace::import function can't be used in PyROOT because `import` is a reserved python keyword.
+    r"""The RooWorkspace::import function can't be used in PyROOT because `import` is a reserved python keyword.
     So, Import() is used and pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the `import()` function.
     """

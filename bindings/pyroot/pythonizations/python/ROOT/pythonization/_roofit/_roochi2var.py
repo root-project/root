@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooChi2Var(object):
-    """Constructor of RooChi2Var takes a RooCmdArg as argument also supports keyword arguments."""
+    r"""Constructor of RooChi2Var takes a RooCmdArg as argument also supports keyword arguments."""
 
     @cpp_signature(
         [
@@ -30,7 +30,7 @@ class RooChi2Var(object):
         ]
     )
     def __init__(self, *args, **kwargs):
-        """The RooCategory constructor is pythonized for converting python dict to std::map.
+        r"""The RooCategory constructor is pythonized for converting python dict to std::map.
         The keywords must correspond to the CmdArg of the constructor function.
         """
         # Redefinition of `RooChi2Var` constructor for keyword arguments.
