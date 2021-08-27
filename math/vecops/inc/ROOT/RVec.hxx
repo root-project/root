@@ -760,11 +760,24 @@ auto Dot(const RVec<T> &v0, const RVec<V> &v1) -> decltype(v0[0] * v1[0])
 /// auto v_sum = Sum(v);
 /// v_sum
 /// // (float) 6.f
+/// auto v_sum_d = Sum(v, 0.);
+/// v_sum_d
+/// // (double) 6.0000000
 /// ~~~
-template <typename T>
-T Sum(const RVec<T> &v)
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// const ROOT::Math::PtEtaPhiMVector lv0 {15.5f, .3f, .1f, 105.65f},
+///   lv1 {34.32f, 2.2f, 3.02f, 105.65f},
+///   lv2 {12.95f, 1.32f, 2.2f, 105.65f};
+/// RVec<ROOT::Math::PtEtaPhiMVector> v {lv0, lv1, lv2};
+/// auto v_sum_lv = Sum(v, ROOT::Math::PtEtaPhiMVector());
+/// v_sum_lv
+/// // (ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > &) (30.8489,2.46534,2.58947,361.084)
+/// ~~~
+template <typename T, typename R = T>
+R Sum(const RVec<T> &v, const R zero = R(0))
 {
-   return std::accumulate(v.begin(), v.end(), T(0));
+   return std::accumulate(v.begin(), v.end(), zero);
 }
 
 /// Get the mean of the elements of an RVec
@@ -783,6 +796,37 @@ double Mean(const RVec<T> &v)
 {
    if (v.empty()) return 0.;
    return double(Sum(v)) / v.size();
+}
+
+/// Get the mean of the elements of an RVec with custom initial value
+///
+/// The return type will be deduced from the `zero` parameter
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_mean_f = Mean(v, 0.f);
+/// v_mean_f
+/// // (float) 2.33333f
+/// auto v_mean_d = Mean(v, 0.);
+/// v_mean_d
+/// // (double) 2.3333333
+/// ~~~
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// const ROOT::Math::PtEtaPhiMVector lv0 {15.5f, .3f, .1f, 105.65f},
+///   lv1 {34.32f, 2.2f, 3.02f, 105.65f},
+///   lv2 {12.95f, 1.32f, 2.2f, 105.65f};
+/// RVec<ROOT::Math::PtEtaPhiMVector> v {lv0, lv1, lv2};
+/// auto v_mean_lv = Mean(v, ROOT::Math::PtEtaPhiMVector());
+/// v_mean_lv
+/// // (ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > &) (10.283,2.46534,2.58947,120.361)
+/// ~~~
+template <typename T, typename R = T>
+R Mean(const RVec<T> &v, const R zero)
+{
+   if (v.empty()) return zero;
+   return Sum(v, zero) / v.size();
 }
 
 /// Get the greatest element of an RVec
