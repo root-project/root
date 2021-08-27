@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooNLLVar(object):
-    """RooNLLVar() constructor takes a RooCmdArg as argument also supports keyword arguments."""
+    r"""RooNLLVar() constructor takes a RooCmdArg as argument also supports keyword arguments."""
 
     @cpp_signature(
         "RooNLLVar(const char* name, const char* title, RooAbsPdf& pdf, RooAbsData& data,"
@@ -24,7 +24,7 @@ class RooNLLVar(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooNLLVar constructor is pythonized with the command argument pythonization.
+        r"""The RooNLLVar constructor is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the constructor function.
         """
         # Redefinition of `RooNLLVar` constructor for keyword arguments.

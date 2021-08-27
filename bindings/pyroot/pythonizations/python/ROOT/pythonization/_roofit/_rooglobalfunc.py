@@ -60,7 +60,7 @@ _style_map = {"-": "kSolid", "--": "kDashed", ":": "kDotted", "-.": "kDashDotted
     "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
 )
 def FitOptions(*args, **kwargs):
-    """The FitOptions() function is pythonized with the command argument pythonization.
+    r"""The FitOptions() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `FitOptions` for keyword arguments.
@@ -77,7 +77,7 @@ def FitOptions(*args, **kwargs):
     "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
 )
 def Format(*args, **kwargs):
-    """The Format() function is pythonized with the command argument pythonization.
+    r"""The Format() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `Format` for keyword arguments.
@@ -96,7 +96,7 @@ def Format(*args, **kwargs):
     "const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none()) ;"
 )
 def Frame(*args, **kwargs):
-    """The Frame() function is pythonized with the command argument pythonization.
+    r"""The Frame() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `Frame` for keyword arguments.
@@ -113,7 +113,7 @@ def Frame(*args, **kwargs):
     "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
 )
 def MultiArg(*args, **kwargs):
-    """The MultiArg() function is pythonized with the command argument pythonization.
+    r"""The MultiArg() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `MultiArg` for keyword arguments.
@@ -125,7 +125,7 @@ def MultiArg(*args, **kwargs):
 
 @cpp_signature("YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
 def YVar(*args, **kwargs):
-    """The YVar() function is pythonized with the command argument pythonization.
+    r"""The YVar() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `YVar` for keyword arguments.
@@ -140,7 +140,7 @@ def YVar(*args, **kwargs):
 
 @cpp_signature("ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
 def ZVar(*args, **kwargs):
-    """The ZVar() function is pythonized with the command argument pythonization.
+    r"""The ZVar() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `ZVar` for keyword arguments.
@@ -155,7 +155,7 @@ def ZVar(*args, **kwargs):
 
 @cpp_signature("Slice(std::map<RooCategory*, std::string> const&) ;")
 def Slice(*args, **kwargs):
-    """The Slice function is pythonized for converting python dict to std::map.
+    r"""The Slice function is pythonized for converting python dict to std::map.
     The keywords must correspond to the CmdArg of the function.
     The instances in the dict must correspond to the template argument in std::map of the function.
     """
@@ -178,7 +178,7 @@ def Slice(*args, **kwargs):
     ]
 )
 def Import(*args, **kwargs):
-    """The Import function is pythonized for converting python dict to std::map.
+    r"""The Import function is pythonized for converting python dict to std::map.
     The keywords must correspond to the CmdArg of the function.
     The instances in the dict must correspond to the template argument in std::map of the function.
     """
@@ -195,7 +195,7 @@ def Import(*args, **kwargs):
 
 @cpp_signature("Link(const std::map<std::string,RooAbsData*>&) ;")
 def Link(*args, **kwargs):
-    """The Link function is pythonized for converting python dict to std::map.
+    r"""The Link function is pythonized for converting python dict to std::map.
     The keywords must correspond to the CmdArg of the function.
     The instances in the dict must correspond to the template argument in std::map of the function.
     """

@@ -15,7 +15,7 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooMCStudy(object):
-    """Some member functions of RooMCStudy that take a RooCmdArg as argument also support keyword arguments.
+    r"""Some member functions of RooMCStudy that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to constructor RooMCStudy(), RooMCStudy::plotParamOn, RooMCStudy::plotParam, RooMCStudy::plotNLL, RooMCStudy::plotError and RooMCStudy::plotPull.
     For example, the following code is equivalent in PyROOT:
     \code{.py}
@@ -34,7 +34,7 @@ class RooMCStudy(object):
         "    const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def __init__(self, *args, **kwargs):
-        """The RooMCStudy constructor is pythonized with the command argument pythonization.
+        r"""The RooMCStudy constructor is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the constructor function.
         """
         # Redefinition of `RooMCStudy` constructor for keyword arguments.
@@ -48,7 +48,7 @@ class RooMCStudy(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def plotParamOn(self, *args, **kwargs):
-        """The RooMCStudy::plotParamOn() function is pythonized with the command argument pythonization.
+        r"""The RooMCStudy::plotParamOn() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function."""
         # Redefinition of `RooMCStudy.plotParamOn` for keyword arguments.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
@@ -66,7 +66,7 @@ class RooMCStudy(object):
         ]
     )
     def plotParam(self, *args, **kwargs):
-        """The RooMCStudy::plotParam() function is pythonized with the command argument pythonization.
+        r"""The RooMCStudy::plotParam() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function.
         """
         # Redefinition of `RooMCStudy.plotParam` for keyword arguments.
@@ -80,7 +80,7 @@ class RooMCStudy(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def plotNLL(self, *args, **kwargs):
-        """The RooMCStudy::plotNLL() function is pythonized with the command argument pythonization.
+        r"""The RooMCStudy::plotNLL() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function.
         """
         # Redefinition of `RooMCStudy.plotNLL` for keyword arguments.
@@ -94,7 +94,7 @@ class RooMCStudy(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def plotError(self, *args, **kwargs):
-        """The RooMCStudy::plotError() function is pythonized with the command argument pythonization.
+        r"""The RooMCStudy::plotError() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function.
         """
         # Redefinition of `RooMCStudy.plotError` for keyword arguments.
@@ -108,7 +108,7 @@ class RooMCStudy(object):
         "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
     )
     def plotPull(self, *args, **kwargs):
-        """The RooMCStudy::plotError() function is pythonized with the command argument pythonization.
+        r"""The RooMCStudy::plotError() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArg of the function.
         """
         # Redefinition of `RooMCStudy.plotPull` for keyword arguments.
