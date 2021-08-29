@@ -324,6 +324,17 @@ void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
    }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Execute Python code from string
+///
+/// \param[in] code Python code as string
+/// \param[in] fGlobalNS Global Namespace for Python Session
+/// \param[in] fLocalNS Local Namespace for Python Session
+///
+/// Overloaded static Helper function to run python code
+/// from string and throw runtime error if the Python session
+/// is unable to execute the code
+
 void PyMethodBase::PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
    PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
@@ -332,6 +343,12 @@ void PyMethodBase::PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLoc
       throw std::runtime_error("\nFailed to run python code: "+code);
    }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Returns `const char*` from Python string in PyObject
+///
+/// \param[in] string Python String object
+/// \return String representation in `const char*`
 
 const char* PyMethodBase::PyStringAsString(PyObject* string){
    PyObject* encodedString = PyUnicode_AsUTF8String(string);
