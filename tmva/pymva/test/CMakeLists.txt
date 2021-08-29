@@ -13,7 +13,6 @@ project(pymva-tests)
 
 set(Libraries Core MathCore TMVA PyMVA)
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
-set(SOFIE ../../sofie)
 
 # Look for needed python modules
 find_python_module(torch QUIET)
@@ -46,18 +45,17 @@ if(PY_TORCH_FOUND)
 
    # Test RModelParser_PyTorch
    add_executable(emitFromPyTorch
-                 EmitFromPyTorch.cxx
-                 ../src/RModelParser_PyTorch.cxx
-                 ../../sofie/src/RModel.cxx
-                 ../../sofie/src/SOFIE_common.cxx
+                  EmitFromPyTorch.cxx
+                  ${CMAKE_SOURCE_DIR}/tmva/pymva/src/RModelParser_PyTorch.cxx
+                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
+                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
                  )
    target_link_libraries(emitFromPyTorch ${PYTHON_LIBRARIES} ${Libraries})
    target_include_directories(emitFromPyTorch PRIVATE
-                 ../inc
-                 ${SOFIE}/inc
-                 ../../tmva/inc
-                 ../../../core/foundation/inc
-                 ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+                              ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+                              ${CMAKE_SOURCE_DIR}/tmva/inc
+                              ${CMAKE_SOURCE_DIR}/core/foundation/inc
+                              ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromPyTorch PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_PyTorch)
