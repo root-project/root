@@ -123,7 +123,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Gemm object
 ///
-/// \param[in] flayer Python Keras layer as a Dictionary object
+/// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
 /// For Keras's Dense layer, the names of the input tensor, output tensor, and
@@ -166,7 +166,7 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator object for activation functions
 ///
-/// \param[in] flayer Python Keras layer as a Dictionary object
+/// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
 /// For Keras's keras.layers.Activation layer, the activation attribute is
@@ -186,7 +186,7 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Relu object
 ///
-/// \param[in] flayer Python Keras layer as a Dictionary object
+/// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_Relu object, we extract the names of
@@ -215,7 +215,7 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Transpose object
 ///
-/// \param[in] flayer Python Keras layer as a Dictionary object
+/// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
 /// The Permute layer in Keras has an equivalent Tranpose operator in ONNX.
@@ -327,7 +327,7 @@ RModel Parse(std::string filename){
       filename_nodir = (filename.substr(isep+1, filename.length() - isep));
    }
 
-   //Check on whether the ONNX file exists
+   //Check on whether the Keras .h5 file exists
    if(!std::ifstream(filename).good()){
         throw std::runtime_error("Model file "+filename_nodir+" not found!");
     }
