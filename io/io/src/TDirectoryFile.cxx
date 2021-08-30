@@ -1453,7 +1453,7 @@ Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
    auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
    if (!listOfKeys) {
       Error("ReadTObject", "Unexpected type of TDirectoryFile::fKeys!");
-      return nullptr;
+      return 0;
    }
 
    if (const TList *keyList = listOfKeys->GetListForObject(keyname)) {
