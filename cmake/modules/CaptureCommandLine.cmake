@@ -32,13 +32,14 @@ endforeach()
 
 # Record the full command line invocation.
 set(CMAKE_INVOKE "${CMAKE_COMMAND} ${CMAKE_INVOKE_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}" CACHE STRING "Command used to invoke cmake" FORCE)
+
 # Create a simple shell script that allows us to reinvoke cmake with the captured command line.
 if(NOT WIN32)
   if (NOT ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
     set(RECMAKE_GENERATOR "-G ${CMAKE_GENERATOR}")
   endif()
-  set(RECMAKE_REPLAY_FILE ${PROJECT_BINARY_DIR}/recmake_replay.sh)
-  set(RECMAKE_INITIAL_FILE ${PROJECT_BINARY_DIR}/recmake_initial.sh)
+  set(RECMAKE_REPLAY_FILE ${CMAKE_CURRENT_BINARY_DIR}/recmake_replay.sh)
+  set(RECMAKE_INITIAL_FILE ${CMAKE_CURRENT_BINARY_DIR}/recmake_initial.sh)
   if (NOT EXISTS ${RECMAKE_INITIAL_FILE})
       FILE(WRITE ${RECMAKE_INITIAL_FILE} "#!/bin/sh\n"
               "rm -f CMakeCache.txt\n"
