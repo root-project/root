@@ -33,4 +33,7 @@ target_include_directories(ROOTTMVASofie PUBLIC
 set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+# tests requires protobuf
+if (tmva-sofie)
+   ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()
