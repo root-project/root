@@ -5,7 +5,7 @@
 
 #include "TError.h"
 
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #ifndef __CUDACC__
@@ -33,7 +33,9 @@ namespace RooBatchCompute {
 #endif
 
 struct RunContext;
-typedef std::unordered_map<const RooAbsReal*,RooSpan<const double>> DataMap;
+// We have to use map instead of unordered_map because the unordered_maps from
+// nvcc and gcc are not compatible sometimes.
+typedef std::map<const RooAbsReal*,RooSpan<const double>> DataMap;
 typedef std::vector<const RooAbsReal*> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double* __restrict RestrictArr;
