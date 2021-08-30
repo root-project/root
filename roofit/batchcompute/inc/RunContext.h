@@ -19,7 +19,7 @@
 
 #include "RooSpan.h"
 
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 class RooArgSet;
@@ -49,12 +49,12 @@ struct RunContext {
   void clear();
 
   /// Once an object has computed its value(s), the span pointing to the results is registered here.
-  std::unordered_map<const RooAbsReal*, RooSpan<const double>> spans;
-  std::unordered_map<const RooAbsReal*, const double*> spansCuda;
+  std::map<const RooAbsReal*, RooSpan<const double>> spans;
+  std::map<const RooAbsReal*, const double*> spansCuda;
 
   /// Memory owned by this struct. It is associated to nodes in the computation graph using their pointers.
-  std::unordered_map<const RooAbsReal*, std::vector<double>> ownedMemory;
-  std::unordered_map<const RooAbsReal*, double*> ownedMemoryCuda;
+  std::map<const RooAbsReal*, std::vector<double>> ownedMemory;
+  std::map<const RooAbsReal*, double*> ownedMemoryCuda;
 
   const char* rangeName{nullptr}; /// If evaluation should only occur in a range, the range name can be passed here.
   std::vector<double> logProbabilities; /// Possibility to register log probabilities.
