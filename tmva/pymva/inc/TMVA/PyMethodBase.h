@@ -131,7 +131,7 @@ namespace TMVA {
       PyObject *fLocalNS; // local namesapace
 
    public:
-      static void PyRunString(TString code, PyObject *fGlobalNS, PyObject* fLocalNS); // Overloaded static Python utlity function for running Python code
+      static void PyRunString(TString code, PyObject *globalNS, PyObject* localNS); // Overloaded static Python utlity function for running Python code
       static const char* PyStringAsString(PyObject *string); // Python Utility function for converting a Python String object to const char*
 
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method

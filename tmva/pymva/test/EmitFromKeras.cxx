@@ -8,6 +8,8 @@
 #include "TMVA/RModel.hxx"
 #include "TMVA/RModelParser_Keras.h"
 
+#include <Python.h>
+
 using namespace TMVA::Experimental::SOFIE;
 
 int main(){
