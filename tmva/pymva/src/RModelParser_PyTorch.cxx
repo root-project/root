@@ -23,13 +23,40 @@
 
 #include "TMVA/RModelParser_PyTorch.h"
 
+#include <Python.h>
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 namespace PyTorch{
 
+// Referencing Python utility functions present in PyMethodBase
+static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
+static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
+
+
 namespace INTERNAL{
+
+// For searching and calling specific preparatory function for PyTorch ONNX Graph's node
+std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode);
+
+std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Gemm operator
+std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Relu operator
+std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode); // For instantiating ROperator for PyTorch ONNX's Transpose operator
+
+// For mapping PyTorch ONNX Graph's Node with the preparatory functions for ROperators
+using PyTorchMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fNode)>;
+
+const PyTorchMethodMap mapPyTorchNode =
+{
+    {"onnx::Gemm",      &MakePyTorchGemm},
+    {"onnx::Relu",      &MakePyTorchRelu},
+    {"onnx::Transpose", &MakePyTorchTranspose}
+};
+
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares equivalent ROperator with respect to PyTorch ONNX node.
