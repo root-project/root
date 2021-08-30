@@ -82,7 +82,7 @@ struct InitializedTensor{
 };
 
 template <typename T>
-ETensorType GetTemplatedType(T obj){
+ETensorType GetTemplatedType(T /*obj*/ ){
    if (std::is_same<T, float>::value) return ETensorType::FLOAT;
    if (std::is_same<T, uint8_t>::value) return ETensorType::UNINT8;
    if (std::is_same<T, int8_t>::value) return ETensorType::INT8;
