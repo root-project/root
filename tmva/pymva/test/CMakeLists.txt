@@ -43,6 +43,9 @@ if(PY_TORCH_FOUND)
 endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
+   configure_file(generateKerasModelFunctional.py generateKerasModelFunctional.py COPYONLY)
+   configure_file(generateKerasModelSequential.py generateKerasModelSequential.py COPYONLY)
+
    # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
       LIBRARIES ${Libraries})
@@ -57,6 +60,37 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
    ROOT_EXECUTABLE(testPyKerasMulticlass testPyKerasMulticlass.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass)
+
+   # Test RModelParser_Keras
+   add_executable(emitFromKeras
+                 EmitFromKeras.cxx
+                 ${CMAKE_SOURCE_DIR}/tmva/pymva/src/RModelParser_Keras.cxx
+                 ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
+                 ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
+                 )
+   target_link_libraries(emitFromKeras ${PYTHON_LIBRARIES} ${Libraries})
+   target_include_directories(emitFromKeras PRIVATE
+                 ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+                 ${CMAKE_SOURCE_DIR}/tmva/inc
+                 ${CMAKE_SOURCE_DIR}/core/foundation/inc
+                 ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+               )
+   set_target_properties(emitFromKeras PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+   add_custom_target(SofieCompileModels_Keras)
+   add_dependencies(SofieCompileModels_Keras emitFromKeras)
+   add_custom_command(TARGET SofieCompileModels_Keras POST_BUILD
+		COMMAND ./emitFromKeras
+		USES_TERMINAL
+	)
+   ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
+    LIBRARIES
+    ROOTTMVASofie
+    blas
+    ${PYTHON_LIBRARIES}
+    INCLUDE_DIRS
+    ${CMAKE_CURRENT_BINARY_DIR}
+   )
+   add_dependencies(TestRModelParserKeras SofieCompileModels_Keras)
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
 
 if(PY_SKLEARN_FOUND)
