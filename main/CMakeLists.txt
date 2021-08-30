@@ -34,8 +34,8 @@ ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
-  ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/haddCommandLineOptionsHelp.h
+  ${PROJECT_SOURCE_DIR}/main/src/hadd-argparse.py
+  ${PROJECT_BINARY_DIR}/ginclude/haddCommandLineOptionsHelp.h
 )
 
 if(fortran AND CMAKE_Fortran_COMPILER)
@@ -52,9 +52,9 @@ foreach(rawUtilName ${utils})
     string(REPLACE ".py" "" utilName ${utilName})
   endif()
   set(python ${PYTHON_EXECUTABLE_Development_Main})
-  configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
+  configure_file(${rawUtilName} ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
-  install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
+  install(FILES ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
                                DESTINATION ${CMAKE_INSTALL_BINDIR}
                                RENAME ${utilName}
                                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
@@ -87,9 +87,9 @@ ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
 add_dependencies(rootcling complexDict)
 
 target_include_directories(rootcling PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/metacling/res
-        ${CMAKE_SOURCE_DIR}/core/dictgen/res
-        ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+        ${PROJECT_SOURCE_DIR}/core/metacling/res
+        ${PROJECT_SOURCE_DIR}/core/dictgen/res
+        ${PROJECT_SOURCE_DIR}/io/rootpcm/res)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
 endif()

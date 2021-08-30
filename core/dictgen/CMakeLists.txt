@@ -30,15 +30,15 @@ ROOT_OBJECT_LIBRARY(Dictgen
 add_dependencies(Dictgen CLING)
 
 target_include_directories(Dictgen PRIVATE
-  ${CMAKE_SOURCE_DIR}/core/dictgen/src
-  ${CMAKE_SOURCE_DIR}/core/dictgen/res
-  ${CMAKE_SOURCE_DIR}/core/foundation/res
-  ${CMAKE_SOURCE_DIR}/core/clingutils/res
-  ${CMAKE_SOURCE_DIR}/core/base/inc
-  ${CMAKE_SOURCE_DIR}/core/clib/inc
-  ${CMAKE_SOURCE_DIR}/core/meta/inc
-  ${CMAKE_SOURCE_DIR}/core/foundation/inc
-  ${CMAKE_BINARY_DIR}/ginclude
+  ${PROJECT_SOURCE_DIR}/core/dictgen/src
+  ${PROJECT_SOURCE_DIR}/core/dictgen/res
+  ${PROJECT_SOURCE_DIR}/core/foundation/res
+  ${PROJECT_SOURCE_DIR}/core/clingutils/res
+  ${PROJECT_SOURCE_DIR}/core/base/inc
+  ${PROJECT_SOURCE_DIR}/core/clib/inc
+  ${PROJECT_SOURCE_DIR}/core/meta/inc
+  ${PROJECT_SOURCE_DIR}/core/foundation/inc
+  ${PROJECT_BINARY_DIR}/ginclude
   ${CLING_INCLUDE_DIRS}
 )
 
@@ -60,8 +60,8 @@ endif()
 
 #---CreateRootClingCommandLineOptions------------------------------------------------------------------
 generateHeader(Dictgen
-  ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/rootclingCommandLineOptionsHelp.h
+  ${PROJECT_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py
+  ${PROJECT_BINARY_DIR}/ginclude/rootclingCommandLineOptionsHelp.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

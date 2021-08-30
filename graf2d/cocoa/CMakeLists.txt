@@ -42,7 +42,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     RGlew
 )
 
-target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
+target_include_directories(GCocoa PRIVATE ${PROJECT_SOURCE_DIR}/graf3d/gl/inc)
 
 # We know GL is deprecated on macOS. And our answer is WebGUI/Graphics.
 target_compile_options(GCocoa PRIVATE -ObjC++ -Wno-deprecated-declarations)
@@ -52,7 +52,7 @@ if(opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON
   target_include_directories(GCocoa PRIVATE ${OPENGL_INCLUDE_DIR})
 else()
   target_include_directories(GCocoa PRIVATE
-    ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
+    ${PROJECT_SOURCE_DIR}/graf3d/gl/inc
   )
 endif(opengl)
 

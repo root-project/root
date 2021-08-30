@@ -38,23 +38,23 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ProofBench
 # Generation and installation of the PAR files required by the benchmark
 add_custom_target(ProofBenchPARFiles ALL
   DEPENDS
-    ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
-    ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
+    ${PROJECT_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
+    ${PROJECT_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
 )
 
 add_custom_command(OUTPUT
-    ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
-    ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
+    ${PROJECT_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
+    ${PROJECT_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/etc/proof/utils/makepbenchpars.sh
+    ${PROJECT_SOURCE_DIR}/etc/proof/utils/makepbenchpars.sh
   COMMAND
-    ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/proof/proofbench
+    ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/etc/proof/proofbench
   COMMAND
-    ${CMAKE_SOURCE_DIR}/etc/proof/utils/makepbenchpars.sh ProofBenchCPUSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}
+    ${PROJECT_SOURCE_DIR}/etc/proof/utils/makepbenchpars.sh ProofBenchCPUSel ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}
   COMMAND
-    ${CMAKE_SOURCE_DIR}/etc/proof/utils/makepbenchpars.sh ProofBenchDataSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/etc/proof/utils/makepbenchpars.sh ProofBenchDataSel ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/proof/proofbench
+install(DIRECTORY ${PROJECT_BINARY_DIR}/etc/proof/proofbench
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/proof USE_SOURCE_PERMISSIONS)

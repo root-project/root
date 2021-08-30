@@ -8,7 +8,7 @@
 
 include(ExternalProject)
 
-set(clad_install_dir ${CMAKE_BINARY_DIR}/etc/cling/)
+set(clad_install_dir ${PROJECT_BINARY_DIR}/etc/cling/)
 # Specify include dirs for clad
 set(CLAD_INCLUDE_DIRS ${clad_install_dir})
 # Clad Libraries

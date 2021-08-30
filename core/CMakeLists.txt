@@ -8,10 +8,10 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+file(WRITE ${PROJECT_BINARY_DIR}/etc/gitinfo.txt
   "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
 
-file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+file(WRITE ${PROJECT_BINARY_DIR}/RGitCommit.h.tmp
 "#ifndef ROOT_RGITCOMMIT_H
 #define ROOT_RGITCOMMIT_H
   #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
@@ -19,47 +19,47 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 #endif"
 )
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
+set_source_files_properties(${PROJECT_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/include/RConfigure.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
-    ${CMAKE_BINARY_DIR}/include/RConfigure.h
+    ${PROJECT_BINARY_DIR}/ginclude/RConfigure.h
+    ${PROJECT_BINARY_DIR}/include/RConfigure.h
   DEPENDS
-    ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
+    ${PROJECT_BINARY_DIR}/ginclude/RConfigure.h
 )
 
-add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
+add_custom_target(rconfigure ALL DEPENDS ${PROJECT_BINARY_DIR}/include/RConfigure.h)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/ginclude/RGitCommit.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+    ${PROJECT_BINARY_DIR}/RGitCommit.h.tmp
+    ${PROJECT_BINARY_DIR}/ginclude/RGitCommit.h
   DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+    ${PROJECT_BINARY_DIR}/RGitCommit.h.tmp
 )
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/include/RGitCommit.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+    ${PROJECT_BINARY_DIR}/RGitCommit.h.tmp
+    ${PROJECT_BINARY_DIR}/include/RGitCommit.h
   DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+    ${PROJECT_BINARY_DIR}/RGitCommit.h.tmp
 )
 
-add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
+add_custom_target(gitcommit ALL DEPENDS ${PROJECT_BINARY_DIR}/include/RGitCommit.h)
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+set_source_files_properties(${PROJECT_BINARY_DIR}/ginclude/RGitCommit.h
   PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
+set_source_files_properties(${PROJECT_BINARY_DIR}/include/RGitCommit.h
   PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
 
-install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+install(FILES ${PROJECT_BINARY_DIR}/ginclude/RGitCommit.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_subdirectory(clib)
@@ -127,17 +127,17 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${unix_objects}
                ${winnt_objects})
 
-ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
+ROOT_OBJECT_LIBRARY(BaseTROOT ${PROJECT_SOURCE_DIR}/core/base/src/TROOT.cxx ${PROJECT_BINARY_DIR}/ginclude/RGitCommit.h)
 target_include_directories(BaseTROOT PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/foundation/res
+   ${PROJECT_SOURCE_DIR}/core/base/inc
+   ${PROJECT_SOURCE_DIR}/core/clib/inc
+   ${PROJECT_SOURCE_DIR}/core/meta/inc
+   ${PROJECT_SOURCE_DIR}/core/cont/inc
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc
+   ${PROJECT_SOURCE_DIR}/core/thread/inc
+   ${PROJECT_SOURCE_DIR}/core/gui/inc
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 add_dependencies(BaseTROOT gitcommit rconfigure)
@@ -191,36 +191,36 @@ target_compile_definitions(Core PRIVATE
 #while basic libs do not depend on Core, we have to add includes directly
 
 target_include_directories(Core PUBLIC
-   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/cont/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/meta/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clib/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/zip/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
+   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/ginclude>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/base/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/foundation/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/cont/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/gui/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/meta/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/clib/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/rint/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/zip/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/thread/inc>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/textinput/inc>
 )
 
-target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
+target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/clingutils/inc>)
 
 if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/v7/inc>)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/base/v7/inc>)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/foundation/v7/inc>)
 endif()
 
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc> $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/macosx/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc ${CMAKE_SOURCE_DIR}/core/macosx/inc)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/unix/inc> $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/macosx/inc>)
+  target_include_directories(BaseTROOT PRIVATE ${PROJECT_SOURCE_DIR}/core/unix/inc ${PROJECT_SOURCE_DIR}/core/macosx/inc)
 elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/winnt/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/winnt/inc>)
+  target_include_directories(BaseTROOT PRIVATE ${PROJECT_SOURCE_DIR}/core/winnt/inc)
 else()
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/core/unix/inc>)
+  target_include_directories(BaseTROOT PRIVATE ${PROJECT_SOURCE_DIR}/core/unix/inc)
 endif()
 
 if (runtime_cxxmodules)
@@ -256,7 +256,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
     base/inc/LinkDef.h
 )
 
-target_include_directories(G__Core PRIVATE ${CMAKE_SOURCE_DIR}/core/clingutils/inc)
+target_include_directories(G__Core PRIVATE ${PROJECT_SOURCE_DIR}/core/clingutils/inc)
 
 target_link_libraries(Core
   PRIVATE

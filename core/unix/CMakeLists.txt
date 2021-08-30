@@ -18,17 +18,17 @@ ROOT_OBJECT_LIBRARY(Unix
 )
 
 target_include_directories(Unix PRIVATE 
-   ${CMAKE_SOURCE_DIR}/core/clib/res
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/textinput/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/clib/res
+   ${PROJECT_SOURCE_DIR}/core/foundation/res
+   ${PROJECT_SOURCE_DIR}/core/base/inc
+   ${PROJECT_SOURCE_DIR}/core/clib/inc
+   ${PROJECT_SOURCE_DIR}/core/meta/inc
+   ${PROJECT_SOURCE_DIR}/core/cont/inc
+   ${PROJECT_SOURCE_DIR}/core/thread/inc
+   ${PROJECT_SOURCE_DIR}/core/textinput/inc
+   ${PROJECT_SOURCE_DIR}/core/gui/inc
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 

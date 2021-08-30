@@ -38,7 +38,7 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 set(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN ON CACHE BOOL "")
 
 # will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
+set(LLVM_DIR "${PROJECT_BINARY_DIR}/interpreter/llvm/src")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -124,7 +124,7 @@ if(clingtest)
   if (NOT builtin_llvm)
     set(CLINGTEST_EXECUTABLE CLING=${CMAKE_CURRENT_BINARY_DIR}/llvm/src/${CMAKE_CFG_INTDIR}/bin/cling)
   endif()
-  ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target check-cling
+  ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR} --target check-cling
                                        ENVIRONMENT ${CLINGTEST_EXECUTABLE})
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
@@ -220,8 +220,8 @@ if(builtin_llvm)
     add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
   endif()
 
-  set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
+  set(LLVM_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/interpreter/llvm/src/include
+    ${PROJECT_BINARY_DIR}/interpreter/llvm/src/include
     CACHE STRING "LLVM include directories."
     )
   #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
@@ -453,12 +453,12 @@ if (builtin_clang)
     # For builtin LLVM this is set in interpreter/llvm/src/CMakeLists.txt
     set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
   else()
-    set(Clang_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/")
+    set(Clang_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/tools/clang/")
     set(Clang_Config_ExtraPathHints "${Clang_DIR}cmake/modules/CMakeFiles")
   endif()
   set(CLANG_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/tools/clang/include/
+    ${CMAKE_CURRENT_BINARY_DIR}/llvm/src/tools/clang/include/
     CACHE STRING "Clang include directories.")
 else()
   set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
@@ -504,7 +504,7 @@ if (builtin_cling)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
-  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
+  set(CLING_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
 
 
 

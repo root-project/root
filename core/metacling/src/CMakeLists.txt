@@ -45,20 +45,20 @@ target_include_directories(MetaCling SYSTEM PRIVATE
 
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
-   ${CMAKE_SOURCE_DIR}/core/metacling/res
-   ${CMAKE_SOURCE_DIR}/core/clingutils/res
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/zip/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_SOURCE_DIR}/io/io/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/metacling/res
+   ${PROJECT_SOURCE_DIR}/core/clingutils/res
+   ${PROJECT_SOURCE_DIR}/core/foundation/res
+   ${PROJECT_SOURCE_DIR}/core/zip/inc
+   ${PROJECT_SOURCE_DIR}/core/clib/res
+   ${PROJECT_SOURCE_DIR}/core/base/inc
+   ${PROJECT_SOURCE_DIR}/core/meta/inc
+   ${PROJECT_SOURCE_DIR}/core/clib/inc
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc
+   ${PROJECT_SOURCE_DIR}/core/thread/inc
+   ${PROJECT_SOURCE_DIR}/core/cont/inc
+   ${PROJECT_SOURCE_DIR}/core/gui/inc
+   ${PROJECT_SOURCE_DIR}/io/io/inc
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 set_target_properties(MetaCling PROPERTIES
@@ -68,7 +68,7 @@ set_target_properties(MetaCling PROPERTIES
 
 if(MSVC)
    target_include_directories(MetaCling PRIVATE
-      ${CMAKE_SOURCE_DIR}/core/winnt/inc
+      ${PROJECT_SOURCE_DIR}/core/winnt/inc
    )
 endif()
 

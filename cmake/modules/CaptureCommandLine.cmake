@@ -37,8 +37,8 @@ if(NOT WIN32)
   if (NOT ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
     set(RECMAKE_GENERATOR "-G ${CMAKE_GENERATOR}")
   endif()
-  set(RECMAKE_REPLAY_FILE ${CMAKE_BINARY_DIR}/recmake_replay.sh)
-  set(RECMAKE_INITIAL_FILE ${CMAKE_BINARY_DIR}/recmake_initial.sh)
+  set(RECMAKE_REPLAY_FILE ${PROJECT_BINARY_DIR}/recmake_replay.sh)
+  set(RECMAKE_INITIAL_FILE ${PROJECT_BINARY_DIR}/recmake_initial.sh)
   if (NOT EXISTS ${RECMAKE_INITIAL_FILE})
       FILE(WRITE ${RECMAKE_INITIAL_FILE} "#!/bin/sh\n"
               "rm -f CMakeCache.txt\n"

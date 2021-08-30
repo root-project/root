@@ -23,5 +23,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rtools
 
 target_include_directories(Rtools PRIVATE ${R_INCLUDE_DIRS})
 
-file(COPY "${CMAKE_SOURCE_DIR}/etc/plugins/ROOT@@Math@@Minimizer/P090_RMinimizer.C"
-  DESTINATION "${CMAKE_BINARY_DIR}/etc/plugins/ROOT@@Math@@Minimizer/")
+file(COPY "${PROJECT_SOURCE_DIR}/etc/plugins/ROOT@@Math@@Minimizer/P090_RMinimizer.C"
+  DESTINATION "${PROJECT_BINARY_DIR}/etc/plugins/ROOT@@Math@@Minimizer/")

@@ -41,27 +41,27 @@ if(root7)
   list(APPEND FOUNDATION_SOURCES
     v7/src/RError.cxx)
   list(APPEND FOUNDATION_HEADER_DIRS v7/inc/)
-  set(FOUNDATION_V7_INC ${CMAKE_SOURCE_DIR}/core/foundation/v7/inc)
+  set(FOUNDATION_V7_INC ${PROJECT_SOURCE_DIR}/core/foundation/v7/inc)
   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
 ROOT_OBJECT_LIBRARY(Foundation ${FOUNDATION_SOURCES})
 target_include_directories(Foundation PRIVATE
    ${FOUNDATION_V7_INC}
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/foundation/res
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 ROOT_OBJECT_LIBRARY(Foundation_Stage1 ${FOUNDATION_SOURCES}) # used by rootcling_stage1
 target_include_directories(Foundation_Stage1 PRIVATE
    ${FOUNDATION_V7_INC}
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/foundation/res
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 if(MSVC)
-   target_include_directories(Foundation PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
-   target_include_directories(Foundation_Stage1 PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+   target_include_directories(Foundation PRIVATE ${PROJECT_SOURCE_DIR}/core/winnt/inc)
+   target_include_directories(Foundation_Stage1 PRIVATE ${PROJECT_SOURCE_DIR}/core/winnt/inc)
 endif()
 
 set_target_properties(Foundation_Stage1 PROPERTIES
