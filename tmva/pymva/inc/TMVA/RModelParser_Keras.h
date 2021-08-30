@@ -42,51 +42,6 @@ namespace SOFIE{
 namespace PyKeras{
 
 
-// Referencing Python utility functions present in PyMethodBase
-static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
-static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
-
-
-namespace INTERNAL{
-   // For adding Keras layer into RModel object
-   void AddKerasLayer(RModel& rmodel, PyObject* fLayer);
-
-
-   // Declaring Internal Functions for Keras layers which don't have activation as an additional attribute
-   std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer);  // For instantiating ROperator for Keras Activation Layer
-   std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer);       // For instantiating ROperator for Keras ReLU layer
-   std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer);   // For instantiating ROperator for Keras Permute Layer
-
-
-   // Declaring Internal function for Keras layers which have additional activation attribute
-   std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer);   // For instantiating ROperator for Keras Dense Layer
-
-   // For mapping Keras layer with the preparatory functions for ROperators
-   using KerasMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fLayer)>;
-   using KerasMethodMapWithActivation = std::unordered_map<std::string, std::unique_ptr<ROperator>(*)(PyObject* fLayer)>;
-
-   const KerasMethodMap mapKerasLayer =
-    {
-        {"Activation", &MakeKerasActivation},
-        {"Permute", &MakeKerasPermute},
-
-        //For activation layers
-        {"ReLU", &MakeKerasReLU},
-
-        //For layers with activation attributes
-        {"relu", &MakeKerasReLU}
-    };
-
-    const KerasMethodMapWithActivation mapKerasLayerWithActivation =
-    {
-        {"Dense", &MakeKerasDense},
-    };
-
-    // Function which returns values from a Python Tuple object in vector of size_t
-    std::vector<size_t> GetShapeFromTuple(PyObject* shapeTuple);
-
-}//INTERNAL
-
 /// Parser function for translatng Keras .h5 model into a RModel object.
 /// Accepts the file location of a Keras model and returns the
 /// equivalent RModel object.
