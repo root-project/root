@@ -148,7 +148,7 @@ namespace SOFIE{
 
    void RModel::UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data){
       tensor_name = UTILITY::Clean_name(tensor_name);
-      if (not CheckIfTensorAlreadyExist(tensor_name)){
+      if (!CheckIfTensorAlreadyExist(tensor_name)){
          throw std::runtime_error("TMVA-SOFIE: tensor " + tensor_name + " not found when trying to update it");
       }
       InitializedTensor new_tensor {type, shape, data};

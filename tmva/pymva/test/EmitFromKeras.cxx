@@ -1,8 +1,8 @@
 // Author: Sanjiban Sengupta, 2021
 // Description:
-//           This is to test the RModelParser_PyTorch.
-//           The program is run when the target 'TestRModelParserPyTorch' is built.
-//           The program generates the required .hxx file after parsing a PyTorch .pt file into a RModel object.
+//           This is to test the RModelParser_Keras.
+//           The program is run when the target 'TestRModelParserKeras' is built.
+//           The program generates the required .hxx file after parsing a Keras .h5 file into a RModel object.
 
 
 #include "TMVA/RModel.hxx"
