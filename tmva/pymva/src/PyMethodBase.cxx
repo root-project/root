@@ -335,8 +335,8 @@ void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
 /// from string and throw runtime error if the Python session
 /// is unable to execute the code
 
-void PyMethodBase::PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
-   PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
+void PyMethodBase::PyRunString(TString code, PyObject *globalNS, PyObject *localNS){
+   PyObject *fPyReturn = PyRun_String(code, Py_single_input, globalNS, localNS);
    if (!fPyReturn) {
       std::cout<<"\nPython error message:\n";
       PyErr_Print();

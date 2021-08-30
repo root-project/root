@@ -25,10 +25,8 @@
 #ifndef TMVA_SOFIE_RMODELPARSER_KERAS
 #define TMVA_SOFIE_RMODELPARSER_KERAS
 
-#include <Python.h>
-
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
+//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+//#include <numpy/arrayobject.h>
 
 #include "TMVA/RModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
