@@ -21,6 +21,4 @@ add_custom_target(builtin_nlohmann_json_incl DEPENDS ${PROJECT_BINARY_DIR}/inclu
 
 set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS builtin_nlohmann_json_incl)
 
-install(FILES ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nlohmann/)
-
-
+install(FILES ${PROJECT_SOURCE_DIR}/builtins/nlohmann/json.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nlohmann/)

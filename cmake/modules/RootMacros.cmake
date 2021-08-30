@@ -286,8 +286,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(libprefix "")
   endif()
 
-   # list of include directories for dictionary generation
-   set(incdirs)
+  # list of include directories for dictionary generation
+  set(incdirs)
   if((PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
     set(headerdirs)
     
@@ -1750,6 +1750,7 @@ endfunction()
 # Creates a new googletest exectuable, and registers it as a test.
 #----------------------------------------------------------------------------
 function(ROOT_ADD_GTEST test_suite)
+
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "REPEATS;FAILREGEX"

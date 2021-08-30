@@ -136,7 +136,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
 
 if(builtin_nlohmannjson)
    target_include_directories(ROOTEve PRIVATE ${PROJECT_SOURCE_DIR}/builtins)
-   target_compile_definitions(ROOTEve INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
 else()
    target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
 endif()
