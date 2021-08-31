@@ -130,14 +130,6 @@ public:
       FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
                                                                       fNEffPoints, fExecutionPolicy);
    }
-   /// In some cases, the gradient algorithm will use information from the previous step, these can be passed
-   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-   /// so that these can be passed forward again as well at the call site, if necessary.
-   /// \warning This implementation just calls the two-parameter overload.
-   virtual void Gradient(const double *x, double *g, double */*previous_grad*/, double */*previous_g2*/, double */*previous_gstep*/) const
-   {
-      Gradient(x, g);
-   }
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLogLikelihood; }
@@ -177,15 +169,6 @@ private:
    virtual double  DoDerivative(const double * x, unsigned int icoord ) const {
       Gradient(x, &fGrad[0]);
       return fGrad[icoord];
-   }
-   /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
-   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-   /// so that these can be passed forward again as well at the call site, if necessary.
-   /// \warning This implementation just calls the two-parameter overload.
-   virtual double DoDerivative(const double *x, unsigned int icoord, double * /*previous_grad*/, double * /*previous_g2*/,
-                               double * /*previous_gstep*/) const
-   {
-      return DoDerivative(x, icoord);
    }
 
 

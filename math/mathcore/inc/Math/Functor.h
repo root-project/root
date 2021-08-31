@@ -128,14 +128,6 @@ private :
       return fFunc.Derivative(x,icoord);
    }
 
-   // TODO: implementing this will require extending with another function signature in GradFunctor
-   /// \warning This overload just calls the two-parameter version.
-   inline double DoDerivative(const double *x, unsigned int icoord, double */*previous_grad*/, double */*previous_g2*/,
-                              double */*previous_gstep*/) const
-   {
-      return DoDerivative(x, icoord);
-   }
-
 
    unsigned int fDim;
    mutable Func fFunc;  // should here be a reference and pass a non-const ref in ctor
@@ -219,13 +211,6 @@ private :
       return fGradFunc(x, icoord);
    }
 
-   // TODO: implementing this will require extending with another function signature in GradFunctor
-   /// \warning This overload just calls the two-parameter version.
-   inline double DoDerivative(const double *x, unsigned int icoord, double */*previous_grad*/, double */*previous_g2*/,
-                              double */*previous_gstep*/) const
-   {
-      return DoDerivative(x, icoord);
-   }
 
    unsigned int fDim;
    mutable Func fFunc;
@@ -361,14 +346,6 @@ private :
 
    inline double DoDerivative (const double * x, unsigned int icoord ) const {
       return ((*fObj).*fGradMemFn)(x,icoord);
-   }
-
-   // TODO: implementing this will require extending with another function signature in GradFunctor
-   /// \warning This overload just calls the two-parameter version.
-   inline double DoDerivative(const double *x, unsigned int icoord, double */*previous_grad*/, double */*previous_g2*/,
-                              double */*previous_gstep*/) const
-   {
-      return DoDerivative(x, icoord);
    }
 
    unsigned int fDim;
@@ -723,14 +700,6 @@ private :
 
    inline double DoDerivative (const double * x, unsigned int icoord  ) const {
       return fImpl->Derivative(x,icoord);
-   }
-
-   // TODO: implementing this will require extending with another function signature in GradFunctor
-   /// \warning This overload just calls the two-parameter version.
-   inline double DoDerivative(const double *x, unsigned int icoord, double */*previous_grad*/, double */*previous_g2*/,
-                              double */*previous_gstep*/) const
-   {
-      return DoDerivative(x, icoord);
    }
 
    std::unique_ptr<Impl> fImpl;    // pointer to base grad functor handler
