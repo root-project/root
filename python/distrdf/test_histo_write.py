@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import warnings
 from array import array
 
 import pyspark
@@ -16,11 +17,16 @@ class SparkHistoWriteTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Setup needed parameteres and environment variable.
+        Set up test environment for this class. Currently this includes:
 
-        Set class parameters related to the histogram.
-
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
+        - Class-wide histogram-related parameters.
+        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
+          Needed to avoid mismatch between python versions on driver and on the
+          fake executor on the same machine.
+        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
+          this is ignored by default in any application, but Python's unittest
+          library overrides the default warning filters thus exposing this
+          warning
         """
         cls.nentries = 10000  # Number of fills
         cls.gaus_mean = 10  # Mean of the gaussian distribution
@@ -29,14 +35,20 @@ class SparkHistoWriteTest(unittest.TestCase):
 
         os.environ["PYSPARK_PYTHON"] = sys.executable
 
-    def tearDown(self):
-        """Clean up the `SparkContext` object that was created."""
-        pyspark.SparkContext.getOrCreate().stop()
+        if sys.version_info.major >= 3:
+            warnings.simplefilter("ignore", ResourceWarning)
 
     @classmethod
     def tearDownClass(cls):
-        """Reset environment variable."""
+        """Reset test environment."""
         os.environ["PYSPARK_PYTHON"] = ""
+
+        if sys.version_info.major >= 3:
+            warnings.simplefilter("default", ResourceWarning)
+
+    def tearDown(self):
+        """Stop any created SparkContext"""
+        pyspark.SparkContext.getOrCreate().stop()
 
     def create_tree_with_data(self):
         """Creates a .root file with some data"""
