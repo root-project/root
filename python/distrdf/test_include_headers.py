@@ -34,7 +34,16 @@ class IncludesSparkTest(unittest.TestCase):
         """
         os.environ["PYSPARK_PYTHON"] = ""
 
-    def test_includes_function_with_filter_and_histo(self):
+    def test_header_distribution_and_inclusion(self):
+        """
+        Tests for the distribution of headers to the workers and their
+        corresponding inclusion.
+        """
+
+        self._includes_function_with_filter_and_histo()
+        self._extend_ROOT_include_path()
+
+    def _includes_function_with_filter_and_histo(self):
         """
         Check that the filter operation is able to use C++ functions that
         were included using header files.
@@ -66,7 +75,7 @@ class IncludesSparkTest(unittest.TestCase):
         # Compare the standard deviations of equivalent set of numbers
         self.assertEqual(histo.GetStdDev(), required_stdDev)
 
-    def test_extend_ROOT_include_path(self):
+    def _extend_ROOT_include_path(self):
         """
         Check that the include path of ROOT is extended with the directories
         specified in `DistRDF.include_headers()` so references between headers
