@@ -14,11 +14,10 @@ TString pythonSrc = "\
 import os\n\
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'\n\
 \n\
-import keras\n\
 import numpy as np\n\
-from keras.models import Model\n\
-from keras.layers import Input,Dense,Activation,ReLU\n\
-from keras.optimizers import SGD\n\
+from tensorflow.keras.models import Model\n\
+from tensorflow.keras.layers import Input,Dense,Activation,ReLU\n\
+from tensorflow.keras.optimizers import SGD\n\
 \n\
 input=Input(shape=(8,),batch_size=2)\n\
 x=Dense(16)(input)\n\
