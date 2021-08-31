@@ -123,14 +123,6 @@ private:
       //std::cout << "Derivative icoord (ext)" << fIndex[icoord] << "   dtrafo " << dExtdInt << "  " << deriv << std::endl;
       return deriv * dExtdInt;
    }
-   /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
-   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-   /// so that these can be passed forward again as well at the call site, if necessary.
-   virtual double DoDerivative(const double *x, unsigned int icoord, double * /*previous_grad*/, double * /*previous_g2*/,
-                               double * /*previous_gstep*/) const
-   {
-      return DoDerivative(x, icoord);
-   }
 
    // copy constructor for this class (disable by having it private)
    MinimTransformFunction( const MinimTransformFunction & ) :
