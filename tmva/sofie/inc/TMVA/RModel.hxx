@@ -37,7 +37,7 @@ private:
 
 
    std::string fGC; //generated code
-   bool fNeedGemm = true;
+   std::unordered_set<std::string> fNeededBlasRoutines;
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
