@@ -54,10 +54,10 @@ public:
       });
       return fGrad;
    }
-   std::vector<double> Gradient(const std::vector<double> &v, double *previous_grad, double *previous_g2,
-                                double *previous_gstep) const override
+   std::vector<double> GradientWithPrevResult(const std::vector<double> &v, double *previous_grad, double *previous_g2,
+                                              double *previous_gstep) const override
    {
-      fFunc.Gradient(&v[0], &fGrad[0], previous_grad, previous_g2, previous_gstep);
+      fFunc.GradientWithPrevResult(&v[0], &fGrad[0], previous_grad, previous_g2, previous_gstep);
 
       MnPrint("FCNGradAdapter").Debug([&](std::ostream &os) {
          os << "gradient in FCNAdapter = {";
