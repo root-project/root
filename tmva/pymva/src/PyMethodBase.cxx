@@ -328,8 +328,8 @@ void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
 /// Execute Python code from string
 ///
 /// \param[in] code Python code as string
-/// \param[in] fGlobalNS Global Namespace for Python Session
-/// \param[in] fLocalNS Local Namespace for Python Session
+/// \param[in] globalNS Global Namespace for Python Session
+/// \param[in] localNS Local Namespace for Python Session
 ///
 /// Overloaded static Helper function to run python code
 /// from string and throw runtime error if the Python session
