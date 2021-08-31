@@ -37,8 +37,6 @@ public:
 
       return (std::vector<double>(1, 2. * x));
    }
-   virtual std::vector<double> Gradient(const std::vector<double> &parameters, double */*previous_grad*/, double */*previous_g2*/,
-                                        double */*previous_gstep*/) const { return Gradient(parameters); };
 
    void SetErrorDef(double up) { fErrorDef = up; }
 
