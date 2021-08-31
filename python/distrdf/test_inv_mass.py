@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import warnings
 from collections import namedtuple
 
 import pyspark
@@ -14,23 +15,32 @@ class SparkHistogramsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
+        Set up test environment for this class. Currently this includes:
 
-        Needed to avoid mismatch between python versions on driver and on
-        the fake executor on the same machine.
+        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
+          Needed to avoid mismatch between python versions on driver and on the
+          fake executor on the same machine.
+        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
+          this is ignored by default in any application, but Python's unittest
+          library overrides the default warning filters thus exposing this
+          warning
         """
         os.environ["PYSPARK_PYTHON"] = sys.executable
+
+        if sys.version_info.major >= 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Reset test environment."""
+        os.environ["PYSPARK_PYTHON"] = ""
+
+        if sys.version_info.major >= 3:
+            warnings.simplefilter("default", ResourceWarning)
 
     def tearDown(self):
         """Stop any created SparkContext"""
         pyspark.SparkContext.getOrCreate().stop()
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Stop the SparkContext and reset environment variable.
-        """
-        os.environ["PYSPARK_PYTHON"] = ""
 
     def build_pyrdf_graph(self):
         """
