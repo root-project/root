@@ -38,7 +38,7 @@ target_include_directories(emitFromONNX PRIVATE
 
 target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie)
 set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-target_compile_options(emitFromONNX PRIVATE "-Wno-unused-parameter -Wno-array-bounds")
+target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
 # Automatic compilation of headers from onnx files
 add_custom_target(SofieCompileModels_ONNX)
@@ -85,8 +85,8 @@ target_include_directories(emitFromROOT PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie)
-set_target_properties(emitFromROOT PROPERTIES
-  POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
 # Automatic compilation of headers from root files
 add_custom_target(SofieCompileModels_ROOT)
