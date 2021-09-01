@@ -22,9 +22,8 @@
 \ingroup Geometry_classes
 
 \deprecated
-TGeoTrack is one of the first attempts to make an event display in the pad early millennium,
-meanwhile people managed to implement similar functionality in much better ways in events
-displays applications. Although the class is still working, its usage was not encouraged.
+Use of TGeoTrack is deprecated. For the event display please switch to TEve (using TEveTracks
+or TEvePointSet to display tracks specifically) or to [REve](https://root.cern/doc/master/tracks_8C_source.html).
 
 Class for user-defined tracks attached to a geometry.
 Tracks are 3D objects made of points and they store a
