@@ -1,5 +1,5 @@
 % ROOT Version 6.24 Release Notes
-% 2021-08-26
+% 2021-09-01
 
 ## Introduction
 
@@ -767,8 +767,17 @@ Published on August 26, 2021
 * [[#8713](https://github.com/root-project/root/issues/8713)] - [tree] `TTreeCache` is turned off when `fAutoFlush == 0`
 
 
+## Release 6.24/06
+
+Published on September 1, 2021
+
+### Bugs and Issues fixed in this release
+
+* [[#8931](https://github.com/root-project/root/issues/8931)] - `TDirectory::RegisterGDirectory` is MT unsafe
+* [[#8011](https://github.com/root-project/root/issues/8011)] - Bug in `RooAbsPdf::extendedTerm` when expected events is negative
+
 ## HEAD of the v6-24-00-patches branch
 
-These changes will be part of a future 6.24/06.
+These changes will be part of a future 6.24/08.
 
 - None so far.
