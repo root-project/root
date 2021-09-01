@@ -48,6 +48,8 @@ public:
    
    typedef  std::map<REveElement*, std::unique_ptr<SPBProduct*> > EProductMap_t;
 
+   virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*) override;
+
 protected:
    void Build(const REveDataCollection* iCollection, REveElement* product, const REveViewContext*) override;
 
