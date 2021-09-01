@@ -37,8 +37,8 @@ target_include_directories(emitFromONNX PRIVATE
 )
 
 target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie)
-set_target_properties(emitFromONNX PROPERTIES
-  POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+target_compile_options(emitFromONNX PRIVATE "-Wno-unused-parameter -Wno-array-bounds")
 
 # Automatic compilation of headers from onnx files
 add_custom_target(SofieCompileModels_ONNX)
