@@ -128,7 +128,7 @@ public:
       <A href="http://statmath.wu-wien.ac.at/unuran/doc/unuran.html#Methods_005ffor_005fCONT">UnuRan doc</A>.
       A re-initialization is needed whenever distribution parameters have been changed.
       Note that the method string can contain in addition to the method name all the specific method 
-      parameters specified using the UNURAN methiod string API. 
+      parameters specified using the UNURAN method string API. 
       For example a valid string can be `"method=arou; max_segments=1000; max_sqhratio = 0.9"`
    */
    bool Init(const TUnuranContDist & distr, const std::string & method = "auto");
@@ -227,8 +227,8 @@ public:
    }
 
    /**
-      Return an information string about used unuran generator method.
-      @param extended : if true return some help about the possible options for the the method.
+      Return an information string about the used Unuran generator method.
+      @param extended : if true return some helper information about the existing options of the method.
    */
    std::string GetInfo(bool extended = false);
 

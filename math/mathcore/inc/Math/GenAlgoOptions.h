@@ -87,23 +87,26 @@ public:
 
    std::vector<std::string>  GetAllNamedKeys() {
       std::vector<std::string> names;
+      names.reserve(fNamOpts.size());
       // start by named options
-      for (auto & e : fNamOpts) 
-         names.push_back(e.first.c_str());
+      for (auto const & e : fNamOpts) 
+         names.push_back(e.first);
       return names;
    }
    std::vector<std::string>  GetAllRealKeys() {
       std::vector<std::string> names;
+      names.reserve(fRealOpts.size());
       // start by named options
-      for (auto & e : fRealOpts) 
-         names.push_back(e.first.c_str());
+      for (auto const & e : fRealOpts) 
+         names.push_back(e.first);
       return names;
    }
    std::vector<std::string>  GetAllIntKeys() {
       std::vector<std::string> names;
+      names.reserve(fIntOpts.size());
       // start by named options
-      for (auto & e : fIntOpts) 
-         names.push_back(e.first.c_str());
+      for (auto const & e : fIntOpts) 
+         names.push_back(e.first);
       return names;
    }
 

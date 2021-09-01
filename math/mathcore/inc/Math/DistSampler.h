@@ -203,7 +203,7 @@ public:
    virtual bool Sample(double * x) = 0;
 
    /**
-      Sample one bin given an estimated of the pdf in the bin.
+      Sample one bin given an estimate of the pdf in the bin.
       (this can be function value at the center or its integral in the bin
       divided by the bin width)
       By default do not do random sample, just return the function values
@@ -228,8 +228,9 @@ public:
 
 
    /**
-      Generate a un-binned data sets by fill the given data set.
-      If dataset is not empty, append the new data.
+      Generate a un-binned data set by filling the given data set object.
+      If the data set object is not empty, the new generated data will be appended to the 
+      existing one. 
    */
    virtual bool Generate(unsigned int nevt, ROOT::Fit::UnBinData & data);
    /**

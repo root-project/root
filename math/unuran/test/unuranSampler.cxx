@@ -30,7 +30,7 @@ TEST(OneDim, StringAPI)
     EXPECT_EQ(ret, true);
     if (!ret) return;
 
-    sampler->SetMode(0.75);
+    sampler->SetMode(3.0);
   
     auto h1 = FillHisto1D(*sampler);
     EXPECT_NEAR(h1->GetMean(), 3., 5 * h1->GetMeanError());
