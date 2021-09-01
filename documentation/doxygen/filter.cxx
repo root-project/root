@@ -18,8 +18,8 @@
 /// "png" is the default value. For example: `Begin_Macro(source, svg)` will show
 /// the code of the macro and the image will be is svg format. The "width" keyword
 /// can be added to define the width of the picture in pixel: "width=400" will
-/// scale a picture to 400 pixel width. This allow to define large picture which
-/// can then be scale done to have a better definition.
+/// scale a picture to 400 pixel width. This allow to define large pictures which
+/// can then be scaled down to have a better definition.
 ///
 /// ## In the ROOT tutorials
 ///
