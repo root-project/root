@@ -50,6 +50,15 @@ void REveDataSimpleProxyBuilder::Clean()
 }
 
 //______________________________________________________________________________
+REveElement *REveDataSimpleProxyBuilder::CreateProduct(const std::string &viewType, const REveViewContext *viewContext)
+{
+   REveElement *productEl = REveDataProxyBuilderBase::CreateProduct(viewType, viewContext);
+   auto it = fProductMap.find(productEl);
+   if (it == fProductMap.end())
+      fProductMap.emplace(productEl, new SPBProduct);
+   return productEl;
+}
+//______________________________________________________________________________
 REveCollectionCompound*
 REveDataSimpleProxyBuilder::CreateCompound(bool set_color, bool propagate_color_to_all_children)
 {
@@ -175,9 +184,10 @@ void REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t &i
       bool visible = ((!item->GetFiltered()) && item->GetRnrSelf()) && Collection()->GetRnrSelf();
 
       auto sit = fProductMap.find(p->m_elements);
-      if (sit == fProductMap.end())
+      if (sit == fProductMap.end()) {
+         std::error << "REveDataSimpleProxyBuilder::ModelChanges product not found!\n";
          return;
-
+      }
       auto spb = sit->second;
       REveCompound *holder = nullptr;
       auto hmit = spb->map.find(itemIdx);
@@ -192,8 +202,9 @@ void REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t &i
          if (HaveSingleProduct())
             Build(Collection()->GetDataPtr(itemIdx), itemIdx, holder, p->m_viewContext);
          else
+            BuildViewType(Collection()->GetDataPtr(itemIdx), itemIdx, holder, p->m_viewType,  p->m_viewContext);
 
-            applyColorAttrToChildren(holder);
+         applyColorAttrToChildren(holder);
          p->m_elements->ProjectChild(holder);
       } else if (holder) {
          holder->SetRnrSelf(visible);
