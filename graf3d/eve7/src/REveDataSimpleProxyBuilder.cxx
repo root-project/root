@@ -185,7 +185,7 @@ void REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t &i
 
       auto sit = fProductMap.find(p->m_elements);
       if (sit == fProductMap.end()) {
-         std::error << "REveDataSimpleProxyBuilder::ModelChanges product not found!\n";
+         std::cerr << "REveDataSimpleProxyBuilder::ModelChanges product not found!\n";
          return;
       }
       auto spb = sit->second;
