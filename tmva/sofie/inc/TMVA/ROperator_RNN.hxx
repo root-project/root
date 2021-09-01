@@ -503,7 +503,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
          for (size_t direction = 0; direction < num_directions; direction++) {
             out << "\t" << "\t" << "\t" << "\t" << "\t" << "for (size_t h = 0; h < " << fAttrHiddenSize << "; h++) {\n";
             out << "\t" << "\t" << "\t" << "\t" << "\t" << "\t" << OpName << "_hidden_state[seq * "
-                << num_directions * batch_size * fAttrHiddenSize + direction * batch_size * fAttrHiddenSize
+                << num_directions * batch_size * fAttrHiddenSize << " + " << direction * batch_size * fAttrHiddenSize
                 << " + batch * " << fAttrHiddenSize << " + h] = 0.;\n";
             out << "\t" << "\t" << "\t" << "\t" << "\t" << "}\n";
          }
