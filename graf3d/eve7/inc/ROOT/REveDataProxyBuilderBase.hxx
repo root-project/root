@@ -53,7 +53,7 @@ public:
    void Build();
    // virtual void Build(REveElement* product);
 
-   REveElement* CreateProduct(const std::string& viewType, const REveViewContext*);
+   virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*);
    //  void removePerViewProduct(const REveViewContext* vc);
 
    void FillImpliedSelected(REveElement::Set_t& impSet);
