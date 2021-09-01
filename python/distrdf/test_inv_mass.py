@@ -30,6 +30,10 @@ class SparkHistogramsTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
+        # Disable ROOT graphics for these tests
+        cls.oldbatch = ROOT.gROOT.IsBatch()
+        ROOT.gROOT.SetBatch(True)
+
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
@@ -37,6 +41,8 @@ class SparkHistogramsTest(unittest.TestCase):
 
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
+
+        ROOT.gROOT.SetBatch(cls.oldbatch)
 
     def tearDown(self):
         """Stop any created SparkContext"""
