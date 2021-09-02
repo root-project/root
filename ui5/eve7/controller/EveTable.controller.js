@@ -76,7 +76,7 @@ sap.ui.define([
             var oData = table.getContextByIndex(idx);
             if (oData) {
                let ui = oData.getPath().substring(6);
-               console.log("idx =", idx, "path idx = ", ui);
+               // console.log("idx =", idx, "path idx = ", ui);
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
@@ -150,7 +150,6 @@ sap.ui.define([
 
       updateSortMap() {
          // update sorted/unsorted idx map
-         console.log("updateSortMap");
          let oTable = this.getView().byId("table");
          let nr = oTable.getModel().oData.rows.length;
          if (!oTable.sortMap)
@@ -218,8 +217,6 @@ sap.ui.define([
 
          if (this.bindTableColumns) {
             // column definition
-
-            console.log("bind table columns ");
             var columnData = [];
 
             columnData.push({ columnName: "Name" });
@@ -273,7 +270,6 @@ sap.ui.define([
                let ent = sap.ui.getCore().byId("inputExp");
                let sm = ent.getModel();
                sm.setData(this.eveTable.fPublicFunctions);
-               console.log("SHOULD UPDATE SUGGESTION DATA")
             }
 
             this.bindTableColumns = false;
@@ -290,7 +286,6 @@ sap.ui.define([
          var oModel = new JSONModel();
          var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          var clist = this.mgr.GetElement(collection.fMotherId);
-         // console.log("collection list ", clist);
 
          var mData = {
             "itemx": [
@@ -319,7 +314,6 @@ sap.ui.define([
       },
 
       onSceneCreate: function (element, id) {
-         console.log("EveTable onSceneChanged", id);
          this.locateEveTable();
          this.buildTableHeader();
          this.buildTableBody(true);
@@ -361,7 +355,6 @@ sap.ui.define([
                   },
                   suggestionItemSelected: function (oEvent) {
                      var oItem = oEvent.getParameter("selectedRow");
-                     console.log("sap.m.Input id with suggestion: selected item text is ------ ", oItem.getCells());
                      // fill in title if empty
                      var it = sap.ui.getCore().byId("titleEx");
                      if ((it.getValue() && it.getValue().length) == false) {
