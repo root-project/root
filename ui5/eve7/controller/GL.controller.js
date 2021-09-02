@@ -256,7 +256,6 @@ sap.ui.define([
 
       isEveCameraPerspective: function() {
          let vo = this.mgr.GetElement(this.eveViewerId);
-         console.log("compare ", vo.CameraType,"PerspXOZ" );
          return vo.CameraType.startsWith("PerspXOZ");
 
       }
