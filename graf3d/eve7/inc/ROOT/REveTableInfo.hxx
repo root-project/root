@@ -112,7 +112,7 @@ public:
 
    bool GetConfigChanged() const { return fConfigChanged; }
 
-
+   REveTableHandle::Specs_t& RefSpecs() { return fSpecs; }
 private:
    int fDisplayedCollection{0};
    std::vector<Delegate_t> fDelegates;
