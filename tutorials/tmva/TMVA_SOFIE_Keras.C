@@ -19,37 +19,44 @@ from tensorflow.keras.models import Model\n\
 from tensorflow.keras.layers import Input,Dense,Activation,ReLU\n\
 from tensorflow.keras.optimizers import SGD\n\
 \n\
-input=Input(shape=(8,),batch_size=2)\n\
-x=Dense(16)(input)\n\
+input=Input(shape=(64,),batch_size=4)\n\
+x=Dense(32)(input)\n\
 x=Activation('relu')(x)\n\
-x=Dense(32,activation='relu')(x)\n\
+x=Dense(16,activation='relu')(x)\n\
+x=Dense(8,activation='relu')(x)\n\
 x=Dense(4)(x)\n\
 output=ReLU()(x)\n\
 model=Model(inputs=input,outputs=output)\n\
 \n\
 randomGenerator=np.random.RandomState(0)\n\
-x_train=randomGenerator.rand(2,8)\n\
-y_train=randomGenerator.rand(2,4)\n\
+x_train=randomGenerator.rand(4,64)\n\
+y_train=randomGenerator.rand(4,4)\n\
 \n\
 model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))\n\
-model.fit(x_train, y_train, epochs=10, batch_size=2)\n\
-model.save('KerasModelFunctional.h5')\n";
+model.fit(x_train, y_train, epochs=5, batch_size=4)\n\
+model.save('KerasModel.h5')\n";
 
 
 void TMVA_SOFIE_Keras(){
 
     //Running the Python script to generate Keras .h5 file
-    Py_Initialize();
-    PyRun_SimpleString(pythonSrc);
+    TMVA::PyMethodBase::PyInitialize();
+
+    TMacro m;
+    m.AddLine(pythonSrc);
+    m.SaveSource("make_keras_model.py");
+    gSystem->Exec("python make_keras_model.py");
 
     //Parsing the saved Keras .h5 file into RModel object
-    SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModelFunctional.h5");
+    SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
+
 
     //Generating inference code
     model.Generate();
-    model.OutputGenerated("KerasModelFunctional.hxx");
+    model.OutputGenerated("KerasModel.hxx");
 
     //Printing required input tensors
+    std::cout<<"\n\n";
     model.PrintRequiredInputTensors();
 
     //Printing initialized tensors (weights)
