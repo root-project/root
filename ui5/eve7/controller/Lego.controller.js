@@ -25,21 +25,16 @@ sap.ui.define([
 
         onInit: function () {
             let data = this.getView().getViewData();
-
-            console.log("LEGO onInit ", data);
-
             this.mgr       = data.mgr;
             this.eveViewerId = data.eveViewerId;
 
             let eviewer = this.mgr.GetElement(this.eveViewerId);
-            console.log("viewer", eviewer);
             let sceneInfo = eviewer.childs[0];
             let sceneId = sceneInfo.fSceneId;
             this.mgr.RegisterController(this);
             this.mgr.RegisterSceneReceiver(sceneId, this);
 
             let scene = this.mgr.GetElement(sceneId);
-            console.log("Lego scene 2", scene);
 
             let chld = scene.childs[0];
             let element = this.byId("legoX");
@@ -69,11 +64,11 @@ sap.ui.define([
         },
 
         onSceneCreate: function (element, id) {
-            console.log("LEGO onSceneCreate", id);
+            //console.log("LEGO onSceneCreate", id);
         },
 
         sceneElementChange: function (el) {
-            console.log("LEGO element changed");
+            //console.log("LEGO element changed");
         },
 
         endChanges: function (oEvent) {
@@ -86,7 +81,7 @@ sap.ui.define([
         },
 
         SelectElement: function (selection_obj, element_id, sec_idcs) {
-            console.log("LEGO element selected", element_id);
+           // console.log("LEGO element selected", element_id);
         },
 
         UnselectElement: function (selection_obj, element_id) {
