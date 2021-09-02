@@ -8,7 +8,7 @@ include(ExternalProject)
 
 find_package(OpenSSL REQUIRED)
 
-set(XROOTD_VERSION "5.3.0")
+set(XROOTD_VERSION "5.3.1")
 set(XROOTD_VERSIONNUM 500020000 CACHE INTERNAL "" FORCE)
 set(XROOTD_SRC_URI https://github.com/xrootd/xrootd/archive/v${XROOTD_VERSION}.tar.gz)
 set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR}/XROOTD-prefix)
@@ -27,7 +27,7 @@ message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=2fbec7bbeaed3f29902f527a72965d6b6158ffe982ef86d9f44fa86649ba5ced
+    URL_HASH SHA256=1194ba435dc1e243f3cdb8273f6385407183799faf7622a582a828f4aff6807d
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
@@ -39,6 +39,7 @@ message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
+               -DENABLE_CEPH=OFF
                -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
             COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
