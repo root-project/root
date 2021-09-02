@@ -15,17 +15,19 @@ import torch\n\
 import torch.nn as nn\n\
 \n\
 model = nn.Sequential(\n\
-           nn.Linear(4,6),\n\
+           nn.Linear(32,16),\n\
+           nn.ReLU(),\n\
+           nn.Linear(16,8),\n\
            nn.ReLU()\n\
            )\n\
 \n\
 criterion = nn.MSELoss()\n\
 optimizer = torch.optim.SGD(model.parameters(),lr=0.01)\n\
 \n\
-x=torch.randn(2,4)\n\
-y=torch.randn(2,6)\n\
+x=torch.randn(2,32)\n\
+y=torch.randn(2,8)\n\
 \n\
-for i in range(2000):\n\
+for i in range(500):\n\
     y_pred = model(x)\n\
     loss = criterion(y_pred,y)\n\
     optimizer.zero_grad()\n\
@@ -34,28 +36,33 @@ for i in range(2000):\n\
 \n\
 model.eval()\n\
 m = torch.jit.script(model)\n\
-torch.jit.save(m,'PyTorchModelSequential.pt')\n";
+torch.jit.save(m,'PyTorchModel.pt')\n";
 
 
 void TMVA_SOFIE_PyTorch(){
 
     //Running the Python script to generate PyTorch .pt file
-    Py_Initialize();
-    PyRun_SimpleString(pythonSrc);
+    TMVA::PyMethodBase::PyInitialize();
+
+    TMacro m;
+    m.AddLine(pythonSrc);
+    m.SaveSource("make_pytorch_model.py");
+    gSystem->Exec("python make_pytorch_model.py");
 
     //Parsing a PyTorch model requires the shape and data-type of input tensor
     //Data-type of input tensor defaults to Float if not specified
-    std::vector<size_t> inputTensorShapeSequential{2,4};
+    std::vector<size_t> inputTensorShapeSequential{2,32};
     std::vector<std::vector<size_t>> inputShapesSequential{inputTensorShapeSequential};
 
     //Parsing the saved PyTorch .pt file into RModel object
-    SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModelSequential.pt",inputShapesSequential);
+    SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt",inputShapesSequential);
 
     //Generating inference code
     model.Generate();
-    model.OutputGenerated("PyTorchModelSequential.hxx");
+    model.OutputGenerated("PyTorchModel.hxx");
 
     //Printing required input tensors
+    std::cout<<"\n\n";
     model.PrintRequiredInputTensors();
 
     //Printing initialized tensors (weights)
