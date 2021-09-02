@@ -1310,23 +1310,16 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Register a std::atomic<TDirectory*> pointing to this TDirectory object
+/// Register a std::atomic<TDirectory*> that will soon be pointing to this TDirectory object
 
 void TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *globalptr)
 {
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
-   auto oldvalue = globalptr->load();
-
-   auto iter = std::find(fGDirectories.begin(), fGDirectories.end(), globalptr);
-   if (iter != fGDirectories.begin())
+   if (std::find(fGDirectories.begin(), fGDirectories.end(), globalptr) != fGDirectories.end())
       fGDirectories.push_back(globalptr);
-
-   if (oldvalue && oldvalue != this) {
-      iter = std::find(oldvalue->fGDirectories.begin(), oldvalue->fGDirectories.end(), globalptr);
-      if (iter != oldvalue->fGDirectories.begin())
-         oldvalue->fGDirectories.erase(iter);
-   }
+   // globalptr->load()->fGDirectories will still contain globalptr, but we cannot
+   // know whether globalptr->load() has been deleted by another thread in the meantime.
 }
 
 
