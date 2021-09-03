@@ -654,6 +654,7 @@ TAxis *THStack::GetZaxis() const
 {
    if (!gPad) return 0;
    TH1 *h = GetHistogram();
+   if (!h->IsA()->InheritsFrom(TH2::Class())) Warning("THStack","1D Histograms don't have a Z axis");
    if (!h) return 0;
    return h->GetZaxis();
 }
