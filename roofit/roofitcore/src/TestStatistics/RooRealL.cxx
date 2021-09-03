@@ -20,6 +20,16 @@
 namespace RooFit {
 namespace TestStatistics {
 
+/** \class RooRealL
+ * \ingroup Roofitcore
+ *
+ * \brief RooAbsReal that wraps RooAbsL likelihoods for use in RooFit outside of the RooMinimizer context
+ *
+ * This class provides a simple wrapper to evaluate RooAbsL derived likelihood objects like a regular RooFit real value.
+ * Whereas the RooAbsL objects are meant to be used within the context of minimization, RooRealL can be used in any
+ * RooFit context, like plotting. The value can be accessed through getVal(), like with other RooFit real variables.
+ **/
+
 RooRealL::RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL> likelihood)
    : RooAbsReal(name, title), likelihood_(std::move(likelihood)),
      vars_proxy_("varsProxy", "proxy set of parameters", this)

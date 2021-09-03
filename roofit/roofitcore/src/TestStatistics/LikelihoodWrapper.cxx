@@ -26,11 +26,26 @@
 namespace RooFit {
 namespace TestStatistics {
 
+/** \class LikelihoodWrapper
+ * \brief Virtual base class for implementation of likelihood calculation strategies
+ *
+ * This class provides the interface necessary for RooMinimizer (through MinuitFcnGrad) to get the likelihood values it
+ * needs for fitting the pdf to the data. The strategy by which these values are obtained is up to the implementer of
+ * this class. Its intended purpose was mainly to allow for parallel calculation strategies, but serial strategies are
+ * possible too, as illustrated in LikelihoodSerial.
+ *
+ * \note The class is not intended for use by end-users. We recommend to either use RooMinimizer with a RooAbsL derived
+ * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
+ */
+
+/*
+ * \param[in] likelihood Shared pointer to the likelihood that must be evaluated
+ * \param[in] calculation_is_clean Shared pointer to the object that keeps track of what has been evaluated for the current parameter set provided by Minuit. This information can be used by different calculators, so must be shared between them.
+ */
 LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
-                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*,
-                                     RooMinimizer *minimizer*/)
-   : likelihood_(std::move(likelihood)),/* minimizer_(minimizer),*/
-     calculation_is_clean_(std::move(calculation_is_clean)) /*, minimizer_fcn_(minimizer_fcn)*/
+                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
+   : likelihood_(std::move(likelihood)),
+     calculation_is_clean_(std::move(calculation_is_clean))
 {
    // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
    // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
@@ -120,7 +135,8 @@ void LikelihoodWrapper::applyOffsetting(double &current_value, double &carry)
 //         carry = (t - current_value) - y;
 //         current_value = t;
 //      }
-      // Jonas method:
+      // TODO: make sure this change in methods (after replacing below by KahanSum object) doesn't affect results
+      // KahanSum method:
       {
          double new_value = current_value - offset_;
          double new_carry = carry - offset_carry_;

@@ -19,12 +19,13 @@
 \class RooBinnedL
 \ingroup Roofitcore
 
-Class RooBinnedL implements a a -log(likelihood) calculation from a dataset
-and a PDF. The NLL is calculated as
-<pre>
- Sum[data] -log( pdf(x_data) )
-</pre>
-In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
+Class RooBinnedL implements a -log(likelihood) calculation from a dataset
+(assumed to be binned) and a PDF. The NLL is calculated as
+\f
+ \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))
+\f]
+In extended mode, a
+\f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
 #include <TestStatistics/RooBinnedL.h>
@@ -74,10 +75,10 @@ RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-///// Calculate and return likelihood on subset of data from firstEvent to lastEvent
-///// processed with a step size of 'stepSize'. If this an extended likelihood and
-///// and the zero event is processed the extended term is added to the return
-///// likelihood.
+/// Calculate and return likelihood on subset of data from firstEvent to lastEvent
+/// processed with a step size of 'stepSize'. If this an extended likelihood and
+/// and the zero event is processed the extended term is added to the return
+/// likelihood.
 //
 double RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/,
                                       std::size_t /*components_end*/)

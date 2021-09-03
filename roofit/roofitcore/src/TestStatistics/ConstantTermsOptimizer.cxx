@@ -25,6 +25,19 @@
 namespace RooFit {
 namespace TestStatistics {
 
+/** \class ConstantTermsOptimizer
+ *
+ * \brief Analyzes a function given a dataset/observables for constant terms and caches those in the dataset
+ *
+ * This optimizer should be used on a consistent combination of function (usually a pdf) and a dataset with observables.
+ * It then analyzes the function to find parts that can be precalculated because they are constant given the set of
+ * observables. These are cached inside the dataset and used in subsequent evaluations of the function on that dataset.
+ * The typical use case for this is inside likelihood minimization where many calls of the same pdf/dataset combination
+ * are made. \p norm_set must provide the normalization set of the function, which would typically be the set of
+ * observables in the dataset; this is used to make sure all object caches are created before analysis by evaluating the
+ * function on this set at the beginning of enableConstantTermsOptimization.
+ */
+
 RooArgSet ConstantTermsOptimizer::requiredExtraObservables()
 {
    // TODO: the RooAbsOptTestStatistics::requiredExtraObservables() call this code was copied
