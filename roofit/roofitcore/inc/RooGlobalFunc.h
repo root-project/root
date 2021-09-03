@@ -239,10 +239,14 @@ RooCmdArg SplitRange(Bool_t flag=kTRUE) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
 RooCmdArg Constrain(RooArgSet && params) ;
-RooCmdArg GlobalObservables(const RooArgSet& globs) ;
-RooCmdArg GlobalObservables(RooArgSet && globs) ;
+
+template<class... Args_t>
+RooCmdArg GlobalObservables(Args_t &&... argsOrArgSet) {
+  return RooCmdArg("GlobalObservables",0,0,0,0,0,0,0,0,0,0,
+          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}));
+}
+RooCmdArg GlobalObservablesSource(const char* sourceName);
 RooCmdArg GlobalObservablesTag(const char* tagName) ;
-//RooCmdArg Constrained() ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg ExternalConstraints(RooArgSet && constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
