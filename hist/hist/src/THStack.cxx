@@ -234,7 +234,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
       }
       TAxis* haxis= useX ? hist->GetYaxis() : hist->GetXaxis();
       if (!haxis) {
-         Warning("HStack","Histogram axis is NULL");
+         Warning("THStack","Histogram axis is NULL");
          return;
       }
       Int_t nbins = haxis->GetNbins();
@@ -270,7 +270,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
          else if (sAxis.First('z')==kNPOS)
             haxis=hist->GetZaxis();
          if (!haxis) {
-            Warning("HStack","Histogram axis is NULL");
+            Warning("THStack","Histogram axis is NULL");
             return;
          }
 
@@ -304,7 +304,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
             haxis2=hist->GetYaxis();
          }
          if (!haxis1 || !haxis2) {
-            Warning("HStack","Histogram axis is NULL");
+            Warning("THStack","Histogram axis is NULL");
             return;
          }
 
@@ -629,7 +629,7 @@ TAxis *THStack::GetXaxis() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get x axis of the histogram used to draw the stack.
+/// Get y axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -641,6 +641,21 @@ TAxis *THStack::GetYaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get z axis of the histogram used to draw the stack.
+///
+/// IMPORTANT NOTE
+///  You must call Draw before calling this function. The returned histogram
+///  depends on the selected Draw options.
+
+TAxis *THStack::GetZaxis() const
+{
+   if (!gPad) return 0;
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetZaxis();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
