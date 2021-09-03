@@ -21,6 +21,10 @@
 /** \class TGeoTrack
 \ingroup Geometry_classes
 
+\deprecated
+Use of TGeoTrack is deprecated. For the event display please switch to TEve (using TEveTracks
+or TEvePointSet to display tracks specifically) or to [REve](https://root.cern/doc/master/tracks_8C_source.html).
+
 Class for user-defined tracks attached to a geometry.
 Tracks are 3D objects made of points and they store a
 pointer to a TParticle. The geometry manager holds a list
