@@ -215,6 +215,8 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 ///     <td> Interpret the given variable as event weight rather than as observable
 /// <tr><td> StoreError(const RooArgSet&)     <td> Store symmetric error along with value for given subset of observables
 /// <tr><td> StoreAsymError(const RooArgSet&) <td> Store asymmetric error along with value for given subset of observables
+/// <tr><td> `GlobalObservables(const RooArgSet&)` <td> Define the set of global observables to be stored in this RooDataSet.
+///                                                     A snapshot of the passed RooArgSet is stored, meaning the values wont't change unexpectedly.
 /// </table>
 ///
 
@@ -245,6 +247,7 @@ RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooA
   pc.defineObject("dummy2","LinkDataSliceMany",0) ;
   pc.defineSet("errorSet","StoreError",0) ;
   pc.defineSet("asymErrSet","StoreAsymError",0) ;
+  pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineMutex("ImportTree","ImportData","ImportDataSlice","LinkDataSlice","ImportFromFile") ;
   pc.defineMutex("CutSpec","CutVar") ;
   pc.defineMutex("WeightVarName","WeightVar") ;
@@ -265,6 +268,8 @@ RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooA
     assert(0) ;
     return ;
   }
+
+  if(pc.getSet("glObs")) setGlobalObservables(*pc.getSet("glObs"));
 
   // Extract relevant objects
   TTree* impTree = static_cast<TTree*>(pc.getObject("impTree")) ;
