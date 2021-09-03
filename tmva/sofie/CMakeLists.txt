@@ -19,6 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Gemm.hxx
    TMVA/ROperator_Relu.hxx
    TMVA/ROperator_Selu.hxx
+   TMVA/ROperator_Sigmoid.hxx
    TMVA/ROperator_Transpose.hxx
    TMVA/ROperator_Conv.hxx
    TMVA/SOFIE_common.hxx
