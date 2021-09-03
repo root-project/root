@@ -45,6 +45,7 @@ std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode);
 
 std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Gemm operator
 std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Relu operator
+std::unique_ptr<ROperator> MakePyTorchSelu(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Selu operator
 std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode); // For instantiating ROperator for PyTorch ONNX's Transpose operator
 
 // For mapping PyTorch ONNX Graph's Node with the preparatory functions for ROperators
@@ -54,6 +55,7 @@ const PyTorchMethodMap mapPyTorchNode =
 {
     {"onnx::Gemm",      &MakePyTorchGemm},
     {"onnx::Relu",      &MakePyTorchRelu},
+    {"onnx::Selu",      &MakePyTorchSelu},
     {"onnx::Transpose", &MakePyTorchTranspose}
 };
 
@@ -163,6 +165,31 @@ std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode){
         return op;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Selu object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Selu object, the names of
+/// input & output tensors and the data-type of the Graph node
+/// are extracted.
+std::unique_ptr<ROperator> MakePyTorchSelu(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Selu<float>(PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Selu does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Transpose object
