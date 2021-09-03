@@ -36,13 +36,12 @@ public:
    enum class Extended { Auto, Yes, No };
    static bool isExtendedHelper(RooAbsPdf *pdf, Extended extended);
 
-   /// wrapper class used to distinguish ctors
+   /// Convenience wrapper class used to distinguish between pdf/data owning and non-owning constructors.
    struct ClonePdfData {
       RooAbsPdf *pdf;
       RooAbsData *data;
    };
 
-   //   RooAbsL() = default;
 private:
    RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data, std::size_t N_events,
            std::size_t N_components, Extended extended);
@@ -82,11 +81,28 @@ public:
       double end_fraction;
    };
 
+   /*
+    * \brief Evaluate (part of) the likelihood over a given range of events and components
+    *
+    * A fractional event range is used because components may have different numbers of events. For a
+    * multi-component RooSumL, for instance, this means the caller need not indicate for each component which event
+    * ranges they want to evaluate, but can just pass one overall fractional range.
+    *
+    * \param[in] events The fractional event range.
+    * \param[in] components_begin The first component to be calculated.
+    * \param[in] components_end The *exclusive* upper limit to the range of components to be calculated, i.e. the component *before this one* is the last to be included.
+    * \return The value of part of the negative log likelihood.
+    */
    virtual double evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) = 0;
    inline double getCarry() const { return eval_carry_; }
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    virtual RooArgSet *getParameters();
+
+   /// \brief Interface function signaling a request to perform constant term optimization.
+   ///
+   /// The default implementation takes no action other than to forward the calls to all servers. May be overridden in
+   /// likelihood classes without a cached dataset, like RooSubsidiaryL.
    virtual void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
 
    virtual std::string GetName() const;
@@ -96,6 +112,7 @@ public:
    inline virtual double defaultErrorLevel() const { return 0.5; }
 
    // necessary in LikelihoodJob
+   /// Number of dataset entries. Typically equal to the number of dataset events, except in RooSubsidiaryL, which has no events.
    virtual std::size_t numDataEntries() const;
    inline std::size_t getNEvents() const { return N_events_; }
    inline std::size_t getNComponents() const { return N_components_; }
@@ -103,7 +120,6 @@ public:
    inline void setSimCount(std::size_t value) { sim_count_ = value; }
 
 protected:
-   virtual void optimizePdf();
    // Note: pdf_ and data_ can be constructed in two ways, one of which implies ownership and the other does not.
    // Inspired by this: https://stackoverflow.com/a/61227865/1199693.
    // The owning variant is used for classes that need a pdf/data clone (RooBinnedL and RooUnbinnedL), whereas the

@@ -24,13 +24,6 @@
 namespace RooFit {
 namespace TestStatistics {
 
-/// Gathers all subsidiary PDF terms from the component PDFs of RooSumL likelihoods.
-/// These are summed separately for increased numerical stability, since these terms are often
-/// small and cause numerical variances in their original PDFs, whereas by summing as one
-/// separate subsidiary collective term, it is numerically very stable.
-/// Note that when a subsidiary PDF is part of multiple component PDFs, it will only be summed
-/// once in this class! This doesn't change the derivative of the log likelihood (which is what
-/// matters in fitting the likelihood), but does change the value of the (log-)likelihood itself.
 class RooSubsidiaryL : public RooAbsL {
 public:
    RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgSet &pdfs, const RooArgSet &parameter_set);

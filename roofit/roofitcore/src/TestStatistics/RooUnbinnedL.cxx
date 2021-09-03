@@ -19,12 +19,13 @@
 \class RooUnbinnedL
 \ingroup Roofitcore
 
-Class RooUnbinnedL implements a a -log(likelihood) calculation from a dataset
-and a PDF. The NLL is calculated as
-<pre>
- Sum[data] -log( pdf(x_data) )
-</pre>
-In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
+Class RooUnbinnedL implements a -log(likelihood) calculation from a dataset
+(assumed to be unbinned) and a PDF. The NLL is calculated as
+\f[
+ \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))
+\f]
+In extended mode, a
+\f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
 #include <TestStatistics/RooUnbinnedL.h>

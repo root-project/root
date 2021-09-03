@@ -27,7 +27,6 @@ namespace TestStatistics {
 
 class RooSumL : public RooAbsL {
 public:
-   // main constructor
    RooSumL(RooAbsPdf* pdf, RooAbsData* data, std::vector<std::unique_ptr<RooAbsL>> components,
            RooAbsL::Extended extended = RooAbsL::Extended::Auto);
    // Note: when above ctor is called without std::moving components, you get a really obscure error. Pass as std::move(components)!

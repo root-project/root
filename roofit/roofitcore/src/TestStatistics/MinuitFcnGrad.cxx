@@ -25,8 +25,20 @@
 namespace RooFit {
 namespace TestStatistics {
 
-// IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient
-// The likelihood and gradient wrappers do the actual calculations.
+/** \class MinuitFcnGrad
+ *
+ * \brief Minuit-RooMinimizer interface which synchronizes parameter data and coordinates evaluation of likelihood (gradient) values
+ *
+ * This class provides an interface between RooFit and Minuit. It synchronizes parameter values from Minuit, calls
+ * calculator classes to evaluate likelihood and likelihood gradient values and returns them to Minuit. The Wrapper
+ * objects do the actual calculations. These are constructed inside the MinuitFcnGrad constructor using the RooAbsL
+ * likelihood passed in to the constructor, usually directly from RooMinimizer, with which this class is intimately
+ * coupled, being a RooAbsMinimizerFcn implementation. MinuitFcnGrad inherits from ROOT::Math::IMultiGradFunction as
+ * well, which allows it to be used as the FCN and GRAD parameters Minuit expects.
+ *
+ * \note The class is not intended for use by end-users. We recommend to either use RooMinimizer with a RooAbsL derived
+ * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
+ */
 
 double MinuitFcnGrad::DoEval(const double *x) const
 {
