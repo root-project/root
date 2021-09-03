@@ -7,7 +7,7 @@
 # @author Stephan Hageboeck CERN, 2019
 
 ROOT_ADD_GTEST(testHistFactory testHistFactory.cxx
-  LIBRARIES RooFitCore RooFit RooStats HistFactory
+  LIBRARIES RooFitCommon RooFitCore RooFit RooStats HistFactory
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/ref_6.16_example_UsingC_channel1_meas_model.root ${CMAKE_CURRENT_SOURCE_DIR}/ref_6.16_example_UsingC_combined_meas_model.root)
 
 ROOT_ADD_GTEST(testParamHistFunc testParamHistFunc.cxx LIBRARIES RooFitCore HistFactory)
