@@ -891,6 +891,16 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 /// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
 /// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
 ///                                                        If none are specified the constrained parameters are used.
+/// <tr><td> `GlobalObservablesSource(const char* sourceName)` <td> Which source to prioritize for global observable values.
+///                                                                 Can be either:
+///                                                                 - `data`: to take the values from the dataset,
+///                                                                   falling back to the pdf value if a given global observable is not available.
+///                                                                   If no `GlobalObservables` or `GlobalObservablesTag` command argument is given, the set
+///                                                                   of global observables will be automatically defined to be the set stored in the data.
+///                                                                 - `model`: to take all values from the pdf and completely ignore the set of global observables stored in the data
+///                                                                   (not even using it to automatically define the set of global observables
+///                                                                   if the `GlobalObservables` or `GlobalObservablesTag` command arguments are not given).
+///                                                                 The default option is `data`.
 /// <tr><td> `GlobalObservablesTag(const char* tagName)` <td> Define the set of normalization observables to be used for the constraint terms by
 ///                                                         a string attribute associated with pdf observables that match the given tagName.
 /// <tr><td> `Verbose(Bool_t flag)`           <td> Controls RooFit informational messages in likelihood construction
@@ -984,6 +994,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
   pc.defineString("addCoefRange","SumCoefRange",0,"") ;
   pc.defineString("globstag","GlobalObservablesTag",0,"") ;
+  pc.defineString("globssource","GlobalObservablesSource",0,"data") ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineInt("splitRange","SplitRange",0,0) ;
@@ -1119,6 +1130,15 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
+  const std::string globalObservablesSource = pc.getString("globssource","data",false);
+  if(globalObservablesSource != "data" && globalObservablesSource != "model") {
+    std::string errMsg = "RooAbsPdf::fitTo: GlobalObservablesSource can only be \"data\" or \"model\"!";
+    coutE(InputArguments) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
+  }
+  const bool takeGlobsFromData = globalObservablesSource == "data";
+
+
   auto constraintTerm = RooConstraintSum::createConstraintTerm(
           baseName + "_constr", // name
           *this, // pdf
@@ -1127,6 +1147,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
           pc.getSet("extCons"), // ExternalConstraints RooCmdArg
           pc.getSet("glObs"), // GlobalObservables RooCmdArg
           pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
+          takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
           _myws // passing workspace to cache the set of constraints
   );
 
@@ -1557,7 +1578,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
-      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode,IntegrateBins");
+      "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,OffsetLikelihood,"
+      "BatchMode,IntegrateBins");
 
   // Default-initialized instance of MinimizerConfig to get the default
   // minimizer parameter values.

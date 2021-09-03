@@ -47,10 +47,11 @@ ClassImp(RooConstraintSum);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf.
 
-RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet) :
+RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet, bool takeGlobalObservablesFromData) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this),
-  _paramSet("paramSet","Set of parameters",this)
+  _paramSet("paramSet","Set of parameters",this),
+  _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
 {
   for (const auto comp : constraintSet) {
     if (!dynamic_cast<RooAbsPdf*>(comp)) {
@@ -71,7 +72,8 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1),
-  _paramSet("paramSet",this,other._paramSet)
+  _paramSet("paramSet",this,other._paramSet),
+  _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
 {
 }
 
@@ -97,7 +99,7 @@ Double_t RooConstraintSum::evaluate() const
 /// RooConstraintSum is configured to not use the global observables stored in
 /// datasets.
 bool RooConstraintSum::setData(RooAbsData const& data, bool /*cloneData=true*/) {
-  if(data.getGlobalObservables()) {
+  if(_takeGlobalObservablesFromData && data.getGlobalObservables()) {
     this->recursiveRedirectServers(*data.getGlobalObservables()) ;
   }
   return true;
@@ -188,6 +190,12 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 ///            used. The `globalObservables` and `globalObservablesTag`
 ///            parameters are mutually exclusive, meaning at least one of them
 ///            has to be `nullptr`.
+/// \param[in] takeGlobalObservablesFromData If the dataset should be used to automatically
+///            define the set of global observables. If this is the case and the
+///            set of global observables is still defined manually with the
+///            `globalObservables` or `globalObservablesTag` parameters, the
+///            values of all global observables that are not stored in the
+///            dataset are taken from the model.
 /// \param[in] workspace RooWorkspace to cache the set of constraints.
 std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         std::string const& name,
@@ -197,6 +205,7 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         RooArgSet const* externalConstraints,
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
+        bool takeGlobalObservablesFromData,
         RooWorkspace * workspace)
 {
   RooArgSet const& observables = *data.get();
@@ -248,7 +257,7 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
 
     // Identify global observables in the model.
     auto glObs = getGlobalObservables(pdf, globalObservables, globalObservablesTag);
-    if(data.getGlobalObservables()) {
+    if(data.getGlobalObservables() && takeGlobalObservablesFromData) {
       if(!glObs) {
         // There were no global observables specified, but there are some in the
         // dataset. We will just take them from the dataset.
@@ -263,16 +272,18 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         data.getGlobalObservables()->selectCommon(*glObs, globalsFromDataset);
         oocoutI(&pdf, Minimization)
             << "The following global observables have been defined: " << *glObs
-            << "," << " with the values of " << globalsFromDataset << " obtained from the dataset." << std::endl;
+            << "," << " with the values of " << globalsFromDataset
+            << " obtained from the dataset and the other values from the model." << std::endl;
       }
     } else if(glObs) {
       oocoutI(&pdf, Minimization)
-          << "The following global observables have been defined: " << *glObs << std::endl;
+          << "The following global observables have been defined and their values are taken from the model: "
+          << *glObs << std::endl;
     }
 
     // The constraint terms need to be cloned, because the global observables
     // might be changed to have the same values as stored in data.
-    RooConstraintSum constraintTerm{name.c_str(),"nllCons", allConstraints, glObs ? *glObs : cPars};
+    RooConstraintSum constraintTerm{name.c_str(),"nllCons", allConstraints, glObs ? *glObs : cPars, takeGlobalObservablesFromData};
     std::unique_ptr<RooAbsReal> constraintTermClone{static_cast<RooAbsReal*>(constraintTerm.cloneTree())};
 
     // The parameters that are not connected to global observables from data
