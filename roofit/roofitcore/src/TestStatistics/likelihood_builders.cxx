@@ -30,8 +30,40 @@
 
 
 namespace RooFit {
+/**
+ * \brief Namespace for new RooFit test statistic calculation.
+ *
+ * RooFit::TestStatistics contains a major refactoring of the RooAbsTestStatistic-RooAbsOptTestStatistic-RooNLLVar inheritance tree into:
+ *   1. statistics-based classes on the one hand;
+ *   2. calculation/evaluation/optimization based classes on the other hand.
+ *
+ * The likelihood is the central unit on the statistics side. The RooAbsL class is implemented for four kinds of likelihoods:
+ * binned, unbinned, "subsidiary" (an optimization for numerical stability that gathers components like global observables)
+ * and "sum" (over multiple components of the other types). These classes provide ways to compute their components in parallelizable
+ * chunks that can be used by the calculator classes as they see fit.
+ *
+ * On top of the likelihood classes, we also provide for convenience a set of likelihood builders, as free functions in the namespace.
+ *
+ * The calculator "Wrapper" classes are abstract interfaces. These can be implemented for different kinds of algorithms, or with
+ * different kinds of optimization "back-ends" in mind. In an upcoming PR, we will introduce the fork-based multi-processing
+ * implementation based on RooFit::MultiProcess. Other possible implementations could use the GPU or external tools like TensorFlow.
+ *
+ * The coupling of all these classes to RooMinimizer is made via the MinuitFcnGrad class, which owns the Wrappers that calculate
+ * the likelihood components.
+ */
 namespace TestStatistics {
 
+/*
+ * \brief Extract a collection of subsidiary likelihoods from a pdf
+ *
+ * \param[in] pdf Raw pointer to the pdf
+ * \param[in] data Raw pointer to the dataset
+ * \param[in] constrained_parameters Set of parameters that are constrained. Pdf components dependent on these alone are added to the subsidiary likelihood.
+ * \param[in] external_constraints Set of external constraint pdfs, i.e. constraints not necessarily in the pdf itself. These are always added to the subsidiary likelihood.
+ * \param[in] global_observables Observables that have a constant value, independent of the dataset events. Pdf components dependent on these alone are added to the subsidiary likelihood. \note Overrides all other likelihood parameters (like those in \p constrained_parameters) if present.
+ * \param[in] global_observables_tag String that can be set as attribute in pdf components to indicate that it is a global observable. Can be used instead of or in addition to \p global_observables.
+ * \return A unique pointer to a RooSubsidiaryL that contains all terms in the pdf that can be calculated separately from the other components in the full likelihood.
+ */
 std::unique_ptr<RooSubsidiaryL> buildConstraints(RooAbsPdf *pdf, RooAbsData *data,
                                                  ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
                                                  GlobalObservables global_observables, std::string global_observables_tag)
@@ -40,7 +72,7 @@ std::unique_ptr<RooSubsidiaryL> buildConstraints(RooAbsPdf *pdf, RooAbsData *dat
 
    Bool_t doStripDisconnected = kFALSE;
    // If no explicit list of parameters to be constrained is specified apply default algorithm
-   // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
+   // All terms of RooProdPdfs that do not contain observables and share parameters with one or more
    // terms that do contain observables are added as constraints.
 #ifndef NDEBUG
    bool did_default_constraint_algo = false;
@@ -111,6 +143,18 @@ std::unique_ptr<RooSubsidiaryL> buildConstraints(RooAbsPdf *pdf, RooAbsData *dat
 }
 
 
+/*
+ * \brief Build a likelihood from a simultaneous pdf, possibly including subsidiary likelihood component
+ *
+ * \param[in] pdf Raw pointer to the pdf
+ * \param[in] data Raw pointer to the dataset
+ * \param[in] extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the pdf whether to activate or not.
+ * \param[in] constrained_parameters Set of parameters that are constrained. Pdf components dependent on these alone are added to the subsidiary likelihood.
+ * \param[in] external_constraints Set of external constraint pdfs, i.e. constraints not necessarily in the pdf itself. These are always added to the subsidiary likelihood.
+ * \param[in] global_observables Observables that have a constant value, independent of the dataset events. Pdf components dependent on these alone are added to the subsidiary likelihood. \note Overrides all other likelihood parameters (like those in \p constrained_parameters) if present.
+ * \param[in] global_observables_tag String that can be set as attribute in pdf components to indicate that it is a global observable. Can be used instead of or in addition to \p global_observables.
+ * \return A unique pointer to a RooSubsidiaryL that contains all terms in the pdf that can be calculated separately from the other components in the full likelihood.
+ */
 std::shared_ptr<RooAbsL>
 buildSimultaneousLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
                                                        ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
@@ -259,6 +303,18 @@ std::shared_ptr<RooAbsL> buildSimultaneousLikelihood(RooAbsPdf* pdf, RooAbsData*
 }
 
 
+/*
+ * \brief Build a likelihood from an unbinned pdf with a subsidiary likelihood component
+ *
+ * \param[in] pdf Raw pointer to the pdf
+ * \param[in] data Raw pointer to the dataset
+ * \param[in] extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the pdf whether to activate or not.
+ * \param[in] constrained_parameters Set of parameters that are constrained. Pdf components dependent on these alone are added to the subsidiary likelihood.
+ * \param[in] external_constraints Set of external constraint pdfs, i.e. constraints not necessarily in the pdf itself. These are always added to the subsidiary likelihood.
+ * \param[in] global_observables Observables that have a constant value, independent of the dataset events. Pdf components dependent on these alone are added to the subsidiary likelihood. \note Overrides all other likelihood parameters (like those in \p constrained_parameters) if present.
+ * \param[in] global_observables_tag String that can be set as attribute in pdf components to indicate that it is a global observable. Can be used instead of or in addition to \p global_observables.
+ * \return A unique pointer to a RooSubsidiaryL that contains all terms in the pdf that can be calculated separately from the other components in the full likelihood.
+ */
 std::shared_ptr<RooAbsL>
 buildUnbinnedConstrainedLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
                                                                ConstrainedParameters constrained_parameters, ExternalConstraints external_constraints,
