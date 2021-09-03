@@ -622,9 +622,9 @@ TObjArray *THStack::GetStack()
 
 TAxis *THStack::GetXaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -637,9 +637,9 @@ TAxis *THStack::GetXaxis() const
 
 TAxis *THStack::GetYaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -652,10 +652,10 @@ TAxis *THStack::GetYaxis() const
 
 TAxis *THStack::GetZaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
    if (!h->IsA()->InheritsFrom(TH2::Class())) Warning("THStack","1D Histograms don't have a Z axis");
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetZaxis();
 }
 
