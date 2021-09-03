@@ -299,7 +299,7 @@ Int_t  TGeoManager::fgMaxDaughters    = 1;
 Int_t  TGeoManager::fgMaxXtruVert     = 1;
 Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
-TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kG4Units;
+TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 static Bool_t gGeometryLocked = kTRUE;
 
