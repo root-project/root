@@ -51,6 +51,7 @@ public:
     bool cloneInputData = true;
     double integrateOverBinsPrecision = -1.;
     bool binnedL = false;
+    bool takeGlobalObservablesFromData = false;
   };
 
   // Constructors, assignment etc
@@ -155,10 +156,11 @@ protected:
 
   RooFit::MPSplit _mpinterl = RooFit::BulkPartition; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
   Bool_t         _doOffset = false; // Apply interval value offset to control numeric precision?
+  const bool  _takeGlobalObservablesFromData = false; // If the global observable values are taken from data
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; //! Offset as KahanSum to avoid loss of precision
   mutable Double_t _evalCarry = 0.0; //! carry of Kahan sum in evaluatePartition
 
-  ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
+  ClassDef(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
 
 };
 

@@ -410,6 +410,13 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   optimizeCaching() ;
 
+  // It would be unusual if the global observables are used in the likelihood
+  // outside of the constraint terms, but if they are we have to be consistent
+  // and also redirect them to the snapshots in the dataset if appropriate.
+  if(_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
+    recursiveRedirectServers(*_data->getGlobalObservables()) ;
+  }
+
 }
 
 
@@ -716,10 +723,15 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   //indata.Print("v") ;
 
 
-  // Delete previous dataset now, if it was owned
+  // If the current dataset is owned, transfer the ownership to unique pointer
+  // that will get out of scope at the end of this function. We can't delete it
+  // right now, because there might be global observables in the model that
+  // first need to be redirected to the new dataset with a later call to
+  // RooAbsArg::recursiveRedirectServers.
+  std::unique_ptr<RooAbsData> oldOwnedData;
   if (_ownData) {
-    delete _dataClone ;
-    _dataClone = 0 ;
+    oldOwnedData.reset(_dataClone);
+    _dataClone = nullptr ;
   }
 
   if (!cloneData && _rangeName.size()>0) {
@@ -760,7 +772,12 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
 
   setValueDirty() ;
 
-//   cout << "RAOTS::setDataSlave(" << this << ") END" << endl ;
+  // It would be unusual if the global observables are used in the likelihood
+  // outside of the constraint terms, but if they are we have to be consistent
+  // and also redirect them to the snapshots in the dataset if appropriate.
+  if(_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
+    recursiveRedirectServers(*_data->getGlobalObservables()) ;
+  }
 
   return kTRUE ;
 }

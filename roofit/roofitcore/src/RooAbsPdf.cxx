@@ -1078,6 +1078,14 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     projDeps.add(*tmp) ;
   }
 
+  const std::string globalObservablesSource = pc.getString("globssource","data",false);
+  if(globalObservablesSource != "data" && globalObservablesSource != "model") {
+    std::string errMsg = "RooAbsPdf::fitTo: GlobalObservablesSource can only be \"data\" or \"model\"!";
+    coutE(InputArguments) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
+  }
+  const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
+
   // Construct NLL
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal* nll ;
@@ -1091,6 +1099,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.cloneInputData = static_cast<bool>(cloneData);
   cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
   cfg.binnedL = false;
+  cfg.takeGlobalObservablesFromData = takeGlobalObservablesFromData;
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
@@ -1129,15 +1138,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,true) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-
-  const std::string globalObservablesSource = pc.getString("globssource","data",false);
-  if(globalObservablesSource != "data" && globalObservablesSource != "model") {
-    std::string errMsg = "RooAbsPdf::fitTo: GlobalObservablesSource can only be \"data\" or \"model\"!";
-    coutE(InputArguments) << errMsg << std::endl;
-    throw std::invalid_argument(errMsg);
-  }
-  const bool takeGlobsFromData = globalObservablesSource == "data";
-
 
   auto constraintTerm = RooConstraintSum::createConstraintTerm(
           baseName + "_constr", // name
