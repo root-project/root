@@ -41,14 +41,14 @@ namespace Experimental{
 namespace SOFIE{
 namespace PyTorch{
 
-/// Parser function for translatng PyTorch .pt model into a RModel object.
+/// Parser function for translating PyTorch .pt model into a RModel object.
 /// Accepts the file location of a PyTorch model, shapes and data-types of input tensors
 /// and returns the equivalent RModel object.
 RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
 
-/// Overloaded Parser function for translatng PyTorch .pt model into a RModel object.
-/// Accepts the file location of a PyTorch model and only the shapes of input tensors.
-/// Builds the data-types vector for input tensors and calls the `Parse()` function to
+/// Overloaded Parser function for translating PyTorch .pt model into a RModel object.
+/// Accepts the file location of a PyTorch model and the shapes of input tensors.
+/// Builds the vector of data-types for input tensors and calls the `Parse()` function to
 /// return the equivalent RModel object.
 RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
 

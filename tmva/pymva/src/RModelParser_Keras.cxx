@@ -29,7 +29,7 @@ namespace Experimental{
 namespace SOFIE{
 namespace PyKeras{
 
-   // Referencing Python utility functions present in PyMethodBase
+// Referencing Python utility functions present in PyMethodBase
 static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
 static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
 
@@ -39,33 +39,34 @@ namespace INTERNAL{
 void AddKerasLayer(RModel &rmodel, PyObject *fLayer);
 
 // Declaring Internal Functions for Keras layers which don't have activation as an additional attribute
-std::unique_ptr<ROperator>
-MakeKerasActivation(PyObject *fLayer);                         // For instantiating ROperator for Keras Activation Layer
-std::unique_ptr<ROperator> MakeKerasReLU(PyObject *fLayer);    // For instantiating ROperator for Keras ReLU layer
-std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer); // For instantiating ROperator for Keras Permute Layer
+std::unique_ptr<ROperator> MakeKerasActivation(PyObject *fLayer);   // For instantiating ROperator for Keras Activation Layer
+std::unique_ptr<ROperator> MakeKerasReLU(PyObject *fLayer);         // For instantiating ROperator for Keras ReLU layer
+std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 
 // Declaring Internal function for Keras layers which have additional activation attribute
-std::unique_ptr<ROperator> MakeKerasDense(PyObject *fLayer); // For instantiating ROperator for Keras Dense Layer
+std::unique_ptr<ROperator> MakeKerasDense(PyObject *fLayer);        // For instantiating ROperator for Keras Dense Layer
 
 // For mapping Keras layer with the preparatory functions for ROperators
 using KerasMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject *fLayer)>;
 using KerasMethodMapWithActivation = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject *fLayer)>;
 
-const KerasMethodMap mapKerasLayer = {{"Activation", &MakeKerasActivation},
-                                      {"Permute", &MakeKerasPermute},
+const KerasMethodMap mapKerasLayer = {
+   {"Activation", &MakeKerasActivation},
+   {"Permute", &MakeKerasPermute},
 
-                                      // For activation layers
-                                      {"ReLU", &MakeKerasReLU},
+   // For activation layers
+   {"ReLU", &MakeKerasReLU},
 
-                                      // For layers with activation attributes
-                                      {"relu", &MakeKerasReLU}};
+   // For layers with activation attributes
+   {"relu", &MakeKerasReLU}
+};
 
 const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
    {"Dense", &MakeKerasDense},
-};
+   };
 
 // Function which returns values from a Python Tuple object in vector of size_t
-std::vector<size_t> GetShapeFromTuple(PyObject *shapeTuple);
+std::vector<size_t> GetDataFromTuple(PyObject *tupleObject);
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Adds equivalent ROperator with respect to Keras model layer
@@ -100,13 +101,14 @@ std::vector<size_t> GetShapeFromTuple(PyObject *shapeTuple);
 ///
 /// The fLayer dictionary which holds all the information about a Keras layer has
 /// following structure:-
-/// dict fLayer { 'layerType'       : Type of the Keras layer
-///               'layerAttributes' : Attributes of the keras layer as returned by layer.get_config()
-///               'layerInput'      : List of names of input tensors
-///               'layerOutput'     : List of names of output tensors
-///               'layerDType'      : Data-type of the Keras layer
-///               'layerWeight'     : List of weight tensor names of Keras layers
-///             }
+///
+///     dict fLayer { 'layerType'       : Type of the Keras layer
+///                   'layerAttributes' : Attributes of the keras layer as returned by layer.get_config()
+///                   'layerInput'      : List of names of input tensors
+///                   'layerOutput'     : List of names of output tensors
+///                   'layerDType'      : Data-type of the Keras layer
+///                   'layerWeight'     : List of weight tensor names of Keras layers
+///                 }
 void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
    std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
 
@@ -161,7 +163,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator_Gemm object
+/// \brief Prepares a ROperator object for Keras Dense Layer
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
@@ -178,8 +180,8 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
 
       // Extracting names of weight tensors
-      // In the list of weight tensors from fLayer, we get the names of Kernel
-      // weights and the bias weights.
+      // The names of Kernel weights and bias weights are found in the list
+      // of weight tensors from fLayer.
       PyObject* fWeightNames  = PyDict_GetItemString(fLayer,"layerWeight");
       std::string fKernelName = PyStringAsString(PyList_GetItem(fWeightNames,0));
       std::string fBiasName   = PyStringAsString(PyList_GetItem(fWeightNames,1));
@@ -204,7 +206,7 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator object for activation functions
+/// \brief Prepares a ROperator object for Keras activation layer
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
@@ -224,13 +226,13 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator_Relu object
+/// \brief Prepares a ROperator object for Keras ReLU activation
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
-/// For instantiating a ROperator_Relu object, we extract the names of
-/// input & output tensors and the deta-type of the layer.
+/// For instantiating a ROperator_Relu object, the names of
+/// input & output tensors and the deta-type of the layer are extracted.
 std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 {
       PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
@@ -253,7 +255,7 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator_Transpose object
+/// \brief Prepares a ROperator object for Keras Permute layer
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
@@ -318,10 +320,8 @@ std::vector<size_t> GetDataFromTuple(PyObject* tupleObject){
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Parser function for translating Keras .h5 model to RModel object
-///
 /// \param[in] filename file location of Keras .h5
-/// \return RModel Parsed RModel object
+/// \return Parsed RModel object
 ///
 /// The `Parse()` function defined in `TMVA::Experimental::SOFIE::PyKeras` will
 /// parse a trained Keras .h5 model into a RModel Object. After loading the model
