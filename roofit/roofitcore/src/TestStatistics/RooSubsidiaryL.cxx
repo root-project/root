@@ -14,6 +14,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+/**
+\file RooSubsidiaryL.cxx
+\class RooSubsidiaryL
+\ingroup Roofitcore
+
+\brief RooSubsidiaryL calculates the sum of the -(log) likelihoods of a set of RooAbsPdf objects that represent subsidiary or constraint functions.
+
+This class is used to gather all subsidiary PDF terms from the component PDFs of RooSumL likelihoods and calculate the
+composite -log(L). Such subsidiary terms can be marked using RooFit::Constrain arguments to RooAbsPdf::fitTo() or
+RooAbsPdf::createNLL().
+
+Subsidiary terms are summed separately for increased numerical stability, since these terms are often small and cause
+numerical variances in their original PDFs, whereas by summing as one separate subsidiary collective term, it is
+numerically very stable.
+
+\note When a subsidiary PDF is part of multiple component PDFs, it will only be summed once in this class! This doesn't
+change the derivative of the log likelihood (which is what matters in fitting the likelihood), but does change the
+value of the (log-)likelihood itself.
+**/
+
 #include <TestStatistics/RooSubsidiaryL.h>
 #include <TestStatistics/kahan_sum.h>
 #include <RooAbsPdf.h> // for dynamic cast
@@ -57,7 +77,6 @@ RooSubsidiaryL::evaluatePartition(RooAbsL::Section events, std::size_t /*compone
 }
 
 void RooSubsidiaryL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) {
-   // do nothing, there's no dataset here to cache
 }
 
 } // namespace TestStatistics
