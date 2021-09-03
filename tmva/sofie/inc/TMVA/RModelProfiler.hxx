@@ -19,24 +19,23 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-class RModelProfiler : public RModel {
+class RModelProfiler {
 
 private:
    void GenerateUtilityFunctions();
+   RModel& fModel;
 
 public:
 
    RModelProfiler() = delete;
+   RModelProfiler(RModel& model);
    ~RModelProfiler() { }
-   RModelProfiler(RModel&& model);
 
-   // default move ctor and move assn
-   RModelProfiler(RModelProfiler&& other) = default;
-   RModelProfiler& operator=(RModelProfiler&& other) = default;
-
-   // disallow copy
+   // There is no point in copying or moving an RModelProfiler
    RModelProfiler(const RModelProfiler& other) = delete;
+   RModelProfiler(RModelProfiler&& other) = delete;
    RModelProfiler& operator=(const RModelProfiler& other) = delete;
+   RModelProfiler& operator=(RModelProfiler&& other) = delete;
 
    void Generate();
 
