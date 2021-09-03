@@ -270,6 +270,9 @@ RooDataHist::RooDataHist(std::string_view name, std::string_view title, const Ro
 ///                              category it will be added on the fly. The import command can be specified
 ///                              multiple times. 
 /// <tr><td> Import(map<string,TH1*>&) <td> As above, but allows specification of many imports in a single operation
+/// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of global observables to be stored in this RooDataHist.
+///                                                          A snapshot of the passed RooArgSet is stored, meaning the values wont't change unexpectedly.
+/// </table>
 ///                              
 
 RooDataHist::RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
@@ -292,6 +295,7 @@ RooDataHist::RooDataHist(std::string_view name, std::string_view title, const Ro
   pc.defineDouble("weight","Weight",0,1) ; 
   pc.defineObject("dummy1","ImportDataHistSliceMany",0) ;
   pc.defineObject("dummy2","ImportHistoSliceMany",0) ;
+  pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineMutex("ImportHisto","ImportHistoSlice","ImportDataHistSlice") ;
   pc.defineDependency("ImportHistoSlice","IndexCat") ;
   pc.defineDependency("ImportDataHistSlice","IndexCat") ;
@@ -308,6 +312,8 @@ RooDataHist::RooDataHist(std::string_view name, std::string_view title, const Ro
     assert(0) ;
     return ;
   }
+
+  if(pc.getSet("glObs")) setGlobalObservables(*pc.getSet("glObs"));
 
   TH1* impHist = static_cast<TH1*>(pc.getObject("impHist")) ;
   Bool_t impDens = pc.getInt("impDens") ;
