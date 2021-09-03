@@ -61,26 +61,28 @@ const PyTorchMethodMap mapPyTorchNode =
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares equivalent ROperator with respect to PyTorch ONNX node.
 ///
-/// \param[in] fNode Python PyTorch ONNX Graph Node
+/// \param[in] fNode Python PyTorch ONNX Graph node
 /// \return unique pointer to ROperator object
-///r
+///
 /// Function searches for the passed PyTorch ONNX Graph node in the map, and calls
 /// the specific preparatory function, subsequently returning the ROperator object.
 ///
 /// For developing new preparatory functions for supporting PyTorch ONNX Graph nodes
 /// in future,  all one needs is to extract the required properties and attributes
 /// from the fNode dictionary which contains all the information about any PyTorch ONNX
-//  Graph Node and after any required transformations, these are passed for instantiating
+//  Graph node and after any required transformations, these are passed for instantiating
 /// the ROperator object.
 ///
-/// The fNode dictionary which holds all the information about a PyTorch ONNX Graph's Node has
+/// The fNode dictionary which holds all the information about a PyTorch ONNX Graph's node has
 /// following structure:-
-/// dict fNode {  'nodeType'        : Type of Operator Node
-///               'nodeAttributes'  : Attributes of the operator Node
-///               'nodeInputs'      : List of names of input tensors
-///               'nodeOutputs'     : List of names of output tensors
-///               'nodeDType'       : Data-type of the operator Node
-///             }
+///
+///     dict fNode {  'nodeType'        : Type of node (operator)
+///                   'nodeAttributes'  : Attributes of the node
+///                   'nodeInputs'      : List of names of input tensors
+///                   'nodeOutputs'     : List of names of output tensors
+///                   'nodeDType'       : Data-type of the operator node
+///                }
+///
 std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode){
         std::string fNodeType = PyStringAsString(PyDict_GetItemString(fNode,"nodeType"));
         auto findNode = mapPyTorchNode.find(fNodeType);
@@ -94,7 +96,7 @@ std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode){
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Gemm object
 ///
-/// \param[in] fNode Python PyTorch ONNX Graph Node
+/// \param[in] fNode Python PyTorch ONNX Graph node
 /// \return Unique pointer to ROperator object
 ///
 /// For PyTorch's Linear layer having Gemm operation in its ONNX graph,
@@ -138,7 +140,7 @@ std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode){
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Relu object
 ///
-/// \param[in] fNode Python PyTorch ONNX Graph Node
+/// \param[in] fNode Python PyTorch ONNX Graph node
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_Relu object, the names of
@@ -165,7 +167,7 @@ std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode){
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Transpose object
 ///
-/// \param[in] fNode Python PyTorch ONNX Graph Node
+/// \param[in] fNode Python PyTorch ONNX Graph node
 /// \return Unique pointer to ROperator object
 ///
 /// For Transpose Operator of PyTorch's ONNX Graph, the permute dimensions are found,
@@ -198,12 +200,10 @@ std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode){
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Parser function for translating PyTorch .pt model to RModel object
-///
 /// \param[in] filename file location of PyTorch .pt model
 /// \param[in] inputShapes vector of input shape vectors
 /// \param[in] inputDTypes vector of ETensorType for data-types of Input tensors
-/// \return    RModel Parsed RModel object
+/// \return    Parsed RModel object
 ///
 /// The `Parse()` function defined in `TMVA::Experimental::SOFIE::PyTorch` will
 /// parse a trained PyTorch .pt model into a RModel Object. The parser uses
@@ -428,12 +428,9 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Overloaded Parser function for translating PyTorch .pt model to RModel
-///        object
-///
 /// \param[in] filename file location of PyTorch .pt model
 /// \param[in] inputShapes vector of input shape vectors
-/// \return    RModel Parsed RModel object
+/// \return    Parsed RModel object
 ///
 /// Overloaded Parser function for translating PyTorch .pt model to RModel object.
 /// Function only requires the inputShapes vector as a parameter. Function
