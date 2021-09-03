@@ -100,7 +100,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _gofOpMode{(cfg.nCPU>1 || cfg.nCPU==-1) ? MPMaster : (dynamic_cast<RooSimultaneous*>(_func) ? SimMaster : Slave)},
   _nEvents{data.numEntries()},
   _nCPU(cfg.nCPU != -1 ? cfg.nCPU : 1),
-  _mpinterl(cfg.interleave)
+  _mpinterl(cfg.interleave),
+  _takeGlobalObservablesFromData{cfg.takeGlobalObservablesFromData}
 {
   // Register all parameters as servers
   _paramSet.add(*std::unique_ptr<RooArgSet>{real.getParameters(&data)});
@@ -138,6 +139,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _nCPU(other._nCPU != -1 ? other._nCPU : 1),
   _mpinterl(other._mpinterl),
   _doOffset(other._doOffset),
+  _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData},
   _offset(other._offset),
   _evalCarry(other._evalCarry)
 {
@@ -412,6 +414,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
   cfg.interleave = _mpinterl;
   cfg.verbose = _verbose;
   cfg.splitCutRange = _splitRange;
+  cfg.takeGlobalObservablesFromData = _takeGlobalObservablesFromData;
   // This configuration parameter is stored in the RooAbsOptTestStatistic.
   // It would have been cleaner to move the member variable into RooAbsTestStatistic,
   // but to avoid incrementing the class version we do the dynamic_cast trick.
@@ -524,6 +527,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       cfg.verbose = _verbose;
       cfg.splitCutRange = _splitRange;
       cfg.binnedL = binnedL;
+      cfg.takeGlobalObservablesFromData = _takeGlobalObservablesFromData;
       // This configuration parameter is stored in the RooAbsOptTestStatistic.
       // It would have been cleaner to move the member variable into RooAbsTestStatistic,
       // but to avoid incrementing the class version we do the dynamic_cast trick.
@@ -601,20 +605,19 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
     return setDataSlave(indata, cloneData);
   case SimMaster:
     // Forward to slaves
-    //     cout << "RATS::setData(" << GetName() << ") SimMaster, calling setDataSlave() on slave nodes" << endl;
     if (indata.canSplitFast()) {
-      for (Int_t i = 0; i < _nGof; ++i) {
-	RooAbsData* compData = indata.getSimData(_gofArray[i]->GetName());
-	_gofArray[i]->setDataSlave(*compData, cloneData);
+      for (int i = 0; i < _nGof; ++i) {
+        RooAbsData* compData = indata.getSimData(_gofArray[i]->GetName());
+        _gofArray[i]->setDataSlave(*compData, cloneData);
       }
     } else if (0 == indata.numEntries()) {
       // For an unsplit empty dataset, simply assign empty dataset to each component
-      for (Int_t i = 0; i < _nGof; ++i) {
-	_gofArray[i]->setDataSlave(indata, cloneData);
+      for (int i = 0; i < _nGof; ++i) {
+        _gofArray[i]->setDataSlave(indata, cloneData);
       }
     } else {
       const RooAbsCategoryLValue& indexCat = static_cast<RooSimultaneous*>(_func)->indexCat();
-      TList* dlist = indata.split(indexCat, kTRUE);
+      std::unique_ptr<TList> dlist{indata.split(indexCat, true)};
       if (!dlist) {
         coutF(DataHandling) << "Tried to split '" << indata.GetName() << "' into categories of '" << indexCat.GetName()
             << "', but splitting failed. Input data:" << std::endl;
@@ -622,16 +625,13 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
         throw std::runtime_error("Error when setting up test statistic: dataset couldn't be split into categories.");
       }
 
-      for (Int_t i = 0; i < _nGof; ++i) {
-        RooAbsData* compData = (RooAbsData*) dlist->FindObject(_gofArray[i]->GetName());
-        // 	cout << "component data for index " << _gofArray[i]->GetName() << " is " << compData << endl;
-        if (compData) {
+      for (int i = 0; i < _nGof; ++i) {
+        if (auto compData = static_cast<RooAbsData*>(dlist->FindObject(_gofArray[i]->GetName()))) {
           _gofArray[i]->setDataSlave(*compData,kFALSE,kTRUE);
         } else {
           coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << _gofArray[i]->GetName() << endl;
         }
       }
-      delete dlist; // delete only list, data will be used
     }
     break;
   case MPMaster:
@@ -641,7 +641,7 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
     break;
   }
 
-  return kTRUE;
+  return true;
 }
 
 
