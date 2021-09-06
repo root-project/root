@@ -99,7 +99,7 @@ private:
 //   using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
 // #endif
 // #else
-// do not use arch GPU for evaluation. It is too slow for batch size=1
+// do not use GPU architecture for evaluation. It is too slow for batch size=1
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
 // #endif
 
@@ -165,6 +165,10 @@ private:
    template <typename Architecture_t>
    std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress);
 
+   /// Get the input event tensor for evaluation
+   /// Internal function to fill the fXInput tensor with the correct shape from TMVA current Event class
+   void FillInputTensor();
+
    /// parce the validation string and return the number of event data used for validation
    UInt_t GetNumValidationSamples();
 
@@ -200,7 +204,7 @@ private:
    std::vector<TTrainingSettings> fTrainingSettings; ///< The vector defining each training strategy
 
    TensorImpl_t fXInput;                 // input tensor used to evaluate fNet
-   HostBufferImpl_t fXInputBuffer;        // input hist buffer corresponding to X (needed for GPU implementation)
+   HostBufferImpl_t fXInputBuffer;        // input host buffer corresponding to X (needed for GPU implementation)
    std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
    std::unique_ptr<DeepNetImpl_t> fNet;
 
