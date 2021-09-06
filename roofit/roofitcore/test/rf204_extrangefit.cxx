@@ -1,95 +1,36 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
-// 
-// Extended maximum likelihood fit with alternate range definition
-// for observed number of events.
-//
-//
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
 #include "RooRealVar.h"
-#include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooExtendPdf.h"
+#include "RooArgSet.h"
+#include "RooLinkedList.h"
+#include "RooDataSet.h"
 #include "RooFitResult.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
-class TestBasic204 : public RooFitTestUnit
+void rf204_extrangefit()
 {
-public: 
-  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fit in sub range",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
-    
-    // S e t u p   c o m p o n e n t   p d f s 
-    // ---------------------------------------
-    
-    // Declare observable x
-    RooRealVar x("x","x",0,10) ;
-    
-    // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
-    RooRealVar mean("mean","mean of gaussians",5) ;
-    RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
-    RooRealVar sigma2("sigma2","width of gaussians",1) ;
-    
-    RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
-    RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
-    
-    // Build Chebychev polynomial p.d.f.  
-    RooRealVar a0("a0","a0",0.5,0.,1.) ;
-    RooRealVar a1("a1","a1",-0.2,0.,1.) ;
-    RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
-    
-    // Sum the signal components into a composite signal p.d.f.
-    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
-    RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
-    
-    
-    // C o n s t r u c t   e x t e n d e d   c o m p s   wi t h   r a n g e   s p e c
-    // ------------------------------------------------------------------------------
-    
-    // Define signal range in which events counts are to be defined
-    x.setRange("signalRange",4,6) ;
-    
-    // Associated nsig/nbkg as expected number of events with sig/bkg _in_the_range_ "signalRange"
-    RooRealVar nsig("nsig","number of signal events in signalRange",500,0.,10000) ;
-    RooRealVar nbkg("nbkg","number of background events in signalRange",500,0,10000) ;
-    RooExtendPdf esig("esig","extended signal p.d.f",sig,nsig,"signalRange") ;
-    RooExtendPdf ebkg("ebkg","extended background p.d.f",bkg,nbkg,"signalRange") ;
-    
-    
-    // S u m   e x t e n d e d   c o m p o n e n t s
-    // ---------------------------------------------
-    
-    // Construct sum of two extended p.d.f. (no coefficients required)
-    RooAddPdf  model("model","(g1+g2)+a",RooArgList(ebkg,esig)) ;
-    
-    
-    // S a m p l e   d a t a ,   f i t   m o d e l
-    // -------------------------------------------
-    
-    // Generate 1000 events from model so that nsig,nbkg come out to numbers <<500 in fit
-    RooDataSet *data = model.generate(x,1000) ;
-    
-    
-    // Perform unbinned extended ML fit to data
-    RooFitResult* r = model.fitTo(*data,Extended(kTRUE),Save()) ;
-
-
-    regResult(r,"rf204_result") ;
-
-    delete data ;
-    return kTRUE ;
-  } 
-} ;
+    RooRealVar x = RooRealVar("x", "x", 0, 10);
+    RooRealVar mean = RooRealVar("mean", "mean of gaussians", 5);
+    RooRealVar sigma1 = RooRealVar("sigma1", "width of gaussians", 0.5);
+    RooRealVar sigma2 = RooRealVar("sigma2", "width of gaussians", 1);
+    RooGaussian sig1 = RooGaussian("sig1", "Signal component 1", x, mean, sigma1);
+    RooGaussian sig2 = RooGaussian("sig2", "Signal component 2", x, mean, sigma2);
+    RooRealVar a0 = RooRealVar("a0", "a0", 0.5, 0.0, 1.0);
+    RooRealVar a1 = RooRealVar("a1", "a1", -0.2, 0.0, 1.0);
+    RooChebychev bkg = RooChebychev("bkg", "Background", x, {a0, a1});
+    RooRealVar sig1frac = RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0);
+    RooAddPdf sig = RooAddPdf("sig", "Signal", {sig1, sig2}, {sig1frac});
+    x.setRange("signalRange", 4, 6);
+    RooRealVar nsig = RooRealVar("nsig", "number of signal events in signalRange", 500, 0.0, 10000);
+    RooRealVar nbkg = RooRealVar("nbkg", "number of background events in signalRange", 500, 0, 10000);
+    RooExtendPdf esig = RooExtendPdf("esig", "extended signal pdf", sig, nsig, "signalRange");
+    RooExtendPdf ebkg = RooExtendPdf("ebkg", "extended background pdf", bkg, nbkg, "signalRange");
+    RooAddPdf model = RooAddPdf("model", "(g1+g2)+a", {ebkg, esig});
+    RooDataSet* data = model.generate(RooArgSet(x), 1000);
+    //auto r = model.fitTo(*data,RooLinkedList());
+    RooFitResult* r = model.fitTo(*data,{"Extended(true)"},{"Save(true)"});
+    //some reason this isn't working...
+    //r->Print();
+}
