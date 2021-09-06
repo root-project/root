@@ -25,8 +25,24 @@ sap.ui.define([
 
         onInit: function () {
             let data = this.getView().getViewData();
-            this.mgr       = data.mgr;
-            this.eveViewerId = data.eveViewerId;
+
+            if (data) {
+                this.setupManagerAndViewType(data.eveViewerId, data.mgr);
+            }
+            else {
+                UIComponent.getRouterFor(this).getRoute("View").attachPatternMatched(this.onViewObjectMatched, this);
+            }
+        },
+
+        onTableObjectMatched: function (oEvent) {
+            let args = oEvent.getParameter("arguments");
+            this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr);
+            delete JSROOT.$eve7tmp;
+        },
+
+        setupManagerAndViewType: function (eveViewerId, mgr) {
+            this.eveViewerId = eveViewerId;
+            this.mgr       = mgr;
 
             let eviewer = this.mgr.GetElement(this.eveViewerId);
             let sceneInfo = eviewer.childs[0];
@@ -46,7 +62,6 @@ sap.ui.define([
             this.canvas_json = JSROOT.parse( atob(chld.fTitle) );
             // console.log(JSON.stringify(this.canvas_json));
         },
-
         onResize()
         {
             let domref = this.byId("legoPlotPlace").getDomRef();
