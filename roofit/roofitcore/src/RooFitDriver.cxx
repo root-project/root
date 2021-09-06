@@ -373,14 +373,13 @@ std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFitDriver::me
 void RooFitDriver::markGPUNodes()
 {
    if (_getValInvocations == 1)
-      return;                          // leave everything to be computed (and timed) in cpu
-   else if (_getValInvocations == 2) { // compute (and time) as much as possible in gpu
+      return;                        // leave everything to be computed (and timed) in cpu
+   else if (_getValInvocations == 2) // compute (and time) as much as possible in gpu
       for (auto &item : _nodeInfos)
-         if (!item.second.computeInScalarMode)
-            item.second.computeInGPU = item.first->canComputeBatchWithCuda();
-   } else // assign nodes to gpu using a greedy algorithm
+         item.second.computeInGPU = !item.second.computeInScalarMode && item.first->canComputeBatchWithCuda();
+   else // assign nodes to gpu using a greedy algorithm
    {
-      // initialization and deletion of the timing events
+      // deletion of the timing events (to be replaced later by non-timing events)
       for (auto &item : _nodeInfos) {
          item.second.computeInGPU = item.second.copyAfterEvaluation = false;
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(item.second.event);
@@ -396,6 +395,13 @@ void RooFitDriver::markGPUNodes()
       const RooAbsReal *cpuNode = nullptr, *cudaNode = nullptr;
       microseconds simulatedTime{0};
       int nNodes = _nodeInfos.size();
+      // launch scalar nodes (assume they are computed in 0 time)
+      for (auto &it : _nodeInfos)
+         if (it.second.computeInScalarMode) {
+            nNodes--;
+            it.second.timeLaunched = microseconds{0};
+         }
+
       while (nNodes) {
          microseconds minDiff = microseconds::max(), maxDiff = -minDiff; // diff = cpuTime - cudaTime
          const RooAbsReal *cpuCandidate = nullptr, *cudaCandidate = nullptr;
@@ -426,7 +432,7 @@ void RooFitDriver::markGPUNodes()
                cpuDelay = cpuWait;
                cpuCandidate = it.first;
             }
-            if (diff > maxDiff) {
+            if (diff > maxDiff && it.first->canComputeBatchWithCuda()) {
                maxDiff = diff;
                cudaDelay = cudaWait;
                cudaCandidate = it.first;
