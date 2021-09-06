@@ -44,6 +44,10 @@
                 "pattern": "view/:viewName:",
                 "target": ["GL"]
             }, {
+                "name": "Lego",
+                "pattern": "lego/:viewName:",
+                "target": ["Lego"]
+            }, {
                 "name": "Table",
                 "pattern": "table/:viewName:",
                 "target": ["Table"]
@@ -58,6 +62,11 @@
                     "transition": "slide",
                     "clearAggregation": false,
                     "viewName": "GL"
+                },
+                "Lego": {
+                    "transition": "slide",
+                    "clearAggregation": false,
+                    "viewName": "Lego"
                 },
                 "Table": {
                     "transition": "slide",
