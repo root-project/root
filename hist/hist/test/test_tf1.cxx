@@ -28,7 +28,7 @@ double functionConst(const double *x, const double *p)
    return *x + *p;
 }
 
-Float_t delta = 0.00000000001;
+constexpr Float_t delta = 1.E-11f;
 
 void coeffNamesGeneric(TString &formula, TObjArray *coeffNames)
 {
