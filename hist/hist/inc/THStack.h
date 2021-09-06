@@ -73,6 +73,7 @@ public:
    virtual Double_t GetMinimum(Option_t *option="");
    TAxis           *GetXaxis() const;
    TAxis           *GetYaxis() const;
+   TAxis           *GetZaxis() const;
    virtual void     ls(Option_t *option="") const;
    virtual Long64_t Merge(TCollection* li, TFileMergeInfo *info);
    virtual void     Modified();
