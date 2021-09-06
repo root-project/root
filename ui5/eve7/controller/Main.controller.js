@@ -67,6 +67,8 @@ sap.ui.define(['sap/ui/core/Component',
          var oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
             oRouter.navTo("Table", { viewName: name });
+         else if (name == "Lego")
+            oRouter.navTo("Lego", { viewName: name });
          else
             oRouter.navTo("View", { viewName: name });
       },
