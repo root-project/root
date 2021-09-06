@@ -559,6 +559,46 @@ int G__isfilebusy(int ifn)
   return(flag);
 }
 
+#if !defined(G__WIN32)
+
+#include <errno.h>
+#include <time.h>
+
+struct G__StatCacheEntry {
+  struct stat info;
+  time_t ctime;
+  int retcode, _errno;
+};
+
+#ifndef R__STAT_CACHING_TIME
+#define R__STAT_CACHING_TIME    60
+#endif
+
+int G__cachingstat(const char *path, struct stat *buf) {
+  static std::map<std::string, struct G__StatCacheEntry> stat_cache;
+
+  if (   stat_cache.count(path)
+      && (stat_cache[path].ctime > (time(NULL) - R__STAT_CACHING_TIME))
+     ) {
+    const struct G__StatCacheEntry &e = stat_cache[path];
+    if (e.retcode < 0) {
+      errno = e._errno;
+    }
+    memcpy(buf, &e.info, sizeof(struct stat));
+    return e.retcode;
+  }
+
+  struct G__StatCacheEntry &e = stat_cache[path];
+  e.retcode = stat(path, &e.info);
+  if (e.retcode < 0) {
+    e._errno = errno;
+  }
+  e.ctime = time(NULL);
+  return e.retcode;
+}
+
+#endif /* !defined(G__WIN32) */
+
 /******************************************************************
 * G__matchfilename(i,filename)
 ******************************************************************/
@@ -582,8 +622,8 @@ int G__matchfilename(int i1,const char *filename)
 #else
   struct stat statBufItem;
   struct stat statBuf;
-  if (   ( 0 == stat( filename, & statBufItem ) )
-      && ( 0 == stat( G__srcfile[i1].filename, & statBuf ) )
+  if (   ( 0 == G__cachingstat( filename, & statBufItem ) )
+      && ( 0 == G__cachingstat( G__srcfile[i1].filename, & statBuf ) )
       && ( statBufItem.st_dev == statBuf.st_dev )     // Files on same device
       && ( statBufItem.st_ino == statBuf.st_ino )     // Files on same inode (but this is not unique on AFS so we need the next 2 test
       && ( statBufItem.st_size == statBuf.st_size )   // Files of same size
