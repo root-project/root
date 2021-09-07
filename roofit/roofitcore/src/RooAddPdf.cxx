@@ -785,7 +785,7 @@ Double_t RooAddPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddPdf::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooAddPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
@@ -800,7 +800,7 @@ void RooAddPdf::computeBatch(double* output, size_t nEvents, RooBatchCompute::Da
         static_cast<RooAbsReal*>(cache->_suppNormList.at(pdfNo))->getVal() : 1) );
     }
   }
-  RooBatchCompute::dispatch->compute(RooBatchCompute::AddPdf, output, nEvents, dataMap, pdfs, coefs);
+  dispatch->compute(RooBatchCompute::AddPdf, output, nEvents, dataMap, pdfs, coefs);
 }
 
 

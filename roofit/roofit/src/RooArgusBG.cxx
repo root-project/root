@@ -88,9 +88,9 @@ Double_t RooArgusBG::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooArgusBG::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooArgusBG::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooBatchCompute::dispatch->compute(RooBatchCompute::ArgusBG, output, nEvents, dataMap, {&*m,&*m0,&*c,&*p,&*_norm});
+  dispatch->compute(RooBatchCompute::ArgusBG, output, nEvents, dataMap, {&*m,&*m0,&*c,&*p,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
