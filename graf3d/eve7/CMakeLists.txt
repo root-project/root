@@ -46,6 +46,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveSelection.hxx
     ROOT/REveShape.hxx
     ROOT/REveStraightLineSet.hxx
+    ROOT/REveSystem.hxx
     ROOT/REveTableInfo.hxx
     ROOT/REveTableProxyBuilder.hxx
     ROOT/REveTrack.hxx
