@@ -63,6 +63,69 @@ def create_logger(level="WARNING", log_path="./DistRDF.log"):
     return logger
 
 
+def RunGraphs(proxies, concurrentruns=4):
+    """
+    Trigger the execution of multiple RDataFrame computation graphs on a certain
+    distributed backend. If the backend doesn't support multiple job
+    submissions concurrently, the distributed computation graphs will be
+    executed sequentially.
+
+    Args:
+        proxies(list): List of action proxies that should be triggered. Only
+            actions belonging to different RDataFrame graphs will be
+            triggered to avoid useless calls.
+
+        concurrent_runs(int, optional): Number of graphs that will be
+            executed concurrently in a distributed backend. Defaults to 4.
+
+    Exceptions:
+
+        TypeError: All actions need to belong to the same type of
+        distributed backend. The function raises an error if this condition is
+        not met.
+
+    Example:
+
+        @code{.py}
+        import ROOT
+        RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+        RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
+
+        # Create 3 different dataframes and book an histogram on each one
+        histoproxies = [
+            RDataFrame(100)
+                .Define("x", "rdfentry_")
+                .Histo1D(("name", "title", 10, 0, 100), "x")
+            for _ in range(4)
+        ]
+
+        # Execute the 3 computation graphs
+        RunGraphs(histoproxies)
+        # Retrieve all the histograms in one go
+        histos = [histoproxy.GetValue() for histoproxy in histoproxies]
+        @endcode
+
+
+    """
+
+    # Get proxies belonging to distinct computation graphs
+    uniqueproxies = list({proxy.proxied_node.get_head(): proxy for proxy in proxies}.values())
+
+    expectedbackend = type(uniqueproxies[0].proxied_node.get_head().backend)
+    for proxy in uniqueproxies:
+        if type(proxy.proxied_node.get_head().backend) is not expectedbackend:
+            raise TypeError(("Actions provided to RunGraphs need to be executable"
+                             " from the same type of distributed backend."))
+
+    try:
+        expectedbackend.RunGraphs(uniqueproxies, concurrentruns)
+    except NotImplementedError:
+        # If the backend does not implement RunGraphs we resort to running
+        # the different dataframe graphs sequentially
+        for proxy in uniqueproxies:
+            proxy.GetValue()
+
+
 def create_distributed_module(parentmodule):
     """
     Helper function to create the ROOT.RDF.Experimental.Distributed module.
@@ -84,5 +147,6 @@ def create_distributed_module(parentmodule):
     # Inject top-level functions
     distributed.initialize = initialize
     distributed.create_logger = create_logger
+    distributed.RunGraphs = RunGraphs
 
     return distributed

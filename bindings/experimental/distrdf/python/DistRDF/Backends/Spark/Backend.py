@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+# @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -10,6 +10,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import threading
 import ntpath  # Filename from path (should be platform-independent)
 
 from DistRDF import DataFrame
@@ -22,6 +23,12 @@ try:
 except ImportError:
     raise ImportError(("cannot import module 'pyspark'. Refer to the Apache Spark documentation "
                        "for installation instructions."))
+
+try:
+    import queue
+except ImportError:
+    # Python2 queue module has a different name
+    import Queue as queue
 
 
 class SparkBackend(Base.BaseBackend):
@@ -161,3 +168,40 @@ class SparkBackend(Base.BaseBackend):
         npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
         headnode = HeadNode.get_headnode(npartitions, *args)
         return DataFrame.RDataFrame(headnode, self)
+
+    @staticmethod
+    def RunGraphs(proxies, numthreads=4):
+        """
+        Trigger multiple RDF graphs through multithreading, according to Spark
+        docs on job scheduling at https://spark.apache.org/docs/latest/job-scheduling.html#scheduling-within-an-application.
+
+        Args:
+            proxies(iterable): Action proxies that should be triggered. Only
+                actions belonging to different RDataFrame graphs will be
+                triggered to avoid useless calls.
+
+            numthreads(int, optional): Number of threads to spawn at the same
+                time. Each thread will submit a separate job to the Spark
+                cluster through the same SparkContext. Defaults to 4.
+        """
+
+        # Create queue to store all the action proxies
+        q = queue.Queue()
+
+        for proxy in proxies:
+            q.put(proxy)
+
+        # Function to trigger the computation graph of each proxy in the queue
+        def trigger_loop(queue_):
+            while True:
+                queue_.get().GetValue()
+                queue_.task_done()
+
+        # Create `numthreads` threads that will each submit a Spark job
+        for _ in range(numthreads):
+            worker = threading.Thread(
+                target=trigger_loop, args=(q,), daemon=True)
+            worker.start()
+
+        # Start the execution and wait for all computations to finish
+        q.join()
