@@ -100,7 +100,7 @@ public:
 private:
 
   Double_t evaluate() const ;
-  void computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
+  void computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
   inline bool canComputeBatchWithCuda() const { return true; }
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;

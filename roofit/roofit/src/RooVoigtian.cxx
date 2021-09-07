@@ -100,7 +100,7 @@ Double_t RooVoigtian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Voigtian distribution. 
-void RooVoigtian::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooVoigtian::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooBatchCompute::dispatch->compute(RooBatchCompute::Voigtian, output, nEvents, dataMap, {&*x,&*mean,&*width,&*sigma,&*_norm});
+  dispatch->compute(RooBatchCompute::Voigtian, output, nEvents, dataMap, {&*x,&*mean,&*width,&*sigma,&*_norm});
 }

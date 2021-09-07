@@ -40,29 +40,30 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
       _constraints = other._constraints;
 }
 
-void RooNLLVarNew::computeBatch(double *output, size_t nEvents, RooBatchCompute::DataMap &dataMap) const
+void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispatch, double *output, size_t nEvents,
+                                RooBatchCompute::DataMap &dataMap) const
 {
    RooBatchCompute::VarVector vars = {&*_pdf};
    if (_weight)
       vars.push_back(&**_weight);
    RooBatchCompute::ArgVector args = {static_cast<double>(vars.size() - 1)};
-   RooBatchCompute::dispatch->compute(RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
+   dispatch->compute(RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
 
    if (_isExtended && _sumWeight == 0.0) {
       if (!_weight) {
          _sumWeight = nEvents;
       } else {
          auto weightSpan = dataMap[&**_weight];
-         _sumWeight = weightSpan.size() == 1
-                         ? weightSpan[0] * nEvents
-                         : RooBatchCompute::dispatch->sumReduce(dataMap[&**_weight].data(), nEvents);
+         _sumWeight =
+            weightSpan.size() == 1 ? weightSpan[0] * nEvents : dispatch->sumReduce(dataMap[&**_weight].data(), nEvents);
       }
    }
 }
 
-double RooNLLVarNew::reduce(const double *input, size_t nEvents) const
+double
+RooNLLVarNew::reduce(RooBatchCompute::RooBatchComputeInterface *dispatch, const double *input, size_t nEvents) const
 {
-   double nll = RooBatchCompute::dispatch->sumReduce(input, nEvents);
+   double nll = dispatch->sumReduce(input, nEvents);
    if (_constraints) {
       nll += _constraints->getVal();
    }

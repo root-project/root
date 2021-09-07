@@ -3694,9 +3694,9 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 }
 
 
-void RooAbsPdf::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooAbsPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooAbsReal::computeBatch(output, nEvents, dataMap);
+  RooAbsReal::computeBatch(dispatch, output, nEvents, dataMap);
 
   auto integralSpan = dataMap[_norm];
 

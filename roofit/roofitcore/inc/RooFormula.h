@@ -61,7 +61,7 @@ public:
   /// Evalute all parameters/observables, and then evaluate formula.
   Double_t eval(const RooArgSet* nset=0) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
-  void computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
+  void computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
 
   /// DEBUG: Dump state information
   void dump() const;

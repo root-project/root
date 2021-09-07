@@ -66,9 +66,9 @@ Double_t RooBreitWigner::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BreitWigner distribution.  
-void RooBreitWigner::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooBreitWigner::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooBatchCompute::dispatch->compute(RooBatchCompute::BreitWigner, output, nEvents, dataMap, {&*x,&*mean,&*width,&*_norm});
+  dispatch->compute(RooBatchCompute::BreitWigner, output, nEvents, dataMap, {&*x,&*mean,&*width,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
