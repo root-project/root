@@ -29,7 +29,6 @@
 #include "Math/Util.h"
 #include "RooHelpers.h"
 
-#include <memory>
 #include <numeric>
 #include <ctime>
 #include <chrono>
@@ -201,17 +200,8 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   RooArgSet* observables = _pdf->getObservables(*_dataUniform);
   RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
 
-  std::vector<RooBatchCompute::RunContext> evalData;
-  auto callBatchFunc = [compareLogs,&evalData,this](const RooAbsPdf& pdf, std::size_t begin, std::size_t len, const RooArgSet* theNormSet)
-      -> RooSpan<const double> {
-    evalData.emplace_back();
-    _dataUniform->getBatches(evalData.back(), begin, len);
-
-    if (compareLogs) {
-      return pdf.getLogProbabilities(evalData.back(), theNormSet);
-    } else {
-      return pdf.getValues(evalData.back(), theNormSet);
-    }
+  auto callBatchFunc = [this](const RooAbsPdf& pdf) {
+      return pdf.getValues(*_dataUniform, RooBatchCompute::BatchMode::Cpu);
   };
 
   auto callScalarFunc = [compareLogs](const RooAbsPdf& pdf, const RooArgSet* theNormSet) {
@@ -226,15 +216,16 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   }
 
   std::vector<RooSpan<const double>> batchResults;
+  std::vector<std::vector<double>> resultData;
   MyTimer batchTimer("Evaluate batch" + timerSuffix + _name);
   __itt_resume();
   const std::size_t chunkSize = _dataUniform->numEntries() / nChunks + (_dataUniform->numEntries() % nChunks != 0);
   for (unsigned int chunk = 0; chunk < nChunks; ++chunk) {
-    auto outputsBatch = callBatchFunc(*_pdf,
-        chunkSize * chunk,
-        chunk+1 < nChunks ? chunkSize : _dataUniform->numEntries() / nChunks,
-        normSet);
-    batchResults.push_back(outputsBatch);
+    auto outputsBatch = callBatchFunc(*_pdf);
+    const std::size_t begin = chunkSize * chunk;
+    const std::size_t len = chunk+1 < nChunks ? chunkSize : _dataUniform->numEntries() / nChunks;
+    batchResults.emplace_back(&(outputsBatch[0]) + begin, &(outputsBatch[0]) + begin + len);
+    resultData.push_back(std::move(outputsBatch));
   }
   __itt_pause();
   if (runTimer)
@@ -474,7 +465,7 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf* pdf) {
 
   MyTimer batchTimer("Fitting batch mode " + _name);
   auto result = pdf->fitTo(*_dataFit,
-      RooFit::BatchMode(true),
+      RooFit::BatchMode("cpu"),
       RooFit::SumW2Error(false),
       RooFit::Optimize(1),
       RooFit::PrintLevel(_printLevel), RooFit::Save(),
@@ -521,7 +512,7 @@ std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf* pdf) {
 
   MyTimer singleTimer("Fitting scalar mode " + _name);
   auto result = pdf->fitTo(*_dataFit,
-      RooFit::BatchMode(false),
+      RooFit::BatchMode("off"),
       RooFit::SumW2Error(false),
       RooFit::PrintLevel(_printLevel), RooFit::Save(),
       _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg()
