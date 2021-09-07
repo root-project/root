@@ -3,8 +3,11 @@ import sys
 import unittest
 import warnings
 
-import DistRDF
 import pyspark
+
+import ROOT
+
+import DistRDF
 from DistRDF.Backends import Spark
 from DistRDF.Backends.Spark import Backend
 
@@ -370,6 +373,61 @@ class ChangeAttributeTest(unittest.TestCase):
 
         # The number of partitions was supplied by the user.
         self.assertEqual(df._headnode.npartitions, 4)
+
+
+class RunGraphsTests(unittest.TestCase):
+    """Tests usage of RunGraphs function with Spark backend"""
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up test environment for this class. Currently this includes:
+
+        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
+          Needed to avoid mismatch between python versions on driver and on the
+          fake executor on the same machine.
+        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
+          this is ignored by default in any application, but Python's unittest
+          library overrides the default warning filters thus exposing this
+          warning
+        """
+        os.environ["PYSPARK_PYTHON"] = sys.executable
+
+        if sys.version_info.major >= 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Reset test environment."""
+        os.environ["PYSPARK_PYTHON"] = ""
+
+        if sys.version_info.major >= 3:
+            warnings.simplefilter("default", ResourceWarning)
+
+    def tearDown(self):
+        """Stop any created SparkContext"""
+        pyspark.SparkContext.getOrCreate().stop()
+
+    def test_rungraphs_spark_3histos(self):
+        """
+        Submit three different Spark RDF graphs concurrently
+        """
+        treename = "myTree"
+        filename = "2clusters.root"
+
+        histoproxies = [Spark.RDataFrame(treename, filename).Histo1D((col, col, 100, 0, 50), col)
+                        for col in ["b1", "b2", "b3"]]
+
+        # Before triggering the computation graphs values are None
+        for proxy in histoproxies:
+            self.assertIsNone(proxy.proxied_node.value)
+
+        DistRDF.RunGraphs(histoproxies)
+
+        # After RunGraphs all histograms are correctly assigned to the
+        # node objects
+        for proxy in histoproxies:
+            self.assertIsInstance(proxy.proxied_node.value, ROOT.TH1D)
 
 
 if __name__ == "__main__":
