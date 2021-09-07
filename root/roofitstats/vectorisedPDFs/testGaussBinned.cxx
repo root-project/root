@@ -71,9 +71,9 @@ TEST(GaussBinned, RetrieveBatches) {
   EXPECT_TRUE(std::equal(logValsNorm.begin(), logValsNorm.end(), savedLogValsNorm.begin()));
 
   m.setVal(1.1);
-  evalData.clear();
-  dataHist->getBatches(evalData, 0, dataHist->numEntries());
-  auto batchValsNew = gaus.getValues(evalData, nullptr);
+  RooBatchCompute::RunContext evalDataUpdated;
+  dataHist->getBatches(evalDataUpdated, 0, dataHist->numEntries());
+  auto batchValsNew = gaus.getValues(evalDataUpdated, nullptr);
   EXPECT_FALSE(std::equal(batchValsNew.begin(), batchValsNew.end(), savedProbs.begin()));
 }
 
