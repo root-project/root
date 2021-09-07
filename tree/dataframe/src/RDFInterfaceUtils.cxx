@@ -422,10 +422,6 @@ ColumnNames_t GetTopLevelBranchNames(TTree &t)
    return bNames;
 }
 
-// The set here is used as a registry, the real list, which keeps the order, is
-// the one in the vector
-class RActionBase;
-
 std::string DemangleTypeIdName(const std::type_info &typeInfo)
 {
    int dummy(0);
