@@ -64,6 +64,6 @@ for pyz_file_path in filenames:
     module = ast.parse(file_contents)
     ds = ast.get_docstring(module)
     if ds is not None:
-        with open(pyz_file_path + '.pyzdoc', 'w') as pyz_doc_file:
+        with open(pyz_file_path + 'zdoc', 'w') as pyz_doc_file:
             pyz_doc_file.write(ds)
 
