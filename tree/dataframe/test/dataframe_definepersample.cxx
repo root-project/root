@@ -54,7 +54,7 @@ struct InputFilesRAII {
 TEST_P(DefinePerSample, NoJitting)
 {
    int counter = 0;
-   auto df = ROOT::RDataFrame(NENTRIES).DefinePerSample("x", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &) {
+   auto df = ROOT::RDataFrame(NENTRIES).DefinePerSample("x", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &) {
       ++counter;
       return 42;
    });
@@ -74,7 +74,7 @@ TEST_P(DefinePerSample, Tree)
    ROOT::RDataFrame df("t", prefix + "*");
 
    int counter = 0;
-   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &db) {
+   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &db) {
       EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
       ++counter;
       return 42;
@@ -94,7 +94,7 @@ TEST_P(DefinePerSample, TChain)
    ROOT::RDataFrame df("t", prefix + "*");
 
    int counter = 0;
-   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RDataBlockID &db) {
+   auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &db) {
       EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
       ++counter;
       return 42;
@@ -111,25 +111,25 @@ TEST(DefinePerSampleMore, ThrowOnRedefinition)
 {
    auto df = ROOT::RDataFrame(1)
                 .Define("x", [] { return 42; });
-   EXPECT_THROW(df.DefinePerSample("x", [](unsigned, const ROOT::RDF::RDataBlockID &) { return 42; }),
+   EXPECT_THROW(df.DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; }),
                 std::runtime_error);
 }
 
 TEST(DefinePerSampleMore, GetColumnType)
 {
-   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RDataBlockID &) { return 42; });
+   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; });
    EXPECT_EQ(df.GetColumnType("x"), "int");
 }
 
 TEST(DefinePerSampleMore, GetColumnNames)
 {
-   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RDataBlockID &) { return 42; });
+   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; });
    EXPECT_EQ(df.GetColumnNames(), std::vector<std::string>{"x"});
 }
 
 TEST(DefinePerSampleMore, GetDefinedColumnNames)
 {
-   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RDataBlockID &) { return 42; });
+   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; });
    EXPECT_EQ(df.GetDefinedColumnNames(), std::vector<std::string>{"x"});
 }
 

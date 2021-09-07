@@ -500,10 +500,10 @@ public:
       auto newColumn = std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression),
                                                                         fLoopManager->GetNSlots());
 
-      auto updateDefinePerSample = [newColumn](unsigned int slot, const ROOT::RDF::RDataBlockID &id) {
+      auto updateDefinePerSample = [newColumn](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
          newColumn->Update(slot, id);
       };
-      fLoopManager->AddDataBlockCallback(std::move(updateDefinePerSample));
+      fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(std::move(newColumn), name);
@@ -2630,7 +2630,7 @@ private:
       auto action =
          RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{}, fDefines);
       fLoopManager->Book(action.get());
-      fLoopManager->AddDataBlockCallback(action->GetDataBlockCallback());
+      fLoopManager->AddSampleCallback(action->GetSampleCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
 

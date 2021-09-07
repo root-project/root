@@ -94,8 +94,8 @@ std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> RJittedAction::GetMergea
    return fConcreteAction->GetMergeableValue();
 }
 
-ROOT::RDF::DataBlockCallback_t RJittedAction::GetDataBlockCallback()
+ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
 {
    R__ASSERT(fConcreteAction != nullptr);
-   return fConcreteAction->GetDataBlockCallback();
+   return fConcreteAction->GetSampleCallback();
 }
