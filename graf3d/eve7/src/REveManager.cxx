@@ -20,6 +20,7 @@
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/REveSystem.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -82,6 +83,9 @@ REveManager::REveManager()
       throw eh + "There can be only one REve!";
 
    REX::gEve = this;
+
+   fServerStatus.fPid = gSystem->GetPid();
+   fServerStatus.fTStart = std::time(nullptr);
 
    fExcHandler = new RExceptionHandler;
 
@@ -701,8 +705,10 @@ void REveManager::WindowConnect(unsigned connid)
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
 
-   fClientStatus.fMIRTime = std::time(nullptr);
-   fClientStatus.fNConnections = fConnList.size();
+   // QQQQ do we want mir-time here as well? maybe set it at the end of function?
+   // Note, this is all under lock, so nobody will get state out in between.
+   fServerStatus.fTLastMir = fServerStatus.fTLastConnect = std::time(nullptr);
+   ++fServerStatus.fNConnects;
 
    // This prepares core and render data buffers.
    printf("\nEVEMNG ............. streaming the world scene.\n");
@@ -768,8 +774,8 @@ void REveManager::WindowDisconnect(unsigned connid)
       fWorld->RemoveSubscriber(connid);
    }
 
-   fClientStatus.fDisconnectTime = std::time(nullptr);
-   fClientStatus.fNConnections = fConnList.size();
+   fServerStatus.fTLastDisconnect = std::time(nullptr);
+   ++fServerStatus.fNDisconnects;
 
    fServerState.fCV.notify_all();
 }
@@ -836,7 +842,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
-   fClientStatus.fMIRTime = std::time(nullptr);
+   fServerStatus.fTLastMir = std::time(nullptr);
    fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype)));
    if (fServerState.fVal == ServerState::Waiting)
       fServerState.fCV.notify_all();
@@ -1098,14 +1104,13 @@ void REveManager::EndChange()
    fServerState.fCV.notify_all();
 }
 
-
 //____________________________________________________________________
-void REveManager::GetClientStatus(ClientStatus& cst)
+void REveManager::GetServerStatus(REveServerStatus& st)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
-   cst.fMIRTime = fClientStatus.fMIRTime;
-   cst.fDisconnectTime = fClientStatus.fDisconnectTime;
-   cst.fNConnections = fClientStatus.fNConnections;
+   gSystem->GetProcInfo(&fServerStatus.fProcInfo);
+   std::timespec_get(&fServerStatus.fTReport, TIME_UTC);
+   st = fServerStatus;
 }
 
 /** \class REveManager::ChangeGuard
