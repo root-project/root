@@ -37,12 +37,13 @@ In extended mode, a
 #include "RooRealVar.h"
 
 #include "TMath.h"
+#include "Math/Util.h" // KahanSum
 
 namespace RooFit {
 namespace TestStatistics {
 
-RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
-   RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1)
+RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
+   : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1)
 {
    // pdf must be a RooRealSumPdf representing a yield vector for a binned likelihood calculation
    if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
@@ -56,7 +57,8 @@ RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
 
    RooArgSet *obs = pdf->getObservables(data);
    if (obs->getSize() != 1) {
-      throw std::logic_error("RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
+      throw std::logic_error(
+         "RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
    } else {
       RooRealVar *var = (RooRealVar *)obs->first();
       std::list<Double_t> *boundaries = pdf->binBoundaries(*var, var->getMin(), var->getMax());
@@ -80,20 +82,20 @@ RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
 /// and the zero event is processed the extended term is added to the return
 /// likelihood.
 //
-double RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/,
-                                      std::size_t /*components_end*/)
+ROOT::Math::KahanSum<double>
+RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, std::size_t /*components_end*/)
 {
    // Throughout the calculation, we use Kahan's algorithm for summing to
    // prevent loss of precision - this is a factor four more expensive than
    // straight addition, but since evaluating the PDF is usually much more
    // expensive than that, we tolerate the additional cost...
-   Double_t result(0), carry(0);
+   ROOT::Math::KahanSum<double> result;
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
    data_->store()->recalculateCache(nullptr, bins.begin(N_events_), bins.end(N_events_), 1, kFALSE);
 
-   Double_t sumWeight(0), sumWeightCarry(0);
+   ROOT::Math::KahanSum<double> sumWeight;
 
    for (std::size_t i = bins.begin(N_events_); i < bins.end(N_events_); ++i) {
 
@@ -125,28 +127,15 @@ double RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begi
 
          Double_t term = -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
 
-         // Kahan summation of sumWeight
-         Double_t y = eventWeight - sumWeightCarry;
-         Double_t t = sumWeight + y;
-         sumWeightCarry = (t - sumWeight) - y;
-         sumWeight = t;
-
-         // Kahan summation of result
-         y = term - carry;
-         t = result + y;
-         carry = (t - result) - y;
-         result = t;
+         sumWeight += eventWeight;
+         result += term;
       }
    }
-
 
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
    if (sim_count_ > 1) {
-      Double_t y = sumWeight * log(1.0 * sim_count_) - carry;
-      Double_t t = result + y;
-      carry = (t - result) - y;
-      result = t;
+      result += sumWeight * log(1.0 * sim_count_);
    }
 
    // At the end of the first full calculation, wire the caches
@@ -155,10 +144,8 @@ double RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begi
       pdf_->wireAllCaches();
    }
 
-   eval_carry_ = carry;
    return result;
 }
-
 
 } // namespace TestStatistics
 } // namespace RooFit

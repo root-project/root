@@ -20,6 +20,8 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h" // enum ConstOpCode
 
+#include "Math/Util.h" // KahanSum
+
 #include <cstddef> // std::size_t
 #include <string>
 #include <memory>
@@ -90,11 +92,12 @@ public:
     *
     * \param[in] events The fractional event range.
     * \param[in] components_begin The first component to be calculated.
-    * \param[in] components_end The *exclusive* upper limit to the range of components to be calculated, i.e. the component *before this one* is the last to be included.
-    * \return The value of part of the negative log likelihood.
+    * \param[in] components_end The *exclusive* upper limit to the range of components to be calculated, i.e. the
+    * component *before this one* is the last to be included. \return The value of part of the negative log likelihood,
+    * returned as a KahanSum object which also includes a carry term.
     */
-   virtual double evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) = 0;
-   inline double getCarry() const { return eval_carry_; }
+   virtual ROOT::Math::KahanSum<double>
+   evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) = 0;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    virtual RooArgSet *getParameters();
@@ -112,7 +115,8 @@ public:
    inline virtual double defaultErrorLevel() const { return 0.5; }
 
    // necessary in LikelihoodJob
-   /// Number of dataset entries. Typically equal to the number of dataset events, except in RooSubsidiaryL, which has no events.
+   /// Number of dataset entries. Typically equal to the number of dataset events, except in RooSubsidiaryL, which has
+   /// no events.
    virtual std::size_t numDataEntries() const;
    inline std::size_t getNEvents() const { return N_events_; }
    inline std::size_t getNComponents() const { return N_components_; }
@@ -136,8 +140,6 @@ protected:
    bool extended_ = false;
 
    std::size_t sim_count_ = 1; // Total number of component p.d.f.s in RooSimultaneous (if any)
-
-   mutable double eval_carry_ = 0; //! carry of Kahan sum in evaluatePartition
 };
 
 } // namespace TestStatistics
