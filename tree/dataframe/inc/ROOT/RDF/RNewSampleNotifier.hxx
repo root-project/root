@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RDF_RDATABLOCKNOTIFIER
-#define ROOT_RDF_RDATABLOCKNOTIFIER
+#ifndef ROOT_RDF_RNEWSAMPLENOTIFIER
+#define ROOT_RDF_RNEWSAMPLENOTIFIER
 
 #include <TNotifyLink.h>
 
@@ -19,7 +19,7 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-struct RDataBlockFlag {
+struct RNewSampleFlag {
    bool fFlag = false;
 
 public:
@@ -33,20 +33,20 @@ public:
    }
 };
 
-class RDataBlockNotifier {
-   // TNotifyLink and RDataBlockFlags per processing slot
-   std::vector<std::unique_ptr<TNotifyLink<RDataBlockFlag>>> fNotifyLink;
-   std::vector<RDataBlockFlag> fFlags;
+class RNewSampleNotifier {
+   // TNotifyLink and RNewSampleFlags per processing slot
+   std::vector<std::unique_ptr<TNotifyLink<RNewSampleFlag>>> fNotifyLink;
+   std::vector<RNewSampleFlag> fFlags;
 
 public:
-   RDataBlockNotifier(unsigned int nSlots) : fNotifyLink(nSlots), fFlags(nSlots) {}
+   RNewSampleNotifier(unsigned int nSlots) : fNotifyLink(nSlots), fFlags(nSlots) {}
    bool CheckFlag(unsigned int slot) const { return fFlags[slot].CheckFlag(); }
    void SetFlag(unsigned int slot) { fFlags[slot].SetFlag(); }
    void UnsetFlag(unsigned int slot) { fFlags[slot].UnsetFlag(); }
-   TNotifyLink<RDataBlockFlag> &GetChainNotifyLink(unsigned int slot)
+   TNotifyLink<RNewSampleFlag> &GetChainNotifyLink(unsigned int slot)
    {
       if (fNotifyLink[slot] == nullptr)
-         fNotifyLink[slot] = std::make_unique<TNotifyLink<RDataBlockFlag>>(&fFlags[slot]);
+         fNotifyLink[slot] = std::make_unique<TNotifyLink<RNewSampleFlag>>(&fFlags[slot]);
       return *fNotifyLink[slot];
    }
 };

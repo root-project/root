@@ -12,8 +12,8 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/RDF/RNodeBase.hxx"
-#include "ROOT/RDF/RDataBlockNotifier.hxx"
-#include "ROOT/RDF/RDataBlockID.hxx"
+#include "ROOT/RDF/RNewSampleNotifier.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <functional>
 #include <map>
@@ -122,9 +122,9 @@ class RLoopManager : public RNodeBase {
    /// Registered callbacks to invoke just once before running the loop
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
    /// Registered callbacks to call at the beginning of each "data block"
-   std::vector<ROOT::RDF::DataBlockCallback_t> fDataBlockCallbacks;
-   RDFInternal::RDataBlockNotifier fDataBlockNotifier;
-   std::vector<ROOT::RDF::RDataBlockID> fDataBlockIDs;
+   std::vector<ROOT::RDF::SampleCallback_t> fSampleCallbacks;
+   RDFInternal::RNewSampleNotifier fNewSampleNotifier;
+   std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
    /// Registry of per-slot value pointers for booked data-source columns
@@ -146,9 +146,9 @@ class RLoopManager : public RNodeBase {
    void CleanUpNodes();
    void CleanUpTask(TTreeReader *r, unsigned int slot);
    void EvalChildrenCounts();
-   void SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot);
-   void UpdateDataBlockID(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
-   void UpdateDataBlockID(unsigned int slot, TTreeReader &r);
+   void SetupSampleCallbacks(TTreeReader *r, unsigned int slot);
+   void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
+   void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -206,7 +206,7 @@ public:
 
    const ColumnNames_t &GetBranchNames();
 
-   void AddDataBlockCallback(ROOT::RDF::DataBlockCallback_t &&callback);
+   void AddSampleCallback(ROOT::RDF::SampleCallback_t &&callback);
 };
 
 } // ns RDF

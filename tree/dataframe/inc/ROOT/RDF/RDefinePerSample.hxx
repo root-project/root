@@ -11,7 +11,7 @@
 #ifndef ROOT_RDF_RDEFINEPERSAMPLE
 #define ROOT_RDF_RDEFINEPERSAMPLE
 
-#include "ROOT/RDF/RDataBlockID.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include <ROOT/RDF/RDefineBase.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -58,7 +58,7 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, const ROOT::RDF::RDataBlockID &id)
+   void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()] = fExpression(slot, id);
    }

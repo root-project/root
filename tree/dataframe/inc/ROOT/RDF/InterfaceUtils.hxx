@@ -498,7 +498,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
 
    auto actionPtr =
       BuildAction<ColTypes...>(cols, std::move(*helperArgOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
-   loopManager.AddDataBlockCallback(actionPtr->GetDataBlockCallback());
+   loopManager.AddSampleCallback(actionPtr->GetSampleCallback());
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can

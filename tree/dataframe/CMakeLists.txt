@@ -52,8 +52,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
     ROOT/RDF/RBookedDefines.hxx
-    ROOT/RDF/RDataBlockNotifier.hxx
-    ROOT/RDF/RDataBlockID.hxx
+    ROOT/RDF/RNewSampleNotifier.hxx
+    ROOT/RDF/RSampleInfo.hxx
     ROOT/RDF/RDefineBase.hxx
     ROOT/RDF/RDefine.hxx
     ROOT/RDF/RDefineReader.hxx
