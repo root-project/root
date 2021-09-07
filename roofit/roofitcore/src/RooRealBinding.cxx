@@ -214,7 +214,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
 
   // Use _evalData to hold on to memory between integration calls
   if (!_evalData) {
-    _evalData.reset(new RooBatchCompute::RunContext());
+    _evalData.reset(new rbc::RunContext());
   } else {
     _evalData->clear();
   }
@@ -265,7 +265,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
 /// The spans can either have a size of `n`, in which case a batch of `n` results is returned, or they can have
 /// a size of 1. In the latter case, the value in the span is broadcast to all `n` events.
 /// \return Batch of function values for each coordinate given in the input spans.
-RooSpan<const double> RooRealBinding::getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const {
+RooSpan<const double> RooRealBinding::getValuesOfBoundFunction(rbc::RunContext& evalData) const {
   return _func->getValues(evalData, _nset);
 }
 

@@ -69,7 +69,7 @@ public:
   }
 
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const override;
 
 private:
   RooTemplateProxy<const RooHistFunc> _histFunc;

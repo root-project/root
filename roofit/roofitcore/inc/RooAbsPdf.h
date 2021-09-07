@@ -35,7 +35,7 @@ class RooLinkedList ;
 class RooMinimizer ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
-namespace RooBatchCompute {
+namespace rbc {
 struct RunContext;
 }
 
@@ -201,10 +201,10 @@ public:
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<const double> getValues(rbc::RunContext& evalData, const RooArgSet* normSet) const;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
-  RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+  RooSpan<const double> getLogProbabilities(rbc::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   void computeBatch(double* output, size_t size, rbc::DataMap& dataMap) const;
 

@@ -1,7 +1,7 @@
 #ifndef ROO_FIT_DRIVER_H
 #define ROO_FIT_DRIVER_H
 
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "RooNLLVarNew.h"
 
 #include <chrono>
@@ -38,9 +38,9 @@ class RooFitDriver {
       bool computeInGPU = false;
       bool copyAfterEvaluation = false;
       ~NodeInfo() {
-        if (event)      rbc::dispatch_gpu->deleteCudaEvent(event);
-        if (eventStart) rbc::dispatch_gpu->deleteCudaEvent(eventStart);
-        if (stream)     rbc::dispatch_gpu->deleteCudaStream(stream);
+        if (event)      rbc::dispatchCUDA->deleteCudaEvent(event);
+        if (eventStart) rbc::dispatchCUDA->deleteCudaEvent(eventStart);
+        if (stream)     rbc::dispatchCUDA->deleteCudaStream(stream);
       }
     };
     void updateMyClients(const RooAbsReal* node);

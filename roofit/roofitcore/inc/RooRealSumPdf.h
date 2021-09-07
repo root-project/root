@@ -67,7 +67,7 @@ public:
   virtual void setCacheAndTrackHints(RooArgSet&) ;
 
 protected:
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const;
   
   class CacheElem : public RooAbsCacheElement {
   public:

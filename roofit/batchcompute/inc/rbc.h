@@ -4,7 +4,9 @@
 #include "RooSpan.h"
 
 #include "TError.h"
+#include "DllImport.h" //for R__EXTERN, needed for windows
 
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -18,7 +20,7 @@
 
 class RooAbsReal;
 
-namespace RooBatchCompute {
+namespace rbc {
 
 #ifdef __CUDACC__
   #define ERRCHECK(err) __checkCudaErrors((err), __func__, __FILE__, __LINE__)
@@ -32,6 +34,10 @@ namespace RooBatchCompute {
   }      
 #endif
 
+enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev,
+              ChiSquare, DstD0BG, Exponential, Gamma, Gaussian, Johnson, Landau, Lognormal,
+              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
+
 struct RunContext;
 // We have to use map instead of unordered_map because the unordered_maps from
 // nvcc and gcc are not compatible sometimes.
@@ -41,7 +47,32 @@ typedef std::vector<double> ArgVector;
 typedef double* __restrict RestrictArr;
 typedef const double* __restrict InputArr;
 
-}
-namespace rbc=RooBatchCompute;
+class RbcInterface {
+  public:
+    virtual ~RbcInterface() = default;
+    virtual void   init() { throw std::bad_function_call(); }
+    virtual void   compute(Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
+    virtual double sumReduce(InputArr, size_t) = 0;
+       
+    //cuda functions that need to be interfaced
+    virtual void* cudaMalloc(size_t)                { throw std::bad_function_call(); }
+    virtual void  cudaFree(void*)                   { throw std::bad_function_call(); }
+    virtual void* cudaMallocHost(size_t)            { throw std::bad_function_call(); }
+    virtual void  cudaFreeHost(void*)               { throw std::bad_function_call(); }
+    virtual cudaEvent_t* newCudaEvent(bool /*forTiming*/) { throw std::bad_function_call(); }
+    virtual void  deleteCudaEvent(cudaEvent_t*)     { throw std::bad_function_call(); }
+    virtual cudaStream_t* newCudaStream()           { throw std::bad_function_call(); }
+    virtual void  deleteCudaStream(cudaStream_t*)   { throw std::bad_function_call(); }
+    virtual bool  streamIsActive(cudaStream_t*)     { throw std::bad_function_call(); }
+    virtual void  cudaEventRecord(cudaEvent_t*, cudaStream_t*)     { throw std::bad_function_call(); }
+    virtual void  cudaStreamWaitEvent(cudaStream_t*, cudaEvent_t*) { throw std::bad_function_call(); }
+    virtual float cudaEventElapsedTime(cudaEvent_t*, cudaEvent_t*) { throw std::bad_function_call(); }
+    virtual void  memcpyToCUDA(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+    virtual void  memcpyToCPU (void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+}; // end class RbcInterface
+
+R__EXTERN RbcInterface *dispatch, *dispatchCPU, *dispatchCUDA;
+
+} // end namespace rbc
 
 #endif //#ifndef RBC_H

@@ -26,7 +26,7 @@ side of maximum value
 
 #include "RooAbsReal.h"
 #include "RooMath.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TMath.h"
 

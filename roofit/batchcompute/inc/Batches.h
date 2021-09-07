@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-namespace RooBatchCompute {
+namespace rbc {
 
 constexpr uint8_t maxParams=8;
 constexpr uint8_t maxExtraArgs=16;
@@ -68,5 +68,5 @@ class Batches {
     }
 }; //end class Batches
 } // End namespace RF_ARCH
-} //end namespace RooBatchCompute
+} //end namespace rbc
 #endif // #ifdef ROOFIT_BATCHCOMPUTE_BATCHES_H 

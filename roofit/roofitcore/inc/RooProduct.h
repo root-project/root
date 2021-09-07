@@ -77,7 +77,7 @@ protected:
 
   Double_t calculate(const RooArgList& partIntList) const;
   Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const;
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;

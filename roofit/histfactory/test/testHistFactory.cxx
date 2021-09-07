@@ -425,17 +425,17 @@ TEST_P(HFFixture, BatchEvaluation) {
   ASSERT_NE(mc, nullptr);
 
   // Test evaluating the model:
-  RooBatchCompute::RunContext evalDataOrig;
+  rbc::RunContext evalDataOrig;
   auto batch = evalDataOrig.makeBatch(obs, 2);
   obs->setBin(0);
   batch[0] = obs->getVal();
   obs->setBin(1);
   batch[1] = obs->getVal();
 
-  RooBatchCompute::RunContext evalData1;
+  rbc::RunContext evalData1;
   evalData1.spans = evalDataOrig.spans;
   auto results = channelPdf->getValues(evalData1, nullptr);
-  RooBatchCompute::RunContext evalData2;
+  rbc::RunContext evalData2;
   evalData2.spans = evalDataOrig.spans;
   auto normResults = channelPdf->getValues(evalData2, mc->GetObservables());
 
@@ -456,10 +456,10 @@ TEST_P(HFFixture, BatchEvaluation) {
 
     // Test syst up:
     var->setVal(1.);
-    RooBatchCompute::RunContext evalData3;
+    rbc::RunContext evalData3;
     evalData3.spans = evalDataOrig.spans;
     auto resultsSyst = channelPdf->getValues(evalData3, nullptr);
-    RooBatchCompute::RunContext evalData4;
+    rbc::RunContext evalData4;
     evalData4.spans = evalDataOrig.spans;
     auto normResultsSyst = channelPdf->getValues(evalData4, mc->GetObservables());
     for (unsigned int i=0; i < 2; ++i) {
@@ -471,10 +471,10 @@ TEST_P(HFFixture, BatchEvaluation) {
 
     // Test syst down:
     var->setVal(-1.);
-    RooBatchCompute::RunContext evalData5;
+    rbc::RunContext evalData5;
     evalData5.spans = evalDataOrig.spans;
     resultsSyst = channelPdf->getValues(evalData5, nullptr);
-    RooBatchCompute::RunContext evalData6;
+    rbc::RunContext evalData6;
     evalData6.spans = evalDataOrig.spans;
     normResultsSyst = channelPdf->getValues(evalData6, mc->GetObservables());
     for (unsigned int i=0; i < 2; ++i) {

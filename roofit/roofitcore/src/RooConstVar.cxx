@@ -54,7 +54,7 @@ RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return batch with 1 constant element.
-RooSpan<const double> RooConstVar::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const {
+RooSpan<const double> RooConstVar::getValues(rbc::RunContext& evalData, const RooArgSet*) const {
   auto item = evalData.spans.find(this);
   if (item == evalData.spans.end()) {
     return evalData.spans[this] = {&_value, 1};

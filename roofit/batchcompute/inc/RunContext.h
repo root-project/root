@@ -26,7 +26,7 @@ class RooArgSet;
 class RooAbsReal;
 class RooArgProxy;
 
-namespace RooBatchCompute {
+namespace rbc {
 
 struct RunContext {
   /// Create an empty RunContext that doesn't have access to any computation results.

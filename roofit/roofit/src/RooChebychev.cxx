@@ -29,7 +29,7 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooNameReg.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include <cmath>
 

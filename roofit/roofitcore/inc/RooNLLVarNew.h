@@ -5,7 +5,7 @@
 #include "RooAbsReal.h"
 #include "RooTemplateProxy.h"
 
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 class RooNLLVarNew : public RooAbsReal {
 
@@ -45,10 +45,10 @@ protected:
 
   double evaluate() const override;
 
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext &evalData, const RooArgSet *normSet) const override;
+  RooSpan<double> evaluateSpan(rbc::RunContext &evalData, const RooArgSet *normSet) const override;
 
   RooSpan<const double>
-  getValues(RooBatchCompute::RunContext &evalData, const RooArgSet *normSet = nullptr) const override;
+  getValues(rbc::RunContext &evalData, const RooArgSet *normSet = nullptr) const override;
 
 private:
   ClassDefOverride(RooNLLVarNew, 1)

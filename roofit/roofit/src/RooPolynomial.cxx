@@ -33,7 +33,7 @@ RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArg
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TError.h"
 #include <vector>

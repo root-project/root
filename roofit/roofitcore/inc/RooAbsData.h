@@ -44,7 +44,7 @@ class RooAbsDataStore ;
 template<typename T> class TMatrixTSym;
 using TMatrixDSym = TMatrixTSym<Double_t>;
 class RooFormulaVar;
-namespace RooBatchCompute{
+namespace rbc{
 struct RunContext;
 }
 
@@ -152,7 +152,7 @@ public:
   /// \param first Index of first event that ends up in the batch.
   /// \param len   Number of events in each batch.
   /// Needs to be overridden by derived classes. This implementation returns an empty RunContext.
-  virtual void getBatches(RooBatchCompute::RunContext& evalData,
+  virtual void getBatches(rbc::RunContext& evalData,
       std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const = 0;
 
   ////////////////////////////////////////////////////////////////////////////////

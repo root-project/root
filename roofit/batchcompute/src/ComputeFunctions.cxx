@@ -1,6 +1,6 @@
 // Auto-vectorizable compute functions written by Emmanouil Michalainas, summer 2019
 
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "Batches.h"
 #include "RooVDTHeaders.h"
 
@@ -9,14 +9,15 @@
 #ifdef __CUDACC__
   #define BEGIN blockDim.x*blockIdx.x + threadIdx.x
   #define STEP  blockDim.x*gridDim.x
-  // for CUDA, we include RooMath.cxx and ComputeFunctions.cxx in ComputeFunctions.cu
+  #include "RooMath.cxx"
+  // for CUDA, we need RooMath.cxx in the same translation unit
 #else
   #define BEGIN  0
   #define STEP   1
   #include "RooMath.h"
 #endif // #ifdef __CUDACC__
 
-namespace RooBatchCompute {
+namespace rbc {
 namespace RF_ARCH {
 
 __global__ void computeAddPdf(Batches batches)
@@ -598,4 +599,4 @@ std::vector<void(*)(Batches)> getFunctions()
           computePolynomial, computeProdPdf, computeVoigtian};
 }
 } // End namespace RF_ARCH
-} //End namespace RooBatchCompute
+} //End namespace rbc

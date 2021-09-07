@@ -591,7 +591,7 @@ Double_t ParamHistFunc::evaluate() const
 /// the associated parameters.
 /// \param[in/out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-RooSpan<double> ParamHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> ParamHistFunc::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const {
   std::vector<double> oldValues;
   std::vector<RooSpan<const double>> data;
   std::size_t batchSize = 0;

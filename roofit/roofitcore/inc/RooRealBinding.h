@@ -24,7 +24,7 @@
 class RooAbsRealLValue;
 class RooAbsReal;
 class RooArgSet;
-namespace RooBatchCompute{ struct RunContext; }
+namespace rbc{ struct RunContext; }
 
 class RooRealBinding : public RooAbsFunc {
 public:
@@ -34,7 +34,7 @@ public:
 
   virtual Double_t operator()(const Double_t xvector[]) const;
   virtual RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const;
-  RooSpan<const double> getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const;
+  RooSpan<const double> getValuesOfBoundFunction(rbc::RunContext& evalData) const;
   virtual Double_t getMinLimit(UInt_t dimension) const;
   virtual Double_t getMaxLimit(UInt_t dimension) const;
 
@@ -62,7 +62,7 @@ protected:
   mutable std::vector<RooAbsReal*> _compList ; //!
   mutable std::vector<Double_t>    _compSave ; //!
   mutable Double_t _funcSave ; //!
-  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; /// Memory for batch evaluations
+  mutable std::unique_ptr<rbc::RunContext> _evalData; /// Memory for batch evaluations
   
   ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
 };

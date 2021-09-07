@@ -40,7 +40,7 @@ protected:
   RooListProxy x ;
 
   Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/ = nullptr) const;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* /*normSet*/ = nullptr) const;
 
 
 private:

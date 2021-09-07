@@ -228,7 +228,7 @@ Double_t RooRealVar::getValV(const RooArgSet*) const
 /// 2. If not, check if there's an object with the same name, and use this object's values.
 /// 3. If there is no such object, return a batch of size one with the current value of the variable.
 /// For cases 2. and 3., the data column in `inputData` is associated to this object, so the next call can return it immediately.
-RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputData, const RooArgSet*) const {
+RooSpan<const double> RooRealVar::getValues(rbc::RunContext& inputData, const RooArgSet*) const {
   auto item = inputData.spans.find(this);
   if (item != inputData.spans.end()) {
     return item->second;

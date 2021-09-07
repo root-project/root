@@ -154,7 +154,7 @@ Double_t RooFormulaVar::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the formula for all entries of our servers found in `inputData`.
-RooSpan<double> RooFormulaVar::evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const {
+RooSpan<double> RooFormulaVar::evaluateSpan(rbc::RunContext& inputData, const RooArgSet* normSet) const {
   if (normSet != _lastNSet) {
     // TODO: Remove dependence on _lastNSet
     // See also comment in RooAbsReal::getValBatch().

@@ -36,7 +36,7 @@ D*-D0 mass difference distributions. It computes
 #include "RooRealVar.h"
 #include "RooIntegrator1D.h"
 #include "RooAbsFunc.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TMath.h"
 

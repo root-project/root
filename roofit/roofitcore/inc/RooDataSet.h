@@ -112,7 +112,7 @@ public:
   virtual const RooArgSet* get(Int_t index) const override;
   virtual const RooArgSet* get() const override;
 
-  void getBatches(RooBatchCompute::RunContext& evalData,
+  void getBatches(rbc::RunContext& evalData,
       std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const override;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
   virtual std::string getWeightVarName() const override;

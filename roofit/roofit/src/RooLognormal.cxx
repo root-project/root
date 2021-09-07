@@ -29,7 +29,7 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooHelpers.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TClass.h"
 

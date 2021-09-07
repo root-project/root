@@ -42,7 +42,7 @@ have to appear in any specific place in the list.
 **/
 
 #include "RooProdPdf.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "RooRealProxy.h"
 #include "RooProdGenContext.h"
 #include "RooGenProdProj.h"

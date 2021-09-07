@@ -281,9 +281,9 @@ TEST(RooDataHist, BatchDataAccess) {
   ASSERT_STREQ(xp->GetName(), "x");
   ASSERT_STREQ(yp->GetName(), "y");
 
-  RooBatchCompute::RunContext evalDataShort{};
+  rbc::RunContext evalDataShort{};
   dataHist.getBatches(evalDataShort, 0, 100);
-  RooBatchCompute::RunContext evalData{};
+  rbc::RunContext evalData{};
   dataHist.getBatches(evalData, 0, numEntries);
 
   auto xBatchShort = xp->getValues(evalDataShort);
@@ -338,9 +338,9 @@ TEST(RooDataHist, BatchDataAccessWithCategories) {
   ASSERT_STREQ(catp->GetName(), "cat");
   ASSERT_STREQ(xp->GetName(), "x");
 
-  RooBatchCompute::RunContext evalDataShort{};
+  rbc::RunContext evalDataShort{};
   dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
+  rbc::RunContext evalData{};
   dataHist.getBatches(evalData, 0, numEntries);
 
   auto xBatchShort = xp->getValues(evalDataShort);
@@ -389,9 +389,9 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   ASSERT_STREQ(catp->GetName(), "cat");
   ASSERT_STREQ(xp->GetName(), "x");
 
-  RooBatchCompute::RunContext evalDataShort{};
+  rbc::RunContext evalDataShort{};
   dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
+  rbc::RunContext evalData{};
   dataHist.getBatches(evalData, 0, numEntries);
 
   auto xBatchShort = xp->getValues(evalDataShort);
@@ -443,9 +443,9 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRangeWithMasking) {
   const std::size_t numEntries = (std::size_t)dataHist.numEntries();
   ASSERT_EQ(numEntries, 40ul);
 
-  RooBatchCompute::RunContext evalDataShort{};
+  rbc::RunContext evalDataShort{};
   dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
+  rbc::RunContext evalData{};
   dataHist.getBatches(evalData, 0, numEntries);
 
   auto xBatchShort = xp->getValues(evalDataShort);

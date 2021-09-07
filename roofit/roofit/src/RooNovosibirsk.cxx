@@ -28,7 +28,7 @@ Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration
 #include "RooNovosibirsk.h"
 #include "RooFit.h"
 #include "RooRealVar.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TMath.h"
 

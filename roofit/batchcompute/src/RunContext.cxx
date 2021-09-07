@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 /**
- * \struct RooBatchCompute::RunContext
+ * \struct rbc::RunContext
  *
  * This struct enables passing computation data around between elements of a computation graph.
  *
@@ -44,14 +44,14 @@
 
 
 #include "RunContext.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include <limits>
 #include <iostream>
 
 class RooAbsReal;
 
-namespace RooBatchCompute {
+namespace rbc {
 
 /// Check if there is a span of data corresponding to the object passed as owner.
 RooSpan<const double> RunContext::getBatch(const RooAbsReal* owner) const {

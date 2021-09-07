@@ -74,7 +74,7 @@ public:
   virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const ; 
   virtual Bool_t isWeighted() const { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
-  virtual RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const {
+  virtual rbc::RunContext getBatches(std::size_t first, std::size_t len) const {
     //TODO
     std::cerr << "This functionality is not yet implemented for tree data stores." << std::endl;
     throw std::logic_error("getBatches() not implemented in RooTreeDataStore.");

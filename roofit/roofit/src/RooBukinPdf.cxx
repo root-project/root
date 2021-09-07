@@ -31,7 +31,7 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 #include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include <cmath>
 using namespace std;

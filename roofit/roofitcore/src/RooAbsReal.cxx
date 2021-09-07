@@ -308,7 +308,7 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
 /// \param[in] normSet   Use these variables for normalisation (relevant for PDFs), and pass this normalisation
 /// on to object serving values to us.
 /// \return RooSpan pointing to the computation results. The memory this span points to is owned by `evalData`.
-RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<const double> RooAbsReal::getValues(rbc::RunContext& evalData, const RooArgSet* normSet) const {
   auto item = evalData.spans.find(this);
   if (item != evalData.spans.end()) {
     return item->second;
@@ -4812,7 +4812,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// Computation results have to be stored here.
 /// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
 /// \return     Span pointing to the results. The memory is owned by `evalData`.
-RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> RooAbsReal::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const {
 
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
@@ -4994,7 +4994,7 @@ Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 /// @param evtNo    Event from `evalData` to check for.
 /// @param normSet  Optional normalisation set that was used in computation.
 /// @param relAccuracy Accuracy required for passing the check.
-void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
+void RooAbsReal::checkBatchComputation(const rbc::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
   for (const auto server : _serverList) {
     try {
       auto realServer = dynamic_cast<RooAbsReal*>(server);

@@ -21,7 +21,7 @@ Plain Gaussian p.d.f
 **/
 
 #include "RooGaussian.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "RooHelpers.h"
 #include "RooMath.h"
 #include "RooRandom.h"

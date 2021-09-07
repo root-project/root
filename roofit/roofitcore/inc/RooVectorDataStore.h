@@ -92,7 +92,7 @@ public:
   virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
   virtual Bool_t isWeighted() const override { return _wgtVar || _extWgtArray; }
 
-  RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override;
+  rbc::RunContext getBatches(std::size_t first, std::size_t len) const override;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name

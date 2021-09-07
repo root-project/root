@@ -1,26 +1,26 @@
-// RooBatchCompute library created September 2020 by Emmanouil Michalainas
+// rbc library created September 2020 by Emmanouil Michalainas
 
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "Batches.h"
 
 #include "ROOT/TExecutor.hxx"
 
 #include <cstdlib>
 
-namespace RooBatchCompute {
+namespace rbc {
 namespace RF_ARCH {
 
 std::vector<void(*)(Batches)> getFunctions();
 
-class RooBatchComputeClass : public RooBatchComputeInterface {
+class RbcClass : public RbcInterface {
   private:
     const std::vector<void(*)(Batches)> _computeFunctions;
   public:
-    RooBatchComputeClass()
+    RbcClass()
       : _computeFunctions(getFunctions())
     {
       // Set the dispatch pointer to this instance of the library upon loading
-      dispatch_cpu = this;
+      dispatchCPU = this;
     }
 
     void compute(Computer computer, RestrictArr output, size_t nEvents, const DataMap& varData, const VarVector& vars, const ArgVector& extraArgs) override  
@@ -62,10 +62,10 @@ class RooBatchComputeClass : public RooBatchComputeInterface {
       for (size_t i=0; i<n; i++) sum += input[i];
       return sum;
     }
-}; // End class RooBatchComputeClass
+}; // End class rbcClass
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
-static RooBatchComputeClass computeObj;
+static RbcClass computeObj;
 
 Batches::Batches(RestrictArr output, size_t nEvents, const DataMap& varData, const VarVector& vars, const ArgVector& extraArgs, double stackArr[maxParams][bufferSize])
   : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
@@ -84,4 +84,4 @@ Batches::Batches(RestrictArr output, size_t nEvents, const DataMap& varData, con
 }
 
 } // End namespace RF_ARCH
-} //End namespace RooBatchCompute
+} //End namespace rbc

@@ -386,7 +386,7 @@ Double_t RooProduct::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of input functions for all points found in `evalData`.
-RooSpan<double> RooProduct::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> RooProduct::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const {
   RooSpan<double> prod;
 
   assert(_compRSet.nset() == normSet);

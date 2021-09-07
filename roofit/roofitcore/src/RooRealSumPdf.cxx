@@ -268,7 +268,7 @@ Double_t RooRealSumPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the value for all values of the observable in `evalData`.
-RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
+RooSpan<double> RooRealSumPdf::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* /*normSet*/) const {
   // Do running sum of coef/func pairs, calculate lastCoef.
   RooSpan<double> values;
   double sumCoeff = 0.;

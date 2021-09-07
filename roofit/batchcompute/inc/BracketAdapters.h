@@ -21,7 +21,7 @@
 
 #include <vector>
 
-namespace RooBatchCompute {
+namespace rbc {
 
 ///Little adapter that gives a bracket operator to types that don't
 ///have one. It completely ignores the index and returns a constant.

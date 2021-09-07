@@ -37,7 +37,7 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TMath.h"
 
@@ -151,7 +151,7 @@ void RooBernstein::computeBatch(double* output, size_t nEvents, rbc::DataMap& da
   extraArgs[nCoef] = _x.min();
   extraArgs[nCoef+1] = _x.max();
 
-  RooBatchCompute::dispatch->compute(rbc::Bernstein, output, nEvents, dataMap, {&*_x, &*_norm}, extraArgs);
+  rbc::dispatch->compute(rbc::Bernstein, output, nEvents, dataMap, {&*_x, &*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

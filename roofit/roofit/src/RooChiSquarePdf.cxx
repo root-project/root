@@ -19,7 +19,7 @@ Here we also implement the analytic integral.
 #include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TMath.h"
 

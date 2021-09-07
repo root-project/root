@@ -206,7 +206,7 @@ Double_t RooHistFunc::evaluate() const
 /// Compute value of the HistFunc for every entry in `evalData`.
 /// \param[in/out] evalData Struct with input data. The computation results will be stored here.
 /// \param[in] normSet Set of observables to normalise over (ignored).
-RooSpan<double> RooHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
+RooSpan<double> RooHistFunc::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* /*normSet*/) const {
   std::vector<RooSpan<const double>> inputValues;
   std::size_t batchSize = 0;
   for (const auto& obs : _depList) {
@@ -607,7 +607,7 @@ Int_t RooHistFunc::getBin() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bin numbers corresponding to all coordinates in `evalData`.
 /// \return Vector of bin numbers. If a bin is not in the current range of the observables, return -1.
-std::vector<Int_t> RooHistFunc::getBins(RooBatchCompute::RunContext& evalData) const {
+std::vector<Int_t> RooHistFunc::getBins(rbc::RunContext& evalData) const {
   std::vector<RooSpan<const double>> depData;
   for (const auto dep : _depList) {
     auto real = dynamic_cast<const RooAbsReal*>(dep);

@@ -1,4 +1,4 @@
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TEnv.h"
 #include "TSystem.h"
@@ -9,7 +9,7 @@
 
 // First initialisation of the pointers. When implementations of the batch compute library
 // are loaded, they will overwrite the pointers.
-rbc::RooBatchComputeInterface *rbc::dispatch=nullptr, *rbc::dispatch_cpu=nullptr, *rbc::dispatch_gpu=nullptr;
+rbc::RbcInterface *rbc::dispatch=nullptr, *rbc::dispatchCPU=nullptr, *rbc::dispatchCUDA=nullptr;
 
 namespace {
   
@@ -40,8 +40,8 @@ void loadComputeLibrary()
 #ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
   #ifdef R__HAS_CUDA
     if (gSystem->Load("libcudart")>=0) load("libRooBatchCompute_CUDA");
-    if (rbc::dispatch_gpu) rbc::dispatch_gpu->init();
-    if (!rbc::dispatch_gpu)
+    if (rbc::dispatchCUDA) rbc::dispatchCUDA->init();
+    if (!rbc::dispatchCUDA)
       Info( (std::string(__func__)+"(), "+__FILE__+":"+std::to_string(__LINE__)).c_str(), 
       "Cuda implementation is not supported or not working, trying cpu optimised implementations." );
   #endif //R__HAS_CUDA
@@ -68,16 +68,16 @@ void loadComputeLibrary()
     throw std::invalid_argument("Supported options for `RooFit.BatchCompute` are `auto`, `avx512`, `avx2`, `avx`, `sse`, `generic`.");
 #endif //R__RF_ARCHITECTURE_SPECIFIC_LIBS
 
-  if (rbc::dispatch_cpu==nullptr)
+  if (rbc::dispatchCPU==nullptr)
     loadWithErrorChecking("libRooBatchCompute_GENERIC");
 }
 } //end anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// A RAII that performs RooFit's static initialisation.
-static struct RooBatchComputeInitialiser {
-  RooBatchComputeInitialiser() {
+static struct RbcInitialiser {
+  RbcInitialiser() {
     loadComputeLibrary();
   }
-} __RooBatchComputeInitialiser;
+} __RbcInitialiser;
 

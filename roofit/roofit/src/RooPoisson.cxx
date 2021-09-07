@@ -16,7 +16,7 @@ Poisson pdf
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooNaNPacker.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "Math/ProbFuncMathCore.h"
 

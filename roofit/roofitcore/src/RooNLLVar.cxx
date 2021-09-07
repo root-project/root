@@ -421,7 +421,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatched(std::size_t stepSize, std::si
   // Holding on to this struct in between function calls will make sure that the memory
   // is only allocated once.
   if (!_evalData) {
-    _evalData.reset(new RooBatchCompute::RunContext);
+    _evalData.reset(new rbc::RunContext);
   }
   _evalData->clear();
   _dataClone->getBatches(*_evalData, firstEvent, nEvents);

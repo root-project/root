@@ -30,7 +30,7 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooBreitWigner.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 using namespace std;
 

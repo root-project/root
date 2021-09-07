@@ -54,7 +54,7 @@ Double_t RooUniform::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Compute multiple values of the uniform distribution (effectively return a span with ones)
-RooSpan<double> RooUniform::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const
+RooSpan<double> RooUniform::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* /*normSet*/) const
 {
   size_t nEvents = 1;
   for (auto elm : x) {

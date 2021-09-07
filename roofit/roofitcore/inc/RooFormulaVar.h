@@ -70,7 +70,7 @@ public:
 
   // Function evaluation
   virtual Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const;
   inline void computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
   {
     formula().computeBatch(output, nEvents, dataMap);

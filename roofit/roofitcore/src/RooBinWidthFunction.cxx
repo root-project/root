@@ -46,7 +46,7 @@ double RooBinWidthFunction::evaluate() const {
 /// Compute bin index for all values of the observable(s) in `evalData`, and return their volumes or inverse volumes, depending
 /// on the configuration chosen in the constructor.
 /// If a bin is not valid, return a volume of 1.
-RooSpan<double> RooBinWidthFunction::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
+RooSpan<double> RooBinWidthFunction::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* /*normSet*/) const {
   const RooDataHist& dataHist = _histFunc->dataHist();
   std::vector<Int_t> bins = _histFunc->getBins(evalData);
   auto volumes = dataHist.binVolumes(0, dataHist.numEntries());

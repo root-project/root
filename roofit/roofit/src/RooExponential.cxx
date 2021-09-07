@@ -28,7 +28,7 @@ range and values of the arguments.
 #include "RooExponential.h"
 
 #include "RooRealVar.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 
 #include <cmath>

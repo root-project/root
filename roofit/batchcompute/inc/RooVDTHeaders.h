@@ -27,7 +27,7 @@
 #include "vdt/log.h"
 #include "vdt/sqrt.h"
 
-namespace RooBatchCompute{
+namespace rbc{
   
 inline double fast_exp(double x) {
   return vdt::fast_exp(x);
@@ -46,7 +46,7 @@ inline double fast_isqrt(double x) {
 #else
 #include <cmath>
 
-namespace RooBatchCompute{
+namespace rbc{
 
 __device__ inline double fast_exp(double x) {
   return std::exp(x);

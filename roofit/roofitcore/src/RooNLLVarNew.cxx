@@ -1,5 +1,5 @@
 #include "RooNLLVarNew.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include <numeric>
 #include <stdexcept>
@@ -77,12 +77,12 @@ double RooNLLVarNew::evaluate() const
    throw std::runtime_error("RooNLLVarNew::evaluate was called directly which should not happen!");
 }
 
-RooSpan<double> RooNLLVarNew::evaluateSpan(RooBatchCompute::RunContext &, const RooArgSet *) const
+RooSpan<double> RooNLLVarNew::evaluateSpan(rbc::RunContext &, const RooArgSet *) const
 {
    throw std::runtime_error("RooNLLVarNew::evaluatSpan was called directly which should not happen!");
 }
 
-RooSpan<const double> RooNLLVarNew::getValues(RooBatchCompute::RunContext &, const RooArgSet *) const
+RooSpan<const double> RooNLLVarNew::getValues(rbc::RunContext &, const RooArgSet *) const
 {
    throw std::runtime_error("RooNLLVarNew::getValues was called directly which should not happen!");
 }

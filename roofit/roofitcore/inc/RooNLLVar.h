@@ -23,7 +23,7 @@
 #include <utility>
 
 class RooRealSumPdf ;
-namespace RooBatchCompute {
+namespace rbc {
 struct RunContext;
 }
 
@@ -81,7 +81,7 @@ private:
 
   mutable std::vector<Double_t> _binw ; //!
   mutable RooRealSumPdf* _binnedPdf{nullptr}; //!
-  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; //! Struct to store function evaluation workspaces.
+  mutable std::unique_ptr<rbc::RunContext> _evalData; //! Struct to store function evaluation workspaces.
    
   ClassDef(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
 };

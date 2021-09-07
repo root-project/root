@@ -105,7 +105,7 @@ protected:
   Int_t addParamSet( const RooArgList& params );
   static Int_t GetNumBins( const RooArgSet& vars );
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const override;
 
 private:
   static NumBins getNumBinsPerDim(RooArgSet const& vars);

@@ -47,7 +47,7 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include "RooRandom.h"
 #include "RooHelpers.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include "TMath.h"
 #include <Math/ProbFuncMathCore.h>

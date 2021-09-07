@@ -86,7 +86,7 @@ public:
 
 
   Int_t getBin() const;
-  std::vector<Int_t> getBins(RooBatchCompute::RunContext& evalData) const;
+  std::vector<Int_t> getBins(rbc::RunContext& evalData) const;
 
 protected:
 
@@ -94,7 +94,7 @@ protected:
   Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const;
+  RooSpan<double> evaluateSpan(rbc::RunContext& evalData, const RooArgSet* /*normSet*/) const;
   friend class RooAbsCachedReal ;
 
   virtual void ioStreamerPass2() ;

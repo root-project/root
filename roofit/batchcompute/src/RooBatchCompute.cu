@@ -1,25 +1,24 @@
-// RooBatchCompute library created September 2020 by Emmanouil Michalainas
+// rbc library created September 2020 by Emmanouil Michalainas
 
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "Batches.h"
 
-#include "TEnv.h"
 #include "TError.h"
 
 #include <thrust/reduce.h>
 
-namespace RooBatchCompute {
+namespace rbc {
 namespace RF_ARCH {
   
 std::vector<void(*)(Batches)> getFunctions();
 
-class RooBatchComputeClass : public RooBatchComputeInterface {
+class RbcClass : public RbcInterface {
   private:
     const std::vector<void(*)(Batches)> _computeFunctions;
   public:
-    RooBatchComputeClass() : _computeFunctions(getFunctions())
+    RbcClass() : _computeFunctions(getFunctions())
     {
-      dispatch_gpu = this; // Set the dispatch pointer to this instance of the library upon loading
+      dispatchCUDA = this; // Set the dispatch pointer to this instance of the library upon loading
     }
 
     void init()
@@ -28,7 +27,7 @@ class RooBatchComputeClass : public RooBatchComputeInterface {
       if (err==cudaSuccess) cudaFree(nullptr);
       else
       {
-        dispatch_gpu = nullptr;
+        dispatchCUDA = nullptr;
         Error( (std::string(__func__)+"(), "+__FILE__+":"+std::to_string(__LINE__)).c_str(), "%s", cudaGetErrorString(err) );
       }
     }
@@ -107,10 +106,10 @@ class RooBatchComputeClass : public RooBatchComputeInterface {
       else
         ERRCHECK( cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost) );
     }
-}; // End class RooBatchComputeClass
+}; // End class RbcClass
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
-static RooBatchComputeClass computeObj;
+static RbcClass computeObj;
 
 
 Batches::Batches(RestrictArr output, size_t nEvents, const DataMap& varData, const VarVector& vars, const ArgVector& extraArgs, double[maxParams][bufferSize])
@@ -127,4 +126,4 @@ Batches::Batches(RestrictArr output, size_t nEvents, const DataMap& varData, con
 }
 
 } // End namespace RF_ARCH
-} // End namespace RooBatchCompute
+} // End namespace rbc

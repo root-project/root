@@ -30,7 +30,7 @@ the selectFastAlgorithm() method.
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 
 #include <cmath>
 #include <complex>

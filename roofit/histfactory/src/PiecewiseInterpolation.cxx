@@ -318,7 +318,7 @@ Double_t PiecewiseInterpolation::evaluate() const
 /// Interpolate between input distributions for all values of the observable in `evalData`.
 /// \param[in/out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
 /// \param[in] normSet Arguments to normalise over.
-RooSpan<double> PiecewiseInterpolation::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+RooSpan<double> PiecewiseInterpolation::evaluateSpan(rbc::RunContext& evalData, const RooArgSet* normSet) const {
   auto nominal = _nominal->getValues(evalData, normSet);
   auto sum = evalData.makeBatch(this, nominal.size());
   std::copy(nominal.begin(), nominal.end(), sum.begin());

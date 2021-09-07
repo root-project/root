@@ -88,8 +88,8 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
 
   auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
   if (realBinding) {
-    _evalData.reset(new RooBatchCompute::RunContext());
-    _evalDataOrig.reset(new RooBatchCompute::RunContext());
+    _evalData.reset(new rbc::RunContext());
+    _evalDataOrig.reset(new rbc::RunContext());
   }
 
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
@@ -137,8 +137,8 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
 
   auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
   if (realBinding) {
-    _evalData.reset(new RooBatchCompute::RunContext());
-    _evalDataOrig.reset(new RooBatchCompute::RunContext());
+    _evalData.reset(new rbc::RunContext());
+    _evalDataOrig.reset(new rbc::RunContext());
   }
 
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {

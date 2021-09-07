@@ -21,7 +21,7 @@
 #include <vector>
 #include <list>
 
-namespace RooBatchCompute {
+namespace rbc {
 struct RunContext;
 }
 
@@ -63,8 +63,8 @@ protected:
   
   Bool_t _useIntegrandLimits;  // If true limits of function binding are ued
 
-  std::unique_ptr<RooBatchCompute::RunContext> _evalData;     //! Run context for evaluating a function.
-  std::unique_ptr<RooBatchCompute::RunContext> _evalDataOrig; //! Run context to save bin centres in between invocations.
+  std::unique_ptr<rbc::RunContext> _evalData;     //! Run context for evaluating a function.
+  std::unique_ptr<rbc::RunContext> _evalDataOrig; //! Run context to save bin centres in between invocations.
 
   double* xvec(double xx) { _x[0] = xx ; return _x ; }
   double* xvec(double xx, double yy) { _x[0] = xx ; _x[1] = yy ; return _x ; }

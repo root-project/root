@@ -66,7 +66,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooAddPdf.h"
 
 #include "RooAddGenContext.h"
-#include "RooBatchCompute.h"
+#include "rbc.h"
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h"
 #include "RooNaNPacker.h"
