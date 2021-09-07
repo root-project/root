@@ -80,9 +80,9 @@ Double_t RooBifurGauss::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BifurGauss distribution.  
-void RooBifurGauss::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooBifurGauss::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::BifurGauss, output, nEvents, dataMap, {&*x,&*mean,&*sigmaL,&*sigmaR,&*_norm});
+  dispatch->compute(rbc::BifurGauss, output, nEvents, dataMap, {&*x,&*mean,&*sigmaL,&*sigmaR,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

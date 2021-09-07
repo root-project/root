@@ -61,7 +61,7 @@ public:
   /// Evalute all parameters/observables, and then evaluate formula.
   Double_t eval(const RooArgSet* nset=0) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, rbc::RunContext& inputData, const RooArgSet* nset = nullptr) const;
-  void computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const;
+  void computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const;
 
   /// DEBUG: Dump state information
   void dump() const;

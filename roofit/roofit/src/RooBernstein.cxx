@@ -142,7 +142,7 @@ Double_t RooBernstein::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Bernstein distribution.  
-void RooBernstein::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooBernstein::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
   const int nCoef = _coefList.size();
   std::vector<double> extraArgs(nCoef+2);
@@ -151,7 +151,7 @@ void RooBernstein::computeBatch(double* output, size_t nEvents, rbc::DataMap& da
   extraArgs[nCoef] = _x.min();
   extraArgs[nCoef+1] = _x.max();
 
-  rbc::dispatch->compute(rbc::Bernstein, output, nEvents, dataMap, {&*_x, &*_norm}, extraArgs);
+  dispatch->compute(rbc::Bernstein, output, nEvents, dataMap, {&*_x, &*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

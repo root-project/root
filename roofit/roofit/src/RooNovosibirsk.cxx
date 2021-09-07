@@ -90,9 +90,9 @@ Double_t RooNovosibirsk::evaluate() const
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Novosibirsk distribution.  
-void RooNovosibirsk::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooNovosibirsk::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::Novosibirsk, output, nEvents, dataMap, {&*x,&*peak,&*width,&*tail,&*_norm});
+  dispatch->compute(rbc::Novosibirsk, output, nEvents, dataMap, {&*x,&*peak,&*width,&*tail,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

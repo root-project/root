@@ -50,7 +50,7 @@ protected:
   RooListProxy _actualVars ; 
   virtual Double_t evaluate() const ;
   RooSpan<double> evaluateSpan(rbc::RunContext& inputData, const RooArgSet* normSet) const;
-  void computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const;
+  void computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const;
 
   Bool_t setFormula(const char* formula) ;
 

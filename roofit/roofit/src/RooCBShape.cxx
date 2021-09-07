@@ -92,9 +92,9 @@ Double_t RooCBShape::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Crystal ball Shape distribution.
-void RooCBShape::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooCBShape::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
+  dispatch->compute(rbc::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
 }
   
 ////////////////////////////////////////////////////////////////////////////////

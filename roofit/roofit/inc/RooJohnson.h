@@ -57,7 +57,7 @@ private:
   double _massThreshold{-1.E300};
 
   Double_t evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const override;
+  void computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooJohnson,1)

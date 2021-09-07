@@ -28,10 +28,10 @@ public:
   }
 
   inline RooAbsPdf* getPdf() const { return &*_pdf; }
-  void computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const override;
+  void computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
   
-  double reduce(const double* input, size_t nEvents) const;
+  double reduce(rbc::RbcInterface* dispatch, const double* input, size_t nEvents) const;
 
 protected:
   RooTemplateProxy<RooAbsPdf> _pdf;

@@ -146,13 +146,13 @@ Double_t RooPolynomial::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Polynomial.
-void RooPolynomial::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooPolynomial::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
   rbc::ArgVector extraArgs;
   for (auto* coef:_coefList)
     extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
   extraArgs.push_back(_lowestOrder);
-  rbc::dispatch->compute(rbc::Polynomial, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
+  dispatch->compute(rbc::Polynomial, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

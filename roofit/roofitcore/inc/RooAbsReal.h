@@ -388,7 +388,7 @@ protected:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
-  virtual void computeBatch(double* output, size_t size, rbc::DataMap& dataMap) const;
+  virtual void computeBatch(rbc::RbcInterface* dispatch, double* output, size_t size, rbc::DataMap& dataMap) const;
   virtual bool canComputeBatchWithCuda() const { return false; }
 
  protected:

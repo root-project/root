@@ -82,9 +82,9 @@ Double_t RooLognormal::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.  
-void RooLognormal::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooLognormal::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::Lognormal, output, nEvents, dataMap, {&*x,&*m0,&*k,&*_norm});
+  dispatch->compute(rbc::Lognormal, output, nEvents, dataMap, {&*x,&*m0,&*k,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

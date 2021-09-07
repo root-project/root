@@ -71,7 +71,7 @@ class RbcInterface {
     virtual void  memcpyToCPU (void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
 }; // end class RbcInterface
 
-R__EXTERN RbcInterface *dispatch, *dispatchCPU, *dispatchCUDA;
+R__EXTERN RbcInterface *dispatchCPU, *dispatchCUDA;
 
 } // end namespace rbc
 

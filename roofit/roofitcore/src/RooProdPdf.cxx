@@ -505,7 +505,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooProdPdf::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
   rbc::VarVector pdfs;
   for (const RooAbsArg* i:_pdfList) {
@@ -518,7 +518,7 @@ void RooProdPdf::computeBatch(double* output, size_t nEvents, rbc::DataMap& data
   }
   rbc::ArgVector special{ static_cast<double>(pdfs.size()) };
   pdfs.push_back(&*_norm);
-  rbc::dispatch->compute(rbc::ProdPdf, output, nEvents, dataMap, pdfs, special);
+  dispatch->compute(rbc::ProdPdf, output, nEvents, dataMap, pdfs, special);
 }
 
 namespace {

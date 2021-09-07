@@ -9,7 +9,7 @@
 
 // First initialisation of the pointers. When implementations of the batch compute library
 // are loaded, they will overwrite the pointers.
-rbc::RbcInterface *rbc::dispatch=nullptr, *rbc::dispatchCPU=nullptr, *rbc::dispatchCUDA=nullptr;
+rbc::RbcInterface *rbc::dispatchCPU=nullptr, *rbc::dispatchCUDA=nullptr;
 
 namespace {
   

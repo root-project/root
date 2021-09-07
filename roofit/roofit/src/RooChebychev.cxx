@@ -184,14 +184,14 @@ Double_t RooChebychev::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Chebychev.  
-void RooChebychev::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooChebychev::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
   rbc::ArgVector extraArgs;
   for (auto* coef:_coefList)
     extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
   extraArgs.push_back( _x.min(_refRangeName?_refRangeName->GetName() : nullptr) );
   extraArgs.push_back( _x.max(_refRangeName?_refRangeName->GetName() : nullptr) );
-  rbc::dispatch->compute(rbc::Chebychev, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
+  dispatch->compute(rbc::Chebychev, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

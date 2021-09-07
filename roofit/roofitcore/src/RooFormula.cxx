@@ -409,7 +409,7 @@ RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, rbc::RunCo
   return output;
 }
 
-void RooFormula::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooFormula::computeBatch(rbc::RbcInterface*, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
   const int nPars=_origList.size();
   std::vector<RooSpan<const double>> inputSpans(nPars);

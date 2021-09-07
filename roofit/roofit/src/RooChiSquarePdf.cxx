@@ -64,9 +64,9 @@ Double_t RooChiSquarePdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of ChiSquare distribution.  
-void RooChiSquarePdf::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooChiSquarePdf::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::ChiSquare, output, nEvents, dataMap, {&*_x,&*_norm}, {_ndof});
+  dispatch->compute(rbc::ChiSquare, output, nEvents, dataMap, {&*_x,&*_norm}, {_ndof});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

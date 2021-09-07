@@ -87,9 +87,9 @@ Double_t RooGamma::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gamma PDF.  
-void RooGamma::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooGamma::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::Gamma, output, nEvents, dataMap, {&*x,&*gamma,&*beta,&*mu,&*_norm});
+  dispatch->compute(rbc::Gamma, output, nEvents, dataMap, {&*x,&*gamma,&*beta,&*mu,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

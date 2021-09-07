@@ -64,9 +64,9 @@ Double_t RooPoisson::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Poisson distribution.  
-void RooPoisson::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooPoisson::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::Poisson, output, nEvents, dataMap, {&*x,&*mean,&*_norm}, 
+  dispatch->compute(rbc::Poisson, output, nEvents, dataMap, {&*x,&*mean,&*_norm}, 
     {static_cast<double>(_protectNegative), static_cast<double>(_noRounding)});
 }
 

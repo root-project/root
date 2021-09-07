@@ -4878,7 +4878,7 @@ RooSpan<double> RooAbsReal::evaluateSpan(rbc::RunContext& evalData, const RooArg
 }
 
 
-void RooAbsReal::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const {
+void RooAbsReal::computeBatch(rbc::RbcInterface*, double* output, size_t nEvents, rbc::DataMap& dataMap) const {
 
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.

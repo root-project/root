@@ -112,9 +112,9 @@ double RooJohnson::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Johnson distribution. 
-void RooJohnson::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooJohnson::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::Johnson, output, nEvents, dataMap, {&*_mass,&*_mu,&*_lambda,&*_gamma,&*_delta,&*_norm},{_massThreshold});
+  dispatch->compute(rbc::Johnson, output, nEvents, dataMap, {&*_mass,&*_mu,&*_lambda,&*_gamma,&*_delta,&*_norm},{_massThreshold});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

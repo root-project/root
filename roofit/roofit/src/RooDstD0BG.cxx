@@ -81,9 +81,9 @@ Double_t RooDstD0BG::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of D*-D0 mass difference distribution. 
-void RooDstD0BG::computeBatch(double* output, size_t nEvents, rbc::DataMap& dataMap) const
+void RooDstD0BG::computeBatch(rbc::RbcInterface* dispatch, double* output, size_t nEvents, rbc::DataMap& dataMap) const
 {
-  rbc::dispatch->compute(rbc::DstD0BG, output, nEvents, dataMap, {&*dm,&*dm0,&*C,&*A,&*B,&*_norm});
+  dispatch->compute(rbc::DstD0BG, output, nEvents, dataMap, {&*dm,&*dm0,&*C,&*A,&*B,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
