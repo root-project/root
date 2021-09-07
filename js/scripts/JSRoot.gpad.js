@@ -196,6 +196,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Return scale min */
+   TAxisPainter.prototype.getScaleMin = function() {
+      return this.func ? this.func.domain()[0] : 0;
+   }
+
+   /** @summary Return scale max */
+   TAxisPainter.prototype.getScaleMax = function() {
+      return this.func ? this.func.domain()[1] : 0;
+   }
+
    /** @summary Provide label for axis value */
    TAxisPainter.prototype.formatLabels = function(d) {
       let indx = parseFloat(d), a = this.getObject();
@@ -1894,6 +1904,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           pad = pp ? pp.getRootPad(true) : null;
       if (!pad) return;
 
+      pp._interactively_changed = true;
+
       let name = "fLog" + axis;
 
       // do not allow log scale for labels
@@ -2370,6 +2382,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       delete this._pad_width;
       delete this._pad_height;
       delete this._doing_draw;
+      delete this._interactively_changed;
 
       this.painters = [];
       this.pad = null;

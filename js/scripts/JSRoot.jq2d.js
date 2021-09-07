@@ -847,6 +847,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             if (dflt_expand || (handle && (handle.dflt === 'expand')) || this.isItemDisplayed(itemname)) can_draw = false;
          }
 
+         if (can_draw && !drawopt && handle && handle.dflt && (handle.dflt !== 'expand'))
+            drawopt = handle.dflt;
+
          if (can_draw)
             return this.display(itemname, drawopt);
 
@@ -854,7 +857,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             return this.expandItem(itemname, d3cont);
 
          // cannot draw, but can inspect ROOT objects
-         if ((typeof hitem._kind === "string") && (hitem._kind.indexOf("ROOT.")===0) && sett.inspect && (can_draw!==false))
+         if ((typeof hitem._kind === "string") && (hitem._kind.indexOf("ROOT.")===0) && sett.inspect && (can_draw !== false))
             return this.display(itemname, "inspect");
 
          if (!hitem._childs || (hitem === this.h)) return;
@@ -907,13 +910,13 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
    /** @summary Handle context menu in the hieararchy
      * @private */
    HierarchyPainter.prototype.tree_contextmenu = function(evnt, elem) {
-      // this is handling of context menu request for the normal objects browser
 
       evnt.preventDefault();
 
       let itemname = d3.select(elem.parentNode.parentNode).attr('item');
 
       let hitem = this.findItem(itemname);
+
       if (!hitem) return;
 
       let onlineprop = this.getOnlineProp(itemname),
@@ -930,7 +933,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       jsrp.createMenu(evnt, this).then(menu => {
 
-         if ((itemname == "") && !('_jsonfile' in hitem)) {
+         if (((itemname == "") || !hitem._parent) && !('_jsonfile' in hitem)) {
             let files = [], addr = "", cnt = 0,
                 separ = () => (cnt++ > 0) ? "&" : "?";
 
@@ -942,27 +945,29 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             if (this.isMonitoring())
                addr += separ() + "monitoring=" + this.getMonitoringInterval();
 
-            if (files.length==1)
+            if (files.length == 1)
                addr += separ() + "file=" + files[0];
-            else
-               if (files.length>1)
-                  addr += separ() + "files=" + JSON.stringify(files);
+            else if (files.length > 1)
+               addr += separ() + "files=" + JSON.stringify(files);
 
             if (this.disp_kind)
                addr += separ() + "layout=" + this.disp_kind.replace(/ /g, "");
 
-            let items = [];
+            let items = [], opts = [];
 
             if (this.disp)
                this.disp.forEachPainter(p => {
-                  if (p.getItemName())
-                     items.push(p.getItemName());
+                  let item = p.getItemName();
+                  if (item) {
+                     items.push(item);
+                     opts.push(p.getDrawOpt() || p.getItemDrawOpt());
+                  }
                });
 
             if (items.length == 1) {
-               addr += separ() + "item=" + items[0];
+               addr += separ() + "item=" + items[0] + separ() + "opt=" + opts[0];
             } else if (items.length > 1) {
-               addr += separ() + "items=" + JSON.stringify(items);
+               addr += separ() + "items=" + JSON.stringify(items) + separ() + "opt=" + JSON.stringify(opts);
             }
 
             menu.add("Direct link", () => window.open(addr));
@@ -975,7 +980,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             // allow to draw item even if draw function is not defined
             if (hitem._can_draw) {
                if (!sett.opts) sett.opts = [""];
-               if (sett.opts.indexOf("")<0) sett.opts.unshift("");
+               if (sett.opts.indexOf("") < 0) sett.opts.unshift("");
             }
 
             if (sett.opts)
@@ -992,9 +997,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
                   filepath += "&item=" + name;
                }
 
-               menu.addDrawMenu("Draw in new tab", sett.opts, arg => {
-                  window.open(JSROOT.source_dir + "index.htm?nobrowser&"+filepath +"&opt="+arg);
-               });
+               menu.addDrawMenu("Draw in new tab", sett.opts,
+                                arg => window.open(JSROOT.source_dir + "index.htm?nobrowser&"+filepath +"&opt="+arg));
             }
 
             if (sett.expand && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))

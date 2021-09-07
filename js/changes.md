@@ -1,5 +1,12 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Fix problem with curved TGraph drawings (#218)
+2. Fix problem with logy/logz drawing in lego plots
+3. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis
+4. Provide JSROOT.Painter.setDefaultDrawOpt to change default draw option
+
+
 ## Changes in 6.2.0
 1. Support fully interactive second X/Y axis for histograms, graphs, functions and spline
 2. Support X+, Y+, RX, RY draw options for TF1
