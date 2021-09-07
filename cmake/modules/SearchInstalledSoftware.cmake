@@ -1002,6 +1002,18 @@ if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER_EQUAL 500000000)
   endif()
 endif()
 
+#---check if netxng and netx can be built-------------------------------
+if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER 300030005)
+  set(netxng ON)
+else()
+  set(netxng OFF)
+endif()
+if(xrootd AND XROOTD_VERSIONNUM VERSION_LESS 500000000)
+  set(netx ON)
+else()
+  set(netx OFF)
+endif()
+
 #---Alien support----------------------------------------------------------------
 if(alien)
   find_package(Alien)

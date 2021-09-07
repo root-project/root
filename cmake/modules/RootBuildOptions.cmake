@@ -399,7 +399,6 @@ if(webgui)
   endif()
 endif()
 
-
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
             krb5 ldap memstat qt qtgsi rfio ruby sapdb srp table python vmc)
