@@ -61,9 +61,9 @@ Double_t RooLandau::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Landau distribution.  
-void RooLandau::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooLandau::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooBatchCompute::dispatch->compute(RooBatchCompute::Landau, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
+  dispatch->compute(RooBatchCompute::Landau, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
