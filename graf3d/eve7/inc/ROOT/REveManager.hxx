@@ -13,6 +13,7 @@
 #define ROOT7_REveManager
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveSystem.hxx>
 #include <ROOT/RLogger.hxx>
 
 #include <ROOT/RWebDisplayArgs.hxx>
@@ -113,13 +114,6 @@ public:
       ~Logger() { RLogManager::Get().Remove(fHandler); }
    };
 
-   struct ClientStatus
-   {
-      int        fNConnections{-1};
-      std::time_t fMIRTime{std::time(nullptr)};
-      std::time_t fDisconnectTime{std::time(nullptr)};
-   };
-
 protected:
    RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
 
@@ -162,7 +156,7 @@ protected:
    std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
 
    Logger            fLogger;
-   ClientStatus    fClientStatus; 
+   REveServerStatus  fServerStatus; 
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
@@ -275,7 +269,7 @@ public:
 
    std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
 
-   void GetClientStatus(ClientStatus&);
+   void GetServerStatus(REveServerStatus&);
 };
 
 R__EXTERN REveManager* gEve;
