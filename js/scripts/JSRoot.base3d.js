@@ -677,9 +677,12 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
                 position = intersect.point[kind],
                 item = { name: kind, ignore: false };
 
-            // z changes from 0..2*size_z3d, others -size_xy3d..+size_xy3d
-            if (kind!=="z") position = (position + control.painter.size_xy3d)/2/control.painter.size_xy3d;
-                       else position = position/2/control.painter.size_z3d;
+            // z changes from 0..2*size_z3d, others -size_x3d..+size_x3d
+            switch (kind) {
+               case "x": position = (position + control.painter.size_x3d)/2/control.painter.size_x3d; break;
+               case "y": position = (position + control.painter.size_y3d)/2/control.painter.size_y3d; break;
+               case "z": position = position/2/control.painter.size_z3d; break;
+            }
 
             control.painter.analyzeMouseWheelEvent(evnt, item, position, false);
 
