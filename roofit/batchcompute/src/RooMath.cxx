@@ -218,7 +218,7 @@ __device__ __host__ static inline std::complex<T> faddeeva_smabmq_impl(
 	// clock cycles; non-gcc compilers also get the normal code, since they
 	// usually do a better job with the default code (and yes, it's a pain
 	// that they're all pretending to be gcc)
-#if (!defined(__x86_64__)) || !defined(__OPTIMIZE__) || \
+#if (defined(__CUDACC__) || !defined(__x86_64__)) || !defined(__OPTIMIZE__) || \
 	defined(__OPTIMIZE_SIZE__) || defined(__INTEL_COMPILER) || \
 	defined(__clang__) || defined(__OPEN64__) || \
 	defined(__PATHSCALE__) || !defined(__GNUC__)
