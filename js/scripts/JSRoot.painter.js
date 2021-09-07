@@ -1269,10 +1269,8 @@ JSROOT.define(['d3'], (d3) => {
       if (ndig === undefined) ndig = smooth ? 2 : 0;
       if (height === undefined) height = 0;
 
-      function jsroot_d3_svg_lineSlope(p0, p1) {
-         return (p1.gry - p0.gry) / (p1.grx - p0.grx);
-      }
-      function jsroot_d3_svg_lineFiniteDifferences(points) {
+      let jsroot_d3_svg_lineSlope = (p0, p1) => (p1.gry - p0.gry) / (p1.grx - p0.grx);
+      let jsroot_d3_svg_lineFiniteDifferences = points => {
          let i = 0, j = points.length - 1, m = [], p0 = points[0], p1 = points[1], d = m[0] = jsroot_d3_svg_lineSlope(p0, p1);
          while (++i < j) {
             p0 = p1; p1 = points[i + 1];
@@ -1280,8 +1278,8 @@ JSROOT.define(['d3'], (d3) => {
          }
          m[i] = d;
          return m;
-      }
-      function jsroot_d3_svg_lineMonotoneTangents(points) {
+      };
+      let jsroot_d3_svg_lineMonotoneTangents = points => {
          let d, a, b, s, m = jsroot_d3_svg_lineFiniteDifferences(points), i = -1, j = points.length - 1;
          while (++i < j) {
             d = jsroot_d3_svg_lineSlope(points[i], points[i + 1]);
@@ -1304,12 +1302,12 @@ JSROOT.define(['d3'], (d3) => {
             points[i].dgrx = s || 0;
             points[i].dgry = m[i] * s || 0;
          }
-      }
+      };
 
       let res = { path: "", close: "" }, bin = bins[0], maxy = Math.max(bin.gry, height + 5),
          currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
 
-      function conv(val) {
+      let conv = val => {
          let vvv = Math.round(val);
          if ((ndig == 0) || (vvv === val)) return vvv.toString();
          let str = val.toFixed(ndig);
@@ -1319,7 +1317,7 @@ JSROOT.define(['d3'], (d3) => {
             str = str.substr(0, str.length - 1);
          if (str == "-0") str = "0";
          return str;
-      }
+      };
 
       res.path = ((kind[0] == "L") ? "L" : "M") + conv(bin.grx) + "," + conv(bin.gry);
 
@@ -1329,12 +1327,12 @@ JSROOT.define(['d3'], (d3) => {
 
       if (smooth) {
          // build smoothed curve
-         res.path += "c" + conv(bin.dgrx) + "," + conv(bin.dgry) + ",";
+         res.path += "C" + conv(bin.grx+bin.dgrx) + "," + conv(bin.gry+bin.dgry) + ",";
          for (let n = 1; n < npnts; ++n) {
             let prev = bin;
             bin = bins[n];
-            if (n > 1) res.path += "s";
-            res.path += conv(bin.grx - bin.dgrx - prev.grx) + "," + conv(bin.gry - bin.dgry - prev.gry) + "," + conv(bin.grx - prev.grx) + "," + conv(bin.gry - prev.gry);
+            if (n > 1) res.path += "S";
+            res.path += conv(bin.grx - bin.dgrx) + "," + conv(bin.gry - bin.dgry) + "," + conv(bin.grx) + "," + conv(bin.gry);
             maxy = Math.max(maxy, prev.gry);
          }
       } else if (npnts < 10000) {
@@ -1343,9 +1341,12 @@ JSROOT.define(['d3'], (d3) => {
             bin = bins[n];
             dx = Math.round(bin.grx) - currx;
             dy = Math.round(bin.gry) - curry;
-            if (dx && dy) res.path += "l" + dx + "," + dy;
-            else if (!dx && dy) res.path += "v" + dy;
-            else if (dx && !dy) res.path += "h" + dx;
+            if (dx && dy)
+               res.path += "l" + dx + "," + dy;
+            else if (!dx && dy)
+               res.path += "v" + dy;
+            else if (dx && !dy)
+               res.path += "h" + dx;
             currx += dx; curry += dy;
             maxy = Math.max(maxy, curry);
          }
@@ -1373,8 +1374,10 @@ JSROOT.define(['d3'], (d3) => {
                curry = prevy;
             }
             dy = lasty - curry;
-            if (dy) res.path += "l" + dx + "," + dy;
-            else res.path += "h" + dx;
+            if (dy)
+               res.path += "l" + dx + "," + dy;
+            else
+               res.path += "h" + dx;
             currx = lastx; curry = lasty;
             prevy = cminy = cmaxy = lasty;
          }
@@ -1384,12 +1387,10 @@ JSROOT.define(['d3'], (d3) => {
             res.path += "v" + (cmaxy - cminy);
             if (cmaxy != prevy) res.path += "v" + (prevy - cmaxy);
          }
-
       }
 
       if (height > 0)
-         res.close = "L" + conv(bin.grx) + "," + conv(maxy) +
-            "h" + conv(bins[0].grx - bin.grx) + "Z";
+         res.close = "L" + conv(bin.grx) + "," + conv(maxy) + "h" + conv(bins[0].grx - bin.grx) + "Z";
 
       return res;
    }
@@ -1849,17 +1850,19 @@ JSROOT.define(['d3'], (d3) => {
      * @desc if options are not modified - returns original string which was specified for object draw */
    ObjectPainter.prototype.getDrawOpt = function() {
       if (!this.options) return "";
-      let changed = false;
-      if (!this.options_store) {
-         changed  = true;
-      } else {
-         for (let k in this.options)
-            if (this.options[k] !== this.options_store[k])
-               changed = true;
-      }
 
-      if (changed && typeof this.options.asString == "function")
-         return this.options.asString();
+      if (typeof this.options.asString == "function") {
+         let changed = false, pp = this.getPadPainter();
+         if (!this.options_store || (pp && pp._interactively_changed)) {
+            changed  = true;
+         } else {
+            for (let k in this.options)
+               if (this.options[k] !== this.options_store[k])
+                  changed = true;
+         }
+         if (changed)
+            return this.options.asString(this.isMainPainter(), pp ? pp.getRootPad() : null);
+      }
 
       return this.options.original || ""; // nothing better, return original draw option
    }
@@ -3702,6 +3705,13 @@ JSROOT.define(['d3'], (d3) => {
      * @private */
    jsrp.canDraw = function(classname) {
       return getDrawSettings("ROOT." + classname).opts !== null;
+   }
+
+   /** @summary Set default draw option for provided class */
+   jsrp.setDefaultDrawOpt = function(classname, opt) {
+      let handle = getDrawHandle("ROOT." + classname, 0);
+      if (handle)
+         handle.dflt = opt;
    }
 
    /** @summary Draw object in specified HTML element with given draw options.

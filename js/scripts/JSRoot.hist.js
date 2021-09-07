@@ -1422,7 +1422,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: true, Palette: 0, BaseLine: false,
               Optimize: JSROOT.settings.OptimizeDraw,
-              Mode3D: false,
+              Mode3D: false, x3dscale: 1, y3dscale: 1,
               Render3D: JSROOT.constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
@@ -1476,6 +1476,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (d.check("SYMLOGX", true)) this.SymlogX = d.partAsInt(0, 3);
       if (d.check("SYMLOGY", true)) this.SymlogY = d.partAsInt(0, 3);
+
+      if (d.check('X3DSC', true)) this.x3dscale = d.partAsInt(0, 100) / 100;
+      if (d.check('Y3DSC', true)) this.y3dscale = d.partAsInt(0, 100) / 100;
 
       let lx = false, ly = false;
       if (d.check('LOGXY')) lx = ly = true;
@@ -1710,7 +1713,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary Tries to reconstruct string with hist draw options */
-   THistDrawOptions.prototype.asString = function() {
+   THistDrawOptions.prototype.asString = function(is_main_hist, pad) {
       let res = "";
       if (this.Mode3D) {
 
@@ -1725,6 +1728,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
          if (!this.FrontBox) res+="FB";
          if (!this.BackBox) res+="BB";
+
+         if (this.x3dscale !== 1) res += "_X3DSC" + Math.round(this.x3dscale * 100);
+         if (this.y3dscale !== 1) res += "_Y3DSC" + Math.round(this.y3dscale * 100);
 
       } else {
          if (this.Scat) {
@@ -1755,8 +1761,26 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             if (this.TextAngle) res += this.TextAngle;
             res += this.TextKind;
          }
-
       }
+
+      if (is_main_hist && res) {
+
+         if (this.ForceStat || (this.StatEnabled === true))
+            res += "_STAT";
+         else if (this.NoStat || (this.StatEnabled === false))
+            res += "_NOSTAT";
+      }
+
+      if (is_main_hist && pad && res) {
+         if (pad.fLogx) res += "_LOGX";
+         if (pad.fLogy) res += "_LOGY";
+         if (pad.fLogz) res += "_LOGZ";
+         if (pad.fGridx) res += "_GRIDX";
+         if (pad.fGridy) res += "_GRIDY";
+         if (pad.fTickx) res += "_TICKX";
+         if (pad.fTicky) res += "_TICKY";
+      }
+
       return res;
    }
 
@@ -2509,6 +2533,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (statpainter) {
          statpainter.Enabled = !statpainter.Enabled;
+         this.options.StatEnabled = statpainter.Enabled; // used only for interactive
          // when stat box is drawn, it always can be drawn individually while it
          // should be last for colz redrawPad is used
          statpainter.redraw();
@@ -3298,8 +3323,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (args.rounding) res.grx[i] = Math.round(res.grx[i]);
 
          if (args.use3d) {
-            if (res.grx[i] < -pmain.size_xy3d) { res.i1 = i; res.grx[i] = -pmain.size_xy3d; }
-            if (res.grx[i] > pmain.size_xy3d) { res.i2 = i; res.grx[i] = pmain.size_xy3d; }
+            if (res.grx[i] < -pmain.size_x3d) { res.i1 = i; res.grx[i] = -pmain.size_x3d; }
+            if (res.grx[i] > pmain.size_x3d) { res.i2 = i; res.grx[i] = pmain.size_x3d; }
          }
       }
 
@@ -3315,8 +3340,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (args.rounding) res.gry[j] = Math.round(res.gry[j]);
 
          if (args.use3d) {
-            if (res.gry[j] < -pmain.size_xy3d) { res.j1 = j; res.gry[j] = -pmain.size_xy3d; }
-            if (res.gry[j] > pmain.size_xy3d) { res.j2 = j; res.gry[j] = pmain.size_xy3d; }
+            if (res.gry[j] < -pmain.size_y3d) { res.j1 = j; res.gry[j] = -pmain.size_y3d; }
+            if (res.gry[j] > pmain.size_y3d) { res.j2 = j; res.gry[j] = pmain.size_y3d; }
          }
       }
 
