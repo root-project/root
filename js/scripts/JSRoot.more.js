@@ -870,7 +870,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if (d.check('Y+')) { res.Axis += "Y+"; res.second_y = has_main; }
       if (d.check('RX')) res.Axis += "RX";
       if (d.check('RY')) res.Axis += "RY";
-      if (d.check('C')) res.Curve = res.Line = 1;
+      if (d.check('CC')) res.Curve = 2; // draw all points without reduction
+      if (d.check('C')) res.Curve = 1;
       if (d.check('*')) res.Mark = 103;
       if (d.check('P0')) res.Mark = 104;
       if (d.check('P')) res.Mark = 1;
@@ -896,7 +897,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if ((res.Mark == 1) && (graph.fMarkerStyle==1)) res.Mark = 101;
 
       // if no drawing option is selected and if opt=='' nothing is done.
-      if (res.Line + res.Fill + res.Mark + res.Bar + res.EF + res.Rect + res.Errors == 0) {
+      if (res.Line + res.Fill + res.Curve + res.Mark + res.Bar + res.EF + res.Rect + res.Errors == 0) {
          if (d.empty()) res.Line = 1;
       }
 
@@ -1138,6 +1139,28 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return pmain.pad ? pmain : null;
    }
 
+   /** @summary append exclusion area to created path */
+   TGraphPainter.prototype.appendExclusion = function(is_curve, path, drawbins, excl_width) {
+      let extrabins = [];
+      for (let n = drawbins.length-1; n >= 0; --n) {
+         let bin = drawbins[n];
+         let dlen = Math.sqrt(bin.dgrx*bin.dgrx + bin.dgry*bin.dgry);
+         // shift point, using
+         bin.grx += excl_width*bin.dgry/dlen;
+         bin.gry -= excl_width*bin.dgrx/dlen;
+         extrabins.push(bin);
+      }
+
+      let path2 = jsrp.buildSvgPath("L" + (is_curve ? "bezier" : "line"), extrabins);
+
+      this.draw_g.append("svg:path")
+                 .attr("d", path.path + path2.path + "Z")
+                 .style("stroke", "none")
+                 .call(this.fillatt.func)
+                 .style('opacity', 0.75);
+
+   }
+
    /** @summary draw TGraph as SVG */
    TGraphPainter.prototype.drawGraph = function() {
 
@@ -1173,17 +1196,17 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (this.lineatt.excl_side != 0) {
          excl_width = this.lineatt.excl_width;
-         if (this.lineatt.width > 0) this.options.Line = 1;
+         if ((this.lineatt.width > 0) && !this.options.Line && !this.options.Curve) this.options.Line = 1;
       }
 
       let drawbins = null;
 
       if (this.options.EF) {
 
-         drawbins = this.optimizeBins((this.options.EF > 1) ? 5000 : 0);
+         drawbins = this.optimizeBins((this.options.EF > 1) ? 20000 : 0);
 
          // build lower part
-         for (let n=0;n<drawbins.length;++n) {
+         for (let n = 0; n < drawbins.length; ++n) {
             let bin = drawbins[n];
             bin.grx = funcs.grx(bin.x);
             bin.gry = funcs.gry(bin.y - bin.eylow);
@@ -1208,17 +1231,17 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          this.draw_kind = "lines";
       }
 
-      if (this.options.Line == 1 || this.options.Fill == 1 || (excl_width!==0)) {
+      if (this.options.Line || this.options.Fill) {
 
          let close_symbol = "";
-         if (graph._typename=="TCutG") this.options.Fill = 1;
+         if (graph._typename == "TCutG") this.options.Fill = 1;
 
-         if (this.options.Fill == 1) {
+         if (this.options.Fill) {
             close_symbol = "Z"; // always close area if we want to fill it
             excl_width = 0;
          }
 
-         if (!drawbins) drawbins = this.optimizeBins(this.options.Curve ? 5000 : 0);
+         if (!drawbins) drawbins = this.optimizeBins(0);
 
          for (let n = 0; n < drawbins.length; ++n) {
             let bin = drawbins[n];
@@ -1227,46 +1250,52 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          }
 
          let kind = "line"; // simple line
-         if (this.options.Curve === 1) kind = "bezier"; else
-         if (excl_width!==0) kind+="calc"; // we need to calculated deltas to build exclusion points
+         if (excl_width) kind += "calc"; // we need to calculated deltas to build exclusion points
 
          let path = jsrp.buildSvgPath(kind, drawbins);
 
-         if (excl_width!==0) {
-            let extrabins = [];
-            for (let n = drawbins.length-1; n >= 0; --n) {
-               let bin = drawbins[n];
-               let dlen = Math.sqrt(bin.dgrx*bin.dgrx + bin.dgry*bin.dgry);
-               // shift point, using
-               bin.grx += excl_width*bin.dgry/dlen;
-               bin.gry -= excl_width*bin.dgrx/dlen;
-               extrabins.push(bin);
-            }
+         if (excl_width)
+             this.appendExclusion(false, path, drawbins, excl_width);
 
-            let path2 = jsrp.buildSvgPath("L" + ((this.options.Curve === 1) ? "bezier" : "line"), extrabins);
+         let elem = this.draw_g.append("svg:path")
+                        .attr("d", path.path + close_symbol);
+         if (this.options.Line)
+            elem.call(this.lineatt.func);
+         else
+            elem.style('stroke', 'none');
 
-            this.draw_g.append("svg:path")
-                       .attr("d", path.path + path2.path + "Z")
-                       .style("stroke", "none")
-                       .call(this.fillatt.func)
-                       .style('opacity', 0.75);
-         }
-
-         if (this.options.Line || this.options.Fill) {
-            let elem = this.draw_g.append("svg:path")
-                           .attr("d", path.path + close_symbol);
-            if (this.options.Line)
-               elem.call(this.lineatt.func);
-            else
-               elem.style('stroke','none');
-
-            if (this.options.Fill)
-               elem.call(this.fillatt.func);
-            else
-               elem.style('fill','none');
-         }
+         if (this.options.Fill)
+            elem.call(this.fillatt.func);
+         else
+            elem.style('fill', 'none');
 
          this.draw_kind = "lines";
+      }
+
+      if (this.options.Curve) {
+         let curvebins = drawbins;
+         if ((this.draw_kind != "lines") || !curvebins || ((this.options.Curve == 1) && (curvebins.length > 20000))) {
+            curvebins = this.optimizeBins((this.options.Curve == 1) ? 20000 : 0);
+            for (let n = 0; n < curvebins.length; ++n) {
+               let bin = curvebins[n];
+               bin.grx = funcs.grx(bin.x);
+               bin.gry = funcs.gry(bin.y);
+            }
+         }
+
+         let kind = "bezier";
+         if (excl_width) kind += "calc"; // we need to calculated deltas to build exclusion points
+
+         let path = jsrp.buildSvgPath(kind, curvebins);
+
+         if (excl_width)
+             this.appendExclusion(true, path, curvebins, excl_width);
+
+         this.draw_g.append("svg:path")
+                    .attr("d", path.path)
+                    .call(this.lineatt.func)
+                    .style('fill','none');
+         this.draw_kind = "lines"; // handled same way as lines
       }
 
       let nodes = null;
@@ -1475,6 +1504,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if (this.draw_kind != "nodes") return null;
 
       let pmain = this.getFramePainter(),
+          pthis = this,
           height = pmain.getFrameHeight(),
           esz = this.error_size,
           isbar1 = (this.options.Bar===1),
@@ -1499,7 +1529,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
              rect = { x1: -d.width/2, x2: d.width/2, y1: 0, y2: height - d.gry1 };
 
              if (isbar1) {
-                let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+                let funcs = pmain.getGrFuncs(pthis.options.second_x, pthis.options.second_y),
                     yy0 = funcs.gry(0);
                 rect.y1 = (d.gry1 > yy0) ? yy0-d.gry1 : 0;
                 rect.y2 = (d.gry1 > yy0) ? 0 : yy0-d.gry1;
