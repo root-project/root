@@ -19,7 +19,8 @@
 \class RooSubsidiaryL
 \ingroup Roofitcore
 
-\brief RooSubsidiaryL calculates the sum of the -(log) likelihoods of a set of RooAbsPdf objects that represent subsidiary or constraint functions.
+\brief RooSubsidiaryL calculates the sum of the -(log) likelihoods of a set of RooAbsPdf objects that represent
+subsidiary or constraint functions.
 
 This class is used to gather all subsidiary PDF terms from the component PDFs of RooSumL likelihoods and calculate the
 composite -log(L). Such subsidiary terms can be marked using RooFit::Constrain arguments to RooAbsPdf::fitTo() or
@@ -35,14 +36,16 @@ value of the (log-)likelihood itself.
 **/
 
 #include <TestStatistics/RooSubsidiaryL.h>
-#include <TestStatistics/kahan_sum.h>
 #include <RooAbsPdf.h> // for dynamic cast
 #include <RooErrorHandler.h>
+
+#include "Math/Util.h" // KahanSum
 
 namespace RooFit {
 namespace TestStatistics {
 
-RooSubsidiaryL::RooSubsidiaryL(const std::string& parent_pdf_name, const RooArgSet &pdfs, const RooArgSet &parameter_set)
+RooSubsidiaryL::RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgSet &pdfs,
+                               const RooArgSet &parameter_set)
    : RooAbsL(nullptr, nullptr, 0, 0, RooAbsL::Extended::No), parent_pdf_name_(parent_pdf_name)
 {
    for (const auto comp : pdfs) {
@@ -56,8 +59,9 @@ RooSubsidiaryL::RooSubsidiaryL(const std::string& parent_pdf_name, const RooArgS
    parameter_set_.add(parameter_set);
 }
 
-double
-RooSubsidiaryL::evaluatePartition(RooAbsL::Section events, std::size_t /*components_begin*/, std::size_t /*components_end*/)
+ROOT::Math::KahanSum<double> RooSubsidiaryL::evaluatePartition(RooAbsL::Section events,
+                                                               std::size_t /*components_begin*/,
+                                                               std::size_t /*components_end*/)
 {
    if (events.begin_fraction != 0 || events.end_fraction != 1) {
       oocoutW((TObject *)0, InputArguments) << "RooSubsidiaryL::evaluatePartition can only calculate everything, so "
@@ -65,19 +69,16 @@ RooSubsidiaryL::evaluatePartition(RooAbsL::Section events, std::size_t /*compone
                                             << std::endl;
    }
 
-   double sum = 0, carry = 0;
+   ROOT::Math::KahanSum<double> sum;
 
    for (const auto comp : subsidiary_pdfs_) {
-      double term = -((RooAbsPdf *)comp)->getLogVal(&parameter_set_);
-      std::tie(sum, carry) = kahan_add(sum, term, carry);
+      sum += -((RooAbsPdf *)comp)->getLogVal(&parameter_set_);
    }
-   eval_carry_ = carry;
 
    return sum;
 }
 
-void RooSubsidiaryL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) {
-}
+void RooSubsidiaryL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) {}
 
 } // namespace TestStatistics
 } // namespace RooFit

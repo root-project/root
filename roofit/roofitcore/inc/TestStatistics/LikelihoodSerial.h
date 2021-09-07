@@ -35,11 +35,10 @@ public:
    void initVars();
 
    void evaluate() override;
-   inline double getResult() const override { return result; }
+   inline ROOT::Math::KahanSum<double> getResult() const override { return result; }
 
 private:
-   double result = 0;
-   double carry = 0;
+   ROOT::Math::KahanSum<double> result;
 
    RooArgList _vars;      // Variables
    RooArgList _saveVars;  // Copy of variables
