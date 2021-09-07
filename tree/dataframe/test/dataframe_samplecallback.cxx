@@ -17,17 +17,17 @@
 #include <thread> // std::hardware_concurrency
 
 // fixture for all tests in this file
-struct RDFDataBlockCallback : ::testing::TestWithParam<bool> {
+struct RDFSampleCallback : ::testing::TestWithParam<bool> {
    unsigned int NSLOTS;
    ULong64_t NENTRIES = std::max(10u, std::thread::hardware_concurrency() * 2);
 
-   RDFDataBlockCallback() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
+   RDFSampleCallback() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
    {
       if (GetParam())
          ROOT::EnableImplicitMT();
    }
 
-   ~RDFDataBlockCallback()
+   ~RDFSampleCallback()
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -58,7 +58,7 @@ struct InputFilesRAII {
    }
 };
 
-TEST_P(RDFDataBlockCallback, EmptySource) {
+TEST_P(RDFSampleCallback, EmptySource) {
    ROOT::RDataFrame df(NENTRIES);
    auto result = df.Book<>(CounterHelper(), {});
    // RDF with empty sources tries to produce 2 tasks per slot when MT is enabled
@@ -66,7 +66,7 @@ TEST_P(RDFDataBlockCallback, EmptySource) {
    EXPECT_EQ(*result, expected);
 }
 
-TEST_P(RDFDataBlockCallback, DataSource) {
+TEST_P(RDFSampleCallback, DataSource) {
    auto df = ROOT::RDF::MakeTrivialDataFrame(NENTRIES);
    auto result = df.Book<>(CounterHelper(), {});
    // RTrivialDS tries to produce NSLOTS tasks
@@ -74,7 +74,7 @@ TEST_P(RDFDataBlockCallback, DataSource) {
    EXPECT_EQ(*result, expected);
 }
 
-TEST_P(RDFDataBlockCallback, TTree) {
+TEST_P(RDFSampleCallback, TTree) {
    const std::string prefix = "rdfdatablockcallback_ttree";
    InputFilesRAII file(1u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
@@ -82,7 +82,7 @@ TEST_P(RDFDataBlockCallback, TTree) {
    EXPECT_EQ(*result, 1u);
 }
 
-TEST_P(RDFDataBlockCallback, TChain) {
+TEST_P(RDFSampleCallback, TChain) {
    const std::string prefix = "rdfdatablockcallback_tchain";
    InputFilesRAII file(5u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
@@ -90,37 +90,37 @@ TEST_P(RDFDataBlockCallback, TChain) {
    EXPECT_EQ(*result, 5u);
 }
 
-class DataBlockHelper : public ROOT::Detail::RDF::RActionImpl<DataBlockHelper> {
-   std::shared_ptr<std::vector<ROOT::RDF::RDataBlockID>> fDataBlocks;
+class SampleHelper : public ROOT::Detail::RDF::RActionImpl<SampleHelper> {
+   std::shared_ptr<std::vector<ROOT::RDF::RSampleInfo>> fSamples;
    std::unique_ptr<std::mutex> fMutex;
 public:
-   DataBlockHelper()
-      : fDataBlocks(std::make_shared<std::vector<ROOT::RDF::RDataBlockID>>()), fMutex(std::make_unique<std::mutex>())
+   SampleHelper()
+      : fSamples(std::make_shared<std::vector<ROOT::RDF::RSampleInfo>>()), fMutex(std::make_unique<std::mutex>())
    {
    }
-   DataBlockHelper(DataBlockHelper &&) = default;
-   DataBlockHelper(const DataBlockHelper &) = delete;
+   SampleHelper(SampleHelper &&) = default;
+   SampleHelper(const SampleHelper &) = delete;
 
-   using Result_t = std::vector<ROOT::RDF::RDataBlockID>;
-   auto GetResultPtr() const { return fDataBlocks; }
+   using Result_t = std::vector<ROOT::RDF::RSampleInfo>;
+   auto GetResultPtr() const { return fSamples; }
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int) {}
-   ROOT::RDF::DataBlockCallback_t GetDataBlockCallback() final
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
    {
-      return [this](unsigned int, const ROOT::RDF::RDataBlockID &db) mutable {
+      return [this](unsigned int, const ROOT::RDF::RSampleInfo &db) mutable {
          std::lock_guard<std::mutex> lg(*fMutex);
-         fDataBlocks->emplace_back(db);
+         fSamples->emplace_back(db);
       };
    }
    void Finalize() {}
 
-   std::string GetActionName() { return "DataBlockHelper"; }
+   std::string GetActionName() { return "SampleHelper"; }
 };
 
-TEST_P(RDFDataBlockCallback, EmptySourceDataBlockID) {
+TEST_P(RDFSampleCallback, EmptySourceSampleID) {
    ROOT::RDataFrame df(NENTRIES);
-   auto result = df.Book<>(DataBlockHelper(), {});
+   auto result = df.Book<>(SampleHelper(), {});
    if (ROOT::IsImplicitMTEnabled()) {
       // RDF with empty sources tries to produce 2 tasks per slot when MT is enabled
       const auto expectedSize = std::min(NENTRIES, df.GetNSlots() * 2ull);
@@ -140,11 +140,11 @@ TEST_P(RDFDataBlockCallback, EmptySourceDataBlockID) {
    }
 }
 
-TEST_P(RDFDataBlockCallback, TTreeDataBlockID) {
+TEST_P(RDFSampleCallback, TTreeSampleID) {
    const std::string prefix = "rdfdatablockcallback_ttreedbnames";
    InputFilesRAII file(1u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
-   auto result = df.Book<>(DataBlockHelper(), {});
+   auto result = df.Book<>(SampleHelper(), {});
    ASSERT_EQ(result->size(), 1u);
    const auto &id = result->at(0);
    EXPECT_TRUE(id.Contains(prefix));
@@ -153,11 +153,11 @@ TEST_P(RDFDataBlockCallback, TTreeDataBlockID) {
    EXPECT_EQ(id.EntryRange(), std::make_pair(0ull, 1ull));
 }
 
-TEST_P(RDFDataBlockCallback, TChainDataBlockID) {
+TEST_P(RDFSampleCallback, TChainSampleID) {
    const std::string prefix = "rdfdatablockcallback_tchain";
    InputFilesRAII file(5u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
-   auto result = df.Book<>(DataBlockHelper(), {});
+   auto result = df.Book<>(SampleHelper(), {});
    ASSERT_EQ(result->size(), 5u);
    std::vector<char> fileNumbers(5);
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges(5);
@@ -183,7 +183,7 @@ TEST_P(RDFDataBlockCallback, TChainDataBlockID) {
 }
 
 /* TODO: data-block IDs for RDataSources are not supported yet
-TEST_P(RDFDataBlockCallback, DataSource) {
+TEST_P(RDFSampleCallback, DataSource) {
    auto df = ROOT::RDF::MakeTrivialDataFrame(NENTRIES);
    auto result = df.Book<>(CounterHelper(), {});
    // RTrivialDS tries to produce NSLOTS tasks
@@ -193,9 +193,9 @@ TEST_P(RDFDataBlockCallback, DataSource) {
 */
 
 // instantiate single-thread tests
-INSTANTIATE_TEST_SUITE_P(Seq, RDFDataBlockCallback, ::testing::Values(false));
+INSTANTIATE_TEST_SUITE_P(Seq, RDFSampleCallback, ::testing::Values(false));
 
 #ifdef R__USE_IMT
    // instantiate multi-thread tests
-   INSTANTIATE_TEST_SUITE_P(MT, RDFDataBlockCallback, ::testing::Values(true));
+   INSTANTIATE_TEST_SUITE_P(MT, RDFSampleCallback, ::testing::Values(true));
 #endif
