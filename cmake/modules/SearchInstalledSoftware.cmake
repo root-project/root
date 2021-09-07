@@ -954,6 +954,11 @@ if(monalisa)
 endif()
 
 #---Check for Xrootd support---------------------------------------------------------
+
+foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+  unset(XROOTD_${suffix} CACHE)
+endforeach()
+
 if(xrootd AND NOT builtin_xrootd)
   message(STATUS "Looking for XROOTD")
   find_package(XROOTD)
