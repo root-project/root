@@ -62,9 +62,9 @@ Double_t RooExponential::evaluate() const{
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Exponential distribution.
-void RooExponential::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooExponential::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooBatchCompute::dispatch->compute(RooBatchCompute::Exponential, output, nEvents, dataMap, {&*x,&*c,&*_norm});
+  dispatch->compute(RooBatchCompute::Exponential, output, nEvents, dataMap, {&*x,&*c,&*_norm});
 }
 
 

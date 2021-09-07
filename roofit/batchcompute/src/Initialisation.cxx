@@ -21,7 +21,7 @@
 
 // First initialisation of the pointers. When implementations of the batch compute library
 // are loaded, they will overwrite the pointers.
-RooBatchCompute::RooBatchComputeInterface *RooBatchCompute::dispatch = nullptr, *RooBatchCompute::dispatchCPU = nullptr,
+RooBatchCompute::RooBatchComputeInterface *RooBatchCompute::dispatchCPU = nullptr,
                                           *RooBatchCompute::dispatchCUDA = nullptr;
 
 namespace {

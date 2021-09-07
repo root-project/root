@@ -137,9 +137,9 @@ RooSpan<double> RooGenericPdf::evaluateSpan(RooBatchCompute::RunContext& inputDa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooGenericPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  formula().computeBatch(output, nEvents, dataMap);
+  formula().computeBatch(dispatch, output, nEvents, dataMap);
   RooSpan<const double> normVal = dataMap.at(&*_norm);
   for (size_t i=0; i<nEvents; i++) output[i]/=normVal[0];
 }

@@ -104,7 +104,6 @@ RooSpan<double> RunContext::makeBatch(const RooAbsReal* owner, std::size_t size)
 
 void RunContext::clear() {
   spans.clear();
-  //~  dispatch->clearCuda(*this);
   rangeName = nullptr;
 }
 

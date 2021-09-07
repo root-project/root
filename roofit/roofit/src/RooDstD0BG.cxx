@@ -81,9 +81,9 @@ Double_t RooDstD0BG::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of D*-D0 mass difference distribution. 
-void RooDstD0BG::computeBatch(double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooDstD0BG::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooBatchCompute::dispatch->compute(RooBatchCompute::DstD0BG, output, nEvents, dataMap, {&*dm,&*dm0,&*C,&*A,&*B,&*_norm});
+  dispatch->compute(RooBatchCompute::DstD0BG, output, nEvents, dataMap, {&*dm,&*dm0,&*C,&*A,&*B,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
