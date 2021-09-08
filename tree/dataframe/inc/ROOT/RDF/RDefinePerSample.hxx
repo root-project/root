@@ -58,7 +58,7 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
+   void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final
    {
       fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()] = fExpression(slot, id);
    }

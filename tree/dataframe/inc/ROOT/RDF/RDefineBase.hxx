@@ -13,6 +13,7 @@
 
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <deque>
 #include <map>
@@ -65,6 +66,8 @@ public:
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   /// Update function to be called once per sample, used if the derived type is a RDefinePerSample
+   virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinaliseSlot(unsigned int slot) = 0;
    /// Return the unique identifier of this RDefineBase.
