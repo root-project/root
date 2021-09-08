@@ -37,6 +37,12 @@ void RJittedDefine::Update(unsigned int slot, Long64_t entry)
    fConcreteDefine->Update(slot, entry);
 }
 
+void RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
+{
+   R__ASSERT(fConcreteDefine != nullptr);
+   fConcreteDefine->Update(slot, id);
+}
+
 void RJittedDefine::FinaliseSlot(unsigned int slot)
 {
    R__ASSERT(fConcreteDefine != nullptr);

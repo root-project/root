@@ -15,6 +15,7 @@
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
 #include <ROOT/RDF/RBookedDefines.hxx>
 #include <ROOT/RDF/RDefine.hxx>
+#include <ROOT/RDF/RDefinePerSample.hxx>
 #include <ROOT/RDF/RFilter.hxx>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RDF/RJittedAction.hxx>
@@ -311,6 +312,10 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
                                                    const ColumnNames_t &branches,
                                                    std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
+std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
+                                                      RLoopManager &lm, const RBookedDefines &customCols,
+                                                      std::shared_ptr<RNodeBase> *upcastNodeOnHeap);
+
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
                            const unsigned int nSlots, const RBookedDefines &defines,
@@ -420,7 +425,33 @@ void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    delete wkJittedFilter;
 }
 
+namespace DefineTypes {
+struct RDefineTag {};
+struct RDefinePerSampleTag {};
+}
+
 template <typename F>
+auto MakeDefineNode(DefineTypes::RDefineTag, std::string_view name, std::string_view dummyType, F &&f,
+                    const ColumnNames_t &cols, unsigned int nSlots, RBookedDefines &defines,
+                    const std::map<std::string, std::vector<void *>> &dsValuePtrs, RDataSource *ds)
+{
+   return std::unique_ptr<RDefineBase>(new RDefine<std::decay_t<F>, CustomColExtraArgs::None>(
+      name, dummyType, std::forward<F>(f), cols, nSlots, defines, dsValuePtrs, ds));
+}
+
+template <typename F>
+auto MakeDefineNode(DefineTypes::RDefinePerSampleTag, std::string_view name, std::string_view dummyType, F &&f,
+                    const ColumnNames_t &, unsigned int nSlots, RBookedDefines &,
+                    const std::map<std::string, std::vector<void *>> &, RDataSource *)
+{
+   return std::unique_ptr<RDefineBase>(
+      new RDefinePerSample<std::decay_t<F>>(name, dummyType, std::forward<F>(f), nSlots));
+}
+
+// Build a RDefine or a RDefinePerSample object and attach it to an existing RJittedDefine
+// This function is meant to be called by jitted code right before starting the event loop.
+// If colsPtr is null, build a RDefinePerSample (it has no input columns), otherwise a RDefine.
+template <typename RDefineTypeTag, typename F>
 void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::string_view name, RLoopManager *lm,
                      std::weak_ptr<RJittedDefine> *wkJittedDefine,
                      RBookedDefines *defines, std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
@@ -442,9 +473,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    auto jittedDefine = wkJittedDefine->lock();
 
    using Callable_t = std::decay_t<F>;
-   using NewCol_t = RDefine<Callable_t, CustomColExtraArgs::None>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
-   constexpr auto nColumns = ColTypes_t::list_size;
 
    auto ds = lm->GetDataSource();
    if (ds != nullptr)
@@ -454,8 +483,9 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    // to help devs debugging
    const auto dummyType = "jittedCol_t";
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
-   jittedDefine->SetDefine(std::unique_ptr<RDefineBase>(
-      new NewCol_t(name, dummyType, std::forward<F>(f), cols, lm->GetNSlots(), *defines, lm->GetDSValuePtrs(), ds)));
+   std::unique_ptr<RDefineBase> newCol{MakeDefineNode(RDefineTypeTag{}, name, dummyType, std::forward<F>(f), cols,
+                                                      lm->GetNSlots(), *defines, lm->GetDSValuePtrs(), ds)};
+   jittedDefine->SetDefine(std::move(newCol));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
