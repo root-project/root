@@ -845,83 +845,9 @@ WARN_LOGFILE           =
 # directories like /usr/src/myproject. Separate the files or directories with
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
+# The INPUT tag is defined in the file Doxyfile_INPUT created by the script makeinput.sh
 
-INPUT                  = ./mainpage.md \
-                         ../../core/base/ \
-                         ../../core/dictgen/ \
-                         ../../core/cont/ \
-                         ../../core/foundation/ \
-                         ../../core/gui/ \
-                         ../../core/macosx/ \
-                         ../../core/meta/ \
-                         ../../core/metacling/ \
-                         ../../core/clingutils/ \
-                         ../../core/multiproc/ \
-                         ../../core/rint/ \
-                         ../../core/thread/ \
-                         ../../core/unix/ \
-                         ../../core/winnt/ \
-                         ../../core/imt/ \
-                         ../../core/zip/inc/Compression.h \
-                         ../../geom/ \
-                         ../../graf2d/asimage/ \
-                         ../../graf2d/cocoa/ \
-                         ../../graf2d/fitsio/ \
-                         ../../graf2d/gpad/ \
-                         ../../graf2d/gpadv7/ \
-                         ../../graf2d/graf/ \
-                         ../../graf2d/gviz/ \
-                         ../../graf2d/postscript/ \
-                         ../../graf2d/quartz/ \
-                         ../../graf2d/win32gdk/ \
-                         ../../graf2d/x11/ \
-                         ../../graf2d/x11ttf/ \
-                         ../../graf3d/eve/ \
-                         ../../graf3d/eve7/ \
-                         ../../graf3d/g3d/ \
-                         ../../graf3d/gl/ \
-                         ../../graf3d/gviz3d/ \
-                         ../../gui/ \
-                         ../../hist/ \
-                         ../../html/ \
-                         ../../io/doc/TFile \
-                         ../../io/dcache/ \
-                         ../../io/gfal/ \
-                         ../../io/io/ \
-                         ../../io/sql/ \
-                         ../../io/xml/ \
-                         ../../io/xmlparser/ \
-                         ../../main/src/hadd.cxx \
-                         ../../math/ \
-                         ../../montecarlo/ \
-                         ../../net/alien/ \
-                         ../../net/auth/ \
-                         ../../net/davix/ \
-                         ../../net/http/ \
-                         ../../net/monalisa/ \
-                         ../../net/net/ \
-                         ../../net/netx/ \
-                         ../../net/netxng/ \
-                         ../../proof/ \
-                         ../../tmva/ \
-                         ../../roofit/ \
-                         ../../tree/ \
-                         ../../sql/ \
-                         ../../tutorials/ \
-                         ../../bindings/tpython/ \
-                         ../../bindings/pyroot/ \
-                         ../../bindings/r/
-#                         ../../core/clib/
-#                         ../../core/lzma/
-#                         ../../core/newdelete/
-#                         ../../core/textinput/
-#                         ../../graf2d/mathtext/
-#                         ../../graf3d/ftgl/
-#                         ../../graf3d/glew/
-#                         ../../graf3d/x3d/
-#                         ../../net/rootd/
-#                         ../../net/rpdutils/
-
+@INCLUDE  = Doxyfile_INPUT
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
