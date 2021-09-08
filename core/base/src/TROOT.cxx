@@ -522,8 +522,8 @@ namespace Internal {
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
    ///
-   /// \note Use `DisableImplicitMT()` to disable multi-threading. `EnableImplicitMT(1)` still creates a thread-pool
-   /// of size 1, some locks will remain in place as described in `EnableThreadSafety()`.
+   /// \note Use `DisableImplicitMT()` to disable multi-threading (some locks will remain in place as
+   /// described in EnableThreadSafety()). `EnableImplicitMT(1)` creates a thread-pool of size 1.
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
