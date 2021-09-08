@@ -81,6 +81,10 @@ public:
       throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
    }
 
+   virtual std::function<void(unsigned int)> GetDataBlockCallback() R__DEPRECATED(6, 28, "Use GetSampleCallback.")
+   {
+      return {};
+   }
    virtual ROOT::RDF::SampleCallback_t GetSampleCallback() { return {}; }
 };
 
