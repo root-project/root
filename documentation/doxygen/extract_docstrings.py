@@ -64,6 +64,11 @@ for pyz_file_path in filenames:
     module = ast.parse(file_contents)
     ds = ast.get_docstring(module)
     if ds is not None:
+        # The output file will sit in the $(DOXYGEN_PYZDOC_PATH)/pyzdoc folder. The output
+        # file name is build from the input file name which is extracted from pyz_file_path.
+        # The extracted file name has the extension ".py". We want the ouput file name has the
+        # extension ".pyzdoc". Therefore it is enough to concatenate the string "zdoc" at the
+        # end of the input file name to get the desired extension for the output file name.
         pyz_filename_out = pyz_dir_out + '/' + pyz_file_path[pyz_file_path.rfind("_"):] + 'zdoc'
         with open(pyz_filename_out, 'w') as pyz_doc_file:
             pyz_doc_file.write(ds)
