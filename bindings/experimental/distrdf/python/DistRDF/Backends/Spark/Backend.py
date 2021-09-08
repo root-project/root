@@ -199,8 +199,7 @@ class SparkBackend(Base.BaseBackend):
 
         # Create `numthreads` threads that will each submit a Spark job
         for _ in range(numthreads):
-            worker = threading.Thread(
-                target=trigger_loop, args=(q,), daemon=True)
+            worker = threading.Thread(group=None, target=trigger_loop, name=None, args=(q, ), kwargs=None)
             worker.start()
 
         # Start the execution and wait for all computations to finish
