@@ -214,6 +214,81 @@ std::unique_ptr<ROperator> make_ROperator_Conv(const onnx::NodeProto& nodeproto,
    return op;
 }
 
+std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type) {
+
+   ETensorType input_type;
+
+   auto input_name = nodeproto.input(0);
+   auto it = tensor_type.find(input_name);
+   if (it != tensor_type.end()) {
+      input_type = it->second;
+   } else {
+      throw
+         std::runtime_error("TMVA::SOFIE ONNX Parser BatchNorm op has input tensor " + input_name + " but its type is not yet registered");
+   }
+
+   std::unique_ptr<ROperator> op;
+   float fepsilon = 1e-05;
+	float fmomentum = 0.9;
+	std::size_t ftraining_mode = 0;
+
+   switch(input_type) {
+      case ETensorType::FLOAT:
+         if (nodeproto.input_size() == 5) {
+            op.reset(new ROperator_BatchNormalization<float>(fepsilon, fmomentum, ftraining_mode, nodeproto.input(0), nodeproto.input(1), nodeproto.input(2), nodeproto.input(3), nodeproto.input(4), nodeproto.output(0)));
+         }
+         break;
+      default:
+         throw
+            std::runtime_error("TMVA::SOFIE - Unsupported - Operator BatchNorm does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = (op->TypeInference({input_type, input_type, input_type, input_type, input_type}))[0];
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()) {
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
+
+   return std::move(op);
+}
+
+std::unique_ptr<ROperator> make_ROperator_InstanceNormalization(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type) {
+
+   ETensorType input_type;
+
+   auto input_name = nodeproto.input(0);
+   auto it = tensor_type.find(input_name);
+   if (it != tensor_type.end()) {
+      input_type = it->second;
+   } else {
+      throw
+         std::runtime_error("TMVA::SOFIE ONNX Parser IN op has input tensor " + input_name + " but its type is not yet registered");
+   }
+
+   std::unique_ptr<ROperator> op;
+   float fepsilon = 1e-05;
+
+   switch(input_type) {
+      case ETensorType::FLOAT:
+         if (nodeproto.input_size() == 3) {
+            op.reset(new ROperator_InstanceNormalization<float>(fepsilon, nodeproto.input(0), nodeproto.input(1), nodeproto.input(2), nodeproto.output(0)));
+         } 
+         break;
+      default:
+         throw
+            std::runtime_error("TMVA::SOFIE - Unsupported - Operator IN does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = (op->TypeInference({input_type, input_type, input_type}))[0];
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()) {
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
+
+   return std::move(op);
+}
+
+
 } //INTERNAL
 
 
@@ -347,6 +422,8 @@ RModel RModelParser_ONNX::Parse(std::string filename){
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
       } else if (op_type == "Conv") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
+      } else if (op_type == "BatchNormalization") {
+         rmodel.AddBlasRoutines({"Copy", "Axpy"});
       }
    }
 

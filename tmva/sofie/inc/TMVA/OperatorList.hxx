@@ -2,3 +2,5 @@
 #include "TMVA/ROperator_Gemm.hxx"
 #include "TMVA/ROperator_Relu.hxx"
 #include "TMVA/ROperator_Conv.hxx"
+#include "ROperator_BatchNormalization.hxx"
+#include "ROperator_InstanceNormalization.hxx"

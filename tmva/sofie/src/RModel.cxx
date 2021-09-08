@@ -190,6 +190,8 @@ namespace SOFIE{
             } else if (routine == "Axpy") {
                fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
                        "\t                         const int * incx, float * y, const int * incy);\n");
+            } else if (routine == "Copy") {
+               fGC += ("\textern \"C\" void scopy_(const int *n, const float* x, const int *incx, float* y, const int* incy);\n");
             }
          }
          fGC += ("}//BLAS\n");
