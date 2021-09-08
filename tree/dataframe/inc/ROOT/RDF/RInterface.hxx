@@ -480,7 +480,8 @@ public:
    }
 
    // TODO we could SFINAE on F's signature to provide friendlier compilation errors in case of signature mismatch
-   template <typename F>
+   // FIXME add docs
+   template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, F expression)
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
@@ -488,7 +489,6 @@ public:
                                         fLoopManager->GetBranchNames(),
                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
-      using RetType_t = typename TTraits::CallableTraits<F>::ret_type;
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType_t));
       if (retTypeName.empty()) {
          // The type is not known to the interpreter.
@@ -508,6 +508,31 @@ public:
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(std::move(newColumn), name);
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, newCols, fDataSource);
+      return newInterface;
+   }
+
+   // FIXME add docs
+   RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, std::string_view expression)
+   {
+      RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
+      // these checks must be done before jitting lest we throw exceptions in jitted code
+      RDFInternal::CheckForRedefinition("DefinePerSample", name, fDefines.GetNames(), fLoopManager->GetAliasMap(),
+                                        fLoopManager->GetBranchNames(),
+                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
+      auto jittedDefine =
+         RDFInternal::BookDefinePerSampleJit(name, expression, *fLoopManager, fDefines, upcastNodeOnHeap);
+      auto updateDefinePerSample = [jittedDefine](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
+         jittedDefine->Update(slot, id);
+      };
+      fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
+
+      RDFInternal::RBookedDefines newCols(fDefines);
+      newCols.AddColumn(jittedDefine, name);
+
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+
       return newInterface;
    }
 

@@ -68,6 +68,24 @@ TEST_P(DefinePerSample, NoJitting)
    EXPECT_EQ(counter, expected);
 }
 
+int AtomicIntValueFromInterpreter(std::string_view varName)
+{
+   return int(*reinterpret_cast<std::atomic_int *>(gInterpreter->Calc(varName.data())));
+}
+
+TEST(DefinePerSample, Jitted)
+{
+   gInterpreter->Declare("std::atomic_int rdftestcounter1{0};");
+   auto df = ROOT::RDataFrame(3).DefinePerSample("x", "rdftestcounter1++; return 42;");
+   auto xmin = df.Min<int>("x");
+   auto xmax = df.Max<int>("x");
+   EXPECT_EQ(*xmin, 42);
+   EXPECT_EQ(*xmax, 42);
+   // RDF with empty sources tries to produce 2 tasks per slot when MT is enabled
+   const auto expected = ROOT::IsImplicitMTEnabled() ? std::min(3u, df.GetNSlots() * 2u) : 1u;
+   EXPECT_EQ(AtomicIntValueFromInterpreter("rdftestcounter1"), expected);
+}
+
 TEST_P(DefinePerSample, Tree)
 {
    const std::string prefix = "rdfdatablockcallback_ttree";
@@ -134,22 +152,7 @@ TEST(DefinePerSampleMore, GetDefinedColumnNames)
    EXPECT_EQ(df.GetDefinedColumnNames(), std::vector<std::string>{"x"});
 }
 
-// TODO
-/*
-
-// Not supported yet
-TEST(DefinePerSample, Jitting)
-{
-   auto df = ROOT::RDataFrame(1).Define("x", [] { return 1; }).Define("y", "1");
-   // Jitted redefine for a non-jitted Define
-   auto rx = df.DefinePerSample("x", "42").Max<int>("x");
-   // Jitted redefine for a jitted Define
-   auto ry = df.DefinePerSample("y", "42").Max<int>("y");
-
-   EXPECT_EQ(*rx, 42);
-   EXPECT_EQ(*ry, 42);
-}
-
+/* TODO
 // Not supported yet
 TEST(DefinePerSample, DataSource)
 {
@@ -157,7 +160,6 @@ TEST(DefinePerSample, DataSource)
    auto r = df.DefinePerSample("col0", [] { return 42; }).Max<int>("col0");
    EXPECT_EQ(*r, 42);
 }
-
 */
 
 // instantiate single-thread tests
