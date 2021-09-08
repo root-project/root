@@ -17,11 +17,11 @@ TEST(TRint, UnrecognizedOptions)
    //   only unrecognized ones, so we can't create an std::vector and pass its
    //   data to TRint directly.
    int argc{4};
-   char **argv = new char *[argc];
-   argv[0] = const_cast<char *>("-q");
-   argv[1] = const_cast<char *>("-z");
-   argv[2] = const_cast<char *>("--nonexistingoption");
-   argv[3] = const_cast<char *>("-b");
+   char e1[]{"-q"};
+   char e2[]{"-z"};
+   char e3[]{"--nonexistingoption"};
+   char e4[]{"-b"};
+   char *argv[]{e1, e2, e3, e4};
 
    CaptureStderr();
    // Unrecognized options will be printed to stderr
@@ -33,11 +33,4 @@ TEST(TRint, UnrecognizedOptions)
                               "Try 'root --help' for more information.\n"};
 
    EXPECT_EQ(trinterr, expected);
-
-   // Properly delete the array
-   for (int i = 0; i < argc; i++) {
-      delete[] argv[i];
-   }
-   delete[] argv;
-   argv = nullptr;
 }
