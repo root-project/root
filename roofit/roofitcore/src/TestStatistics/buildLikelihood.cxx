@@ -19,6 +19,7 @@
 #include <RooSimultaneous.h>
 #include <TestStatistics/RooBinnedL.h>
 #include <TestStatistics/RooUnbinnedL.h>
+#include <RunContext.h> // necessary to complete RooUnbinnedL
 #include <TestStatistics/RooSubsidiaryL.h>
 #include <TestStatistics/RooSumL.h>
 #include <RooAbsPdf.h>
