@@ -4030,10 +4030,10 @@ void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
 	      "Alternatively unlock the default units at own risk.");
    }
    else if ( new_value == kG4Units )   {
-      ::Warning("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
+      ::Info("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
    }
    else if ( new_value == kRootUnits )   {
-      ::Warning("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
+      ::Info("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
    }
    fgDefaultUnits = new_value;
 }
