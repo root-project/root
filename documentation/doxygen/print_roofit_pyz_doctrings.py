@@ -114,9 +114,8 @@ def print_roofit_pythonization_page():
     from ROOT.pythonization import _roofit
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
-    print("\defgroup RoofitPythonizations")
+    print("\defgroup RoofitPythonizations Roofit pythonizations")
     print("\ingroup Roofitmain")
-    print("# RooFit pythonizations")
     for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None:
             continue
