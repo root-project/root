@@ -176,9 +176,11 @@ The header consists of the following elements:
  - Feature flag
  - String: name of the ntuple
  - String: description of the ntuple
+ - String: identifier of the library or program that writes the data
  - List frame: list of field record frames
  - List frame: list of column record frames
  - List frame: list of alias column record frames
+ - List frame: list of extra type information
 
 #### Field Description
 
@@ -310,6 +312,36 @@ The second 32bit integer references a field that needs to have the "alias field"
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns.
 In the footer and page list envelopes, only physical column IDs must be referenced.
+
+
+#### Extra type information
+
+Certain field types may come with additional information required, e.g., for schema evolution.
+The type information record frame has the following contents
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          Type Version                         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++                       Content Identifier                      +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+followed by
+
+  - String: type name
+  - String: content
+
+The combination of type version, type name, and content identifier should be unique in the list.
+However, not every type needs to provide additional type information.
+
+The following kinds of content are supported:
+
+| Content identifier  | Meaning of content                                  |
+|---------------------|-----------------------------------------------------|
+| 0x00                | C++ definition of the type                          |
 
 
 ### Footer Envelope

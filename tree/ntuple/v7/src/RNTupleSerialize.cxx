@@ -19,6 +19,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 
+#include <RVersion.h>
 #include <RZip.h> // for R__crc32
 
 #include <cstring> // for memcpy
@@ -927,6 +928,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
+   pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
 
    auto frame = pos;
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
@@ -940,6 +942,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // We don't use alias columns yet
+   frame = pos;
+   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+
+   // We don't use extra type information yet
    frame = pos;
    pos += SerializeListFramePreamble(0, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
@@ -1077,11 +1084,16 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
 
    std::string name;
    std::string description;
+   std::string writer;
    result = DeserializeString(bytes, fnBufSize(), name);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
    result = DeserializeString(bytes, fnBufSize(), description);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = DeserializeString(bytes, fnBufSize(), writer);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
@@ -1159,6 +1171,15 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    bytes += result.Unwrap();
    if (nAliasColumns > 0)
       R__LOG_WARNING(NTupleLog()) << "Alias columns are still unsupported! ";
+
+   std::uint32_t nTypeInfo;
+   frame = bytes;
+   result = DeserializeFrame(bytes, fnBufSize(), frameSize, nTypeInfo);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   if (nTypeInfo > 0)
+      R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
 
    return RResult<void>::Success();
 }
