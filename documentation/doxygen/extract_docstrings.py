@@ -64,8 +64,7 @@ for pyz_file_path in filenames:
     module = ast.parse(file_contents)
     ds = ast.get_docstring(module)
     if ds is not None:
-        pyz_filename = pyz_file_path
-        pyz_filename = pyz_dir_out + '/' + pyz_filename[pyz_filename.rfind("_") : : ] + 'zdoc'
-        with open(pyz_filename, 'w') as pyz_doc_file:
+        pyz_filename_out = pyz_dir_out + '/' + pyz_file_path[pyz_file_path.rfind("_"):] + 'zdoc'
+        with open(pyz_filename_out, 'w') as pyz_doc_file:
             pyz_doc_file.write(ds)
 
