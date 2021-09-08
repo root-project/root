@@ -168,11 +168,12 @@ class CppWorkflow(object):
         '''
 
         # Operations that need special treatment
-        if operation.name == 'Snapshot':
-            self._handle_snapshot(operation, range_id)
-        elif operation.name == 'AsNumpy':
+        if operation.name == 'AsNumpy':
             self._handle_asnumpy(operation, parent_id)
-            return None
+            return None # nothing else to do
+
+        if operation.name == 'Snapshot':
+            self._handle_snapshot(operation, range_id) # this modifies operation.args
 
         # Add operation node to the graph
         self.graph_nodes += '\n  '
