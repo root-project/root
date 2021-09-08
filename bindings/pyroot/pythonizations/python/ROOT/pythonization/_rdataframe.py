@@ -166,3 +166,29 @@ def pythonize_rdataframe(klass, name):
             setattr(klass, method_name, partialmethod(_histo_profile, fixed_args))
 
     return True
+
+
+def dispatch_rungraphs(actions):
+    """
+    Decides whether to apply the local ROOT::RDF::RunGraphs or the distributed
+    DistRDF.RunGraphs depending on the type of the parameter passed.
+    """
+
+    if not actions:
+        raise RuntimeError("RunGraphs must be called with at least one action.")
+
+    import ROOT
+    rdfns = ROOT.RDF
+    distrdf = rdfns.Experimental.Distributed
+
+    try:
+        # If all actions can be converted to RResultHandle they are RResultPtr
+        # thus we should dispatch to the C++ function.
+        # Note: we can't check `if isinstance (actions[0], RResultPtr)` because
+        # it is a non-instantiated template type thus this is the next best thing
+        handles = [rdfns.RResultHandle(action) for action in actions]
+        # The cpp function was renamed in the facade
+        return rdfns.RunGraphs_cpp(handles)
+    except TypeError:
+        return distrdf.RunGraphs(actions)
+

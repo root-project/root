@@ -332,6 +332,16 @@ class ROOTFacade(types.ModuleType):
 
             # Inject Experimental.Distributed package into namespace RDF
             ns.Experimental = _create_rdf_experimental_distributed_module(ns)
+
+            # Add a dispatch function for RunGraphs to distinguish between
+            # local and distributed RDF cases.
+            from .pythonization._rdataframe import dispatch_rungraphs
+
+            api_name = "RunGraphs"
+            cpp_name = api_name + "_cpp"
+
+            setattr(ns, cpp_name, getattr(ns, api_name))
+            setattr(ns, api_name, dispatch_rungraphs)
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF
