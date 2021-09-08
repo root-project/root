@@ -443,7 +443,7 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
 template <typename T>
 std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr)
 {
-
+   rptr.ThrowIfNull();
    if (!rptr.fActionPtr->HasRun())
       rptr.TriggerRun(); // Prevents from using `const` specifier in parameter
    return std::unique_ptr<RMergeableValue<T>>{
