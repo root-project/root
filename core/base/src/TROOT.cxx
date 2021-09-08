@@ -521,6 +521,9 @@ namespace Internal {
    /// a hint for ROOT: it will try to satisfy the request if the execution
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
+   ///
+   /// \note `EnableImplicitMT(1)` creates a thread-pool of size 1; in order to disable multi-threading,
+   ///       use DisableImplicitMT() (some locks will remain in place as described in EnableThreadSafety()).
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
