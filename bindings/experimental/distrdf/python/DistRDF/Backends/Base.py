@@ -428,3 +428,14 @@ class BaseBackend(ABC):
         Distributed backends have to take care of creating an RDataFrame object
         that can run distributedly.
         """
+
+    @staticmethod
+    def RunGraphs(proxies, concurrentruns=None):
+        """
+        By default, a distributed backend does not implement a way to submit
+        multiple jobs from the client at once. This raises a
+        `NotImplementedError` to allow us to default to submitting the jobs
+        sequentially.
+        """
+        raise NotImplementedError
+
