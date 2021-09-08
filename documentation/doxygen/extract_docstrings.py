@@ -26,12 +26,12 @@ try:
 except ImportError:
     from scandir import scandir
 
-if len(sys.argv) < 2:
-    print("Please provide the directory where documented .py files are.")
+if len(sys.argv) < 3:
+    print("Please provide the directory where documented .py files are, and the output folder for the .pyzdoc files.")
     exit(1)
 
 pyz_dir = sys.argv[1]
-
+pyz_dir_out = sys.argv[2]
 
 def run_fast_scandir(dir, ext):    # dir: str, ext: list
     subfolders, files = [], []
@@ -64,6 +64,8 @@ for pyz_file_path in filenames:
     module = ast.parse(file_contents)
     ds = ast.get_docstring(module)
     if ds is not None:
-        with open(pyz_file_path + 'zdoc', 'w') as pyz_doc_file:
+        pyz_filename = pyz_file_path
+        pyz_filename = pyz_dir_out + '/' + pyz_filename[pyz_filename.rfind("_") : : ] + 'zdoc'
+        with open(pyz_filename, 'w') as pyz_doc_file:
             pyz_doc_file.write(ds)
 
