@@ -179,7 +179,7 @@ class ComputationGraphGenerator(object):
                     to a partial Snapshot output file.
 
             Returns:
-                tuple: the first element is the list of results of the actions
+                tuple[list, list]: the first element is the list of results of the actions
                     in the C++ workflow, the second element is the list of
                     result types corresponding to those actions.
             """
