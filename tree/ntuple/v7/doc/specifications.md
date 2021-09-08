@@ -323,7 +323,9 @@ The type information record frame has the following contents
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                          Type Version                         |
+|                        Type Version From                      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         Type Version To                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +                       Content Identifier                      +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -334,7 +336,7 @@ followed by
   - String: type name
   - String: content
 
-The combination of type version, type name, and content identifier should be unique in the list.
+The combination of type version from/to, type name, and content identifier should be unique in the list.
 However, not every type needs to provide additional type information.
 
 The following kinds of content are supported:
