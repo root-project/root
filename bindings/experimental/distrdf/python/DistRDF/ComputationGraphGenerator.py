@@ -173,8 +173,8 @@ class ComputationGraphGenerator(object):
             This function triggers the event loop via the CppWorkflow class.
 
             Args:
-                rdf_node (ROOT.RDF.RNode): The main RDataFrame node on which
-                    the graph will be executed.
+                rdf_node (ROOT.RDF.RNode): The RDataFrame node that will serve as
+                    the root of the computation graph.
                 range_id (int): Id of the current range. Needed to assign a name
                     to a partial Snapshot output file.
 
