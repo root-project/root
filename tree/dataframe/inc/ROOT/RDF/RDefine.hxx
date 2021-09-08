@@ -142,6 +142,8 @@ public:
       }
    }
 
+   void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) final {}
+
    const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
    /// Clean-up operations to be performed at the end of a task.

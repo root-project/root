@@ -12,6 +12,7 @@
 #define ROOT_RJITTEDCUSTOMCOLUMN
 
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 
@@ -44,6 +45,7 @@ public:
    void *GetValuePtr(unsigned int slot) final;
    const std::type_info &GetTypeId() const final;
    void Update(unsigned int slot, Long64_t entry) final;
+   void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final;
    void FinaliseSlot(unsigned int slot) final;
 };
 

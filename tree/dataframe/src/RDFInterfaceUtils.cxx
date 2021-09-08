@@ -692,8 +692,8 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm.GetNSlots(), lm.GetDSValuePtrs());
 
    std::stringstream defineInvocation;
-   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << lambdaName << ", new const char*["
-                    << parsedExpr.fUsedCols.size() << "]{";
+   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>("
+                    << lambdaName << ", new const char*[" << parsedExpr.fUsedCols.size() << "]{";
    for (const auto &col : parsedExpr.fUsedCols) {
       defineInvocation << "\"" << col << "\", ";
    }
@@ -704,6 +704,38 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    defineInvocation << "}, " << parsedExpr.fUsedCols.size() << ", \"" << name
+                    << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
+                    << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
+                    << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr
+                    << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
+                    << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
+
+   lm.ToJitExec(defineInvocation.str());
+   return jittedDefine;
+}
+
+// Book the jitting of a DefinePerSample call
+std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
+                                                      RLoopManager &lm, const RBookedDefines &customCols,
+                                                      std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+{
+   const auto lambdaName = DeclareLambda(std::string(expression), {"rdfslot_", "rdfsampleinfo_"},
+                                         {"unsigned int", "const ROOT::RDF::RSampleInfo"});
+   const auto retType = RetTypeOfLambda(lambdaName);
+
+   auto definesCopy = new RBookedDefines(customCols);
+   auto definesAddr = PrettyPrintAddr(definesCopy);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm.GetNSlots(), lm.GetDSValuePtrs());
+
+   std::stringstream defineInvocation;
+   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
+                    << lambdaName << ", nullptr, 0, ";
+   // lifetime of pointees:
+   // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
+   // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
+   // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
+   defineInvocation << "\"" << name
                     << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
