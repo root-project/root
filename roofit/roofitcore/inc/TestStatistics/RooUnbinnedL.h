@@ -23,22 +23,29 @@
 class RooAbsPdf;
 class RooAbsData;
 class RooArgSet;
+namespace RooBatchCompute {
+struct RunContext;
+}
 
 namespace RooFit {
 namespace TestStatistics {
 
 class RooUnbinnedL : public RooAbsL {
 public:
-   RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
+   RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended = RooAbsL::Extended::Auto,
+                bool useBatchedEvaluations = false);
    RooUnbinnedL(const RooUnbinnedL &other);
    bool setApplyWeightSquared(bool flag);
 
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
 
+   void setUseBatchedEvaluations(bool flag);
 private:
-   bool apply_weight_squared = false; // Apply weights squared?
-   mutable bool _first = true;        //!
+   bool apply_weight_squared = false;                              // Apply weights squared?
+   mutable bool _first = true;                                     //!
+   bool useBatchedEvaluations_ = false;
+   mutable std::unique_ptr<RooBatchCompute::RunContext> evalData_; //! Struct to store function evaluation workspaces.
 };
 
 } // namespace TestStatistics
