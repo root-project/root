@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <memory>
 #include <thread> // std::thread::hardware_concurrency
 
@@ -53,7 +54,7 @@ struct InputFilesRAII {
 
 TEST_P(DefinePerSample, NoJitting)
 {
-   int counter = 0;
+   std::atomic_int counter{0};
    auto df = ROOT::RDataFrame(NENTRIES).DefinePerSample("x", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &) {
       ++counter;
       return 42;
@@ -73,7 +74,7 @@ TEST_P(DefinePerSample, Tree)
    InputFilesRAII file(1u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
 
-   int counter = 0;
+   std::atomic_int counter{0};
    auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &db) {
       EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
       ++counter;
@@ -93,7 +94,7 @@ TEST_P(DefinePerSample, TChain)
    InputFilesRAII file(5u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
 
-   int counter = 0;
+   std::atomic_int counter{0};
    auto df2 = df.DefinePerSample("y", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &db) {
       EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
       ++counter;
