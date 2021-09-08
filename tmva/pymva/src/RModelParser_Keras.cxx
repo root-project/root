@@ -32,6 +32,7 @@ namespace PyKeras{
 // Referencing Python utility functions present in PyMethodBase
 static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
 static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
+static std::vector<size_t>(& GetDataFromTuple)(PyObject*) = PyMethodBase::GetDataFromTuple;
 
 namespace INTERNAL{
 
@@ -45,6 +46,7 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For insta
 
 // Declaring Internal function for Keras layers which have additional activation attribute
 std::unique_ptr<ROperator> MakeKerasDense(PyObject *fLayer);        // For instantiating ROperator for Keras Dense Layer
+std::unique_ptr<ROperator> MakeKerasConv(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 
 // For mapping Keras layer with the preparatory functions for ROperators
 using KerasMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject *fLayer)>;
@@ -52,7 +54,7 @@ using KerasMethodMapWithActivation = std::unordered_map<std::string, std::unique
 
 const KerasMethodMap mapKerasLayer = {
    {"Activation", &MakeKerasActivation},
-   {"Permute", &MakeKerasPermute},
+   {"Permute"   , &MakeKerasPermute},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -62,11 +64,12 @@ const KerasMethodMap mapKerasLayer = {
 };
 
 const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
-   {"Dense", &MakeKerasDense},
+   {"Dense",  &MakeKerasDense},
+   {"Conv1D", &MakeKerasConv},
+   {"Conv2D", &MakeKerasConv},
+   {"Conv3D", &MakeKerasConv},
    };
 
-// Function which returns values from a Python Tuple object in vector of size_t
-std::vector<size_t> GetDataFromTuple(PyObject *tupleObject);
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Adds equivalent ROperator with respect to Keras model layer
@@ -214,7 +217,7 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 /// For Keras's keras.layers.Activation layer, the activation attribute is
 /// extracted and appropriate function for adding the function is called.
 std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
-      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
       std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
 
       auto findLayer = mapKerasLayer.find(fLayerActivation);
@@ -235,8 +238,8 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
 /// input & output tensors and the deta-type of the layer are extracted.
 std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 {
-      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
 
       std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
@@ -266,9 +269,9 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
 {
       // Extracting required layer information
-      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fInputs     = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs    = PyDict_GetItemString(fLayer,"layerOutput");
 
       std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
       std::string fLayerInputName      = PyStringAsString(PyList_GetItem(fInputs,0));
@@ -300,21 +303,69 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
             throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + fLayerDType);
             }
    return op;
-   }
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Utility function which retrieves and returns the values of the Tuple
-///        object as a vector of size_t
+/// \brief Prepares a ROperator object for Keras Conv Layer
 ///
-/// \param[in] tupleObject Python Tuple object
-/// \return vector of tuple members
-std::vector<size_t> GetDataFromTuple(PyObject* tupleObject){
-   std::vector<size_t>inputShape;
-   for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(tupleObject);++tupleIter){
-               inputShape.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(tupleObject,tupleIter)));
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For Keras's Dense layer, the names of the input tensor, output tensor, and
+/// weight tensors are extracted, along with attributes like dilation_rate,
+/// groups, kernel size, padding, strides. Padding attribute for
+/// is then computed for ROperator depending on Keras' attribute parameter.
+std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
+      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      // Extracting names of weight tensors
+      // The names of Kernel weights and bias weights are found in the list
+      // of weight tensors from fLayer.
+      PyObject* fWeightNames  = PyDict_GetItemString(fLayer,"layerWeight");
+      std::string fKernelName = PyStringAsString(PyList_GetItem(fWeightNames,0));
+      std::string fBiasName   = PyStringAsString(PyList_GetItem(fWeightNames,1));
+
+      // Extracting the Conv Node Attributes
+      PyObject* fDilations       = PyDict_GetItemString(fAttributes,"dilation_rate'");
+      PyObject* fGroup           = PyDict_GetItemString(fAttributes,"groups");
+      PyObject* fKernelShape     = PyDict_GetItemString(fAttributes,"kernel_size");
+      PyObject* fPads            = PyDict_GetItemString(fAttributes,"padding");
+      PyObject* fStrides         = PyDict_GetItemString(fAttributes,"strides");
+
+      std::vector<size_t> fAttrDilations = GetDataFromTuple(fDilations);
+      size_t fAttrGroup = PyLong_AsLong(fGroup);
+      std::vector<size_t> fAttrKernelShape = GetDataFromTuple(fKernelShape);
+      std::vector<size_t> fAttrStrides     = GetDataFromTuple(fStrides);
+      std::string fAttrAutopad;
+      std::vector<size_t>fAttrPads;
+
+      //Seting the layer padding
+      std::string fKerasPadding = PyStringAsString(fPads);
+      if(fKerasPadding == "valid"){
+         fAttrAutopad="VALID";
+      }
+      else{
+         throw std::runtime_error("TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding);
+      }
+
+      std::unique_ptr<ROperator> op;
+
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Conv<float>(fAttrAutopad, fAttrDilations, fAttrGroup, fAttrKernelShape, fAttrPads, fAttrStrides, fLayerInputName, fKernelName, fBiasName, fLayerOutputName));
+         break;
+
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Conv does not yet support input type " + fLayerDType);
          }
-   return inputShape;
+         return op;
 }
 }//INTERNAL
 
@@ -434,6 +485,8 @@ RModel Parse(std::string filename){
       // inference code.
       else if(fLayerType == "Dense")
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
+      else if(fLayerType == "Conv1D" || fLayerType == "Conv2D" || fLayerType == "Conv3D")
+         rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
@@ -521,7 +574,7 @@ RModel Parse(std::string filename){
          }
 
          // Getting the shape vector from the Tuple object
-         std::vector<size_t>fInputShape=INTERNAL::GetDataFromTuple(fPInputShapes);
+         std::vector<size_t>fInputShape=GetDataFromTuple(fPInputShapes);
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }
@@ -548,7 +601,7 @@ RModel Parse(std::string filename){
             throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
          }
 
-         std::vector<size_t>fInputShape=INTERNAL::GetDataFromTuple(fInputShapeTuple);
+         std::vector<size_t>fInputShape=GetDataFromTuple(fInputShapeTuple);
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }

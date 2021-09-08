@@ -355,3 +355,33 @@ const char* PyMethodBase::PyStringAsString(PyObject* string){
    const char* cstring = PyBytes_AsString(encodedString);
    return cstring;
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Utility function which retrieves and returns the values of the Tuple
+///        object as a vector of size_t
+///
+/// \param[in] tupleObject Python Tuple object
+/// \return vector of tuple members
+
+std::vector<size_t> PyMethodBase::GetDataFromTuple(PyObject* tupleObject){
+   std::vector<size_t>tupleVec;
+   for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(tupleObject);++tupleIter){
+               tupleVec.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(tupleObject,tupleIter)));
+         }
+   return tupleVec;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Utility function which retrieves and returns the values of the List
+///        object as a vector of size_t
+///
+/// \param[in] listObject Python List object
+/// \return vector of list members
+
+std::vector<size_t> PyMethodBase::GetDataFromList(PyObject* listObject){
+   std::vector<size_t>listVec;
+   for(Py_ssize_t listIter=0; listIter<PyList_Size(listObject);++listIter){
+               listVec.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(listObject,listIter)));
+         }
+   return listVec;
+}
