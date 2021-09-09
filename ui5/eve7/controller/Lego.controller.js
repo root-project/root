@@ -24,6 +24,9 @@ sap.ui.define([
     return Controller.extend("rootui5.eve7.controller.Lego", {
 
         onInit: function () {
+            // disable narrowing axis range
+            JSROOT.settings.Zooming = false;
+
             let data = this.getView().getViewData();
             if (data) {
                 this.setupManagerAndViewType(data.eveViewerId, data.mgr);
