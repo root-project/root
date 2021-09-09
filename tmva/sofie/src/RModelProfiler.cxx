@@ -126,7 +126,6 @@ namespace SOFIE{
       fGC += "){\n";
 
       // Creating variables for timing
-      fGC += "\tstd::chrono::microseconds elapsed;\n";
       fGC += "\tstd::chrono::steady_clock::time_point tp_start;\n";
       fGC += "\tProfilerResult current_execution;\n";
 
