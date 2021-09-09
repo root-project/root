@@ -331,10 +331,7 @@ The type information record frame has the following contents
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-followed by
-
-  - String: type name
-  - String: content
+followed by a string containing the type name.
 
 The combination of type version from/to, type name, and content identifier should be unique in the list.
 However, not every type needs to provide additional type information.
@@ -343,7 +340,7 @@ The following kinds of content are supported:
 
 | Content identifier  | Meaning of content                                  |
 |---------------------|-----------------------------------------------------|
-| 0x00                | C++ definition of the type                          |
+| 0x01                | String: C++ definition of the type                  |
 
 
 ### Footer Envelope
