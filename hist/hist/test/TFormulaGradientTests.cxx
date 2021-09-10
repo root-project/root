@@ -22,6 +22,9 @@
 #include <TF1.h>
 #include <TFitResult.h>
 
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
 TEST(TFormulaGradientPar, Sanity)
 {
    TFormula f("f", "x*std::sin([0]) - y*std::cos([1])");

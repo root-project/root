@@ -20,6 +20,9 @@
 #include <Math/MinimizerOptions.h>
 #include <TFormula.h>
 
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
 TEST(TFormulaHessianPar, Sanity)
 {
    TFormula f("f", "x*std::sin([0]) - y*std::cos([1])");
