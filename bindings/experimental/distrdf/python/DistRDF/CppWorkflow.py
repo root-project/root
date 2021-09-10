@@ -482,10 +482,9 @@ class CppWorkflow(object):
 
 namespace {namespace} {{
 
-typedef std::tuple<std::vector<ROOT::RDF::RResultHandle>,
-                   std::vector<std::string>,
-                   std::vector<ROOT::RDF::RNode>>
-        CppWorkflowResult;
+using CppWorkflowResult = std::tuple<std::vector<ROOT::RDF::RResultHandle>,
+                          std::vector<std::string>,
+                          std::vector<ROOT::RDF::RNode>>;
 
 CppWorkflowResult {func_name}(ROOT::RDF::RNode &rdf0)
 {{
