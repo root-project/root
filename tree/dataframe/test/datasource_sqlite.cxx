@@ -202,6 +202,7 @@ TEST(RSqliteDS, IMT)
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
+   ROOTUnitTestSupport::CheckDiagsRAII diagRAII{kWarning, "SetNSlots", "Currently the SQlite data source faces performance degradation in multi-threaded mode. Consider turning off IMT."};
    auto rdf = MakeSqliteDataFrame(fileName0, query0);
    EXPECT_EQ(3, *rdf.Sum("fint"));
    EXPECT_NEAR(3.0, *rdf.Sum("freal"), epsilon);
