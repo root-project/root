@@ -788,17 +788,25 @@ TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
 
    DecodeNameCycle(keyname, name, cycle, kMaxLen);
 
-   TIter next(GetListOfKeys());
-   TKey *key;
-   while ((key = (TKey *) next())) {
-      if (!strcmp(name, key->GetName()))
-         if ((cycle == 9999) || (cycle >= key->GetCycle()))  {
+   auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
+   if (!listOfKeys) {
+      Error("FindKeyAny", "Unexpected type of TDirectoryFile::fKeys!");
+      return nullptr;
+   }
+
+   if (const TList *keyList = listOfKeys->GetListForObject(name)) {
+      for (auto key: TRangeDynCast<TKey>(*keyList)) {
+         if (key && !strcmp(key->GetName(), name)
+             && (cycle == 9999 || cycle >= key->GetCycle())) {
             const_cast<TDirectoryFile*>(this)->cd(); // may be we should not make cd ???
             return key;
          }
+      }
    }
+
    //try with subdirectories
-   next.Reset();
+   TIter next(GetListOfKeys());
+   TKey *key;
    while ((key = (TKey *) next())) {
       //if (!strcmp(key->GetClassName(),"TDirectory")) {
       if (strstr(key->GetClassName(),"TDirectory")) {
@@ -832,17 +840,24 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
 
    DecodeNameCycle(aname, name, cycle, kMaxLen);
 
-   TIter next(GetListOfKeys());
-   TKey *key;
-   //may be a key in the current directory
-   while ((key = (TKey *) next())) {
-      if (!strcmp(name, key->GetName())) {
-         if (cycle == 9999)             return key->ReadObj();
-         if (cycle >= key->GetCycle())  return key->ReadObj();
+   auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
+   if (!listOfKeys) {
+      Error("FindObjectAny", "Unexpected type of TDirectoryFile::fKeys!");
+      return nullptr;
+   }
+
+   if (const TList *keyList = listOfKeys->GetListForObject(name)) {
+      for (auto key: TRangeDynCast<TKey>(*keyList)) {
+         if (key && !strcmp(key->GetName(), name)
+             && (cycle == 9999 || cycle >= key->GetCycle())) {
+            return key->ReadObj();
+         }
       }
    }
+
    //try with subdirectories
-   next.Reset();
+   TIter next(GetListOfKeys());
+   TKey *key;
    while ((key = (TKey *) next())) {
       //if (!strcmp(key->GetClassName(),"TDirectory")) {
       if (strstr(key->GetClassName(),"TDirectory")) {
@@ -946,19 +961,23 @@ TObject *TDirectoryFile::Get(const char *namecycle)
 
 //*-*---------------------Case of Key---------------------
 //                        ===========
-   TKey *key;
-   TIter nextkey(GetListOfKeys());
-   while ((key = (TKey *) nextkey())) {
-      if (strcmp(namobj,key->GetName()) == 0) {
-         if ((cycle == 9999) || (cycle == key->GetCycle())) {
+   auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
+   if (!listOfKeys) {
+      Error("Get", "Unexpected type of TDirectoryFile::fKeys!");
+      return nullptr;
+   }
+
+   if (const TList *keyList = listOfKeys->GetListForObject(namobj)) {
+      for (auto key: TRangeDynCast<TKey>(*keyList)) {
+         if (key && !strcmp(key->GetName(), namobj)
+             && (cycle == 9999 || cycle == key->GetCycle())) {
             TDirectory::TContext ctxt(this);
-            idcur = key->ReadObj();
-            break;
+            return key->ReadObj();
          }
       }
    }
 
-   return idcur;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1106,14 +1125,18 @@ TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 {
    if (!fKeys) return nullptr;
 
-   // TIter::TIter() already checks for null pointers
-   TIter next( ((THashList *)(GetListOfKeys()))->GetListForObject(name) );
+   auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
+   if (!listOfKeys) {
+      Error("GetKey", "Unexpected type of TDirectoryFile::fKeys!");
+      return nullptr;
+   }
 
-   TKey *key;
-   while (( key = (TKey *)next() )) {
-      if (!strcmp(name, key->GetName())) {
-         if ((cycle == 9999) || (cycle >= key->GetCycle()))
+   if (const TList *keyList = listOfKeys->GetListForObject(name)) {
+      for (auto key: TRangeDynCast<TKey>(*keyList)) {
+         if (key && !strcmp(key->GetName(), name)
+             && (cycle == 9999 || cycle >= key->GetCycle())) {
             return key;
+         }
       }
    }
 
@@ -1426,15 +1449,22 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 
 Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
 {
-   if (!fFile) { Error("Read","No file open"); return 0; }
-   TKey *key = nullptr;
-   TIter nextkey(GetListOfKeys());
-   while ((key = (TKey *) nextkey())) {
-      if (strcmp(keyname,key->GetName()) == 0) {
-         return key->Read(obj);
+   if (!fFile) { Error("ReadTObject","No file open"); return 0; }
+   auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
+   if (!listOfKeys) {
+      Error("ReadTObject", "Unexpected type of TDirectoryFile::fKeys!");
+      return 0;
+   }
+
+   if (const TList *keyList = listOfKeys->GetListForObject(keyname)) {
+      for (auto key: TRangeDynCast<TKey>(*keyList)) {
+         if (key && !strcmp(key->GetName(), keyname) ) {
+            return key->Read(obj);
+         }
       }
    }
-   Error("Read","Key not found");
+
+   Error("ReadTObject","Key not found");
    return 0;
 }
 
