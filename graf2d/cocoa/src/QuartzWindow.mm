@@ -1443,6 +1443,12 @@ void print_mask_info(ULong_t mask)
    assert(!(newSize.height < 0) && "-setDrawableSize:, height is negative");
 
    NSRect frame = self.frame;
+   // Some sanity check (rather random and inconsistent, based on the recent M1 crash/assert):
+   if (frame.origin.x < -100000. || frame.origin.x > 100000.) {
+      // Hope nobody has screens like this!
+      NSLog(@"Attempting to set a frame with X: %g", frame.origin.x);
+      frame.origin.x = 0.; // Otherwise, AppKit seems to use uint(-1) to initialise frames ... sometimes?
+   }
    //dY is potentially a titlebar height.
    const CGFloat dY = fContentView ? frame.size.height - fContentView.frame.size.height : 0.;
    //Adjust the frame.
