@@ -69,7 +69,7 @@ structures.
 In the following, the details about the creation of different types of branches are given.
 
 \anchor addcolumnoffundamentaltypes
-## Add a column (`branch`) of fundamental types and arrays thereof
+## Add a column (branch) of fundamental types and arrays thereof
 This strategy works also for lists of variables, e.g. to describe simple structures.
 It is strongly recommended to persistify those as objects rather than lists of leaves.
 
