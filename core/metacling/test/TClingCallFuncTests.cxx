@@ -282,8 +282,8 @@ TEST(TClingCallFunc, FunctionWrapperNodiscard)
    {
       using ::testing::Not;
       using ::testing::HasSubstr;
-      FilterDiagsRAII RAII([] (int /*level*/, Bool_t /*abort*/,
-                               const char * /*location*/, const char *msg) {
+      ROOTUnitTestSupport::FilterDiagsRAII RAII([] (int /*level*/, Bool_t /*abort*/,
+                                                    const char * /*location*/, const char *msg) {
          EXPECT_THAT(msg, Not(HasSubstr("-Wunused-result")));
       });
       ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));

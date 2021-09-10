@@ -1754,13 +1754,7 @@ function(ROOT_ADD_GTEST test_suite)
     "WILLFAIL"
     "REPEATS;FAILREGEX"
     "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
-
-  # ROOTUnitTestSupport
-  if(NOT TARGET ROOTUnitTestSupport)
-    add_library(ROOTUnitTestSupport INTERFACE)
-    target_include_directories(ROOTUnitTestSupport INTERFACE ${PROJECT_SOURCE_DIR}/test/unit_testing_support)
-  endif()
-
+    
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
   # The test suites should choose this in their specific CMakeLists.txt file.

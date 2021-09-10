@@ -600,6 +600,10 @@ endif()
 configure_file(${PROJECT_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${PROJECT_BINARY_DIR} COPYONLY)
 if(testing)
   include(RootCTest)
+
+  # ROOTUnitTestSupport for google tests:
+  add_subdirectory(test/unit_testing_support)
+
   if(roottest)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
