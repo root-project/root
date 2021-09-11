@@ -7105,7 +7105,7 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
    std::set<string> DedupSet;
    std::string Result = lib + ' ';
    for (const auto &S : BinObjFile->symbols()) {
-      uint32_t Flags = S.getFlags();
+      uint32_t Flags = llvm::cantFail(S.getFlags());
       if (Flags & llvm::object::SymbolRef::SF_Undefined) {
          llvm::Expected<StringRef> SymNameErr = S.getName();
          if (!SymNameErr) {
