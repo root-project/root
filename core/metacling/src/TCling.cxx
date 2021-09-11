@@ -1944,10 +1944,9 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
       // Code copied from HS.lookupModuleMapFile.
       llvm::SmallString<256> ModuleMapFileName(DE->getName());
       llvm::sys::path::append(ModuleMapFileName, ModuleMapName);
-      const FileEntry *FE = FM.getFile(ModuleMapFileName, /*openFile*/ false,
-                                       /*CacheFailure*/ false);
-      if (FE) {
-         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
+      if (auto FE = FM.getOptionalFileRef(ModuleMapFileName, /*openFile*/ false,
+                                          /*CacheFailure*/ false)) {
+         if (!HS.loadModuleMapFile(*FE, /*IsSystem*/ false))
             return true;
          Error("RegisterPrebuiltModulePath", "Could not load modulemap in %s", ModuleMapFileName.c_str());
       }
@@ -3203,27 +3202,27 @@ Bool_t TCling::IsLoaded(const char* filename) const
    const clang::DirectoryLookup *CurDir = 0;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
-   const clang::FileEntry *FE = HS.LookupFile(file_name.c_str(),
-                                              clang::SourceLocation(),
-                                              /*isAngled*/ false,
-                                              /*FromDir*/ 0, CurDir,
-                                              clang::ArrayRef<std::pair<const clang::FileEntry *,
-                                                                        const clang::DirectoryEntry *>>(),
-                                              /*SearchPath*/ 0,
-                                              /*RelativePath*/ 0,
-                                              /*RequestingModule*/ 0,
-                                              /*SuggestedModule*/ 0,
-                                              /*IsMapped*/ 0,
-                                              /*IsFrameworkFound*/ nullptr,
-                                              /*SkipCache*/ false,
-                                              /*BuildSystemModule*/ false,
-                                              /*OpenFile*/ false,
-                                              /*CacheFail*/ false);
+   auto FE = HS.LookupFile(file_name.c_str(),
+                           clang::SourceLocation(),
+                           /*isAngled*/ false,
+                           /*FromDir*/ 0, CurDir,
+                           clang::ArrayRef<std::pair<const clang::FileEntry *,
+                           const clang::DirectoryEntry *>>(),
+                           /*SearchPath*/ 0,
+                           /*RelativePath*/ 0,
+                           /*RequestingModule*/ 0,
+                           /*SuggestedModule*/ 0,
+                           /*IsMapped*/ 0,
+                           /*IsFrameworkFound*/ nullptr,
+                           /*SkipCache*/ false,
+                           /*BuildSystemModule*/ false,
+                           /*OpenFile*/ false,
+                           /*CacheFail*/ false);
    if (FE && FE->isValid()) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
       // this works only with header (and source) files...
-      clang::FileID FID = SM.translateFile(FE);
+      clang::FileID FID = SM.translateFile(*FE);
       if (!FID.isInvalid() && FID.getHashValue() == 0)
          return kFALSE;
       else {
