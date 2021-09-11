@@ -3347,7 +3347,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       // use HeaderSearch on the basename, to make sure it takes a header from
       // the include path (e.g. not from /usr/include/bits/)
       assert(headerFE && "Couldn't find FileEntry from FID!");
-      const FileEntry *FEhdr
+      auto FEhdr
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
@@ -3392,7 +3392,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    // points to the same file as the long version. If such a short version
    // exists it will be returned. If it doesn't the long version is returned.
    bool isAbsolute = llvm::sys::path::is_absolute(headerFileName);
-   const FileEntry* FELong = 0;
+   llvm::Optional<clang::FileEntryRef> FELong;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
            IDir = llvm::sys::path::begin(headerFileName),
