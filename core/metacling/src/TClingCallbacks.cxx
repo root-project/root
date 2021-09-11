@@ -336,7 +336,7 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
             llvm::errs() << "Loading '" << ModuleName << "' on demand"
                          << " for '" << Name.getAsString() << "'\n";
 
-         m_Interpreter->loadModule(ModuleName);
+         m_Interpreter->loadModule(ModuleName.str());
          fIsLoadingModule = false;
          m_LoadedModuleFiles[FileName] = Name;
          if (loadFirstMatchOnly)
