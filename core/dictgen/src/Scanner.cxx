@@ -742,7 +742,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          auto previouslyMatchingRule = (const ClassSelectionRule*)declSelRuleMapIt->second;
          int previouslineno = previouslyMatchingRule->GetLineNumber();
 
-         std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
+         std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName()).str();
          auto lineno = selected->GetLineNumber();
          auto rulesAreCompatible = SelectionRulesUtils::areEqual<ClassSelectionRule>(selected, previouslyMatchingRule, true /*moduloNameOrPattern*/);
          if (!rulesAreCompatible){

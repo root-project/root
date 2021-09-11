@@ -586,7 +586,7 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
                                  nullptr /*SearchPath*/, nullptr /*RelativePath*/,
                                  nullptr /*RequestingModule*/, nullptr/*SuggestedModule*/,
                                  nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/)) {
-      hdrFullPath = hdrFileEntry->getName();
+      hdrFullPath = hdrFileEntry->getName().str();
       return true;
    }
 

@@ -1622,7 +1622,7 @@ int ROOT::TMetaUtils::extractAttrString(clang::Attr* attribute, std::string& att
       //TMetaUtils::Error(0,"Could not cast Attribute to AnnotatedAttribute\n");
       return 1;
    }
-   attrString = annAttr->getAnnotation();
+   attrString = annAttr->getAnnotation().str();
    return 0;
 }
 
@@ -1669,7 +1669,7 @@ bool ROOT::TMetaUtils::ExtractAttrPropertyFromName(const clang::Decl& decl,
       std::pair<llvm::StringRef,llvm::StringRef> split = attribute.split(propNames::separator.c_str());
       if (split.first != propName.c_str()) continue;
       else {
-         propValue = split.second;
+         propValue = split.second.str();
          return true;
       }
    }
@@ -3441,7 +3441,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                0/*Searchpath*/, 0/*RelPath*/,
                                0/*SuggestedModule*/, 0/*RequestingModule*/,
                                0/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
-         return trailingPart;
+         return trailingPart.str();
       }
    }
 

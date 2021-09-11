@@ -2292,7 +2292,7 @@ void TCling::RegisterModule(const char* modulename,
          ModuleMapName = ModuleName + ".modulemap";
       else
          ModuleMapName = "module.modulemap";
-      RegisterPrebuiltModulePath(llvm::sys::path::parent_path(dyLibName),
+      RegisterPrebuiltModulePath(llvm::sys::path::parent_path(dyLibName).data(),
                                  ModuleMapName);
 
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
@@ -3169,7 +3169,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator
            iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
       if ((*iF) == file_name.c_str()) return kTRUE; // exact match
-      fileMap.insert(*iF);
+      fileMap.insert(iF->str());
    }
 
    if (fileMap.empty()) return kFALSE;
@@ -3234,7 +3234,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
             return kTRUE;
       }
       // ...then check shared library again, but with full path now
-      sFilename = FE->getName();
+      sFilename = FE->getName().str();
       if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
           && fileMap.count(sFilename.Data())) {
          return kTRUE;
@@ -7092,7 +7092,7 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
       }
    } else {
       assert(llvm::sys::fs::exists(lib) && "Must exist!");
-      lib = llvm::sys::path::filename(lib);
+      lib = llvm::sys::path::filename(lib).str();
    }
 
    auto ObjF = llvm::object::ObjectFile::createObjectFile(LibFullPath.Data());
@@ -7141,12 +7141,12 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          // MacOS symbols sometimes have an extra "_", see
          // https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dlsym.3.html
          if (skipLoadedLibs && SymName[0] == '_'
-             && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.drop_front()))
+             && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.drop_front().str()))
             continue;
 #endif
 
          // If we can find the address of the symbol, we have loaded it. Skip.
-         if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName))
+         if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.str()))
             continue;
 
          R__LOCKGUARD(gInterpreterMutex);

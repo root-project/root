@@ -2003,7 +2003,7 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
 
    compilerInstance->getFrontendOpts().RelocatablePCH = true;
 
-   writer.WriteAST(compilerInstance->getSema(), fileName, module, iSysRoot);
+   writer.WriteAST(compilerInstance->getSema(), fileName.str(), module, iSysRoot);
 
    // Write the generated bitstream to "Out".
    out->write(&buffer.front(), buffer.size());
@@ -2128,7 +2128,7 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
 
 std::string ExtractFileName(const std::string &path)
 {
-   return llvm::sys::path::filename(path);
+   return llvm::sys::path::filename(path).str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4077,7 +4077,7 @@ int RootClingMain(int argc,
          return 1;
       }
 
-      dictname = llvm::sys::path::filename(gOptDictionaryFileName);
+      dictname = llvm::sys::path::filename(gOptDictionaryFileName).str();
    }
 
    if (gOptForce && dictname.empty()) {
@@ -4110,8 +4110,8 @@ int RootClingMain(int argc,
         ROOT::TMetaUtils::Error("", "isysroot specified without a value.\n");
         return 1;
       }
-      clingArgs.push_back(gOptISysRoot.ArgStr);
-      clingArgs.push_back(gOptISysRoot.ValueStr);
+      clingArgs.push_back(gOptISysRoot.ArgStr.str());
+      clingArgs.push_back(gOptISysRoot.ValueStr.str());
    }
 
    // Check if we have a multi dict request but no target library
@@ -4384,7 +4384,7 @@ int RootClingMain(int argc,
          DepMod = GetModuleNameFromRdictName(DepMod);
          // We might deserialize.
          cling::Interpreter::PushTransactionRAII RAII(&interp);
-         if (!interp.loadModule(DepMod, /*complain*/false)) {
+         if (!interp.loadModule(DepMod.str(), /*complain*/false)) {
             ROOT::TMetaUtils::Error(nullptr, "Module '%s' failed to load.\n",
                                     DepMod.data());
          }
