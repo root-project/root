@@ -1993,8 +1993,8 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
    clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
-                                         /*RemoveFileOnSignal=*/false, /*InFile*/ "",
-                                         /*Extension=*/"", /*useTemporary=*/false,
+                                         /*RemoveFileOnSignal=*/false,
+                                         /*useTemporary=*/false,
                                          /*CreateMissingDirectories*/ false);
    if (!out) {
       ROOT::TMetaUtils::Error("WriteAST", "Couldn't open output stream to '%s'!\n", fileName.data());
