@@ -381,7 +381,7 @@ std::vector<size_t> PyMethodBase::GetDataFromTuple(PyObject* tupleObject){
 std::vector<size_t> PyMethodBase::GetDataFromList(PyObject* listObject){
    std::vector<size_t>listVec;
    for(Py_ssize_t listIter=0; listIter<PyList_Size(listObject);++listIter){
-               listVec.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(listObject,listIter)));
+               listVec.push_back((size_t)PyLong_AsLong(PyList_GetItem(listObject,listIter)));
          }
    return listVec;
 }
