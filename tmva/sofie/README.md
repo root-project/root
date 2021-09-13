@@ -61,17 +61,22 @@ model.OutputGenerated(“./example_output_prof.hxx”);
 ```
 Once the model has been created, we can include it in our code and start profiling the inference.
 By running `infer` at least once, the profiler will collect the microseconds that each operator took.
+
+The use will also be able to use utility functions like `GetOpAvgTime()` and `GetOpAvgTime()`.
 ```C++
 #include "example_output_prof.hxx"
 
-// for (int i = 0; i < 1000; ++i)
-//     TMVA_SOFIE_example_model::infer(...)
+for (int i = 0; i < 1000; ++i)
+    TMVA_SOFIE_example_model::infer(input);
 
 auto res = TMVA_SOFIE_example_model::profiler_results;
-res[0]["Gemm_0"];		// Gemm_0 in the first run of 'infer'
-res[2]["Relu_0"];		// Relu_0 in the third run of 'infer'
+res["Gemm_0"][0];		// Gemm_0 in the first run of 'infer'
+res["Relu_5"][2];		// Relu_5 in the third run of 'infer'
 
 auto avg = TMVA_SOFIE_example_model::GetOpAvgTime();
 avg["Gemm_14"];			// Average time [us] of operator Gemm_14
+
+auto var = TMVA_SOFIE_example_model::GetOpVariance();
+var["Gemm_14"];         // Time variance of operator Gemm_14
 
 ```
