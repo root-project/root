@@ -156,7 +156,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
    nll_config.cloneInputData = false;
    nll_config.binnedL = true;
    int extended = 2;
-   RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, nll_config, extended);
+   RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
    RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);

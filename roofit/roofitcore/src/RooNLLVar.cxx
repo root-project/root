@@ -124,7 +124,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 /// For internal use.
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
-                     RooAbsTestStatistic::Configuration const& cfg, bool extended) :
+                     bool extended, RooAbsTestStatistic::Configuration const& cfg) :
   RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),cfg),
   _extended(extended),
   _weightSq(kFALSE),
@@ -169,7 +169,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
                      const RooArgSet& projDeps,
-                     RooAbsTestStatistic::Configuration const& cfg, bool extended) :
+                     bool extended, RooAbsTestStatistic::Configuration const& cfg) :
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, cfg),
   _extended(extended),
   _weightSq(kFALSE),
@@ -229,7 +229,7 @@ RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooA
   // check if pdf can be extended
   bool extendedPdf = _extended && thePdf.canBeExtended();
 
-  auto testStat = new RooNLLVar(name, title, thePdf, adata, projDeps, cfg, extendedPdf);
+  auto testStat = new RooNLLVar(name, title, thePdf, adata, projDeps, extendedPdf, cfg);
   testStat->batchMode(_batchEvaluations);
   return testStat;
 }
