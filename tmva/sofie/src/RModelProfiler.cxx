@@ -15,23 +15,46 @@ namespace SOFIE{
       fModel.fGC +=
          "ProfilerResult GetOpAvgTime() {\n"
          "\tif (profiler_results.size() == 0) {\n"
-         //"\t\tthrow std::runtime_error(\"TMVA_SOFIE_" + fName + ": No profiling data. Run 'infer' at least once in order to collect profiling data.\");\n"
          "\t\treturn {};\n"
          "\t}\n"
          "\t\n"
-         "\t// Accumulation phase\n"
-         "\tProfilerResult avg = profiler_results[0];\n"
-         "\tfor (size_t i = 1; i < profiler_results.size(); ++i) {\n"
-         "\t\tfor (auto&& pair : profiler_results[i]) {\n"
-         "\t\t\tavg[pair.first] += pair.second;\n"
+         "\tProfilerResult avg;\n"
+         "\tfor (auto&& op : profiler_results) {\n"
+         "\t\tdouble mean = 0;\n"
+         "\t\tfor (double d : op.second) {\n"
+         "\t\t\tmean += d;\n"
          "\t\t}\n"
+         "\t\tmean /= op.second.size();\n"
+         "\t\tavg[op.first] = mean;\n"
          "\t}\n"
          "\t\n"
-         "\t// Normalization phase\n"
-         "\tfor (auto& pair : avg) {\n"
-         "\t\tpair.second /= profiler_results.size();\n"
-         "\t}\n"
          "\treturn avg;\n"
+         "}\n";
+
+      // Generation of 'GetOpVariance()'
+      // To exploit locality of reference the variance is calculated according
+      // to the formula:
+      // Var[X] = E[X^2] - E[X]^2
+      fModel.fGC +=
+         "ProfilerResult GetOpVariance() {\n"
+         "\tif (profiler_results.size() == 0) {\n"
+         "\t\treturn {};\n"
+         "\t}\n"
+         "\t\n"
+         "\tProfilerResult var;\n"
+         "\tfor (auto&& op : profiler_results) {\n"
+         "\t\t// Var[X] = E[X^2] - E[X]^2\n"
+         "\t\tdouble mean = 0, mean2 = 0;\n"
+         "\t\tfor (double d : op.second) {\n"
+         "\t\t\tmean += d;\n"
+         "\t\t\tmean2 += d * d;\n"
+         "\t\t}\n"
+         "\t\tmean /= op.second.size();\n"
+         "\t\tmean2 /= op.second.size();\n"
+         "\t\tvar[op.first] = mean2 - mean * mean;\n"
+         "\t}\n"
+         "\t\n"
+         "\treturn var;\n"
          "}\n";
    }
 
@@ -65,7 +88,7 @@ namespace SOFIE{
       // Every time 'infer' is called every operator gets timed in this variable
       fGC += "// Maps an operator name to its execution time in a run.\n";
       fGC += "using ProfilerResult = std::unordered_map<std::string,double>;\n";
-      fGC += "std::vector<ProfilerResult> profiler_results;\n";
+      fGC += "std::unordered_map<std::string,std::vector<double>> profiler_results;\n";
 
       if (UtilityFunctionsGeneration) {
          GenerateUtilityFunctions();
@@ -127,17 +150,17 @@ namespace SOFIE{
 
       // Creating variables for timing
       fGC += "\tstd::chrono::steady_clock::time_point tp_start;\n";
-      fGC += "\tProfilerResult current_execution;\n";
+      //fGC += "\tProfilerResult current_execution;\n";
 
       for (size_t id = 0; id < fModel.fOperators.size(); id++){
          // Starting timer
          fGC += "\ttp_start = std::chrono::steady_clock::now();\n";
          fGC += (fModel.fOperators[id]->Generate(std::to_string(id)));
          // Stopping timer
-         fGC += "\tcurrent_execution[\"" + fModel.fOperators[id]->name + "\"] = std::chrono::duration_cast<std::chrono::microseconds>(\n";
-         fGC += "\t\tstd::chrono::steady_clock::now() - tp_start).count() / 1e0;\n";
+         fGC += "\profiler_results[\"" + fModel.fOperators[id]->name + "\"].push_back(std::chrono::duration_cast<std::chrono::microseconds>(\n";
+         fGC += "\t\tstd::chrono::steady_clock::now() - tp_start).count() / 1e0);\n";
       }
-      fGC += "\tprofiler_results.push_back(std::move(current_execution));\n";
+      //fGC += "\tprofiler_results.push_back(std::move(current_execution));\n";
       if (fModel.fOutputTensorNames.size() == 1){
          fGC += "\tstd::vector<float> ret (tensor_" + fModel.fOutputTensorNames[0] + ", tensor_" + fModel.fOutputTensorNames[0] + " + sizeof(tensor_" +
                fModel.fOutputTensorNames[0] + ") / sizeof(tensor_" + fModel.fOutputTensorNames[0] + "[0]));\n";
