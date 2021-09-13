@@ -38,11 +38,12 @@ public:
 	    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-            RooAbsTestStatistic::Configuration const& cfg, bool extended);
+            bool extended,
+            RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
   
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-            const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg,
-            bool extended = false) ;
+            const RooArgSet& projDeps, bool extended = false,
+            RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
