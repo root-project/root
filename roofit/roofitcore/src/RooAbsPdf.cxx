@@ -1085,7 +1085,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
     cfg.rangeName = rangeName ? rangeName : "";
-    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,cfg, ext);
+    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
     theNLL->batchMode(pc.getInt("BatchMode"));
     nll = theNLL;
   } else {
@@ -1099,7 +1099,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     for (const auto& token : tokens) {
       cfg.rangeName = token;
       auto nllComp = new RooNLLVar((baseName + "_" + token).c_str(),"-log(likelihood)",
-                                   *this,data,projDeps,cfg,ext);
+                                   *this,data,projDeps,ext,cfg);
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }
