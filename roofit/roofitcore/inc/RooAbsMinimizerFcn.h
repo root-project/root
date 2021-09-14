@@ -59,7 +59,7 @@ public:
           absReal.getParameters(nullptr, parameters);
        }
 
-       Function(RooFitDriver & driver)
+       Function(ROOT::Experimental::RooFitDriver & driver)
          : getVal([&driver](){ return driver.getVal(); })
          , constOptimizeTestStatistic([](RooAbsArg::ConstOpCode, bool){ })
          , name{driver.name()}

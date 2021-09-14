@@ -12,6 +12,9 @@ class RooAbsData;
 class RooAbsArg;
 class RooAbsReal;
 
+namespace ROOT {
+namespace Experimental {
+
 class RooFitDriver {
   public:
      RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, rbc::BatchMode batchMode);
@@ -74,6 +77,8 @@ class RooFitDriver {
     std::queue<double*> _gpuBuffers;
     std::queue<double*> _pinnedBuffers;
     std::vector<double> _nonDerivedValues;
-};
+}; // end class RooFitDriver
+} // end namespace Experimental
+} // end namespace ROOT
 
 #endif //ROO_FIT_DRIVER_H

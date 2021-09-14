@@ -9,6 +9,7 @@
 
 #include <thread>
 
+using namespace ROOT::Experimental;
 RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, rbc::BatchMode batchMode)
   : _name{topNode.GetName()}, _title{topNode.GetTitle()}
   , _parameters{*std::unique_ptr<RooArgSet>(topNode.getParameters(data, true))}

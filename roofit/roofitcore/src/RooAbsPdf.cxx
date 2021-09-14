@@ -1640,7 +1640,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   RooAbsReal* nll=nullptr;
-  std::unique_ptr<RooFitDriver> driver;
+  std::unique_ptr<ROOT::Experimental::RooFitDriver> driver;
   std::unique_ptr<RooRealVar> weightVar;
   std::unique_ptr<RooAbsReal> constraintsTerm;
   if (pc.getInt("BatchMode")==0) nll = createNLL(data,nllCmdList);
@@ -1669,10 +1669,10 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       weightVar.reset( new RooRealVar(weightVarName.c_str(), "Weight(s) of events", data.weight()) );
     }
 
-    nll = new RooNLLVarNew("NewNLLVar", "NewNLLVar", *this,
+    nll = new ROOT::Experimental::RooNLLVarNew("NewNLLVar", "NewNLLVar", *this,
                            *data.get(), weightVar.get(), constraintsTerm.get(), isExtended);
 
-    driver.reset(new RooFitDriver( data, static_cast<RooNLLVarNew&>(*nll), batchMode ));
+    driver.reset(new ROOT::Experimental::RooFitDriver( data, static_cast<ROOT::Experimental::RooNLLVarNew&>(*nll), batchMode ));
   }
   RooFitResult *ret = 0 ;
 

@@ -141,7 +141,6 @@
 #pragma link C++ class RooMappedCategory::Entry+;
 #pragma read sourceClass="RooMappedCategory::Entry" targetClass="RooMappedCategory::Entry" version="[1]" include="RooFitLegacy/RooCatTypeLegacy.h" \
     source="RooCatType _cat" target="_catIdx" code="{ _catIdx = onfile._cat.getVal(); }"
-#pragma link C++ class RooMath+ ;
 #pragma link C++ class RooMCIntegrator+ ;
 #pragma link C++ class RooMinuit+ ;
 #pragma link C++ class RooMPSentinel+ ;
@@ -149,7 +148,7 @@
 #pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNameSet+ ;
 #pragma link C++ class RooNLLVar+ ;
-#pragma link C++ class RooNLLVarNew+ ;
+#pragma link C++ class ROOT::Experimental::RooNLLVarNew+ ;
 #pragma link C++ class RooNormSetCache+ ;
 #pragma link C++ class RooNumber+ ;
 #pragma link C++ class RooNumConvolution+ ;

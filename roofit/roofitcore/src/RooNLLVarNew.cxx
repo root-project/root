@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
+using namespace ROOT::Experimental;
+
 ClassImp(RooNLLVarNew);
 
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title,

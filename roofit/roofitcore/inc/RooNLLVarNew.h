@@ -7,6 +7,9 @@
 
 #include "rbc.h"
 
+namespace ROOT {
+namespace Experimental {
+
 class RooNLLVarNew : public RooAbsReal {
 
 public:
@@ -52,6 +55,8 @@ protected:
 
 private:
   ClassDefOverride(RooNLLVarNew, 1)
-};
+}; // end class RooNLLVar
+} // end namespace Experimental
+} // end namespace ROOT
 
 #endif
