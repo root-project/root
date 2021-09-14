@@ -9,7 +9,7 @@
 
 #include <thread>
 
-RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, int batchMode)
+RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, rbc::BatchMode batchMode)
   : _name{topNode.GetName()}, _title{topNode.GetTitle()}
   , _parameters{*std::unique_ptr<RooArgSet>(topNode.getParameters(data, true))}
   , _batchMode{batchMode}, _topNode{topNode}
@@ -81,7 +81,7 @@ RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, 
   }
 
   // Extra steps for initializing in cuda mode
-  if (_batchMode != -1) return;
+  if (_batchMode != rbc::Cuda) return;
   if (!rbc::dispatchCUDA) 
     throw std::runtime_error(std::string("In: ")+__func__+"(), "+__FILE__+":"+__LINE__+": Cuda implementation of the computing library is not available\n");
 
@@ -129,7 +129,7 @@ void clearQueue(std::queue<T>& q, Func_t destroyer) {
 RooFitDriver::~RooFitDriver()
 {
   clearQueue(_cpuBuffers,      [](double* ptr){delete[] ptr;} );
-  if (_batchMode==-1)
+  if (_batchMode==rbc::Cuda)
   {
     clearQueue(_gpuBuffers,    [](double* ptr){rbc::dispatchCUDA->cudaFree(ptr);} );
     clearQueue(_pinnedBuffers, [](double* ptr){rbc::dispatchCUDA->cudaFreeHost(ptr);} );
@@ -149,7 +149,7 @@ double* RooFitDriver::getAvailablePinnedBuffer() {
 
 double RooFitDriver::getVal()
 {
-  if (_batchMode==-1 && ++_getValInvocations<=3)
+  if (_batchMode==rbc::Cuda && ++_getValInvocations<=3)
     markGPUNodes();
   
   for (auto& item:_nodeInfos) {
@@ -168,7 +168,7 @@ double RooFitDriver::getVal()
   while (nNodes)
   {
     // find finished gpu nodes
-    if (_batchMode==-1)
+    if (_batchMode==rbc::Cuda)
       for (auto& it:_nodeInfos)
         if (it.second.remServers==-1 && !rbc::dispatchCUDA->streamIsActive(it.second.stream))
         {

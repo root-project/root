@@ -508,7 +508,7 @@ TEST_P(HFFixture, Fit) {
   RooStats::ModelConfig* mc = dynamic_cast<RooStats::ModelConfig*>(ws->obj("ModelConfig"));
   ASSERT_NE(mc, nullptr);
 
-  for (bool batchFit : {true, false}) {
+  for (rbc::BatchMode batchFit : {rbc::Cpu, rbc::Off}) {
     for (bool constTermOptimisation : {true, false}) { // This tests both correct pre-caching of constant terms and (if false) that all evaluateSpan() are correct.
       SCOPED_TRACE(batchFit ? "Batch fit" : "Normal fit");
       SCOPED_TRACE(constTermOptimisation ? "const term optimisation" : "No const term optimisation");

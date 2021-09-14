@@ -14,7 +14,7 @@ class RooAbsReal;
 
 class RooFitDriver {
   public:
-     RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, int batchMode);
+     RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, rbc::BatchMode batchMode);
      ~RooFitDriver();
      double getVal();
      std::string const& name() const { return _name; }
@@ -57,7 +57,7 @@ class RooFitDriver {
     std::string _title;
     RooArgSet _parameters;
 
-    const int _batchMode = 0;
+    const rbc::BatchMode _batchMode = rbc::Off;
     int _getValInvocations = 0;
     double* _cudaMemDataset = nullptr;
 

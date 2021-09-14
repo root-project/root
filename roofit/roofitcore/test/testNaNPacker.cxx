@@ -136,7 +136,7 @@ TEST(RooNaNPacker, FitParabola) {
   a2.setVal(-1.);
   params.snapshot(evilValues);
 
-  for (bool batchMode : std::initializer_list<bool>{true, false}) {
+  for (rbc::BatchMode batchMode : {rbc::Cpu, rbc::Off}) {
     SCOPED_TRACE(batchMode ? "in batch mode" : "in single-value mode");
 
     params = evilValues;

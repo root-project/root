@@ -18,6 +18,8 @@
 
 #include "RooCmdArg.h"
 #include "RooArgSet.h"
+#include "rbc.h"
+
 #include <map>
 #include <string>
 
@@ -200,7 +202,7 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
-RooCmdArg BatchMode(int mode=1);
+RooCmdArg BatchMode(rbc::BatchMode mode=rbc::Cpu);
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments

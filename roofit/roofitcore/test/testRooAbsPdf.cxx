@@ -13,6 +13,7 @@
 #include "RooHelpers.h"
 #include "RooGaussian.h"
 #include "RooPoisson.h"
+#include "rbc.h"
 
 #include "TClass.h"
 #include "TRandom.h"
@@ -115,7 +116,7 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 
     RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::FastEvaluations);
 
-    for(bool batchMode : {false, true}) {
+    for(rbc::BatchMode batchMode : {rbc::Off, rbc::Cpu}) {
       factor.setVal(1.0);
       fitResults.emplace_back(
         model.fitTo(

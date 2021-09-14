@@ -30,7 +30,7 @@ using namespace RooFit ;
 class TestBasic101 : public RooUnitTest
 {
 public:
-  TestBasic101(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic101(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l
@@ -123,7 +123,7 @@ using namespace RooFit ;
 class TestBasic102 : public RooUnitTest
 {
 public:
-  TestBasic102(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Data import methods",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic102(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Data import methods",refFile,writeRef,verbose,batchMode) {} ;
 
   TH1* makeTH1()
   {
@@ -292,7 +292,7 @@ using namespace RooFit ;
 class TestBasic103 : public RooUnitTest
 {
 public:
-  TestBasic103(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Interpreted expression p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic103(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Interpreted expression p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     /////////////////////////////////////////////////////////
@@ -409,7 +409,7 @@ using namespace RooFit ;
 class TestBasic105 : public RooUnitTest
 {
 public:
-  TestBasic105(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("C++ function binding operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic105(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("C++ function binding operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // B i n d   T M a t h : : E r f   C   f u n c t i o n
@@ -506,7 +506,7 @@ using namespace RooFit ;
 class TestBasic108 : public RooUnitTest
 {
 public:
-  TestBasic108(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic108(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l
@@ -634,7 +634,7 @@ using namespace RooFit ;
 class TestBasic109 : public RooUnitTest
 {
 public:
-  TestBasic109(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic109(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l
@@ -729,7 +729,7 @@ using namespace RooFit ;
 class TestBasic110 : public RooUnitTest
 {
 public:
-  TestBasic110(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic110(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l
@@ -824,7 +824,7 @@ using namespace RooFit ;
 class TestBasic111 : public RooUnitTest
 {
 public:
-  TestBasic111(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Numeric integration configuration",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic111(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Numeric integration configuration",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // A d j u s t   g l o b a l   1 D   i n t e g r a t i o n   p r e c i s i o n
@@ -926,7 +926,7 @@ using namespace RooFit ;
 class TestBasic201 : public RooUnitTest
 {
 public:
-  TestBasic201(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Addition operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic201(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Addition operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
@@ -1053,7 +1053,7 @@ using namespace RooFit ;
 class TestBasic202 : public RooUnitTest
 {
 public:
-  TestBasic202(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic202(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
@@ -1173,7 +1173,7 @@ using namespace RooFit ;
 class TestBasic203 : public RooUnitTest
 {
 public:
-  TestBasic203(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Basic fitting and plotting in ranges",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic203(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Basic fitting and plotting in ranges",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l
@@ -1261,7 +1261,7 @@ using namespace RooFit ;
 class TestBasic204 : public RooUnitTest
 {
 public:
-  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Extended ML fit in sub range",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Extended ML fit in sub range",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
@@ -1354,7 +1354,7 @@ using namespace RooFit ;
 class TestBasic205 : public RooUnitTest
 {
 public:
-  TestBasic205(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Component plotting variations",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic205(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Component plotting variations",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o s i t e    p d f
@@ -1484,7 +1484,7 @@ using namespace RooFit ;
 class TestBasic208 : public RooUnitTest
 {
 public:
-  TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("FFT Convolution operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("FFT Convolution operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
 
   Bool_t isTestAvailable() {
      // only if ROOT was build with fftw3 enabled
@@ -1595,7 +1595,7 @@ using namespace RooFit ;
 class TestBasic209 : public RooUnitTest
 {
 public:
-  TestBasic209(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Analytical convolution operator",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic209(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Analytical convolution operator",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // B - p h y s i c s   p d f   w i t h   t r u t h   r e s o l u t i o n
@@ -1686,7 +1686,7 @@ using namespace RooFit ;
 class TestBasic301 : public RooUnitTest
 {
 public:
-  TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Composition extension of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Composition extension of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
@@ -1770,7 +1770,7 @@ using namespace RooFit ;
 class TestBasic302 : public RooUnitTest
 {
 public:
-  TestBasic302(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Sum and product utility functions",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic302(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Sum and product utility functions",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   o b s e r v a b l e s ,   p a r a m e t e r s
@@ -1907,7 +1907,7 @@ RooDataSet* makeFakeDataXY()
 
 
 
-  TestBasic303(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Conditional use of F(x|y)",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic303(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Conditional use of F(x|y)",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
@@ -2014,7 +2014,7 @@ using namespace RooFit ;
 class TestBasic304 : public RooUnitTest
 {
 public:
-  TestBasic304(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic304(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   c o m p o n e n t   p d f s   i n   x   a n d   y
@@ -2100,7 +2100,7 @@ using namespace RooFit ;
 class TestBasic305 : public RooUnitTest
 {
 public:
-  TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Product operator p.d.f. with conditional term",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Product operator p.d.f. with conditional term",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   c o n d i t i o n a l   p d f   g x ( x | y )
@@ -2201,7 +2201,7 @@ using namespace RooFit ;
 class TestBasic306 : public RooUnitTest
 {
 public:
-  TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
@@ -2319,7 +2319,7 @@ using namespace RooFit ;
 class TestBasic307 : public RooUnitTest
 {
 public:
-  TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
@@ -2428,7 +2428,7 @@ using namespace RooFit ;
 class TestBasic308 : public RooUnitTest
 {
 public:
-  TestBasic308(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic308(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // S e t u p   m o d e l
@@ -2537,7 +2537,7 @@ using namespace RooFit ;
 class TestBasic310 : public RooUnitTest
 {
 public:
-  TestBasic310(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Data and p.d.f projection in category slice",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic310(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Data and p.d.f projection in category slice",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   B   d e c a y   p d f   w it h   m i x i n g
@@ -2641,7 +2641,7 @@ using namespace RooFit ;
 class TestBasic311 : public RooUnitTest
 {
 public:
-  TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Data and p.d.f projection in sub range",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Data and p.d.f projection in sub range",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a
@@ -2739,7 +2739,7 @@ using namespace RooFit ;
 class TestBasic312 : public RooUnitTest
 {
 public:
-  TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Fit in multiple rectangular ranges",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Fit in multiple rectangular ranges",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   2 D   p d f   a n d   d a t a
@@ -2862,7 +2862,7 @@ using namespace RooFit ;
 class TestBasic313 : public RooUnitTest
 {
 public:
-  TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Integration over non-rectangular regions",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Integration over non-rectangular regions",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   3 D   p d f
@@ -2957,7 +2957,7 @@ using namespace RooFit ;
 class TestBasic314 : public RooUnitTest
 {
 public:
-  TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
@@ -3051,7 +3051,7 @@ using namespace RooFit ;
 class TestBasic315 : public RooUnitTest
 {
 public:
-  TestBasic315(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("P.d.f. marginalization through integration",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic315(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("P.d.f. marginalization through integration",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     // C r e a t e   p d f   m ( x , y )  =  g x ( x | y ) * g ( y )
@@ -3148,7 +3148,7 @@ using namespace RooFit ;
 class TestBasic316 : public RooUnitTest
 {
 public:
-  TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Likelihood ratio projection plot",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Likelihood ratio projection plot",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a
@@ -3276,7 +3276,7 @@ using namespace RooFit ;
 class TestBasic402 : public RooUnitTest
 {
 public:
-  TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Basic operations on datasets",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Basic operations on datasets",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // Binned (RooDataHist) and unbinned datasets (RooDataSet) share
@@ -3406,7 +3406,7 @@ using namespace RooFit ;
 class TestBasic403 : public RooUnitTest
 {
 public:
-  TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Fits with weighted datasets",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Fits with weighted datasets",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t
@@ -3562,7 +3562,7 @@ using namespace RooFit ;
 class TestBasic404 : public RooUnitTest
 {
 public:
-  TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Categories basic functionality",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Categories basic functionality",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C o n s t r u c t    a   c a t e g o r y   w i t h   l a b e l s
@@ -3678,7 +3678,7 @@ using namespace RooFit ;
 class TestBasic405 : public RooUnitTest
 {
 public:
-  TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Real-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Real-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
 
@@ -3806,7 +3806,7 @@ using namespace RooFit ;
 class TestBasic406 : public RooUnitTest
 {
 public:
-  TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Category-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Category-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C o n s t r u c t  t w o   c a t e g o r i e s
@@ -3914,7 +3914,7 @@ using namespace RooFit ;
 class TestBasic501 : public RooUnitTest
 {
 public:
-  TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Simultaneous p.d.f. operator",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Simultaneous p.d.f. operator",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l   f o r   p h y s i c s   s a m p l e
@@ -4070,7 +4070,7 @@ using namespace RooFit ;
 class TestBasic599 : public RooUnitTest
 {
 public:
-  TestBasic599(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Workspace and p.d.f. persistence",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic599(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Workspace and p.d.f. persistence",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
     if (_write) {
@@ -4300,7 +4300,7 @@ using namespace RooFit ;
 class TestBasic601 : public RooUnitTest
 {
 public:
-  TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Interactive Minuit",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Interactive Minuit",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // S e t u p   p d f   a n d   l i k e l i h o o d
@@ -4412,7 +4412,7 @@ using namespace RooFit ;
 class TestBasic602 : public RooUnitTest
 {
 public:
-  TestBasic602(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Chi2 minimization",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic602(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Chi2 minimization",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // S e t u p   m o d e l
@@ -4500,7 +4500,7 @@ using namespace RooFit ;
 class TestBasic604 : public RooUnitTest
 {
 public:
-  TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Auxiliary observable constraints",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Auxiliary observable constraints",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t
@@ -4599,7 +4599,7 @@ using namespace RooFit ;
 class TestBasic605 : public RooUnitTest
 {
 public:
-  TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Profile Likelihood operator",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Profile Likelihood operator",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l   a n d   d a t a s e t
@@ -4710,7 +4710,7 @@ using namespace RooFit ;
 class TestBasic606 : public RooUnitTest
 {
 public:
-  TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("NLL error handling",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("NLL error handling",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t
@@ -4805,7 +4805,7 @@ using namespace RooFit ;
 class TestBasic607 : public RooUnitTest
 {
 public:
-  TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Fit Result functionality",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Fit Result functionality",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   p d f ,   d a t a
@@ -4909,7 +4909,7 @@ using namespace RooFit ;
 class TestBasic609 : public RooUnitTest
 {
 public:
-  TestBasic609(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic609(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   d a t a s e t   w i t h   X   a n d   Y   v a l u e s
@@ -5007,7 +5007,7 @@ using namespace RooFit ;
 class TestBasic701 : public RooUnitTest
 {
 public:
-  TestBasic701(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic701(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x )
@@ -5113,7 +5113,7 @@ using namespace RooFit ;
 class TestBasic702 : public RooUnitTest
 {
 public:
-  TestBasic702(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic702(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   Bool_t flat=kFALSE ;
@@ -5228,7 +5228,7 @@ using namespace RooFit ;
 class TestBasic703 : public RooUnitTest
 {
 public:
-  TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Efficiency product operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Efficiency product operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
@@ -5330,7 +5330,7 @@ using namespace RooFit ;
 class TestBasic704 : public RooUnitTest
 {
 public:
-  TestBasic704(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Amplitude sum operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic704(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Amplitude sum operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // S e t u p   2 D   a m p l i t u d e   f u n c t i o n s
@@ -5450,7 +5450,7 @@ public:
 
   Double_t ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
 
-  TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Linear morph operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Linear morph operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   e n d   p o i n t   p d f   s h a p e s
@@ -5589,7 +5589,7 @@ using namespace RooFit ;
 class TestBasic706 : public RooUnitTest
 {
 public:
-  TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Histogram based p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Histogram based p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   p d f   f o r   s a m p l i n g
@@ -5681,7 +5681,7 @@ using namespace RooFit ;
 class TestBasic707 : public RooUnitTest
 {
 public:
-  TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Kernel estimation p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Kernel estimation p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t
@@ -5801,7 +5801,7 @@ using namespace RooFit ;
 class TestBasic708 : public RooUnitTest
 {
 public:
-  TestBasic708(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("B Physics p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic708(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("B Physics p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   ////////////////////////////////////////////////////
@@ -6022,7 +6022,7 @@ using namespace RooFit ;
 class TestBasic801 : public RooUnitTest
 {
 public:
-  TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("Automated MC studies",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("Automated MC studies",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l
@@ -6140,7 +6140,7 @@ using namespace RooFit ;
 class TestBasic802 : public RooUnitTest
 {
 public:
-  TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("MC Study with chi^2 calculator",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("MC Study with chi^2 calculator",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l
@@ -6259,7 +6259,7 @@ using namespace RooFit ;
 class TestBasic803 : public RooUnitTest
 {
 public:
-  TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("MC Study with param rand. and Z calc",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("MC Study with param rand. and Z calc",refFile,writeRef,verbose,batchMode) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l
@@ -6393,7 +6393,7 @@ using namespace RooFit ;
 class TestBasic804 : public RooUnitTest
 {
 public:
-  TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode) : RooUnitTest("MC Studies with aux. obs. constraints",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose, rbc::BatchMode batchMode) : RooUnitTest("MC Studies with aux. obs. constraints",refFile,writeRef,verbose,batchMode) {} ;
 
   Double_t htol() { return 0.1 ; } // numerically very difficult test
 

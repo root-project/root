@@ -38,6 +38,8 @@ enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShap
               ChiSquare, DstD0BG, Exponential, Gamma, Gaussian, Johnson, Landau, Lognormal,
               NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
 
+enum BatchMode{Off, Cpu, Cuda};
+
 struct RunContext;
 // We have to use map instead of unordered_map because the unordered_maps from
 // nvcc and gcc are not compatible sometimes.

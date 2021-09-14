@@ -1,15 +1,6 @@
 // @(#)root/roofitcore:$name:  $:$id$
 // Authors: Wouter Verkerke  November 2007
 
-#include "TWebFile.h"
-#include "TSystem.h"
-#include "TString.h"
-#include "TStopwatch.h"
-#include "TROOT.h"
-#include "TLine.h"
-#include "TFile.h"
-#include "TClass.h"
-#include "TBenchmark.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
 #include "RooPlot.h"
@@ -22,6 +13,18 @@
 #include "RooRandom.h"
 #include "RooTrace.h"
 #include "RooMath.h"
+#include "rbc.h"
+
+#include "TWebFile.h"
+#include "TSystem.h"
+#include "TString.h"
+#include "TStopwatch.h"
+#include "TROOT.h"
+#include "TLine.h"
+#include "TFile.h"
+#include "TClass.h"
+#include "TBenchmark.h"
+
 #include <string>
 #include <list>
 #include <iostream>
@@ -58,7 +61,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore, int batchMode)
+Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore, rbc::BatchMode batchMode)
 {
   Int_t retVal = 0;
   // Save memory directory location
@@ -256,7 +259,7 @@ int main(int argc,const char *argv[])
   Int_t dryRun       = kFALSE ;
   Bool_t doDump      = kFALSE ;
   Bool_t doTreeStore = kFALSE ;
-  int batchMode      = 0;
+  rbc::BatchMode batchMode = rbc::Off;
 
   //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
   string refFileName = "stressRooFit_ref.root" ;
@@ -266,8 +269,16 @@ int main(int argc,const char *argv[])
     string arg = argv[i] ;
 
     if (arg=="-b") {
-      cout << "stressRooFit: BatchMode set to " << argv[i+1] << endl;
-      batchMode = atoi(argv[++i]);
+      string mode = argv[i+1];
+      transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
+      if      (mode=="off")   batchMode=rbc::Off;
+      else if (mode=="cpu")   batchMode=rbc::Cpu;
+      else if (mode=="cuda")  batchMode=rbc::Cuda;
+      else {
+        cout << "Error setting -b (batchMode). The accepted values are \"off\", \"cpu\" and \"cuda\"" << endl;
+        return 1;
+      }
+      cout << "stressRooFit: BatchMode set to " << mode << endl;
     }
 
     if (arg=="-f") {
@@ -318,7 +329,7 @@ int main(int argc,const char *argv[])
     if (arg=="-h" || arg == "--help") {
       cout << "usage: stressRooFit [ options ] " << endl ;
       cout << "" << endl ;
-      cout << "       -b <int>  : Perform every fit in the tests in batchMode(<int>) (default is scalar mode)" << endl ;
+      cout << "       -b <off|cpu|cuda>  : Perform every fit in the tests in batchMode(<Off|Cpu|Cuda>) (default is Off-scalar mode)" << endl ;
       cout << "       -f <file> : use given reference file instead of default (" <<  refFileName << ")" << endl ;
       cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl ;
       cout << " " << endl ;
@@ -364,7 +375,7 @@ Int_t stressRooFit()
    Int_t dryRun       = kFALSE ;
    Bool_t doDump      = kFALSE ;
    Bool_t doTreeStore = kFALSE ;
-   int batchMode      = 0;
+   rbc::BatchMode batchMode = rbc::Off;
 
    //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root" ;

@@ -1646,6 +1646,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   if (pc.getInt("BatchMode")==0) nll = createNLL(data,nllCmdList);
   else
   {
+    auto batchMode = static_cast<rbc::BatchMode>(pc.getInt("BatchMode"));
     const bool isExtended = interpretExtendedCmdArg(*this, pc.getInt("ext")) ;
 
     constraintsTerm = RooConstraintSum::createConstraintTerm(
@@ -1671,7 +1672,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     nll = new RooNLLVarNew("NewNLLVar", "NewNLLVar", *this,
                            *data.get(), weightVar.get(), constraintsTerm.get(), isExtended);
 
-    driver.reset(new RooFitDriver( data, static_cast<RooNLLVarNew&>(*nll), pc.getInt("BatchMode") ));
+    driver.reset(new RooFitDriver( data, static_cast<RooNLLVarNew&>(*nll), batchMode ));
   }
   RooFitResult *ret = 0 ;
 
