@@ -30,7 +30,7 @@ namespace Experimental {
 
 class RooFitDriver {
 public:
-   RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, int batchMode);
+   RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, RooBatchCompute::BatchMode batchMode);
    ~RooFitDriver();
    double getVal();
    RooAbsReal const &topNode() const { return _topNode; }
@@ -115,7 +115,7 @@ private:
    std::string _title;
    RooArgSet _parameters;
 
-   const int _batchMode = 0;
+   const RooBatchCompute::BatchMode _batchMode = RooBatchCompute::BatchMode::Off;
    int _getValInvocations = 0;
    double *_cudaMemDataset = nullptr;
 

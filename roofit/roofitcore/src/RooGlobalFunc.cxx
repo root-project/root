@@ -179,10 +179,10 @@ namespace RooFit {
   RooCmdArg BatchMode(std::string const& batchMode) {
       std::string lower = batchMode;
       std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });
-      int mode;
-      if(lower == "off") mode = 0;
-      else if(lower == "cpu") mode = 1;
-      else if(lower == "cuda") mode = -1;
+      RooBatchCompute::BatchMode mode;
+      if(lower == "off") mode = RooBatchCompute::BatchMode::Off;
+      else if(lower == "cpu") mode = RooBatchCompute::BatchMode::Cpu;
+      else if(lower == "cuda") mode = RooBatchCompute::BatchMode::Cuda;
       else throw std::runtime_error("Only supported string values for BatchMode() are `off`, `cpu`, or `cuda`.");
       return RooCmdArg("BatchMode", static_cast<int>(mode));
   }

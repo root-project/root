@@ -26,7 +26,7 @@
 namespace ROOT {
 namespace Experimental {
 
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, int batchMode)
+RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, RooBatchCompute::BatchMode batchMode)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(data, true))},
      _batchMode{batchMode}, _topNode{topNode}, _data{&data}, _nEvents{static_cast<size_t>(data.numEntries())}
@@ -100,7 +100,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
    }
 
    // Extra steps for initializing in cuda mode
-   if (_batchMode != -1)
+   if (_batchMode != RooBatchCompute::BatchMode::Cuda)
       return;
    if (!RooBatchCompute::dispatchCUDA)
       throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
@@ -152,7 +152,7 @@ void clearQueue(std::queue<T> &q, Func_t destroyer)
 RooFitDriver::~RooFitDriver()
 {
    clearQueue(_cpuBuffers, [](double *ptr) { delete[] ptr; });
-   if (_batchMode == -1) {
+   if (_batchMode == RooBatchCompute::BatchMode::Cuda) {
       clearQueue(_gpuBuffers, [](double *ptr) { RooBatchCompute::dispatchCUDA->cudaFree(ptr); });
       clearQueue(_pinnedBuffers, [](double *ptr) { RooBatchCompute::dispatchCUDA->cudaFreeHost(ptr); });
       RooBatchCompute::dispatchCUDA->cudaFree(_cudaMemDataset);
@@ -176,7 +176,7 @@ double *RooFitDriver::getAvailablePinnedBuffer()
 
 double RooFitDriver::getVal()
 {
-   if (_batchMode == -1 && ++_getValInvocations <= 3)
+   if (_batchMode == RooBatchCompute::BatchMode::Cuda && ++_getValInvocations <= 3)
       markGPUNodes();
 
    for (auto &item : _nodeInfos) {
@@ -194,7 +194,7 @@ double RooFitDriver::getVal()
    int nNodes = _nodeInfos.size();
    while (nNodes) {
       // find finished gpu nodes
-      if (_batchMode == -1)
+      if (_batchMode == RooBatchCompute::BatchMode::Cuda)
          for (auto &it : _nodeInfos)
             if (it.second.remServers == -1 && !RooBatchCompute::dispatchCUDA->streamIsActive(it.second.stream)) {
                if (_getValInvocations == 2) {

@@ -48,6 +48,8 @@ class RooAbsReal;
  */
 namespace RooBatchCompute {
 
+enum class BatchMode { Off, Cpu, Cuda };
+
 struct RunContext;
 typedef std::unordered_map<const RooAbsReal *, RooSpan<const double>> DataMap;
 typedef std::vector<const RooAbsReal *> VarVector;
