@@ -27,18 +27,9 @@
 namespace RooFit {
 namespace TestStatistics {
 
-/** \class LikelihoodSerial
- * \brief Serial likelihood calculation strategy implementation
- *
- * This class serves as a baseline reference implementation of the LikelihoodWrapper. It reimplements the previous
- * RooNLLVar "BulkPartition" single CPU strategy in the new RooFit::TestStatistics framework.
- *
- * \note The class is not intended for use by end-users. We recommend to either use RooMinimizer with a RooAbsL derived
- * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
- */
-
-LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
-   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean))
+LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*,
+                                   RooMinimizer *minimizer*/)
+   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean)/*, minimizer*/)
 {
    initVars();
    // determine likelihood type
@@ -58,13 +49,11 @@ LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::sha
    // should also somehow be updated in this class.
 }
 
-/// \brief Helper function for the constuctor.
-///
-/// This is a separate function (instead of just in ctor) for historical reasons.
-/// Its predecessor RooRealMPFE::initVars() was used from multiple ctors, but also
-/// from RooRealMPFE::constOptimizeTestStatistic at the end, which makes sense,
-/// because it might change the set of variables. We may at some point want to do
-/// this here as well.
+// This is a separate function (instead of just in ctor) for historical reasons.
+// Its predecessor RooRealMPFE::initVars() was used from multiple ctors, but also
+// from RooRealMPFE::constOptimizeTestStatistic at the end, which makes sense,
+// because it might change the set of variables. We may at some point want to do
+// this here as well.
 void LikelihoodSerial::initVars()
 {
    // Empty current lists
@@ -72,7 +61,9 @@ void LikelihoodSerial::initVars()
    _saveVars.removeAll();
 
    // Retrieve non-constant parameters
-   auto vars = std::make_unique<RooArgSet>(*likelihood_->getParameters());
+   auto vars = std::make_unique<RooArgSet>(
+      *likelihood_->getParameters()); // TODO: make sure this is the right list of parameters, compare to original
+                                           // implementation in RooRealMPFE.cxx
 
    RooArgList varList(*vars);
 
@@ -92,6 +83,13 @@ void LikelihoodSerial::evaluate() {
    case LikelihoodType::sum: {
       result = likelihood_->evaluatePartition({0, 1}, 0, likelihood_->getNComponents());
       carry = likelihood_->getCarry();
+      // TODO: this normalization part below came from RooOptTestStatistic::evaluate, probably this just means you need to do the normalization on master only when doing parallel calculation. Make sure of this! In any case, it is currently not relevant, because the norm term is 1 by default and is only overridden for the RooDataWeightAverage class.
+//      // Only apply global normalization if SimMaster doesn't have MP master
+//      if (numSets() == 1) {
+//         const Double_t norm = globalNormalization();
+//         result /= norm;
+//         carry /= norm;
+//      }
       break;
    }
    default: {

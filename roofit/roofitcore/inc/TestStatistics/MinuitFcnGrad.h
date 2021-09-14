@@ -39,8 +39,7 @@ namespace TestStatistics {
 class LikelihoodSerial;
 class LikelihoodGradientSerial;
 
-/// For communication with wrappers, an instance of this struct must be shared between them and MinuitFcnGrad. It keeps
-/// track of what has been evaluated for the current parameter set provided by Minuit.
+// -- for communication with wrappers: --
 struct WrapperCalculationCleanFlags {
    // indicate whether that part has been calculated since the last parameter update
    bool likelihood = false;
@@ -64,7 +63,7 @@ public:
 
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
-   /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
+   // override to include gradient strategy synchronization:
    Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst,
                       Bool_t verbose = kFALSE) override;
 
@@ -77,14 +76,13 @@ public:
    }
 
 private:
-   /// IMultiGradFunction override necessary for Minuit
+   // IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient
    double DoEval(const double *x) const override;
 
 public:
-   /// IMultiGradFunction override necessary for Minuit
    void Gradient(const double *x, double *grad) const override;
 
-   /// Part of IMultiGradFunction interface, used widely both in Minuit and in RooFit.
+   // part of IMultiGradFunction interface, used widely both in Minuit and in RooFit:
    inline unsigned int NDim() const override { return _nDim; }
 
    inline std::string getFunctionName() const override { return likelihood->GetName(); }
@@ -103,7 +101,7 @@ private:
       LikelihoodGradientWrapperT * /* used only for template deduction */ =
          static_cast<LikelihoodGradientWrapperT *>(nullptr));
 
-   /// This override should not be used in this class, so it throws.
+   // The following three overrides will not actually be used in this class, so they will throw:
    double DoDerivative(const double *x, unsigned int icoord) const override;
 
    bool syncParameterValuesFromMinuitCalls(const double *x, bool minuit_internal) const;

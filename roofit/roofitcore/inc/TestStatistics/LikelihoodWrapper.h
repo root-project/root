@@ -43,10 +43,10 @@ enum class LikelihoodType {
    sum
 };
 
-/// Previously, offsetting was only implemented for RooNLLVar components of a likelihood,
-/// not for RooConstraintSum terms. To emulate this behavior, use OffsettingMode::legacy. To
-/// also offset the RooSubsidiaryL component (equivalent of RooConstraintSum) of RooSumL
-/// likelihoods, use OffsettingMode::full.
+// Previously, offsetting was only implemented for RooNLLVar components of a likelihood,
+// not for RooConstraintSum terms. To emulate this behavior, use OffsettingMode::legacy. To
+// also offset the RooSubsidiaryL component (equivalent of RooConstraintSum) of RooSumL
+// likelihoods, use OffsettingMode::full.
 enum class OffsettingMode {
    legacy,
    full
@@ -54,31 +54,22 @@ enum class OffsettingMode {
 
 class LikelihoodWrapper {
 public:
-   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
+   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean/*, RooMinimizer* minimizer*/);
    virtual ~LikelihoodWrapper() = default;
    virtual LikelihoodWrapper* clone() const = 0;
 
-   /// \brief Triggers (possibly asynchronous) evaluation of the likelihood
-   ///
-   /// In parallel strategies, it may be advantageous to allow a calling process to continue on with other tasks while
-   /// the calculation is offloaded to another process or device, like a GPU. For this reason, evaluate() does not
-   /// return the result, this is done in getResult().
    virtual void evaluate() = 0;
-   /// \brief Return the latest result of a likelihood evaluation.
-   ///
-   /// Returns the result that was stored after calling evaluate(). It is up to the implementer to make sure the stored
-   /// value represents the most recent evaluation call, e.g. by using a mutex.
    virtual double getResult() const = 0;
 
-   /// Synchronize minimizer settings with calculators in child classes
+   // synchronize minimizer settings with calculators in child classes
    virtual void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions & options);
    virtual void synchronizeParameterSettings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings);
-   /// Minuit passes in parameter values that may not conform to RooFit internal standards (like applying range clipping),
-   /// but that the specific calculator does need. This function can be implemented to receive these Minuit-internal values:
+   // Minuit passes in parameter values that may not conform to RooFit internal standards (like applying range clipping),
+   // but that the specific calculator does need. This function can be implemented to receive these Minuit-internal values:
    virtual void updateMinuitInternalParameterValues(const std::vector<double>& minuit_internal_x);
    virtual void updateMinuitExternalParameterValues(const std::vector<double>& minuit_external_x);
 
-   // The following functions are necessary from MinuitFcnGrad to reach likelihood properties:
+   // necessary from MinuitFcnGrad to reach likelihood properties:
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
    double defaultErrorLevel() const;
    virtual std::string GetName() const;
