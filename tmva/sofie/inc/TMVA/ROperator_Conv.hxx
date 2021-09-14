@@ -156,6 +156,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Conv Op input tensor" + fNW + " is not of 4 dimensions");
       }
+      fShapeY = ShapeInference({fShapeX, fShapeW})[0];
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       if (fNB != "") {
          if (!model.CheckIfTensorAlreadyExist(fNB)) {
             throw
@@ -173,8 +175,7 @@ public:
             }
          }
       }
-      fShapeY = ShapeInference({fShapeX, fShapeW})[0];
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      
    }
 
    std::string Generate(std::string OpName) {
