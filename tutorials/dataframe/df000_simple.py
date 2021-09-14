@@ -2,9 +2,9 @@
 ## \ingroup tutorial_dataframe
 ## Simple RDataFrame example in Python.
 ##
-## This tutorial shows a minimal example of RDataFrame that creates an
-## empty-source data frame, adds a new column `x` with random numbers
-## and finally creates and draws a histogram for `x`.
+## This tutorial shows a minimal example of RDataFrame. It starts without input
+## data, generates a new column `x` with random numbers, and finally draws
+## a histogram for `x`.
 ##
 ## \macro_code
 ## \macro_output
