@@ -2,9 +2,9 @@
 /// \ingroup tutorial_dataframe
 /// Simple RDataFrame example in C++.
 ///
-/// This tutorial shows a minimal example of RDataFrame that creates an
-/// empty-source data frame, adds a new column `x` with random numbers
-/// and finally creates and draws a histogram for `x`.
+/// This tutorial shows a minimal example of RDataFrame. It starts without input
+/// data, generates a new column `x` with random numbers, and finally draws
+/// a histogram for `x`.
 ///
 /// \macro_code
 /// \macro_output
@@ -20,7 +20,10 @@ void df000_simple()
    // Define a new column `x` that contains random numbers
    auto rdf_x = rdf.Define("x", [](){ return gRandom->Rndm(); });
 
-   // Create a histogram from `x` and draw it
+   // Create a histogram from `x`
    auto h = rdf_x.Histo1D("x");
+
+   // At the end of this function, the histogram pointed to by `h` will be deleted.
+   // Draw a copy of the histogram object instead:
    h->DrawClone();
 }
