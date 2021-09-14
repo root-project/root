@@ -244,6 +244,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     TestStatistics/RooSumL.h
     TestStatistics/RooRealL.h
     TestStatistics/RooUnbinnedL.h
+    TestStatistics/kahan_sum.h
     TestStatistics/optional_parameter_types.h
     TestStatistics/buildLikelihood.h
   SOURCES
@@ -475,6 +476,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/optional_parameter_types.cxx
     src/TestStatistics/buildLikelihood.cxx
+    src/TestStatistics/kahan_sum.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES

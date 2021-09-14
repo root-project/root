@@ -68,7 +68,7 @@ public:
    ///
    /// Returns the result that was stored after calling evaluate(). It is up to the implementer to make sure the stored
    /// value represents the most recent evaluation call, e.g. by using a mutex.
-   virtual ROOT::Math::KahanSum<double> getResult() const = 0;
+   virtual double getResult() const = 0;
 
    /// Synchronize minimizer settings with calculators in child classes
    virtual void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions & options);
@@ -86,7 +86,8 @@ public:
    inline virtual bool isOffsetting() const { return do_offset_; }
    virtual void enableOffsetting(bool flag);
    void setOffsettingMode(OffsettingMode mode);
-   inline ROOT::Math::KahanSum<double> offset() const { return offset_; }
+   inline double offset() const { return offset_; }
+   inline double offsetCarry() const { return offset_carry_; }
    void setApplyWeightSquared(bool flag);
 
 protected:
@@ -94,10 +95,12 @@ protected:
    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
 
    bool do_offset_ = false;
-   ROOT::Math::KahanSum<double> offset_;
-   ROOT::Math::KahanSum<double> offset_save_ = 0;      //!
+   double offset_ = 0;
+   double offset_carry_ = 0;
+   double offset_save_ = 0;      //!
+   double offset_carry_save_ = 0; //!
    OffsettingMode offsetting_mode_ = OffsettingMode::legacy;
-   ROOT::Math::KahanSum<double> applyOffsetting(ROOT::Math::KahanSum<double> current_value);
+   void applyOffsetting(double &current_value, double &carry);
    void swapOffsets();
 };
 

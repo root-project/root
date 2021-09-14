@@ -16,6 +16,7 @@
 
 
 #include <TestStatistics/LikelihoodSerial.h>
+#include <TestStatistics/kahan_sum.h>
 #include <TestStatistics/RooAbsL.h>
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
@@ -85,10 +86,12 @@ void LikelihoodSerial::evaluate() {
    case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
       result = likelihood_->evaluatePartition({0, 1}, 0, 0);
+      carry = likelihood_->getCarry();
       break;
    }
    case LikelihoodType::sum: {
       result = likelihood_->evaluatePartition({0, 1}, 0, likelihood_->getNComponents());
+      carry = likelihood_->getCarry();
       break;
    }
    default: {
@@ -97,7 +100,7 @@ void LikelihoodSerial::evaluate() {
    }
    }
 
-   result = applyOffsetting(result);
+   applyOffsetting(result, carry);
 }
 
 } // namespace TestStatistics

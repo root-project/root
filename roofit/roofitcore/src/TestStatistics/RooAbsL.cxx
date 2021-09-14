@@ -100,7 +100,7 @@ RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, std::size_t N_events, std
 
 
 RooAbsL::RooAbsL(const RooAbsL &other)
-   : pdf_(other.pdf_), data_(other.data_), N_events_(other.N_events_), N_components_(other.N_components_), extended_(other.extended_), sim_count_(other.sim_count_)
+   : pdf_(other.pdf_), data_(other.data_), N_events_(other.N_events_), N_components_(other.N_components_), extended_(other.extended_), sim_count_(other.sim_count_), eval_carry_(other.eval_carry_)
 {
    // it can never be one, since we just copied the shared_ptr; if it is, something really weird is going on; also they must be equal (usually either zero or two)
    assert((pdf_.use_count() != 1) && (data_.use_count() != 1) && (pdf_.use_count() == data_.use_count()));

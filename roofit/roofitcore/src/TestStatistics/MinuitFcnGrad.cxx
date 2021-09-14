@@ -47,7 +47,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
    // Calculate the function for these parameters
 //   RooAbsReal::setHideOffset(kFALSE);
    likelihood->evaluate();
-   double fvalue = likelihood->getResult().Sum();
+   double fvalue = likelihood->getResult();
    calculation_is_clean->likelihood = true;
 //   RooAbsReal::setHideOffset(kTRUE);
 

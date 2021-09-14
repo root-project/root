@@ -14,40 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef ROOT_ROOFIT_LikelihoodSerial
-#define ROOT_ROOFIT_LikelihoodSerial
-
-#include <TestStatistics/LikelihoodWrapper.h>
-#include "RooArgList.h"
-
-#include "Math/MinimizerOptions.h"
-
-#include <map>
+#include <TestStatistics/kahan_sum.h>
 
 namespace RooFit {
-namespace TestStatistics {
 
-class LikelihoodSerial : public LikelihoodWrapper {
-public:
-   LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
-   inline LikelihoodSerial *clone() const override { return new LikelihoodSerial(*this); }
+std::tuple<double, double> kahan_add(double sum, double additive, double carry)
+{
+   double y = additive - carry;
+   double t = sum + y;
+   carry = (t - sum) - y;
+   sum = t;
 
-   void initVars();
-
-   void evaluate() override;
-   inline double getResult() const override { return result; }
-
-private:
-   double result = 0;
-   double carry = 0;
-
-   RooArgList _vars;      // Variables
-   RooArgList _saveVars;  // Copy of variables
-
-   LikelihoodType likelihood_type;
-};
-
-}
+   return {sum, carry};
 }
 
-#endif // ROOT_ROOFIT_LikelihoodSerial
+}

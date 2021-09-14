@@ -27,18 +27,19 @@ class RooArgSet;
 namespace RooFit {
 namespace TestStatistics {
 
-class RooUnbinnedL : public RooAbsL {
+class RooUnbinnedL :
+   public RooAbsL {
 public:
-   RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
+   RooUnbinnedL(RooAbsPdf* pdf, RooAbsData* data, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
    RooUnbinnedL(const RooUnbinnedL &other);
    bool setApplyWeightSquared(bool flag);
 
-   ROOT::Math::KahanSum<double>
-   evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
+   double evaluatePartition(Section events, std::size_t components_begin,
+                             std::size_t components_end) override;
 
 private:
-   bool apply_weight_squared = false; // Apply weights squared?
-   mutable bool _first = true;        //!
+   bool apply_weight_squared = false;            // Apply weights squared?
+   mutable bool _first = true;       //!
 };
 
 } // namespace TestStatistics

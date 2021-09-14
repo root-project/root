@@ -21,8 +21,6 @@
 #include "RooArgList.h"
 #include "RooArgSet.h"
 
-#include "Math/Util.h" // KahanSum
-
 namespace RooFit {
 namespace TestStatistics {
 
@@ -30,8 +28,7 @@ class RooSubsidiaryL : public RooAbsL {
 public:
    RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgSet &pdfs, const RooArgSet &parameter_set);
 
-   ROOT::Math::KahanSum<double>
-   evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
+   double evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
    inline RooArgSet *getParameters() override { return &parameter_set_; }
    inline std::string GetName() const override { return std::string("subsidiary_pdf_of_") + parent_pdf_name_; }
 

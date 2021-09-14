@@ -34,20 +34,17 @@ In extended mode, a
 #include "RooAbsPdf.h"
 #include "RooAbsDataStore.h"
 
-#include "Math/Util.h" // KahanSum
-
 namespace RooFit {
 namespace TestStatistics {
 
-RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended)
+RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data,
+                           RooAbsL::Extended extended)
    : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1, extended)
-{
-}
+{}
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
    : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first)
-{
-}
+{}
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -68,18 +65,18 @@ bool RooUnbinnedL::setApplyWeightSquared(bool flag)
 /// and the zero event is processed the extended term is added to the return
 /// likelihood.
 ///
-ROOT::Math::KahanSum<double>
-RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/, std::size_t /*components_end*/)
+double RooUnbinnedL::evaluatePartition(Section events,
+                                        std::size_t /*components_begin*/, std::size_t /*components_end*/)
 {
    // Throughout the calculation, we use Kahan's algorithm for summing to
    // prevent loss of precision - this is a factor four more expensive than
    // straight addition, but since evaluating the PDF is usually much more
    // expensive than that, we tolerate the additional cost...
-   ROOT::Math::KahanSum<double> result;
+   Double_t result(0), carry(0);
 
    data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, kTRUE);
 
-   ROOT::Math::KahanSum<double> sumWeight;
+   Double_t sumWeight(0), sumWeightCarry(0);
 
    for (std::size_t i = events.begin(N_events_); i < events.end(N_events_); ++i) {
       data_->get(i);
@@ -97,8 +94,15 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
 
       Double_t term = -eventWeight * pdf_->getLogVal(normSet_.get());
 
-      sumWeight += eventWeight;
-      result += term;
+      Double_t y = eventWeight - sumWeightCarry;
+      Double_t t = sumWeight + y;
+      sumWeightCarry = (t - sumWeight) - y;
+      sumWeight = t;
+
+      y = term - carry;
+      t = result + y;
+      carry = (t - result) - y;
+      result = t;
    }
 
    // include the extended maximum likelihood term, if requested
@@ -106,11 +110,13 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       if (apply_weight_squared) {
 
          // Calculate sum of weights-squared here for extended term
-         ROOT::Math::KahanSum<double> sumW2;
-
+         Double_t sumW2(0), sumW2carry(0);
          for (Int_t i = 0; i < data_->numEntries(); i++) {
             data_->get(i);
-            sumW2 += data_->weightSquared();
+            Double_t y = data_->weightSquared() - sumW2carry;
+            Double_t t = sumW2 + y;
+            sumW2carry = (t - sumW2) - y;
+            sumW2 = t;
          }
 
          Double_t expected = pdf_->expectedEvents(data_->get());
@@ -135,16 +141,26 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
 
          // Double_t y = pdf->extendedTerm(sumW2, data->get()) - carry;
 
-         result += extra;
+         Double_t y = extra - carry;
+
+         Double_t t = result + y;
+         carry = (t - result) - y;
+         result = t;
       } else {
-         result += pdf_->extendedTerm(data_->sumEntries(), data_->get());
+         Double_t y = pdf_->extendedTerm(data_->sumEntries(), data_->get()) - carry;
+         Double_t t = result + y;
+         carry = (t - result) - y;
+         result = t;
       }
    }
 
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
    if (sim_count_ > 1) {
-      result += sumWeight * log(1.0 * sim_count_);
+      Double_t y = sumWeight * log(1.0 * sim_count_) - carry;
+      Double_t t = result + y;
+      carry = (t - result) - y;
+      result = t;
    }
 
    // At the end of the first full calculation, wire the caches
@@ -153,6 +169,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       pdf_->wireAllCaches();
    }
 
+   eval_carry_ = carry;
    return result;
 }
 

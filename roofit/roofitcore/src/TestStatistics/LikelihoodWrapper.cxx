@@ -82,7 +82,8 @@ void LikelihoodWrapper::enableOffsetting(bool flag)
    do_offset_ = flag;
    // Clear offset if feature is disabled so that it is recalculated next time it is enabled
    if (!do_offset_) {
-      offset_ = {};
+      offset_ = 0;
+      offset_carry_ = 0;
    }
 }
 
@@ -91,25 +92,34 @@ void LikelihoodWrapper::setOffsettingMode(OffsettingMode mode)
    offsetting_mode_ = mode;
    if (isOffsetting()) {
       oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization) << "LikelihoodWrapper::setOffsettingMode(" << GetName() << "): changed offsetting mode while offsetting was enabled; resetting offset values" << std::endl;
-      offset_ = {};
+      offset_ = 0;
+      offset_carry_ = 0;
    }
 }
 
-ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::KahanSum<double> current_value)
+void LikelihoodWrapper::applyOffsetting(double &current_value, double &carry)
 {
    if (do_offset_) {
 
       // If no offset is stored enable this feature now
       if (offset_ == 0 && current_value != 0) {
          offset_ = current_value;
+         offset_carry_ = carry;
          if (offsetting_mode_ == OffsettingMode::legacy) {
             auto sum_likelihood = dynamic_cast<RooSumL*>(likelihood_.get());
             if (sum_likelihood != nullptr) {
-               auto subsidiary_value = sum_likelihood->getSubsidiaryValue();
+               double subsidiary_value, subsidiary_carry;
+               std::tie(subsidiary_value, subsidiary_carry) = sum_likelihood->getSubsidiaryValue();
                // "undo" the addition of the subsidiary value to emulate legacy behavior
                offset_ -= subsidiary_value;
-               // manually calculate result with zero carry, again to emulate legacy behavior
-               return {current_value.Result() - offset_.Result()};
+               offset_carry_ -= subsidiary_carry;
+               // then add 0 in Kahan summation way to make sure the carry gets taken up into the value if it should be
+               double y = 0 - offset_carry_;
+               double t = offset_ + y;
+               offset_carry_ = (t - offset_) - y;
+               offset_ = t;
+               // also set carry to this value, again to emulate legacy behavior
+               carry = offset_carry_;
             }
          }
          oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
@@ -117,9 +127,25 @@ ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::Kaha
             << std::endl;
       }
 
-      return current_value - offset_;
-   } else {
-      return current_value;
+      // Subtract offset
+      // old method:
+//      {
+//         double y = -offset_ - (carry + offset_carry_);
+//         double t = current_value + y;
+//         carry = (t - current_value) - y;
+//         current_value = t;
+//      }
+      // TODO: make sure this change in methods (after replacing below by KahanSum object) doesn't affect results
+      // KahanSum method:
+      {
+         double new_value = current_value - offset_;
+         double new_carry = carry - offset_carry_;
+         // then add 0 in Kahan summation way to make sure the carry gets taken up into the value if it should be
+         double y = 0 - new_carry;
+         double t = new_value + y;
+         carry = (t - new_value) - y;
+         current_value = t;
+      }
    }
 }
 
@@ -129,6 +155,7 @@ ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::Kaha
 void LikelihoodWrapper::swapOffsets()
 {
    std::swap(offset_, offset_save_);
+   std::swap(offset_carry_, offset_carry_save_);
 }
 
 void LikelihoodWrapper::setApplyWeightSquared(bool flag)

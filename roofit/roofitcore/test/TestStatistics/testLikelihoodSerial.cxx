@@ -28,8 +28,7 @@
 #include <TestStatistics/optional_parameter_types.h>
 #include <TestStatistics/buildLikelihood.h>
 #include <TestStatistics/RooRealL.h>
-
-#include "Math/Util.h"  // KahanSum
+#include <TestStatistics/kahan_sum.h>
 
 #include <stdexcept> // runtime_error
 
@@ -404,12 +403,8 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    nll_ts.enableOffsetting(true);
 
    nll_ts.evaluate();
-   // The RooFit::TestStatistics classes used for minimization (RooAbsL and Wrapper derivatives) will return offset
-   // values, whereas RooNLLVar::getVal will always return the non-offset value, since that is the "actual" likelihood
-   // value. RooRealL will also give the non-offset value, so that can be directly compared to the RooNLLVar::getVal
-   // result (the nll0 vs nll2 comparison below). To compare to the raw RooAbsL/Wrapper value nll1, however, we need to
-   // manually add the offset.
-   ROOT::Math::KahanSum<double> nll1 = nll_ts.getResult() + nll_ts.offset();
+   double nll1, carry1;
+   std::tie(nll1, carry1) = RooFit::kahan_add(nll_ts.getResult(), nll_ts.offset(), nll_ts.offsetCarry() + likelihood->getCarry());
 
    EXPECT_DOUBLE_EQ(nll0, nll1);
    EXPECT_FALSE(nll_ts.offset() == 0);

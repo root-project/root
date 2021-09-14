@@ -28,14 +28,14 @@ class RooAbsData;
 namespace RooFit {
 namespace TestStatistics {
 
-class RooBinnedL : public RooAbsL {
+class RooBinnedL :
+   public RooAbsL {
 public:
-   RooBinnedL(RooAbsPdf *pdf, RooAbsData *data);
-   ROOT::Math::KahanSum<double>
-   evaluatePartition(Section bins, std::size_t components_begin, std::size_t components_end) override;
-
+   RooBinnedL(RooAbsPdf* pdf, RooAbsData* data);
+   double evaluatePartition(Section bins, std::size_t components_begin,
+                             std::size_t components_end) override;
 private:
-   mutable bool _first = true;        //!
+   mutable bool _first = true;       //!
    mutable std::vector<double> _binw; //!
 };
 

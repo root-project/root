@@ -48,11 +48,11 @@ Double_t RooRealL::evaluate() const
    // Evaluate as straight FUNC
    std::size_t last_component = likelihood_->getNComponents();
 
-   auto ret_kahan = likelihood_->evaluatePartition({0, 1}, 0, last_component);
+   Double_t ret = likelihood_->evaluatePartition({0, 1}, 0, last_component);
 
    const Double_t norm = globalNormalization();
-   double ret = ret_kahan.Sum() / norm;
-   eval_carry = ret_kahan.Carry() / norm;
+   ret /= norm;
+   eval_carry = likelihood_->getCarry() / norm;
 
    return ret;
 }
