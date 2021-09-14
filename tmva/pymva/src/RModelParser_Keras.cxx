@@ -33,6 +33,8 @@ namespace PyKeras{
 static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
 static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
 static std::vector<size_t>(& GetDataFromTuple)(PyObject*) = PyMethodBase::GetDataFromTuple;
+static std::vector<size_t>(& GetDataFromList)(PyObject*) = PyMethodBase::GetDataFromList;
+
 
 namespace INTERNAL{
 
@@ -65,9 +67,7 @@ const KerasMethodMap mapKerasLayer = {
 
 const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
    {"Dense",  &MakeKerasDense},
-   {"Conv1D", &MakeKerasConv},
    {"Conv2D", &MakeKerasConv},
-   {"Conv3D", &MakeKerasConv},
    };
 
 
@@ -333,13 +333,15 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       std::string fBiasName   = PyStringAsString(PyList_GetItem(fWeightNames,1));
 
       // Extracting the Conv Node Attributes
-      PyObject* fDilations       = PyDict_GetItemString(fAttributes,"dilation_rate'");
+      PyObject* fDilations       = PyDict_GetItemString(fAttributes,"dilation_rate");
       PyObject* fGroup           = PyDict_GetItemString(fAttributes,"groups");
       PyObject* fKernelShape     = PyDict_GetItemString(fAttributes,"kernel_size");
       PyObject* fPads            = PyDict_GetItemString(fAttributes,"padding");
       PyObject* fStrides         = PyDict_GetItemString(fAttributes,"strides");
 
       std::vector<size_t> fAttrDilations = GetDataFromTuple(fDilations);
+
+
       size_t fAttrGroup = PyLong_AsLong(fGroup);
       std::vector<size_t> fAttrKernelShape = GetDataFromTuple(fKernelShape);
       std::vector<size_t> fAttrStrides     = GetDataFromTuple(fStrides);
@@ -545,63 +547,33 @@ RModel Parse(std::string filename){
    // For every input tensor inputNames will have their names as string,
    // inputShapes will have their shape as Python Tuple, and inputTypes
    // will have their dtype as string
-   PyRunString("inputNames=model.input_names",fGlobalNS,fLocalNS);
-   PyRunString("inputShapes=model.input_shape",fGlobalNS,fLocalNS);
-   PyRunString("inputTypes=[]",fGlobalNS,fLocalNS);
-   PyRunString("for idx in range(len(model.inputs)):\n"
-               "  inputTypes.append(model.inputs[idx].dtype.__str__()[9:-2])",fGlobalNS,fLocalNS);
+   PyRunString("inputNames  = [x.name for x in model.input] if isinstance(model.input,list) else [model.input.name]",fGlobalNS,fLocalNS);
+   PyRunString("inputShapes = [list(x.shape) for x in model.input] if isinstance(model.input,list) else [list(model.input.shape)]",fGlobalNS,fLocalNS);
+   PyRunString("inputDTypes = [x.dtype.__str__()[9:-2] for x in model.input] if isinstance(model.input,list) else [model.input.dtype.__str__()[9:-2]]",fGlobalNS,fLocalNS);
 
    PyObject* fPInputs       = PyDict_GetItemString(fLocalNS,"inputNames");
    PyObject* fPInputShapes  = PyDict_GetItemString(fLocalNS,"inputShapes");
-   PyObject* fPInputTypes   = PyDict_GetItemString(fLocalNS,"inputTypes");
+   PyObject* fPInputDTypes  = PyDict_GetItemString(fLocalNS,"inputDTypes");
 
    std::string fInputName;
    ETensorType fInputDType;
+   std::vector<size_t>fInputShape;
 
-   // For single input models, the model.input_shape will return a tuple
-   // describing the input tensor shape. For multiple inputs models,
-   // the model.input_shape will return a list of tuple, each describing
-   // the input tensor shape.
-   if(PyTuple_Check(fPInputShapes)){
-      fInputName  = PyStringAsString(PyList_GetItem(fPInputs,0));
-      fInputDType = ConvertStringToType(PyStringAsString(PyList_GetItem(fPInputTypes,0)));
-
-      switch(fInputDType){
-
-         case ETensorType::FLOAT : {
-         if (PyTuple_GetItem(fPInputShapes,0) == Py_None){
-            throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
-         }
-
-         // Getting the shape vector from the Tuple object
-         std::vector<size_t>fInputShape=GetDataFromTuple(fPInputShapes);
-         rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
-         break;
-         }
-
-         default:
-         throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport data type"+ConvertTypeToString(fInputDType));
-      }
-
-   }
-
-   else{
-
-      // Iterating through multiple input tensors
-      for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(fPInputs);++inputIter){
+   // Iterating through the input tensors
+   for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(fPInputs);++inputIter){
 
       fInputName  = PyStringAsString(PyList_GetItem(fPInputs,inputIter));
-      fInputDType = ConvertStringToType(PyStringAsString(PyList_GetItem(fPInputTypes,inputIter)));
+      fInputDType = ConvertStringToType(PyStringAsString(PyList_GetItem(fPInputDTypes,inputIter)));
 
+      PyObject* fInputShapeList=PyList_GetItem(fPInputShapes,inputIter);
       switch(fInputDType){
          case ETensorType::FLOAT : {
-         PyObject* fInputShapeTuple=PyList_GetItem(fPInputShapes,inputIter);
 
-         if (PyTuple_GetItem(fInputShapeTuple,0) == Py_None){
+         if (PyList_GetItem(fInputShapeList,0) == Py_None){
             throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
          }
 
-         std::vector<size_t>fInputShape=GetDataFromTuple(fInputShapeTuple);
+         fInputShape=GetDataFromList(fInputShapeList);
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }
@@ -611,7 +583,7 @@ RModel Parse(std::string filename){
 
       }
       }
-   }
+
 
    // For adding OutputTensorInfos, the names of the output
    // tensors are extracted from the Keras model
