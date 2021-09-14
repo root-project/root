@@ -353,6 +353,27 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       if(fKerasPadding == "valid"){
          fAttrAutopad="VALID";
       }
+      else if(fKerasPadding == "same"){
+         fAttrAutopad="NOTSET";
+         PyObject* fInputShape = PyDict_GetItemString(fAttributes,"batch_input_shape");
+         long inputHeight = PyLong_AsLong(PyTuple_GetItem(fInputShape,1));
+         long inputWidth = PyLong_AsLong(PyTuple_GetItem(fInputShape,2));
+
+         long outputHeight = std::ceil(float(inputHeight) / float(fAttrStrides[0]));
+         long outputWidth  = std::ceil(float(inputWidth) / float(fAttrStrides[1]));
+
+         long x1 = (outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight;
+         long x2 = (outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth;
+
+         (x1 < 0) ? x1 = 0 : x1 = x1;
+         (x2 < 0) ? x2 = 0 : x2 = x2;
+
+         size_t x1_begin = std::floor(x1/2);
+         size_t x1_end   = x1 - x1_begin;
+         size_t x2_begin = std::floor(x2/2);
+         size_t x2_end   = x2 - x2_begin;
+         fAttrPads = {x1_begin,x2_begin,x1_end,x2_end};
+      }
       else{
          throw std::runtime_error("TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding);
       }
