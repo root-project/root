@@ -16,7 +16,6 @@
 
 #include "TestStatistics/MinuitFcnGrad.h"
 
-#include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
 
@@ -57,17 +56,18 @@ double MinuitFcnGrad::DoEval(const double *x) const
                << "RooGradMinimizerFcn: Minimized function has error status but is ignored" << std::endl;
          }
 
+         TIterator *iter = _floatParamList->createIterator();
+         RooRealVar *var;
          Bool_t first(kTRUE);
          ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << "Parameter values: ";
-         for (const auto rooAbsArg : *_floatParamList) {
-            auto var = static_cast<const RooRealVar*>(rooAbsArg);
+         while ((var = (RooRealVar *)iter->Next())) {
             if (first) {
                first = kFALSE;
-            } else {
+            } else
                ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << ", ";
-            }
             ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << var->GetName() << "=" << var->getVal();
          }
+         delete iter;
          ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << std::endl;
 
          RooAbsReal::printEvalErrors(ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval), _printEvalErrors);

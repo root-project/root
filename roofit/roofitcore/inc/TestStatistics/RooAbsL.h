@@ -22,7 +22,6 @@
 
 #include <cstddef> // std::size_t
 #include <string>
-#include <memory>
 
 // forward declarations
 class RooAbsPdf;

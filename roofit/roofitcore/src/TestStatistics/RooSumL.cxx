@@ -23,13 +23,20 @@
 namespace RooFit {
 namespace TestStatistics {
 
-/// \note Components must be passed with std::move, otherwise it cannot be moved into the RooSumL because of the unique_ptr!
-/// \note The number of events in RooSumL is that of the full dataset. Components will have their own number of events that may be more relevant.
+// Note: components must be passed with std::move, otherwise it cannot be moved into the RooSumL because of the unique_ptr!
 RooSumL::RooSumL(RooAbsPdf *pdf, RooAbsData *data, std::vector<std::unique_ptr<RooAbsL>> components, RooAbsL::Extended extended)
    : RooAbsL(pdf, data,
-             data->numEntries(),
+             data->numEntries(), // TODO: this may be misleading, because components in reality will have their own N_events...
              components.size(), extended), components_(std::move(components))
 {}
+
+
+bool RooSumL::processEmptyDataSets() const
+{
+   // TODO: check whether this is correct! This is copied the implementation of the RooNLLVar override; the
+   // implementation in RooAbsTestStatistic always returns true
+   return extended_;
+}
 
 double RooSumL::evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end)
 {
@@ -39,6 +46,11 @@ double RooSumL::evaluatePartition(Section events, std::size_t components_begin, 
    // from RooAbsOptTestStatistic::combinedValue (which is virtual, so could be different for non-RooNLLVar!):
    eval_carry_ = 0;
    for (std::size_t ix = components_begin; ix < components_end; ++ix) {
+      // TODO: make sure we only calculate over events in the sub-range that the caller asked for
+      //      std::size_t component_events_begin = std::max(events_begin, components_[ix]->get_N_events())  // THIS
+      //      WON'T WORK, we need to somehow allow evaluate_partition to take in separate event ranges for all
+      //      components...
+
       double y = components_[ix]->evaluatePartition(events, 0, 0);
 
       eval_carry_ += components_[ix]->getCarry();

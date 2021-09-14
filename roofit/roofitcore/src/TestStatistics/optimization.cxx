@@ -14,7 +14,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include <TestStatistics/ConstantTermsOptimizer.h>
+#include <TestStatistics/optimization.h>
 
 #include <RooMsgService.h>
 #include <RooVectorDataStore.h> // complete type for dynamic cast
@@ -61,7 +61,9 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
    if (applyTrackingOpt) {
       RooArgSet branches;
       function->branchNodeServerList(&branches);
-      for (const auto arg : branches) {
+      RooFIter iter = branches.fwdIterator();
+      RooAbsArg *arg;
+      while ((arg = iter.next())) {
          arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
@@ -85,11 +87,14 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
    dataset->cacheArgs(nullptr, cached_nodes, norm_set, !function->getAttribute("BinnedLikelihood"));
 
    // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
-   for (const auto cacheArg : cached_nodes) {
+   TIterator *cIter = cached_nodes.createIterator();
+   RooAbsArg *cacheArg;
+   while ((cacheArg = (RooAbsArg *)cIter->Next())) {
       cacheArg->setOperMode(RooAbsArg::AClean);
    }
+   delete cIter;
 
-   std::unique_ptr<RooArgSet> constNodes {(RooArgSet *)cached_nodes.selectByAttrib("ConstantExpressionCached", kTRUE)};
+   RooArgSet *constNodes = (RooArgSet *)cached_nodes.selectByAttrib("ConstantExpressionCached", kTRUE);
    RooArgSet actualTrackNodes(cached_nodes);
    actualTrackNodes.remove(*constNodes);
    if (constNodes->getSize() > 0) {
@@ -112,9 +117,12 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
                              << " expressions will be evaluated in cache-and-track-mode." << std::endl;
       }
    }
+   delete constNodes;
 
    // Disable reading of observables that are no longer used
    dataset->optimizeReadingWithCaching(*function, cached_nodes, requiredExtraObservables());
+
+   //   _optimized = kTRUE;
 }
 
 void ConstantTermsOptimizer::disableConstantTermsOptimization(RooAbsReal *function, RooArgSet *norm_set, RooArgSet *observables,

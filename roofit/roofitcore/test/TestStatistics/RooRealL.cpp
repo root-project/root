@@ -31,8 +31,6 @@
 #include <RooRealSumPdf.h>
 #include <RooNLLVar.h>
 
-#include <algorithm>  // count_if
-
 #include "gtest/gtest.h"
 
 class RooRealL
@@ -48,12 +46,12 @@ TEST_P(RooRealL, getVal)
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data {pdf->generate(RooArgSet(*x), 10000)};
-   std::unique_ptr<RooAbsReal> nll {pdf->createNLL(*data)};
+   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+   auto nll = pdf->createNLL(*data);
 
    auto nominal_result = nll->getVal();
 
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data));
 
    auto mp_result = nll_new.getVal();
 
@@ -65,17 +63,20 @@ void check_NLL_type(RooAbsReal *nll)
    if (dynamic_cast<RooAddition *>(nll) != nullptr) {
       std::cout << "the NLL object is a RooAddition*..." << std::endl;
       bool has_rooconstraintsum = false;
-      for (const auto nll_component : static_cast<RooAddition *>(nll)->list()) {
+      RooFIter nll_component_iter = nll->getComponents()->fwdIterator();
+      RooAbsArg *nll_component;
+      while ((nll_component = nll_component_iter.next())) {
          if (nll_component->IsA() == RooConstraintSum::Class()) {
             has_rooconstraintsum = true;
-            std::cout << "...containing a RooConstraintSum component: " << nll_component->GetName() << std::endl;
             break;
          } else if (nll_component->IsA() != RooNLLVar::Class() && nll_component->IsA() != RooAddition::Class()) {
             std::cerr << "... containing an unexpected component class: " << nll_component->ClassName() << std::endl;
             throw std::runtime_error("RooAddition* type NLL object contains unexpected component class!");
          }
       }
-      if (!has_rooconstraintsum) {
+      if (has_rooconstraintsum) {
+         std::cout << "...containing a RooConstraintSum component: " << nll_component->GetName() << std::endl;
+      } else {
          std::cout << "...containing only RooNLLVar components." << std::endl;
       }
    } else if (dynamic_cast<RooNLLVar *>(nll) != nullptr) {
@@ -87,9 +88,11 @@ void count_NLL_components(RooAbsReal *nll)
 {
    if (dynamic_cast<RooAddition *>(nll) != nullptr) {
       std::cout << "the NLL object is a RooAddition*..." << std::endl;
-      std::size_t nll_component_count = 0;
-      for (const auto& component : *nll->getComponents()) {
-         if (component->IsA() == RooNLLVar::Class()) {
+      unsigned nll_component_count = 0;
+      RooFIter nll_component_iter = nll->getComponents()->fwdIterator();
+      RooAbsArg *nll_component;
+      while ((nll_component = nll_component_iter.next())) {
+         if (nll_component->IsA() != RooNLLVar::Class()) {
             ++nll_component_count;
          }
       }
@@ -113,7 +116,7 @@ TEST_P(RooRealL, getValRooAddition)
    x->setRange("another_range", 1, 7);
 
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data {pdf->generate(RooArgSet(*x), 10000)};
+   RooDataSet *data = pdf->generate(*x, 10000);
 
    RooAbsReal *nll =
       pdf->createNLL(*data, RooFit::Range("x_range"), RooFit::Range("another_range"));
@@ -122,6 +125,7 @@ TEST_P(RooRealL, getValRooAddition)
    count_NLL_components(nll);
 
    delete nll;
+   delete data;
 }
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
@@ -144,16 +148,16 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    RooPolynomial p0("p0", "p0", x);
    RooPolynomial p1("p1", "p1", x, RooArgList(a0, a1, a2), 0);
 
-   std::unique_ptr<RooDataHist> dh_bkg {p0.generateBinned(x, 1000000000)};
-   std::unique_ptr<RooDataHist> dh_sig {p1.generateBinned(x, 100000000)};
+   RooDataHist *dh_bkg = p0.generateBinned(x, 1000000000);
+   RooDataHist *dh_sig = p1.generateBinned(x, 100000000);
    dh_bkg->SetName("dh_bkg");
    dh_sig->SetName("dh_sig");
 
    a1.setVal(2);
-   std::unique_ptr<RooDataHist> dh_sig_up {p1.generateBinned(x, 1100000000)};
+   RooDataHist *dh_sig_up = p1.generateBinned(x, 1100000000);
    dh_sig_up->SetName("dh_sig_up");
    a1.setVal(.5);
-   std::unique_ptr<RooDataHist> dh_sig_down {p1.generateBinned(x, 900000000)};
+   RooDataHist *dh_sig_down = p1.generateBinned(x, 900000000);
    dh_sig_down->SetName("dh_sig_down");
 
    RooWorkspace w = RooWorkspace("w");
@@ -174,7 +178,7 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
 
    RooAbsPdf *pdf = w.pdf("model2");
 
-   std::unique_ptr<RooDataHist> data {pdf->generateBinned(x, 1100000)};
+   RooDataHist *data = pdf->generateBinned(x, 1100000);
    RooAbsReal *nll = pdf->createNLL(*data);
 
    check_NLL_type(nll);
@@ -193,10 +197,10 @@ TEST_P(RooRealL, setVal)
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data {pdf->generate(RooArgSet(*x), 10000)};
-   std::unique_ptr<RooAbsReal> nll {pdf->createNLL(*data)};
+   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+   auto nll = pdf->createNLL(*data);
 
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data));
 
    // calculate first results
    auto nominal_result1 = nll->getVal();
@@ -242,13 +246,13 @@ TEST_P(RealLVsMPFE, getVal)
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data {pdf->generate(RooArgSet(*x), 10000)};
+   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
 
-   std::unique_ptr<RooAbsReal> nll_mpfe {pdf->createNLL(*data)};
+   auto nll_mpfe = pdf->createNLL(*data);
 
    auto mpfe_result = nll_mpfe->getVal();
 
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data));
 
    auto mp_result = nll_new.getVal();
 
@@ -264,6 +268,8 @@ TEST_P(RealLVsMPFE, minimize)
 
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
+   // TODO: see whether it performs adequately
+
    // parameters
    std::size_t seed = std::get<0>(GetParam());
 
@@ -276,16 +282,16 @@ TEST_P(RealLVsMPFE, minimize)
    RooAbsPdf *pdf = w.pdf("g");
    RooRealVar *mu = w.var("mu");
 
-   std::unique_ptr<RooDataSet> data {pdf->generate(RooArgSet(*x), 10000)};
+   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
    mu->setVal(-2.9);
 
-   std::unique_ptr<RooAbsReal> nll_mpfe {pdf->createNLL(*data)};
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   auto nll_mpfe = pdf->createNLL(*data);
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data));
 
    // save initial values for the start of all minimizations
    RooArgSet values = RooArgSet(*mu, *pdf);
 
-   auto savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
+   RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
    if (savedValues == nullptr) {
       throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
    }
@@ -300,7 +306,7 @@ TEST_P(RealLVsMPFE, minimize)
 
    m0.migrad();
 
-   std::unique_ptr<RooFitResult> m0result {m0.lastMinuitFit()};
+   RooFitResult *m0result = m0.lastMinuitFit();
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -316,7 +322,7 @@ TEST_P(RealLVsMPFE, minimize)
 
    m1.migrad();
 
-   std::unique_ptr<RooFitResult> m1result {m1.lastMinuitFit()};
+   RooFitResult *m1result = m1.lastMinuitFit();
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
    double mu1 = mu->getVal();
@@ -328,7 +334,6 @@ TEST_P(RealLVsMPFE, minimize)
    EXPECT_EQ(edm0, edm1);
 
    m1.cleanup(); // necessary in tests to clean up global _theFitter
-   delete savedValues;
 }
 
 INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RealLVsMPFE,

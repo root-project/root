@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 #include <TestStatistics/RooAbsL.h>
-#include <TestStatistics/ConstantTermsOptimizer.h>
+#include <TestStatistics/optimization.h>
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 
@@ -152,8 +152,10 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    normSet_.reset((RooArgSet *)indata.get()->snapshot(kFALSE));
 
    // Expand list of observables with any observables used in parameterized ranges
-   for (const auto realDep : *_funcObsSet) {
-      auto realDepRLV = dynamic_cast<RooAbsRealLValue *>(realDep);
+   RooAbsArg *realDep;
+   RooFIter iter = _funcObsSet->fwdIterator();
+   while ((realDep = iter.next())) {
+      RooAbsRealLValue *realDepRLV = dynamic_cast<RooAbsRealLValue *>(realDep);
       if (realDepRLV && realDepRLV->isDerived()) {
          RooArgSet tmp2;
          realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE);
@@ -167,14 +169,16 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
    const RooArgSet *dataDepSet = indata.get();
-   for (const auto arg : *_funcObsSet) {
+   iter = _funcObsSet->fwdIterator();
+   RooAbsArg *arg;
+   while ((arg = iter.next())) {
 
       // Check that both dataset and function argument are of type RooRealVar
-      auto realReal = dynamic_cast<RooRealVar *>(arg);
+      RooRealVar *realReal = dynamic_cast<RooRealVar *>(arg);
       if (!realReal) {
          continue;
       }
-      auto datReal = dynamic_cast<RooRealVar *>(dataDepSet->find(realReal->GetName()));
+      RooRealVar *datReal = dynamic_cast<RooRealVar *>(dataDepSet->find(realReal->GetName()));
       if (!datReal) {
          continue;
       }
