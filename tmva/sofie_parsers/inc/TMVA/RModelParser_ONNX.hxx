@@ -41,11 +41,7 @@ const factoryMethodMap mapOptypeOperator = {
       {"Conv", &make_ROperator_Conv},
       {"RNN", &make_ROperator_RNN}
       {"Selu", &make_ROperator_Selu},
-<<<<<<< HEAD
-=======
       {"Sigmoid", &make_ROperator_Sigmoid},
-      {"Conv", &make_ROperator_Conv}
->>>>>>> add sigmoid function to pytorch parser
    };
 
 
