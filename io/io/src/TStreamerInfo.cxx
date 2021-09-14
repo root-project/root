@@ -3424,40 +3424,17 @@ static bool R__IsUniquePtr(TStreamerElement *element) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write down the body of the 'move' constructor.
+/// Write down the pointers and arrays part of the body of the 'move' constructor.
 
-static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TIter &next)
+static void R__WriteMoveBodyPointersArrays(FILE *file, const TString &protoname, TIter &next)
 {
    TStreamerElement *element = 0;
-   next.Reset();
-   Bool_t atstart = kTRUE;
-   while ((element = (TStreamerElement*)next())) {
-      if (element->IsBase()) {
-         if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
-         else fprintf(file,"   , ");
-         fprintf(file, "%s(const_cast<%s &>( rhs ))\n", element->GetName(),protoname.Data());
-      } else {
-         if (element->GetArrayLength() <= 1) {
-            if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
-            else fprintf(file,"   , ");
-            if (R__IsUniquePtr(element)) {
-               fprintf(file, "%s(const_cast<%s &>( rhs ).%s.release() )\n",element->GetName(),protoname.Data(),element->GetName());
-            } else {
-               fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
-            }
-         }
-      }
-   }
-   fprintf(file,"{\n");
-   fprintf(file,"   // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).\n");
-   fprintf(file,"   // Use at your own risk!\n");
-   fprintf(file,"   (void)rhs; // avoid warning about unused parameter\n");
    next.Reset();
    Bool_t defMod = kFALSE;
    while ((element = (TStreamerElement*)next())) {
       if (element->GetType() == TVirtualStreamerInfo::kObjectp || element->GetType() == TVirtualStreamerInfo::kObjectP||
-          element->GetType() == TVirtualStreamerInfo::kAnyp || element->GetType() == TVirtualStreamerInfo::kAnyP
-          || element->GetType() == TVirtualStreamerInfo::kAnyPnoVT)
+         element->GetType() == TVirtualStreamerInfo::kAnyp || element->GetType() == TVirtualStreamerInfo::kAnyP
+         || element->GetType() == TVirtualStreamerInfo::kAnyPnoVT)
       {
          if (!defMod) { fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
          const char *ename = element->GetName();
@@ -3506,7 +3483,7 @@ static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TI
             TVirtualCollectionProxy *proxy = cle ? element->GetClassPointer()->GetCollectionProxy() : 0;
             std::string method_name = "clear";
             if (!element->TestBit(TStreamerElement::kDoNotDelete) && proxy && (((TStreamerSTL*)element)->GetSTLtype() == ROOT::kSTLbitset)) {
-                method_name = "reset";
+               method_name = "reset";
             }
             if (element->IsBase()) {
                fprintf(file,"   modrhs.%s();\n", method_name.c_str());
@@ -3516,6 +3493,70 @@ static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TI
          }
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write down the body of the 'move' constructor.
+
+static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TIter &next)
+{
+   TStreamerElement *element = 0;
+   next.Reset();
+   Bool_t atstart = kTRUE;
+   while ((element = (TStreamerElement*)next())) {
+      if (element->IsBase()) {
+         if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
+         else fprintf(file,"   , ");
+         fprintf(file, "%s(const_cast<%s &>( rhs ))\n", element->GetName(),protoname.Data());
+      } else {
+         if (element->GetArrayLength() <= 1) {
+            if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
+            else fprintf(file,"   , ");
+            if (R__IsUniquePtr(element)) {
+               fprintf(file, "%s(const_cast<%s &>( rhs ).%s.release() )\n",element->GetName(),protoname.Data(),element->GetName());
+            } else {
+               fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+            }
+         }
+      }
+   }
+   fprintf(file,"{\n");
+   fprintf(file,"   // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).\n");
+   fprintf(file,"   // Use at your own risk!\n");
+   fprintf(file,"   (void)rhs; // avoid warning about unused parameter\n");
+
+   R__WriteMoveBodyPointersArrays(file, protoname, next);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write down the body of the 'move' constructor.
+
+static void R__WriteOddOperatorEqualBody(FILE *file, const TString &protoname, TIter &next)
+{
+   fprintf(file,"{\n");
+   fprintf(file,"   // This is NOT a copy operator=. This is actually a move operator= (for stl container's sake).\n");
+   fprintf(file,"   // Use at your own risk!\n");
+   fprintf(file,"   (void)rhs; // avoid warning about unused parameter\n");
+
+   TStreamerElement *element = 0;
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      if (element->IsBase()) {
+         fprintf(file, "   %s::operator=(const_cast<%s &>( rhs ));\n", element->GetName(),protoname.Data());
+      } else {
+         if (element->GetArrayLength() <= 1) {
+            if (R__IsUniquePtr(element)) {
+               fprintf(file, "   %s = std::move((const_cast<%s &>( rhs ).%s));\n",element->GetName(),protoname.Data(),element->GetName());
+            } else {
+               fprintf(file, "   %s = (const_cast<%s &>( rhs ).%s);\n",element->GetName(),protoname.Data(),element->GetName());
+            }
+         }
+      }
+   }
+
+   R__WriteMoveBodyPointersArrays(file, protoname, next);
+
+   fprintf(file, "   return *this;\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3804,10 +3845,13 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       R__WriteConstructorBody(fp,next);
       fprintf(fp,"   }\n");
       fprintf(fp,"   %s(%s && ) = default;\n",protoname.Data(),protoname.Data());
-      fprintf(fp,"   %s(const %s & rhs )\n",protoname.Data(),protoname.Data());
+      fprintf(fp,"   %s &operator=(const %s & rhs)\n   ",protoname.Data(),protoname.Data());
+      R__WriteOddOperatorEqualBody(fp,protoname,next);
+      fprintf(fp,"   }\n");
+      fprintf(fp,"   %s(const %s & rhs )\n   ",protoname.Data(),protoname.Data());
       R__WriteMoveConstructorBody(fp,protoname,next);
       fprintf(fp,"   }\n");
-      fprintf(fp,"   virtual ~%s() {\n",protoname.Data());
+      fprintf(fp,"   virtual ~%s() {\n   ",protoname.Data());
       R__WriteDestructorBody(fp,next);
       fprintf(fp,"   }\n\n");
 
@@ -3815,6 +3859,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       // Generate default functions, ClassDef and trailer.
       fprintf(fp,"\n   %s();\n",protoname.Data());
       fprintf(fp,"   %s(%s && ) = default;\n",protoname.Data(),protoname.Data());
+      fprintf(fp,"   %s &operator=(const %s & );\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   %s(const %s & );\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
 
@@ -3824,6 +3869,10 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(sfp,"#define %s_cxx\n",guard.Data());
       fprintf(sfp,"%s::%s() {\n",GetName(),protoname.Data());
       R__WriteConstructorBody(sfp,next);
+      fprintf(sfp,"}\n");
+
+      fprintf(sfp,"%s &%s::operator=(const %s & rhs)\n",GetName(),GetName(),protoname.Data());
+      R__WriteOddOperatorEqualBody(sfp,protoname,next);
       fprintf(sfp,"}\n");
 
       fprintf(sfp,"%s::%s(const %s & rhs)\n",GetName(),protoname.Data(),protoname.Data());
