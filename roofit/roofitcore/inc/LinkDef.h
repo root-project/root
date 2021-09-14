@@ -338,7 +338,6 @@
 #pragma link C++ class RooUnitTest+ ;
 #pragma link C++ class RooMinimizer+ ;
 #pragma link C++ class RooMinimizerFcn+ ;
-#pragma link C++ class RooFit::TestStatistics::RooRealL+ ;
 #pragma link C++ class RooAbsMoment+ ;
 #pragma link C++ class RooMoment+ ;
 #pragma link C++ class RooFirstMoment+ ;
