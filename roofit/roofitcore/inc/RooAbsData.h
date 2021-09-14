@@ -47,6 +47,12 @@ class RooFormulaVar;
 namespace RooBatchCompute{
 struct RunContext;
 }
+namespace RooFit {
+namespace TestStatistics {
+class RooAbsL;
+struct ConstantTermsOptimizer;
+}
+}
 
 
 // Writes a templated constructor for compatibility with ROOT builds using the
@@ -328,6 +334,9 @@ protected:
   friend class RooAbsReal ;
   friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
+  friend struct RooFit::TestStatistics::ConstantTermsOptimizer;
+  // for access into copied dataset:
+  friend class RooFit::TestStatistics::RooAbsL;
 
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual void resetCache() ;

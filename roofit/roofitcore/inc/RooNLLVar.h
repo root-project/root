@@ -63,6 +63,14 @@ public:
 
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
+  static RooNLLVar::ComputeResult computeBatchedFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
+                                                     std::unique_ptr<RooBatchCompute::RunContext> &evalData,
+                                                 RooArgSet *normSet, bool weightSq, std::size_t stepSize,
+                                                 std::size_t firstEvent, std::size_t lastEvent);
+  static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
+                                                bool weightSq, std::size_t stepSize, std::size_t firstEvent,
+                                                std::size_t lastEvent);
+
 protected:
 
   virtual Bool_t processEmptyDataSets() const { return _extended ; }
