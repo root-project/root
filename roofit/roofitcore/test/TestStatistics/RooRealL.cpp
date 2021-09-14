@@ -16,7 +16,6 @@
 
 #include "TestStatistics/RooRealL.h"
 #include "TestStatistics/RooUnbinnedL.h"
-#include <RunContext.h> // necessary to complete RooUnbinnedL
 
 #include <RooRandom.h>
 #include <RooWorkspace.h>

@@ -112,7 +112,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussian1D)
 
 TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 {
-   unsigned int N = 4;
+   unsigned int N = 1;
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
@@ -421,23 +421,4 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    EXPECT_EQ(nll0, nll2);
    EXPECT_DOUBLE_EQ(nll1, nll2);
-}
-
-TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
-{
-   unsigned int N = 4;
-
-   bool batch_mode = true;
-
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, batch_mode);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   dynamic_cast<RooFit::TestStatistics::RooUnbinnedL*>(likelihood.get())->setUseBatchedEvaluations(true);
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags/*, nullptr*/);
-
-   auto nll0 = nll->getVal();
-
-   nll_ts.evaluate();
-   auto nll1 = nll_ts.getResult();
-
-   EXPECT_EQ(nll0, nll1);
 }
