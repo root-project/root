@@ -4879,6 +4879,11 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 }
 
 
+/** Base function for computing multiple values of a RooAbsReal
+\param output The array where the results are stored
+\param nEvents The number of events to be processed
+\param dataMap A std::map containing the input data for the computations
+**/ 
 void RooAbsReal::computeBatch(RooBatchCompute::RooBatchComputeInterface*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
 
   // Find all servers that are serving real numbers to us, retrieve their batch data,

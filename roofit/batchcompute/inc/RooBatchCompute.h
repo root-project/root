@@ -62,7 +62,14 @@ enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShap
               NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
 
 /**
+ * \class RooBatchComputeInterface
+ * \ingroup Roobatchcompute
  * \brief The interface which should be implemented to provide optimised computation functions for implementations of RooAbsReal::evaluateSpan().
+ *
+ * The class RooBatchComputeInterface provides the mechanism for external modules (like RooFit) to call
+ * functions from the library. The power lies in the virtual functions that can resolve to different
+ * implementations for the functionality; for example, calling a function through dispatchCuda
+ * will resolve to efficient cuda implementations.
  *
  * This interface contains the signatures of the compute functions of every PDF that has an optimised implementation available.
  * These are the functions that perform the actual computations in batches.
