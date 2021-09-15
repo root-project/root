@@ -221,10 +221,17 @@ void TAttAxis::SetLabelSize(Float_t size)
 /// n2 is the number of second order divisions and
 /// n3 is the number of third order divisions.
 ///
-/// e.g. 512 means 12 primary and 5 secondary divisions.
-///
 /// If the number of divisions is "optimized" (see above) n1, n2, n3 are
 /// maximum values.
+///
+/// Examples:
+///
+///  - ndiv = 0: no tick marks.
+///  - ndiv = 2: 2 divisions, one tick mark in the middle of the axis.
+///  - ndiv = 510: 10 primary divisions, 5 secondary divisions.
+///  - ndiv = -10: exactly 10 primary divisions.
+
+
 
 void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 {
