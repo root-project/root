@@ -43,4 +43,4 @@ If a column has enough elements to fill at least half a page, there is a mechani
 writing uses two page buffers in turns and flushes the previous buffer only once the next buffer is at least at 50%.
 If the cluster gets flushed with an undersized tail page,
 the small page is appended to the previous page before flushing.
-Therefore, tail pages sizes are between [0.5 * target size .. 1.5 * target size].
+Therefore, tail pages sizes are between `[0.5 * target size .. 1.5 * target size]`.
