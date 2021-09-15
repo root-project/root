@@ -10,18 +10,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+/**
+\file RooBatchCompute.cxx
+\class RbcClass
+\ingroup Roobatchcompute
+
+This file contains the code for cpu computations using the RooBatchCompute library.
+**/
+
 #include "RooBatchCompute.h"
 #include "Batches.h"
 
 #include "ROOT/TExecutor.hxx"
 
-#include <cstdlib>
+#include <algorithm>
 
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
 std::vector<void (*)(Batches)> getFunctions();
 
+/// This class overrides some RooBatchComputeInterface functions, for the
+/// purpose of providing a CPU specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
 private:
    const std::vector<void (*)(Batches)> _computeFunctions;
@@ -32,7 +42,16 @@ public:
       // Set the dispatch pointer to this instance of the library upon loading
       dispatchCPU = this;
    }
-
+   /** Compute multiple values using optimized functions.
+   This method creates a Batches object and passes it to the correct compute function.
+   In case Implicit Multithreading is enabled, the events to be processed are equally
+   divided among the tasks to be generated and computed in parallel.
+   \param computer An enum specifying the compute function to be used.
+   \param output The array where the computation results are stored.
+   \param nEvents The number of events to be processed.
+   \param varData A std::map containing the values of the variables involved in the computation.
+   \param vars A std::vector containing pointers to the variables involved in the computation.
+   \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
    void compute(Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
                 const ArgVector &extraArgs) override
    {
@@ -65,7 +84,7 @@ public:
       };
       ex.Map(task, batchesArr);
    }
-
+   /// Return the sum of an input array
    double sumReduce(InputArr input, size_t n) override
    {
       long double sum = 0.0;
@@ -78,6 +97,17 @@ public:
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
 
+/** Construct a Batches object
+\param output The array where the computation results are stored.
+\param nEvents The number of events to be processed.
+\param varData A std::map containing the values of the variables involved in the computation.
+\param vars A std::vector containing pointers to the variables involved in the computation.
+\param extraArgs An optional std::vector containing extra double values that may participate in the computation.
+\param stackArr A 2D array allocated in stack (recommended for performance reasons) that is used as a buffer
+       for scalar variables.
+For every scalar parameter a buffer (one row of the stackArr) is filled with copies of the scalar
+value, so that it behaves as a batch and facilitates auto-vectorization. The Batches object can be
+passed by value to a compute function to perform efficient computations. **/
 Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
                  const ArgVector &extraArgs, double stackArr[maxParams][bufferSize])
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)

@@ -10,6 +10,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+/**
+\file RooBatchCompute.cu
+\class RbcClass
+\ingroup Roobatchcompute
+
+This file contains the code for cuda computations using the RooBatchCompute library.
+**/
+
 #include "RooBatchCompute.h"
 #include "Batches.h"
 
@@ -33,6 +41,8 @@ namespace RF_ARCH {
 
 std::vector<void (*)(Batches)> getFunctions();
 
+/// This class overrides some RooBatchComputeInterface functions, for the
+/// purpose of providing a cuda specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
 private:
    const std::vector<void (*)(Batches)> _computeFunctions;
@@ -43,6 +53,10 @@ public:
       dispatchCUDA = this; // Set the dispatch pointer to this instance of the library upon loading
    }
 
+   /** Initialize the cuda computation library.
+   This method needs to be called after the dynamic loading of the cuda instance of the
+   RooBatchCompute library. If cuda is not working properly, it will set the dispatchCUDA
+   pointer to nullptr. **/
    void init()
    {
       cudaError_t err = cudaSetDevice(0);
@@ -53,13 +67,22 @@ public:
          Error("RbcClass::init()", cudaGetErrorString(err));
       }
    }
-
+   /** Compute multiple values using cuda kernels.
+   This method creates a Batches object and passes it to the correct compute function.
+   The compute function is launched as a cuda kernel.
+   \param computer An enum specifying the compute function to be used.
+   \param output The array where the computation results are stored.
+   \param nEvents The number of events to be processed.
+   \param varData A std::map containing the values of the variables involved in the computation.
+   \param vars A std::vector containing pointers to the variables involved in the computation.
+   \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
    void compute(Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
                 const ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, varData, vars, extraArgs);
       _computeFunctions[computer]<<<128, 512>>>(batches);
    }
+   /// Return the sum of an input array
    double sumReduce(InputArr input, size_t n) override { return thrust::reduce(thrust::device, input, input + n, 0.0); }
 
    // cuda functions
@@ -142,6 +165,15 @@ public:
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
 
+/** Construct a Batches object
+\param output The array where the computation results are stored.
+\param nEvents The number of events to be processed.
+\param varData A std::map containing the values of the variables involved in the computation.
+\param vars A std::vector containing pointers to the variables involved in the computation.
+\param extraArgs An optional std::vector containing extra double values that may participate in the computation.
+For every scalar parameter a `Batch` object inside the `Batches` object is set accordingly;
+a data member of type double gets assigned the scalar value. This way, when the cuda kernel
+is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
 Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
                  const ArgVector &extraArgs, double[maxParams][bufferSize])
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)

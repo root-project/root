@@ -10,6 +10,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+/**
+\file Batches.h
+\class Batch
+\class Batches
+\ingroup RooBatchCompute
+
+These classes encapsulate the necessary data for the computations.
+They are lightweight objects designed to be passed by value and also flexible,
+so that they can contain data for every kind of compute function.
+**/
 #ifndef ROOFIT_BATCHCOMPUTE_BATCHES_H
 #define ROOFIT_BATCHCOMPUTE_BATCHES_H
 

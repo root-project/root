@@ -3695,6 +3695,13 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 }
 
 
+/** Base function for computing multiple values of a RooAbsPdf.
+First, the RooAbsReal base function is called to compute the raw values of the
+pdf. After that, divide by the normalization values found in the dataMap.
+\param output The array where the results are stored
+\param nEvents The number of events to be processed
+\param dataMap A std::map containing the input data for the computations
+**/ 
 void RooAbsPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   RooAbsReal::computeBatch(dispatch, output, nEvents, dataMap);

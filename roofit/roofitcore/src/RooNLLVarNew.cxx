@@ -11,6 +11,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+/**
+\file RooNLLVarNew.cxx
+\class RooNLLVarNew
+\ingroup Roofitcore
+
+This is a simple class designed to produce the nll values needed by the fitter.
+In contrast to the `RooNLLVar` class, any logic except the bare minimum has been
+transfered away to other classes, like the `RooFitDriver`. This class also calls
+functions from `RooBatchCompute` library to provide faster computation times.
+**/
+
 #include "RooNLLVarNew.h"
 #include "RooBatchCompute.h"
 
@@ -20,6 +31,14 @@
 
 using namespace ROOT::Experimental;
 
+/** Contstruct a RooNLLVarNew
+
+\param pdf The pdf for which the nll is computed for
+\param observables The observabes of the pdf
+\param weight A pointer to the weight variable (if exists)
+\param constraints A pointer to the constraints (if exist)
+\param isExtended Set to true if this is an extended fit
+**/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
                            RooAbsReal *weight, RooAbsReal *constraints, bool isExtended)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{&observables}, _isExtended{isExtended}
@@ -40,6 +59,13 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
       _constraints = other._constraints;
 }
 
+/** Compute multiple negative logs of propabilities
+
+\param dispatch A pointer to the RooBatchCompute library interface used for this computation
+\param output An array of doubles where the computation results will be stored
+\param nEvents The number of events to be processed
+\param dataMap A map containing spans with the input data for the computation
+**/
 void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispatch, double *output, size_t nEvents,
                                 RooBatchCompute::DataMap &dataMap) const
 {
@@ -60,6 +86,12 @@ void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispa
    }
 }
 
+/** Reduce an array of nll values to the sum of them
+
+\param dispatch A pointer to the RooBatchCompute library interface used for this computation
+\param input The input array with the nlls to be reduced
+\param nEvents the number of events to be processed
+**/
 double
 RooNLLVarNew::reduce(RooBatchCompute::RooBatchComputeInterface *dispatch, const double *input, size_t nEvents) const
 {
