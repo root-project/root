@@ -157,7 +157,7 @@ namespace SOFIE{
          fGC += "\ttp_start = std::chrono::steady_clock::now();\n";
          fGC += (fModel.fOperators[id]->Generate(std::to_string(id)));
          // Stopping timer
-         fGC += "\profiler_results[\"" + fModel.fOperators[id]->name + "\"].push_back(std::chrono::duration_cast<std::chrono::microseconds>(\n";
+         fGC += "\tprofiler_results[\"" + fModel.fOperators[id]->name + "\"].push_back(std::chrono::duration_cast<std::chrono::microseconds>(\n";
          fGC += "\t\tstd::chrono::steady_clock::now() - tp_start).count() / 1e0);\n";
       }
       //fGC += "\tprofiler_results.push_back(std::move(current_execution));\n";

@@ -62,7 +62,7 @@ model.OutputGenerated(“./example_output_prof.hxx”);
 Once the model has been created, we can include it in our code and start profiling the inference.
 By running `infer` at least once, the profiler will collect the microseconds that each operator took.
 
-The use will also be able to use utility functions like `GetOpAvgTime()` and `GetOpAvgTime()`.
+The use will also be able to use utility functions like `GetOpAvgTime()` and `GetOpVariance()`.
 ```C++
 #include "example_output_prof.hxx"
 
