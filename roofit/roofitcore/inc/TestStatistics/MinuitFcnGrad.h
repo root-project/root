@@ -37,7 +37,7 @@ namespace TestStatistics {
 
 // forward declaration
 class LikelihoodSerial;
-class LikelihoodGradientSerial;
+//class LikelihoodGradientSerial;
 
 /// For communication with wrappers, an instance of this struct must be shared between them and MinuitFcnGrad. It keeps
 /// track of what has been evaluated for the current parameter set provided by Minuit.
@@ -56,8 +56,8 @@ struct WrapperCalculationCleanFlags {
 class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
    // factory
-   template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodSerial,
-             typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientSerial>
+   template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodSerial*/,
+             typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientSerial*/>
    static MinuitFcnGrad *
    create(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &likelihood, RooMinimizer *context,
           std::vector<ROOT::Fit::ParameterSettings> &parameters, bool verbose = false);
