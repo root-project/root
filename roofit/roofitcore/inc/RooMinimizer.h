@@ -32,6 +32,9 @@
 #include "RooMinimizerFcn.h"
 #include "RooGradMinimizerFcn.h"
 
+#include "TestStatistics/RooAbsL.h"
+#include "TestStatistics/MinuitFcnGrad.h"
+
 #include "RooSentinel.h"
 #include "RooMsgService.h"
 

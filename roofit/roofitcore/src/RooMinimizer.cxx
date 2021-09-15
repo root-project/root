@@ -249,9 +249,6 @@ void RooMinimizer::setOffsetting(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
 
-// forward declaration (necessary for avoiding circular dependency problems)
-class RooGradMinimizerFcn;
-
 void RooMinimizer::setMinimizerType(const char* type)
 {
   if (_fcnMode != FcnMode::classic && strcmp(type, "Minuit2") != 0) {
@@ -325,6 +322,10 @@ bool RooMinimizer::fitFcn() const {
    }
    case FcnMode::gradient: {
       ret = _theFitter->FitFCN(*dynamic_cast<RooGradMinimizerFcn *>(_fcn));
+      break;
+   }
+   case FcnMode::generic_wrapper: {
+      ret = _theFitter->FitFCN(*dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(_fcn));
       break;
    }
    default: {
@@ -870,6 +871,9 @@ ROOT::Math::IMultiGenFunction* RooMinimizer::getMultiGenFcn() const
       case FcnMode::gradient: {
          return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooGradMinimizerFcn *>(_fcn));
       }
+      case FcnMode::generic_wrapper: {
+         return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(_fcn));
+      }
       default: {
          throw std::logic_error("In RooMinimizer::getMultiGenFcn: _fcnMode has an unsupported value!");
       }
@@ -887,6 +891,9 @@ const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
       }
       case FcnMode::gradient: {
          return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooGradMinimizerFcn *>(getFitterMultiGenFcn()));
+      }
+      case FcnMode::generic_wrapper: {
+         return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(getFitterMultiGenFcn()));
       }
       default: {
          throw std::logic_error("In RooMinimizer::fitterFcn: _fcnMode has an unsupported value!");
