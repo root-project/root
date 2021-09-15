@@ -48,7 +48,7 @@ class RooPlot ;
 namespace RooFit {
 namespace TestStatistics {
 class LikelihoodSerial;
-class LikelihoodGradientSerial;
+//class LikelihoodGradientSerial;
 }
 } // namespace RooFit
 
@@ -58,8 +58,8 @@ public:
 
   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
   static std::unique_ptr<RooMinimizer> create(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
-  template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodSerial,
-            typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientSerial>
+  template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodSerial*/,
+            typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientSerial*/>
   static std::unique_ptr<RooMinimizer> create(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood);
 
   ~RooMinimizer() override;
@@ -136,10 +136,10 @@ protected:
   bool fitFcn() const;
 
 private:
-  template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodSerial, typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientSerial>
+  template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodSerial*/, typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientSerial*/>
   RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
-               LikelihoodWrapperT* /* used only for template deduction */ = static_cast<RooFit::TestStatistics::LikelihoodSerial*>(nullptr),
-               LikelihoodGradientWrapperT* /* used only for template deduction */ = static_cast<RooFit::TestStatistics::LikelihoodGradientSerial*>(nullptr));
+               LikelihoodWrapperT* /* used only for template deduction = static_cast<RooFit::TestStatistics::LikelihoodSerial*>(nullptr) */,
+               LikelihoodGradientWrapperT* /* used only for template deduction  = static_cast<RooFit::TestStatistics::LikelihoodGradientSerial*>(nullptr) */);
 
   Int_t _printLevel = 1;
   Int_t _status = -99;
