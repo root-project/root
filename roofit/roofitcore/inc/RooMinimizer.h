@@ -45,10 +45,16 @@ class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
 class RooPlot ;
+namespace RooFit {
+namespace TestStatistics {
+class LikelihoodSerial;
+class LikelihoodGradientSerial;
+}
+} // namespace RooFit
 
 class RooMinimizer : public TObject {
 public:
-  enum class FcnMode { classic, gradient };
+  enum class FcnMode { classic, gradient, generic_wrapper };
 
   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
   static std::unique_ptr<RooMinimizer> create(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
