@@ -87,9 +87,9 @@ public:
       RSealedPage() = default;
       RSealedPage(const void *b, std::uint32_t s, std::uint32_t n) : fBuffer(b), fSize(s), fNElements(n) {}
       RSealedPage(const RSealedPage &other) = delete;
-      RSealedPage& operator =(const RSealedPage &other) = delete;
+      RSealedPage &operator=(const RSealedPage &other) = delete;
       RSealedPage(RSealedPage &&other) = default;
-      RSealedPage& operator =(RSealedPage &&other) = default;
+      RSealedPage &operator=(RSealedPage &&other) = default;
    };
 
 protected:
@@ -99,9 +99,9 @@ protected:
 public:
    explicit RPageStorage(std::string_view name);
    RPageStorage(const RPageStorage &other) = delete;
-   RPageStorage& operator =(const RPageStorage &other) = delete;
+   RPageStorage &operator=(const RPageStorage &other) = delete;
    RPageStorage(RPageStorage &&other) = default;
-   RPageStorage& operator =(RPageStorage &&other) = default;
+   RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage();
 
    /// Whether the concrete implementation is a sink or a source
@@ -160,6 +160,7 @@ protected:
       RNTupleAtomicCounter &fTimeWallZip;
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuWrite;
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuZip;
+      RNTupleFixedWidthHistogram &fHistoSzWritePayload;
    };
    std::unique_ptr<RCounters> fCounters;
    RNTupleMetrics fMetrics;
@@ -185,8 +186,8 @@ protected:
 
    virtual void CreateImpl(const RNTupleModel &model) = 0;
    virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
-   virtual RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
-                                                             const RPageStorage::RSealedPage &sealedPage) = 0;
+   virtual RClusterDescriptor::RLocator
+   CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    virtual RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) = 0;
    virtual void CommitDatasetImpl() = 0;
 
@@ -198,8 +199,7 @@ protected:
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting);
 
    /// Seal a page using the provided buffer.
-   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element,
-      int compressionSetting, void *buf);
+   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf);
 
    /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -215,10 +215,10 @@ protected:
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RPageSink(const RPageSink&) = delete;
-   RPageSink& operator=(const RPageSink&) = delete;
-   RPageSink(RPageSink&&) = default;
-   RPageSink& operator=(RPageSink&&) = default;
+   RPageSink(const RPageSink &) = delete;
+   RPageSink &operator=(const RPageSink &) = delete;
+   RPageSink(RPageSink &&) = default;
+   RPageSink &operator=(RPageSink &&) = default;
    virtual ~RPageSink();
 
    /// Guess the concrete derived page source from the file name (location)
@@ -249,7 +249,8 @@ public:
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) = 0;
 
-   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
+   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
+   /// overriding this.
    virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
@@ -288,6 +289,7 @@ protected:
       RNTupleCalcPerf &fBandwidthUnzip;
       RNTupleCalcPerf &fFractionReadOverhead;
       RNTupleCalcPerf &fCompressionRatio;
+      RNTupleFixedWidthHistogram &fHistoSzWritePayload;
    };
    std::unique_ptr<RCounters> fCounters;
    /// Wraps the I/O counters and is observed by the RNTupleReader metrics
@@ -305,14 +307,13 @@ protected:
 
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(RCluster * /* cluster */)
-      { }
+   virtual void UnzipClusterImpl(RCluster * /* cluster */) {}
 
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
    /// Usage of this method requires construction of fDecompressor.
-   std::unique_ptr<unsigned char []> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
+   std::unique_ptr<unsigned char[]> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -324,10 +325,10 @@ protected:
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
-   RPageSource(const RPageSource&) = delete;
-   RPageSource& operator=(const RPageSource&) = delete;
-   RPageSource(RPageSource&&) = default;
-   RPageSource& operator=(RPageSource&&) = default;
+   RPageSource(const RPageSource &) = delete;
+   RPageSource &operator=(const RPageSource &) = delete;
+   RPageSource(RPageSource &&) = default;
+   RPageSource &operator=(RPageSource &&) = default;
    virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
@@ -375,7 +376,8 @@ public:
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
 
-   /// Returns the default metrics object.  Subclasses might alternatively override the method and provide their own metrics object.
+   /// Returns the default metrics object.  Subclasses might alternatively override the method and provide their own
+   /// metrics object.
    virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 

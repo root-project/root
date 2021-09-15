@@ -19,9 +19,7 @@
 
 #include <iostream>
 
-ROOT::Experimental::Detail::RNTuplePerfCounter::~RNTuplePerfCounter()
-{
-}
+ROOT::Experimental::Detail::RNTuplePerfCounter::~RNTuplePerfCounter() {}
 
 std::string ROOT::Experimental::Detail::RNTuplePerfCounter::ToString() const
 {
@@ -30,10 +28,10 @@ std::string ROOT::Experimental::Detail::RNTuplePerfCounter::ToString() const
 
 bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
 {
-  return GetLocalCounter(name) != nullptr;
+   return GetLocalCounter(name) != nullptr;
 }
 
-const ROOT::Experimental::Detail::RNTuplePerfCounter*
+const ROOT::Experimental::Detail::RNTuplePerfCounter *
 ROOT::Experimental::Detail::RNTupleMetrics::GetLocalCounter(std::string_view name) const
 {
    for (const auto &c : fCounters) {
@@ -43,7 +41,7 @@ ROOT::Experimental::Detail::RNTupleMetrics::GetLocalCounter(std::string_view nam
    return nullptr;
 }
 
-const ROOT::Experimental::Detail::RNTuplePerfCounter*
+const ROOT::Experimental::Detail::RNTuplePerfCounter *
 ROOT::Experimental::Detail::RNTupleMetrics::GetCounter(std::string_view name) const
 {
    std::string prefix = fName + ".";
@@ -73,6 +71,12 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, con
    for (const auto &c : fCounters) {
       output << prefix << fName << kNamespaceSeperator << c->ToString() << std::endl;
    }
+
+   for (const auto &c : fHistograms) {
+      output << prefix << fName << kNamespaceSeperator << c->ToString() << std::endl;
+      c->Dump();
+   }
+
    for (const auto c : fObservedMetrics) {
       c->Print(output, prefix + fName + ".");
    }
@@ -80,10 +84,10 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, con
 
 void ROOT::Experimental::Detail::RNTupleMetrics::Enable()
 {
-   for (auto &c: fCounters)
+   for (auto &c : fCounters)
       c->Enable();
    fIsEnabled = true;
-   for (auto m: fObservedMetrics)
+   for (auto m : fObservedMetrics)
       m->Enable();
 }
 

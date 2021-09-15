@@ -293,6 +293,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       fCounters->fNPageLoaded.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(bytesOnStorage);
+      fCounters->fHistoSzWritePayload.Fill(bytesOnStorage);
       sealedPageBuffer = directReadBuffer.get();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
@@ -475,6 +476,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    readRequests.emplace_back(req);
    fCounters->fSzReadPayload.Add(szPayload);
    fCounters->fSzReadOverhead.Add(szOverhead);
+   fCounters->fHistoSzWritePayload.Fill(szPayload);
 
    // Register the on disk pages in a page map
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
