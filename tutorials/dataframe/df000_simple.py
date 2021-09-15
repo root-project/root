@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_dataframe
+## \notebook -draw
 ## Simple RDataFrame example in Python.
 ##
 ## This tutorial shows a minimal example of RDataFrame. It starts without input
