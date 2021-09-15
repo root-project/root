@@ -78,7 +78,7 @@ private:
    /// Used in Append() and AppendV() to switch pages when the main page reached the target size
    /// The other page has been flushed when the main page reached 50%.
    void SwapHeadPages() {
-      fHeadPageIdx = 1 - fHeadPageIdx;
+      fHeadPageIdx = 1 - fHeadPageIdx; // == (fHeadPageIdx + 1) % 2
       R__ASSERT(fHeadPage[fHeadPageIdx].IsEmpty());
       fHeadPage[fHeadPageIdx].Reset(fNElements);
    }
