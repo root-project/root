@@ -28,17 +28,18 @@ Manages histogram axis attributes.
 
 They are:
 
-  - The number of divisions
-  - The line axis' color
-  - The labels' color
-  - The labels' font
-  - The labels' offset
-  - The labels' size
-  - The tick marks'
-  - The axis title's offset
-  - The axis title's size
-  - The axis title's color
-  - The axis title's font
+  - The number of divisions.
+  - The line axis' color.
+  - The axis labels' color.
+  - The axis labels' font.
+  - The axis labels' offset.
+  - The axis labels' size.
+  - The tick marks's length.
+  - The axis title's offset.
+  - The axis title's size.
+  - The axis title's color.
+  - The axis title's font.
+
 */
 
 TAttAxis::TAttAxis()
