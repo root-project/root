@@ -64,9 +64,9 @@ style is created simply by:
 auto default = new TStyle("Default","Default Style");
 ~~~
 
-The "**Plain**" style can be used if you are working on a monochrome display or
+The `Plain` style can be used if you are working on a monochrome display or
 if you want to get a "conventional" Postscript output. These are the instructions
-in the ROOT constructor to create the "Plain*" style.
+in the ROOT constructor to create the `Plain` style.
 
 ```
 auto plain  = new TStyle("Plain","Plain Style (no colors/fill areas)");
@@ -445,7 +445,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetLabelOffset(0.015,"z");
 
       SetTickLength(0.03,"x");
-      SetTickLength(0.02,"y");  // This way we slighty achive equal length ticks for x and y
+      SetTickLength(0.02,"y");  // This way we slightly achieve equal length ticks for x and y
 
       // use bold lines and markers
       SetMarkerStyle(20);
