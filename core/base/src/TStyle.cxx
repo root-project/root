@@ -150,12 +150,12 @@ TStyle::TStyle() :TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TStyle.
 /// The following names are reserved to create special styles
-///   - `Classic`
+///   - `Classic`: Similar to 'Default` style set in TStyle::Reset
 ///   - `Plain`: a black&white oriented style
 ///   - `Bold`
 ///   - `Video`
 ///   - `Pub`
-///   - `Modern` : the default style set in TStyle::Reset
+///   - `Modern` Used when ROOT starts
 ///   - `ATLAS`: style used by the ATLAS experiment
 ///   - `BELLE2`: style used by the BELLE II experiment
 ///     (see the definition of these styles below).
