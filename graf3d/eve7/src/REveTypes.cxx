@@ -46,7 +46,7 @@ REveException REX::operator+(const REveException &s1, ElementId_t x)
 
 REX::RLogChannel &REX::REveLog()
 {
-   thread_local RLogChannel sLog("ROOT.Eve");
+   static RLogChannel sLog("ROOT.Eve");
    return sLog;
 }
 
