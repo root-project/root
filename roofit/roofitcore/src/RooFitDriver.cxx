@@ -1,3 +1,19 @@
+// Author: Emmanouil Michalainas, January 2021
+/**
+\file RooFitDriver.cxx
+\class RooFitDriver
+\ingroup Roofitcore
+
+This class is responsible for evaluating a RooAbsReal object. Currently,
+it is being used for evaluating a RooNLLVarNew object and supplying the
+value to the minimizer, during a fit. The class scans the dependencies and
+schedules the computations in a secure and efficient way. The computations
+take place in the RooBatchCompute library and can be carried off by
+either the cpu or a cuda gpu; this class takes care of data transfers.
+An instance of this class is created every time RooAbsPdf::fitTo() is called
+and gets destroyed when the fitting ends.
+**/ 
+
 #include "RooFitDriver.h"
 #include "RooAbsData.h"
 #include "RooAbsReal.h"
@@ -10,6 +26,15 @@
 #include <thread>
 
 using namespace ROOT::Experimental;
+/**
+Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
+useful for the evaluation of it that will be done later. In case cuda mode is selected,
+there's also some cuda-related initialization.
+
+\param data The dataset for the fitting model
+\param topNode The RooNLLVaNew object that sits on top of the graph and whose value the minimiser needs.
+\param batchMode The computation mode of the RooBatchCompute library, accepted values are `rbc::Cpu` and `rbc::Cuda`.
+**/
 RooFitDriver::RooFitDriver(const RooAbsData& data, const RooNLLVarNew& topNode, rbc::BatchMode batchMode)
   : _name{topNode.GetName()}, _title{topNode.GetTitle()}
   , _parameters{*std::unique_ptr<RooArgSet>(topNode.getParameters(data, true))}
@@ -148,8 +173,11 @@ double* RooFitDriver::getAvailablePinnedBuffer() {
   return getAvailable(_pinnedBuffers, [=](){return rbc::dispatchCUDA->cudaMallocHost(_nEvents*sizeof(double));} );
 }
 
+/// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
+  // In a cuda fit, use first 3 fits to determine the execution times
+  // and the hardware that computes each part of the graph
   if (_batchMode==rbc::Cuda && ++_getValInvocations<=3)
     markGPUNodes();
   
@@ -210,6 +238,7 @@ double RooFitDriver::getVal()
       double* buffer = info.copyAfterEvaluation ? getAvailablePinnedBuffer() : getAvailableCPUBuffer();
       _dataMapCPU[node] = RooSpan<const double>(buffer, _nEvents);
       handleIntegral(node);
+      // compute node and measure the time the first time
       if (_getValInvocations==1) {
         using namespace std::chrono;
         auto start = steady_clock::now();
@@ -240,10 +269,12 @@ double RooFitDriver::getVal()
   }
 }
 
-// TODO: Put integrals seperately in the computation queue
-// For now, we just assume they are scalar and assign them some temporary memory
+/// Handles the computation of the integral of a PDF for normalization purposes,
+/// before the pdf is computed.  
 void RooFitDriver::handleIntegral(const RooAbsReal* node)
 {
+  // TODO: Put integrals seperately in the computation queue
+  // For now, we just assume they are scalar and assign them some temporary memory
   if (auto pAbsPdf = dynamic_cast<const RooAbsPdf*>(node))
   {
     auto integral = pAbsPdf->getIntegral(*_data->get());
@@ -252,6 +283,8 @@ void RooFitDriver::handleIntegral(const RooAbsReal* node)
   }
 }
 
+/// Assign a node to be computed in the GPU. Scan it's clients and also assign them
+/// in case they only depend on gpu nodes.
 void RooFitDriver::assignToGPU(const RooAbsReal* node)
 {
   NodeInfo& info = _nodeInfos.at(node);
@@ -287,6 +320,8 @@ void RooFitDriver::assignToGPU(const RooAbsReal* node)
   updateMyClients(node);
 }
 
+/// Check the clients of a node that has been computed and assign them to gpu
+/// if they are ready to be computed
 void RooFitDriver::updateMyClients(const RooAbsReal* node)
 {
   NodeInfo& info = _nodeInfos.at(node);
@@ -305,6 +340,8 @@ void RooFitDriver::updateMyClients(const RooAbsReal* node)
   }
 }
 
+/// Check the servers of a node that has been computed and release it's resources
+/// if they are no longer needed
 void RooFitDriver::updateMyServers(const RooAbsReal* node)
 {
   for (auto* server : node->servers())
@@ -326,6 +363,7 @@ void RooFitDriver::updateMyServers(const RooAbsReal* node)
   }
 }
 
+/// Measure the time for transfering data from host to device and vice-versa
 std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFitDriver::memcpyBenchmark()
 {
   using namespace std::chrono;
@@ -348,6 +386,14 @@ std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFitDriver::me
   return ret;
 }
 
+/// Decides which nodes are assigned to the gpu in a cuda fit. In the 1st iteration,
+/// everything is computed in cpu for measuring the cpu time. In the 2nd iteration,
+/// everything is computed in gpu (if possible) to measure the gpu time.
+/// In the 3rd iteration, this methods simulates the computation of the whole graph
+/// and the time it takes and decides what to compute in gpu. The decision is made on the
+/// basis avoiding leaving either the gpu or the cpu idle at any time, if possible,
+/// and on assigning to each piece of hardware a computation that is significantly slower on the
+/// other part.
 void RooFitDriver::markGPUNodes()
 {
   if (_getValInvocations==1) return; // leave everything to be computed (and timed) in cpu

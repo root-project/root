@@ -1,4 +1,16 @@
 // Auto-vectorizable compute functions written by Emmanouil Michalainas, summer 2019
+/**
+\file ComputeFunctions.cxx
+\ingroup Roobatchcompute
+
+This file contains vectorizable computation functions for PDFs and other Roofit objects.
+The same source file can also be compiled with nvcc. All functions have a single `Batches`
+object as an argument passed by value, which contains all the information necessary for the
+computation. In case of cuda computations, the loops have a step (stride) the size of the grid
+which allows for reusing the same code as the cpu implementations, easier debugging and in terms
+of performance, maximum memory coalescing. For more details, see
+https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-stride-loops/
+**/ 
 
 #include "rbc.h"
 #include "Batches.h"
@@ -590,6 +602,7 @@ __global__ void computeVoigtian(Batches batches)
     batches._output[i] /= normVal[i];
 }
 
+/// Returns a std::vector of pointers to the compute functions in this file.
 std::vector<void(*)(Batches)> getFunctions()
 {
   return {computeAddPdf, computeArgusBG, computeBernstein, computeBifurGauss, computeBreitWigner,

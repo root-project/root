@@ -1,3 +1,14 @@
+/**
+\file rbc.h
+\class RbcInterface
+\ingroup Roobatchcompute
+
+This file contains all the necessary declarations for using the RooBatchCompute library.
+The class RbcInterface provides the mechanism for external modules (like RooFit) to call
+functions from the library. The power lies in the virtual functions that can resolve to different
+implementations for the functionality; for example, calling a function through dispatchCuda
+will resolve to efficient cuda implementations.
+**/ 
 #ifndef RBC_H
 #define RBC_H
 
