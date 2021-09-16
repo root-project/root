@@ -48,6 +48,8 @@ struct TensorInfo{
 
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
+std::string ConvertShapeToString(std::vector<size_t> shape);
+
 struct InitializedTensor{
    ETensorType fType;
    std::vector<std::size_t> fShape;
