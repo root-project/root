@@ -32,8 +32,8 @@ std::unique_ptr<TTree> MakeTree() {
    tree->Branch("two", &yData, "ny/i:y[ny]/I");
    tree->Branch("three", &z, "z");
    tree->Branch("str", &str);
-   tree->Branch("d32", &Double32);
-   tree->Branch("f16", &Float16);
+   tree->Branch("d32", &Double32, "d32/d");
+   tree->Branch("f16", &Float16, "f16/f");
    tree->Branch("0.2.0.energy", &z);
 
    x[1] = 42.;
