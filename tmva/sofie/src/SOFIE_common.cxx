@@ -40,7 +40,7 @@ ETensorType ConvertStringToType(std::string type){
    }
 }
 
-std::string ShapeToString(std::vector<size_t> shape) {
+std::string ConvertShapeToString(std::vector<size_t> shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
@@ -81,20 +81,28 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
          target_length *= target_shape[i];
       }
       if (original_shape.size() > target_shape.size())  {
-         std::string  targetShape = "target : " + ShapeToString(target_shape);
-         std::string  originalShape = "original : " + ShapeToString(original_shape);
+         std::string  targetShape = "target : " + ConvertShapeToString(target_shape);
+         std::string  originalShape = "original : " + ConvertShapeToString(original_shape);
          throw std::runtime_error(
             "TMVA::SOFIE Error in Broadcasting Tensor : original array has more dimensions than target shape," + originalShape + ", " + targetShape);
       }
-      // case shape are not equal e.g. (3,4,5,6) and (3)
-      // maybe not the most efficient algo for this
-      std::vector<size_t> current_shape(target_shape.size(),1);
-      for (size_t i = 0; i < original_shape.size(); i++) {
-         for (size_t j = 0; j < target_shape.size(); j++) {
-            if (target_shape[j] == original_shape[i])
-               current_shape[j] = original_shape[i];
-         }
+      // if shape's sizes are different prepend 1 to get tensor with same shape size 
+      // since the broadcast is unidirectional we can only prepend
+      std::vector<size_t> current_shape(original_shape);
+      auto it = current_shape.begin();
+      while (current_shape.size() < target_shape.size()) {
+         it = current_shape.insert(it, 1);
       }
+      // this code below will work
+      // when shape are not equal e.g. (3,4,5,6) and (3) and we add 1 in all missing positions
+      // since broadcasting is uni-directional we do not use it 
+      // std::vector<size_t> current_shape(target_shape.size(),1);
+      // for (size_t i = 0; i < original_shape.size(); i++) {
+      //    for (size_t j = 0; j < target_shape.size(); j++) {
+      //       if (target_shape[j] == original_shape[i])
+      //          current_shape[j] = original_shape[i];
+      //    }
+      // }
 
       T* new_datavector = new T[target_length];
       std::memcpy(new_datavector, original_data, original_length * sizeof(T));
@@ -102,8 +110,8 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
       for (int dim = (int) target_shape.size() - 1; dim >= 0; dim--){
          if (current_shape[dim] != target_shape[dim]){
             if (current_shape[dim] != 1) {
-               std::string targetShape = "target : " + ShapeToString(target_shape);
-               std::string originalShape = "original : " + ShapeToString(current_shape);
+               std::string targetShape = "target : " + ConvertShapeToString(target_shape);
+               std::string originalShape = "original : " + ConvertShapeToString(current_shape);
                throw std::runtime_error ("TMVA::SOFIE Error in Broadcasting Tensor at least one dimension to be broadcast of the original array is not 1, " + originalShape + ", " + targetShape);
             }
             int_t group_size = 1;
