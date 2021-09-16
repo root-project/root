@@ -55,7 +55,7 @@ public:
          length *= i;
       }
       out << "\t" << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << "\t\t" << "tensor_" << fNY << "[id] = 1.0507009873554804934193349852946 * (std::max(float(0.0), tensor_"  << fNX << "[id]) + std::min(0.0, 1.6732632423543772848170429916717 * (exp(" << "tensor_" << fNX << "[id]" <<")-1)));\n";
+      out << "\t\t" << "tensor_" << fNY << "[id] = 1.0507009873554804934193349852946 * (std::max(float(0.0), tensor_"  << fNX << "[id]) + std::min(0.0, 1.6732632423543772848170429916717 * (std::exp(" << "tensor_" << fNX << "[id]" <<")-1)));\n";
       out << "\t}\n";
       return out.str();
    }
