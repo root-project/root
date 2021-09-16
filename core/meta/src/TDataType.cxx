@@ -422,8 +422,8 @@ void TDataType::AddBuiltins(TCollection* types)
       fgBuiltins[kULong_t] = new TDataType("unsigned long");
       fgBuiltins[kLong64_t] = new TDataType("long long");
       fgBuiltins[kULong64_t] = new TDataType("unsigned long long");
-      fgBuiltins[kFloat_t] = new TDataType("float");
-      fgBuiltins[kDouble_t] = new TDataType("double");
+      fgBuiltins[kFloat_t] = fgBuiltins[kFloat16_t] = new TDataType("float");
+      fgBuiltins[kDouble_t] = fgBuiltins[kDouble32_t] = new TDataType("double");
       fgBuiltins[kVoid_t] = new TDataType("void");
       fgBuiltins[kBool_t] = new TDataType("bool");
       fgBuiltins[kCharStar] = new TDataType("char*");
