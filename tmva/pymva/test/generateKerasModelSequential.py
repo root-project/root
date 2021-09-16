@@ -8,9 +8,9 @@ from tensorflow.keras.optimizers import SGD
 
 model=Sequential()
 model.add(Dense(8,batch_size=4))
-model.add(Activation('relu'))
-model.add(Dense(6))
 model.add(ReLU())
+model.add(Dense(6))
+model.add(Activation('sigmoid'))
 
 randomGenerator=np.random.RandomState(0)
 x_train=randomGenerator.rand(4,8)

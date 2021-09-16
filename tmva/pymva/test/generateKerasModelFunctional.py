@@ -9,9 +9,9 @@ from tensorflow.keras.optimizers import SGD
 input=Input(shape=(8,),batch_size=2)
 x=Dense(16)(input)
 x=Activation('relu')(x)
-x=Dense(32,activation='relu')(x)
-x=Dense(4)(x)
-output=ReLU()(x)
+x=Dense(32)(x)
+x=ReLU()(x)
+output=Dense(4, activation='selu')(x)
 model=Model(inputs=input,outputs=output)
 
 randomGenerator=np.random.RandomState(0)

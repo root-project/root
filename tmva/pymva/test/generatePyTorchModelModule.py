@@ -5,12 +5,16 @@ import torch.nn as nn
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.fc1 = nn.Linear(6, 12)
-        self.relu=nn.ReLU()
+        self.fc1 = nn.Linear(6, 36)
+        self.fc2 = nn.Linear(36,12)
+        self.relu    = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x=self.fc1(x)
         x=self.relu(x)
+        x=self.fc2(x)
+        x=self.sigmoid(x)
         x=torch.transpose(x,1,0)
         return x
 
