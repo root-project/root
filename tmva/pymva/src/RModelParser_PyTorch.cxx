@@ -405,6 +405,9 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         if(fNodeType == "onnx::Gemm"){
             rmodel.AddBlasRoutines({"Gemm", "Gemv"});
         }
+        else if(fNodeType == "onnx::Selu" || fNodeType == "onnx::Sigmoid"){
+            rmodel.AddNeededStdLib("cmath");
+        }
         rmodel.AddOperator(INTERNAL::MakePyTorchNode(fNode));
     }
 
