@@ -69,6 +69,7 @@
 */
 
 /** \class TH1
+    \ingroup Hist
 TH1 is the base class of all histogram classes in %ROOT.
 
 It provides the common interface for operations such as binning, filling, drawing, which
@@ -8382,8 +8383,8 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 /// ~~~ {.cpp}
 ///  h->GetBinContent(h->GetMaximumBin())
 /// ~~~
-/// 
-/// TH1::GetMaximumBin can be used to get the location of the maximum 
+///
+/// TH1::GetMaximumBin can be used to get the location of the maximum
 /// value.
 
 Double_t TH1::GetMaximum(Double_t maxval) const
@@ -8473,7 +8474,7 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 /// h->GetBinContent(h->GetMinimumBin())
 /// ~~~
 ///
-/// TH1::GetMinimumBin can be used to get the location of the 
+/// TH1::GetMinimumBin can be used to get the location of the
 /// minimum value.
 
 Double_t TH1::GetMinimum(Double_t minval) const

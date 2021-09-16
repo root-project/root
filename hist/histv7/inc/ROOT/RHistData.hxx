@@ -1,5 +1,5 @@
 /// \file ROOT/RHistData.hxx
-/// \ingroup Hist ROOT7
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-06-14
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -86,7 +86,7 @@ public:
    RHistStatContent(size_t bin_size, size_t overflow_size): fBinContent(bin_size), fOverflowBinContent(overflow_size) {}
 
    /// Get a reference to the bin corresponding to `binidx` of the correct bin
-   /// content array 
+   /// content array
    /// i.e. depending if `binidx` is a regular bin or an under- / overflow bin.
    Weight_t GetBinArray(int binidx) const
    {
@@ -310,7 +310,7 @@ public:
    RHistStatUncertainty(size_t bin_size, size_t overflow_size): fSumWeightsSquared(bin_size), fOverflowSumWeightsSquared(overflow_size) {}
 
    /// Get a reference to the bin corresponding to `binidx` of the correct bin
-   /// content array 
+   /// content array
    /// i.e. depending if `binidx` is a regular bin or an under- / overflow bin.
    Weight_t GetBinArray(int binidx) const
    {
