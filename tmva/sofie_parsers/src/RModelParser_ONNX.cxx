@@ -500,6 +500,8 @@ RModel RModelParser_ONNX::Parse(std::string filename){
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       } else if (op_type == "RNN") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
+      } else if (op_type == "Selu" || op_type == "Sigmoid") {
+         rmodel.AddNeededStdLib("cmath");
       }
    }
 
