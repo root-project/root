@@ -41,7 +41,7 @@ void AddKerasLayer(RModel &rmodel, PyObject *fLayer);
 // Declaring Internal Functions for Keras layers which don't have activation as an additional attribute
 std::unique_ptr<ROperator> MakeKerasActivation(PyObject *fLayer);   // For instantiating ROperator for Keras Activation Layer
 std::unique_ptr<ROperator> MakeKerasReLU(PyObject *fLayer);         // For instantiating ROperator for Keras ReLU layer
-std::unique_ptr<ROperator> MakeKerasSeLU(PyObject *fLayer);         // For instantiating ROperator for Keras SeLU layer
+std::unique_ptr<ROperator> MakeKerasSelu(PyObject *fLayer);         // For instantiating ROperator for Keras Selu layer
 std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject *fLayer);      // For instantiating ROperator for Keras Sigmoid layer
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 
@@ -61,7 +61,7 @@ const KerasMethodMap mapKerasLayer = {
 
    // For layers with activation attributes
    {"relu", &MakeKerasReLU},
-   {"selu", &MakeKerasSeLU},
+   {"selu", &MakeKerasSelu},
    {"sigmoid", &MakeKerasSigmoid}
 };
 
@@ -130,6 +130,9 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 
       std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"name"));
       std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
+
+      if(fLayerActivation == "selu" || fLayerActivation == "sigmoid")
+         rmodel.AddNeededStdLib("cmath");
 
       //Checking if additional attribute exixts
       if(fLayerActivation != "linear"){
@@ -259,14 +262,14 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator object for Keras SeLU activation
+/// \brief Prepares a ROperator object for Keras Selu activation
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_Selu object, the names of
 /// input & output tensors and the deta-type of the layer are extracted.
-std::unique_ptr<ROperator> MakeKerasSeLU(PyObject* fLayer){
+std::unique_ptr<ROperator> MakeKerasSelu(PyObject* fLayer){
       PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
       PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
 

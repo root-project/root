@@ -55,7 +55,7 @@ public:
          length *= i;
       }
       out << "\t" << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << "\t\t" << "tensor_" << fNY << "[id] = 1 / (1 + exp( - tensor_"  << fNX << "[id]));\n";
+      out << "\t\t" << "tensor_" << fNY << "[id] = 1 / (1 + std::exp( - tensor_"  << fNX << "[id]));\n";
       out << "\t}\n";
       return out.str();
    }
