@@ -3,8 +3,10 @@ import torch.nn as nn
 
 #Define model
 model = nn.Sequential(
-           nn.Linear(4,6),
-           nn.ReLU()
+           nn.Linear(4,8),
+           nn.ReLU(),
+           nn.Linear(8,6),
+           nn.SELU()
            )
 
 #Construct loss function and optimizer
