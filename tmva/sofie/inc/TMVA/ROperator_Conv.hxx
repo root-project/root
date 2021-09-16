@@ -156,6 +156,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Conv Op input tensor" + fNW + " is not of 4 dimensions");
       }
+      fShapeY = ShapeInference({fShapeX, fShapeW})[0];
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       if (fNB != "") {
          if (!model.CheckIfTensorAlreadyExist(fNB)) {
             throw
@@ -165,6 +167,16 @@ public:
          bool broadcast_needed = (fShapeB.size() != fShapeY.size());
          if (broadcast_needed) {
             auto original_data = model.GetInitializedTensorData(fNB);
+            // make bias shape equal to Y shape by adding 1
+            if (fShapeB.size() < 1)
+               throw std::runtime_error("TMVA SOFIE Conv op: Bias Tensor has empty shape");
+            // we assume bias tensor dimension is equal to number of filters that is first dimension in 
+            // the output tensor
+            if (fShapeB[0] != fShapeY[0])
+               throw std::runtime_error("TMVA SOFIE Conv op: Bias Tensor has wrong shape: " +
+                                           ConvertShapeToString(fShapeB));
+            fShapeB.resize(fShapeY.size(), 1.);
+
             if (fType == "float") {
                std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(
                   static_cast<float*>(original_data.get()), fShapeB, fShapeY), std::default_delete<float[]>());
@@ -173,8 +185,7 @@ public:
             }
          }
       }
-      fShapeY = ShapeInference({fShapeX, fShapeW})[0];
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      
    }
 
    std::string Generate(std::string OpName) {
