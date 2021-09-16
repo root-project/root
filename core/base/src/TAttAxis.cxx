@@ -28,17 +28,17 @@ Manages histogram axis attributes.
 
 They are:
 
-  - The number of divisions.
-  - The line axis' color.
-  - The axis labels' color.
-  - The axis labels' font.
-  - The axis labels' offset.
-  - The axis labels' size.
-  - The tick marks's length.
-  - The axis title's offset.
-  - The axis title's size.
-  - The axis title's color.
-  - The axis title's font.
+  - The number of divisions: TAttAxis::SetNdivisions.
+  - The line axis' color: TAttAxis::SetAxisColor.
+  - The axis labels' color: TAttAxis::SetLabelColor.
+  - The axis labels' font: TAttAxis::SetLabelFont.
+  - The axis labels' offset: TAttAxis::SetLabelOffset.
+  - The axis labels' size: TAttAxis::SetLabelSize.
+  - The tick marks's length: TAttAxis::SetTickLength or TAttAxis::SetTickSize .
+  - The axis title's offset: TAttAxis::SetTitleOffset.
+  - The axis title's size: TAttAxis::SetTitleSize.
+  - The axis title's color: TAttAxis::SetTitleColor.
+  - The axis title's font: TAttAxis::SetTitleFont.
 
 */
 
@@ -189,6 +189,7 @@ void TAttAxis::SetLabelFont(Style_t font)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set distance between the axis and the labels.
 /// The distance is expressed in per cent of the pad width.
+/// A negative value allow to draw the label on the other side of the axis.
 
 void TAttAxis::SetLabelOffset(Float_t offset)
 {

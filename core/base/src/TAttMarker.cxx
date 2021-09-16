@@ -134,6 +134,8 @@ Begin_Macro
 }
 End_Macro
 
+\warning Non-symmetric symbols should be used carefully. See markerwarning.C
+
 \anchor ATTMARKER21
 ### Marker line width
 
