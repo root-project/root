@@ -1,10 +1,7 @@
 # roottest
 
 Tests in the roottest repository can be added and executed using CMake and
-CTest. A CDash report for nightly and continuous builds can be found at:
-
-    http://cdash.cern.ch/index.php?project=ROOT
-
+CTest. These tests are executed as part of ROOT's Continuous Integration setup.
 
 ## Run tests locally
 
