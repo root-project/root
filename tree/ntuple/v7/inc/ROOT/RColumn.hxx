@@ -16,6 +16,7 @@
 #ifndef ROOT7_RColumn
 #define ROOT7_RColumn
 
+#include <ROOT/RConfig.hxx> // for R__likely
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -77,7 +78,10 @@ private:
 
    /// Used in Append() and AppendV() to switch pages when the main page reached the target size
    /// The other page has been flushed when the main page reached 50%.
-   void SwapWritePages() {
+   void SwapWritePagesIfFull() {
+      if (R__likely(fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage))
+         return;
+
       fWritePageIdx = 1 - fWritePageIdx; // == (fWritePageIdx + 1) % 2
       R__ASSERT(fWritePage[fWritePageIdx].IsEmpty());
       fWritePage[fWritePageIdx].Reset(fNElements);
@@ -90,7 +94,7 @@ private:
          return;
       fPageSink->CommitPage(fHandleSink, fWritePage[otherIdx]);
       // Mark the page as flushed; the rangeFirst is zero for now but will be reset to
-      // fNElements in SwapWritePages() when the pages swap
+      // fNElements in SwapWritePagesIfFull() when the pages swap
       fWritePage[otherIdx].Reset(0);
    }
 
@@ -119,8 +123,7 @@ public:
       element.WriteTo(dst, 1);
       fNElements++;
 
-      if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage)
-         SwapWritePages();
+      SwapWritePagesIfFull();
    }
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
@@ -138,8 +141,8 @@ public:
       // The check for flushing the shadow page is more complicated than for the Append() case
       // because we don't necessarily fill up to exactly fApproxNElementsPerPage / 2 elements;
       // we might instead jump over the 50% fill level
-      if ((fWritePage[fWritePageIdx].GetNElements() <= fApproxNElementsPerPage / 2) &&
-          (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage / 2))
+      if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
+          (fWritePage[fWritePageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
       {
          FlushShadowWritePage();
       }
@@ -147,9 +150,8 @@ public:
       elemArray.WriteTo(dst, count);
       fNElements += count;
 
-      // Note that by the very first check, we cannot have filled more than fApproxNElementsPerPage elements
-      if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage)
-         SwapWritePages();
+      // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
+      SwapWritePagesIfFull();
    }
 
    void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
