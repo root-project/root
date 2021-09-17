@@ -26,6 +26,9 @@ void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClus
    if (zippedClusterSize == 0) {
       throw RException(R__FAIL("invalid target cluster size: 0"));
    }
+   if (unzippedPageSize == 0) {
+      throw RException(R__FAIL("invalid target page size: 0"));
+   }
    if (zippedClusterSize > unzippedClusterSize) {
       throw RException(R__FAIL("compressed target cluster size must not be larger than "
                                "maximum uncompressed cluster size"));
@@ -33,9 +36,6 @@ void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClus
    if (unzippedPageSize > unzippedClusterSize) {
       throw RException(R__FAIL("target page size must not be larger than "
                                "maximum uncompressed cluster size"));
-   }
-   if (unzippedPageSize == 0) {
-      throw RException(R__FAIL("invalid target page size: 0"));
    }
 }
 
