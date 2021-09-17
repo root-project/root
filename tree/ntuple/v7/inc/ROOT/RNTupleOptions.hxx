@@ -17,7 +17,6 @@
 #define ROOT7_RNTupleOptions
 
 #include <Compression.h>
-#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <memory>
