@@ -57,9 +57,9 @@ private:
    /// The current page is filled until the target size, but it is only committed once the other
    /// head page is filled at least 50%. If a flush occurs earlier, a slightly oversized, single
    /// page will be committed.
-   RPage fHeadPage[2];
+   RPage fWritePage[2];
    /// Index of the current head page
-   int fHeadPageIdx = 0;
+   int fWritePageIdx = 0;
    /// For writing, the targeted number of elements, given by `fApproxNElementsPerPage` (in the write options) and the element size.
    /// We ensure this value to be >= 2 in Connect() so that we have meaningful
    /// "page full" and "page half full" events when writing the page.
@@ -78,20 +78,20 @@ private:
    /// Used in Append() and AppendV() to switch pages when the main page reached the target size
    /// The other page has been flushed when the main page reached 50%.
    void SwapHeadPages() {
-      fHeadPageIdx = 1 - fHeadPageIdx; // == (fHeadPageIdx + 1) % 2
-      R__ASSERT(fHeadPage[fHeadPageIdx].IsEmpty());
-      fHeadPage[fHeadPageIdx].Reset(fNElements);
+      fWritePageIdx = 1 - fWritePageIdx; // == (fWritePageIdx + 1) % 2
+      R__ASSERT(fWritePage[fWritePageIdx].IsEmpty());
+      fWritePage[fWritePageIdx].Reset(fNElements);
    }
 
    /// When the main head page surpasses the 50% fill level, the (full) shadow head page gets flushed
    void FlushShadowHeadPage() {
-      auto otherIdx = 1 - fHeadPageIdx;
-      if (fHeadPage[otherIdx].IsEmpty())
+      auto otherIdx = 1 - fWritePageIdx;
+      if (fWritePage[otherIdx].IsEmpty())
          return;
-      fPageSink->CommitPage(fHandleSink, fHeadPage[otherIdx]);
+      fPageSink->CommitPage(fHandleSink, fWritePage[otherIdx]);
       // Mark the page as flushed; the rangeFirst is zero for now but will be reset to
       // fNElements in SwapHeadPages() when the pages swap
-      fHeadPage[otherIdx].Reset(0);
+      fWritePage[otherIdx].Reset(0);
    }
 
 public:
@@ -110,22 +110,22 @@ public:
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
 
    void Append(const RColumnElementBase &element) {
-      void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(1);
+      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(1);
 
-      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
+      if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
          FlushShadowHeadPage();
       }
 
       element.WriteTo(dst, 1);
       fNElements++;
 
-      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage)
+      if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage)
          SwapHeadPages();
    }
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
       // We might not have enough space in the current page. In this case, fall back to one by one filling.
-      if (fHeadPage[fHeadPageIdx].GetNElements() + count > fApproxNElementsPerPage) {
+      if (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage) {
          // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
          for (unsigned i = 0; i < count; ++i) {
             Append(RColumnElementBase(elemArray, i));
@@ -133,13 +133,13 @@ public:
          return;
       }
 
-      void *dst = fHeadPage[fHeadPageIdx].GrowUnchecked(count);
+      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
 
       // The check for flushing the shadow page is more complicated than for the Append() case
       // because we don't necessarily fill up to exactly fApproxNElementsPerPage / 2 elements;
       // we might instead jump over the 50% fill level
-      if ((fHeadPage[fHeadPageIdx].GetNElements() <= fApproxNElementsPerPage / 2) &&
-          (fHeadPage[fHeadPageIdx].GetNElements() + count > fApproxNElementsPerPage / 2))
+      if ((fWritePage[fWritePageIdx].GetNElements() <= fApproxNElementsPerPage / 2) &&
+          (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage / 2))
       {
          FlushShadowHeadPage();
       }
@@ -148,7 +148,7 @@ public:
       fNElements += count;
 
       // Note that by the very first check, we cannot have filled more than fApproxNElementsPerPage elements
-      if (fHeadPage[fHeadPageIdx].GetNElements() == fApproxNElementsPerPage)
+      if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage)
          SwapHeadPages();
    }
 
