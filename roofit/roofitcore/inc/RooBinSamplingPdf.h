@@ -93,6 +93,7 @@ public:
 
   std::unique_ptr<ROOT::Math::IntegratorOneDim>& integrator() const;
 
+  static std::unique_ptr<RooAbsPdf> create(RooAbsPdf& pdf, RooAbsData const &data, double precision);
 
 protected:
   double evaluate() const override;
