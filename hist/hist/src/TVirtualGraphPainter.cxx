@@ -18,7 +18,7 @@ TVirtualGraphPainter *TVirtualGraphPainter::fgPainter = nullptr;
 ClassImp(TVirtualGraphPainter);
 
 /** \class TVirtualGraphPainter
- \ingroup Hist
+ \ingroup Histpainter
  Abstract interface to a histogram painter
 */
 

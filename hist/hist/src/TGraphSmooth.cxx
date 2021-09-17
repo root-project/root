@@ -33,7 +33,7 @@ ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth
-    \ingroup Hist
+    \ingroup Graph
 A helper class to smooth TGraph.
 see examples in $ROOTSYS/tutorials/graphs/motorcycle.C and approx.C
 */

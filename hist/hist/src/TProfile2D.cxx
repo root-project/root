@@ -23,7 +23,7 @@ Bool_t TProfile2D::fgApproximate = kFALSE;
 ClassImp(TProfile2D);
 
 /** \class TProfile2D
-    \ingroup Hist
+    \ingroup Histograms
  Profile2D histograms are used to display the mean
  value of Z and its error for each cell in X,Y.
  Profile2D histograms are in many cases an

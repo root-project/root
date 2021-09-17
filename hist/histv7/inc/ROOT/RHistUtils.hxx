@@ -1,5 +1,5 @@
 /// \file ROOT/RHistUtils.hxx
-/// \ingroup Hist ROOT7
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2016-06-01
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!

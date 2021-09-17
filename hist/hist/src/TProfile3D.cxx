@@ -25,7 +25,7 @@ Bool_t TProfile3D::fgApproximate = kFALSE;
 ClassImp(TProfile3D);
 
 /** \class TProfile3D
-    \ingroup Hist
+    \ingroup Histograms
  Profile3D histograms are used to display the mean
  value of T and its RMS for each cell in X,Y,Z.
  Profile3D histograms are in many cases an

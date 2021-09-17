@@ -27,7 +27,7 @@
 ClassImp(TF3);
 
 /** \class TF3
-    \ingroup Hist
+    \ingroup Functions
 A 3-Dim function with parameters
 */
 

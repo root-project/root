@@ -20,7 +20,7 @@
 ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
-    \ingroup Hist
+    \ingroup Graphs
 Graph 2D class with errors.
 
 A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has

@@ -17,7 +17,7 @@ THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;
 ClassImp(THLimitsFinder);
 
 /** \class THLimitsFinder
-    \ingroup Hist
+    \ingroup Histograms
 Class to compute nice axis limits.
 
 This class is called by default by the histogramming system

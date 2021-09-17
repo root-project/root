@@ -17,7 +17,7 @@ ClassImp(TGraphDelaunay);
 
 
 /** \class TGraphDelaunay
-    \ingroup Hist
+    \ingroup Graphs
 TGraphDelaunay generates a Delaunay triangulation of a TGraph2D. This
 triangulation code derives from an implementation done by Luke Jones
 (Royal Holloway, University of London) in April 2002 in the PAW context.

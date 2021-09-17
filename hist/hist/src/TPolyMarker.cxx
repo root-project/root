@@ -20,7 +20,7 @@ ClassImp(TPolyMarker);
 
 
 /** \class TPolyMarker
-    \ingroup Hist
+    \ingroup Graphs
 A PolyMarker is defined by an array on N points in a 2-D space.
 At each point x[i], y[i] a marker is drawn.
 Marker attributes are managed by TAttMarker.

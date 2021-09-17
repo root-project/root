@@ -24,7 +24,7 @@
 #include "TVirtualFFT.h"
 
 /** \class TF1Convolution
-    \ingroup Hist
+    \ingroup Functions
     \brief Class wrapping convolution of two functions
 
 Class wrapping convolution of two functions: evaluation of \f$\int f(x)g(x-t)dx\f$
@@ -49,7 +49,7 @@ class TF1Convolution_EvalWrapper
    Double_t fT0;
 
 public:
-   TF1Convolution_EvalWrapper(TF1 &f1, TF1 &f2, Double_t t) : 
+   TF1Convolution_EvalWrapper(TF1 &f1, TF1 &f2, Double_t t) :
       fFunc1(&f1),
       fFunc2(&f2),
       fT0(t)
@@ -65,7 +65,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal function to initialize data members. 
+/// Internal function to initialize data members.
 /// Use TF1::Copy instead of Clone.
 
 void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_t useFFT)
@@ -93,7 +93,7 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    fFunction1->SetBit(TF1::kNotGlobal, kTRUE);
    fFunction2->SetBit(TF1::kNotGlobal, kTRUE);
 
-   // use by default range of first function 
+   // use by default range of first function
    fFunction1->GetRange(fXmin, fXmax);
    // when using FFT add by default an extra 10% on  each side
    if (useFFT) {
@@ -200,7 +200,7 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from 2 function names where f1 and f2 are two functions known to
-/// ROOT. 
+/// ROOT.
 ///
 /// If the function names are not known to ROOT, tries to interpret them as
 /// TFormula.
@@ -319,7 +319,7 @@ void TF1Convolution::MakeFFTConv()
    // delete the fft objects
    delete fft1;
    delete fft2;
-   delete fftinverse; 
+   delete fftinverse;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,7 +338,7 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform numerical convolution.
-/// 
+///
 
 Double_t TF1Convolution::EvalNumConv(Double_t t)
 {
@@ -429,7 +429,7 @@ void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fraction of extra range used when doing an FFT convolution.
-/// The extra range is often needed to avoid mirroring effect of the resulting convolution 
+/// The extra range is often needed to avoid mirroring effect of the resulting convolution
 /// function at the borders.
 /// By default an extra range of 0.1 is used.
 
@@ -444,7 +444,7 @@ void TF1Convolution::SetExtraRange(Double_t percentage)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the actual range used for the convolution.
-/// In case  a or b are -inf or +inf and FFT convolution is used, then the 
+/// In case  a or b are -inf or +inf and FFT convolution is used, then the
 /// range of the first function will be used and extended by the default extra range fraction.
 
 void TF1Convolution::SetRange(Double_t a, Double_t b)
@@ -519,7 +519,7 @@ void TF1Convolution::Copy(TObject &obj) const
    // we need to copy the content of the  unique_ptr's
    ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)new TF1() );
    ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)new TF1() );
-   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1 ) ); 
-   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2 ) ); 
+   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1 ) );
+   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2 ) );
    // fGraphConv is transient anyway, so we don't bother to copy it
 }
