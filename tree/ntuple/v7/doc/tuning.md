@@ -21,6 +21,7 @@ when the current cluster is larger than the maximum uncompressed size, it will b
 When the current cluster size reaches the estimate for the compressed cluster size, it will be flushed, too.
 The estimated compression ratio for the first cluster is 0.5 if compression is used, and 1 otherwise.
 The following clusters use the compression ratio of the last cluster as estimate.
+See the notes below on a discussion of this approximation.
 
 
 Page Sizes
@@ -44,3 +45,31 @@ writing uses two page buffers in turns and flushes the previous buffer only once
 If the cluster gets flushed with an undersized tail page,
 the small page is appended to the previous page before flushing.
 Therefore, tail pages sizes are between `[0.5 * target size .. 1.5 * target size]`.
+
+
+Notes
+=====
+
+Approximation of the compressed cluster size
+--------------------------------------------
+
+The estimator for the compressed cluster size uses the compression factor of the previously written cluster.
+This has been choosen as a simple, yet (expectedly) accurate enough estimator.
+The following alternative strategies were discussed:
+
+  - The average compression factor of all so-far written pages.
+    Easy to implement.
+    It would better prevent outlier clusters from skewing the estimate of the successor clusters.
+    It would be slower though in adjusting to systematic changes in the data set,
+    e.g. ones that are caused by changing experimental conditions during data taking
+
+  - The average over a window of the last $k$ clusters, possibly with exponential smoothing.
+    More accurate than just the last cluster but also more code to implement.
+    Could be a viable option if cluster compression ratios turn out to change significantly.
+
+  - Calculate the cluster compression ratio from column-based individual estimators.
+    More complex to implement and to recalculate the estimator on every fill,
+    requires additional state for every column.
+    One might reduce the additional state and complexity by only applying the fine-grained estimator for collections.
+    Such an estimator would react better to a sudden change in the amount of data written for collections / columns
+    that have substentially different compression ratios.
