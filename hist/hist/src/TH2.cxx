@@ -30,7 +30,7 @@
 
 ClassImp(TH2);
 
-/** \addtogroup Hist
+/** \addtogroup Histograms
 @{
 \class TH2C
 \brief 2-D histogram with a byte per channel (see TH1 documentation)
