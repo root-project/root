@@ -839,51 +839,11 @@ const RooAbsData& RooAbsOptTestStatistic::data() const
 /// - = 0: Only enable feature if fitting unbinned PDF to RooDataHist.
 /// - > 0: Enable as requested.
 void RooAbsOptTestStatistic::setUpBinSampling() {
-  if (_integrateBinsPrecision < 0.)
-    return;
 
-  std::unique_ptr<RooArgSet> funcObservables( _funcClone->getObservables(*_dataClone) );
-  const bool oneDimAndBinned = (1 == std::count_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg) {
-    auto var = dynamic_cast<const RooRealVar*>(arg);
-    return var && var->numBins() > 1;
-  }));
-
-  if (!oneDimAndBinned) {
-    if (_integrateBinsPrecision > 0.) {
-      coutE(Fitting) << "Integration over bins was requested, but this is currently only implemented for 1-D fits." << std::endl;
-    }
-    return;
-  }
-
-  // Find the real-valued observable. We don't care about categories.
-  auto theObs = std::find_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg){
-    return dynamic_cast<const RooAbsRealLValue*>(arg);
-  });
-  assert(theObs != funcObservables->end());
-
-  RooBinSamplingPdf* newPdf = nullptr;
-
-  if (_integrateBinsPrecision > 0.) {
-    // User forced integration. Let just apply it.
-    newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
-        _funcClone->GetTitle(),
-        *static_cast<RooAbsRealLValue*>(*theObs),
-        *static_cast<RooAbsPdf*>(_funcClone),
-        _integrateBinsPrecision);
-  } else if (dynamic_cast<RooDataHist*>(_dataClone) != nullptr
-      && _integrateBinsPrecision == 0.
-      && !_funcClone->isBinnedDistribution(*_dataClone->get())) {
-    // User didn't forbid integration, and it seems appropriate with a RooDataHist.
-    coutI(Fitting) << "The PDF '" << _funcClone->GetName() << "' is continuous, but fit to binned data.\n"
-        << "RooFit will integrate it in each bin using the RooBinSamplingPdf." << std::endl;
-    newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
-        _funcClone->GetTitle(),
-        *static_cast<RooAbsRealLValue*>(*theObs),
-        *static_cast<RooAbsPdf*>(_funcClone));
-  }
-
-  if (newPdf) {
+  auto& pdf = static_cast<RooAbsPdf&>(*_funcClone);
+  if (auto newPdf = RooBinSamplingPdf::create(pdf, *_dataClone, _integrateBinsPrecision)) {
     newPdf->addOwnedComponents(*_funcClone);
-    _funcClone = newPdf;
+    _funcClone = newPdf.release();
   }
+
 }
