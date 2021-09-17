@@ -55,10 +55,10 @@ private:
    /// A set of open pages into which new elements are being written. The pages are used
    /// in rotation. They are 50% bigger than the target size given by the write options.
    /// The current page is filled until the target size, but it is only committed once the other
-   /// head page is filled at least 50%. If a flush occurs earlier, a slightly oversized, single
+   /// write page is filled at least 50%. If a flush occurs earlier, a slightly oversized, single
    /// page will be committed.
    RPage fWritePage[2];
-   /// Index of the current head page
+   /// Index of the current write page
    int fWritePageIdx = 0;
    /// For writing, the targeted number of elements, given by `fApproxNElementsPerPage` (in the write options) and the element size.
    /// We ensure this value to be >= 2 in Connect() so that we have meaningful
@@ -83,8 +83,8 @@ private:
       fWritePage[fWritePageIdx].Reset(fNElements);
    }
 
-   /// When the main head page surpasses the 50% fill level, the (full) shadow head page gets flushed
-   void FlushShadowHeadPage() {
+   /// When the main write page surpasses the 50% fill level, the (full) shadow write page gets flushed
+   void FlushShadowWritePage() {
       auto otherIdx = 1 - fWritePageIdx;
       if (fWritePage[otherIdx].IsEmpty())
          return;
@@ -113,7 +113,7 @@ public:
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(1);
 
       if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
-         FlushShadowHeadPage();
+         FlushShadowWritePage();
       }
 
       element.WriteTo(dst, 1);
@@ -141,7 +141,7 @@ public:
       if ((fWritePage[fWritePageIdx].GetNElements() <= fApproxNElementsPerPage / 2) &&
           (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage / 2))
       {
-         FlushShadowHeadPage();
+         FlushShadowWritePage();
       }
 
       elemArray.WriteTo(dst, count);
