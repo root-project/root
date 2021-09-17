@@ -339,7 +339,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster()
    }
    const float nbytes = fSink->CommitCluster(fNEntries);
    // Cap the compression factor at 1000 to prevent overflow of fMinUnzippedClusterSizeEst
-   float compressionFactor = std::min(1000.f, static_cast<float>(fUnzippedClusterSize) / nbytes);
+   const float compressionFactor = std::min(1000.f, static_cast<float>(fUnzippedClusterSize) / nbytes);
    fUnzippedClusterSizeEst =
       compressionFactor * static_cast<float>(fSink->GetWriteOptions().GetApproxZippedClusterSize());
 
