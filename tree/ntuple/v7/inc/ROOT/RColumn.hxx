@@ -55,7 +55,7 @@ private:
    /// A set of open pages into which new elements are being written. The pages are used
    /// in rotation. They are 50% bigger than the target size given by the write options.
    /// The current page is filled until the target size, but it is only committed once the other
-   /// head page is filled at least 50%. If a flush occurs earlier, a slightly oversize, single
+   /// head page is filled at least 50%. If a flush occurs earlier, a slightly oversized, single
    /// page will be committed.
    RPage fHeadPage[2];
    /// Index of the current head page
