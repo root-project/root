@@ -104,7 +104,7 @@ public:
 
    void* GetBuffer() const { return fBuffer; }
    /// Called during writing: returns a pointer after the last element and increases the element counter
-   /// in anticpation of the caller filling nElements in the page. It is the responsibility of the caller
+   /// in anticipation of the caller filling nElements in the page. It is the responsibility of the caller
    /// to prevent page overflows, i.e. that fNElements + nElements <= fMaxElements
    void* GrowUnchecked(ClusterSize_t::ValueType nElements) {
       auto offset = GetNBytes();
