@@ -77,7 +77,7 @@ private:
 
    /// Used in Append() and AppendV() to switch pages when the main page reached the target size
    /// The other page has been flushed when the main page reached 50%.
-   void SwapHeadPages() {
+   void SwapWritePages() {
       fWritePageIdx = 1 - fWritePageIdx; // == (fWritePageIdx + 1) % 2
       R__ASSERT(fWritePage[fWritePageIdx].IsEmpty());
       fWritePage[fWritePageIdx].Reset(fNElements);
@@ -90,7 +90,7 @@ private:
          return;
       fPageSink->CommitPage(fHandleSink, fWritePage[otherIdx]);
       // Mark the page as flushed; the rangeFirst is zero for now but will be reset to
-      // fNElements in SwapHeadPages() when the pages swap
+      // fNElements in SwapWritePages() when the pages swap
       fWritePage[otherIdx].Reset(0);
    }
 
@@ -120,7 +120,7 @@ public:
       fNElements++;
 
       if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage)
-         SwapHeadPages();
+         SwapWritePages();
    }
 
    void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
@@ -149,7 +149,7 @@ public:
 
       // Note that by the very first check, we cannot have filled more than fApproxNElementsPerPage elements
       if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage)
-         SwapHeadPages();
+         SwapWritePages();
    }
 
    void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
