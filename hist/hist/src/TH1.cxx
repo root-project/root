@@ -53,7 +53,7 @@
 
 #include "TH1Merger.h"
 
-/** \addtogroup Hist
+/** \addtogroup Histograms
 @{
 \class TH1C
 \brief 1-D histogram with a byte per channel (see TH1 documentation)
@@ -69,7 +69,7 @@
 */
 
 /** \class TH1
-    \ingroup Hist
+    \ingroup Histograms
 TH1 is the base class of all histogram classes in %ROOT.
 
 It provides the common interface for operations such as binning, filling, drawing, which

@@ -27,7 +27,7 @@
 
 ClassImp(TH3);
 
-/** \addtogroup Hist
+/** \addtogroup Histograms
 @{
 \class TH3C
 \brief 3-D histogram with a byte per channel (see TH1 documentation)
@@ -43,7 +43,7 @@ ClassImp(TH3);
 */
 
 /** \class TH3
-    \ingroup Hist
+    \ingroup Histograms
 The 3-D histogram classes derived from the 1-D histogram classes.
 All operations are supported (fill, fit).
 Drawing is currently restricted to one single option.

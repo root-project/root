@@ -239,7 +239,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TF1
-    \ingroup Hist
+    \ingroup Functions
     \brief 1-Dim function class
 
 

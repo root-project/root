@@ -48,7 +48,7 @@ ClassImp(TGraph);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TGraph
-    \ingroup Hist
+    \ingroup Graphs
 A TGraph is an object made of two arrays X and Y with npoints each.
 The TGraph painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.

@@ -32,7 +32,7 @@ ClassImp(THStack);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class THStack
-    \ingroup Hist
+    \ingroup Histograms
 The Histogram stack class
 
 A THStack is a collection of TH1 or TH2 histograms.
