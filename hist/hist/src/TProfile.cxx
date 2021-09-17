@@ -26,7 +26,7 @@ Bool_t TProfile::fgApproximate = kFALSE;
 ClassImp(TProfile);
 
 /** \class TProfile
-    \ingroup Hist
+    \ingroup Histograms
  Profile Histogram.
  Profile histograms are used to display the mean
  value of Y and its error for each bin in X. The displayed error is by default the

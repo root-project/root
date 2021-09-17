@@ -39,7 +39,7 @@ ClassImp(TMultiGraph);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TMultiGraph
-    \ingroup Hist
+    \ingroup Graphs
      \brief A TMultiGraph is a collection of TGraph (or derived) objects.
 
 - [Introduction](\ref MG00)

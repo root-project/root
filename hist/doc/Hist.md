@@ -31,3 +31,6 @@ ROOT supports the following histogram types:
   - [How to Fit Histograms](https://root.cern/manual/fitting/)
   - [How to Fit find peaks in histograms](https://root.cern/doc/master/peaks_8C.html)
   - [How to convert Hbook/PAW files to ROOT](https://root-forum.cern.ch/t/how-to-convert-hbook-paw-files-to-root/)
+
+\defgroup HistPainting Painting classes
+\ingroup Hist

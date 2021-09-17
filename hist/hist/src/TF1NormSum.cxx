@@ -19,7 +19,7 @@
 ClassImp(TF1NormSum);
 
 /** \class TF1NormSum
-    \ingroup Hist
+    \ingroup Functions
 Class adding two functions: c1*f1+c2*f2
 */
 
@@ -67,11 +67,11 @@ void TF1NormSum::InitializeDataMembers(const std::vector<TF1 *> &functions, cons
    fFunctions = std::vector<std::unique_ptr<TF1>>(functions.size());
    for (unsigned int n = 0; n < fNOfFunctions; n++) {
       // use TF1::Copy and not clone to copy the TF1 pointers
-      // and use IsA()::New() in case we have base class pointers 
+      // and use IsA()::New() in case we have base class pointers
       TF1 * f = (TF1*) functions[n]->IsA()->New();
       functions[n]->Copy(*f);
       fFunctions[n] = std::unique_ptr<TF1>(f);
-     
+
 
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
@@ -421,7 +421,7 @@ void TF1NormSum::Copy(TObject &obj) const
    // Clone objects in unique_ptr's
    ((TF1NormSum &)obj).fFunctions = std::vector<std::unique_ptr<TF1>>(fNOfFunctions);
    for (unsigned int n = 0; n < fNOfFunctions; n++) {
-      TF1 * f = (TF1*) fFunctions[n]->IsA()->New();   
+      TF1 * f = (TF1*) fFunctions[n]->IsA()->New();
       fFunctions[n]->Copy(*f);
       ((TF1NormSum &)obj).fFunctions[n] = std::unique_ptr<TF1>(f);
    }

@@ -25,7 +25,7 @@
 ClassImp(TF2);
 
 /** \class TF2
-    \ingroup Hist
+    \ingroup Functions
 A 2-Dim function with parameters.
 
 ### Expression using variables x and y

@@ -27,7 +27,7 @@
 ClassImp(TGraphMultiErrors)
 
 /** \class TGraphMultiErrors
-    \ingroup Hist
+    \ingroup Graphs
 TGraph with asymmetric error bars and multiple y error dimensions.
 
 The TGraphMultiErrors painting is performed thanks to the TGraphPainter

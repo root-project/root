@@ -21,7 +21,7 @@
 ClassImp(TH2Poly);
 
 /** \class TH2Poly
-    \ingroup Hist
+    \ingroup Histograms
 2D Histogram with Polygonal Bins
 
 ## Overview
@@ -1322,7 +1322,7 @@ void TH2Poly::GetStats(Double_t *stats) const
 }
 
 /** \class TH2PolyBin
-    \ingroup Hist
+    \ingroup Histograms
 Helper class to represent a bin in the TH2Poly histogram
 */
 

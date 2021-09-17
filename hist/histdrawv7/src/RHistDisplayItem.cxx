@@ -1,5 +1,5 @@
 /// \file RHistDisplayItem.cxx
-/// \ingroup Hist ROOT7
+/// \ingroup HistDrawV7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2020-06-25
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

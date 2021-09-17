@@ -20,7 +20,7 @@
 #include <set>
 
 /** \class TProfile2Poly
-    \ingroup Hist
+    \ingroup Histograms
 2D Profile Histogram with Polygonal Bins.
 
 tprofile2polyRealisticModuleError.C and tprofile2polyRealistic.C illustrate how

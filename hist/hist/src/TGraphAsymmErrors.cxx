@@ -34,7 +34,7 @@
 ClassImp(TGraphAsymmErrors);
 
 /** \class TGraphAsymmErrors
-    \ingroup Hist
+    \ingroup Graphs
 TGraph with asymmetric error bars.
 
 The TGraphAsymmErrors painting is performed thanks to the TGraphPainter
