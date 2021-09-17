@@ -32,8 +32,8 @@ ROOT::Experimental::Detail::RColumn::~RColumn()
       fPageSink->ReleasePage(fWritePage[0]);
    if (!fWritePage[1].IsNull())
       fPageSink->ReleasePage(fWritePage[1]);
-   if (!fCurrentPage.IsNull())
-      fPageSource->ReleasePage(fCurrentPage);
+   if (!fReadPage.IsNull())
+      fPageSource->ReleasePage(fReadPage);
    if (fHandleSink)
       fPageSink->DropColumn(fHandleSink);
    if (fHandleSource)
@@ -86,12 +86,12 @@ void ROOT::Experimental::Detail::RColumn::Flush()
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
 {
-   fPageSource->ReleasePage(fCurrentPage);
-   fCurrentPage = fPageSource->PopulatePage(fHandleSource, index);
+   fPageSource->ReleasePage(fReadPage);
+   fReadPage = fPageSource->PopulatePage(fHandleSource, index);
 }
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
 {
-   fPageSource->ReleasePage(fCurrentPage);
-   fCurrentPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
+   fPageSource->ReleasePage(fReadPage);
+   fReadPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
 }
