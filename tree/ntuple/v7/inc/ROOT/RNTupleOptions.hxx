@@ -57,7 +57,7 @@ class RNTupleWriteOptions {
    /// Should be just large enough so that the compression ratio does not benefit much more from larger pages.
    /// Unless the cluster is too small to contain a sufficiently large page, pages are
    /// fApproxUnzippedPageSize in size and tail pages (the last page in a cluster) is between
-   /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 2 in size.
+   /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
 
