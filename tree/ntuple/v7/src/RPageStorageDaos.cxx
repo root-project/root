@@ -196,9 +196,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
 std::uint64_t
 ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
-   auto result = fNBytesCurrentCluster;
-   fNBytesCurrentCluster = 0;
-   return result;
+   return std::exchange(fNBytesCurrentCluster, 0);
 }
 
 
