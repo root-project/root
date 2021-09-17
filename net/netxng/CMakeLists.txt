@@ -14,10 +14,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     TNetXNGFile.h
     TNetXNGFileStager.h
     TNetXNGSystem.h
+    ROOT/RRawFileNetXNG.hxx
   SOURCES
     src/TNetXNGFile.cxx
     src/TNetXNGFileStager.cxx
     src/TNetXNGSystem.cxx
+    src/RRawFileNetXNG.cxx
   LIBRARIES
     Xrootd::Xrootd
   DEPENDENCIES
