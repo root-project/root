@@ -88,7 +88,7 @@ void rf403_weightedevts()
    //
    // A fit in this mode can be performed as follows:
 
-   RooFitResult *r_ml_wgt_corr = p2.fitTo(wdata, Save(), SumW2Error(kTRUE));
+   RooFitResult *r_ml_wgt_corr = p2.fitTo(wdata, Save(), SumW2Error(true));
 
    // P l o t   w e i g h e d   d a t a   a n d   f i t   r e s u l t
    // ---------------------------------------------------------------

@@ -71,7 +71,7 @@ void rf609_xychi2fit()
 
    // Alternative: fit chi^2 integrating f(x) over ranges defined by X errors, rather
    // than taking point at center of bin
-   f.chi2FitTo(dxy, YVar(y), Integrate(kTRUE));
+   f.chi2FitTo(dxy, YVar(y), Integrate(true));
 
    // Overlay alternate fit result
    f.plotOn(frame, LineStyle(kDashed), LineColor(kRed));
