@@ -49,7 +49,7 @@ void rf203_ranges()
    // ---------------------------
 
    // Fit pdf to all data
-   RooFitResult *r_full = model.fitTo(*modelData, Save(kTRUE));
+   RooFitResult *r_full = model.fitTo(*modelData, Save(true));
 
    // F i t   p a r t i a l   r a n g e
    // ----------------------------------
@@ -58,7 +58,7 @@ void rf203_ranges()
    x.setRange("signal", -3, 3);
 
    // Fit pdf only to data in "signal" range
-   RooFitResult *r_sig = model.fitTo(*modelData, Save(kTRUE), Range("signal"));
+   RooFitResult *r_sig = model.fitTo(*modelData, Save(true), Range("signal"));
 
    // P l o t   /   p r i n t   r e s u l t s
    // ---------------------------------------

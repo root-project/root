@@ -60,7 +60,7 @@ void rf606_nllerrorhandling()
 
    // Perform another fit. In this configuration only the number of errors per
    // likelihood evaluation is shown, if it is greater than zero. The
-   // EvalErrorWall(kFALSE) arguments disables the default error handling strategy
+   // EvalErrorWall(false) arguments disables the default error handling strategy
    // and will cause the actual (problematic) value of the likelihood to be passed
    // to MINUIT.
    //
@@ -70,7 +70,7 @@ void rf606_nllerrorhandling()
    // illustrated in the second plot
 
    m0.setError(0.1);
-   argus.fitTo(*data, PrintEvalErrors(0), EvalErrorWall(kFALSE));
+   argus.fitTo(*data, PrintEvalErrors(0), EvalErrorWall(false));
 
    // P l o t   l i k e l i h o o d   a s   f u n c t i o n   o f   m 0
    // ------------------------------------------------------------------

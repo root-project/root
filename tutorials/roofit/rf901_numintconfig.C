@@ -57,7 +57,7 @@ void rf901_numintconfig()
 
    // Calculate integral over landau with default choice of numeric integrator
    RooAbsReal *intLandau = landau.createIntegral(x);
-   Double_t val = intLandau->getVal();
+   double val = intLandau->getVal();
    cout << " [1] int_dx landau(x) = " << setprecision(15) << val << endl;
 
    // S a m e   w i t h   c u s t o m   c o n f i g u r a t i o n
@@ -74,7 +74,7 @@ void rf901_numintconfig()
 
    // Calculate integral over landau with custom integral specification
    RooAbsReal *intLandau2 = landau.createIntegral(x, NumIntConfig(customConfig));
-   Double_t val2 = intLandau2->getVal();
+   double val2 = intLandau2->getVal();
    cout << " [2] int_dx landau(x) = " << val2 << endl;
 
    // A d j u s t i n g   d e f a u l t   c o n f i g   f o r   a   s p e c i f i c   p d f
@@ -85,7 +85,7 @@ void rf901_numintconfig()
 
    // Calculate integral over landau custom numeric integrator specified as object default
    RooAbsReal *intLandau3 = landau.createIntegral(x);
-   Double_t val3 = intLandau3->getVal();
+   double val3 = intLandau3->getVal();
    cout << " [3] int_dx landau(x) = " << val3 << endl;
 
    // Another possibility: Change global default for 1D numeric integration strategy on finite domains

@@ -94,7 +94,7 @@ void rf201_composite()
    //
    //   model2 = bkg + (sig1 + sig2)
    //
-   RooAddPdf model2("model", "g1+g2+a", RooArgList(bkg, sig1, sig2), RooArgList(bkgfrac, sig1frac), kTRUE);
+   RooAddPdf model2("model", "g1+g2+a", RooArgList(bkg, sig1, sig2), RooArgList(bkgfrac, sig1frac), true);
 
    // NB: Each coefficient is interpreted as the fraction of the
    // left-hand component of the i-th recursive sum, i.e.

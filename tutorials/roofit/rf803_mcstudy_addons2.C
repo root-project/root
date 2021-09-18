@@ -58,8 +58,8 @@ void rf803_mcstudy_addons2()
 
    // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
    // with a Poisson fluctuation on Nobs (Extended())
-   RooMCStudy *mcs = new RooMCStudy(model, mjjj, Binned(), Silence(), Extended(kTRUE),
-                                    FitOptions(Extended(kTRUE), PrintEvalErrors(-1)));
+   RooMCStudy *mcs = new RooMCStudy(model, mjjj, Binned(), Silence(), Extended(true),
+                                    FitOptions(Extended(true), PrintEvalErrors(-1)));
 
    // C u s t o m i z e   m a n a g e r
    // ---------------------------------

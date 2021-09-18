@@ -91,8 +91,8 @@ void rf705_linearmorph()
    RooDataSet *data = lmorph.generate(x, 1000);
 
    // Fit pdf to toy data
-   lmorph.setCacheAlpha(kTRUE);
-   lmorph.fitTo(*data, Verbose(kTRUE));
+   lmorph.setCacheAlpha(true);
+   lmorph.fitTo(*data, Verbose(true));
 
    // Plot fitted pdf and data overlaid
    RooPlot *frame2 = x.frame(Bins(100));
@@ -109,7 +109,7 @@ void rf705_linearmorph()
    std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data)};
    nll->plotOn(frame3, ShiftToZero());
 
-   lmorph.setCacheAlpha(kFALSE);
+   lmorph.setCacheAlpha(false);
 
    TCanvas *c = new TCanvas("rf705_linearmorph", "rf705_linearmorph", 800, 800);
    c->Divide(2, 2);

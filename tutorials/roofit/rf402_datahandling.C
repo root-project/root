@@ -125,8 +125,8 @@ void rf402_datahandling()
 
    // Examine the statistics of a binned dataset
    cout << ">> number of bins in dh   : " << dh.numEntries() << endl;
-   cout << ">> sum of weights in dh   : " << dh.sum(kFALSE) << endl;
-   cout << ">> integral over histogram: " << dh.sum(kTRUE) << endl; // accounts for bin volume
+   cout << ">> sum of weights in dh   : " << dh.sum(false) << endl;
+   cout << ">> integral over histogram: " << dh.sum(true) << endl; // accounts for bin volume
 
    // Locate a bin from a set of coordinates and retrieve its properties
    x = 0.3;

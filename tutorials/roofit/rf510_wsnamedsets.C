@@ -131,17 +131,17 @@ void fillWorkspace(RooWorkspace &w)
    RooDataSet *refData = model.generate(x, 10000);
    model.fitTo(*refData, PrintLevel(-1));
 
-   // The kTRUE flag imports the values of the objects in (*params) into the workspace
+   // The true flag imports the values of the objects in (*params) into the workspace
    // If not set, the present values of the workspace parameters objects are stored
-   w.saveSnapshot("reference_fit", *params, kTRUE);
+   w.saveSnapshot("reference_fit", *params, true);
 
    // Make another fit with the signal component forced to zero
    // and save those parameters too
 
    bkgfrac.setVal(1);
-   bkgfrac.setConstant(kTRUE);
+   bkgfrac.setConstant(true);
    bkgfrac.removeError();
    model.fitTo(*refData, PrintLevel(-1));
 
-   w.saveSnapshot("reference_fit_bkgonly", *params, kTRUE);
+   w.saveSnapshot("reference_fit_bkgonly", *params, true);
 }

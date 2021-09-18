@@ -110,11 +110,11 @@ void rf404_categories()
 
    // Retrieve number of events from table
    // Number can be non-integer if source dataset has weighed events
-   Double_t nb0 = btable->get("B0");
+   double nb0 = btable->get("B0");
    std::cout << "Number of events with B0 flavor is " << nb0 << std::endl;
 
    // Retrieve fraction of events with "Lepton" tag
-   Double_t fracLep = ttable->getFrac("Lepton");
+   double fracLep = ttable->getFrac("Lepton");
    std::cout << "Fraction of events tagged with Lepton tag is " << fracLep << std::endl;
 
    // D e f i n i n g   r a n g e s   f o r   p l o t t i n g ,   f i t t i n g   o n   c a t e g o r i e s
