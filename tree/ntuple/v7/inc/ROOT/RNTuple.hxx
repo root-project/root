@@ -361,6 +361,11 @@ private:
    NTupleSize_t fNEntries = 0;
    /// Keeps track of the number of bytes written into the current cluster
    std::size_t fUnzippedClusterSize = 0;
+   /// The total number of bytes written to storage (i.e., after compression)
+   std::uint64_t fNBytesCommitted = 0;
+   /// The total number of bytes filled into all the so far committed clusters,
+   /// i.e. the uncompressed size of the written clusters
+   std::uint64_t fNBytesFilled = 0;
    /// Limit for committing cluster no matter the other tunables
    std::size_t fMaxUnzippedClusterSize;
    /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio

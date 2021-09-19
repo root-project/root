@@ -10,7 +10,7 @@ The default can be changed by the `RNTupleWriteOptions`.
 The default should work well in the majority of cases.
 In general, larger clusters provide room for more and larger pages and should improve compression ratio and speed.
 However, clusters also need to be buffered during write and (partially) during read,
-so larger cluster increase the memory footprint.
+so larger clusters increase the memory footprint.
 
 A second option in `RNTupleWriteOptions` specifies the maximum uncompressed cluster size.
 The default is 512MiB.
@@ -20,7 +20,7 @@ Given the two settings, writing works as follows:
 when the current cluster is larger than the maximum uncompressed size, it will be flushed unconditionally.
 When the current cluster size reaches the estimate for the compressed cluster size, it will be flushed, too.
 The estimated compression ratio for the first cluster is 0.5 if compression is used, and 1 otherwise.
-The following clusters use the compression ratio of the last cluster as estimate.
+The following clusters use the average compression ratio of all so-far written clusters as an estimate.
 See the notes below on a discussion of this approximation.
 
 
@@ -53,8 +53,9 @@ Notes
 Approximation of the compressed cluster size
 --------------------------------------------
 
-The estimator for the compressed cluster size uses the compression factor of the previously written cluster.
-This has been choosen as a simple, yet (expectedly) accurate enough estimator.
+The estimator for the compressed cluster size uses the average compression factor
+of the so far written clusters.
+This has been choosen as a simple, yet expectedly accurate enough estimator (to be validated).
 The following alternative strategies were discussed:
 
   - The average compression factor of all so-far written pages.
@@ -64,8 +65,10 @@ The following alternative strategies were discussed:
     e.g. ones that are caused by changing experimental conditions during data taking
 
   - The average over a window of the last $k$ clusters, possibly with exponential smoothing.
-    More accurate than just the last cluster but also more code to implement.
-    Could be a viable option if cluster compression ratios turn out to change significantly.
+    More code compared to the average compression factor or all so-far written clusters.
+    It would be faster in adjusting to systematic changes in the data set,
+    e.g. ones that are caused by changing experimental conditions during data taking.
+    Could be a viable option if cluster compression ratios turn out to change significantly in a single file.
 
   - Calculate the cluster compression ratio from column-based individual estimators.
     More complex to implement and to recalculate the estimator on every fill,
