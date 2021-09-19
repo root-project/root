@@ -120,7 +120,7 @@ RooFormula& RooGenericPdf::formula() const
 
 Double_t RooGenericPdf::evaluate() const
 {
-  return formula().eval(_normSet) ;
+  return formula().eval(_actualVars.nset()) ;
 }
 
 

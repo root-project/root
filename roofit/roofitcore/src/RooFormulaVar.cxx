@@ -148,7 +148,7 @@ RooFormula& RooFormulaVar::getFormula() const
 
 Double_t RooFormulaVar::evaluate() const
 {
-  return getFormula().eval(_lastNSet);
+  return getFormula().eval(_actualVars.nset());
 }
 
 
