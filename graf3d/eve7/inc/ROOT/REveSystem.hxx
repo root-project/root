@@ -30,8 +30,11 @@ struct REveServerStatus
    std::time_t   fTLastConnect = 0;
    std::time_t   fTLastDisconnect = 0;
    ProcInfo_t    fProcInfo; // To be complemented with cpu1/5/15 and memgrowth1/5/15 on the collector side.
+#ifdef R__LINUX
    std::timespec fTReport = {0, 0};
-
+#else
+   std::time_t   fTReport = 0;
+#endif
    int n_active_connections() const { return fNConnects - fNDisconnects; }
 };
 
