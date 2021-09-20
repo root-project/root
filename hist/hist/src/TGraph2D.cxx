@@ -42,6 +42,18 @@ ClassImp(TGraph2D);
     \ingroup Graphs
 Graphics object made of three arrays X, Y and Z with the same number of points each.
 
+- [Creating a TGraph2D](\ref G2D00)
+- [Drawing options](\ref G2D01)
+- [Examples](\ref G2D02)
+   - [SURF1 Example](\ref G2D021)
+   - [Fitting Example](\ref G2D022)
+   - [PCOL Example](\ref G2D023)
+- [Definition of the Delaunay triangulation (After B. Delaunay)](\ref G2D03)
+
+
+\anchor G2D00
+## Creating a TGraph2D
+
 This class has different constructors:
 - With an array's dimension and three arrays x, y, and z:
 ~~~ {.cpp}
@@ -74,12 +86,15 @@ Note that in any of these three cases, `SetPoint()` can be used to change a data
 point or add a new one. If the data point index (`i`) is greater than the
 current size of the internal arrays, they are automatically extended.
 
-Like TGraph the TGraph2D constructors do not have the TGraph2D title and name as parameters.
-A TGraph2D has the default title and name "Graph2D". To change the default title
-and name `SetTitle` and `SetName` should be called on the TGraph2D after its creation.
+Like TGraph some TGraph2D constructors do not have the TGraph2D title and name as parameters.
+For these constructors TGraph2D has the default title and name "Graph2D". To change the
+default title and name `SetTitle` and `SetName` should be called on the TGraph2D after its
+creation.
+
+\anchor G2D01
+## Drawing options
 
 Specific drawing options can be used to paint a TGraph2D:
-
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
@@ -127,7 +142,11 @@ at drawing time only. Therefore they should called after the TGraph2D is drawn:
      g->GetXaxis()->SetTitle("X axis title");
 ~~~
 
-Example:
+\anchor G2D02
+## Examples
+
+\anchor G2D021
+### SURF1 Example
 
 Begin_Macro(source)
 {
@@ -149,11 +168,17 @@ Begin_Macro(source)
 }
 End_Macro
 
+\anchor G2D022
+### Fitting Example
+
 2D graphs can be fitted as shown by the following example:
 
 Begin_Macro(source)
 ../../../tutorials/fit/graph2dfit.C
 End_Macro
+
+\anchor G2D023
+### PCOL Example
 
 Example showing the PCOL option.
 
@@ -189,7 +214,9 @@ Begin_Macro(source)
 }
 End_Macro
 
-### Definition of Delaunay triangulation (After B. Delaunay)
+\anchor G2D03
+## Definition of the Delaunay triangulation (After B. Delaunay)
+
 For a set S of points in the Euclidean plane, the unique triangulation DT(S)
 of S such that no point in S is inside the circumcircle of any triangle in
 DT(S). DT(S) is the dual of the Voronoi diagram of S.
