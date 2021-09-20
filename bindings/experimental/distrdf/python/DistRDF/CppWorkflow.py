@@ -215,7 +215,7 @@ class CppWorkflow(object):
 
     def _handle_snapshot(self, operation, range_id):
         '''
-        Does three extra settings needed for Snapshot nodes:
+        Does two extra settings needed for Snapshot nodes:
         - Modifies the output file name to be of the form `filename_rangeid`,
         since it is a partial snapshot for a given range.
         - Stores the index of the returned vector<RResultHandle> in which the
