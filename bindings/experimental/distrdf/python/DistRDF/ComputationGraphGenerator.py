@@ -184,16 +184,12 @@ class ComputationGraphGenerator(object):
                     result types corresponding to those actions.
             """
 
-            py_headnode = self.headnode
-            cpp_workflow = CppWorkflow()
-            parent_idx = 0
-
-            # Recurse over children nodes
-            for py_node in py_headnode.children:
-                explore_graph(py_node, cpp_workflow, range_id, parent_idx)
+            # Generate the code of the C++ workflow
+            cpp_workflow = CppWorkflow(self.headnode, range_id)
 
             logger.debug("Generated C++ workflow is:\n{}".format(cpp_workflow))
 
+            # Compile and run the C++ workflow on the received RDF head node
             return cpp_workflow.execute(ROOT.RDF.AsRNode(rdf_node))
 
         def explore_graph(py_node, cpp_workflow, range_id, parent_idx):
