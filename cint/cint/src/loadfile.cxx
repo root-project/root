@@ -577,10 +577,11 @@ struct G__StatCacheEntry {
 int G__cachingstat(const char *path, struct stat *buf) {
   static std::map<std::string, struct G__StatCacheEntry> stat_cache;
 
-  if (   stat_cache.count(path)
-      && (stat_cache[path].ctime > (time(NULL) - R__STAT_CACHING_TIME))
+  std::map<std::string, struct G__StatCacheEntry>::const_iterator it = stat_cache.find(path);
+  if (   (it != stat_cache.end())
+      && (it->second.ctime > (time(NULL) - R__STAT_CACHING_TIME))
      ) {
-    const struct G__StatCacheEntry &e = stat_cache[path];
+    const struct G__StatCacheEntry &e = it->second;
     if (e.retcode < 0) {
       errno = e._errno;
     }
