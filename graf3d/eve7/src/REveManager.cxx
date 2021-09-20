@@ -1109,7 +1109,11 @@ void REveManager::GetServerStatus(REveServerStatus& st)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
    gSystem->GetProcInfo(&fServerStatus.fProcInfo);
+#ifdef R__LINUX
    std::timespec_get(&fServerStatus.fTReport, TIME_UTC);
+#else
+   fServerStatus.fTReport = std::time_t(nullptr);
+#endif
    st = fServerStatus;
 }
 
