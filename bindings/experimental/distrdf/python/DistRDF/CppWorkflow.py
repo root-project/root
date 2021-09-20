@@ -271,9 +271,6 @@ class CppWorkflow(object):
         C++ workflow built by this class. Therefore, this function takes care
         of saving the RDF node, generated in C++, on which an AsNumpy action
         should be applied from Python.
-        This function also stores the index of the AsNumpy result in the final
-        list of results, where the index depends on the DFS traversal of the
-        computation graph.
 
         Args:
             operation (Operation): object representing the AsNumpy operation
@@ -282,11 +279,19 @@ class CppWorkflow(object):
                 save that node in the vector of output nodes.
         '''
 
+        # Store DFS-order index of the AsNumpy operation, together with the
+        # operation information, for later invocation from Python
         self.py_actions.append(CppWorkflow.PyActionData(self.res_ptr_id, operation))
+        self.res_ptr_id += 1
+
+        # Save parent RDF node to run AsNumpy on it later from Python
         self.graph_nodes += \
             '\n  output_nodes.push_back(ROOT::RDF::AsRNode(rdf{}));' \
             .format(parent_id)
-        self.res_ptr_id += 1
+
+        # Add placeholders to the result lists
+        self.graph_nodes += '\n  result_handles.emplace_back();'
+        self.graph_nodes += '\n  result_types.emplace_back();'
 
     def _get_template_args(self, operation):
         '''
@@ -451,6 +456,10 @@ class CppWorkflow(object):
 
         # Strip out the ROOT::RDF::RResultPtr<> part of the type
         def get_result_type(s):
+            if s.empty():
+                # Python-only actions have an empty return type in C++
+                return ''
+
             s = str(s)
             pos = s.find('<')
             if pos == -1:
@@ -463,9 +472,7 @@ class CppWorkflow(object):
         # Add Python-only actions on their corresponding nodes
         for (i, operation), n in zip(self.py_actions, v_nodes):
             operation.kwargs['lazy'] = True  # make it lazy
-            res = getattr(n, operation.name)(*operation.args, **operation.kwargs)
-            results.insert(i, res)
-            res_types.insert(i, None) # placeholder
+            results[i] = getattr(n, operation.name)(*operation.args, **operation.kwargs)
 
         if v_results:
             # We trigger the event loop here, so make sure we release the GIL
