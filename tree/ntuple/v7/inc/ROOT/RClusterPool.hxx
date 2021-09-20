@@ -87,7 +87,7 @@ private:
    };
 
    /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
-   /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadCluster()).
+   /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
    RPageSource &fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
    unsigned int fWindowPre;
@@ -112,7 +112,7 @@ private:
    /// The communication channel between the I/O thread and the unzip thread
    std::queue<RUnzipItem> fUnzipQueue;
 
-   /// The I/O thread calls RPageSource::LoadCluster() asynchronously.  The thread is mostly waiting for the
+   /// The I/O thread calls RPageSource::LoadClusters() asynchronously.  The thread is mostly waiting for the
    /// data to arrive (blocked by the kernel) and therefore can safely run in addition to the application
    /// main threads.
    std::thread fThreadIo;

@@ -22,6 +22,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
+#include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <atomic>
@@ -29,6 +30,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -361,14 +363,15 @@ public:
    /// buffer and call LoadSealedPage again.
    virtual void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) = 0;
 
-   /// Populates all the pages of the given cluster id and columns; it is possible that some columns do not
-   /// contain any pages.  The pages source may load more columns than the minimal necessary set from `columns`.
-   /// To indicate which columns have been loaded, LoadCluster() must mark them with SetColumnAvailable().
+   /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
+   /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.
+   /// To indicate which columns have been loaded, LoadClusters() must mark them with SetColumnAvailable().
    /// That includes the ones from the `columns` that don't have pages; otherwise subsequent requests
    /// for the cluster would assume an incomplete cluster and trigger loading again.
-   /// LoadCluster() is typically called from the I/O thread of a cluster pool, i.e. the method runs
+   /// LoadClusters() is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
-   virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
+   virtual std::vector<std::unique_ptr<RCluster>> LoadClusters(
+      std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns) = 0;
 
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's

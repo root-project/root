@@ -125,7 +125,9 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
             return;
 
          // TODO(jblomer): the page source needs to be capable of loading multiple clusters in one go
-         auto cluster = fPageSource.LoadCluster(item.fClusterId, item.fColumns);
+         std::vector<DescriptorId_t> dummy;
+         dummy.emplace_back(item.fClusterId);
+         auto cluster = std::move(fPageSource.LoadClusters(dummy, item.fColumns)[0]);
 
          // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
          // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
