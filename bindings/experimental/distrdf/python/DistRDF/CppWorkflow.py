@@ -206,43 +206,37 @@ class CppWorkflow(object):
         if operation.name == 'Snapshot':
             self._handle_snapshot(operation, range_id) # this modifies operation.args
 
-        # Add operation node to the graph
-        self.graph_nodes += '\n  '
-        new_node_id = self.node_id
-        if operation.is_transformation():
-            self.graph_nodes += 'auto rdf{}'.format(new_node_id)
-        else:  # action or instant action
-            self.graph_nodes += 'auto res_ptr{}'.format(self.res_ptr_id)
-
-        template_args = self._get_template_args(operation)
-        self.graph_nodes += ' = rdf{n}.{op_name}{templ_args}(' \
-                            .format(n=parent_id, op_name=operation.name, \
-                                    templ_args=template_args)
-        self._process_args(operation)
-        self.graph_nodes += ');'
+        # Generate the code of the call that creates the new node
+        op_call = 'rdf{n}.{op}{templ_args}({args});' \
+                  .format(n=parent_id, op=operation.name, \
+                          templ_args=self._get_template_args(operation), \
+                          args=self._get_call_args(operation))
 
         if operation.is_transformation():
+            new_node_id = self.node_id
+            self.graph_nodes += '\n  auto rdf{n} = {call}' \
+                                .format(n=new_node_id, call=op_call)
             self.node_id += 1
-        else:
-            # Action or instant action
+            return new_node_id
 
-            # The result is stored in the vector of results to be returned
-            self.graph_nodes += '\n  result_handles.emplace_back(res_ptr{});' \
-                                .format(self.res_ptr_id)
+        # Else it's an action or instant action
+        self.graph_nodes += '\n  auto res_ptr{n} = {call}' \
+                            .format(n=self.res_ptr_id, call=op_call)
 
-            # The result type is stored in the vector of result types to be
-            # returned
-            self.graph_nodes += \
-                '\n  auto c{} = TClass::GetClass(typeid(res_ptr{}));' \
-                .format(self.res_ptr_id, self.res_ptr_id)
-            self.graph_nodes += \
-                '\n  result_types.emplace_back(c{}->GetName());' \
-                .format(self.res_ptr_id)
+        # The result is stored in the vector of results to be returned
+        self.graph_nodes += '\n  result_handles.emplace_back(res_ptr{});' \
+                            .format(self.res_ptr_id)
 
-            self.res_ptr_id += 1
-            return None
+        # The result type is stored in the vector of result types to be
+        # returned
+        self.graph_nodes += \
+            '\n  auto c{} = TClass::GetClass(typeid(res_ptr{}));' \
+            .format(self.res_ptr_id, self.res_ptr_id)
+        self.graph_nodes += \
+            '\n  result_types.emplace_back(c{}->GetName());' \
+            .format(self.res_ptr_id)
 
-        return new_node_id
+        self.res_ptr_id += 1
 
     def _handle_snapshot(self, operation, range_id):
         '''
@@ -296,7 +290,8 @@ class CppWorkflow(object):
 
     def _get_template_args(self, operation):
         '''
-        Gets the template arguments with which to generate a given operation.
+        Gets the template arguments with which to generate the call to a given
+        operation.
 
         Args:
             operation (Operation): object representing the operation whose
@@ -310,43 +305,49 @@ class CppWorkflow(object):
 
         return ''
 
-    def _process_args(self, operation):
+    def _get_call_args(self, operation):
         '''
-        Processes the arguments of an operation node.
+        Gets the arguments with which to generate the call to a given operation.
 
         Args:
             operation (Operation): object representing the operation whose
-                arguments need to be processed.
+                call arguments need to be returned.
+
+        Returns:
+            string: call arguments for this operation.
         '''
 
         # TODO
         # - Do a more thorough type conversion
         # - Use RDF helper functions to convert jitted strings to lambdas
 
+        args = ""
+
         # Argument type conversion
         for narg, arg in enumerate(operation.args):
             if (narg > 0):
-                self.graph_nodes += ', '
+                args += ', '
 
             if isinstance(arg, str):
-                self.graph_nodes += '"{}"'.format(arg)
+                args += '"{}"'.format(arg)
             elif isinstance(arg, tuple):
-                self.graph_nodes += '{'
+                args += '{'
                 for nelem, elem in enumerate(arg):
                     if nelem > 0:
-                        self.graph_nodes += ','
+                        args += ','
                     if isinstance(elem, str):
-                        self.graph_nodes += '"{}"'.format(elem)
+                        args += '"{}"'.format(elem)
                     else:
-                        self.graph_nodes += '{}'.format(elem)
-                self.graph_nodes += '}'
+                        args += '{}'.format(elem)
+                args += '}'
 
         # Make Snapshot lazy
         # TODO: Do a proper processing of the args (user might have specified
         # her own options object)
         if operation.name == 'Snapshot':
-            self.graph_nodes += ', "", lazy_options'
+            args += ', "", lazy_options'
 
+        return args
 
     def execute(self, rdf):
         '''
