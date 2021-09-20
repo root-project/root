@@ -372,134 +372,142 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
    return std::unique_ptr<RPageSourceFile>(clone);
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RCluster>
-ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns)
+std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
+ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(
+   std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns)
 {
-   fCounters->fNClusterLoaded.Inc();
+   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>> result;
+   for (auto clusterId: clusterIds) {
+      fCounters->fNClusterLoaded.Inc();
 
-   const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
+      const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
+      auto clusterLocator = clusterDesc.GetLocator();
+      auto clusterSize = clusterLocator.fBytesOnStorage;
+      R__ASSERT(clusterSize > 0);
 
-   struct ROnDiskPageLocator {
-      ROnDiskPageLocator() = default;
-      ROnDiskPageLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s)
-         : fColumnId(c), fPageNo(p), fOffset(o), fSize(s) {}
-      DescriptorId_t fColumnId = 0;
-      NTupleSize_t fPageNo = 0;
-      std::uint64_t fOffset = 0;
-      std::uint64_t fSize = 0;
-      std::size_t fBufPos = 0;
-   };
+      struct ROnDiskPageLocator {
+         ROnDiskPageLocator() = default;
+         ROnDiskPageLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s)
+            : fColumnId(c), fPageNo(p), fOffset(o), fSize(s) {}
+         DescriptorId_t fColumnId = 0;
+         NTupleSize_t fPageNo = 0;
+         std::uint64_t fOffset = 0;
+         std::uint64_t fSize = 0;
+         std::size_t fBufPos = 0;
+      };
 
-   // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
-   std::vector<ROnDiskPageLocator> onDiskPages;
-   auto activeSize = 0;
-   for (auto columnId : columns) {
-      const auto &pageRange = clusterDesc.GetPageRange(columnId);
-      NTupleSize_t pageNo = 0;
-      for (const auto &pageInfo : pageRange.fPageInfos) {
-         const auto &pageLocator = pageInfo.fLocator;
-         activeSize += pageLocator.fBytesOnStorage;
-         onDiskPages.emplace_back(ROnDiskPageLocator(
-            columnId, pageNo, pageLocator.fPosition, pageLocator.fBytesOnStorage));
-         ++pageNo;
-      }
-   }
-
-   // Linearize the page requests by file offset
-   std::sort(onDiskPages.begin(), onDiskPages.end(),
-      [](const ROnDiskPageLocator &a, const ROnDiskPageLocator &b) {return a.fOffset < b.fOffset;});
-
-   // In order to coalesce close-by pages, we collect the sizes of the gaps between pages on disk.  We then order
-   // the gaps by size, sum them up and find a cutoff for the largest gap that we tolerate when coalescing pages.
-   // The size of the cutoff is given by the fraction of extra bytes we are willing to read in order to reduce
-   // the number of read requests.  We thus schedule the lowest number of requests given a tolerable fraction
-   // of extra bytes.
-   // TODO(jblomer): Eventually we may want to select the parameter at runtime according to link latency and speed,
-   // memory consumption, device block size.
-   float maxOverhead = 0.25 * float(activeSize);
-   std::vector<std::size_t> gaps;
-   for (unsigned i = 1; i < onDiskPages.size(); ++i) {
-      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
-   }
-   std::sort(gaps.begin(), gaps.end());
-   std::size_t gapCut = 0;
-   std::size_t currentGap = 0;
-   float szExtra = 0.0;
-   for (auto g : gaps) {
-      if (g != currentGap) {
-         gapCut = currentGap;
-         currentGap = g;
-      }
-      szExtra += g;
-      if (szExtra  > maxOverhead)
-         break;
-   }
-
-   // Prepare the input vector for the RRawFile::ReadV() call
-   struct RReadRequest {
-      RReadRequest() = default;
-      RReadRequest(std::size_t b, std::uint64_t o, std::uint64_t s) : fBufPos(b), fOffset(o), fSize(s) {}
-      std::size_t fBufPos = 0;
-      std::uint64_t fOffset = 0;
-      std::uint64_t fSize = 0;
-   };
-   std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
-
-   ROOT::Internal::RRawFile::RIOVec req;
-   std::size_t szPayload = 0;
-   std::size_t szOverhead = 0;
-   for (auto &s : onDiskPages) {
-      R__ASSERT(s.fSize > 0);
-      auto readUpTo = req.fOffset + req.fSize;
-      R__ASSERT(s.fOffset >= readUpTo);
-      auto overhead = s.fOffset - readUpTo;
-      szPayload += s.fSize;
-      if (overhead <= gapCut) {
-         szOverhead += overhead;
-         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
-         req.fSize += overhead + s.fSize;
-         continue;
+      // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
+      std::vector<ROnDiskPageLocator> onDiskPages;
+      auto activeSize = 0;
+      for (auto columnId : columns) {
+         const auto &pageRange = clusterDesc.GetPageRange(columnId);
+         NTupleSize_t pageNo = 0;
+         for (const auto &pageInfo : pageRange.fPageInfos) {
+            const auto &pageLocator = pageInfo.fLocator;
+            activeSize += pageLocator.fBytesOnStorage;
+            onDiskPages.emplace_back(ROnDiskPageLocator(
+               columnId, pageNo, pageLocator.fPosition, pageLocator.fBytesOnStorage));
+            ++pageNo;
+         }
       }
 
-      // close the current request and open new one
-      if (req.fSize > 0)
-         readRequests.emplace_back(req);
+      // Linearize the page requests by file offset
+      std::sort(onDiskPages.begin(), onDiskPages.end(),
+         [](const ROnDiskPageLocator &a, const ROnDiskPageLocator &b) {return a.fOffset < b.fOffset;});
 
-      req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
-      s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);
+      // In order to coalesce close-by pages, we collect the sizes of the gaps between pages on disk.  We then order
+      // the gaps by size, sum them up and find a cutoff for the largest gap that we tolerate when coalescing pages.
+      // The size of the cutoff is given by the fraction of extra bytes we are willing to read in order to reduce
+      // the number of read requests.  We thus schedule the lowest number of requests given a tolerable fraction
+      // of extra bytes.
+      // TODO(jblomer): Eventually we may want to select the parameter at runtime according to link latency and speed,
+      // memory consumption, device block size.
+      float maxOverhead = 0.25 * float(activeSize);
+      std::vector<std::size_t> gaps;
+      for (unsigned i = 1; i < onDiskPages.size(); ++i) {
+         gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
+      }
+      std::sort(gaps.begin(), gaps.end());
+      std::size_t gapCut = 0;
+      std::size_t currentGap = 0;
+      float szExtra = 0.0;
+      for (auto g : gaps) {
+         if (g != currentGap) {
+            gapCut = currentGap;
+            currentGap = g;
+         }
+         szExtra += g;
+         if (szExtra  > maxOverhead)
+            break;
+      }
 
-      req.fOffset = s.fOffset;
-      req.fSize = s.fSize;
+      // Prepare the input vector for the RRawFile::ReadV() call
+      struct RReadRequest {
+         RReadRequest() = default;
+         RReadRequest(std::size_t b, std::uint64_t o, std::uint64_t s) : fBufPos(b), fOffset(o), fSize(s) {}
+         std::size_t fBufPos = 0;
+         std::uint64_t fOffset = 0;
+         std::uint64_t fSize = 0;
+      };
+      std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
+
+      ROOT::Internal::RRawFile::RIOVec req;
+      std::size_t szPayload = 0;
+      std::size_t szOverhead = 0;
+      for (auto &s : onDiskPages) {
+         R__ASSERT(s.fSize > 0);
+         auto readUpTo = req.fOffset + req.fSize;
+         R__ASSERT(s.fOffset >= readUpTo);
+         auto overhead = s.fOffset - readUpTo;
+         szPayload += s.fSize;
+         if (overhead <= gapCut) {
+            szOverhead += overhead;
+            s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
+            req.fSize += overhead + s.fSize;
+            continue;
+         }
+
+         // close the current request and open new one
+         if (req.fSize > 0)
+            readRequests.emplace_back(req);
+
+         req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
+         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);
+
+         req.fOffset = s.fOffset;
+         req.fSize = s.fSize;
+      }
+      readRequests.emplace_back(req);
+      fCounters->fSzReadPayload.Add(szPayload);
+      fCounters->fSzReadOverhead.Add(szOverhead);
+
+      // Register the on disk pages in a page map
+      auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
+      auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char []>(buffer));
+      for (const auto &s : onDiskPages) {
+         ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
+         pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
+      }
+      fCounters->fNPageLoaded.Add(onDiskPages.size());
+      for (auto &r : readRequests) {
+         r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
+      }
+
+      auto nReqs = readRequests.size();
+      {
+         RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+         fFile->ReadV(&readRequests[0], nReqs);
+      }
+      fCounters->fNReadV.Inc();
+      fCounters->fNRead.Add(nReqs);
+
+      auto cluster = std::make_unique<RCluster>(clusterId);
+      cluster->Adopt(std::move(pageMap));
+      for (auto colId : columns)
+         cluster->SetColumnAvailable(colId);
+      result.emplace_back(std::move(cluster));
    }
-   readRequests.emplace_back(req);
-   fCounters->fSzReadPayload.Add(szPayload);
-   fCounters->fSzReadOverhead.Add(szOverhead);
-
-   // Register the on disk pages in a page map
-   auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
-   auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char []>(buffer));
-   for (const auto &s : onDiskPages) {
-      ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-      pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
-   }
-   fCounters->fNPageLoaded.Add(onDiskPages.size());
-   for (auto &r : readRequests) {
-      r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
-   }
-
-   auto nReqs = readRequests.size();
-   {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      fFile->ReadV(&readRequests[0], nReqs);
-   }
-   fCounters->fNReadV.Inc();
-   fCounters->fNRead.Add(nReqs);
-
-   auto cluster = std::make_unique<RCluster>(clusterId);
-   cluster->Adopt(std::move(pageMap));
-   for (auto colId : columns)
-      cluster->SetColumnAvailable(colId);
-   return cluster;
+   return result;
 }
 
 
