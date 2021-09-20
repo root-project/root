@@ -224,13 +224,13 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   double meanv=x1/x0;
   double sigmav=std::sqrt(x2/x0-meanv*meanv);
-  double h=std::pow(double(4)/double(3),0.2)*std::pow(_nEvents,-0.2)*_rho;
+  double h=std::pow(double(4)/double(3),0.2)*std::pow(_sumWgt,-0.2)*_rho;
   double hmin=h*sigmav*std::sqrt(2.)/10;
-  double norm=h*std::sqrt(sigmav)/(2.0*std::sqrt(3.0));
+  double norm=h*std::sqrt(sigmav * _sumWgt)/(2.0*std::sqrt(3.0));
 
   _weights=new double[_nEvents];
   for(Int_t j=0;j<_nEvents;++j) {
-    _weights[j]=norm/std::sqrt(g(_dataPts[j],h*sigmav));
+    _weights[j] = norm / std::sqrt(_dataWgts[j] * g(_dataPts[j],h*sigmav));
     if (_weights[j]<hmin) _weights[j]=hmin;
   }
 
@@ -403,5 +403,5 @@ double RooKeysPdf::g(double x,double sigmav) const {
   }
 
   static const double sqrt2pi(std::sqrt(2*TMath::Pi()));
-  return y/(sigmav*sqrt2pi*_nEvents);
+  return y/(sigmav*sqrt2pi);
 }
