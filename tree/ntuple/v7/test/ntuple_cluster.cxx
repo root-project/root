@@ -46,14 +46,14 @@ public:
 };
 
 /**
- * Used to track LoadCluster calls triggered by ClusterPool::GetCluster
+ * Used to track LoadClusters calls triggered by ClusterPool::GetCluster
  */
 class RPageSourceMock : public RPageSource {
 protected:
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
 
 public:
-   /// Records the cluster IDs requests by LoadCluster() calls
+   /// Records the cluster IDs requests by LoadClusters() calls
    std::vector<ROOT::Experimental::DescriptorId_t> fReqsClusterIds;
    std::vector<ROOT::Experimental::Detail::RPageSource::ColumnSet_t> fReqsColumns;
 
@@ -73,20 +73,24 @@ public:
    void LoadSealedPage(
       ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::RClusterIndex &, RSealedPage &) final
    { }
-   std::unique_ptr<RCluster> LoadCluster(
-      ROOT::Experimental::DescriptorId_t clusterId,
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(
+      std::span<ROOT::Experimental::DescriptorId_t> clusterIds,
       const ROOT::Experimental::Detail::RPageSource::ColumnSet_t &columns) final
    {
-      fReqsClusterIds.emplace_back(clusterId);
-      fReqsColumns.emplace_back(columns);
-      auto cluster = std::make_unique<RCluster>(clusterId);
-      auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
-      for (auto colId : columns) {
-         pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
-         cluster->SetColumnAvailable(colId);
+      std::vector<std::unique_ptr<RCluster>> result;
+      for (auto clusterId : clusterIds) {
+         fReqsClusterIds.emplace_back(clusterId);
+         fReqsColumns.emplace_back(columns);
+         auto cluster = std::make_unique<RCluster>(clusterId);
+         auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
+         for (auto colId : columns) {
+            pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
+            cluster->SetColumnAvailable(colId);
+         }
+         cluster->Adopt(std::move(pageMap));
+         result.emplace_back(std::move(cluster));
       }
-      cluster->Adopt(std::move(pageMap));
-      return cluster;
+      return result;
    }
 };
 
@@ -289,7 +293,7 @@ TEST(ClusterPool, GetClusterIncrementally)
 }
 
 
-TEST(PageStorageFile, LoadCluster)
+TEST(PageStorageFile, LoadClusters)
 {
    FileRaii fileGuard("test_ntuple_clusters.root");
 
@@ -317,7 +321,8 @@ TEST(PageStorageFile, LoadCluster)
    auto colId = source.GetDescriptor().FindColumnId(ptId, 0);
    EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
 
-   auto cluster = source.LoadCluster(0, {});
+   std::vector<ROOT::Experimental::DescriptorId_t> ClusterIDs = {0};
+   auto cluster = std::move(source.LoadClusters(ClusterIDs, {})[0]);
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
@@ -325,7 +330,8 @@ TEST(PageStorageFile, LoadCluster)
       ROOT::Experimental::Detail::RColumn::Create<float, ROOT::Experimental::EColumnType::kReal32>(
          ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
    column->Connect(ptId, &source);
-   cluster = source.LoadCluster(1, {colId});
+   ClusterIDs[0] = 1;
+   cluster = std::move(source.LoadClusters(ClusterIDs, {colId})[0]);
    EXPECT_EQ(1U, cluster->GetId());
    EXPECT_EQ(1U, cluster->GetNOnDiskPages());
 
