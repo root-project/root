@@ -89,9 +89,17 @@ class CppWorkflow(object):
                 self.append(elem)
             self.t = t  # set lifeline for tuple
 
-    def __init__(self):
+    def __init__(self, head_node, range_id):
         '''
-        Initializes the attributes used in the generation of the workflow.
+        Generates the C++ code of an RDF workflow that corresponds to the
+        received graph and data range.
+
+        Args:
+            head_node (Node): head node of a graph that represents an RDF
+                workflow.
+            range_id (int): id of the data range to be processed by this
+                workflow. Needed to assign a name to a partial Snapshot output
+                file.
         '''
 
         self.includes = '''
@@ -107,13 +115,36 @@ class CppWorkflow(object):
         self.lambda_id = 0
 
         self.graph_nodes = ''
-        self.node_id = 1  # 0 is the parent node we receive
+        self.node_id = 1  # 0 is the head node we receive
 
         self.res_ptr_id = 0
 
         self.snapshots = []
 
         self.py_actions = []
+
+        # Generate the C++ workflow.
+        # Recurse over children nodes of received graph head node
+        head_node_id = 0
+        for child_node in head_node.children:
+            self._explore_graph(child_node, range_id, head_node_id)
+
+    def _explore_graph(self, node, range_id, parent_id):
+        """
+        Recursively traverses the graph nodes in DFS order and, for each of
+        them, adds a new node to the C++ workflow.
+
+        Args:
+            node (Node): object that contains the information to add the
+                corresponding node to the C++ workflow.
+            range_id (int): id of the current range. Needed to assign a name to a
+                partial Snapshot output file.
+            parent_id (int): id of the parent node in the C++ workflow.
+        """
+        node_id = self.add_node(node.operation, range_id, parent_id)
+
+        for child_node in node.children:
+            self._explore_graph(child_node, range_id, node_id)
 
     def add_include(self, header):
         '''
