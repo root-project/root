@@ -615,6 +615,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
       endif()
       set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
+      # The COMPILE_DEFINITIONS list might contain empty elements. These are
+      # removed with the FILTER generator expression, excluding elements that
+      # match the ^$ regexp (only matches empty strings).
+      set(module_defs "$<FILTER:$<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
     endif()
   endif()
 
