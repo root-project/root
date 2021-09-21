@@ -20,6 +20,7 @@
 #include <Math/MinimizerOptions.h>
 #include <TFormula.h>
 #include <TF1.h>
+#include <TF2.h>
 #include <TFitResult.h>
 
 TEST(TFormulaGradientPar, Sanity)
@@ -129,7 +130,24 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
    EXPECT_NEAR(0, result_num[2], /*abs_error*/1e-13);
 }
 
-// FIXME: Add more: crystalball, cheb3, bigaus?
+TEST(TFormulaGradientPar, BigausCrossCheck)
+{
+   auto h = new TF2("f1", "bigaus");
+   const unsigned len = 6;
+   double p[] = {/*Constant=*/1,/*MeanX=*/0,/*SigmaX=*/1,/*MeanY=*/1,/*SigmaY=*/2,/*Rho=*/0.};
+   h->SetParameters(p);
+   double x[] = {0};
+   TFormula::CladStorage result_clad(len);
+   TFormula* formula = h->GetFormula();
+   formula->GradientPar(x, result_clad);
+   TFormula::CladStorage result_num(len);
+   h->GradientPar(x, result_num.data());
+
+   for (unsigned i = 0; i < len; ++i)
+     ASSERT_FLOAT_EQ(result_num[i], result_clad[i]);
+}
+
+// FIXME: Add more: crystalball, cheb3?
 
 TEST(TFormulaGradientPar, GetGradFormula)
 {
