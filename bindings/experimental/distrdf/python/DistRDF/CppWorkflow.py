@@ -28,8 +28,9 @@ class CppWorkflow(object):
     Attributes:
         action_res_types (dict): result types for each supported action.
 
-        cached_wfs (set): ids of workflow functions that have been already
-            compiled and loaded by the current process. Used to prevent
+        cached_wfs (dict): uses as key the code of workflow functions that have
+            been already compiled and loaded by the current process, while the
+            value is the id of a given workflow function. Used to prevent
             recompilation of already executed workflow functions.
 
         FUNCTION_NAME (string): name of the function that encapsulates the
@@ -61,12 +62,15 @@ class CppWorkflow(object):
             `(res_id,filename)`, where `res_id` is the Snapshot result index in
             the vector of workflow results and `filename` is its modified output
             file name.
+
+        wf_id (int): used to assign new ids to workflow functions
     '''
 
     FUNCTION_NAME = 'GenerateGraph'
     FUNCTION_NAMESPACE = 'DistRDF_Internal'
 
-    cached_wfs = set()
+    cached_wfs = {}
+    wf_id = 0
 
     SnapshotData = namedtuple('SnapshotData', ['res_id', 'filename'])
     PyActionData = namedtuple('PyActionData', ['res_id', 'operation'])
@@ -374,8 +378,8 @@ class CppWorkflow(object):
                 corresponding to those actions.
         '''
 
-        function_id = self._compile()
-        return self._run_function(rdf, function_id)
+        wf_id = self._compile()
+        return self._run_function(rdf, wf_id)
 
     def _compile(self):
         '''
@@ -393,32 +397,30 @@ class CppWorkflow(object):
         process runs multiple times the same workflow).
 
         Returns:
-            string: the id of the function to be executed. Such id is appended
-                to CppWorkflow.FUNCTION_NAME to prevent name clashes (a worker
-                process might compile and load multiple workflow functions).
-                A function id is mostly the hash of its code.
+            int: the id of the workflow function to be executed. Such id is
+                appended to CppWorkflow.FUNCTION_NAME to prevent name clashes
+                (a worker process might compile and load multiple workflow
+                functions).
         '''
 
         # TODO: Make this function thread-safe? To support Dask threaded
         # workers
 
         code = self._get_code()
-        code_hash = hash(code)
-        # A hash can be a negative value, replace '-' with '_' so it can be
-        # part of a function name
-        function_id = str(code_hash).replace('-', '_', 1)
-        if code_hash in CppWorkflow.cached_wfs:
+        this_wf_id = CppWorkflow.cached_wfs.get(code)
+        if this_wf_id is not None:
             # We already compiled and loaded a workflow function with this
             # code. Return the id of that function
-            return function_id
+            return this_wf_id
 
         # We are trying to run this workflow for the first time in this
         # process. First dump the code in a file with the right function name
-        cpp_file_name = 'rdfworkflow_{code_hash}_{pid}.cpp' \
-                        .format(code_hash=code_hash, pid=os.getpid())
-        code = code.replace(CppWorkflow.FUNCTION_NAME, CppWorkflow.FUNCTION_NAME + function_id, 1)
+        this_wf_id = CppWorkflow.wf_id
+        cpp_file_name = 'rdfworkflow_{wf_id}_{pid}.cxx' \
+                        .format(wf_id=this_wf_id, pid=os.getpid())
+        final_code = code.replace(CppWorkflow.FUNCTION_NAME, CppWorkflow.FUNCTION_NAME + str(this_wf_id), 1)
         with open(cpp_file_name, 'w') as f:
-            f.write(code)
+            f.write(final_code)
 
         # Now compile and load the code
         if not ROOT.gSystem.CompileMacro(cpp_file_name, 'O'):
@@ -427,19 +429,19 @@ class CppWorkflow(object):
                 .format(cpp_file_name))
 
         # Let the cache know there is a new workflow
-        CppWorkflow.cached_wfs.add(code_hash)
+        CppWorkflow.cached_wfs[code] = this_wf_id
+        CppWorkflow.wf_id += 1
 
-        return function_id
+        return this_wf_id
 
-    def _run_function(self, rdf, function_id):
+    def _run_function(self, rdf, wf_id):
         '''
         Runs the workflow generation function.
 
         Args:
             rdf (ROOT::RDF::RNode): object that represents the dataset on
                 which to execute the workflow.
-            function_id (string): identifier of the workflow function to be
-                executed.
+            wf_id (int): identifier of the workflow function to be executed.
 
         Returns:
             tuple: the first element is the list of results of the actions in
@@ -448,7 +450,7 @@ class CppWorkflow(object):
         '''
 
         ns = getattr(ROOT, CppWorkflow.FUNCTION_NAMESPACE)
-        func = getattr(ns, CppWorkflow.FUNCTION_NAME + function_id)
+        func = getattr(ns, CppWorkflow.FUNCTION_NAME + str(wf_id))
 
         # Run the workflow generator function
         vectors = func(rdf)
