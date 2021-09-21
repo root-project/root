@@ -24,6 +24,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     Net
     RIO
     Thread
+  BUILTINS
+    XROOTD
 )
 
 target_include_directories(NetxNG PRIVATE ${XROOTD_INCLUDE_DIRS})
