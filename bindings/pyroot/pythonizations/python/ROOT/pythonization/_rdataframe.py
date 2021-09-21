@@ -93,11 +93,11 @@ class AsNumpyResult(object):
     Provides AsNumpy with laziness when it comes to triggering the event loop.
 
     Attributes:
-        columns (list): list of the names of the columns returned by
+        _columns (list): list of the names of the columns returned by
             AsNumpy.
-        py_arrays (dict): results of the AsNumpy action. The key is the
+        _py_arrays (dict): results of the AsNumpy action. The key is the
             column name, the value is the NumPy array for that column.
-        result_ptrs (dict): results of the AsNumpy action. The key is the
+        _result_ptrs (dict): results of the AsNumpy action. The key is the
             column name, the value is the result pointer for that column.
     """
     def __init__(self, result_ptrs, columns):
@@ -110,9 +110,9 @@ class AsNumpyResult(object):
                 AsNumpy.
         """
 
-        self.result_ptrs = result_ptrs
-        self.columns = columns
-        self.py_arrays = None
+        self._result_ptrs = result_ptrs
+        self._columns = columns
+        self._py_arrays = None
 
     def GetValue(self):
         """Triggers, if necessary, the event loop to run the Take actions for
@@ -123,24 +123,24 @@ class AsNumpyResult(object):
                 column.
         """
 
-        if self.py_arrays is None:
+        if self._py_arrays is None:
             import numpy
             from ROOT.pythonization._rdf_utils import ndarray
 
             # Convert the C++ vectors to numpy arrays
-            self.py_arrays = {}
-            for column in self.columns:
-                cpp_reference = self.result_ptrs[column].GetValue()
+            self._py_arrays = {}
+            for column in self._columns:
+                cpp_reference = self._result_ptrs[column].GetValue()
                 if hasattr(cpp_reference, "__array_interface__"):
                     tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
-                    self.py_arrays[column] = ndarray(tmp, self.result_ptrs[column])
+                    self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
                 else:
                     tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
                     for i, x in enumerate(cpp_reference):
                         tmp[i] = x # This creates only the wrapping of the objects and does not copy.
-                    self.py_arrays[column] = ndarray(tmp, self.result_ptrs[column])
+                    self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
 
-        return self.py_arrays
+        return self._py_arrays
 
 
 def _histo_profile(self, fixed_args, *args):
