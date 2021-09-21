@@ -2109,7 +2109,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Overload to make sure that the object specific
+/// Change the file that is being cached.
 
 void TTreeCache::SetFile(TFile *file, TFile::ECacheAction action)
 {
