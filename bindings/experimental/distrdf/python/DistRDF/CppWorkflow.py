@@ -347,10 +347,14 @@ class CppWorkflow(object):
                     else:
                         args += '{}'.format(elem)
                 args += '}'
+            elif isinstance(arg, ROOT.RDF.RSnapshotOptions):
+                ROOT.Warning('DistRDF',
+                             'Processing of RSnapshotOptions not implemented')
 
         # Make Snapshot lazy
         # TODO: Do a proper processing of the args (user might have specified
         # her own options object)
+        # Remove warning above when this is implemented
         if operation.name == 'Snapshot':
             args += ', "", lazy_options'
 
