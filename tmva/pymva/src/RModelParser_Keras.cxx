@@ -352,6 +352,7 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       std::string fKerasPadding = PyStringAsString(fPads);
       if(fKerasPadding == "valid"){
          fAttrAutopad="VALID";
+	 fAttrPads    = {0,0,0,0};
       }
       else if(fKerasPadding == "same"){
          fAttrAutopad="NOTSET";
@@ -365,8 +366,8 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
          long x1 = (outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight;
          long x2 = (outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth;
 
-         (x1 < 0) ? x1 = 0 : x1 = x1;
-         (x2 < 0) ? x2 = 0 : x2 = x2;
+         if(x1 < 0) x1 = 0;
+         if(x2 < 0) x2 = 0;
 
          size_t x1_begin = std::floor(x1/2);
          size_t x1_end   = x1 - x1_begin;
