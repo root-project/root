@@ -230,11 +230,13 @@ class CppWorkflow(object):
         # The result type is stored in the vector of result types to be
         # returned
         self.graph_nodes += \
-            '\n  auto c{} = TClass::GetClass(typeid(res_ptr{}));' \
-            .format(self.res_ptr_id, self.res_ptr_id)
-        self.graph_nodes += \
-            '\n  result_types.emplace_back(c{}->GetName());' \
-            .format(self.res_ptr_id)
+            '\n  auto c{0} = TClass::GetClass(typeid(res_ptr{0}));' \
+            '\n  if (c{0} == nullptr)' \
+            '\n    throw std::runtime_error(' \
+            '\n    "Cannot get type of result {0} of action {1} during "' \
+            '\n    "generation of RDF C++ workflow");' \
+            '\n  result_types.emplace_back(c{0}->GetName());' \
+            .format(self.res_ptr_id, operation.name)
 
         self.res_ptr_id += 1
 
