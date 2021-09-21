@@ -75,24 +75,6 @@ class CppWorkflow(object):
     SnapshotData = namedtuple('SnapshotData', ['res_id', 'filename'])
     PyActionData = namedtuple('PyActionData', ['res_id', 'operation'])
 
-    class ListWithLifeline(list):
-        '''
-        List-like helper class that is constructed from the elements stored in
-        an std::vector. Moreover, it stores a reference to the std::tuple that
-        contains the vector, so that the life of the tuple is tied to that
-        of the new list.
-
-        Attributes:
-            v (std::vector): vector used to construct the list.
-            t (std::tuple): tuple that contains `v`. It must not be destroyed
-                before the list is.
-        '''
-        def __init__(self, v, t):
-            super(CppWorkflow.ListWithLifeline, self).__init__()
-            for elem in v:
-                self.append(elem)
-            self.t = t  # set lifeline for tuple
-
     def __init__(self, head_node, range_id):
         '''
         Generates the C++ code of an RDF workflow that corresponds to the
@@ -453,14 +435,14 @@ class CppWorkflow(object):
         func = getattr(ns, CppWorkflow.FUNCTION_NAME + str(wf_id))
 
         # Run the workflow generator function
-        vectors = func(rdf)
+        vectors = func(rdf) # need to keep the tuple alive
         v_results, v_res_types, v_nodes = vectors
 
         # Convert the vector of results into a list so that we can mix
         # different types in it.
-        # The std::tuple `vectors` is passed as parameter to tie its life with
-        # that of the new list
-        results = self.ListWithLifeline(v_results, vectors)
+        # We copy the results since the life of the original ones is tied to
+        # that of the vector
+        results = [ ROOT.RDF.RResultHandle(res) for res in v_results ]
 
         # Strip out the ROOT::RDF::RResultPtr<> part of the type
         def get_result_type(s):
