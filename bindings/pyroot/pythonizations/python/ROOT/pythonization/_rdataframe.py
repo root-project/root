@@ -58,6 +58,12 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     if isinstance(exclude, str):
         raise TypeError("The exclude argument requires a list of strings")
 
+    # Early check for numpy
+    try:
+        import numpy
+    except:
+        raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
+
     # Find all column names in the dataframe if no column are specified
     if not columns:
         columns = [str(c) for c in df.GetColumnNames()]
@@ -118,12 +124,8 @@ class AsNumpyResult(object):
         """
 
         if self.py_arrays is None:
-            # Import numpy and numpy.array derived class lazily
-            try:
-                import numpy
-                from ROOT.pythonization._rdf_utils import ndarray
-            except:
-                raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
+            import numpy
+            from ROOT.pythonization._rdf_utils import ndarray
 
             # Convert the C++ vectors to numpy arrays
             self.py_arrays = {}
