@@ -66,7 +66,7 @@ class CppWorkflow(object):
         wf_id (int): used to assign new ids to workflow functions
     '''
 
-    FUNCTION_NAME = 'GenerateGraph'
+    FUNCTION_NAME = '__RDF_WORKFLOW_FUNCTION__'
     FUNCTION_NAMESPACE = 'DistRDF_Internal'
 
     cached_wfs = {}
