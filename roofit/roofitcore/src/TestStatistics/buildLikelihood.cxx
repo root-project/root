@@ -26,6 +26,7 @@
 #include <RooAbsData.h>
 #include <RooRealSumPdf.h>
 #include <RooProdPdf.h>
+#include <TClass.h>
 
 #include <memory>
 
