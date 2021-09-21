@@ -6319,7 +6319,7 @@ void THistPainter::PaintErrors(Option_t *)
    const Int_t kBASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
    Double_t delta;
-   Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror, sbase;
+   Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror, sbasex, sbasey;
    Double_t xi1, xi2, xi3, xi4, yi1, yi2, yi3, yi4;
    Double_t xmin, xmax, ymin, ymax;
    Double_t logxmin = 0;
@@ -6331,6 +6331,8 @@ void THistPainter::PaintErrors(Option_t *)
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
    Int_t option0, option1, option2, option3, option4, optionE, optionEX0, optionI0;
+   static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
+   static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -6352,7 +6354,7 @@ void THistPainter::PaintErrors(Option_t *)
    offset = fH->GetBarOffset();
    width = fH->GetBarWidth();
 
-   errormarker = fH->GetMarkerStyle();
+   errormarker = TAttMarker::GetMarkerStyleBase(fH->GetMarkerStyle());
    if (optionEX0) {
       xerror = 0;
    } else {
@@ -6360,7 +6362,11 @@ void THistPainter::PaintErrors(Option_t *)
    }
    symbolsize  = fH->GetMarkerSize();
    if (errormarker == 1) symbolsize = 0.01;
-   sbase       = symbolsize*kBASEMARKER;
+   sbasex = sbasey = symbolsize*kBASEMARKER;
+   if (errormarker >= 20 && errormarker <= 49) {
+      sbasex *= cxx[errormarker-20];
+      sbasey *= cyy[errormarker-20];
+   }
    // set the graphics attributes
 
    fH->TAttLine::Modify();
@@ -6391,8 +6397,8 @@ void THistPainter::PaintErrors(Option_t *)
    }
 
    //  compute the offset of the error bars due to the symbol size
-   s2x    = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   s2x    = gPad->PixeltoX(Int_t(0.5*sbasex)) - gPad->PixeltoX(0);
+   s2y    =-gPad->PixeltoY(Int_t(0.5*sbasey)) + gPad->PixeltoY(0);
 
    // compute size of the lines at the end of the error bars
    Int_t dxend = Int_t(gStyle->GetEndErrorSize());
