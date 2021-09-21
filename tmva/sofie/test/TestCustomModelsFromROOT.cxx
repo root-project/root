@@ -9,6 +9,12 @@
 #include "Linear_64_FromROOT.hxx"
 #include "input_models/references/Linear_64.ref.hxx"
 
+#include "LinearWithSelu_FromROOT.hxx"
+#include "input_models/references/LinearWithSelu.ref.hxx"
+
+#include "LinearWithSigmoid_FromROOT.hxx"
+#include "input_models/references/LinearWithSigmoid.ref.hxx"
+
 #include "ConvWithPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
 
@@ -76,7 +82,7 @@ TEST(ROOT, Linear16)
 TEST(ROOT, Linear32)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-   
+
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.data(), input.size(), 1.0f);
@@ -97,7 +103,7 @@ TEST(ROOT, Linear32)
 TEST(ROOT, Linear64)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-   
+
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
    std::fill_n(input.data(), input.size(), 1.0f);
@@ -109,6 +115,48 @@ TEST(ROOT, Linear64)
    float *correct = Linear_64_ExpectedOutput::all_ones;
 
    // Testing the actual and expected output values
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, LinearWithSelu)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(48);
+   std::fill_n(input.data(), input.size(), 1.0f);
+   std::vector<float> output = TMVA_SOFIE_LinearWithSelu::infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = LinearWithSelu_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, LinearWithSigmoid)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(48);
+   std::fill_n(input.data(), input.size(), 1.0f);
+   std::vector<float> output = TMVA_SOFIE_LinearWithSigmoid::infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = LinearWithSigmoid_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
