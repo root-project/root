@@ -173,3 +173,6 @@ ROOTTEST_ADD_TEST(index
 ROOTTEST_ADD_TEST(assertBranchCount
                   MACRO assertBranchCount.C
                   OUTREF references/assertBranchCount.ref)
+
+ROOTTEST_ADD_TEST(clone-friend-tear-down
+                  COMMAND ${ROOT_hadd_CMD} -f tr_merge.root ${CMAKE_CURRENT_SOURCE_DIR}/files/tr1.root ${CMAKE_CURRENT_SOURCE_DIR}/files/tr2.root)
