@@ -12,6 +12,7 @@ namespace SOFIE{
    RModel::RModel(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
+      fOutputTensorNames = other.fOutputTensorNames;
       fOperators = std::move(other.fOperators);
       fInitializedTensors = std::move(other.fInitializedTensors);
       fIntermediateTensorInfos = std::move(other.fIntermediateTensorInfos);
@@ -19,13 +20,14 @@ namespace SOFIE{
       fFileName = other.fFileName;
       fParseTime = other.fParseTime;
       fGC = other.fGC;
+      fNeededBlasRoutines = other.fNeededBlasRoutines;
       fNeededStdLib = other.fNeededStdLib;
-      fOutputTensorNames = other.fOutputTensorNames;
    }
 
    RModel& RModel::operator=(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
+      fOutputTensorNames = other.fOutputTensorNames;
       fOperators = std::move(other.fOperators);
       fInitializedTensors = std::move(other.fInitializedTensors);
       fIntermediateTensorInfos = std::move(other.fIntermediateTensorInfos);
@@ -33,8 +35,8 @@ namespace SOFIE{
       fFileName = other.fFileName;
       fParseTime = other.fParseTime;
       fGC = other.fGC;
+      fNeededBlasRoutines = other.fNeededBlasRoutines;
       fNeededStdLib = other.fNeededStdLib;
-      fOutputTensorNames = other.fOutputTensorNames;
       return *this;
    }
 
@@ -171,7 +173,7 @@ namespace SOFIE{
    void RModel::Generate(){
       Initialize();
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
-      for (auto& i: fNeededStdLib){
+      for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
       }
       fGC += ("namespace TMVA_SOFIE_" + fName + "{\n");
@@ -293,7 +295,6 @@ namespace SOFIE{
       }
       fGC += "\treturn ret;\n";
       fGC += "}\n";
-      }
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
    }
 
