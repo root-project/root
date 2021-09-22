@@ -930,6 +930,12 @@ TTree::~TTree()
       TFile *file = fDirectory->GetFile();
       MoveReadCache(file,0);
    }
+
+   // Remove the TTree from any list (linked to to the list of Cleanups) to avoid the unnecessary call to
+   // this RecursiveRemove while we delete our content.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+   ResetBit(kMustCleanup); // Don't redo it.
+
    // We don't own the leaves in fLeaves, the branches do.
    fLeaves.Clear();
    // I'm ready to destroy any objects allocated by
