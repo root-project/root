@@ -961,6 +961,11 @@ TTree::~TTree()
    // Get rid of our branches, note that this will also release
    // any memory allocated by TBranchElement::SetAddress().
    fBranches.Delete();
+
+   // The TBranch destructor is using fDirectory to detect whether it
+   // owns the TFile that contains its data (See TBranch::~TBranch)
+   fDirectory = nullptr;
+
    // FIXME: We must consider what to do with the reset of these if we are a clone.
    delete fPlayer;
    fPlayer = 0;
@@ -1013,9 +1018,6 @@ TTree::~TTree()
    fClusterRangeEnd = 0;
    delete [] fClusterSize;
    fClusterSize = 0;
-   // Must be done after the destruction of friends.
-   // Note: We do *not* own our directory.
-   fDirectory = 0;
 
    if (fTransientBuffer) {
       delete fTransientBuffer;
