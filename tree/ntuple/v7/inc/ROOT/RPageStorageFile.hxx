@@ -19,6 +19,7 @@
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RRawFile.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <array>
@@ -135,6 +136,15 @@ private:
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType idxInCluster);
+
+   /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
+   /// read requests for a given cluster and columns.  The reead requests are appended to
+   /// the provided vector.  This way, requests can be collected for multiple clusters before
+   /// sending them to RRawFile::ReadV().
+   std::unique_ptr<RCluster> PrepareSingleCluster(
+      DescriptorId_t &clusterId,
+      const ColumnSet_t &columns,
+      std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
 
 protected:
    RNTupleDescriptor AttachImpl() final;
