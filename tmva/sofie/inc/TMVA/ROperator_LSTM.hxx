@@ -89,7 +89,7 @@ template <typename T> class ROperator_LSTM final : public ROperator {
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
       size_t num_directions = input[1][0];
-      size_t hidden_size = input[1][1];
+      size_t hidden_size = input[1][1] / 4;
       if (fAttrLayout == 0) {
          size_t seq_length = input[0][0];
          size_t batch_size = input[0][1];
