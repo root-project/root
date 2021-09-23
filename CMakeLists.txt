@@ -619,7 +619,7 @@ if(testing)
       find_package(Git REQUIRED)
 
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+        execute_process(COMMAND ${GIT_EXECUTABLE} for-each-ref --points-at=HEAD --count=1 --format=%\(refname:short\)
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
       else()
@@ -634,7 +634,7 @@ if(testing)
       endif()
 
       execute_process(COMMAND
-        ${GIT_EXECUTABLE} ls-remote --heads
+        ${GIT_EXECUTABLE} ls-remote --heads --tags
         https://github.com/root-project/roottest.git ${GIT_BRANCH}
         OUTPUT_VARIABLE ROOTTEST_GIT_BRANCH)
 
