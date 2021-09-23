@@ -52,7 +52,7 @@ template <typename T> class ROperator_LSTM final : public ROperator {
    std::string fType;
 
  public:
-   ROperator_LSTM() = delete;
+   ROperator_LSTM() {}
 
    ROperator_LSTM(std::vector<float> activation_alpha,
                  std::vector<float> activation_beta,
