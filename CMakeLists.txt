@@ -626,6 +626,13 @@ if(testing)
         set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
       endif()
 
+      # Resolve the `latest-stable` branch to the latest merged head/tag
+      if("${GIT_BRANCH}" STREQUAL "latest-stable")
+        execute_process(COMMAND ${GIT_EXECUTABLE} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+      endif()
+
       execute_process(COMMAND
         ${GIT_EXECUTABLE} ls-remote --heads
         https://github.com/root-project/roottest.git ${GIT_BRANCH}
