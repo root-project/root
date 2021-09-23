@@ -115,7 +115,7 @@ include(CheckCCompilerFlag)
 # so we check the value of __cplusplus.
 # This default value can be overridden by specifying one at the prompt.
 if (MSVC)
-   set(CXX_STANDARD_STRING 2011)
+   set(CXX_STANDARD_STRING "201703L")
 else()
    execute_process(COMMAND echo __cplusplus
                    COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -
