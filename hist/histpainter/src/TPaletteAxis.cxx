@@ -406,7 +406,8 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wmax = fH->GetMaximum();
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
-   Double_t y1, y2, w1, w2, zc;
+   Double_t b1, b2, w1, w2, zc;
+   Double_t kHorizontal = false;
 
    if ((wlmax - wlmin) <= 0) {
       Double_t mz = wlmin * 0.1;
@@ -417,9 +418,10 @@ void TPaletteAxis::Paint(Option_t *)
       wmax  = wlmax;
    }
 
+   if (xmax-xmin > ymax-ymin) kHorizontal = true;
+
    if (gPad->GetLogz()) {
-      if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1,
-                                                      (Double_t)0.001 * wmax);
+      if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1, (Double_t)0.001 * wmax);
       wlmin = TMath::Log10(wmin);
       wlmax = TMath::Log10(wmax);
    }
@@ -440,10 +442,12 @@ void TPaletteAxis::Paint(Option_t *)
       label = new TLatex();
       label->SetTextFont(fAxis.GetLabelFont());
       label->SetTextColor(fAxis.GetLabelColor());
-      label->SetTextAlign(kHAlignLeft+kVAlignCenter);
+      if (kHorizontal) label->SetTextAlign(kHAlignCenter+kVAlignTop);
+      else             label->SetTextAlign(kHAlignLeft+kVAlignCenter);
       line = new TLine();
       line->SetLineColor(fAxis.GetLineColor());
-      line->PaintLine(xmax, ymin, xmax, ymax);
+      if (kHorizontal) line->PaintLine(xmin, ymin, xmax, ymin);
+      else             line->PaintLine(xmax, ymin, xmax, ymax);
    }
    Double_t scale = ndivz / (wlmax - wlmin);
    for (Int_t i = 0; i < ndivz; i++) {
@@ -463,8 +467,13 @@ void TPaletteAxis::Paint(Option_t *)
       }
 
       if (w2 <= wlmin) continue;
-      y1 = ymin + (w1 - wlmin) * (ymax - ymin) / ws;
-      y2 = ymin + (w2 - wlmin) * (ymax - ymin) / ws;
+      if (kHorizontal) {
+         b1 = xmin + (w1 - wlmin) * (xmax - xmin) / ws;
+         b2 = xmin + (w2 - wlmin) * (xmax - xmin) / ws;
+      } else {
+         b1 = ymin + (w1 - wlmin) * (ymax - ymin) / ws;
+         b2 = ymin + (w2 - wlmin) * (ymax - ymin) / ws;
+      }
 
       if (fH->TestBit(TH1::kUserContour)) {
          color = i;
@@ -475,7 +484,8 @@ void TPaletteAxis::Paint(Option_t *)
       theColor = Int_t((color + 0.99) * Double_t(ncolors) / Double_t(ndivz));
       SetFillColor(gStyle->GetColorPalette(theColor));
       TAttFill::Modify();
-      gPad->PaintBox(xmin, y1, xmax, y2);
+      if (kHorizontal) gPad->PaintBox(b1, ymin, b2, ymax);
+      else             gPad->PaintBox(xmin, b1, xmax, b2);
       // case option "CJUST": put labels directly
       if (label) {
          Double_t lof = fAxis.GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin());
@@ -488,16 +498,21 @@ void TPaletteAxis::Paint(Option_t *)
             zlab = TMath::Power(10, zlab);
          }
          // make sure labels dont overlap
-         if (i == 0 || (y1 - prevlab) > 1.5*lsize_user) {
-            label->PaintLatex(xmax + lof, y1, 0, lsize, Form("%g", zlab));
-            prevlab = y1;
+         if (i == 0 || (b1 - prevlab) > 1.5*lsize_user) {
+            if (kHorizontal) label->PaintLatex(b1, ymin - lof, 0, lsize, Form("%g", zlab));
+            else             label->PaintLatex(xmax + lof, b1, 0, lsize, Form("%g", zlab));
+            prevlab = b1;
          }
-         line->PaintLine(xmax-tlength, y1, xmax, y1);
+         if (kHorizontal) line->PaintLine(b2, ymin+tlength, b2, ymin);
+         else             line->PaintLine(xmax-tlength, b1, xmax, b1);
          if (i == ndivz-1) {
             // label + tick at top of axis
-            if ((y2 - prevlab > 1.5*lsize_user))
-               label->PaintLatex(xmax + lof, y2, 0, lsize, Form("%g",fH->GetMaximum()));
-            line->PaintLine(xmax-tlength, y2, xmax, y2);
+            if ((b2 - prevlab > 1.5*lsize_user)) {
+               if (kHorizontal) label->PaintLatex(b2, ymin - lof, 0, lsize, Form("%g",fH->GetMaximum()));
+               else             label->PaintLatex(xmax + lof, b2, 0, lsize, Form("%g",fH->GetMaximum()));
+            }
+            if (kHorizontal) line->PaintLine(b1, ymin+tlength, b1, ymin);
+            else             line->PaintLine(xmax-tlength, b2, xmax, b2);
          }
       }
    }
@@ -528,7 +543,8 @@ void TPaletteAxis::Paint(Option_t *)
       delete line;
    } else {
       // default
-      fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
+      if (kHorizontal) fAxis.PaintAxis(xmin, ymin, xmax, ymin, wmin, wmax, ndiv, chopt);
+      else             fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
    }
 }
 
