@@ -459,7 +459,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 
 std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
 ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(
-   std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns)
+   std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns)
 {
    std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>> result;
    for (auto clusterId : clusterIds) {
