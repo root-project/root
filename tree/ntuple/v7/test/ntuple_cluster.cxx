@@ -73,17 +73,15 @@ public:
    void LoadSealedPage(
       ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::RClusterIndex &, RSealedPage &) final
    { }
-   std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<ROOT::Experimental::DescriptorId_t> clusterIds,
-      const ROOT::Experimental::Detail::RCluster::ColumnSet_t &columns) final
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {
       std::vector<std::unique_ptr<RCluster>> result;
-      for (auto clusterId : clusterIds) {
-         fReqsClusterIds.emplace_back(clusterId);
-         fReqsColumns.emplace_back(columns);
-         auto cluster = std::make_unique<RCluster>(clusterId);
+      for (auto key : clusterKeys) {
+         fReqsClusterIds.emplace_back(key.fClusterId);
+         fReqsColumns.emplace_back(key.fColumnSet);
+         auto cluster = std::make_unique<RCluster>(key.fClusterId);
          auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
-         for (auto colId : columns) {
+         for (auto colId : key.fColumnSet) {
             pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
             cluster->SetColumnAvailable(colId);
          }
@@ -321,8 +319,9 @@ TEST(PageStorageFile, LoadClusters)
    auto colId = source.GetDescriptor().FindColumnId(ptId, 0);
    EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
 
-   std::vector<ROOT::Experimental::DescriptorId_t> clusterIDs = {0};
-   auto cluster = std::move(source.LoadClusters(clusterIDs, {})[0]);
+   std::vector<ROOT::Experimental::Detail::RCluster::RKey> clusterKeys;
+   clusterKeys.push_back({0, {}});
+   auto cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
@@ -330,19 +329,20 @@ TEST(PageStorageFile, LoadClusters)
       ROOT::Experimental::Detail::RColumn::Create<float, ROOT::Experimental::EColumnType::kReal32>(
          ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
    column->Connect(ptId, &source);
-   clusterIDs[0] = 1;
-   cluster = std::move(source.LoadClusters(clusterIDs, {colId})[0]);
+   clusterKeys[0].fClusterId = 1;
+   clusterKeys[0].fColumnSet.insert(colId);
+   cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(1U, cluster->GetId());
    EXPECT_EQ(1U, cluster->GetNOnDiskPages());
 
    ROnDiskPage::Key key(colId, 0);
    EXPECT_NE(nullptr, cluster->GetOnDiskPage(key));
-
-   clusterIDs = {0, 1};
-   auto clusters = source.LoadClusters(clusterIDs, {colId});
-   //EXPECT_EQ(2U, clusters.size());
-   //EXPECT_EQ(0U, clusters[0]->GetId());
-   //EXPECT_EQ(1U, clusters[0]->GetNOnDiskPages());
-   //EXPECT_EQ(1U, clusters[1]->GetId());
-   //EXPECT_EQ(1U, clusters[1]->GetNOnDiskPages());
+   clusterKeys.push_back({1, {colId}});
+   clusterKeys[0].fClusterId = 0;
+   auto clusters = source.LoadClusters(clusterKeys);
+   EXPECT_EQ(2U, clusters.size());
+   EXPECT_EQ(0U, clusters[0]->GetId());
+   EXPECT_EQ(1U, clusters[0]->GetNOnDiskPages());
+   EXPECT_EQ(1U, clusters[1]->GetId());
+   EXPECT_EQ(1U, clusters[1]->GetNOnDiskPages());
 }
