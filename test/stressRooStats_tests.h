@@ -1,24 +1,45 @@
-// ROOT headers
-#include "TCanvas.h"
-#include "TMath.h"
-
-// RooFit headers
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooPlot.h"
-#include "RooUnitTest.h"
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-
-// RooStats headers
-#include "RooStats/NumberCountingUtils.h"
-#include "RooStats/RooStatsUtils.h"
-#include "RooStats/TestStatistic.h"
-#include "RooStats/HypoTestCalculatorGeneric.h"
-
 #include "stressRooStats_models.h" // Global functions that build complex RooStats models
 
+// RooStats headers
+#include <RooStats/AsymptoticCalculator.h>
+#include <RooStats/BayesianCalculator.h>
+#include <RooStats/FrequentistCalculator.h>
+#include <RooStats/HybridCalculator.h>
+#include <RooStats/HypoTestCalculatorGeneric.h>
+#include <RooStats/HypoTestInverter.h>
+#include <RooStats/HypoTestInverterPlot.h>
+#include <RooStats/HypoTestInverterResult.h>
+#include <RooStats/HypoTestPlot.h>
+#include <RooStats/HypoTestResult.h>
+#include <RooStats/LikelihoodInterval.h>
+#include <RooStats/LikelihoodIntervalPlot.h>
+#include <RooStats/MCMCCalculator.h>
+#include <RooStats/MaxLikelihoodEstimateTestStat.h>
+#include <RooStats/NumEventsTestStat.h>
+#include <RooStats/NumberCountingUtils.h>
+#include <RooStats/ProfileLikelihoodCalculator.h>
+#include <RooStats/ProfileLikelihoodTestStat.h>
+#include <RooStats/RatioOfProfiledLikelihoodsTestStat.h>
+#include <RooStats/RooStatsUtils.h>
+#include <RooStats/SamplingDistPlot.h>
+#include <RooStats/SequentialProposal.h>
+#include <RooStats/SimpleLikelihoodRatioTestStat.h>
+#include <RooStats/TestStatistic.h>
+#include <RooStats/ToyMCSampler.h>
+
+// ROOT headers
+#include <TCanvas.h>
+#include <TMath.h>
+
+// RooFit headers
+#include <RooCFunction1Binding.h>
+#include <RooDataSet.h>
+#include <RooGlobalFunc.h>
+#include <RooPlot.h>
+#include <RooRealVar.h>
+#include <RooUnitTest.h>
+
+// STL headers
 #include <cassert>
 
 using namespace ROOT::Math;
@@ -57,10 +78,6 @@ static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const
 //    PROFILE LIKELIHOOD CALCULATOR UNIT TESTS
 //
 
-#include "RooStats/ProfileLikelihoodCalculator.h"
-#include "RooStats/LikelihoodInterval.h"
-#include "RooStats/LikelihoodIntervalPlot.h"
-#include "RooStats/HypoTestResult.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -489,8 +506,6 @@ public:
 //    BAYESIAN CALCULATOR UNIT TESTS
 //
 
-#include "RooStats/BayesianCalculator.h"
-#include "RooCFunction1Binding.h" // for prior building purposes
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -915,8 +930,6 @@ public:
 //    MARKOV CHAIN MONTE CARLO CALCULATOR UNIT TESTS
 //
 
-#include "RooStats/MCMCCalculator.h"
-#include "RooStats/SequentialProposal.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1049,19 +1062,6 @@ public:
 //    HYPOTHESIS TEST CALCULATOR UNIT TESTS
 //
 
-// Hypo Test Calculators
-#include "RooStats/HypoTestCalculatorGeneric.h"
-#include "RooStats/FrequentistCalculator.h"
-#include "RooStats/HybridCalculator.h"
-#include "RooStats/AsymptoticCalculator.h"
-#include "RooStats/HypoTestPlot.h"
-// Test Statistics
-#include "RooStats/ProfileLikelihoodTestStat.h"
-#include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
-#include "RooStats/SimpleLikelihoodRatioTestStat.h"
-#include "RooStats/ProfileLikelihoodCalculator.h"
-#include "RooStats/MaxLikelihoodEstimateTestStat.h"
-#include "RooStats/NumEventsTestStat.h"
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -1398,11 +1398,6 @@ public:
 //    HYPOTHESIS TEST INVERTER UNIT TESTS
 //
 
-#include "RooStats/HypoTestInverter.h"
-#include "RooStats/HypoTestInverterResult.h"
-#include "RooStats/ToyMCSampler.h"
-#include "RooStats/HypoTestInverterPlot.h"
-#include "RooStats/SamplingDistPlot.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1914,9 +1909,6 @@ public:
    }
 } ;
 
-#include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
-#include "RooStats/MaxLikelihoodEstimateTestStat.h"
-#include "RooStats/NumEventsTestStat.h"
 
 static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType calculatorType, RooAbsData &data, const ModelConfig &nullModel, const ModelConfig &altModel, const UInt_t toysNull, const UInt_t toysAlt)
 {
