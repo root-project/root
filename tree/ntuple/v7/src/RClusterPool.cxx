@@ -182,7 +182,7 @@ namespace {
 /// Helper class for the (cluster, column list) pairs that should be loaded in the background
 class RProvides {
    using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
-   using ColumnSet_t = ROOT::Experimental::Detail::RPageSource::ColumnSet_t;
+   using ColumnSet_t = ROOT::Experimental::Detail::RCluster::ColumnSet_t;
 
 private:
    std::map<DescriptorId_t, ColumnSet_t> fMap;
@@ -220,7 +220,7 @@ public:
 
 ROOT::Experimental::Detail::RCluster *
 ROOT::Experimental::Detail::RClusterPool::GetCluster(
-   DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns)
+   DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns)
 {
    const auto &desc = fPageSource.GetDescriptor();
 
@@ -334,7 +334,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
 ROOT::Experimental::Detail::RCluster *
 ROOT::Experimental::Detail::RClusterPool::WaitFor(
-   DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns)
+   DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns)
 {
    while (true) {
       // Fast exit: the cluster happens to be already present in the cache pool

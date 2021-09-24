@@ -184,7 +184,7 @@ public:
                        RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns) final;
+      std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns) final;
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
