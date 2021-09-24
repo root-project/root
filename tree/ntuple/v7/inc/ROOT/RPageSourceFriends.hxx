@@ -103,8 +103,7 @@ public:
 
    void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
-   std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns) final;
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };

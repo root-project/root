@@ -154,6 +154,11 @@ Binds together several page maps that represent all the pages of certain columns
 class RCluster {
 public:
    using ColumnSet_t = std::unordered_set<DescriptorId_t>;
+   /// The identifiers that specifies the content of a (partial) cluster
+   struct RKey {
+      DescriptorId_t fClusterId;
+      ColumnSet_t fColumnSet;
+   };
 
 protected:
    /// References the cluster identifier in the page source that created the cluster
