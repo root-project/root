@@ -142,8 +142,7 @@ private:
    /// the provided vector.  This way, requests can be collected for multiple clusters before
    /// sending them to RRawFile::ReadV().
    std::unique_ptr<RCluster> PrepareSingleCluster(
-      DescriptorId_t &clusterId,
-      const RCluster::ColumnSet_t &columns,
+      const RCluster::RKey &clusterKey,
       std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
 
 protected:
@@ -169,8 +168,7 @@ public:
    void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
                        RSealedPage &sealedPage) final;
 
-   std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns) final;
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 };
 
 

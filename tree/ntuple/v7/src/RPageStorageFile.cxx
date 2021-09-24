@@ -374,8 +374,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
-   DescriptorId_t &clusterId,
-   const RCluster::ColumnSet_t &columns,
+   const RCluster::RKey &clusterKey,
    std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests)
 {
    struct ROnDiskPageLocator {
@@ -386,12 +385,12 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
       std::size_t fBufPos = 0;
    };
 
-   const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
+   const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterKey.fClusterId);
 
    // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
-   for (auto columnId : columns) {
+   for (auto columnId : clusterKey.fColumnSet) {
       const auto &pageRange = clusterDesc.GetPageRange(columnId);
       NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
@@ -481,24 +480,23 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
       readRequests[i].fBuffer = buffer + reinterpret_cast<intptr_t>(readRequests[i].fBuffer);
    }
 
-   auto cluster = std::make_unique<RCluster>(clusterId);
+   auto cluster = std::make_unique<RCluster>(clusterKey.fClusterId);
    cluster->Adopt(std::move(pageMap));
-   for (auto colId : columns)
+   for (auto colId : clusterKey.fColumnSet)
       cluster->SetColumnAvailable(colId);
    return cluster;
 }
 
 std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
-ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(
-   std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns)
+ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
-   fCounters->fNClusterLoaded.Add(clusterIds.size());
+   fCounters->fNClusterLoaded.Add(clusterKeys.size());
 
    std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>> clusters;
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
-   for (auto clusterId: clusterIds) {
-      clusters.emplace_back(PrepareSingleCluster(clusterId, columns, readRequests));
+   for (auto key: clusterKeys) {
+      clusters.emplace_back(PrepareSingleCluster(key, readRequests));
    }
 
    auto nReqs = readRequests.size();
