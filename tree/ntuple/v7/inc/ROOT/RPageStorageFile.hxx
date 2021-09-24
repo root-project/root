@@ -143,7 +143,7 @@ private:
    /// sending them to RRawFile::ReadV().
    std::unique_ptr<RCluster> PrepareSingleCluster(
       DescriptorId_t &clusterId,
-      const ColumnSet_t &columns,
+      const RCluster::ColumnSet_t &columns,
       std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
 
 protected:
@@ -170,7 +170,7 @@ public:
                        RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns) final;
+      std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns) final;
 };
 
 

@@ -18,7 +18,6 @@
 
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RPageStorage.hxx> // for ColumnSet_t
 
 #include <condition_variable>
 #include <memory>
@@ -60,7 +59,7 @@ private:
    struct RReadItem {
       std::promise<std::unique_ptr<RCluster>> fPromise;
       DescriptorId_t fClusterId = kInvalidDescriptorId;
-      RPageSource::ColumnSet_t fColumns;
+      RCluster::ColumnSet_t fColumns;
    };
 
    /// Request to decompress and if necessary unpack compressed pages. The unzipped pages
@@ -75,7 +74,7 @@ private:
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
       DescriptorId_t fClusterId = kInvalidDescriptorId;
-      RPageSource::ColumnSet_t fColumns;
+      RCluster::ColumnSet_t fColumns;
       /// By the time a cluster has been loaded, this cluster might not be necessary anymore. This can happen if
       /// there are jumps in the access pattern (i.e. the access pattern deviates from linear access).
       bool fIsExpired = false;
@@ -134,7 +133,7 @@ private:
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.
-   RCluster *WaitFor(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
+   RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
 
 public:
    static constexpr unsigned int kDefaultPoolSize = 4;
@@ -153,7 +152,7 @@ public:
    /// and possibly pages of other columns, too.  If implicit multi-threading is turned on, the uncompressed pages
    /// of the returned cluster are already pushed into the page pool associated with the page source upon return.
    /// The cluster remains valid until the next call to GetCluster().
-   RCluster *GetCluster(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
+   RCluster *GetCluster(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
 }; // class RClusterPool
 
 } // namespace Detail

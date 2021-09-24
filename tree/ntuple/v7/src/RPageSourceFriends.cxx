@@ -200,7 +200,7 @@ void ROOT::Experimental::Detail::RPageSourceFriends::ReleasePage(RPage &page)
 
 std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
 ROOT::Experimental::Detail::RPageSourceFriends::LoadClusters(std::span<DescriptorId_t> clusterIds,
-                                                             const ColumnSet_t & /* columns */)
+                                                             const RCluster::ColumnSet_t & /* columns */)
 {
    // The virtual friends page source does not pre-load any clusters itself. However, the underlying page sources
    // that are combined may well do it.

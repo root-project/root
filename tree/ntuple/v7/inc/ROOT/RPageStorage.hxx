@@ -16,6 +16,7 @@
 #ifndef ROOT7_RPageStorage
 #define ROOT7_RPageStorage
 
+#include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleOptions.hxx>
@@ -40,7 +41,6 @@ class RNTupleModel;
 
 namespace Detail {
 
-class RCluster;
 class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
@@ -268,10 +268,6 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
-public:
-   /// Derived from the model (fields) that are actually being requested at a given point in time
-   using ColumnSet_t = std::unordered_set<DescriptorId_t>;
-
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -300,7 +296,7 @@ protected:
    RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
    /// The active columns are implicitly defined by the model fields or views
-   ColumnSet_t fActiveColumns;
+   RCluster::ColumnSet_t fActiveColumns;
 
    /// Helper to unzip pages and header/footer; comprises a 16MB (kMAXZIPBUF) unzip buffer.
    /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
@@ -371,7 +367,7 @@ public:
    /// LoadClusters() is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
    virtual std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns) = 0;
+      std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns) = 0;
 
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's

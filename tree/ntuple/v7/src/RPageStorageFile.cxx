@@ -375,7 +375,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
    DescriptorId_t &clusterId,
-   const ColumnSet_t &columns,
+   const RCluster::ColumnSet_t &columns,
    std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests)
 {
    struct ROnDiskPageLocator {
@@ -490,7 +490,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
 
 std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
 ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(
-   std::span<DescriptorId_t> clusterIds, const ColumnSet_t &columns)
+   std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns)
 {
    fCounters->fNClusterLoaded.Add(clusterIds.size());
 
