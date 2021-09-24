@@ -160,6 +160,8 @@ The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In
 
 - Implement the option `X+` and `Y+` for reverse axis on TGraph.
 - Offsets for axis titles with absolute-sized fonts (size%10 == 3) are now relative only to the font size (i.e. no longer relative to pad dimensions).
+- In `TPaletteAxis` when the palette width is bigger than the palette height, the palette
+  in automatically drawn horizontally.
 
 ## 3D Graphics Libraries
 
