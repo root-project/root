@@ -366,8 +366,7 @@ public:
    /// for the cluster would assume an incomplete cluster and trigger loading again.
    /// LoadClusters() is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
-   virtual std::vector<std::unique_ptr<RCluster>> LoadClusters(
-      std::span<DescriptorId_t> clusterIds, const RCluster::ColumnSet_t &columns) = 0;
+   virtual std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) = 0;
 
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
