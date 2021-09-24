@@ -407,7 +407,7 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
    Double_t b1, b2, w1, w2, zc;
-   Double_t kHorizontal = false;
+   Bool_t   kHorizontal = false;
 
    if ((wlmax - wlmin) <= 0) {
       Double_t mz = wlmin * 0.1;
