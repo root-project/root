@@ -418,7 +418,7 @@ void TPaletteAxis::Paint(Option_t *)
       wmax  = wlmax;
    }
 
-   if (xmax-xmin > ymax-ymin) kHorizontal = true;
+   if (GetX2NDC()-GetX1NDC() > GetY2NDC()-GetY1NDC()) kHorizontal = true;
 
    if (gPad->GetLogz()) {
       if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1, (Double_t)0.001 * wmax);
