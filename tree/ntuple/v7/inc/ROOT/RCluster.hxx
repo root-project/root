@@ -156,7 +156,7 @@ public:
    using ColumnSet_t = std::unordered_set<DescriptorId_t>;
    /// The identifiers that specifies the content of a (partial) cluster
    struct RKey {
-      DescriptorId_t fClusterId;
+      DescriptorId_t fClusterId = kInvalidDescriptorId;
       ColumnSet_t fColumnSet;
    };
 
