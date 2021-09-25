@@ -58,8 +58,7 @@ private:
    /// Work items come in groups and are executed by the page source.
    struct RReadItem {
       std::promise<std::unique_ptr<RCluster>> fPromise;
-      DescriptorId_t fClusterId = kInvalidDescriptorId;
-      RCluster::ColumnSet_t fColumns;
+      RCluster::RKey fClusterKey;
    };
 
    /// Request to decompress and if necessary unpack compressed pages. The unzipped pages
@@ -73,13 +72,14 @@ private:
    /// work item, first a read item and then an unzip item.
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
-      DescriptorId_t fClusterId = kInvalidDescriptorId;
-      RCluster::ColumnSet_t fColumns;
+      RCluster::RKey fClusterKey;
       /// By the time a cluster has been loaded, this cluster might not be necessary anymore. This can happen if
       /// there are jumps in the access pattern (i.e. the access pattern deviates from linear access).
       bool fIsExpired = false;
 
-      bool operator ==(const RInFlightCluster &other) const { return fClusterId == other.fClusterId && fColumns == other.fColumns; }
+      bool operator ==(const RInFlightCluster &other) const {
+         return (fClusterKey.fClusterId == other.fClusterKey.fClusterId) &&
+                (fClusterKey.fColumnSet == other.fClusterKey.fColumnSet); }
       bool operator !=(const RInFlightCluster &other) const { return !(*this == other); }
       /// First order by cluster id, then by number of columns, than by the column ids in fColumns
       bool operator <(const RInFlightCluster &other) const;
