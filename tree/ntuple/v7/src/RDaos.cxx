@@ -98,13 +98,14 @@ ROOT::Experimental::Detail::RDaosObject::~RDaosObject()
 int ROOT::Experimental::Detail::RDaosObject::Fetch(FetchUpdateArgs &args)
 {
    args.fIods[0].iod_size = (daos_size_t)DAOS_REC_ANY;
-   return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, 1,
-                         args.fIods, args.fSgls, nullptr, args.fEv);
+   return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE,
+                         DAOS_COND_DKEY_FETCH | DAOS_COND_AKEY_FETCH,
+                         &args.fDistributionKey, 1, args.fIods, args.fSgls, nullptr, args.fEv);
 }
 
 int ROOT::Experimental::Detail::RDaosObject::Update(FetchUpdateArgs &args)
 {
-   return daos_obj_update(fObjectHandle, DAOS_TX_NONE, DAOS_COND_DKEY_INSERT, &args.fDistributionKey, 1,
+   return daos_obj_update(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, 1,
                           args.fIods, args.fSgls, args.fEv);
 }
 
