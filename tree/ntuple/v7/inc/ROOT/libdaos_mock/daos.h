@@ -164,7 +164,8 @@ enum {
 };
 
 enum {
-	DAOS_COND_DKEY_INSERT	= (1 << 1),
+	DAOS_COND_DKEY_FETCH	= (1 << 3),
+	DAOS_COND_AKEY_FETCH	= (1 << 6),
 };
 
 /** Object open modes */
