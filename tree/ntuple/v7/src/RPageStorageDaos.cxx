@@ -461,8 +461,8 @@ std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
 ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>> result;
-   for (const auto &key : clusterKeys) {
-      auto clusterId = key.fClusterId;
+   for (const auto &clusterKey : clusterKeys) {
+      auto clusterId = clusterKey.fClusterId;
       fCounters->fNClusterLoaded.Inc();
 
       const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
@@ -482,7 +482,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
       std::vector<RDaosSealedPageLocator> onDiskPages;
       std::size_t szPayload = 0;
-      for (auto columnId : key.fColumnSet) {
+      for (auto columnId : clusterKey.fColumnSet) {
          const auto &pageRange = clusterDesc.GetPageRange(columnId);
          NTupleSize_t pageNo = 0;
          for (const auto &pageInfo : pageRange.fPageInfos) {
@@ -522,7 +522,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
 
       auto cluster = std::make_unique<RCluster>(clusterId);
       cluster->Adopt(std::move(pageMap));
-      for (auto colId : key.fColumnSet)
+      for (auto colId : clusterKey.fColumnSet)
          cluster->SetColumnAvailable(colId);
 
       result.emplace_back(std::move(cluster));
