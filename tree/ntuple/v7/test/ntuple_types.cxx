@@ -8,6 +8,9 @@ TEST(RNTuple, TypeName) {
                 ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
    EXPECT_STREQ("DerivedB",
                 ROOT::Experimental::RField<DerivedB>::TypeName().c_str());
+
+   auto field = RField<DerivedB>("derived");
+   EXPECT_EQ(sizeof(DerivedB), field.GetValueSize());
 }
 
 
