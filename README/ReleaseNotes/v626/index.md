@@ -24,6 +24,7 @@ The following people have contributed to this new version:
  Enrico Guiraud, CERN/SFT,\
  Jonas Hahnfeld, CERN/SFT,\
  Sergey Linev, GSI,\
+ Javier Lopez-Gomez, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
@@ -49,6 +50,17 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+### Interpreter
+
+- As of v6.26, cling diagnostic messages can be redirected to the ROOT error handler. Users may enable/disable this via `TCling::ReportDiagnosticsToErrorHandler()`, e.g.
+```cpp
+root [1] gInterpreter->ReportDiagnosticsToErrorHandler();
+root [2] int f() { return; }
+Error in <cling>: ROOT_prompt_2:1:11: non-void function 'f' should return a value [-Wreturn-type]
+int f() { return; }
+          ^
+```
+More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 
 ## I/O Libraries
 
