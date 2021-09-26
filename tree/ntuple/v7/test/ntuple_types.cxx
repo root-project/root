@@ -166,3 +166,48 @@ TEST(RNTuple, TClass)
       }
    }
 }
+
+TEST(RNTuple, TClassMultipleInheritance)
+{
+   FileRaii fileGuard("test_ntuple_tclass.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldKlass = model->MakeField<DerivedC>("klass");
+      RNTupleWriteOptions options;
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      for (int i = 0; i < 10000; i++) {
+         DerivedC klass;
+         klass.DerivedA::a = static_cast<float>(i);
+         klass.DerivedA::v1.emplace_back(static_cast<float>(i));
+         klass.DerivedA::v2.emplace_back(std::vector<float>(3, static_cast<float>(i)));
+         klass.DerivedA::s = "hi" + std::to_string(i);
+
+         klass.a_v.emplace_back(static_cast<float>(i + 1));
+         klass.a_s = "bye" + std::to_string(i);
+         klass.a2_f = static_cast<float>(i + 2);
+
+         klass.c_i = i;
+         klass.c_a2.a2_f = static_cast<float>(i + 3);
+         *fieldKlass = klass;
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(10000U, ntuple->GetNEntries());
+   auto viewKlass = ntuple->GetView<DerivedC>("klass");
+   for (auto i : ntuple->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(fi, viewKlass(i).DerivedA::a);
+      EXPECT_EQ(std::vector<float>{fi}, viewKlass(i).DerivedA::v1);
+      EXPECT_EQ((std::vector<float>(3, fi)), viewKlass(i).DerivedA::v2.at(0));
+      EXPECT_EQ("hi" + std::to_string(i), viewKlass(i).DerivedA::s);
+
+      EXPECT_EQ(std::vector<float>{fi + 1}, viewKlass(i).a_v);
+      EXPECT_EQ("bye" + std::to_string(i), viewKlass(i).a_s);
+      EXPECT_EQ((fi + 2), viewKlass(i).a2_f);
+
+      EXPECT_EQ(i, viewKlass(i).c_i);
+      EXPECT_EQ((fi + 3), viewKlass(i).c_a2.a2_f);
+   }
+}
