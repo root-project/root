@@ -615,8 +615,9 @@ E: loizides@MIT.EDU
 D: PROOF testing and debugging
 
 N: Javier Lopez-Gomez
-E: jalopezg@inf.uc3m.es
-D: Cling support for redefinitions
+E: j.lopez@cern.ch
+D: Cling support for redefinitions; cling improvements
+D: RNTuple/DAOS integration
 
 N: Johan Lundberg
 E: johan.lundberg@cern.ch
