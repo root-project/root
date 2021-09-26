@@ -211,3 +211,40 @@ TEST(RNTuple, TClassMultipleInheritance)
       EXPECT_EQ((fi + 3), viewKlass(i).c_a2.a2_f);
    }
 }
+
+TEST(RNTuple, TClassTemplatedBase)
+{
+   FileRaii fileGuard("test_ntuple_tclass.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldKlass = model->MakeField<PackedContainer<int>>("klass");
+      RNTupleWriteOptions options;
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      for (int i = 0; i < 10000; i++) {
+         PackedContainer<int> klass;
+         klass.m_params.m_nbits = (uint8_t)i;
+         klass.m_params.m_nmantissa = (uint8_t)i;
+         klass.m_params.m_scale = static_cast<float>(i + 1);
+         klass.m_params.m_flags = 0;
+
+         klass.push_back(i + 2);
+         klass.push_back(i + 3);
+         *fieldKlass = klass;
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(10000U, ntuple->GetNEntries());
+   auto viewKlass = ntuple->GetView<PackedContainer<int>>("klass");
+   for (auto i : ntuple->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.m_nbits);
+      EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.m_nmantissa);
+      EXPECT_EQ((fi + 1), viewKlass(i).m_params.m_scale);
+      EXPECT_EQ(0, viewKlass(i).m_params.m_flags);
+
+      EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2),
+                                  static_cast<int>(i + 3)}), viewKlass(i));
+   }
+}

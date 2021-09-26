@@ -10,4 +10,8 @@
 #pragma link C++ class DerivedB+;
 #pragma link C++ class DerivedC+;
 
+#pragma link C++ class IAuxSetOption+;
+#pragma link C++ class PackedParameters+;
+#pragma link C++ class PackedContainer+;
+
 #endif
