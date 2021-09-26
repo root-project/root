@@ -30,3 +30,18 @@ struct DerivedC : public DerivedA, public DerivedA2 {
    int c_i{};
    DerivedA2 c_a2;
 };
+
+/// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)
+///
+struct IAuxSetOption {};
+
+struct PackedParameters {
+   uint8_t m_nbits, m_nmantissa;
+   float   m_scale;
+   uint8_t m_flags;
+};
+
+template <class T>
+struct PackedContainer : public std::vector<T>, public IAuxSetOption {
+   PackedParameters m_params;
+};
