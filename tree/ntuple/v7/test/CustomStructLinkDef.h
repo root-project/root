@@ -6,6 +6,8 @@
 
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
+#pragma link C++ class DerivedA2+;
 #pragma link C++ class DerivedB+;
+#pragma link C++ class DerivedC+;
 
 #endif
