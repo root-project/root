@@ -778,8 +778,8 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
    for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
       TClass *c = baseClass->GetClassPointer();
-      auto subField = std::unique_ptr<RClassField>(new RClassField(std::string(kPrefixInherited) + c->GetName(),
-                                                                   c->GetName(), c));
+      auto subField = Detail::RFieldBase::Create(std::string(kPrefixInherited) + c->GetName(),
+                                                 c->GetName()).Unwrap();
       Attach(std::move(subField),
 	     RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
    }
