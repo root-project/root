@@ -313,6 +313,7 @@ if(root7)
     #---EOS is not supported on Windows
     list(APPEND root7_veto rcanvas/df104.py)
     list(APPEND root7_veto rcanvas/df105.py)
+    list(APPEND root7_veto rcanvas/rbox.py)
   endif()
 else()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C rcanvas/*.py rcanvas/*.cxx)
