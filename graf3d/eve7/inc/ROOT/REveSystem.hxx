@@ -15,6 +15,10 @@
 #include "TSystem.h"
 #include <ctime>
 
+#ifdef _MSC_VER
+   typedef int pid_t;
+#endif
+
 namespace ROOT {
 namespace Experimental {
 
@@ -30,7 +34,7 @@ struct REveServerStatus
    std::time_t   fTLastConnect = 0;
    std::time_t   fTLastDisconnect = 0;
    ProcInfo_t    fProcInfo; // To be complemented with cpu1/5/15 and memgrowth1/5/15 on the collector side.
-#ifdef R__LINUX
+#if defined(R__LINUX) || defined(_MSC_VER)
    std::timespec fTReport = {0, 0};
 #else
    std::time_t   fTReport = 0;
