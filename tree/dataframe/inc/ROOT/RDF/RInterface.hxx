@@ -479,8 +479,23 @@ public:
       return newInterface;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column that is updated when the input sample changes.
+   /// \param[in] name The name of the defined column.
+   /// \param[in] expression A C++ callable that computes the new value of the defined column.
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// The signature of the callable passed as second argument should be `T(unsigned int slot, ROOT::RDF::RSampleInfo &id)`
+   /// where `T` is the type of the defined column, `slot` is a number in the range [0, nThreads) that is different
+   /// for each processing thread that can simplify the definition of thread-safe callables, and `id` is an instance
+   /// of a ROOT::RDF::RSampleInfo object which contains information about the sample which is being processed (see the
+   /// relevant docs for more information).
+   ///
+   /// DefinePerSample() is useful to e.g. define a quantity that depends on which TTree in which TFile is being
+   /// processed or to inject a callback into the event loop that is only called when the processing of a new sample
+   /// starts rather than at every entry.
+   ///
    // TODO we could SFINAE on F's signature to provide friendlier compilation errors in case of signature mismatch
-   // FIXME add docs
    template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, F expression)
    {
@@ -511,7 +526,17 @@ public:
       return newInterface;
    }
 
-   // FIXME add docs
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column that is updated when the input sample changes.
+   /// \param[in] name The name of the defined column.
+   /// \param[in] expression A valid C++ expression as a string, which will be used to compute the defined value.
+   /// \return the first node of the computation graph for which the new quantity is defined.
+   ///
+   /// The expression is just-in-time compiled and used to produce the column entries.
+   /// It must be valid C++ syntax and the usage of the special variable names `rdfslot_` and `rdfsampleinfo_` is
+   /// permitted, where these variables will take the same values as the `slot` and `id` parameters described at the
+   /// other DefinePerSample overload. See the documentation of that overload for more information.
+   ///
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, std::string_view expression)
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
