@@ -27,7 +27,7 @@ namespace RDF {
 /// When the input data comes from a TTree, the string representation of RSampleInfo (which is returned by AsString()
 /// and that can be queried e.g. with Contains()) is of the form "<filename>/<treename>".
 ///
-/// In multi-thread runs different tasks might process different entry ranges of the same sample,
+/// In multi-thread runs, different tasks might process different entry ranges of the same sample,
 /// so RSampleInfo also provides methods to inspect which part of a sample is being taken into consideration.
 class RSampleInfo {
    // Currently backed by a simple string, might change in the future as we get usage experience.
