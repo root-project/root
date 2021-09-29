@@ -748,6 +748,14 @@ TEST(VecOps, TakeLast)
    CheckEqual(v2, none);
 }
 
+TEST(VecOps, Drop)
+{
+   RVec<int> v1{2, 0, 1};
+   // also test that out-of-bound and repeated indices are ignored
+   auto v2 = Drop(v1, {2, 2, 3});
+   CheckEqual(v2, RVec<int>{2,0});
+}
+
 TEST(VecOps, Reverse)
 {
    RVec<int> v0{0, 1, 2};
