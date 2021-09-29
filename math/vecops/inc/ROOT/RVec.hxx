@@ -386,6 +386,7 @@ void SmallVectorTemplateBase<T, TriviallyCopyable>::grow(size_t MinSize)
    size_t NewCapacity = size_t(NextPowerOf2(this->capacity() + 2));
    NewCapacity = std::min(std::max(NewCapacity, MinSize), this->SizeTypeMax());
    T *NewElts = static_cast<T *>(malloc(NewCapacity * sizeof(T)));
+   R__ASSERT(NewElts != nullptr);
 
    // Move the elements over.
    this->uninitialized_move(this->begin(), this->end(), NewElts);
