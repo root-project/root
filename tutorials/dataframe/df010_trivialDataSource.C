@@ -11,6 +11,9 @@
 /// - https://github.com/root-project/root/blob/master/tree/dataframe/src/RTrivialDS.cxx
 /// - https://github.com/root-project/root/blob/master/tree/dataframe/inc/ROOT/RTrivialDS.hxx
 ///
+/// Note that RTrivialDS is only a demo data source implementation and superior alternatives
+/// typically exist for production use (e.g. constructing an empty RDataFrame as `RDataFrame(nEntries)`).
+///
 /// \macro_code
 ///
 /// \date September 2017
@@ -28,7 +31,7 @@ int df010_trivialDataSource()
    /// Now we redo the same with a RDF from scratch and we draw the two histograms
    ROOT::RDataFrame d(nEvents);
 
-   /// This lambda redoes what the TTrivialDS provides
+   /// This lambda redoes what the RTrivialDS provides
    auto g = []() {
       static ULong64_t i = 0;
       return i++;
