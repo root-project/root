@@ -114,15 +114,10 @@ inline uint64_t NextPowerOf2(uint64_t A)
 }
 
 /// This is all the stuff common to all SmallVectors.
-///
-/// The template parameter specifies the type which should be used to hold the
-/// Size and Capacity of the SmallVector, so it can be adjusted.
-/// Using 32 bit size is desirable to shrink the size of the SmallVector.
-/// Using 64 bit size is desirable for cases like SmallVector<char>, where a
-/// 32 bit size would limit the vector to ~4GB. SmallVectors are used for
-/// buffering bitcode output - which can exceed 4GB.
 class SmallVectorBase {
 public:
+   // This limits the maximum size of an RVec<char> to ~4GB but we don't expect this to ever be a problem,
+   // and we prefer the smaller Size_T to reduce the size of each RVec object.
    using Size_T = int32_t;
 
 protected:
@@ -177,8 +172,8 @@ public:
       fSize = N;
    }
 
-   // LLVM SmallVector does not have a shrink_to_fit method
-   // it's technically ok to do nothing, but assuming no one uses this method for RVec anyway, I'd rather deprecate it
+   // LLVM SmallVector does not have a shrink_to_fit method, but RVec used to.
+   // It's technically ok to do nothing, but assuming no one uses this method for RVec anyway, I'd rather deprecate it
    R__DEPRECATED(6, 28, "This method will be removed.")
    void shrink_to_fit() { }
 };
