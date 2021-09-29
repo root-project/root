@@ -1,3 +1,15 @@
+// Author: Enrico Guiraud, Enric Tejedor, Danilo Piparo CERN  04/2021
+// Implementation adapted from from llvm::SmallVector.
+// See /math/vecops/ARCHITECTURE.md for more information.
+
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "ROOT/RVec.hxx"
 using namespace ROOT::VecOps;
 
