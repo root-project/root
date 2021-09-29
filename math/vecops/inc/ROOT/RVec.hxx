@@ -36,14 +36,14 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <numeric> // for inner_product
 #include <new>
+#include <numeric> // for inner_product
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
-#include <vector>
-#include <utility>
 #include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
