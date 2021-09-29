@@ -76,6 +76,7 @@ More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 - Add `Redefine` to the `RDataFrame` interface, which allows to overwrite the value of an existing column.
 - Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
 - Add `DescribeDataset` to the `RDataFrame` interface, which allows to get information about the dataset (subset of the output of Describe()).
+- Add [DefinePerSample](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a29d77593e95c0f84e359a802e6836a0e), a method which makes it possible to define columns based on the sample and entry range being processed. It is also a useful way to register callbacks that should only be called when the input dataset/TTree changes.
 - `Book` now suports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
 - As an aid to `RDataSource` implementations with which collection sizes can be retrieved more efficiently than the full collection, `#var` can now be used as a short-hand notation for column name `R_rdf_sizeof_var`
 
