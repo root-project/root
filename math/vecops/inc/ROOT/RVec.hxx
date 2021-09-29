@@ -57,7 +57,7 @@ template<typename T>
 class RVec;
 }
 
-namespace Detail {
+namespace Internal {
 namespace VecOps {
 
 template<typename T>
@@ -100,11 +100,6 @@ auto MapFromTuple(Tuple_t &&t, std::index_sequence<Is...>)
    return MapImpl(std::get<tupleSizeM1>(t), std::get<Is>(t)...);
 }
 
-} // namespace VecOps
-} // namespace Detail
-
-namespace Internal {
-namespace VecOps {
 /// Return the next power of two (in 64-bits) that is strictly greater than A.
 /// Return zero on overflow.
 inline uint64_t NextPowerOf2(uint64_t A)
@@ -2018,8 +2013,6 @@ double StdDev(const RVec<T> &v)
 /// ~~~
 template <typename... Args>
 auto Map(Args &&... args)
-   -> decltype(ROOT::Detail::VecOps::MapFromTuple(std::forward_as_tuple(args...),
-                                                  std::make_index_sequence<sizeof...(args) - 1>()))
 {
    /*
    Here the strategy in order to generalise the previous implementation of Map, i.e.
@@ -2028,11 +2021,9 @@ auto Map(Args &&... args)
    This is achieved in two steps:
    1. Forward as tuple the pack to MapFromTuple
    2. Invoke the MapImpl helper which has the signature `template<...T, F> RVec MapImpl(F &&f, RVec<T>...)`
-   NOTA BENE: the signature is very heavy but it is one of the lightest ways to manage in C++11
-   to build the return type based on the template args.
    */
-   return ROOT::Detail::VecOps::MapFromTuple(std::forward_as_tuple(args...),
-                                             std::make_index_sequence<sizeof...(args) - 1>());
+   return ROOT::Internal::VecOps::MapFromTuple(std::forward_as_tuple(args...),
+                                               std::make_index_sequence<sizeof...(args) - 1>());
 }
 
 /// Create a new collection with the elements passing the filter expressed by the predicate
@@ -2774,7 +2765,7 @@ T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const
 template <typename T, typename... Args_t>
 RVec<T> Construct(const RVec<Args_t> &... args)
 {
-   const auto size = ::ROOT::Detail::VecOps::GetVectorsSize("Construct", args...);
+   const auto size = ::ROOT::Internal::VecOps::GetVectorsSize("Construct", args...);
    RVec<T> ret;
    ret.reserve(size);
    for (auto i = 0UL; i < size; ++i) {
