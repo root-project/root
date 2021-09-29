@@ -620,7 +620,7 @@ std::string PrettyPrintAddr(const void *const addr)
    return s.str();
 }
 
-// Book the jitting of a Filter call
+/// Book the jitting of a Filter call
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
                    std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
@@ -666,7 +666,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    lm->ToJitExec(filterInvocation.str());
 }
 
-// Book the jitting of a Define call
+/// Book the jitting of a Define call
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
                                              RDataSource *ds, const RBookedDefines &customCols,
                                              const ColumnNames_t &branches,
@@ -711,7 +711,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    return jittedDefine;
 }
 
-// Book the jitting of a DefinePerSample call
+/// Book the jitting of a DefinePerSample call
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
                                                       RLoopManager &lm, const RBookedDefines &customCols,
                                                       std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
