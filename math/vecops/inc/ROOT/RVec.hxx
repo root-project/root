@@ -57,17 +57,6 @@ template<typename T>
 class RVec;
 }
 
-namespace Internal {
-namespace VecOps {
-
-constexpr unsigned FirstOf(unsigned N0, ...)
-{
-   return N0;
-}
-
-} // namespace VecOps
-} // namespace Internal
-
 namespace Detail {
 namespace VecOps {
 
