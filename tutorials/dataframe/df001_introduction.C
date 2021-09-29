@@ -86,7 +86,7 @@ int df001_introduction()
    // ### `Take` action
    // The `Take` action allows to retrieve all values of the variable stored in a
    // particular column that passed filters we specified. The values are stored
-   // in a list by default, but other collections can be chosen.
+   // in a vector by default, but other collections can be chosen.
    auto b1_cut = d.Filter(cutb1);
    auto b1Vec = b1_cut.Take<double>();
    auto b1List = b1_cut.Take<double, std::list<double>>();
