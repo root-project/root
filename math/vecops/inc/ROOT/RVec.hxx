@@ -1341,7 +1341,7 @@ RVec<double> v{6., 4., 5.};
 std::sort(v.begin(), v.end());
 ~~~
 
-For convinience, helpers are provided too:
+For convenience, helpers are provided too:
 ~~~{.cpp}
 auto sorted_v = Sort(v);
 auto reversed_v = Reverse(v);
@@ -1352,7 +1352,7 @@ auto reversed_v = Reverse(v);
 It is also possible to manipulated the RVecs acting on their indices. For example,
 the following syntax
 ~~~{.cpp}
-RVec<double> v0 {9., 7., 8.};
+RVecD v0 {9., 7., 8.};
 auto v1 = Take(v0, {1, 2, 0});
 ~~~
 will yield a new RVec<double> the content of which is the first, second and zeroth element of
@@ -1369,7 +1369,7 @@ The `Take` utility allows to extract portions of the `RVec`. The content to be *
 can be specified with an `RVec` of indices or an integer. If the integer is negative,
 elements will be picked starting from the end of the container:
 ~~~{.cpp}
-RVec<float> vf {1.f, 2.f, 3.f, 4.f};
+RVecF vf {1.f, 2.f, 3.f, 4.f};
 auto vf_1 = Take(vf, {1, 3}); // The content is {2.f, 4.f}
 auto vf_2 = Take(vf, 2); // The content is {1.f, 2.f}
 auto vf_3 = Take(vf, -3); // The content is {2.f, 3.f, 4.f}
@@ -1391,8 +1391,7 @@ for which the energy is greater than 200 MeV.
 The code required would just be:
 ~~~{.cpp}
 RDataFrame d("mytree", "myfile.root");
-using doubles = RVec<double>;
-auto cutPt = [](doubles &pxs, doubles &pys, doubles &Es) {
+auto cutPt = [](RVecD &pxs, RVecD &pys, RVecD &Es) {
    auto all_pts = sqrt(pxs * pxs + pys * pys);
    auto good_pts = all_pts[Es > 200.];
    return good_pts;
@@ -1813,7 +1812,7 @@ auto Dot(const RVec<T> &v0, const RVec<V> &v1) -> decltype(v0[0] * v1[0])
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 3.f};
+/// RVecF v {1.f, 2.f, 3.f};
 /// auto v_sum = Sum(v);
 /// v_sum
 /// // (float) 6.f
@@ -1843,7 +1842,7 @@ R Sum(const RVec<T> &v, const R zero = R(0))
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_mean = Mean(v);
 /// v_mean
 /// // (double) 2.3333333
@@ -1861,7 +1860,7 @@ double Mean(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_mean_f = Mean(v, 0.f);
 /// v_mean_f
 /// // (float) 2.33333f
@@ -1891,7 +1890,7 @@ R Mean(const RVec<T> &v, const R zero)
 /// Example code, at the ROOT prompt:
 /// ~~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_max = Max(v)
 /// v_max
 /// (float) 4.f
@@ -1907,7 +1906,7 @@ T Max(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_min = Min(v)
 /// v_min
 /// (float) 1.f
@@ -1925,7 +1924,7 @@ T Min(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_argmax = ArgMax(v);
 /// v_argmax
 /// // (int) 2
@@ -1943,7 +1942,7 @@ std::size_t ArgMax(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_argmin = ArgMin(v);
 /// v_argmin
 /// // (int) 0
@@ -1960,7 +1959,7 @@ std::size_t ArgMin(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_var = Var(v);
 /// v_var
 /// // (double) 2.3333333
@@ -1984,7 +1983,7 @@ double Var(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_sd = StdDev(v);
 /// v_sd
 /// // (double) 1.5275252
@@ -2000,14 +1999,14 @@ double StdDev(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> v {1.f, 2.f, 4.f};
+/// RVecF v {1.f, 2.f, 4.f};
 /// auto v_square = Map(v, [](float f){return f* 2.f;});
 /// v_square
 /// // (ROOT::VecOps::RVec<float> &) { 2.00000f, 4.00000f, 8.00000f }
 ///
-/// RVec<float> x({1.f, 2.f, 3.f});
-/// RVec<float> y({4.f, 5.f, 6.f});
-/// RVec<float> z({7.f, 8.f, 9.f});
+/// RVecF x({1.f, 2.f, 3.f});
+/// RVecF y({4.f, 5.f, 6.f});
+/// RVecF z({7.f, 8.f, 9.f});
 /// auto mod = [](float x, float y, float z) { return sqrt(x * x + y * y + z * z); };
 /// auto v_mod = Map(x, y, z, mod);
 /// v_mod
@@ -2033,7 +2032,7 @@ auto Map(Args &&... args)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<int> v {1, 2, 4};
+/// RVecI v {1, 2, 4};
 /// auto v_even = Filter(v, [](int i){return 0 == i%2;});
 /// v_even
 /// // (ROOT::VecOps::RVec<int> &) { 2, 4 }
@@ -2056,7 +2055,7 @@ RVec<T> Filter(const RVec<T> &v, F &&f)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<int> v {0, 1, 0};
+/// RVecI v {0, 1, 0};
 /// auto anyTrue = Any(v);
 /// anyTrue
 /// // (bool) true
@@ -2075,7 +2074,7 @@ auto Any(const RVec<T> &v) -> decltype(v[0] == true)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<int> v {0, 1, 0};
+/// RVecI v {0, 1, 0};
 /// auto allTrue = All(v);
 /// allTrue
 /// // (bool) false
@@ -2100,7 +2099,7 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto sortIndices = Argsort(v);
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 2, 0, 1 }
 /// auto values = Take(v, sortIndices)
@@ -2121,7 +2120,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto sortIndices = Argsort(v, [](double x, double y) {return x > y;})
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 1, 0, 2 }
 /// auto values = Take(v, sortIndices)
@@ -2143,7 +2142,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v, Compare &&c)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto vTaken = Take(v, {0,2});
 /// vTaken
 /// // (ROOT::VecOps::RVec<double>) { 2.0000000, 1.0000000 }
@@ -2166,7 +2165,7 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto firstTwo = Take(v, 2);
 /// firstTwo
 /// // (ROOT::VecOps::RVec<double>) { 2.0000000, 3.0000000 }
@@ -2227,7 +2226,7 @@ RVec<T> Drop(const RVec<T> &v, RVec<typename RVec<T>::size_type> idxs)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto v_reverse = Reverse(v);
 /// v_reverse
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 3.0000000, 2.0000000 }
@@ -2248,7 +2247,7 @@ RVec<T> Reverse(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto v_sorted = Sort(v);
 /// v_sorted
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000, 3.0000000 }
@@ -2273,7 +2272,7 @@ RVec<T> Sort(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 3., 1.};
+/// RVecD v {2., 3., 1.};
 /// auto v_sorted = Sort(v, [](double x, double y) {return 1/x < 1/y;});
 /// v_sorted
 /// // (ROOT::VecOps::RVec<double>) { 3.0000000, 2.0000000, 1.0000000 }
@@ -2323,8 +2322,8 @@ inline RVec<RVec<std::size_t>> Combinations(const std::size_t size1, const std::
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v1 {1., 2., 3.};
-/// RVec<double> v2 {-4., -5.};
+/// RVecD v1 {1., 2., 3.};
+/// RVecD v2 {-4., -5.};
 /// auto comb_idx = Combinations(v1, v2);
 /// comb_idx
 /// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1,
@@ -2341,7 +2340,7 @@ RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const 
 ///
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {1., 2., 3., 4.};
+/// RVecD v {1., 2., 3., 4.};
 /// auto v_1 = Combinations(v, 1);
 /// v_1
 /// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 1, 2, 3 } }
@@ -2396,7 +2395,7 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v {2., 0., 3., 0., 1.};
+/// RVecD v {2., 0., 3., 0., 1.};
 /// auto nonzero_idx = Nonzero(v);
 /// nonzero_idx
 /// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type>) { 0, 2, 4 }
@@ -2426,8 +2425,8 @@ RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v1 {1., 2., 3.};
-/// RVec<double> v2 {-4., -5., 2., 1.};
+/// RVecD v1 {1., 2., 3.};
+/// RVecD v2 {-4., -5., 2., 1.};
 /// auto v1_intersect_v2 = Intersect(v1, v2);
 /// v1_intersect_v2
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000 }
@@ -2457,8 +2456,8 @@ RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = fals
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v1 {1., 2., 3.};
-/// RVec<double> v2 {-1., -2., -3.};
+/// RVecD v1 {1., 2., 3.};
+/// RVecD v2 {-1., -2., -3.};
 /// auto c = v1 > 1;
 /// c
 /// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
@@ -2485,7 +2484,7 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<double> v1 {1., 2., 3.};
+/// RVecD v1 {1., 2., 3.};
 /// double v2 = 4.;
 /// auto c = v1 > 1;
 /// c
@@ -2514,7 +2513,7 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// double v1 = 4.;
-/// RVec<double> v2 {1., 2., 3.};
+/// RVecD v2 {1., 2., 3.};
 /// auto c = v2 > 1;
 /// c
 /// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
@@ -2543,7 +2542,7 @@ RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
 /// using namespace ROOT::VecOps;
 /// double v1 = 4.;
 /// double v2 = 2.;
-/// RVec<int> c {0, 1, 1};
+/// RVecI c {0, 1, 1};
 /// auto if_c_v1_else_v2 = Where(c, v1, v2);
 /// if_c_v1_else_v2
 /// // (ROOT::VecOps::RVec<double>) { 2.0000000, 4.0000000, 4.0000000 }
@@ -2566,8 +2565,8 @@ RVec<T> Where(const RVec<int>& c, T v1, T v2)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> rvf {0.f, 1.f, 2.f};
-/// RVec<int> rvi {7, 8, 9};
+/// RVecF rvf {0.f, 1.f, 2.f};
+/// RVecI rvi {7, 8, 9};
 /// Concatenate(rvf, rvi);
 /// // (ROOT::VecOps::RVec<float>) { 2.0000000, 4.0000000, 4.0000000 }
 /// ~~~
@@ -2782,10 +2781,10 @@ T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
-/// RVec<float> pts = {15.5, 34.32, 12.95};
-/// RVec<float> etas = {0.3, 2.2, 1.32};
-/// RVec<float> phis = {0.1, 3.02, 2.2};
-/// RVec<float> masses = {105.65, 105.65, 105.65};
+/// RVecF pts = {15.5, 34.32, 12.95};
+/// RVecF etas = {0.3, 2.2, 1.32};
+/// RVecF phis = {0.1, 3.02, 2.2};
+/// RVecF masses = {105.65, 105.65, 105.65};
 /// auto fourVecs = Construct<ROOT::Math::PtEtaPhiMVector>(pts, etas, phis, masses);
 /// cout << fourVecs << endl;
 /// // { (15.5,0.3,0.1,105.65), (34.32,2.2,3.02,105.65), (12.95,1.32,2.2,105.65) }
