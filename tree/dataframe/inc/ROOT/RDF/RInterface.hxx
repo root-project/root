@@ -111,7 +111,7 @@ class RInterface {
    /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
    RDataSource *fDataSource = nullptr;
 
-   /// Contains the custom columns defined up to this node.
+   /// Contains the columns defined up to this node.
    RDFInternal::RBookedDefines fDefines;
 
 public:
@@ -268,13 +268,13 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column.
-   /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \brief Define a new column.
+   /// \param[in] name The name of the defined column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
-   /// Create a custom column that will be visible from all subsequent nodes
+   /// Define a column that will be visible from all subsequent nodes
    /// of the functional chain. The `expression` is only evaluated for entries that pass
    /// all the preceding filters.
    /// A new variable is created called `name`, accessible as if it was contained
@@ -304,13 +304,13 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column with a value dependent on the processing slot.
-   /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \brief Define a new column with a value dependent on the processing slot.
+   /// \param[in] name The name of the defined column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
-   /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
+   /// This alternative implementation of `Define` is meant as a helper to evaluate new column values in a thread-safe manner.
    /// The expression must be a callable of signature R(unsigned int, T1, T2, ...) where `T1, T2...` are the types
    /// of the columns that the expression takes as input. The first parameter is reserved for an unsigned integer
    /// representing a "slot number". RDataFrame guarantees that different threads will invoke the expression with
@@ -333,9 +333,9 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
-   /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \brief Define a new column with a value dependent on the processing slot and the current entry.
+   /// \param[in] name The name of the defined column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -363,8 +363,8 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column.
-   /// \param[in] name The name of the custom column.
+   /// \brief Define a new column.
+   /// \param[in] name The name of the defined column.
    /// \param[in] expression An expression in C++ which represents the defined value
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -395,13 +395,15 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column
-   /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
-   /// \param[in] columns Names of the columns/branches in input to the producer function.
-   /// \return the first node of the computation graph for which the new quantity is defined.
+   /// \brief Overwrite the value and/or type of an existing column.
+   /// \param[in] name The name of the column to redefine.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
+   /// \param[in] columns Names of the columns/branches in input to the expression.
+   /// \return the first node of the computation graph for which the quantity is redefined.
    ///
-   /// An exception is thrown in case the column to re-define does not already exist.
+   /// The old value of the column can be used as an input for the expression.
+   ///
+   /// An exception is thrown in case the column to redefine does not already exist.
    /// See Define() for more information.
    template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
@@ -411,13 +413,14 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column, possibly overriding an existing one with the same name.
-   /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \brief Overwrite the value and/or type of an existing column.
+   /// \param[in] name The name of the column to redefine.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
-   /// An exception is thrown in case the column to re-define does not already exist.
+   /// The old value of the column can be used as an input for the expression.
+   /// An exception is thrown in case the column to redefine does not already exist.
    ///
    /// See DefineSlot() for more information.
    // clang-format on
@@ -429,12 +432,13 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column, possibly overriding an existing one with the same name.
-   /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the custom column.
+   /// \brief Overwrite the value and/or type of an existing column.
+   /// \param[in] name The name of the column to redefine.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
+   /// The old value of the column can be used as an input for the expression.
    /// An exception is thrown in case the column to re-define does not already exist.
    ///
    /// See DefineSlotEntry() for more information.
@@ -447,8 +451,8 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column, overriding an existing one with the same name.
-   /// \param[in] name The name of the custom column.
+   /// \brief Overwrite the value and/or type of an existing column.
+   /// \param[in] name The name of the column to redefine.
    /// \param[in] expression An expression in C++ which represents the defined value
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -456,6 +460,7 @@ public:
    /// It must be valid C++ syntax in which variable names are substituted with the names
    /// of branches/columns.
    ///
+   /// The old value of the column can be used as an input for the expression.
    /// An exception is thrown in case the column to re-define does not already exist.
    ///
    /// Aliases cannot be overridden. See the corresponding Define() overload for more information.
@@ -480,7 +485,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column that is updated when the input sample changes.
+   /// \brief Define a new column that is updated when the input sample changes.
    /// \param[in] name The name of the defined column.
    /// \param[in] expression A C++ callable that computes the new value of the defined column.
    /// \return the first node of the computation graph for which the new quantity is defined.
@@ -527,7 +532,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a custom column that is updated when the input sample changes.
+   /// \brief Define a new column that is updated when the input sample changes.
    /// \param[in] name The name of the defined column.
    /// \param[in] expression A valid C++ expression as a string, which will be used to compute the defined value.
    /// \return the first node of the computation graph for which the new quantity is defined.
@@ -2197,7 +2202,7 @@ public:
    ///
    /// This is not an action nor a transformation, just a simple utility to
    /// get the columns names that have been defined up to the node.
-   /// If no custom column has been defined, e.g. on a root node, it returns an
+   /// If no column has been defined, e.g. on a root node, it returns an
    /// empty collection.
    ///
    /// ### Example usage:
