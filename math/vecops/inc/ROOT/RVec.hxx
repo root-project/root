@@ -178,17 +178,15 @@ public:
    void shrink_to_fit() { }
 };
 
-/// Figure out the offset of the first element.
-template <class T, typename = void>
+/// Used to figure out the offset of the first element of an RVec
+template <class T>
 struct SmallVectorAlignmentAndSize {
    alignas(SmallVectorBase) char Base[sizeof(SmallVectorBase)];
    alignas(T) char FirstEl[sizeof(T)];
 };
 
-/// This is the part of SmallVectorTemplateBase which does not depend on whether
-/// the type T is a POD. The extra dummy template argument is used by ArrayRef
-/// to avoid unnecessarily requiring T to be complete.
-template <typename T, typename = void>
+/// This is the part of SmallVectorTemplateBase which does not depend on whether the type T is a POD.
+template <typename T>
 class SmallVectorTemplateCommon : public SmallVectorBase {
    using Base = SmallVectorBase;
 
