@@ -1479,7 +1479,7 @@ public:
 };
 
 template <typename T, unsigned N>
-inline size_t capacity_in_bytes(const RVecN<T, N> &X)
+inline size_t CapacityInBytes(const RVecN<T, N> &X)
 {
    return X.capacity_in_bytes();
 }
