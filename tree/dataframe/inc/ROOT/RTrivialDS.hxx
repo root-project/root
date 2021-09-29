@@ -48,9 +48,9 @@ public:
 };
 
 // Make a RDF wrapping a RTrivialDS with the specified amount of entries
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
 // Make a RDF wrapping a RTrivialDS with infinite entries
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame();
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame();
 
 } // ns RDF
 
