@@ -1,4 +1,5 @@
 // Author: Enrico Guiraud, Enric Tejedor, Danilo Piparo CERN  04/2021
+// Implementation adapted from from llvm::SmallVector.
 // See /math/vecops/ARCHITECTURE.md for more information.
 
 /*************************************************************************
