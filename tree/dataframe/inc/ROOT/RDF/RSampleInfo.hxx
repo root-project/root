@@ -30,7 +30,6 @@ namespace RDF {
 /// In multi-thread runs, different tasks might process different entry ranges of the same sample,
 /// so RSampleInfo also provides methods to inspect which part of a sample is being taken into consideration.
 class RSampleInfo {
-   // Currently backed by a simple string, might change in the future as we get usage experience.
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
