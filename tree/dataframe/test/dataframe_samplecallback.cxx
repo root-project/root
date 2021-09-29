@@ -154,7 +154,7 @@ TEST_P(RDFSampleCallback, TTreeSampleID) {
 }
 
 TEST_P(RDFSampleCallback, TChainSampleID) {
-   const std::string prefix = "rdfdatablockcallback_tchain";
+   const std::string prefix = "rdfdatablockcallback_tchainsampleid";
    InputFilesRAII file(5u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
    auto result = df.Book<>(SampleHelper(), {});
