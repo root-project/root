@@ -136,22 +136,26 @@ void PyMethodBase::PyInitialize()
       _import_array();
    }
 
+   // note fMain is a borrowed reference
    fMain = PyImport_AddModule("__main__");
    if (!fMain) {
       Log << kFATAL << "Can't import __main__" << Endl;
       Log << Endl;
    }
+   Py_INCREF(fMain);
 
    fGlobalNS = PyModule_GetDict(fMain);
    if (!fGlobalNS) {
       Log << kFATAL << "Can't init global namespace" << Endl;
       Log << Endl;
    }
+   // no need to increase reference for fGlobalNS, since it is linked to fMain?
 
    #if PY_MAJOR_VERSION < 3
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
+   // returns a new reference
    fModuleBuiltin = PyImport_Import(bName);
    if (!fModuleBuiltin) {
       Log << kFATAL << "Can't import __builtin__" << Endl;
@@ -168,26 +172,34 @@ void PyMethodBase::PyInitialize()
    }
    #endif
 
+   // note mDict is a borrowed reference
    PyObject *mDict = PyModule_GetDict(fModuleBuiltin);
    fEval = PyDict_GetItemString(mDict, "eval");
    fOpen = PyDict_GetItemString(mDict, "open");
+    // fEval and fOpen are borrowed referencers and we need to keep them alive
+   if (fEval) Py_INCREF(fEval);
+   if (fOpen) Py_INCREF(fOpen);
 
+   // bName is a new reference (from PyUnicode_FromString)
    Py_DECREF(bName);
-   Py_DECREF(mDict);
+
    //preparing objects for pickle
    PyObject *pName = PyUnicode_FromString("pickle");
    // Import the file as a Python module.
+   // return object is a new reference !
    fModulePickle = PyImport_Import(pName);
    if (!fModulePickle) {
       Log << kFATAL << "Can't import pickle" << Endl;
       Log << Endl;
    }
    PyObject *pDict = PyModule_GetDict(fModulePickle);
+   // note the following return objects are borrowed references
    fPickleDumps = PyDict_GetItemString(pDict, "dump");
    fPickleLoads = PyDict_GetItemString(pDict, "load");
+   if (fPickleDumps) Py_INCREF(fPickleDumps);
+   if (fPickleLoads) Py_INCREF(fPickleLoads);
 
    Py_DECREF(pName);
-   Py_DECREF(pDict);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -195,12 +207,13 @@ void PyMethodBase::PyInitialize()
 
 void PyMethodBase::PyFinalize()
 {
-   Py_Finalize();
    if (fEval) Py_DECREF(fEval);
+   if (fOpen) Py_DECREF(fOpen);
    if (fModuleBuiltin) Py_DECREF(fModuleBuiltin);
    if (fPickleDumps) Py_DECREF(fPickleDumps);
    if (fPickleLoads) Py_DECREF(fPickleLoads);
    if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
+   Py_Finalize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
