@@ -1266,6 +1266,9 @@ the manipulation and analysis of the data in the RVec.
 \note RVec does not attempt to be exception safe. Exceptions thrown by element constructors during insertions, swaps or
 other operations will be propagated potentially leaving the RVec object in an invalid state.
 
+\note RVec methods (e.g. `at` or `size`) follow the STL naming convention instead of the ROOT naming convention in order
+to make RVec a drop-in replacement for `std::vector`.
+
 \htmlonly
 <a href="https://doi.org/10.5281/zenodo.1253756"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1253756.svg" alt="DOI"></a>
 \endhtmlonly
