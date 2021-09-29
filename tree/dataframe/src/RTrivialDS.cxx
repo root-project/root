@@ -121,17 +121,17 @@ std::string RTrivialDS::GetLabel()
    return "TrivialDS";
 }
 
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
 {
    auto lm = std::make_unique<RDFDetail::RLoopManager>(std::make_unique<RTrivialDS>(size, skipEvenEntries),
                                                        RDFInternal::ColumnNames_t{});
-   return RInterface<RDFDetail::RLoopManager, RTrivialDS>(std::move(lm));
+   return RInterface<RDFDetail::RLoopManager>(std::move(lm));
 }
 
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame()
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame()
 {
    auto lm = std::make_unique<RDFDetail::RLoopManager>(std::make_unique<RTrivialDS>(), RDFInternal::ColumnNames_t{});
-   return RInterface<RDFDetail::RLoopManager, RTrivialDS>(std::move(lm));
+   return RInterface<RDFDetail::RLoopManager>(std::move(lm));
 }
 
 } // ns RDF
