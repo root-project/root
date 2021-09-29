@@ -1263,6 +1263,10 @@ Its storage is contiguous in memory and its interface is designed such to resemb
 of the stl vector. In addition the interface features methods and external functions to ease
 the manipulation and analysis of the data in the RVec.
 
+\note ROOT::VecOps::RVec can also be spelled simply ROOT::RVec, and shorthand aliases such as ROOT::RVecI, ROOT::RVecD
+or ROOT::RVecF are available as template instantiations of RVec of fundamental types (int, double, float respectively
+for these examples.
+
 \note RVec does not attempt to be exception safe. Exceptions thrown by element constructors during insertions, swaps or
 other operations will be propagated potentially leaving the RVec object in an invalid state.
 
@@ -2981,6 +2985,17 @@ RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 
 // Allow to use RVec as ROOT::RVec
 using ROOT::VecOps::RVec;
+
+using RVecB = ROOT::VecOps::RVec<bool>;
+using RVecC = ROOT::VecOps::RVec<char>;
+using RVecD = ROOT::VecOps::RVec<double>;
+using RVecF = ROOT::VecOps::RVec<float>;
+using RVecI = ROOT::VecOps::RVec<int>;
+using RVecL = ROOT::VecOps::RVec<long int>;
+using RVecLL = ROOT::VecOps::RVec<long long int>;
+using RVecU = ROOT::VecOps::RVec<unsigned int>;
+using RVecUL = ROOT::VecOps::RVec<unsigned long int>;
+using RVecULL = ROOT::VecOps::RVec<unsigned long long int>;
 
 } // End of ROOT NS
 
