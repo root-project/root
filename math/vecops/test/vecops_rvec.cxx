@@ -55,13 +55,13 @@ void CheckEqual(const T &a, const V &b, std::string_view msg = "")
 
 TEST(VecOps, DefaultCtor)
 {
-   ROOT::VecOps::RVec<int> v;
+   RVec<int> v;
    EXPECT_EQ(v.size(), 0u);
 }
 
 TEST(VecOps, InitListCtor)
 {
-   ROOT::VecOps::RVec<int> v{1, 2, 3};
+   RVec<int> v{1, 2, 3};
    EXPECT_EQ(v.size(), 3u);
    EXPECT_EQ(v[0], 1);
    EXPECT_EQ(v[1], 2);
@@ -70,8 +70,8 @@ TEST(VecOps, InitListCtor)
 
 TEST(VecOps, CopyCtor)
 {
-   ROOT::VecOps::RVec<int> v1{1, 2, 3};
-   ROOT::VecOps::RVec<int> v2(v1);
+   RVec<int> v1{1, 2, 3};
+   RVec<int> v2(v1);
    EXPECT_EQ(v1.size(), 3u);
    EXPECT_EQ(v2.size(), 3u);
    EXPECT_EQ(v2[0], 1);
@@ -99,9 +99,9 @@ TEST(VecOps, EmplaceBack)
 
 TEST(VecOps, CopyCtorCheckNoLeak)
 {
-   ROOT::VecOps::RVec<TLeakChecker> ref;
+   RVec<TLeakChecker> ref;
    ref.emplace_back(TLeakChecker());
-   ROOT::VecOps::RVec<TLeakChecker> proxy(ref.data(), ref.size());
+   RVec<TLeakChecker> proxy(ref.data(), ref.size());
    TLeakChecker::fgDestroyed = false;
    {
       auto v = proxy;
@@ -116,18 +116,18 @@ TEST(VecOps, CopyCtorCheckNoLeak)
 
 TEST(VecOps, MoveCtor)
 {
-   ROOT::VecOps::RVec<int> v1{1, 2, 3};
-   ROOT::VecOps::RVec<int> v2(std::move(v1));
+   RVec<int> v1{1, 2, 3};
+   RVec<int> v2(std::move(v1));
    EXPECT_EQ(v2.size(), 3u);
 }
 
 TEST(VecOps, Conversion)
 {
-   ROOT::VecOps::RVec<float> fvec{1.0f, 2.0f, 3.0f};
-   ROOT::VecOps::RVec<unsigned> uvec{1u, 2u, 3u};
+   RVec<float> fvec{1.0f, 2.0f, 3.0f};
+   RVec<unsigned> uvec{1u, 2u, 3u};
 
-   ROOT::VecOps::RVec<int>  ivec = uvec;
-   ROOT::VecOps::RVec<long> lvec = ivec;
+   RVec<int>  ivec = uvec;
+   RVec<long> lvec = ivec;
 
    EXPECT_EQ(1, ivec[0]);
    EXPECT_EQ(2, ivec[1]);
@@ -138,8 +138,8 @@ TEST(VecOps, Conversion)
    EXPECT_EQ(3l, lvec[2]);
    EXPECT_EQ(3u, lvec.size());
 
-   auto dvec1 = ROOT::VecOps::RVec<double>(fvec);
-   auto dvec2 = ROOT::VecOps::RVec<double>(uvec);
+   auto dvec1 = RVec<double>(fvec);
+   auto dvec2 = RVec<double>(uvec);
 
    EXPECT_EQ(1.0, dvec1[0]);
    EXPECT_EQ(2.0, dvec1[1]);
@@ -153,10 +153,10 @@ TEST(VecOps, Conversion)
 
 TEST(VecOps, ArithmeticsUnary)
 {
-   ROOT::VecOps::RVec<int> ivec{1, 2, 3};
-   ROOT::VecOps::RVec<int> pvec = +ivec;
-   ROOT::VecOps::RVec<int> nvec = -ivec;
-   ROOT::VecOps::RVec<int> tvec = ~ivec;
+   RVec<int> ivec{1, 2, 3};
+   RVec<int> pvec = +ivec;
+   RVec<int> nvec = -ivec;
+   RVec<int> tvec = ~ivec;
 
    EXPECT_EQ(1, pvec[0]);
    EXPECT_EQ(2, pvec[1]);
@@ -176,8 +176,8 @@ TEST(VecOps, ArithmeticsUnary)
 
 TEST(VecOps, MathScalar)
 {
-   ROOT::VecOps::RVec<double> ref{1, 2, 3};
-   ROOT::VecOps::RVec<double> v(ref);
+   RVec<double> ref{1, 2, 3};
+   RVec<double> v(ref);
    int scalar = 3;
    auto plus = v + scalar;
    auto minus = v - scalar;
@@ -190,7 +190,7 @@ TEST(VecOps, MathScalar)
    CheckEqual(div, ref / scalar);
 
    // The same with views
-   ROOT::VecOps::RVec<double> w(ref.data(), ref.size());
+   RVec<double> w(ref.data(), ref.size());
    plus = w + scalar;
    minus = w - scalar;
    mult = w * scalar;
@@ -204,8 +204,8 @@ TEST(VecOps, MathScalar)
 
 TEST(VecOps, MathScalarInPlace)
 {
-   ROOT::VecOps::RVec<double> ref{1, 2, 3};
-   const ROOT::VecOps::RVec<double> v(ref);
+   RVec<double> ref{1, 2, 3};
+   const RVec<double> v(ref);
    int scalar = 3;
    auto plus = v;
    plus += scalar;
@@ -224,9 +224,9 @@ TEST(VecOps, MathScalarInPlace)
 
 TEST(VecOps, MathVector)
 {
-   ROOT::VecOps::RVec<double> ref{1, 2, 3};
-   ROOT::VecOps::RVec<double> vec{3, 4, 5};
-   ROOT::VecOps::RVec<double> v(ref);
+   RVec<double> ref{1, 2, 3};
+   RVec<double> vec{3, 4, 5};
+   RVec<double> v(ref);
    auto plus = v + vec;
    auto minus = v - vec;
    auto mult = v * vec;
@@ -238,7 +238,7 @@ TEST(VecOps, MathVector)
    CheckEqual(div, ref / vec);
 
    // The same with 1 view
-   ROOT::VecOps::RVec<double> w(ref.data(), ref.size());
+   RVec<double> w(ref.data(), ref.size());
    plus = w + vec;
    minus = w - vec;
    mult = w * vec;
@@ -250,7 +250,7 @@ TEST(VecOps, MathVector)
    CheckEqual(div, ref / vec);
 
    // The same with 2 views
-   ROOT::VecOps::RVec<double> w2(ref.data(), ref.size());
+   RVec<double> w2(ref.data(), ref.size());
    plus = w + w2;
    minus = w - w2;
    mult = w * w2;
@@ -264,9 +264,9 @@ TEST(VecOps, MathVector)
 
 TEST(VecOps, MathVectorInPlace)
 {
-   ROOT::VecOps::RVec<double> ref{1, 2, 3};
-   ROOT::VecOps::RVec<double> vec{3, 4, 5};
-   ROOT::VecOps::RVec<double> v(ref);
+   RVec<double> ref{1, 2, 3};
+   RVec<double> vec{3, 4, 5};
+   RVec<double> v(ref);
    auto plus = v;
    plus += vec;
    auto minus = v;
@@ -284,7 +284,7 @@ TEST(VecOps, MathVectorInPlace)
 
 TEST(VecOps, Filter)
 {
-   ROOT::VecOps::RVec<int> v{0, 1, 2, 3, 4, 5};
+   RVec<int> v{0, 1, 2, 3, 4, 5};
    const std::vector<int> vEvenRef{0, 2, 4};
    const std::vector<int> vOddRef{1, 3, 5};
    auto vEven = v[v % 2 == 0];
@@ -300,7 +300,7 @@ TEST(VecOps, Filter)
 }
 
 template <typename T, typename V>
-std::string PrintRVec(ROOT::VecOps::RVec<T> v, V w)
+std::string PrintRVec(RVec<T> v, V w)
 {
    std::stringstream ss;
    ss << v << " " << w << std::endl;
@@ -327,8 +327,8 @@ std::string PrintRVec(ROOT::VecOps::RVec<T> v, V w)
 
 TEST(VecOps, PrintOps)
 {
-   ROOT::VecOps::RVec<int> ref{1, 2, 3};
-   ROOT::VecOps::RVec<int> v(ref);
+   RVec<int> ref{1, 2, 3};
+   RVec<int> v(ref);
 
    auto ref0 = R"ref0({ 1, 2, 3 } 2
 { 3, 4, 5 }
@@ -375,7 +375,7 @@ TEST(VecOps, PrintOps)
    auto t1 = PrintRVec(v, ref + 2);
    EXPECT_STREQ(t1.c_str(), ref1);
 
-   ROOT::VecOps::RVec<int> w(ref.data(), ref.size());
+   RVec<int> w(ref.data(), ref.size());
 
    auto ref2 = R"ref2({ 1, 2, 3 } 2
 { 3, 4, 5 }
@@ -430,9 +430,9 @@ TEST(VecOps, PrintOps)
 
 TEST(VecOps, MathFuncs)
 {
-   ROOT::VecOps::RVec<double> u{1, 1, 1};
-   ROOT::VecOps::RVec<double> v{1, 2, 3};
-   ROOT::VecOps::RVec<double> w{1, 4, 27};
+   RVec<double> u{1, 1, 1};
+   RVec<double> v{1, 2, 3};
+   RVec<double> w{1, 4, 27};
 
    CheckEqual(pow(1,v), u, " error checking math function pow");
    CheckEqual(pow(v,1), v, " error checking math function pow");
@@ -473,15 +473,15 @@ TEST(VecOps, MathFuncs)
 TEST(VecOps, PhysicsSelections)
 {
    // We emulate 8 muons
-   ROOT::VecOps::RVec<short> mu_charge{1, 1, -1, -1, -1, 1, 1, -1};
-   ROOT::VecOps::RVec<float> mu_pt{56.f, 45.f, 32.f, 24.f, 12.f, 8.f, 7.f, 6.2f};
-   ROOT::VecOps::RVec<float> mu_eta{3.1f, -.2f, -1.1f, 1.f, 4.1f, 1.6f, 2.4f, -.5f};
+   RVec<short> mu_charge{1, 1, -1, -1, -1, 1, 1, -1};
+   RVec<float> mu_pt{56.f, 45.f, 32.f, 24.f, 12.f, 8.f, 7.f, 6.2f};
+   RVec<float> mu_eta{3.1f, -.2f, -1.1f, 1.f, 4.1f, 1.6f, 2.4f, -.5f};
 
    // Pick the pt of the muons with a pt greater than 10, an eta between -2 and 2 and a negative charge
    // or the ones with a pt > 20, outside the eta range -2:2 and with positive charge
    auto goodMuons_pt = mu_pt[(mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1) ||
                              (mu_pt > 15.f && abs(mu_eta) > 2.f && mu_charge == 1)];
-   ROOT::VecOps::RVec<float> goodMuons_pt_ref = {56.f, 32.f, 24.f};
+   RVec<float> goodMuons_pt_ref = {56.f, 32.f, 24.f};
    CheckEqual(goodMuons_pt, goodMuons_pt_ref, "Muons quality cut");
 }
 
@@ -501,19 +501,19 @@ TEST(VecOps, InputOutput)
    auto filename = "vecops_inputoutput.root";
    auto treename = "t";
 
-   const ROOT::VecOps::RVec<double> dref {1., 2., 3.};
-   const ROOT::VecOps::RVec<float> fref {1.f, 2.f, 3.f};
-   const ROOT::VecOps::RVec<UInt_t> uiref {1, 2, 3};
-   const ROOT::VecOps::RVec<ULong_t> ulref {1UL, 2UL, 3UL};
-   const ROOT::VecOps::RVec<ULong64_t> ullref {1ULL, 2ULL, 3ULL};
-   const ROOT::VecOps::RVec<UShort_t> usref {1, 2, 3};
-   const ROOT::VecOps::RVec<UChar_t> ucref {1, 2, 3};
-   const ROOT::VecOps::RVec<Int_t> iref {1, 2, 3};;
-   const ROOT::VecOps::RVec<Long_t> lref {1UL, 2UL, 3UL};;
-   const ROOT::VecOps::RVec<Long64_t> llref {1ULL, 2ULL, 3ULL};
-   const ROOT::VecOps::RVec<Short_t> sref {1, 2, 3};
-   const ROOT::VecOps::RVec<Char_t> cref {1, 2, 3};
-   const ROOT::VecOps::RVec<bool> bref {true, false, true};
+   const RVec<double> dref {1., 2., 3.};
+   const RVec<float> fref {1.f, 2.f, 3.f};
+   const RVec<UInt_t> uiref {1, 2, 3};
+   const RVec<ULong_t> ulref {1UL, 2UL, 3UL};
+   const RVec<ULong64_t> ullref {1ULL, 2ULL, 3ULL};
+   const RVec<UShort_t> usref {1, 2, 3};
+   const RVec<UChar_t> ucref {1, 2, 3};
+   const RVec<Int_t> iref {1, 2, 3};;
+   const RVec<Long_t> lref {1UL, 2UL, 3UL};;
+   const RVec<Long64_t> llref {1ULL, 2ULL, 3ULL};
+   const RVec<Short_t> sref {1, 2, 3};
+   const RVec<Char_t> cref {1, 2, 3};
+   const RVec<bool> bref {true, false, true};
 
    {
       auto d = dref;
@@ -548,19 +548,19 @@ TEST(VecOps, InputOutput)
       t.Write();
    }
 
-   auto d = new ROOT::VecOps::RVec<double>();
-   auto f = new ROOT::VecOps::RVec<float>;
-   auto ui = new ROOT::VecOps::RVec<UInt_t>();
-   auto ul = new ROOT::VecOps::RVec<ULong_t>();
-   auto ull = new ROOT::VecOps::RVec<ULong64_t>();
-   auto us = new ROOT::VecOps::RVec<UShort_t>();
-   auto uc = new ROOT::VecOps::RVec<UChar_t>();
-   auto i = new ROOT::VecOps::RVec<Int_t>();
-   auto l = new ROOT::VecOps::RVec<Long_t>();
-   auto ll = new ROOT::VecOps::RVec<Long64_t>();
-   auto s = new ROOT::VecOps::RVec<Short_t>();
-   auto c = new ROOT::VecOps::RVec<Char_t>();
-   auto b = new ROOT::VecOps::RVec<bool>();
+   auto d = new RVec<double>();
+   auto f = new RVec<float>;
+   auto ui = new RVec<UInt_t>();
+   auto ul = new RVec<ULong_t>();
+   auto ull = new RVec<ULong64_t>();
+   auto us = new RVec<UShort_t>();
+   auto uc = new RVec<UChar_t>();
+   auto i = new RVec<Int_t>();
+   auto l = new RVec<Long_t>();
+   auto ll = new RVec<Long64_t>();
+   auto s = new RVec<Short_t>();
+   auto c = new RVec<Char_t>();
+   auto b = new RVec<bool>();
 
    TFile file(filename);
    TTree *tp;
@@ -600,13 +600,13 @@ TEST(VecOps, InputOutput)
 
 TEST(VecOps, SimpleStatOps)
 {
-   ROOT::VecOps::RVec<double> v0 {};
+   RVec<double> v0 {};
    ASSERT_DOUBLE_EQ(Sum(v0), 0.);
    ASSERT_DOUBLE_EQ(Mean(v0), 0.);
    ASSERT_DOUBLE_EQ(StdDev(v0), 0.);
    ASSERT_DOUBLE_EQ(Var(v0), 0.);
 
-   ROOT::VecOps::RVec<double> v1 {42.};
+   RVec<double> v1 {42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
    ASSERT_DOUBLE_EQ(Max(v1), 42.);
@@ -616,7 +616,7 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(StdDev(v1), 0.);
    ASSERT_DOUBLE_EQ(Var(v1), 0.);
 
-   ROOT::VecOps::RVec<double> v2 {1., 2., 3.};
+   RVec<double> v2 {1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Max(v2), 3.);
@@ -626,7 +626,7 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Var(v2), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
 
-   ROOT::VecOps::RVec<double> v3 {10., 20., 32.};
+   RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
    ASSERT_DOUBLE_EQ(Max(v3), 32.);
@@ -636,7 +636,7 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
 
-   ROOT::VecOps::RVec<int> v4 {2, 3, 1};
+   RVec<int> v4 {2, 3, 1};
    ASSERT_DOUBLE_EQ(Sum(v4), 6.);
    ASSERT_DOUBLE_EQ(Mean(v4), 2.);
    ASSERT_DOUBLE_EQ(Max(v4), 3);
@@ -646,7 +646,7 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Var(v4), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v4), 1.);
 
-   ROOT::VecOps::RVec<int> v5 {2, 3, 1, 4};
+   RVec<int> v5 {2, 3, 1, 4};
    ASSERT_DOUBLE_EQ(Sum(v5), 10);
    ASSERT_DOUBLE_EQ(Mean(v5), 2.5);
    ASSERT_DOUBLE_EQ(Max(v5), 4);
@@ -661,16 +661,16 @@ TEST(VecOps, SimpleStatOps)
    const ROOT::Math::PtEtaPhiMVector lv2 {12.95f, 1.32f, 2.2f, 105.65f};
    const ROOT::Math::PtEtaPhiMVector lv_sum_ref = lv0 + lv1 + lv2;
    const ROOT::Math::PtEtaPhiMVector lv_mean_ref = lv_sum_ref / 3;
-   ROOT::VecOps::RVec<ROOT::Math::PtEtaPhiMVector> v6 {lv0, lv1, lv2};
-   const ROOT::Math::PtEtaPhiMVector lv_sum = ROOT::VecOps::Sum(v6, ROOT::Math::PtEtaPhiMVector());
-   const ROOT::Math::PtEtaPhiMVector lv_mean = ROOT::VecOps::Mean(v6, ROOT::Math::PtEtaPhiMVector());
+   RVec<ROOT::Math::PtEtaPhiMVector> v6 {lv0, lv1, lv2};
+   const ROOT::Math::PtEtaPhiMVector lv_sum = Sum(v6, ROOT::Math::PtEtaPhiMVector());
+   const ROOT::Math::PtEtaPhiMVector lv_mean = Mean(v6, ROOT::Math::PtEtaPhiMVector());
    CheckEqual(lv_sum, lv_sum_ref);
    CheckEqual(lv_mean, lv_mean_ref);
 }
 
 TEST(VecOps, Any)
 {
-   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   RVec<int> vi {0, 1, 2};
    EXPECT_TRUE(Any(vi));
    vi = {0, 0, 0};
    EXPECT_FALSE(Any(vi));
@@ -680,7 +680,7 @@ TEST(VecOps, Any)
 
 TEST(VecOps, All)
 {
-   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   RVec<int> vi {0, 1, 2};
    EXPECT_FALSE(All(vi));
    vi = {0, 0, 0};
    EXPECT_FALSE(All(vi));
@@ -690,104 +690,104 @@ TEST(VecOps, All)
 
 TEST(VecOps, Argsort)
 {
-   ROOT::VecOps::RVec<int> v{2, 0, 1};
-   using size_type = typename ROOT::VecOps::RVec<int>::size_type;
+   RVec<int> v{2, 0, 1};
+   using size_type = typename RVec<int>::size_type;
    auto i = Argsort(v);
-   ROOT::VecOps::RVec<size_type> ref{1, 2, 0};
+   RVec<size_type> ref{1, 2, 0};
    CheckEqual(i, ref);
 }
 
 TEST(VecOps, ArgsortWithComparisonOperator)
 {
-   ROOT::VecOps::RVec<int> v{2, 0, 1};
-   using size_type = typename ROOT::VecOps::RVec<int>::size_type;
+   RVec<int> v{2, 0, 1};
+   using size_type = typename RVec<int>::size_type;
 
    auto i1 = Argsort(v, [](int x, int y){ return x < y; });
-   ROOT::VecOps::RVec<size_type> ref1{1, 2, 0};
+   RVec<size_type> ref1{1, 2, 0};
    CheckEqual(i1, ref1);
 
    auto i2 = Argsort(v, [](int x, int y){ return x > y; });
-   ROOT::VecOps::RVec<size_type> ref2{0, 2, 1};
+   RVec<size_type> ref2{0, 2, 1};
    CheckEqual(i2, ref2);
 }
 
 TEST(VecOps, TakeIndices)
 {
-   ROOT::VecOps::RVec<int> v0{2, 0, 1};
-   ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i{1, 2, 0, 0, 0};
+   RVec<int> v0{2, 0, 1};
+   RVec<typename RVec<int>::size_type> i{1, 2, 0, 0, 0};
    auto v1 = Take(v0, i);
-   ROOT::VecOps::RVec<int> ref{0, 1, 2, 2, 2};
+   RVec<int> ref{0, 1, 2, 2, 2};
    CheckEqual(v1, ref);
 }
 
 TEST(VecOps, TakeFirst)
 {
-   ROOT::VecOps::RVec<int> v0{0, 1, 2};
+   RVec<int> v0{0, 1, 2};
 
    auto v1 = Take(v0, 2);
-   ROOT::VecOps::RVec<int> ref{0, 1};
+   RVec<int> ref{0, 1};
    CheckEqual(v1, ref);
 
    // Corner-case: Take zero entries
    auto v2 = Take(v0, 0);
-   ROOT::VecOps::RVec<int> none{};
+   RVec<int> none{};
    CheckEqual(v2, none);
 }
 
 TEST(VecOps, TakeLast)
 {
-   ROOT::VecOps::RVec<int> v0{0, 1, 2};
+   RVec<int> v0{0, 1, 2};
 
    auto v1 = Take(v0, -2);
-   ROOT::VecOps::RVec<int> ref{1, 2};
+   RVec<int> ref{1, 2};
    CheckEqual(v1, ref);
 
    // Corner-case: Take zero entries
    auto v2 = Take(v0, 0);
-   ROOT::VecOps::RVec<int> none{};
+   RVec<int> none{};
    CheckEqual(v2, none);
 }
 
 TEST(VecOps, Reverse)
 {
-   ROOT::VecOps::RVec<int> v0{0, 1, 2};
+   RVec<int> v0{0, 1, 2};
 
    auto v1 = Reverse(v0);
-   ROOT::VecOps::RVec<int> ref{2, 1, 0};
+   RVec<int> ref{2, 1, 0};
    CheckEqual(v1, ref);
 
    // Corner-case: Empty vector
-   ROOT::VecOps::RVec<int> none{};
+   RVec<int> none{};
    auto v2 = Reverse(none);
    CheckEqual(v2, none);
 }
 
 TEST(VecOps, Sort)
 {
-   ROOT::VecOps::RVec<int> v{2, 0, 1};
+   RVec<int> v{2, 0, 1};
 
    // Sort in ascending order
    auto v1 = Sort(v);
-   ROOT::VecOps::RVec<int> ref{0, 1, 2};
+   RVec<int> ref{0, 1, 2};
    CheckEqual(v1, ref);
 
    // Corner-case: Empty vector
-   ROOT::VecOps::RVec<int> none{};
+   RVec<int> none{};
    auto v2 = Sort(none);
    CheckEqual(v2, none);
 }
 
 TEST(VecOps, SortWithComparisonOperator)
 {
-   ROOT::VecOps::RVec<int> v{2, 0, 1};
+   RVec<int> v{2, 0, 1};
 
    // Sort with comparison operator
    auto v1 = Sort(v, std::greater<int>());
-   ROOT::VecOps::RVec<int> ref{2, 1, 0};
+   RVec<int> ref{2, 1, 0};
    CheckEqual(v1, ref);
 
    // Corner-case: Empty vector
-   ROOT::VecOps::RVec<int> none{};
+   RVec<int> none{};
    auto v2 = Sort(none, std::greater<int>());
    CheckEqual(v2, none);
 }
@@ -795,7 +795,7 @@ TEST(VecOps, SortWithComparisonOperator)
 TEST(VecOps, RVecBool)
 {
    // std::vector<bool> is special, so RVec<bool> is special
-   ROOT::VecOps::RVec<bool> v{true, false};
+   RVec<bool> v{true, false};
    auto v2 = v;
    EXPECT_EQ(v[0], true);
    EXPECT_EQ(v[1], false);
@@ -805,8 +805,8 @@ TEST(VecOps, RVecBool)
 
 TEST(VecOps, CombinationsTwoVectors)
 {
-   ROOT::VecOps::RVec<int> v1{1, 2, 3};
-   ROOT::VecOps::RVec<int> v2{-4, -5};
+   RVec<int> v1{1, 2, 3};
+   RVec<int> v2{-4, -5};
 
    auto idx = Combinations(v1, v2);
    auto c1 = Take(v1, idx[0]);
@@ -835,7 +835,7 @@ TEST(VecOps, CombinationsTwoVectors)
 TEST(VecOps, UniqueCombinationsSingleVector)
 {
    // Doubles: x + y
-   ROOT::VecOps::RVec<int> v1{1, 2, 3};
+   RVec<int> v1{1, 2, 3};
    auto idx1 = Combinations(v1, 2);
    auto c1 = Take(v1, idx1[0]);
    auto c2 = Take(v1, idx1[1]);
@@ -847,7 +847,7 @@ TEST(VecOps, UniqueCombinationsSingleVector)
    CheckEqual(v2, ref1);
 
    // Triples: x * y * z
-   ROOT::VecOps::RVec<int> v3{1, 2, 3, 4};
+   RVec<int> v3{1, 2, 3, 4};
    auto idx2 = Combinations(v3, 3);
    auto c3 = Take(v3, idx2[0]);
    auto c4 = Take(v3, idx2[1]);
@@ -861,14 +861,14 @@ TEST(VecOps, UniqueCombinationsSingleVector)
    CheckEqual(v4, ref2);
 
    // Corner-case: Single combination
-   ROOT::VecOps::RVec<int> v5{1};
+   RVec<int> v5{1};
    auto idx3 = Combinations(v5, 1);
    EXPECT_EQ(idx3.size(), 1u);
    EXPECT_EQ(idx3[0].size(), 1u);
    EXPECT_EQ(idx3[0][0], 0u);
 
    // Corner-case: Insert empty vector
-   ROOT::VecOps::RVec<int> empty_int{};
+   RVec<int> empty_int{};
    auto idx4 = Combinations(empty_int, 0);
    EXPECT_EQ(idx4.size(), 0u);
 
@@ -879,36 +879,36 @@ TEST(VecOps, UniqueCombinationsSingleVector)
 
 TEST(VecOps, PrintCollOfNonPrintable)
 {
-   auto code = "class A{};ROOT::VecOps::RVec<A> v(1);v";
+   auto code = "class A{};RVec<A> v(1);v";
    auto ret = gInterpreter->ProcessLine(code);
    EXPECT_TRUE(0 != ret) << "Error in printing an RVec collection of non printable objects.";
 }
 
 TEST(VecOps, Nonzero)
 {
-   ROOT::VecOps::RVec<int> v1{0, 1, 0, 3, 4, 0, 6};
-   ROOT::VecOps::RVec<float> v2{0, 1, 0, 3, 4, 0, 6};
+   RVec<int> v1{0, 1, 0, 3, 4, 0, 6};
+   RVec<float> v2{0, 1, 0, 3, 4, 0, 6};
    auto v3 = Nonzero(v1);
    auto v4 = Nonzero(v2);
-   ROOT::VecOps::RVec<size_t> ref1{1, 3, 4, 6};
+   RVec<size_t> ref1{1, 3, 4, 6};
    CheckEqual(v3, ref1);
    CheckEqual(v4, ref1);
 
    auto v5 = v1[v1<2];
    auto v6 = Nonzero(v5);
-   ROOT::VecOps::RVec<size_t> ref2{1};
+   RVec<size_t> ref2{1};
    CheckEqual(v6, ref2);
 }
 
 TEST(VecOps, Intersect)
 {
-   ROOT::VecOps::RVec<int> v1{0, 1, 2, 3};
-   ROOT::VecOps::RVec<int> v2{2, 3, 4, 5};
+   RVec<int> v1{0, 1, 2, 3};
+   RVec<int> v2{2, 3, 4, 5};
    auto v3 = Intersect(v1, v2);
-   ROOT::VecOps::RVec<int> ref1{2, 3};
+   RVec<int> ref1{2, 3};
    CheckEqual(v3, ref1);
 
-   ROOT::VecOps::RVec<int> v4{4, 5, 3, 2};
+   RVec<int> v4{4, 5, 3, 2};
    auto v5 = Intersect(v1, v4);
    CheckEqual(v5, ref1);
 
@@ -944,7 +944,7 @@ TEST(VecOps, Where)
 
 TEST(VecOps, AtWithFallback)
 {
-   ROOT::VecOps::RVec<float> v({1.f, 2.f, 3.f});
+   RVec<float> v({1.f, 2.f, 3.f});
    EXPECT_FLOAT_EQ(v.at(7, 99.f), 99.f);
 }
 
@@ -1097,7 +1097,7 @@ TEST(VecOps, Map)
 
    auto res = Map(a, c, c, mod);
 
-   ROOT::VecOps::RVec<double> ref{9.9498743710661994, 11.489125293076057, 13.076696830622021};
+   RVec<double> ref{9.9498743710661994, 11.489125293076057, 13.076696830622021};
    CheckEqual(res, ref);
 }
 
