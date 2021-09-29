@@ -14,10 +14,8 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
   HEADERS
-    ROOT/RAdoptAllocator.hxx
     ROOT/RVec.hxx
   SOURCES
-    src/RAdoptAllocator.cxx
     src/RVec.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
