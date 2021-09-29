@@ -879,7 +879,7 @@ TEST(VecOps, UniqueCombinationsSingleVector)
 
 TEST(VecOps, PrintCollOfNonPrintable)
 {
-   auto code = "class A{};RVec<A> v(1);v";
+   auto code = "class A{};ROOT::RVec<A> v(1);v";
    auto ret = gInterpreter->ProcessLine(code);
    EXPECT_TRUE(0 != ret) << "Error in printing an RVec collection of non printable objects.";
 }
