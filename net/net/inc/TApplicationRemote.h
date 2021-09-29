@@ -30,6 +30,7 @@
 #include "TNamed.h"
 #include "TMessage.h"
 #include "TSysEvtHandler.h"
+#include "RtypesCore.h"  // for Longptr_t
 
 
 class THashList;
