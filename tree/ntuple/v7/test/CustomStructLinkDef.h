@@ -12,6 +12,6 @@
 
 #pragma link C++ class IAuxSetOption+;
 #pragma link C++ class PackedParameters+;
-#pragma link C++ class PackedContainer+;
+#pragma link C++ class PackedContainer<int>+;
 
 #endif
