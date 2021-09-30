@@ -55,9 +55,6 @@ compressed pages and the page source has to uncompresses pages at a later point 
 // clang-format on
 class RClusterPool {
 private:
-   /// Maximum number of queued cluster requests for the I/O thread. A single request can span mutliple clusters.
-   static constexpr unsigned int kWorkQueueLimit = 4;
-
    /// Request to load a subset of the columns of a particular cluster.
    /// Work items come in groups and are executed by the page source.
    struct RReadItem {
