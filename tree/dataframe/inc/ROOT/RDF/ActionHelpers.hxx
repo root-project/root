@@ -1105,70 +1105,6 @@ public:
    std::string GetActionName() { return "Display"; }
 };
 
-// std::vector<bool> is special, and not in a good way. As a consequence Snapshot of RVec<bool> needs to be treated
-// specially. In particular, if RVec<bool> is filled with a (fixed or variable size) boolean array coming from
-// a ROOT file, when writing out the correspinding branch from a Snapshot we do not have an address to set for the
-// TTree branch (std::vector<bool> and, consequently, RVec<bool> do not provide a `data()` method).
-// Bools is a lightweight wrapper around a C array of booleans that is meant to provide a stable address for the
-// output TTree to read the contents of the snapshotted branches at Fill time.
-class BoolArray {
-   std::size_t fSize = 0;
-   bool *fBools = nullptr;
-
-   bool *CopyVector(const RVec<bool> &v)
-   {
-      auto b = new bool[fSize];
-      std::copy(v.begin(), v.end(), b);
-      return b;
-   }
-
-public:
-   BoolArray() = default;
-   BoolArray(const RVec<bool> &v) : fSize(v.size()), fBools(CopyVector(v)) {}
-   BoolArray(const BoolArray &b) = delete;
-   BoolArray &operator=(const BoolArray &b) = delete;
-   BoolArray(BoolArray &&b)
-   {
-      fSize = b.fSize;
-      fBools = b.fBools;
-      b.fSize = 0;
-      b.fBools = nullptr;
-   }
-   BoolArray &operator=(BoolArray &&b)
-   {
-      delete[] fBools;
-      fSize = b.fSize;
-      fBools = b.fBools;
-      b.fSize = 0;
-      b.fBools = nullptr;
-      return *this;
-   }
-   ~BoolArray() { delete[] fBools; }
-   std::size_t Size() const { return fSize; }
-   bool *Data() { return fBools; }
-};
-using BoolArrayMap = std::map<std::string, BoolArray>;
-
-inline bool *UpdateBoolArrayIfBool(BoolArrayMap &boolArrays, RVec<bool> &v, const std::string &outName)
-{
-   // create a boolArrays entry
-   boolArrays[outName] = BoolArray(v);
-   return boolArrays[outName].Data();
-}
-
-template <typename T>
-T *UpdateBoolArrayIfBool(BoolArrayMap &, RVec<T> &v, const std::string &)
-{
-   return v.data();
-}
-
-// Helper which gets the return value of the data() method if the type is an
-// RVec (of anything but a bool), nullptr otherwise.
-inline void *GetData(ROOT::VecOps::RVec<bool> & /*v*/)
-{
-   return nullptr;
-}
-
 template <typename T>
 void *GetData(ROOT::VecOps::RVec<T> &v)
 {
@@ -1182,7 +1118,7 @@ void *GetData(T & /*v*/)
 }
 
 template <typename T>
-void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, const std::string &inName,
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName,
                        const std::string &name, TBranch *&branch, void *&branchAddress, T *address,
                        RBranchSet &outputBranches)
 {
@@ -1239,7 +1175,7 @@ void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, cons
 /// In case of 1., we keep aside the pointer to the branch and the pointer to the input value (in `branch` and
 /// `branchAddress`) so we can intercept changes in the address of the input branch and tell the output branch.
 template <typename T>
-void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName,
                        const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab,
                        RBranchSet &outputBranches)
 {
@@ -1286,9 +1222,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
    const auto rootbtype = TypeName2ROOTTypeName(btype);
    const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
 
-   /// RVec<bool> is special because std::vector<bool> is special. In particular, it has no `data()`,
-   /// so we need to explicitly manage storage of the data that the tree needs to Fill branches with.
-   auto dataPtr = UpdateBoolArrayIfBool(boolArrays, *ab, outName);
+   auto dataPtr = ab->data();
 
    if (outputBranch) {
       if (outputBranch->IsA() != TBranch::Class()) {
@@ -1301,32 +1235,8 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
       outputBranch->SetTitle(inputBranch->GetTitle());
       outputBranches.Insert(outName, outputBranch);
-      // Record the branch ptr and the address associated to it if this is not a bool array
-      // The case of RVec<bool> is taken care of by the `UpdateBoolArrayIfBool` call above
-      if (!std::is_same<bool, T>::value) {
-         branch = outputBranch;
-         branchAddress = GetData(*ab);
-      }
-   }
-}
-
-// generic version, no-op
-template <typename T>
-void UpdateBoolArray(BoolArrayMap &, T&, const std::string &, TTree &) {}
-
-// RVec<bool> overload, update boolArrays if needed
-inline void UpdateBoolArray(BoolArrayMap &boolArrays, RVec<bool> &v, const std::string &outName, TTree &t)
-{
-   // in case the RVec<bool> does not correspond to a bool C-array
-   if (boolArrays.find(outName) == boolArrays.end())
-      return;
-
-   if (v.size() > boolArrays[outName].Size()) {
-      boolArrays[outName] = BoolArray(v); // resize and copy
-      t.SetBranchAddress(outName.c_str(), boolArrays[outName].Data());
-   }
-   else {
-      std::copy(v.begin(), v.end(), boolArrays[outName].Data()); // just copy
+      branch = outputBranch;
+      branchAddress = GetData(*ab);
    }
 }
 
@@ -1345,7 +1255,6 @@ class SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
    const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
-   BoolArrayMap fBoolArrays; // Storage for C arrays of bools to be written out
    // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
    std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
    std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
@@ -1381,7 +1290,6 @@ public:
          SetBranches(values..., ind_t{});
          fBranchAddressesNeedReset = false;
       }
-      UpdateBoolArrays(values..., ind_t{});
       fOutputTree->Fill();
    }
 
@@ -1404,19 +1312,12 @@ public:
    template <std::size_t... S>
    void SetBranches(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
-      // create branches in output tree (and fill fBoolArrays for RVec<bool> columns)
+      // create branches in output tree
       int expander[] = {
-         (SetBranchesHelper(fBoolArrays, fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
+         (SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
                             fBranches[S], fBranchAddresses[S], &values, fOutputBranches),
           0)...,
          0};
-      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-   }
-
-   template <std::size_t... S>
-   void UpdateBoolArrays(ColTypes &...values, std::index_sequence<S...> /*dummy*/)
-   {
-      int expander[] = {(UpdateBoolArray(fBoolArrays, values, fOutputBranchNames[S], *fOutputTree), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
@@ -1480,7 +1381,6 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
-   std::vector<BoolArrayMap> fBoolArrays; // Per-thread storage for C arrays of bools to be written out
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
    // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
@@ -1494,7 +1394,7 @@ public:
                     const RSnapshotOptions &options)
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fBranchAddressesNeedReset(fNSlots, 1),
         fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots),
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots),
         fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
         fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)), fOutputBranches(fNSlots)
    {
@@ -1549,7 +1449,6 @@ public:
          SetBranches(slot, values..., ind_t{});
          fBranchAddressesNeedReset[slot] = 0;
       }
-      UpdateBoolArrays(slot, values..., ind_t{});
       fOutputTrees[slot]->Fill();
       auto entries = fOutputTrees[slot]->GetEntries();
       auto autoFlush = fOutputTrees[slot]->GetAutoFlush();
@@ -1578,22 +1477,13 @@ public:
    void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
          // hack to call TTree::Branch on all variadic template arguments
-         int expander[] = {(SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot],
-                                              fInputBranchNames[S], fOutputBranchNames[S], fBranches[slot][S],
-                                              fBranchAddresses[slot][S], &values, fOutputBranches[slot]),
-                            0)...,
-                           0};
+         int expander[] = {
+            (SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S], fOutputBranchNames[S],
+                               fBranches[slot][S], fBranchAddresses[slot][S], &values, fOutputBranches[slot]),
+             0)...,
+            0};
          (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
          (void)slot;     // avoid unused variable warnings in gcc6.2
-   }
-
-   template <std::size_t... S>
-   void UpdateBoolArrays(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
-   {
-      (void)slot; // avoid bogus 'unused parameter' warning
-      int expander[] = {
-         (UpdateBoolArray(fBoolArrays[slot], values, fOutputBranchNames[S], *fOutputTrees[slot]), 0)..., 0};
-      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
    void Initialize()
