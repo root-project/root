@@ -2193,6 +2193,8 @@ RVec<T> Take(const RVec<T> &v, const int n)
 }
 
 /// Return a copy of the container without the elements at the specified indices.
+///
+/// Duplicated and out-of-range indices in idxs are ignored.
 template <typename T>
 RVec<T> Drop(const RVec<T> &v, RVec<typename RVec<T>::size_type> idxs)
 {
