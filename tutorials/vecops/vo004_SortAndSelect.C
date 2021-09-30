@@ -10,8 +10,6 @@
 /// \date August 2018
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo004_SortAndSelect()
 {
    // Because RVec implements an iterator, the class is fully compatible with

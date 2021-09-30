@@ -11,8 +11,6 @@
 /// \date March 2019
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo007_PhysicsHelpers()
 {
    // The DeltaPhi helper computes the closest angle between angles.

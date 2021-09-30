@@ -9,8 +9,6 @@
 /// \date September 2018
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo006_IndexManipulation()
 {
    // We assume that we have multiple linked collections, the elements of which

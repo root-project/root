@@ -10,8 +10,6 @@
 /// \date May 2018
 /// \author Danilo Piparo
 
-using namespace ROOT::VecOps;
-
 void vo003_LogicalOperations()
 {
 
