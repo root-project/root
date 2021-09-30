@@ -9,8 +9,6 @@
 /// \date August 2018
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo005_Combinations()
 {
    // The starting point are two collections and we want to calculate the result
