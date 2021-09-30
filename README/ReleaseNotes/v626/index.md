@@ -92,7 +92,7 @@ More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 ## Math Libraries
 
 - I/O support of `RVec` objects has been optimized. As a side-effect, `RVec`s can now be read back as `std::vector`s and vice-versa.
-- added `ROOT::VecOps::Drop`, an operation that removes `RVec` elements at the specified indices
+- added `ROOT::VecOps::Drop`, an operation that removes `RVec` elements at the specified indices.
 
 
 ## RooFit Libraries
