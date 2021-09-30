@@ -15,7 +15,7 @@
 
 using namespace ROOT::VecOps;
 
-void CheckEqual(const RVec<float> &a, const RVec<float> &b, std::string_view msg = "")
+void CheckEqual(const ROOT::RVecF &a, const ROOT::RVecF &b, std::string_view msg = "")
 {
    const auto asize = a.size();
    const auto bsize = b.size();
@@ -25,7 +25,7 @@ void CheckEqual(const RVec<float> &a, const RVec<float> &b, std::string_view msg
    }
 }
 
-void CheckEqual(const RVec<double> &a, const RVec<double> &b, std::string_view msg = "")
+void CheckEqual(const ROOT::RVecD &a, const ROOT::RVecD &b, std::string_view msg = "")
 {
    const auto asize = a.size();
    const auto bsize = b.size();
