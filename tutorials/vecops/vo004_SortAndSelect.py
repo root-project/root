@@ -11,7 +11,7 @@
 ## \author Stefan Wunsch
 
 import ROOT
-from ROOT.VecOps import RVec, Argsort, Take, Sort, Reverse
+from ROOT.VecOps import Argsort, Take, Sort, Reverse
 
 # RVec can be sorted in Python with the inbuilt sorting function because
 # PyROOT implements a Python iterator
