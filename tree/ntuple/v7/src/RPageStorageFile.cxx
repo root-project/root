@@ -423,12 +423,16 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    }
    std::sort(gaps.begin(), gaps.end());
    std::size_t gapCut = 0;
+   std::size_t currentGap = 0;
    float szExtra = 0.0;
    for (auto g : gaps) {
+      if (g != currentGap) {
+         gapCut = currentGap;
+         currentGap = g;
+      }
       szExtra += g;
       if (szExtra  > maxOverhead)
          break;
-      gapCut = g;
    }
 
    // Prepare the input vector for the RRawFile::ReadV() call
