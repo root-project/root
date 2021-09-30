@@ -1204,7 +1204,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
       if (outputBranch) {
-         branchAddress = GetData(*ab);
+         branchAddress = ab->data();
          outputBranch->SetAddress(&branchAddress);
       } else {
          auto *b = outputTree.Branch(outName.c_str(), ab);
@@ -1236,7 +1236,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       outputBranch->SetTitle(inputBranch->GetTitle());
       outputBranches.Insert(outName, outputBranch);
       branch = outputBranch;
-      branchAddress = GetData(*ab);
+      branchAddress = ab->data();
    }
 }
 
