@@ -2198,13 +2198,13 @@ RVec<T> Take(const RVec<T> &v, const int n)
 template <typename T>
 RVec<T> Drop(const RVec<T> &v, RVec<typename RVec<T>::size_type> idxs)
 {
-   RVec<T> r;
-   if (v.size() > idxs.size())
-      r.reserve(v.size() - idxs.size());
-
    // clean up input indices
    std::sort(idxs.begin(), idxs.end());
    idxs.erase(std::unique(idxs.begin(), idxs.end()), idxs.end());
+
+   RVec<T> r;
+   if (v.size() > idxs.size())
+      r.reserve(v.size() - idxs.size());
 
    auto discardIt = idxs.begin();
    using sz_t = typename RVec<T>::size_type;
