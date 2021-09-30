@@ -91,8 +91,11 @@ More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 
 ## Math Libraries
 
+- `RVec` has been heavily re-engineered in order to add a small buffer optimization and to streamline its internals. The change should provide a small performance boost to
+  applications that make heavy use of `RVec`s and should otherwise be user-transparent. Please report any issues you should encounter.
 - I/O support of `RVec` objects has been optimized. As a side-effect, `RVec`s can now be read back as `std::vector`s and vice-versa.
 - added `ROOT::VecOps::Drop`, an operation that removes `RVec` elements at the specified indices.
+- handy aliases `ROOT::RVecI`, `ROOT::RVecD`, `ROOT::RVecF`, ..., have been introduced as short-hands for `RVec<int>`, `RVec<double>`, `RVec<float>`, ...
 
 
 ## RooFit Libraries
