@@ -10,7 +10,7 @@
 ## \author Stefan Wunsch
 
 import ROOT
-from ROOT.VecOps import RVec, Take, Combinations
+from ROOT.VecOps import Take, Combinations
 
 # RVec can be sorted in Python with the inbuilt sorting function because
 # PyROOT implements a Python iterator
