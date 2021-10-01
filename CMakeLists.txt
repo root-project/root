@@ -504,6 +504,20 @@ install(
    PATTERN "pkgconfig" EXCLUDE
 )
 
+# modules.idx
+if(runtime_cxxmodules)
+  add_custom_command(OUTPUT ${CMAKE_INSTALL_LIBDIR}/modules.idx
+                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                             ROOTIGNOREPREFIX=1 ROOT_HIST=0
+                             $<TARGET_FILE:root.exe> -l -q -b
+                     WORKING_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts ${modules_idx_deps})
+  add_custom_target(modules_idx ALL DEPENDS ${CMAKE_INSTALL_LIBDIR}/modules.idx)
+  add_dependencies(modules_idx ${modules_idx_deps})
+  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_INSTALL_LIBDIR}/modules.timestamp")
+endif()
+
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
@@ -523,6 +537,10 @@ else()
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+
+if(runtime_cxxmodules)
+  add_dependencies(hsimple modules_idx)
+endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
