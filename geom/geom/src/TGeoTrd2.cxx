@@ -11,12 +11,12 @@
  *************************************************************************/
 
 /** \class TGeoTrd2
-\ingroup Geometry_classes
-A trapezoid with both x and y lengths varying with z. It
-has 5 parameters, the half lengths in x at -dz and +dz, the half
-lengths in y at -dz and +dz, and the half length in z (dz).
+\ingroup Trapezoids
 
-Begin_Macro(source)
+A trapezoid with only X varying with Z. It is defined by the
+half-length in Z, the half-length in X at the lowest and highest Z
+planes and the half-length in Y:
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("trd2", "poza9");
@@ -33,6 +33,7 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
 */
 
 #include <iostream>

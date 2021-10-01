@@ -11,31 +11,52 @@
  *************************************************************************/
 
 /** \class TGeoBBox
-\ingroup Geometry_classes
+\ingroup Shapes_classes
+\brief Box class.
 
-Box class. All shape primitives inherit from this, their
+  - [Building boxes](\ref GEOB00)
+  - [Creation of boxes](\ref GEOB01)
+  - [Divisions of boxes](\ref GEOB02)
+
+All shape primitives inherit from this, their
   constructor filling automatically the parameters of the box that bounds
   the given shape. Defined by 6 parameters :
-    - fDX, fDY, fDZ - half lengths on X, Y and Z axis
-    - fOrigin[3]    - position of box origin
 
+```
+TGeoBBox(Double_t dx,Double_t dy,Double_t dz,Double_t *origin=0);
+```
 
+  - `fDX`, `fDY`, `fDZ` : half lengths on X, Y and Z axis
+  - `fOrigin[3]`        : position of box origin
+
+\anchor GEOB00
 ### Building boxes
 
- Normally a box has to be built only with 3 parameters : dx, dy, dz
-representing the half lengths on X, Y and Z axis. In this case, the origin
-of the box will match the one of its reference frame. The translation of the
-origin is used only by the constructors of all other shapes in order to
-define their own bounding boxes. Users should be aware that building a
-translated box that will represent a physical shape by itself will affect any
-further positioning of other shapes inside. Therefore in order to build a
-positioned box one should follow the recipe described in class TGeoNode.
+Normally a box has to be built only with 3 parameters: `DX,DY,DZ`
+representing the half-lengths on X, Y and Z-axes. In this case, the
+origin of the box will match the one of its reference frame and the box
+will range from: `-DX` to `DX` on X-axis, from `-DY` to `DY` on Y and
+from `-DZ` to `DZ` on Z. On the other hand, any other shape needs to
+compute and store the parameters of their minimal bounding box. The
+bounding boxes are essential to optimize navigation algorithms.
+Therefore all other primitives derive from **`TGeoBBox`**. Since the
+minimal bounding box is not necessary centered in the origin, any box
+allows an origin translation `(Ox`,`Oy`,`Oz)`. All primitive
+constructors automatically compute the bounding box parameters. Users
+should be aware that building a translated box that will represent a
+primitive shape by itself would affect any further positioning of other
+shapes inside. Therefore it is highly recommendable to build
+non-translated boxes as primitives and translate/rotate their
+corresponding volumes only during positioning stage.
 
+\anchor GEOB01
 #### Creation of boxes
 
-  - TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
+```
+   TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
+```
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("box", "poza1");
@@ -54,19 +75,25 @@ Begin_Macro(source)
 }
 End_Macro
 
-  - A volume having a box shape can be built in one step:
-    `TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);`
+A volume having a box shape can be built in one step:
 
-#### Divisions of boxes.
+```
+   TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);
+```
+
+\anchor GEOB02
+#### Divisions of boxes
 
   Volumes having box shape can be divided with equal-length slices on
 X, Y or Z axis. The following options are supported:
 
   - Dividing the full range of one axis in N slices
-    `TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);`
-    - here 1 stands for the division axis (1-X, 2-Y, 3-Z)
+```
+   TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);
+```
+here `1` stands for the division axis (1-X, 2-Y, 3-Z)
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("box", "poza1");
@@ -87,11 +114,13 @@ Begin_Macro(source)
 End_Macro
 
   - Dividing in a limited range - general case.
-    `TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);`
+```
+   TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);
+```
     - start = starting offset within (-fDY, fDY)
     - step  = slicing step
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("box", "poza1");

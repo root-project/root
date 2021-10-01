@@ -11,18 +11,15 @@
  *************************************************************************/
 
 /** \class TGeoPgon
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-A polygone. It has at least 10 parameters :
-  - the lower phi limit;
-  - the range in phi;
-  - the number of equal edges on each z plane;
-  - the number of z planes (at least two) where the inner/outer
-    radii are changing;
-  - z coordinate, inner and outer radius of the inscribed cercle
-    (distance from center to edges) for each z plane
+Polygons are defined in the same way as polycones, the difference being
+just that the segments between consecutive Z planes are regular
+polygons. The phi segmentation is preserved and the shape is defined in
+a similar manner, just that `rmin` and `rmax` represent the radii of the
+circles inscribed in the inner/outer polygon.
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("pgon", "poza11");
@@ -45,6 +42,16 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
+The constructor of a polygon has the form:
+
+~~~{.cpp}
+TGeoPgon(Double_t phi1,Double_t dphi,Int_t nedges,Int_t nz);
+~~~
+
+The extra parameter `nedges` represent the number of equal edges of the
+polygons, between `phi1` and `phi1+dphi.`
+
 */
 
 
