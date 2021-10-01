@@ -330,8 +330,9 @@ class ROOTFacade(types.ModuleType):
             from libROOTPythonizations import MakeNumpyDataFrame
             ns.MakeNumpyDataFrame = MakeNumpyDataFrame
 
-            # Inject Experimental.Distributed package into namespace RDF
-            ns.Experimental = _create_rdf_experimental_distributed_module(ns)
+            if sys.version_info >= (3, 7):
+                # Inject Experimental.Distributed package into namespace RDF
+                ns.Experimental = _create_rdf_experimental_distributed_module(ns)
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF
