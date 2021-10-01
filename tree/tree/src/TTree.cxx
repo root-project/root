@@ -7845,27 +7845,27 @@ Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescript
 void TTree::RecursiveRemove(TObject *obj)
 {
    if (obj == fEventList) {
-      fEventList = 0;
+      fEventList = nullptr;
    }
    if (obj == fEntryList) {
-      fEntryList = 0;
+      fEntryList = nullptr;
    }
    if (fUserInfo) {
       fUserInfo->RecursiveRemove(obj);
    }
    if (fPlayer == obj) {
-      fPlayer = 0;
+      fPlayer = nullptr;
    }
    if (fTreeIndex == obj) {
-      fTreeIndex = 0;
+      fTreeIndex = nullptr;
    }
    if (fAliases == obj) {
-      fAliases = 0;
+      fAliases = nullptr;
    } else if (fAliases) {
       fAliases->RecursiveRemove(obj);
    }
    if (fFriends == obj) {
-      fFriends = 0;
+      fFriends = nullptr;
    } else if (fFriends) {
       fFriends->RecursiveRemove(obj);
    }
