@@ -11,10 +11,15 @@
  *************************************************************************/
 
 /** \class TGeoTrd1
-\ingroup Geometry_classes
-A trapezoid with only x length varying with z. It has 4
-parameters, the half length in x at the low z surface, that at the
-high z surface, the half length in y, and in z
+\ingroup Trapezoids
+
+A trapezoid with only X varying with Z. It is defined by the
+half-length in Z, the half-length in X at the lowest and highest Z
+planes and the half-length in Y:
+
+~~~ {.cpp}
+TGeoTrd1(Double_t dx1,Double_t dx2,Double_t dy,Double_t dz);
+~~~
 
 Begin_Macro
 {

@@ -11,17 +11,18 @@
  *************************************************************************/
 
 /** \class TGeoSphere
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-Spherical shell class. It takes 6 parameters :
+TGeoSphere are not just balls having internal and external
+radii, but sectors of a sphere having defined theta and phi ranges. The
+TGeoSphere class has the following constructor.
 
-   - spherical shell class. It takes 6 parameters :
-   - inner and outer radius Rmin, Rmax
-   - the theta limits Tmin, Tmax
-   - the phi limits Pmin, Pmax (the sector in phi is considered
-     starting from Pmin to Pmax counter-clockwise
+~~~{.cpp}
+TGeoSphere(Double_t rmin,Double_t rmax,Double_t theta1,
+Double_t theta2,Double_t phi1, Double_t phi2);
+~~~
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("sphere", "poza7");
@@ -39,6 +40,12 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
+  - `rmin: ` internal radius of the spherical sector
+  - `rmax:` external radius
+  - `theta1:` starting theta value [0, 180) in degrees
+  - `theta2:` ending theta value (0, 180] in degrees (`theta1<theta2`)
+
 */
 
 #include <iostream>

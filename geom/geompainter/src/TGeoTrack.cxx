@@ -19,7 +19,7 @@
 #include "TGeoTrack.h"
 
 /** \class TGeoTrack
-\ingroup Geometry_classes
+\ingroup Geometry_painter
 
 \deprecated
 Use of TGeoTrack is deprecated. For the event display please switch to TEve (using TEveTracks

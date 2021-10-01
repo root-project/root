@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGeoMaterial
-\ingroup Geometry_classes
+\ingroup Materials_classes
 
 Base class describing materials.
 
@@ -700,7 +700,7 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
 }
 
 /** \class TGeoMixture
-\ingroup Geometry_classes
+\ingroup Materials_classes
 
 Mixtures of elements.
 

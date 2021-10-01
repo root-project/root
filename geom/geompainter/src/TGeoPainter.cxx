@@ -9,7 +9,7 @@
  *************************************************************************/
 
 /** \class TGeoPainter
-\ingroup Geometry_classes
+\ingroup Geometry_painter
 
 Class implementing all draw interfaces for a generic 3D viewer
 using TBuffer3D mechanism.

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGeoShape
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 Base abstract class for all shapes.
 
   Shapes are geometrical objects that provide the basic modelling
@@ -43,7 +43,7 @@ shape topologies and combinations.
 
   Named shapes register themselves to the manager class at creation time. The
 manager is responsible for their final deletion. Shapes can be created using their
-default constructor if their retrieval by name is not needed, but in this case 
+default constructor if their retrieval by name is not needed, but in this case
 they are owned by the user. A shape may be referenced by several volumes,
 therefore its deletion is not possible once volumes were defined based on it.
 
@@ -138,7 +138,7 @@ is always invoked in a generic way from the volume level. Details on how to
 do that can be found in TGeoVolume class. One can see how all division options
 are interpreted and which is their result inside specific shape classes.
 
-\image html geom_t_shape.png
+\image html geom_t_shape.png width=600px
 */
 
 #include "TObjArray.h"
