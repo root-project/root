@@ -607,6 +607,11 @@ RDataFrame operations currently work with this package. The subset that is curre
 with support for more operations coming in the future. Data sources other than TTree and TChain (e.g. CSV, RNTuple) are
 currently not supported.
 
+**Note** that the distributed RDataFrame module is available in a ROOT installation if the following criteria are met:
+- PyROOT is available
+- RDataFrame is available
+- The version of the Python interpreter used to build ROOT is greater or equal than 3.7
+
 ### Connecting to a Spark cluster
 
 In order to distribute the RDataFrame workload, you can connect to a Spark cluster you have access to through the

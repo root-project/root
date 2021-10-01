@@ -483,11 +483,18 @@ elseif(Python3_Interpreter_Development_FOUND AND Python2_Interpreter_Development
 endif()
 
 #---distributed RDataFrame pyspark tests require both dataframe and pyroot----------------------------------
-if(test_distrdf_pyspark AND (NOT dataframe OR NOT pyroot))
+if(test_distrdf_pyspark)
 
-  message(STATUS "Running the tests for distributed RDataFrame with pyspark requires both RDataFrame and PyROOT to be enabled")
-  message(STATUS "    Switching it OFF because either pyroot or dataframe option is disabled")
-  message(STATUS "    pyroot is set to ${pyroot} and dataframe is set to ${dataframe}")
-  set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
+  if(NOT dataframe OR NOT pyroot)
+    message(STATUS "Running the tests for distributed RDataFrame with pyspark requires both RDataFrame and PyROOT to be enabled")
+    message(STATUS "    Switching it OFF because either pyroot or dataframe option is disabled")
+    message(STATUS "    pyroot is set to ${pyroot} and dataframe is set to ${dataframe}")
+    set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
+  elseif(NOT PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7)
+    message(STATUS "Distributed RDataFrame requires Python 3.7 and above.")
+    message(STATUS "    The current Python version is ${PYTHON_VERSION_STRING_Development_Main}.")
+    message(STATUS "    Setting option 'test_distrdf_pyspark' to OFF.")
+    set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because Python version is less than minimum required 3.7" FORCE)
+  endif()
 
 endif()
