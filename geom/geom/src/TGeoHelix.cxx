@@ -11,7 +11,7 @@
 
 
 /** \class TGeoHelix
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
 Class representing a helix curve
 

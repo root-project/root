@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGeoElement
-\ingroup Geometry_classes
+\ingroup Materials_classes
 Base class for chemical elements
 */
 

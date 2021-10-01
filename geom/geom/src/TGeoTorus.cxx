@@ -10,17 +10,11 @@
  *************************************************************************/
 
 /** \class TGeoTorus
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-Torus segment class. A torus has 5 parameters :
-  - R    - axial radius
-  - Rmin - inner radius
-  - Rmax - outer radius
-  - Phi1 - starting phi
-  - Dphi - phi extent
+The torus is defined by its axial radius, its inner and outer radius.
 
-
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("torus", "poza2");
@@ -37,6 +31,20 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
+It may have a `phi `range:
+
+~~~{.cpp}
+TGeoTorus(Double_t R,Double_t Rmin,Double_t Rmax,Double_t Phi1,
+Double_t Dphi);
+~~~
+
+  - `R:` axial radius of the torus
+  - `Rmin:` inner radius
+  - `Rmax:` outer radius
+  - `Phi1:` starting phi angle
+  - `Dphi:` total phi range
+
 */
 
 #include <iostream>
