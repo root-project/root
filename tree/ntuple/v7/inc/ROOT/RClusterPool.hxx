@@ -143,8 +143,10 @@ public:
    static constexpr unsigned int kDefaultPoolSize = 4;
    RClusterPool(RPageSource &pageSource, unsigned int size);
    explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
-   RClusterPool(const RClusterPool &other) = delete;
-   RClusterPool &operator =(const RClusterPool &other) = delete;
+   RClusterPool(const RClusterPool &) = delete;
+   RClusterPool &operator =(const RClusterPool &) = delete;
+   RClusterPool(RClusterPool &&) = delete;
+   RClusterPool &operator =(RClusterPool &&) = delete;
    ~RClusterPool();
 
    unsigned int GetWindowPre() const { return fWindowPre; }

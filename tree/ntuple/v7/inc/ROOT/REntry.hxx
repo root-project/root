@@ -51,8 +51,10 @@ public:
    using Iterator_t = decltype(fValues)::iterator;
 
    REntry() = default;
-   REntry(const REntry& other) = delete;
-   REntry& operator=(const REntry& other) = delete;
+   REntry(const REntry &) = delete;
+   REntry& operator=(const REntry &) = delete;
+   REntry(REntry &&) = delete;
+   REntry& operator=(REntry &&) = delete;
    ~REntry();
 
    /// Adds a value whose storage is managed by the entry

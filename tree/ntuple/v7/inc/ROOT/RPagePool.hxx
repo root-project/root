@@ -60,6 +60,8 @@ public:
    RPagePool() = default;
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
+   RPagePool(RPagePool&&) = delete;
+   RPagePool& operator =(RPagePool&&) = delete;
    ~RPagePool() = default;
 
    /// Adds a new page to the pool together with the function to free its space. Upon registration,

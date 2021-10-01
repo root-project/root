@@ -62,8 +62,7 @@ public:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
-         ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+      fColumns.emplace_back(ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0));
       fPrincipalColumn = fColumns[0].get();
    }
 

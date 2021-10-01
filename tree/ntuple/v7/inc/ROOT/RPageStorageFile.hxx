@@ -85,7 +85,7 @@ public:
    RPageSinkFile& operator=(const RPageSinkFile&) = delete;
    RPageSinkFile(RPageSinkFile&&) = default;
    RPageSinkFile& operator=(RPageSinkFile&&) = default;
-   virtual ~RPageSinkFile();
+   ~RPageSinkFile() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
@@ -117,6 +117,9 @@ class RPageSourceFile : public RPageSource {
 public:
    /// Cannot process pages larger than 1MB
    static constexpr std::size_t kMaxPageSize = 1024 * 1024;
+   /// When reading gaps between pages to coalesce read requests, set a maximum overhead volume
+   /// with respect to the payload
+   static constexpr float kMaxReadOverheadFactor = 0.25;
 
 private:
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
@@ -150,7 +153,7 @@ public:
    RPageSourceFile& operator=(const RPageSourceFile&) = delete;
    RPageSourceFile(RPageSourceFile&&) = default;
    RPageSourceFile& operator=(RPageSourceFile&&) = default;
-   virtual ~RPageSourceFile();
+   ~RPageSourceFile() final;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;

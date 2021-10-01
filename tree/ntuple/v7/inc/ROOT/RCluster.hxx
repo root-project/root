@@ -139,7 +139,7 @@ public:
    ROnDiskPageMapHeap(ROnDiskPageMapHeap &&other) = default;
    ROnDiskPageMapHeap &operator =(const ROnDiskPageMapHeap &other) = delete;
    ROnDiskPageMapHeap &operator =(ROnDiskPageMapHeap &&other) = default;
-   ~ROnDiskPageMapHeap();
+   ~ROnDiskPageMapHeap() final;
 };
 
 // clang-format off

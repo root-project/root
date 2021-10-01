@@ -147,7 +147,11 @@ public:
 
       RSchemaIterator() { fStack.emplace_back(Position()); }
       RSchemaIterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
-      ~RSchemaIterator() {}
+      RSchemaIterator(const RSchemaIterator &) = default;
+      RSchemaIterator &operator =(const RSchemaIterator &) = default;
+      RSchemaIterator(RSchemaIterator &&) = default;
+      RSchemaIterator &operator =(RSchemaIterator &&) = default;
+      ~RSchemaIterator() = default;
       /// Given that the iterator points to a valid field which is not the end iterator, go to the next field
       /// in depth-first search order
       void Advance();
@@ -270,7 +274,7 @@ public:
 /// The container field for an ntuple model, which itself has no physical representation
 class RFieldZero : public Detail::RFieldBase {
 protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const;
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
 
 public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
@@ -278,7 +282,7 @@ public:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue GenerateValue(void*) { return Detail::RFieldValue(); }
+   Detail::RFieldValue GenerateValue(void*) final { return Detail::RFieldValue(); }
    Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
    size_t GetValueSize() const final { return 0; }
 
@@ -318,9 +322,11 @@ protected:
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
-   RClassField(RClassField&& other) = default;
-   RClassField& operator =(RClassField&& other) = default;
-   ~RClassField() = default;
+   RClassField(const RClassField &) = delete;
+   RClassField& operator =(const RClassField &) = delete;
+   RClassField(RClassField &&) = default;
+   RClassField& operator =(RClassField &&) = default;
+   ~RClassField() override = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -351,9 +357,11 @@ protected:
 
 public:
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
-   RRecordField(RRecordField&& other) = default;
-   RRecordField& operator =(RRecordField&& other) = default;
-   ~RRecordField() = default;
+   RRecordField(const RRecordField &) = delete;
+   RRecordField& operator =(const RRecordField &) = delete;
+   RRecordField(RRecordField &&) = default;
+   RRecordField& operator =(RRecordField &&) = default;
+   ~RRecordField() final = default;
 
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
@@ -380,9 +388,11 @@ protected:
 
 public:
    RVectorField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
-   RVectorField(RVectorField&& other) = default;
-   RVectorField& operator =(RVectorField&& other) = default;
-   ~RVectorField() = default;
+   RVectorField(const RVectorField &) = delete;
+   RVectorField& operator =(const RVectorField &) = delete;
+   RVectorField(RVectorField &&) = default;
+   RVectorField& operator =(RVectorField &&) = default;
+   ~RVectorField() override = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -418,9 +428,11 @@ protected:
 
 public:
    RArrayField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength);
-   RArrayField(RArrayField &&other) = default;
-   RArrayField& operator =(RArrayField &&other) = default;
-   ~RArrayField() = default;
+   RArrayField(const RArrayField &) = delete;
+   RArrayField& operator =(const RArrayField &) = delete;
+   RArrayField(RArrayField &&) = default;
+   RArrayField& operator =(RArrayField &&) = default;
+   ~RArrayField() override = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -458,9 +470,11 @@ protected:
 public:
    // TODO(jblomer): use std::span in signature
    RVariantField(std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields);
-   RVariantField(RVariantField &&other) = default;
-   RVariantField& operator =(RVariantField &&other) = default;
-   ~RVariantField() = default;
+   RVariantField(const RVariantField &) = delete;
+   RVariantField& operator =(const RVariantField &) = delete;
+   RVariantField(RVariantField &&) = default;
+   RVariantField& operator =(RVariantField &&) = default;
+   ~RVariantField() override = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -483,9 +497,11 @@ public:
    RField(std::string_view name) : RClassField(name, TypeName()) {
       static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
    }
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField& operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -509,9 +525,11 @@ public:
    RCollectionField(std::string_view name,
                     std::shared_ptr<RCollectionNTupleWriter> collectionNTuple,
                     std::unique_ptr<RNTupleModel> collectionModel);
-   RCollectionField(RCollectionField&& other) = default;
-   RCollectionField& operator =(RCollectionField&& other) = default;
-   ~RCollectionField() = default;
+   RCollectionField(const RCollectionField &) = delete;
+   RCollectionField& operator =(const RCollectionField &) = delete;
+   RCollectionField(RCollectionField &&) = default;
+   RCollectionField& operator =(RCollectionField &&) = default;
+   ~RCollectionField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -545,9 +563,11 @@ public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -602,9 +622,11 @@ public:
    static std::string TypeName() { return "bool"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -650,9 +672,11 @@ public:
    static std::string TypeName() { return "float"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -699,9 +723,11 @@ public:
    static std::string TypeName() { return "double"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -747,9 +773,11 @@ public:
    static std::string TypeName() { return "char"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -795,9 +823,11 @@ public:
    static std::string TypeName() { return "std::int8_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -843,9 +873,11 @@ public:
    static std::string TypeName() { return "std::uint8_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -891,9 +923,11 @@ public:
    static std::string TypeName() { return "std::int16_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -939,9 +973,11 @@ public:
    static std::string TypeName() { return "std::uint16_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -987,9 +1023,11 @@ public:
    static std::string TypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -1035,9 +1073,11 @@ public:
    static std::string TypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -1083,9 +1123,11 @@ public:
    static std::string TypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -1131,9 +1173,11 @@ public:
    static std::string TypeName() { return "std::int64_t"; }
    explicit RField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -1186,9 +1230,11 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
       , fIndex(0), fElemIndex(&fIndex) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -1200,13 +1246,13 @@ public:
       return Detail::RFieldValue(this, static_cast<std::string*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, ""); }
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) {
+   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
       auto str = value.Get<std::string>();
       str->~basic_string(); // TODO(jblomer) C++17 std::destroy_at
       if (!dtorOnly)
          free(str);
    }
-   Detail::RFieldValue CaptureValue(void *where) {
+   Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
@@ -1226,9 +1272,11 @@ public:
    explicit RField(std::string_view name)
       : RArrayField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()), N)
    {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1271,9 +1319,11 @@ private:
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name) : RVariantField(name, BuildItemFields<ItemTs...>()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField&&) = default;
+   RField& operator =(RField&&) = default;
+   ~RField() final = default;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1295,9 +1345,11 @@ public:
    explicit RField(std::string_view name)
       : RVectorField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
    {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1332,9 +1384,11 @@ protected:
 public:
    static std::string TypeName() { return "std::vector<bool>"; }
    explicit RField(std::string_view name);
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
-   ~RField() = default;
+   RField(const RField &) = delete;
+   RField &operator =(const RField &) = delete;
+   RField(RField &&) = default;
+   RField& operator =(RField &&) = default;
+   ~RField() final = default;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1424,8 +1478,7 @@ public:
 
    void GenerateColumnsImpl() final {
       RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
-         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
+      fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0));
    }
    // TODO(jblomer): update together with RVec 2.0
    void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) final {
@@ -1514,8 +1567,7 @@ public:
 
    void GenerateColumnsImpl() final {
       RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
-         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
+      fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0));
    }
    // TODO(jblomer): update together with RVec 2.0
    void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) final {
