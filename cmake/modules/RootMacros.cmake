@@ -515,6 +515,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif(ARG_MODULE)
 
+  # modules.idx deps
+  list(APPEND modules_idx_deps ${library_target_name})
+  set(modules_idx_deps ${modules_idx_deps} CACHE INTERNAL "modules_idx_deps")
+
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   set(runtime_cxxmodule_dependencies )
