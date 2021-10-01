@@ -10,14 +10,16 @@
  *************************************************************************/
 
 /** \class TGeoEltu
-\ingroup Geometry_classes
+\ingroup Tubes
 
-Elliptical tube  class. An elliptical tube has 3 parameters
-  - A - semi-axis of the ellipse along x
-  - B - semi-axis of the ellipse along y
-  - dz - half length in z
+An elliptical tube is defined by the two semi-axes `A` and `B`. It ranges
+from `-dZ` to `+dZ` as all other tubes:
 
-Begin_Macro(source)
+~~~ {.cpp}
+TGeoEltu(Double_t a,Double_t b,Double_t dz);
+~~~
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("eltu", "poza6");

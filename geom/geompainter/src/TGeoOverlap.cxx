@@ -26,7 +26,7 @@
 ClassImp(TGeoOverlap);
 
 /** \class TGeoOverlap
-\ingroup Geometry_classes
+\ingroup Geometry_painter
 
 Base class describing geometry overlaps. Overlaps apply
 to the nodes contained inside a volume. These should not overlap to

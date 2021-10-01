@@ -10,13 +10,20 @@
  *************************************************************************/
 
 /** \class TGeoHalfSpace
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-A half-space defined by:
-  - p[3] - an arbitrary point on the plane
-  - n[3] - normal at the plane in point P
-A half-space is not really a shape, because it is infinite. The normal
-points "outside" the half-space
+A half space is limited just by a plane, defined by a point and the
+normal direction. The point lies on the plane and the normal vector
+points outside the half space. The half space is the only shape
+which is infinite and can be used only in Boolean operations that
+result in non-infinite composite shapes (see also TGeoCompositeShape).
+A half space has to be defined using the constructor:
+
+~~~{.cpp}
+TGeoHalfSpace (const char *name, Double_t *point[3],
+Double_t *norm[3]);
+~~~
+
 */
 
 #include <iostream>

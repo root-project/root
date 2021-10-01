@@ -11,17 +11,31 @@
  *************************************************************************/
 
 /** \class TGeoPara
-\ingroup Geometry_classes
+\ingroup Shapes_classes
+\brief Parallelepiped class.
 
-Parallelepiped class. It has 6 parameters :
+A parallelepiped is a shape having 3 pairs of parallel faces out of
+which one is parallel with the XY plane (Z faces). All faces are
+parallelograms in the general case. The Z faces have 2 edges parallel
+with the X-axis.
 
-  - dx, dy, dz - half lengths in X, Y, Z
-  - alpha - angle w.r.t the Y axis from center of low Y edge to
-    center of high Y edge [deg]
-  - theta, phi - polar and azimuthal angles of the segment between
-    low and high Z surfaces [deg]
+The shape has the center in the origin and it is defined by:
 
-Begin_Macro(source)
+  - `dX, dY, dZ:` half-lengths of the projections of the edges on X, Y
+    and Z. The lower Z face is positioned at `-dZ`, while the upper at `+dZ`.
+  - `alpha:` angle between the segment defined by the centers of the
+    X-parallel edges and Y axis `[-90,90]` in degrees
+  -   `theta:` theta angle of the segment defined by the centers of the Z faces;
+  - `phi:` phi angle of the same segment
+
+~~~ {.cpp}
+TGeoPara(dX,dY,dZ,alpha,theta,phi);
+~~~
+
+A box is a particular parallelepiped having the parameters:
+`(dX,dY,dZ,0.,0.,0.)`.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("para", "poza1");
@@ -39,6 +53,7 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
 */
 
 #include <iostream>
