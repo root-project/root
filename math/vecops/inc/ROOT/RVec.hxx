@@ -1263,9 +1263,18 @@ Its storage is contiguous in memory and its interface is designed such to resemb
 of the stl vector. In addition the interface features methods and external functions to ease
 the manipulation and analysis of the data in the RVec.
 
-\note ROOT::VecOps::RVec can also be spelled simply ROOT::RVec, and shorthand aliases such as ROOT::RVecI, ROOT::RVecD
-or ROOT::RVecF are available as template instantiations of RVec of fundamental types (int, double, float respectively
-for these examples.
+\note ROOT::VecOps::RVec can also be spelled simply ROOT::RVec. Shorthand aliases such as ROOT::RVecI or ROOT::RVecD
+are also available as template instantiations of RVec of fundamental types. The full list of available aliases:
+- RVecB (`bool`)
+- RVecC (`char`)
+- RVecD (`double`)
+- RVecF (`float`)
+- RVecI (`int`)
+- RVecL (`long`)
+- RVecLL (`long long`)
+- RVecU (`unsigned`)
+- RVecUL (`unsigned long`)
+- RVecULL (`unsigned long long`)
 
 \note RVec does not attempt to be exception safe. Exceptions thrown by element constructors during insertions, swaps or
 other operations will be propagated potentially leaving the RVec object in an invalid state.
