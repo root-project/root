@@ -94,6 +94,7 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
 
 PyMethodBase::~PyMethodBase()
 {
+   // should we delete here fLocalNS ?
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -149,7 +150,7 @@ void PyMethodBase::PyInitialize()
       Log << kFATAL << "Can't init global namespace" << Endl;
       Log << Endl;
    }
-   // no need to increase reference for fGlobalNS, since it is linked to fMain?
+   Py_INCREF(fGlobalNS);
 
    #if PY_MAJOR_VERSION < 3
    //preparing objects for eval
@@ -213,6 +214,7 @@ void PyMethodBase::PyFinalize()
    if (fPickleDumps) Py_DECREF(fPickleDumps);
    if (fPickleLoads) Py_DECREF(fPickleLoads);
    if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
+   if (fGlobalNS) Py_DECREF(fGlobalNS);
    Py_Finalize();
 }
 
