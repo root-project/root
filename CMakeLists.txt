@@ -515,7 +515,7 @@ if(runtime_cxxmodules)
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts ${modules_idx_deps})
   add_custom_target(modules_idx ALL DEPENDS ${CMAKE_INSTALL_LIBDIR}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
-  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_INSTALL_LIBDIR}/modules.timestamp")
+  set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_LIBDIR}/modules.timestamp")
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
