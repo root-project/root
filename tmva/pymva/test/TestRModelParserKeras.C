@@ -6,6 +6,7 @@
 #include <numpy/arrayobject.h>
 
 #include "gtest/gtest.h"
+#include <cmath>
 
 constexpr float DEFAULT_TOLERANCE = 1e-6f;
 
