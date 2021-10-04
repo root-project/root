@@ -53,7 +53,7 @@ replaces it with a more meaningful name. In addition, TGeoPNEntry objects are
 faster to search by name and they may optionally store an additional user
 matrix.
 
-For more details please read the misalignment section in the Users Guide.
+For more details please read the [misalignment section](\ref GP05).
 */
 
 #include "TGeoManager.h"
