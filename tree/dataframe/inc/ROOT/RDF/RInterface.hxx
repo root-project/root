@@ -490,16 +490,25 @@ public:
    /// \param[in] expression A C++ callable that computes the new value of the defined column.
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
-   /// The signature of the callable passed as second argument should be `T(unsigned int slot, ROOT::RDF::RSampleInfo &id)`
-   /// where `T` is the type of the defined column, `slot` is a number in the range [0, nThreads) that is different
-   /// for each processing thread that can simplify the definition of thread-safe callables, and `id` is an instance
-   /// of a ROOT::RDF::RSampleInfo object which contains information about the sample which is being processed (see the
-   /// relevant docs for more information).
+   /// The signature of the callable passed as second argument should be `T(unsigned int slot, const ROOT::RDF::RSampleInfo &id)`
+   /// where:
+   /// - `T` is the type of the defined column
+   /// - `slot` is a number in the range [0, nThreads) that is different for each processing thread. This can simplify
+   ///   the definition of thread-safe callables if you are interested in using parallel capabilities of RDataFrame.
+   /// - `id` is an instance of a ROOT::RDF::RSampleInfo object which contains information about the sample which is
+   ///   being processed (see the class docs for more information).
    ///
    /// DefinePerSample() is useful to e.g. define a quantity that depends on which TTree in which TFile is being
    /// processed or to inject a callback into the event loop that is only called when the processing of a new sample
    /// starts rather than at every entry.
    ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame df{"mytree", {"sample1.root","sample2.root"}};
+   /// df.DefinePerSample("weightbysample",
+   ///                    [](unsigned int slot, const ROOT::RDF::RSampleInfo &id)
+   ///                    { return id.Contains("sample1") ? 1.0f : 2.0f; });
+   /// ~~~
    // TODO we could SFINAE on F's signature to provide friendlier compilation errors in case of signature mismatch
    template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, F expression)
@@ -540,8 +549,28 @@ public:
    /// The expression is just-in-time compiled and used to produce the column entries.
    /// It must be valid C++ syntax and the usage of the special variable names `rdfslot_` and `rdfsampleinfo_` is
    /// permitted, where these variables will take the same values as the `slot` and `id` parameters described at the
-   /// other DefinePerSample overload. See the documentation of that overload for more information.
+   /// DefinePerSample(std::string_view name, F expression) overload. See the documentation of that overload for more information.
    ///
+   /// ### Example usage:
+   /// ~~~{.py}
+   /// df = ROOT.RDataFrame("mytree", ["sample1.root","sample2.root"])
+   /// df.DefinePerSample("weightbysample", "rdfsampleinfo_.Contains('sample1') ? 1.0f : 2.0f")
+   /// ~~~
+   ///
+   /// \note
+   /// If you have declared some C++ function to the interpreter, the correct syntax to call that function with this
+   /// overload of DefinePerSample is by calling it explicitly with the special names `rdfslot_` and `rdfsampleinfo_` as
+   /// input parameters. This is for example the correct way to call this overload when working in PyROOT:
+   /// ~~~{.py}
+   /// ROOT.gInterpreter.Declare(
+   /// """
+   /// float weights(unsigned int slot, const ROOT::RDF::RSampleInfo &id){
+   ///    return id.Contains("sample1") ? 1.0f : 2.0f;
+   /// }
+   /// """)
+   /// df = ROOT.RDataFrame("mytree", ["sample1.root","sample2.root"])
+   /// df.DefinePerSample("weightsbysample", "weights(rdfslot_, rdfsampleinfo_)")
+   /// ~~~
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, std::string_view expression)
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
