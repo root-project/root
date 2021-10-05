@@ -13,7 +13,7 @@
  *   thread_local or
  *   Pthread-Keys
  * depending on the (configure-set) CPP-variables R__HAS___THREAD,
- * R__HAS_DECLSPEC_THREAD, R__HAS_THREAD_LOCAL or R__HAS_PTHREAD.
+ * R__HAS_DECLSPEC_THREAD or R__HAS_PTHREAD.
  *
  * Use the macros TTHREAD_TLS_DECLARE, TTHREAD_TLS_INIT, and the
  * getters and setters TTHREAD_TLS_GET and TTHREAD_TLS_GET
@@ -36,8 +36,7 @@
  *       func (a, TTHREAD_TLS_SET(int, my_var, 5));
  *    as we do not use the gcc-extension of returning macro-values.
  *
- * C++11 requires the implementation of the thread_local storage but
- * a few platforms do not yet implement it.
+ * C++11 requires the implementation of the thread_local storage.
  *
  *  For simple type use:
  *      TTHREAD_TLS(int) varname;
@@ -82,34 +81,6 @@
 #  define R__HAS_DECLSPEC_THREAD
 #endif
 
-#if __cplusplus >= 201103L
-
-// Clang 3.4 also support SD-6 (feature test macros __cpp_*), but no thread local macro
-#  if defined(__clang__)
-
-#    if __has_feature(cxx_thread_local)
-     // thread_local was added in Clang 3.3
-     // Still requires libstdc++ from GCC 4.8
-     // For that __GLIBCXX__ isn't good enough
-     // Also the MacOS build of clang does *not* support thread local yet.
-#      define R__HAS_THREAD_LOCAL
-#    else
-#      define R__HAS___THREAD
-#    endif
-
-#  elif defined(__INTEL_COMPILER)
-#    define R__HAS__THREAD
-
-#  elif defined(__GNUG__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 8)
-    // The C++11 thread_local keyword is supported in GCC only since 4.8
-#    define R__HAS___THREAD
-#  else
-#    define R__HAS_THREAD_LOCAL
-#  endif
-
-#endif
-
-
 #ifdef __cplusplus
 
 // Note that the order is relevant, more than one of the flag might be
@@ -121,7 +92,7 @@
 #  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size]
 #  define TTHREAD_TLS_PTR(name) &name
 
-#elif defined(R__HAS_THREAD_LOCAL)
+#else
 
 #  define TTHREAD_TLS(type) thread_local type
 #  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size]
@@ -130,124 +101,6 @@
 #  define TTHREAD_TLS_DECL(type, name) thread_local type name
 #  define TTHREAD_TLS_DECL_ARG(type, name, arg) thread_local type name(arg)
 #  define TTHREAD_TLS_DECL_ARG2(type, name, arg1, arg2) thread_local type name(arg1,arg2)
-
-#elif defined(R__HAS___THREAD)
-
-#  define TTHREAD_TLS(type)  static __thread type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static __thread type name[size]
-#  define TTHREAD_TLS_PTR(name) &name
-
-#elif defined(R__HAS_DECLSPEC_THREAD)
-
-#  define TTHREAD_TLS(type) static __declspec(thread) type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static __declspec(thread) type name[size]
-#  define TTHREAD_TLS_PTR(name) &name
-
-#elif defined(R__HAS_PTHREAD)
-
-#include <assert.h>
-#include <pthread.h>
-
-template <typename type> class TThreadTLSWrapper
-{
-private:
-   pthread_key_t  fKey;
-   type           fInitValue;
-
-   static void key_delete(void *arg) {
-      assert (NULL != arg);
-      delete (type*)(arg);
-   }
-
-public:
-
-   TThreadTLSWrapper() : fInitValue() {
-
-      pthread_key_create(&(fKey), key_delete);
-   }
-
-   TThreadTLSWrapper(const type &value) : fInitValue(value) {
-
-      pthread_key_create(&(fKey), key_delete);
-   }
-
-   ~TThreadTLSWrapper() {
-      pthread_key_delete(fKey);
-   }
-
-   type& get() {
-      void *ptr = pthread_getspecific(fKey);
-      if (!ptr) {
-         ptr = new type(fInitValue);
-         assert (NULL != ptr);
-         (void) pthread_setspecific(fKey, ptr);
-      }
-      return *(type*)ptr;
-   }
-
-   type& operator=(const type &in) {
-      type &ptr = get();
-      ptr = in;
-      return ptr;
-   }
-
-   operator type&() {
-      return get();
-   }
-
-};
-
-template <typename type,int size> class TThreadTLSArrayWrapper
-{
-private:
-   pthread_key_t  fKey;
-
-   static void key_delete(void *arg) {
-      assert (NULL != arg);
-      delete [] (type*)(arg);
-   }
-
-public:
-
-   TThreadTLSArrayWrapper() {
-
-      pthread_key_create(&(fKey), key_delete);
-   }
-
-   ~TThreadTLSArrayWrapper() {
-      pthread_key_delete(fKey);
-   }
-
-   type* get() {
-      void *ptr = pthread_getspecific(fKey);
-      if (!ptr) {
-         ptr = new type[size];
-         assert (NULL != ptr);
-         (void) pthread_setspecific(fKey, ptr);
-      }
-      return  (type*)ptr;
-   }
-
-//   type& operator=(const type &in) {
-//      type &ptr = get();
-//      ptr = in;
-//      return ptr;
-//   }
-//
-   operator type*() {
-      return get();
-   }
-
-};
-
-#  define TTHREAD_TLS(type) static TThreadTLSWrapper<type>
-#  define TTHREAD_TLS_ARRAY(type,size,name) static TThreadTLSArrayWrapper<type,size> name;
-#  define TTHREAD_TLS_PTR(name) &(name.get())
-#  define TTHREAD_TLS_OBJ(index,type,name) type &name( TTHREAD_TLS_INIT<index,type>() )
-
-#else
-
-#error "No Thread Local Storage (TLS) technology for this platform specified."
 
 #endif
 
@@ -315,15 +168,11 @@ T &TTHREAD_TLS_INIT(ArgType arg) {
 
 #else // __cplusplus
 
-#if defined(R__HAS_THREAD_LOCAL)
+// TODO: Evaluate using thread_local / _Thread_local from C11 instead of
+// platform-specific solutions such as __thread, __declspec(thread) or the
+// pthreads API functions.
 
-#  define TTHREAD_TLS_DECLARE(type,name)
-#  define TTHREAD_TLS_INIT(type,name,value) thread_local type name = (value)
-#  define TTHREAD_TLS_SET(type,name,value)  name = (value)
-#  define TTHREAD_TLS_GET(type,name)        (name)
-#  define TTHREAD_TLS_FREE(name)
-
-#elif defined(R__HAS___THREAD)
+#if defined(R__HAS___THREAD)
 
 #  define TTHREAD_TLS_DECLARE(type,name)
 #  define TTHREAD_TLS_INIT(type,name,value) static __thread type name = (value)
