@@ -113,7 +113,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, 
          pAbsReal->getObservables(_data->get(), observablesForNode);
          _nodeInfos[pAbsReal].computeInScalarMode = observablesForNode.empty() || !pAbsReal->isDerived();
 
-         auto clients = pAbsReal->valueClients();
+         auto clients = pAbsReal->clients();
          for (auto *client : clients) {
             if (list.find(*client)) {
                auto pClient = static_cast<const RooAbsReal *>(client);
@@ -342,7 +342,7 @@ void RooFitDriver::assignToGPU(const RooAbsReal *node)
 void RooFitDriver::updateMyClients(const RooAbsReal *node)
 {
    NodeInfo &info = _nodeInfos.at(node);
-   for (auto *client : node->valueClients()) {
+   for (auto *client : node->clients()) {
       auto pClient = static_cast<const RooAbsReal *>(client);
       if (_nodeInfos.count(pClient) == 0)
          continue; // client not part of the computation graph
@@ -371,12 +371,12 @@ void RooFitDriver::updateMyServers(const RooAbsReal *node)
       if (info.computeInScalarMode)
          continue;
       if (info.copyAfterEvaluation) {
-         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA[pServer].data()));
-         _pinnedBuffers.push(const_cast<double *>(_dataMapCPU[pServer].data()));
+         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(pServer).data()));
+         _pinnedBuffers.push(const_cast<double *>(_dataMapCPU.at(pServer).data()));
       } else if (info.computeInGPU)
-         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA[pServer].data()));
+         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(pServer).data()));
       else
-         _cpuBuffers.push(const_cast<double *>(_dataMapCPU[pServer].data()));
+         _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(pServer).data()));
    }
 }
 
@@ -514,7 +514,7 @@ void RooFitDriver::markGPUNodes()
 
    for (auto &item : _nodeInfos)
       if (!item.second.computeInScalarMode) // scalar nodes don't need copying
-         for (auto *client : item.first->valueClients()) {
+         for (auto *client : item.first->clients()) {
             auto pClient = static_cast<const RooAbsReal *>(client);
             if (_nodeInfos.count(pClient) == 0)
                continue;
