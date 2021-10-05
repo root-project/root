@@ -3827,8 +3827,8 @@ void TBranchElement::Print(Option_t* option) const
    Int_t nbranches = fBranches.GetEntriesFast();
    if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
       if (strlen(option)==strlen("debugAddress")) {
-         Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s\n",
-                "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject");
+         Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s %s\n",
+                "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject", "fOnfileObject");
       }
       if (strlen(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
       else Printf("%-24s ", GetName());
@@ -3837,11 +3837,11 @@ void TBranchElement::Print(Option_t* option) const
       Int_t ind = parent ? parent->GetListOfBranches()->IndexOf(this) : -1;
       TVirtualStreamerInfo *info = ((TBranchElement*)this)->GetInfoImp();
 
-      Printf("%-16s %2d %4d %-16s %-16s %8x %8x %s\n",
-             info ? info->GetName() : "StreamerInfo unvailable", GetID(), GetType(),
+      Printf("%-16s %2d %4d %-16s %-16s %8x %8x %p %p%s\n",
+             info ? info->GetName() : "StreamerInfo unavailable", GetID(), GetType(),
              GetClassName(), GetParentName(),
              (fBranchOffset&&parent && ind>=0) ? parent->fBranchOffset[ind] : 0,
-             GetOffset(), GetObject());
+             GetOffset(), GetObject(), fOnfileObject, TestBit(kOwnOnfileObj) ? " (owned)" : "");
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
          subbranch->Print("debugAddressSub");
