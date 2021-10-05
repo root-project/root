@@ -19,7 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     src/TNetXNGFileStager.cxx
     src/TNetXNGSystem.cxx
   LIBRARIES
-    ${XROOTD_LIBRARIES}
+    Xrootd::Xrootd
   DEPENDENCIES
     Net
     RIO
