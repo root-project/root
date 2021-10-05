@@ -2047,7 +2047,6 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
          auto search = be ? be->GetListOfBranches() : &branches;
          TVirtualArray *onfileObject = nullptr;
 
-         // Note: This is duplicated, please move.
          TString subprefix;
          if (prefix.Length() && nextel->IsA() == TStreamerBase::Class()) {
             // We skip the name of the base class if there is already a prefix.
@@ -2060,10 +2059,8 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
          for (Int_t bi = 0; bi < nbranches; ++bi) {
             TBranchElement* subbe = (TBranchElement*)search->At(bi);
             if (elementClass == subbe->GetInfo()->GetClass() // Use GetInfo to provoke its creation.
-               && subbe->GetOnfileObject())
-            if (elementClass == subbe->GetInfo()->GetClass() // Use GetInfo to provoke its creation.
                && subbe->GetOnfileObject()
-               && strncmp(subbe->GetName(), subprefix.Data(), subprefix.Length()) == 0)
+               && strncmp(subbe->GetFullName(), subprefix.Data(), subprefix.Length()) == 0)
             {
                nextinfo = subbe->GetInfo();
                onfileObject = subbe->GetOnfileObject();
@@ -2248,25 +2245,37 @@ void TBranchElement::InitInfo()
             // First find the first branch of corresponding to the same class as 'this'
             // branch
             Int_t index = branches->IndexOf(this);
-            Int_t firstindex = -1;
-            TLeafElement *leaf = dynamic_cast<TLeafElement*>(this->GetListOfLeaves()->At(0));
-            auto currentid = leaf ? leaf->GetID() : GetID();
-            Int_t firstid = currentid;
+            Int_t firstindex = 0;
+            Int_t lastindex = nbranches - 1;
             if (index >= 0) {
-               firstindex = index;
-               for(Int_t i = index - 1; i >= 0; --i) {
-                  TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+               TString fullname( GetFullName() );
+               Ssiz_t lastdot = fullname.Last('.');
+               if (lastdot == TString::kNPOS) {
+                  // No prefix or index, thus this is a first level branch
+                  TBranchElement* subbranch = (TBranchElement*)branches->At(0);
                   if (!subbranch->fInfo)
                      subbranch->SetupInfo();
-                  TLeafElement *subleaf = dynamic_cast<TLeafElement*>(subbranch->GetListOfLeaves()->At(0));
-                  auto branchid = subleaf ? subleaf->GetID() : subbranch->GetID();
-                  if (subbranch->fInfo == info && branchid >= currentid) {
-                     // We moved to another data member (of the enclosing class) of the same
-                     // type
-                     break;
+               } else {
+                  TString &thisprefix = fullname.Remove(lastdot + 1);  // Mod fullname and 'rename' the variable.
+                  for(Int_t i = index - 1; i >= 0; --i) {
+                     TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+                     TString subbranch_name(subbranch->GetFullName());
+                     if ( ! subbranch_name.BeginsWith(thisprefix)) {
+                        // We moved to another data member (of the enclosing class)
+                        firstindex = i + 1;
+                        break;
+                     }
+                     if (!subbranch->fInfo)
+                        subbranch->SetupInfo();
                   }
-                  firstindex = i;
-                  firstid = branchid;
+                  for(Int_t i = index; i < nbranches; ++i) {
+                     TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+                     TString subbranch_name(subbranch->GetFullName());
+                     if ( ! subbranch_name.BeginsWith(thisprefix)) {
+                        lastindex = i - 1;
+                        break;
+                     }
+                  }
                }
             }
             for (Int_t i = firstindex; i < nbranches; ++i) {
@@ -2442,7 +2451,7 @@ void TBranchElement::InitInfo()
                localInfo = FindOnfileInfo(fClonesClass, fBranches);
             }
 
-            TString prefix(GetName());
+            TString prefix(GetFullName());
             if (fType == 2 && fID >= 0) {
                auto start = prefix.Length();
                if (prefix[start - 1] == '.')
