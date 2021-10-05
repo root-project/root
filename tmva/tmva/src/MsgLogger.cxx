@@ -57,15 +57,9 @@ const UInt_t                           TMVA::MsgLogger::fgMaxSourceSize = 25;
 
 const std::string                      TMVA::MsgLogger::fgPrefix = "";
 const std::string                      TMVA::MsgLogger::fgSuffix = ": ";
-#if __cplusplus > 199711L
 std::atomic<Bool_t>                                       TMVA::MsgLogger::fgInhibitOutput{kFALSE};
 std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgTypeMap{0};
 std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgColorMap{0};
-#else
-Bool_t                                       TMVA::MsgLogger::fgInhibitOutput = kFALSE;
-const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgTypeMap  = 0;
-const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgColorMap = 0;
-#endif
 static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnTypeMap;
 static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
 
