@@ -3525,53 +3525,6 @@ TRealData* TClass::GetRealData(const char* name) const
       return rd;
    }
 
-   // Strip the first component, it may be the name of
-   // the branch (old TBranchElement code), and try again.
-   std::string firstDotName(givenName.substr(firstDot + 1));
-
-   // New attempt starting after the first "." if any,
-   // this allows for the case that the first component
-   // may have been a branch name (for TBranchElement).
-   rd = (TRealData*) fRealData->FindObject(firstDotName.c_str());
-   if (rd) {
-      return rd;
-   }
-
-   // New attempt starting after the first "." if any,
-   // but this time try ignoring the array dimensions.
-   // Again, we are allowing for the case that the first
-   // component may have been a branch name (for TBranchElement).
-   std::string::size_type firstDotBracket = firstDotName.find_first_of("[");
-   if (firstDotBracket != std::string::npos) {
-      // -- We are looking for an array data member.
-      std::string nameNoDim(firstDotName.substr(0, firstDotBracket));
-      TObjLink* lnk = fRealData->FirstLink();
-      while (lnk) {
-         TObject* obj = lnk->GetObject();
-         std::string objName(obj->GetName());
-         std::string::size_type pos = objName.find_first_of("[");
-         // Only match arrays to arrays for now.
-         if (pos != std::string::npos) {
-            objName.erase(pos);
-            if (objName == nameNoDim) {
-               return static_cast<TRealData*>(obj);
-            }
-         }
-         lnk = lnk->Next();
-      }
-   }
-
-   // New attempt starting after the first "." if any,
-   // but this time check for a pointer type.  Again, we
-   // are allowing for the case that the first component
-   // may have been a branch name (for TBranchElement).
-   ptrname.str("");
-   ptrname << "*" << firstDotName;
-   rd = (TRealData*) fRealData->FindObject(ptrname.str().c_str());
-   if (rd) {
-      return rd;
-   }
-
    // Last attempt in case a member has been changed from
    // a static array to a pointer, for example the member
    // was arr[20] and is now *arr.
@@ -3583,13 +3536,20 @@ TRealData* TClass::GetRealData(const char* name) const
    // FIXME: What about checking after the first dot as well?
    //
    std::string::size_type bracket = starname.str().find_first_of("[");
-   if (bracket == std::string::npos) {
-      return nullptr;
+   if (bracket != std::string::npos) {
+      rd = (TRealData*) fRealData->FindObject(starname.str().substr(0, bracket).c_str());
+      if (rd) {
+         return rd;
+      }
    }
-   rd = (TRealData*) fRealData->FindObject(starname.str().substr(0, bracket).c_str());
-   if (rd) {
+
+   // Strip the first component, it may be the name of
+   // the branch (old TBranchElement code), and try again.
+   std::string firstDotName(givenName.substr(firstDot + 1));
+
+   rd = GetRealData(firstDotName.c_str());
+   if (rd)
       return rd;
-   }
 
    // Not found;
    return nullptr;
