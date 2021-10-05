@@ -30,9 +30,7 @@
 #include<string>
 #include<vector>
 //support for std c++11 classes
-// #if __cplusplus > 199711L
 #include<array>
-// #endif
 
 //pragma to disable warnings on Rcpp which have
 //so many noise compiling

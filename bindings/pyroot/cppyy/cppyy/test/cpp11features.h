@@ -1,5 +1,3 @@
-#if __cplusplus >= 201103L
-
 #include <functional>
 #include <memory>
 #include <vector>
@@ -114,5 +112,3 @@ namespace std {
         size_t operator()(const StructWithHash&) const { return 17; }
     };
 } // namespace std
-
-#endif // c++11 and later
