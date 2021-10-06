@@ -248,7 +248,7 @@ TEST(RPageSinkBuf, Basics)
          std::make_unique<RPageSinkFile>("unbuf", fileGuard.GetPath(), RNTupleWriteOptions()
       ));
 
-      for (int i = 0; i < 20000; i++) {
+      for (int i = 0; i < 40000; i++) {
          *bufModel.fFloatField = static_cast<float>(i);
          *unbufModel.fFloatField = static_cast<float>(i);
          CustomStruct klass;
@@ -262,7 +262,7 @@ TEST(RPageSinkBuf, Basics)
          ntupleBuf->Fill();
          ntuple->Fill();
 
-         if (i && i % 15000 == 0) {
+         if (i && i % 30000 == 0) {
             ntupleBuf->CommitCluster();
             ntuple->CommitCluster();
             auto *parallel_zip = ntupleBuf->GetMetrics().GetCounter(
