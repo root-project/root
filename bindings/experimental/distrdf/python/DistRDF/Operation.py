@@ -62,6 +62,7 @@ class Operation(object):
 
         operations_dict = {
             "Define": Operation.TRANSFORMATION,
+            "DefinePerSample": Operation.TRANSFORMATION,
             "Filter": Operation.TRANSFORMATION,
             "Range": Operation.TRANSFORMATION,
             "Aggregate": Operation.ACTION,
