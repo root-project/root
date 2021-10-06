@@ -43,6 +43,7 @@ class BaseBackend(ABC):
         "AsNumpy",
         "Count",
         "Define",
+        "DefinePerSample",
         "Fill",
         "Filter",
         "Graph",
