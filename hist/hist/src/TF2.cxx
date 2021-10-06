@@ -26,8 +26,15 @@ ClassImp(TF2);
 
 /** \class TF2
     \ingroup Functions
-A 2-Dim function with parameters.
+    \brief A 2-Dim function with parameters.
 
+The following types of functions can be created:
+
+1.  [Expression using variables x and y](\ref TF2a)
+2.  [Expression using a user defined function](\ref TF2b)
+3.  [Lambda Expression with x and y variables and parameters](\ref TF2c)
+
+\anchor TF2a
 ### Expression using variables x and y
 
 Begin_Macro (source)
@@ -37,6 +44,7 @@ Begin_Macro (source)
 }
 End_Macro
 
+\anchor TF2b
 ### Expression using a user defined function
 
 ~~~~{.cpp}
@@ -53,6 +61,17 @@ void fplot()
    TF2 *f = new TF2("f",func,-1,1,-1,1);
    f->Draw("surf1");
 }
+~~~~
+
+\anchor TF2c
+### Lambda Expression with x and y variables and parameters
+
+~~~~{.cpp}
+root [0] TF2 f2("f2", [](double* x, double*p) { return x[0] + x[1] * p[0]; }, 0., 1., 0., 1., 1 /*npar*/)
+(TF2 &) Name: f2 Title: f2
+root [1] f2.SetParameter(0, 1.)
+root [2] f2.Eval(1., 2.)
+(double) 3.0000000
 ~~~~
 
 See TF1 class for the list of functions formats
