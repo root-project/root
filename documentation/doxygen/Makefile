@@ -53,8 +53,11 @@ doxygen: filter pyzdoc
 	./makeinput.sh
 	doxygen
 	./listlibs.sh
-	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt listofclass.sh
+	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
+	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
+	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
+	rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
 	rm -f $(DOXYGEN_NOTEBOOK_PATH)/*.root
 
 clean:
-	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html dataset*
+	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY)
