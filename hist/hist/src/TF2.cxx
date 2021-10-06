@@ -67,7 +67,7 @@ void fplot()
 ### Lambda Expression with x and y variables and parameters
 
 ~~~~{.cpp}
-root [0] TF2 f2("f2", [](double* x, double*p) { return x[0] + x[1] * p[0]; }, 0., 1., 0., 1., 1 /*npar*/)
+root [0] TF2 f2("f2", [](double* x, double*p) { return x[0] + x[1] * p[0]; }, 0., 1., 0., 1., 1)
 (TF2 &) Name: f2 Title: f2
 root [1] f2.SetParameter(0, 1.)
 root [2] f2.Eval(1., 2.)
