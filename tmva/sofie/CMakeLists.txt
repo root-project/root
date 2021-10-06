@@ -15,6 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
    TMVA/RModel.hxx
+   TMVA/RModelProfiler.hxx
    TMVA/ROperator.hxx
    TMVA/ROperator_Gemm.hxx
    TMVA/ROperator_Relu.hxx
@@ -25,6 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/SOFIE_common.hxx
   SOURCES
     src/RModel.cxx
+    src/RModelProfiler.cxx
     src/SOFIE_common.cxx
   DEPENDENCIES
     TMVA

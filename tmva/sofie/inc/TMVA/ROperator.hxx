@@ -30,8 +30,8 @@ public:
    //irtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
-
-
+   // Operator's name generally inherited by the original parsed model.
+   std::string name = "UnnamedOperator";
 
 };
 
