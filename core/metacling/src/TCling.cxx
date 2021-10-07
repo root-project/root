@@ -3394,6 +3394,15 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/libAudioToolboxUtility")
        || strstr(filename, "/usr/lib/liboah")
        || strstr(filename, "/usr/lib/libRosetta")
+       || strstr(filename, "/usr/lib/libCoreEntitlements")
+       // These are candidates for suppression, too:
+       //   -lfakelink -lapple_nghttp2 -lnetwork -lsqlite3 -lenergytrace -lCoreEntitlements
+       //   -lMobileGestalt -lcoretls -lcoretls_cfhelpers -lxar.1 -lcompression -larchive.2
+       //   -lxml2.2 -lpcap.A -ldns_services -llzma.5 -lbz2.1.0 -liconv.2 -lcharset.1
+       //   -lCheckFix -lmecabra -lmecab -lgermantok -lThaiTokenizer -lChineseTokenizer
+       //   -lcmph -lutil -lapp_launch_measurement -lxslt.1 -lspindump -late -lexpat.1
+       //   -lAudioStatistics -lSMC -lperfcheck -lmis -lIOReport -lheimdal-asn1
+
        // "cannot link directly with dylib/framework, your binary is not an allowed client of
        // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
        // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
