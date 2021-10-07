@@ -35,7 +35,7 @@
  - [SpectrumBck.ps.gz](https://root.cern.ch/download/SpectrumBck.ps.gz)
 
  See also the
- [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
+ [online documentation](https://root.cern/root/htmldoc/guides/spectrum/Spectrum.html) and
  [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
 */
 
