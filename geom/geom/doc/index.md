@@ -1902,9 +1902,9 @@ problems. These have to be properly handled by the stepping code.
 Supposing we have found out that a particle will cross a boundary during
 the next step, it is sometimes useful to compute the normal to the
 crossed surface. The modeller uses the following convention: we define
-as `normal` ($\vec{n}$) the unit vector perpendicular
+as `normal` (\f$\vec{n}\f$) the unit vector perpendicular
 to a surface in the `next crossing point`, having the orientation such
-that: $\vec{n}.\vec{d}>0$. Here $\vec{d}$
+that: \f$\vec{n}.\vec{d}>0\f$. Here \f$\vec{d}\f$
 represents the current direction. The next crossing point represents the
 point where a ray shot from the current point along the current
 direction crosses the surface.
