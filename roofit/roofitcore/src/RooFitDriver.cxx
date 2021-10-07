@@ -51,7 +51,7 @@ there's also some cuda-related initialization.
 \param batchMode The computation mode of the RooBatchCompute library, accepted values are `RooBatchCompute::Cpu` and
 `RooBatchCompute::Cuda`.
 **/
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooNLLVarNew &topNode, RooBatchCompute::BatchMode batchMode)
+RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooBatchCompute::BatchMode batchMode)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(data, true))},
      _batchMode{batchMode}, _topNode{topNode}, _data{&data}, _nEvents{static_cast<size_t>(data.numEntries())}
@@ -199,6 +199,17 @@ double *RooFitDriver::getAvailablePinnedBuffer()
                        [=]() { return RooBatchCompute::dispatchCUDA->cudaMallocHost(_nEvents * sizeof(double)); });
 }
 
+std::unique_ptr<double[]> RooFitDriver::getValues()
+{
+   getVal();
+   if (_nodeInfos.at(&_topNode).computeInGPU) {
+      double *buffer = new double[_nEvents];
+      RooBatchCompute::dispatchCUDA->memcpyToCPU(buffer, _dataMapCPU.at(&_topNode).data(), _nEvents * sizeof(double));
+      _dataMapCPU[&_topNode] = RooSpan<const double>(buffer, _nEvents);
+   }
+   return std::unique_ptr<double[]>(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
+}
+
 /// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
@@ -278,13 +289,20 @@ double RooFitDriver::getVal()
       updateMyServers(node);
    } // while (nNodes)
 
+   // Check if topNode is a RooNLLVarNew or any other RooAbsReal. In the latter case,
+   // do not call reduce() and do not recycle the topNode's memory as it will be returned
+   // to the caller of getValues().
+   auto pNLLVarNew = dynamic_cast<const RooNLLVarNew *>(&_topNode);
+   if (!pNLLVarNew)
+      return 0.0;
+
    // recycle the top node's buffer and return the final value
    if (_nodeInfos.at(&_topNode).computeInGPU) {
-      _gpuBuffers.push(const_cast<double *>(_dataMapCUDA[&_topNode].data()));
-      return _topNode.reduce(RooBatchCompute::dispatchCUDA, _dataMapCUDA[&_topNode].data(), _nEvents);
+      _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(&_topNode).data()));
+      return pNLLVarNew->reduce(RooBatchCompute::dispatchCUDA, _dataMapCUDA.at(&_topNode).data(), _nEvents);
    } else {
-      _cpuBuffers.push(const_cast<double *>(_dataMapCPU[&_topNode].data()));
-      return _topNode.reduce(RooBatchCompute::dispatchCPU, _dataMapCPU[&_topNode].data(), _nEvents);
+      _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
+      return pNLLVarNew->reduce(RooBatchCompute::dispatchCPU, _dataMapCPU.at(&_topNode).data(), _nEvents);
    }
 }
 
