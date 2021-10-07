@@ -1318,7 +1318,7 @@ if(builtin_tbb)
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${PROJECT_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND devenv.exe /useenv /build "Release|${tbb_arch}" build/${vsdir}/makefile.sln
+      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=Release /p:Platform=${tbb_arch}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${PROJECT_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${PROJECT_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${PROJECT_BINARY_DIR}/bin/
