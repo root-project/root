@@ -192,9 +192,7 @@ The variable which is not incorporated in \f$y\f$ is used as the control variabl
 depicted in Fig. 1.
 
 
-\image html splot_pdfmesNIM.png width=800
-
-#### Figure 1:
+\image html splot_pdfmesNIM.png Figure 1 width=800
 
 Distributions of the three discriminating variables available to perform the Likelihood fit:
 \f${m_{\rm ES}}\f$ , \f$\Delta E\f$ , \f${\cal F}\f$ .
@@ -213,9 +211,7 @@ Whereas the distribution of \f$\Delta E\f$  clearly indicates the presence of th
 the distribution of \f${m_{\rm ES}}\f$ and \f${\cal F}\f$  are less obviously populated by signal.
 
 
-\image html splot_genfiTOTNIM.png  width=800
-
-#### Figure 2:
+\image html splot_genfiTOTNIM.png Figure 2 width=800
 
 Distributions of the three discriminating variables for signal plus
 background. The three distributions are the ones obtained from a data
@@ -258,9 +254,7 @@ are consistent with the actual observation, at a given confidence
 level.
 
 
-\image html splot_mass-bkg-sPlot.png  width=600
-
-#### Figure 3:
+\image html splot_mass-bkg-sPlot.png Figure 3 width=600
 
 The \f$\hbox {$_s$}{\cal P}lots\f$ (signal on top, background on bottom)
 obtained for \f${m_{\rm ES}}\f$ are represented as dots with error bars.
@@ -277,9 +271,7 @@ In the \f$\hbox{$_s$}{\cal P}lot\f$ for signal one observes that error bars are
 the largest in the \f$x\f$ regions where the background is the largest.
 
 
-\image html splot_fisher-bkg-sPlot.png width=600
-
-#### Figure 4:
+\image html splot_fisher-bkg-sPlot.png Figure 4 width=600
 
 The \f$\hbox {$_s$}{\cal P}lots\f$ (signal on top, background on bottom) obtained
 for \f${\cal F}\f$ are represented as dots with error bars. They are obtained
