@@ -2,7 +2,6 @@
 \ingroup Geometry
 \brief Shapes are geometrical objects that provide the basic modeling functionality.
 
-  - [Units](\ref SHAPES00)
   - [Primitive Shapes](\ref SHAPES01)
   - [Navigation Methods Performed By Shapes](\ref SHAPES02)
   - [Creating Shapes](\ref SHAPES03)
@@ -52,20 +51,6 @@ TGeoXXX(<type> param1,<type> param2, ...);
 Naming shape primitive is mandatory only for the primitives used in
 Boolean composites (see "Composite Shapes"). For the sake of simplicity,
 we will describe only the constructors in the second form.
-
-\anchor SHAPES00
-### Units
-
-The length units used in the geometry are **arbitrary**. However, there
-are certain functionalities that work with the assumption that the used
-lengths are expressed in centimeters. This is the case for shape
-capacity or volume weight computation. The same is valid when using the
-ROOT geometry as navigator for an external transport MC package (e.g.
-GEANT) via the VMC interface.
-
-Other units in use: All angles used for defining rotation matrices or
-some shape parameters are expressed in **degrees**. Material density is
-expressed in [**g/cm3**].
 
 \anchor SHAPES01
 ### Primitive Shapes
