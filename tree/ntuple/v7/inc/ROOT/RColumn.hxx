@@ -223,7 +223,7 @@ public:
 
    template <typename CppT>
    CppT *MapV(const NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      if (!fReadPage.Contains(globalIndex)) {
+      if (R__unlikely(!fReadPage.Contains(globalIndex))) {
          MapPage(globalIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
@@ -263,12 +263,22 @@ public:
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
    void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
    {
-      auto idxStart = (globalIndex == 0) ? 0 : *Map<ClusterSize_t>(globalIndex - 1);
-      auto idxEnd = *Map<ClusterSize_t>(globalIndex);
-      auto selfOffset = fReadPage.GetClusterInfo().GetIndexOffset();
-      if (globalIndex == selfOffset) {
-         // Passed cluster boundary
-         idxStart = 0;
+      NTupleSize_t idxStart = 0;
+      NTupleSize_t idxEnd;
+      // Try to avoid jumping back to the previous page and jumping pack to the previous cluster
+      if (R__likely(globalIndex > 0)) {
+         if (R__likely(fReadPage.Contains(globalIndex - 1))) {
+            idxStart = *Map<ClusterSize_t>(globalIndex - 1);
+            idxEnd = *Map<ClusterSize_t>(globalIndex);
+            if (R__unlikely(fReadPage.GetClusterInfo().GetIndexOffset() == globalIndex))
+               idxStart = 0;
+         } else {
+            idxEnd = *Map<ClusterSize_t>(globalIndex);
+            auto selfOffset = fReadPage.GetClusterInfo().GetIndexOffset();
+            idxStart = (globalIndex == selfOffset) ? 0 : *Map<ClusterSize_t>(globalIndex - 1);
+         }
+      } else {
+         idxEnd = *Map<ClusterSize_t>(globalIndex);
       }
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RClusterIndex(fReadPage.GetClusterInfo().GetId(), idxStart);
