@@ -241,3 +241,13 @@ TEST_F(TClingTests, ROOT10499) {
    EXPECT_EQ((void*)&errno, (void*)gInterpreter->Calc("&errno"));
 #endif
 }
+
+// Test issue #8828
+TEST_F(TClingTests, StdNamespaceRedefinition)
+{
+  gInterpreter->Declare("namespace std { namespace Detail { } }");
+  auto cl = TClass::GetClass("Detail");
+  EXPECT_TRUE(cl != nullptr);
+
+  gInterpreter->Declare("namespace Detail { }");
+}

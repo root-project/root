@@ -6634,9 +6634,9 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
       if (!oldDef || (def && def != oldDef)) {
          cl->ResetCaches();
          TClass::RemoveClassDeclId(cci->GetDeclId());
-         if (def) {
+         if (const auto *type = cci->GetType()) {
             // It's a tag decl, not a namespace decl.
-            cci->Init(*cci->GetType());
+            cci->Init(*type);
             TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
          }
       }
