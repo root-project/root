@@ -28,6 +28,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     XROOTD
 )
 
-target_include_directories(NetxNG PRIVATE ${XROOTD_INCLUDE_DIRS})
+target_include_directories(NetxNG SYSTEM PRIVATE ${XROOTD_INCLUDE_DIRS})
 
 target_compile_options(NetxNG PRIVATE -Wno-shadow)
