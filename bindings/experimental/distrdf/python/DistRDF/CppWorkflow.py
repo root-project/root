@@ -94,6 +94,7 @@ class CppWorkflow(object):
 #include "ROOT/RResultHandle.hxx"
 #include "ROOT/RDFHelpers.hxx"
 
+#include <utility>
 #include <vector>
 #include <tuple>
 '''
@@ -533,7 +534,7 @@ CppWorkflowResult {func_name}(ROOT::RDF::RNode &rdf0)
 
 {nodes}
 
-  return {{ result_handles, result_types, output_nodes }};
+  return {{ std::move(result_handles), std::move(result_types), std::move(output_nodes) }};
 }}
 
 }}
