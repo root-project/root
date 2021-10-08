@@ -94,7 +94,6 @@ TEST(RNTuple, InsideCollection)
 }
 
 
-
 TEST(RNTuple, RVec)
 {
    FileRaii fileGuard("test_ntuple_rvec.root");
@@ -146,6 +145,7 @@ TEST(RNTuple, RVec)
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
 
+
 TEST(RNTuple, RVecTypeErased)
 {
    FileRaii fileGuard("test_ntuple_rvec_typeerased.root");
@@ -179,6 +179,33 @@ TEST(RNTuple, RVecTypeErased)
    EXPECT_EQ(v->size(), 1);
    EXPECT_EQ(v->at(0), 42);
 }
+
+
+TEST(RNTuple, ReadVectorAsRVec)
+{
+   FileRaii fileGuard("test_ntuple_vectorrvecinterop.root");
+
+   // write out vector and RVec
+   {
+      auto m = RNTupleModel::Create();
+      auto vec = m->MakeField<std::vector<float>>("vec");
+      *vec = {1.f, 2.f, 3.f};
+      auto r = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
+      r->Fill();
+      vec->push_back(4.f);
+      r->Fill();
+   }
+
+   // read them back as the other type
+   auto m = RNTupleModel::Create();
+   auto rvec = m->MakeField<ROOT::RVec<float>>("vec");
+   auto r = RNTupleReader::Open(std::move(m), "r", fileGuard.GetPath());
+   r->LoadEntry(0);
+   EXPECT_TRUE(All(*rvec == ROOT::RVec<float>({1.f, 2.f, 3.f})));
+   r->LoadEntry(1);
+   EXPECT_TRUE(All(*rvec == ROOT::RVec<float>({1.f, 2.f, 3.f, 4.f})));
+}
+
 
 TEST(RNTuple, BoolVector)
 {
