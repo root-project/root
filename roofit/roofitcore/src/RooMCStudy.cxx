@@ -123,7 +123,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   RooCmdConfig pc(Form("RooMCStudy::RooMCStudy(%s)",model.GetName())) ;
 
   pc.defineObject("fitModel","FitModel",0,0) ;
-  pc.defineObject("condObs","ProjectedDependents",0,0) ;
+  pc.defineObject("condObs","ProjectedObservables",0,0) ;
   pc.defineObject("protoData","PrototypeData",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
