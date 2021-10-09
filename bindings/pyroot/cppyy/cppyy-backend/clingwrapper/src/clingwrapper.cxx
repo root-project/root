@@ -1219,6 +1219,83 @@ Cppyy::TCppIndex_t Cppyy::GetNumBases(TCppType_t klass)
     return (TCppIndex_t)0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \fn Cppyy::TCppIndex_t GetLongestInheritancePath(TClass *klass)
+/// \brief Retrieve number of base classes in the longest branch of the
+///        inheritance tree of the input class.
+/// \param[in] klass The class to start the retrieval process from.
+///
+/// This is a helper function for Cppyy::GetNumBasesLongestBranch.
+/// Given an inheritance tree, the function assigns weight 1 to each class that
+/// has at least one base. Starting from the input class, the function is
+/// called recursively on all the bases. For each base the return value is one
+/// (the weight of the base itself) plus the maximum value retrieved for their
+/// bases in turn. For example, given the following inheritance tree:
+///
+/// ~~~{.cpp}
+/// class A {}; class B: public A {};
+/// class X {}; class Y: public X {}; class Z: public Y {};
+/// class C: public B, Z {};
+/// ~~~
+///
+/// calling this function on an instance of `C` will return 3, the steps
+/// required to go from C to X.
+Cppyy::TCppIndex_t GetLongestInheritancePath(TClass *klass)
+{
+
+   auto directbases = klass->GetListOfBases();
+   if (!directbases) {
+      // This is a leaf with no bases
+      return 0;
+   }
+   auto ndirectbases = directbases->GetSize();
+   if (ndirectbases == 0) {
+      // This is a leaf with no bases
+      return 0;
+   } else {
+      // If there is at least one direct base
+      std::vector<Cppyy::TCppIndex_t> nbases_branches;
+      nbases_branches.reserve(ndirectbases);
+
+      // Traverse all direct bases of the current class and call the function
+      // recursively
+      for (auto baseclass : TRangeDynCast<TBaseClass>(directbases)) {
+         if (!baseclass)
+            continue;
+         if (auto baseclass_tclass = baseclass->GetClassPointer()) {
+            nbases_branches.emplace_back(GetLongestInheritancePath(baseclass_tclass));
+         }
+      }
+
+      // Get longest path among the direct bases of the current class
+      auto longestbranch = std::max_element(std::begin(nbases_branches), std::end(nbases_branches));
+
+      // Add 1 to include the current class in the count
+      return 1 + *longestbranch;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongest(TCppType_t klass)
+/// \brief Retrieve number of base classes in the longest branch of the
+///        inheritance tree.
+/// \param[in] klass The class to start the retrieval process from.
+///
+/// The function converts the input class to a `TClass *` and calls
+/// GetLongestInheritancePath.
+Cppyy::TCppIndex_t Cppyy::GetNumBasesLongestBranch(TCppType_t klass)
+{
+
+   const auto &cr = type_from_handle(klass);
+
+   if (auto klass_tclass = cr.GetClass()) {
+      return GetLongestInheritancePath(klass_tclass);
+   }
+
+   // In any other case, return zero
+   return 0;
+}
+
 std::string Cppyy::GetBaseName(TCppType_t klass, TCppIndex_t ibase)
 {
     TClassRef& cr = type_from_handle(klass);
@@ -2381,6 +2458,10 @@ int cppyy_has_complex_hierarchy(cppyy_type_t type) {
 
 int cppyy_num_bases(cppyy_type_t type) {
     return (int)Cppyy::GetNumBases(type);
+}
+
+int cppyy_num_bases_longest_branch(cppyy_type_t type) {
+    return (int)Cppyy::GetNumBasesLongestBranch(type);
 }
 
 char* cppyy_base_name(cppyy_type_t type, int base_index) {
