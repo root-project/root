@@ -1,7 +1,9 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
+# Author: Enric Tejedor Saavedra
+# Author: Vincenzo Eduardo Padulano (CERN)
 # Created: 01/03/05
-# Last: 09/30/10
+# Last: 10/08/21 (MM-DD-YY)
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -19,6 +21,7 @@ __all__ = [
    'Cpp1LanguageFeatureTestCase',
    'Cpp2ClassNamingTestCase',
    'Cpp3UsingDeclarations',
+   'Cpp4InheritanceTreeOverloadResolution',
 ]
 
 IS_WINDOWS = 0
@@ -460,6 +463,63 @@ class Cpp3UsingDeclarations( MyTestCase ):
         """)
 
         h = ROOT.MyTH1F("name", "title", 100, 0, 100)
+
+
+class Cpp4InheritanceTreeOverloadResolution(MyTestCase):
+    """
+    Tests correct overload resolution of functions accepting classes part of
+    the same inheritance tree.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Declare the classes and functions needed for the tests"""
+        ROOT.gInterpreter.Declare(
+        """
+        namespace Cpp4 {
+            class A {};
+            class B: public A {};
+            class C: public B {};
+
+            class X {};
+            class Y: public X {};
+            class Z: public Y {};
+
+            int myfunc(const B &b){
+                return 1;
+            }
+
+            int myfunc(const C &c){
+                return 2;
+            }
+
+            int myfunc(const B &b, const Z &z){
+                return 1;
+            }
+
+            int myfunc(const C &c, const X &x){
+                return 2;
+            }
+
+        } // end namespace
+        """)
+
+    def test1SingleArgumentFunction(self):
+        """Test reproducer of issue root-project/root/8817."""
+        self.assertEqual(ROOT.Cpp4.myfunc(ROOT.Cpp4.B()), 1)
+        self.assertEqual(ROOT.Cpp4.myfunc(ROOT.Cpp4.C()), 2)
+
+    def test2TwoArgumentFunctionAmbiguous(self):
+        """
+        Test the behaviour of a scenario that would be ambiguous in C++.
+
+        In PyROOT, the function with the highest priority in the overload
+        resolution will be called. Would be nice to throw an error in this kind
+        of scenario.
+        """
+        # In C++ calling myfunc(C(), Z()) would throw
+        # error: call to 'myfunc' is ambiguous
+        self.assertEqual(ROOT.Cpp4.myfunc(ROOT.Cpp4.C(), ROOT.Cpp4.Z()), 1)
 
 
 ## actual test run
