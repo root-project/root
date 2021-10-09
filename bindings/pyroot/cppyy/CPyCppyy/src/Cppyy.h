@@ -137,6 +137,8 @@ namespace Cppyy {
     CPPYY_IMPORT
     TCppIndex_t GetNumBases(TCppType_t type);
     CPPYY_IMPORT
+    TCppIndex_t GetNumBasesLongestBranch(TCppType_t type);
+    CPPYY_IMPORT
     std::string GetBaseName(TCppType_t type, TCppIndex_t ibase);
     CPPYY_IMPORT
     bool        IsSubtype(TCppType_t derived, TCppType_t base);
