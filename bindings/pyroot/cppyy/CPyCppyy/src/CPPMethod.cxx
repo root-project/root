@@ -409,7 +409,7 @@ int CPyCppyy::CPPMethod::GetPriority()
             const std::string& clean_name = TypeManip::clean_type(aname, false);
             Cppyy::TCppScope_t scope = Cppyy::GetScope(clean_name);
             if (scope)
-                priority += (int)Cppyy::GetNumBases(scope);
+                priority += static_cast<int>(Cppyy::GetNumBasesLongestBranch(scope));
 
             if (Cppyy::IsEnum(clean_name))
                 priority -= 100;
