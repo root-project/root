@@ -57,6 +57,8 @@ private:
    /// Request to load a subset of the columns of a particular cluster.
    /// Work items come in groups and are executed by the page source.
    struct RReadItem {
+      /// Items with different bunch ids are scheduled for different vector reads
+      std::int64_t fBunchId = -1;
       std::promise<std::unique_ptr<RCluster>> fPromise;
       RCluster::RKey fClusterKey;
    };
@@ -92,6 +94,8 @@ private:
    unsigned int fWindowPre;
    /// The number of desired clusters in the pool, including the currently active cluster
    unsigned int fWindowPost;
+   /// Used as an ever-growing counter in GetCluster() to separate bunches of cluster from each other
+   std::int64_t fBunchId = 0;
    /// The cache of clusters around the currently active cluster
    std::vector<std::unique_ptr<RCluster>> fPool;
 
