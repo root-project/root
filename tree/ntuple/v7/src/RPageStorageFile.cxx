@@ -214,7 +214,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    : RPageSource(ntupleName, options)
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fClusterPool(std::make_unique<RClusterPool>(*this))
+   , fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
    fDecompressor = std::make_unique<RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceFile");
