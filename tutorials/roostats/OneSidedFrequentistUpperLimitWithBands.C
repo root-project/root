@@ -369,23 +369,18 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       } else {
 
          // try fix for sim pdf
-         TIterator *iter = simPdf->indexCat().typeIterator();
-         RooCatType *tt = NULL;
-         while ((tt = (RooCatType *)iter->Next())) {
+         for (auto const& tt : simPdf->indexCat()) {
+            auto const& catName = tt.first;
 
             // Get pdf associated with state from simpdf
-            RooAbsPdf *pdftmp = simPdf->getPdf(tt->GetName());
+            RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
 
             // Generate only global variables defined by the pdf associated with this state
-            RooArgSet *globtmp = pdftmp->getObservables(*mc->GetGlobalObservables());
-            RooDataSet *tmp = pdftmp->generate(*globtmp, 1);
+            std::unique_ptr<RooArgSet> globtmp{pdftmp->getObservables(*mc->GetGlobalObservables())};
+            std::unique_ptr<RooDataSet> tmp{pdftmp->generate(*globtmp, 1)};
 
             // Transfer values to output placeholder
-            *globtmp = *tmp->get(0);
-
-            // Cleanup
-            delete globtmp;
-            delete tmp;
+            globtmp->assign(*tmp->get(0));
          }
       }
 
