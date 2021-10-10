@@ -21,8 +21,6 @@
 #include <vector>
 #include <utility>
 
-#include "RooFitLegacy/RooCatTypeLegacy.h"
-
 class RooThresholdCategory : public RooAbsCategory {
 
 public:

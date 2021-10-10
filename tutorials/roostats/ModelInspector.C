@@ -72,8 +72,10 @@ enum ETestCommandIdentifiers {
    HSId1
 };
 
+using namespace std;
 using namespace RooFit;
 using namespace RooStats;
+
 class ModelInspectorGUI : public TGMainFrame {
 
 private:
@@ -117,9 +119,8 @@ public:
    void DoFit();
    void DoExit();
    void HandleButtons();
-
-   ClassDef(ModelInspectorGUI, 0)
 };
+
 
 //______________________________________________________________________________
 ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsData *data)
@@ -273,9 +274,9 @@ void ModelInspectorGUI::DoText(const char * /*text*/)
    Int_t id = te->WidgetId();
 
    switch (id) {
-   case HId1: fHslider1->SetPosition(atof(fTbh1->GetString()), fHslider1->GetMaxPosition()); break;
+   case HId1: fHslider1->SetPosition(atof(fTbh1->GetString()), static_cast<double>(fHslider1->GetMaxPosition())); break;
    case HId2: fHslider1->SetPointerPosition(atof(fTbh2->GetString())); break;
-   case HId3: fHslider1->SetPosition(fHslider1->GetMinPosition(), atof(fTbh1->GetString())); break;
+   case HId3: fHslider1->SetPosition(static_cast<double>(fHslider1->GetMinPosition()), atof(fTbh1->GetString())); break;
    default: break;
    }
    DoSlider();
@@ -373,15 +374,15 @@ void ModelInspectorGUI::DoSlider()
       ////////////////////////////////////////////////////////////////////////////
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
       //    TIterator* iter = simPdf->indexCat().typeIterator() ;
-      TIterator *iter = channelCat->typeIterator();
-      RooCatType *tt = NULL;
       Int_t frameIndex = 0;
-      while ((tt = (RooCatType *)iter->Next())) {
+      for (auto const& tt : *channelCat) {
+         auto const& catName = tt.first;
+
          ++frameIndex;
          fCanvas->GetCanvas()->cd(frameIndex);
 
          // pre loop
-         RooAbsPdf *pdftmp = simPdf->getPdf(tt->GetName());
+         RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
          RooArgSet *obstmp = pdftmp->getObservables(*fMC->GetObservables());
          RooRealVar *obs = ((RooRealVar *)obstmp->first());
 
@@ -394,7 +395,7 @@ void ModelInspectorGUI::DoSlider()
          RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
          RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
          fData->plotOn(fPlot, MarkerSize(1),
-                       Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                       Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                        DataError(RooAbsData::None));
          RooMsgService::instance().setGlobalKillBelow(msglevel);
 
@@ -448,7 +449,7 @@ void ModelInspectorGUI::DoSlider()
             msglevel = RooMsgService::instance().globalKillBelow();
             RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
             fData->plotOn(fPlot, MarkerSize(1),
-                          Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                          Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                           DataError(RooAbsData::None));
             RooMsgService::instance().setGlobalKillBelow(msglevel);
          }
@@ -484,7 +485,6 @@ void ModelInspectorGUI::DoExit()
 void ModelInspector(const char *infile = "", const char *workspaceName = "combined",
                     const char *modelConfigName = "ModelConfig", const char *dataName = "obsData")
 {
-
    // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
