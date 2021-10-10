@@ -206,40 +206,6 @@ TEST(Cluster, AdoptClusters)
 }
 
 
-TEST(ClusterPool, Windows)
-{
-   RPageSourceMock ps;
-
-   EXPECT_DEATH(RClusterPool(ps, 0), ".*");
-   RClusterPool c1(ps, 1);
-   EXPECT_EQ(0U, c1.GetWindowPre());
-   EXPECT_EQ(1U, c1.GetWindowPost());
-   RClusterPool c2(ps, 2);
-   EXPECT_EQ(0U, c2.GetWindowPre());
-   EXPECT_EQ(2U, c2.GetWindowPost());
-   RClusterPool c3(ps, 3);
-   EXPECT_EQ(1U, c3.GetWindowPre());
-   EXPECT_EQ(2U, c3.GetWindowPost());
-   RClusterPool c5(ps, 5);
-   EXPECT_EQ(1U, c5.GetWindowPre());
-   EXPECT_EQ(4U, c5.GetWindowPost());
-   RClusterPool c6(ps, 6);
-   EXPECT_EQ(2U, c6.GetWindowPre());
-   EXPECT_EQ(4U, c6.GetWindowPost());
-   RClusterPool c9(ps, 9);
-   EXPECT_EQ(2U, c9.GetWindowPre());
-   EXPECT_EQ(7U, c9.GetWindowPost());
-   RClusterPool c10(ps, 10);
-   EXPECT_EQ(3U, c10.GetWindowPre());
-   EXPECT_EQ(7U, c10.GetWindowPost());
-   RClusterPool c15(ps, 15);
-   EXPECT_EQ(3U,  c15.GetWindowPre());
-   EXPECT_EQ(12U, c15.GetWindowPost());
-   RClusterPool c16(ps, 16);
-   EXPECT_EQ(4U,  c16.GetWindowPre());
-   EXPECT_EQ(12U, c16.GetWindowPost());
-}
-
 TEST(ClusterPool, GetClusterBasics)
 {
    RPageSourceMock p1;
