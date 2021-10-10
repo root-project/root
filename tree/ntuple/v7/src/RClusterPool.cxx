@@ -114,15 +114,21 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
    while (true) {
       std::vector<RReadItem> readItems;
       std::vector<RCluster::RKey> clusterKeys;
+      std::int64_t bunchId = -1;
       {
          std::unique_lock<std::mutex> lock(fLockWorkQueue);
          fCvHasReadWork.wait(lock, [&]{ return !fReadQueue.empty(); });
          while (!fReadQueue.empty()) {
+            if (fReadQueue.front().fClusterKey.fClusterId == kInvalidDescriptorId) {
+               fReadQueue.pop();
+               return;
+            }
+
+            if ((bunchId >= 0) && (fReadQueue.front().fBunchId != bunchId))
+               break;
             readItems.emplace_back(std::move(fReadQueue.front()));
             fReadQueue.pop();
-            if (readItems.back().fClusterKey.fClusterId == kInvalidDescriptorId)
-               return;
-
+            bunchId = readItems.back().fBunchId;
             clusterKeys.emplace_back(readItems.back().fClusterKey);
          }
       }
@@ -315,6 +321,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          R__ASSERT(!kv.second.empty());
 
          RReadItem readItem;
+         readItem.fBunchId = fBunchId++;
          readItem.fClusterKey.fClusterId = kv.first;
          readItem.fClusterKey.fColumnSet = kv.second;
 
