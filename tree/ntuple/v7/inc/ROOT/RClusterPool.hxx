@@ -94,7 +94,7 @@ private:
    unsigned int fWindowPre;
    /// The number of desired clusters in the pool, including the currently active cluster
    unsigned int fWindowPost;
-   /// Used as an ever-growing counter in GetCluster() to separate bunches of cluster from each other
+   /// Used as an ever-growing counter in GetCluster() to separate bunches of clusters from each other
    std::int64_t fBunchId = 0;
    /// The cache of clusters around the currently active cluster
    std::vector<std::unique_ptr<RCluster>> fPool;
