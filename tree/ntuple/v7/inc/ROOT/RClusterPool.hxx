@@ -91,9 +91,10 @@ private:
    /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
    RPageSource &fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
-   unsigned int fWindowPre;
-   /// The number of desired clusters in the pool, including the currently active cluster
-   unsigned int fWindowPost;
+   /// Reserved for later use.
+   unsigned int fWindowPre = 0;
+   /// The number of clusters that are being read in a single vector read.
+   unsigned int fClusterBunchSize;
    /// Used as an ever-growing counter in GetCluster() to separate bunches of clusters from each other
    std::int64_t fBunchId = 0;
    /// The cache of clusters around the currently active cluster
@@ -140,15 +141,12 @@ private:
    RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
 
 public:
-   static constexpr unsigned int kDefaultPoolSize = 4;
-   RClusterPool(RPageSource &pageSource, unsigned int size);
-   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
+   static constexpr unsigned int kDefaultClusterBunchSize = 1;
+   RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize);
+   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultClusterBunchSize) {}
    RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
-
-   unsigned int GetWindowPre() const { return fWindowPre; }
-   unsigned int GetWindowPost() const { return fWindowPost; }
 
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading

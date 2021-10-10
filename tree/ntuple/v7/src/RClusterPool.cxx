@@ -49,20 +49,14 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
    return fClusterKey.fClusterId < other.fClusterKey.fClusterId;
 }
 
-ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
+ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize)
    : fPageSource(pageSource)
-   , fPool(size)
+   , fClusterBunchSize(clusterBunchSize)
+   , fPool(2 * clusterBunchSize)
    , fThreadIo(&RClusterPool::ExecReadClusters, this)
    , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
 {
-   R__ASSERT(size > 0);
-   fWindowPre = 0;
-   fWindowPost = size;
-   // Large pools maintain a small look-back window together with the large look-ahead window
-   while ((1u << fWindowPre) < (fWindowPost - (fWindowPre + 1))) {
-      fWindowPre++;
-      fWindowPost--;
-   }
+   R__ASSERT(clusterBunchSize > 0);
 }
 
 ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
@@ -191,18 +185,30 @@ class RProvides {
    using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
    using ColumnSet_t = ROOT::Experimental::Detail::RCluster::ColumnSet_t;
 
+public:
+   struct RInfo {
+      std::int64_t fBunchId = -1;
+      std::int64_t fFlags = 0;
+      ColumnSet_t fColumnSet;
+   };
+
+   static constexpr std::int64_t kFlagRequired = 0x01;
+   static constexpr std::int64_t kFlagLast     = 0x02;
+
 private:
-   std::map<DescriptorId_t, ColumnSet_t> fMap;
+   std::map<DescriptorId_t, RInfo> fMap;
 
 public:
-   void Insert(DescriptorId_t clusterId, const ColumnSet_t &columns)
+   void Insert(DescriptorId_t clusterId, const RInfo &info)
    {
-      fMap.emplace(clusterId, columns);
+      fMap.emplace(clusterId, info);
    }
 
    bool Contains(DescriptorId_t clusterId) {
       return fMap.count(clusterId) > 0;
    }
+
+   std::size_t GetSize() const { return fMap.size(); }
 
    void Erase(DescriptorId_t clusterId, const ColumnSet_t &columns)
    {
@@ -210,12 +216,12 @@ public:
       if (itr == fMap.end())
          return;
       ColumnSet_t d;
-      std::copy_if(itr->second.begin(), itr->second.end(), std::inserter(d, d.end()),
+      std::copy_if(itr->second.fColumnSet.begin(), itr->second.fColumnSet.end(), std::inserter(d, d.end()),
          [&columns] (DescriptorId_t needle) { return columns.count(needle) == 0; });
       if (d.empty()) {
          fMap.erase(itr);
       } else {
-         itr->second = d;
+         itr->second.fColumnSet = d;
       }
    }
 
@@ -243,16 +249,24 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
    // Determine following cluster ids and the column ids that we want to make available
    RProvides provide;
-   provide.Insert(clusterId, columns);
-   auto next = clusterId;
-   // TODO(jblomer): instead of a fixed-sized window, eventually we should determine the window size based on
-   // a user-defined memory limit.  The size of the preloaded data can be determined at the beginning of
-   // GetCluster from the descriptor and the current contents of fPool.
-   for (unsigned int i = 1; i < fWindowPost; ++i) {
-      next = desc.FindNextClusterId(next);
+   RProvides::RInfo provideInfo;
+   provideInfo.fColumnSet = columns;
+   provideInfo.fBunchId = fBunchId;
+   provideInfo.fFlags = RProvides::kFlagRequired;
+   for (DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
+      if (i == fClusterBunchSize)
+         provideInfo.fBunchId = ++fBunchId;
+
+      auto cid = next;
+      next = desc.FindNextClusterId(cid);
+      if (next == kInvalidDescriptorId)
+         provideInfo.fFlags |= RProvides::kFlagLast;
+
+      provide.Insert(cid, provideInfo);
+
       if (next == kInvalidDescriptorId)
          break;
-      provide.Insert(next, columns);
+      provideInfo.fFlags = 0;
    }
 
    // Clear the cache from clusters not the in the look-ahead or the look-back window
@@ -313,28 +327,42 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          provide.Erase(cptr->GetId(), cptr->GetAvailColumns());
       }
 
+      // Figure out if enough work accumulated to justify I/O calls
+      bool skipPrefetch = false;
+      if (provide.GetSize() < fClusterBunchSize) {
+         skipPrefetch = true;
+         for (const auto &kv : provide) {
+            if ((kv.second.fFlags & (RProvides::kFlagRequired | RProvides::kFlagLast)) == 0)
+               continue;
+            skipPrefetch = false;
+            break;
+         }
+      }
+
       // Update the work queue and the in-flight cluster list with new requests. We already hold the work queue
       // mutex
       // TODO(jblomer): we should ensure that clusterId is given first to the I/O thread.  That is usually the
       // case but it's not ensured by the code
-      for (const auto &kv : provide) {
-         R__ASSERT(!kv.second.empty());
+      if (!skipPrefetch) {
+         for (const auto &kv : provide) {
+            R__ASSERT(!kv.second.fColumnSet.empty());
 
-         RReadItem readItem;
-         readItem.fBunchId = fBunchId++;
-         readItem.fClusterKey.fClusterId = kv.first;
-         readItem.fClusterKey.fColumnSet = kv.second;
+            RReadItem readItem;
+            readItem.fClusterKey.fClusterId = kv.first;
+            readItem.fBunchId = kv.second.fBunchId;
+            readItem.fClusterKey.fColumnSet = kv.second.fColumnSet;
 
-         RInFlightCluster inFlightCluster;
-         inFlightCluster.fClusterKey.fClusterId = kv.first;
-         inFlightCluster.fClusterKey.fColumnSet = kv.second;
-         inFlightCluster.fFuture = readItem.fPromise.get_future();
-         fInFlightClusters.emplace_back(std::move(inFlightCluster));
+            RInFlightCluster inFlightCluster;
+            inFlightCluster.fClusterKey.fClusterId = kv.first;
+            inFlightCluster.fClusterKey.fColumnSet = kv.second.fColumnSet;
+            inFlightCluster.fFuture = readItem.fPromise.get_future();
+            fInFlightClusters.emplace_back(std::move(inFlightCluster));
 
-         fReadQueue.emplace(std::move(readItem));
+            fReadQueue.emplace(std::move(readItem));
+         }
+         if (fReadQueue.size() > 0)
+            fCvHasReadWork.notify_one();
       }
-      if (fReadQueue.size() > 0)
-         fCvHasReadWork.notify_one();
    } // work queue lock guard
 
    return WaitFor(clusterId, columns);
