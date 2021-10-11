@@ -2282,7 +2282,6 @@ JSROOT.define(['d3'], (d3) => {
       return true;
    }
 
-
    /** @summary Creates marker attributes object
      * @desc Can be used to produce markers in painter.
      * See {@link JSROOT.TAttMarkerHandler} for more info.
@@ -3058,6 +3057,57 @@ JSROOT.define(['d3'], (d3) => {
          delete this._user_tooltip_handle;
          if (this._user_tooltip_handler) this._user_tooltip_handler(d);
       }, this._user_tooltip_timeout);
+   }
+
+   /** @summary Provide projection areas
+     * @param kind - "X", "Y" or ""
+     * @private */
+   ObjectPainter.prototype.provideSpecialDrawArea = function(kind) {
+      if (kind == this._special_draw_area)
+         return Promise.resolve(true);
+
+      return this.getCanvPainter().toggleProjection(kind).then(() => {
+         this._special_draw_area = kind;
+         return true;
+      });
+   }
+
+   /** @summary Provide projection areas
+     * @param kind - "X", "Y" or ""
+     * @private */
+   ObjectPainter.prototype.drawInSpecialArea = function(obj, opt) {
+      let canp = this.getCanvPainter();
+      if (!this._special_draw_area || !canp || typeof canp.drawProjection !== "function")
+         return Promise.resolve(false);
+
+      return canp.drawProjection(this._special_draw_area, obj, opt);
+   }
+
+   /** @summary Get tooltip for painter and specified event position
+     * @param {Object} evnt - object wiith clientX and clientY positions
+     * @private */
+   ObjectPainter.prototype.getToolTip = function(evnt) {
+      if (!evnt || (evnt.clientX === undefined) || (evnt.clientY === undefined)) return null;
+
+      let frame = this.getFrameSvg();
+      if (frame.empty()) return null;
+      let layer = frame.select(".main_layer");
+      if (layer.empty()) return null;
+
+      let pos = d3.pointer(evnt, layer.node());
+      let pnt = { touch: false, x: pos[0], y: pos[1] };
+
+      if (typeof this.extractToolTip == 'function')
+         return this.extractToolTip(pnt);
+
+      pnt.disabled = true;
+
+      let res = null;
+
+      if (typeof this.processTooltipEvent == 'function')
+         res = this.processTooltipEvent(pnt);
+
+      return res && res.user_info ? res.user_info : res;
    }
 
    // ===========================================================

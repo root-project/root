@@ -5,6 +5,8 @@
 2. Fix problem with logy/logz drawing in lego plots
 3. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis
 4. Provide JSROOT.Painter.setDefaultDrawOpt to change default draw option
+5. Provide example of custom entries in context menu
+6. Fix error with projection statistic calculations
 
 
 ## Changes in 6.2.0

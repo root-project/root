@@ -852,13 +852,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          pnt.disabled = true; // do not invoke graphics
 
          // collect tooltips from pad painter - it has list of all drawn objects
-         let hints = pp.processPadTooltipEvent(pnt), exact = null;
+         let hints = pp.processPadTooltipEvent(pnt), exact = null, res;
          for (let k = 0; (k <hints.length) && !exact; ++k)
-            if (hints[k] && hints[k].exact) exact = hints[k];
-         //if (exact) console.log('Click exact', pnt, exact.painter.getObjectHint());
-         //      else console.log('Click frame', pnt);
-
-         let res;
+            if (hints[k] && hints[k].exact)
+               exact = hints[k];
 
          if (exact) {
             let handler = dblckick ? this._dblclick_handler : this._click_handler;

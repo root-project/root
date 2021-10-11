@@ -1824,7 +1824,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {string} filepath - URL to ROOT file
      * @returns {Promise} when file is opened */
    HierarchyPainter.prototype.openRootFile = function(filepath) {
-      // first check that file with such URL already opened
 
       let isfileopened = false;
       this.forEachRootFile(item => { if (item._fullurl===filepath) isfileopened = true; });
@@ -2669,7 +2668,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    JSROOT.buildNobrowserGUI = function(gui_element, gui_kind) {
 
       let myDiv = (typeof gui_element == 'string') ? d3.select('#' + gui_element) : d3.select(gui_element);
-      if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
+      if (myDiv.empty()) {
+         alert('no div for simple nobrowser gui found');
+         return Promise.resolve(null);
+      }
 
       let online = false, drawing = false;
       if (gui_kind == 'online')
@@ -2713,7 +2715,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (d.has("websocket")) opt+=";websocket";
          console.log('try to draw first object');
 
-         return hpainter.display("", opt).then(() => { return hpainter; });
+         return hpainter.display("", opt).then(() => hpainter);
       });
    }
 

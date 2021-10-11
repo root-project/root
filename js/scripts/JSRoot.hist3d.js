@@ -87,7 +87,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, lt
 
             fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta),
                                    max3dy*Math.sin(phi)*Math.cos(theta),
-                                   fp.size_z3d + max3d*Math.sin(theta));
+                                   fp.size_z3d + (max3dx+max3dy)*0.5*Math.sin(theta));
 
             first_time = true;
          }

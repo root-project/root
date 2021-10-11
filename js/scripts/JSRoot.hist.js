@@ -1447,8 +1447,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (d.check('PAL', true)) this.Palette = d.partAsInt();
       // this is zooming of histo content
-      if (d.check('MINIMUM:', true)) this.minimum = parseFloat(d.part); else this.minimum = histo.fMinimum;
-      if (d.check('MAXIMUM:', true)) this.maximum = parseFloat(d.part); else this.maximum = histo.fMaximum;
+      if (d.check('MINIMUM:', true)) { this.ominimum = true; this.minimum = parseFloat(d.part); }
+                                else this.minimum = histo.fMinimum;
+      if (d.check('MAXIMUM:', true)) { this.omaximum = true; this.maximum = parseFloat(d.part); }
+                                else this.maximum = histo.fMaximum;
       // this is actual range of data - used by graph drawing
       if (d.check('YMIN:', true)) this.ymin = parseFloat(d.part);
       if (d.check('YMAX:', true)) this.ymax = parseFloat(d.part);
@@ -2287,6 +2289,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (((opt !== undefined) && (this.options.original !== opt)) || changed_opt)
             this.decodeOptions(opt || histo.fOption);
       }
+
+      if (!this.options.ominimum) this.options.minimum = histo.fMinimum;
+      if (!this.options.omaximum) this.options.maximum = histo.fMaximum;
 
       if (this.snapid || !fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
@@ -3578,7 +3583,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             w = histo.getBinContent(i + 1);
          }
 
-         if ((xmax===null) || (w>wmax)) { xmax = xx; wmax = w; }
+         if ((xmax === null) || (w > wmax)) { xmax = xx; wmax = w; }
 
          stat_sumw += w;
          stat_sumwx += w * xx;
@@ -3586,7 +3591,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       // when no range selection done, use original statistic from histogram
-      if (!fp.isAxisZoomed("x") && (histo.fTsumw>0)) {
+      if (!fp.isAxisZoomed("x") && (histo.fTsumw > 0)) {
          stat_sumw = histo.fTsumw;
          stat_sumwx = histo.fTsumwx;
          stat_sumwx2 = histo.fTsumwx2;
@@ -3950,7 +3955,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
          path_err += "M" + midx + "," + (my-yerr1+dend) + endy + "v" + (yerr1+yerr2-2*dend) + endy;
          if (hints_err !== null)
-         hints_err += "M" + (midx-edx) + "," + (my-yerr1) + "h" + (2*edx) + "v" + (yerr1+yerr2) + "h" + (-2*edx) + "z";
+            hints_err += "M" + (midx-edx) + "," + (my-yerr1) + "h" + (2*edx) + "v" + (yerr1+yerr2) + "h" + (-2*edx) + "z";
       };
 
       let draw_bin = bin => {
@@ -4337,7 +4342,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      if (findbin!==null) {
+      if (findbin !== null) {
          // if bin on boundary found, check that x position is ok
          if ((findbin === left) && (grx1 > pnt_x + gapx))  findbin = null; else
          if ((findbin === right-1) && (grx2 < pnt_x - gapx)) findbin = null; else
@@ -4640,7 +4645,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
      * @private */
    TH2Painter.prototype.toggleProjection = function(kind, width) {
 
-      if ((kind=="Projections") || (kind=="Off")) kind = "";
+      if ((kind == "Projections") || (kind == "Off")) kind = "";
 
       if ((typeof kind == 'string') && (kind.length>1)) {
           width = parseInt(kind.substr(1));
@@ -4649,7 +4654,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (!width) width = 1;
 
-      if (kind && (this.is_projection==kind)) {
+      if (kind && (this.is_projection == kind)) {
          if (this.projection_width === width) {
             kind = "";
          } else {
@@ -4661,22 +4666,18 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       delete this.proj_hist;
 
       let new_proj = (this.is_projection === kind) ? "" : kind;
-      this.is_projection = ""; // disable projection redraw until callback
       this.projection_width = width;
+      this.is_projection = ""; // avoid projection handling until area is created
 
-      this.getCanvPainter().toggleProjection(new_proj).then(() => this.redrawProjection("toggling", new_proj));
+      this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
    }
 
    /** @summary Redraw projection
      * @private */
    TH2Painter.prototype.redrawProjection = function(ii1, ii2, jj1, jj2) {
-      if (ii1 === "toggling") {
-         this.is_projection = ii2;
-         ii1 = ii2 = undefined;
-      }
       if (!this.is_projection) return;
 
-      if (jj2 == undefined) {
+      if (jj2 === undefined) {
          if (!this.tt_handle) return;
          ii1 = Math.round((this.tt_handle.i1 + this.tt_handle.i2)/2); ii2 = ii1+1;
          jj1 = Math.round((this.tt_handle.j1 + this.tt_handle.j2)/2); jj2 = jj1+1;
@@ -4710,20 +4711,24 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       if (this.is_projection == "X") {
-         for (let i=0;i<this.nbinsx;++i) {
-            let sum=0;
-            for (let j=jj1;j<jj2;++j) sum += histo.getBinContent(i+1,j+1);
+         for (let i = 0; i < this.nbinsx; ++i) {
+            let sum = 0;
+            for (let j = jj1; j < jj2; ++j) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(i+1, sum);
          }
       } else {
-         for (let j=0;j<this.nbinsy;++j) {
+         for (let j = 0; j < this.nbinsy; ++j) {
             let sum = 0;
             for (let i=ii1;i<ii2;++i) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(j+1, sum);
          }
       }
 
-      return canp.drawProjection(this.is_projection, this.proj_hist);
+      // reset statistic before display
+      this.proj_hist.fEntries = 0;
+      this.proj_hist.fTsumw = 0;
+
+      return this.drawInSpecialArea(this.proj_hist);
    }
 
    /** @summary Execute TH2 menu command

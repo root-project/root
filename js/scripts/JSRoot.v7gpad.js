@@ -3485,7 +3485,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    RPadPainter.prototype.drawNextSnap = function(lst, indx) {
 
-      if (indx===undefined) {
+      if (indx === undefined) {
          indx = -1;
          // flag used to prevent immediate pad redraw during first draw
          this._snaps_map = {}; // to control how much snaps are drawn
@@ -3516,7 +3516,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // first appropriate painter for the object
       // if same object drawn twice, two painters will exists
-      for (let k=0; k<this.painters.length; ++k) {
+      for (let k = 0; k<this.painters.length; ++k) {
          if (this.painters[k].snapid === snapid)
             if (--cnt === 0) { objpainter = this.painters[k]; break;  }
       }
@@ -3584,7 +3584,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             for (let n = 0; n < arr.length; ++n) {
                let name = arr[n].fString, p = name.indexOf("=");
                if (p > 0)
-                  ListOfColors[parseInt(name.substr(0,p))] =name.substr(p+1);
+                  ListOfColors[parseInt(name.substr(0,p))] = name.substr(p+1);
             }
 
             this.root_colors = ListOfColors;
@@ -3701,7 +3701,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
-      for (let k=0;k<this.painters.length;++k) {
+      for (let k = 0;k < this.painters.length; ++k) {
          let sub = this.painters[k];
          if (sub.snapid===undefined) continue; // look only for painters with snapid
 
@@ -4246,7 +4246,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Changes layout
      * @returns {Promise} indicating when finished */
-   RCanvasPainter.prototype.changeLayout = function(layout_kind) {
+   RCanvasPainter.prototype.changeLayout = function(layout_kind, mainid) {
       let current = this.getLayoutKind();
       if (current == layout_kind)
          return Promise.resolve(true);
@@ -4276,13 +4276,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
 
-         if (layout_kind.indexOf("vert")==0) {
-            main = d3.select(grid.getGridFrame(0));
-            sidebar = d3.select(grid.getGridFrame(1));
-         } else {
-            main = d3.select(grid.getGridFrame(1));
-            sidebar = d3.select(grid.getGridFrame(0));
-         }
+         if (mainid == undefined)
+            mainid = (layout_kind.indexOf("vert") == 0) ? 0 : 1;
+
+         main = d3.select(grid.getGridFrame(mainid));
+         sidebar = d3.select(grid.getGridFrame(1 - mainid));
 
          main.classed("central_panel", true).style('position','relative');
          sidebar.classed("side_panel", true).style('position','relative');
@@ -4314,12 +4312,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.showUI5ProjectionArea)
          return this.showUI5ProjectionArea(kind);
 
-      let layout = 'simple';
+      let layout = 'simple', mainid;
 
-      if (kind == "X") layout = 'vert2_31'; else
-      if (kind == "Y") layout = 'horiz2_13';
+      switch(kind) {
+         case "X":
+         case "bottom": layout = 'vert2_31'; mainid = 0; break;
+         case "Y":
+         case "left": layout = 'horiz2_13'; mainid = 1; break;
+         case "top": layout = 'vert2_13'; mainid = 1; break;
+         case "right": layout = 'horiz2_31'; mainid = 0; break;
+      }
 
-      return this.changeLayout(layout);
+      return this.changeLayout(layout, mainid);
    }
 
    /** @summary Draw projection for specified histogram
