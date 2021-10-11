@@ -758,6 +758,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    return true;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Complete websocket send operation
+/// Clear "doing send" flag and check if next operation has to be started
+
 void RWebWindow::CompleteWSSend(unsigned wsid)
 {
    auto conn = FindConnection(wsid);
@@ -953,7 +957,7 @@ std::string RWebWindow::GetClientVersion() const
 /////////////////////////////////////////////////////////////////////////
 /// Set arbitrary JSON code, which is accessible via conn.GetUserArgs() method
 /// This JSON code injected into main HTML document into JSROOT.connectWebWindow()
-/// Must be called before RWebWindow::Show() method is called
+/// Must be set before RWebWindow::Show() method is called
 
 void RWebWindow::SetUserArgs(const std::string &args)
 {
@@ -987,7 +991,9 @@ int RWebWindow::NumConnections(bool with_pending) const
 /// Configures recording of communication data in protocol file
 /// Provided filename will be used to store JSON array with names of written files - text or binary
 /// If data was send from client, "send" entry will be placed. JSON file will look like:
-///    ["send","msg0.txt","send","msg1.txt","msg2.txt"]
+///
+///      ["send", "msg0.txt", "send", "msg1.txt", "msg2.txt"]
+///
 /// If empty file name is provided, data recording will be disabled
 /// Recorded data can be used in JSROOT directly to test client code without running C++ server
 
@@ -1013,8 +1019,8 @@ unsigned RWebWindow::GetConnectionId(int num) const
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns true if specified connection id exists
-/// connid is connection (0 - any)
-/// if only_active==false, also inactive connections check or connections which should appear
+/// \param connid is connection id (0 - any)
+/// \param only_active when true only active connection will be checked, otherwise also pending (not yet established) connections are checked
 
 bool RWebWindow::HasConnection(unsigned connid, bool only_active) const
 {
@@ -1081,9 +1087,9 @@ RWebWindow::ConnectionsList_t RWebWindow::GetConnections(unsigned connid, bool o
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// returns true if sending via specified connection can be performed
-/// if direct==true, checks if direct sending (without queuing) is possible
-/// if connid==0, all existing connections are checked
+/// Returns true if sending via specified connection can be performed
+/// \param connid is connection id, when 0 - all existing connections are checked
+/// \param direct - when true, checks if direct sending (without queuing) is possible
 
 bool RWebWindow::CanSend(unsigned connid, bool direct) const
 {
@@ -1106,8 +1112,8 @@ bool RWebWindow::CanSend(unsigned connid, bool direct) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// returns send queue length for specified connection
-/// if connid==0, maximal value for all connections is returned
+/// Returns send queue length for specified connection
+/// \param connid is connection id, when 0 - maximal value for all connections is returned
 /// If wrong connection is specified, -1 is return
 
 int RWebWindow::GetSendQueueLength(unsigned connid) const
@@ -1122,7 +1128,6 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 
    return maxq;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Internal method to send data
@@ -1182,7 +1187,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Sends data to specified connection
-/// If connid==0, data will be send to all connections
+/// If \param connid is 0, data will be send to all connections
 
 void RWebWindow::Send(unsigned connid, const std::string &data)
 {
@@ -1191,7 +1196,7 @@ void RWebWindow::Send(unsigned connid, const std::string &data)
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Send binary data to specified connection
-/// If connid==0, data will be sent to all connections
+/// If \param connid is 0, data will be sent to all connections
 
 void RWebWindow::SendBinary(unsigned connid, std::string &&data)
 {
@@ -1200,7 +1205,7 @@ void RWebWindow::SendBinary(unsigned connid, std::string &&data)
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Send binary data to specified connection
-/// If connid==0, data will be sent to all connections
+/// If \param connid is 0, data will be sent to all connections
 
 void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 {
