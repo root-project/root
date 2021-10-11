@@ -430,6 +430,9 @@ sap.ui.define([
          let intersects = this.raycaster.intersectObjects(this.scene.children, true);
          for (let i = 0; i < intersects.length; ++i)
          {
+            if (!intersects[i].object.get_ctrl)
+               intersects[i].object = intersects[i].object.parent;
+
             if (intersects[i].object.visible && intersects[i].object.get_ctrl)
             {
                let ctrl = intersects[i].object.get_ctrl();
