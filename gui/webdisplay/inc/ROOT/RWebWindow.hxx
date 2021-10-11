@@ -158,6 +158,7 @@ private:
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
+   /// Find connection with specified websocket id
    std::shared_ptr<WebConn> FindConnection(unsigned wsid) { return FindOrCreateConnection(wsid, false, nullptr); }
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
