@@ -1241,7 +1241,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      if ((this.zoom_ymin == this.zoom_ymax) && (opts.zoom_ymin != opts.zoom_ymax) && !this.zoomChangedInteractive("y")) {
+      if ((opts.zoom_ymin != opts.zoom_ymax) && ((this.zoom_ymin == this.zoom_ymax) || !this.zoomChangedInteractive("y"))) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }
@@ -4133,7 +4133,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Changes layout
      * @returns {Promise} indicating when finished */
-   TCanvasPainter.prototype.changeLayout = function(layout_kind) {
+   TCanvasPainter.prototype.changeLayout = function(layout_kind, mainid) {
       let current = this.getLayoutKind();
       if (current == layout_kind)
          return Promise.resolve(true);
@@ -4152,7 +4152,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (layout_kind == 'simple') {
          main = origin;
-         for (let k=0;k<lst.length;++k)
+         for (let k = 0; k < lst.length; ++k)
             main.node().appendChild(lst[k]);
          this.setLayoutKind(layout_kind);
          JSROOT.resize(main.node());
@@ -4163,13 +4163,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
 
-         if (layout_kind.indexOf("vert")==0) {
-            main = d3.select(grid.getGridFrame(0));
-            sidebar = d3.select(grid.getGridFrame(1));
-         } else {
-            main = d3.select(grid.getGridFrame(1));
-            sidebar = d3.select(grid.getGridFrame(0));
-         }
+         if (mainid == undefined)
+            mainid = (layout_kind.indexOf("vert") == 0) ? 0 : 1;
+
+         main = d3.select(grid.getGridFrame(mainid));
+         sidebar = d3.select(grid.getGridFrame(1 - mainid));
 
          main.classed("central_panel", true).style('position','relative');
          sidebar.classed("side_panel", true).style('position','relative');
@@ -4201,19 +4199,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.showUI5ProjectionArea)
          return this.showUI5ProjectionArea(kind);
 
-      let layout = 'simple';
+      let layout = 'simple', mainid;
 
-      if (kind == "X") layout = 'vert2_31'; else
-      if (kind == "Y") layout = 'horiz2_13';
+      switch(kind) {
+         case "X":
+         case "bottom": layout = 'vert2_31'; mainid = 0; break;
+         case "Y":
+         case "left": layout = 'horiz2_13'; mainid = 1; break;
+         case "top": layout = 'vert2_13'; mainid = 1; break;
+         case "right": layout = 'horiz2_31'; mainid = 0; break;
+      }
 
-      return this.changeLayout(layout);
+      return this.changeLayout(layout, mainid);
    }
 
    /** @summary Draw projection for specified histogram
      * @private */
-   TCanvasPainter.prototype.drawProjection = function(kind,hist) {
+   TCanvasPainter.prototype.drawProjection = function(kind, hist, hopt) {
 
       if (!this.proj_painter) return; // ignore drawing if projection not configured
+
+      if (hopt === undefined) hopt = "hist";
 
       if (this.proj_painter === 1) {
 
@@ -4228,7 +4234,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             canv.fUxmin = main.logx ? Math.log10(main.scale_xmin) : main.scale_xmin;
             canv.fUxmax = main.logx ? Math.log10(main.scale_xmax) : main.scale_xmax;
             drawopt = "fixframe";
-         } else {
+         } else if (kind == "Y") {
             canv.fBottomMargin = pad.fBottomMargin;
             canv.fTopMargin = pad.fTopMargin;
             canv.fLogx = main.logy;
@@ -4237,7 +4243,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             drawopt = "rotate";
          }
 
-         canv.fPrimitives.Add(hist, "hist");
+         canv.fPrimitives.Add(hist, hopt);
 
          let promise = this.drawInUI5ProjectionArea
                        ? this.drawInUI5ProjectionArea(canv, drawopt)
@@ -4246,7 +4252,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          promise.then(painter => { this.proj_painter = painter; });
       } else {
          let hp = this.proj_painter.getMainPainter();
-         if (hp) hp.updateObject(hist, "hist");
+         if (hp) hp.updateObject(hist, hopt);
          this.proj_painter.redrawPad();
       }
    }

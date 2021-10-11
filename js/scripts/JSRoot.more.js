@@ -814,9 +814,20 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    /** @summary Redraw graph
+     * @desc may redraw histogram which was used to draw axes
+     * @returns {Promise} for ready
      * @private */
    TGraphPainter.prototype.redraw = function() {
-      this.drawGraph();
+      let promise = Promise.resolve(true);
+
+      if (this.$redraw_hist) {
+         delete this.$redraw_hist;
+         let hist_painter = this.getMainPainter();
+         if (hist_painter && hist_painter.$secondary && this.axes_draw)
+            promise = hist_painter.redraw();
+      }
+
+      return promise.then(() => this.drawGraph());
    }
 
    /** @summary Cleanup graph painter */
@@ -829,7 +840,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    /** @summary Decode options  */
    TGraphPainter.prototype.decodeOptions = function(opt) {
 
-      if ((typeof opt == "string") && (opt.indexOf("same ")==0))
+      if ((typeof opt == "string") && (opt.indexOf("same ") == 0))
          opt = opt.substr(5);
 
       let graph = this.getObject(),
@@ -1161,7 +1172,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    }
 
-   /** @summary draw TGraph as SVG */
+   /** @summary draw TGraph */
    TGraphPainter.prototype.drawGraph = function() {
 
       let pmain = this.get_main();
@@ -1487,10 +1498,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      if (JSROOT.batch_mode) return;
-
-      return JSROOT.require(['interactive'])
-                   .then(inter => inter.addMoveHandler(this, this.testEditable()));
+      if (!JSROOT.batch_mode)
+         return JSROOT.require(['interactive'])
+                      .then(inter => inter.addMoveHandler(this, this.testEditable()));
    }
 
    /** @summary Provide tooltip at specified point
@@ -1953,13 +1963,18 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       graph.fNpoints = obj.fNpoints;
       this.createBins();
 
+      delete this.$redraw_hist;
+
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
          let histo = this.createHistogram(obj.fHistogram);
          histo.fTitle = graph.fTitle; // copy title
 
-         let main = this.getMainPainter();
-         main.updateObject(histo, this.options.HOptions);
+         let hist_painter = this.getMainPainter();
+         if (hist_painter && hist_painter.$secondary) {
+            hist_painter.updateObject(histo, this.options.HOptions);
+            this.$redraw_hist = true;
+         }
       }
 
       return true;
