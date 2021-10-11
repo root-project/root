@@ -401,14 +401,13 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public Detail::RFieldBase {
-private:
+protected:
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
 
-protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) override;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) override;
 
 public:
    RRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -421,12 +420,12 @@ public:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue GenerateValue(void *where) final;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
-   Detail::RFieldValue CaptureValue(void *where) final;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
+   Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final;
+   size_t GetValueSize() const override;
+   size_t GetAlignment() const override;
    void CommitCluster() final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
@@ -1395,14 +1394,9 @@ public:
    }
 };
 
-
 template <typename ItemT>
-class RField<ROOT::VecOps::RVec<ItemT>> : public Detail::RFieldBase {
+class RField<ROOT::VecOps::RVec<ItemT>> : public RRVecField {
    using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
-private:
-   size_t fItemSize;
-   ClusterSize_t fNWritten;
-
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
@@ -1416,8 +1410,8 @@ protected:
          auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
          nbytes += fSubFields[0]->Append(itemValue);
       }
-      Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
-      fNWritten += count;
+      Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&this->fNWritten);
+      this->fNWritten += count;
       fColumns[0]->Append(elemIndex);
       return nbytes + sizeof(elemIndex);
    }
@@ -1435,12 +1429,10 @@ protected:
 
 public:
    RField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
-      : ROOT::Experimental::Detail::RFieldBase(
-           fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false)
-      , fItemSize(itemField->GetValueSize()), fNWritten(0)
+      : RRVecField(fieldName, std::move(itemField))
    {
-      Attach(std::move(itemField));
    }
+
    explicit RField(std::string_view name)
       : RField(name, std::make_unique<RField<ItemT>>("_0"))
    {
@@ -1449,22 +1441,12 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
 
-   void GenerateColumnsImpl() final {
-      RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
-         Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
-   }
-   // TODO(jblomer): update together with RVec 2.0
-   void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) final {
-      GenerateColumnsImpl();
-   }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
       auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
       vec->~RVec();
       if (!dtorOnly)
          free(vec);
    }
-   void CommitCluster() final { fNWritten = 0; }
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
