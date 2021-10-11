@@ -23,6 +23,7 @@
 #include "TBaseClass.h"
 
 #include <sstream>
+#include <regex>
 
 #include <nlohmann/json.hpp>
 
@@ -98,7 +99,7 @@ void REveDataItemList::ItemChanged(Int_t idx)
 void REveDataItemList::FillImpliedSelectedSet( Set_t& impSelSet)
 {
    /*
-   printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",   RefSelectedSet().size());
+   printf("REveDataItemList::FillImpliedSelectedSet colecction setsize %zu\n",   RefSelectedSet().size());
    for (auto x : RefSelectedSet())
       printf("%d \n", x);
    */
@@ -142,6 +143,28 @@ Bool_t REveDataItemList::SetRnrState(Bool_t iRnrSelf)
 
    return ret;
 }
+
+
+//______________________________________________________________________________
+void REveDataItemList::ProcessSelectionStr(ElementId_t id, bool multi, bool secondary, const char* secondary_idcs)
+{
+   static const REveException eh("REveDataItemList::ProcessSelectionStr ");
+   static const std::regex comma_re("\\s*,\\s*", std::regex::optimize);
+   std::string   str(secondary_idcs);
+   std::set<int> sis;
+   std::sregex_token_iterator itr(str.begin(), str.end(), comma_re, -1);
+   std::sregex_token_iterator end;
+
+   try {
+      while (itr != end) sis.insert(std::stoi(*itr++));
+   }
+   catch (const std::invalid_argument& ia) {
+      throw eh + "invalid secondary index argument '" + *itr + "' - must be int.";
+   }
+
+   ProcessSelection(id, multi, secondary, sis);
+}
+
 
 //______________________________________________________________________________
 void REveDataItemList::ProcessSelection(ElementId_t selectionId, bool multi, bool secondary, const std::set<int>& secondary_idcs)
