@@ -290,12 +290,12 @@ static const std::string DisplayAsStringVectors(
 TEST(RDFDisplayTests, Vectors)
 {
   std::vector<int> v0 (0);
-  std::vector<int> v1 (1, 0);
-  std::vector<int> v3 (3, 0);
-  std::vector<int> v9 (9, 0);
-  std::vector<int> v10 (10, 0);
-  std::vector<int> v11 (11, 0);
-  std::vector<int> v20 (20, 0);
+  std::vector<int> v1(1);
+  std::vector<int> v3(3);
+  std::vector<int> v9(9);
+  std::vector<int> v10(10);
+  std::vector<int> v11(11);
+  std::vector<int> v20(20);
 
   RDataFrame vc(3);
 
