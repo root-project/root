@@ -28,7 +28,7 @@
 
 namespace std {
 
-namespace Detail {
+namespace __ROOT_noinline {
 template <typename F>
 class not_fn_t {
    std::decay_t<F> fFun;
@@ -55,9 +55,9 @@ public:
 
 
 template <typename F>
-Detail::not_fn_t<F> not_fn(F &&f)
+__ROOT_noinline::not_fn_t<F> not_fn(F &&f)
 {
-   return Detail::not_fn_t<F>(std::forward<F>(f));
+   return __ROOT_noinline::not_fn_t<F>(std::forward<F>(f));
 }
 }
 
