@@ -401,9 +401,15 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public Detail::RFieldBase {
+private:
+   /// Evaluate the constant returned by GetValueSize.
+   // (we separate evaluation from the getter to avoid repeating the computation).
+   std::size_t EvalValueSize() const;
+
 protected:
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
+   std::size_t fValueSize;
 
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
    std::size_t AppendImpl(const Detail::RFieldValue &value) override;

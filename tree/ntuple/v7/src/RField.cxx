@@ -1119,6 +1119,7 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
      fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
    Attach(std::move(itemField));
+   fValueSize = EvalValueSize(); // requires fSubFields to be populated
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -1278,7 +1279,7 @@ ROOT::Experimental::RRVecField::SplitValue(const Detail::RFieldValue &value) con
    return result;
 }
 
-size_t ROOT::Experimental::RRVecField::GetValueSize() const
+size_t ROOT::Experimental::RRVecField::EvalValueSize() const
 {
    // the size of an RVec<T> is the size of its 4 data-members + optional padding:
    //
@@ -1324,6 +1325,10 @@ size_t ROOT::Experimental::RRVecField::GetValueSize() const
       paddingEnd = alignOfRVecT - paddingEnd;
 
    return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
+}
+
+size_t ROOT::Experimental::RRVecField::GetValueSize() const {
+   return fValueSize;
 }
 
 size_t ROOT::Experimental::RRVecField::GetAlignment() const
