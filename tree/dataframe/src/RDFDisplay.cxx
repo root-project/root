@@ -128,6 +128,7 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
    // For each element of the collection, save it. The first element will be in the current row, next ones will have
    // their own row.
    size_t collectionSize = collection.size();
+   size_t nMaxCollectionElements = 10;  // threshold on elements in collections to be Print()
    for (size_t index = 0; index < collectionSize; ++index) {
       auto stringEle = collection[index];
       auto element = DElement_t(stringEle);
@@ -135,14 +136,14 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
       // Update the width if this element is the biggest found
       EnsureCurrentColumnWidth(stringEle.length());
 
-      if (index == 0 || index == collectionSize - 1) {
+      if (index < nMaxCollectionElements) {
          // Do nothing, by default DisplayElement is printed
-      } else if (index == 1) {
+      } else if (index == nMaxCollectionElements) {
          element.SetDots();
          // Be sure the "..." fit
          EnsureCurrentColumnWidth(3);
       } else {
-         // In the Print(), after the dots, all element will just be ignored except the last one.
+         // In the Print(), after the dots, all element will just be ignored.
          element.SetIgnore();
       }
 

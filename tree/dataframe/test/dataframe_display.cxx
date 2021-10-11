@@ -10,16 +10,16 @@ using namespace ROOT::RDF;
 using namespace ROOT::VecOps;
 
 static const std::string DisplayPrintDefaultRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n "
-   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+   "b1 | b2 | b3        | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | "
+   "2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n "
+   "  | 3  |           | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | "
+   "2.0000000 | \n   | 2  |           | \n   | 3  |           | \n");
 
 static const std::string DisplayAsStringDefaultRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n "
-   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+   "b1 | b2 | b3        | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | "
+   "2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n "
+   "  | 3  |           | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | "
+   "2.0000000 | \n   | 2  |           | \n   | 3  |           | \n   |    |           | \n");
 
 TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 {
@@ -103,12 +103,12 @@ TEST(RDFDisplayTests, DisplayRegexDefaultRows)
 }
 
 static const std::string
-   DisplayPrintTwoRows("b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |          "
-                       " | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+   DisplayPrintTwoRows("b1 | b2 | b3        | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |          "
+                       " | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |           | \n");
 
 static const std::string DisplayAsStringTwoRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+   "b1 | b2 | b3        | \n0  | 1  | 2.0000000 | \n   | 2  |           | \n   | 3  |           | \n0  | 1  | "
+   "2.0000000 | \n   | 2  |           | \n   | 3  |           | \n   |    |           | \n");
 
 TEST(RDFDisplayTests, DisplayJitTwoRows)
 {
@@ -139,8 +139,9 @@ TEST(RDFDisplayTests, DisplayJitTwoRows)
 
 static const std::string DisplayAsStringOneColumn("b1 | \n0  | \n0  | \n0  | \n0  | \n0  | \n   | \n");
 static const std::string DisplayAsStringTwoColumns(
-   "b1 | b2  | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | "
-   "\n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n   |     | \n");
+   "b1 | b2 | \n0  | 1  | \n   | 2  | \n   | 3  | \n0  | 1  | \n   | 2  | \n   | 3  | \n0  | 1  | \n   | 2  | "
+   "\n   | 3  | \n0  | 1  | \n   | 2  | \n   | 3  | \n0  | 1  | \n   | 2  | \n   | 3  | \n   |    | \n");
+
 
 TEST(RDFDisplayTests, DisplayAmbiguity)
 {
@@ -244,4 +245,86 @@ TEST(RDFDisplayTests, Friends)
   const auto res = ROOT::RDataFrame(main).Display()->AsString();
   const auto expected = "friend.x | \n0        | \n         | \n";
   EXPECT_EQ(res, expected);
+}
+
+static const std::string DisplayPrintVectors(
+"S0 | S1 | S3 | S9 | S10 | S11 | S20 | S20_ | \n"
+"   | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    |    | 0   | 0   | 0   | 0    | \n"
+"   |    |    |    |     | ... | ... | ...  | \n"
+"   | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    |    | 0   | 0   | 0   | 0    | \n"
+"   |    |    |    |     | ... | ... | ...  | \n"
+"   | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+"   |    |    |    | 0   | 0   | 0   | 0    | \n"
+"   |    |    |    |     | ... | ... | ...  | \n");
+
+static const std::string DisplayAsStringVectors(
+"S0 | S1 | S3 | S9 | S10 | S11 | S20 | S20_ | \n   | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    |    | 0   | 0   | 0   | 0    | \n   |    |    |    |     | 0   | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    |    | 0   | 0   | 0   | 0    | \n   |    |    |    |     | 0   | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    | 0  | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    | 0  | 0   | 0   | 0   | 0    | \n   |    |    |    | 0   | 0   | 0   | 0    | \n   |    |    |    |     | 0   | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     | 0   | 0    | \n   |    |    |    |     |     |     |      | \n"
+);
+
+TEST(RDFDisplayTests, Vectors)
+{
+  std::vector<int> v0 (0);
+  std::vector<int> v1 (1, 0);
+  std::vector<int> v3 (3, 0);
+  std::vector<int> v9 (9, 0);
+  std::vector<int> v10 (10, 0);
+  std::vector<int> v11 (11, 0);
+  std::vector<int> v20 (20, 0);
+
+  RDataFrame vc(3);
+
+  auto dd = vc.Define("S0", [&v0] { return v0; })
+              .Define("S1", [&v1] { return v1; })
+              .Define("S3", [&v3] { return v3; })
+              .Define("S9", [&v9] { return v9; })
+              .Define("S10", [&v10] { return v10; })
+              .Define("S11", [&v11] { return v11; })
+              .Define("S20", [&v20] { return v20; })
+              .Define("S20_", [&v20] { return v20; })
+              .Display<std::vector<int>, std::vector<int>,
+                       std::vector<int>, std::vector<int>,
+                       std::vector<int>, std::vector<int>,
+                       std::vector<int>, std::vector<int>>({"S0", "S1", "S3", "S9",
+                                          "S10", "S11", "S20", "S20_"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), DisplayPrintVectors);
+
+   // Testing the string returned
+   EXPECT_EQ(dd->AsString(), DisplayAsStringVectors);
 }
