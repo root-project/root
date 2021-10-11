@@ -1433,11 +1433,6 @@ public:
    }
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
       auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
-      auto nItems = vec->size();
-      for (unsigned i = 0; i < nItems; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
-      }
       vec->~RVec();
       if (!dtorOnly)
          free(vec);
