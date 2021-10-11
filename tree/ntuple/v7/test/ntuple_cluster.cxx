@@ -211,33 +211,49 @@ TEST(ClusterPool, GetClusterBasics)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
-   ASSERT_EQ(1U, p1.fReqsClusterIds.size());
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[0]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[1]);
 
    RPageSourceMock p2;
    {
       RClusterPool c2(p2, 2);
       c2.GetCluster(0, {0});
    }
-   ASSERT_EQ(2U, p2.fReqsClusterIds.size());
+   ASSERT_EQ(4U, p2.fReqsClusterIds.size());
    EXPECT_EQ(0U, p2.fReqsClusterIds[0]);
    EXPECT_EQ(1U, p2.fReqsClusterIds[1]);
+   EXPECT_EQ(2U, p2.fReqsClusterIds[2]);
+   EXPECT_EQ(3U, p2.fReqsClusterIds[3]);
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[0]);
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[1]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[2]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[3]);
 
    RPageSourceMock p3;
    {
-      RClusterPool c3(p3, 4);
-      c3.GetCluster(2, {0});
+      RClusterPool c3(p3, 2);
+      c3.GetCluster(0, {0});
+      c3.GetCluster(1, {0});
    }
-   ASSERT_EQ(3U, p3.fReqsClusterIds.size());
-   EXPECT_EQ(2U, p3.fReqsClusterIds[0]);
-   EXPECT_EQ(3U, p3.fReqsClusterIds[1]);
-   EXPECT_EQ(4U, p3.fReqsClusterIds[2]);
-   EXPECT_EQ(RCluster::ColumnSet_t({0}), p3.fReqsColumns[0]);
-   EXPECT_EQ(RCluster::ColumnSet_t({0}), p3.fReqsColumns[1]);
-   EXPECT_EQ(RCluster::ColumnSet_t({0}), p3.fReqsColumns[2]);
+   ASSERT_EQ(4U, p3.fReqsClusterIds.size());
+   EXPECT_EQ(0U, p3.fReqsClusterIds[0]);
+   EXPECT_EQ(1U, p3.fReqsClusterIds[1]);
+   EXPECT_EQ(2U, p3.fReqsClusterIds[2]);
+   EXPECT_EQ(3U, p3.fReqsClusterIds[3]);
+
+   RPageSourceMock p4;
+   {
+      RClusterPool c4(p4, 3);
+      c4.GetCluster(1, {0});
+   }
+   ASSERT_EQ(4U, p4.fReqsClusterIds.size());
+   EXPECT_EQ(1U, p4.fReqsClusterIds[0]);
+   EXPECT_EQ(2U, p4.fReqsClusterIds[1]);
+   EXPECT_EQ(3U, p4.fReqsClusterIds[2]);
+   EXPECT_EQ(4U, p4.fReqsClusterIds[3]);
 }
 
 
@@ -246,14 +262,14 @@ TEST(ClusterPool, GetClusterIncrementally)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
-   ASSERT_EQ(1U, p1.fReqsClusterIds.size());
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[0]);
 
    c1.GetCluster(3, {1});
-   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
-   EXPECT_EQ(3U, p1.fReqsClusterIds[1]);
-   EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[1]);
+   ASSERT_EQ(4U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[2]);
+   EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
 }
 
 
