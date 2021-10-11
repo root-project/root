@@ -36,7 +36,6 @@ public:
           const RooArgSet* auxProto=0, bool _verbose= false);
   RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
           const RooArgSet* auxProto=0, bool _verbose= false);
-  ~RooConvGenContext() override;
 
   void setProtoDataOrder(Int_t* lut) override ;
 
@@ -51,18 +50,18 @@ protected:
 
   RooConvGenContext(const RooConvGenContext& other) ;
 
-  RooAbsGenContext* _pdfGen ;    ///< Physics model generator context
-  RooAbsGenContext* _modelGen ;  ///< Resolution model generator context
-  TString _convVarName ;         ///< Name of convolution variable
-  RooArgSet* _pdfVarsOwned ;     ///< Owning version of pdfVars ;
-  RooArgSet* _modelVarsOwned ;   ///< Owning version of modelVars ;
-  RooArgSet* _pdfVars ;          ///< Holder of PDF x truth event
-  RooArgSet* _modelVars ;        ///< Holder of resModel event
-  RooArgSet* _pdfCloneSet ;      ///< Owner of PDF clone
-  RooArgSet* _modelCloneSet ;    ///< Owner of resModel clone
-  RooRealVar* _cvModel{nullptr}; ///< Convolution variable in resModel event
-  RooRealVar* _cvPdf{nullptr};   ///< Convolution variable in PDFxTruth event
-  RooRealVar* _cvOut{nullptr};   ///< Convolution variable in output event
+  std::unique_ptr<RooAbsGenContext> _pdfGen ;    ///< Physics model generator context
+  std::unique_ptr<RooAbsGenContext> _modelGen ;  ///< Resolution model generator context
+  TString _convVarName ;                         ///< Name of convolution variable
+  std::unique_ptr<RooArgSet> _pdfVarsOwned ;     ///< Owning version of pdfVars ;
+  std::unique_ptr<RooArgSet> _modelVarsOwned ;   ///< Owning version of modelVars ;
+  std::unique_ptr<RooArgSet> _pdfVars ;          ///< Holder of PDF x truth event
+  std::unique_ptr<RooArgSet> _modelVars ;        ///< Holder of resModel event
+  std::unique_ptr<RooArgSet> _pdfCloneSet ;      ///< Owner of PDF clone
+  std::unique_ptr<RooArgSet> _modelCloneSet ;    ///< Owner of resModel clone
+  RooRealVar* _cvModel{nullptr};                 ///< Convolution variable in resModel event
+  RooRealVar* _cvPdf{nullptr};                   ///< Convolution variable in PDFxTruth event
+  RooRealVar* _cvOut{nullptr};                   ///< Convolution variable in output event
 
   ClassDefOverride(RooConvGenContext,0) // Context for generating a dataset from a PDF
 };
