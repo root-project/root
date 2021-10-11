@@ -204,14 +204,12 @@ void RDisplay::Print() const
 {
    auto columnsToPrint =
       fNColumns - GetNColumnsToShorten(); // Get the number of columns that fit in the characters limit
-   std::vector<bool> hasPrintedNext(fNColumns,
-                                    false); // Keeps track if the collection as already been shortened, allowing to skip
-                                            // all elements until the next printable element.
 
    if (columnsToPrint < fNColumns)
       Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
 
    auto nrRows = fTable.size();
+
    for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
       auto &row = fTable[rowIndex];
 
@@ -225,23 +223,9 @@ void RDisplay::Print() const
          if (element.IsDot()) {
             printedElement = "...";
          } else if (element.IsPrint()) {
-            // Maybe the element is part of a collection that is being shortened, and so it was already printed.
-            if (!hasPrintedNext[columnIndex]) {
-               printedElement = element.GetRepresentation();
-            }
-            hasPrintedNext[columnIndex] =
-               false; // Encountered "next printable element", shortening can start again when needed.
+            printedElement = element.GetRepresentation();
          } else {     // IsIgnore
-            // Shortening is starting here. Print directly the last element, to have something like 1 ... 3, and don't
-            // print anything else.
-            if (!hasPrintedNext[columnIndex]) {
-               size_t i = rowIndex + 1; // Starting from the next row...
-               for (; !fTable[i][columnIndex].IsPrint(); ++i) {
-                  // .. look for the first element that can be printed, it will be the last of the collection.
-               }
-               printedElement = fTable[i][columnIndex].GetRepresentation(); // Print the element
-               hasPrintedNext[columnIndex] = true; // And start ignoring anything else until the next collection.
-            }
+            // Do nothing, printedElement remains ""
          }
          if (!printedElement.empty()) {
             // Found at least one element, so the row is not empty.
