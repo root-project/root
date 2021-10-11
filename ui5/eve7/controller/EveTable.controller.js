@@ -80,8 +80,8 @@ sap.ui.define([
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
-               let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, false, true`;
-               fcall += ", { " + secIdcs.join(", ") + " }";
+               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + `, false, true`;
+               fcall += ", \" " + secIdcs.join(", ") + " \"";
                fcall += ")";
                pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
             }
