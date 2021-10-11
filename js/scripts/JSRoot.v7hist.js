@@ -1282,7 +1282,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           left = handle.i1,
           right = handle.i2,
           di = handle.stepi,
-          histo = this.getHisto(), xaxis = this.getAxis("x"),
+          histo = this.getHisto(),
+          want_tooltip = !JSROOT.batch_mode && JSROOT.settings.Tooltip,
+          xaxis = this.getAxis("x"),
           res = "", lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           exclude_zero = !options.Zero,
@@ -1292,6 +1294,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           show_text = options.Text,
           text_profile = show_text && (this.options.TextKind == "E") && this.isRProfile(),
           path_fill = null, path_err = null, path_marker = null, path_line = null,
+          hints_err = null,
           endx = "", endy = "", dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx,
           text_font;
 
@@ -1303,6 +1306,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                               else path_fill = "";
       } else if (options.Error) {
          path_err = "";
+         hints_err = want_tooltip ? "" : null;
       }
 
       if (show_line) path_line = "";
@@ -1386,12 +1390,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                   if (path_marker !== null)
                      path_marker += this.markeratt.create(midx, my);
                   if (path_err !== null) {
+                     let edx = 5;
                      if (this.options.errorX > 0) {
-                        let mmx1 = Math.round(midx - (mx2-mx1)*this.options.errorX),
-                            mmx2 = Math.round(midx + (mx2-mx1)*this.options.errorX);
+                        edx = Math.round((mx2-mx1)*this.options.errorX);
+                        let mmx1 = midx - edx, mmx2 = midx + edx;
                         path_err += "M" + (mmx1+dend) +","+ my + endx + "h" + (mmx2-mmx1-2*dend) + endx;
                      }
                      path_err += "M" + midx +"," + (my-yerr1+dend) + endy + "v" + (yerr1+yerr2-2*dend) + endy;
+                     if (hints_err !== null)
+                        hints_err += "M" + (midx-edx) + "," + (my-yerr1) + "h" + (2*edx) + "v" + (yerr1+yerr2) + "h" + (-2*edx) + "z";
                   }
                }
             }
@@ -1499,6 +1506,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                this.draw_g.append("svg:path")
                    .attr("d", path_err)
                    .call(this.lineatt.func);
+
+         if ((hints_err !== null) && (hints_err.length > 0))
+               this.draw_g.append("svg:path")
+                   .attr("d", hints_err)
+                   .attr("stroke", "none")
+                   .attr("fill", "none")
+                   .attr("pointer-events", "visibleFill");
 
          if ((path_line !== null) && (path_line.length > 0)) {
             if (!this.fillatt.empty())
@@ -1999,17 +2013,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.is_projection = ""; // disable projection redraw until callback
       this.projection_width = width;
 
-      let canp = this.getCanvPainter();
-      if (canp) canp.toggleProjection(this.is_projection).then(() => this.redrawProjection("toggling", new_proj));
+      this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
    }
 
-   RH2Painter.prototype.redrawProjection = function(ii1, ii2 /*, jj1, jj2*/) {
+   RH2Painter.prototype.redrawProjection = function(/* ii1, ii2 , jj1, jj2*/) {
       // do nothing for the moment
-
-      if (ii1 === "toggling") {
-         this.is_projection = ii2;
-         ii1 = ii2 = undefined;
-      }
 
       if (!this.is_projection) return;
    }
