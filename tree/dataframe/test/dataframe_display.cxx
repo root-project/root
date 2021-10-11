@@ -328,3 +328,24 @@ TEST(RDFDisplayTests, Vectors)
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringVectors);
 }
+
+TEST(RDFDisplayTests, CustomMaxWidth)
+{
+
+   std::vector<int> v3(3);
+   ROOT::RDataFrame vc(3);
+   auto dd = vc.Define("S3", [&v3] { return v3; })
+               .Display<std::vector<int>>({"S3"}, 1, 2);
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "S3  | \n0   | \n0   | \n... | \n");
+}

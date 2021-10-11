@@ -124,11 +124,12 @@ void RDisplay::AddToRow(const std::string &stringEle)
 
 void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
 {
+ 
+
    auto row = fCurrentRow;
    // For each element of the collection, save it. The first element will be in the current row, next ones will have
    // their own row.
    size_t collectionSize = collection.size();
-   size_t nMaxCollectionElements = 10;  // threshold on elements in collections to be Print()
    for (size_t index = 0; index < collectionSize; ++index) {
       auto stringEle = collection[index];
       auto element = DElement_t(stringEle);
@@ -136,9 +137,9 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
       // Update the width if this element is the biggest found
       EnsureCurrentColumnWidth(stringEle.length());
 
-      if (index < nMaxCollectionElements) {
+      if (index < fNMaxCollectionElements) {
          // Do nothing, by default DisplayElement is printed
-      } else if (index == nMaxCollectionElements) {
+      } else if (index == fNMaxCollectionElements) {
          element.SetDots();
          // Be sure the "..." fit
          EnsureCurrentColumnWidth(3);
@@ -173,11 +174,10 @@ void RDisplay::MovePosition()
    }
 }
 
-RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries)
+RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
-     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries)
+     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries), fNMaxCollectionElements(nMaxCollectionElements)
 {
-
    // Add the first row with the names of the columns
    fTable.push_back(std::vector<DElement_t>(columnNames.size()));
    for (const auto &name : columnNames) {
@@ -207,6 +207,9 @@ void RDisplay::Print() const
 
    if (columnsToPrint < fNColumns)
       Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
+
+   if (fNMaxCollectionElements < 1)
+      Info("Print", "No collections shown since fNMaxCollectionElements is %lu\n", fNMaxCollectionElements);
 
    auto nrRows = fTable.size();
 
