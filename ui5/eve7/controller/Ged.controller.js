@@ -418,8 +418,8 @@ sap.ui.define([
 		     list.setSelectedItem(selected[s], false);
 	       }
 	    }
-            let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, ${is_multi}, true`;
-                              fcall += ", { " + secIdcs.join(", ")  + " }";
+            let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + `, ${is_multi}, true`;
+                              fcall += ", \"" + secIdcs.join(", ")  + " \"";
                               fcall += ")";
                               pthis.mgr.SendMIR(fcall, el.fElementId, el._typename);
 
