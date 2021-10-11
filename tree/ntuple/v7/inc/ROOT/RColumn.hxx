@@ -265,7 +265,7 @@ public:
    {
       NTupleSize_t idxStart = 0;
       NTupleSize_t idxEnd;
-      // Try to avoid jumping back to the previous page and jumping pack to the previous cluster
+      // Try to avoid jumping back to the previous page and jumping back to the previous cluster
       if (R__likely(globalIndex > 0)) {
          if (R__likely(fReadPage.Contains(globalIndex - 1))) {
             idxStart = *Map<ClusterSize_t>(globalIndex - 1);
