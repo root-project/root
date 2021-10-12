@@ -23,3 +23,9 @@ div.contents {
   background-color: #f9fafc;
   padding: 15px;
 }
+
+.legacybox {
+  border: 3px solid #879ecb;
+  background-color: #fdf06b;
+  padding: 15px;
+}
