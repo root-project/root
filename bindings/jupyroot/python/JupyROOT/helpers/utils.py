@@ -19,7 +19,8 @@ import os
 import sys
 import select
 import tempfile
-import pty
+if not 'win32' in sys.platform:
+    import pty
 import itertools
 import re
 import fnmatch
@@ -122,7 +123,10 @@ def RCanvasAvailable():
        return False
    return True
 
-_enableJSVis = False
+if 'win32' in sys.platform:
+    _enableJSVis = True
+else:
+    _enableJSVis = False
 _enableJSVisDebug = False
 def enableJSVis():
     if not TBufferJSONAvailable():
@@ -610,7 +614,8 @@ def loadMagicsAndCapturers():
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
-    captures.append(StreamCapture())
+    if not 'win32' in sys.platform:
+        captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
     for capture in captures: capture.register()
