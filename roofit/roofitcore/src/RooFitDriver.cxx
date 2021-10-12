@@ -31,15 +31,21 @@ and gets destroyed when the fitting ends.
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooBatchCompute.h"
+#include "RooMsgService.h"
 #include "RooNLLVarNew.h"
 #include "RooRealVar.h"
 #include "RunContext.h"
 #include "RooDataSet.h"
 
+#include "RooBatchCompute.h"
+
+#include <iomanip>
 #include <thread>
 
 namespace ROOT {
 namespace Experimental {
+
+using namespace std::chrono;
 
 /**
 Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
@@ -238,7 +244,7 @@ double RooFitDriver::getVal()
             if (it.second.remServers == -1 && !RooBatchCompute::dispatchCUDA->streamIsActive(it.second.stream)) {
                if (_getValInvocations == 2) {
                   float ms = RooBatchCompute::dispatchCUDA->cudaEventElapsedTime(it.second.eventStart, it.second.event);
-                  it.second.cudaTime += std::chrono::microseconds{int(1000.0 * ms)};
+                  it.second.cudaTime += microseconds{int(1000.0 * ms)};
                }
                it.second.remServers = -2;
                nNodes--;
@@ -254,7 +260,7 @@ double RooFitDriver::getVal()
 
       // if no cpu node available sleep for a while to save cpu usage
       if (it == _nodeInfos.end()) {
-         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+         std::this_thread::sleep_for(milliseconds(1));
          continue;
       }
 
@@ -399,9 +405,8 @@ void RooFitDriver::updateMyServers(const RooAbsReal *node)
 }
 
 /// Measure the time for transfering data from host to device and vice-versa
-std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFitDriver::memcpyBenchmark()
+std::pair<microseconds, microseconds> RooFitDriver::memcpyBenchmark()
 {
-   using namespace std::chrono;
    std::pair<microseconds, microseconds> ret;
    auto hostArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMallocHost(_nEvents * sizeof(double)));
    auto deviArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(_nEvents * sizeof(double)));
@@ -420,14 +425,112 @@ std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFitDriver::me
    return ret;
 }
 
+/// This methods simulates the computation of the whole graph and the time it takes
+/// and decides what to compute in gpu. The decision is made on the basis of avoiding
+/// leaving either the gpu or the cpu idle at any time, if possible, and on assigning
+/// to each piece of hardware a computation that is significantly slower on the other part.
+/// The nodes may be assigned to the non-efficient side (cpu or gpu) to prevent idleness
+/// only if the absolute difference cpuTime-cudaTime does not exceed the diffThreshold.
+microseconds RooFitDriver::simulateFit(microseconds h2dTime, microseconds d2hTime, microseconds diffThreshold)
+{
+   int nNodes = _nodeInfos.size();
+   // launch scalar nodes (assume they are computed in 0 time)
+   for (auto &it : _nodeInfos)
+      if (it.second.computeInScalarMode) {
+         nNodes--;
+         it.second.timeLaunched = microseconds{0};
+      } else
+         it.second.timeLaunched = microseconds{-1};
+
+   const RooAbsReal *cpuNode = nullptr, *cudaNode = nullptr;
+   microseconds simulatedTime{0};
+   while (nNodes) {
+      microseconds minDiff = microseconds::max(), maxDiff = -minDiff; // diff = cpuTime - cudaTime
+      const RooAbsReal *cpuCandidate = nullptr, *cudaCandidate = nullptr;
+      microseconds cpuDelay, cudaDelay;
+      for (auto &it : _nodeInfos) {
+         if (it.second.timeLaunched >= microseconds{0})
+            continue; // already launched
+         microseconds diff{it.second.cpuTime - it.second.cudaTime}, cpuWait{0}, cudaWait{0};
+
+         for (auto *server : it.first->servers()) {
+            auto pServer = static_cast<const RooAbsReal *>(server);
+            if (_nodeInfos.count(pServer) == 0)
+               continue;
+            auto &info = _nodeInfos.at(pServer);
+            if (info.computeInScalarMode)
+               continue;
+
+            // dependencies not computed yet
+            if (info.timeLaunched < microseconds{0})
+               goto nextCandidate;
+            if (info.computeInGPU)
+               cpuWait = std::max(cpuWait, info.timeLaunched + info.cudaTime + d2hTime - simulatedTime);
+            else
+               cudaWait = std::max(cudaWait, info.timeLaunched + info.cpuTime + h2dTime - simulatedTime);
+         }
+
+         diff += cpuWait - cudaWait;
+         if (diff < minDiff) {
+            minDiff = diff;
+            cpuDelay = cpuWait;
+            cpuCandidate = it.first;
+         }
+         if (diff > maxDiff && it.first->canComputeBatchWithCuda()) {
+            maxDiff = diff;
+            cudaDelay = cudaWait;
+            cudaCandidate = it.first;
+         }
+      nextCandidate:;
+      } // for (auto& it:_nodeInfos)
+
+      auto calcDiff = [&](const RooAbsReal *node) {
+         return _nodeInfos.at(node).cpuTime - _nodeInfos.at(node).cudaTime;
+      };
+      if (cpuCandidate && calcDiff(cpuCandidate) > diffThreshold)
+         cpuCandidate = nullptr;
+      if (cudaCandidate && -calcDiff(cudaCandidate) > diffThreshold)
+         cudaCandidate = nullptr;
+      // don't compute same node twice
+      if (cpuCandidate == cudaCandidate && !cpuNode && !cudaNode) {
+         if (minDiff < microseconds{0})
+            cudaCandidate = nullptr;
+         else
+            cpuCandidate = nullptr;
+      }
+      if (cpuCandidate && !cpuNode) {
+         cpuNode = cpuCandidate;
+         _nodeInfos.at(cpuNode).timeLaunched = simulatedTime + cpuDelay;
+         _nodeInfos.at(cpuNode).computeInGPU = false;
+         nNodes--;
+      }
+      if (cudaCandidate && !cudaNode) {
+         cudaNode = cudaCandidate;
+         _nodeInfos.at(cudaNode).timeLaunched = simulatedTime + cudaDelay;
+         _nodeInfos.at(cudaNode).computeInGPU = true;
+         nNodes--;
+      }
+
+      microseconds etaCPU{microseconds::max()}, etaCUDA{microseconds::max()};
+      if (cpuNode)
+         etaCPU = _nodeInfos[cpuNode].timeLaunched + _nodeInfos[cpuNode].cpuTime;
+      if (cudaNode)
+         etaCUDA = _nodeInfos[cudaNode].timeLaunched + _nodeInfos[cudaNode].cudaTime;
+      simulatedTime = std::min(etaCPU, etaCUDA);
+      if (etaCPU < etaCUDA)
+         cpuNode = nullptr;
+      else
+         cudaNode = nullptr;
+   } // while(nNodes)
+   return simulatedTime;
+}
+
 /// Decides which nodes are assigned to the gpu in a cuda fit. In the 1st iteration,
 /// everything is computed in cpu for measuring the cpu time. In the 2nd iteration,
 /// everything is computed in gpu (if possible) to measure the gpu time.
-/// In the 3rd iteration, this methods simulates the computation of the whole graph
-/// and the time it takes and decides what to compute in gpu. The decision is made on the
-/// basis avoiding leaving either the gpu or the cpu idle at any time, if possible,
-/// and on assigning to each piece of hardware a computation that is significantly slower on the
-/// other part.
+/// In the 3rd iteration, simulate the computation of the graph by calling simulateFit
+/// with every distinct threshold found as timeDiff within the nodes of the graph and select
+/// the best configuration. In the end, mark the nodes and handle the details accordingly.
 void RooFitDriver::markGPUNodes()
 {
    if (_getValInvocations == 1)
@@ -437,98 +540,36 @@ void RooFitDriver::markGPUNodes()
          item.second.computeInGPU = !item.second.computeInScalarMode && item.first->canComputeBatchWithCuda();
    else // assign nodes to gpu using a greedy algorithm
    {
+      auto transferTimes = memcpyBenchmark();
+      microseconds h2dTime = transferTimes.first;
+      microseconds d2hTime = transferTimes.second;
+      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations) << "------Copying times------\n";
+      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
+         << "h2dTime=" << h2dTime.count() << "us\td2hTime=" << d2hTime.count() << "us\n";
+
+      std::vector<microseconds> diffTimes;
+      for (auto &item : _nodeInfos)
+         if (!item.second.computeInScalarMode)
+            diffTimes.push_back(item.second.cpuTime - item.second.cudaTime);
+      microseconds bestTime = microseconds::max(), bestThreshold, ret;
+      for (auto &threshold : diffTimes)
+         if ((ret = simulateFit(h2dTime, d2hTime, microseconds{std::abs(threshold.count())})) < bestTime) {
+            bestTime = ret;
+            bestThreshold = threshold;
+         }
+      // finalize the marking of the best configuration
+      simulateFit(h2dTime, d2hTime, microseconds{std::abs(bestThreshold.count())});
+      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
+         << "Best threshold=" << bestThreshold.count() << "us" << std::endl;
+
       // deletion of the timing events (to be replaced later by non-timing events)
       for (auto &item : _nodeInfos) {
-         item.second.computeInGPU = item.second.copyAfterEvaluation = false;
+         item.second.copyAfterEvaluation = false;
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(item.second.event);
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(item.second.eventStart);
          item.second.event = item.second.eventStart = nullptr;
       }
-
-      using namespace std::chrono;
-      auto transferTimes = memcpyBenchmark();
-      microseconds h2dTime = transferTimes.first;
-      microseconds d2hTime = transferTimes.second;
-
-      const RooAbsReal *cpuNode = nullptr, *cudaNode = nullptr;
-      microseconds simulatedTime{0};
-      int nNodes = _nodeInfos.size();
-      // launch scalar nodes (assume they are computed in 0 time)
-      for (auto &it : _nodeInfos)
-         if (it.second.computeInScalarMode) {
-            nNodes--;
-            it.second.timeLaunched = microseconds{0};
-         }
-
-      while (nNodes) {
-         microseconds minDiff = microseconds::max(), maxDiff = -minDiff; // diff = cpuTime - cudaTime
-         const RooAbsReal *cpuCandidate = nullptr, *cudaCandidate = nullptr;
-         microseconds cpuDelay, cudaDelay;
-         for (auto &it : _nodeInfos) {
-            if (it.second.timeLaunched >= microseconds{0})
-               continue; // already launched
-            microseconds diff{it.second.cpuTime - it.second.cudaTime}, cpuWait{0}, cudaWait{0};
-
-            for (auto *server : it.first->servers()) {
-               auto pServer = static_cast<const RooAbsReal *>(server);
-               if (_nodeInfos.count(pServer) == 0)
-                  continue;
-               auto &info = _nodeInfos.at(pServer);
-
-               // dependencies not computed yet
-               if (info.timeLaunched < microseconds{0})
-                  goto nextCandidate;
-               if (info.computeInGPU)
-                  cpuWait = std::max(cpuWait, info.timeLaunched + info.cudaTime + d2hTime - simulatedTime);
-               else
-                  cudaWait = std::max(cudaWait, info.timeLaunched + info.cpuTime + h2dTime - simulatedTime);
-            }
-
-            diff += cpuWait - cudaWait;
-            if (diff < minDiff) {
-               minDiff = diff;
-               cpuDelay = cpuWait;
-               cpuCandidate = it.first;
-            }
-            if (diff > maxDiff && it.first->canComputeBatchWithCuda()) {
-               maxDiff = diff;
-               cudaDelay = cudaWait;
-               cudaCandidate = it.first;
-            }
-         nextCandidate:;
-         } // for (auto& it:_nodeInfos)
-
-         // don't compute same node twice
-         if (cpuCandidate == cudaCandidate && !cpuNode && !cudaNode) {
-            if (minDiff < microseconds{0})
-               cudaCandidate = nullptr;
-            else
-               cpuCandidate = nullptr;
-         }
-         if (cpuCandidate && !cpuNode) {
-            cpuNode = cpuCandidate;
-            _nodeInfos.at(cpuNode).timeLaunched = simulatedTime + cpuDelay;
-            nNodes--;
-         }
-         if (cudaCandidate && !cudaNode) {
-            cudaNode = cudaCandidate;
-            _nodeInfos.at(cudaNode).timeLaunched = simulatedTime + cudaDelay;
-            _nodeInfos.at(cudaNode).computeInGPU = true;
-            nNodes--;
-         }
-
-         microseconds etaCPU{microseconds::max()}, etaCUDA{microseconds::max()};
-         if (cpuNode)
-            etaCPU = _nodeInfos[cpuNode].timeLaunched + _nodeInfos[cpuNode].cpuTime;
-         if (cudaNode)
-            etaCUDA = _nodeInfos[cudaNode].timeLaunched + _nodeInfos[cudaNode].cudaTime;
-         simulatedTime = std::min(etaCPU, etaCUDA);
-         if (etaCPU < etaCUDA)
-            cpuNode = nullptr;
-         else
-            cudaNode = nullptr;
-      } // while(nNodes)
-   }    // else (_getValInvocations > 2)
+   } // else (_getValInvocations > 2)
 
    for (auto &item : _nodeInfos)
       if (!item.second.computeInScalarMode) // scalar nodes don't need copying
@@ -544,10 +585,19 @@ void RooFitDriver::markGPUNodes()
          }
 
    // restore a cudaEventDisableTiming event when necessary
-   if (_getValInvocations == 3)
+   if (_getValInvocations == 3) {
       for (auto &item : _nodeInfos)
          if (item.second.computeInGPU || item.second.copyAfterEvaluation)
             item.second.event = RooBatchCompute::dispatchCUDA->newCudaEvent(false);
+
+      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
+         << "------Nodes------\t\t\t\tCpu time: \t Cuda time\n";
+      for (auto &item : _nodeInfos)
+         ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
+            << std::setw(20) << item.first->GetName() << "\t" << item.first << "\t"
+            << (item.second.computeInGPU ? "CUDA" : "CPU") << "\t" << item.second.cpuTime.count() << "us\t"
+            << item.second.cudaTime.count() << "us\n";
+   }
 }
 
 } // namespace Experimental
