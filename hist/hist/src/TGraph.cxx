@@ -1413,7 +1413,6 @@ Double_t TGraph::GetRMS(Int_t axis) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 
 Double_t TGraph::GetErrorX(Int_t) const
@@ -1422,7 +1421,6 @@ Double_t TGraph::GetErrorX(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 
 Double_t TGraph::GetErrorY(Int_t) const
@@ -1431,7 +1429,6 @@ Double_t TGraph::GetErrorY(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1441,7 +1438,6 @@ Double_t TGraph::GetErrorXhigh(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1451,7 +1447,6 @@ Double_t TGraph::GetErrorXlow(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1461,7 +1456,6 @@ Double_t TGraph::GetErrorYhigh(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
