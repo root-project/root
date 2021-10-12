@@ -25,6 +25,8 @@ ClassImp(TSPlot);
 
 /** \class TSPlot
 
+\legacy{TSPlot,class}
+
 A common method used in High Energy Physics to perform measurements is
 the maximum Likelihood method, exploiting discriminating variables to
 disentangle signal from background. The crucial point for such an

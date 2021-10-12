@@ -14,6 +14,8 @@
     \brief Advanced Spectra Processing
     \author Miroslav Morhac
 
+ \legacy{TSpectrum,class}
+
  This class contains advanced spectra processing functions for:
 
  -   One-dimensional background estimation
