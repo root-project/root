@@ -107,6 +107,8 @@ private:
    void updateMyServers(const RooAbsReal *node);
    void handleIntegral(const RooAbsReal *node);
    std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
+   std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
+                                         std::chrono::microseconds diffThreshold);
    void markGPUNodes();
    void assignToGPU(const RooAbsReal *node);
    double *getAvailableCPUBuffer();
