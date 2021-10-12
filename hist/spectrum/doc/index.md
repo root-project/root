@@ -1,6 +1,8 @@
 \defgroup Spectrum Advanced spectra processing classes.
 \ingroup Hist
 
+\legacy{Spectrum,package}
+
  \authors
  Miroslav Morhac
  Institute of Physics
