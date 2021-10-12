@@ -124,6 +124,7 @@ void RDisplay::AddToRow(const std::string &stringEle)
 
 void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
 {
+
    auto row = fCurrentRow;
    // For each element of the collection, save it. The first element will be in the current row, next ones will have
    // their own row.
@@ -135,14 +136,14 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
       // Update the width if this element is the biggest found
       EnsureCurrentColumnWidth(stringEle.length());
 
-      if (index == 0 || index == collectionSize - 1) {
+      if (index < fNMaxCollectionElements) {
          // Do nothing, by default DisplayElement is printed
-      } else if (index == 1) {
+      } else if (index == fNMaxCollectionElements) {
          element.SetDots();
          // Be sure the "..." fit
          EnsureCurrentColumnWidth(3);
       } else {
-         // In the Print(), after the dots, all element will just be ignored except the last one.
+         // In the Print(), after the dots, all element will just be ignored.
          element.SetIgnore();
       }
 
@@ -172,11 +173,11 @@ void RDisplay::MovePosition()
    }
 }
 
-RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries)
+RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
-     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries)
+     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries),
+     fNMaxCollectionElements(nMaxCollectionElements)
 {
-
    // Add the first row with the names of the columns
    fTable.push_back(std::vector<DElement_t>(columnNames.size()));
    for (const auto &name : columnNames) {
@@ -203,14 +204,15 @@ void RDisplay::Print() const
 {
    auto columnsToPrint =
       fNColumns - GetNColumnsToShorten(); // Get the number of columns that fit in the characters limit
-   std::vector<bool> hasPrintedNext(fNColumns,
-                                    false); // Keeps track if the collection as already been shortened, allowing to skip
-                                            // all elements until the next printable element.
 
    if (columnsToPrint < fNColumns)
       Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
 
+   if (fNMaxCollectionElements < 1)
+      Info("Print", "No collections shown since fNMaxCollectionElements is %lu\n", fNMaxCollectionElements);
+
    auto nrRows = fTable.size();
+
    for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
       auto &row = fTable[rowIndex];
 
@@ -224,23 +226,9 @@ void RDisplay::Print() const
          if (element.IsDot()) {
             printedElement = "...";
          } else if (element.IsPrint()) {
-            // Maybe the element is part of a collection that is being shortened, and so it was already printed.
-            if (!hasPrintedNext[columnIndex]) {
-               printedElement = element.GetRepresentation();
-            }
-            hasPrintedNext[columnIndex] =
-               false; // Encountered "next printable element", shortening can start again when needed.
+            printedElement = element.GetRepresentation();
          } else {     // IsIgnore
-            // Shortening is starting here. Print directly the last element, to have something like 1 ... 3, and don't
-            // print anything else.
-            if (!hasPrintedNext[columnIndex]) {
-               size_t i = rowIndex + 1; // Starting from the next row...
-               for (; !fTable[i][columnIndex].IsPrint(); ++i) {
-                  // .. look for the first element that can be printed, it will be the last of the collection.
-               }
-               printedElement = fTable[i][columnIndex].GetRepresentation(); // Print the element
-               hasPrintedNext[columnIndex] = true; // And start ignoring anything else until the next collection.
-            }
+            // Do nothing, printedElement remains ""
          }
          if (!printedElement.empty()) {
             // Found at least one element, so the row is not empty.

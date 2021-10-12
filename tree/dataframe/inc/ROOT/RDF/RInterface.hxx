@@ -2566,13 +2566,15 @@ public:
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Number of columns to be later Print().
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// This function returns a RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see
+   /// RResultPtr.
    ///
    /// Example usage:
    /// ~~~{.cpp}
@@ -2585,11 +2587,13 @@ public:
    /// d2->Print();
    /// ~~~
    template <typename... ColumnTypes>
-   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
+   RResultPtr<RDisplay>
+   Display(const ColumnNames_t &columnList, const int &nRows = 5, const size_t &nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
 
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows,
+                                                               nMaxCollectionElements);
       return CreateAction<RDFInternal::ActionTags::Display, ColumnTypes...>(columnList, displayer, displayer);
    }
 
@@ -2597,14 +2601,17 @@ public:
    /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Number of columns to be later Print().
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// This overload automatically infers the column types.
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
+   RResultPtr<RDisplay>
+   Display(const ColumnNames_t &columnList, const int &nRows = 5, const size_t &nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows,
+                                                               nMaxCollectionElements);
       return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(columnList, displayer, displayer,
                                                                                       columnList.size());
    }
@@ -2613,16 +2620,18 @@ public:
    /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnNameRegexp A regular expression to select the columns.
    /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Number of columns to be later Print().
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// The existing columns are matched against the regular expression. If the string provided
    /// is empty, all columns are selected.
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
+   RResultPtr<RDisplay>
+   Display(std::string_view columnNameRegexp = "", const int &nRows = 5, const size_t &nMaxCollectionElements = 10)
    {
       const auto columnNames = GetColumnNames();
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
-      return Display(selectedColumns, nRows);
+      return Display(selectedColumns, nRows, nMaxCollectionElements);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2632,10 +2641,11 @@ public:
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5)
+   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5,
+                                const size_t &nMaxCollectionElements = 10)
    {
       ColumnNames_t selectedColumns(columnList);
-      return Display(selectedColumns, nRows);
+      return Display(selectedColumns, nRows, nMaxCollectionElements);
    }
 
 private:

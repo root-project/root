@@ -90,6 +90,8 @@ private:
 
    size_t fEntries; ///< Number of events to process for each column (i.e. number of rows).
 
+   size_t fNMaxCollectionElements = 10; // threshold on number of elements in collections to be Print()
+
    ////////////////////////////////////////////////////////////////////////////
    /// Appends a cling::printValue call to the stringstream.
    /// \tparam T the type of the event to convert
@@ -234,7 +236,7 @@ public:
    /// \param[in] columnNames Columns to print
    /// \param[in] types The type of each column
    /// \param[in] entries How many events per column (row) must be processed.
-   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries);
+   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements);
 
    ////////////////////////////////////////////////////////////////////////////
    /// Prints the representation to the standard output
