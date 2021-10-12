@@ -14,7 +14,7 @@
     \brief Advanced Spectra Processing
     \author Miroslav Morhac
 
- \legacy{TSpectrum,class}
+ \legacy{TSpectrum}
 
  This class contains advanced spectra processing functions for:
 
