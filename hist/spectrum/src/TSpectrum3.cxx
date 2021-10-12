@@ -6,7 +6,7 @@
     \brief Advanced 3-dimensional spectra processing functions
     \author Miroslav Morhac
 
- \legacy{TSpectrum3,class}
+ \legacy{TSpectrum3}
 
   This class contains advanced spectra processing functions.
 

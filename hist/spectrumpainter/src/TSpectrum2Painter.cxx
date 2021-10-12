@@ -13,7 +13,7 @@
 /** \class TSpectrum2Painter
     \ingroup Spectrumpainter
 
-\legacy{TSpectrum2Painter,class}
+\legacy{TSpectrum2Painter}
 
 Two-dimensional graphics function
 
