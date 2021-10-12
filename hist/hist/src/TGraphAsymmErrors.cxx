@@ -1110,7 +1110,6 @@ void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along X at point i.
 
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
@@ -1125,7 +1124,6 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along Y at point i.
 
 Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const

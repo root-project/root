@@ -601,7 +601,6 @@ void TGraphErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along X at point `i`.
 
 Double_t TGraphErrors::GetErrorX(Int_t i) const
@@ -613,7 +612,6 @@ Double_t TGraphErrors::GetErrorX(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along Y at point `i`.
 
 Double_t TGraphErrors::GetErrorY(Int_t i) const
@@ -625,8 +623,8 @@ Double_t TGraphErrors::GetErrorY(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along X at point `i`. For TGraphErrors this method is
+/// the same as GetErrorX.
 
 Double_t TGraphErrors::GetErrorXhigh(Int_t i) const
 {
@@ -637,8 +635,8 @@ Double_t TGraphErrors::GetErrorXhigh(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along X at point `i`. For TGraphErrors this method is
+/// the same as GetErrorX.
 
 Double_t TGraphErrors::GetErrorXlow(Int_t i) const
 {
@@ -649,8 +647,8 @@ Double_t TGraphErrors::GetErrorXlow(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along Y at point `i`. For TGraphErrors this method is
+/// the same as GetErrorY.
 
 Double_t TGraphErrors::GetErrorYhigh(Int_t i) const
 {
@@ -661,8 +659,8 @@ Double_t TGraphErrors::GetErrorYhigh(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along Y at point `i`. For TGraphErrors this method is
+/// the same as GetErrorY.
 
 Double_t TGraphErrors::GetErrorYlow(Int_t i) const
 {

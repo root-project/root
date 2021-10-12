@@ -389,7 +389,6 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along X at point `i`.
 
 Double_t TGraphBentErrors::GetErrorX(Int_t i) const
@@ -404,7 +403,6 @@ Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along Y at point `i`.
 
 Double_t TGraphBentErrors::GetErrorY(Int_t i) const
