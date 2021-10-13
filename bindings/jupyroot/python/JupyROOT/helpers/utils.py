@@ -123,10 +123,7 @@ def RCanvasAvailable():
        return False
    return True
 
-if 'win32' in sys.platform:
-    _enableJSVis = True
-else:
-    _enableJSVis = False
+_enableJSVis = False
 _enableJSVisDebug = False
 def enableJSVis():
     if not TBufferJSONAvailable():
@@ -565,10 +562,12 @@ class NotebookDrawer(object):
         return 0
 
     def _getPngImage(self):
-        ofile = tempfile.NamedTemporaryFile(suffix=".png")
+        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         with _setIgnoreLevel(ROOT.kError):
             self.drawableObject.SaveAs(ofile.name)
         img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
+        ofile.close()
+        os.unlink(ofile.name)
         return img
 
     def _pngDisplay(self):
