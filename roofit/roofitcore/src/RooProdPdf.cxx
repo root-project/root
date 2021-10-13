@@ -92,26 +92,6 @@ RooProdPdf::RooProdPdf() :
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Dummy constructor
-
-RooProdPdf::RooProdPdf(const char *name, const char *title, double cutOff) :
-  RooAbsPdf(name,title),
-  _cacheMgr(this,10),
-  _genCode(10),
-  _cutOff(cutOff),
-  _pdfList("!pdfs","List of PDFs",this),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
-{
-  TRACE_CREATE
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with 2 PDFs (most frequent use case).
 ///
