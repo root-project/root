@@ -19,7 +19,6 @@ import os
 import sys
 import select
 import tempfile
-import pty
 import itertools
 import re
 import fnmatch
@@ -561,10 +560,12 @@ class NotebookDrawer(object):
         return 0
 
     def _getPngImage(self):
-        ofile = tempfile.NamedTemporaryFile(suffix=".png")
+        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         with _setIgnoreLevel(ROOT.kError):
             self.drawableObject.SaveAs(ofile.name)
         img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
+        ofile.close()
+        os.unlink(ofile.name)
         return img
 
     def _pngDisplay(self):
@@ -610,7 +611,8 @@ def loadMagicsAndCapturers():
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
-    captures.append(StreamCapture())
+    if not 'win32' in sys.platform:
+        captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
     for capture in captures: capture.register()
