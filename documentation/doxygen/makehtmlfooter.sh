@@ -2,7 +2,7 @@
 
 # Generates the HTML footer
 
-echo '<!-- HTML footer for doxygen 1.8.14-->'
+echo '<!-- HTML footer for doxygen 1.9.3-->'
 echo '<!-- start footer part -->'
 echo '<!--BEGIN GENERATE_TREEVIEW-->'
 echo '<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->'
