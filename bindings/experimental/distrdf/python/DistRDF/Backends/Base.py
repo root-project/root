@@ -15,8 +15,11 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 import ROOT
+from ROOT.pythonization._rdataframe import AsNumpyResult
+
 from DistRDF.Backends import Utils
 from DistRDF.HeadNode import TreeHeadNode
+from DistRDF.PythonMergeables import SnapshotResult
 
 # Abstract class declaration
 # This ensures compatibility between Python 2 and 3 versions, since in
@@ -254,8 +257,7 @@ class BaseBackend(ABC):
                 resultptr_list = computation_graph_callable(rdf, current_range.id)
 
                 mergeables = [
-                    resultptr  # Here resultptr is already the result value
-                    if isinstance(resultptr, (dict, list))
+                    resultptr if isinstance(resultptr, (AsNumpyResult, SnapshotResult))
                     else ROOT.ROOT.Detail.RDF.GetMergeableValue(resultptr)
                     for resultptr in resultptr_list
                 ]
@@ -283,34 +285,11 @@ class BaseBackend(ABC):
 
             import ROOT
 
-            # We still need the list index to modify results of `Snapshot` and
-            # `AsNumpy` in place.
-            for index, (mergeable_out, mergeable_in) in enumerate(
-                    zip(mergeables_out, mergeables_in)):
-                # Create a global list with all the files of the partial
-                # snapshots.
-                if isinstance(mergeable_out, list):
-                    mergeables_out[index].extend(mergeable_in)
-
-                # Concatenate the partial numpy arrays along the same key of
-                # the dictionary.
-                elif isinstance(mergeable_out, dict):
-                    # Import numpy lazily
-                    try:
-                        import numpy
-                    except ImportError:
-                        raise ImportError("Failed to import numpy during distributed RDataFrame reduce step.")
-                    mergeables_out[index] = {
-                        key: numpy.concatenate([mergeable_out[key],
-                                                mergeable_in[key]])
-                        for key in mergeable_out
-                    }
-
-                # The `MergeValues` function modifies the arguments in place
-                # so there's no need to access the list elements.
+            for mergeable_out, mergeable_in in zip(mergeables_out, mergeables_in):
+                if isinstance(mergeable_out, (AsNumpyResult, SnapshotResult)):
+                    mergeable_out.Merge(mergeable_in)
                 else:
-                    ROOT.ROOT.Detail.RDF.MergeValues(
-                        mergeable_out, mergeable_in)
+                    ROOT.ROOT.Detail.RDF.MergeValues(mergeable_out, mergeable_in)
 
             return mergeables_out
 
@@ -322,16 +301,9 @@ class BaseBackend(ABC):
         # Set the value of every action node
         for node, value in zip(nodes, values):
             if node.operation.name == "Snapshot":
-                # Retrieve treename from operation args and start TChain
-                snapshot_treename = node.operation.args[0]
-                snapshot_chain = ROOT.TChain(snapshot_treename)
-                # Add partial snapshot files to the chain
-                for filename in value:
-                    snapshot_chain.Add(filename)
-                # Create a new rdf with the chain and return that to user
-                node.value = self.make_dataframe(snapshot_chain)
-            elif node.operation.name == "AsNumpy":
-                node.value = value
+                # Retrieving a new distributed RDataFrame from the result of a
+                # distributed Snapshot needs knowledge of the correct backend
+                node.value = value.GetValue(self)
             else:
                 node.value = value.GetValue()
 

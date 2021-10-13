@@ -142,6 +142,55 @@ class AsNumpyResult(object):
 
         return self._py_arrays
 
+    def Merge(self, other):
+        """
+        Merges the numpy arrays in the dictionary of this object with the numpy
+        arrays in the dictionary of the other object, modifying the attribute of
+        this object inplace.
+
+        Raises:
+            - RuntimeError: if either of the method arguments doesn't already
+                have filled the internal dictionary of numpy arrays.
+            - ImportError: if the numpy module couldn't be imported.
+            - ValueError: If the dictionaries of numpy arrays of the two
+                arguments don't have exactly the same keys.
+        """
+
+        if self._py_arrays is None or other._py_arrays is None:
+            raise RuntimeError("Merging instances of 'AsNumpyResult' failed because either of them didn't compute "
+                               "their result yet. Make sure to call the 'GetValue' method on both objects before "
+                               "trying to merge again.")
+
+        try:
+            import numpy
+        except ImportError:
+            raise ImportError("Failed to import numpy while merging two 'AsNumpyResult' instances.")
+
+        if not self._py_arrays.keys() == other._py_arrays.keys():
+            raise ValueError("The two dictionary of numpy arrays have different keys.")
+
+        self._py_arrays = {
+            key: numpy.concatenate([self._py_arrays[key],
+                                    other._py_arrays[key]])
+            for key in self._py_arrays
+        }
+
+    def __getstate__(self):
+        """
+        This function is called during the pickle serialization step. Return the
+        dictionary of numpy arrays (i.e. the actual result of this `AsNumpy`
+        call). Other attributes are not needed and the RResultPtr objects are
+        not serializable at all.
+        """
+        return self.GetValue()
+
+    def __setstate__(self, state):
+        """
+        This function is called during unserialization step. Sets the dictionary
+        of numpy array of the unserialized object.
+        """
+        self._py_arrays = state
+
 
 def _histo_profile(self, fixed_args, *args):
     # Check wheter the user called one of the HistoXD or ProfileXD methods
