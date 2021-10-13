@@ -86,6 +86,9 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
 }
 
 
+RooProduct::RooProduct(const char *name, const char *title, RooAbsReal& real1, RooAbsReal& real2) :
+  RooProduct{name, title, {real1, real2}} {}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor

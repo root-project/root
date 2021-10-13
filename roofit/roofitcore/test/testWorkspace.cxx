@@ -7,6 +7,8 @@
 #include "RooArgList.h"
 #include "RooRealVar.h"
 #include "RooAbsReal.h"
+#include "RooProdPdf.h"
+#include "RooProduct.h"
 #include "RooStats/ModelConfig.h"
 
 #include "ROOT/StringUtils.hxx"
@@ -28,7 +30,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 
    RooRealVar x("x", "x", 1, 0, 10);
    RooRealVar mu("mu", "mu", 1, 0, 10);
-   RooRealVar sigma("sigma", "sigma", 1, 0, 10);
+   RooRealVar sigma("sigma", "sigma", 1, 0.01, 10);
 
    RooGaussian pdf("Gauss", "Gauss", x, mu, sigma);
 
@@ -83,7 +85,7 @@ protected:
   {
     RooRealVar x("x", "x", 1, 0, 10);
     RooRealVar mu("mu", "mu", 1, 0, 10);
-    RooRealVar sigma("sigma", "sigma", 1, 0, 10);
+    RooRealVar sigma("sigma", "sigma", 1, 0.01, 10);
 
     RooGaussian pdf("Gauss", "Gauss", x, mu, sigma);
 
@@ -245,4 +247,24 @@ TEST(RooWorkspace, Issue_7965)
    ws.factory("RooAddPdf::addPdf({})");
 
    ASSERT_NE(ws.pdf("addPdf"), nullptr);
+}
+
+/// Covers an issue about the RooProdPdf constructor taking a RooFit collection
+/// not working and the RooProduct constuctors behaving inconsistently.
+TEST(RooWorkspace, Issue_7809)
+{
+   RooWorkspace ws;
+   ws.factory("RooGaussian::a(x[-10,10],0.,1.)");
+   ws.factory("RooGaussian::b(y[-10,10],0.,1.)");
+
+   ws.factory("RooProdPdf::p1({a,b})");
+   ws.factory("RooProduct::p2({x,y})");
+
+   ws.factory("RooProdPdf::p3(a,b)");
+   ws.factory("RooProduct::p4(x,y)");
+
+   ASSERT_EQ(static_cast<RooProdPdf*>(ws.pdf("p1"))->pdfList().size(), 2);
+   ASSERT_EQ(static_cast<RooProduct*>(ws.function("p2"))->components().size(), 2);
+   ASSERT_EQ(static_cast<RooProdPdf*>(ws.pdf("p3"))->pdfList().size(), 2);
+   ASSERT_EQ(static_cast<RooProduct*>(ws.function("p4"))->components().size(), 2);
 }
