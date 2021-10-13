@@ -124,7 +124,6 @@ void RDisplay::AddToRow(const std::string &stringEle)
 
 void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
 {
-
    auto row = fCurrentRow;
    // For each element of the collection, save it. The first element will be in the current row, next ones will have
    // their own row.

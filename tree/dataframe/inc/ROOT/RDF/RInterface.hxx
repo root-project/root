@@ -2566,7 +2566,7 @@ public:
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements Number of columns to be later Print().
+   /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// This function returns a RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
@@ -2588,7 +2588,7 @@ public:
    /// ~~~
    template <typename... ColumnTypes>
    RResultPtr<RDisplay>
-   Display(const ColumnNames_t &columnList, const int &nRows = 5, const size_t &nMaxCollectionElements = 10)
+   Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
 
@@ -2601,13 +2601,13 @@ public:
    /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements Number of columns to be later Print().
+   /// \param[in] nMaxCollectionElements  Maximum number of collection elements to display per row.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// This overload automatically infers the column types.
    /// See the previous overloads for further details.
    RResultPtr<RDisplay>
-   Display(const ColumnNames_t &columnList, const int &nRows = 5, const size_t &nMaxCollectionElements = 10)
+   Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
       auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows,
@@ -2620,14 +2620,14 @@ public:
    /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnNameRegexp A regular expression to select the columns.
    /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements Number of columns to be later Print().
+   /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// The existing columns are matched against the regular expression. If the string provided
    /// is empty, all columns are selected.
    /// See the previous overloads for further details.
    RResultPtr<RDisplay>
-   Display(std::string_view columnNameRegexp = "", const int &nRows = 5, const size_t &nMaxCollectionElements = 10)
+   Display(std::string_view columnNameRegexp = "", int nRows = 5, size_t nMaxCollectionElements = 10)
    {
       const auto columnNames = GetColumnNames();
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
@@ -2641,8 +2641,8 @@ public:
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5,
-                                const size_t &nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, int nRows = 5,
+                                size_t nMaxCollectionElements = 10)
    {
       ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows, nMaxCollectionElements);
