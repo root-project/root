@@ -32,6 +32,7 @@ namespace PyKeras{
 // Referencing Python utility functions present in PyMethodBase
 static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
 static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
+static std::vector<size_t>(& GetDataFromTuple)(PyObject*) = PyMethodBase::GetDataFromTuple;
 
 namespace INTERNAL{
 
@@ -69,8 +70,6 @@ const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
    {"Dense", &MakeKerasDense},
    };
 
-// Function which returns values from a Python Tuple object in vector of size_t
-std::vector<size_t> GetDataFromTuple(PyObject *tupleObject);
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Adds equivalent ROperator with respect to Keras model layer
@@ -365,20 +364,6 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
    return op;
    }
 
-
-//////////////////////////////////////////////////////////////////////////////////
-/// \brief Utility function which retrieves and returns the values of the Tuple
-///        object as a vector of size_t
-///
-/// \param[in] tupleObject Python Tuple object
-/// \return vector of tuple members
-std::vector<size_t> GetDataFromTuple(PyObject* tupleObject){
-   std::vector<size_t>inputShape;
-   for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(tupleObject);++tupleIter){
-               inputShape.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(tupleObject,tupleIter)));
-         }
-   return inputShape;
-}
 }//INTERNAL
 
 
@@ -584,7 +569,7 @@ RModel Parse(std::string filename){
          }
 
          // Getting the shape vector from the Tuple object
-         std::vector<size_t>fInputShape=INTERNAL::GetDataFromTuple(fPInputShapes);
+         std::vector<size_t>fInputShape = GetDataFromTuple(fPInputShapes);
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }
@@ -611,7 +596,7 @@ RModel Parse(std::string filename){
             throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
          }
 
-         std::vector<size_t>fInputShape=INTERNAL::GetDataFromTuple(fInputShapeTuple);
+         std::vector<size_t>fInputShape = GetDataFromTuple(fInputShapeTuple);
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }
