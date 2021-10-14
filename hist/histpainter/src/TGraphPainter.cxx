@@ -54,22 +54,22 @@ ClassImp(TGraphPainter);
     \ingroup Histpainter
     \brief The graph painter class. Implements all graphs' drawing's options.
 
-- [Introduction](\ref GP00)
-- [Graphs' plotting options](\ref GP01)
-- [Exclusion graphs](\ref GP02)
-- [Graphs with error bars](\ref GP03)
-   - [TGraphErrors](\ref GP03a)
-   - [TGraphAsymmErrors](\ref GP03b)
-   - [TGraphBentErrors](\ref GP03c)
-   - [TGraphMultiErrors](\ref GP03d)
-- [TGraphPolar options](\ref GP04)
-- [Colors automatically picked in palette](\ref GP05)
-- [Reverse graphs' axis](\ref GP06)
-- [Graphs in logarithmic scale](\ref GP07)
-- [Highlight mode for graph](\ref GP08)
+- [Introduction](\ref GrP0)
+- [Graphs' plotting options](\ref GrP1)
+- [Exclusion graphs](\ref GrP2)
+- [Graphs with error bars](\ref GrP3)
+   - [TGraphErrors](\ref GrP3a)
+   - [TGraphAsymmErrors](\ref GrP3b)
+   - [TGraphBentErrors](\ref GrP3c)
+   - [TGraphMultiErrors](\ref GrP3d)
+- [TGraphPolar options](\ref GrP4)
+- [Colors automatically picked in palette](\ref GrP5)
+- [Reverse graphs' axis](\ref GrP6)
+- [Graphs in logarithmic scale](\ref GrP7)
+- [Highlight mode for graph](\ref GrP8)
 
 
-\anchor GP00
+\anchor GrP0
 ### Introduction
 
 Graphs are drawn via the painter `TGraphPainter` class. This class
@@ -102,7 +102,7 @@ after one of these three actions:
 2.  a click inside the pad,
 3.  a call to `TPad::Update`.
 
-\anchor GP01
+\anchor GrP1
 ### Graphs' plotting options
 Graphs can be drawn with the following options:
 
@@ -181,7 +181,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-\anchor GP02
+\anchor GrP2
 ### Exclusion graphs
 
 When a graph is painted with the option `C` or `L` it is
@@ -204,7 +204,7 @@ Begin_Macro(source)
 ../../../tutorials/graphs/exclusiongraph.C
 End_Macro
 
-\anchor GP03
+\anchor GrP3
 ### Graphs with error bars
 Three classes are available to handle graphs with error bars:
 `TGraphErrors`, `TGraphAsymmErrors` and `TGraphBentErrors`.
@@ -232,7 +232,7 @@ The following drawing options are specific to graphs with error bars:
 at the end of the error bars (when option 1 is used).
 By default `np=1`. (np represents the number of pixels).
 
-\anchor GP03a
+\anchor GrP3a
 #### TGraphErrors
 
 A `TGraphErrors` is a `TGraph` with error bars. The errors are
@@ -350,7 +350,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-\anchor GP03b
+\anchor GrP3b
 #### TGraphAsymmErrors
 A `TGraphAsymmErrors` is like a `TGraphErrors` but the errors
 defined along X and Y are not symmetric: The left and right errors are
@@ -374,7 +374,7 @@ Begin_Macro(source)
 End_Macro
 
 
-\anchor GP03c
+\anchor GrP3c
 #### TGraphBentErrors
 A `TGraphBentErrors` is like a `TGraphAsymmErrors`.
 An extra parameter allows to bend the error bars to better see them
@@ -403,7 +403,7 @@ Begin_Macro(source)
 End_Macro
 
 
-\anchor GP03d
+\anchor GrP3d
 #### TGraphMultiErrors
 A `TGraphMultiErrors` works basically the same way like a `TGraphAsymmErrors`.
 It has the possibility to define more than one type / dimension of y-Errors.
@@ -455,7 +455,7 @@ Begin_Macro(source)
 End_Macro
 
 
-\anchor GP04
+\anchor GrP4
 ### TGraphPolar options
 
 The drawing options for the polar graphs are the following:
@@ -497,7 +497,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-\anchor GP05
+\anchor GrP5
 ### Colors automatically picked in palette
 
 \since **ROOT version 6.09/01**
@@ -520,7 +520,7 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multigraphpalettecolor.C
 End_Macro
 
-\anchor GP06
+\anchor GrP6
 ### Reverse graphs' axis
 
 \since **ROOT version 6.09/03**
@@ -561,7 +561,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-\anchor GP07
+\anchor GrP7
 ### Graphs in logarithmic scale
 
 Like histograms, graphs can be drawn in logarithmic scale along X and Y. When
@@ -603,7 +603,7 @@ Begin_Macro(source)
 
 End_Macro
 
-\anchor GP08
+\anchor GrP8
 #### Highlight mode for graph
 
 \since **ROOT version 6.15/01**
@@ -1275,7 +1275,7 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a graph.]($GP01)
+/// [Control function to draw a graph.](\ref GrP1)
 
 void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
@@ -2406,7 +2406,7 @@ do_cleanup:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphAsymmErrors with its current attributes.](#GP03)
+/// [Paint this TGraphAsymmErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
@@ -2652,7 +2652,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphMultiErrors with its current attributes.]($GP03)
+/// [Paint this TGraphMultiErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 {
@@ -3123,7 +3123,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphBentErrors with its current attributes.]($GP03)
+/// [Paint this TGraphBentErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
@@ -3379,7 +3379,7 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphErrors with its current attributes.]($GP03)
+/// [Paint this TGraphErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
@@ -3626,7 +3626,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphPolar with its current attributes.]($GP04)
+/// [Paint this TGraphPolar with its current attributes.](\ref GrP4)
 
 void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 {
