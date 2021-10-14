@@ -36,6 +36,7 @@ namespace PyTorch{
 // Referencing Python utility functions present in PyMethodBase
 static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
 static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
+static std::vector<size_t>(& GetDataFromList)(PyObject*) = PyMethodBase::GetDataFromList;
 
 
 namespace INTERNAL{
@@ -44,6 +45,7 @@ namespace INTERNAL{
 std::unique_ptr<ROperator> MakePyTorchNode(PyObject* fNode);
 
 std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Gemm operator
+std::unique_ptr<ROperator> MakePyTorchConv(PyObject* fNode); // For instantiating ROperator for PyTorch ONNX's Conv operator
 std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Relu operator
 std::unique_ptr<ROperator> MakePyTorchSelu(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Selu operator
 std::unique_ptr<ROperator> MakePyTorchSigmoid(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Sigmoid operator
@@ -55,9 +57,10 @@ using PyTorchMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperat
 const PyTorchMethodMap mapPyTorchNode =
 {
     {"onnx::Gemm",      &MakePyTorchGemm},
+    {"onnx::Conv",      &MakePyTorchConv},
     {"onnx::Relu",      &MakePyTorchRelu},
     {"onnx::Selu",      &MakePyTorchSelu},
-    {"onnx::Sigmoid",      &MakePyTorchSigmoid},
+    {"onnx::Sigmoid",   &MakePyTorchSigmoid},
     {"onnx::Transpose", &MakePyTorchTranspose}
 };
 
@@ -114,25 +117,29 @@ std::unique_ptr<ROperator> MakePyTorchGemm(PyObject* fNode){
         PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
         std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
 
-        // Extracting the attributes of Gemm Operator
-        float attr_alpha = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"alpha")));
-        float attr_beta = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"beta")));
-        int_t attr_transA;
-        int_t attr_transB;
+        // Extracting the parameters for Gemm Operator
+        std::string fNameA = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameB = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameC = PyStringAsString(PyList_GetItem(fInputs,2));
+        std::string fNameY = PyStringAsString(PyList_GetItem(fOutputs,0));
+        float fAttrAlpha = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"alpha")));
+        float fAttrBeta = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"beta")));
+        int_t fAttrTransA;
+        int_t fAttrTransB;
 
         if(PyDict_Contains(fAttributes,PyUnicode_FromString("transB"))){
-            attr_transB=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transB")));
-            attr_transA=!attr_transB;
+            fAttrTransB = (int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transB")));
+            fAttrTransA = !fAttrTransB;
         }
         else{
-            attr_transA=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transA")));
-            attr_transB=!attr_transA;
+            fAttrTransA=(int_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"transA")));
+            fAttrTransB = !fAttrTransA;
         }
 
         std::unique_ptr<ROperator> op;
         switch(ConvertStringToType(fNodeDType)){
             case ETensorType::FLOAT: {
-                op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fInputs,1)), PyStringAsString(PyList_GetItem(fInputs,2)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                op.reset(new ROperator_Gemm<float>(fAttrAlpha, fAttrBeta, fAttrTransA, fAttrTransB, fNameA, fNameB, fNameC, fNameY ));
                 break;
                 }
                 default:
@@ -154,11 +161,12 @@ std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode){
         PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
         PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
         std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
-
+        std::string fNameX      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
         std::unique_ptr<ROperator> op;
         switch(ConvertStringToType(fNodeDType)){
             case ETensorType::FLOAT: {
-                op.reset(new ROperator_Relu<float>(PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                op.reset(new ROperator_Relu<float>(fNameX,fNameY));
                 break;
                 }
                 default:
@@ -219,6 +227,7 @@ std::unique_ptr<ROperator> MakePyTorchSigmoid(PyObject* fNode){
         return op;
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator_Transpose object
 ///
@@ -234,20 +243,68 @@ std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode){
         std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
 
         // Extracting the Permute dimensions for transpose
-        std::vector<int_t> fAttributePermute;
+        std::vector<int_t> fAttrPermute;
         PyObject* fPermute=PyDict_GetItemString(fAttributes,"perm");
         for(Py_ssize_t permIter=0; permIter<PyList_Size(fPermute);++permIter){
-            fAttributePermute.push_back((int_t)PyLong_AsLong(PyList_GetItem(fPermute,permIter)));
+            fAttrPermute.push_back((int_t)PyLong_AsLong(PyList_GetItem(fPermute,permIter)));
         }
+        std::string fNameData   = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameOutput = PyStringAsString(PyList_GetItem(fOutputs,0));
 
         std::unique_ptr<ROperator> op;
         switch(ConvertStringToType(fNodeDType)){
             case ETensorType::FLOAT: {
-                op.reset(new ROperator_Transpose<float>(fAttributePermute, PyStringAsString(PyList_GetItem(fInputs,0)), PyStringAsString(PyList_GetItem(fOutputs,0))));
+                op.reset(new ROperator_Transpose<float>(fAttrPermute, fNameData, fNameOutput));
                 break;
             }
             default:
             throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Conv object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For Conv Operator of PyTorch's ONNX Graph, attributes like dilations, group,
+/// kernel shape, pads and strides are found, and are passed in instantiating the
+/// ROperator object with autopad default to `NOTSET`.
+std::unique_ptr<ROperator> MakePyTorchConv(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+
+        // Extracting the Conv Node Attributes
+        PyObject* fDilations       = PyDict_GetItemString(fAttributes,"dilations");
+        PyObject* fGroup           = PyDict_GetItemString(fAttributes,"group");
+        PyObject* fKernelShape     = PyDict_GetItemString(fAttributes,"kernel_shape");
+        PyObject* fPads            = PyDict_GetItemString(fAttributes,"pads");
+        PyObject* fStrides         = PyDict_GetItemString(fAttributes,"strides");
+
+        std::string fAttrAutopad = "NOTSET";
+        std::vector<size_t> fAttrDilations = GetDataFromList(fDilations);
+        size_t fAttrGroup = PyLong_AsLong(fGroup);
+        std::vector<size_t> fAttrKernelShape = GetDataFromList(fKernelShape);
+        std::vector<size_t> fAttrPads        = GetDataFromList(fPads);
+        std::vector<size_t> fAttrStrides     = GetDataFromList(fStrides);
+        std::string nameX = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string nameW = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string nameB = PyStringAsString(PyList_GetItem(fInputs,2));
+        std::string nameY = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Conv<float>(fAttrAutopad, fAttrDilations, fAttrGroup, fAttrKernelShape, fAttrPads, fAttrStrides, nameX, nameW, nameB, nameY));
+                break;
+            }
+            default:
+            throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Conv does not yet support input type " + fNodeDType);
         }
         return op;
 }
@@ -354,15 +411,8 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         for(long unsigned int itr=0;itr<inputShapes[it].size();++itr){
             PyRunString(TString::Format("inputShape.append(%d)",(int)inputShapes[it][itr]),fGlobalNS,fLocalNS);
             }
-        switch(inputDTypes[it]){
-            case ETensorType::FLOAT:{
-                PyRunString("dummyInputs.append(torch.rand(*inputShape))",fGlobalNS,fLocalNS);
-                break;
-            }
-            default:
-                throw std::runtime_error("Type Error: TMVA SOFIE does not yet support the input tensor data type"+ConvertTypeToString(inputDTypes[it]));
-        }
-        }
+        PyRunString("dummyInputs.append(torch.rand(*inputShape))",fGlobalNS,fLocalNS);
+    }
 
     //Finding example outputs from dummy
     PyRunString("output=model(*dummyInputs)",fGlobalNS,fLocalNS);
@@ -407,6 +457,9 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         }
         else if(fNodeType == "onnx::Selu" || fNodeType == "onnx::Sigmoid"){
             rmodel.AddNeededStdLib("cmath");
+        }
+        else if (fNodeType == "onnx::Conv") {
+         rmodel.AddBlasRoutines({"Gemm", "Axpy"});
         }
         rmodel.AddOperator(INTERNAL::MakePyTorchNode(fNode));
     }
