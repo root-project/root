@@ -78,15 +78,15 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Generate and execute the mapper
         generator = ComputationGraphGenerator.ComputationGraphGenerator(
             node.proxied_node)
-        mapper_func = generator.get_callable()
-        values = mapper_func(t, 0)
+        mapper_func = generator.generate_computation_graph
+        triggerables = mapper_func(t, 0)
         nodes = generator.get_action_nodes()
 
         reqd_order = [1, 3, 2, 2, 3, 2]
 
         self.assertEqual(t.ord_list, reqd_order)
         self.assertListEqual(nodes, [n5.proxied_node, n4.proxied_node])
-        self.assertListEqual(values, [t, t])
+        self.assertListEqual(triggerables, [t, t])
 
     def test_mapper_with_pruning(self):
         """
@@ -115,12 +115,14 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Generate and execute the mapper
         generator = ComputationGraphGenerator.ComputationGraphGenerator(
             node.proxied_node)
-        mapper_func = generator.get_callable()
-        values = mapper_func(t, 0)
+        # Prune first
+        generator.headnode.graph_prune()
+        mapper_func = generator.generate_computation_graph
+        triggerables = mapper_func(t, 0)
         nodes = generator.get_action_nodes()
 
         reqd_order = [1, 2, 2, 2, 3, 2]
 
         self.assertEqual(t.ord_list, reqd_order)
         self.assertListEqual(nodes, [n4.proxied_node])
-        self.assertListEqual(values, [t])
+        self.assertListEqual(triggerables, [t])
