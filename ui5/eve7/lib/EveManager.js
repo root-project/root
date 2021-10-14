@@ -606,11 +606,14 @@ sap.ui.define([], function() {
 
          for (let imp of value.implied)
          {
-            if (JSROOT.EVE.DebugSelection)
-               console.log("UnSel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
+            let impEl = this.GetElement(imp);
+            if (impEl) {
+               if (JSROOT.EVE.DebugSelection)
+                  console.log("UnSel impl", imp, impEl, impEl.fSceneId);
 
-            this.UnselectElement(sel, imp);
-            changedSet.add(this.GetElement(imp).fSceneId);
+               this.UnselectElement(sel, imp);
+               changedSet.add(impEl.fSceneId);
+            }
          }
       }
 
