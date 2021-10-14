@@ -436,7 +436,7 @@ some combinations must be use with care.
 - It does not work when combined with the `LEGO` and `SURF` options unless the
   histogram plotted with the option `SAME` has exactly the same
   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
-  lego plots [histograms' stacks](#HP26) should be used.
+  lego plots [histograms' stacks](\ref HP26) should be used.
 
 
 \anchor HP061
@@ -1132,7 +1132,7 @@ End_Macro
 When the option SAME (or "SAMES") is used with the option COL, the boxes' color
 are computing taking the previous plots into account. The range along the Z axis
 is imposed by the first plot (the one without option SAME); therefore the order
-in which the plots are done is relevant. Same as [in the `BOX` option](#HP13), one can use
+in which the plots are done is relevant. Same as [in the `BOX` option](\ref HP13), one can use
 `SAME0` (or `SAMES0`) to opt out of this imposition.
 
 Begin_Macro(source)
@@ -1915,7 +1915,7 @@ following options:
 | "0"      | When used with any LEGO option, the empty bins are not drawn.|
 
 
-See the limitations with [the option "SAME"](#HP060a).
+See the limitations with [the option "SAME"](\ref HP060a).
 
 Line attributes can be used in lego plots to change the edges' style.
 
@@ -2021,7 +2021,7 @@ The height of the mesh is proportional to the cell content.
 
 
 
-See the limitations with [the option "SAME"](#HP060a).
+See the limitations with [the option "SAME"](\ref HP060a).
 
 The following example shows a 2D histogram plotted with the option
 `SURF`. The option `SURF` draws a lego plot using the hidden
@@ -2286,7 +2286,7 @@ Begin_Macro(source)
 End_Macro
 
 This option also works for horizontal plots. The example given in the section
-["The bar chart option"](#HP100) appears as follow:
+["The bar chart option"](\ref HP100) appears as follow:
 
 Begin_Macro(source)
 {
@@ -4462,7 +4462,7 @@ Int_t THistPainter::MakeCuts(char *choptin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control routine to paint any kind of histograms](#HP00)
+/// [Control routine to paint any kind of histograms](\ref HP00)
 
 void THistPainter::Paint(Option_t *option)
 {
@@ -4656,7 +4656,7 @@ paintstat:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a table as an arrow plot](#HP12)
+/// [Control function to draw a table as an arrow plot](\ref HP12)
 
 void THistPainter::PaintArrows(Option_t *)
 {
@@ -5031,7 +5031,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Draw a bar-chart in a normal pad.](#HP10)
+/// [Draw a bar-chart in a normal pad.](\ref HP10)
 
 void THistPainter::PaintBar(Option_t *)
 {
@@ -5080,7 +5080,7 @@ void THistPainter::PaintBar(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Draw a bar char in a rotated pad (X vertical, Y horizontal)](#HP10)
+/// [Draw a bar char in a rotated pad (X vertical, Y horizontal)](\ref HP10)
 
 void THistPainter::PaintBarH(Option_t *)
 {
@@ -5157,7 +5157,7 @@ void THistPainter::PaintBarH(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a box plot](#HP13)
+/// [Control function to draw a 2D histogram as a box plot](\ref HP13)
 
 void THistPainter::PaintBoxes(Option_t *)
 {
@@ -5342,7 +5342,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a candle (box) plot or violin plot](#HP14)
+/// [Control function to draw a 2D histogram as a candle (box) plot or violin plot](\ref HP14)
 
 void THistPainter::PaintCandlePlot(Option_t *)
 {
@@ -5556,7 +5556,7 @@ THistPainter::ComputeRenderingRegions(TAxis* pAxis, Int_t nPixels, Bool_t isLog)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Rendering scheme for the COL2 and COLZ2 options] (#HP14)
+/// [Rendering scheme for the COL2 and COLZ2 options] (\ref HP14)
 
 void THistPainter::PaintColorLevelsFast(Option_t*)
 {
@@ -5745,7 +5745,7 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a color plot.](#HP14)
+/// [Control function to draw a 2D histogram as a color plot.](\ref HP14)
 
 void THistPainter::PaintColorLevels(Option_t*)
 {
@@ -5908,7 +5908,7 @@ void THistPainter::PaintColorLevels(Option_t*)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a contour plot.](#HP16)
+/// [Control function to draw a 2D histogram as a contour plot.](\ref HP16)
 
 void THistPainter::PaintContour(Option_t *option)
 {
@@ -6306,7 +6306,7 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Draw 1D histograms error bars.](#HP09)
+/// [Draw 1D histograms error bars.](\ref HP09)
 
 void THistPainter::PaintErrors(Option_t *)
 {
@@ -6796,7 +6796,7 @@ void THistPainter::PaintFrame()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  [Paint functions associated to an histogram.](#HP28")
+///  [Paint functions associated to an histogram.](\ref HP28")
 
 void THistPainter::PaintFunction(Option_t *)
 {
@@ -6836,7 +6836,7 @@ void THistPainter::PaintFunction(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control routine to draw 1D histograms](#HP01b)
+/// [Control routine to draw 1D histograms](\ref HP01b)
 
 void THistPainter::PaintHist(Option_t *)
 {
@@ -6978,7 +6978,7 @@ void THistPainter::PaintHist(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 3D histograms.](#HP01d)
+/// [Control function to draw a 3D histograms.](\ref HP01d)
 
 void THistPainter::PaintH3(Option_t *option)
 {
@@ -7470,7 +7470,7 @@ Int_t THistPainter::PaintInitH()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 3D histogram with boxes.](#HP25)
+/// [Control function to draw a 3D histogram with boxes.](\ref HP25)
 
 void THistPainter::PaintH3Box(Int_t iopt)
 {
@@ -7645,7 +7645,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 3D histogram with boxes.](#HP25)
+/// [Control function to draw a 3D histogram with boxes.](\ref HP25)
 
 void THistPainter::PaintH3BoxRaster()
 {
@@ -7831,7 +7831,7 @@ void THistPainter::PaintH3BoxRaster()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 3D histogram with Iso Surfaces.](#HP25)
+/// [Control function to draw a 3D histogram with Iso Surfaces.](\ref HP25)
 
 void THistPainter::PaintH3Iso()
 {
@@ -7949,7 +7949,7 @@ void THistPainter::PaintH3Iso()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a lego plot.](#HP17)
+/// [Control function to draw a 2D histogram as a lego plot.](\ref HP17)
 
 void THistPainter::PaintLego(Option_t *)
 {
@@ -8350,7 +8350,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint the color palette on the right side of the pad.](#HP22)
+/// [Paint the color palette on the right side of the pad.](\ref HP22)
 
 void THistPainter::PaintPalette()
 {
@@ -8389,7 +8389,7 @@ void THistPainter::PaintPalette()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a scatter plot.](#HP11)
+/// [Control function to draw a 2D histogram as a scatter plot.](\ref HP11)
 
 void THistPainter::PaintScatterPlot(Option_t *option)
 {
@@ -8543,7 +8543,7 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Draw the statistics box for 1D and profile histograms.](#HP07)
+/// [Draw the statistics box for 1D and profile histograms.](\ref HP07)
 
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
@@ -8760,7 +8760,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Draw the statistics box for 2D histograms.](#HP07)
+/// [Draw the statistics box for 2D histograms.](\ref HP07)
 
 void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 {
@@ -8977,7 +8977,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Draw the statistics box for 3D histograms.](#HP07)
+/// [Draw the statistics box for 3D histograms.](\ref HP07)
 
 void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
 {
@@ -9192,7 +9192,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a surface plot.](#HP18)
+/// [Control function to draw a 2D histogram as a surface plot.](\ref HP18)
 
 void THistPainter::PaintSurface(Option_t *)
 {
@@ -9569,7 +9569,7 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw 2D/3D histograms (tables).](#HP01c)
+/// [Control function to draw 2D/3D histograms (tables).](\ref HP01c)
 
 void THistPainter::PaintTable(Option_t *option)
 {
@@ -9732,7 +9732,7 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a TH2Poly as a color plot.](#HP20a)
+/// [Control function to draw a TH2Poly as a color plot.](\ref HP20a)
 
 void THistPainter::PaintTH2PolyColorLevels(Option_t *)
 {
@@ -9829,7 +9829,7 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a TH2Poly as a scatter plot.](#HP20a)
+/// [Control function to draw a TH2Poly as a scatter plot.](\ref HP20a)
 
 void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
 {
@@ -9942,7 +9942,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a TH2Poly as a text plot.](#HP20a)
+/// [Control function to draw a TH2Poly as a text plot.](\ref HP20a)
 
 void THistPainter::PaintTH2PolyText(Option_t *)
 {
@@ -10000,7 +10000,7 @@ void THistPainter::PaintTH2PolyText(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 1D/2D histograms with the bin values.](#HP15)
+/// [Control function to draw a 1D/2D histograms with the bin values.](\ref HP15)
 
 void THistPainter::PaintText(Option_t *)
 {
@@ -10096,7 +10096,7 @@ void THistPainter::PaintText(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 3D implicit functions.](#HP27)
+/// [Control function to draw a 3D implicit functions.](\ref HP27)
 
 void THistPainter::PaintTF3()
 {
