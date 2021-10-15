@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 import cppyy
 
 
@@ -93,29 +93,26 @@ def _iter_pyz(self):
         yield o
 
 
-@pythonization()
+@pythonization('TCollection')
 def pythonize_tcollection(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name == 'TCollection':
-        # Support `len(c)` as `c.GetEntries()`
-        klass.__len__ = klass.GetEntries
+    # Support `len(c)` as `c.GetEntries()`
+    klass.__len__ = klass.GetEntries
 
-        # Add Python lists methods
-        klass.append = klass.Add
-        klass.remove = _remove_pyz
-        klass.extend = _extend_pyz
-        klass.count = _count_pyz
+    # Add Python lists methods
+    klass.append = klass.Add
+    klass.remove = _remove_pyz
+    klass.extend = _extend_pyz
+    klass.count = _count_pyz
 
-        # Define Python operators
-        klass.__add__ = _add_pyz
-        klass.__mul__ = _mul_pyz
-        klass.__rmul__ = _mul_pyz
-        klass.__imul__ = _imul_pyz
+    # Define Python operators
+    klass.__add__ = _add_pyz
+    klass.__mul__ = _mul_pyz
+    klass.__rmul__ = _mul_pyz
+    klass.__imul__ = _imul_pyz
 
-        # Make TCollections iterable
-        klass.__iter__ = _iter_pyz
-
-    return True
+    # Make TCollections iterable
+    klass.__iter__ = _iter_pyz

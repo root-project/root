@@ -14,7 +14,7 @@
 import sys
 import cppyy
 
-from ROOT import pythonization
+from .. import pythonization
 
 from ._rooabscollection import RooAbsCollection
 from ._rooabsdata import RooAbsData
@@ -168,14 +168,11 @@ def make_func_name_orig(func_name):
     return "_" + func_name
 
 
-@pythonization()
+@pythonization("Roo", is_prefix=True)
 def pythonize_roofit_class(klass, name):
     # Parameters:
     # klass: class to pythonize
     # name: string containing the name of the class
-
-    if not name.startswith("Roo"):
-        return
 
     if not name in python_classes_dict:
         return

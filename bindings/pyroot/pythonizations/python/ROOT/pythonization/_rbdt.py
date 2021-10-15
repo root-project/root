@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 from cppyy import gbl as gbl_namespace
 
 
@@ -36,14 +36,10 @@ def Compute(self, x):
     return self._OriginalCompute(x)
 
 
-@pythonization()
+@pythonization("TMVA::Experimental::RBDT", is_prefix=True)
 def pythonize_rbdt(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: name of the class
-
-    if name.startswith("TMVA::Experimental::RBDT"):
-        klass._OriginalCompute = klass.Compute
-        klass.Compute = Compute
-
-    return True
+    klass._OriginalCompute = klass.Compute
+    klass.Compute = Compute

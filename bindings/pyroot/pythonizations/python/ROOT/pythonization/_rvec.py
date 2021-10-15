@@ -65,7 +65,7 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 */
 '''
 
-from ROOT import pythonization
+from . import pythonization
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
 
 
@@ -110,14 +110,11 @@ def add_array_interface_property(klass, name):
         klass.__array_interface__ = property(get_array_interface)
 
 
-@pythonization()
+@pythonization("ROOT::VecOps::RVec<", is_prefix=True)
 def pythonize_rvec(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name.startswith("ROOT::VecOps::RVec<"):
-        # Add numpy array interface
-        add_array_interface_property(klass, name)
-
-    return True
+    # Add numpy array interface
+    add_array_interface_property(klass, name)

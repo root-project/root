@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
 import cppyy
 
 def set_size(self, buf):
@@ -39,5 +38,5 @@ comp = cppyy.py.compose_method('^TGraph(2D)?$|^TGraph.*Errors$', # class to matc
                                'GetE?[XYZ]$',                    # method to match
                                set_size)                         # post-process function
 
-# Invoke the decorator with the composite as argument to add it to the list of pythonizors
-pythonization()(comp)
+# Add the composite to the list of pythonizors
+cppyy.py.add_pythonization(comp)
