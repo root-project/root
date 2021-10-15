@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 
 # functools.partial does not add the self argument
 # this is done by functools.partialmethod which is
@@ -229,39 +229,36 @@ def _histo_profile(self, fixed_args, *args):
     return res
 
 
-@pythonization()
+@pythonization([ "ROOT::RDataFrame<", "ROOT::RDF::RInterface<" ], is_prefix=True)
 def pythonize_rdataframe(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name.startswith("ROOT::RDataFrame<") or name.startswith("ROOT::RDF::RInterface<"):
-        from cppyy.gbl.ROOT import RDF
+    from cppyy.gbl.ROOT import RDF
 
-        # Add asNumpy feature
-        klass.AsNumpy = RDataFrameAsNumpy
+    # Add asNumpy feature
+    klass.AsNumpy = RDataFrameAsNumpy
 
-        # Replace the implementation of the following RDF methods
-        # to convert a tuple argument into a model object
-        methods_with_TModel = {
-                'Histo1D' : RDF.TH1DModel,
-                'Histo2D' : RDF.TH2DModel,
-                'Histo3D' : RDF.TH3DModel,
-                'Profile1D' : RDF.TProfile1DModel,
-                'Profile2D' : RDF.TProfile2DModel
-                }
+    # Replace the implementation of the following RDF methods
+    # to convert a tuple argument into a model object
+    methods_with_TModel = {
+            'Histo1D' : RDF.TH1DModel,
+            'Histo2D' : RDF.TH2DModel,
+            'Histo3D' : RDF.TH3DModel,
+            'Profile1D' : RDF.TProfile1DModel,
+            'Profile2D' : RDF.TProfile2DModel
+            }
 
-        # Do e.g.:
-        # klass._OriginalHisto1D = klass.Histo1D
-        # klass.Histo1D = TH1DModel
-        for method_name, model_class in methods_with_TModel.items():
-            original_method_name = '_Original' + method_name
-            setattr(klass, original_method_name, getattr(klass, method_name))
-            # Fixed arguments to construct a partialmethod
-            fixed_args = (original_method_name, model_class)
-            # Replace the original implementation of the method
-            # by a generic function _histo_profile with
-            # (original_method_name, model_class) as fixed argument
-            setattr(klass, method_name, partialmethod(_histo_profile, fixed_args))
-
-    return True
+    # Do e.g.:
+    # klass._OriginalHisto1D = klass.Histo1D
+    # klass.Histo1D = TH1DModel
+    for method_name, model_class in methods_with_TModel.items():
+        original_method_name = '_Original' + method_name
+        setattr(klass, original_method_name, getattr(klass, method_name))
+        # Fixed arguments to construct a partialmethod
+        fixed_args = (original_method_name, model_class)
+        # Replace the original implementation of the method
+        # by a generic function _histo_profile with
+        # (original_method_name, model_class) as fixed argument
+        setattr(klass, method_name, partialmethod(_histo_profile, fixed_args))

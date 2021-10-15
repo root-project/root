@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 import cppyy
 
 
@@ -121,13 +121,10 @@ def SaveXGBoost(self, xgb_model, key_name, output_path,
     f.Close()
 
 
-@pythonization()
+@pythonization("TMVA::Experimental::SaveXGBoost")
 def pythonize_tree_inference(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name == "TMVA::Experimental::SaveXGBoost":
-        klass.__init__ = SaveXGBoost
-
-    return True
+    klass.__init__ = SaveXGBoost

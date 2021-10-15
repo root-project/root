@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 
 
 # Multiplication by constant
@@ -23,14 +23,11 @@ def _imul(self, c):
     return self
 
 
-@pythonization()
+@pythonization('TH1')
 def pythonize_th1(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: name of the class
 
-    if name == 'TH1':
-        # Support hist *= scalar
-        klass.__imul__ = _imul
-
-    return True
+    # Support hist *= scalar
+    klass.__imul__ = _imul

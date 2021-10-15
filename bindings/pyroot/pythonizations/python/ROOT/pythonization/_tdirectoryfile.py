@@ -56,10 +56,10 @@ d.WriteObject(obj, 'keyName')
 '''
 
 from libROOTPythonizations import AddTDirectoryFileGetPyz
-from ROOT import pythonization
+from . import pythonization
 
 # Pythonizor function
-@pythonization()
+@pythonization('TDirectoryFile')
 def pythonize_tdirectoryfile(klass, name):
     """
     TDirectoryFile inherits from TDirectory the pythonized attr syntax (__getattr__)
@@ -76,7 +76,4 @@ def pythonize_tdirectoryfile(klass, name):
         2.2 returns nullptr if object not found
     """
 
-    if name == 'TDirectoryFile':
-        AddTDirectoryFileGetPyz(klass)
-
-    return True
+    AddTDirectoryFileGetPyz(klass)

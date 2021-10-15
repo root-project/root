@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 from libcppyy import SetOwnership
 
 import sys
@@ -246,23 +246,20 @@ def _index_pyz(self, val):
     return idx
 
 
-@pythonization()
+@pythonization('TSeqCollection')
 def pythonize_tseqcollection(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name == 'TSeqCollection':
-        # Item access methods
-        klass.__getitem__ = _getitem_pyz
-        klass.__setitem__ = _setitem_pyz
-        klass.__delitem__ = _delitem_pyz
+    # Item access methods
+    klass.__getitem__ = _getitem_pyz
+    klass.__setitem__ = _setitem_pyz
+    klass.__delitem__ = _delitem_pyz
 
-        # Python lists methods
-        klass.insert  = _insert_pyz
-        klass.pop     = _pop_pyz
-        klass.reverse = _reverse_pyz
-        klass.sort    = _sort_pyz
-        klass.index   = _index_pyz
-
-    return True
+    # Python lists methods
+    klass.insert  = _insert_pyz
+    klass.pop     = _pop_pyz
+    klass.reverse = _reverse_pyz
+    klass.sort    = _sort_pyz
+    klass.index   = _index_pyz

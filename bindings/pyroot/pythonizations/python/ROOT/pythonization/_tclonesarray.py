@@ -8,18 +8,15 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 from libROOTPythonizations import AddSetItemTCAPyz
 
 
-@pythonization()
+@pythonization('TClonesArray')
 def pythonize_tclonesarray(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name == 'TClonesArray':
-        # Add item setter method
-        AddSetItemTCAPyz(klass)
-
-    return True
+    # Add item setter method
+    AddSetItemTCAPyz(klass)

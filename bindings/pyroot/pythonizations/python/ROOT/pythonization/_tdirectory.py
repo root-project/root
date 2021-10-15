@@ -51,16 +51,14 @@ for more information.
 '''
 
 from libROOTPythonizations import AddDirectoryGetAttrPyz, AddDirectoryWritePyz
-from ROOT import pythonization
 import cppyy
 
-# This pythonization must be set as not lazy, otherwise the mechanism cppyy uses
-# to pythonize classes will not be able to be triggered on this very core class.
-# The pythonization does not have arguments since it is not fired by cppyy but
-# manually upon import of the ROOT module.
-@pythonization(lazy = False)
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
     AddDirectoryGetAttrPyz(klass)
     AddDirectoryWritePyz(klass)
-    return True
+
+# Instant pythonization (executed at `import ROOT` time), no need of a
+# decorator. This is a core class that is instantiated before cppyy's
+# pythonization machinery is in place.
+pythonize_tdirectory()

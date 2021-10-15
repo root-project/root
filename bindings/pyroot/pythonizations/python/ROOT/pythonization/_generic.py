@@ -9,7 +9,6 @@
 ################################################################################
 
 from libROOTPythonizations import AddPrettyPrintingPyz
-from ROOT import pythonization
 
 def _add_getitem_checked(klass):
     # Parameters:
@@ -33,9 +32,8 @@ def _add_getitem_checked(klass):
     klass._getitem__unchecked = klass.__getitem__
     klass.__getitem__ = getitem_checked
 
-
-@pythonization()
-def pythonizegeneric(klass, name):
+# Generic pythonizor for pretty printing that is applied to (almost) all classes
+def pythonize_generic(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
@@ -51,5 +49,3 @@ def pythonizegeneric(klass, name):
 
     if name not in exclude and not has_cpp_str:
         AddPrettyPrintingPyz(klass)
-
-    return True
