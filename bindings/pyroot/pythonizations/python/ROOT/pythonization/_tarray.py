@@ -45,12 +45,12 @@ for elem in a:
 */
 '''
 
-from ROOT import pythonization
+from . import pythonization
 
 from ._generic import _add_getitem_checked
 
 
-@pythonization()
+@pythonization("TArray", is_prefix=True)
 def pythonize_tarray(klass, name):
     # Parameters:
     # klass: class to be pythonized
@@ -59,12 +59,9 @@ def pythonize_tarray(klass, name):
     if name == 'TArray':
         # Support `len(a)` as `a.GetSize()`
         klass.__len__ = klass.GetSize
-
-    elif name.startswith('TArray'):
+    else:
         # Add checked __getitem__. It has to be directly added to the TArray
         # subclasses, which have a default __getitem__.
         # The new __getitem__ allows to throw pythonic IndexError when index
         # is out of range and to iterate over the array.
         _add_getitem_checked(klass)
-
-    return True

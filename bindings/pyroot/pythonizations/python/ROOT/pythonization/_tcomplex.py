@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 import cppyy
 
 def _rsub(self, other):
@@ -43,29 +43,25 @@ def _rtruediv(self, other):
     else:
         return NotImplemented
 
-@pythonization()
+@pythonization('TComplex')
 def pythonize_tcomplex(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
-    if name == 'TComplex':
 
-        # implements __radd__ as equal to __add__
-        klass.__radd__ = klass.__add__
+    # implements __radd__ as equal to __add__
+    klass.__radd__ = klass.__add__
 
-        # implements __rsub__ by assigning the function previously defined
-        klass.__rsub__ = _rsub
+    # implements __rsub__ by assigning the function previously defined
+    klass.__rsub__ = _rsub
 
-        # implements __rmul__ as equal to __mul__
-        klass.__rmul__ = klass.__mul__
+    # implements __rmul__ as equal to __mul__
+    klass.__rmul__ = klass.__mul__
 
-        # implements __rtruediv__ by assigning the function previously defined
-        # necessary for Python3
-        klass.__rtruediv__ = _rtruediv
+    # implements __rtruediv__ by assigning the function previously defined
+    # necessary for Python3
+    klass.__rtruediv__ = _rtruediv
 
-        # implements __rtruediv__ by assigning the function previously defined
-        # necessary for Python2
-        klass.__rdiv__ = _rdiv
-
-    return True
-
+    # implements __rtruediv__ by assigning the function previously defined
+    # necessary for Python2
+    klass.__rdiv__ = _rdiv

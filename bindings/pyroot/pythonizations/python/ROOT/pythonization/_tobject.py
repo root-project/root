@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
 from libROOTPythonizations import AddTObjectEqNePyz
 import cppyy
 
@@ -50,7 +49,6 @@ def _ge(self, o):
         return NotImplemented
 
 
-@pythonization(lazy = False)
 def pythonize_tobject():
     klass = cppyy.gbl.TObject
 
@@ -64,4 +62,7 @@ def pythonize_tobject():
     klass.__gt__ = _gt
     klass.__ge__ = _ge
 
-    return True
+# Instant pythonization (executed at `import ROOT` time), no need of a
+# decorator. This is a core class that is instantiated before cppyy's
+# pythonization machinery is in place.
+pythonize_tobject()

@@ -8,9 +8,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
+from ._rvec import _array_interface_dtype_map
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
-from ROOT.pythonization._rvec import _array_interface_dtype_map
 import cppyy
 
 
@@ -117,16 +117,13 @@ def RTensorGetitem(self, idx):
     return self(idxVec)
 
 
-@pythonization()
+@pythonization("TMVA::Experimental::RTensor<", is_prefix=True)
 def pythonize_rtensor(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name.startswith("TMVA::Experimental::RTensor<"):
-        # Add numpy array interface
-        add_array_interface_property(klass, name)
-        # Get elements, including slices
-        klass.__getitem__ = RTensorGetitem
-
-    return True
+    # Add numpy array interface
+    add_array_interface_property(klass, name)
+    # Get elements, including slices
+    klass.__getitem__ = RTensorGetitem

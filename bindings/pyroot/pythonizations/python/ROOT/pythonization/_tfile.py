@@ -39,7 +39,7 @@ file (e.g. non-existent or corrupted file).
 '''
 
 from libROOTPythonizations import AddFileOpenPyz
-from ROOT import pythonization
+from . import pythonization
 from libcppyy import bind_object
 
 def _TFileConstructor(self, *args):
@@ -68,7 +68,7 @@ def _TFileOpen(klass, *args):
     return f
 
 # Pythonizor function
-@pythonization()
+@pythonization('TFile')
 def pythonize_tfile(klass, name):
     """
     TFile inherits from
@@ -76,14 +76,11 @@ def pythonize_tfile(klass, name):
     - TDirectoryFile the pythonized Get method (pythonized only in Python)
     """
 
-    if name == 'TFile':
-        # Pythonizations for TFile::Open
-        AddFileOpenPyz(klass)
-        klass._OriginalOpen = klass.Open
-        klass.Open = classmethod(_TFileOpen)
+    # Pythonizations for TFile::Open
+    AddFileOpenPyz(klass)
+    klass._OriginalOpen = klass.Open
+    klass.Open = classmethod(_TFileOpen)
 
-        # Pythonization for TFile constructor
-        klass._OriginalConstructor = klass.__init__
-        klass.__init__ = _TFileConstructor
-
-    return True
+    # Pythonization for TFile constructor
+    klass._OriginalConstructor = klass.__init__
+    klass.__init__ = _TFileConstructor
