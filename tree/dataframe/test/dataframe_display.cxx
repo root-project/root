@@ -368,3 +368,101 @@ TEST(RDFDisplayTests, CustomMaxWidth)
 
    EXPECT_EQ(strCout.str(), "S3  | \n0   | \n0   | \n... | \n");
 }
+
+TEST(RDFDisplayTests, PrintWideTables1)
+{
+  std::vector<std::string> v3(3);
+  v3[0] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890";
+  v3[1] = v3[0];
+  v3[2] = v3[0];
+  std::vector<int> v0(10);
+  ROOT::RDataFrame vc(3);
+  auto dd = vc.Define("S3", [&v3] { return v3; })
+              .Display<std::vector<std::string>>({"S3"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "S3                                                                                                     | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n");
+}
+
+TEST(RDFDisplayTests, PrintWideTables2)
+{
+  std::vector<std::string> v3(3);
+  v3[0] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890";
+  v3[1] = v3[0];
+  v3[2] = v3[0];
+  std::vector<int> v10(10);
+  ROOT::RDataFrame vc(1);
+  auto dd = vc.Define("S10", [&v10] { return v10; })
+              .Define("S3", [&v3] { return v3; })
+              .Display<std::vector<int>, std::vector<std::string>>({"S10", "S3"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "S10 |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n"
+   "0   |  ... | \n");
+}
+
+
+TEST(RDFDisplayTests, PrintWideTables3)
+{
+  std::vector<std::string> v3(3);
+  v3[0] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890";
+  v3[1] = v3[0];
+  v3[2] = v3[0];
+  std::vector<int> v10(10);
+  ROOT::RDataFrame vc(1);
+  auto dd = vc.Define("S10", [&v10] { return v10; })
+              .Define("S3", [&v3] { return v3; })
+              .Display<std::vector<std::string>, std::vector<int>>({"S3", "S10"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "S3                                                                                                     |  ... | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" |  ... | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" |  ... | \n"
+   "\"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" |  ... | \n");
+}
+
