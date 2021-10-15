@@ -69,7 +69,7 @@ private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
    static constexpr char fgSeparator = ' '; ///< Spacing used to align the table entries
-   static constexpr unsigned fgMaxWidth = 80;
+   static constexpr unsigned fgMaxWidth = 100; ///< Maximum width of the table that Print() displays
 
    VecStr_t fTypes; ///< This attribute stores the type of each column. It is needed by the interpreter to print it.
    std::vector<bool> fIsCollection; ///< True if the column contains a collection. Collections are treated differently
