@@ -165,6 +165,8 @@ TEST(RNTuple, RVecTypeErased)
       rvec.clear();
       rvec.push_back(42);
       w->Fill();
+      rvec.clear();
+      w->Fill();
    }
 
    // read back RVec with type-erased API
@@ -178,6 +180,9 @@ TEST(RNTuple, RVecTypeErased)
    r->LoadEntry(1);
    EXPECT_EQ(v->size(), 1);
    EXPECT_EQ(v->at(0), 42);
+
+   r->LoadEntry(2);
+   EXPECT_TRUE(v->empty());
 }
 
 
@@ -194,6 +199,8 @@ TEST(RNTuple, ReadVectorAsRVec)
       r->Fill();
       vec->push_back(4.f);
       r->Fill();
+      vec->clear();
+      r->Fill();
    }
 
    // read them back as the other type
@@ -204,6 +211,8 @@ TEST(RNTuple, ReadVectorAsRVec)
    EXPECT_TRUE(All(*rvec == ROOT::RVec<float>({1.f, 2.f, 3.f})));
    r->LoadEntry(1);
    EXPECT_TRUE(All(*rvec == ROOT::RVec<float>({1.f, 2.f, 3.f, 4.f})));
+   r->LoadEntry(2);
+   EXPECT_TRUE(rvec->empty());
 }
 
 
