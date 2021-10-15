@@ -201,11 +201,19 @@ size_t RDisplay::GetNColumnsToShorten() const
 
 void RDisplay::Print() const
 {
-   auto columnsToPrint =
-      fNColumns - GetNColumnsToShorten(); // Get the number of columns that fit in the characters limit
-
-   if (columnsToPrint < fNColumns)
+   size_t columnsToPrint = fNColumns;
+   const size_t columnsToShorten = GetNColumnsToShorten();
+   bool allColumnsFit = true;
+   if (fNColumns > 1u && columnsToShorten > 0u){
+      if (fNColumns > columnsToShorten) {
+         columnsToPrint = fNColumns - columnsToShorten;
+      } else { // table has many columns and the first column is very wide;
+               // thus, the first column is only printed
+         columnsToPrint = 1;
+      }
       Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
+      allColumnsFit = false;
+   }
 
    if (fNMaxCollectionElements < 1)
       Info("Print", "No collections shown since fNMaxCollectionElements is %lu\n", fNMaxCollectionElements);
@@ -238,6 +246,10 @@ void RDisplay::Print() const
                    << " | ";
       }
       if (!isRowEmpty) {
+         if (!allColumnsFit){ // If there are column(s), that do not fit, a single column of dots is displayed
+                              // in the right end of each (non-empty) row.
+            stringRow << " ... | ";
+         }
          std::cout << stringRow.str() << std::endl;
       }
    }
