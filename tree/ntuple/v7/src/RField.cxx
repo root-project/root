@@ -1164,13 +1164,6 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    // int32_t fCapacity is the third data member (1 int32_t after fSize)
    std::int32_t *capacity = size + 1;
 
-   // Destroy current elements.
-   for (auto i = 0; i < *size; ++i) {
-      auto itemAddr = reinterpret_cast<void *>(begin + (i * fItemSize));
-      auto itemValue = fSubFields[0]->CaptureValue(itemAddr);
-      fSubFields[0]->DestroyValue(itemValue, /*dtorOnly=*/true);
-   }
-
    // Read collection info for this entry
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
