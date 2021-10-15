@@ -1286,7 +1286,7 @@ size_t ROOT::Experimental::RRVecField::EvalValueSize() const
    // - between fCapacity and the char[] buffer aligned like T
    // - after the char[] buffer
 
-   const auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
    const auto alignOfT = fSubFields[0]->GetAlignment();
    const auto sizeOfT = fSubFields[0]->GetValueSize();
 
@@ -1299,7 +1299,7 @@ size_t ROOT::Experimental::RRVecField::EvalValueSize() const
       constexpr unsigned cacheLineSize = 64u;
 #endif
       const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
-      const unsigned maxInlineByteSize = 1024;
+      constexpr unsigned maxInlineByteSize = 1024;
       const unsigned nElements =
          elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
       return nElements * sizeOfT;
