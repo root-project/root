@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
 import cppyy
 
 def _next_pyz(self):
@@ -23,7 +22,6 @@ def _next_pyz(self):
 		raise StopIteration()
 
 
-@pythonization(lazy = False)
 def pythonize_titer():
     klass = cppyy.gbl.TIter
 
@@ -34,4 +32,7 @@ def pythonize_titer():
     klass.__next__ = _next_pyz  # Py3
     klass.next     = _next_pyz  # Py2
 
-    return True
+# Instant pythonization (executed at `import ROOT` time), no need of a
+# decorator. This is a core class that is instantiated before cppyy's
+# pythonization machinery is in place.
+pythonize_titer()

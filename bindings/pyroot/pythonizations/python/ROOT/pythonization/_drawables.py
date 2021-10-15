@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT import pythonization
+from . import pythonization
 from cppyy.gbl import kCanDelete
 from libcppyy import SetOwnership
 
@@ -53,20 +53,19 @@ def _init(self, *args):
         # do it again in case it is executed.
         self.Draw = self._OriginalDraw
 
-@pythonization()
+@pythonization([ 'TPad', 'TButton', 'TColorWheel',
+                 'TPolyLine3D', 'TPolyMarker', 'TPolyMarker3D' ])
 def pythonize_drawables(klass, name):
     # Parameters:
     # klass: class to be pythonized
-    # name: name of the class
+    # name: string containing the name of the class
+    klass._OriginalDraw = klass.Draw
+    klass.Draw = _Draw
 
-    if name in {'TPad', 'TButton', 'TColorWheel',
-                'TPolyLine3D', 'TPolyMarker', 'TPolyMarker3D'}:
-        # Draw
-        klass._OriginalDraw = klass.Draw
-        klass.Draw = _Draw
-    elif name == 'TSlider':
-        # __init__
-        klass._original__init__ = klass.__init__
-        klass.__init__ = _init
-
-    return True
+@pythonization('TSlider')
+def pythonize_tslider(klass, name):
+    # Parameters:
+    # klass: class to be pythonized
+    # name: string containing the name of the class
+    klass._original__init__ = klass.__init__
+    klass.__init__ = _init
