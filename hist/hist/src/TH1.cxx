@@ -443,14 +443,14 @@ When using the options 2 or 3 above, the labels are automatically
  TH1::FillRandom can be used to randomly fill a histogram using
  the contents of an existing TF1 function or another
  TH1 histogram (for all dimensions).
- For example the following two statements create and fill a histogram
+ For example, the following two statements create and fill a histogram
  10000 times with a default gaussian distribution of mean 0 and sigma 1:
 ~~~ {.cpp}
        TH1F h1("h1", "histo from a gaussian", 100, -3, 3);
        h1.FillRandom("gaus", 10000);
 ~~~
  TH1::GetRandom can be used to return a random number distributed
- according the contents of a histogram.
+ according to the contents of a histogram.
 
 \anchor making-a-copy
 ### Making a copy of a histogram
@@ -5094,7 +5094,7 @@ Double_t TH1::Interpolate(Double_t, Double_t, Double_t) const
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check if a histogram is empty
-///  (this a protected method used mainly by TH1Merger )
+///  (this is a protected method used mainly by TH1Merger )
 
 Bool_t TH1::IsEmpty() const
 {
@@ -8767,7 +8767,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// By default when a histogram is created, it is added to the list
+/// By default, when a histogram is created, it is added to the list
 /// of histogram objects in the current directory in memory.
 /// Remove reference to this histogram from current directory and add
 /// reference to new directory dir. dir can be 0 in which case the
