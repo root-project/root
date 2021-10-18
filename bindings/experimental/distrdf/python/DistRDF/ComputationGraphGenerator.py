@@ -154,7 +154,7 @@ class ComputationGraphGenerator(object):
             # The result is a pyroot object which is stored together with
             # the DistRDF node. This binds the pyroot object lifetime to the
             # DistRDF node, so both nodes will be kept alive as long as there
-            # is a valid reference poiting to the DistRDF node.
+            # is a valid reference pointing to the DistRDF node.
             distrdf_node.pyroot_node = pyroot_node
 
             # Set the next `previous_node` input argument to the `pyroot_node`
