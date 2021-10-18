@@ -24,11 +24,14 @@ class ReducerMergeTest(unittest.TestCase):
           this is ignored by default in any application, but Python's unittest
           library overrides the default warning filters thus exposing this
           warning
+        - Initialize a SparkContext for the tests in this class
         """
         os.environ["PYSPARK_PYTHON"] = sys.executable
 
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
+
+        cls.sc = pyspark.SparkContext()
 
     @classmethod
     def tearDownClass(cls):
@@ -38,9 +41,7 @@ class ReducerMergeTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
-    def tearDown(self):
-        """Stop any created SparkContext"""
-        pyspark.SparkContext.getOrCreate().stop()
+        cls.sc.stop()
 
     def assertHistoOrProfile(self, obj_1, obj_2):
         """Asserts equality between two 'ROOT.TH1' or 'ROOT.TH2' objects."""
@@ -75,7 +76,7 @@ class ReducerMergeTest(unittest.TestCase):
     def test_histo1d_merge(self):
         """Check the working of Histo1D merge operation in the reducer."""
         # Operations with DistRDF
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         histo_py = rdf_py.Histo1D("rdfentry_")
 
         # Operations with PyROOT
@@ -90,7 +91,7 @@ class ReducerMergeTest(unittest.TestCase):
         modelTH2D = ("", "", 64, -4, 4, 64, -4, 4)
 
         # Operations with DistRDF
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         columns_py = self.define_two_columns(rdf_py)
         histo_py = columns_py.Histo2D(modelTH2D, "x", "y")
 
@@ -106,7 +107,7 @@ class ReducerMergeTest(unittest.TestCase):
         """Check the working of Histo3D merge operation in the reducer."""
         modelTH3D = ("", "", 64, -4, 4, 64, -4, 4, 64, -4, 4)
         # Operations with DistRDF
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         columns_py = self.define_three_columns(rdf_py)
         histo_py = columns_py.Histo3D(modelTH3D, "x", "y", "z")
 
@@ -121,7 +122,7 @@ class ReducerMergeTest(unittest.TestCase):
     def test_profile1d_merge(self):
         """Check the working of Profile1D merge operation in the reducer."""
         # Operations with DistRDF
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         columns_py = self.define_two_columns(rdf_py)
         profile_py = columns_py.Profile1D(("", "", 64, -4, 4), "x", "y")
 
@@ -138,7 +139,7 @@ class ReducerMergeTest(unittest.TestCase):
         model = ("", "", 64, -4, 4, 64, -4, 4)
 
         # Operations with DistRDF
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         columns_py = self.define_three_columns(rdf_py)
         profile_py = columns_py.Profile2D(model, "x", "y", "z")
 
@@ -155,7 +156,7 @@ class ReducerMergeTest(unittest.TestCase):
     def test_tgraph_merge(self):
         """Check the working of TGraph merge operation in the reducer."""
         # Operations with DistRDF
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         columns_py = self.define_two_columns(rdf_py)
         graph_py = columns_py.Graph("x", "y")
 
@@ -176,14 +177,14 @@ class ReducerMergeTest(unittest.TestCase):
 
     def test_distributed_count(self):
         """Test support for `Count` operation in distributed backend"""
-        rdf_py = Spark.RDataFrame(100)
+        rdf_py = Spark.RDataFrame(100, sparkcontext=self.sc)
         count = rdf_py.Count()
 
         self.assertEqual(count.GetValue(), 100)
 
     def test_distributed_sum(self):
         """Test support for `Sum` operation in distributed backend"""
-        rdf_py = Spark.RDataFrame(10)
+        rdf_py = Spark.RDataFrame(10, sparkcontext=self.sc)
         rdf_def = rdf_py.Define("x", "rdfentry_")
         rdf_sum = rdf_def.Sum("x")
 
@@ -193,7 +194,7 @@ class ReducerMergeTest(unittest.TestCase):
         """Test support for `AsNumpy` pythonization in distributed backend"""
 
         # Let's create a simple dataframe with ten rows and two columns
-        df = Spark.RDataFrame(10).Define("x", "(int)rdfentry_")\
+        df = Spark.RDataFrame(10, sparkcontext=self.sc).Define("x", "(int)rdfentry_")\
             .Define("y", "1.f/(1.f+rdfentry_)")
 
         # Build a dictionary of numpy arrays.
@@ -217,10 +218,34 @@ class ReducerMergeTest(unittest.TestCase):
         self.assertEqual(npy_x.dtype, int_32_dtype)
         self.assertEqual(npy_y.dtype, float_32_dtype)
 
+    def test_distributed_asnumpy_columns(self):
+        """
+        Test that distributed AsNumpy correctly accepts the 'columns' keyword
+        argument.
+        """
+
+        # Let's create a simple dataframe with ten rows and two columns
+        df = Spark.RDataFrame(10, sparkcontext=self.sc)\
+                  .Define("x", "(int)rdfentry_")\
+                  .Define("y", "1.f/(1.f+rdfentry_)")
+
+        # Build a dictionary of numpy arrays.
+        npy = df.AsNumpy(columns=["x"])
+
+        # Check the dictionary only has the desired column
+        self.assertListEqual(list(npy.keys()), ["x"])
+
+        # Check correctness of the output array
+        npy_x = npy["x"]
+        self.assertIsInstance(npy_x, numpy.ndarray)
+        self.assertEqual(len(npy_x), 10)
+        int_32_dtype = numpy.dtype("int32")
+        self.assertEqual(npy_x.dtype, int_32_dtype)
+
     def test_distributed_snapshot(self):
         """Test support for `Snapshot` in distributed backend"""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Spark.RDataFrame(10).Define("x", "rdfentry_")
+        df = Spark.RDataFrame(10, sparkcontext=self.sc).Define("x", "rdfentry_")
 
         # Count rows in the dataframe
         nrows = df.Count()
@@ -245,6 +270,32 @@ class ReducerMergeTest(unittest.TestCase):
         # names, then remove them because they are not necessary
         for filename in tmp_files:
             self.assertTrue(os.path.exists(filename))
+            os.remove(filename)
+
+    def test_distributed_snapshot_columnlist(self):
+        """
+        Test that distributed Snapshot correctly passes also the third input
+        argument "columnList".
+        """
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        df = Spark.RDataFrame(10, sparkcontext=self.sc)\
+                  .Define("a", "rdfentry_")\
+                  .Define("b", "rdfentry_")\
+                  .Define("c", "rdfentry_")\
+                  .Define("d", "rdfentry_")
+
+        expectedcolumns = ["a", "b"]
+        df.Snapshot("snapTree_columnlist", "snapFile_columnlist.root", expectedcolumns)
+
+        # Create a traditional RDF from the snapshotted files to retrieve the
+        # list of columns
+        tmp_files = ["snapFile_columnlist_0.root", "snapFile_columnlist_1.root"]
+        rdf = ROOT.RDataFrame("snapTree_columnlist", tmp_files)
+        snapcolumns = [str(column) for column in rdf.GetColumnNames()]
+
+        self.assertListEqual(snapcolumns, expectedcolumns)
+
+        for filename in tmp_files:
             os.remove(filename)
 
 
