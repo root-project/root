@@ -2244,7 +2244,7 @@ void TBranchElement::InitInfo()
                currentVersion = info->GetClassVersion();
             }
 
-            // First find the first branch of corresponding to the same class as 'this'
+            // First find the first branch corresponding to the same class as 'this'
             // branch
             Int_t index = branches->IndexOf(this);
             Int_t firstindex = 0;
