@@ -64,6 +64,7 @@ public:
       descBuilder.AddCluster(2, RNTupleVersion(), 2, ClusterSize_t(1));
       descBuilder.AddCluster(3, RNTupleVersion(), 3, ClusterSize_t(1));
       descBuilder.AddCluster(4, RNTupleVersion(), 4, ClusterSize_t(1));
+      descBuilder.AddCluster(5, RNTupleVersion(), 5, ClusterSize_t(1));
       fDescriptor = descBuilder.MoveDescriptor();
    }
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
@@ -247,13 +248,13 @@ TEST(ClusterPool, GetClusterBasics)
    RPageSourceMock p4;
    {
       RClusterPool c4(p4, 3);
-      c4.GetCluster(1, {0});
+      c4.GetCluster(2, {0});
    }
    ASSERT_EQ(4U, p4.fReqsClusterIds.size());
-   EXPECT_EQ(1U, p4.fReqsClusterIds[0]);
-   EXPECT_EQ(2U, p4.fReqsClusterIds[1]);
-   EXPECT_EQ(3U, p4.fReqsClusterIds[2]);
-   EXPECT_EQ(4U, p4.fReqsClusterIds[3]);
+   EXPECT_EQ(2U, p4.fReqsClusterIds[0]);
+   EXPECT_EQ(3U, p4.fReqsClusterIds[1]);
+   EXPECT_EQ(4U, p4.fReqsClusterIds[2]);
+   EXPECT_EQ(5U, p4.fReqsClusterIds[3]);
 }
 
 
