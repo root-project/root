@@ -215,7 +215,6 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       cardinalityField->SetOnDiskId(skeinIDs.back());
    }
 
-   std::string typeName;
    for (auto i = skeinIDs.rbegin(); i != skeinIDs.rend(); ++i) {
       valueField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(valueField));
       valueField->SetOnDiskId(*i);
