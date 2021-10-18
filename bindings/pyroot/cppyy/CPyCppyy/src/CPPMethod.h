@@ -24,6 +24,8 @@ public:
 
 public:
     virtual PyObject* GetSignature(bool show_formalargs = true);
+    virtual PyObject* GetSignatureNames();
+    virtual PyObject* GetSignatureTypes();
     virtual PyObject* GetPrototype(bool show_formalargs = true);
     virtual int       GetPriority();
     virtual bool IsGreedy();
