@@ -33,13 +33,13 @@ void fit1() {
    gBenchmark->Start("fit1");
    //
    // We connect the ROOT file generated in a previous tutorial
-   // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>) 
+   // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>)
    //
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/fit/");
    TFile *file = TFile::Open("fillrandom.root");
    if (!file) {
-      gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C",dir.Data()));
+      gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C(0)",dir.Data()));
       file = TFile::Open("fillrandom.root");
       if (!file) return;
    }

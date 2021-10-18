@@ -5,7 +5,6 @@
 /// This method computes confidence intervals for the fitted function
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
@@ -21,7 +20,7 @@
 void ConfidenceIntervals()
 {
    TCanvas *myc = new TCanvas("myc",
-      "Confidence intervals on the fitted function",1200, 500);
+      "Confidence intervals on the fitted function",1000, 500);
    myc->Divide(3,1);
 
 //### 1. A graph
