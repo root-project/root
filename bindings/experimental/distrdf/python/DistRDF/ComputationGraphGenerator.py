@@ -201,13 +201,20 @@ class ComputationGraphGenerator(object):
                 the second case a dictionary of numpy arrays after processing of
                 the current range.
         """
-        future_results = self.generate_computation_graph(starting_node, range_id)
-        triggerables = [
-            result.pyroot_node if result.operation.name != "AsNumpy"
-            else list(result.pyroot_node._result_ptrs.values())[0]
-            for result in future_results
+        actions = self.generate_computation_graph(starting_node, range_id)
+        # Retrieve a list of RResultPtrs. In most cases, this is what is already
+        # stored in the elements returned by `generate_computation_graph`. For
+        # `AsNumpy` operation we need to retrieve one of the internal RResultPtr
+        # of the `Take` operation on a column of the dataframe.
+        resultptrs = [
+            action.pyroot_node if action.operation.name != "AsNumpy"
+            else list(action.pyroot_node._result_ptrs.values())[0]
+            for action in actions
         ]
-        resulthandle = ROOT.RDF.RResultHandle(triggerables[0])
+        # We convert just the first RResultPtr to an RResultHandle that is
+        # accepted by `ROOT::RDF::RunGraphs`. We don't need to pass all of the
+        # actions since they belong to the same computation graph anyway.
+        resulthandle = ROOT.RDF.RResultHandle(resultptrs[0])
 
         # Release the GIL, run the RDF computation graph and then restore
         # previous value of the attribute
@@ -217,12 +224,17 @@ class ComputationGraphGenerator(object):
         rungraphs_fn([resulthandle])
         rungraphs_fn.__release_gil__ = old_rg
 
+        # Return a list of objects that can be later merged. In most cases this
+        # is still made of RResultPtrs that will then be used as input arguments
+        # to `ROOT::RDF::Detail::GetMergeableValue`. For the `Snapshot`
+        # operation we return a list with a single element corresponding to the
+        # path of the partial snapshotted file for this range. For `AsNumpy`,
+        # we return directly the resulting dictionary of Numpy arrays.
         return [
-            [result.operation.args[1]] if result.operation.name == "Snapshot"  # The path to partial Snapshot
-            # Get the dictionary of Numpy arrays from the AsNumpyResult
-            else result.pyroot_node.GetValue() if result.operation.name == "AsNumpy"
-            else result.pyroot_node
-            for result in future_results
+            [action.operation.args[1]] if action.operation.name == "Snapshot"
+            else action.pyroot_node.GetValue() if action.operation.name == "AsNumpy"
+            else action.pyroot_node
+            for action in actions
         ]
 
     def get_callable(self):
