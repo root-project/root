@@ -1055,6 +1055,70 @@ PyObject* CPyCppyy::CPPMethod::GetSignature(bool fa)
     return CPyCppyy_PyText_FromString(GetSignatureString(fa).c_str());
 }
 
+/**
+ * @brief Returns a tuple with the names of the input parameters of this method.
+ *
+ * For example given a function with prototype:
+ *
+ * double foo(int a, float b, double c)
+ *
+ * this function returns:
+ *
+ * ('a', 'b', 'c')
+ */
+PyObject *CPyCppyy::CPPMethod::GetSignatureNames()
+{
+   // Build a tuple of the argument names for this signature.
+   int argcount = GetMaxArgs();
+   PyObject *signature_names = PyTuple_New(argcount);
+
+   for (int iarg = 0; iarg < argcount; ++iarg) {
+      const std::string &argname_cpp = Cppyy::GetMethodArgName(fMethod, iarg);
+      PyObject *argname_py = CPyCppyy_PyText_FromString(argname_cpp.c_str());
+      PyTuple_SET_ITEM(signature_names, iarg, argname_py);
+   }
+
+   return signature_names;
+}
+
+/**
+ * @brief Returns a dictionary with the types of the signature of this method.
+ *
+ * This dictionary will store both the return type and the input parameter
+ * types of this method, respectively with keys "return_type" and
+ * "input_types", for example given a function with prototype:
+ *
+ * double foo(int a, float b, double c)
+ *
+ * this function returns:
+ *
+ * {'input_types': ('int', 'float', 'double'), 'return_type': 'double'}
+ */
+PyObject *CPyCppyy::CPPMethod::GetSignatureTypes()
+{
+
+   PyObject *signature_types_dict = PyDict_New();
+
+   // Insert the return type first
+   std::string return_type = GetReturnTypeName();
+   PyObject *return_type_py = CPyCppyy_PyText_FromString(return_type.c_str());
+   PyDict_SetItem(signature_types_dict, CPyCppyy_PyText_FromString("return_type"), return_type_py);
+
+   // Build a tuple of the argument types for this signature.
+   int argcount = GetMaxArgs();
+   PyObject *parameter_types = PyTuple_New(argcount);
+
+   for (int iarg = 0; iarg < argcount; ++iarg) {
+      const std::string &argtype_cpp = Cppyy::GetMethodArgType(fMethod, iarg);
+      PyObject *argtype_py = CPyCppyy_PyText_FromString(argtype_cpp.c_str());
+      PyTuple_SET_ITEM(parameter_types, iarg, argtype_py);
+   }
+
+   PyDict_SetItem(signature_types_dict, CPyCppyy_PyText_FromString("input_types"), parameter_types);
+
+   return signature_types_dict;
+}
+
 //----------------------------------------------------------------------------
 std::string CPyCppyy::CPPMethod::GetReturnTypeName()
 {
