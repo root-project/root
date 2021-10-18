@@ -910,7 +910,7 @@ auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still s
 ~~~
 
 \anchor helper-cols
-### Special helper columns: `rdfentry_` and `rdfslot_`
+### Special helper columns: rdfentry_ and rdfslot_
 Every instance of RDataFrame is created with two special columns called `rdfentry_` and `rdfslot_`. The `rdfentry_`
 column is of type `ULong64_t` and it holds the current entry number while `rdfslot_` is an `unsigned int`
 holding the index of the current data processing slot.
