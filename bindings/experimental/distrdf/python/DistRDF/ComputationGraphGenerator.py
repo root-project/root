@@ -144,8 +144,8 @@ class ComputationGraphGenerator(object):
             # current DistRDF node as the head node
             distrdf_node = self.headnode
         else:
-            # Execute the current operation using the output of the parent
-            # node (node_cpp)
+            # Execute the current operation using the output of the previous
+            # node
             RDFOperation = getattr(previous_node, distrdf_node.operation.name)
             operation = distrdf_node.operation
             self._modify_op_if_needed(operation, range_id)
