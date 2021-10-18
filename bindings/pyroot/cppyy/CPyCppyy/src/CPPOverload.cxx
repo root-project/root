@@ -62,6 +62,12 @@ public:
     PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
+    PyObject* GetSignatureNames() override {
+        return PyTuple_New(0);
+    }
+    PyObject* GetSignatureTypes() override {
+        return PyTuple_New(0);
+    }
     PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("<callback>");
     }
@@ -283,6 +289,54 @@ static int mp_doc_set(CPPOverload* pymeth, PyObject *val, void *)
     Py_INCREF(val);
     pymeth->fMethodInfo->fDoc = val;
     return 0;
+}
+
+/**
+ * @brief Returns a dictionary with the input parameter names for all overloads.
+ *
+ * This dictionary may look like:
+ *
+ * {'double ::foo(int a, float b, double c)': ('a', 'b', 'c'),
+ *  'float ::foo(float b)': ('b',),
+ *  'int ::foo(int a)': ('a',),
+ *  'int ::foo(int a, float b)': ('a', 'b')}
+ */
+static PyObject *mp_func_overloads_names(CPPOverload *pymeth)
+{
+
+   const CPPOverload::Methods_t &methods = pymeth->fMethodInfo->fMethods;
+
+   PyObject *overloads_names_dict = PyDict_New();
+
+   for (PyCallable *method : methods) {
+      PyDict_SetItem(overloads_names_dict, method->GetPrototype(), method->GetSignatureNames());
+   }
+
+   return overloads_names_dict;
+}
+
+/**
+ * @brief Returns a dictionary with the types of all overloads.
+ *
+ * This dictionary may look like:
+ *
+ * {'double ::foo(int a, float b, double c)': {'input_types': ('int', 'float', 'double'), 'return_type': 'double'},
+ *  'float ::foo(float b)': {'input_types': ('float',), 'return_type': 'float'},
+ *  'int ::foo(int a)': {'input_types': ('int',), 'return_type': 'int'},
+ *  'int ::foo(int a, float b)': {'input_types': ('int', 'float'), 'return_type': 'int'}}
+ */
+static PyObject *mp_func_overloads_types(CPPOverload *pymeth)
+{
+
+   const CPPOverload::Methods_t &methods = pymeth->fMethodInfo->fMethods;
+
+   PyObject *overloads_types_dict = PyDict_New();
+
+   for (PyCallable *method : methods) {
+      PyDict_SetItem(overloads_types_dict, method->GetPrototype(), method->GetSignatureTypes());
+   }
+
+   return overloads_types_dict;
 }
 
 //----------------------------------------------------------------------------
@@ -582,6 +636,8 @@ static PyGetSetDef mp_getset[] = {
     {(char*)"func_globals",  (getter)mp_func_globals,  nullptr, nullptr, nullptr},
     {(char*)"func_doc",      (getter)mp_doc,           (setter)mp_doc_set, nullptr, nullptr},
     {(char*)"func_name",     (getter)mp_name,          nullptr, nullptr, nullptr},
+    {(char*)"func_overloads_types",    (getter)mp_func_overloads_types,    nullptr, nullptr, nullptr},
+    {(char*)"func_overloads_names",    (getter)mp_func_overloads_names,    nullptr, nullptr, nullptr},
 
 
 // flags to control behavior
