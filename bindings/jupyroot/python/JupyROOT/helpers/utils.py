@@ -611,8 +611,7 @@ def loadMagicsAndCapturers():
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
-    if not 'win32' in sys.platform:
-        captures.append(StreamCapture())
+    captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
     for capture in captures: capture.register()
