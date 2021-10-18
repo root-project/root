@@ -108,7 +108,7 @@ class ComputationGraphGenerator(object):
         elif operation.name == "AsNumpy":
             operation.kwargs["lazy"] = True  # Make it lazy
 
-    def generate_computation_graph(self, previous_node, range_id, distrdf_node=None):
+    def generate_computation_graph(self, previous_node, range_id, distrdf_node):
         """
         Generates the RDF computation graph by recursively retrieving
         information from the DistRDF nodes.
@@ -126,9 +126,9 @@ class ComputationGraphGenerator(object):
                 call (e.g. Histo1D, Count).
             range_id (int): The id of the current range. Needed to assign a
                 file name to a partial Snapshot if it was requested.
-            distrdf_node (DistRDF.Node.Node | None): The current DistRDF node in
-                the computation graph. In the first recursive state this is None
-                and it will be set equal to the DistRDF headnode.
+            distrdf_node (DistRDF.Node.Node): The current DistRDF node in
+                the computation graph. In the first recursive state this the
+                DistRDF head node.
 
         Returns:
             list: List of actions of the computation graph to be triggered. Each
@@ -139,32 +139,27 @@ class ComputationGraphGenerator(object):
         """
         future_results = []
 
-        if distrdf_node is None:
-            # In the first recursive state, just set the
-            # current DistRDF node as the head node
-            distrdf_node = self.headnode
-        else:
-            # Execute the current operation using the output of the parent
-            # node (node_cpp)
-            RDFOperation = getattr(previous_node, distrdf_node.operation.name)
-            operation = distrdf_node.operation
-            self._modify_op_if_needed(operation, range_id)
-            pyroot_node = RDFOperation(*operation.args, **operation.kwargs)
+        # Execute the current operation using the output of the parent
+        # node (node_cpp)
+        RDFOperation = getattr(previous_node, distrdf_node.operation.name)
+        operation = distrdf_node.operation
+        self._modify_op_if_needed(operation, range_id)
+        pyroot_node = RDFOperation(*operation.args, **operation.kwargs)
 
-            # The result is a pyroot object which is stored together with
-            # the DistRDF node. This binds the pyroot object lifetime to the
-            # DistRDF node, so both nodes will be kept alive as long as there
-            # is a valid reference pointing to the DistRDF node.
-            distrdf_node.pyroot_node = pyroot_node
+        # The result is a pyroot object which is stored together with
+        # the DistRDF node. This binds the pyroot object lifetime to the
+        # DistRDF node, so both nodes will be kept alive as long as there
+        # is a valid reference pointing to the DistRDF node.
+        distrdf_node.pyroot_node = pyroot_node
 
-            # Set the next `previous_node` input argument to the `pyroot_node`
-            # we just retrieved
-            previous_node = pyroot_node
+        # Set the next `previous_node` input argument to the `pyroot_node`
+        # we just retrieved
+        previous_node = pyroot_node
 
-            # Append a pair (pyroot_node, operation) that will be used in the
-            # trigger_computation_graph function
-            if (operation.is_action() or operation.is_instant_action()):
-                future_results.append(NODE_AND_OP(pyroot_node, operation))
+        # Append a pair (pyroot_node, operation) that will be used in the
+        # trigger_computation_graph function
+        if (operation.is_action() or operation.is_instant_action()):
+            future_results.append(NODE_AND_OP(pyroot_node, operation))
 
         for child_node in distrdf_node.children:
             # Recurse through children and get their output
@@ -201,7 +196,10 @@ class ComputationGraphGenerator(object):
                 the second case a dictionary of numpy arrays after processing of
                 the current range.
         """
-        actions = self.generate_computation_graph(starting_node, range_id)
+        # Generate the computation graph starting from an RNode according to the
+        # data source in the mapper function and connecting it to the DistRDF
+        # head node.
+        actions = self.generate_computation_graph(starting_node, range_id, self.headnode)
         # Retrieve a list of RResultPtrs. In most cases, this is what is already
         # stored in the elements returned by `generate_computation_graph`. For
         # `AsNumpy` operation we need to retrieve one of the internal RResultPtr
