@@ -246,7 +246,7 @@ Bool_t RooUnitTest::runCompTests()
 	TObject* objRef = bmark->findObject(obj->GetName()) ;
 
 	if (!objRef) {
-	  cout << "RooUnitTest ERROR: cannot retrieve object " << obj->GetName() << " from reference  RooPlot " << iter->second << ", skipping" << endl ;
+	  cout << "RooUnitTest ERROR: cannot retrieve reference bject " << obj->GetName() << " from benchmark RooPlot " << iter->second << ", skipping" << endl ;
 	  ret = kFALSE ;
 	  break ;
 	}
