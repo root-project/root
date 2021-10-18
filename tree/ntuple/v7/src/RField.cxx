@@ -130,6 +130,20 @@ std::string GetNormalizedType(const std::string &typeName) {
    return normalizedType;
 }
 
+/// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
+/// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
+std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
+{
+   void **begin = reinterpret_cast<void **>(rvecPtr);
+   // int32_t fSize is the second data member (after 1 void*)
+   std::int32_t *size = reinterpret_cast<std::int32_t *>(begin + 1);
+   R__ASSERT(*size >= 0);
+   // int32_t fCapacity is the third data member (1 int32_t after fSize)
+   std::int32_t *capacity = size + 1;
+   R__ASSERT(*capacity >= -1);
+   return {begin, size, capacity};
+}
+
 } // anonymous namespace
 
 
@@ -1131,21 +1145,18 @@ ROOT::Experimental::RRVecField::CloneImpl(std::string_view newName) const
 
 std::size_t ROOT::Experimental::RRVecField::AppendImpl(const Detail::RFieldValue &value)
 {
-   void **rvecAddr = reinterpret_cast<void**>(value.GetRawPtr());
-   // void* fBegin is the first data member
-   void *begin = *rvecAddr;
-   // int32_t fSize is the second data member (after 1 void*)
-   const std::int32_t size = *reinterpret_cast<std::int32_t *>(rvecAddr + 1);
-   R__ASSERT(size >= 0);
+   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetRawPtr());
 
    std::size_t nbytes = 0;
-   for (std::int32_t i = 0; i < size; ++i) {
-      auto elementValue = fSubFields[0]->CaptureValue(reinterpret_cast<void *>(std::intptr_t(begin) + i * fItemSize));
+   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   for (std::int32_t i = 0; i < *sizePtr; ++i) {
+      auto elementValue =
+         fSubFields[0]->CaptureValue(begin + i * fItemSize);
       nbytes += fSubFields[0]->Append(elementValue);
    }
 
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
-   fNWritten += size;
+   fNWritten += *sizePtr;
    fColumns[0]->Append(elemIndex);
    return nbytes + sizeof(elemIndex);
 }
@@ -1155,14 +1166,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    // TODO as a performance optimization, we could assign values to elements of the inline buffer:
    // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
 
-   // Recover the current RVec data members
-   void **rvecAddr = reinterpret_cast<void**>(value->GetRawPtr());
-   // void* fBegin is the first data member in RVec (using it as char* so we can do pointer arithmetic on it)
-   char *begin = reinterpret_cast<char*>(*rvecAddr);
-   // int32_t fSize is the second data member (after 1 void*)
-   std::int32_t *size = reinterpret_cast<std::int32_t *>(rvecAddr + 1);
-   // int32_t fCapacity is the third data member (1 int32_t after fSize)
-   std::int32_t *capacity = size + 1;
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(value->GetRawPtr());
 
    // Read collection info for this entry
    ClusterSize_t nItems;
@@ -1170,25 +1174,25 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    // Resize output RVec if needed
-   if (std::int32_t(nItems) > *capacity) {
+   if (std::int32_t(nItems) > *capacityPtr) {
       // Get new buffer.
       // We trust that `malloc` returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
-      free(begin);
-      begin = reinterpret_cast<char*>(malloc(nItems * fItemSize));
-      R__ASSERT(begin != nullptr);
-      *rvecAddr = begin;
-      *capacity = nItems;
+      free(*beginPtr);
+      *beginPtr = malloc(nItems * fItemSize);
+      R__ASSERT(*beginPtr != nullptr);
+      *capacityPtr = nItems;
    }
 
    // Create new elements
+   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
    for (auto i = 0u; i < nItems; ++i) {
       // GenerateValue uses a placement new which starts the objects' lifetime
       auto itemValue = fSubFields[0]->GenerateValue(begin + (i * fItemSize));
       fSubFields[0]->Read(collectionStart + i, &itemValue);
    }
-   *size = nItems;
+   *sizePtr = nItems;
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl()
@@ -1217,36 +1221,29 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::Generate
 
 void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
-   void **rvecAddr = reinterpret_cast<void**>(value.GetRawPtr());
-   // void* fBegin is the first data member
-   void *begin = *rvecAddr;
-   // int32_t fSize is the second data member (after 1 void*, no padding expected)
-   const std::int32_t* sizePtr = reinterpret_cast<std::int32_t *>(rvecAddr + 1);
-   const std::int32_t size = *sizePtr;
-   R__ASSERT(size >= 0);
-   // int32_t fCapacity is the third data member (after fSize, no padding expected)
-   const std::int32_t capacity = *(sizePtr + 1);
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(value.GetRawPtr());
 
-   for (std::int32_t i = 0; i < size; ++i) {
-      auto elementValue = fSubFields[0]->CaptureValue(reinterpret_cast<void *>(std::intptr_t(begin) + i * fItemSize));
+   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   for (std::int32_t i = 0; i < *sizePtr; ++i) {
+      auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
       fSubFields[0]->DestroyValue(elementValue, true /* dtorOnly */);
    }
 
    // figure out if we are in the small state, i.e. begin == &inlineBuffer
    // there might be padding between fCapacity and the inline buffer, so we compute it here
-   const auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
    const auto alignOfT = fSubFields[0]->GetAlignment();
    auto paddingMiddle = dataMemberSz % alignOfT;
    if (paddingMiddle != 0)
       paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = begin == (rvecAddr + dataMemberSz + paddingMiddle);
+   const bool isSmall = (reinterpret_cast<void*>(begin) == (beginPtr + dataMemberSz + paddingMiddle));
 
-   const bool owns = capacity != -1;
+   const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
       free(begin);
 
    if (!dtorOnly)
-      free(rvecAddr);
+      free(beginPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::CaptureValue(void* where)
@@ -1257,16 +1254,12 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::CaptureV
 std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::RRVecField::SplitValue(const Detail::RFieldValue &value) const
 {
-   void **rvecAddr = reinterpret_cast<void**>(value.GetRawPtr());
-   // void* fBegin is the first data member
-   void *begin = *rvecAddr;
-   // int32_t fSize is the second data member (after 1 void*)
-   const std::int32_t size = *reinterpret_cast<std::int32_t *>(rvecAddr + 1);
-   R__ASSERT(size >= 0);
+   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetRawPtr());
 
    std::vector<Detail::RFieldValue> result;
-   for (std::int32_t i = 0; i < size; ++i) {
-      auto elementValue = fSubFields[0]->CaptureValue(reinterpret_cast<void *>(std::intptr_t(begin) + i * fItemSize));
+   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   for (std::int32_t i = 0; i < *sizePtr; ++i) {
+      auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
       result.emplace_back(std::move(elementValue));
    }
    return result;
