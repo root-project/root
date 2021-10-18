@@ -132,13 +132,16 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, str
    ofstream out(jupyconfig, ios::trunc);
    if (out.is_open()) {
       out << "import os" << endl;
+#ifdef WIN32
+      std::replace( rootbin.begin(), rootbin.end(), '\\', '/');
+      std::replace( rootdata.begin(), rootdata.end(), '\\', '/');
+      out << "rootbin = '" << rootbin << "'" << endl;
+      string jsrootsys = rootdata + "/js/";
+      out << "os.environ['PYTHONPATH']      = '%s' % rootbin + ';' + os.getenv('PYTHONPATH', '')" << endl;
+      out << "os.environ['PATH']            = '%s;%s/bin' % (rootbin,rootbin) + ';' + os.getenv('PATH', '')" << endl;
+#else
       out << "rootbin = '" << rootbin << "'" << endl;
       out << "rootlib = '" << rootlib << "'" << endl;
-#ifdef WIN32
-      string jsrootsys = rootdata + "\\js\\";
-      out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
-      out << "os.environ['PATH']            = '%s:%s\\bin' % (rootbin,rootbin) + ':' + '%s' % rootlib + ':' + os.getenv('PATH', '')" << endl;
-#else
       string jsrootsys = rootdata + "/js/";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
