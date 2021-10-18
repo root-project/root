@@ -108,14 +108,15 @@ class ComputationGraphGenerator(object):
         elif operation.name == "AsNumpy":
             operation.kwargs["lazy"] = True  # Make it lazy
 
-    def generate_computation_graph(self, current_node, range_id, distrdf_node=None):
+    def generate_computation_graph(self, previous_node, range_id, distrdf_node=None):
         """
         Generates the RDF computation graph by recursively retrieving
         information from the DistRDF nodes.
 
         Args:
-            current_node (Any): The current RDF node in the computation graph.
-                In the first recursive state, this corresponds to the RDataFrame
+            previous_node (Any): The node in the RDF computation graph on which
+                the operation of the current recursive state is called. In the
+                first recursive state, this corresponds to the RDataFrame
                 object that will be processed. Specifically, if the head node
                 of the computation graph is an EmptySourceHeadNode, then the
                 first current node will actually be the result of a call to the
@@ -145,7 +146,7 @@ class ComputationGraphGenerator(object):
         else:
             # Execute the current operation using the output of the parent
             # node (node_cpp)
-            RDFOperation = getattr(current_node, distrdf_node.operation.name)
+            RDFOperation = getattr(previous_node, distrdf_node.operation.name)
             operation = distrdf_node.operation
             self._modify_op_if_needed(operation, range_id)
             pyroot_node = RDFOperation(*operation.args, **operation.kwargs)
@@ -156,9 +157,9 @@ class ComputationGraphGenerator(object):
             # is a valid reference poiting to the DistRDF node.
             distrdf_node.pyroot_node = pyroot_node
 
-            # Set the next `current_node` input argument to the `pyroot_node`
+            # Set the next `previous_node` input argument to the `pyroot_node`
             # we just retrieved
-            current_node = pyroot_node
+            previous_node = pyroot_node
 
             # Append a pair (pyroot_node, operation) that will be used in the
             # trigger_computation_graph function
@@ -168,7 +169,7 @@ class ComputationGraphGenerator(object):
         for child_node in distrdf_node.children:
             # Recurse through children and get their output
             prev_results = self.generate_computation_graph(
-                current_node, range_id, child_node)
+                previous_node, range_id, child_node)
 
             # Attach the output of the children node
             future_results.extend(prev_results)
