@@ -605,10 +605,6 @@ if(ROOT_pyroot_FOUND)
         roofit/rf511_wsfactory_basic.py)
   endif()
 
-  if(NOT dataframe)
-    list(APPEND pyveto pyroot/pyroot002_TTreeAsMatrix.py)
-  endif()
-
   if(NOT dataframe
      OR ${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS_EQUAL 2.7.5
      OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2)
