@@ -66,7 +66,7 @@ void rf203_ranges()
    // Make plot frame in x and add data and fitted model
    RooPlot *frame = x.frame(Title("Fitting a sub range"));
    modelData->plotOn(frame);
-   model.plotOn(frame, Range("Full"), LineStyle(kDashed), LineColor(kRed)); // Add shape in full ranged dashed
+   model.plotOn(frame, Range(""), LineStyle(kDashed), LineColor(kRed)); // Add shape in full ranged dashed
    model.plotOn(frame);                                                     // By default only fitted range is shown
 
    // Print fit results
