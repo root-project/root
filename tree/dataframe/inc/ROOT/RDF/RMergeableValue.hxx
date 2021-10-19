@@ -17,9 +17,11 @@
 #ifndef ROOT_RDF_RMERGEABLEVALUE
 #define ROOT_RDF_RMERGEABLEVALUE
 
+#include <algorithm> // std::min, std::max
 #include <memory>
 #include <stdexcept>
-#include <algorithm> // std::min, std::max
+#include <string> // RMergeableSnapshotPaths
+#include <vector> // RMergeableSnapshotPaths
 
 #include "RtypesCore.h"
 #include "TList.h" // RMergeableFill::Merge
@@ -410,6 +412,57 @@ public:
    RMergeableMin() = default;
    RMergeableMin(RMergeableMin &&) = default;
    RMergeableMin(const RMergeableMin &) = delete;
+};
+
+/**
+\class ROOT::Detail::RDF::RMergeableSnapshotPaths
+\ingroup dataframe
+\brief Specialization of RMergeableValue for the ROOT::RDF::RInterface::Snapshot
+       operation.
+
+This subclass is responsible for merging results coming from Snapshot actions.
+It stores a vector with the path to the snapshotted file. When merged with other
+objects of the same type, the various vectors are concatenated together so that
+a TChain can be built with all the paths to the files.
+*/
+class RMergeableSnapshotPaths final : public RMergeableValue<std::vector<std::string>> {
+
+   void Merge(const RMergeableValue<std::vector<std::string>> &other) final
+   {
+      try {
+         const auto &othercast = dynamic_cast<const RMergeableSnapshotPaths &>(other);
+         // Sizes of original vectors
+         const auto &thissize = this->fValue.size();
+         const auto &othersize = othercast.fValue.size();
+
+         // Create a new vector with enough size for elements of both vectors
+         std::vector<std::string> mergedpaths;
+         mergedpaths.reserve(thissize + othersize);
+
+         // Move elements of both vectors into new one
+         std::move(this->fValue.begin(), this->fValue.end(), std::back_inserter(mergedpaths));
+         std::move(othercast.fValue.begin(), othercast.fValue.end(), std::back_inserter(mergedpaths));
+
+         // Move assign new vector to the class instance data member
+         this->fValue = std::move(mergedpaths);
+
+      } catch (const std::bad_cast &) {
+         throw std::invalid_argument("Results from different actions cannot be merged together.");
+      }
+   }
+
+public:
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructor that initializes data members.
+   /// \param[in] value The action result.
+   RMergeableSnapshotPaths(std::vector<std::string> &&value) : RMergeableValue<std::vector<std::string>>(value) {}
+   /**
+      Default constructor. Needed to allow serialization of ROOT objects. See
+      TBufferFile::WriteObjectClass.
+   */
+   RMergeableSnapshotPaths() = default;
+   RMergeableSnapshotPaths(RMergeableSnapshotPaths &&) = default;
+   RMergeableSnapshotPaths(const RMergeableSnapshotPaths &) = delete;
 };
 
 /**

@@ -1358,6 +1358,12 @@ public:
       fOutputFile->Close();
    }
 
+   // Helper function for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableSnapshotPaths>(std::vector<std::string>{fFileName});
+   }
+
    std::string GetActionName() { return "Snapshot"; }
 
    ROOT::RDF::SampleCallback_t GetSampleCallback() final

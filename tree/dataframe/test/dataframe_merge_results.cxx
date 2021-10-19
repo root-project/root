@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RResultPtr.hxx> // GetMergeableValue
+#include <ROOT/RSnapshotOptions.hxx>
 #include <stdexcept>
 #include <gtest/gtest.h>
 
@@ -334,5 +335,35 @@ TEST(RDataFrameMergeResults, WrongMergeMinMax)
       EXPECT_STREQ(e.what(), "Results from different actions cannot be merged together.");
    } catch (...) {
       FAIL() << "Expected std::invalid_argument error.";
+   }
+}
+
+TEST(RDataFrameMergeResults, MergeSnapshotPaths)
+{
+   ROOT::RDataFrame df1{100};
+   ROOT::RDataFrame df2{100};
+
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fLazy = true;
+
+   auto col1 = df1.Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = df2.Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+
+   auto snap1 = col1.Snapshot<double>("mytree", "myfile_1.root", {"x"}, opts);
+   auto snap2 = col2.Snapshot<double>("mytree", "myfile_2.root", {"x"}, opts);
+
+   auto ms1 = GetMergeableValue(snap1);
+   auto ms2 = GetMergeableValue(snap2);
+
+   auto mergedptr = MergeValues(std::move(ms1), std::move(ms2));
+
+   const auto &mergedpaths = mergedptr->GetValue();
+
+   std::vector<std::string> expected{"myfile_1.root", "myfile_2.root"};
+
+   EXPECT_EQ(mergedpaths.size(), expected.size());
+
+   for (std::size_t i = 0; i < expected.size(); i++) {
+      EXPECT_EQ(mergedpaths[i], expected[i]);
    }
 }

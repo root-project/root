@@ -48,7 +48,7 @@ void WarnOnLazySnapshotNotTriggered(
       Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
    }
 }
-}
+} // namespace RDF
 } // namespace Internal
 
 namespace Detail {
@@ -63,8 +63,16 @@ RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &df,
 template <typename T>
 class RMergeableValue;
 
-template <typename T>
-std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr);
+template <typename T, typename U = T>
+std::unique_ptr<RMergeableValue<U>> GetMergeableValue(RResultPtr<T> &rptr);
+
+// Special case: GetMergeableValue on a Snapshot operation
+// Cannot be a template specialization because writing
+// auto mergeable = GetMergeableValue(rptr_from_a_snapshot)
+// would choose the template overload above
+std::unique_ptr<RMergeableValue<std::vector<std::string>>>
+GetMergeableValue(RResultPtr<ROOT::RDF::RInterface<RLoopManager, void>> &rptr);
+
 } // namespace RDF
 } // namespace Detail
 namespace RDF {
@@ -115,7 +123,13 @@ class RResultPtr {
    friend bool operator!=(const RResultPtr<T1> &lhs, std::nullptr_t rhs);
    template <class T1>
    friend bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs);
-   friend std::unique_ptr<RDFDetail::RMergeableValue<T>> RDFDetail::GetMergeableValue<T>(RResultPtr<T> &rptr);
+
+   template <typename From, typename To>
+   friend std::unique_ptr<ROOT::Detail::RDF::RMergeableValue<To>>
+   ROOT::Detail::RDF::GetMergeableValue(RResultPtr<From> &rptr);
+
+   friend std::unique_ptr<ROOT::Detail::RDF::RMergeableValue<std::vector<std::string>>>
+   ROOT::Detail::RDF::GetMergeableValue(RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>> &rptr);
 
    friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
 
@@ -423,6 +437,9 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Retrieve a mergeable value from an RDataFrame action.
 /// \param[in] rptr lvalue reference of an RResultPtr object.
+/// \tparam T The type of the result encapsulated by RResultPtr
+/// \tparam U The type of the value that the RMergeableValue will encapsulate.
+///           In general, this is equal to T.
 /// \returns An RMergeableValue holding the result of the action, wrapped in an
 ///          `std::unique_ptr`.
 ///
@@ -440,15 +457,16 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
 /// auto h = d.Histo1D("Branch_A");
 /// auto mergeablehisto = GetMergeableValue(h);
 /// ~~~
-template <typename T>
-std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr)
+template <typename T, typename U>
+std::unique_ptr<RMergeableValue<U>> GetMergeableValue(RResultPtr<T> &rptr)
 {
    rptr.ThrowIfNull();
    if (!rptr.fActionPtr->HasRun())
       rptr.TriggerRun(); // Prevents from using `const` specifier in parameter
-   return std::unique_ptr<RMergeableValue<T>>{
-      static_cast<RMergeableValue<T> *>(rptr.fActionPtr->GetMergeableValue().release())};
+   return std::unique_ptr<RMergeableValue<U>>{
+      static_cast<RMergeableValue<U> *>(rptr.fActionPtr->GetMergeableValue().release())};
 }
+
 } // namespace RDF
 } // namespace Detail
 } // namespace ROOT

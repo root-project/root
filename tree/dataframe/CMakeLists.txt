@@ -88,6 +88,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFActionHelpers.cxx
     src/RDFBookedDefines.cxx
     src/RDFDisplay.cxx
+    src/RDFGetMergeableValue.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
