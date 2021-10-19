@@ -18,11 +18,6 @@ from .CppWorkflow import CppWorkflow
 
 logger = logging.getLogger(__name__)
 
-# This named tuple stores a result of a call to the RDF API (e.g. Histo1D, Count)
-# and its corresponding DistRDF.Operation.Operation instance. It is used in the
-# machinery to construct and trigger the computation graph
-NODE_AND_OP = collections.namedtuple("NodeAndOp", ["pyroot_node", "operation"])
-
 
 class ComputationGraphGenerator(object):
     """
@@ -164,7 +159,7 @@ class ComputationGraphGenerator(object):
             # Append a pair (pyroot_node, operation) that will be used in the
             # trigger_computation_graph function
             if (operation.is_action() or operation.is_instant_action()):
-                future_results.append(NODE_AND_OP(pyroot_node, operation))
+                future_results.append(pyroot_node)
 
         for child_node in distrdf_node.children:
             # Recurse through children and get their output
@@ -182,9 +177,7 @@ class ComputationGraphGenerator(object):
 
         The list of actions to be performed is retrieved by calling
         generate_computation_graph. Afterwards, the first of this actions is
-        passed to ROOT.RDF.RunGraphs in order to trigger the execution of the
-        actual computation graph. The RunGraphs function is treated in order to
-        release the GIL.
+        triggered through the `RResultPtr::GetValue` method.
 
         Args:
             starting_node (ROOT.RDF.RNode): The node where the generation of the
@@ -196,46 +189,20 @@ class ComputationGraphGenerator(object):
         Returns:
             list: A list of objects that can be either used as or converted into
                 mergeable values. These are RResultPtr in most cases, but there
-                are exceptions for Snapshot and AsNumpy. In the first case a
-                list with the path to the partial Snapshot file is returned. In
-                the second case a dictionary of numpy arrays after processing of
-                the current range.
+                is an exception for AsNumpy. In that case the element of the
+                list is an instance of `AsNumpyResult`.
         """
         actions = self.generate_computation_graph(starting_node, range_id)
-        # Retrieve a list of RResultPtrs. In most cases, this is what is already
-        # stored in the elements returned by `generate_computation_graph`. For
-        # `AsNumpy` operation we need to retrieve one of the internal RResultPtr
-        # of the `Take` operation on a column of the dataframe.
-        resultptrs = [
-            action.pyroot_node if action.operation.name != "AsNumpy"
-            else list(action.pyroot_node._result_ptrs.values())[0]
-            for action in actions
-        ]
-        # We convert just the first RResultPtr to an RResultHandle that is
-        # accepted by `ROOT::RDF::RunGraphs`. We don't need to pass all of the
-        # actions since they belong to the same computation graph anyway.
-        resulthandle = ROOT.RDF.RResultHandle(resultptrs[0])
 
-        # Release the GIL, run the RDF computation graph and then restore
-        # previous value of the attribute
-        rungraphs_fn = ROOT.RDF.RunGraphs
-        old_rg = rungraphs_fn.__release_gil__
-        rungraphs_fn.__release_gil__ = True
-        rungraphs_fn([resulthandle])
-        rungraphs_fn.__release_gil__ = old_rg
+        # Trigger computation graph. This relies on the pythonization of the
+        # `RResultPtr::GetValue` method that always releases the GIL
+        actions[0].GetValue()
 
         # Return a list of objects that can be later merged. In most cases this
         # is still made of RResultPtrs that will then be used as input arguments
-        # to `ROOT::RDF::Detail::GetMergeableValue`. For the `Snapshot`
-        # operation we return a list with a single element corresponding to the
-        # path of the partial snapshotted file for this range. For `AsNumpy`,
-        # we return directly the resulting dictionary of Numpy arrays.
-        return [
-            [action.operation.args[1]] if action.operation.name == "Snapshot"
-            else action.pyroot_node.GetValue() if action.operation.name == "AsNumpy"
-            else action.pyroot_node
-            for action in actions
-        ]
+        # to `ROOT::RDF::Detail::GetMergeableValue`. For `AsNumpy`, it returns
+        # an instance of `AsNumpyResult`.
+        return actions
 
     def get_callable(self):
         """

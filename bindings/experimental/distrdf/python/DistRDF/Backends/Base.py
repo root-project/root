@@ -23,6 +23,9 @@ from DistRDF.HeadNode import TreeHeadNode
 # Python 2 there is no ABC class
 ABC = ABCMeta("ABC", (object,), {})
 
+# Lookup of the AsNumpyResult class that will be used in the mapper function
+AsNumpyResult = ROOT.pythonization._rdataframe.AsNumpyResult
+
 
 class BaseBackend(ABC):
     """
@@ -254,8 +257,7 @@ class BaseBackend(ABC):
                 resultptr_list = computation_graph_callable(rdf, current_range.id)
 
                 mergeables = [
-                    resultptr  # Here resultptr is already the result value
-                    if isinstance(resultptr, (dict, list))
+                    resultptr.GetValue() if isinstance(resultptr, AsNumpyResult)
                     else ROOT.ROOT.Detail.RDF.GetMergeableValue(resultptr)
                     for resultptr in resultptr_list
                 ]
@@ -283,18 +285,12 @@ class BaseBackend(ABC):
 
             import ROOT
 
-            # We still need the list index to modify results of `Snapshot` and
-            # `AsNumpy` in place.
+            # We still need the list index to modify results of `AsNumpy` in place.
             for index, (mergeable_out, mergeable_in) in enumerate(
                     zip(mergeables_out, mergeables_in)):
-                # Create a global list with all the files of the partial
-                # snapshots.
-                if isinstance(mergeable_out, list):
-                    mergeables_out[index].extend(mergeable_in)
-
                 # Concatenate the partial numpy arrays along the same key of
                 # the dictionary.
-                elif isinstance(mergeable_out, dict):
+                if isinstance(mergeable_out, dict):
                     # Import numpy lazily
                     try:
                         import numpy
