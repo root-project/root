@@ -78,7 +78,7 @@ public:
     {return makeResidHist(curve,true,useAverage); }
 
 
-  Bool_t isIdentical(const RooHist& other, Double_t tol=1e-6) const ;
+  Bool_t isIdentical(const RooHist& other, Double_t tol=1e-6, bool verbose=true) const ;
 
 
 protected:

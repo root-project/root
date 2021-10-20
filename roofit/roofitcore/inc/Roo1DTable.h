@@ -52,7 +52,7 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual Bool_t isIdentical(const RooTable& other) ;
+  virtual Bool_t isIdentical(const RooTable& other, bool verbose) ;
 
 protected:
 
