@@ -2,11 +2,17 @@
 
 ## Changes in dev
 1. Fix problem with curved TGraph drawings (#218)
-2. Fix problem with logy/logz drawing in lego plots
-3. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis
-4. Provide JSROOT.Painter.setDefaultDrawOpt to change default draw option
-5. Provide example of custom entries in context menu
-6. Fix error with projection statistic calculations
+2. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis
+3. Provide JSROOT.Painter.setDefaultDrawOpt to change default draw option
+4. Provide example of custom entries in context menu
+5. Fix problems with TGraph drawing updates
+6. Provide alternative location for zstd-codec
+
+
+## Changes in 6.2.1
+1. Fix logy and logz handling on lego plots
+2. Fix error in statistic calculations for projections
+3. Fix zstd-codec loading with minified jsroot scripts
 
 
 ## Changes in 6.2.0
