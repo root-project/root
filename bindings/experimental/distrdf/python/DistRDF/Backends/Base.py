@@ -15,6 +15,8 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 import ROOT
+from ROOT.pythonization._rdataframe import AsNumpyResult
+
 from DistRDF.Backends import Utils
 from DistRDF.HeadNode import TreeHeadNode
 
@@ -22,9 +24,6 @@ from DistRDF.HeadNode import TreeHeadNode
 # This ensures compatibility between Python 2 and 3 versions, since in
 # Python 2 there is no ABC class
 ABC = ABCMeta("ABC", (object,), {})
-
-# Lookup of the AsNumpyResult class that will be used in the mapper function
-AsNumpyResult = ROOT.pythonization._rdataframe.AsNumpyResult
 
 
 class BaseBackend(ABC):
