@@ -28,7 +28,7 @@ class RooNLLVarNew : public RooAbsReal {
 public:
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, RooAbsReal *weight,
-                RooAbsReal *constraints, bool isExtended);
+                RooAbsReal *constraints, bool isExtended, std::string const &rangeName);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
    virtual TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -53,8 +53,10 @@ protected:
    RooArgSet const *_observables = nullptr;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;
    RooAbsReal const *_constraints = nullptr;
-   mutable double _sumWeight = 0.0; //!
+   mutable double _sumWeight = 0.0;         //!
+   mutable double _sumCorrectionTerm = 0.0; //!
    bool _isExtended;
+   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _rangeNormTerm;
 
    double getValV(const RooArgSet *normalisationSet = nullptr) const override;
 

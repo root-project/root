@@ -39,7 +39,10 @@ and gets destroyed when the fitting ends.
 
 #include "RooBatchCompute.h"
 
+#include "ROOT/StringUtils.hxx"
+
 #include <iomanip>
+#include <numeric>
 #include <thread>
 
 namespace ROOT {
@@ -57,7 +60,8 @@ there's also some cuda-related initialization.
 \param batchMode The computation mode of the RooBatchCompute library, accepted values are `RooBatchCompute::Cpu` and
 `RooBatchCompute::Cuda`.
 **/
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooBatchCompute::BatchMode batchMode)
+RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooBatchCompute::BatchMode batchMode,
+                           std::string const &rangeName)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(data, true))},
      _batchMode{batchMode}, _topNode{topNode}, _data{&data}, _nEvents{static_cast<size_t>(data.numEntries())}
@@ -121,12 +125,52 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
 
          auto clients = pAbsReal->clients();
          for (auto *client : clients) {
-            if (list.find(*client)) {
+            // we use containsInstance instead of find to match by pointer and not name
+            if (list.containsInstance(*client)) {
                auto pClient = static_cast<const RooAbsReal *>(client);
                ++_nodeInfos[pClient].nServers;
                ++_nodeInfos[pAbsReal].nClients;
             }
          }
+      }
+   }
+
+   // Now we have do do the range selection
+   if (!rangeName.empty()) {
+      RooArgSet observables;
+      topNode.getObservables(data.get(), observables);
+
+      // figure out which events are in the range
+      std::vector<bool> isInRange(_nEvents, false);
+      for (auto const &range : ROOT::Split(rangeName, ",")) {
+         std::vector<bool> isInSubRange(_nEvents, true);
+         for (auto *observable : static_range_cast<RooAbsRealLValue *>(observables)) {
+            RooSpan<const double> allValues = _dataMapCPU[observable];
+            observable->inRange({allValues.data(), _nEvents}, range, isInSubRange);
+         }
+         for (std::size_t i = 0; i < isInSubRange.size(); ++i) {
+            isInRange[i] = isInRange[i] | isInSubRange[i];
+         }
+      }
+
+      // reset the number of events
+      _nEvents = std::accumulate(isInRange.begin(), isInRange.end(), 0);
+
+      // do the data reduction in the data map
+      for (auto const &item : _dataMapCPU) {
+         auto const &allValues = item.second;
+         // ignore scalars
+         if (allValues.size() <= 2)
+            continue;
+         double *buffer = getAvailableCPUBuffer();
+         std::size_t j = 0;
+         for (std::size_t i = 0; i < isInRange.size(); ++i) {
+            if (isInRange[i]) {
+               buffer[j] = allValues[i];
+               ++j;
+            }
+         }
+         _dataMapCPU[item.first] = RooSpan<const double>{buffer, _nEvents};
       }
    }
 
