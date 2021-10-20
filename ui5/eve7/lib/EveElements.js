@@ -1,4 +1,4 @@
-8/** @file EveElements.js
+/** @file EveElements.js
  * used only together with OpenUI5 */
 
 // TODO: add dependency from JSROOT components
