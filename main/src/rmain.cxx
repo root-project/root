@@ -18,18 +18,20 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRint.h"
-#ifdef _MSC_VER
 #include "RConfigure.h"
 #include "snprintf.h"
+#ifdef _MSC_VER
 #include <process.h>
+#define execv _execv
 #endif
+
+#define ROOTNBBINARY "rootnb.exe"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an interactive ROOT application
 
 int main(int argc, char **argv)
 {
-#ifdef _MSC_VER
    char **argvv;
    char arg0[kMAXPATHLEN];
    int notebook = 0; // index of --notebook args, all other args will be re-directed to nbmain
@@ -42,26 +44,31 @@ int main(int argc, char **argv)
 #ifdef ROOTBINDIR
       if (getenv("ROOTIGNOREPREFIX"))
 #endif
-         snprintf(arg0, sizeof(arg0), "%s/bin/rootnb.exe", getenv("ROOTSYS"));
+         snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
 #ifdef ROOTBINDIR
       else
-         snprintf(arg0, sizeof(arg0), "%s/rootnb.exe", ROOTBINDIR);
+         snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
 #endif
+
       int numnbargs = 1 + (argc - notebook);
+
       argvv = new char* [numnbargs+1];
       argvv[0] = arg0;
       for (i = 1; i < numnbargs; i++)
          argvv[i] = argv[notebook + i];
       argvv[numnbargs] = nullptr;
+
       // Execute ROOT notebook binary
-      _execv(arg0, argvv);
+      execv(arg0, argvv);
+
       // Exec failed
       fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s exists\n",
               argv[0], arg0);
+
       delete [] argvv;
+
       return 1;
    }
-#endif
    TRint *theApp = new TRint("Rint", &argc, argv);
 
    // and enter the event loop...
