@@ -335,7 +335,7 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 ////////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<double[]> RooAbsReal::getValues(RooAbsData& data, RooBatchCompute::BatchMode batchMode) const {
-  ROOT::Experimental::RooFitDriver driver(data, *this, batchMode, "");
+  ROOT::Experimental::RooFitDriver driver(data, *this, *data.get(), batchMode, "");
   return driver.getValues();
 }
 
