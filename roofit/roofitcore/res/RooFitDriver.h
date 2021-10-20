@@ -31,8 +31,8 @@ namespace Experimental {
 
 class RooFitDriver {
 public:
-   RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooBatchCompute::BatchMode batchMode,
-                std::string const &rangeName);
+   RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
+                RooBatchCompute::BatchMode batchMode, std::string const &rangeName);
    ~RooFitDriver();
    std::unique_ptr<double[]> getValues();
    double getVal();
@@ -115,6 +115,7 @@ private:
    double *getAvailableCPUBuffer();
    double *getAvailableGPUBuffer();
    double *getAvailablePinnedBuffer();
+   void computeCPUNode(const RooAbsReal *node, NodeInfo &info);
 
    std::string _name;
    std::string _title;
@@ -128,7 +129,7 @@ private:
    RooBatchCompute::DataMap _dataMapCPU;
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooAbsReal &_topNode;
-   const RooAbsData *const _data = nullptr;
+   RooArgSet _normSet;
    size_t _nEvents = 0;
    std::unordered_map<const RooAbsReal *, NodeInfo> _nodeInfos;
 
