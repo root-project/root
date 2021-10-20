@@ -1883,7 +1883,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           pp = this.getPadPainter(), draw_promise;
 
       if (pp && pp._fast_drawing) {
-         draw_promise = Promise.resolve(true)
+         draw_promise = Promise.resolve(true);
       } else if (this.v6axes) {
 
          // in v7 ticksx/y values shifted by 1 relative to v6
@@ -2221,8 +2221,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (JSROOT.batch_mode) return promise;
 
+      top_rect.attr("pointer-events", "visibleFill");  // let process mouse events inside frame
+
       return promise.then(() => JSROOT.require(['interactive'])).then(inter => {
-         top_rect.attr("pointer-events", "visibleFill");  // let process mouse events inside frame
          inter.FrameInteractive.assign(this);
          this.addBasicInteractivity();
       });
@@ -2252,10 +2253,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.getPadPainter().getHistPalette();
    }
 
+   /** @summary Configure user-defined click handler
+     * @desc Function will be called every time when frame click was perfromed
+     * As argument, tooltip object with selected bins will be provided
+     * If handler function returns true, default handling of click will be disabled */
    RFramePainter.prototype.configureUserClickHandler = function(handler) {
       this._click_handler = handler && (typeof handler == 'function') ? handler : null;
    }
 
+   /** @summary Configure user-defined dblclick handler
+     * @desc Function will be called every time when double click was called
+     * As argument, tooltip object with selected bins will be provided
+     * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
    RFramePainter.prototype.configureUserDblclickHandler = function(handler) {
       this._dblclick_handler = handler && (typeof handler == 'function') ? handler : null;
    }
@@ -2311,7 +2320,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             flags: [false, false, false, false, false, false]
          };
 
-      let checkZooming = (painter, force) => {
+      const checkZooming = (painter, force) => {
          if (!force && (typeof painter.canZoomInside != 'function')) return;
 
          is_any_check = true;
@@ -2418,7 +2427,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             req.values[indx*2] = vmin; req.values[indx*2+1] = vmax;
             req.flags[indx*2] = req.flags[indx*2+1] = true;
          }
-      }
+      };
 
       // first process zooming (if any)
       if (zoom_v)
@@ -2920,8 +2929,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.setTopPainter(); //assign canvas as top painter of that element
 
          svg.append("svg:title").text("ROOT canvas");
-         let frect = svg.append("svg:rect").attr("class","canvas_fillrect")
-                               .attr("x",0).attr("y",0);
+         let frect = svg.append("svg:path").attr("class","canvas_fillrect");
          if (!JSROOT.batch_mode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", evnt => this.enlargePad(evnt))
@@ -2997,8 +3005,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this._pad_height = rect.height;
 
       svg.select(".canvas_fillrect")
-         .attr("width", rect.width)
-         .attr("height", rect.height)
+         .attr("d", `M0,0H${rect.width}V${rect.height}H0Z`)
          .call(this.fillatt.func);
 
       this._fast_drawing = JSROOT.settings.SmallPad && ((rect.width < JSROOT.settings.SmallPad.width) || (rect.height < JSROOT.settings.SmallPad.height));
@@ -3088,7 +3095,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
-         svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
+         svg_rect = svg_pad.append("svg:path").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
          if (!JSROOT.batch_mode)
@@ -3128,10 +3135,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this._pad_width = w;
       this._pad_height = h;
 
-      svg_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
+      svg_rect.attr("d", `M0,0H${w}V${h}H0Z`)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
