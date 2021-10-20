@@ -13,6 +13,9 @@
 #include "RooHelpers.h"
 #include "RooGaussian.h"
 #include "RooPoisson.h"
+#include "RooConstVar.h"
+#include "RooProdPdf.h"
+#include "RooPolynomial.h"
 
 #include "TClass.h"
 #include "TRandom.h"
@@ -190,4 +193,74 @@ TEST(RooAbsPdf, MultiRangeFit)
           << data->IsA()->GetName() <<  " should be very similar.";
     }
   }
+}
+
+// ROOT-9530: RooFit side-band fit inconsistent with fit to full range (2D case)
+TEST(RooAbsPdf, MultiRangeFit2D)
+{
+   using namespace RooFit;
+   auto &msg = RooMsgService::instance();
+   msg.setGlobalKillBelow(RooFit::WARNING);
+
+   // model taken from the rf312_multirangefit.C tutorial
+
+   // Define observables x,y
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar y("y", "y", -10, 10);
+
+   // Construct the signal pdf gauss(x)*gauss(y)
+   RooRealVar mx("mx", "mx", 1, -10, 10);
+   RooRealVar my("my", "my", 1, -10, 10);
+
+   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
+   RooGaussian gy("gy", "gy", y, my, RooConst(1));
+
+   RooProdPdf sig("sig", "sig", gx, gy);
+
+   // Construct the background pdf (flat in x,y)
+   RooPolynomial px("px", "px", x);
+   RooPolynomial py("py", "py", y);
+   RooProdPdf bkg("bkg", "bkg", px, py);
+
+   // Construct the composite model sig+bkg
+   RooRealVar f("f", "f", 0.5, 0., 1.);
+   RooAddPdf model("model", "model", RooArgList(sig, bkg), f);
+
+   x.setRange("SB1", -10, +10);
+   y.setRange("SB1", -10, 0);
+
+   x.setRange("SB2", -10, 0);
+   y.setRange("SB2", 0, +10);
+
+   x.setRange("SIG", 0, +10);
+   y.setRange("SIG", 0, +10);
+
+   x.setRange("FULL", -10, +10);
+   y.setRange("FULL", -10, +10);
+
+   auto resetValues = [&]() {
+      mx.setVal(1.0);
+      my.setVal(1.0);
+      f.setVal(0.5);
+   };
+
+   std::size_t nEvents = 100;
+
+   // try out with both binned and unbinned data
+   std::unique_ptr<RooDataSet> dataSet{model.generate({x, y}, nEvents)};
+   std::unique_ptr<RooDataHist> dataHist{dataSet->binnedClone()};
+
+   // loop over binned fit and unbinned fit
+   for (auto *data : {static_cast<RooAbsData *>(dataSet.get()), static_cast<RooAbsData *>(dataHist.get())}) {
+      // full range
+      resetValues();
+      std::unique_ptr<RooFitResult> fitResultFull{model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1))};
+
+      // part (side band fit, but the union of the side bands is the full range)
+      resetValues();
+      std::unique_ptr<RooFitResult> fitResultPart{model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1))};
+
+      EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull)) << "Results of fitting " << model.GetName() << " to a "
+                                                              << data->IsA()->GetName() << " should be very similar.";
+   }
 }

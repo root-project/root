@@ -949,7 +949,7 @@ std::unique_ptr<RooAbsReal> createMultiRangeNLLCorrectionTerm(
 
       RooArgSet depList;
       pdf.getObservables(data.get(), depList);
-      auto pdfIntegralCurrent = pdf.createIntegral(depList, nullptr, nullptr, currentRangeName.c_str());
+      auto pdfIntegralCurrent = pdf.createIntegral(depList, &depList, nullptr, currentRangeName.c_str());
 
       auto term = new RooFormulaVar((currentName + "_correctionTerm").c_str(),
                                     (std::string("-(") + std::to_string(sumEntriesCurrent) + " * log(x[0]))").c_str(),
