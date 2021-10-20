@@ -45,3 +45,14 @@ template <class T>
 struct PackedContainer : public std::vector<T>, public IAuxSetOption {
    PackedParameters m_params;
 };
+
+/// class with non-trivial constructor and destructor
+struct ComplexStruct {
+   static int gNCallConstructor;
+   static int gNCallDestructor;
+
+   ComplexStruct() { gNCallConstructor++; }
+   ~ComplexStruct() { gNCallDestructor++; }
+
+   int a = 0;
+};

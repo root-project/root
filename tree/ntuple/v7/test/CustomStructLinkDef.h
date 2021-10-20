@@ -14,4 +14,6 @@
 #pragma link C++ class PackedParameters+;
 #pragma link C++ class PackedContainer<int>+;
 
+#pragma link C++ class ComplexStruct+;
+
 #endif
