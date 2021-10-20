@@ -284,14 +284,25 @@ int main(int argc,const char *argv[])
       doTreeStore=kTRUE ;
     }
 
+    auto verbosityOptionErrorMsg = std::string("Multiple verbosity-related options have been passed to stressRooFit! ")
+                                   + "The options -v, -vv, and -q are mutually exclusive.";
+
     if (arg=="-v") {
       cout << "stressRooFit: running in verbose mode" << endl ;
+      if(doVerbose != 0) throw std::runtime_error(verbosityOptionErrorMsg);
       doVerbose = 1 ;
     }
 
     if (arg=="-vv") {
       cout << "stressRooFit: running in very verbose mode" << endl ;
+      if(doVerbose != 0) throw std::runtime_error(verbosityOptionErrorMsg);
       doVerbose = 2 ;
+    }
+
+    if (arg=="-q") {
+      cout << "stressRooFit: running in quiet mode" << endl ;
+      if(doVerbose != 0) throw std::runtime_error(verbosityOptionErrorMsg);
+      doVerbose = -1 ;
     }
 
     if (arg=="-n") {
@@ -320,6 +331,7 @@ int main(int argc,const char *argv[])
       cout << "       -mc       : memory check mode, no regression test are performed. Set this flag when running with valgrind" << endl ;
       cout << "       -vs       : Use vector-based storage for all datasets (default is tree-based storage)" << endl ;
       cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl ;
+      cout << "       -q        : quiet mode where errors are not logged" << endl ;
       cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
       cout << " " << endl ;
       return 0 ;
