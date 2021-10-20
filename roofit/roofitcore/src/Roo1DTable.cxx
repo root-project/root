@@ -332,7 +332,7 @@ Double_t Roo1DTable::getFrac(const int index, Bool_t silent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if table is identical in contents to given reference table
 
-Bool_t Roo1DTable::isIdentical(const RooTable& other) 
+Bool_t Roo1DTable::isIdentical(const RooTable& other, bool /*verbose*/) 
 {
   const Roo1DTable* other1d = &dynamic_cast<const Roo1DTable&>(other) ;
 
