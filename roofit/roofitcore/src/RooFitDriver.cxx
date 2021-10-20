@@ -60,11 +60,11 @@ there's also some cuda-related initialization.
 \param batchMode The computation mode of the RooBatchCompute library, accepted values are `RooBatchCompute::Cpu` and
 `RooBatchCompute::Cuda`.
 **/
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooBatchCompute::BatchMode batchMode,
-                           std::string const &rangeName)
+RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
+                           RooBatchCompute::BatchMode batchMode, std::string const &rangeName)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(data, true))},
-     _batchMode{batchMode}, _topNode{topNode}, _data{&data}, _nEvents{static_cast<size_t>(data.numEntries())}
+     _batchMode{batchMode}, _topNode{topNode}, _normSet{normSet}, _nEvents{static_cast<size_t>(data.numEntries())}
 {
    // fill the RunContext with the observable data and map the observables
    // by namePtr in order to replace their memory addresses later, with
@@ -120,17 +120,18 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
          // If the node doesn't depend on any observables, there is no need to
          // loop over events and we don't need to use the batched evaluation.
          RooArgSet observablesForNode;
-         pAbsReal->getObservables(_data->get(), observablesForNode);
+         pAbsReal->getObservables(data.get(), observablesForNode);
          _nodeInfos[pAbsReal].computeInScalarMode = observablesForNode.empty() || !pAbsReal->isDerived();
 
          auto clients = pAbsReal->clients();
          for (auto *client : clients) {
             // we use containsInstance instead of find to match by pointer and not name
-            if (list.containsInstance(*client)) {
-               auto pClient = static_cast<const RooAbsReal *>(client);
-               ++_nodeInfos[pClient].nServers;
-               ++_nodeInfos[pAbsReal].nClients;
-            }
+            if (!list.containsInstance(*client))
+               continue;
+
+            auto pClient = static_cast<const RooAbsReal *>(client);
+            ++_nodeInfos[pClient].nServers;
+            ++_nodeInfos[pAbsReal].nClients;
          }
       }
    }
@@ -260,6 +261,35 @@ std::unique_ptr<double[]> RooFitDriver::getValues()
    return std::unique_ptr<double[]>(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
 }
 
+void RooFitDriver::computeCPUNode(const RooAbsReal *node, NodeInfo &info)
+{
+   if (info.computeInScalarMode) {
+      _nonDerivedValues.push_back(node->getVal(&_normSet));
+      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
+   } else {
+      double *buffer = info.copyAfterEvaluation ? getAvailablePinnedBuffer() : getAvailableCPUBuffer();
+      _dataMapCPU[node] = RooSpan<const double>(buffer, _nEvents);
+      handleIntegral(node);
+      // compute node and measure the time the first time
+      if (_getValInvocations == 1) {
+         using namespace std::chrono;
+         auto start = steady_clock::now();
+         node->computeBatch(nullptr, buffer, _nEvents, _dataMapCPU);
+         info.cpuTime = duration_cast<microseconds>(steady_clock::now() - start);
+      } else {
+         node->computeBatch(nullptr, buffer, _nEvents, _dataMapCPU);
+      }
+      if (info.copyAfterEvaluation) {
+         double *gpuBuffer = getAvailableGPUBuffer();
+         _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
+         RooBatchCompute::dispatchCUDA->memcpyToCUDA(gpuBuffer, buffer, _nEvents * sizeof(double), info.stream);
+         if (info.event) {
+            RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
+         }
+      }
+   }
+}
+
 /// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
@@ -313,28 +343,7 @@ double RooFitDriver::getVal()
       NodeInfo &info = it->second;
       info.remServers = -2; // so that it doesn't get picked again
       nNodes--;
-      if (info.computeInScalarMode) {
-         _nonDerivedValues.push_back(node->getVal(_data->get()));
-         _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
-      } else {
-         double *buffer = info.copyAfterEvaluation ? getAvailablePinnedBuffer() : getAvailableCPUBuffer();
-         _dataMapCPU[node] = RooSpan<const double>(buffer, _nEvents);
-         handleIntegral(node);
-         // compute node and measure the time the first time
-         if (_getValInvocations == 1) {
-            using namespace std::chrono;
-            auto start = steady_clock::now();
-            node->computeBatch(nullptr, buffer, _nEvents, _dataMapCPU);
-            info.cpuTime = duration_cast<microseconds>(steady_clock::now() - start);
-         } else
-            node->computeBatch(nullptr, buffer, _nEvents, _dataMapCPU);
-         if (info.copyAfterEvaluation) {
-            double *gpuBuffer = getAvailableGPUBuffer();
-            _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
-            RooBatchCompute::dispatchCUDA->memcpyToCUDA(gpuBuffer, buffer, _nEvents * sizeof(double), info.stream);
-            RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
-         }
-      }
+      computeCPUNode(node, info);
       updateMyClients(node);
       updateMyServers(node);
    } // while (nNodes)
@@ -364,9 +373,22 @@ void RooFitDriver::handleIntegral(const RooAbsReal *node)
    // TODO: Put integrals seperately in the computation queue
    // For now, we just assume they are scalar and assign them some temporary memory
    if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
-      auto integral = pAbsPdf->getIntegral(*_data->get());
-      _nonDerivedValues.push_back(integral->getVal());
-      _dataMapCPU[integral] = _dataMapCUDA[integral] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
+      auto integral = pAbsPdf->getIntegral(_normSet);
+
+      RooArgSet valueServers;
+      integral->treeNodeServerList(&valueServers, nullptr, true, true, true);
+      std::size_t inputSize = 1;
+      for (auto *server : static_range_cast<RooAbsReal *>(valueServers)) {
+         inputSize = std::max(inputSize, _dataMapCPU[server].size());
+      }
+
+      NodeInfo info;
+      info.computeInScalarMode = inputSize == 1;
+      if (!info.computeInScalarMode && _batchMode == RooBatchCompute::BatchMode::Cuda) {
+         info.copyAfterEvaluation = true;
+         info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
+      }
+      computeCPUNode(integral, info);
    }
 }
 
