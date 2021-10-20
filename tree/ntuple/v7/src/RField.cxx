@@ -1031,9 +1031,18 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
+   auto oldNItems = typedValue->size() / fItemSize;
+   for (std::size_t i = nItems; i < oldNItems; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
+      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   }
    typedValue->resize(nItems * fItemSize);
-   for (unsigned i = 0; i < nItems; ++i) {
-      auto itemValue = fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
+   for (std::size_t i = oldNItems; i < nItems; ++i) {
+      fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
+   }
+
+   for (std::size_t i = 0; i < nItems; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
       fSubFields[0]->Read(collectionStart + i, &itemValue);
    }
 }
