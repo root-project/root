@@ -23,13 +23,44 @@ functions from `RooBatchCompute` library to provide faster computation times.
 **/
 
 #include "RooNLLVarNew.h"
-#include "RooBatchCompute.h"
+
+#include "RooAddition.h"
+#include "RooFormulaVar.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include <numeric>
 #include <stdexcept>
 #include <vector>
 
 using namespace ROOT::Experimental;
+
+namespace {
+
+std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet const &observables,
+                                                std::string const &baseName, std::string const &rangeNames)
+{
+
+   RooArgSet observablesInPdf;
+   pdf.getObservables(&observables, observablesInPdf);
+
+   RooArgList termList;
+
+   auto pdfIntegralCurrent = pdf.createIntegral(observablesInPdf, &observablesInPdf, nullptr, rangeNames.c_str());
+   auto term =
+      new RooFormulaVar((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*pdfIntegralCurrent));
+   termList.add(*term);
+
+   auto integralFull = pdf.createIntegral(observablesInPdf, &observablesInPdf, nullptr);
+   auto fullRangeTerm = new RooFormulaVar((baseName + "_foobar").c_str(), "-(log(x[0]))", RooArgList(*integralFull));
+   termList.add(*fullRangeTerm);
+
+   auto out =
+      std::unique_ptr<RooAbsReal>{new RooAddition((baseName + "_correction").c_str(), "correction", termList, true)};
+   return out;
+}
+
+} // namespace
 
 /** Contstruct a RooNLLVarNew
 
@@ -40,13 +71,19 @@ using namespace ROOT::Experimental;
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           RooAbsReal *weight, RooAbsReal *constraints, bool isExtended)
+                           RooAbsReal *weight, RooAbsReal *constraints, bool isExtended, std::string const &rangeName)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{&observables}, _isExtended{isExtended}
+//_rangeNormTerm{rangeName.empty() ? nullptr : createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName)}
 {
    if (weight)
       _weight = std::make_unique<RooTemplateProxy<RooAbsReal>>("_weight", "_weight", this, *weight);
    if (constraints) {
       _constraints = constraints;
+   }
+   if (!rangeName.empty()) {
+      auto term = createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName);
+      _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", "_rangeNormTerm", this, *term);
+      this->addOwnedComponents(*term.release());
    }
 }
 
@@ -57,6 +94,8 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
       _weight = std::make_unique<RooTemplateProxy<RooAbsReal>>("_weight", this, *other._weight);
    if (other._constraints)
       _constraints = other._constraints;
+   if (other._rangeNormTerm)
+      _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", this, *other._rangeNormTerm);
 }
 
 /** Compute multiple negative logs of propabilities
@@ -75,13 +114,35 @@ void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispa
    RooBatchCompute::ArgVector args = {static_cast<double>(vars.size() - 1)};
    dispatch->compute(RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
 
-   if (_isExtended && _sumWeight == 0.0) {
+   if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
       if (!_weight) {
          _sumWeight = nEvents;
       } else {
          auto weightSpan = dataMap[&**_weight];
          _sumWeight =
             weightSpan.size() == 1 ? weightSpan[0] * nEvents : dispatch->sumReduce(dataMap[&**_weight].data(), nEvents);
+      }
+   }
+   if (_rangeNormTerm) {
+      auto rangeNormTermSpan = dataMap[&**_rangeNormTerm];
+      if (rangeNormTermSpan.size() == 1) {
+         _sumCorrectionTerm = _sumWeight * rangeNormTermSpan[0];
+      } else {
+         if (!_weight) {
+            _sumCorrectionTerm = dispatch->sumReduce(rangeNormTermSpan.data(), nEvents);
+         } else {
+            auto weightSpan = dataMap[&**_weight];
+            if (weightSpan.size() == 1) {
+               _sumCorrectionTerm = weightSpan[0] * dispatch->sumReduce(rangeNormTermSpan.data(), nEvents);
+            } else {
+               // We don't need to use the library for now because the weights and
+               // correction term integrals are always in the CPU map.
+               _sumCorrectionTerm = 0.0;
+               for (std::size_t i = 0; i < nEvents; ++i) {
+                  _sumCorrectionTerm += weightSpan[i] * rangeNormTermSpan[i];
+               }
+            }
+         }
       }
    }
 }
@@ -102,6 +163,9 @@ RooNLLVarNew::reduce(RooBatchCompute::RooBatchComputeInterface *dispatch, const 
    if (_isExtended) {
       assert(_sumWeight != 0.0);
       nll += _pdf->extendedTerm(_sumWeight, _observables);
+   }
+   if (_rangeNormTerm) {
+      nll += _sumCorrectionTerm;
    }
    return nll;
 }
