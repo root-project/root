@@ -1652,7 +1652,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   RooLinkedList fitCmdList(cmdList) ;
 
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,"
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"Extended,"
       "NumCPU,SplitRange,Constrained,"
       "CloneData,OffsetLikelihood,IntegrateBins");
 
@@ -1668,7 +1668,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   {
       // some arguments should not be filtered out, but we will use them also in fitTo
       // to create the constraints term.
-      RooLinkedList tmp = pc.filterCmdList(fitCmdList,"Range,RangeWithName,SumCoefRange",false);
+      RooLinkedList tmp = pc.filterCmdList(fitCmdList,"Range,RangeWithName,SumCoefRange,ProjectedObservables",false);
       std::unique_ptr<TIterator> iter{tmp.MakeIterator()} ;
       while(auto arg=(RooCmdArg*)iter->Next()) {
         nllCmdList.Add(arg);
@@ -1682,6 +1682,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   MinimizerConfig minimizerDefaults;
 
   pc.defineString("addCoefRange","SumCoefRange",0,"") ;
+  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,minimizerDefaults.recoverFromNaN);
   pc.defineString("fitOpt","FitOptions",0,minimizerDefaults.fitOpt.c_str()) ;
@@ -1732,6 +1733,11 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   const std::string addCoefRangeName = addCoefRangeNameCstr ? addCoefRangeNameCstr : "";
   Double_t prefit = pc.getDouble("prefit");
   Int_t optConst = pc.getInt("optConst") ;
+  RooArgSet projDeps ;
+  auto tmp = static_cast<RooArgSet*>(pc.getObject("projDepSet")) ;
+  if (tmp) {
+    projDeps.add(*tmp) ;
+  }
 
   if (optConst > 1) {
     // optConst >= 2 is pre-computating values, which are never used when
@@ -1781,13 +1787,18 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
   }
 
+  RooArgSet observables;
+  this->getObservables(data.get(), observables);
   RooAbsReal* nll=nullptr;
   std::unique_ptr<ROOT::Experimental::RooFitDriver> driver;
   std::unique_ptr<RooRealVar> weightVar;
   std::unique_ptr<RooAbsReal> constraintsTerm;
+
   if (pc.getInt("BatchMode")==0) nll = createNLL(data,nllCmdList);
   else
   {
+    observables.remove(projDeps,true,true) ;
+
     if(dynamic_cast<RooSimultaneous*>(this)) {
       cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
                        << ") simultaneous fit with batch mode not supported, exiting." << endl ;
@@ -1796,7 +1807,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
     cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
                      << ") fixing normalization set for coefficient determination to observables in data" << endl ;
-    this->fixAddCoefNormalization(*data.get(),false) ;
+    this->fixAddCoefNormalization(observables,false) ;
     if(!addCoefRangeName.empty()) {
       cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
                        << ") fixing interpretation of coefficients of any component to range " << addCoefRangeName << endl ;
@@ -1838,13 +1849,11 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       weightVar.reset( new RooRealVar(weightVarName.c_str(), "Weight(s) of events", data.weight()) );
     }
 
-    RooArgSet observables;
-    this->getObservables(data.get(), observables);
     std::string nllName = std::string("nll_") + this->GetName() + "_" + data.GetName();
     nll = new ROOT::Experimental::RooNLLVarNew(nllName.c_str(), nllName.c_str(), *this,
-                           *data.get(), weightVar.get(), constraintsTerm.get(), isExtended, rangeName);
+                           observables, weightVar.get(), constraintsTerm.get(), isExtended, rangeName);
 
-    driver.reset(new ROOT::Experimental::RooFitDriver( data, static_cast<ROOT::Experimental::RooNLLVarNew&>(*nll), batchMode, rangeName ));
+    driver.reset(new ROOT::Experimental::RooFitDriver( data, static_cast<ROOT::Experimental::RooNLLVarNew&>(*nll), observables, batchMode, rangeName ));
 
     // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
     if(!rangeName.empty()) {
