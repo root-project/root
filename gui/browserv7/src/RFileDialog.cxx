@@ -447,6 +447,14 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
 
    auto chid = std::stoi(arr->at(2));
 
+   if ((arr->size() > 3) && (arr->at(3) == "__cannotChangePath__"s)) {
+      dialog->SetCanChangePath(false);
+      arr->erase(arr->begin() + 3, arr->begin() + 4); // erase element 3
+   } else if ((arr->size() > 3) && (arr->at(3) == "__canChangePath__"s)) {
+      dialog->SetCanChangePath(true);
+      arr->erase(arr->begin() + 3, arr->begin() + 4); // erase element 3
+   }
+
    if (arr->size() > 4) {
       dialog->SetSelectedFilter(arr->at(3));
       arr->erase(arr->begin(), arr->begin() + 4); // erase 4 elements, keep only list of filters
