@@ -2328,47 +2328,72 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    /** @summary Draw histogram bins as color
      * @private */
    RH2Painter.prototype.drawBinsColor = function() {
-      let histo = this.getHisto(),
-          handle = this.prepareDraw(),
-          colPaths = [], currx = [], curry = [],
-          colindx, cmd1, cmd2, i, j, binz, di = handle.stepi, dj = handle.stepj, dx, dy;
+      const histo = this.getHisto(),
+            handle = this.prepareDraw(),
+            di = handle.stepi, dj = handle.stepj,
+            entries = [],
+            can_merge = true;
+      let colindx, cmd1, cmd2, i, j, binz, dx, dy, entry, last_entry;
+
+      const flush_last_entry = () => {
+         last_entry.path += "h"+dx + "v"+last_entry.dy + "h"+(-dx) + "z";
+         last_entry.dy = 0;
+         last_entry = null;
+      };
 
       // now start build
       for (i = handle.i1; i < handle.i2; i += di) {
+         dx = (handle.grx[i+di] - handle.grx[i]) || 1;
+
          for (j = handle.j1; j < handle.j2; j += dj) {
-            binz = histo.getBinContent(i + 1, j + 1);
+            binz = histo.getBinContent(i+1, j+1);
             colindx = handle.palette.getContourIndex(binz);
-            if (binz===0) {
-               if (!this.options.Zero) continue;
-               if ((colindx === null) && this._show_empty_bins) colindx = 0;
+            if (binz === 0) {
+               if (!this.options.Zero)
+                  colindx = null;
+               else if ((colindx === null) && this._show_empty_bins)
+                  colindx = 0;
             }
-            if (colindx === null) continue;
-
-            cmd1 = "M"+handle.grx[i]+","+handle.gry[j+dj];
-            if (colPaths[colindx] === undefined) {
-               colPaths[colindx] = cmd1;
-            } else{
-               cmd2 = "m" + (handle.grx[i]-currx[colindx]) + "," + (handle.gry[j+dj]-curry[colindx]);
-               colPaths[colindx] += (cmd2.length < cmd1.length) ? cmd2 : cmd1;
+            if (colindx === null) {
+               if (last_entry) flush_last_entry();
+               continue;
             }
 
-            currx[colindx] = handle.grx[i];
-            curry[colindx] = handle.gry[j+dj];
+            cmd1 = "M"+handle.grx[i]+","+handle.gry[j];
 
-            dx = (handle.grx[i+di] - handle.grx[i]) || 1;
-            dy = (handle.gry[j] - handle.gry[j+dj]) || 1;
+            dy = (handle.gry[j+dj] - handle.gry[j]) || 1;
 
-            colPaths[colindx] += "v"+dy + "h"+dx + "v"+(-dy) + "z";
+            entry = entries[colindx];
+
+            if (entry === undefined) {
+               entry = entries[colindx] = { path: cmd1 };
+            } else if (can_merge && (entry === last_entry)) {
+               entry.dy += dy;
+               continue;
+            } else {
+               cmd2 = "m" + (handle.grx[i]-entry.x) + "," + (handle.gry[j]-entry.y);
+               entry.path += (cmd2.length < cmd1.length) ? cmd2 : cmd1;
+            }
+            if (last_entry) flush_last_entry();
+            entry.x = handle.grx[i];
+            entry.y = handle.gry[j];
+            if (can_merge) {
+               entry.dy = dy;
+               last_entry = entry;
+            } else {
+               entry.path += "h"+dx + "v"+dy + "h"+(-dx) + "z";
+            }
          }
+         if (last_entry) flush_last_entry();
       }
 
-      for (colindx=0;colindx<colPaths.length;++colindx)
-        if (colPaths[colindx] !== undefined)
+      entries.forEach((entry,colindx) => {
+        if (entry)
            this.draw_g
                .append("svg:path")
-               .attr("palette-index", colindx)
                .attr("fill", handle.palette.getColor(colindx))
-               .attr("d", colPaths[colindx]);
+               .attr("d", entry.path);
+      });
 
       this.updatePaletteDraw();
 
@@ -2789,11 +2814,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          if (this.options.Text) textbins.push(bin);
       }
 
-      for (colindx=0;colindx<colPaths.length;++colindx)
+      for (colindx = 0; colindx < colPaths.length; ++colindx)
          if (colPaths[colindx]) {
             item = this.draw_g
                      .append("svg:path")
-                     .attr("palette-index", colindx)
                      .attr("fill", colindx ? palette.getColor(colindx) : "none")
                      .attr("d", colPaths[colindx]);
             if (this.options.Line)

@@ -2069,11 +2069,10 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    TGeoPainter.prototype.createCamera = function() {
 
       if (this._camera) {
-          this._scene.remove(this._camera)
+          this._scene.remove(this._camera);
           jsrp.disposeThreejsObject(this._camera);
           delete this._camera;
        }
-
 
       if (this.ctrl.ortho_camera) {
          this._camera =  new THREE.OrthographicCamera(-this._scene_width/2, this._scene_width/2, this._scene_height/2, -this._scene_height/2, 1, 10000);
