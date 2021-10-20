@@ -30,13 +30,13 @@ if(NOT MSVC OR win_broken_tests)
   target_include_directories(dataframe_simple PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   ROOT_GENERATE_DICTIONARY(DataFrameSimpleDict MaxSlotHelper.h SimpleFiller.h MODULE dataframe_simple
                            LINKDEF DataFrameSimpleLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES ROOTDataFrame Hist)
-  if(NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS)
-    ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame)
-  endif()
   ROOT_ADD_GTEST(dataframe_helpers dataframe_helpers.cxx LIBRARIES ROOTDataFrame)
   ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)
 endif()
 
+if(NOT (MSVC OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)) OR win_broken_tests OR M1_BROKEN_TESTS)
+  ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame)
+endif()
 
 ROOT_ADD_GTEST(dataframe_display dataframe_display.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
