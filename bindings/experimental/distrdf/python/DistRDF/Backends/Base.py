@@ -321,8 +321,9 @@ class BaseBackend(ABC):
                 snapshot_treename = node.operation.args[0]
                 snapshot_chain = ROOT.TChain(snapshot_treename)
                 # Add partial snapshot files to the chain
-                for filename in value:
-                    snapshot_chain.Add(filename)
+                for filename in value.GetValue():
+                    # These are std::string
+                    snapshot_chain.Add(filename.c_str())
                 # Create a new rdf with the chain and return that to user
                 node.value = self.make_dataframe(snapshot_chain)
             elif node.operation.name == "AsNumpy":
