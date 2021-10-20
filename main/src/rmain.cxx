@@ -23,6 +23,8 @@
 #ifdef _MSC_VER
 #include <process.h>
 #define execv _execv
+#else
+#include <unistd.h>
 #endif
 
 #define ROOTNBBINARY "rootnb.exe"
