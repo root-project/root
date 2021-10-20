@@ -29,10 +29,7 @@
 
 #define ROOTNBBINARY "rootnb.exe"
 
-////////////////////////////////////////////////////////////////////////////////
-/// Create an interactive ROOT application
-
-int main(int argc, char **argv)
+void handle_notebook_option(int argc, char **argv)
 {
    char **argvv;
    char arg0[kMAXPATHLEN];
@@ -69,8 +66,17 @@ int main(int argc, char **argv)
 
       delete [] argvv;
 
-      return 1;
+      exit(1);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create an interactive ROOT application
+
+int main(int argc, char **argv)
+{
+   handle_notebook_option(argc, argv);
+
    TRint *theApp = new TRint("Rint", &argc, argv);
 
    // and enter the event loop...
