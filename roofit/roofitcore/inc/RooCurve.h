@@ -66,7 +66,7 @@ public:
   Double_t average(Double_t lo, Double_t hi) const ;
   Double_t interpolate(Double_t x, Double_t tolerance=1e-10) const ;
 
-  Bool_t isIdentical(const RooCurve& other, Double_t tol=1e-6) const ;
+  Bool_t isIdentical(const RooCurve& other, Double_t tol=1e-6, bool verbose=true) const ;
 
   RooCurve* makeErrorBand(const std::vector<RooCurve*>& variations, Double_t Z=1) const ;
   RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& V, Double_t Z=1) const ;

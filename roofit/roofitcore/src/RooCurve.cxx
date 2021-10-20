@@ -884,7 +884,7 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Doub
 /// Return true if curve is identical to other curve allowing for given
 /// absolute tolerance on each point compared point.
 
-Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const 
+Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol, bool verbose) const 
 {
   // Determine X range and Y range
   Int_t n= min(GetN(),other.GetN());
@@ -903,6 +903,7 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
     Double_t rdy = fabs(yTest-other.fY[i])/Yrange ;
     if (rdy>tol) {
       ret = false;
+      if(!verbose) continue;
       cout << "RooCurve::isIdentical[" << std::setw(3) << i << "] Y tolerance exceeded (" << std::setprecision(5) << std::setw(10) << rdy << ">" << tol << "),";
       cout << "  x,y=(" << std::right << std::setw(10) << fX[i] << "," << std::setw(10) << fY[i] << ")\tref: y="
           << std::setw(10) << other.interpolate(fX[i], 1.E-15) << ". [Nearest point from ref: ";
