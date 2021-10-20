@@ -1264,13 +1264,13 @@ JSROOT.define(['d3'], (d3) => {
      * @private */
    jsrp.buildSvgPath = function(kind, bins, height, ndig) {
 
-      let smooth = kind.indexOf("bezier") >= 0;
+      const smooth = kind.indexOf("bezier") >= 0;
 
       if (ndig === undefined) ndig = smooth ? 2 : 0;
       if (height === undefined) height = 0;
 
-      let jsroot_d3_svg_lineSlope = (p0, p1) => (p1.gry - p0.gry) / (p1.grx - p0.grx);
-      let jsroot_d3_svg_lineFiniteDifferences = points => {
+      const jsroot_d3_svg_lineSlope = (p0, p1) => (p1.gry - p0.gry) / (p1.grx - p0.grx);
+      const jsroot_d3_svg_lineFiniteDifferences = points => {
          let i = 0, j = points.length - 1, m = [], p0 = points[0], p1 = points[1], d = m[0] = jsroot_d3_svg_lineSlope(p0, p1);
          while (++i < j) {
             p0 = p1; p1 = points[i + 1];
@@ -1279,7 +1279,7 @@ JSROOT.define(['d3'], (d3) => {
          m[i] = d;
          return m;
       };
-      let jsroot_d3_svg_lineMonotoneTangents = points => {
+      const jsroot_d3_svg_lineMonotoneTangents = points => {
          let d, a, b, s, m = jsroot_d3_svg_lineFiniteDifferences(points), i = -1, j = points.length - 1;
          while (++i < j) {
             d = jsroot_d3_svg_lineSlope(points[i], points[i + 1]);
@@ -1307,7 +1307,7 @@ JSROOT.define(['d3'], (d3) => {
       let res = { path: "", close: "" }, bin = bins[0], maxy = Math.max(bin.gry, height + 5),
          currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
 
-      let conv = val => {
+      const conv = val => {
          let vvv = Math.round(val);
          if ((ndig == 0) || (vvv === val)) return vvv.toString();
          let str = val.toFixed(ndig);
@@ -1337,19 +1337,34 @@ JSROOT.define(['d3'], (d3) => {
          }
       } else if (npnts < 10000) {
          // build simple curve
+
+         let acc_x = 0, acc_y = 0;
+
+         const flush = () => {
+            if (acc_x) { res.path += "h" + acc_x; acc_x = 0; }
+            if (acc_y) { res.path += "v" + acc_y; acc_y = 0; }
+         };
+
          for (let n = 1; n < npnts; ++n) {
             bin = bins[n];
             dx = Math.round(bin.grx) - currx;
             dy = Math.round(bin.gry) - curry;
-            if (dx && dy)
+            if (dx && dy) {
+               flush();
                res.path += "l" + dx + "," + dy;
-            else if (!dx && dy)
-               res.path += "v" + dy;
-            else if (dx && !dy)
-               res.path += "h" + dx;
+            } else if (!dx && dy) {
+               if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
+               acc_y += dy;
+            } else if (dx && !dy) {
+               if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0))) flush();
+               acc_x += dx;
+            }
             currx += dx; curry += dy;
             maxy = Math.max(maxy, curry);
          }
+
+         flush();
+
       } else {
          // build line with trying optimize many vertical moves
          let lastx, lasty, cminy = curry, cmaxy = curry, prevy = curry;
@@ -1407,12 +1422,12 @@ JSROOT.define(['d3'], (d3) => {
       if (JSROOT.nodejs && (sizearg != 'bbox'))
          return { x: 0, y: 0, width: parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
 
-      function styleValue(name) {
+      const styleValue = name => {
          let value = elem.style(name);
          if (!value || (typeof value !== 'string')) return 0;
          value = parseFloat(value.replace("px", ""));
          return !Number.isFinite(value) ? 0 : Math.round(value);
-      }
+      };
 
       let rect = elem.node().getBoundingClientRect();
       if ((sizearg == 'bbox') && (parseFloat(rect.width) > 0))

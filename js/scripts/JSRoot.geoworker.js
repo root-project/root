@@ -14,7 +14,7 @@ JSROOT.define = function(args, factory) {
 
 importScripts("three.min.js", "JSRoot.csg.js", "JSRoot.geobase.js");
 
-if (console) console.log('geoworker started ' + THREE.REVISION);
+if (console) console.log(`geoworker started three.js r${THREE.REVISION}`);
 
 let clones = null;
 

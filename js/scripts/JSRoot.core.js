@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "11/10/2021";
+   JSROOT.version_date = "19/10/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -166,8 +166,8 @@
          'jqueryui-mousewheel'  : { src: 'jquery.mousewheel', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'jqueryui-touch-punch' : { src: 'touch-punch', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'rawinflate'           : { src: 'rawinflate', libs: true },
-         'zstd-codec'           : { src: '../../zstd/zstd-codec.min', extract: "ZstdCodec", node: "zstd-codec" },
-         'mathjax'              : { src: 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg', extract: "MathJax", node: "mathjax" },
+         'zstd-codec'           : { src: '../../zstd/zstd-codec', onlymin: true, alt: "https://root.cern/js/zstd/zstd-codec.min.js", extract: "ZstdCodec", node: "zstd-codec" },
+         'mathjax'              : { src: '../../mathjax/3.2.0/es5/tex-svg', nomin: true,  alt: 'https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg.js', extract: "MathJax", node: "mathjax" },
          'dat.gui'              : { src: 'dat.gui', libs: true, extract: "dat" },
          'three'                : { src: 'three', libs: true, extract: "THREE", node: "three" },
          'threejs_jsroot'       : { src: 'three.extra', libs: true }
@@ -181,11 +181,12 @@
       if (entry.src.indexOf('http') == 0)
          return _.amd ? entry.src : entry.src + ".js";
 
+      // WARNING, with sap mathjax and zstd-codec loaded directly from alternative location
       if (_.sap)
-         return "jsroot/scripts/" + entry.src + ((_.source_min || entry.libs || entry.onlymin) ? ".min" : "");
+         return entry.alt || "jsroot/scripts/" + entry.src + ((_.source_min || entry.libs || entry.onlymin) && !entry.nomin ? ".min" : "");
 
       let dir = (entry.libs && _.use_full_libs && !_.source_min) ? JSROOT.source_dir + "libs/" : JSROOT.source_dir + "scripts/",
-          ext = (_.source_min || (entry.libs && !_.use_full_libs) || entry.onlymin) ? ".min" : "";
+          ext = (_.source_min || (entry.libs && !_.use_full_libs) || entry.onlymin) && !entry.nomin ? ".min" : "";
       if (_.amd) return dir + entry.src + ext;
       let res = dir + entry.src + ext + ".js";
 
@@ -533,8 +534,8 @@
          return Promise.resolve(arr.length == 1 ? arr[0] : arr);
       }
 
-      // loading with sap.ui.require - but not mathjax
-      if (_.sap && (need[0] != "mathjax")) {
+      // loading with sap.ui.require - but not mathjax or zstd
+      if (_.sap && (need[0] != "mathjax") && (need[0] != "zstd-codec")) {
          let req = [], reqindx = [], res = [];
          for (let k = 0; k < need.length; ++k) {
             let m = _.modules[need[k]];
@@ -651,7 +652,11 @@
 
          if (!m.jsroot || m.extract)
             element.onload = () => finish_loading(m, m.extract ? globalThis[m.extract] : 1); // mark script loaded
-         element.onerror = () => { element.remove(); m.failure = true; req.failed(); }
+         element.onerror = () => {
+            element.remove();
+            if (m.alt) { m.src = m.alt; delete m.alt; load_module(req, m); }
+                  else { m.failure = true; req.failed(); }
+         }
       }
 
       function after_depend_load(req,d,m) {
@@ -691,13 +696,14 @@
                   m.src = _.get_module_src(jsmodule, true);
                   m.extract = jsmodule.extract;
                   m.dep = jsmodule.dep; // copy dependence
+                  m.alt = jsmodule.alt; // alternative location
               } else {
                   m.src = need[k];
                }
             }
 
             if (m.failure)
-               // module loading failed, no nee to continue
+               // module loading failed, no need to continue
                return req.failed(`Loading of module ${need[k]} failed`);
 
             if (m.dep) {
@@ -730,9 +736,7 @@
       if (factoryFunc)
          analyze();
       else
-         return new Promise(function(resolve,reject) {
-            analyze(resolve,reject);
-         });
+         return new Promise((resolve,reject) => analyze(resolve,reject));
    }
 
    /** @summary Central method to load JSROOT functionality

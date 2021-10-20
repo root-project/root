@@ -461,9 +461,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                let axis = this.getObject(), abits = JSROOT.EAxisBits;
 
-               function set_bit(bit, on) {
-                  if (axis.TestBit(bit) != on) axis.InvertBit(bit);
-               }
+               const set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
 
                axis.fTitleOffset = (vertical ? new_x : new_y) / offset_k;
                if (curr_indx == 1) {
@@ -483,7 +481,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       title_g.style("cursor", "move").call(drag_move);
    }
-
 
    /** @summary Draw axis ticks */
    TAxisPainter.prototype.drawTicks = function(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
@@ -529,6 +526,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
    }
 
+   /** @summary Returns modifier for axis label */
+   TAxisPainter.prototype.findLabelModifier = function(axis, nlabel, num_labels) {
+      if (!axis.fModLabs) return null;
+      for (let n = 0; n < axis.fModLabs.arr.length; ++n) {
+         let mod = axis.fModLabs.arr[n];
+         if (mod.fLabNum === nlabel + 1) return mod;
+         if ((mod.fLabNum < 0) && (nlabel === num_labels + mod.fLabNum)) return mod;
+      }
+      return null;
+   }
+
    /** @summary Draw axis labels
      * @returns {Promise} with array label size and max width */
    TAxisPainter.prototype.drawLabels = function(axis_g, axis, w, h, handle, side, labelSize, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
@@ -567,7 +575,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      let labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelSize);
+      const labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelSize);
 
       for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
 
@@ -582,13 +590,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let lbl = this.format(lbl_pos[nmajor], true);
             if (lbl === null) continue;
 
+            let mod = this.findLabelModifier(axis, nmajor, lbl_pos.length);
+            if (mod && (mod.fTextSize == 0)) continue;
+
+            if (mod && mod.fLabText) lbl = mod.fLabText;
+
             let arg = { text: lbl, color: label_color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0) };
 
             let pos = Math.round(this.func(lbl_pos[nmajor]));
 
-            arg.gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
+            if (mod && mod.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
 
-            arg.gap_after = (nmajor<lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
+            arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
+
+            arg.gap_after = (nmajor < lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
 
             if (center_lbls) {
                let gap = arg.gap_after || arg.gap_before;
@@ -608,7 +623,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
             }
 
-            if (rotate_lbls) arg.rotate = 270;
+            if (rotate_lbls)
+               arg.rotate = 270;
 
             // only for major text drawing scale factor need to be checked
             if (lcnt == 0) arg.post_process = process_drawtext_ready;
@@ -699,10 +715,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!disable_axis_drawing && draw_lines)
-         axis_g.append("svg:line")
-               .attr("x1",0).attr("y1",0)
-               .attr("x2", vertical ? 0 : w)
-               .attr("y2", vertical ? h : 0)
+         axis_g.append("svg:path").attr("d", "M0,0" + (vertical ? "v"+h : "h"+w))
                .call(this.lineatt.func);
 
       axis_g.attr("transform", transform || null);
@@ -1241,7 +1254,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      if ((opts.zoom_ymin != opts.zoom_ymax) && ((this.zoom_ymin == this.zoom_ymax) || !this.zoomChangedInteractive("y"))) {
+      if ((opts.zoom_ymin != opts.zoom_ymax) && (this.zoom_ymin == this.zoom_ymax) && !this.zoomChangedInteractive("y")) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }
@@ -1855,7 +1868,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.draw_g.append("svg:title").text("");
 
-         top_rect = this.draw_g.append("svg:rect");
+         top_rect = this.draw_g.append("svg:path");
 
          // append for the moment three layers - for drawing and axis
          this.draw_g.append('svg:g').attr('class','grid_layer');
@@ -1866,10 +1879,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                            .attr("y", 0)
                            .attr('overflow', 'hidden');
 
-         this.draw_g.append('svg:g').attr('class','axis_layer');
-         this.draw_g.append('svg:g').attr('class','upper_layer');
+         this.draw_g.append('svg:g').attr('class', 'axis_layer');
+         this.draw_g.append('svg:g').attr('class', 'upper_layer');
       } else {
-         top_rect = this.draw_g.select("rect");
+         top_rect = this.draw_g.select("path");
          main_svg = this.draw_g.select(".main_layer");
       }
 
@@ -1877,10 +1890,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.draw_g.attr("transform", trans);
 
-      top_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
+      top_rect.attr("d", `M0,0H${w}V${h}H0Z`)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
@@ -1890,8 +1900,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (JSROOT.batch_mode) return;
 
+      top_rect.attr("pointer-events", "visibleFill"); // let process mouse events inside frame
+
       JSROOT.require(['interactive']).then(inter => {
-         top_rect.attr("pointer-events", "visibleFill"); // let process mouse events inside frame
          inter.FrameInteractive.assign(this);
          this.addBasicInteractivity();
       });
@@ -1962,7 +1973,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return true;
       }
 
-      let alone = menu.size() == 0;
+      const alone = menu.size() == 0;
 
       if (alone)
          menu.add("header:Frame");
@@ -2556,8 +2567,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          svg.append("svg:title").text("ROOT canvas");
-         let frect = svg.append("svg:rect").attr("class","canvas_fillrect")
-                               .attr("x",0).attr("y",0);
+         let frect = svg.append("svg:path").attr("class","canvas_fillrect");
          if (!JSROOT.batch_mode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", evnt => this.enlargePad(evnt))
@@ -2633,8 +2643,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this._pad_height = rect.height;
 
       let fill_rect = svg.select(".canvas_fillrect")
-         .attr("width", rect.width)
-         .attr("height", rect.height)
+         .attr("d", `M0,0H${rect.width}V${rect.height}H0Z`)
          .call(this.fillatt.func);
 
       this._fast_drawing = JSROOT.settings.SmallPad && ((rect.width < JSROOT.settings.SmallPad.width) || (rect.height < JSROOT.settings.SmallPad.height));
@@ -2713,7 +2722,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
-         svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
+         svg_rect = svg_pad.append("svg:path").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
          if (!JSROOT.batch_mode)
@@ -2752,10 +2761,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this._pad_width = w;
       this._pad_height = h;
 
-      svg_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
+      svg_rect.attr("d", `M0,0H${w}V${h}H0Z`)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
@@ -3136,7 +3142,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
              let res = this.painters[indx].redraw(force ? "redraw" : "resize");
              if (!jsrp.isPromise(res)) res = Promise.resolve();
-              return res.then(() => redrawNext(indx+1));
+             return res.then(() => redrawNext(indx+1));
           };
 
       return sync_promise.then(() => {
@@ -3453,7 +3459,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.createPadSvg(true);
       }
 
-      let MatchPrimitive = (painters, primitives, class_name, obj_name) => {
+      const MatchPrimitive = (painters, primitives, class_name, obj_name) => {
          let painter = painters.find(p => {
             if (p.snapid === undefined) return;
             if (!p.matchObjectType(class_name)) return;
@@ -3635,22 +3641,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!r.ranges || p.empty()) return true;
 
       // calculate user range for full pad
-      let same = x => x,
-          direct_funcs = [same, Math.log10, x => Math.log10(x)/Math.log10(2) ],
-          revert_funcs = [same, x => Math.pow(10, x), x => Math.pow(2, x)],
-          func = direct_funcs[main.logx],
+      const same = x => x,
+            direct_funcs = [same, Math.log10, x => Math.log10(x)/Math.log10(2)],
+            revert_funcs = [same, x => Math.pow(10, x), x => Math.pow(2, x)],
+            match = (v1, v0, range) => (Math.abs(v0-v1) < Math.abs(range)*1e-10) ? v0 : v1;
+
+      let func = direct_funcs[main.logx],
           func2 = revert_funcs[main.logx],
           k = (func(main.scale_xmax) - func(main.scale_xmin))/p.property("draw_width"),
           x1 = func(main.scale_xmin) - k*p.property("draw_x"),
           x2 = x1 + k*p.property("draw_width");
 
-       // method checks if new value v1 close to the old value v0
-       function match(v1, v0, range) {
-          return (Math.abs(v0-v1)<Math.abs(range)*1e-10) ? v0 : v1;
-       }
-
-      r.ux1 = match( func2(x1), r.ux1, r.px2-r.px1);
-      r.ux2 = match( func2(x2), r.ux2, r.px2-r.px1);
+      r.ux1 = match(func2(x1), r.ux1, r.px2-r.px1);
+      r.ux2 = match(func2(x2), r.ux2, r.px2-r.px1);
 
       func = direct_funcs[main.logy];
       func2 = revert_funcs[main.logy];
@@ -3659,8 +3662,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let y2 = func(main.scale_ymax) + k*p.property("draw_y"),
           y1 = y2 - k*p.property("draw_height");
 
-      r.uy1 = match( func2(y1), r.uy1, r.py2-r.py1);
-      r.uy2 = match( func2(y2), r.uy2, r.py2-r.py1);
+      r.uy1 = match(func2(y1), r.uy1, r.py2-r.py1);
+      r.uy2 = match(func2(y2), r.uy2, r.py2-r.py1);
 
       return true;
    }
@@ -3820,7 +3823,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
          }
-      }
+      };
 
       let width = elem.property('draw_width'), height = elem.property('draw_height');
       if (use_frame) {
