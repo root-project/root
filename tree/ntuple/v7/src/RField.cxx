@@ -26,6 +26,7 @@
 
 #include <TBaseClass.h>
 #include <TClass.h>
+#include <TClassEdit.h>
 #include <TCollection.h>
 #include <TDataMember.h>
 #include <TError.h>
@@ -73,21 +74,8 @@ std::vector<std::string> TokenizeTypeList(std::string templateType) {
    return result;
 }
 
-/// Remove leading and trailing white spaces
-std::string Trim(const std::string &raw) {
-  if (raw.empty()) return "";
-
-  unsigned start_pos = 0;
-  for (; (start_pos < raw.length()) && (raw[start_pos] == ' ' || raw[start_pos] == '\t'); ++start_pos) { }
-
-  unsigned end_pos = raw.length() - 1;  // at least one character in raw
-  for (; (end_pos >= start_pos) && (raw[end_pos] == ' ' || raw[end_pos] == '\t'); --end_pos) { }
-
-  return raw.substr(start_pos, end_pos - start_pos + 1);
-}
-
 std::string GetNormalizedType(const std::string &typeName) {
-   std::string normalizedType(Trim(typeName));
+   std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
 
    // TODO(jblomer): use a type translation map
    if (normalizedType == "Bool_t") normalizedType = "bool";
