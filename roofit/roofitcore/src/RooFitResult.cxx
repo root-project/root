@@ -790,14 +790,25 @@ void RooFitResult::fillPrefitCorrMatrix()
    }
 }
 
+
+namespace {
+
+void isIdenticalErrMsg(std::string const& msgHead, const RooAbsReal* tv, const RooAbsReal* ov) {
+  std::cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in value:\t"
+      << tv->getVal() << " vs.\t" << ov->getVal()
+      << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << std::endl;
+}
+
+} // namespace
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if this fit result is identical to other within tolerances.
+/// Return true if this fit result is identical to other within tolerances, ignoring the correlation matrix.
 /// \param[in] other Fit result to test against.
 /// \param[in] tol **Relative** tolerance for parameters and NLL.
-/// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
 /// \param[in] verbose Ignored.
 
-Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double_t tolCorr, Bool_t /*verbose*/) const 
+bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, bool /*verbose*/) const 
 {
   Bool_t ret = kTRUE ;
   auto deviation = [tol](const double left, const double right){
@@ -805,12 +816,6 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       return fabs((left - right)/right) >= tol;
     else
       return fabs(left) >= tol;
-  };
-
-  auto errMsg = [](std::string msgHead, const RooAbsReal* tv, const RooAbsReal* ov) {
-    cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in value:\t"
-        << tv->getVal() << " vs.\t" << ov->getVal()
-        << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << endl;
   };
 
   if (deviation(_minNLL, other._minNLL)) {
@@ -826,7 +831,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       ret = kFALSE ;
     }
     if (ov && deviation(tv->getVal(), ov->getVal())) {
-      errMsg("constant parameter", tv, ov);
+      isIdenticalErrMsg("constant parameter", tv, ov);
       ret = kFALSE ;
     }
   }
@@ -839,7 +844,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       ret = kFALSE ;
     }
     if (ov && deviation(tv->getVal(), ov->getVal())) {
-      errMsg("initial parameter", tv, ov);
+      isIdenticalErrMsg("initial parameter", tv, ov);
       ret = kFALSE ;
     }
   }
@@ -852,10 +857,25 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       ret = kFALSE ;
     }
     if (ov && deviation(tv->getVal(), ov->getVal())) {
-      errMsg("final parameter", tv, ov);
+      isIdenticalErrMsg("final parameter", tv, ov);
       ret = kFALSE ;
     }
   }
+
+  return ret;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this fit result is identical to other within tolerances.
+/// \param[in] other Fit result to test against.
+/// \param[in] tol **Relative** tolerance for parameters and NLL.
+/// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
+/// \param[in] verbose Ignored.
+
+bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tolCorr, bool verbose) const 
+{
+  bool ret = isIdenticalNoCov(other, tol, verbose);
 
   auto deviationCorr = [tolCorr](const double left, const double right){
     return fabs(left - right) >= tolCorr;
@@ -875,7 +895,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
         ret = kFALSE ;
       }
       if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
-        errMsg("global correlation coefficient", tv, ov);
+        isIdenticalErrMsg("global correlation coefficient", tv, ov);
         ret = kFALSE ;
       }
     }
@@ -891,7 +911,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
           ret = kFALSE ;
         }
         if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
-          errMsg("correlation coefficient", tv, ov);
+          isIdenticalErrMsg("correlation coefficient", tv, ov);
           ret = kFALSE ;
         }
       }
