@@ -639,6 +639,9 @@ void TTeXDump::NewPage()
 
    if(!fBoundingBox) {
       PrintStr("\\begin{tikzpicture}@");
+      PrintStr("\\def\\CheckTikzLibraryLoaded#1{ \\ifcsname tikz@library@#1@loaded\\endcsname \\else \\PackageWarning{tikz}{usetikzlibrary{#1} is missing in the preamble.} \\fi }@");
+      PrintStr("\\CheckTikzLibraryLoaded{patterns}@");
+      PrintStr("\\CheckTikzLibraryLoaded{plotmarks}@");
       DefineMarkers();
       fBoundingBox = kTRUE;
    }
