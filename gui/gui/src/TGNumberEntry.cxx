@@ -32,6 +32,7 @@ The following styles are supported:
   - kNESReal:           arbitrary real number
   - kNESDegree:         angle in degree:minutes:seconds format
   - kNESMinSec:         time in minutes:seconds format
+  - kNESMinSecCent:     time in minutes:seconds.centiseconds format
   - kNESHourMin:        time in hour:minutes format
   - kNESHourMinSec:     time in hour:minutes:seconds format
   - kNESDayMYear:       date in day/month/year format
@@ -184,7 +185,8 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
         (style == TGNumberFormat::kNESRealFour) ||
         (style == TGNumberFormat::kNESReal) ||
         (style == TGNumberFormat::kNESDegree) ||
-        (style == TGNumberFormat::kNESMinSec)) &&
+        (style == TGNumberFormat::kNESMinSec) ||
+        (style == TGNumberFormat::kNESMinSecCent)) &&
        (attr == TGNumberFormat::kNEAAnyNumber)) {
       return kTRUE;
    }
@@ -199,6 +201,7 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
         (style == TGNumberFormat::kNESReal) ||
         (style == TGNumberFormat::kNESDegree) ||
         (style == TGNumberFormat::kNESMinSec) ||
+        (style == TGNumberFormat::kNESMinSecCent) ||
         (style == TGNumberFormat::kNESHourMin) ||
         (style == TGNumberFormat::kNESHourMinSec) ||
         (style == TGNumberFormat::kNESDayMYear) ||
@@ -208,6 +211,7 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
    if ((c == ':') &&
        ((style == TGNumberFormat::kNESDegree) ||
         (style == TGNumberFormat::kNESMinSec) ||
+        (style == TGNumberFormat::kNESMinSecCent) ||
         (style == TGNumberFormat::kNESHourMin) ||
         (style == TGNumberFormat::kNESHourMinSec) ||
         (style == TGNumberFormat::kNESDayMYear) ||
@@ -657,6 +661,10 @@ static Long_t TranslateToNum(const char *text,
    case TGNumberFormat::kNESMinSec:
       GetNumbers(text, sign, n1, 12, n2, 2, n3, 0, ".,:");
       return sign * (60 * n1 + GetSignificant(n2, 60));
+   case TGNumberFormat::kNESMinSecCent:
+      GetNumbers(text, sign, n1, 12, n2, 2, n3, 2, ".,:");
+      return 6000 * n1 + 100*GetSignificant(n2, 60) +
+          GetSignificant(n3, 100);
    case TGNumberFormat::kNESHourMin:
       GetNumbers(text, sign, n1, 12, n2, 2, n3, 0, ".,:");
       return 60 * n1 + GetSignificant(n2, 60);
@@ -697,6 +705,8 @@ static char *TranslateToStr(char *text, Long_t l,
       return DIntToStr(text, l % (24 * 3600), kTRUE, ':');
    case TGNumberFormat::kNESMinSec:
       return DIntToStr(text, l, kFALSE, ':');
+   case TGNumberFormat::kNESMinSecCent:
+      return DIntToStr(text, l % (60 * 6000), kTRUE, ':');       
    case TGNumberFormat::kNESHourMin:
       return DIntToStr(text, l % (24 * 60), kFALSE, ':');
    case TGNumberFormat::kNESDayMYear:
@@ -1146,6 +1156,9 @@ void TGNumberEntryField::SetNumber(Double_t val, Bool_t emit)
    case kNESMinSec:
       SetIntNumber(Round(val), emit);
       break;
+   case kNESMinSecCent:
+      SetIntNumber(Round(val), emit);
+      break;
    case kNESHourMin:
       SetIntNumber(Round(val), emit);
       break;
@@ -1179,7 +1192,7 @@ void TGNumberEntryField::SetIntNumber(Long_t val, Bool_t emit)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (time format).
 
-void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec, Bool_t emit)
+void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec, Int_t centisec, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESHourMinSec:
@@ -1187,10 +1200,11 @@ void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec, Bool_t emit)
                    TMath::Abs(sec), emit);
       break;
    case kNESMinSec:
-      {
-         SetIntNumber(60 * min + sec, emit);
-         break;
-      }
+      SetIntNumber(60 * TMath::Abs(min) + TMath::Abs(sec), emit);
+      break;
+   case kNESMinSecCent:
+      SetIntNumber(6000 *TMath::Abs(min) + 100 * TMath::Abs(sec) + TMath::Abs(centisec), emit);
+      break;
    case kNESHourMin:
       SetIntNumber(60 * TMath::Abs(hour) + TMath::Abs(min), emit);
       break;
@@ -1267,6 +1281,8 @@ Double_t TGNumberEntryField::GetNumber() const
       return (Double_t) GetIntNumber();
    case kNESMinSec:
       return (Double_t) GetIntNumber();
+   case kNESMinSecCent:
+      return (Double_t) GetIntNumber();
    case kNESHourMin:
       return (Double_t) GetIntNumber();
    case kNESDayMYear:
@@ -1289,7 +1305,8 @@ Long_t TGNumberEntryField::GetIntNumber() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the numeric value (time format).
+/// Get the numeric value (time format). In case of kNESMinSecCent, the first
+/// variable (hour) will store instead the centiseconds.
 
 void TGNumberEntryField::GetTime(Int_t & hour, Int_t & min, Int_t & sec) const
 {
@@ -1312,6 +1329,14 @@ void TGNumberEntryField::GetTime(Int_t & hour, Int_t & min, Int_t & sec) const
             min *= -1;
             sec *= -1;
          }
+         break;
+      }
+   case kNESMinSecCent:
+      {
+         Long_t l = GetIntNumber();
+         min = TMath::Abs(l) / 6000;
+         sec = (TMath::Abs(l) % 60) / 100;
+         hour = TMath::Abs(l) % 100;// centisec is stored in variable named hour
          break;
       }
    case kNESHourMin:
@@ -1398,7 +1423,7 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
    if ((fNumStyle == kNESDegree) || (fNumStyle == kNESHourMinSec) ||
        (fNumStyle == kNESMinSec) || (fNumStyle == kNESHourMin) ||
        (fNumStyle == kNESDayMYear) || (fNumStyle == kNESMDayYear) ||
-       (fNumStyle == kNESHex)) {
+       (fNumStyle == kNESHex) || (fNumStyle == kNESMinSecCent)) {
       logstep = kFALSE;
       switch (step) {
       case kNSSSmall:
@@ -1516,6 +1541,21 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
             l = 0;
          if ((l <= 0) && (fNumAttr == kNEAPositive))
             l = 1;
+         break;
+      }
+   case kNESMinSecCent:
+      {
+         if (mag > 60)
+            l += sign * 36 * mag;
+         else if (mag > 6)
+            l += sign * 6 * mag;
+         else
+            l += sign * mag;
+         CheckMinMax(l, fNumStyle, fNumLimits, fNumMin, fNumMax);
+         if (l < 0)
+            l = (60 * 6000) - ((-l) % (60 * 6000));
+         if (l > 0)
+            l = l % (60 * 6000);
          break;
       }
    case kNESHourMin:
@@ -2185,6 +2225,11 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          out << min*60 + sec << "," << digits << "," << WidgetId()
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
+      case kNESMinSecCent:
+         //GetTime returns the centisecs in the hour variable
+         out << min*6000 + sec*100 + hour << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
       case kNESHourMin:
          out << hour*60 + min << "," << digits << "," << WidgetId()
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
@@ -2298,6 +2343,11 @@ void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= "
          break;
       case kNESMinSec:
          out << min*60 + sec
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMinSecCent:
+         //GetTime returns centisec in the hour variable
+         out << min*6000 + sec*100 + hour
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       case kNESHourMin:
