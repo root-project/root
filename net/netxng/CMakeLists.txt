@@ -33,3 +33,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
 target_include_directories(NetxNG SYSTEM PRIVATE ${XROOTD_INCLUDE_DIRS})
 
 target_compile_options(NetxNG PRIVATE -Wno-shadow)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
