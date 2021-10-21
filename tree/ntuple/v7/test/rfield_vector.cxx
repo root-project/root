@@ -205,40 +205,40 @@ TEST(RNTuple, ComplexVector)
       ntuple->Fill();
    }
 
-   ComplexStruct::gNCallConstructor = 0;
-   ComplexStruct::gNCallDestructor = 0;
+   ComplexStruct::SetNCallConstructor(0);
+   ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
       auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
-      EXPECT_EQ(0, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(0, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
       EXPECT_TRUE(rdV->empty());
       ntuple->LoadEntry(1);
-      EXPECT_EQ(10, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(0, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(10, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(10u, rdV->size());
       ntuple->LoadEntry(2);
-      EXPECT_EQ(10000, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(0, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(10000, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(10000u, rdV->size());
       ntuple->LoadEntry(3);
-      EXPECT_EQ(10000, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(9900, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(10000, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(9900, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(100u, rdV->size());
       ntuple->LoadEntry(4);
-      EXPECT_EQ(10100, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(9900, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(10100, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(9900, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(200u, rdV->size());
       ntuple->LoadEntry(5);
-      EXPECT_EQ(10100, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(10100, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(10100, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(10100, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(0u, rdV->size());
       ntuple->LoadEntry(6);
-      EXPECT_EQ(10101, ComplexStruct::gNCallConstructor);
-      EXPECT_EQ(10100, ComplexStruct::gNCallDestructor);
+      EXPECT_EQ(10101, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(10100, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(1u, rdV->size());
    }
-   EXPECT_EQ(10101u, ComplexStruct::gNCallDestructor);
+   EXPECT_EQ(10101u, ComplexStruct::GetNCallDestructor());
 }
