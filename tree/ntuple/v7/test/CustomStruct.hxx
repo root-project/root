@@ -51,8 +51,13 @@ struct ComplexStruct {
    static int gNCallConstructor;
    static int gNCallDestructor;
 
-   ComplexStruct() { gNCallConstructor++; }
-   ~ComplexStruct() { gNCallDestructor++; }
+   static int GetNCallConstructor();
+   static int GetNCallDestructor();
+   static void SetNCallConstructor(int);
+   static void SetNCallDestructor(int);
+
+   ComplexStruct();
+   ~ComplexStruct();
 
    int a = 0;
 };
