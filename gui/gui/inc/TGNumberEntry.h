@@ -34,7 +34,8 @@ public:
       kNESHourMinSec = 9,    ///< Hour:minute:seconds
       kNESDayMYear = 10,     ///< Day/month/year
       kNESMDayYear = 11,     ///< Month/day/year
-      kNESHex = 12           ///< Hex
+      kNESHex = 12,          ///< Hex
+      kNESMinSecCent = 13    ///< Minute:seconds.centiseconds
    };
 
    enum EAttribute {         ///< Attributes of number entry field
