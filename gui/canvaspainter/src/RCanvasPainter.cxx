@@ -637,6 +637,8 @@ void RCanvasPainter::NewDisplay(const std::string &where)
       args.SetHeight(height + 36);
    }
 
+   args.SetWidgetKind("RCanvas");
+
    fWindow->Show(args);
 }
 
