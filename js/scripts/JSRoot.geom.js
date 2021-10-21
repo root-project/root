@@ -2099,7 +2099,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          if (this.ctrl.outline && (typeof this.createOutline == "function")) {
             this._effectComposer = new THREE.EffectComposer( this._renderer );
             this._effectComposer.addPass( new THREE.RenderPass( this._scene, this._camera ) );
-            this.createOutline(w, h);
+            this.createOutline(this._scene_width, this._scene_height);
          } else if (this.ctrl.ssao.enabled) {
             this.createSSAO();
          }
