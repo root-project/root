@@ -922,16 +922,27 @@ std::string RWebWindow::GetAddr() const
 
 std::string RWebWindow::GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
-   if (fMgr != win->fMgr) {
+   return GetRelativeAddr(*win);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL address for the specified window
+/// Address can be required if one needs to access data from one window into another window
+/// Used for instance when inserting panel into canvas
+
+std::string RWebWindow::GetRelativeAddr(const RWebWindow &win) const
+{
+   if (fMgr != win.fMgr) {
       R__LOG_ERROR(WebGUILog()) << "Same web window manager should be used";
       return "";
    }
 
    std::string res("../");
-   res.append(win->GetAddr());
+   res.append(win.GetAddr());
    res.append("/");
    return res;
 }
+
 
 /////////////////////////////////////////////////////////////////////////
 /// Set client version, used as prefix in scripts URL
