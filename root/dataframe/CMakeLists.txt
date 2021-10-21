@@ -141,7 +141,13 @@ ROOTTEST_ADD_TEST(testIMT
                   OUTREF testIMT.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(test_readerarray test_readerarray.cxx LIBRARIES ${DFLIBRARIES})
+if(MSVC AND MSVC_VERSION LESS 1924 AND NOT win_broken_tests)
+  # FIXME: with Visual Studio v16.3, test_readerarray fails in debug mode, so compile it in release mode
+  # this is fixed with more recent versions of Visual Studio
+  ROOTTEST_GENERATE_EXECUTABLE(test_readerarray test_readerarray.cxx COMPILE_FLAGS ${CMAKE_CXX_FLAGS_RELEASE} LIBRARIES ${DFLIBRARIES})
+else()
+  ROOTTEST_GENERATE_EXECUTABLE(test_readerarray test_readerarray.cxx LIBRARIES ${DFLIBRARIES})
+endif()
 ROOTTEST_ADD_TEST(test_readerarray
                   EXEC ./test_readerarray
                   OUTREF test_readerarray.ref
