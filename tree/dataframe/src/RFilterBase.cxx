@@ -17,9 +17,10 @@ using namespace ROOT::Detail::RDF;
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
                          const RDFInternal::RBookedDefines &defines)
-   : RNodeBase(implPtr), fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
+   : RNodeBase(implPtr), fLastCheckedEntry(std::vector<Long64_t>(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1)),
+     fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
      fAccepted(nSlots * RDFInternal::CacheLineStep<ULong64_t>()),
-     fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fNSlots(nSlots), fDefines(defines)
+     fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fDefines(defines)
 {
 }
 
@@ -47,7 +48,6 @@ void RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
 
 void RFilterBase::InitNode()
 {
-   fLastCheckedEntry = std::vector<Long64_t>(fNSlots * RDFInternal::CacheLineStep<Long64_t>(), -1);
    if (!fName.empty()) // if this is a named filter we care about its report count
       ResetReportCount();
 }
