@@ -91,7 +91,8 @@ public:
   Bool_t isWeighted() const override { return true; }
   Bool_t isNonPoissonWeighted() const override ;
 
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
+  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
+
   void getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const override;
   /// Retrieve all bin volumes. Bins are indexed according to getIndex().
   RooSpan<const double> binVolumes(std::size_t first, std::size_t len) const {
@@ -275,7 +276,8 @@ protected:
   mutable double* _sumw2{nullptr}; //[_arrSize] Sum of weights^2
   double*         _binv {nullptr}; //[_arrSize] Bin volume array
 
-  mutable std::vector<double> _maskedWeights; //! Copy of _wgtVec, but masked events have a weight of zero.
+  mutable std::vector<double> _maskedWeights; //! Copy of _wgt, but masked events have a weight of zero.
+  mutable std::vector<double> _maskedSumw2; //! Copy of _sumW2, but masked events have a weight of zero.
  
   mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
 
