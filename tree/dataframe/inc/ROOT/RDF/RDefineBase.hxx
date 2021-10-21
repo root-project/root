@@ -36,7 +36,6 @@ class RDefineBase {
 protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
-   const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
    std::vector<Long64_t> fLastCheckedEntry;
    /// A unique ID that identifies this custom column.
    /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
