@@ -525,11 +525,16 @@ Double_t THStack::GetMaximum(Option_t *option)
    if (!opt.Contains("nostack")) {
       BuildStack();
       h = (TH1*)fStack->At(nhists-1);
+      if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                              fHistogram->GetXaxis()->GetLast());
       themax = h->GetMaximum();
    } else {
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
+         if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                                 fHistogram->GetXaxis()->GetLast());
          them = h->GetMaximum();
+         if (fHistogram) h->GetXaxis()->SetRange(0,0);
          if (them > themax) themax = them;
       }
    }
