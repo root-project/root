@@ -1021,8 +1021,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "editor": this.createCodeEditor(par1, par2, par3); break;
             case "image": this.createImageViewer(par1, par2, par3); break;
             case "geom": this.createGeomViewer(par1, par2, par3); break;
+            case "catched": this.createCatchedWidget(par1, par2, par3); break;
             default: this.createCanvas(kind, par1, par2, par3);
          }
+      },
+
+      createCatchedWidget: function(url, name, catched_kind) {
+         if (catched_kind == "rcanvas")
+            this.createCanvas("rcanvas", url, name, "Catched RCanvas");
       },
 
       createGeomViewer: function(url, name, title) {

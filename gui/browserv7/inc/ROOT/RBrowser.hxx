@@ -41,6 +41,7 @@ protected:
    RBrowserData  fBrowsable;                   ///<! central browsing element
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
+   std::shared_ptr<RBrowserWidget> AddCatchedWidget(const std::string &url, const std::string &kind);
    std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name) const;
    std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveWidgetName); }
 
