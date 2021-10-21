@@ -45,7 +45,7 @@ private:
   mutable TNamed* _refRangeName ; 
 
   Double_t evaluate() const;
-  void computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
   inline bool canComputeBatchWithCuda() const { return true; }
   
   Double_t evalAnaInt(const Double_t a, const Double_t b) const;

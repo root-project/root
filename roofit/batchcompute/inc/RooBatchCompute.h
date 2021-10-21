@@ -85,8 +85,8 @@ class RooBatchComputeInterface {
   public:
     virtual ~RooBatchComputeInterface() = default;
     virtual void   init() { throw std::bad_function_call(); }
-    virtual void   compute(Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
-    virtual double sumReduce(InputArr, size_t) = 0;
+    virtual void   compute(cudaStream_t*, Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
+    virtual double sumReduce(cudaStream_t*, InputArr input, size_t n) = 0;
        
     //cuda functions that need to be interfaced
     virtual void* cudaMalloc(size_t)                { throw std::bad_function_call(); }
@@ -112,7 +112,7 @@ class RooBatchComputeInterface {
  *
  * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
  */
-R__EXTERN RooBatchComputeInterface *dispatch, *dispatchCPU, *dispatchCUDA;
+R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
 } // End namespace RooBatchCompute
 
 #endif
