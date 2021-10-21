@@ -728,7 +728,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
 
 bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    if (m_IsRuntime)
-     return false;
+      return false;
 
    if (R.getLookupKind() != Sema::LookupOrdinaryName)
       return false;
@@ -744,6 +744,16 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
       return false;
    const cling::CompilationOptions& COpts = T->getCompilationOpts();
    if (!COpts.DynamicScoping)
+      return false;
+
+   auto &PP = R.getSema().PP;
+   // In `foo bar`, `foo` is certainly a type name and must not be resolved. We
+   // cannot rely on `PP.LookAhead(0)` as the parser might have already consumed
+   // some tokens.
+   SourceLocation LocAfterIdent = PP.getLocForEndOfToken(R.getNameLoc());
+   Token LookAhead0;
+   PP.getRawToken(LocAfterIdent, LookAhead0, /*IgnoreWhiteSpace=*/true);
+   if (LookAhead0.is(tok::raw_identifier))
       return false;
 
    // FIXME: Figure out better way to handle:
