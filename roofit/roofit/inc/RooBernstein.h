@@ -45,7 +45,7 @@ private:
   std::string _refRangeName ;
 
   Double_t evaluate() const;
-  void computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
   inline bool canComputeBatchWithCuda() const { return true; }
 
   ClassDef(RooBernstein,2) // Bernstein polynomial PDF

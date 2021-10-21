@@ -52,8 +52,8 @@ public:
    \param varData A std::map containing the values of the variables involved in the computation.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-                const ArgVector &extraArgs) override
+   void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData,
+                const VarVector &vars, const ArgVector &extraArgs) override
    {
       double buffer[maxParams][bufferSize];
       ROOT::Internal::TExecutor ex;
@@ -85,7 +85,7 @@ public:
       ex.Map(task, batchesArr);
    }
    /// Return the sum of an input array
-   double sumReduce(InputArr input, size_t n) override
+   double sumReduce(cudaStream_t *, InputArr input, size_t n) override
    {
       long double sum = 0.0;
       for (size_t i = 0; i < n; i++)

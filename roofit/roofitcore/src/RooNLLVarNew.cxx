@@ -105,22 +105,23 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 \param nEvents The number of events to be processed
 \param dataMap A map containing spans with the input data for the computation
 **/
-void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispatch, double *output, size_t nEvents,
+void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
                                 RooBatchCompute::DataMap &dataMap) const
 {
    RooBatchCompute::VarVector vars = {&*_pdf};
    if (_weight)
       vars.push_back(&**_weight);
    RooBatchCompute::ArgVector args = {static_cast<double>(vars.size() - 1)};
-   dispatch->compute(RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   dispatch->compute(stream, RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
 
    if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
       if (!_weight) {
          _sumWeight = nEvents;
       } else {
          auto weightSpan = dataMap[&**_weight];
-         _sumWeight =
-            weightSpan.size() == 1 ? weightSpan[0] * nEvents : dispatch->sumReduce(dataMap[&**_weight].data(), nEvents);
+         _sumWeight = weightSpan.size() == 1 ? weightSpan[0] * nEvents
+                                             : dispatch->sumReduce(stream, dataMap[&**_weight].data(), nEvents);
       }
    }
    if (_rangeNormTerm) {
@@ -129,11 +130,11 @@ void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispa
          _sumCorrectionTerm = _sumWeight * rangeNormTermSpan[0];
       } else {
          if (!_weight) {
-            _sumCorrectionTerm = dispatch->sumReduce(rangeNormTermSpan.data(), nEvents);
+            _sumCorrectionTerm = dispatch->sumReduce(stream, rangeNormTermSpan.data(), nEvents);
          } else {
             auto weightSpan = dataMap[&**_weight];
             if (weightSpan.size() == 1) {
-               _sumCorrectionTerm = weightSpan[0] * dispatch->sumReduce(rangeNormTermSpan.data(), nEvents);
+               _sumCorrectionTerm = weightSpan[0] * dispatch->sumReduce(stream, rangeNormTermSpan.data(), nEvents);
             } else {
                // We don't need to use the library for now because the weights and
                // correction term integrals are always in the CPU map.
@@ -153,10 +154,10 @@ void RooNLLVarNew::computeBatch(RooBatchCompute::RooBatchComputeInterface *dispa
 \param input The input array with the nlls to be reduced
 \param nEvents the number of events to be processed
 **/
-double
-RooNLLVarNew::reduce(RooBatchCompute::RooBatchComputeInterface *dispatch, const double *input, size_t nEvents) const
+double RooNLLVarNew::reduce(cudaStream_t *stream, const double *input, size_t nEvents) const
 {
-   double nll = dispatch->sumReduce(input, nEvents);
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   double nll = dispatch->sumReduce(stream, input, nEvents);
    if (_constraints) {
       nll += _constraints->getVal();
    }

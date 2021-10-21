@@ -64,9 +64,10 @@ Double_t RooGaussian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gaussian distribution.  
-void RooGaussian::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooGaussian::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  dispatch->compute(RooBatchCompute::Gaussian, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Gaussian, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
