@@ -206,6 +206,9 @@ public:
    /// Returns ID for the window - unique inside window manager
    unsigned GetId() const { return fId; }
 
+   /// Returns window manager
+   std::shared_ptr<RWebWindowsManager> GetManager() const { return fMgr; }
+
    /// Set content of default window HTML page
    /// This page returns when URL address of the window will be requested
    /// Either HTML code or file name in the form "file:/home/user/data/file.htm"

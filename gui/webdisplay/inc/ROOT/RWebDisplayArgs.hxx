@@ -50,6 +50,7 @@ protected:
    std::string fExtraArgs;        ///<! extra arguments which will be append to exec string
    std::string fPageContent;      ///<! HTML page content
    std::string fRedirectOutput;   ///<! filename where browser output should be redirected
+   std::string fWidgetKind;       ///<! widget kind, used to identify that will be displayed in the web window
    bool fBatchMode{false};        ///<! is browser runs in batch mode
    bool fHeadless{false};         ///<! is browser runs in headless mode
    bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
@@ -106,6 +107,11 @@ public:
    RWebDisplayArgs &SetUrl(const std::string &url) { fUrl = url; return *this; }
    /// returns window url
    const std::string &GetUrl() const { return fUrl; }
+
+   /// set widget kind
+   RWebDisplayArgs &SetWidgetKind(const std::string &kind) { fWidgetKind = kind; return *this; }
+   /// returns widget kind
+   const std::string &GetWidgetKind() const { return fWidgetKind; }
 
    /// set window url
    RWebDisplayArgs &SetPageContent(const std::string &cont) { fPageContent = cont; return *this; }
