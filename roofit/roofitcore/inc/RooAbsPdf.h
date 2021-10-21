@@ -234,7 +234,7 @@ public:
       const RooArgSet* normSet = nullptr) const;
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
-  void computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t size, RooBatchCompute::DataMap&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
 
   /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 

@@ -76,14 +76,17 @@ public:
    \param varData A std::map containing the values of the variables involved in the computation.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-                const ArgVector &extraArgs) override
+   void compute(cudaStream_t *stream, Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData,
+                const VarVector &vars, const ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, varData, vars, extraArgs);
-      _computeFunctions[computer]<<<128, 512>>>(batches);
+      _computeFunctions[computer]<<<128, 512, 0, *stream>>>(batches);
    }
    /// Return the sum of an input array
-   double sumReduce(InputArr input, size_t n) override { return thrust::reduce(thrust::device, input, input + n, 0.0); }
+   double sumReduce(cudaStream_t *stream, InputArr input, size_t n) override
+   {
+      return thrust::reduce(thrust::cuda::par.on(*stream), input, input + n, 0.0);
+   }
 
    // cuda functions
    virtual void *cudaMalloc(size_t nBytes)

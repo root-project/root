@@ -3759,9 +3759,9 @@ pdf. After that, divide by the normalization values found in the dataMap.
 \param nEvents The number of events to be processed
 \param dataMap A std::map containing the input data for the computations
 **/ 
-void RooAbsPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooAbsPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  RooAbsReal::computeBatch(dispatch, output, nEvents, dataMap);
+  RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
 
   auto integralSpan = dataMap[_norm];
 

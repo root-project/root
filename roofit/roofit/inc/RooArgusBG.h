@@ -40,7 +40,7 @@ protected:
   RooRealProxy p ;
 
   Double_t evaluate() const ;
-  void computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t size, RooBatchCompute::DataMap& dataMap) const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
   inline bool canComputeBatchWithCuda() const { return true; }
 
 

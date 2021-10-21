@@ -146,13 +146,14 @@ Double_t RooPolynomial::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Polynomial.
-void RooPolynomial::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooPolynomial::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   RooBatchCompute::ArgVector extraArgs;
   for (auto* coef:_coefList)
     extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
   extraArgs.push_back(_lowestOrder);
-  dispatch->compute(RooBatchCompute::Polynomial, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Polynomial, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
