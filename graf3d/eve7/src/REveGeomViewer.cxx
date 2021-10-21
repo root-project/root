@@ -90,6 +90,9 @@ void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool 
    if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
    fWebWindow->SetUserArgs(user_args);
 
+   if (args.GetWidgetKind().empty())
+      const_cast<RWebDisplayArgs *>(&args)->SetWidgetKind("REveGeomViewer");
+
    if ((fWebWindow->NumConnections(true) == 0) || always_start_new_browser)
       fWebWindow->Show(args);
    else

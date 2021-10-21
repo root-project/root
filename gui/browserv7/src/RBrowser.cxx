@@ -173,13 +173,20 @@ RBrowser::RBrowser(bool use_rcanvas)
    fWebWindow->GetManager()->SetShowCallback([this](RWebWindow &win, const RWebDisplayArgs &args) -> bool {
       if (args.GetBrowserKind() != RWebDisplayArgs::kNative) return false;
 
-      if (args.GetWidgetKind() != "RCanvas") return false;
+      std::string kind;
 
-      if (!fWebWindow) return false;
+      if (args.GetWidgetKind() == "RCanvas")
+         kind = "rcanvas";
+      else if (args.GetWidgetKind() == "TCanvas")
+         kind = "tcanvas";
+      else if (args.GetWidgetKind() == "REveGeomViewer")
+         kind = "geom";
+
+      if (!fWebWindow || kind.empty()) return false;
 
       std::string url = fWebWindow->GetRelativeAddr(win);
 
-      auto widget = AddCatchedWidget(url, "rcanvas");
+      auto widget = AddCatchedWidget(url, kind);
 
       if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
          fWebWindow->Send(0, NewWidgetMsg(widget));

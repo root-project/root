@@ -1027,8 +1027,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       createCatchedWidget: function(url, name, catched_kind) {
-         if (catched_kind == "rcanvas")
-            this.createCanvas("rcanvas", url, name, "Catched RCanvas");
+         switch(catched_kind) {
+            case "rcanvas": this.createCanvas("rcanvas", url, name, "Catched RCanvas"); break;
+            case "tcanvas": this.createCanvas("tcanvas", url, name, "Catched RCanvas"); break;
+            case "geom": this.createGeomViewer(url, name, "Catched geom viewer"); break;
+            default: console.error("Not supported cacthed kind", catched_kind);
+         }
       },
 
       createGeomViewer: function(url, name, title) {
