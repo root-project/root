@@ -105,7 +105,7 @@ public:
            unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
            const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
       : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds), fExpression(std::move(expression)),
-        fColumnNames(columns), fLastResults(fNSlots * RDFInternal::CacheLineStep<ret_type>()), fValues(fNSlots),
+        fColumnNames(columns), fLastResults(nSlots * RDFInternal::CacheLineStep<ret_type>()), fValues(nSlots),
         fIsDefine()
    {
       const auto nColumns = fColumnNames.size();
