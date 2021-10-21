@@ -2009,6 +2009,7 @@ void RooDataHist::cacheValidEntries()
   checkInit() ;
 
   _maskedWeights.assign(_wgt, _wgt + _arrSize);
+  if(_sumw2) _maskedSumw2.assign(_sumw2, _sumw2 + _arrSize);
 
   for (Int_t i=0; i < _arrSize; ++i) {
     get(i) ;
@@ -2016,6 +2017,7 @@ void RooDataHist::cacheValidEntries()
     for (const auto arg : _vars) {
       if (!arg->inRange(nullptr)) {
         _maskedWeights[i] = 0.;
+        if(_sumw2) _maskedSumw2[i] = 0.;
         break;
       }
     }
@@ -2149,10 +2151,16 @@ void RooDataHist::Streamer(TBuffer &R__b) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Return event weights of all events in range [first, first+len).
 /// If cacheValidEntries() has been called, out-of-range events will have a weight of 0.
-RooSpan<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len) const {
-  return _maskedWeights.empty() ?
-      RooSpan<const double>{_wgt + first, len} :
-      RooSpan<const double>{_maskedWeights.data() + first, len};
+RooSpan<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len, bool sumW2 /*=false*/) const {
+  if(sumW2 && _sumw2) {
+    return _maskedSumw2.empty() ?
+        RooSpan<const double>{_sumw2 + first, len} :
+        RooSpan<const double>{_maskedSumw2.data() + first, len};
+  } else {
+    return _maskedWeights.empty() ?
+        RooSpan<const double>{_wgt + first, len} :
+        RooSpan<const double>{_maskedWeights.data() + first, len};
+  }
 }
 
 
