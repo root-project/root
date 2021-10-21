@@ -32,6 +32,7 @@ protected:
    unsigned fConnId{0}; ///<! default connection id
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
+   bool fCatchWindowShow{true};         ///<! if arbitrary RWebWindow::Show calls should be catched by browser
    std::string fActiveWidgetName;        ///<! name of active widget
    std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
    int fWidgetCnt{0};                                     ///<! counter for created widgets
@@ -79,6 +80,12 @@ public:
    void Hide();
 
    void SetWorkingPath(const std::string &path);
+
+   /// Enable/disable catch of RWebWindow::Show calls to embed created widgets, default on
+   void SetCatchWindowShow(bool on = true) { fCatchWindowShow = on; }
+
+   /// Is RWebWindow::Show calls catched for embeding of created widgets
+   bool GetCatchWindowShow() const { return fCatchWindowShow; }
 
 };
 
