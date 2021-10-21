@@ -310,6 +310,8 @@ public:
 
    std::string GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const;
 
+   std::string GetRelativeAddr(const RWebWindow &win) const;
+
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);
 
    void SetConnectCallBack(WebWindowConnectCallback_t func);
