@@ -8,10 +8,10 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class UnuranDistr
+// Header file for class UnuranDistrAdapter
 
-#ifndef ROOT_Math_UnuranDistr
-#define ROOT_Math_UnuranDistr
+#ifndef ROOT_Math_UnuranDistrAdapter
+#define ROOT_Math_UnuranDistrAdapter
 
 #include "unuran.h"
 #include <iostream>
