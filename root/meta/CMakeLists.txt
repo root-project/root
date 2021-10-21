@@ -18,6 +18,10 @@ ROOTTEST_ADD_TEST(clingTErrorDiagnostics
                   MACRO clingTErrorDiagnostics.C
                   OUTREF clingTErrorDiagnostics.ref)
 
+ROOTTEST_ADD_TEST(ROOT5268
+                  MACRO ROOT-5268.C
+                  PASSREGEX "error: unknown type name 'Tbrowser'")
+
 ROOTTEST_ADD_TEST(rlibmap
                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/rlibmapLauncher.py
                   PASSRC 1
