@@ -509,6 +509,22 @@ static char *DIntToStr(char *text, Long_t l, Bool_t Sec, char Del)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// For kNESMinSecCent
+
+static char *DIntToStr(char *text, Long_t l, char Del, char Del2)
+{
+   TString s;
+   s = StringInt(TMath::Abs(l) / 6000, 0) + Del +
+       StringInt((TMath::Abs(l) % 6000) / 100, 2) + Del2 +
+       StringInt(TMath::Abs(l) % 100, 2);
+   if (l < 0) {
+      s = "-" + s;
+   }
+   strlcpy(text, (const char *) s, 256);
+   return text;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void GetNumbers(const char *s, Int_t & Sign,
                        Long_t & n1, Int_t maxd1,
@@ -706,7 +722,7 @@ static char *TranslateToStr(char *text, Long_t l,
    case TGNumberFormat::kNESMinSec:
       return DIntToStr(text, l, kFALSE, ':');
    case TGNumberFormat::kNESMinSecCent:
-      return DIntToStr(text, l % (60 * 6000), kTRUE, ':');       
+      return DIntToStr(text, l % (60 * 6000), ':', '.');       
    case TGNumberFormat::kNESHourMin:
       return DIntToStr(text, l % (24 * 60), kFALSE, ':');
    case TGNumberFormat::kNESDayMYear:
