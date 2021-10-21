@@ -327,7 +327,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy)) {
          let spath = "", scol = this.getColor(pt.fShadowColor);
          if (this.fillatt.empty()) {
-            if ((dx<0) && (dy<0))
+            if ((dx < 0) && (dy < 0))
                spath = "M0,0v"+(height-brd)+"h-"+brd+"v-"+height+"h"+width+"v"+brd;
             else // ((dx<0) && (dy>0))
                spath = "M0,"+height+"v-"+(height-brd)+"h-"+brd+"v"+height+"h"+width+"v-"+brd;
@@ -349,10 +349,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                .call(this.fillatt.func)
                .call(this.lineatt.func);
 
-      let rect = this.draw_g.append("svg:path")
-                     .attr("d", "M0,0h"+width + "v"+height + "h-"+width + "z")
-                     .call(this.fillatt.func)
-                     .call(this.lineatt.func);
+      const rect = this.draw_g
+                       .append("svg:path")
+                       .attr("d", "M0,0H"+width + "V"+height + "H0Z")
+                       .call(this.fillatt.func)
+                       .call(this.lineatt.func);
 
       if (typeof this.paveDrawFunc == 'function')
          promise = this.paveDrawFunc(width, height, arg);
