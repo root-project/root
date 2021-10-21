@@ -46,6 +46,7 @@ ROOT_ADD_GTEST(dataframe_take dataframe_take.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_entrylist dataframe_entrylist.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_merge_results dataframe_merge_results.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_samplecallback dataframe_samplecallback.cxx CounterHelper.h LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_vary dataframe_vary.cxx LIBRARIES ROOTDataFrame)
 
 #### TESTS FOR DIFFERENT DATASOURCES ####
 if (MSVC)
