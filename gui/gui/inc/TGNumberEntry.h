@@ -148,7 +148,7 @@ class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    public TGNumberFormat {
 
    // dummy data members - just to say about options for context menu
-   EStyle fNumStyle;//*OPTION={GetMethod="GetNumStyle";SetMethod="SetNumStyle";Items=(0="Int",5="Real",6="Degree",9="Hour:Min:Sec",10="Day/Month/Year",12="Hex")}*
+   EStyle fNumStyle;//*OPTION={GetMethod="GetNumStyle";SetMethod="SetNumStyle";Items=(0="Int",5="Real",6="Degree",9="Hour:Min:Sec",10="Day/Month/Year",12="Hex",13="Min:Sec.Centisec")}*
    EAttribute fNumAttr; // *OPTION={GetMethod="GetNumAttr";SetMethod="SetNumAttr";Items=(0="&AnyNumber",1="&Non negative",2="&Positive")}*
    ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(0="&No Limits",1="Limit M&in",2="Limit M&ax",2="Min &and Max")}*
 
