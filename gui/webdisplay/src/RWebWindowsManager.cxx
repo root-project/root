@@ -512,6 +512,11 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
       return 0;
 
+   // catch window showing, used by the RBrowser to embed some of ROOT widgets
+   if (fShowCallback)
+      if (fShowCallback(win, user_args))
+         return 0;
+
    // place here while involves conn mutex
    auto token = win.GetConnToken();
 
