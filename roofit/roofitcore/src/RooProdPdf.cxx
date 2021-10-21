@@ -505,7 +505,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   for (const RooAbsArg* i:_pdfList) {
@@ -518,7 +518,8 @@ void RooProdPdf::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatc
   }
   RooBatchCompute::ArgVector special{ static_cast<double>(pdfs.size()) };
   pdfs.push_back(&*_norm);
-  dispatch->compute(RooBatchCompute::ProdPdf, output, nEvents, dataMap, pdfs, special);
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, dataMap, pdfs, special);
 }
 
 namespace {

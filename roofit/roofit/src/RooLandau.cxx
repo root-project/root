@@ -61,9 +61,10 @@ Double_t RooLandau::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Landau distribution.  
-void RooLandau::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooLandau::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  dispatch->compute(RooBatchCompute::Landau, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Landau, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
