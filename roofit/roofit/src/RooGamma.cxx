@@ -87,9 +87,10 @@ Double_t RooGamma::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gamma PDF.  
-void RooGamma::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooGamma::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  dispatch->compute(RooBatchCompute::Gamma, output, nEvents, dataMap, {&*x,&*gamma,&*beta,&*mu,&*_norm});
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Gamma, output, nEvents, dataMap, {&*x,&*gamma,&*beta,&*mu,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

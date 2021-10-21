@@ -92,9 +92,10 @@ Double_t RooCBShape::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Crystal ball Shape distribution.
-void RooCBShape::computeBatch(RooBatchCompute::RooBatchComputeInterface* dispatch, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooCBShape::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  dispatch->compute(RooBatchCompute::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
 }
   
 ////////////////////////////////////////////////////////////////////////////////

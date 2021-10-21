@@ -324,10 +324,10 @@ double RooFitDriver::getVal()
          if (_getValInvocations == 1) {
             using namespace std::chrono;
             auto start = steady_clock::now();
-            node->computeBatch(RooBatchCompute::dispatchCPU, buffer, _nEvents, _dataMapCPU);
+            node->computeBatch(nullptr, buffer, _nEvents, _dataMapCPU);
             info.cpuTime = duration_cast<microseconds>(steady_clock::now() - start);
          } else
-            node->computeBatch(RooBatchCompute::dispatchCPU, buffer, _nEvents, _dataMapCPU);
+            node->computeBatch(nullptr, buffer, _nEvents, _dataMapCPU);
          if (info.copyAfterEvaluation) {
             double *gpuBuffer = getAvailableGPUBuffer();
             _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _nEvents);
@@ -347,12 +347,13 @@ double RooFitDriver::getVal()
       return 0.0;
 
    // recycle the top node's buffer and return the final value
-   if (_nodeInfos.at(&_topNode).computeInGPU) {
+   NodeInfo &info = _nodeInfos.at(&_topNode);
+   if (info.computeInGPU) {
       _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(&_topNode).data()));
-      return pNLLVarNew->reduce(RooBatchCompute::dispatchCUDA, _dataMapCUDA.at(&_topNode).data(), _nEvents);
+      return pNLLVarNew->reduce(info.stream, _dataMapCUDA.at(&_topNode).data(), _nEvents);
    } else {
       _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
-      return pNLLVarNew->reduce(RooBatchCompute::dispatchCPU, _dataMapCPU.at(&_topNode).data(), _nEvents);
+      return pNLLVarNew->reduce(nullptr, _dataMapCPU.at(&_topNode).data(), _nEvents);
    }
 }
 
@@ -392,10 +393,10 @@ void RooFitDriver::assignToGPU(const RooAbsReal *node)
       using namespace std::chrono;
       RooBatchCompute::dispatchCUDA->cudaEventRecord(info.eventStart, info.stream);
       auto start = steady_clock::now();
-      node->computeBatch(RooBatchCompute::dispatchCUDA, buffer, _nEvents, _dataMapCUDA);
+      node->computeBatch(info.stream, buffer, _nEvents, _dataMapCUDA);
       info.cudaTime = duration_cast<microseconds>(steady_clock::now() - start);
    } else
-      node->computeBatch(RooBatchCompute::dispatchCUDA, buffer, _nEvents, _dataMapCUDA);
+      node->computeBatch(info.stream, buffer, _nEvents, _dataMapCUDA);
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
       double *pinnedBuffer = getAvailablePinnedBuffer();
