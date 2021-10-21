@@ -1193,7 +1193,7 @@ void TGNumberEntryField::SetIntNumber(Long_t val, Bool_t emit)
 /// Set the numeric value (time format). In case of kNESMinSecCent, pass the
 /// centiseconds in the hour variable.
 
-void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec,Bool_t emit)
+void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESHourMinSec:
