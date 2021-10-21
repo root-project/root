@@ -39,10 +39,14 @@ struct PackedParameters {
    uint8_t m_nbits, m_nmantissa;
    float   m_scale;
    uint8_t m_flags;
+   const uint8_t c_uint = 10;
 };
 
 template <class T>
 struct PackedContainer : public std::vector<T>, public IAuxSetOption {
+   PackedContainer() = default;
+   PackedContainer(std::initializer_list<T> l, const PackedParameters& p) : std::vector<T>(l), m_params(p) {}
+
    PackedParameters m_params;
 };
 

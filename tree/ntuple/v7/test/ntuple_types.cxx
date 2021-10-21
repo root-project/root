@@ -221,15 +221,12 @@ TEST(RNTuple, TClassTemplatedBase)
       RNTupleWriteOptions options;
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       for (int i = 0; i < 10000; i++) {
-         PackedContainer<int> klass;
-         klass.m_params.m_nbits = (uint8_t)i;
-         klass.m_params.m_nmantissa = (uint8_t)i;
-         klass.m_params.m_scale = static_cast<float>(i + 1);
-         klass.m_params.m_flags = 0;
-
-         klass.push_back(i + 2);
-         klass.push_back(i + 3);
-         *fieldKlass = klass;
+         new (fieldKlass.get()) PackedContainer<int>({i + 2, i + 3},
+                                                     {/*m_nbits=*/ (uint8_t)i,
+                                                      /*m_nmantissa=*/ (uint8_t)i,
+                                                      /*m_scale=*/ static_cast<float>(i + 1),
+                                                      /*m_flags=*/ 0,
+                                                      /*c_uint=*/ (uint8_t)i});
          ntuple->Fill();
       }
    }
@@ -243,6 +240,7 @@ TEST(RNTuple, TClassTemplatedBase)
       EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.m_nmantissa);
       EXPECT_EQ((fi + 1), viewKlass(i).m_params.m_scale);
       EXPECT_EQ(0, viewKlass(i).m_params.m_flags);
+      EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.c_uint);
 
       EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2),
                                   static_cast<int>(i + 3)}), viewKlass(i));
