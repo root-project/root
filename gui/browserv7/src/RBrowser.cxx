@@ -177,7 +177,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 
       if (!fWebWindow) return false;
 
-      std::string url = "../"s + win.GetAddr() + "/";
+      std::string url = fWebWindow->GetRelativeAddr(win);
 
       auto widget = AddCatchedWidget(url, "rcanvas");
 
@@ -405,6 +405,8 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 
 std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(const std::string &url, const std::string &kind)
 {
+   if (url.empty()) return nullptr;
+
    std::string name = "catched"s + std::to_string(++fWidgetCnt);
 
    auto widget = std::make_shared<RBrowserCatchedWidget>(name, url, kind);
