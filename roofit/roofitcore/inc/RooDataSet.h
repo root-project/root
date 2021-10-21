@@ -114,7 +114,7 @@ public:
 
   void getBatches(RooBatchCompute::RunContext& evalData,
       std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const override;
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0) override;
@@ -174,6 +174,8 @@ private:
 #endif
   unsigned short _errorMsgCount{0}; //! Counter to silence error messages when filling dataset.
   bool _doWeightErrorCheck{true}; //! When adding events with weights, check that weights can actually be stored.
+
+  mutable std::unique_ptr<std::vector<double>> _sumW2Buffer; //! Buffer for sumW2 in case a batch of values is requested.
 
   ClassDefOverride(RooDataSet,2) // Unbinned data set
 };
