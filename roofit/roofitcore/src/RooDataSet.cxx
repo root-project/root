@@ -1019,8 +1019,35 @@ Double_t RooDataSet::weightSquared() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \see RooAbsData::getWeightBatch().
-RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len) const {
-  return _dstore->getWeightBatch(first, len);
+RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len, bool sumW2 /*=false*/) const {
+
+  std::size_t nEntries = this->numEntries(); // for the casting to std::size_t
+
+  if(first >= nEntries || (first + len) > nEntries) {
+    throw std::runtime_error("RooDataSet::getWeightBatch(): requested range not valid for dataset.");
+  }
+
+  RooSpan<const double> allWeights = _dstore->getWeightBatch(0, numEntries());
+  if(allWeights.empty()) return {};
+
+  if(!sumW2) return {std::cbegin(allWeights) + first, std::cbegin(allWeights) + first + len};
+
+  // Treat the sumW2 case with a result buffer, first reset buffer if the
+  // number of entries doesn't match with the dataset anymore
+  if(_sumW2Buffer && _sumW2Buffer->size() != nEntries) _sumW2Buffer.reset(nullptr);
+
+  if (!_sumW2Buffer) {
+    _sumW2Buffer = std::make_unique<std::vector<double>>();
+    _sumW2Buffer->reserve(nEntries);
+
+    for (std::size_t i = 0; i < nEntries; ++i) {
+      // Unlike in the RooDataHist case, the sum of weights squared for each
+      // entry is simply the square of the weight.
+      _sumW2Buffer->push_back(allWeights[i] * allWeights[i]);
+    }
+  }
+
+  return RooSpan<const double>(_sumW2Buffer->begin() + first, _sumW2Buffer->begin() + first + len);
 }
 
 

@@ -369,13 +369,13 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
         // Calculate sum of weights-squared here for extended term
         Double_t sumW2;
         if (_batchEvaluations) {
-          const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(0, _nEvents);
+          const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(0, _nEvents, /*sumW2=*/true);
           if (eventWeights.empty()) {
             sumW2 = (lastEvent - firstEvent) * _dataClone->weightSquared();
           } else {
             ROOT::Math::KahanSum<double, 4u> kahanWeight;
             for (std::size_t i = 0; i < eventWeights.size(); ++i) {
-              kahanWeight.AddIndexed(eventWeights[i] * eventWeights[i], i);
+              kahanWeight.AddIndexed(eventWeights[i], i);
             }
             sumW2 = kahanWeight.Sum();
           }
@@ -515,19 +515,14 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
 
 
   // Compute sum of event weights. First check if we need squared weights
-  const RooSpan<const double> eventWeights = dataClone->getWeightBatch(firstEvent, nEvents);
-  //Capture member for lambda:
-  const bool retrieveSquaredWeights = weightSq;
-  auto retrieveWeight = [&eventWeights, retrieveSquaredWeights](std::size_t i) {
-    return retrieveSquaredWeights ? eventWeights[i] * eventWeights[i] : eventWeights[i];
-  };
+  const RooSpan<const double> eventWeights = dataClone->getWeightBatch(firstEvent, nEvents, weightSq);
 
   //Sum the event weights and probabilities
   ROOT::Math::KahanSum<double, 4u> kahanProb;
   double uniformSingleEventWeight{0.0};
   double sumOfWeights;
   if (eventWeights.empty()) {
-    uniformSingleEventWeight = retrieveSquaredWeights ? dataClone->weightSquared() : dataClone->weight();
+    uniformSingleEventWeight = weightSq ? dataClone->weightSquared() : dataClone->weight();
     sumOfWeights = nEvents * uniformSingleEventWeight;
     for (std::size_t i = 0; i < results.size(); ++i) { //CHECK_VECTORISE
       kahanProb.AddIndexed(-uniformSingleEventWeight * results[i], i);
@@ -536,7 +531,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
     assert(results.size() == eventWeights.size());
     ROOT::Math::KahanSum<double, 4u> kahanWeight;
     for (std::size_t i = 0; i < results.size(); ++i) { //CHECK_VECTORISE
-      const double weight = retrieveWeight(i);
+      const double weight = eventWeights[i];
       kahanProb.AddIndexed(-weight * results[i], i);
       kahanWeight.AddIndexed(weight, i);
     }
@@ -549,7 +544,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
     ROOT::Math::KahanSum<double, 4u> kahanSanitised;
     RooNaNPacker nanPacker;
     for (std::size_t i = 0; i < results.size(); ++i) {
-      double weight = eventWeights.empty() ? uniformSingleEventWeight : retrieveWeight(i);
+      double weight = eventWeights.empty() ? uniformSingleEventWeight : eventWeights[i];
 
       if (weight == 0.)
         continue;
