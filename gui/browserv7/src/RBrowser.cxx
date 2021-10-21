@@ -171,7 +171,8 @@ RBrowser::RBrowser(bool use_rcanvas)
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 
    fWebWindow->GetManager()->SetShowCallback([this](RWebWindow &win, const RWebDisplayArgs &args) -> bool {
-      if (args.GetBrowserKind() != RWebDisplayArgs::kNative) return false;
+
+      if (!fCatchWindowShow || (args.GetBrowserKind() != RWebDisplayArgs::kNative)) return false;
 
       std::string kind;
 
