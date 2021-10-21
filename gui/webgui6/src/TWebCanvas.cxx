@@ -636,7 +636,9 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 
 void TWebCanvas::Show()
 {
-   ShowWebWindow();
+   ROOT::Experimental::RWebDisplayArgs args;
+   args.SetWidgetKind("TCanvas");
+   ShowWebWindow(args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
