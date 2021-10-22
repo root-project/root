@@ -239,8 +239,6 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
     // get the data values for this event
     hdata->get(i);
 
-    if (!hdata->valid()) continue;
-
     const double nData = hdata->weight() ;
 
     const double nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;

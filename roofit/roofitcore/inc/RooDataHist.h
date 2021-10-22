@@ -115,8 +115,6 @@ public:
   /// Return bin volume of i-th bin. \see getIndex()
   double binVolume(std::size_t i) const { return _binv[i]; }
   double binVolume(const RooArgSet& bin) const;
-  /// Return true if bin `i` is considered valid within the current range definitions of all observables. \see getIndex()
-  bool valid(std::size_t i) const { return i <= static_cast<std::size_t>(_arrSize) && (_maskedWeights.empty() || _maskedWeights[i] != 0.);}
 
   TIterator* sliceIterator(RooAbsArg& sliceArg, const RooArgSet& otherArgs) ;
 
@@ -162,9 +160,6 @@ public:
 
   void removeSelfFromDir() { removeFromDir(this) ; }
 
-  // A shortcut function only for RooAbsOptTestStatistic.
-  void cacheValidEntries();
-
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// @name Deprecated functions
@@ -199,13 +194,6 @@ public:
   /// Write `weight` into current bin. \deprecated Use set(std::size_t,double,double)
   void set(double wgt, double wgtErr=-1)
   R__SUGGEST_ALTERNATIVE("Use set(std::size_t,double,double).");
-
-  /// Return true if currently loaded coordinate is considered valid within
-  /// the current range definitions of all observables.
-  /// \deprecated Use the safer valid(std::size_t) const.
-  bool valid() const override
-  R__SUGGEST_ALTERNATIVE("Use valid(std::size_t).")
-  { return _curIndex <= static_cast<std::size_t>(_arrSize) && (_maskedWeights.empty() || _maskedWeights[_curIndex] != 0.);}
 
   void dump2();
 
@@ -278,9 +266,6 @@ protected:
   mutable double* _errHi{nullptr}; ///<[_arrSize] High-side error on weight array
   mutable double* _sumw2{nullptr}; ///<[_arrSize] Sum of weights^2
   double*         _binv {nullptr}; ///<[_arrSize] Bin volume array
-
-  mutable std::vector<double> _maskedWeights; ///<! Copy of _wgt, but masked events have a weight of zero.
-  mutable std::vector<double> _maskedSumw2;   ///<! Copy of _sumW2, but masked events have a weight of zero.
 
   mutable ULong64_t _curIndex{std::numeric_limits<ULong64_t>::max()}; ///< Current index
 

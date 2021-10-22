@@ -248,8 +248,6 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
       _dataClone->get(i) ;
 
-      if (!_dataClone->valid()) continue;
-
       double eventWeight = _dataClone->weight();
 
 
@@ -392,7 +390,6 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
     if (dataClone->weight() == 0.) // 0-weight events are not cached, so cannot compare against them.
       continue;
 
-    assert(dataClone->valid());
     try {
       // Cross check results with strict tolerance and complain
       BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *evalData, evtNo-firstEvent, normSet, 1.E-13);
@@ -482,8 +479,6 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
 
   for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
     dataClone->get(i) ;
-
-    if (!dataClone->valid()) continue;
 
     double eventWeight = dataClone->weight(); //FIXME
     if (0. == eventWeight * eventWeight) continue ;
