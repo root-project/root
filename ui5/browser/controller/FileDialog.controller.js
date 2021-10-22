@@ -390,6 +390,9 @@ sap.ui.define(['rootui5/panel/Controller',
          if (args.can_change_path !== undefined)
             server_args.push(args.can_change_path ? "__canChangePath__" : "__cannotChangePath__");
 
+         if (args.working_path && typeof args.working_path == "string")
+            server_args.push("__workingPath__", args.working_path);
+
          // add at the end filter and filter array
          if (args.filter || args.filters) {
             server_args.push(args.filter || "Any files");
@@ -429,34 +432,36 @@ sap.ui.define(['rootui5/panel/Controller',
       }
    });
 
-   /** Function to initiate SaveAs dialog from client side
-    * Following arguments has to be specified:
+   /** @summary Function to initiate SaveAs dialog from client side
+    * @desc Following arguments has to be specified:
     * args.websocket - current available connection, used to send "FILEDIALOG:" request
     * args.filename - initial file name in the dialog
     * args.title - title used for the dialog
     * args.can_change_path - if it is allowed to change path
+    * args.working_path - initial working path in dialog like "/Home/storage"
+    * args.filters - array of supported extensions like ["C++ files (*.cxx *.cpp *.c)", "Text files (*.txt)", "Any files (*)" ]
+    * args.filter - selected extension like "Any files"
     * args.onOk - handler when file is selected and "Ok" button is pressed
     * args.onCancel - handler when "Cancel" button is pressed
-    * args.onFailure - handler when any failure appears, dialog will be closed afterwards
-    */
+    * args.onFailure - handler when any failure appears, dialog will be closed afterwards */
    FileDialog.SaveAs = function(args) {
       let controller = new FileDialog();
-
       return controller._initDialog("SaveAs", args);
    }
 
+   /** @summary Function to initiate NewFile dialog from client side,
+     * @desc See @ref FileDialog.SaveAs for supported parameters */
    FileDialog.NewFile = function(args) {
       let controller = new FileDialog();
-
       return controller._initDialog("NewFile", args);
    }
 
+   /** @summary Function to initiate OpenFile dialog from client side,
+     * @desc See @ref FileDialog.SaveAs for supported parameters */
    FileDialog.OpenFile = function(args) {
       let controller = new FileDialog();
-
       return controller._initDialog("OpenFile", args);
    }
-
 
    return FileDialog;
 
