@@ -709,6 +709,41 @@ static int tpp_setuseffi(CPPOverload*, PyObject*, void*)
     return 0;                 // dummy (__useffi__ unused)
 }   
 
+static PyObject* tpp_templateargs(TemplateProxy* pytmpl, void*) {
+    if (pytmpl->fTemplateArgs != 0) {
+        Py_INCREF((PyObject*)pytmpl->fTemplateArgs);
+        return (PyObject*)pytmpl->fTemplateArgs;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* tpp_templatedoverloads(TemplateProxy* pytmpl, void*) {
+    if (pytmpl->fTI && pytmpl->fTI->fTemplated != 0) {
+        Py_INCREF((PyObject*)pytmpl->fTI->fTemplated);
+        return (PyObject*)pytmpl->fTI->fTemplated;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* tpp_nontemplatedoverloads(TemplateProxy* pytmpl, void*) {
+    if (pytmpl->fTI && pytmpl->fTI->fNonTemplated != 0) {
+        Py_INCREF((PyObject*)pytmpl->fTI->fNonTemplated);
+        return (PyObject*)pytmpl->fTI->fNonTemplated;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* tpp_lowpriorityoverloads(TemplateProxy* pytmpl, void*) {
+    if (pytmpl->fTI && pytmpl->fTI->fLowPriority != 0) {
+        Py_INCREF((PyObject*)pytmpl->fTI->fLowPriority);
+        return (PyObject*)pytmpl->fTI->fLowPriority;
+    }
+
+    Py_RETURN_NONE;
+}
 
 //----------------------------------------------------------------------------
 static PyMappingMethods tpp_as_mapping = {
@@ -719,6 +754,10 @@ static PyGetSetDef tpp_getset[] = {
     {(char*)"__doc__", (getter)tpp_doc, nullptr, nullptr, nullptr},
     {(char*)"__useffi__", (getter)tpp_getuseffi, (setter)tpp_setuseffi,
       (char*)"unused", nullptr},
+    {(char*)"im_templateargs", (getter)tpp_templateargs, nullptr, nullptr, nullptr},
+    {(char*)"im_nontemplatedoverloads", (getter)tpp_nontemplatedoverloads, nullptr, nullptr, nullptr},
+    {(char*)"im_templatedoverloads", (getter)tpp_templatedoverloads, nullptr, nullptr, nullptr},
+    {(char*)"im_lowpriorityoverloads", (getter)tpp_lowpriorityoverloads, nullptr, nullptr, nullptr},
     {(char*)nullptr,   nullptr,         nullptr, nullptr, nullptr}
 };
 
