@@ -41,7 +41,7 @@ public:
    const std::string &GetIcon() const { return icon; }
    const std::string &GetTitle() const { return title; }
    const std::string &GetSize() const { return fsize; }
-   virtual bool IsFolder() const { return false; }
+   virtual bool IsFolder() const { return nchilds != 0; }
    virtual bool IsHidden() const { return false; }
 
    void SetChecked(bool on = true) { checked = on; }
@@ -66,7 +66,6 @@ public:
          fsize = std::to_string(_size);
       }
    }
-
 
    virtual bool Compare(const RItem *b, const std::string &) const
    {
