@@ -17,6 +17,7 @@ This class describes one single function template.
 #include "TFunctionTemplate.h"
 #include "TInterpreter.h"
 #include "TClass.h"
+#include "TFunction.h"
 
 ClassImp(TFunctionTemplate);
 
@@ -24,7 +25,7 @@ ClassImp(TFunctionTemplate);
 /// Default TFunctionTemplate ctor.
 
 TFunctionTemplate::TFunctionTemplate(FuncTempInfo_t *info, TClass *cl) : TDictionary(),
-   fInfo(info), fClass(cl)
+   fInfo(info), fClass(cl), fFunction(nullptr)
 {
    if (fInfo) {
       gCling->FuncTempInfo_Name(fInfo,fName);
@@ -42,6 +43,7 @@ TFunctionTemplate::TFunctionTemplate(const TFunctionTemplate &orig) : TDictionar
    } else
       fInfo = nullptr;
    fClass = orig.fClass;
+   fFunction = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +59,7 @@ TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
          gCling->FuncTempInfo_Title(fInfo,fTitle);
       } else
          fInfo = nullptr;
+      fFunction = nullptr;
    }
    return *this;
 }
@@ -67,6 +70,9 @@ TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
 TFunctionTemplate::~TFunctionTemplate()
 {
    gCling->FuncTempInfo_Delete(fInfo);
+   if (fFunction) {
+      delete fFunction;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,5 +163,16 @@ Bool_t TFunctionTemplate::Update(FuncTempInfo_t *info)
       gCling->FuncTempInfo_Title(fInfo,fTitle);
       return kTRUE;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+TFunction *TFunctionTemplate::Function() {
+   if (!fFunction) {
+      if (!gInterpreter)
+         Fatal("Function", "gInterpreter not initialized");
+
+      gInterpreter->CreateFunction(this);
+   }
+   return fFunction;
 }
 

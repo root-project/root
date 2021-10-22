@@ -4386,6 +4386,21 @@ std::vector<std::string> TCling::GetUsingNamespaces(ClassInfo_t *cl) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create the underlying function object for a function template
+void TCling::CreateFunction(TFunctionTemplate *ft) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   if (ft->fFunction) {
+      return;
+   }
+   const clang::FunctionTemplateDecl *ftdecl = (const clang::FunctionTemplateDecl*)(ft->fInfo);
+   const clang::FunctionDecl *fdecl = ftdecl->getTemplatedDecl();
+
+   MethodInfo_t *methodinfo = MethodInfo_Factory(fdecl->getCanonicalDecl());
+   ft->fFunction = new TFunction(methodinfo);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create list of pointers to data members for TClass cl.
 /// This is now a nop.  The creation and updating is handled in
 /// TListOfDataMembers.
