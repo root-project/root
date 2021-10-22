@@ -366,6 +366,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             title: "Select file name to save",
             filter: "Any files",
             filters: ["Text files (*.txt)", "C++ files (*.cxx *.cpp *.c)", "Any files (*)"],
+            // working_path: "/Home",
             onOk: fname => {
                let p = Math.max(fname.lastIndexOf("/"), fname.lastIndexOf("\\"));
                let title = (p > 0) ? fname.substr(p+1) : fname;
@@ -375,8 +376,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.syncEditor(tab, "SAVE");
                this.doReload(true); // while new file appears, one should reload items on server
             },
-            onCancel: function() { },
-            onFailure: function() { }
+            onCancel: () => { },
+            onFailure: () => { }
          });
       },
 
