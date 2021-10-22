@@ -244,10 +244,16 @@ static std::vector<std::vector<Long64_t>> GetFriendEntries(const Internal::TreeU
          // Traverse together filenames and respective treenames
          for (auto fileidx = 0u; fileidx < thisFriendFiles.size(); ++fileidx) {
             std::unique_ptr<TFile> curfile(TFile::Open(thisFriendFiles[fileidx].c_str()));
-            TTree *curtree = nullptr; // owned by TFile
+            if (!curfile || curfile->IsZombie())
+               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not open file \"" +
+                                        thisFriendFiles[fileidx] + "\"");
             // thisFriendChainSubNames[fileidx] stores the name of the current
             // subtree in the TChain stored in the current file.
-            curfile->GetObject(thisFriendChainSubNames[fileidx].c_str(), curtree);
+            TTree *curtree = curfile->Get<TTree>(thisFriendChainSubNames[fileidx].c_str());
+            if (!curtree)
+               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not retrieve TTree \"" +
+                                        thisFriendChainSubNames[fileidx] + "\" from file \"" +
+                                        thisFriendFiles[fileidx] + "\"");
             nEntries.emplace_back(curtree->GetEntries());
          }
          // Otherwise, if there are no sub names for the current friend, it means
@@ -256,8 +262,12 @@ static std::vector<std::vector<Long64_t>> GetFriendEntries(const Internal::TreeU
       } else {
          for (const auto &fname : thisFriendFiles) {
             std::unique_ptr<TFile> f(TFile::Open(fname.c_str()));
-            TTree *t = nullptr; // owned by TFile
-            f->GetObject(thisFriendName.c_str(), t);
+            if (!f || f->IsZombie())
+               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not open file \"" + fname + "\"");
+            TTree *t = f->Get<TTree>(thisFriendName.c_str());
+            if (!t)
+               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not retrieve TTree \"" +
+                                        thisFriendName + "\" from file \"" + fname + "\"");
             nEntries.emplace_back(t->GetEntries());
          }
       }
