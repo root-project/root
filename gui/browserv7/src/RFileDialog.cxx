@@ -455,6 +455,11 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
       arr->erase(arr->begin() + 3, arr->begin() + 4); // erase element 3
    }
 
+   if ((arr->size() > 4) && (arr->at(3) == "__workingPath__"s)) {
+      dialog->SetWorkingPath(arr->at(4));
+      arr->erase(arr->begin() + 3, arr->begin() + 5); // erase two elements used to set working path
+   }
+
    if (arr->size() > 4) {
       dialog->SetSelectedFilter(arr->at(3));
       arr->erase(arr->begin(), arr->begin() + 4); // erase 4 elements, keep only list of filters
