@@ -54,7 +54,7 @@ public:
    /** Size of TObject */
    virtual Long64_t GetSize() const { return -1; }
 
-   bool IsFolder();
+   bool IsFolder() const;
 
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override;
