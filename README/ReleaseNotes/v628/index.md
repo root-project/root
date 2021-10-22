@@ -44,10 +44,15 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 - The deprecated function `ROOT::Detail::RDF::RActionImpl<Helper>::GetDataBlockCallback()` is removed; please use `GetSampleCallback()` instead.
 - The deprecated RooFit containers `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList` are removed. Please use STL container classes instead, like `std::unordered_map`, `std::set`, and `std::vector`.
 - The `RooFit::FitOptions(const char*)` command to steer [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v628/classRooAbsPdf.html) with an option string was removed. This way of configuring the fit was deprecated since at least since ROOT 5.02.
-  Subsequently, the `RooMinimizer::fit(const char*)` function and the [RooMCStudy](https://root.cern.ch/doc/v628/classRooMCStudy.html) constructor that takes an option string was removed as well.
+  Subsequently, the `RooMinimizer::fit(const char*)` function and the [RooMCStudy](https://root.cern.ch/doc/v628/classRooMCStudy.html) constructor that takes an option string were removed as well.
 - The overload of `RooAbsData::createHistogram` that takes integer parameters for the bin numbers is now deprecated and will be removed in ROOT 6.30.
   This was done to avoid confusion with inconsistent behavior when compared to other `createHistogram` overloads.
   Please use the verson of `createHistogram` that takes RooFit command arguments.
+- The `RooAbsData::valid()` method to cache valid entries in the variable range
+  was removed. It was not implemented in RooDataSet, so it never worked as
+  intended. Related to it was the `RooDataHist::cacheValidEntries()` function, which is removed as well.
+  The preferred way to reduce RooFit datasets to subranges is [RooAbsData::reduce()](https://root.cern.ch/doc/v628/classRooAbsData.html#acfa7b31e5cd751eec1bc4e95d2796390).
+
 
 ## Core Libraries
 

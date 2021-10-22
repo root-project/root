@@ -376,8 +376,6 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   RooDataHist dataHist("dataHist", "Data histogram with batch access",
       RooArgSet(x), RooFit::Index(cat), RooFit::Import("catX", *histoX), RooFit::Import("catY", *histoY));
 
-  dataHist.cacheValidEntries();
-
   const std::size_t numEntries = (std::size_t)dataHist.numEntries();
   ASSERT_EQ(numEntries, 26ul);
 
@@ -414,60 +412,6 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   ASSERT_FALSE(weights.empty());
   ASSERT_EQ(weights.size(), numEntries);
   EXPECT_TRUE(std::none_of(weights.begin(), weights.end(), [](double arg){return arg == 0.;}));
-}
-
-
-TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRangeWithMasking) {
-  RooRealVar x("x", "x", 0, -10, 10);
-  RooCategory cat("cat", "category");
-
-  auto histoX = std::make_unique<TH1D>("xHist", "xHist", 20, -10., 10.);
-  auto histoY = std::make_unique<TH1D>("yHist", "yHist", 20, -10., 10.);
-  fillHist(histoX.get(), 0.2);
-  fillHist(histoY.get(), 0.3);
-
-  RooDataHist dataHist("dataHist", "Data histogram with batch access",
-      RooArgSet(x), RooFit::Index(cat), RooFit::Import("catX", *histoX), RooFit::Import("catY", *histoY));
-
-  const RooArgSet& vars = *dataHist.get();
-  auto catp = dynamic_cast<RooCategory*>(vars[0ul]);
-  auto xp = dynamic_cast<RooRealVar*>(vars[1]);
-  ASSERT_NE(catp, nullptr);
-  ASSERT_NE(xp, nullptr);
-  ASSERT_STREQ(catp->GetName(), "cat");
-  ASSERT_STREQ(xp->GetName(), "x");
-
-  xp->setRange(-8., 5.);
-  dataHist.cacheValidEntries();
-
-  const std::size_t numEntries = (std::size_t)dataHist.numEntries();
-  ASSERT_EQ(numEntries, 40ul);
-
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
-
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch      = xp->getValues(evalData);
-
-  ASSERT_FALSE(xBatchShort.empty());
-  ASSERT_FALSE(xBatch.empty());
-
-  EXPECT_EQ(xBatchShort.size(), 10ul);
-  EXPECT_EQ(xBatch.size(), numEntries);
-
-  EXPECT_EQ(xBatch[15], histoX->GetXaxis()->GetBinCenter(15+1));
-  EXPECT_EQ(xBatch[35], histoX->GetXaxis()->GetBinCenter(15+1));
-
-  auto weights = dataHist.getWeightBatch(0, numEntries);
-  ASSERT_FALSE(weights.empty());
-  ASSERT_EQ(weights.size(), numEntries);
-  EXPECT_TRUE(std::any_of(weights.begin(), weights.end(), [](double arg){return arg == 0.;}));
-
-  for (unsigned int i=0; i < numEntries; ++i) {
-    EXPECT_TRUE((-8. < xBatch[i] && xBatch[i] < 5.) || weights[i] == 0.);
-  }
 }
 
 double integrate(RooAbsReal &absReal, const RooArgSet &iset, const RooArgSet &nset, const char *rangeName = 0)

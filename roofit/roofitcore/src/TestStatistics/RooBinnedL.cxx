@@ -97,9 +97,6 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
 
       data_->get(i);
 
-      if (!data_->valid())
-         continue;
-
       double eventWeight = data_->weight();
 
       // Calculate log(Poisson(N|mu) for this bin

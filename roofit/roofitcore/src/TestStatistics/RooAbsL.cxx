@@ -179,12 +179,18 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    // TODO
 
-   // If dataset is binned, activate caching of bins that are invalid because they're outside the
-   // updated range definition (WVE need to add virtual interface here)
-   RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
-   if (tmph) {
-      tmph->cacheValidEntries();
-   }
+   // Jonas R.: The following code is commented out, because the functionality
+   // to mask out-ot-range entries with `RooDataHist::cacheValidEntries` has
+   // been removed from the RooDataHist. If you want to implement ranged fits
+   // properly, please create a RooDataHist for the requested range with
+   // `RooDataHist::reduce`.
+
+   //// If dataset is binned, activate caching of bins that are invalid because they're outside the
+   //// updated range definition (WVE need to add virtual interface here)
+   //RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
+   //if (tmph) {
+      //tmph->cacheValidEntries();
+   //}
 
    // This is deferred from part 2 - but must happen after part 3 - otherwise invalid bins cannot be properly marked in
    // cacheValidEntries
