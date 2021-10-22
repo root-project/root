@@ -353,13 +353,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // *** PART 3.2 *** Binned fits                                     *
   // ******************************************************************
 
-  // If dataset is binned, activate caching of bins that are invalid because the're outside the
-  // updated range definition (WVE need to add virtual interface here)
-  RooDataHist* tmph = dynamic_cast<RooDataHist*>(_dataClone) ;
-  if (tmph) {
-    tmph->cacheValidEntries() ;
-  }
-
   setUpBinSampling();
 
 

@@ -1882,12 +1882,7 @@ Int_t RooDataHist::numEntries() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Sum the weights of all bins.
 double RooDataHist::sumEntries() const {
-
-  if (_maskedWeights.empty()) {
-    return ROOT::Math::KahanSum<double>::Accumulate(_wgt, _wgt + _arrSize);
-  } else {
-    return ROOT::Math::KahanSum<double>::Accumulate(_maskedWeights.begin(), _maskedWeights.end());
-  }
+  return ROOT::Math::KahanSum<double>::Accumulate(_wgt, _wgt + _arrSize);
 }
 
 
@@ -1915,9 +1910,7 @@ double RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
     ROOT::Math::KahanSum<> kahanSum;
     for (Int_t i=0; i < _arrSize; i++) {
       get(i) ;
-      if ((!_maskedWeights.empty() && _maskedWeights[i] == 0.)
-          || (select && select->eval() == 0.)
-          || (cutRange && !_vars.allInRange(cutRange)))
+      if ((select && select->eval() == 0.) || (cutRange && !_vars.allInRange(cutRange)))
           continue;
 
       kahanSum += weight(i);
@@ -2071,31 +2064,6 @@ void RooDataHist::printArgs(ostream& os) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute which bins of the dataset are part of the currently set fit range.
-void RooDataHist::cacheValidEntries()
-{
-  checkInit() ;
-
-  _maskedWeights.assign(_wgt, _wgt + _arrSize);
-  if(_sumw2) _maskedSumw2.assign(_sumw2, _sumw2 + _arrSize);
-
-  for (Int_t i=0; i < _arrSize; ++i) {
-    get(i) ;
-
-    for (const auto arg : _vars) {
-      if (!arg->inRange(nullptr)) {
-        _maskedWeights[i] = 0.;
-        if(_sumw2) _maskedSumw2[i] = 0.;
-        break;
-      }
-    }
-  }
-
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Returns true if dataset contains entries with a non-integer weight.
 
 bool RooDataHist::isNonPoissonWeighted() const
@@ -2220,15 +2188,7 @@ void RooDataHist::Streamer(TBuffer &R__b) {
 /// Return event weights of all events in range [first, first+len).
 /// If cacheValidEntries() has been called, out-of-range events will have a weight of 0.
 RooSpan<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len, bool sumW2 /*=false*/) const {
-  if(sumW2 && _sumw2) {
-    return _maskedSumw2.empty() ?
-        RooSpan<const double>{_sumw2 + first, len} :
-        RooSpan<const double>{_maskedSumw2.data() + first, len};
-  } else {
-    return _maskedWeights.empty() ?
-        RooSpan<const double>{_wgt + first, len} :
-        RooSpan<const double>{_maskedWeights.data() + first, len};
-  }
+  return {(sumW2 && _sumw2 ? _sumw2 : _wgt) + first, len};
 }
 
 

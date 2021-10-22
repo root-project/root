@@ -108,7 +108,6 @@ public:
   }
   virtual double weight() const = 0 ; // DERIVED
   virtual double weightSquared() const = 0 ; // DERIVED
-  virtual bool valid() const { return true ; }
 
   enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
   /// Return the symmetric error on the current weight.

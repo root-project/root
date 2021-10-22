@@ -408,14 +408,6 @@ double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
     // get the data values for this event
     xydata->get(i);
 
-    if (!xydata->valid()) {
-      continue ;
-    }
-
-//     cout << "xydata = " << endl ;
-//     xydata->get()->Print("v") ;
-    //xydata->store()->dump() ;
-
     // Get function value
     double yfunc = fy() ;
 
