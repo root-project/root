@@ -295,10 +295,11 @@ public:
    /// // alternatively, we can pass the body of the function as a string, as in Filter:
    /// auto df_with_define = df.Define("newColumn", "x*x + y*y");
    /// ~~~
-   template <typename F, typename std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
-   RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   template <typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_convertible<F, std::string>::value, RInterface<Proxied, DS_t>>
+   Define(std::string_view name, F &&expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Define");
+      return DefineImpl<RDFDetail::CustomColExtraArgs::None, ColumnTypes, RetType>(name, std::forward<F>(expression), columns, "Define");
    }
    // clang-format on
 
@@ -324,10 +325,11 @@ public:
    /// ~~~
    ///
    /// See Define for more information.
-   template <typename F>
-   RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   template <typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_convertible<F, std::string>::value, RInterface<Proxied, DS_t>>
+   DefineSlot(std::string_view name, F &&expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "DefineSlot");
+      return DefineImpl<RDFDetail::CustomColExtraArgs::Slot, ColumnTypes, RetType>(name, std::forward<F>(expression), columns, "DefineSlot");
    }
    // clang-format on
 
@@ -354,12 +356,13 @@ public:
    /// ~~~
    ///
    /// See Define for more information.
-   template <typename F>
-   RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   template <typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_convertible<F, std::string>::value, RInterface<Proxied, DS_t>>
+   DefineSlotEntry(std::string_view name, F &&expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns,
-                                                                        "DefineSlotEntry");
+      return DefineImpl<RDFDetail::CustomColExtraArgs::SlotAndEntry, ColumnTypes, RetType>(name, std::forward<F>(expression), columns, "DefineSlotEntry");
    }
+
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
@@ -405,10 +408,11 @@ public:
    ///
    /// An exception is thrown in case the column to redefine does not already exist.
    /// See Define() for more information.
-   template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
-   RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   template <typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_convertible<F, std::string>::value, RInterface<Proxied, DS_t>>
+   Redefine(std::string_view name, F &&expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Redefine");
+      return DefineImpl<RDFDetail::CustomColExtraArgs::None, ColumnTypes, RetType>(name, std::forward<F>(expression), columns, "Redefine");
    }
 
    // clang-format off
@@ -424,10 +428,11 @@ public:
    ///
    /// See DefineSlot() for more information.
    // clang-format on
-   template <typename F>
-   RInterface<Proxied, DS_t> RedefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   template <typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_convertible<F, std::string>::value, RInterface<Proxied, DS_t>>
+   RedefineSlot(std::string_view name, F &&expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "RedefineSlot");
+      return DefineImpl<RDFDetail::CustomColExtraArgs::Slot, ColumnTypes, RetType>(name, std::forward<F>(expression), columns, "RedefineSlot");
    }
 
    // clang-format off
@@ -443,11 +448,11 @@ public:
    ///
    /// See DefineSlotEntry() for more information.
    // clang-format on
-   template <typename F>
-   RInterface<Proxied, DS_t> RedefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   template <typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_convertible<F, std::string>::value, RInterface<Proxied, DS_t>>
+   RedefineSlotEntry(std::string_view name, F &&expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns,
-                                                                        "RedefineSlotEntry");
+      return DefineImpl<RDFDetail::CustomColExtraArgs::SlotAndEntry, ColumnTypes, RetType>(name, std::forward<F>(expression), columns, "RedefineSlotEntry");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2648,6 +2653,22 @@ public:
       return Display(selectedColumns, nRows, nMaxCollectionElements);
    }
 
+   std::vector<std::string> ValidatedArgTypes(const ColumnNames_t &columns, std::string_view context, bool vector2rvec) {
+      std::string contextstr(context);
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columns, contextstr);
+
+      const auto validColumnNames =
+         GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
+      return GetValidatedArgTypes(validColumnNames, fDefines, fLoopManager->GetTree(), fDataSource,
+                                                 contextstr, vector2rvec);
+   }
+
+   std::tuple<std::string, std::vector<std::string>, std::vector<std::string>> BuildLambdaWithArgsAndTypes(std::string_view expression, std::string_view context) {
+
+      return BuildLambdaWithArgsAndTypesImpl(expression, *fLoopManager, fDataSource, fDefines,
+                                                     fLoopManager->GetBranchNames(), std::string(context));
+   }
+
 private:
    void AddDefaultColumns()
    {
@@ -2761,9 +2782,37 @@ private:
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
 
-   template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
-   std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>
+   template <typename DefineType, typename ColumnTypes = RDFDetail::RInferredType, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<std::is_same<ColumnTypes, RDFDetail::RInferredType>::value, RInterface<Proxied, DS_t>>
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
+   {
+      // infer column types from expression type
+      using ArgTypesTmp_t = typename TTraits::CallableTraits<std::decay_t<F>>::arg_types;
+      using ArgTypesTmp2_t = typename RDFInternal::RemoveFirstParameterIf<
+         std::is_same<DefineType, RDFDetail::CustomColExtraArgs::Slot>::value, ArgTypesTmp_t>::type;
+      using ArgTypes_t = typename RDFInternal::RemoveFirstTwoParametersIf<
+         std::is_same<DefineType, RDFDetail::CustomColExtraArgs::SlotAndEntry>::value, ArgTypesTmp2_t>::type;
+
+      using ActualRetType = std::conditional_t<std::is_same<RetType, RDFDetail::RInferredType>::value, typename TTraits::CallableTraits<std::decay_t<F>>::ret_type, RetType>;
+
+      return DefineImpl2<DefineType, ArgTypes_t, ActualRetType>(name, std::forward<F>(expression), columns, where);
+   }
+
+   template <typename DefineType, typename ColumnTypes, typename RetType = RDFDetail::RInferredType, typename F>
+   std::enable_if_t<!std::is_same<ColumnTypes, RDFDetail::RInferredType>::value, RInterface<Proxied, DS_t>>
+   DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
+   {
+      // explicitly specify column types
+      using ArgTypes_t = ROOT::Internal::RDF::Decay_t<ColumnTypes>;
+
+      using ActualRetType = std::conditional_t<std::is_same<RetType, RDFDetail::RInferredType>::value, ROOT::Internal::RDF::Result_t<std::decay_t<F>, ArgTypes_t>, RetType>;
+
+      return DefineImpl2<DefineType, ArgTypes_t, ActualRetType>(name, std::forward<F>(expression), columns, where);
+   }
+
+   template <typename DefineType, typename ArgTypes_t, typename RetType, typename F>
+   std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>
+   DefineImpl2(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
    {
       RDFInternal::CheckValidCppVarName(name, where);
       if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
@@ -2776,16 +2825,10 @@ private:
                                          fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       }
 
-      using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
-      using ColTypesTmp_t = typename RDFInternal::RemoveFirstParameterIf<
-         std::is_same<DefineType, RDFDetail::CustomColExtraArgs::Slot>::value, ArgTypes_t>::type;
-      using ColTypes_t = typename RDFInternal::RemoveFirstTwoParametersIf<
-         std::is_same<DefineType, RDFDetail::CustomColExtraArgs::SlotAndEntry>::value, ColTypesTmp_t>::type;
-
-      constexpr auto nColumns = ColTypes_t::list_size;
+      constexpr auto nColumns = ArgTypes_t::list_size;
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-      CheckAndFillDSColumns(validColumnNames, ColTypes_t());
+      CheckAndFillDSColumns(validColumnNames, ArgTypes_t());
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
@@ -2796,7 +2839,7 @@ private:
          retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
       }
 
-      using NewCol_t = RDFDetail::RDefine<F, DefineType>;
+      using NewCol_t = RDFDetail::RDefine<std::decay_t<F>, DefineType, ArgTypes_t, RetType>;
       auto newColumn =
          std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
                                     fLoopManager->GetNSlots(), fDefines, fLoopManager->GetDSValuePtrs(), fDataSource);
@@ -2812,13 +2855,13 @@ private:
    // This overload is chosen when the callable passed to Define or DefineSlot returns void.
    // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
    // this way compilation of `Define` has no way to continue after throwing the error.
-   template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type,
+   template <typename DefineType, typename ArgTypes_t, typename RetType, typename F,
              bool IsFStringConv = std::is_convertible<F, std::string>::value,
              bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
    std::enable_if_t<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>
-   DefineImpl(std::string_view, F, const ColumnNames_t &)
+   DefineImpl2(std::string_view, F&&, const ColumnNames_t &,  const std::string &)
    {
-      static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+      static_assert(IsRetTypeDefConstr,
                     "Error in `Define`: type returned by expression is not default-constructible");
       return *this; // never reached
    }
