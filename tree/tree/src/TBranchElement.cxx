@@ -2231,7 +2231,7 @@ void TBranchElement::InitInfo()
                if (parent && parent->fOnfileObject == nullptr)
                   parent->fOnfileObject = fOnfileObject;
             }
-            // Propage this to all the other branch of this type.
+            // Propagate this to all the other branch belonging to the same object.
             TObjArray *branches = toplevel ? GetListOfBranches() : GetMother()->GetSubBranch(this)->GetListOfBranches();
             Int_t nbranches = branches->GetEntriesFast();
             TBranchElement *lastbranch = this;
@@ -2279,8 +2279,23 @@ void TBranchElement::InitInfo()
                      }
                   }
                }
+            } else {
+               // Case of a top level branch or 'empty node' (object marker for split sub-object)
+               TString fullname( GetFullName() );
+               Ssiz_t lastdot = fullname.Last('.');
+               if (lastdot != TString::kNPOS) {
+                  TString &thisprefix = fullname.Remove(lastdot + 1);  // Mod fullname and 'rename' the variable.
+                  for(Int_t i = 0; i < nbranches; ++i) {
+                     TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+                     TString subbranch_name(subbranch->GetFullName());
+                     if ( ! subbranch_name.BeginsWith(thisprefix)) {
+                        lastindex = i - 1;
+                        break;
+                     }
+                  }
+               }
             }
-            for (Int_t i = firstindex; i < nbranches; ++i) {
+            for (Int_t i = firstindex; i <= lastindex; ++i) {
                TBranchElement* subbranch = (TBranchElement*)branches->At(i);
                Bool_t match = kFALSE;
                if (this != subbranch) {
@@ -2304,11 +2319,6 @@ void TBranchElement::InitInfo()
                   }
                }
                if (match) {
-                  TLeafElement *subleaf = dynamic_cast<TLeafElement*>(subbranch->GetListOfLeaves()->At(0));
-                  auto branchid = subleaf ? subleaf->GetID() : subbranch->GetID();
-                  if (i != firstindex && branchid <= firstid) {
-                     break;
-                  }
                   if (subbranch->fOnfileObject && subbranch->fOnfileObject != fOnfileObject) {
                      if (seenExisting) {
                         Error("SetOnfileObject (lambda)", "2 distincts fOnfileObject are in the hierarchy of %s for type %s",
