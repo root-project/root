@@ -15,11 +15,9 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 import ROOT
-from ROOT.pythonization._rdataframe import AsNumpyResult
 
 from DistRDF.Backends import Utils
 from DistRDF.HeadNode import TreeHeadNode
-from DistRDF.PythonMergeables import SnapshotResult
 
 # Abstract class declaration
 # This ensures compatibility between Python 2 and 3 versions, since in
@@ -159,7 +157,15 @@ class BaseBackend(ABC):
                 list: This respresents the list of (mergeable)values of all
                 action nodes in the computational graph.
             """
-            import ROOT
+            # Disable graphics functionality in ROOT. It is not needed inside a
+            # distributed task
+            ROOT.gROOT.SetBatch(True)
+            # Enable thread safety for the whole mapper function. We need to do
+            # this since two tasks could be invoking the C++ interpreter
+            # simultaneously, given that this function will release the GIL
+            # before calling into C++ to run the event loop. Dask multi-threaded
+            # or even multi-process workers could trigger such a scenario.
+            ROOT.EnableThreadSafety()
 
             # We have to decide whether to do this in Dist or in subclasses
             # Utils.declare_headers(worker_includes)  # Declare headers if any
@@ -256,11 +262,7 @@ class BaseBackend(ABC):
                 # Output of the callable
                 resultptr_list = computation_graph_callable(rdf, current_range.id)
 
-                mergeables = [
-                    resultptr if isinstance(resultptr, (AsNumpyResult, SnapshotResult))
-                    else ROOT.ROOT.Detail.RDF.GetMergeableValue(resultptr)
-                    for resultptr in resultptr_list
-                ]
+                mergeables = [Utils.get_mergeablevalue(resultptr) for resultptr in resultptr_list]
 
             return mergeables
 
@@ -283,13 +285,8 @@ class BaseBackend(ABC):
                 list: The list of updated (mergeable)values.
             """
 
-            import ROOT
-
             for mergeable_out, mergeable_in in zip(mergeables_out, mergeables_in):
-                if isinstance(mergeable_out, (AsNumpyResult, SnapshotResult)):
-                    mergeable_out.Merge(mergeable_in)
-                else:
-                    ROOT.ROOT.Detail.RDF.MergeValues(mergeable_out, mergeable_in)
+                Utils.merge_values(mergeable_out, mergeable_in)
 
             return mergeables_out
 
