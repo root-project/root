@@ -2061,3 +2061,23 @@ if(test_distrdf_pyspark)
   endif()
 
 endif()
+
+#------------------------------------------------------------------------------------
+# Check if the dask package is installed on the system.
+# Needed to run tests of the distributed RDataFrame module that use dask.
+if(test_distrdf_dask)
+  message(STATUS "Looking for Dask")
+
+  if(fail-on-missing)
+    find_package(Dask 2020.12 REQUIRED)
+  else()
+
+    find_package(Dask 2020.12)
+    if(NOT Dask_FOUND)
+      message(STATUS "Switching OFF 'test_distrdf_dask' option")
+      set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)
+    endif()
+
+  endif()
+
+endif()

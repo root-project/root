@@ -8,12 +8,13 @@ import sys
 # Compile list of packages to be ignored in the test
 ignore = []
 
-# pyspark is always ignored in this test since we use the build option
-# `test_distrdf_pyspark` to check whether the CTest environment is ready for
-# distributed RDataFrame tests of the Spark backend. Those tests will be run
-# only on the nodes where the build option is enabled and `FindPySpark.cmake`
-# was succesfully run during the configuration step.
+# Dependencies of distributed RDataFrame are ignored in this test because they
+# are checked through specific build options (`test_distrdf_*`).
+# The dependencies are checked at configuration time so that we know whether the
+# CTest environment would be ready for the tests of the distributed RDF backends
 ignore.append('pyspark')
+ignore.append('dask')
+ignore.append('distributed')
 
 if sys.version_info[0] == 2 and 'ROOTTEST_IGNORE_NUMBA_PY2' in os.environ or \
    sys.version_info[0] == 3 and 'ROOTTEST_IGNORE_NUMBA_PY3' in os.environ:
