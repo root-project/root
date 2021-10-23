@@ -12,5 +12,7 @@ cffi>=1.9.1
 notebook>=4.4.1
 metakernel>=0.20.0
 
-# Distributed RDataFrame: Spark backend
-pyspark>=2.4
+# Distributed RDataFrame
+pyspark>=2.4 # Spark backend
+dask>=2020.12 # Dask backend
+distributed>=2020.12 # Dask backend
