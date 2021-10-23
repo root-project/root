@@ -63,7 +63,7 @@ class IncludesSparkTest(unittest.TestCase):
 
         rdf = Spark.RDataFrame(10, sparkcontext=self.sc)
 
-        rdf._headnode.backend.distribute_headers("test_headers/header1.hxx")
+        rdf._headnode.backend.distribute_headers("../test_headers/header1.hxx")
 
         # This filters out all numbers less than 5
         rdf_filtered = rdf.Filter("check_number_less_than_5(tdfentry_)")
@@ -99,7 +99,7 @@ class IncludesSparkTest(unittest.TestCase):
         rdf = Spark.RDataFrame(100, sparkcontext=self.sc)
 
         # Distribute headers to the workers
-        header_folder = "test_headers/headers_folder"
+        header_folder = "../test_headers/headers_folder"
         rdf._headnode.backend.distribute_headers(header_folder)
 
         # Get list of include paths seen by ROOT
