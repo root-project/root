@@ -578,8 +578,8 @@ df.Define("z", "x + y").Snapshot("tree", "file.root")
 RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
 thanks to the Python package `ROOT.RDF.Experimental.Distributed`. This experimental, **Python-only** package allows to scale the
 optimized performance RDataFrame can achieve on a single machine to multiple nodes at the same time. It is designed so
-that different backends can be easily plugged in, currently supporting [Apache Spark](http://spark.apache.org/) and soon
-also [Dask](https://dask.org/). To make use of distributed RDataFrame, you only need to switch `ROOT.RDataFrame` with
+that different backends can be easily plugged in, currently supporting [Apache Spark](http://spark.apache.org/) and
+[Dask](https://dask.org/). To make use of distributed RDataFrame, you only need to switch `ROOT.RDataFrame` with
 the backend-specific `RDataFrame` of your choice, for example:
 
 ~~~{.py}
@@ -647,6 +647,35 @@ df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
 
 If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 is not provided, the default behaviour is to create one in the background for you.
+
+### Connecting to a Dask cluster
+
+Similarly, you can connect to a Dask cluster by creating your own connection object which internally operates with one
+of the cluster schedulers supported by Dask (more information in the
+[Dask distributed docs](http://distributed.dask.org/en/stable/)):
+
+~~~{.py}
+import ROOT
+from dask.distributed import Client
+
+# Point RDataFrame calls to the Dask specific RDataFrame
+RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+
+# In a Python script the Dask client needs to be initalized in a context
+# Jupyter notebooks / Python session don't need this
+if __name__ == "__main__":
+    # With an already setup cluster that exposes a Dask scheduler endpoint
+    client = Client("dask_scheduler.domain.com:8786")
+
+    # The Dask RDataFrame constructor accepts the Dask Client object as an optional argument
+    df = RDataFrame("mytree","myfile.root", daskclient=client)
+    # Proceed as usual
+    df.Define("x","someoperation").Histo1D("x")
+~~~
+
+If an instance of [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client) is not
+provided to the RDataFrame object, it will be created for you and it will run the computations in the local machine
+using all cores available.
 
 ### Distributed Snapshot
 
