@@ -184,11 +184,11 @@ class RDFPythonHelper:
         self._jitcounter = 0
 
     def get_arg_names_global(self, function):
-        import ROOT
+        from cppyy.gbl import gROOT
 
         cols = None
 
-        for method in ROOT.gROOT.GetListOfGlobalFunctions(True):
+        for method in gROOT.GetListOfGlobalFunctions(True):
             if method.GetName() == function:
                 colstmp = []
                 for arg in method.GetListOfMethodArgs():
@@ -200,8 +200,8 @@ class RDFPythonHelper:
                 cols = colstmp
 
         # search templated methods
-        ROOT.gROOT.GetListOfFunctionTemplates().Load()
-        for method in ROOT.gROOT.GetListOfFunctionTemplates():
+        gROOT.GetListOfFunctionTemplates().Load()
+        for method in gROOT.GetListOfFunctionTemplates():
             if method.GetName() == function:
                 colstmp = []
                 for arg in method.Function().GetListOfMethodArgs():
@@ -219,7 +219,7 @@ class RDFPythonHelper:
         return cols
 
     def get_arg_names(self, cl, function):
-        import ROOT
+        from cppyy.gbl import TClass
 
         if not cl:
             return self.get_arg_names_global(function)
@@ -229,11 +229,11 @@ class RDFPythonHelper:
         cols = None
 
         # first try to load existing class info
-        classinfo = ROOT.TClass.GetClass(cl)
+        classinfo = TClass.GetClass(cl)
 
         if not classinfo:
             # create temporary class info, which may be needed for interpreted types
-            classinfo = ROOT.TClass(cl)
+            classinfo = TClass(cl)
 
         if not classinfo.HasInterpreterInfo():
             raise Exception(f"Couldn't load class information for class {cl} and therefore cannot infer column names for function {fullname}, and none were explcitly provided.")
@@ -273,9 +273,10 @@ class RDFPythonHelper:
         original_method_name, method_name = fixed_args
         original_method = getattr(cppself, original_method_name)
 
-        islambdaexpr = isinstance(expression, str) and expression.lstrip().startswith("[")
+        from cppyy.gbl import TInterpreter, ROOT
+        gInterpreter = TInterpreter.Instance()
 
-        import ROOT
+        nsname = f"RDFPythonHelper_{self._jitcounter}"
 
         if cols is not None:
           # FIXME currently this means there is no way to call functions taking std::vector input
@@ -287,10 +288,6 @@ class RDFPythonHelper:
         if isinstance(expression, str):
             # C++ lambda expression string
             # wrap in a callable because cppyy doesn't play nice with lambdas currently
-
-            lambdaname = f"lambda_{self._jitcounter}"
-            lambdatypename = f"LambdaT_{self._jitcounter}"
-            classname = f"DefineWrapperT_{self._jitcounter}"
 
             if expression.lstrip().startswith("["):
                 # already a lambda expression, use it directly
@@ -310,22 +307,22 @@ class RDFPythonHelper:
 
             tojit = f"""
                 namespace ROOT {{
-                    namespace RDFPythonHelper {{
-                        auto {lambdaname} = {lambdaexpr};
-                        using {lambdatypename} = decltype({lambdaname});
+                    namespace {nsname} {{
+                        auto lambda = {lambdaexpr};
+                        using LambdaT = decltype(lambda);
 
-                        template<typename... Args>
-                        class {classname} {{
+                        class DefineWrapper {{
 
                         public:
-                            auto operator() (typename ROOT::Internal::RDF::argument_t<Args>... x) {{ return {lambdaname}(x...); }}
+                            template<typename... Args>
+                            auto operator() (Args... x) {{ return lambda(x...); }}
                         }};
 
                     }};
                 }};
             """
 
-            status = ROOT.gInterpreter.Declare(tojit)
+            status = gInterpreter.Declare(tojit)
 
             if not status:
                 raise Exception("failed to jit helper callable with code as below:\n" + tojit)
@@ -333,17 +330,14 @@ class RDFPythonHelper:
             self._jitcounter += 1
 
             if cols is None:
-                cols = self.get_arg_names(f"ROOT::RDFPythonHelper::{lambdatypename}", "operator()")
+                cols = self.get_arg_names(f"ROOT::{nsname}::LambdaT", "operator()")
                 coltypes = cppself.ValidatedArgTypes(cols, method_name, True)
                 # cppyy doesn't like the std::string objects from C++ somehow...
                 coltypes = [str(coltype) for coltype in coltypes]
 
-            expressiontargs = tuple(coltypes)
-            expressionargs = tuple()
-
             # the below works, but can give extremely opaque error messages
-            expressiontype = eval(f"ROOT.ROOT.RDFPythonHelper.{classname}")
-            expression = expressiontype[expressiontargs](*expressionargs)
+            expressiontype = eval(f"ROOT.{nsname}.DefineWrapper")
+            expression = expressiontype()
 
 
         elif type(expression).__name__ in ["CPPOverload", "TemplateProxy"]:
@@ -395,21 +389,19 @@ class RDFPythonHelper:
 
                 fname = namespace + "::" + exprname
 
-
                 tojit = f"""
                     namespace ROOT {{
-                        namespace RDFPythonHelper {{
-                            template<typename... Args>
-                            class {classname} {{
+                        namespace {nsname} {{
+                            class DefineWrapper {{
 
                             public:
-                                auto operator() (typename ROOT::Internal::RDF::argument_t<Args>... x) {{ return {fname}{ftemplateargs}(x...); }}
+                                template<typename... Args>
+                                auto operator() (Args... x) {{ return {fname}{ftemplateargs}(x...); }}
                             }};
                         }};
                     }};
                 """
 
-                expressiontargs = tuple(coltypes)
                 expressionargs = tuple()
 
             else:
@@ -418,27 +410,26 @@ class RDFPythonHelper:
 
                 tojit = f"""
                     namespace ROOT {{
-                        namespace RDFPythonHelper {{
-                            template<typename C, typename... Args>
-                            class {classname} {{
+                        namespace {nsname} {{
+                            class DefineWrapper {{
 
                             public:
                                 template<typename T>
-                                {classname}(T &&callable) : callable_(std::forward<T>(callable)) {{}}
+                                DefineWrapper(T &&callable) : callable_(std::forward<T>(callable)) {{}}
 
-                                auto operator() (typename ROOT::Internal::RDF::argument_t<Args>... x) {{ return callable_.{fname}{ftemplateargs}(x...); }}
+                                template<typename... Args>
+                                auto operator() (Args... x) {{ return callable_.{fname}{ftemplateargs}(x...); }}
 
                             private:
-                                C callable_;
+                                {type(im_class).__cpp_name__} callable_;
                             }};
                         }};
                     }};
                 """
 
-                expressiontargs = tuple([type(im_class)] + coltypes)
                 expressionargs = (im_self,)
 
-            status = ROOT.gInterpreter.Declare(tojit)
+            status = gInterpreter.Declare(tojit)
 
             if not status:
                 raise Exception("failed to jit helper callable with code as below:\n" + tojit)
@@ -446,8 +437,8 @@ class RDFPythonHelper:
             self._jitcounter += 1
 
             # the below works, but can give extremely opaque error messages
-            expressiontype = eval(f"ROOT.ROOT.RDFPythonHelper.{classname}")
-            expression = expressiontype[expressiontargs](*expressionargs)
+            expressiontype = eval(f"ROOT.{nsname}.DefineWrapper")
+            expression = expressiontype(*expressionargs)
         else:
             # Callable object can be used directly
             if cols is None:
