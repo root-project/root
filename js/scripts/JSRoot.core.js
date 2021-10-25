@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "21/10/2021";
+   JSROOT.version_date = "25/10/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -588,10 +588,21 @@
             let separ = (typeof thisSrc == 'string') ? thisSrc.indexOf('?') : -1;
             if (separ > 0) thisSrc = thisSrc.substr(0, separ);
             thisModule = thisSrc;
-            for (let mod in _.sources)
-               if (_.get_module_src(_.sources[mod]) == thisSrc) {
+            for (let mod in _.sources) {
+               let entry = _.sources[mod];
+               if (entry.not_jsroot && thisSrc) {
+                  let indx = thisSrc.indexOf(entry.src);
+                  if ((indx >= 0) && (entry.src.length + indx == thisSrc.length)) {
+                     let m = _.modules[mod];
+                     if (m && m.loading) m.ingore_first_finish = true;
+                     thisModule = mod;
+                     break;
+
+                  }
+               } else if (_.get_module_src(entry) == thisSrc) {
                   thisModule = mod; break;
                }
+            }
          }
          if (!thisModule)
             throw Error("Cannot define module for " + (thisSrc || "uncknown script"));
@@ -603,6 +614,12 @@
          // check if promise was returned
          if (res && (typeof res == 'object') && (typeof res.then == 'function'))
             return res.then(pres => finish_loading(m, pres));
+
+         // this is special case of non-jsroot modules, completion will be performed after factoryFunc
+         if (m.ingore_first_finish && m.waiting) {
+            delete m.ingore_first_finish;
+            return;
+         }
 
          m.module = res || 1; // just to have some value
          let waiting = m.waiting;
@@ -678,8 +695,11 @@
                      failed: function(msg) { this.processed = true; if (this.reject) this.reject(Error(msg || "JSROOT.require failed")); } };
 
          if (req.factoryFunc && req.thisModule) {
-            if (!(_.modules[req.thisModule]))
+            if (!(_.modules[req.thisModule])) {
+               console.log('Introducing module', req.thisModule, 'need', need)
+
                _.modules[req.thisModule] = { jsroot: true, src: thisSrc, loading: true };
+            }
          }
 
          for (let k = 0; k < need.length; ++k) {
@@ -691,7 +711,7 @@
                let jsmodule = _.sources[need[k]];
 
                m = _.modules[need[k]] = {};
-               if (jsmodule) {
+               if (jsmodule && !jsmodule.not_jsroot) {
                   m.jsroot = true;
                   m.src = _.get_module_src(jsmodule, true);
                   m.extract = jsmodule.extract;
@@ -699,6 +719,8 @@
                   m.alt = jsmodule.alt; // alternative location
               } else {
                   m.src = need[k];
+                  // create entry in sources
+                  _.sources[need[k]] = { not_jsroot: true, src: need[k] };
                }
             }
 
@@ -730,7 +752,7 @@
          if (!handler && !any_dep)
             return handle_func(req, true);
 
-         srcs.forEach(m => load_module(req,m));
+         srcs.forEach(m => load_module(req, m));
       }
 
       if (factoryFunc)
