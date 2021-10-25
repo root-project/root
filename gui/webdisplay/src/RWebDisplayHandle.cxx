@@ -544,8 +544,13 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
          return handle;
    }
 
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kLocal) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
+      if (try_creator(FindCreator("qt6", "libROOTQt6WebDisplay")))
+         return handle;
+   }
+
    if (args.IsLocalDisplay()) {
-      R__LOG_ERROR(WebGUILog()) << "Neither Qt5 nor CEF libraries were found to provide local display";
+      R__LOG_ERROR(WebGUILog()) << "Neither Qt5/6 nor CEF libraries were found to provide local display";
       return handle;
    }
 
@@ -633,7 +638,7 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
    }
 
    RWebDisplayArgs args; // set default browser kind, only Chrome or CEF or Qt5 can be used here
-   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5))
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6))
       args.SetBrowserKind(RWebDisplayArgs::kChrome);
 
    std::string draw_kind;
@@ -697,7 +702,7 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
 
 try_again:
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
       args.SetUrl(""s);
       args.SetPageContent(filecont);
 

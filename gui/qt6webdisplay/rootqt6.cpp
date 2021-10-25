@@ -12,17 +12,16 @@
 
 #include <QApplication>
 #include <QWebEngineView>
-#include <qtwebengineglobal.h>
-#include <QWebEngineDownloadItem>
+#include <qtwebenginecoreglobal.h>
+#include <QWebEngineDownloadRequest>
+// #include <qtwebenginequickglobal.h>
 
 #include <QThread>
 #include <QWebEngineSettings>
 #include <QWebEngineProfile>
 #include <QtGlobal>
 
-#if QT_VERSION >= 0x050C00
 #include <QWebEngineUrlScheme>
-#endif
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -32,25 +31,25 @@
 #include "THttpServer.h"
 #include "TSystem.h"
 
-#include "rootwebview.h"
-#include "rootwebpage.h"
-#include "rooturlschemehandler.h"
+#include "../qt5webdisplay/rootwebview.h"
+#include "../qt5webdisplay/rootwebpage.h"
+#include "../qt5webdisplay/rooturlschemehandler.h"
 
 #include <memory>
 
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RLogger.hxx>
 
-/** \class TQt5Timer
-\ingroup qt5webdisplay
+/** \class TQt6Timer
+\ingroup qt6webdisplay
 */
 
-class TQt5Timer : public TTimer {
+class TQt6Timer : public TTimer {
 public:
-   TQt5Timer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
+   TQt6Timer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
 
    /// timeout handler
-   /// used to process all qt5 events in main ROOT thread
+   /// used to process all qt6 events in main ROOT thread
    void Timeout() override
    {
       QApplication::sendPostedEvents();
@@ -61,34 +60,34 @@ public:
 namespace ROOT {
 namespace Experimental {
 
-/** \class RQt5WebDisplayHandle
-\ingroup qt5webdisplay
+/** \class RQt6WebDisplayHandle
+\ingroup qt6webdisplay
 */
 
-class RQt5WebDisplayHandle : public RWebDisplayHandle {
+class RQt6WebDisplayHandle : public RWebDisplayHandle {
 protected:
 
    RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
 
-   class Qt5Creator : public Creator {
+   class Qt6Creator : public Creator {
       int fCounter{0}; ///< counter used to number handlers
       QApplication *qapp{nullptr};  ///< created QApplication
       int qargc{1};                 ///< arg counter
       char *qargv[2];               ///< arg values
-      std::unique_ptr<TQt5Timer> fTimer; ///< timer to process ROOT events
+      std::unique_ptr<TQt6Timer> fTimer; ///< timer to process ROOT events
       std::unique_ptr<RootUrlSchemeHandler> fHandler; ///< specialized handler
    public:
 
-      Qt5Creator() = default;
+      Qt6Creator() = default;
 
-      virtual ~Qt5Creator()
+      virtual ~Qt6Creator()
       {
          /** Code executed during exit and sometime crashes.
           *  Disable it, while not clear if defaultProfile can be still used - seems to be not */
          // if (fHandler)
          //   QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
 
-         R__LOG_DEBUG(0, QtWebDisplayLog()) << "Deleting Qt5Creator";
+         R__LOG_DEBUG(0, QtWebDisplayLog()) << "Deleting Qt6Creator";
       }
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
@@ -101,15 +100,13 @@ protected:
             }
 
             // initialize web engine only before creating QApplication
-            QtWebEngine::initialize();
+            // QtWebEngineQuick::initialize();
 
-            #if QT_VERSION >= 0x050C00
             QWebEngineUrlScheme scheme("rootscheme");
             scheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
             scheme.setDefaultPort(2345);
             scheme.setFlags(QWebEngineUrlScheme::SecureScheme);
             QWebEngineUrlScheme::registerScheme(scheme);
-            #endif
 
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
@@ -122,7 +119,7 @@ protected:
          if (!fTimer && !args.IsHeadless()) {
             Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
             if (interval > 0) {
-               fTimer = std::make_unique<TQt5Timer>(interval, kTRUE);
+               fTimer = std::make_unique<TQt6Timer>(interval, kTRUE);
                fTimer->TurnOn();
             }
          }
@@ -135,7 +132,7 @@ protected:
                fHandler = std::make_unique<RootUrlSchemeHandler>();
                QWebEngineProfile::defaultProfile()->installUrlSchemeHandler("rootscheme", fHandler.get());
                QWebEngineProfile::defaultProfile()->connect(QWebEngineProfile::defaultProfile(), &QWebEngineProfile::downloadRequested,
-                              [](QWebEngineDownloadItem *item) { item->accept(); });
+                              [](QWebEngineDownloadRequest *request) { request->accept(); });
             }
 
             fullurl = fHandler->MakeFullUrl(args.GetHttpServer(), fullurl);
@@ -143,7 +140,7 @@ protected:
 
          QWidget *qparent = static_cast<QWidget *>(args.GetDriverData());
 
-         auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
+         auto handle = std::make_unique<RQt6WebDisplayHandle>(fullurl.toLatin1().constData());
 
          RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
 
@@ -164,12 +161,10 @@ protected:
                load_finished = true; is_error = !is_ok;
             });
 
-            #if QT_VERSION >= 0x050900
             if (!pdffile.empty())
                QObject::connect(view->page(), &RootWebPage::pdfPrintingFinished, [&expired, &is_error](const QString &, bool is_ok) {
                   expired = 0; is_error = !is_ok;
                });
-            #endif
 
             const std::string &page_content = args.GetPageContent();
             if (page_content.empty())
@@ -223,9 +218,9 @@ protected:
    };
 
 public:
-   RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
+   RQt6WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
 
-   virtual ~RQt5WebDisplayHandle()
+   virtual ~RQt6WebDisplayHandle()
    {
       // now view can be safely destroyed
       if (fView) {
@@ -236,16 +231,16 @@ public:
 
    static void AddCreator()
    {
-      auto &entry = FindCreator("qt5");
+      auto &entry = FindCreator("qt6");
       if (!entry)
-         GetMap().emplace("qt5", std::make_unique<Qt5Creator>());
+         GetMap().emplace("qt6", std::make_unique<Qt6Creator>());
    }
 
 };
 
-struct RQt5CreatorReg {
-   RQt5CreatorReg() { RQt5WebDisplayHandle::AddCreator(); }
-} newRQt5CreatorReg;
+struct RQt6CreatorReg {
+   RQt6CreatorReg() { RQt6WebDisplayHandle::AddCreator(); }
+} newRQt6CreatorReg;
 
 }
 }

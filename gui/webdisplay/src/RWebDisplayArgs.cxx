@@ -213,6 +213,8 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kCEF);
    else if ((kind == "qt") || (kind == "qt5"))
       SetBrowserKind(kQt5);
+   else if (kind == "qt6")
+      SetBrowserKind(kQt6);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
    else if (!SetSizeAsStr(kind))
@@ -232,6 +234,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
       case kNative: return "native";
       case kCEF: return "cef";
       case kQt5: return "qt5";
+      case kQt6: return "qt6";
       case kLocal: return "local";
       case kStandard: return "default";
       case kEmbedded: return "embed";
