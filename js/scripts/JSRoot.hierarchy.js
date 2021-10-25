@@ -1848,8 +1848,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.refreshHtml();
       }).catch(() => {
          // make CORS warning
-         if (!d3.select("#gui_fileCORS").style("background","red").empty())
-             setTimeout(function() { d3.select("#gui_fileCORS").style("background",''); }, 5000);
+         if (JSROOT.batch_mode)
+            console.error(`Fail to open ${filepath} - check CORS headers`);
+         else if (!d3.select("#gui_fileCORS").style("background","red").empty())
+            setTimeout(() => d3.select("#gui_fileCORS").style("background",''), 5000);
          return false;
       }).finally(() => jsrp.showProgress());
    }
@@ -2017,25 +2019,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.h._expand = onlineHierarchy;
 
-         let scripts = [], modules = [];
+         let styles = [], scripts = [], modules = [];
          this.forEachItem(item => {
             if ('_childs' in item) item._expand = onlineHierarchy;
 
             if ('_autoload' in item) {
                let arr = item._autoload.split(";");
-               for (let n = 0; n < arr.length; ++n)
-                  if ((arr[n].length>3) &&
-                      ((arr[n].lastIndexOf(".js")==arr[n].length-3) ||
-                      (arr[n].lastIndexOf(".css")==arr[n].length-4))) {
-                     if (!scripts.find(elem => elem == arr[n])) scripts.push(arr[n]);
-                  } else {
-                     if (arr[n] && !modules.find(elem => elem ==arr[n])) modules.push(arr[n]);
+               arr.forEach(name => {
+                  if ((name.length > 3) && (name.lastIndexOf(".js") == name.length-3)) {
+                     if (!scripts.find(elem => elem == name)) scripts.push(name);
+                  } else if ((name.length > 4) && (name.lastIndexOf(".css") == name.length-4)) {
+                     if (!styles.find(elem => elem == name)) styles.push(name);
+                  } else if (name && !modules.find(elem => elem == name)) {
+                     modules.push(name);
                   }
+               });
             }
          });
 
          return JSROOT.require(modules)
-               .then(() => JSROOT.loadScript(scripts))
+               .then(() => JSROOT.require(scripts))
+               .then(() => JSROOT.loadScript(styles))
                .then(() => {
                   this.forEachItem(item => {
                      if (!('_drawfunc' in item) || !('_kind' in item)) return;
@@ -2421,6 +2425,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           localfile = GetOption("localfile"),
           jsonarr = GetOptionAsArray("#json;jsons"),
           expanditems = GetOptionAsArray("expand"),
+          focusitem = GetOption("focus"),
           itemsarr = GetOptionAsArray("#item;items"),
           optionsarr = GetOptionAsArray("#opt;opts"),
           monitor = GetOption("monitoring"),
@@ -2534,6 +2539,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          else
             return this.refreshHtml()
                    .then(() => this.displayItems(itemsarr, optionsarr))
+                   .then(() => focusitem ? this.focusOnItem(focusitem) : this)
                    .then(() => {
                       this.setMonitoring(monitor);
                       return itemsarr ? this.refreshHtml() : this; // this is final return

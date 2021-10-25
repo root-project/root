@@ -892,7 +892,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (color_as_svg) {
          this.color = color;
-         indx = d3.color(color).hex().substr(1); // fictional index produced from color code
+         if (color != "none") indx = d3.color(color).hex().substr(1); // fictional index produced from color code
       } else {
          this.color = painter ? painter.getColor(indx) : jsrp.getColor(indx);
       }
@@ -907,7 +907,7 @@ JSROOT.define(['d3'], (d3) => {
          return true;
       }
 
-      if (!svg || svg.empty() || (this.pattern < 3000)) return false;
+      if (!svg || svg.empty() || (this.pattern < 3000) || (this.color == "none")) return false;
 
       let id = "pat_" + this.pattern + "_" + indx,
          defs = svg.select('.canvas_defs');
@@ -3350,11 +3350,30 @@ JSROOT.define(['d3'], (d3) => {
             if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
             item.min = item.min / Math.pow(10, factor*delta_left*dmin);
             item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
+         } else if ((delta_left === -delta_right) && !item.reverse) {
+            // shift left/right, try to keep range constant
+            let delta = (item.max - item.min) * delta_right * dmin;
+
+            if ((Math.round(item.max) === item.max) && (Math.round(item.min) === item.min) && (Math.abs(delta) > 1)) delta = Math.round(delta);
+
+            if (item.min + delta < gmin)
+               delta = gmin - item.min;
+            else if (item.max + delta > gmax)
+               delta = gmax - item.max;
+
+            if (delta != 0) {
+               item.min += delta;
+               item.max += delta;
+             } else {
+               delete item.min;
+               delete item.max;
+            }
+
          } else {
             let rx_left = (item.max - item.min), rx_right = rx_left;
-            if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
+            if (delta_left > 0) rx_left = 1.001 * rx_left / (1-delta_left);
             item.min += -delta_left*dmin*rx_left;
-            if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
+            if (delta_right > 0) rx_right = 1.001 * rx_right / (1-delta_right);
             item.max -= -delta_right*(1-dmin)*rx_right;
          }
          if (item.min >= item.max) {

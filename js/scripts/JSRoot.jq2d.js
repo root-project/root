@@ -726,6 +726,40 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if (this.brlayout) this.brlayout.adjustBrowserSize(true);
    }
 
+
+   /** @summary Focus on hierarchy item
+     * @param {Object|string} hitem - item to open or its name
+     * @desc all parents to the otem will be opened first
+     * @returns {Promise} when done
+     * @private */
+   HierarchyPainter.prototype.focusOnItem = function(hitem) {
+      if (typeof hitem == "string")
+         hitem = this.findItem(hitem);
+
+      let name = hitem ? this.itemFullName(hitem) : "";
+      if (!name) return Promise.resolve(false)
+
+      let itm = hitem, need_refresh = false;
+
+      while (itm) {
+         if ((itm._childs !== undefined) && !itm._isopen) {
+            itm._isopen = true;
+            need_refresh = true;
+         }
+         itm = itm._parent;
+      }
+
+      let promise = need_refresh ? this.refreshHtml() : Promise.resolve(true);
+
+      return promise.then(() => {
+         let d3cont = this.selectDom().select("[item='" + name + "']");
+         if (d3cont.empty()) return false;
+         d3cont.node().scrollIntoView();
+         return true;
+      });
+   }
+
+
    /** @summary Update item background
      * @private */
    HierarchyPainter.prototype.updateBackground = function(hitem, scroll_into_view) {
