@@ -37,7 +37,8 @@ public:
       kFirefox,  ///< Mozilla Firefox browser
       kNative,   ///< either Chrome or Firefox - both support major functionality
       kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
-      kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
+      kQt5,      ///< Qt5 QWebEngine libraries - Chromium code packed in qt5
+      kQt6,      ///< Qt6 QWebEngine libraries - Chromium code packed in qt6
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
@@ -94,13 +95,13 @@ public:
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const
    {
-      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
    /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
    /// set window url

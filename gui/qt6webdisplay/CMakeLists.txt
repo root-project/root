@@ -28,10 +28,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ROOT_LINKER_LIBRARY(ROOTQt6WebDisplay
-  ../qt5webdisplay/rootwebview.cpp
-  ../qt5webdisplay/rootwebpage.cpp
-  ../qt5webdisplay/rooturlschemehandler.cpp
-  ../qt5webdisplay/rootqt5.cpp
+     ../qt5webdisplay/rootwebview.cpp
+     ../qt5webdisplay/rootwebpage.cpp
+     ../qt5webdisplay/rooturlschemehandler.cpp
+     rootqt6.cpp
   LIBRARIES
     Qt6::WebEngineCore
     Qt6::WebEngineWidgets
