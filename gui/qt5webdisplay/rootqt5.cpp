@@ -12,11 +12,18 @@
 
 #include <QApplication>
 #include <QWebEngineView>
+#if QT_VERSION >= 0x060200
+#include <qtwebenginecoreglobal.h>
+#include <QWebEngineDownloadRequest>
+// #include <qtwebenginequickglobal.h>
+#else
 #include <qtwebengineglobal.h>
+#include <QWebEngineDownloadItem>
+#endif
+
 #include <QThread>
 #include <QWebEngineSettings>
 #include <QWebEngineProfile>
-#include <QWebEngineDownloadItem>
 #include <QtGlobal>
 
 #if QT_VERSION >= 0x050C00
@@ -100,7 +107,11 @@ protected:
             }
 
             // initialize web engine only before creating QApplication
+            #if QT_VERSION >= 0x060200
+            // QtWebEngineQuick::initialize();
+            #else
             QtWebEngine::initialize();
+            #endif
 
             #if QT_VERSION >= 0x050C00
             QWebEngineUrlScheme scheme("rootscheme");
@@ -133,8 +144,13 @@ protected:
             if (!fHandler) {
                fHandler = std::make_unique<RootUrlSchemeHandler>();
                QWebEngineProfile::defaultProfile()->installUrlSchemeHandler("rootscheme", fHandler.get());
+#if QT_VERSION >= 0x060200
+               QWebEngineProfile::defaultProfile()->connect(QWebEngineProfile::defaultProfile(), &QWebEngineProfile::downloadRequested,
+                              [](QWebEngineDownloadRequest *request) { request->accept(); });
+#else
                QWebEngineProfile::defaultProfile()->connect(QWebEngineProfile::defaultProfile(), &QWebEngineProfile::downloadRequested,
                               [](QWebEngineDownloadItem *item) { item->accept(); });
+#endif
             }
 
             fullurl = fHandler->MakeFullUrl(args.GetHttpServer(), fullurl);
