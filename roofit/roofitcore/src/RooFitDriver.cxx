@@ -97,7 +97,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // treeNodeServelList() is recursive and adds the top node before the children,
    // so reversing the list gives us a topological ordering of the graph.
    RooArgList list;
-   _topNode.treeNodeServerList(&list);
+   _topNode.treeNodeServerList(&list, nullptr, true, true, true);
    for (int i = list.size() - 1; i >= 0; i--) {
       auto pAbsReal = dynamic_cast<RooAbsReal *>(&list[i]);
       if (!pAbsReal)
