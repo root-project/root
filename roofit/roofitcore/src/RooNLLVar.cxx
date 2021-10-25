@@ -69,10 +69,10 @@ namespace {
 
 ClassImp(RooNLLVar)
 
-RooArgSet RooNLLVar::_emptySet ;
+RooNLLVar::RooNLLVar() {}
+RooNLLVar::~RooNLLVar() {}
 
-RooNLLVar::RooNLLVar()
-{ }
+RooArgSet RooNLLVar::_emptySet ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct likelihood from given p.d.f and (binned or unbinned dataset)
@@ -86,7 +86,7 @@ RooNLLVar::RooNLLVar()
 ///  SplitRange()             | Fit range is split by index category of simultaneous PDF
 ///  ConditionalObservables() | Define conditional observables
 ///  Verbose()                | Verbose output of GOF framework classes
-///  CloneData()              | Clone input dataset for internal use (default is kTRUE)
+///  CloneData()              | Clone input dataset for internal use (default is true)
 ///  BatchMode()              | Evaluate batches of data events (faster if PDFs support it)
 ///  IntegrateBins() | Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
 RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
@@ -101,7 +101,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 {
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
-  pc.defineInt("extended","Extended",0,kFALSE) ;
+  pc.defineInt("extended","Extended",0,false) ;
   pc.defineInt("BatchMode", "BatchMode", 0, false);
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
@@ -110,13 +110,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
   _extended = pc.getInt("extended") ;
   _batchEvaluations = pc.getInt("BatchMode");
-  _weightSq = kFALSE ;
-  _first = kTRUE ;
-  _offsetSaveW2 = 0.;
-
-  _binnedPdf = 0 ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,42 +119,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
                      bool extended, RooAbsTestStatistic::Configuration const& cfg) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),cfg),
-  _extended(extended),
-  _weightSq(kFALSE),
-  _first(kTRUE)
-{
-  // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
-  // for a binned likelihood calculation
-  _binnedPdf = cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
-
-  // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
-  if (_binnedPdf) {
-
-    // The Active label will disable pdf integral calculations
-    _binnedPdf->setAttribute("BinnedLikelihoodActive") ;
-
-    RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
-    if (obs->getSize()!=1) {
-      _binnedPdf = 0 ;
-    } else {
-      RooRealVar* var = (RooRealVar*) obs->first() ;
-      std::list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
-      std::list<Double_t>::iterator biter = boundaries->begin() ;
-      _binw.resize(boundaries->size()-1) ;
-      Double_t lastBound = (*biter) ;
-      ++biter ;
-      int ibin=0 ;
-      while (biter!=boundaries->end()) {
-	_binw[ibin] = (*biter) - lastBound ;
-	lastBound = (*biter) ;
-	ibin++ ;
-	++biter ;
-      }
-    }
-  }
-}
-
+  RooNLLVar{name, title, pdf, indata, RooArgSet(), extended, cfg} {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,33 +130,33 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
                      const RooArgSet& projDeps,
                      bool extended, RooAbsTestStatistic::Configuration const& cfg) :
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps, cfg),
-  _extended(extended),
-  _weightSq(kFALSE),
-  _first(kTRUE)
+  _extended(extended)
 {
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
-  _binnedPdf = cfg.binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binnedPdf = cfg.binnedL ? static_cast<RooRealSumPdf*>(_funcClone) : nullptr ;
 
   // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
 
-    RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
-    if (obs->getSize()!=1) {
-      _binnedPdf = 0 ;
+    // The Active label will disable pdf integral calculations
+    _binnedPdf->setAttribute("BinnedLikelihoodActive") ;
+
+    RooArgSet obs;
+    _funcClone->getObservables(_dataClone->get(), obs);
+    if (obs.size()!=1) {
+      _binnedPdf = nullptr;
     } else {
-      RooRealVar* var = (RooRealVar*) obs->first() ;
-      std::list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
-      std::list<Double_t>::iterator biter = boundaries->begin() ;
-      _binw.resize(boundaries->size()-1) ;
-      Double_t lastBound = (*biter) ;
+      auto* var = static_cast<RooRealVar*>(obs.first());
+      std::unique_ptr<std::list<Double_t>> boundaries{_binnedPdf->binBoundaries(*var,var->getMin(),var->getMax())};
+      auto biter = boundaries->begin() ;
+      _binw.reserve(boundaries->size()-1) ;
+      double lastBound = (*biter) ;
       ++biter ;
-      int ibin=0 ;
       while (biter!=boundaries->end()) {
-	_binw[ibin] = (*biter) - lastBound ;
-	lastBound = (*biter) ;
-	ibin++ ;
-	++biter ;
+        _binw.push_back((*biter) - lastBound);
+        lastBound = (*biter) ;
+        ++biter ;
       }
     }
   }
@@ -213,10 +172,10 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   _extended(other._extended),
   _batchEvaluations(other._batchEvaluations),
   _weightSq(other._weightSq),
-  _first(kTRUE),
   _offsetSaveW2(other._offsetSaveW2),
-  _binw(other._binw) {
-  _binnedPdf = other._binnedPdf ? (RooRealSumPdf*)_funcClone : 0 ;
+  _binw(other._binw),
+  _binnedPdf{other._binnedPdf}
+{
 }
 
 
@@ -236,16 +195,6 @@ RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooA
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNLLVar::~RooNLLVar()
-{
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 void RooNLLVar::applyWeightSquared(Bool_t flag)
 {
@@ -256,11 +205,11 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
     }
     setValueDirty();
   } else if ( _gofOpMode==MPMaster) {
-    for (Int_t i=0 ; i<_nCPU ; i++)
+    for (int i=0 ; i<_nCPU ; i++)
       _mpfeArray[i]->applyNLLWeightSquared(flag);
   } else if ( _gofOpMode==SimMaster) {
-    for (Int_t i=0 ; i<_nGof ; i++)
-      ((RooNLLVar*)_gofArray[i])->applyWeightSquared(flag);
+    for (int i=0 ; i<_nGof ; i++)
+      static_cast<RooNLLVar*>(_gofArray[i])->applyWeightSquared(flag);
   }
 }
 
@@ -284,11 +233,11 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
   ROOT::Math::KahanSum<double> result{0.0};
   double sumWeight{0.0};
 
-  RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
+  auto * pdfClone = static_cast<RooAbsPdf*>(_funcClone);
 
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
 
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE) ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true) ) ;
 
 
 
@@ -301,12 +250,12 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
       if (!_dataClone->valid()) continue;
 
-      Double_t eventWeight = _dataClone->weight();
+      double eventWeight = _dataClone->weight();
 
 
       // Calculate log(Poisson(N|mu) for this bin
-      Double_t N = eventWeight ;
-      Double_t mu = _binnedPdf->getVal()*_binw[i] ;
+      double N = eventWeight ;
+      double mu = _binnedPdf->getVal()*_binw[i] ;
       //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << endl ;
 
       if (mu<=0 && N>0) {
@@ -314,14 +263,14 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
         // Catch error condition: data present where zero events are predicted
         logEvalError(Form("Observed %f events in bin %lu with zero event yield",N,(unsigned long)i)) ;
 
-      } else if (fabs(mu)<1e-10 && fabs(N)<1e-10) {
+      } else if (std::abs(mu)<1e-10 && std::abs(N)<1e-10) {
 
         // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
         // since log(mu)=0. No update of result is required since term=0.
 
       } else {
 
-        result += -1*(-mu + N*log(mu) - TMath::LnGamma(N+1));
+        result += -1*(-mu + N * std::log(mu) - TMath::LnGamma(N+1));
         sumWeightKahanSum += eventWeight;
 
       }
@@ -341,17 +290,17 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
       constexpr bool alwaysPrint = false;
 
-      if (alwaysPrint || fabs(result - resultScalar)/resultScalar > 5.E-15) {
+      if (alwaysPrint || std::abs(result - resultScalar)/resultScalar > 5.E-15) {
         std::cerr << "RooNLLVar: result is off\n\t" << std::setprecision(15) << result
             << "\n\t" << resultScalar << std::endl;
       }
 
-      if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 500.) {
+      if (alwaysPrint || std::abs(carry - carryScalar)/carryScalar > 500.) {
         std::cerr << "RooNLLVar: carry is far off\n\t" << std::setprecision(15) << carry
             << "\n\t" << carryScalar << std::endl;
       }
 
-      if (alwaysPrint || fabs(sumWeight - sumWeightScalar)/sumWeightScalar > 1.E-15) {
+      if (alwaysPrint || std::abs(sumWeight - sumWeightScalar)/sumWeightScalar > 1.E-15) {
         std::cerr << "RooNLLVar: sumWeight is off\n\t" << std::setprecision(15) << sumWeight
             << "\n\t" << sumWeightScalar << std::endl;
       }
@@ -371,13 +320,13 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
   // If part of simultaneous PDF normalize probability over
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
   if (_simCount>1) {
-    result += sumWeight * log(1.0*_simCount);
+    result += sumWeight * std::log(static_cast<double>(_simCount));
   }
 
 
   // At the end of the first full calculation, wire the caches
   if (_first) {
-    _first = kFALSE ;
+    _first = false ;
     _funcClone->wireAllCaches() ;
   }
 
@@ -536,7 +485,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
 
     if (!dataClone->valid()) continue;
 
-    Double_t eventWeight = dataClone->weight(); //FIXME
+    double eventWeight = dataClone->weight(); //FIXME
     if (0. == eventWeight * eventWeight) continue ;
     if (weightSq) eventWeight = dataClone->weightSquared() ;
 
