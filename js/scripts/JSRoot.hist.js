@@ -4101,9 +4101,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                    .attr("pointer-events", "visibleFill");
 
          if ((path_line !== null) && (path_line.length > 0)) {
-            if (!this.fillatt.empty())
+            if (!this.fillatt.empty() && !draw_hist)
                this.draw_g.append("svg:path")
-                     .attr("d", (this.options.Fill ? path_line : res) + close_path)
+                     .attr("d", path_line + close_path)
                      .attr("stroke", "none")
                      .call(this.fillatt.func);
 
