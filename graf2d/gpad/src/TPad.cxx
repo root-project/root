@@ -4665,26 +4665,7 @@ void TPad::Pop()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save Pad contents in a file in one of various formats.
-///
-///  - if filename is "", the file produced is padname.ps
-///  - if filename starts with a dot, the padname is added in front
-///  - if filename contains .eps, an Encapsulated Postscript file is produced
-///  - if filename contains .pdf, a PDF file is produced NOTE: TMathText will be converted to TLatex; q.e.d., symbols only available in TMathText will not render properly.
-///  - if filename contains .svg, a SVG file is produced
-///  - if filename contains .tex, a TeX file is produced
-///  - if filename contains .gif, a GIF file is produced
-///  - if filename contains .gif+NN, an  animated GIF file is produced See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
-///  - if filename contains .xpm, a XPM file is produced
-///  - if filename contains .png, a PNG file is produced
-///  - if filename contains .jpg, a JPEG file is produced NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-///  - if filename contains .tiff, a TIFF file is produced
-///  - if filename contains .C or .cxx, a C++ macro file is produced
-///  - if filename contains .root, a Root file is produced
-///  - if filename contains .xml, a XML file is produced
-///  - if filename contains .json, a JSON file is produced
-///
-///  See comments in TPad::SaveAs or the TPad::Print function below
+/// This method is equivalent to `SaveAs("filename")`. See TPad::SaveAs for details.
 
 void TPad::Print(const char *filename) const
 {
@@ -4715,35 +4696,36 @@ static Bool_t ContainsTImage(TList *li)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save Canvas contents in a file in one of various formats.
 ///
+/// \anchor TPadPrint
 /// option can be:
-///  -           0  as "ps"
-///  -         "ps"  Postscript file is produced (see special cases below)
-///  -   "Portrait"  Postscript file is produced (Portrait)
-///  -  "Landscape"  Postscript file is produced (Landscape)
-///  -     "Title:"  The character string after "Title:" becomes a table
-///                  of content entry (for PDF files).
-///  -        "eps"  an Encapsulated Postscript file is produced
-///  -    "Preview"  an Encapsulated Postscript file with preview is produced.
-///  - "EmbedFonts"  a PDF file with embedded fonts is generated.
-///  -        "pdf"  a PDF file is produced NOTE: TMathText will be converted to TLatex; q.e.d., symbols only available in TMathText will not render properly.
-///  -        "svg"  a SVG file is produced
-///  -        "tex"  a TeX file is produced
-///  -        "gif"  a GIF file is produced
-///  -     "gif+NN"  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
-///  -        "xpm"  a XPM file is produced
-///  -        "png"  a PNG file is produced
-///  -        "jpg"  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-///  -       "tiff"  a TIFF file is produced
-///  -        "cxx"  a C++ macro file is produced
-///  -        "xml"  a XML file
-///  -       "json"  a JSON file
-///  -       "root"  a ROOT binary file
 ///
-///     filename = 0 - filename  is defined by the GetName and its
-///                    extension is defined with the option
+///  -         `ps`:  a Postscript file is produced (default). [See special cases](\ref TPadPrintPS).
+///    -   `Portrait`:  Postscript file is produced (Portrait)
+///    -  `Landscape`:  Postscript file is produced (Landscape)
+///  -        `eps`:  an Encapsulated Postscript file is produced
+///    -    `Preview`:  an [Encapsulated Postscript file with preview](\ref TPadPrintPreview) is produced.
+///  -        `pdf`:  a PDF file is produced NOTE: TMathText will be converted to TLatex; q.e.d., symbols only available in TMathText will not render properly.
+///    -     `Title:`:  The character string after `Title:` becomes a table
+///                    of content entry (for PDF files).
+///    - `EmbedFonts`:  a [PDF file with embedded fonts](\ref TPadPrintEmbedFonts) is generated.
+///  -        `svg`:  a SVG file is produced
+///  -        `tex`:  a TeX file is produced
+///  -        `gif`:  a GIF file is produced
+///  -     `gif+NN`:  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
+///  -        `xpm`:  a XPM file is produced
+///  -        `png`:  a PNG file is produced
+///  -        `jpg`:  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
+///  -       `tiff`:  a TIFF file is produced
+///  -        `cxx`:  a C++ macro file is produced
+///  -        `xml`:  a XML file
+///  -       `json`:  a JSON file
+///  -       `root`:  a ROOT binary file
 ///
-/// When Postscript output is selected (ps, eps), the canvas is saved
-/// to filename.ps or filename.eps. The aspect ratio of the canvas is preserved
+///     `filename` = 0 - filename  is defined by `GetName` and its
+///                      extension is defined with the option
+///
+/// When Postscript output is selected (`ps`, `eps`), the canvas is saved
+/// to `filename.ps` or `filename.eps`. The aspect ratio of the canvas is preserved
 /// on the Postscript file. When the "ps" option is selected, the Postscript
 /// page will be landscape format if the canvas is in landscape format, otherwise
 /// portrait format is selected.
@@ -4766,28 +4748,31 @@ static Bool_t ContainsTImage(TList *li)
 /// ~~~
 ///   The above numbers take into account some margins and are in centimeters.
 ///
+/// \anchor TPadPrintPreview
 /// ### The "Preview" option
 ///
 /// The "Preview" option allows to generate a preview (in the TIFF format) within
 /// the Encapsulated Postscript file. This preview can be used by programs like
 /// MSWord to visualize the picture on screen. The "Preview" option relies on the
-/// "epstool" command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
+/// ["epstool" command](http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
 ///
 /// Example:
 /// ~~~ {.cpp}
 ///     canvas->Print("example.eps","Preview");
 /// ~~~
 ///
+/// \anchor TPadPrintEmbedFonts
 /// ### The "EmbedFonts" option
 ///
 /// The "EmbedFonts" option allows to embed the fonts used in a PDF file inside
-/// that file. This option relies on the "gs" command (https://ghostscript.com).
+/// that file. This option relies on the ["gs" command](https://ghostscript.com).
 ///
 /// Example:
 /// ~~~ {.cpp}
 ///     canvas->Print("example.pdf","EmbedFonts");
 /// ~~~
 ///
+/// \anchor TPadPrintPS
 /// ### Writing several canvases to the same Postscript or PDF file:
 ///
 ///  - if the Postscript or PDF file name finishes with "(", the file is not closed
@@ -4814,7 +4799,7 @@ static Bool_t ContainsTImage(TList *li)
 ///    h1.Draw();
 ///    c1.Print("c1.ps");
 /// ~~~
-///  The TCanvas::Print("file.ps(") mechanism is very useful, but it can be
+///  The `TCanvas::Print("file.ps(")` mechanism is very useful, but it can be
 ///  a little inconvenient to have the action of opening/closing a file
 ///  being atomic with printing a page. Particularly if pages are being
 ///  generated in some loop one needs to detect the special cases of first
@@ -4850,12 +4835,12 @@ static Bool_t ContainsTImage(TList *li)
 /// ~~~
 /// The delay between each frame must be specified in each Print() statement.
 /// If the file "myfile.gif" already exists, the new frame are appended at
-/// the end of the file. To avoid this, delete it first with gSystem->Unlink(myfile.gif);
+/// the end of the file. To avoid this, delete it first with `gSystem->Unlink(myfile.gif);`
 /// If you want the gif file to repeat or loop forever, check TASImage::WriteImage documentation
 
-void TPad::Print(const char *filenam, Option_t *option)
+void TPad::Print(const char *filename, Option_t *option)
 {
-   TString psname, fs1 = filenam;
+   TString psname, fs1 = filename;
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
    // of the file name (see help) they must be removed before doing ExpandPathName.
@@ -5608,26 +5593,34 @@ void TPad::ResizePad(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save Pad contents in a file in one of various formats.
+/// Save the pad content in a file.
 ///
-///  - if filename is "", the file produced is padname.ps
-///  - if filename starts with a dot, the padname is added in front
-///  - if filename contains .eps, an Encapsulated Postscript file is produced
-///  - if filename contains .pdf, a PDF file is produced NOTE: TMathText will be converted to TLatex; q.e.d., symbols only available in TMathText will not render properly.
-///  - if filename contains .svg, a SVG file is produced
-///  - if filename contains .tex, a TeX file is produced
-///  - if filename contains .gif, a GIF file is produced
-///  - if filename contains .gif+NN, an  animated GIF file is produced See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
-///  - if filename contains .xpm, a XPM file is produced
-///  - if filename contains .png, a PNG file is produced
-///  - if filename contains .jpg, a JPEG file is produced NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-///  - if filename contains .tiff, a TIFF file is produced
-///  - if filename contains .C or .cxx, a C++ macro file is produced
-///  - if filename contains .root, a Root file is produced
-///  - if filename contains .xml, a XML file is produced
-///  - if filename contains .json, a JSON file is produced
+/// The file's format used to save the pad  is determined by the `filename` extension:
 ///
-///   See comments in TPad::Print for the Postscript formats
+///  - if `filename` is empty, the file produced is `padname.ps`
+///  - if `filename` starts with a dot, the padname is added in front
+///  - if `filename` ends with `.ps`, a Postscript file is produced
+///  - if `filename` ends with `.eps`, an Encapsulated Postscript file is produced
+///  - if `filename` ends with `.pdf`, a PDF file is produced NOTE: TMathText will be converted to TLatex; q.e.d., symbols only available in TMathText will not render properly.
+///  - if `filename` ends with `.svg`, a SVG file is produced
+///  - if `filename` ends with `.tex`, a TeX file is produced
+///  - if `filename` ends with `.gif`, a GIF file is produced
+///  - if `filename` ends with `.gif+NN`, an  animated GIF file is produced See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
+///  - if `filename` ends with `.xpm`, a XPM file is produced
+///  - if `filename` ends with `.png`, a PNG file is produced
+///  - if `filename` ends with `.bmp`, a BMP file is produced
+///  - if `filename` ends with `.jpg` or `.jpeg` a JPEG file is produced NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
+///  - if `filename` ends with `.tiff`, a TIFF file is produced
+///  - if `filename` ends with `.C`, `.cxx`,`.cpp` or `.cc`, a C++ macro file is produced
+///  - if `filename` ends with `.root`, a Root file is produced
+///  - if `filename` ends with `.xml`, a XML file is produced
+///  - if `filename` ends with `.json`, a JSON file is produced
+///
+/// \remarks
+///  - The parameter `option` is not used.
+///  - This method calls [TPad::Print(const char *filename, Option_t *option)](\ref TPadPrint)
+///    the value of `option` is determined by the `filename` extension.
+///  - Postscript and PDF formats allow to have [several pictures in one file](\ref TPadPrintPS).
 
 void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 {
@@ -5649,7 +5642,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"gif");
    else if (psname.Contains(".gif+"))
       ((TPad*)this)->Print(psname,"gif+");
-   else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp"))
+   else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp") || psname.EndsWith(".cc"))
       ((TPad*)this)->Print(psname,"cxx");
    else if (psname.EndsWith(".root"))
       ((TPad*)this)->Print(psname,"root");
