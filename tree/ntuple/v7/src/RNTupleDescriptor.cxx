@@ -353,7 +353,7 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
    pos += SerializeVersion(val.GetVersion(), *where);
    pos += SerializeUInt64(val.GetFirstEntryIndex(), *where);
    pos += SerializeUInt64(val.GetNEntries(), *where);
-   pos += SerializeLocator({0, 1, ""}, *where); // unused
+   pos += SerializeLocator({0, 1, ""}, *where); // reserved for later use.
 
    auto size = pos - base;
    SerializeUInt32(size, ptrSize);
