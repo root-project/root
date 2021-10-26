@@ -54,6 +54,21 @@
 #include "RNNSequenceBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNSequenceBatchwise.ref.hxx"
 
+#include "LSTMBatchwise_FromONNX.hxx"
+#include "input_models/references/LSTMBatchwise.ref.hxx"
+
+#include "LSTMBidirectional_FromONNX.hxx"
+#include "input_models/references/LSTMBidirectional.ref.hxx"
+
+#include "LSTMDefaults_FromONNX.hxx"
+#include "input_models/references/LSTMDefaults.ref.hxx"
+
+#include "LSTMInitialBias_FromONNX.hxx"
+#include "input_models/references/LSTMInitialBias.ref.hxx"
+
+#include "LSTMPeepholes_FromONNX.hxx"
+#include "input_models/references/LSTMPeepholes.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -520,5 +535,172 @@ TEST(ONNX, RNNSequenceBatchwise)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LSTMBatchwise)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMBatchwise::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(LSTMBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = LSTMBatchwise_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(LSTMBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LSTMBidirectional)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMBidirectional::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+   std::vector<float> output_yc = output[2];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(LSTMBidirectional_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = LSTMBidirectional_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(LSTMBidirectional_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = LSTMBidirectional_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yc.size(), sizeof(LSTMBidirectional_ExpectedOutput::all_ones_yc) / sizeof(float));
+
+   float *correct_yc = LSTMBidirectional_ExpectedOutput::all_ones_yc;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yc[i] - correct_yc[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LSTMDefaults)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMDefaults::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(LSTMDefaults_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = LSTMDefaults_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(LSTMDefaults_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = LSTMDefaults_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LSTMInitialBias)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(9);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMInitialBias::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(LSTMInitialBias_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = LSTMInitialBias_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(LSTMInitialBias_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = LSTMInitialBias_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LSTMPeepholes)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(8);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMPeepholes::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(LSTMPeepholes_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = LSTMPeepholes_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(LSTMPeepholes_ExpectedOutput::all_ones) / sizeof(float));
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
    }
 }
