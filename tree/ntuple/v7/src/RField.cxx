@@ -459,14 +459,14 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisito
 
 void ROOT::Experimental::RField<char>::GenerateColumnsImpl()
 {
-   RColumnModel model(EColumnType::kByte, false /* isSorted*/);
+   RColumnModel model(EColumnType::kChar, false /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
-      char, EColumnType::kByte>(model, 0)));
+      char, EColumnType::kChar>(model, 0)));
 }
 
 void ROOT::Experimental::RField<char>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
-   EnsureColumnType({EColumnType::kByte}, 0, desc);
+   EnsureColumnType({EColumnType::kChar}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -479,14 +479,14 @@ void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visi
 
 void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl()
 {
-   RColumnModel model(EColumnType::kByte, false /* isSorted*/);
+   RColumnModel model(EColumnType::kInt8, false /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
-      std::int8_t, EColumnType::kByte>(model, 0)));
+      std::int8_t, EColumnType::kInt8>(model, 0)));
 }
 
 void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
-   EnsureColumnType({EColumnType::kByte}, 0, desc);
+   EnsureColumnType({EColumnType::kInt8}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -499,14 +499,14 @@ void ROOT::Experimental::RField<std::int8_t>::AcceptVisitor(Detail::RFieldVisito
 
 void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl()
 {
-   RColumnModel model(EColumnType::kByte, false /* isSorted*/);
+   RColumnModel model(EColumnType::kInt8, false /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
-      std::uint8_t, EColumnType::kByte>(model, 0)));
+      std::uint8_t, EColumnType::kInt8>(model, 0)));
 }
 
 void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
-   EnsureColumnType({EColumnType::kByte}, 0, desc);
+   EnsureColumnType({EColumnType::kInt8}, 0, desc);
    GenerateColumnsImpl();
 }
 
@@ -713,15 +713,15 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl()
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
 
-   RColumnModel modelChars(EColumnType::kByte, false /* isSorted*/);
+   RColumnModel modelChars(EColumnType::kChar, false /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
-      Detail::RColumn::Create<char, EColumnType::kByte>(modelChars, 1)));
+      Detail::RColumn::Create<char, EColumnType::kChar>(modelChars, 1)));
 }
 
 void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
    EnsureColumnType({EColumnType::kIndex}, 0, desc);
-   EnsureColumnType({EColumnType::kByte}, 1, desc);
+   EnsureColumnType({EColumnType::kChar}, 1, desc);
    GenerateColumnsImpl();
 }
 
