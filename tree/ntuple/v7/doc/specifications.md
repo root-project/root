@@ -119,7 +119,7 @@ The type can take one of the following values
 | 0x02 | URI string      |
 
 _Offset_:
-For on-disk / in-file locators, the 64bit byte offset of the referenced byte range.
+For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
 For object ID locators, specifies the 64bit object ID.
 FOr URI locators, the locator contains the ASCII characters of the URI following the size and the type.
 
