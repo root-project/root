@@ -936,9 +936,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeEnvelopePreamble(*where);
    // So far we don't make use of feature flags
    pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += SerializeUInt32(kReleaseCandidateTag, *where);
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
-   pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE + "  [RNTuple v1 alpha]", *where);
+   pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
 
    auto frame = pos;
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
@@ -1090,6 +1091,14 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    for (auto f: featureFlags) {
       if (f)
          R__LOG_WARNING(NTupleLog()) << "Unsupported feature flag! " << f;
+   }
+
+   std::uint32_t rcTag;
+   if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
+      return R__FAIL("header too short");
+   bytes += DeserializeUInt32(bytes, rcTag);
+   if (rcTag > 0) {
+      R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << rcTag;
    }
 
    std::string name;
