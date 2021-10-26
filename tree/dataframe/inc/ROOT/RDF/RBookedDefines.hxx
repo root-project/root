@@ -100,6 +100,11 @@ public:
    /// in each branch of the computation graph.
    /// Internally it recreates the vector with the new name, and swaps it with the old one.
    void AddName(std::string_view name);
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Empty the contents of this ledger.
+   /// The only allowed operation on a RBookedDefines object after a call to Clear is its destruction.
+   void Clear();
 };
 
 } // Namespace RDF

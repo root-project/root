@@ -11,6 +11,7 @@
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/InternalTreeUtils.hxx" // GetTreeFullPaths
 #include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
@@ -601,6 +602,8 @@ void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
       ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters)
       ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedDefines)
+      ptr->InitSlot(r, slot);
    for (auto &callback : fCallbacksOnce)
       callback(slot);
 }
@@ -690,6 +693,8 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
+      ptr->FinaliseSlot(slot);
+   for (auto &ptr : fBookedDefines)
       ptr->FinaliseSlot(slot);
 }
 
@@ -808,6 +813,16 @@ void RLoopManager::Book(RRangeBase *rangePtr)
 void RLoopManager::Deregister(RRangeBase *rangePtr)
 {
    RDFInternal::Erase(rangePtr, fBookedRanges);
+}
+
+void RLoopManager::Book(RDefineBase *ptr)
+{
+   fBookedDefines.emplace_back(ptr);
+}
+
+void RLoopManager::Deregister(RDefineBase *ptr)
+{
+   RDFInternal::Erase(ptr, fBookedDefines);
 }
 
 // dummy call, end of recursive chain of calls
