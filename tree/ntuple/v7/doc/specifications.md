@@ -121,7 +121,7 @@ The type can take one of the following values
 _Offset_:
 For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
 For object ID locators, specifies the 64bit object ID.
-FOr URI locators, the locator contains the ASCII characters of the URI following the size and the type.
+For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
 
 An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
 followed by a locator.
