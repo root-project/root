@@ -434,7 +434,7 @@ followed by an inner list frame in which the items correspond to the pages of th
 The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
 For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).
 
-The order of the inner items must match the order of pages resp. elements.
+The order of the inner items must match the order of pages' resp. elements.
 Every inner item (that describes a page) has the following structure:
 
 ```
