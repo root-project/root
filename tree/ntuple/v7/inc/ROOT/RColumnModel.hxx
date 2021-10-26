@@ -41,6 +41,7 @@ enum class EColumnType {
    // in order to serialize std::variant
    kSwitch,
    kByte,
+   kChar,
    kBit,
    kReal64,
    kReal32,
@@ -48,6 +49,7 @@ enum class EColumnType {
    kInt64,
    kInt32,
    kInt16,
+   kInt8,
    kMax,
 };
 
