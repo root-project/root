@@ -538,7 +538,7 @@ public:
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(std::move(newColumn), name);
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, newCols, fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
       return newInterface;
    }
 
@@ -2806,7 +2806,7 @@ private:
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(newColumn, name);
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, newCols, fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
       return newInterface;
    }
