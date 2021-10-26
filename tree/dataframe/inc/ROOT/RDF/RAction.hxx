@@ -74,9 +74,13 @@ public:
 
    RAction(const RAction &) = delete;
    RAction &operator=(const RAction &) = delete;
-   // must call Deregister here (and not e.g. in ~RActionBase), because we need fPrevDataFrame to be alive:
-   // otherwise, if fPrevDataFrame is fLoopManager, we get a use after delete
-   ~RAction() { fLoopManager->Deregister(this); }
+   ~RAction()
+   {
+      // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
+      // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
+      RActionBase::GetDefines().Clear(); // triggers RDefine deregistration
+      fLoopManager->Deregister(this);
+   }
 
    /**
       Retrieve a wrapper to the result of the action that knows how to merge
@@ -91,8 +95,6 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &bookedBranch : GetDefines().GetColumns())
-         bookedBranch.second->InitSlot(r, slot);
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetDefines(), fIsDefine.data(),
                                            fLoopManager->GetDSValuePtrs(), fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
@@ -118,8 +120,6 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      for (auto &column : GetDefines().GetColumns())
-         column.second->FinaliseSlot(slot);
       for (auto &v : fValues[slot])
          v.reset();
       fHelper.CallFinalizeTask(slot);

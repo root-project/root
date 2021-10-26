@@ -42,7 +42,6 @@ protected:
    const std::string fType; ///< The type of the custom column as a text string
    std::vector<Long64_t> fLastCheckedEntry;
    RDFInternal::RBookedDefines fDefines;
-   std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
    RLoopManager *fLoopManager; // non-owning pointer to the RLoopManager
    const ROOT::RDF::ColumnNames_t fColumnNames;
    /// The nth flag signals whether the nth input column is a custom column or not.

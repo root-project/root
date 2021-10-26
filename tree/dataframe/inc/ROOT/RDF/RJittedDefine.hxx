@@ -37,6 +37,7 @@ public:
       : RDefineBase(name, type, RDFInternal::RBookedDefines(), lm, /* columnNames */ {})
    {
    }
+   ~RJittedDefine();
 
    void SetDefine(std::unique_ptr<RDefineBase> c) { fConcreteDefine = std::move(c); }
 
