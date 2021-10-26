@@ -138,7 +138,7 @@ public:
    void Update(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         // evaluate this filter, cache the result
+         // evaluate this define expression, cache the result
          UpdateHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
          fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
       }
