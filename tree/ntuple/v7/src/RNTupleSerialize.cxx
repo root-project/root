@@ -425,7 +425,9 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
       case EColumnType::kSwitch:
          return SerializeUInt16(0x03, buffer);
       case EColumnType::kByte:
-         return SerializeUInt16(0x0D, buffer);
+         return SerializeUInt16(0x04, buffer);
+      case EColumnType::kChar:
+         return SerializeUInt16(0x05, buffer);
       case EColumnType::kBit:
          return SerializeUInt16(0x06, buffer);
       case EColumnType::kReal64:
@@ -440,6 +442,8 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
          return SerializeUInt16(0x0B, buffer);
       case EColumnType::kInt16:
          return SerializeUInt16(0x0C, buffer);
+      case EColumnType::kInt8:
+         return SerializeUInt16(0x0D, buffer);
       default:
          throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
@@ -458,6 +462,12 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
          break;
       case 0x03:
          type = EColumnType::kSwitch;
+         break;
+      case 0x04:
+         type = EColumnType::kByte;
+         break;
+      case 0x05:
+         type = EColumnType::kChar;
          break;
       case 0x06:
          type = EColumnType::kBit;
@@ -481,7 +491,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
          type = EColumnType::kInt16;
          break;
       case 0x0D:
-         type = EColumnType::kByte;
+         type = EColumnType::kInt8;
          break;
       default:
          return R__FAIL("unexpected on-disk column type");
