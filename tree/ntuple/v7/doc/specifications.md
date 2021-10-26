@@ -411,7 +411,7 @@ The order of the cluster summaries defines the cluster IDs, starting from zero.
 
 #### Cluster Group Record Frame
 The cluster group record frame references the page list envelopes for groups of clusters.
-The order and cardinality of the cluster groups corrensponds to the cluster IDs as defined by the cluster summaries.
+The order and cardinality of the cluster groups corresponds to the cluster IDs as defined by the cluster summaries.
 A cluster group record frame starts with
 
 ```
