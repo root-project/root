@@ -5,3 +5,4 @@
 #include "TMVA/ROperator_Sigmoid.hxx"
 #include "TMVA/ROperator_Conv.hxx"
 #include "TMVA/ROperator_RNN.hxx"
+#include "TMVA/ROperator_LSTM.hxx"
