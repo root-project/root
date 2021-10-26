@@ -177,9 +177,10 @@ public:
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
    static std::uint32_t SerializeFramePostscript(void *frame, std::int32_t size);
-   static RResult<std::uint32_t> DeserializeFrame(const void *buffer, std::uint32_t bufSize,
-                                                  std::uint32_t &frameSize, std::uint32_t &nitems);
-   static RResult<std::uint32_t> DeserializeFrame(const void *buffer, std::uint32_t bufSize, std::uint32_t &frameSize);
+   static RResult<std::uint32_t> DeserializeFrameHeader(const void *buffer, std::uint32_t bufSize,
+                                                        std::uint32_t &frameSize, std::uint32_t &nitems);
+   static RResult<std::uint32_t> DeserializeFrameHeader(const void *buffer, std::uint32_t bufSize,
+                                                        std::uint32_t &frameSize);
 
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
