@@ -73,6 +73,7 @@ protected:
    std::string fCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
    std::vector<std::string> fCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
    Bool_t fCanCreateObjects{kTRUE}; ///<! indicates if canvas allowed to create extra objects for interactive painting
+   Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
@@ -182,6 +183,9 @@ public:
 
    void SetPrimitivesMerge(Int_t cnt) { fPrimitivesMerge = cnt; }
    Int_t GetPrimitivesMerge() const { return fPrimitivesMerge; }
+
+   void SetLongerPolling(Bool_t on) { fLongerPolling = on; }
+   Bool_t GetLongerPolling() const { return fLongerPolling; }
 
    void SetCustomScripts(const std::string &src);
 

@@ -628,6 +628,11 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
    if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
       fWindow->SetGeometry(w + 6, h + 22);
 
+   if ((args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt5) ||
+       (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt6) ||
+       (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kCEF))
+      SetLongerPolling(kTRUE);
+
    fWindow->Show(args);
 }
 
@@ -1127,13 +1132,14 @@ void TWebCanvas::ForceUpdate()
 Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
 {
    // simple polling loop until specified version delivered to the clients
+   // first 500 loops done without sleep, then with 1ms sleep and last 500 with 100 ms sleep
 
-   long cnt = 0;
+   long cnt = 0, cnt_limit = GetLongerPolling() ? 5500 : 1500;
 
    if (gDebug > 2)
       Info("WaitWhenCanvasPainted", "version %ld", (long)ver);
 
-   while (cnt++ < 1000) {
+   while (cnt++ < cnt_limit) {
 
       if (!fWindow->HasConnection(0, false)) {
          if (gDebug > 2)
@@ -1148,8 +1154,8 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
       }
 
       gSystem->ProcessEvents();
-
-      gSystem->Sleep((cnt < 500) ? 1 : 100); // increase sleep interval when do very often
+      if (cnt > 500)
+         gSystem->Sleep((cnt < cnt_limit - 500) ? 1 : 100); // increase sleep interval when do very often
    }
 
    if (gDebug > 2)
