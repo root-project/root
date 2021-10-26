@@ -185,8 +185,8 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       if ((pos > 0) && (kind[pos-1] == ';')) kind.resize(pos-1);
    }
 
-   // very special handling of qt5 which can specify pointer as a string
-   if (kind.find("qt5:") == 0) {
+   // very special handling of qt5/qt6 which can specify pointer as a string
+   if ((kind.find("qt5:") == 0) || (kind.find("qt6:") == 0)) {
       SetDriverData((void *) std::stoul(kind.substr(4)));
       kind.resize(3);
    }
