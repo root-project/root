@@ -737,7 +737,7 @@ class RClusterDescriptorBuilder {
 private:
    RClusterDescriptor fCluster = RClusterDescriptor();
 public:
-   /// Make an empty column descriptor builder.
+   /// Make an empty cluster descriptor builder.
    RClusterDescriptorBuilder() = default;
 
    RClusterDescriptorBuilder& ClusterId(DescriptorId_t clusterId) {
@@ -753,8 +753,8 @@ public:
       return *this;
    }
 
-   RResult<void> AddPageRange(const RClusterDescriptor::RPageRange &pageRange);
-   RResult<void> CommitColumnRange(DescriptorId_t columnId, std::uint64_t firstElementIndex);
+   RResult<void> CommitColumnRange(DescriptorId_t columnId, std::uint64_t firstElementIndex,
+                                   const RClusterDescriptor::RPageRange &pageRange);
 
    /// Attempt to make a cluster descriptor. This may fail if the cluster
    /// was not given enough information to make a proper descriptor.
