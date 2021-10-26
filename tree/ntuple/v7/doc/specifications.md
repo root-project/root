@@ -532,19 +532,18 @@ e.g. `std::vector<MyEvent>` or `std::vector<std::vector<float>>`.
 
 The following fundamental types are stored as `leaf` fields with a single column each:
 
-| C++ Type          | Default RNTuple Column | Alternative Encodings |
---------------------|------------------------|-----------------------|
-| bool              | Bit                    |                       |
-| char              | Char                   |                       |
-| unsigned char     | Byte                   |                       |
-| int8_t, uint_8_t  | Int8                   |                       |
-| int16_t, uint16_t | Int16                  | SplitInt16            |
-| int32_t, uint32_t | Int32                  | SplitInt32            |
-| int64_t, uint64_t | Int64                  | SplitInt64            |
-| float             | Real32                 | SplitReal32           |
-| double            | Real64                 | SplitReal64           |
+| C++ Type                         | Default RNTuple Column | Alternative Encoding  |
+-----------------------------------|------------------------|-----------------------|
+| bool                             | Bit                    |                       |
+| char                             | Char                   |                       |
+| int8_t, uint_8_t, unsigned char  | Int8                   |                       |
+| int16_t, uint16_t                | SplitInt16             | Int16                 |
+| int32_t, uint32_t                | SplitInt32             | Int32                 |
+| int64_t, uint64_t                | SplitInt64             | Int64                 |
+| float                            | SplitReal32            | Real32                |
+| double                           | SplitReal64            | Real64                |
 
-Possibly available `const` and `volatile` qualifiers of the C++ types are discarded for serialization.
+Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
 
 ### STL Types and Collections
 
@@ -552,7 +551,7 @@ The following STL and collection types are supported.
 Generally, collections have a mother column of type (Split)Index32 or (Split)Index64.
 The mother column stores the offsets of the next collection entries relative to the cluster.
 For instance, an `std::vector<float>` with the values `{1.0}`, `{}`, `{1.0, 2.0}`
-for the first 3 entries would result in an index column `[1, 1, 3]`
+for the first 3 entries results in an index column `[1, 1, 3]`
 and a value column `[1.0, 1.0, 2.0]`.
 
 #### std::string
@@ -566,20 +565,19 @@ The second column is of type Char.
 STL vector and ROOT's RVec have identical on-disk representations.
 They are stored as two fields:
   - Collection mother field of type SplitIndex32 or SplitIndex64
-  - Child field of type `T`, which must by a type with RNTuple I/O support
-
-The name of the child field is `_0`.
+  - Child field of type `T`, which must by a type with RNTuple I/O support.
+    The name of the child field is `_0`.
 
 #### std::array<T, N>
 
-Fixed-sized arrays are stored as single repetitive leaf fields of type `T`.
+Fixed-sized arrays are stored as single repetitive fields of type `T`.
 The array size `N` is stored in the field meta-data.
 
 #### std::variant<T1, T2, ..., Tn>
 
-Variants are stored as $n+1$ fields:
+Variants are stored in $n+1$ fields:
   - Variant mother field of type Switch; the dispatch tag points to the principle column of the active type
-  - Child fields of types `T1`, ..., `Tn`
+  - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
 
 ### User-defined classes
 
@@ -594,7 +592,7 @@ User defined C++ classes are supported with the following limitations
 User classes are stored as a record mother field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
 The field name of member subfields is identical to the C++ field name.
-The field name of base class subfields is the class type name preceeded by a colon (`:`).
+The field name of base class subfields are numbered and preceeded by a colon (`:`), i.e. `:_0`, `:_1`, ...
 
 ## Limits
 
