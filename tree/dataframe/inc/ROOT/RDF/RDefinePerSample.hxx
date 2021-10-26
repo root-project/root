@@ -11,6 +11,7 @@
 #ifndef ROOT_RDF_RDEFINEPERSAMPLE
 #define ROOT_RDF_RDEFINEPERSAMPLE
 
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include <ROOT/RDF/RDefineBase.hxx>
@@ -37,9 +38,9 @@ class R__CLING_PTRCHECK(off) RDefinePerSample final : public RDefineBase {
    ValuesPerSlot_t fLastResults;
 
 public:
-   RDefinePerSample(std::string_view name, std::string_view type, F expression, unsigned int nSlots)
-      : RDefineBase(name, type, nSlots, /*defines*/ {}, /*DSValuePtrs*/ {}, /*ds*/ nullptr, /*columnNames*/ {}),
-        fExpression(std::move(expression)), fLastResults(nSlots * RDFInternal::CacheLineStep<RetType_t>())
+   RDefinePerSample(std::string_view name, std::string_view type, F expression, RLoopManager &lm)
+      : RDefineBase(name, type, /*defines*/ {}, lm, /*columnNames*/ {}), fExpression(std::move(expression)),
+        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
    {
    }
 
