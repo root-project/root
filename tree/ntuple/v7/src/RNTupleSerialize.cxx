@@ -928,7 +928,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
-   pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
+   pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE + "  [RNTuple v1 alpha]", *where);
 
    auto frame = pos;
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
