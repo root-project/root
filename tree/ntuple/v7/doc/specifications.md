@@ -76,7 +76,7 @@ _T(ype)_: Can be either 0 for a **record frame** or 1 for a **list frame**.
 The type can be interpreted as the sign bit of the size, i.e. negative sizes indicate list frames.
 
 _Reserved, Number of items_: Only used for list frames to indicate the length of the list in the frame payload.
-The reseved bits might be used in a future format versions.
+The reserved bits might be used in a future format versions.
 
 File format readers should use the size provided in the frame to seek to the data that follows a frame
 instead of summing up the sizes of the elements in the frame.
