@@ -16,7 +16,7 @@
 using namespace ROOT::Detail::RDF;
 
 RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RBookedDefines()) { }
+   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RBookedDefines(), {}) { }
 
 void RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
 {

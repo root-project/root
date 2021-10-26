@@ -55,24 +55,18 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
-   const ROOT::RDF::ColumnNames_t fColumnNames;
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
-   /// The nth flag signals whether the nth input column is a custom column or not.
-   std::array<bool, ColumnTypes_t::list_size> fIsDefine;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
 
 public:
    RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
            const RDFInternal::RBookedDefines &defines, std::string_view name = "")
-      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), defines),
-        fFilter(std::move(f)), fColumnNames(columns), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fIsDefine(),
-        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr)
+      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), defines, columns),
+        fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevDataPtr(std::move(pd)),
+        fPrevData(*fPrevDataPtr)
    {
-      const auto nColumns = fColumnNames.size();
-      for (auto i = 0u; i < nColumns; ++i)
-         fIsDefine[i] = fDefines.HasName(fColumnNames[i]);
    }
 
    RFilter(const RFilter &) = delete;

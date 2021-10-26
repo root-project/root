@@ -16,12 +16,16 @@
 using namespace ROOT::Detail::RDF;
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
-                         const RDFInternal::RBookedDefines &defines)
+                         const RDFInternal::RBookedDefines &defines, const ColumnNames_t &columns)
    : RNodeBase(implPtr), fLastCheckedEntry(std::vector<Long64_t>(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1)),
      fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
      fAccepted(nSlots * RDFInternal::CacheLineStep<ULong64_t>()),
-     fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fDefines(defines)
+     fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fColumnNames(columns), fDefines(defines),
+     fIsDefine(columns.size())
 {
+   const auto nColumns = fColumnNames.size();
+   for (auto i = 0u; i < nColumns; ++i)
+      fIsDefine[i] = fDefines.HasName(fColumnNames[i]);
 }
 
 // outlined to pin virtual table

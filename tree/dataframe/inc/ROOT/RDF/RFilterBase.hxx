@@ -13,6 +13,8 @@
 
 #include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
+#include "ROOT/RDF/Utils.hxx" // ColumnNames_t
+#include "ROOT/RVec.hxx"
 #include "RtypesCore.h"
 #include "TError.h" // R_ASSERT
 
@@ -40,12 +42,14 @@ protected:
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;
-
+   const ROOT::RDF::ColumnNames_t fColumnNames;
    RDFInternal::RBookedDefines fDefines;
+   /// The nth flag signals whether the nth input column is a custom column or not.
+   ROOT::RVecB fIsDefine;
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
-               const RDFInternal::RBookedDefines &defines);
+               const RDFInternal::RBookedDefines &defines, const ColumnNames_t &columns);
    RFilterBase &operator=(const RFilterBase &) = delete;
 
    virtual ~RFilterBase();
