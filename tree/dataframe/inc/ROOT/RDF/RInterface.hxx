@@ -131,9 +131,10 @@ public:
    RInterface(RInterface &&) = default;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Only enabled when building a RInterface<RLoopManager>.
-   template <typename T = Proxied, std::enable_if_t<std::is_same<T, RLoopManager>::value, int> = 0>
-   RInterface(const std::shared_ptr<Proxied> &proxied)
+   /// \brief Build a RInterface from a RLoopManager.
+   /// This constructor is only available for RInterface<RLoopManager>.
+   template <typename T = Proxied, typename = std::enable_if_t<std::is_same<T, RLoopManager>::value, int>>
+   RInterface(const std::shared_ptr<RLoopManager> &proxied)
       : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource())
    {
       AddDefaultColumns();
