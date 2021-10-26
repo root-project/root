@@ -92,6 +92,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 class RFilterBase;
 class RRangeBase;
+class RDefineBase;
 using ROOT::RDF::RDataSource;
 
 /// The head node of a RDF computation graph.
@@ -107,6 +108,7 @@ class RLoopManager : public RNodeBase {
    std::vector<RFilterBase *> fBookedFilters;
    std::vector<RFilterBase *> fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::vector<RRangeBase *> fBookedRanges;
+   std::vector<RDefineBase *> fBookedDefines;
 
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
@@ -172,6 +174,8 @@ public:
    void Deregister(RFilterBase *filterPtr);
    void Book(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
+   void Book(RDefineBase *definePtr);
+   void Deregister(RDefineBase *definePtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;

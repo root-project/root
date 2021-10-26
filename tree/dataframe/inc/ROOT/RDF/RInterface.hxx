@@ -390,6 +390,7 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fDefines,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+      fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(jittedDefine, name);
@@ -480,6 +481,7 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fDefines,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+      fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(jittedDefine, name);
@@ -2883,9 +2885,9 @@ private:
       }
 
       using NewCol_t = RDFDetail::RDefine<F, DefineType>;
-      auto newColumn =
-         std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
-                                    fDefines, *fLoopManager);
+      auto newColumn = std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
+                                                  fDefines, *fLoopManager);
+      fLoopManager->Book(newColumn.get());
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(newColumn, name);

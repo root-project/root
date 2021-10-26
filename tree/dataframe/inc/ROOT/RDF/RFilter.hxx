@@ -72,9 +72,12 @@ public:
 
    RFilter(const RFilter &) = delete;
    RFilter &operator=(const RFilter &) = delete;
-   // must call Deregister here, before fPrevDataFrame is destroyed,
-   // otherwise if fPrevDataFrame is fLoopManager we get a use after delete
-   ~RFilter() { fLoopManager->Deregister(this); }
+   ~RFilter() {
+      // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
+      // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
+      fDefines.Clear(); // triggers RDefine deregistration
+      fLoopManager->Deregister(this);
+   }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
@@ -105,8 +108,6 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &bookedBranch : fDefines.GetColumns())
-         bookedBranch.second->InitSlot(r, slot);
       RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
                                            fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
@@ -153,9 +154,6 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinaliseSlot(unsigned int slot) final
    {
-      for (auto &column : fDefines.GetColumns())
-         column.second->FinaliseSlot(slot);
-
       for (auto &v : fValues[slot])
          v.reset();
    }
