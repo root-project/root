@@ -14,6 +14,8 @@
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RVec.hxx"
 
 #include <deque>
 #include <map>
@@ -44,13 +46,17 @@ protected:
    std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
    const std::map<std::string, std::vector<void *>> &fDSValuePtrs; // reference to RLoopManager's data member
    ROOT::RDF::RDataSource *fDataSource; ///< non-owning ptr to the RDataSource, if any. Used to retrieve column readers.
+   const ROOT::RDF::ColumnNames_t fColumnNames;
+   /// The nth flag signals whether the nth input column is a custom column or not.
+   ROOT::RVecB fIsDefine;
 
    static unsigned int GetNextID();
 
 public:
    RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
                const RDFInternal::RBookedDefines &defines,
-               const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds);
+               const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds,
+               const ColumnNames_t &columnNames);
 
    RDefineBase &operator=(const RDefineBase &) = delete;
    RDefineBase &operator=(RDefineBase &&) = delete;
