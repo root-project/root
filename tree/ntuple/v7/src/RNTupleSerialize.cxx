@@ -1349,8 +1349,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
             pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
             bytes += result.Unwrap();
          }
-         clusterBuilder.AddPageRange(pageRange);
-         clusterBuilder.CommitColumnRange(j, columnOffset);
+         clusterBuilder.CommitColumnRange(j, columnOffset, pageRange);
 
          bytes = innerFrame + innerFrameSize;
       }
