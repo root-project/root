@@ -14,6 +14,7 @@
 #include "ROOT/RDF/ColumnReaderUtils.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
@@ -98,10 +99,9 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
 
 public:
    RDefine(std::string_view name, std::string_view type, F expression, const ROOT::RDF::ColumnNames_t &columns,
-           unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
-           const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
-      : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds, columns), fExpression(std::move(expression)),
-        fLastResults(nSlots * RDFInternal::CacheLineStep<ret_type>()), fValues(nSlots)
+           const RDFInternal::RBookedDefines &defines, RLoopManager &lm)
+      : RDefineBase(name, type, defines, lm, columns), fExpression(std::move(expression)),
+        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
    }
 
@@ -114,7 +114,8 @@ public:
          for (auto &define : fDefines.GetColumns())
             define.second->InitSlot(r, slot);
          fIsInitialized[slot] = true;
-         RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs, fDataSource};
+         RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
+                                              fLoopManager->GetDataSource()};
          fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
          fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
       }
