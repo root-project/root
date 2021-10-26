@@ -153,7 +153,11 @@ void GuiHandler::CloseAllBrowsers(bool force_close)
 {
    if (!CefCurrentlyOn(TID_UI)) {
       // Execute on the UI thread.
+#if CEF_VERSION_MAJOR < 95
       CefPostTask(TID_UI, base::Bind(&GuiHandler::CloseAllBrowsers, this, force_close));
+#else
+      CefPostTask(TID_UI, base::BindOnce(&GuiHandler::CloseAllBrowsers, this, force_close));
+#endif
       return;
    }
 
@@ -193,7 +197,7 @@ cef_return_value_t GuiHandler::OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefRequest> request,
-    CefRefPtr<CefRequestCallback> callback) {
+    CefRefPtr<CefResourceLoadCallBack> callback) {
   CEF_REQUIRE_IO_THREAD();
 
   // std::string url = request->GetURL().ToString();
@@ -254,9 +258,9 @@ public:
 
    virtual ~TGuiResourceHandler() {}
 
-   void Cancel() OVERRIDE { CEF_REQUIRE_IO_THREAD(); }
+   void Cancel() override { CEF_REQUIRE_IO_THREAD(); }
 
-   bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) OVERRIDE
+   bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) override
    {
       CEF_REQUIRE_IO_THREAD();
 
@@ -270,7 +274,7 @@ public:
       return true;
    }
 
-   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) OVERRIDE
+   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) override
    {
       CEF_REQUIRE_IO_THREAD();
 
@@ -301,7 +305,7 @@ public:
       // DCHECK(!fArg->Is404());
    }
 
-   bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) OVERRIDE
+   bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) override
    {
       CEF_REQUIRE_IO_THREAD();
 

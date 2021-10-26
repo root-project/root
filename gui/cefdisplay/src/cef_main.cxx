@@ -38,7 +38,7 @@ public:
 
 //   virtual CefRefPtr< CefRenderProcessHandler > GetRenderProcessHandler() { return this; }
 
-//   void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE
+//   void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) override
 //   {
 //      // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
 //   }
