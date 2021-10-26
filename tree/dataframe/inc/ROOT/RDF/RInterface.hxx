@@ -21,6 +21,7 @@
 #include "ROOT/RDF/RDefinePerSample.hxx"
 #include "ROOT/RDF/RFilter.hxx"
 #include "ROOT/RDF/RLazyDSImpl.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RResultPtr.hxx"
