@@ -53,32 +53,38 @@ public:
    void SetNextHandle(RCefWebDisplayHandle *handle);
 
    // CefApp methods:
-   virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
+   virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
 
 #if defined(OS_LINUX)
+#if CEF_VERSION_MAJOR < 95
    // only on Linux special print handler is required to return PDF size
-   virtual CefRefPtr<CefPrintHandler> GetPrintHandler() OVERRIDE { return this; }
+   virtual CefRefPtr<CefPrintHandler> GetPrintHandler() override { return this; }
 #endif
-   // virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
+#endif
+   // virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override { return this; }
 
-   virtual void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE;
+   virtual void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) override;
 
    // CefBrowserProcessHandler methods:
-   virtual void OnContextInitialized() OVERRIDE;
+   virtual void OnContextInitialized() override;
 
    virtual void
-   OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+   OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line) override;
 
-   virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+   virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) override;
 
 #if defined(OS_LINUX)
    // CefPrintHandler methods
-   virtual CefSize GetPdfPaperSize(int device_units_per_inch) OVERRIDE { return CefSize(device_units_per_inch*8.25, device_units_per_inch*11.75); }
-   virtual bool OnPrintDialog( CefRefPtr< CefBrowser > browser, bool has_selection, CefRefPtr< CefPrintDialogCallback > callback ) OVERRIDE { return false; }
-   virtual bool OnPrintJob( CefRefPtr< CefBrowser > browser, const CefString& document_name, const CefString& pdf_file_path, CefRefPtr< CefPrintJobCallback > callback ) OVERRIDE { return false; }
-   virtual void OnPrintReset( CefRefPtr< CefBrowser > browser ) OVERRIDE {}
-   virtual void OnPrintSettings( CefRefPtr< CefBrowser > browser, CefRefPtr< CefPrintSettings > settings, bool get_defaults ) OVERRIDE {}
-   virtual void OnPrintStart( CefRefPtr< CefBrowser > browser ) OVERRIDE {}
+#if CEF_VERSION_MAJOR < 95
+   virtual CefSize GetPdfPaperSize(int device_units_per_inch) override { return CefSize(device_units_per_inch*8.25, device_units_per_inch*11.75); }
+#else
+   virtual CefSize GetPdfPaperSize(CefRefPtr<CefBrowser>, int device_units_per_inch) override { return CefSize(device_units_per_inch*8.25, device_units_per_inch*11.75); }
+#endif
+   virtual bool OnPrintDialog( CefRefPtr< CefBrowser > browser, bool has_selection, CefRefPtr< CefPrintDialogCallback > callback ) override { return false; }
+   virtual bool OnPrintJob( CefRefPtr< CefBrowser > browser, const CefString& document_name, const CefString& pdf_file_path, CefRefPtr< CefPrintJobCallback > callback ) override { return false; }
+   virtual void OnPrintReset( CefRefPtr< CefBrowser > browser ) override {}
+   virtual void OnPrintSettings( CefRefPtr< CefBrowser > browser, CefRefPtr< CefPrintSettings > settings, bool get_defaults ) override {}
+   virtual void OnPrintStart( CefRefPtr< CefBrowser > browser ) override {}
 #endif
 
 
@@ -86,7 +92,7 @@ public:
 
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-   //                              CefRefPtr<CefV8Context> context) OVERRIDE;
+   //                              CefRefPtr<CefV8Context> context) override;
 
 private:
    // Include the default reference counting implementation.
