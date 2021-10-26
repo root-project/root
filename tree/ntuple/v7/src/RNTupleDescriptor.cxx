@@ -757,27 +757,20 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RClusterDescriptorBuilder::AddPageRange(const RClusterDescriptor::RPageRange &pageRange)
-{
-   if (fCluster.fPageRanges.count(pageRange.fColumnId) > 0)
-      return R__FAIL("column ID conflict");
-   fCluster.fPageRanges[pageRange.fColumnId] = pageRange.Clone();
-   return RResult<void>::Success();
-}
-
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(
-   DescriptorId_t columnId, std::uint64_t firstElementIndex)
+   DescriptorId_t columnId, std::uint64_t firstElementIndex, const RClusterDescriptor::RPageRange &pageRange)
 {
+   if (columnId != pageRange.fColumnId)
+      return R__FAIL("column ID mismatch");
+   if (fCluster.fPageRanges.count(columnId) > 0)
+      return R__FAIL("column ID conflict");
    RClusterDescriptor::RColumnRange columnRange{columnId, firstElementIndex, RClusterSize(0)};
-   auto iter = fCluster.fPageRanges.find(columnId);
-   if (iter != fCluster.fPageRanges.end()) {
-      for (const auto &pi : iter->second.fPageInfos) {
-         columnRange.fNElements += pi.fNElements;
-      }
+   for (const auto &pi : pageRange.fPageInfos) {
+      columnRange.fNElements += pi.fNElements;
    }
+   fCluster.fPageRanges[columnId] = pageRange.Clone();
    fCluster.fColumnRanges[columnId] = columnRange;
    return RResult<void>::Success();
 }
