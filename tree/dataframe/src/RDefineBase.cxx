@@ -18,7 +18,7 @@
 #include <atomic>
 
 using ROOT::Detail::RDF::RDefineBase;
-namespace RDFInternal = ROOT::Internal::RDF;
+namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in the header), but Windows needs it
 
 unsigned int RDefineBase::GetNextID()
 {
