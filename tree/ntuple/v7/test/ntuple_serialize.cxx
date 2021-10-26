@@ -158,7 +158,7 @@ TEST(RNTuple, SerializeFrame)
    std::uint32_t nitems;
 
    try {
-      RNTupleSerializer::DeserializeFrame(nullptr, 0, frameSize).Unwrap();
+      RNTupleSerializer::DeserializeFrameHeader(nullptr, 0, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
@@ -175,12 +175,12 @@ TEST(RNTuple, SerializeFrame)
    EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 6));
 
    try {
-      RNTupleSerializer::DeserializeFrame(buffer, 4, frameSize).Unwrap();
+      RNTupleSerializer::DeserializeFrameHeader(buffer, 4, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(4u, RNTupleSerializer::DeserializeFrame(buffer, 6, frameSize, nitems).Unwrap());
+   EXPECT_EQ(4u, RNTupleSerializer::DeserializeFrameHeader(buffer, 6, frameSize, nitems).Unwrap());
    EXPECT_EQ(6u, frameSize);
    EXPECT_EQ(1u, nitems);
 
@@ -208,12 +208,12 @@ TEST(RNTuple, SerializeFrame)
    EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 12));
 
    try {
-      RNTupleSerializer::DeserializeFrame(buffer, 6, frameSize, nitems).Unwrap();
+      RNTupleSerializer::DeserializeFrameHeader(buffer, 6, frameSize, nitems).Unwrap();
       FAIL() << "too short list frame should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFrame(buffer, 12, frameSize, nitems).Unwrap());
+   EXPECT_EQ(8u, RNTupleSerializer::DeserializeFrameHeader(buffer, 12, frameSize, nitems).Unwrap());
    EXPECT_EQ(12u, frameSize);
    EXPECT_EQ(2u, nitems);
 }
