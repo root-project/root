@@ -531,8 +531,8 @@ public:
          retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
       }
 
-      auto newColumn = std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression),
-                                                                        fLoopManager->GetNSlots());
+      auto newColumn =
+         std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression), *fLoopManager);
 
       auto updateDefinePerSample = [newColumn](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
          newColumn->Update(slot, id);
@@ -2748,8 +2748,7 @@ private:
       using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
-                                                         ColumnNames_t{}, fLoopManager->GetNSlots(), newCols,
-                                                         fLoopManager->GetDSValuePtrs(), fDataSource);
+                                                         ColumnNames_t{}, newCols, *fLoopManager);
       newCols.AddColumn(entryColumn, entryColName);
 
       // Slot number column
@@ -2759,8 +2758,7 @@ private:
       using NewColSlot_t = RDFDetail::RDefine<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
-                                                       fLoopManager->GetNSlots(), newCols,
-                                                       fLoopManager->GetDSValuePtrs(), fDataSource);
+                                                       newCols, *fLoopManager);
       newCols.AddColumn(slotColumn, slotColName);
 
       fDefines = std::move(newCols);
@@ -2887,7 +2885,7 @@ private:
       using NewCol_t = RDFDetail::RDefine<F, DefineType>;
       auto newColumn =
          std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
-                                    fLoopManager->GetNSlots(), fDefines, fLoopManager->GetDSValuePtrs(), fDataSource);
+                                    fDefines, *fLoopManager);
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddColumn(newColumn, name);

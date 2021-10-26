@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // Long64_t
@@ -20,13 +21,12 @@
 using ROOT::Detail::RDF::RDefineBase;
 namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in the header), but Windows needs it
 
-RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                         const RDFInternal::RBookedDefines &defines,
-                         const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds,
+RDefineBase::RDefineBase(std::string_view name, std::string_view type,
+                         const RDFInternal::RBookedDefines &defines, RLoopManager &lm,
                          const ROOT::RDF::ColumnNames_t &columnNames)
-   : fName(name), fType(type), fLastCheckedEntry(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1),
-     fDefines(defines), fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs), fDataSource(ds),
-     fColumnNames(columnNames), fIsDefine(columnNames.size())
+   : fName(name), fType(type), fLastCheckedEntry(lm.GetNSlots() * RDFInternal::CacheLineStep<Long64_t>(), -1),
+     fDefines(defines), fIsInitialized(lm.GetNSlots(), false), fLoopManager(&lm), fColumnNames(columnNames),
+     fIsDefine(columnNames.size())
 {
    const auto nColumns = fColumnNames.size();
    for (auto i = 0u; i < nColumns; ++i)

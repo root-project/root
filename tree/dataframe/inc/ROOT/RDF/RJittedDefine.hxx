@@ -33,9 +33,8 @@ class RJittedDefine : public RDefineBase {
    std::unique_ptr<RDefineBase> fConcreteDefine = nullptr;
 
 public:
-   RJittedDefine(std::string_view name, std::string_view type, unsigned int nSlots,
-                       const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RDefineBase(name, type, nSlots, RDFInternal::RBookedDefines(), DSValuePtrs, nullptr, /* columnNames */ {})
+   RJittedDefine(std::string_view name, std::string_view type, RLoopManager &lm)
+      : RDefineBase(name, type, RDFInternal::RBookedDefines(), lm, /* columnNames */ {})
    {
    }
 

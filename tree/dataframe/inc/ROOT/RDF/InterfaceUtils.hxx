@@ -433,20 +433,18 @@ struct RDefinePerSampleTag {};
 
 template <typename F>
 auto MakeDefineNode(DefineTypes::RDefineTag, std::string_view name, std::string_view dummyType, F &&f,
-                    const ColumnNames_t &cols, unsigned int nSlots, RBookedDefines &defines,
-                    const std::map<std::string, std::vector<void *>> &dsValuePtrs, RDataSource *ds)
+                    const ColumnNames_t &cols, RBookedDefines &defines, RLoopManager &lm)
 {
-   return std::unique_ptr<RDefineBase>(new RDefine<std::decay_t<F>, CustomColExtraArgs::None>(
-      name, dummyType, std::forward<F>(f), cols, nSlots, defines, dsValuePtrs, ds));
+   return std::unique_ptr<RDefineBase>(
+      new RDefine<std::decay_t<F>, CustomColExtraArgs::None>(name, dummyType, std::forward<F>(f), cols, defines, lm));
 }
 
 template <typename F>
 auto MakeDefineNode(DefineTypes::RDefinePerSampleTag, std::string_view name, std::string_view dummyType, F &&f,
-                    const ColumnNames_t &, unsigned int nSlots, RBookedDefines &,
-                    const std::map<std::string, std::vector<void *>> &, RDataSource *)
+                    const ColumnNames_t &, RBookedDefines &, RLoopManager &lm)
 {
    return std::unique_ptr<RDefineBase>(
-      new RDefinePerSample<std::decay_t<F>>(name, dummyType, std::forward<F>(f), nSlots));
+      new RDefinePerSample<std::decay_t<F>>(name, dummyType, std::forward<F>(f), lm));
 }
 
 // Build a RDefine or a RDefinePerSample object and attach it to an existing RJittedDefine
@@ -484,8 +482,8 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    // to help devs debugging
    const auto dummyType = "jittedCol_t";
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
-   std::unique_ptr<RDefineBase> newCol{MakeDefineNode(RDefineTypeTag{}, name, dummyType, std::forward<F>(f), cols,
-                                                      lm->GetNSlots(), *defines, lm->GetDSValuePtrs(), ds)};
+   std::unique_ptr<RDefineBase> newCol{
+      MakeDefineNode(RDefineTypeTag{}, name, dummyType, std::forward<F>(f), cols, *defines, *lm)};
    jittedDefine->SetDefine(std::move(newCol));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
