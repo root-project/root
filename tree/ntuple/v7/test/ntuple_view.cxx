@@ -45,7 +45,7 @@ TEST(RNTuple, View)
    }
    EXPECT_EQ(2, n);
 
-   auto viewJetElements = ntuple.GetView<std::int32_t>("jets.std::int32_t");
+   auto viewJetElements = ntuple.GetView<std::int32_t>("jets._0");
    n = 0;
    for (auto i : viewJetElements.GetFieldRange()) {
       n++;
@@ -112,7 +112,7 @@ TEST(RNTuple, BulkViewCollection)
    }
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewVecOffsets = ntuple->GetView<ClusterSize_t>("vec");
-   auto viewVecData = ntuple->GetView<double>("vec.double");
+   auto viewVecData = ntuple->GetView<double>("vec._0");
 
    NTupleSize_t nPageItems = 0;
    const ClusterSize_t *offsets_buf = viewVecOffsets.MapV(0, nPageItems);

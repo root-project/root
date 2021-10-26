@@ -268,7 +268,7 @@ TEST(RNTupleShow, Objects)
       +      "\"s\": \"AnotherString1\"}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
       +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\"}],\n"
       + "  \"DerivedA\": {\n"
-      + "    \":CustomStruct\": {\n"
+      + "    \":_0\": {\n"
       + "      \"a\": 0,\n"
       + "      \"v1\": [],\n"
       + "      \"v2\": [],\n"

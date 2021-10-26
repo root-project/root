@@ -21,8 +21,8 @@ TEST(RNTuple, ClassVector)
    EXPECT_EQ(1U, ntuple.GetNEntries());
 
    auto viewKlassVec = ntuple.GetViewCollection("klassVec");
-   auto viewKlass = viewKlassVec.GetView<CustomStruct>("CustomStruct");
-   auto viewKlassA = viewKlassVec.GetView<float>("CustomStruct.a");
+   auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
+   auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
 
    for (auto entryId : ntuple.GetEntryRange()) {
       EXPECT_EQ(42.0, viewKlass(entryId).a);
@@ -56,7 +56,7 @@ TEST(RNTuple, InsideCollection)
 
    auto idKlassVec = source->GetDescriptor().FindFieldId("klassVec");
    ASSERT_NE(idKlassVec, ROOT::Experimental::kInvalidDescriptorId);
-   auto idKlass = source->GetDescriptor().FindFieldId("CustomStruct", idKlassVec);
+   auto idKlass = source->GetDescriptor().FindFieldId("_0", idKlassVec);
    ASSERT_NE(idKlass, ROOT::Experimental::kInvalidDescriptorId);
    auto idA = source->GetDescriptor().FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);

@@ -253,9 +253,9 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    auto fldIdInts = desc.FindFieldId("ints");
    EXPECT_STREQ("ints", desc.GetQualifiedFieldName(fldIdInts).c_str());
    auto fldIdJets = desc.FindFieldId("jets");
-   auto fldIdInner = desc.FindFieldId("float", fldIdJets);
+   auto fldIdInner = desc.FindFieldId("_0", fldIdJets);
    EXPECT_STREQ("jets", desc.GetQualifiedFieldName(fldIdJets).c_str());
-   EXPECT_STREQ("jets.float", desc.GetQualifiedFieldName(fldIdInner).c_str());
+   EXPECT_STREQ("jets._0", desc.GetQualifiedFieldName(fldIdInner).c_str());
 }
 
 TEST(RFieldDescriptorIterable, IterateOverFieldNames)
@@ -300,7 +300,7 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
       EXPECT_EQ(float_child_range.begin(), float_child_range.end());
    }
    ASSERT_EQ(child_names.size(), 1);
-   EXPECT_EQ(child_names[0], std::string("float"));
+   EXPECT_EQ(child_names[0], std::string("_0"));
 
    // check if canonical iterator methods work
    auto iter = top_level_fields.begin();
@@ -313,7 +313,7 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
       child_names.push_back(child_field.GetFieldName());
    }
    ASSERT_EQ(child_names.size(), 1);
-   EXPECT_EQ(child_names[0], std::string("std::vector<bool>"));
+   EXPECT_EQ(child_names[0], std::string("_0"));
 }
 
 TEST(RFieldDescriptorIterable, SortByLambda)

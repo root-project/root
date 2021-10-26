@@ -1260,7 +1260,7 @@ private:
    static std::vector<Detail::RFieldBase *> BuildItemFields(unsigned int index = 0)
    {
       std::vector<Detail::RFieldBase *> result;
-      result.emplace_back(new RField<HeadT>("variant" + std::to_string(index)));
+      result.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
       if constexpr(sizeof...(TailTs) > 0) {
          auto tailFields = BuildItemFields<TailTs...>(index + 1);
          result.insert(result.end(), tailFields.begin(), tailFields.end());
@@ -1293,7 +1293,7 @@ class RField<std::vector<ItemT>> : public RVectorField {
 public:
    static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name)
-      : RVectorField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
+      : RVectorField(name, std::make_unique<RField<ItemT>>("_0"))
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1415,7 +1415,7 @@ public:
       Attach(std::move(itemField));
    }
    explicit RField(std::string_view name)
-      : RField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
+      : RField(name, std::make_unique<RField<ItemT>>("_0"))
    {
    }
    RField(RField&& other) = default;
@@ -1501,7 +1501,7 @@ public:
    RField(std::string_view name)
       : ROOT::Experimental::Detail::RFieldBase(name, "ROOT::VecOps::RVec<bool>", ENTupleStructure::kCollection, false)
    {
-      Attach(std::make_unique<RField<bool>>("bool"));
+      Attach(std::make_unique<RField<bool>>("_0"));
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
