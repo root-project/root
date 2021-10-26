@@ -38,6 +38,11 @@ void RBookedDefines::AddName(std::string_view name)
    fDefinesNames = newColsNames;
 }
 
+void RBookedDefines::Clear() {
+   fDefines.reset();
+   fDefinesNames.reset();
+}
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT

@@ -110,15 +110,10 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      if (!fIsInitialized[slot]) {
-         for (auto &define : fDefines.GetColumns())
-            define.second->InitSlot(r, slot);
-         fIsInitialized[slot] = true;
-         RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                              fLoopManager->GetDataSource()};
-         fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
-         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
-      }
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
+                                           fLoopManager->GetDataSource()};
+      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
@@ -144,11 +139,8 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinaliseSlot(unsigned int slot) final
    {
-      if (fIsInitialized[slot]) {
-         for (auto &v : fValues[slot])
-            v.reset();
-         fIsInitialized[slot] = false;
-      }
+      for (auto &v : fValues[slot])
+         v.reset();
    }
 };
 
