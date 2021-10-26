@@ -186,14 +186,14 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<std::vector<bool>>>(fieldName);
    } else if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
-      auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
+      auto itemField = Create("_0", itemTypeName);
       result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
    } else if (normalizedType == "ROOT::VecOps::RVec<bool>") {
       result = std::make_unique<RField<ROOT::VecOps::RVec<bool>>>(fieldName);
    } else if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       // For the time being, we silently read RVec fields as std::vector
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
-      auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
+      auto itemField = Create("_0", itemTypeName);
       result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
    } else if (normalizedType.substr(0, 11) == "std::array<") {
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
@@ -207,7 +207,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
       std::vector<RFieldBase *> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
-         items.emplace_back(Create("variant" + std::to_string(i), innerTypes[i]).Unwrap().release());
+         items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
       }
       result = std::make_unique<RVariantField>(fieldName, items);
    }
@@ -782,12 +782,14 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       throw RException(R__FAIL(std::string(className) + " is not supported"));
    }
 
+   int i = 0;
    for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
       TClass *c = baseClass->GetClassPointer();
-      auto subField = Detail::RFieldBase::Create(std::string(kPrefixInherited) + c->GetName(),
+      auto subField = Detail::RFieldBase::Create(std::string(kPrefixInherited) + "_" + std::to_string(i),
                                                  c->GetName()).Unwrap();
       Attach(std::move(subField),
 	     RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
+      i++;
    }
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
       if (!dataMember->IsPersistent())
@@ -1121,7 +1123,7 @@ ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
    : ROOT::Experimental::Detail::RFieldBase(name, "std::vector<bool>", ENTupleStructure::kCollection,
                                             false /* isSimple */)
 {
-   Attach(std::make_unique<RField<bool>>("bool"));
+   Attach(std::make_unique<RField<bool>>("_0"));
 }
 
 std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Detail::RFieldValue& value) {
