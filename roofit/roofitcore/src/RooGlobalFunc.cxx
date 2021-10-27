@@ -31,6 +31,8 @@
 #include "RooHelpers.h"
 #include "TH1.h"
 
+#include <algorithm>
+
 using namespace std;
 
 namespace RooFit {
@@ -176,7 +178,15 @@ namespace RooFit {
   RooCmdArg Extended(Bool_t flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg DataError(Int_t etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
   RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
-  RooCmdArg BatchMode(bool flag) { return RooCmdArg("BatchMode", flag); }
+  RooCmdArg BatchMode(std::string const& batchMode) {
+      std::string lower = batchMode;
+      std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });
+      bool mode;
+      if(lower == "off") mode = false;
+      else if(lower == "cpu") mode = true;
+      else throw std::runtime_error("Only supported string values for BatchMode() are `off` or `cpu`.");
+      return RooCmdArg("BatchMode", static_cast<int>(mode));
+  }
   /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see RooAbsPdf::fitTo().
   RooCmdArg IntegrateBins(double precision) { return RooCmdArg("IntegrateBins", 0, 0, precision); }
 
