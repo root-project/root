@@ -600,22 +600,25 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
 
 int RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
-   int res = 0;
-   int cnt = 0;
-   double spent = 0;
+   int res = 0, cnt = 0;
+   double spent = 0.;
 
    auto start = std::chrono::high_resolution_clock::now();
 
    win.Sync(); // in any case call sync once to ensure
 
+   auto is_main_thread = IsMainThrd();
+
    while ((res = check(spent)) == 0) {
 
-      if (IsMainThrd())
+      if (is_main_thread)
          gSystem->ProcessEvents();
 
       win.Sync();
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      // only when first 1000 events processed, invoke sleep
+      if (++cnt > 1000)
+         std::this_thread::sleep_for(std::chrono::milliseconds(cnt > 5000 ? 10 : 1));
 
       std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
 
@@ -623,8 +626,6 @@ int RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool
 
       if (timed && (spent > timelimit))
          return -3;
-
-      cnt++;
    }
 
    return res;

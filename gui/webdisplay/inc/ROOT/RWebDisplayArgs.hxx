@@ -150,12 +150,14 @@ public:
    RWebDisplayArgs &SetWidth(int w = 0) { fWidth = w; return *this; }
    /// set preferable web window height
    RWebDisplayArgs &SetHeight(int h = 0) { fHeight = h; return *this; }
+   /// set preferable web window width and height
    RWebDisplayArgs &SetSize(int w, int h) { fWidth = w; fHeight = h; return *this; }
 
    /// set preferable web window x position, negative is default
    RWebDisplayArgs &SetX(int x = -1) { fX = x; return *this; }
    /// set preferable web window y position, negative is default
    RWebDisplayArgs &SetY(int y = -1) { fY = y; return *this; }
+   /// set preferable web window x and y position, negative is default
    RWebDisplayArgs &SetPos(int x = -1, int y = -1) { fX = x; fY = y; return *this; }
 
    /// returns preferable web window width
@@ -167,10 +169,14 @@ public:
    /// set preferable web window y position
    int GetY() const { return fY; }
 
+   /// set extra command line arguments for starting web browser command
    void SetExtraArgs(const std::string &args) { fExtraArgs = args; }
+   /// get extra command line arguments for starting web browser command
    const std::string &GetExtraArgs() const { return fExtraArgs; }
 
+   /// specify file name to which web browser output should be redirected
    void SetRedirectOutput(const std::string &fname = "") { fRedirectOutput = fname; }
+   /// get file name to which web browser output should be redirected
    const std::string &GetRedirectOutput() const { return fRedirectOutput; }
 
    /// set custom executable to start web browser
