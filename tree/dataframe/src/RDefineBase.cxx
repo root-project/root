@@ -29,7 +29,7 @@ unsigned int RDefineBase::GetNextID()
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
                          const RDFInternal::RBookedDefines &defines,
                          const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds,
-                         const ColumnNames_t &columnNames)
+                         const ROOT::RDF::ColumnNames_t &columnNames)
    : fName(name), fType(type), fLastCheckedEntry(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1),
      fDefines(defines), fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs), fDataSource(ds),
      fColumnNames(columnNames), fIsDefine(columnNames.size())
