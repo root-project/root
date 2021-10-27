@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo, Massimo Tumolo CERN  06/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -34,9 +34,9 @@ namespace RDFDetail = ROOT::Detail::RDF;
 /**
  * \class ROOT::Internal::RDF::RBookedDefines
  * \ingroup dataframe
- * \brief Encapsulates the columns defined by the user
+ * \brief A binder for user-defined columns and aliases.
+ * The storage is copy-on-write and shared between all instances of the class that have the same values.
  */
-
 class RBookedDefines {
    using RDefineBasePtrMap_t = std::map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
    using ColumnNames_t = std::vector<std::string>;
@@ -46,40 +46,31 @@ class RBookedDefines {
    using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 
 private:
+   /// Immutable map of Defines, can be shared among several nodes.
+   /// When a new define is added (through a call to RInterface::Define or similar) a new map with the extra element is
+   /// created.
    RDefineBasePtrMapPtr_t fDefines;
-   ColumnNamesPtr_t fDefinesNames;  // also abused to keep track of aliases for each branch of the computation graph
+   ColumnNamesPtr_t fColumnNames;  ///< Names of Defines and Aliases registered so far.
 
 public:
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Copy-ctor for RBookedDefines.
    RBookedDefines(const RBookedDefines &) = default;
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Move-ctor for RBookedDefines.
    RBookedDefines(RBookedDefines &&) = default;
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Copy-assignment operator for RBookedDefines.
    RBookedDefines &operator=(const RBookedDefines &) = default;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates the object starting from the provided maps
    RBookedDefines(RDefineBasePtrMapPtr_t defines, ColumnNamesPtr_t defineNames)
-      : fDefines(defines), fDefinesNames(defineNames)
+      : fDefines(defines), fColumnNames(defineNames)
    {
    }
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a new wrapper with empty maps
    RBookedDefines()
       : fDefines(std::make_shared<RDefineBasePtrMap_t>()),
-        fDefinesNames(std::make_shared<ColumnNames_t>())
+        fColumnNames(std::make_shared<ColumnNames_t>())
    {
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the names of the defined columns
-   ColumnNames_t GetNames() const { return *fDefinesNames; }
+   /// \brief Returns the list of the names of the defined columns (Defines + Aliases)
+   ColumnNames_t GetNames() const { return *fColumnNames; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the list of the pointers to the defined columns
@@ -97,7 +88,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
    ///
-   /// This is needed because we abuse fDefinesNames to also keep track of the aliases defined
+   /// This is needed because we abuse fColumnNames to also keep track of the aliases defined
    /// in each branch of the computation graph.
    /// Internally it recreates the vector with the new name, and swaps it with the old one.
    void AddName(std::string_view name);
