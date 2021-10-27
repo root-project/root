@@ -34,7 +34,7 @@ class RRangeBase;
 
 namespace Internal {
 namespace RDF {
-class RBookedDefines;
+class RColumnRegister;
 
 namespace GraphDrawing {
 std::shared_ptr<GraphNode>
@@ -47,8 +47,7 @@ std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *
 
 /// Add the Defines that have been added between this node and the previous to the graph.
 /// Return the new "upmost" node, i.e. the last of the Defines added if any, otherwise the node itself
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RBookedDefines &defines,
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines);
 
 // clang-format off
