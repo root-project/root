@@ -14,8 +14,8 @@ namespace RDF {
 
 bool RBookedDefines::HasName(std::string_view name) const
 {
-   const auto ccolnamesEnd = fDefinesNames->end();
-   return ccolnamesEnd != std::find(fDefinesNames->begin(), ccolnamesEnd, name);
+   const auto ccolnamesEnd = fColumnNames->end();
+   return ccolnamesEnd != std::find(fColumnNames->begin(), ccolnamesEnd, name);
 }
 
 void RBookedDefines::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column, std::string_view name)
@@ -35,7 +35,7 @@ void RBookedDefines::AddName(std::string_view name)
 
    auto newColsNames = std::make_shared<ColumnNames_t>(names);
    newColsNames->emplace_back(std::string(name));
-   fDefinesNames = newColsNames;
+   fColumnNames = newColsNames;
 }
 
 void RBookedDefines::Clear() {
