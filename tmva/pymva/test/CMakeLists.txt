@@ -26,8 +26,7 @@ if(PY_TORCH_FOUND)
    configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
    configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
    configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
-   configure_file(generatePyTorchModelModule.py generatePyTorchModelModule.py COPYONLY)
-   configure_file(generatePyTorchModelSequential.py generatePyTorchModelSequential.py COPYONLY)
+   configure_file(generatePyTorchModel.py generatePyTorchModel.py COPYONLY)
    # Test PyTorch: Binary classification${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS}
    ROOT_EXECUTABLE(testPyTorchClassification testPyTorchClassification.C
       LIBRARIES ${Libraries})
