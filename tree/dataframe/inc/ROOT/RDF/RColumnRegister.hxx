@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RDFBOOKEDCUSTOMCOLUMNS
-#define ROOT_RDFBOOKEDCUSTOMCOLUMNS
+#ifndef ROOT_RDF_RCOLUMNREGISTER
+#define ROOT_RDF_RCOLUMNREGISTER
 
 #include <TString.h>
 
@@ -24,7 +24,7 @@ namespace Detail {
 namespace RDF {
 class RDefineBase;
 }
-}
+} // namespace Detail
 
 namespace Internal {
 namespace RDF {
@@ -32,16 +32,16 @@ namespace RDF {
 namespace RDFDetail = ROOT::Detail::RDF;
 
 /**
- * \class ROOT::Internal::RDF::RBookedDefines
+ * \class ROOT::Internal::RDF::RColumnRegister
  * \ingroup dataframe
  * \brief A binder for user-defined columns and aliases.
  * The storage is copy-on-write and shared between all instances of the class that have the same values.
  */
-class RBookedDefines {
+class RColumnRegister {
    using RDefineBasePtrMap_t = std::map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
    using ColumnNames_t = std::vector<std::string>;
 
-   // Since RBookedDefines is meant to be an immutable, copy-on-write object, the actual values are set as const
+   // Since RColumnRegister is meant to be an immutable, copy-on-write object, the actual values are set as const
    using RDefineBasePtrMapPtr_t = std::shared_ptr<const RDefineBasePtrMap_t>;
    using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 
@@ -50,21 +50,20 @@ private:
    /// When a new define is added (through a call to RInterface::Define or similar) a new map with the extra element is
    /// created.
    RDefineBasePtrMapPtr_t fDefines;
-   ColumnNamesPtr_t fColumnNames;  ///< Names of Defines and Aliases registered so far.
+   ColumnNamesPtr_t fColumnNames; ///< Names of Defines and Aliases registered so far.
 
 public:
-   RBookedDefines(const RBookedDefines &) = default;
-   RBookedDefines(RBookedDefines &&) = default;
-   RBookedDefines &operator=(const RBookedDefines &) = default;
+   RColumnRegister(const RColumnRegister &) = default;
+   RColumnRegister(RColumnRegister &&) = default;
+   RColumnRegister &operator=(const RColumnRegister &) = default;
 
-   RBookedDefines(RDefineBasePtrMapPtr_t defines, ColumnNamesPtr_t defineNames)
+   RColumnRegister(RDefineBasePtrMapPtr_t defines, ColumnNamesPtr_t defineNames)
       : fDefines(defines), fColumnNames(defineNames)
    {
    }
 
-   RBookedDefines()
-      : fDefines(std::make_shared<RDefineBasePtrMap_t>()),
-        fColumnNames(std::make_shared<ColumnNames_t>())
+   RColumnRegister()
+      : fDefines(std::make_shared<RDefineBasePtrMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
    {
    }
 
@@ -95,7 +94,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Empty the contents of this ledger.
-   /// The only allowed operation on a RBookedDefines object after a call to Clear is its destruction.
+   /// The only allowed operation on a RColumnRegister object after a call to Clear is its destruction.
    void Clear();
 };
 
@@ -103,4 +102,4 @@ public:
 } // Namespace Internal
 } // Namespace ROOT
 
-#endif
+#endif // ROOT_RDF_RCOLUMNREGISTER

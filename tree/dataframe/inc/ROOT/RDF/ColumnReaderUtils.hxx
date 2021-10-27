@@ -12,7 +12,7 @@
 #define ROOT_RDF_COLUMNREADERUTILS
 
 #include "RColumnReaderBase.hxx"
-#include "RBookedDefines.hxx"
+#include "RColumnRegister.hxx"
 #include "RDefineBase.hxx"
 #include "RDefineReader.hxx"
 #include "RDSColumnReader.hxx"
@@ -74,7 +74,7 @@ MakeColumnReader(unsigned int slot, RDefineBase *define,
 /// incorrectly from a compiled MakeColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
-   const RBookedDefines &fCustomCols;
+   const RColumnRegister &fCustomCols;
    const bool *fIsDefine;
    const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
    ROOT::RDF::RDataSource *fDataSource;
