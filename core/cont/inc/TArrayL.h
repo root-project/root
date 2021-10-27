@@ -27,30 +27,30 @@
 class TArrayL : public TArray {
 
 public:
-   Long_t    *fArray;       //[fN] Array of fN longs
+   Longptr_t *fArray;       //[fN] Array of fN longs
 
    TArrayL();
    TArrayL(Int_t n);
-   TArrayL(Int_t n, const Long_t *array);
+   TArrayL(Int_t n, const Longptr_t *array);
    TArrayL(const TArrayL &array);
    TArrayL    &operator=(const TArrayL &rhs);
    virtual    ~TArrayL();
 
-   void          Adopt(Int_t n, Long_t *array);
-   void          AddAt(Long_t c, Int_t i);
-   Long_t        At(Int_t i) const;
+   void          Adopt(Int_t n, Longptr_t *array);
+   void          AddAt(Longptr_t c, Int_t i);
+   Longptr_t     At(Int_t i) const;
    void          Copy(TArrayL &array) const {array.Set(fN,fArray);}
-   const Long_t *GetArray() const { return fArray; }
-   Long_t       *GetArray() { return fArray; }
+   const Longptr_t *GetArray() const { return fArray; }
+   Longptr_t    *GetArray() { return fArray; }
    Double_t      GetAt(Int_t i) const { return At(i); }
    Stat_t        GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void          Reset()           {memset(fArray,  0, fN*sizeof(Long_t));}
-   void          Reset(Long_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void          Reset()           {memset(fArray,  0, fN*sizeof(Longptr_t));}
+   void          Reset(Longptr_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
    void          Set(Int_t n);
-   void          Set(Int_t n, const Long_t *array);
-   void          SetAt(Double_t v, Int_t i) { AddAt((Long_t)v, i); }
-   Long_t       &operator[](Int_t i);
-   Long_t        operator[](Int_t i) const;
+   void          Set(Int_t n, const Longptr_t *array);
+   void          SetAt(Double_t v, Int_t i) { AddAt((Longptr_t)v, i); }
+   Longptr_t    &operator[](Int_t i);
+   Longptr_t     operator[](Int_t i) const;
 
    ClassDef(TArrayL,1)  //Array of longs
 };
@@ -77,20 +77,20 @@ inline TBuffer &operator<<(TBuffer &buf, const TArrayL *obj)
    return buf << (const TArray*)obj;
 }
 
-inline Long_t TArrayL::At(Int_t i) const
+inline Longptr_t TArrayL::At(Int_t i) const
 {
    if (!BoundsOk("TArrayL::At", i)) return 0;
    return fArray[i];
 }
 
-inline Long_t &TArrayL::operator[](Int_t i)
+inline Longptr_t &TArrayL::operator[](Int_t i)
 {
    if (!BoundsOk("TArrayL::operator[]", i))
       i = 0;
    return fArray[i];
 }
 
-inline Long_t TArrayL::operator[](Int_t i) const
+inline Longptr_t TArrayL::operator[](Int_t i) const
 {
    if (!BoundsOk("TArrayL::operator[]", i)) return 0;
    return fArray[i];
