@@ -23,10 +23,16 @@
 
 #include "TDictionary.h"
 
+class TFunction;
+
 class TFunctionTemplate : public TDictionary {
+
+friend class TCling;
+
 protected:
    FuncTempInfo_t *fInfo;  // pointer to Interpreter function template info
    TClass         *fClass; //pointer to the class (if any).
+   TFunction      *fFunction; // pointer to underlying function
 
 public:
    TFunctionTemplate(FuncTempInfo_t *info, TClass *cl);
@@ -44,6 +50,8 @@ public:
    Long_t              ExtraProperty() const;
 
    virtual bool        Update(FuncTempInfo_t *info);
+
+   TFunction          *Function();
 
    ClassDef(TFunctionTemplate,0)  //Dictionary for function template
 

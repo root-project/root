@@ -221,6 +221,48 @@ constexpr std::size_t CacheLineStep() {
    return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
 }
 
+template <typename>
+struct Decay {
+};
+
+template <typename... Args>
+struct Decay<TypeList<Args...>> {
+   using type = TypeList<std::decay_t<Args>...>;
+};
+
+template <typename T>
+using Decay_t = typename Decay<T>::type;
+
+template<typename, typename>
+struct Result {
+};
+
+template <typename F, typename... Args>
+struct Result<F, TypeList<Args...>> {
+#if __cplusplus >= 201703L
+   using type = std::invoke_result_t<F, Args...>;
+#else
+   using type = std::result_of_t<F(Args...)>;
+#endif
+};
+
+template <typename F, typename T>
+using Result_t = typename Result<F, T>::type;
+
+// appropriate type conversion for callable arguments in jitted functions
+// scalar types passed by const value, non-scalar types passed by non-const reference
+// in order to allow calling of non-const functions (though const would be much safer)
+template <class T> struct argument {
+private:
+   using DT = typename std::decay<T>::type;
+public:
+   // *FIXME* really want non-const references here?
+   using type = typename std::conditional<std::is_scalar<DT>::value, typename std::add_const<DT>::type, typename std::add_lvalue_reference<DT>::type>::type;
+};
+
+template <class T>
+using argument_t = typename argument<T>::type;
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

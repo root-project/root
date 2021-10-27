@@ -228,6 +228,278 @@ def _histo_profile(self, fixed_args, *args):
 
     return res
 
+class RDFPythonHelper:
+    def __init__(self):
+        self._jitcounter = 0
+
+    def get_arg_names_global(self, function):
+        from cppyy.gbl import gROOT
+
+        cols = None
+
+        for method in gROOT.GetListOfGlobalFunctions(True):
+            if method.GetName() == function:
+                colstmp = []
+                for arg in method.GetListOfMethodArgs():
+                    if not arg.GetName():
+                        raise Exception(f"Argument names not available from function {function}, cannot infer column names and none were explicitly provided.")
+                    colstmp.append(arg.GetName())
+                if cols is not None and colstmp != cols:
+                    raise Exception(f"Cannot infer column names from overloaded function {function} with different argument names.")
+                cols = colstmp
+
+        # search templated methods
+        gROOT.GetListOfFunctionTemplates().Load()
+        for method in gROOT.GetListOfFunctionTemplates():
+            if method.GetName() == function:
+                colstmp = []
+                for arg in method.Function().GetListOfMethodArgs():
+                    if not arg.GetName():
+                        raise Exception(f"Argument names not available from function {function}, cannot infer column names and none were explicitly provided.")
+                    colstmp.append(arg.GetName())
+                if cols is not None and colstmp != cols:
+                    raise Exception(f"Cannot infer column names from overloaded function {function} with different argument names.")
+                cols = colstmp
+
+
+        if cols is None:
+            raise Exception(f"Failed to infer column names from provided function {function}, and none were explicitly provided.")
+
+        return cols
+
+    def get_arg_names(self, cl, function):
+        from cppyy.gbl import TClass
+
+        if not cl:
+            return self.get_arg_names_global(function)
+
+        fullname = f"{cl}::{function}"
+
+        cols = None
+
+        # first try to load existing class info
+        classinfo = TClass.GetClass(cl)
+
+        if not classinfo:
+            # create temporary class info, which may be needed for interpreted types
+            classinfo = TClass(cl)
+
+        if not classinfo.HasInterpreterInfo():
+            raise Exception(f"Couldn't load class information for class {cl} and therefore cannot infer column names for function {fullname}, and none were explcitly provided.")
+
+        # TODO consolidate shared code with other cases
+        # search non-templated methods first
+        for method in classinfo.GetListOfAllPublicMethods():
+            if method.GetName() == function:
+                colstmp = []
+                for arg in method.GetListOfMethodArgs():
+                    if not arg.GetName():
+                        raise Exception(f"Argument names not available from function {fullname}, cannot infer column names and none were explicitly provided.")
+                    colstmp.append(arg.GetName())
+                if cols is not None and colstmp != cols:
+                    raise Exception(f"Cannot infer column names from overloaded function {fullname} with different argument names.")
+                cols = colstmp
+
+        # search templated methods
+        for method in classinfo.GetListOfFunctionTemplates():
+            if method.GetName() == function:
+                colstmp = []
+                for arg in method.Function().GetListOfMethodArgs():
+                    if not arg.GetName():
+                        raise Exception(f"Argument names not available from function {fullname}, cannot infer column names and none were explicitly provided.")
+                    colstmp.append(arg.GetName())
+                if cols is not None and colstmp != cols:
+                    raise Exception(f"Cannot infer column names from overloaded function {fullname} with different argument names.")
+                cols = colstmp
+
+
+        if cols is None:
+            raise Exception(f"Failed to infer column names from provided function {fullname}, and none were explicitly provided.")
+
+        return cols
+
+    def _define(self, cppself, fixed_args, name, expression, cols = None):
+        original_method_name, method_name = fixed_args
+        original_method = getattr(cppself, original_method_name)
+
+        from cppyy.gbl import TInterpreter, ROOT
+        gInterpreter = TInterpreter.Instance()
+
+        nsname = f"RDFPythonHelper_{self._jitcounter}"
+
+        if cols is not None:
+          # FIXME currently this means there is no way to call functions taking std::vector input
+          # arguments directly, since they will always be passed as RVec arguments
+          coltypes = cppself.ValidatedArgTypes(cols, method_name, True)
+          # cppyy doesn't like the std::string objects from C++ somehow...
+          coltypes = [str(coltype) for coltype in coltypes]
+
+        if isinstance(expression, str):
+            # C++ lambda expression string
+            # wrap in a callable because cppyy doesn't play nice with lambdas currently
+
+            if expression.lstrip().startswith("["):
+                # already a lambda expression, use it directly
+                lambdaexpr = expression
+            else:
+                # expression string needs to be parsed to construct full lambda expression
+                if cols is not None:
+                    raise ValueError("Column names cannot be explicitly provided when passing a result expression as a string.")
+
+                # DON'T unpack directly or the std::tuple gets gc'd
+                lambda_cols_types = cppself.BuildLambdaWithArgsAndTypes(expression, method_name)
+                lambdaexpr, cols, coltypes = lambda_cols_types
+
+                lambdaexpr = str(lambdaexpr)
+                cols = [str(col) for col in cols]
+                coltypes = [str(coltype) for coltype in coltypes]
+
+            tojit = f"""
+                namespace ROOT {{
+                    namespace {nsname} {{
+                        auto lambda = {lambdaexpr};
+                        using LambdaT = decltype(lambda);
+
+                        class DefineWrapper {{
+
+                        public:
+                            template<typename... Args>
+                            auto operator() (Args... x) {{ return lambda(x...); }}
+                        }};
+
+                    }};
+                }};
+            """
+
+            status = gInterpreter.Declare(tojit)
+
+            if not status:
+                raise Exception("failed to jit helper callable with code as below:\n" + tojit)
+
+            self._jitcounter += 1
+
+            if cols is None:
+                cols = self.get_arg_names(f"ROOT::{nsname}::LambdaT", "operator()")
+                coltypes = cppself.ValidatedArgTypes(cols, method_name, True)
+                # cppyy doesn't like the std::string objects from C++ somehow...
+                coltypes = [str(coltype) for coltype in coltypes]
+
+            # the below works, but can give extremely opaque error messages
+            expressiontype = eval(f"ROOT.{nsname}.DefineWrapper")
+            expression = expressiontype()
+
+
+        elif type(expression).__name__ in ["CPPOverload", "TemplateProxy"]:
+            # wrap in a callable to transparently handle overloaded functions and work around some cppyy limitations with function pointers
+
+            exprname = None
+            ftemplateargs = ""
+            im_class = None
+            im_self = None
+
+            if type(expression).__name__ == "CPPOverload":
+                overloads = [expression]
+            elif type(expression).__name__ == "TemplateProxy":
+                if expression.im_templateargs is not None:
+                    ftemplateargs = expression.im_templateargs
+                overloads = [expression.im_lowpriorityoverloads, expression.im_templatedoverloads, expression.im_nontemplatedoverloads]
+                overloads = [overload for overload in overloads if overload is not None]
+
+            for overload in overloads:
+                if exprname is not None and overload.__name__ != exprname:
+                    raise Exception("Mismatched function names between different overloads for templated function.")
+                exprname = overload.__name__
+                if overload.im_class is not None:
+                    if im_class is not None and overload.im_class !=  im_class:
+                        raise Exception("Mismatched class types between different overloads for templated function.")
+
+                    im_class = overload.im_class
+                if overload.im_self is not None:
+                    if im_self is not None and overload.im_self !=  im_self:
+                        raise Exception("Mismatched bound object between different overloads for templated function.")
+
+                    im_self = overload.im_self
+
+            if cols is None:
+                cols = self.get_arg_names(im_class.__cpp_name__, exprname)
+                coltypes = cppself.ValidatedArgTypes(cols, method_name, True)
+                # cppyy doesn't like the std::string objects from C++ somehow...
+                coltypes = [str(coltype) for coltype in coltypes]
+
+            classname = f"DefineWrapperT_{self._jitcounter}"
+
+            if im_self is None:
+                # free function or static class function
+
+                if im_class is None:
+                    namespace = ""
+                else:
+                    namespace = im_class.__cpp_name__
+
+                fname = namespace + "::" + exprname
+
+                tojit = f"""
+                    namespace ROOT {{
+                        namespace {nsname} {{
+                            class DefineWrapper {{
+
+                            public:
+                                template<typename... Args>
+                                auto operator() (Args... x) {{ return {fname}{ftemplateargs}(x...); }}
+                            }};
+                        }};
+                    }};
+                """
+
+                expressionargs = tuple()
+
+            else:
+                # bound member function
+                fname = exprname
+
+                tojit = f"""
+                    namespace ROOT {{
+                        namespace {nsname} {{
+                            class DefineWrapper {{
+
+                            public:
+                                template<typename T>
+                                DefineWrapper(T &&callable) : callable_(std::forward<T>(callable)) {{}}
+
+                                template<typename... Args>
+                                auto operator() (Args... x) {{ return callable_.{fname}{ftemplateargs}(x...); }}
+
+                            private:
+                                {type(im_class).__cpp_name__} callable_;
+                            }};
+                        }};
+                    }};
+                """
+
+                expressionargs = (im_self,)
+
+            status = gInterpreter.Declare(tojit)
+
+            if not status:
+                raise Exception("failed to jit helper callable with code as below:\n" + tojit)
+
+            self._jitcounter += 1
+
+            # the below works, but can give extremely opaque error messages
+            expressiontype = eval(f"ROOT.{nsname}.DefineWrapper")
+            expression = expressiontype(*expressionargs)
+        else:
+            # Callable object can be used directly
+            if cols is None:
+                cols = self.get_arg_names(type(expression).__cpp_name__, "operator()")
+                coltypes = cppself.ValidatedArgTypes(cols, method_name, True)
+                # cppyy doesn't like the std::string objects from C++ somehow...
+                coltypes = [str(coltype) for coltype in coltypes]
+
+
+        # the below works, but can give extremely opaque error messages
+        targs = (ROOT.TypeTraits.TypeList[tuple(coltypes)],)
+        return original_method[targs](name, expression, cols)
 
 @pythonization()
 def pythonize_rdataframe(klass, name):
@@ -263,5 +535,18 @@ def pythonize_rdataframe(klass, name):
             # by a generic function _histo_profile with
             # (original_method_name, model_class) as fixed argument
             setattr(klass, method_name, partialmethod(_histo_profile, fixed_args))
+
+        helper = RDFPythonHelper()
+
+        methods_with_pythonization = {
+                'Define'  :  helper._define,
+          }
+
+        for method_name, method, in methods_with_pythonization.items():
+            print("pythonize", method_name)
+            original_method_name = '_Original' + method_name
+            setattr(klass, original_method_name, getattr(klass, method_name))
+            fixed_args = (original_method_name, method_name)
+            setattr(klass, method_name, partialmethod(method, fixed_args))
 
     return True

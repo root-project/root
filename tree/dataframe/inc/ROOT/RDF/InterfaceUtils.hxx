@@ -312,6 +312,12 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
                                                    const ColumnNames_t &branches,
                                                    std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
+std::tuple<std::string, std::vector<std::string>, std::vector<std::string>>
+BuildLambdaWithArgsAndTypesImpl(std::string_view expression,
+                                             RLoopManager &lm,
+                                             RDataSource *ds, const RBookedDefines &customCols,
+                                             const ColumnNames_t &branches, std::string context);
+
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
                                                       RLoopManager &lm, const RBookedDefines &customCols,
                                                       std::shared_ptr<RNodeBase> *upcastNodeOnHeap);

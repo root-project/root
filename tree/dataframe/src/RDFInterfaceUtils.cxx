@@ -711,6 +711,25 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    return jittedDefine;
 }
 
+std::tuple<std::string, std::vector<std::string>, std::vector<std::string>>
+BuildLambdaWithArgsAndTypesImpl(std::string_view expression,
+                                             RLoopManager &lm,
+                                             RDataSource *ds, const RBookedDefines &customCols,
+                                             const ColumnNames_t &branches, std::string context)
+{
+   const auto &aliasMap = lm.GetAliasMap();
+   auto *const tree = lm.GetTree();
+   const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
+
+   const auto parsedExpr =
+      ParseRDFExpression(expression, branches, customCols.GetNames(), dsColumns, aliasMap);
+   const auto exprVarTypes =
+      GetValidatedArgTypes(parsedExpr.fUsedCols, customCols, tree, ds, context, /*vector2rvec=*/true);
+   const auto lambdaExpr = BuildLambdaString(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
+
+   return std::tuple<std::string, std::vector<std::string>, std::vector<std::string>>(lambdaExpr, parsedExpr.fUsedCols, exprVarTypes);
+}
+
 /// Book the jitting of a DefinePerSample call
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
                                                       RLoopManager &lm, const RBookedDefines &customCols,

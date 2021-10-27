@@ -37,6 +37,7 @@
 class TClass;
 class TEnv;
 class TFunction;
+class TFunctionTemplate;
 class TMethod;
 class TObjArray;
 class TEnum;
@@ -311,6 +312,8 @@ public:
    virtual void     GetFunctionOverloads(ClassInfo_t *cl, const char *funcname, std::vector<DeclId_t>& res) const = 0;
    virtual void     LoadFunctionTemplates(TClass* cl) const = 0;
    virtual std::vector<std::string> GetUsingNamespaces(ClassInfo_t *cl) const = 0;
+
+   virtual void     CreateFunction(TFunctionTemplate *ft) const = 0;
 
    // CallFunc interface
    virtual void   CallFunc_Delete(CallFunc_t * /* func */) const {;}

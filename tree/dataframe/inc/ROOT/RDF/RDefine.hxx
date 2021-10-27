@@ -41,20 +41,18 @@ struct SlotAndEntry{};
 }
 // clang-format on
 
-template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
+template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None, typename FunParamTypes_t = typename CallableTraits<F>::arg_types, typename ret_type = typename CallableTraits<F>::ret_type>
 class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    // shortcuts
    using NoneTag = CustomColExtraArgs::None;
    using SlotTag = CustomColExtraArgs::Slot;
    using SlotAndEntryTag = CustomColExtraArgs::SlotAndEntry;
    // other types
-   using FunParamTypes_t = typename CallableTraits<F>::arg_types;
    using ColumnTypesTmp_t =
       RDFInternal::RemoveFirstParameterIf_t<std::is_same<ExtraArgsTag, SlotTag>::value, FunParamTypes_t>;
    using ColumnTypes_t =
       RDFInternal::RemoveFirstTwoParametersIf_t<std::is_same<ExtraArgsTag, SlotAndEntryTag>::value, ColumnTypesTmp_t>;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
-   using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
    using ValuesPerSlot_t =
       std::conditional_t<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>;
@@ -101,10 +99,13 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    }
 
 public:
-   RDefine(std::string_view name, std::string_view type, F expression, const ROOT::RDF::ColumnNames_t &columns,
+
+   // constructor is templated to allow both lvalue or rvalue for the expression
+   template <typename T>
+   RDefine(std::string_view name, std::string_view type, T &&expression, const ROOT::RDF::ColumnNames_t &columns,
            unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
            const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
-      : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds), fExpression(std::move(expression)),
+      : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds), fExpression(std::forward<T>(expression)),
         fColumnNames(columns), fLastResults(nSlots * RDFInternal::CacheLineStep<ret_type>()), fValues(nSlots),
         fIsDefine()
    {

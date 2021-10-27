@@ -306,6 +306,8 @@ public: // Public Interface
 
    virtual std::vector<std::string> GetUsingNamespaces(ClassInfo_t *cl) const;
 
+   void    CreateFunction(TFunctionTemplate *ft) const;
+
    void    GetInterpreterTypeName(const char* name, std::string &output, Bool_t full = kFALSE);
    void    Execute(const char* function, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);
