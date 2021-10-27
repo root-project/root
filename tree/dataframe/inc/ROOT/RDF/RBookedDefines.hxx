@@ -11,12 +11,13 @@
 #ifndef ROOT_RDFBOOKEDCUSTOMCOLUMNS
 #define ROOT_RDFBOOKEDCUSTOMCOLUMNS
 
-#include <memory>
-#include <map>
-#include <vector>
-#include <string>
+#include <TString.h>
+
 #include <algorithm>
-#include "TString.h"
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Detail {
