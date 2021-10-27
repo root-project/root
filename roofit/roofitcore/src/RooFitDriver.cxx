@@ -71,67 +71,51 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // the ones from the variables that are actually in the computation graph.
    RooBatchCompute::RunContext evalData;
    data.getBatches(evalData, 0, _nEvents);
-   _dataMapCPU = evalData.spans;
-   std::unordered_map<const TNamed *, const RooAbsReal *> nameResolver;
-   for (auto &it : _dataMapCPU)
-      nameResolver[it.first->namePtr()] = it.first;
+   std::map<const TNamed *, RooSpan<const double>> dataSpans;
+   for (auto const &item : evalData.spans) {
+      dataSpans[item.first->namePtr()] = item.second;
+   }
 
    // Check if there is a batch for weights and if it's already in the dataMap.
    // If not, we need to put the batch and give as a key a RooRealVar* that has
    // the same name as RooNLLVarNew's _weight proxy, so that it gets renamed like
    // every other observable.
    RooSpan<const double> weights = data.getWeightBatch(0, _nEvents);
-   std::string weightVarName = "_weight";
-   if (auto *dataSet = dynamic_cast<RooDataSet const *>(&data)) {
-      if (dataSet->weightVar())
-         weightVarName = dataSet->weightVar()->GetName();
-   }
-   RooRealVar dummy(weightVarName.c_str(), "dummy", 0.0);
-   const TNamed *pTNamed = dummy.namePtr();
-   if (!weights.empty() && nameResolver.count(pTNamed) == 0) {
-      _dataMapCPU[&dummy] = weights;
-      nameResolver[pTNamed] = &dummy;
+   if (!weights.empty()) {
+      std::string weightVarName = "_weight";
+      if (auto *dataSet = dynamic_cast<RooDataSet const *>(&data)) {
+         if (dataSet->weightVar())
+            weightVarName = dataSet->weightVar()->GetName();
+      }
+      const TNamed *pTNamed = RooNameReg::instance().constPtr(weightVarName.c_str());
+      dataSpans[pTNamed] = weights;
    }
 
    // Get a serial list of the nodes in the computation graph.
    // treeNodeServelList() is recursive and adds the top node before the children,
    // so reversing the list gives us a topological ordering of the graph.
-   RooArgList list;
-   _topNode.treeNodeServerList(&list, nullptr, true, true, true);
-   for (int i = list.size() - 1; i >= 0; i--) {
-      auto pAbsReal = dynamic_cast<RooAbsReal *>(&list[i]);
-      if (!pAbsReal)
-         continue;
-      const bool alreadyExists = nameResolver.count(pAbsReal->namePtr());
-      const RooAbsReal *pClone = nameResolver[pAbsReal->namePtr()];
-      if (alreadyExists && !pClone)
-         continue; // node included multiple times in the list
+   RooArgList serverList;
+   _topNode.treeNodeServerList(&serverList, nullptr, true, true, true);
+   for (RooAbsArg *arg : RooArgSet{serverList}) {
+      if (auto pAbsReal = dynamic_cast<RooAbsReal *>(arg)) {
+         if (dataSpans.count(pAbsReal->namePtr())) {
+            _dataMapCPU[pAbsReal] = dataSpans[pAbsReal->namePtr()];
+         } else {
+            // If the node doesn't depend on any observables, there is no need to
+            // loop over events and we don't need to use the batched evaluation.
+            RooArgSet observablesForNode;
+            pAbsReal->getObservables(data.get(), observablesForNode);
+            _nodeInfos[pAbsReal].computeInScalarMode = observablesForNode.empty() || !pAbsReal->isDerived();
 
-      if (pClone) // this node is an observable, update the RunContext and don't add it in `_nodeInfos`.
-      {
-         auto it = _dataMapCPU.find(pClone);
-         _dataMapCPU[pAbsReal] = it->second;
-         _dataMapCPU.erase(it);
+            for (auto *client : pAbsReal->clients()) {
+               // we use containsInstance instead of find to match by pointer and not name
+               if (!serverList.containsInstance(*client))
+                  continue;
 
-         // set nameResolver to nullptr to be able to detect future duplicates
-         nameResolver[pAbsReal->namePtr()] = nullptr;
-      } else // this node needs evaluation, mark it's clients
-      {
-         // If the node doesn't depend on any observables, there is no need to
-         // loop over events and we don't need to use the batched evaluation.
-         RooArgSet observablesForNode;
-         pAbsReal->getObservables(data.get(), observablesForNode);
-         _nodeInfos[pAbsReal].computeInScalarMode = observablesForNode.empty() || !pAbsReal->isDerived();
-
-         auto clients = pAbsReal->clients();
-         for (auto *client : clients) {
-            // we use containsInstance instead of find to match by pointer and not name
-            if (!list.containsInstance(*client))
-               continue;
-
-            auto pClient = static_cast<const RooAbsReal *>(client);
-            ++_nodeInfos[pClient].nServers;
-            ++_nodeInfos[pAbsReal].nClients;
+               auto pClient = static_cast<const RooAbsReal *>(client);
+               ++_nodeInfos[pClient].nServers;
+               ++_nodeInfos[pAbsReal].nClients;
+            }
          }
       }
    }
