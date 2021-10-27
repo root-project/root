@@ -16,6 +16,7 @@
 
 #include "RooBatchCompute.h"
 #include "RooNLLVarNew.h"
+#include "RooAbsReal.h"
 
 #include <chrono>
 #include <memory>
@@ -24,7 +25,6 @@
 
 class RooAbsData;
 class RooAbsArg;
-class RooAbsReal;
 
 namespace ROOT {
 namespace Experimental {
@@ -32,7 +32,7 @@ namespace Experimental {
 class RooFitDriver {
 public:
    RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
-                RooBatchCompute::BatchMode batchMode, std::string const &rangeName);
+                RooBatchCompute::BatchMode batchMode, std::string_view rangeName);
    ~RooFitDriver();
    std::unique_ptr<double[]> getValues();
    double getVal();
@@ -125,12 +125,28 @@ private:
    int _getValInvocations = 0;
    double *_cudaMemDataset = nullptr;
 
+   class Dataset {
+   public:
+      Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName);
+
+      std::size_t size() const { return _nEvents; }
+      bool contains(RooAbsReal const *real) const { return _dataSpans.count(real->namePtr()); }
+      RooSpan<const double> const &span(RooAbsReal const *real) const { return _dataSpans.at(real->namePtr()); }
+
+   private:
+      std::map<const TNamed *, RooSpan<const double>> _dataSpans;
+      size_t _nEvents = 0;
+      std::stack<std::vector<double>> _buffers;
+   };
+
+   // used to get access to the data that we fit to
+   const Dataset _dataset;
+
    // used for preserving static info about the computation graph
    RooBatchCompute::DataMap _dataMapCPU;
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooAbsReal &_topNode;
    RooArgSet _normSet;
-   size_t _nEvents = 0;
    std::unordered_map<const RooAbsReal *, NodeInfo> _nodeInfos;
 
    // used for preserving resources
