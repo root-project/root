@@ -1,15 +1,6 @@
 // @(#)root/roofitcore:$name:  $:$id$
 // Authors: Wouter Verkerke  November 2007
 
-#include "TWebFile.h"
-#include "TSystem.h"
-#include "TString.h"
-#include "TStopwatch.h"
-#include "TROOT.h"
-#include "TLine.h"
-#include "TFile.h"
-#include "TClass.h"
-#include "TBenchmark.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
 #include "RooPlot.h"
@@ -21,6 +12,16 @@
 #include "RooHist.h"
 #include "RooRandom.h"
 #include "RooTrace.h"
+
+#include "TWebFile.h"
+#include "TSystem.h"
+#include "TString.h"
+#include "TStopwatch.h"
+#include "TROOT.h"
+#include "TLine.h"
+#include "TFile.h"
+#include "TClass.h"
+#include "TBenchmark.h"
 
 #include <string>
 #include <list>
@@ -58,7 +59,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore, int batchMode)
+Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore, std::string const& batchMode)
 {
   Int_t retVal = 0;
   // Save memory directory location
@@ -256,7 +257,7 @@ int main(int argc,const char *argv[])
   Int_t dryRun       = kFALSE ;
   Bool_t doDump      = kFALSE ;
   Bool_t doTreeStore = kFALSE ;
-  int batchMode      = 0;
+  std::string batchMode = "off";
 
   //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
   string refFileName = "stressRooFit_ref.root" ;
@@ -266,8 +267,9 @@ int main(int argc,const char *argv[])
     string arg = argv[i] ;
 
     if (arg=="-b") {
-      cout << "stressRooFit: BatchMode set to " << argv[i+1] << endl;
-      batchMode = atoi(argv[++i]);
+      string mode = argv[i+1];
+      batchMode = mode;
+      cout << "stressRooFit: BatchMode set to " << mode << endl;
     }
 
     if (arg=="-f") {
@@ -329,7 +331,7 @@ int main(int argc,const char *argv[])
     if (arg=="-h" || arg == "--help") {
       cout << "usage: stressRooFit [ options ] " << endl ;
       cout << "" << endl ;
-      cout << "       -b <int>  : Perform every fit in the tests in batchMode(<int>) (default is scalar mode)" << endl ;
+      cout << "       -b <mode> : Perform every fit in the tests with the BatchMode(<mode>) command argument, where <mode> is a string" << endl ;
       cout << "       -f <file> : use given reference file instead of default (" <<  refFileName << ")" << endl ;
       cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl ;
       cout << " " << endl ;
@@ -376,7 +378,7 @@ Int_t stressRooFit()
    Int_t dryRun       = kFALSE ;
    Bool_t doDump      = kFALSE ;
    Bool_t doTreeStore = kFALSE ;
-   int batchMode      = 0;
+   std::string batchMode = "off";
 
    //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root" ;

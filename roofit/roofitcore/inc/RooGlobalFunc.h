@@ -200,7 +200,14 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
-RooCmdArg BatchMode(bool flag=true);
+
+RooCmdArg BatchMode(std::string const& batchMode="cpu");
+// The const char * overload is necessary, otherwise the compiler will cast a
+// C-Style string to a bool and choose the BatchMode(bool) overload if one
+// calls for example BatchMode("off").
+inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
+inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
+
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
