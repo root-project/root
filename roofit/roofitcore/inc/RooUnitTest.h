@@ -15,13 +15,15 @@
 #ifndef ROO_UNIT_TEST
 #define ROO_UNIT_TEST
 
-#include "TNamed.h"
 #include "RooTable.h"
 #include "RooWorkspace.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
+
+#include "TNamed.h"
 #include "TFile.h"
 #include "TH1.h"
+
 #include <list>
 #include <string>
 #include <utility>
@@ -34,7 +36,7 @@
 
 class RooUnitTest : public TNamed {
 public:
-  RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose, int batchMode=0) ;
+  RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode="off") ;
   ~RooUnitTest() ;
   
   void setDebug(Bool_t flag) { _debug = flag ; }
@@ -74,7 +76,7 @@ protected:
   Bool_t _debug ;
   Bool_t _write ;
   Int_t _verb ;
-  int _batchMode=0;
+  std::string _batchMode="off";
    std::list<std::pair<RooPlot*, std::string> > _regPlots ;
    std::list<std::pair<RooFitResult*, std::string> > _regResults ;
    std::list<std::pair<Double_t, std::string> > _regValues ;
