@@ -40,6 +40,15 @@
 using namespace ROOT::Experimental;
 using namespace std::string_literals;
 
+/** \class ROOT::Experimental::RWebDisplayHandle
+\ingroup webdisplay
+
+Handle of created web-based display
+Depending from type of web display, holds handle of started browser process or other display-specific information
+to correctly stop and cleanup display.
+*/
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Static holder of registered creators of web displays
 

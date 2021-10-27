@@ -33,7 +33,7 @@ RLogChannel &ROOT::Experimental::WebGUILog()
 
 Holds different arguments for starting browser with RWebDisplayHandle::Display() method
 
- */
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Default constructor - browser kind configured from gROOT->GetWebDisplay()
@@ -54,7 +54,7 @@ RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor - browser kind specified as const char *
-/// See SetBrowserKind() method for description of allowed parameters
+/// See \ref SetBrowserKind method for description of allowed parameters
 
 RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 {
@@ -79,14 +79,11 @@ RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel
    SetMasterWindow(master, channel);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor
+/// must be defined in source code to correctly call RWebWindow destructor
 
-RWebDisplayArgs::~RWebDisplayArgs()
-{
-  // must be defined here to correctly call RWebWindow destructor
-}
+RWebDisplayArgs::~RWebDisplayArgs() = default;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set size of web browser window as string like "800x600"
@@ -139,14 +136,15 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
 /// Recognized values:
-///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
+///   chrome - use Google Chrome web browser, supports headless mode from v60, default
 ///  firefox - use Mozilla Firefox browser, supports headless mode from v57
 ///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
 ///  browser - default system web-browser, no batch mode
 ///   safari - Safari browser on Mac
 ///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 WebEngine, local display, local communication
-///    local - either cef or qt5
+///      qt5 - Qt5 QWebEngine, local display, local communication
+///      qt6 - Qt6 QWebEngineCore, local display, local communication
+///    local - either cef or qt5 or qt6
 ///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
