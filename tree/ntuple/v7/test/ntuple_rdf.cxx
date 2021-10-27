@@ -40,6 +40,7 @@ TEST(RNTuple, RDF)
    auto rdf = ROOT::Experimental::MakeNTupleDataFrame("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(42.0, *rdf.Min("pt"));
    EXPECT_EQ(17.0, *rdf.Max("tracks.energy"));
+   EXPECT_EQ(2U, *rdf.Max("R_rdf_sizeof_tracks"));
    auto s = rdf.Take<std::string>("klass.s");
    EXPECT_EQ(1ull, s.GetValue().size());
    EXPECT_EQ(std::string("abc"), s.GetValue()[0]);
