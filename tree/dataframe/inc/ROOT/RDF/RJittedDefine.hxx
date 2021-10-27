@@ -34,7 +34,7 @@ class RJittedDefine : public RDefineBase {
 
 public:
    RJittedDefine(std::string_view name, std::string_view type, RLoopManager &lm)
-      : RDefineBase(name, type, RDFInternal::RBookedDefines(), lm, /* columnNames */ {})
+      : RDefineBase(name, type, RDFInternal::RColumnRegister(), lm, /* columnNames */ {})
    {
    }
    ~RJittedDefine();

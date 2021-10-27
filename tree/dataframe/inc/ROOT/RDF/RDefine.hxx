@@ -99,8 +99,8 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
 
 public:
    RDefine(std::string_view name, std::string_view type, F expression, const ROOT::RDF::ColumnNames_t &columns,
-           const RDFInternal::RBookedDefines &defines, RLoopManager &lm)
-      : RDefineBase(name, type, defines, lm, columns), fExpression(std::move(expression)),
+           const RDFInternal::RColumnRegister &colRegister, RLoopManager &lm)
+      : RDefineBase(name, type, colRegister, lm, columns), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
    }
@@ -110,7 +110,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
                                            fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;

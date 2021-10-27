@@ -9,7 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RCutFlowReport.hxx"
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedFilter.hxx"
 
@@ -18,7 +18,9 @@
 using namespace ROOT::Detail::RDF;
 
 RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RBookedDefines(), /*columnNames*/{}) { }
+   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(), /*columnNames*/ {})
+{
+}
 
 void RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
 {

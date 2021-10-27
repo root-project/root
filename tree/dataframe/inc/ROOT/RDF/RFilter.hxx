@@ -38,7 +38,7 @@ namespace GraphDrawing {
 std::shared_ptr<GraphNode> CreateFilterNode(const RFilterBase *filterPtr);
 
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RDFInternal::RBookedDefines &defines,
+                                             const RDFInternal::RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines);
 } // ns GraphDrawing
 
@@ -63,8 +63,9 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
 
 public:
    RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
-           const RDFInternal::RBookedDefines &defines, std::string_view name = "")
-      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), defines, columns),
+           const RDFInternal::RColumnRegister &colRegister, std::string_view name = "")
+      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
+                    columns),
         fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevDataPtr(std::move(pd)),
         fPrevData(*fPrevDataPtr)
    {
@@ -75,7 +76,7 @@ public:
    ~RFilter() {
       // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
       // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-      fDefines.Clear(); // triggers RDefine deregistration
+      fColRegister.Clear(); // triggers RDefine deregistration
       fLoopManager->Deregister(this);
    }
 
@@ -108,7 +109,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
                                            fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
@@ -173,10 +174,10 @@ public:
          return thisNode;
       }
 
-      auto upmostNode = AddDefinesToGraph(thisNode, fDefines, prevColumns);
+      auto upmostNode = AddDefinesToGraph(thisNode, fColRegister, prevColumns);
 
       // Keep track of the columns defined up to this point.
-      thisNode->AddDefinedColumns(fDefines.GetNames());
+      thisNode->AddDefinedColumns(fColRegister.GetNames());
 
       upmostNode->SetPrevNode(prevNode);
       return thisNode;

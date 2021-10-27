@@ -13,8 +13,10 @@
 
 using namespace ROOT::Internal::RDF;
 
-RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedDefines &defines)
-   : fLoopManager(lm), fNSlots(lm->GetNSlots()), fColumnNames(colNames), fDefines(defines) { }
+RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister)
+   : fLoopManager(lm), fNSlots(lm->GetNSlots()), fColumnNames(colNames), fColRegister(colRegister)
+{
+}
 
 // outlined to pin virtual table
 RActionBase::~RActionBase() {}

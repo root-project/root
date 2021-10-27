@@ -624,7 +624,7 @@ std::string PrettyPrintAddr(const void *const addr)
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
                    std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
-                   const ColumnNames_t &branches, const RBookedDefines &customCols, TTree *tree, RDataSource *ds)
+                   const ColumnNames_t &branches, const RColumnRegister &customCols, TTree *tree, RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -638,7 +638,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
       std::runtime_error("Filter: the following expression does not evaluate to bool:\n" + std::string(expression));
 
    // definesOnHeap is deleted by the jitted call to JitFilterHelper
-   ROOT::Internal::RDF::RBookedDefines *definesOnHeap = new ROOT::Internal::RDF::RBookedDefines(customCols);
+   ROOT::Internal::RDF::RColumnRegister *definesOnHeap = new ROOT::Internal::RDF::RColumnRegister(customCols);
    const auto definesOnHeapAddr = PrettyPrintAddr(definesOnHeap);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
@@ -659,7 +659,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
                     << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedFilter>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedFilter)) << "), "
                     << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>(" << prevNodeAddr << "),"
-                    << "reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesOnHeapAddr << ")"
+                    << "reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << definesOnHeapAddr << ")"
                     << ");\n";
 
    auto lm = jittedFilter->GetLoopManagerUnchecked();
@@ -668,7 +668,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 
 /// Book the jitting of a Define call
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RBookedDefines &customCols,
+                                             RDataSource *ds, const RColumnRegister &customCols,
                                              const ColumnNames_t &branches,
                                              std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
@@ -683,7 +683,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfLambda(lambdaName);
 
-   auto definesCopy = new RBookedDefines(customCols);
+   auto definesCopy = new RColumnRegister(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm);
 
@@ -703,7 +703,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
                     << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
-                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << definesAddr
                     << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
                     << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
 
@@ -713,14 +713,14 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 
 /// Book the jitting of a DefinePerSample call
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RBookedDefines &customCols,
+                                                      RLoopManager &lm, const RColumnRegister &customCols,
                                                       std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
    const auto lambdaName = DeclareLambda(std::string(expression), {"rdfslot_", "rdfsampleinfo_"},
                                          {"unsigned int", "const ROOT::RDF::RSampleInfo"});
    const auto retType = RetTypeOfLambda(lambdaName);
 
-   auto definesCopy = new RBookedDefines(customCols);
+   auto definesCopy = new RColumnRegister(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm);
 
@@ -731,11 +731,10 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
    // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
    // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
-   defineInvocation << "\"" << name
-                    << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
+   defineInvocation << "\"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
-                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << definesAddr
                     << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
                     << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
 
@@ -747,7 +746,7 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
-                           TTree *tree, const unsigned int nSlots, const RBookedDefines &customCols, RDataSource *ds,
+                           TTree *tree, const unsigned int nSlots, const RColumnRegister &customCols, RDataSource *ds,
                            std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of result of the action as a string
@@ -767,7 +766,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    const std::string actionTypeName = actionTypeClass->GetName();
    const std::string actionTypeNameBase = actionTypeName.substr(actionTypeName.rfind(':') + 1);
 
-   auto definesCopy = new RBookedDefines(customCols); // deleted in jitted CallBuildAction
+   auto definesCopy = new RColumnRegister(customCols); // deleted in jitted CallBuildAction
    auto definesAddr = PrettyPrintAddr(definesCopy);
 
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
@@ -791,7 +790,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
                     << PrettyPrintAddr(helperArgOnHeap)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap)
-                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr << "));";
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << definesAddr << "));";
    return createAction_str.str();
 }
 
@@ -843,11 +842,12 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
    return selectedColumns;
 }
 
-std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedDefines &defines, TTree *tree,
-                                              RDataSource *ds, const std::string &context, bool vector2rvec)
+std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RColumnRegister &colRegister,
+                                              TTree *tree, RDataSource *ds, const std::string &context,
+                                              bool vector2rvec)
 {
    auto toCheckedArgType = [&](const std::string &c) {
-      RDFDetail::RDefineBase *define = defines.HasName(c) ? defines.GetColumns().at(c).get() : nullptr;
+      RDFDetail::RDefineBase *define = colRegister.HasName(c) ? colRegister.GetColumns().at(c).get() : nullptr;
       const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2rvec);
       if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
          const auto msg =

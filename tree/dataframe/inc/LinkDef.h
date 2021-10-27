@@ -41,7 +41,7 @@
 #pragma link C++ class ROOT::Internal::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
 #pragma link C++ class ROOT::Internal::RDF::MeanHelper-;
-#pragma link C++ class ROOT::Internal::RDF::RBookedDefines-;
+#pragma link C++ class ROOT::Internal::RDF::RColumnRegister-;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValueBase+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<int>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<unsigned int>+;

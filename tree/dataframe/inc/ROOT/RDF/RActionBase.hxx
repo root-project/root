@@ -11,7 +11,7 @@
 #ifndef ROOT_RACTIONBASE
 #define ROOT_RACTIONBASE
 
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 #include "RtypesCore.h"
@@ -48,16 +48,16 @@ private:
    bool fHasRun = false;
    const ColumnNames_t fColumnNames;
 
-   RBookedDefines fDefines;
+   RColumnRegister fColRegister;
 
 public:
-   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedDefines &defines);
+   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
    virtual ~RActionBase();
 
    const ColumnNames_t &GetColumnNames() const { return fColumnNames; }
-   RBookedDefines &GetDefines() { return fDefines; }
+   RColumnRegister &GetColRegister() { return fColRegister; }
    RLoopManager *GetLoopManager() { return fLoopManager; }
    unsigned int GetNSlots() const { return fNSlots; }
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
