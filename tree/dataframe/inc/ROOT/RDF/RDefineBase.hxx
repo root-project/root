@@ -12,7 +12,7 @@
 #define ROOT_RCUSTOMCOLUMNBASE
 
 #include "ROOT/RDF/GraphNode.hxx"
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RVec.hxx"
@@ -41,14 +41,14 @@ protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
    std::vector<Long64_t> fLastCheckedEntry;
-   RDFInternal::RBookedDefines fDefines;
+   RDFInternal::RColumnRegister fColRegister;
    RLoopManager *fLoopManager; // non-owning pointer to the RLoopManager
    const ROOT::RDF::ColumnNames_t fColumnNames;
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
 
 public:
-   RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RBookedDefines &defines,
+   RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
                RLoopManager &lm, const ColumnNames_t &columnNames);
 
    RDefineBase &operator=(const RDefineBase &) = delete;
