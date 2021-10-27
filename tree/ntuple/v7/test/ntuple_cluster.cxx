@@ -276,7 +276,7 @@ TEST(ClusterPool, GetClusterIncrementally)
 
 TEST(PageStorageFile, LoadClusters)
 {
-   FileRaii fileGuard("test_ntuple_clusters.root");
+   FileRaii fileGuard("test_pagestoragefile_loadclusters.root");
 
    auto modelWrite = ROOT::Experimental::RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
