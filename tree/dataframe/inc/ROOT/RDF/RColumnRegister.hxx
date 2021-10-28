@@ -45,6 +45,14 @@ class RColumnRegister {
    using RDefineBasePtrMapPtr_t = std::shared_ptr<const RDefineBasePtrMap_t>;
    using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
+   ///
+   /// This is needed because we abuse fColumnNames to also keep track of the aliases defined
+   /// in each branch of the computation graph.
+   /// Internally it recreates the vector with the new name, and swaps it with the old one.
+   void AddName(std::string_view name);
+
 private:
    /// Immutable map of Defines, can be shared among several nodes.
    /// When a new define is added (through a call to RInterface::Define or similar) a new map with the extra element is
@@ -82,14 +90,6 @@ public:
    /// \brief Add a new booked column.
    /// Internally it recreates the map with the new column, and swaps it with the old one.
    void AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column);
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
-   ///
-   /// This is needed because we abuse fColumnNames to also keep track of the aliases defined
-   /// in each branch of the computation graph.
-   /// Internally it recreates the vector with the new name, and swaps it with the old one.
-   void AddName(std::string_view name);
 
    /// \brief Add a new alias to the ledger.
    void AddAlias(std::string_view alias, std::string_view colName);
