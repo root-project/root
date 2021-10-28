@@ -10,21 +10,20 @@
 /// \authors Axel Naumann, Danilo Piparo (CERN)
 
 auto Select = [](ROOT::RDataFrame &dataFrame) {
-   using Farray_t = ROOT::VecOps::RVec<float>;
-   using Iarray_t = ROOT::VecOps::RVec<int>;
+   using namespace ROOT;
 
    auto ret = dataFrame.Filter("TMath::Abs(md0_d - 1.8646) < 0.04")
                  .Filter("ptds_d > 2.5")
                  .Filter("TMath::Abs(etads_d) < 1.5")
-                 .Filter([](int ik, int ipi, Iarray_t& nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
+                 .Filter([](int ik, int ipi, RVecI& nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
                          {"ik", "ipi", "nhitrp"})
-                 .Filter([](int ik, Farray_t& rstart, Farray_t& rend) { return rend[ik - 1] - rstart[ik - 1] > 22; },
+                 .Filter([](int ik, RVecF& rstart, RVecF& rend) { return rend[ik - 1] - rstart[ik - 1] > 22; },
                          {"ik", "rstart", "rend"})
-                 .Filter([](int ipi, Farray_t& rstart, Farray_t& rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; },
+                 .Filter([](int ipi, RVecF& rstart, RVecF& rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; },
                          {"ipi", "rstart", "rend"})
-                 .Filter([](int ik, Farray_t& nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
-                 .Filter([](int ipi, Farray_t& nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
-                 .Filter([](int ipis, Farray_t& nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
+                 .Filter([](int ik, RVecF& nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
+                 .Filter([](int ipi, RVecF& nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
+                 .Filter([](int ipis, RVecF& nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
                  .Filter("njets >= 1");
 
    return ret;
