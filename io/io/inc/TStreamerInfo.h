@@ -49,7 +49,7 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       Int_t             fOffset;
       Int_t             fLength;
       TStreamerElement *fElem;     ///< Not Owned
-      ULong_t           fMethod;
+      ULongptr_t        fMethod;
       TClass           *fClass;    ///< Not Owned
       TClass           *fNewClass; ///< Not Owned
       TString           fClassName;
@@ -215,7 +215,7 @@ public:
    Int_t               GetNelement() const { return fElements->GetEntriesFast(); }
    Int_t               GetNumber()  const {return fNumber;}
    Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
-   ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
+   ULongptr_t          GetMethod(Int_t id) const {return fComp[id].fMethod;}
    Int_t               GetNewType(Int_t id) const {return fComp[id].fNewType;}
    Int_t               GetOffset(const char *) const;
    Int_t               GetOffset(Int_t id) const {return fComp[id].fOffset;}
