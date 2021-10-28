@@ -1352,6 +1352,28 @@ RooBatchCompute::RunContext RooVectorDataStore::getBatches(std::size_t first, st
 }
 
 
+std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> RooVectorDataStore::getCategoryBatches(std::size_t first, std::size_t len) const {
+  std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> evalData;
+
+  auto emplace = [this,&evalData,first,len](const CatVector* catVec) {
+    auto span = catVec->getRange(first, first + len);
+    auto result = evalData.emplace(catVec->_cat->GetName(), span);
+    if (result.second == false || result.first->second.size() != len) {
+      const auto size = result.second ? result.first->second.size() : 0;
+      coutE(DataHandling) << "A batch of data for '" << catVec->_cat->GetName()
+          << "' was requested from " << first << " to " << first+len
+          << ", but only the events [" << first << ", " << first + size << ") are available." << std::endl;
+    }
+  };
+
+  for (const auto& catVec : _catStoreList) {
+    emplace(catVec);
+  }
+
+  return evalData;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weights of all events in the range [first, first+len).
 /// If an array with weights is stored, a batch with these weights will be returned. If
