@@ -87,6 +87,22 @@ TEST(RDataFrameInterface, CheckAliasesPerChain)
    EXPECT_ANY_THROW(f1.Alias("c2", "c1")) << "No exception thrown when trying to alias a non-existing column.";
 }
 
+TEST(RDataFrameInterface, PerBranchAliases)
+{
+   // test that it's possible to register the same alias in different branches of the computation graph
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 42; }).Define("y", [] { return 0; });
+   auto dfzx = df.Alias("z", "x");
+   auto dfzy = df.Alias("z", "y");
+
+   EXPECT_ANY_THROW(df.Max<int>("z"))
+      << "No exception thrown when trying to access an alias that is not present at this point of the graph.";
+
+   auto max42 = dfzx.Max<int>("z");
+   auto max0 = dfzy.Max<int>("z");
+   EXPECT_EQ(*max42, 42);
+   EXPECT_EQ(*max0, 0);
+}
+
 TEST(RDataFrameInterface, GetColumnNamesFromScratch)
 {
    RDataFrame f(1);
