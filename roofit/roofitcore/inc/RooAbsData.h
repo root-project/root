@@ -17,6 +17,7 @@
 #define ROO_ABS_DATA
 
 #include "RooPrintable.h"
+#include "RooAbsCategory.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooSpan.h"
@@ -31,7 +32,6 @@ class RooAbsArg;
 class RooAbsReal ;
 class RooRealVar;
 class RooAbsRealLValue;
-class RooAbsCategory ;
 class RooAbsCategoryLValue;
 class Roo1DTable ;
 class RooPlot;
@@ -153,13 +153,9 @@ public:
 
   virtual const RooArgSet* get(Int_t index) const ;
 
-  /// Retrieve batches of data for each real-valued variable in this dataset.
-  /// \param[out]  evalData Store references to all data batches in this struct.
-  /// \param first Index of first event that ends up in the batch.
-  /// \param len   Number of events in each batch.
-  /// Needs to be overridden by derived classes. This implementation returns an empty RunContext.
   virtual void getBatches(RooBatchCompute::RunContext& evalData,
-      std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const = 0;
+      std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
+  virtual std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Return event weights of all events in range [first, first+len).
