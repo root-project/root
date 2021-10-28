@@ -74,7 +74,7 @@ TEST(RDataFrameInterface, CreateAliases)
 TEST(RDataFrameInterface, CheckAliasesPerChain)
 {
    RDataFrame tdf(1);
-   auto d = tdf.Define("c0", []() { return 0; });
+   auto d = tdf.Define("c0", []() { return 42; });
    // Now branch the graph
    auto ok = []() { return true; };
    auto f0 = d.Filter(ok);
@@ -82,6 +82,7 @@ TEST(RDataFrameInterface, CheckAliasesPerChain)
    auto f0a = f0.Alias("c1", "c0");
    // must work
    auto f0aa = f0a.Alias("c2", "c1");
+   EXPECT_EQ(f0aa.Max<int>("c2").GetValue(), 42);
    // must fail
    EXPECT_ANY_THROW(f1.Alias("c2", "c1")) << "No exception thrown when trying to alias a non-existing column.";
 }
