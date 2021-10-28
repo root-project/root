@@ -72,9 +72,9 @@ for p in processes:
 
 # Just-in-time compile custom helper function performing complex computations
 ROOT.gInterpreter.Declare("""
-using VecF_t = const ROOT::RVec<float>&;
-using VecI_t = const ROOT::RVec<int>&;
-int FindGoodLepton(VecI_t goodlep, VecI_t type, VecF_t lep_pt, VecF_t lep_eta, VecF_t lep_phi, VecF_t lep_e, VecF_t trackd0pv, VecF_t tracksigd0pv, VecF_t z0)
+using cRVecF = const ROOT::RVecF &;
+using cRVecI = const ROOT::RVecI &;
+int FindGoodLepton(cRVecI goodlep, cRVecI type, cRVecF lep_pt, cRVecF lep_eta, cRVecF lep_phi, cRVecF lep_e, cRVecF trackd0pv, cRVecF tracksigd0pv, cRVecF z0)
 {
     int idx = -1; // Return -1 if no good lepton is found.
     for(auto i = 0; i < type.size(); i++) {
