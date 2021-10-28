@@ -198,6 +198,10 @@ private:
    size_t GetNColumnsToShorten() const;
 
    ////////////////////////////////////////////////////////////////////////////
+   /// Generate dashes between entries in Print() and AsString() Methods
+   std::string DashesBetweenLines(size_t lastColToPrint, bool allColumnsFit) const;
+
+   ////////////////////////////////////////////////////////////////////////////
    /// Adds a row of events to the table
    template <typename... Columns>
    void AddRow(Columns &... columns)
