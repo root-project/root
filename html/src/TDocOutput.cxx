@@ -449,16 +449,16 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             TObject* gClientGetDefaultRoot = nullptr;
             std::set<TObject*> previousWindows;
             if (gclient) {
-               gROOT->ProcessLine(TString::Format("*((TList**)0x%lx) = ((TGClient*)0x%lx)->GetListOfWindows();",
-                                                  (ULong_t)&gClientGetListOfWindows, (ULong_t)gclient));
-               gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGClient*)0x%lx)->GetDefaultRoot();",
-                                                  (ULong_t)&gClientGetDefaultRoot, (ULong_t)gclient));
+               gROOT->ProcessLine(TString::Format("*((TList**)0x%zx) = ((TGClient*)0x%zx)->GetListOfWindows();",
+                                                  (size_t)&gClientGetListOfWindows, (size_t)gclient));
+               gROOT->ProcessLine(TString::Format("*((TObject**)0x%zx) = ((TGClient*)0x%zx)->GetDefaultRoot();",
+                                                  (size_t)&gClientGetDefaultRoot, (size_t)gclient));
                TObject *win = nullptr;
                TIter iWin(gClientGetListOfWindows);
                while((win = iWin())) {
                   TObject *winGetParent = nullptr;
-                  gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGWindow*)0x%lx)->GetParent();",
-                                                     (ULong_t)&winGetParent, (ULong_t)win));
+                  gROOT->ProcessLine(TString::Format("*((TObject**)0x%zx) = ((TGWindow*)0x%zx)->GetParent();",
+                                                     (size_t)&winGetParent, (size_t)win));
                   if (winGetParent == gClientGetDefaultRoot)
                      previousWindows.insert(win);
                }
@@ -491,31 +491,31 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                   TIter iWin(gClientGetListOfWindows);
                   while((win = iWin())) {
                      TObject* winGetParent = 0;
-                     gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGWindow*)0x%lx)->GetParent();",
-                                                        (ULong_t)&winGetParent, (ULong_t)win));
+                     gROOT->ProcessLine(TString::Format("*((TObject**)0x%zx) = ((TGWindow*)0x%zx)->GetParent();",
+                                                        (size_t)&winGetParent, (size_t)win));
                      Bool_t winIsMapped = kFALSE;
                      if (winGetParent == gClientGetDefaultRoot)
-                        gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%lx) = ((TGWindow*)0x%lx)->IsMapped();",
-                                                           (ULong_t)&winIsMapped, (ULong_t)win));
+                        gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%zx) = ((TGWindow*)0x%zx)->IsMapped();",
+                                                           (size_t)&winIsMapped, (size_t)win));
                      if (winIsMapped && previousWindows.find(win) == previousWindows.end()
                          && win->InheritsFrom(clGMainFrame)) {
-                        gROOT->ProcessLine(TString::Format("((TGWindow*)0x%lx)->MapRaised();", (ULong_t)win));
+                        gROOT->ProcessLine(TString::Format("((TGWindow*)0x%zx)->MapRaised();", (size_t)win));
                         Bool_t isRootCanvas = win->InheritsFrom(clRootCanvas);
                         Bool_t hasEditor = false;
                         if (isRootCanvas) {
-                           gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%lx) = ((TRootCanvas*)0x%lx)->HasEditor();",
-                                                              (ULong_t)&hasEditor, (ULong_t)win));
+                           gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%zx) = ((TRootCanvas*)0x%zx)->HasEditor();",
+                                                              (size_t)&hasEditor, (size_t)win));
                         }
                         if (isRootCanvas && !hasEditor) {
                            TVirtualPad* pad = 0;
-                           gROOT->ProcessLine(TString::Format("*((TVirtualPad**)0x%lx) = ((TRootCanvas*)0x%lx)->Canvas();",
-                                                              (ULong_t)&pad, (ULong_t)win));
+                           gROOT->ProcessLine(TString::Format("*((TVirtualPad**)0x%zx) = ((TRootCanvas*)0x%zx)->Canvas();",
+                                                              (size_t)&pad, (size_t)win));
                            if (!pad->HasViewer3D() || pad->GetViewer3D()->InheritsFrom("TViewer3DPad")) {
                               pad->SaveAs(TString::Format("%s_%d.png", outfilename, nCanvases++));
                            }
                         } else
-                           gROOT->ProcessLine(TString::Format("((TGWindow*)0x%lx)->SaveAs(\"%s_%d.png\");",
-                                                              (ULong_t)win, outfilename, nCanvases++));
+                           gROOT->ProcessLine(TString::Format("((TGWindow*)0x%zx)->SaveAs(\"%s_%d.png\");",
+                                                              (size_t)win, outfilename, nCanvases++));
                      }
                   }
                } else {
