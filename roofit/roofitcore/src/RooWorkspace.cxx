@@ -3100,7 +3100,7 @@ void RooWorkspace::exportObj(TObject* wobj)
   }
 
   // Declare correctly typed reference to object in CINT in the namespace associated with this workspace
-  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%lx ; }",_exportNSName.c_str(),wobj->IsA()->GetName(),wobj->GetName(),wobj->IsA()->GetName(),(ULong_t)wobj) ;
+  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%zx ; }",_exportNSName.c_str(),wobj->IsA()->GetName(),wobj->GetName(),wobj->IsA()->GetName(),(size_t)wobj) ;
   gROOT->ProcessLine(cintExpr.c_str()) ;
 }
 

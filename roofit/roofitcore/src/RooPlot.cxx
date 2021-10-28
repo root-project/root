@@ -330,9 +330,9 @@ void RooPlot::initialize()
 TString RooPlot::histName() const
 {
   if (_plotVarClone) {
-    return TString(Form("frame_%s_%lx",_plotVarClone->GetName(),(ULong_t)this)) ;
+    return TString(Form("frame_%s_%zx",_plotVarClone->GetName(),(size_t)this)) ;
   } else {
-    return TString(Form("frame_%lx",(ULong_t)this)) ;
+    return TString(Form("frame_%zx",(size_t)this)) ;
   }
 }
 

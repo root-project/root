@@ -233,7 +233,7 @@ RooAbsArg::~RooAbsArg()
     client->setAttribute("ServerDied") ;
     TString attr("ServerDied:");
     attr.Append(GetName());
-    attr.Append(Form("(%lx)",(ULong_t)this)) ;
+    attr.Append(Form("(%zx)",(size_t)this)) ;
     client->setAttribute(attr.Data());
     client->removeServer(*this,kTRUE);
 
@@ -280,8 +280,8 @@ void RooAbsArg::verboseDirty(Bool_t flag)
 
 Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 {
-  return (getAttribute(Form("CloneOf(%lx)",(ULong_t)&other)) ||
-	  other.getAttribute(Form("CloneOf(%lx)",(ULong_t)this))) ;
+  return (getAttribute(Form("CloneOf(%zx)",(size_t)&other)) ||
+	  other.getAttribute(Form("CloneOf(%zx)",(size_t)this))) ;
 }
 
 
@@ -2028,7 +2028,7 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
       strlcpy(buf,iter->c_str(),128) ;
       strtok(buf,"(") ;
       char* ptrToken = strtok(0,")") ;
-      RooAbsArg* ptr = (RooAbsArg*) strtol(ptrToken,0,16) ;
+      RooAbsArg* ptr = (RooAbsArg*) strtoll(ptrToken,0,16) ;
       retVal.Add(ptr) ;
     }
   }
