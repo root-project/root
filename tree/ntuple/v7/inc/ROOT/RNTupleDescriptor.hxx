@@ -759,7 +759,9 @@ public:
       return *this;
    }
 
-   RResult<void> CommitColumnRange(DescriptorId_t columnId, std::uint64_t firstElementIndex,
+   RResult<void> CommitColumnRange(DescriptorId_t columnId,
+                                   std::uint64_t firstElementIndex,
+                                   std::uint32_t compressionSettings,
                                    const RClusterDescriptor::RPageRange &pageRange);
 
    /// Attempt to make a cluster descriptor. This may fail if the cluster
