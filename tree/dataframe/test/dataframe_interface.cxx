@@ -388,9 +388,12 @@ TEST(RDataFrameInterface, GetNSlots)
 TEST(RDataFrameInterface, DefineAliasedColumn)
 {
    ROOT::RDataFrame rdf(1);
-   auto r0 = rdf.Define("myVar", [](){return 1;});
+   auto r0 = rdf.Define("myVar", [] { return 1; });
    auto r1 = r0.Alias("newVar", "myVar");
-   EXPECT_ANY_THROW(r0.Define("newVar", [](int i){return i;}, {"myVar"})) << "No exception thrown when defining a column with a name which is already an alias.";
+   auto mdefine = r0.Define("newVar", [] { return 42; }).Max<int>("newVar");
+   auto malias = r1.Max<int>("newVar");
+   EXPECT_EQ(*mdefine, 42);
+   EXPECT_EQ(*malias, 1);
 }
 
 // ROOT-10619
