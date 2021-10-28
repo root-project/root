@@ -433,9 +433,10 @@ The page list envelope contains a top-most list frame where every item correspon
 The order of items corresponds to the cluster IDs as defined by the cluster groups and cluster summaries.
 
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
-Every item of the outer list frame is a record frame, which contains the 32bit compression settings,
-a 64bit unsigned integer element offset and an inner list frame
-in which the items correspond to the pages of the column in the cluster.
+Every item of the outer list frame is an inner list frame
+whose items correspond to the pages of the column in the cluster.
+The inner list is followed by a 64bit unsigned integer element offset and the 32bit compression settings.
+Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
 For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).
 
@@ -455,7 +456,7 @@ If flag 0x01 is set, a CRC32 checksum of the uncompressed page data is stored ju
 Note that columns might be empty, i.e. the number of pages is zero.
 
 Depending on the number of pages per column per cluster, every page induces
-a total of 32-40 Bytes of data to be stored in the page list envelope.
+a total of 28-36 Bytes of data to be stored in the page list envelope.
 For typical page sizes, that should be < 1 per mille.
 
 Note that we do not need to store the uncompressed size of the page
@@ -468,14 +469,13 @@ The hierarchical structure of the frames in the page list envelope is as follows
     - Top-most cluster list frame
     |
     |---- Cluster 1 column list frame (outer list frame)
-    |     |---- Column 1 record frame
-    |     |     |---- Column 1 compression settings (UInt32)
-    |     |     |---- Column 1 element offset (UInt64)
-    |     |     |---- Column 1 page list frame (inner list frame)
-    |     |     |     |---- Page 1 description (inner item)
-    |     |     |     |---- Page 2 description (inner item)
-    |     |     |     | ...
-    |     |---- Column 2 record frame
+    |     |---- Column 1 page list frame (inner list frame)
+    |     |     |---- Page 1 description (inner item)
+    |     |     |---- Page 2 description (inner item)
+    |     |     | ...
+    |     |---- Column 1 element offset (UInt64)
+    |     |---- Column 1 flags (UInt32)
+    |     |---- Column 2 page list frame
     |     | ...
     |
     |---- Cluster 2 column list frame
