@@ -395,7 +395,6 @@ protected:
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
   virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
-  virtual bool canComputeBatchWithCuda() const { return false; }
 
  protected:
 
