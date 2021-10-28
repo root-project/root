@@ -15,7 +15,7 @@
 import ROOT
 
 df = ROOT.RDataFrame(1024)
-coordDefineCode = '''ROOT::VecOps::RVec<double> {0}(len);
+coordDefineCode = '''ROOT::RVecD {0}(len);
                      std::transform({0}.begin(), {0}.end(), {0}.begin(), [](double){{return gRandom->Uniform(-1.0, 1.0);}});
                      return {0};'''
 d = df.Define("len", "gRandom->Uniform(0, 16)")\

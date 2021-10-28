@@ -12,8 +12,7 @@
 /// \date February 2018
 /// \author Danilo Piparo (CERN)
 
-using ROOT::RDataFrame;
-using namespace ROOT::VecOps;
+using namespace ROOT;
 
 int df016_vecOps()
 {
@@ -21,7 +20,7 @@ int df016_vecOps()
    // This is a technical detail, just to create a dataset to play with!
    auto unifGen = [](double) { return gRandom->Uniform(-1.0, 1.0); };
    auto vGen = [&](int len) {
-      RVec<double> v(len);
+      RVecD v(len);
       std::transform(v.begin(), v.end(), v.begin(), unifGen);
       return v;
    };
