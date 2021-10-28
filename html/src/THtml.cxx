@@ -1524,8 +1524,8 @@ void THtml::Convert(const char *filename, const char *title,
 
    TDocOutput output(*this);
    if (!fGClient)
-      gROOT->ProcessLine(TString::Format("*((TGClient**)0x%lx) = gClient;",
-                                         (ULong_t)&fGClient));
+      gROOT->ProcessLine(TString::Format("*((TGClient**)0x%zx) = gClient;",
+                                         (size_t)&fGClient));
    if (includeOutput && !fGClient)
       Warning("Convert", "Output requested but cannot initialize graphics: GUI  and GL windows not be available");
    output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput, context, fGClient);
