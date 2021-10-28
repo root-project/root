@@ -119,7 +119,6 @@ class RLoopManager : public RNodeBase {
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
-   std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
    /// Registered callbacks to invoke just once before running the loop
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
@@ -185,8 +184,6 @@ public:
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
-   void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
-   const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
    bool HasDSValuePtrs(const std::string &col) const;
