@@ -996,6 +996,10 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
          const auto &columnRange = clusterDesc.GetColumnRange(memId);
          const auto &pageRange = clusterDesc.GetPageRange(memId);
 
+         auto columnRecordFrame = pos;
+         pos += SerializeRecordFramePreamble(*where);
+
+         pos += SerializeUInt32(columnRange.fCompressionSettings, *where);
          pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
          auto innerFrame = pos;
          pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
@@ -1004,6 +1008,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
             pos += SerializeLocator(pi.fLocator, *where);
          }
          pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);
+
+         pos += SerializeFramePostscript(buffer ? columnRecordFrame : nullptr, pos - columnRecordFrame);
       }
       pos += SerializeFramePostscript(buffer ? outerFrame : nullptr, pos - outerFrame);
    }
@@ -1317,7 +1323,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
 
    std::uint32_t topMostFrameSize;
    auto topMostFrame = bytes;
-   auto fnTopMostFrameSize = [&]() { return topMostFrameSize - (bytes - topMostFrame); };
+   auto fnTopMostFrameSizeLeft = [&]() { return topMostFrameSize - (bytes - topMostFrame); };
 
    std::uint32_t nClusters;
    result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), topMostFrameSize, nClusters);
@@ -1333,14 +1339,25 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       RClusterDescriptorBuilder clusterBuilder;
 
       std::uint32_t nColumns;
-      result = DeserializeFrameHeader(bytes, fnTopMostFrameSize(), outerFrameSize, nColumns);
+      result = DeserializeFrameHeader(bytes, fnTopMostFrameSizeLeft(), outerFrameSize, nColumns);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
 
       for (std::uint32_t j = 0; j < nColumns; ++j) {
-         if (fnOuterFrameSizeLeft() < static_cast<int>(sizeof(std::uint64_t)))
-            return R__FAIL("outer frame too short");
+         std::uint32_t columnRecordFrameSize;
+         auto columnRecordFrame = bytes;
+         auto fnColumnRecordFrameSizeLeft = [&]() { return columnRecordFrameSize - (bytes - columnRecordFrame); };
+
+         result = DeserializeFrameHeader(bytes, fnOuterFrameSizeLeft(), columnRecordFrameSize);
+         if (!result)
+            return R__FORWARD_ERROR(result);
+         bytes += result.Unwrap();
+
+         if (fnColumnRecordFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t) + sizeof(std::uint64_t)))
+            return R__FAIL("column record frame too short");
+         std::uint32_t compressionSettings;
+         bytes += DeserializeUInt32(bytes, compressionSettings);
          std::uint64_t columnOffset;
          bytes += DeserializeUInt64(bytes, columnOffset);
 
@@ -1349,7 +1366,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          auto fnInnerFrameSizeLeft = [&]() { return innerFrameSize - (bytes - innerFrame); };
 
          std::uint32_t nPages;
-         result = DeserializeFrameHeader(bytes, fnOuterFrameSizeLeft(), innerFrameSize, nPages);
+         result = DeserializeFrameHeader(bytes, fnColumnRecordFrameSizeLeft(), innerFrameSize, nPages);
          if (!result)
             return R__FORWARD_ERROR(result);
          bytes += result.Unwrap();
@@ -1368,9 +1385,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
             pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
             bytes += result.Unwrap();
          }
-         clusterBuilder.CommitColumnRange(j, columnOffset, pageRange);
+         clusterBuilder.CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
 
-         bytes = innerFrame + innerFrameSize;
+         bytes = columnRecordFrame + columnRecordFrameSize;
       }
 
       clusters.emplace_back(std::move(clusterBuilder));

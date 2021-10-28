@@ -760,13 +760,15 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(
-   DescriptorId_t columnId, std::uint64_t firstElementIndex, const RClusterDescriptor::RPageRange &pageRange)
+   DescriptorId_t columnId, std::uint64_t firstElementIndex, std::uint32_t compressionSettings,
+   const RClusterDescriptor::RPageRange &pageRange)
 {
    if (columnId != pageRange.fColumnId)
       return R__FAIL("column ID mismatch");
    if (fCluster.fPageRanges.count(columnId) > 0)
       return R__FAIL("column ID conflict");
    RClusterDescriptor::RColumnRange columnRange{columnId, firstElementIndex, RClusterSize(0)};
+   columnRange.fCompressionSettings = compressionSettings;
    for (const auto &pi : pageRange.fPageInfos) {
       columnRange.fNElements += pi.fNElements;
    }
