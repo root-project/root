@@ -22,7 +22,7 @@ using ROOT::Detail::RDF::RDefineBase;
 namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in the header), but Windows needs it
 
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RBookedDefines &defines,
-                         RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames)
+                         ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames)
    : fName(name), fType(type), fLastCheckedEntry(lm.GetNSlots() * RDFInternal::CacheLineStep<Long64_t>(), -1),
      fDefines(defines), fLoopManager(&lm), fColumnNames(columnNames), fIsDefine(columnNames.size())
 {
