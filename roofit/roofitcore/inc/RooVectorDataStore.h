@@ -120,6 +120,7 @@ public:
   virtual Bool_t isWeighted() const override { return _wgtVar || _extWgtArray; }
 
   RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override;
+  std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t /*first*/, std::size_t len) const override;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
@@ -592,6 +593,14 @@ public:
     inline void load(std::size_t idx) const {
       *_buf = _vec[idx];
     }
+
+    RooSpan<const RooAbsCategory::value_type> getRange(std::size_t first, std::size_t last) const {
+      auto beg = std::min(_vec.cbegin() + first, _vec.cend());
+      auto end = std::min(_vec.cbegin() + last,  _vec.cend());
+
+      return RooSpan<const RooAbsCategory::value_type>(beg, end);
+    }
+
 
     inline void loadToNative(std::size_t idx) const {
       *_nativeBuf = _vec[idx];

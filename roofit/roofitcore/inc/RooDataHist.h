@@ -93,7 +93,6 @@ public:
 
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
 
-  void getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const override;
   /// Retrieve all bin volumes. Bins are indexed according to getIndex().
   RooSpan<const double> binVolumes(std::size_t first, std::size_t len) const {
     return {_binv + first, len};
