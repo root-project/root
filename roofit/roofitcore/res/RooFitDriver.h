@@ -31,6 +31,20 @@ namespace Experimental {
 
 class RooFitDriver {
 public:
+   class Dataset {
+   public:
+      Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName);
+
+      std::size_t size() const { return _nEvents; }
+      bool contains(RooAbsArg const *real) const { return _dataSpans.count(real->namePtr()); }
+      RooSpan<const double> const &span(RooAbsArg const *real) const { return _dataSpans.at(real->namePtr()); }
+
+   private:
+      std::map<const TNamed *, RooSpan<const double>> _dataSpans;
+      size_t _nEvents = 0;
+      std::stack<std::vector<double>> _buffers;
+   };
+
    RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
                 RooBatchCompute::BatchMode batchMode, std::string_view rangeName);
    ~RooFitDriver();
@@ -104,18 +118,18 @@ private:
             RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
       }
    };
-   void updateMyClients(const RooAbsReal *node);
-   void updateMyServers(const RooAbsReal *node);
-   void handleIntegral(const RooAbsReal *node);
+   void updateMyClients(const RooAbsArg *node);
+   void updateMyServers(const RooAbsArg *node);
+   void handleIntegral(const RooAbsArg *node);
    std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
                                          std::chrono::microseconds diffThreshold);
    void markGPUNodes();
-   void assignToGPU(const RooAbsReal *node);
+   void assignToGPU(const RooAbsArg *node);
    double *getAvailableCPUBuffer();
    double *getAvailableGPUBuffer();
    double *getAvailablePinnedBuffer();
-   void computeCPUNode(const RooAbsReal *node, NodeInfo &info);
+   void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
 
    std::string _name;
    std::string _title;
@@ -125,20 +139,6 @@ private:
    int _getValInvocations = 0;
    double *_cudaMemDataset = nullptr;
 
-   class Dataset {
-   public:
-      Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName);
-
-      std::size_t size() const { return _nEvents; }
-      bool contains(RooAbsReal const *real) const { return _dataSpans.count(real->namePtr()); }
-      RooSpan<const double> const &span(RooAbsReal const *real) const { return _dataSpans.at(real->namePtr()); }
-
-   private:
-      std::map<const TNamed *, RooSpan<const double>> _dataSpans;
-      size_t _nEvents = 0;
-      std::stack<std::vector<double>> _buffers;
-   };
-
    // used to get access to the data that we fit to
    const Dataset _dataset;
 
@@ -147,7 +147,7 @@ private:
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooAbsReal &_topNode;
    RooArgSet _normSet;
-   std::unordered_map<const RooAbsReal *, NodeInfo> _nodeInfos;
+   std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
 
    // used for preserving resources
    std::queue<double *> _cpuBuffers;

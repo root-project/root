@@ -32,7 +32,7 @@ struct cudaEvent_t;
 struct cudaStream_t;
 #endif // #ifndef __CUDACC__
 
-class RooAbsReal;
+class RooAbsArg;
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -53,8 +53,8 @@ enum class BatchMode { Off, Cpu, Cuda };
 struct RunContext;
 // We have to use map instead of unordered_map because the unordered_maps from
 // nvcc and gcc are not compatible sometimes.
-typedef std::map<const RooAbsReal *, RooSpan<const double>> DataMap;
-typedef std::vector<const RooAbsReal *> VarVector;
+typedef std::map<const RooAbsArg *, RooSpan<const double>> DataMap;
+typedef std::vector<const RooAbsArg *> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
