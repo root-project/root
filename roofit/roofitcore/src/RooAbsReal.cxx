@@ -4896,7 +4896,7 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
   struct ServerData {
-    RooAbsReal* server;
+    RooAbsArg* server;
     RooSpan<const double> batch;
     double oldValue;
     RooAbsArg::OperMode oldOperMode;
@@ -4904,16 +4904,16 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
   std::vector<ServerData> ourServers;
   std::size_t dataSize = 1;
 
-  for (auto absArgServer : servers()) {
-    if (absArgServer->IsA()->InheritsFrom(RooAbsReal::Class()) && absArgServer->isValueServer(*this)) {
-      auto server = static_cast<RooAbsReal*>(absArgServer);
+  for (auto server : servers()) {
+    if (server->isValueServer(*this)) {
       // maybe we are still missing inhibit dirty here
+      auto oldOperMode = server->operMode();
+      server->setOperMode(RooAbsArg::AClean);
       ourServers.push_back({server,
           dataMap[server],
-          server->_value,
-          server->operMode()});
+          dynamic_cast<RooAbsCategory const*>(server) ? static_cast<RooAbsCategory const*>(server)->getCurrentIndex() : static_cast<RooAbsReal const*>(server)->_value,
+          oldOperMode});
       // Prevent the server from evaluating; just return cached result, which we will side load:
-      server->setOperMode(RooAbsArg::AClean);
       dataSize = std::max(dataSize, ourServers.back().batch.size());
     }
   }

@@ -27,6 +27,7 @@ and gets destroyed when the fitting ends.
 **/
 
 #include "RooFitDriver.h"
+#include "RooAbsCategory.h"
 #include "RooAbsData.h"
 #include "RooAbsReal.h"
 #include "RooArgList.h"
@@ -48,6 +49,17 @@ and gets destroyed when the fitting ends.
 namespace ROOT {
 namespace Experimental {
 
+namespace {
+
+bool absArgNeedsComputation(RooAbsArg const *arg)
+{
+   auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(arg);
+   auto nodeAbsCategory = dynamic_cast<RooAbsCategory const *>(arg);
+   return nodeAbsReal || nodeAbsCategory;
+}
+
+} // namespace
+
 using namespace std::chrono;
 
 RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName)
@@ -61,6 +73,22 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
    data.getBatches(evalData, 0, _nEvents);
    for (auto const &item : evalData.spans) {
       _dataSpans[item.first->namePtr()] = item.second;
+   }
+
+   // Get the category batches and cast the also to double branches to put in
+   // the data map
+   for (auto const &item : data.getCategoryBatches()) {
+
+      const TNamed *namePtr = RooNameReg::instance().constPtr(item.first.c_str());
+      RooSpan<const RooAbsCategory::value_type> intSpan{item.second};
+
+      _buffers.emplace(_nEvents);
+      double *buffer = _buffers.top().data();
+
+      for (std::size_t i = 0; i < _nEvents; ++i) {
+         buffer[i] = static_cast<double>(intSpan[i]);
+      }
+      _dataSpans[namePtr] = RooSpan<const double>(buffer, _nEvents);
    }
 
    // Check if there is a batch for weights and if it's already in the dataMap.
@@ -99,9 +127,6 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
       // do the data reduction in the data map
       for (auto const &item : _dataSpans) {
          auto const &allValues = item.second;
-         // ignore scalars
-         if (allValues.size() <= 2)
-            continue;
          _buffers.emplace(_nEvents);
          double *buffer = _buffers.top().data();
          std::size_t j = 0;
@@ -154,26 +179,25 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       }
    }
 
-   for (RooAbsArg *arg : serverSet) {
-      if (auto pAbsReal = dynamic_cast<RooAbsReal *>(arg)) {
-         if (_dataset.contains(pAbsReal)) {
-            _dataMapCPU[pAbsReal] = _dataset.span(pAbsReal);
+   for (RooAbsArg const *arg : serverSet) {
+      if (absArgNeedsComputation(arg)) {
+         if (_dataset.contains(arg)) {
+            _dataMapCPU[arg] = _dataset.span(arg);
          }
 
          // If the node doesn't depend on any observables, there is no need to
          // loop over events and we don't need to use the batched evaluation.
          RooArgSet observablesForNode;
-         pAbsReal->getObservables(data.get(), observablesForNode);
-         _nodeInfos[pAbsReal].computeInScalarMode = observablesForNode.empty() || !pAbsReal->isDerived();
+         arg->getObservables(data.get(), observablesForNode);
+         _nodeInfos[arg].computeInScalarMode = observablesForNode.empty() || !arg->isDerived();
 
-         for (auto *client : pAbsReal->clients()) {
+         for (auto *client : arg->clients()) {
             // we use containsInstance instead of find to match by pointer and not name
             if (!serverSet.containsInstance(*client))
                continue;
 
-            auto pClient = static_cast<const RooAbsReal *>(client);
-            ++_nodeInfos[pClient].nServers;
-            ++_nodeInfos[pAbsReal].nClients;
+            ++_nodeInfos[client].nServers;
+            ++_nodeInfos[arg].nClients;
          }
       }
    }
@@ -266,10 +290,14 @@ std::unique_ptr<double[]> RooFitDriver::getValues()
    return std::unique_ptr<double[]>(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
 }
 
-void RooFitDriver::computeCPUNode(const RooAbsReal *node, NodeInfo &info)
+void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 {
+   auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
+   assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
+
    if (info.computeInScalarMode) {
-      _nonDerivedValues.push_back(node->getVal(&_normSet));
+      _nonDerivedValues.push_back(nodeAbsReal->getVal(&_normSet));
+
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
    } else {
       double *buffer = info.copyAfterEvaluation ? getAvailablePinnedBuffer() : getAvailableCPUBuffer();
@@ -279,10 +307,10 @@ void RooFitDriver::computeCPUNode(const RooAbsReal *node, NodeInfo &info)
       if (_getValInvocations == 1) {
          using namespace std::chrono;
          auto start = steady_clock::now();
-         node->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
+         nodeAbsReal->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
          info.cpuTime = duration_cast<microseconds>(steady_clock::now() - start);
       } else {
-         node->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
+         nodeAbsReal->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
       }
       if (info.copyAfterEvaluation) {
          double *gpuBuffer = getAvailableGPUBuffer();
@@ -344,7 +372,7 @@ double RooFitDriver::getVal()
       }
 
       // compute next cpu node
-      const RooAbsReal *node = it->first;
+      RooAbsArg const *node = it->first;
       NodeInfo &info = it->second;
       info.remServers = -2; // so that it doesn't get picked again
       nNodes--;
@@ -376,7 +404,7 @@ double RooFitDriver::getVal()
 
 /// Handles the computation of the integral of a PDF for normalization purposes,
 /// before the pdf is computed.
-void RooFitDriver::handleIntegral(const RooAbsReal *node)
+void RooFitDriver::handleIntegral(const RooAbsArg *node)
 {
    // TODO: Put integrals seperately in the computation queue
    // For now, we just assume they are scalar and assign them some temporary memory
@@ -386,7 +414,7 @@ void RooFitDriver::handleIntegral(const RooAbsReal *node)
       RooArgSet valueServers;
       integral->treeNodeServerList(&valueServers, nullptr, true, true, true);
       std::size_t inputSize = 1;
-      for (auto *server : static_range_cast<RooAbsReal *>(valueServers)) {
+      for (auto *server : valueServers) {
          inputSize = std::max(inputSize, _dataMapCPU[server].size());
       }
 
@@ -402,16 +430,18 @@ void RooFitDriver::handleIntegral(const RooAbsReal *node)
 
 /// Assign a node to be computed in the GPU. Scan it's clients and also assign them
 /// in case they only depend on gpu nodes.
-void RooFitDriver::assignToGPU(const RooAbsReal *node)
+void RooFitDriver::assignToGPU(RooAbsArg const *node)
 {
+   auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
+   assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
+
    NodeInfo &info = _nodeInfos.at(node);
    info.remServers = -1;
    // wait for every server to finish
    for (auto *server : node->servers()) {
-      auto pServer = static_cast<const RooAbsReal *>(server);
-      if (_nodeInfos.count(pServer) == 0)
+      if (_nodeInfos.count(server) == 0)
          continue;
-      const auto &infoServer = _nodeInfos.at(pServer);
+      const auto &infoServer = _nodeInfos.at(server);
       if (infoServer.event)
          RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer.event);
    }
@@ -423,10 +453,10 @@ void RooFitDriver::assignToGPU(const RooAbsReal *node)
       using namespace std::chrono;
       RooBatchCompute::dispatchCUDA->cudaEventRecord(info.eventStart, info.stream);
       auto start = steady_clock::now();
-      node->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
+      nodeAbsReal->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
       info.cudaTime = duration_cast<microseconds>(steady_clock::now() - start);
    } else
-      node->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
+      nodeAbsReal->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
       double *pinnedBuffer = getAvailablePinnedBuffer();
@@ -438,46 +468,44 @@ void RooFitDriver::assignToGPU(const RooAbsReal *node)
 
 /// Check the clients of a node that has been computed and assign them to gpu
 /// if they are ready to be computed
-void RooFitDriver::updateMyClients(const RooAbsReal *node)
+void RooFitDriver::updateMyClients(RooAbsArg const *node)
 {
    NodeInfo &info = _nodeInfos.at(node);
    for (auto *client : node->clients()) {
-      auto pClient = static_cast<const RooAbsReal *>(client);
-      if (_nodeInfos.count(pClient) == 0)
+      if (_nodeInfos.count(client) == 0)
          continue; // client not part of the computation graph
-      NodeInfo &infoClient = _nodeInfos.at(pClient);
+      NodeInfo &infoClient = _nodeInfos.at(client);
 
       if (info.remServers == -1 && infoClient.computeInGPU && --infoClient.remServers == 0)
-         assignToGPU(pClient); // updateMyCilents called when assigning to gpu
+         assignToGPU(client); // updateMyCilents called when assigning to gpu
       else if (info.remServers == -2 && info.computeInGPU && !infoClient.computeInGPU)
          --infoClient.remServers; // updateMyClients called after finishing a gpu node
       else if (!info.computeInGPU && --infoClient.remServers == 0 && infoClient.computeInGPU)
-         assignToGPU(pClient); // updateMyClients called after finishing a cpu node
+         assignToGPU(client); // updateMyClients called after finishing a cpu node
    }
 }
 
 /// Check the servers of a node that has been computed and release it's resources
 /// if they are no longer needed
-void RooFitDriver::updateMyServers(const RooAbsReal *node)
+void RooFitDriver::updateMyServers(const RooAbsArg *node)
 {
    for (auto *server : node->servers()) {
-      auto pServer = static_cast<const RooAbsReal *>(server);
-      if (_nodeInfos.count(pServer) == 0)
+      if (_nodeInfos.count(server) == 0)
          continue;
-      auto &info = _nodeInfos.at(pServer);
+      auto &info = _nodeInfos.at(server);
       if (--info.remClients > 0)
          continue;
       if (info.computeInScalarMode)
          continue;
-      if (_dataset.contains(pServer))
+      if (_dataset.contains(server))
          continue;
       if (info.copyAfterEvaluation) {
-         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(pServer).data()));
-         _pinnedBuffers.push(const_cast<double *>(_dataMapCPU.at(pServer).data()));
+         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(server).data()));
+         _pinnedBuffers.push(const_cast<double *>(_dataMapCPU.at(server).data()));
       } else if (info.computeInGPU)
-         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(pServer).data()));
+         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(server).data()));
       else
-         _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(pServer).data()));
+         _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(server).data()));
    }
 }
 
@@ -520,11 +548,13 @@ microseconds RooFitDriver::simulateFit(microseconds h2dTime, microseconds d2hTim
       } else
          it.second.timeLaunched = microseconds{-1};
 
-   const RooAbsReal *cpuNode = nullptr, *cudaNode = nullptr;
+   RooAbsArg const *cpuNode = nullptr;
+   RooAbsArg const *cudaNode = nullptr;
    microseconds simulatedTime{0};
    while (nNodes) {
       microseconds minDiff = microseconds::max(), maxDiff = -minDiff; // diff = cpuTime - cudaTime
-      const RooAbsReal *cpuCandidate = nullptr, *cudaCandidate = nullptr;
+      RooAbsArg const *cpuCandidate = nullptr;
+      RooAbsArg const *cudaCandidate = nullptr;
       microseconds cpuDelay, cudaDelay;
       for (auto &it : _nodeInfos) {
          if (it.second.timeLaunched >= microseconds{0})
@@ -532,10 +562,9 @@ microseconds RooFitDriver::simulateFit(microseconds h2dTime, microseconds d2hTim
          microseconds diff{it.second.cpuTime - it.second.cudaTime}, cpuWait{0}, cudaWait{0};
 
          for (auto *server : it.first->servers()) {
-            auto pServer = static_cast<const RooAbsReal *>(server);
-            if (_nodeInfos.count(pServer) == 0)
+            if (_nodeInfos.count(server) == 0)
                continue;
-            auto &info = _nodeInfos.at(pServer);
+            auto &info = _nodeInfos.at(server);
             if (info.computeInScalarMode)
                continue;
 
@@ -562,9 +591,7 @@ microseconds RooFitDriver::simulateFit(microseconds h2dTime, microseconds d2hTim
       nextCandidate:;
       } // for (auto& it:_nodeInfos)
 
-      auto calcDiff = [&](const RooAbsReal *node) {
-         return _nodeInfos.at(node).cpuTime - _nodeInfos.at(node).cudaTime;
-      };
+      auto calcDiff = [&](const RooAbsArg *node) { return _nodeInfos.at(node).cpuTime - _nodeInfos.at(node).cudaTime; };
       if (cpuCandidate && calcDiff(cpuCandidate) > diffThreshold)
          cpuCandidate = nullptr;
       if (cudaCandidate && -calcDiff(cudaCandidate) > diffThreshold)
@@ -652,10 +679,9 @@ void RooFitDriver::markGPUNodes()
    for (auto &item : _nodeInfos)
       if (!item.second.computeInScalarMode) // scalar nodes don't need copying
          for (auto *client : item.first->clients()) {
-            auto pClient = static_cast<const RooAbsReal *>(client);
-            if (_nodeInfos.count(pClient) == 0)
+            if (_nodeInfos.count(client) == 0)
                continue;
-            auto &info = _nodeInfos.at(pClient);
+            auto &info = _nodeInfos.at(client);
             if (item.second.computeInGPU != info.computeInGPU) {
                item.second.copyAfterEvaluation = true;
                break;

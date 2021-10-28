@@ -553,6 +553,7 @@ public:
      return kFALSE;
   };
 
+  virtual bool canComputeBatchWithCuda() const { return false; }
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
