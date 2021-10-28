@@ -54,8 +54,8 @@ for p in processes:
 # Compile a function to compute the invariant mass of the diphoton system
 ROOT.gInterpreter.Declare(
 """
-using Vec_t = const ROOT::VecOps::RVec<float>;
-float ComputeInvariantMass(Vec_t& pt, Vec_t& eta, Vec_t& phi, Vec_t& e) {
+using namespace ROOT;
+float ComputeInvariantMass(RVecF pt, RVecF eta, RVecF phi, RVecF e) {
     ROOT::Math::PtEtaPhiEVector p1(pt[0], eta[0], phi[0], e[0]);
     ROOT::Math::PtEtaPhiEVector p2(pt[1], eta[1], phi[1], e[1]);
     return (p1 + p2).mass() / 1000.0;

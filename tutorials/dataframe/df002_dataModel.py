@@ -76,7 +76,7 @@ print("%s events passed all filters" % nentries.GetValue())
 
 getPt_code ='''
 using namespace ROOT::VecOps;
-RVec<double> getPt(const RVec<FourVector> &tracks)
+ROOT::RVecD getPt(const RVec<FourVector> &tracks)
 {
    auto pt = [](const FourVector &v) { return v.pt(); };
    return Map(tracks, pt);
@@ -86,7 +86,7 @@ ROOT.gInterpreter.Declare(getPt_code)
 
 getPtWeights_code ='''
 using namespace ROOT::VecOps;
-RVec<double> getPtWeights(const RVec<FourVector> &tracks)
+ROOT::RVecD getPtWeights(const RVec<FourVector> &tracks)
 {
    auto ptWeight = [](const FourVector &v) { return 1. / v.Pt(); };
    return Map(tracks, ptWeight);
