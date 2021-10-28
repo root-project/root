@@ -39,6 +39,36 @@ void RColumnRegister::AddName(std::string_view name)
    fColumnNames = newColsNames;
 }
 
+void RColumnRegister::AddAlias(std::string_view alias, std::string_view colName)
+{
+   // at this point validation of alias and colName has already happened, we trust that
+   // this is a new, valid alias.
+   auto newAliases = std::make_shared<std::unordered_map<std::string, std::string>>(*fAliases);
+   (*newAliases)[std::string(alias)] = ResolveAlias(colName);
+   fAliases = std::move(newAliases);
+   AddName(alias);
+}
+
+bool RColumnRegister::IsAlias(const std::string &name) const
+{
+   return fAliases->find(name) != fAliases->end();
+}
+
+std::string RColumnRegister::ResolveAlias(std::string_view alias) const
+{
+   std::string aliasStr{alias};
+
+   // #var is an alias for R_rdf_sizeof_var
+   if (aliasStr.size() > 1 && aliasStr[0] == '#')
+      return "R_rdf_sizeof_" + aliasStr.substr(1);
+
+   auto it = fAliases->find(aliasStr);
+   if (it != fAliases->end())
+      return it->second;
+
+   return aliasStr; // not an alias, i.e. already resolved
+}
+
 void RColumnRegister::Clear()
 {
    fDefines.reset();
