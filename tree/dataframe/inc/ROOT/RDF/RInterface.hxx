@@ -2594,11 +2594,12 @@ public:
    RResultPtr<RDisplay>
    Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
    {
-      CheckIMTDisabled("Display");
-
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows,
-                                                               nMaxCollectionElements);
-      return CreateAction<RDFInternal::ActionTags::Display, ColumnTypes...>(columnList, displayer, displayer);
+      CheckIMTDisabled("Display");  
+      auto newCols = columnList;
+      newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
+      // Need to add ULong64_t type corresponding to the first column rdfentry_
+      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(newCols, displayer, displayer);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2610,14 +2611,17 @@ public:
    ///
    /// This overload automatically infers the column types.
    /// See the previous overloads for further details.
+   ///
+   /// Invoked when no types are specified to Display
    RResultPtr<RDisplay>
    Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows,
-                                                               nMaxCollectionElements);
-      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(columnList, displayer, displayer,
-                                                                                      columnList.size());
+      auto newCols = columnList;
+      newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(newCols, displayer, displayer,
+                                                                                      newCols.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
