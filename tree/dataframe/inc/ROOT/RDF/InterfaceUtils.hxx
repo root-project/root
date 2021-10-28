@@ -11,6 +11,7 @@
 #ifndef ROOT_RDF_TINTERFACE_UTILS
 #define ROOT_RDF_TINTERFACE_UTILS
 
+#include "RColumnRegister.hxx"
 #include <ROOT/RDF/RAction.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
 #include <ROOT/RDF/RColumnRegister.hxx>
@@ -289,23 +290,18 @@ void CheckFilter(Filter &)
 
 ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const std::string &action);
 
-std::string ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap);
-
 void CheckValidCppVarName(std::string_view var, const std::string &where);
 
-void CheckForRedefinition(const std::string &where, std::string_view definedCol, const ColumnNames_t &customCols,
-                          const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
-                          const ColumnNames_t &dataSourceColumns);
+void CheckForRedefinition(const std::string &where, std::string_view definedCol, const RColumnRegister &customCols,
+                          const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
 
-void CheckForDefinition(const std::string &where, std::string_view definedColView, const ColumnNames_t &customCols,
-                        const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &treeColumns,
-                        const ColumnNames_t &dataSourceColumns);
+void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols,
+                        const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
 
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
-                   std::string_view name, std::string_view expression,
-                   const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                   std::string_view name, std::string_view expression, const ColumnNames_t &branches,
                    const RColumnRegister &customCols, TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
@@ -347,7 +343,7 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &validDefines, RDataSource *ds);
+                                      const RColumnRegister &validDefines, RDataSource *ds);
 
 std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RColumnRegister &colRegister,
                                               TTree *tree, RDataSource *ds, const std::string &context,
@@ -628,7 +624,7 @@ const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, c
 
 /// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const ColumnNames_t &datasetColumns,
-                                 const ColumnNames_t &definedCols, const ColumnNames_t &dataSourceColumns);
+                                 const RColumnRegister &definedCols, const ColumnNames_t &dataSourceColumns);
 
 /// Returns the list of Filters defined in the whole graph
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager);
