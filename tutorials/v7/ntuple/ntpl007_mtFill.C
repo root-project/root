@@ -119,7 +119,7 @@ void Read()
 {
    auto ntuple = RNTupleReader::Open("NTuple", kNTupleFileName);
    // TODO(jblomer): the "inner name" of the vector should become "vpx._0"
-   auto viewVpx = ntuple->GetView<float>("vpx.float");
+   auto viewVpx = ntuple->GetView<float>("vpx._0");
 
    gStyle->SetOptStat(0);
 
