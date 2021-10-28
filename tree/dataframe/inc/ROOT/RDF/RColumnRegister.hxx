@@ -14,7 +14,7 @@
 #include <TString.h>
 
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -38,7 +38,7 @@ namespace RDFDetail = ROOT::Detail::RDF;
  * The storage is copy-on-write and shared between all instances of the class that have the same values.
  */
 class RColumnRegister {
-   using RDefineBasePtrMap_t = std::map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
+   using RDefineBasePtrMap_t = std::unordered_map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
    using ColumnNames_t = std::vector<std::string>;
 
    // Since RColumnRegister is meant to be an immutable, copy-on-write object, the actual values are set as const
