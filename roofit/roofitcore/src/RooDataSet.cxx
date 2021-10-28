@@ -1052,21 +1052,6 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write information to retrieve data columns into `evalData.spans`.
-/// All spans belonging to variables of this dataset are overwritten. Spans to other
-/// variables remain intact.
-/// \param[out] evalData Store references to all data batches in this struct's `spans`.
-/// The key to retrieve an item is the pointer of the variable that owns the data.
-/// \param first Index of first event that ends up in the batch.
-/// \param len   Number of events in each batch.
-void RooDataSet::getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const {
-  for (auto&& batch : store()->getBatches(begin, len).spans) {
-    evalData.spans[batch.first] = std::move(batch.second);
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsData::weightError(double&,double&,RooAbsData::ErrorType) const
 void RooDataSet::weightError(double& lo, double& hi, ErrorType etype) const
 {
