@@ -325,6 +325,9 @@ private:
    /// NTuples in the same group have the same number of entries and are supposed to contain associated data.
    RNTupleUuid fGroupUuid;
 
+   std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
+   std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
+
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
@@ -519,6 +522,9 @@ public:
    std::uint32_t GetFooterSize() const {
       return SerializeFooter(nullptr);
    }
+
+   std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
+   std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const {
       return fFieldDescriptors.at(fieldId);
@@ -790,6 +796,9 @@ public:
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
    void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCRC32 = crc32; }
    std::uint32_t GetHeaderCRC32() const { return fHeaderCRC32; }
+
+   void SetOnDiskHeaderSize(std::uint64_t size) { fDescriptor.fOnDiskHeaderSize = size; }
+   void SetOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize = size; }
 
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
