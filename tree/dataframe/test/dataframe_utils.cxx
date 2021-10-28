@@ -141,6 +141,7 @@ TEST(RDataFrameUtils, FindUnknownColumns)
    defs.AddAlias("b", "a");
 
    auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {});
+   EXPECT_EQ(ncols.size(), 2u);
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
 }
