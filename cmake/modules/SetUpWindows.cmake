@@ -19,7 +19,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
 elseif(MSVC)
   if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
-    set(ARCH -D_WIN64)
+    set(ARCH "-wd4267 -D_WIN64")
     set(ROOT_ARCHITECTURE win64)
   else()
     set(ROOT_ARCHITECTURE win32)
