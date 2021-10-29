@@ -23,7 +23,7 @@ void RColumnRegister::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &c
    auto newDefines = std::make_shared<RDefineBasePtrMap_t>(GetColumns());
    const std::string colName(name);
    (*newDefines)[colName] = column;
-   fDefines = newDefines;
+   fDefines = std::move(newDefines);
    AddName(colName);
 }
 
