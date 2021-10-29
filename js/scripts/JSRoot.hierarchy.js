@@ -1299,8 +1299,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (opt && typeof opt === 'function') { call_back = opt; opt = ""; }
       if (opt===undefined) opt = "";
 
-      let drop_complete = drop_painter => {
-         if (drop_painter && (typeof drop_painter === 'object') && (typeof drop_painter.setItemName == 'function'))
+      let drop_complete = (drop_painter, is_main_painter) => {
+         if (drop_painter && !is_main_painter && (typeof drop_painter === 'object') && (typeof drop_painter.setItemName == 'function'))
             drop_painter.setItemName(itemname, null, this);
          return drop_painter;
       }
@@ -1318,10 +1318,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let main_painter = jsrp.getElementMainPainter(divid);
 
          if (main_painter && (typeof main_painter.performDrop === 'function'))
-            return main_painter.performDrop(res.obj, itemname, res.item, opt).then(p => drop_complete(p));
+            return main_painter.performDrop(res.obj, itemname, res.item, opt).then(p => drop_complete(p, main_painter === p));
 
          if (main_painter && main_painter.accept_drops)
-            return JSROOT.draw(divid, res.obj, "same " + opt).then(p => drop_complete(p));
+            return JSROOT.draw(divid, res.obj, "same " + opt).then(p => drop_complete(p, main_painter === p));
 
          this.cleanupFrame(divid);
          return JSROOT.draw(divid, res.obj, opt).then(p => drop_complete(p));
@@ -2770,9 +2770,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (sett.opts)
             menu.addDrawMenu("nosub:Draw", sett.opts, function(arg) {
                if (!hitem || !hitem._obj) return;
-               let obj = hitem._obj, dom = this.selectDom();
+               let obj = hitem._obj, dom = this.selectDom().node();
                if (this.removeInspector) {
-                  dom = dom.node().parentNode;
+                  dom = dom.parentNode;
                   this.removeInspector();
                   if (arg == "inspect")
                      return this.showInspector(obj);

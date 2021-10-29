@@ -2890,14 +2890,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 
-      let npoints = Math.round(track.fNpoints/4),
+      let npoints = Math.round(track.fNpoints/4), // each track point has [x,y,z,t] coordinate
           buf = new Float32Array((npoints-1)*6),
           pos = 0, projv = this.ctrl.projectPos,
           projx = (this.ctrl.project === "x"),
           projy = (this.ctrl.project === "y"),
           projz = (this.ctrl.project === "z");
 
-      for (let k=0;k<npoints-1;++k) {
+      for (let k = 0; k < npoints-1; ++k) {
          buf[pos]   = projx ? projv : track.fPoints[k*4];
          buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
          buf[pos+2] = projz ? projv : track.fPoints[k*4+2];

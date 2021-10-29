@@ -875,6 +875,11 @@ JSROOT.define(['rawinflate'], () => {
          this.fAcceptRanges = false;
       }
 
+      if (this.fURL[this.fURL.length - 1] === "^") {
+         this.fURL = this.fURL.substr(0, this.fURL.length - 1);
+         this.fSkipHeadRequest = true;
+      }
+
       if (this.fURL[this.fURL.length - 1] === "-") {
          this.fURL = this.fURL.substr(0, this.fURL.length - 1);
          this.fUseStampPar = false;
@@ -902,7 +907,7 @@ JSROOT.define(['rawinflate'], () => {
     * @returns {Promise} after file keys are read
     * @private */
    TFile.prototype._open = function() {
-      if (!this.fAcceptRanges)
+      if (!this.fAcceptRanges || this.fSkipHeadRequest)
          return this.readKeys();
 
       return JSROOT.httpRequest(this.fURL, "head").then(res => {

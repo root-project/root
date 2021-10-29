@@ -114,8 +114,7 @@ JSROOT.define([], () => {
                this.handle.processRequest(res);
          }
       }, function(err,status) {
-         // console.log('Get request error', err)
-         // console.log('Get request status', status)
+         // console.log(`Get request error ${err} status ${status}`);
          this.handle.processRequest(null, "error");
       });
 
@@ -128,7 +127,8 @@ JSROOT.define([], () => {
    /** @summary Process request */
    LongPollSocket.prototype.processRequest = function(res, _offset) {
       if (res === null) {
-         if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
+         if (typeof this.onerror === 'function')
+            this.onerror("receive data with connid " + (this.connid || "---"));
          if ((_offset == "error") && (typeof this.onclose === 'function'))
             this.onclose("force_close");
          this.connid = null;
@@ -619,7 +619,7 @@ JSROOT.define([], () => {
          }
 
          this._websocket.onerror = function(err) {
-            console.log("websocket error " + err);
+            console.log(`websocket error ${err} state ${pthis.state}`);
             if (pthis.state > 0) {
                pthis.invokeReceiver(true, "onWebsocketError", err);
                pthis.state = 0;

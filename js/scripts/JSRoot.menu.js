@@ -559,6 +559,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       /** @summary Fill context menu for axis
         * @private */
       addTAxisMenu(painter, faxis, kind) {
+         this.add("Divisions", () => this.input("Set Ndivisions", faxis.fNdivisions, "int").then(val => {
+            faxis.fNdivisions = val;
+            painter.interactiveRedraw("pad", `exec:SetNdivisions(${val})`, kind);
+         }));
+
          this.add("sub:Labels");
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterLabels), "Center",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterLabels); painter.interactiveRedraw("pad", `exec:CenterLabels(${arg})`, kind); });

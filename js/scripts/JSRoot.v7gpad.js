@@ -1385,10 +1385,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.addchk(this.log && !this.symlog && (this.logbase==10), "log10", () => this.changeAxisLog(10));
       menu.addchk(this.log && !this.symlog && (this.logbase==2), "log2", () => this.changeAxisLog(2));
       menu.addchk(this.log && !this.symlog && Math.abs(this.logbase - Math.exp(1)) < 0.1, "ln", () => this.changeAxisLog(Math.exp(1)));
-      menu.addchk(!this.log && this.symlog, "symlog", 0, () => {
-         menu.input("set symlog constant", this.symlog || 10, "float").then(v => this.changeAxisAttr(2,"symlog", v));
-      });
+      menu.addchk(!this.log && this.symlog, "symlog", 0, () =>
+         menu.input("set symlog constant", this.symlog || 10, "float").then(v => this.changeAxisAttr(2,"symlog", v)));
       menu.add("endsub:");
+
+      menu.add("Divisions", () => menu.input("Set axis devisions", this.v7EvalAttr("ndiv", 508), "int").then(val => this.changeAxisAttr(1, "ndiv", val)));
 
       menu.add("sub:Ticks");
       menu.addRColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color", col));
@@ -1398,38 +1399,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!this.optionUnlab && this.labelsFont) {
          menu.add("sub:Labels");
-         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scaling_size, offset => {
-            this.changeAxisAttr(1, "labels_offset", offset);
-         });
-         menu.addRAttrTextItems(this.labelsFont, { noangle: 1, noalign: 1 }, change => {
-            this.changeAxisAttr(1, "labels_" + change.name, change.value);
-         });
-         menu.addchk(this.labelsFont.angle, "rotate", res => {
-            this.changeAxisAttr(1, "labels_angle", res ? 180 : 0);
-         });
+         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scaling_size,
+                         offset => this.changeAxisAttr(1, "labels_offset", offset));
+         menu.addRAttrTextItems(this.labelsFont, { noangle: 1, noalign: 1 },
+               change => this.changeAxisAttr(1, "labels_" + change.name, change.value));
+         menu.addchk(this.labelsFont.angle, "rotate", res => this.changeAxisAttr(1, "labels_angle", res ? 180 : 0));
          menu.add("endsub:");
       }
 
-      menu.add("sub:Title", () => {
-         menu.input("Enter axis title", this.fTitle).then(t => this.changeAxisAttr(1, "title", t));
-      });
+      menu.add("sub:Title", () => menu.input("Enter axis title", this.fTitle).then(t => this.changeAxisAttr(1, "title_value", t)));
 
       if (this.fTitle) {
-         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.titleOffset/this.scaling_size, offset => {
-            this.changeAxisAttr(1, "title_offset", offset);
-         });
+         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.titleOffset/this.scaling_size,
+                           offset => this.changeAxisAttr(1, "title_offset", offset));
 
-         menu.addSelectMenu("position", ["left", "center", "right"], this.titlePos, pos => {
-            this.changeAxisAttr(1, "title_position", pos);
-         });
+         menu.addSelectMenu("position", ["left", "center", "right"], this.titlePos,
+                            pos => this.changeAxisAttr(1, "title_position", pos));
 
-         menu.addchk(this.isTitleRotated(), "rotate", flag => {
-            this.changeAxisAttr(1, "title_angle", flag ? 180 : 0);
-         });
+         menu.addchk(this.isTitleRotated(), "rotate", flag => this.changeAxisAttr(1, "title_angle", flag ? 180 : 0));
 
-         menu.addRAttrTextItems(this.titleFont, { noangle: 1, noalign: 1 }, change => {
-            this.changeAxisAttr(1, "title_" + change.name, change.value);
-         });
+         menu.addRAttrTextItems(this.titleFont, { noangle: 1, noalign: 1 }, change => this.changeAxisAttr(1, "title_" + change.name, change.value));
       }
 
       menu.add("endsub:");
@@ -2141,7 +2130,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
           tm = Math.round(rect.height * (1 - this.fY2NDC)),
           h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false, trans = `translate(${lm},${tm})`;
+          rotate = false, fixpos = false, trans;
 
       if (pp && pp.options) {
          if (pp.options.RotateFrame) rotate = true;
@@ -2149,8 +2138,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (rotate) {
-         trans += ` rotate(-90) translate(${-h},0)`;
+         trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
          let d = w; w = h; h = d;
+      } else {
+         trans = `translate(${lm},${tm})`;
       }
 
       // update values here to let access even when frame is not really updated
@@ -2166,7 +2157,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getLayerSvg("primitives_layer").select(".root_frame");
 
-      let top_rect, main_svg;
+      let top_rect, main_g;
 
       if (this.draw_g.empty()) {
 
@@ -2181,17 +2172,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // append for the moment three layers - for drawing and axis
          this.draw_g.append('svg:g').attr('class','grid_layer');
 
-         main_svg = this.draw_g.append('svg:svg')
-                           .attr('class','main_layer')
-                           .attr("x", 0)
-                           .attr("y", 0)
-                           .attr('overflow', 'hidden');
+         main_g = this.draw_g.append('svg:g').attr('class','main_layer');
 
          this.draw_g.append('svg:g').attr('class','axis_layer');
          this.draw_g.append('svg:g').attr('class','upper_layer');
       } else {
          top_rect = this.draw_g.select("rect");
-         main_svg = this.draw_g.select(".main_layer");
+         main_g = this.draw_g.select(".main_layer");
       }
 
       this.axes_drawn = false;
@@ -2207,9 +2194,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr("width", w)
-              .attr("height", h)
-              .attr("viewBox", "0 0 " + w + " " + h);
+      main_g.attr("clip-path", `path('M0,0H${w}V${h}H0Z')`);
 
       let promise = Promise.resolve(true);
 
@@ -3091,7 +3076,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_parent.select(".primitives_layer")
-             .append("svg:svg") // here was g before, svg used to blend all drawin outside
+             .append("svg:g")
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
@@ -3119,12 +3104,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
       svg_pad.attr("display", pad_visible ? null : "none")
-             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
-             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
-             .attr("x", x)    // due to svg
-             .attr("y", y)   // due to svg
-             .attr("width", w)    // due to svg
-             .attr("height", h)   // due to svg
+             .attr("transform", `translate(${x},${y})`)
+             .attr("clip-path", `path('M0,0H${w}V${h}H0Z')`)
              .property('draw_x', x) // this is to make similar with canvas
              .property('draw_y', y)
              .property('draw_width', w)
