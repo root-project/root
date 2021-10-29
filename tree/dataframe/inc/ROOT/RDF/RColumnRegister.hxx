@@ -40,13 +40,9 @@ class RVariationBase;
  * The storage is copy-on-write and shared between all instances of the class that have the same values.
  */
 class RColumnRegister {
-   using RDefineBasePtrMap_t = std::unordered_map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
    using ColumnNames_t = std::vector<std::string>;
-
-   // Since RColumnRegister is meant to be an immutable, copy-on-write object, the actual values are set as const
-   using RDefineBasePtrMapPtr_t = std::shared_ptr<const RDefineBasePtrMap_t>;
-   using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
-   using VariationsMap_t = std::unordered_map<std::string, std::shared_ptr<RVariationBase>>;
+   using DefinesMap_t = std::unordered_map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
+   using VariationsMap_t = std::unordered_multimap<std::string, std::shared_ptr<RVariationBase>>;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
@@ -60,11 +56,11 @@ private:
    /// Immutable map of Defines, can be shared among several nodes.
    /// When a new define is added (through a call to RInterface::Define or similar) a new map with the extra element is
    /// created.
-   RDefineBasePtrMapPtr_t fDefines;
+   std::shared_ptr<const DefinesMap_t> fDefines;
    /// Immutable map of Aliases, can be shared among several nodes.
    std::shared_ptr<const std::unordered_map<std::string, std::string>> fAliases;
-   ColumnNamesPtr_t fColumnNames; ///< Names of Defines and Aliases registered so far.
    std::shared_ptr<const VariationsMap_t> fVariations;
+   std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
 
 public:
    RColumnRegister(const RColumnRegister &) = default;
@@ -72,22 +68,22 @@ public:
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
    RColumnRegister()
-      : fDefines(std::make_shared<RDefineBasePtrMap_t>()),
+      : fDefines(std::make_shared<DefinesMap_t>()),
         fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
-        fColumnNames(std::make_shared<ColumnNames_t>()), fVariations(std::make_shared<VariationsMap_t>())
+        fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
    {
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the names of the defined columns (Defines + Aliases)
+   /// \brief Returns the list of the names of the defined columns (Defines + Aliases).
    ColumnNames_t GetNames() const { return *fColumnNames; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the pointers to the defined columns
-   const RDefineBasePtrMap_t &GetColumns() const { return *fDefines; }
+   /// \brief Returns a map of pointers to the defined columns.
+   const DefinesMap_t &GetColumns() const { return *fDefines; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the pointers to the defined columns
+   /// \brief Returns a map of collections of pointers to the registered systematic variations.
    const VariationsMap_t &GetVariations() const { return *fVariations; }
 
    ////////////////////////////////////////////////////////////////////////////
