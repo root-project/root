@@ -158,6 +158,28 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
      _batchMode{batchMode}, _dataset{data, *std::unique_ptr<RooArgSet>(topNode.getObservables(data)), rangeName},
      _topNode{topNode}, _normSet{normSet}
 {
+   // Some checks and logging of used architectures
+   {
+      auto log = [](std::string_view message) {
+         oocxcoutI(static_cast<RooAbsArg *>(nullptr), FastEvaluations) << message << std::endl;
+      };
+
+      if (_batchMode == RooBatchCompute::BatchMode::Cuda && !RooBatchCompute::dispatchCUDA) {
+         throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
+                                  ": Cuda implementation of the computing library is not available\n");
+      }
+      if (RooBatchCompute::dispatchCPU->architecture() == RooBatchCompute::Architecture::GENERIC) {
+         log("using generic CPU library compiled with no vectorizations");
+      } else {
+         log(std::string("using CPU computation library compiled with -m") +
+             RooBatchCompute::dispatchCPU->architectureName());
+      }
+      if (_batchMode == RooBatchCompute::BatchMode::Cuda) {
+         log("using CUDA computation library");
+      }
+   }
+
+   // Get observables for model
    RooArgSet observables;
    topNode.getObservables(data.get(), observables);
 
@@ -205,9 +227,6 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // Extra steps for initializing in cuda mode
    if (_batchMode != RooBatchCompute::BatchMode::Cuda)
       return;
-   if (!RooBatchCompute::dispatchCUDA)
-      throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
-                               ": Cuda implementation of the computing library is not available\n");
 
    // copy observable data to the gpu
    _cudaMemDataset = static_cast<double *>(
