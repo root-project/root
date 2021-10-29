@@ -84,7 +84,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDefineBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
-    src/RDefineReader.cxx
     src/RDFActionHelpers.cxx
     src/RDFBookedDefines.cxx
     src/RDFDisplay.cxx
