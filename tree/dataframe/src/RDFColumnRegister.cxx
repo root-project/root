@@ -26,7 +26,7 @@ bool RColumnRegister::HasName(std::string_view name) const
 
 void RColumnRegister::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column)
 {
-   auto newDefines = std::make_shared<RDefineBasePtrMap_t>(GetColumns());
+   auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
    const std::string &colName = column->GetName();
    (*newDefines)[colName] = column;
    fDefines = std::move(newDefines);
@@ -93,7 +93,7 @@ RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const
 
 void RColumnRegister::AddName(std::string_view name)
 {
-   const auto &names = GetNames();
+   const auto &names = *fColumnNames;
    if (std::find(names.begin(), names.end(), name) != names.end())
       return; // must be a Redefine of an existing column. Nothing to do.
 
