@@ -36,8 +36,9 @@ namespace Internal {
 namespace RDF {
 std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 
-class RActionBase;
 class GraphNode;
+class RActionBase;
+class RVariationBase;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
@@ -109,6 +110,7 @@ class RLoopManager : public RNodeBase {
    std::vector<RFilterBase *> fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::vector<RRangeBase *> fBookedRanges;
    std::vector<RDefineBase *> fBookedDefines;
+   std::vector<RDFInternal::RVariationBase *> fBookedVariations;
 
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
@@ -175,6 +177,8 @@ public:
    void Deregister(RRangeBase *rangePtr);
    void Book(RDefineBase *definePtr);
    void Deregister(RDefineBase *definePtr);
+   void Book(RDFInternal::RVariationBase *varPtr);
+   void Deregister(RDFInternal::RVariationBase *varPtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
