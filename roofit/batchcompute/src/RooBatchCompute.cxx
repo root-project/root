@@ -21,9 +21,14 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include "RooBatchCompute.h"
 #include "Batches.h"
 
+#include "ROOT/RConfig.h"
 #include "ROOT/TExecutor.hxx"
 
 #include <algorithm>
+
+#ifndef RF_ARCH
+#error "RF_ARCH should always be defined"
+#endif
 
 namespace RooBatchCompute {
 namespace RF_ARCH {
@@ -42,6 +47,17 @@ public:
       // Set the dispatch pointer to this instance of the library upon loading
       dispatchCPU = this;
    }
+
+   Architecture architecture() const override { return Architecture::RF_ARCH; };
+   std::string architectureName() const override
+   {
+      // transform to lower case to match the original architecture name passed to the compiler
+      std::string out = _QUOTE_(RF_ARCH);
+      std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
+      ;
+      return out;
+   };
+
    /** Compute multiple values using optimized functions.
    This method creates a Batches object and passes it to the correct compute function.
    In case Implicit Multithreading is enabled, the events to be processed are equally
