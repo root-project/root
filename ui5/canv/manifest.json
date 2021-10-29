@@ -1,5 +1,5 @@
 {
-   "_version": "1.8.0",
+    "_version": "6.25.01",
     "sap.app": {
         "id": "rootui5.canv"
     },
@@ -11,7 +11,7 @@
             "id": "RootCanvas"
         },
         "dependencies": {
-            "minUI5Version": "1.30.0",
+            "minUI5Version": "1.82.0",
             "libs": {
                 "sap.ui.core": {},
                 "sap.ui.layout": {},
