@@ -77,7 +77,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new booked column.
    /// Internally it recreates the map with the new column, and swaps it with the old one.
-   void AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column, std::string_view name);
+   void AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column);
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new name to the list returned by `GetNames` without booking a new column.

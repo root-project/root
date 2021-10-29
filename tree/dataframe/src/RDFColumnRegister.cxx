@@ -7,6 +7,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RColumnRegister.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 
 namespace ROOT {
 namespace Internal {
@@ -18,10 +19,10 @@ bool RColumnRegister::HasName(std::string_view name) const
    return ccolnamesEnd != std::find(fColumnNames->begin(), ccolnamesEnd, name);
 }
 
-void RColumnRegister::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column, std::string_view name)
+void RColumnRegister::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column)
 {
    auto newDefines = std::make_shared<RDefineBasePtrMap_t>(GetColumns());
-   const std::string colName(name);
+   const std::string &colName = column->GetName();
    (*newDefines)[colName] = column;
    fDefines = std::move(newDefines);
    AddName(colName);

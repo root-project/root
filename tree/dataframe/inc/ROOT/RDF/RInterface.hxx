@@ -394,7 +394,7 @@ public:
       fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine, name);
+      newCols.AddColumn(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -485,7 +485,7 @@ public:
       fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine, name);
+      newCols.AddColumn(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -543,7 +543,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(std::move(newColumn), name);
+      newCols.AddColumn(std::move(newColumn));
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
       return newInterface;
    }
@@ -596,7 +596,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine, name);
+      newCols.AddColumn(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -2753,7 +2753,7 @@ private:
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, newCols, *fLoopManager);
-      newCols.AddColumn(entryColumn, entryColName);
+      newCols.AddColumn(entryColumn);
 
       // Slot number column
       const std::string slotColName = "rdfslot_";
@@ -2763,7 +2763,7 @@ private:
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
                                                        newCols, *fLoopManager);
-      newCols.AddColumn(slotColumn, slotColName);
+      newCols.AddColumn(slotColumn);
 
       fColRegister = std::move(newCols);
 
@@ -2892,7 +2892,7 @@ private:
       fLoopManager->Book(newColumn.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(newColumn, name);
+      newCols.AddColumn(newColumn);
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
