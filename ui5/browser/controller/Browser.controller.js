@@ -484,6 +484,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                oEditor.setType('markdown');
                break;
             case "py":
+               oModel.setProperty("/runEnabled", true);
                oEditor.setType('python');
                break;
             case "tex":

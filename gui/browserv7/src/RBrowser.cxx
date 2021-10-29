@@ -252,11 +252,17 @@ void RBrowser::ProcessSaveFile(const std::string &fname, const std::string &cont
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Process file save command in the editor
+/// Process run macro command in the editor
 
-long RBrowser::ProcessRunMacro(const std::string &file_path)
+void RBrowser::ProcessRunMacro(const std::string &file_path)
 {
-   return gInterpreter->ExecuteMacro(file_path.c_str());
+   if (file_path.rfind(".py") == file_path.length() - 3) {
+      TString exec;
+      exec.Form("TPython::ExecScript(\"%s\");", file_path.c_str());
+      gROOT->ProcessLine(exec.Data());
+   } else {
+      gInterpreter->ExecuteMacro(file_path.c_str());
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////
