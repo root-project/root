@@ -12,6 +12,7 @@
 #define ROOT_RDF_COLUMNREADERUTILS
 
 #include "RColumnReaderBase.hxx"
+#include "RBookedDefines.hxx"
 #include "RDefineBase.hxx"
 #include "RDefineReader.hxx"
 #include "RDSColumnReader.hxx"
@@ -22,6 +23,7 @@
 #include <TTreeReader.h>
 
 #include <array>
+#include <cassert>
 #include <map>
 #include <memory>
 #include <string>
@@ -37,19 +39,21 @@ namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
 std::unique_ptr<RDFDetail::RColumnReaderBase>
-MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader *r, ROOT::RDF::RDataSource *ds,
-                 const std::vector<void *> *DSValuePtrsPtr, const std::string &colName)
+MakeColumnReader(unsigned int slot, RDefineBase *define,
+                 const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
+                 ROOT::RDF::RDataSource *ds, const std::string &colName)
 {
    using Ret_t = std::unique_ptr<RDFDetail::RColumnReaderBase>;
 
    // this check must come first!
    // so that Redefine'd columns have precedence over the original columns
    if (define != nullptr)
-      return Ret_t(new RDefineReader(slot, *define, typeid(T)));
+      return Ret_t{new RDefineReader(slot, *define, typeid(T))};
 
-   if (DSValuePtrsPtr != nullptr) {
+   const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
+   if (DSValuePtrsIt != DSValuePtrsMap.end()) {
       // reading from a RDataSource with the old column reader interface
-      auto &DSValuePtrs = *DSValuePtrsPtr;
+      const std::vector<void *> &DSValuePtrs = DSValuePtrsIt->second;
       return Ret_t(new RDSColumnReader<T>(DSValuePtrs[slot]));
    }
 
@@ -58,20 +62,10 @@ MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader 
       return ds->GetColumnReaders(slot, colName, typeid(T));
    }
 
-   // reading from a TTree
-   return Ret_t(new RTreeColumnReader<T>(*r, colName));
-}
+   assert(r != nullptr && "We could not find a reader for this column, this should never happen at this point.");
 
-template <typename T>
-std::unique_ptr<RDFDetail::RColumnReaderBase>
-MakeColumnReadersHelper(unsigned int slot, RDFDetail::RDefineBase *define,
-                        const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
-                        ROOT::RDF::RDataSource *ds, const std::string &colName)
-{
-   const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
-   const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
-   assert(define != nullptr || r != nullptr || DSValuePtrsPtr != nullptr || ds != nullptr);
-   return MakeColumnReader<T>(slot, define, r, ds, DSValuePtrsPtr, colName);
+   // reading from a TTree
+   return Ret_t{new RTreeColumnReader<T>(*r, colName)};
 }
 
 /// This type aggregates some of the arguments passed to MakeColumnReaders.
@@ -95,17 +89,15 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
-   const auto &customCols = colInfo.fCustomCols;
+   const auto &defines = colInfo.fCustomCols.GetColumns();
    const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
    auto *ds = colInfo.fDataSource;
 
-   const auto &customColMap = customCols.GetColumns();
-
    int i = -1;
    std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, MakeColumnReadersHelper<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
-                                                DSValuePtrsMap, r, ds, colNames[i]))}...}};
+      {{(++i, MakeColumnReader<ColTypes>(slot, isDefine[i] ? defines.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r,
+                                         ds, colNames[i]))}...}};
    return ret;
 
    // avoid bogus "unused variable" warnings
