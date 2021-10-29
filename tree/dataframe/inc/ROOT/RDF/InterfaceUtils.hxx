@@ -677,6 +677,19 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
 
 void TriggerRun(ROOT::RDF::RNode &node);
 
+template <typename T>
+struct InnerValueType {
+   using type = T; // fallback for when T is not a nested RVec
+};
+
+template <typename T>
+struct InnerValueType<ROOT::VecOps::RVec<ROOT::VecOps::RVec<T>>> {
+   using type = T;
+};
+
+template <typename T>
+using InnerValueType_t = typename InnerValueType<T>::type;
+
 } // namespace RDF
 } // namespace Internal
 
