@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "25/10/2021";
+   JSROOT.version_date = "28/10/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -139,7 +139,7 @@
    let browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false  };
 
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
-      let script = document.currentScript;
+      const script = document.currentScript;
       if (script && (typeof script.src == "string")) {
          const pos = script.src.indexOf("scripts/JSRoot.core.");
          if (pos >= 0) {

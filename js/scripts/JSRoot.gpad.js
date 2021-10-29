@@ -1834,7 +1834,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
           tm = Math.round(rect.height * (1 - this.fY2NDC)),
           h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false, trans = `translate(${lm},${tm})`;
+          rotate = false, fixpos = false, trans;
 
       if (pp && pp.options) {
          if (pp.options.RotateFrame) rotate = true;
@@ -1842,8 +1842,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (rotate) {
-         trans += ` rotate(-90) translate(${-h},0)`;
+         trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
          let d = w; w = h; h = d;
+      } else {
+         trans = `translate(${lm},${tm})`;
       }
 
       this._frame_x = lm;
@@ -1858,7 +1860,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getLayerSvg("primitives_layer").select(".root_frame");
 
-      let top_rect, main_svg;
+      let top_rect, main_g;
 
       if (this.draw_g.empty()) {
 
@@ -1873,17 +1875,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // append for the moment three layers - for drawing and axis
          this.draw_g.append('svg:g').attr('class','grid_layer');
 
-         main_svg = this.draw_g.append('svg:svg')
-                           .attr('class','main_layer')
-                           .attr("x", 0)
-                           .attr("y", 0)
-                           .attr('overflow', 'hidden');
+         // main layer with the clipping
+         main_g = this.draw_g.append('svg:g').attr('class','main_layer');
 
          this.draw_g.append('svg:g').attr('class', 'axis_layer');
          this.draw_g.append('svg:g').attr('class', 'upper_layer');
       } else {
          top_rect = this.draw_g.select("path");
-         main_svg = this.draw_g.select(".main_layer");
+         main_g = this.draw_g.select(".main_layer");
       }
 
       this.axes_drawn = false;
@@ -1894,9 +1893,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr("width", w)
-              .attr("height", h)
-              .attr("viewBox", "0 0 " + w + " " + h);
+      main_g.attr("clip-path", `path('M0,0H${w}V${h}H0Z')`);
 
       if (JSROOT.batch_mode) return;
 
@@ -2718,7 +2715,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_can.select(".primitives_layer")
-             .append("svg:svg") // here was g before, svg used to blend all drawin outside
+             .append("svg:g")
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
@@ -2745,12 +2742,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
       svg_pad.attr("display", pad_visible ? null : "none")
-             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
-             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
-             .attr("x", x)        // due to svg
-             .attr("y", y)        // due to svg
-             .attr("width", w)    // due to svg
-             .attr("height", h)   // due to svg
+             .attr("transform", `translate(${x},${y})`)
+             .attr("clip-path", `path('M0,0H${w}V${h}H0Z')`)
              .property('draw_x', x) // this is to make similar with canvas
              .property('draw_y', y)
              .property('draw_width', w)
