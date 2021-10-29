@@ -21,8 +21,10 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include "RooBatchCompute.h"
 #include "Batches.h"
 
+#include "ROOT/RConfig.h"
 #include "TError.h"
 
+#include <algorithm>
 #include <thrust/reduce.h>
 
 #ifdef __CUDACC__
@@ -34,6 +36,10 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
       throw std::bad_alloc();
    }
 }
+#endif
+
+#ifndef RF_ARCH
+#error "RF_ARCH should always be defined"
 #endif
 
 namespace RooBatchCompute {
@@ -52,6 +58,16 @@ public:
    {
       dispatchCUDA = this; // Set the dispatch pointer to this instance of the library upon loading
    }
+
+   Architecture architecture() const override { return Architecture::RF_ARCH; };
+   std::string architectureName() const override
+   {
+      // transform to lower case to match the original architecture name passed to the compiler
+      std::string out = _QUOTE_(RF_ARCH);
+      std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
+      ;
+      return out;
+   };
 
    /** Initialize the cuda computation library.
    This method needs to be called after the dynamic loading of the cuda instance of the
