@@ -75,10 +75,10 @@ MakeColumnReadersHelper(unsigned int slot, RDFDetail::RDefineBase *define,
    return MakeColumnReader<T>(slot, define, r, ds, DSValuePtrsPtr, colName);
 }
 
-/// This type aggregates some of the arguments passed to InitColumnReaders.
+/// This type aggregates some of the arguments passed to MakeColumnReaders.
 /// We need to pass a single RColumnReadersInfo object rather than each argument separately because with too many
 /// arguments passed, gcc 7.5.0 and cling disagree on the ABI, which leads to the last function argument being read
-/// incorrectly from a compiled InitColumnReaders symbols when invoked from a jitted symbol.
+/// incorrectly from a compiled MakeColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
    const RBookedDefines &fCustomCols;
