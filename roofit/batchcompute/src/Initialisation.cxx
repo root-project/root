@@ -21,26 +21,15 @@
 
 // First initialisation of the pointers. When implementations of the batch compute library
 // are loaded, they will overwrite the pointers.
-RooBatchCompute::RooBatchComputeInterface *RooBatchCompute::dispatchCPU = nullptr,
-                                          *RooBatchCompute::dispatchCUDA = nullptr;
+RooBatchCompute::RooBatchComputeInterface *RooBatchCompute::dispatchCPU = nullptr;
+RooBatchCompute::RooBatchComputeInterface *RooBatchCompute::dispatchCUDA = nullptr;
 
 namespace {
-
-int load(const std::string &libName)
-{
-   // set gDebug tempoarily to 1 to get library loading messages printed
-   int prevDebug = gDebug;
-   if (gDebug <= 0)
-      gDebug = 1;
-   int ret = gSystem->Load(libName.c_str());
-   gDebug = prevDebug;
-   return ret;
-}
 
 /// Dynamically load a library and throw exception in case of failure
 void loadWithErrorChecking(const std::string &libName)
 {
-   const auto returnValue = load(libName);
+   const auto returnValue = gSystem->Load(libName.c_str());
    if (returnValue == -1 || returnValue == -2)
       throw std::runtime_error("RooFit was unable to load its computation library " + libName);
    else if (returnValue == 1) // Library should not have been loaded before we tried to do it.
@@ -56,12 +45,9 @@ void loadComputeLibrary()
 #ifdef R__HAS_CUDA
    TString libcudart{"libcudart"};
    if (gSystem->FindDynamicLibrary(libcudart, true))
-      load("libRooBatchCompute_CUDA");
+      gSystem->Load("libRooBatchCompute_CUDA");
    if (RooBatchCompute::dispatchCUDA)
       RooBatchCompute::dispatchCUDA->init();
-   if (!RooBatchCompute::dispatchCUDA)
-      Info((std::string(__func__) + "(), " + __FILE__ + ":" + std::to_string(__LINE__)).c_str(),
-           "Cuda implementation is not supported or not working, trying cpu optimised implementations.");
 #endif // R__HAS_CUDA
 
    __builtin_cpu_init();

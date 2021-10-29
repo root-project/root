@@ -26,6 +26,7 @@ endif()
 
 # Generic implementation for CPUs that don't support vector instruction sets.
 ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC src/RooBatchCompute.cxx src/ComputeFunctions.cxx TYPE SHARED DEPENDENCIES RooBatchCompute)
+target_compile_options(RooBatchCompute_GENERIC  PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
 
 # Windows platform and ICC compiler need special code and testing, thus the feature has not been implemented yet for these.
 if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_64 AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
