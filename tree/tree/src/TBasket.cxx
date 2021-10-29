@@ -821,12 +821,12 @@ void TBasket::WriteReset()
    Int_t curSize = fBufferRef->BufferSize();
    // fBufferLen at this point is already reset, so use indirect measurements
    Int_t curLen = (GetObjlen() + GetKeylen());
-   Long_t newSize = -1;
+   Longptr_t newSize = -1;
    if (curSize > 2*curLen)
    {
-      Long_t curBsize = fBranch->GetBasketSize();
+      Longptr_t curBsize = fBranch->GetBasketSize();
       if (curSize > 2*curBsize ) {
-         Long_t avgSize = (Long_t)(fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
+         Longptr_t avgSize = (Longptr_t)(fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
          if (curSize > 2*avgSize) {
             newSize = curBsize;
             if (curLen > newSize) {

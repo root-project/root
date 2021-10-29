@@ -164,7 +164,7 @@ TEST(TBasket, TestUnsupportedIO)
 
    TClass *cl = basket->IsA();
    ASSERT_NE(cl, nullptr);
-   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   Longptr_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
    UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
 
@@ -249,7 +249,7 @@ TEST(TBasket, TestVarLengthArrays)
 
    TClass *cl = basket->IsA();
    ASSERT_NE(cl, nullptr);
-   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   Longptr_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
    UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
    EXPECT_EQ(*ioBits, 0);
@@ -366,7 +366,7 @@ TEST(TBasket, TestSettingIOBits)
 
    TClass *cl = basket->IsA();
    ASSERT_NE(cl, nullptr);
-   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   Longptr_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
    UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
    EXPECT_EQ(*ioBits, static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
