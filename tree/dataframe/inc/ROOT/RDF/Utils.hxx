@@ -221,6 +221,8 @@ constexpr std::size_t CacheLineStep() {
    return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
 }
 
+void CheckDefineType(RDefineBase &define, const std::type_info &tid);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
