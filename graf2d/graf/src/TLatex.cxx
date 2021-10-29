@@ -1944,6 +1944,7 @@ TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 {
    TLatex *newtext = new TLatex(x, y, text);
    TAttText::Copy(*newtext);
+   TAttLine::Copy(*newtext);
    newtext->SetBit(kCanDelete);
    if (TestBit(kTextNDC)) newtext->SetNDC();
    newtext->AppendPad();
