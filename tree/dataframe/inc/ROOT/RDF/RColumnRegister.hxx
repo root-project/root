@@ -57,11 +57,6 @@ public:
    RColumnRegister(RColumnRegister &&) = default;
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
-   RColumnRegister(RDefineBasePtrMapPtr_t defines, ColumnNamesPtr_t defineNames)
-      : fDefines(defines), fColumnNames(defineNames)
-   {
-   }
-
    RColumnRegister()
       : fDefines(std::make_shared<RDefineBasePtrMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
    {
