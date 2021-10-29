@@ -34,7 +34,6 @@
 #include "RooHist.h"
 #include "RooRandom.h"
 #include "RooTrace.h"
-#include "RooMath.h"
 
 // Tests file
 #include "stressRooStats_tests.h"

@@ -21,7 +21,7 @@
 #include "RooHist.h"
 #include "RooRandom.h"
 #include "RooTrace.h"
-#include "RooMath.h"
+
 #include <string>
 #include <list>
 #include <iostream>
