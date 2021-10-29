@@ -76,6 +76,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RResultMap.hxx
     ROOT/RDF/RSlotStack.hxx
     ROOT/RDF/RTreeColumnReader.hxx
+    ROOT/RDF/RVariation.hxx
+    ROOT/RDF/RVariationBase.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
@@ -100,6 +102,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RJittedFilter.cxx
     src/RLoopManager.cxx
     src/RRangeBase.cxx
+    src/RVariationBase.cxx
     src/RRootDS.cxx
     src/RSlotStack.cxx
     src/RTrivialDS.cxx
