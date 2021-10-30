@@ -29,6 +29,7 @@ private:
    std::string fNX;
    std::string fNW;
    std::string fNB;
+   std::string fNB2; // bias tensor name after broadcasting
    std::string fNY;
 
    std::vector<size_t> fShapeX;
@@ -175,17 +176,52 @@ public:
             if (fShapeB[0] != fShapeY[0])
                throw std::runtime_error("TMVA SOFIE Conv op: Bias Tensor has wrong shape: " +
                                            ConvertShapeToString(fShapeB));
-            fShapeB.resize(fShapeY.size(), 1.);
+            if (fType != "float")
+               throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
+            
+            // here the acual broadcasting
+            if (!model.UseSession()) {
+               // in case of session the code is in GenerateInitCode
+               fShapeB.resize(fShapeY.size(), 1.);
 
-            if (fType == "float") {
-               std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(
-                  static_cast<float*>(original_data.get()), fShapeB, fShapeY), std::default_delete<float[]>());
+               std::shared_ptr<void> new_data_ptr(
+                  UTILITY::Unidirectional_broadcast<float>(static_cast<float *>(original_data.get()), fShapeB, fShapeY),
+                  std::default_delete<float[]>());
                model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, new_data_ptr);
                fShapeB = model.GetTensorShape(fNB);
+               fNB2 = fNB;   // use same name
+            }
+            else { 
+               // we need to add bias as an intermediate tensor
+               // I need here to inser a new tensor
+               fNB2 = fNB + "bcast";
+               model.AddIntermediateTensor(fNB2, model.GetTensorType(fNB), fShapeY);
+               //model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, new_data_ptr);
             }
          }
       }
       
+   }
+
+   std::string GenerateInitCode() {
+      std::stringstream out;
+      // generate initialization code for broadcasting of bias tensor  
+      if (fShapeB.size() != fShapeY.size() ) {
+         // include a separate scope to avoid defining unique operator temp variables 
+         out << "   {\n"; 
+         out << "      std::vector<size_t> shapeB = " << ConvertShapeToString(fShapeB) << ";\n";
+         out << "      std::vector<size_t> shapeY = " << ConvertShapeToString(fShapeY) << ";\n";
+         out << "      shapeB.resize(shapeY.size(), 1.);\n";
+         // here a copy could be maybe avoided
+         std::string original_bias_tensor = "tensor_" + fNB;
+         std::string new_bias_tensor = "tensor_" + fNB2;
+         out << "     float * new_data_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
+             << original_bias_tensor << ", shapeB, shapeY);\n";
+         out << "     std::copy(new_data_ptr, new_data_ptr + TMVA::Experimental::SOFIE::ConvertShapeToLength(shapeY), "
+                <<  new_bias_tensor << " );\n";
+         out << "   }\n";
+      }
+      return out.str();
    }
 
    std::string Generate(std::string OpName) {
@@ -253,8 +289,13 @@ public:
 
       if (fAttrGroup == 1) {
          if (fType == "float") {
-         out << "\t" << "float " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1]
-             * fShapeX[0] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+//         out << "\t" << "float " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1]
+//             * fShapeX[0] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+         out << "\t"
+             << "std::vector<float> vec_" << OpName << "_xcol("
+             << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeX[0] * fShapeY[2] * fShapeY[3] << ");\n";
+         out << "\t"
+             << "float * " << OpName << "_xcol = vec_" << OpName << "_xcol.data();\n";
          }
          // Unroll the input tensor
          out << "\t" << "size_t " << OpName << "_index = 0;\n";
@@ -291,8 +332,11 @@ public:
              << ", &" << OpName << "_m);\n";
       } else {
          if (fType == "float") {
-         out << "\t" << "float " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1]
-             * fShapeX[0] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+         //out << "\t" << "float " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1]
+         //    * fShapeX[0] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+         out << "\t" << "std::vector<float> vec_" << OpName << "_xcol(" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1]
+             * fShapeX[0] * fShapeY[2] * fShapeY[3] << ");\n";
+         out << "\t" << "float " << OpName << "_xcol = vec_" << OpName << "_xcol.data();\n";
          }
          // Unroll the input tensor
          out << "\t" << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
@@ -363,13 +407,13 @@ public:
          out << "\t" << "}\n";
       }
 
-      if (fNB != "") {
+      if (fNB2 != "") {
          out << "\t" << "int " << OpName << "_size = " << fShapeY[0] * fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
          out << "\t" << "float " << OpName << "_gamma = 1.0;\n";
          out << "\t" << "int " << OpName << "_incx = 1;\n";
          out << "\t" << "int " << OpName << "_incy = 1;\n";
 
-         out << "\t" << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB << ", &"
+         out << "\t" << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB2 << ", &"
              << OpName << "_incx, tensor_" << fNY << ", &" << OpName << "_incy);\n";
       }
 
