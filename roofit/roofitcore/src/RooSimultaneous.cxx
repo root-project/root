@@ -68,6 +68,7 @@ in each category.
 #include "RooDataHist.h"
 #include "RooRandom.h"
 #include "RooArgSet.h"
+#include "RooBinSamplingPdf.h"
 
 #include "ROOT/StringUtils.hxx"
 
@@ -1126,4 +1127,81 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
 
   delete globClone ;
   return data ;
+}
+
+
+/// Wraps the components of this RooSimultaneous in RooBinSamplingPdfs.
+/// \param[in] data The dataset to be used in the eventual fit, used to figure
+///            out the observables and whether the dataset is binned.
+/// \param[in] precisions Precision argument for all created RooBinSamplingPdfs.
+void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double precision) {
+
+  if (precision < 0.) return;
+
+  RooArgSet newSamplingPdfs;
+
+  for (auto const &item : this->indexCat()) {
+
+    auto const &catName = item.first;
+    auto &pdf = *this->getPdf(catName.c_str());
+
+    if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
+      // Set the "ORIGNAME" attribute the indicate to
+      // RooAbsArg::redirectServers() wich pdf should be replaced by this
+      // RooBinSamplingPdf in the RooSimultaneous.
+      newSamplingPdf->setAttribute(
+          (std::string("ORIGNAME:") + pdf.GetName()).c_str());
+      newSamplingPdfs.add(*newSamplingPdf.release());
+    }
+  }
+
+  this->redirectServers(newSamplingPdfs, false, true);
+  this->addOwnedComponents(newSamplingPdfs);
+}
+
+
+/// Wraps the components of this RooSimultaneous in RooBinSamplingPdfs, with a
+/// different precision parameter for each component.
+/// \param[in] data The dataset to be used in the eventual fit, used to figure
+///            out the observables and whether the dataset is binned.
+/// \param[in] precisions The map that gives the precision argument for each
+///            component in the RooSimultaneous. The keys are the pdf names. If
+///            there is no value for a given component, it will not use the bin
+///            integration. Otherwise, the value has the same meaning than in
+///            the IntegrateBins() command argument for RooAbsPdf::fitTo().
+/// \param[in] useCategoryNames If this flag is set, the category names will be
+///            used to look up the precision in the precisions map instead of
+///            the pdf names.
+void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
+                                                std::map<std::string, double> const& precisions,
+                                                bool useCategoryNames /*=false*/) {
+
+  constexpr double defaultPrecision = -1.;
+
+  RooArgSet newSamplingPdfs;
+
+  for (auto const &item : this->indexCat()) {
+
+    auto const &catName = item.first;
+    auto &pdf = *this->getPdf(catName.c_str());
+    std::string pdfName = pdf.GetName();
+
+    auto found = precisions.find(useCategoryNames ? catName : pdfName);
+    const double precision =
+        found != precisions.end() ? found->second : defaultPrecision;
+    if (precision < 0.)
+      continue;
+
+    if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
+      // Set the "ORIGNAME" attribute the indicate to
+      // RooAbsArg::redirectServers() wich pdf should be replaced by this
+      // RooBinSamplingPdf in the RooSimultaneous.
+      newSamplingPdf->setAttribute(
+          (std::string("ORIGNAME:") + pdf.GetName()).c_str());
+      newSamplingPdfs.add(*newSamplingPdf.release());
+    }
+  }
+
+  this->redirectServers(newSamplingPdfs, false, true);
+  this->addOwnedComponents(newSamplingPdfs);
 }
