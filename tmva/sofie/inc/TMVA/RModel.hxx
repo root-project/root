@@ -41,6 +41,8 @@ private:
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
+   bool fUseWeightFile = false;
+   bool fUseSession = false;
 
 
 
@@ -83,7 +85,10 @@ public:
 
 
    void Initialize();
-   void Generate();
+   void Generate(bool useSession = false, bool useWeightFile = false);
+
+   void ReadInitializedTensorsFromFile();
+   void WriteInitializedTensorsToFile(std::string filename = "");
 
    void PrintGenerated(){
       std::cout << fGC;
@@ -108,6 +113,8 @@ public:
    void PrintRequiredInputTensors();
    void PrintInitializedTensors();
    void HeadInitializedTensors(std::string name, int n_print = 50);
+
+   bool UseSession() const { return fUseSession;}
 
    ~RModel(){
       /*
