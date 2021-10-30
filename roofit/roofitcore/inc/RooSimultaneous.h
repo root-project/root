@@ -83,6 +83,11 @@ public:
 
   virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor,
 				    Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
+
+  void wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double precision);
+  void wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
+                                 std::map<std::string, double> const& precisions,
+                                 bool useCategoryNames=false);
   
 protected:
 
