@@ -28,6 +28,7 @@ The following people have contributed to this new version:
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
+ Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
  Max Orok, U Ottawa,\
  Alexander Penev, University of Plovdiv,\
  Danilo Piparo, CERN/SFT,\
@@ -64,10 +65,30 @@ More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 
 ## I/O Libraries
 
+- `TDirectory::WriteObject` now always saves the object's title to the file if it is derived from `TObject` (PR [#8394](https://github.com/root-project/root/pull/8934)).
+
+### Command line utilities
+
+- `rootls` now follows the same logic of `TFile::ls()` to print the key cycle number and its tag when listing contents of a file with the `-l` option (PR [#7878](https://github.com/root-project/root/pull/7878)):
+```
+$: rootls -l https://root.cern/files/ttree_read_imt.root
+TTree  Mar 13 17:17 2019 TreeIMT;2 "TTree for IMT test" [current cycle]
+TTree  Mar 13 17:17 2019 TreeIMT;1 "TTree for IMT test" [backup cycle]
+```
+- `root` will now error on receiving unrecognized options, similarly to other command line tools (PR [#8868](https://github.com/root-project/root/pull/8868)):
+```
+$: root --random -z --nonexistingoption
+root: unrecognized option '--random'
+root: unrecognized option '-z'
+root: unrecognized option '--nonexistingoption'
+Try 'root --help' for more information.
+```
 
 ## TTree Libraries
 
 - `TTreeReader::GetEntryStatus` now always reports `kEntryBeyondEnd` after an event loop correctly completes. In previous versions, it could sometime return `kEntryNotFound` even for well-behaved event loops.
+- Add `TEntryList::AddSubList` to specifically add a sub-list to the main list of entries. Consequently, add also a new option `"sync"` in `TChain::SetEntryList` to connect the sub-trees of the chain to the sub-lists of the entry list in lockstep (PR [#8660](https://github.com/root-project/root/pull/8660)).
+- Add `TEntryList::EnterRange` to add all entries in a certain range `[start, end)` to the entry list (PR [#8740](https://github.com/root-project/root/pull/8740)).
 
 ## RDataFrame
 
@@ -80,6 +101,37 @@ More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 - `Book` now supports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
 - As an aid to `RDataSource` implementations with which collection sizes can be retrieved more efficiently than the full collection, `#var` can now be used as a short-hand notation for column name `R_rdf_sizeof_var`.
 - Helpers have been added to export data from `RDataFrame` to RooFit datasets. See the "RooFit Libraries" section below for more details.
+
+### Experimental Distributed RDataFrame
+The distributed RDataFrame module has been improved. Now it supports sending RDataFrame tasks to a [Dask](https://dask.org/) scheduler. Through Dask, RDataFrame can be also scaled to a cluster of machines managed through a batch system like HTCondor or Slurm. Here is an example:
+
+```python
+import ROOT
+from dask.distributed import Client
+RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+
+# In a Python script the Dask client needs to be initalized in a context
+# Jupyter notebooks / Python session don't need this
+if __name__ == "__main__":
+    client = Client("SCHEDULER_ADDRESS")
+    df = RDataFrame("mytree","myfile.root", daskclient=client)
+    # Proceed as usual
+    df.Define("x","someoperation").Histo1D("x")
+```
+
+Other notable additions and improvements include:
+
+- Greatly reduce distributed tasks processing overhead. This involved:
+    - Changing the distributed execution logic with the `TTree` data source to use `TEntryList` in order to select the range of entries that each task will read from the tree. This highly reduces the waiting time spent in retrieving the correct entries for processing, as it was previously done using the `Range` operation.
+    - Refactoring the internal mechanism to store information about data sources and create ranges for the distributed tasks accordingly. This will also allow in the future to easily extend the supported data sources in distributed RDataFrame.
+- Refactor triggering of the computation graph in the distributed tasks, so that it now runs with the Python GIL released. This allows interoperability with frameworks like Dask that run different Python threads along the main processing one.
+- Set minimum Python version to use this tool to 3.7. This allows using more modern Python functionality in distributed RDataFrame code and is in line with the Python support provided by Spark and Dask.
+- Add support for the `DefinePerSample` operation.
+- Fixed a bug that disregarded user provided `npartitions` parameter in distributed Spark execution.
+- Improve support for friend trees in distributed executions with TTree as data source. This fixes a long-standing issue with distributed RDataFrame [#7584](https://github.com/root-project/root/issues/7584).
+- Changed naming scheme of the files written by a distributed `Snapshot` operation. Now, each task will be assigned with a sequential id that will be appended to the name of the file created during the execution. For example, calling `Snapshot("mytree","myfile.root")` on a distributed RDataFrame with 3 partitions will create three files named like so: `myfile_0.root, myfile_1.root, myfile_2.root`.
+- Add support for TChain data sources with no tree name and multiple different tree subnames.
+- Raise an error if an in-memory-only TTree is passed as data source to a distributed RDataFrame.
 
 ### Other improvements
 
@@ -229,3 +281,8 @@ The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In
 
 
 ## Build, Configuration and Testing Infrastructure
+
+## PyROOT
+
+- The `ROOT` Python module is now properly serializable so that it is automatically available in the Python environment if a function or ROOT object needs to be serialized. See issue [#6764](https://github.com/root-project/root/issues/6764) for a concrete usecase.
+- Improve overload resolution of functions that accept classes with long inheritance trees. Now prefer to call the function overload of the most derived class type (PR [#9092](https://github.com/root-project/root/pull/9092)).
