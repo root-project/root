@@ -65,15 +65,15 @@ class SparkBackend(Base.BaseBackend):
             self.sc = pyspark.SparkContext.getOrCreate()
 
     def optimize_npartitions(self):
-        numex = self.sc.getConf().get("spark.executor.instances")
-        numcoresperex = self.sc.getConf().get("spark.executor.cores")
-
-        if numex is not None:
-            if numcoresperex is not None:
-                return int(numex) * int(numcoresperex)
-            return int(numex)
-        else:
-            return self.MIN_NPARTITIONS
+        """
+        The SparkContext.defaultParallelism property roughly translates to the
+        available amount of logical cores on the cluster. Some examples:
+        - spark.master = local[n]: returns n.
+        - spark.executor.instances = m and spark.executor.cores = n: returns `n*m`.
+        By default, the minimum number this returns is 2 if the context
+        doesn't know any better. For example, if dynamic allocation is enabled.
+        """
+        return self.sc.defaultParallelism
 
     def ProcessAndMerge(self, ranges, mapper, reducer):
         """
