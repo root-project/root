@@ -24,6 +24,7 @@ class SparkHistogramsTest(unittest.TestCase):
           this is ignored by default in any application, but Python's unittest
           library overrides the default warning filters thus exposing this
           warning
+        - Initialize a SparkContext for the tests in this class
         """
         os.environ["PYSPARK_PYTHON"] = sys.executable
 
@@ -33,6 +34,9 @@ class SparkHistogramsTest(unittest.TestCase):
         # Disable ROOT graphics for these tests
         cls.oldbatch = ROOT.gROOT.IsBatch()
         ROOT.gROOT.SetBatch(True)
+
+        sparkconf = pyspark.SparkConf().setMaster("local[2]")
+        cls.sc = pyspark.SparkContext(conf=sparkconf)
 
     @classmethod
     def tearDownClass(cls):
@@ -44,9 +48,7 @@ class SparkHistogramsTest(unittest.TestCase):
 
         ROOT.gROOT.SetBatch(cls.oldbatch)
 
-    def tearDown(self):
-        """Stop any created SparkContext"""
-        pyspark.SparkContext.getOrCreate().stop()
+        cls.sc.stop()
 
     def build_pyrdf_graph(self):
         """
@@ -54,7 +56,7 @@ class SparkHistogramsTest(unittest.TestCase):
         """
         treename = "data"
         files = ["http://root.cern/files/teaching/CMS_Open_Dataset.root", ]
-        rdf = Spark.RDataFrame(treename, files, npartitions=5)
+        rdf = Spark.RDataFrame(treename, files, npartitions=5, sparkcontext=self.sc)
 
         # Define the analysis cuts
         chargeCutStr = "C1 != C2"

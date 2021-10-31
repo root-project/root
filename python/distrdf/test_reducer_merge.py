@@ -31,7 +31,8 @@ class ReducerMergeTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
-        cls.sc = pyspark.SparkContext()
+        sparkconf = pyspark.SparkConf().setMaster("local[2]")
+        cls.sc = pyspark.SparkContext(conf=sparkconf)
 
     @classmethod
     def tearDownClass(cls):

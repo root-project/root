@@ -26,11 +26,15 @@ class IncludesSparkTest(unittest.TestCase):
           this is ignored by default in any application, but Python's unittest
           library overrides the default warning filters thus exposing this
           warning
+        - Initialize a SparkContext for the tests in this class
         """
         os.environ["PYSPARK_PYTHON"] = sys.executable
 
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
+
+        sparkconf = pyspark.SparkConf().setMaster("local[2]")
+        cls.sc = pyspark.SparkContext(conf=sparkconf)
 
     @classmethod
     def tearDownClass(cls):
@@ -40,9 +44,7 @@ class IncludesSparkTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
-    def tearDown(self):
-        """Stop any created SparkContext"""
-        pyspark.SparkContext.getOrCreate().stop()
+        cls.sc.stop()
 
     def test_header_distribution_and_inclusion(self):
         """
@@ -59,7 +61,7 @@ class IncludesSparkTest(unittest.TestCase):
         were included using header files.
         """
 
-        rdf = Spark.RDataFrame(10)
+        rdf = Spark.RDataFrame(10, sparkcontext=self.sc)
 
         rdf._headnode.backend.distribute_headers("test_headers/header1.hxx")
 
@@ -94,7 +96,7 @@ class IncludesSparkTest(unittest.TestCase):
         import ROOT
 
         # Create an RDataFrame with 100 integers from 0 to 99
-        rdf = Spark.RDataFrame(100)
+        rdf = Spark.RDataFrame(100, sparkcontext=self.sc)
 
         # Distribute headers to the workers
         header_folder = "test_headers/headers_folder"
