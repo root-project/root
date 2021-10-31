@@ -245,14 +245,15 @@ class ReducerMergeTest(unittest.TestCase):
     def test_distributed_snapshot(self):
         """Test support for `Snapshot` in distributed backend"""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Spark.RDataFrame(10, sparkcontext=self.sc).Define("x", "rdfentry_")
+        df = Spark.RDataFrame(10, sparkcontext=self.sc)
+        df_x = df.Define("x", "rdfentry_")
 
         # Count rows in the dataframe
-        nrows = df.Count()
+        nrows = df_x.Count()
 
-        # Snapshot to two files, build a ROOT.TChain with them and retrieve a
-        # Spark.RDataFrame
-        snapdf = df.Snapshot("snapTree", "snapFile.root")
+        # Snapshot to several partial files, build a ROOT.TChain with them and
+        # retrieve a Spark.RDataFrame
+        snapdf = df_x.Snapshot("snapTree", "snapFile.root")
 
         # Count the rows in the snapshotted dataframe
         snapcount = snapdf.Count()
@@ -263,7 +264,8 @@ class ReducerMergeTest(unittest.TestCase):
         # Retrieve list of file from the snapshotted dataframe
         input_files = snapdf.proxied_node.inputfiles
         # Create list of supposed filenames for the intermediary files
-        tmp_files = ["snapFile_0.root", "snapFile_1.root"]
+        # There should be one per each partition of the original head node
+        tmp_files = [f"snapFile_{i}.root" for i in range(df._headnode.npartitions)]
         # Check that the two lists are the same
         self.assertListEqual(input_files, tmp_files)
         # Check that the intermediary .root files were created with the right
@@ -278,18 +280,19 @@ class ReducerMergeTest(unittest.TestCase):
         argument "columnList".
         """
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Spark.RDataFrame(10, sparkcontext=self.sc)\
-                  .Define("a", "rdfentry_")\
-                  .Define("b", "rdfentry_")\
-                  .Define("c", "rdfentry_")\
-                  .Define("d", "rdfentry_")
+        df = Spark.RDataFrame(10, sparkcontext=self.sc)
+
+        df_withcols = df.Define("a", "rdfentry_")\
+                        .Define("b", "rdfentry_")\
+                        .Define("c", "rdfentry_")\
+                        .Define("d", "rdfentry_")
 
         expectedcolumns = ["a", "b"]
-        df.Snapshot("snapTree_columnlist", "snapFile_columnlist.root", expectedcolumns)
+        df_withcols.Snapshot("snapTree_columnlist", "snapFile_columnlist.root", expectedcolumns)
 
         # Create a traditional RDF from the snapshotted files to retrieve the
         # list of columns
-        tmp_files = ["snapFile_columnlist_0.root", "snapFile_columnlist_1.root"]
+        tmp_files = [f"snapFile_columnlist_{i}.root" for i in range(df._headnode.npartitions)]
         rdf = ROOT.RDataFrame("snapTree_columnlist", tmp_files)
         snapcolumns = [str(column) for column in rdf.GetColumnNames()]
 
