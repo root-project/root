@@ -70,17 +70,19 @@ class SparkBackendInitTest(unittest.TestCase):
         appname = backend.sc.getConf().get("spark.app.name")
         self.assertEqual(appname, "my-pyspark-app1")
 
-    def test_optimize_npartitions_with_num_executors(self):
+    def test_optimize_npartitions(self):
         """
-        Check that the number of partitions is correctly set to number of
-        executors in the SparkConf dictionary.
+        The optimize_npartitions function returns the value of the
+        `defaultParallelism` attribute of the `SparkContext`. This should be
+        equal to the number of available cores in case of a context created on
+        a single machine.
         """
-        conf = {"spark.executor.instances": 10}
-        sconf = pyspark.SparkConf().setAll(conf.items())
+        ncores = 4
+        sconf = pyspark.SparkConf().setMaster(f"local[{ncores}]")
         sc = pyspark.SparkContext(conf=sconf)
         backend = Backend.SparkBackend(sparkcontext=sc)
 
-        self.assertEqual(backend.optimize_npartitions(), 10)
+        self.assertEqual(backend.optimize_npartitions(), ncores)
 
 
 class OperationSupportTest(unittest.TestCase):
@@ -339,22 +341,6 @@ class ChangeAttributeTest(unittest.TestCase):
 
         self.assertEqual(nentries, 10)
         self.assertEqual(df._headnode.npartitions, 1)
-
-    def test_optimize_npartitions_with_spark_config_options(self):
-        """
-        Check that relevant spark configuration options optimize the number of
-        partitions.
-        """
-
-        conf = {"spark.executor.cores": 4, "spark.executor.instances": 4}
-        sconf = pyspark.SparkConf().setAll(conf.items())
-        scontext = pyspark.SparkContext(conf=sconf)
-
-        df = Spark.RDataFrame(100, sparkcontext=scontext)
-
-        # The number of partitions was optimized to be equal to
-        # spark.executor.cores * spark.executor.instances
-        self.assertEqual(df._headnode.npartitions, 16)
 
     def test_user_supplied_npartitions_have_precedence(self):
         """
