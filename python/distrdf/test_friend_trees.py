@@ -25,11 +25,15 @@ class SparkFriendTreesTest(unittest.TestCase):
           this is ignored by default in any application, but Python's unittest
           library overrides the default warning filters thus exposing this
           warning
+        - Initialize a SparkContext for the tests in this class
         """
         os.environ["PYSPARK_PYTHON"] = sys.executable
 
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
+
+        sparkconf = pyspark.SparkConf().setMaster("local[2]")
+        cls.sc = pyspark.SparkContext(conf=sparkconf)
 
     @classmethod
     def tearDownClass(cls):
@@ -39,9 +43,7 @@ class SparkFriendTreesTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
-    def tearDown(self):
-        """Stop any created SparkContext"""
-        pyspark.SparkContext.getOrCreate().stop()
+        cls.sc.stop()
 
     def create_parent_tree(self):
         """Creates a .root file with the parent TTree"""
@@ -99,7 +101,7 @@ class SparkFriendTreesTest(unittest.TestCase):
         baseTree.AddFriend(friendTree)
 
         # Create a DistRDF RDataFrame with the parent and the friend trees
-        df = Spark.RDataFrame(baseTree)
+        df = Spark.RDataFrame(baseTree, sparkcontext=self.sc)
 
         # Create histograms
         h_parent = df.Histo1D("x")
@@ -152,7 +154,7 @@ class SparkFriendTreesTest(unittest.TestCase):
 
         chain.AddFriend(chainFriend, "myfriend")
 
-        df = Spark.RDataFrame(chain)
+        df = Spark.RDataFrame(chain, sparkcontext=self.sc)
 
         h_parent = df.Histo1D("rnd")
         h_friend = df.Histo1D("myfriend.rnd")

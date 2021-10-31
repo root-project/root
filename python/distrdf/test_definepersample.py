@@ -43,7 +43,8 @@ class DefinePerSampleTest(unittest.TestCase):
         for filename in cls.filenames:
             write_tree(cls.maintreename, filename)
 
-        cls.sc = pyspark.SparkContext()
+        sparkconf = pyspark.SparkConf().setMaster("local[2]")
+        cls.sc = pyspark.SparkContext(conf=sparkconf)
 
     @classmethod
     def tearDownClass(cls):

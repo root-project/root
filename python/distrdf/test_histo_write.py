@@ -27,6 +27,7 @@ class SparkHistoWriteTest(unittest.TestCase):
           this is ignored by default in any application, but Python's unittest
           library overrides the default warning filters thus exposing this
           warning
+        - Initialize a SparkContext for the tests in this class
         """
         cls.nentries = 10000  # Number of fills
         cls.gaus_mean = 10  # Mean of the gaussian distribution
@@ -38,6 +39,9 @@ class SparkHistoWriteTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
+        sparkconf = pyspark.SparkConf().setMaster("local[2]")
+        cls.sc = pyspark.SparkContext(conf=sparkconf)
+
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
@@ -46,9 +50,7 @@ class SparkHistoWriteTest(unittest.TestCase):
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
-    def tearDown(self):
-        """Stop any created SparkContext"""
-        pyspark.SparkContext.getOrCreate().stop()
+        cls.sc.stop()
 
     def create_tree_with_data(self):
         """Creates a .root file with some data"""
@@ -79,7 +81,7 @@ class SparkHistoWriteTest(unittest.TestCase):
         outfile = ROOT.TFile("out_file.root", "recreate")
 
         # Create a DistRDF RDataFrame with the parent and the friend trees
-        df = Spark.RDataFrame("Events", "tree_gaus.root")
+        df = Spark.RDataFrame("Events", "tree_gaus.root", sparkcontext=self.sc)
 
         # Create histogram
         histo = df.Histo1D(("x", "x", 100, 0, 20), "x")
