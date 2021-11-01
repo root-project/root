@@ -247,6 +247,9 @@ public:
     assert(_norm != nullptr);
     return _norm;
   }
+  const RooAbsReal* getCachedLastIntegral() const {
+    return _norm;
+  }
 
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;

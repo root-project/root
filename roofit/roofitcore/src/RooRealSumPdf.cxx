@@ -257,6 +257,36 @@ Double_t RooRealSumPdf::evaluate() const
 }
 
 
+void RooRealSumPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
+
+  // To evaluate this RooRealSumPdf, we have to undo the normalization of the
+  // pdf servers by convention. TODO: find a less hacky solution for this,
+  // which should be easy once the integrals are treated like separate nodes in
+  // the computation queue of the RooFit driver.
+
+  // remember copying a data map is cheap, because it only contains non-owning spans
+  RooBatchCompute::DataMap dataMapCopy = dataMap;
+
+  std::vector<std::vector<double>> buffers;
+
+  for(RooAbsArg const* func : _funcList) {
+      if(auto pdf = dynamic_cast<RooAbsPdf const*>(func)) {
+          auto pdfSpan = dataMapCopy.at(pdf);
+          std::size_t nEntries = pdfSpan.size();
+          auto integralSpan = dataMapCopy.at(pdf->getCachedLastIntegral());
+          buffers.emplace_back(nEntries);
+          auto& buffer = buffers.back();
+          for(std::size_t i = 0; i < nEntries; ++i) {
+            buffer[i] = pdfSpan[i] * integralSpan[integralSpan.size() == 1 ? 0 : i];
+          }
+          dataMapCopy[pdf] = RooSpan<const double>{buffer.begin(), buffer.end()};
+      }
+  }
+
+  RooAbsPdf::computeBatch(stream, output, nEvents, dataMapCopy);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the value for all values of the observable in `evalData`.
 RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
