@@ -246,6 +246,12 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit )
 
+  # Test that the user can still include RooMath.h themselves from the
+  # interpreter. We test this case explicitely, because RooMath.h was moved
+  # from roofit/roofitcore to roofit/batchcompute, which can cause redefinition
+  # problems.
+  ROOT_ADD_TEST(test-roofit-includingRooMath COMMAND ${ROOT_root_CMD} -b -q -l -e "#include\ <RooMath.h>")
+
   add_subdirectory(fit)
 endif()
 
