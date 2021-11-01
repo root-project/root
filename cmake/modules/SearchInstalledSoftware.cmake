@@ -1895,7 +1895,7 @@ if (testing)
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_SHALLOW 1
-    GIT_TAG release-1.10.0
+    GIT_TAG release-1.11.0
     UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
