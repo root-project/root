@@ -475,9 +475,11 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 #ifdef _MSC_VER
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog -headless -no-remote $profile $url");
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url &");
 #else
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window --no-remote $profile $url");
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window --no-remote $profile $url");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog --private-window \'$url\' &");
 #endif
@@ -516,6 +518,15 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 
       if (gSystem->mkdir(profile_dir.c_str()) == 0) {
          rmdir = profile_dir;
+
+         if (batch_mode) {
+            std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
+            user_js << "user_pref(\"browser.dom.window.dump.enabled\", true);" << std::endl;
+            // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
+            user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
+            user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
+         }
+
       } else {
          R__LOG_ERROR(WebGUILog()) << "Cannot create Firefox profile directory " << profile_dir;
       }
@@ -615,7 +626,7 @@ bool RWebDisplayHandle::DisplayUrl(const std::string &url)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file using JSON data as source
-/// Invokes JSROOT drawing functionality in headless browser - Google Chrome
+/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
 
 bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height)
 {
@@ -646,8 +657,9 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   RWebDisplayArgs args; // set default browser kind, only Chrome or CEF or Qt5 can be used here
-   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6))
+   RWebDisplayArgs args; // set default browser kind, only Chrome or Firefox or CEF or Qt5 can be used here
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox ) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6))
       args.SetBrowserKind(RWebDisplayArgs::kChrome);
 
    std::string draw_kind;
@@ -692,7 +704,12 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
    filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
 
    TString dump_name;
-   if ((draw_kind != "draw") && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+   if (draw_kind == "draw") {
+      if (args.GetBrowserKind() != RWebDisplayArgs::kChrome) {
+         R__LOG_ERROR(WebGUILog()) << "Creation of PDF files supported only by Chrome browser";
+         return false;
+      }
+   } else if ((args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
       dump_name = "canvasdump";
       FILE *df = gSystem->TempFileName(dump_name);
       if (!df) {
@@ -779,6 +796,10 @@ try_again:
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
+   } else if (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) {
+      // firefox will use window.dump to output produced result
+      args.SetRedirectOutput(dump_name.Data());
+      gSystem->Unlink(dump_name.Data());
    } else if (args.GetBrowserKind() == RWebDisplayArgs::kChrome) {
       // require temporary output file
       args.SetExtraArgs("--dump-dom");
