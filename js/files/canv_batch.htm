@@ -36,6 +36,11 @@
                elem.html(res);
             else
                elem.html("").append("img").attr("src", res);
+            dump(`types ${typeof window} ${typeof window.dump}\n`);
+            if (JSROOT.browser.isFirefox && window && (typeof window.dump == 'function')) {
+                window.dump(d3.select("body").html());
+                window.close();
+           }
         });
    });
 </script>
