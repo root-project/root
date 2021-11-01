@@ -2503,7 +2503,7 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
 /// // (ROOT::VecOps::RVec<double>) { 4.0000000, 2.0000000, 3.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
+RVec<T> Where(const RVec<int> &c, const RVec<T> &v1, typename RVec<T>::value_type v2)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type size = c.size();
@@ -2531,7 +2531,7 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 4.0000000, 4.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
+RVec<T> Where(const RVec<int>& c, typename RVec<T>::value_type v1, const RVec<T>& v2)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type size = c.size();
