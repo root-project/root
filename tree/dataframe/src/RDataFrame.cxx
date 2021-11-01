@@ -532,6 +532,17 @@ sum = df.Filter("Numba::myFilter(x)").Sum("y")
 print(sum.GetValue())
 ~~~
 
+It also works with collections: `RVec` objects of fundamental types can be transparently converted to/from numpy arrays:
+
+~~~{.py}
+@ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
+def pypowarray(x, y):
+    return x**y
+
+df.Define('array', 'ROOT::RVec<float>{1.,2.,3.})\
+  .Define('arraySquared', 'Numba::pypowarray(array, 2)')
+~~~
+
 ### Conversion to numpy arrays
 
 Eventually, you probably would like to inspect the content of the RDataFrame or process the data further
