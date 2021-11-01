@@ -23,6 +23,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Jonas Hahnfeld, CERN/SFT,\
+ Ivan Kabadzhov, CERN/SFT,\
  Sergey Linev, GSI,\
  Javier Lopez-Gomez, CERN/SFT,\
  Pere Mato, CERN/SFT,\
@@ -80,6 +81,7 @@ More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 - `Book` now supports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
 - As an aid to `RDataSource` implementations with which collection sizes can be retrieved more efficiently than the full collection, `#var` can now be used as a short-hand notation for column name `R_rdf_sizeof_var`.
 - Helpers have been added to export data from `RDataFrame` to RooFit datasets. See the "RooFit Libraries" section below for more details.
+- The output format of `Display` has been significantly improved.
 
 ### Other improvements
 
