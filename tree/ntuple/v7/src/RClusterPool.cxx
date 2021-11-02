@@ -105,8 +105,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
 
 void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
 {
-   bool terminate = false;
-   while (!terminate) {
+   while (true) {
       std::vector<RReadItem> readItems;
       std::vector<RCluster::RKey> clusterKeys;
       std::int64_t bunchId = -1;
@@ -116,8 +115,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
          while (!fReadQueue.empty()) {
             if (fReadQueue.front().fClusterKey.fClusterId == kInvalidDescriptorId) {
                fReadQueue.pop();
-               terminate = true;
-               break;
+               return;
             }
 
             if ((bunchId >= 0) && (fReadQueue.front().fBunchId != bunchId))
@@ -129,8 +127,6 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
          }
       }
 
-      if (clusterKeys.empty())
-         break;
       auto clusters = fPageSource.LoadClusters(clusterKeys);
 
       for (std::size_t i = 0; i < clusters.size(); ++i) {
@@ -156,7 +152,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
             fCvHasUnzipWork.notify_one();
          }
       }
-   } // while (!terminate)
+   } // while (true)
 }
 
 ROOT::Experimental::Detail::RCluster *
