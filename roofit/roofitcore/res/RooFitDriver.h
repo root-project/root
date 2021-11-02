@@ -18,6 +18,8 @@
 #include "RooNLLVarNew.h"
 #include "RooAbsReal.h"
 
+#include "RooFit/Detail/Buffers.h"
+
 #include <chrono>
 #include <memory>
 #include <queue>
@@ -48,7 +50,7 @@ public:
    RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
                 RooBatchCompute::BatchMode batchMode, std::string_view rangeName);
    ~RooFitDriver();
-   std::unique_ptr<double[]> getValues();
+   std::vector<double> getValues();
    double getVal();
    RooAbsReal const &topNode() const { return _topNode; }
    std::string const &name() const { return _name; }
@@ -95,6 +97,24 @@ public:
 
 private:
    struct NodeInfo {
+
+      NodeInfo() {}
+
+      // No copying because of the owned CUDA pointers and buffers
+      NodeInfo(const NodeInfo &) = delete;
+      NodeInfo &operator=(const NodeInfo &) = delete;
+
+      /// Check the servers of a node that has been computed and release it's resources
+      /// if they are no longer needed.
+      void decrementRemainingClients()
+      {
+         if (--remClients == 0) {
+            buffer.reset();
+         }
+      }
+
+      std::unique_ptr<Detail::AbsBuffer> buffer;
+
       cudaEvent_t *event = nullptr;
       cudaEvent_t *eventStart = nullptr;
       cudaStream_t *stream = nullptr;
@@ -126,9 +146,6 @@ private:
                                          std::chrono::microseconds diffThreshold);
    void markGPUNodes();
    void assignToGPU(const RooAbsArg *node);
-   double *getAvailableCPUBuffer();
-   double *getAvailableGPUBuffer();
-   double *getAvailablePinnedBuffer();
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
 
    std::string _name;
@@ -150,11 +167,9 @@ private:
    std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
 
    // used for preserving resources
-   std::queue<double *> _cpuBuffers;
-   std::queue<double *> _gpuBuffers;
-   std::queue<double *> _pinnedBuffers;
    std::vector<double> _nonDerivedValues;
 }; // end class RooFitDriver
+
 } // end namespace Experimental
 } // end namespace ROOT
 

@@ -137,7 +137,7 @@ public:
 #endif
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
   virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
-  std::unique_ptr<double[]> getValues(RooAbsData& data, RooBatchCompute::BatchMode batchMode) const;
+  std::vector<double> getValues(RooAbsData& data, RooBatchCompute::BatchMode batchMode) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
