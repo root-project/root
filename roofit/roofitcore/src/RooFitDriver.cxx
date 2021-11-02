@@ -49,6 +49,8 @@ and gets destroyed when the fitting ends.
 namespace ROOT {
 namespace Experimental {
 
+using namespace Detail;
+
 namespace {
 
 bool absArgNeedsComputation(RooAbsArg const *arg)
@@ -247,57 +249,14 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    }
 }
 
-namespace {
-
-template <typename T, typename Func_t>
-T getAvailable(std::queue<T> &q, Func_t creator)
-{
-   if (q.empty())
-      return static_cast<T>(creator());
-   else {
-      T ret = q.front();
-      q.pop();
-      return ret;
-   }
-}
-
-template <typename T, typename Func_t>
-void clearQueue(std::queue<T> &q, Func_t destroyer)
-{
-   while (!q.empty()) {
-      destroyer(q.front());
-      q.pop();
-   }
-}
-} // end anonymous namespace
-
 RooFitDriver::~RooFitDriver()
 {
-   clearQueue(_cpuBuffers, [](double *ptr) { delete[] ptr; });
    if (_batchMode == RooBatchCompute::BatchMode::Cuda) {
-      clearQueue(_gpuBuffers, [](double *ptr) { RooBatchCompute::dispatchCUDA->cudaFree(ptr); });
-      clearQueue(_pinnedBuffers, [](double *ptr) { RooBatchCompute::dispatchCUDA->cudaFreeHost(ptr); });
       RooBatchCompute::dispatchCUDA->cudaFree(_cudaMemDataset);
    }
 }
 
-double *RooFitDriver::getAvailableCPUBuffer()
-{
-   return getAvailable(_cpuBuffers, [=]() { return new double[_dataset.size()]; });
-}
-double *RooFitDriver::getAvailableGPUBuffer()
-{
-   return getAvailable(_gpuBuffers,
-                       [=]() { return RooBatchCompute::dispatchCUDA->cudaMalloc(_dataset.size() * sizeof(double)); });
-}
-double *RooFitDriver::getAvailablePinnedBuffer()
-{
-   return getAvailable(_pinnedBuffers, [=]() {
-      return RooBatchCompute::dispatchCUDA->cudaMallocHost(_dataset.size() * sizeof(double));
-   });
-}
-
-std::unique_ptr<double[]> RooFitDriver::getValues()
+std::vector<double> RooFitDriver::getValues()
 {
    getVal();
    if (_nodeInfos.at(&_topNode).computeInGPU) {
@@ -306,7 +265,14 @@ std::unique_ptr<double[]> RooFitDriver::getValues()
                                                  _dataset.size() * sizeof(double));
       _dataMapCPU[&_topNode] = RooSpan<const double>(buffer, _dataset.size());
    }
-   return std::unique_ptr<double[]>(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
+   // We copy the data to the output vector
+   auto dataSpan = _dataMapCPU.at(&_topNode);
+   std::vector<double> out;
+   out.reserve(dataSpan.size());
+   for (auto const &x : dataSpan) {
+      out.push_back(x);
+   }
+   return out;
 }
 
 void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
@@ -319,9 +285,11 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
    } else {
-      double *buffer = info.copyAfterEvaluation ? getAvailablePinnedBuffer() : getAvailableCPUBuffer();
-      _dataMapCPU[node] = RooSpan<const double>(buffer, _dataset.size());
       handleIntegral(node);
+      info.buffer =
+         info.copyAfterEvaluation ? makePinnedBuffer(_dataset.size(), info.stream) : makeCpuBuffer(_dataset.size());
+      double *buffer = info.buffer->cpuWritePtr();
+      _dataMapCPU[node] = RooSpan<const double>(buffer, _dataset.size());
       // compute node and measure the time the first time
       if (_getValInvocations == 1) {
          using namespace std::chrono;
@@ -332,9 +300,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
          nodeAbsReal->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
       }
       if (info.copyAfterEvaluation) {
-         double *gpuBuffer = getAvailableGPUBuffer();
-         _dataMapCUDA[node] = RooSpan<const double>(gpuBuffer, _dataset.size());
-         RooBatchCompute::dispatchCUDA->memcpyToCUDA(gpuBuffer, buffer, _dataset.size() * sizeof(double), info.stream);
+         _dataMapCUDA[node] = RooSpan<const double>(info.buffer->gpuReadPtr(), _dataset.size());
          if (info.event) {
             RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
          }
@@ -410,13 +376,11 @@ double RooFitDriver::getVal()
    if (!pNLLVarNew)
       return 0.0;
 
-   // recycle the top node's buffer and return the final value
+   // return the final value
    NodeInfo &info = _nodeInfos.at(&_topNode);
    if (info.computeInGPU) {
-      _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(&_topNode).data()));
       return pNLLVarNew->reduce(info.stream, _dataMapCUDA.at(&_topNode).data(), _dataset.size());
    } else {
-      _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(&_topNode).data()));
       return pNLLVarNew->reduce(nullptr, _dataMapCPU.at(&_topNode).data(), _dataset.size());
    }
 }
@@ -464,7 +428,9 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
       if (infoServer.event)
          RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer.event);
    }
-   double *buffer = getAvailableGPUBuffer();
+   info.buffer =
+      info.copyAfterEvaluation ? makePinnedBuffer(_dataset.size(), info.stream) : makeGpuBuffer(_dataset.size());
+   double *buffer = info.buffer->gpuWritePtr();
    _dataMapCUDA[node] = RooSpan<const double>(buffer, _dataset.size());
    handleIntegral(node);
    // measure launching overhead (add computation time later)
@@ -478,9 +444,7 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
       nodeAbsReal->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
-      double *pinnedBuffer = getAvailablePinnedBuffer();
-      RooBatchCompute::dispatchCUDA->memcpyToCPU(pinnedBuffer, buffer, _dataset.size() * sizeof(double), info.stream);
-      _dataMapCPU[node] = RooSpan<const double>(pinnedBuffer, _dataset.size());
+      _dataMapCPU[node] = RooSpan<const double>(info.buffer->cpuReadPtr(), _dataset.size());
    }
    updateMyClients(node);
 }
@@ -509,22 +473,9 @@ void RooFitDriver::updateMyClients(RooAbsArg const *node)
 void RooFitDriver::updateMyServers(const RooAbsArg *node)
 {
    for (auto *server : node->servers()) {
-      if (_nodeInfos.count(server) == 0)
-         continue;
-      auto &info = _nodeInfos.at(server);
-      if (--info.remClients > 0)
-         continue;
-      if (info.computeInScalarMode)
-         continue;
-      if (_dataset.contains(server))
-         continue;
-      if (info.copyAfterEvaluation) {
-         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(server).data()));
-         _pinnedBuffers.push(const_cast<double *>(_dataMapCPU.at(server).data()));
-      } else if (info.computeInGPU)
-         _gpuBuffers.push(const_cast<double *>(_dataMapCUDA.at(server).data()));
-      else
-         _cpuBuffers.push(const_cast<double *>(_dataMapCPU.at(server).data()));
+      if (_nodeInfos.count(server)) {
+         _nodeInfos.at(server).decrementRemainingClients();
+      }
    }
 }
 
