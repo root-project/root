@@ -29,6 +29,8 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 #include "ROOT/StringUtils.hxx"
 
+#include "RooFit/Detail/Buffers.h"
+
 #include <numeric>
 #include <stdexcept>
 #include <vector>
@@ -105,15 +107,22 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 \param nEvents The number of events to be processed
 \param dataMap A map containing spans with the input data for the computation
 **/
-void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*nOut*/,
                                 RooBatchCompute::DataMap &dataMap) const
 {
+   using namespace ROOT::Experimental::Detail;
+
+   std::size_t nEvents = dataMap[&*_pdf].size();
+
    RooBatchCompute::VarVector vars = {&*_pdf};
    if (_weight)
       vars.push_back(&**_weight);
    RooBatchCompute::ArgVector args = {static_cast<double>(vars.size() - 1)};
    auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   dispatch->compute(stream, RooBatchCompute::NegativeLogarithms, output, nEvents, dataMap, vars, args);
+
+   std::unique_ptr<AbsBuffer> logsBuffer = stream ? makeGpuBuffer(nEvents) : makeCpuBuffer(nEvents);
+   double *logsBufferDataPtr = stream ? logsBuffer->gpuWritePtr() : logsBuffer->cpuWritePtr();
+   dispatch->compute(stream, RooBatchCompute::NegativeLogarithms, logsBufferDataPtr, nEvents, dataMap, vars, args);
 
    if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
       if (!_weight) {
@@ -146,6 +155,8 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t nEv
          }
       }
    }
+
+   output[0] = reduce(stream, logsBufferDataPtr, nEvents);
 }
 
 /** Reduce an array of nll values to the sum of them
