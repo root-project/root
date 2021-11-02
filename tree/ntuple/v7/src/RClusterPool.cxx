@@ -417,3 +417,22 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(
       fInFlightClusters.erase(itr);
    }
 }
+
+
+void ROOT::Experimental::Detail::RClusterPool::WaitForInFlightClusters()
+{
+   while (true) {
+      decltype(fInFlightClusters)::iterator itr;
+      {
+         std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
+         itr = fInFlightClusters.begin();
+         if (itr == fInFlightClusters.end())
+            return;
+      }
+
+      itr->fFuture.wait();
+
+      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
+      fInFlightClusters.erase(itr);
+   }
+}
