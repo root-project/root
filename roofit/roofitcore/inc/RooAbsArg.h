@@ -554,6 +554,7 @@ public:
   };
 
   virtual bool canComputeBatchWithCuda() const { return false; }
+  virtual bool isReducerNode() const { return false; }
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
