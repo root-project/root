@@ -15,7 +15,6 @@
 #define RooFit_RooFitDriver_h
 
 #include "RooBatchCompute.h"
-#include "RooNLLVarNew.h"
 #include "RooAbsReal.h"
 
 #include "RooFit/Detail/Buffers.h"
