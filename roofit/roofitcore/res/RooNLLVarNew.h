@@ -42,12 +42,13 @@ public:
    }
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
-   void computeBatch(cudaStream_t *, double *output, size_t nEvents, RooBatchCompute::DataMap &) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooBatchCompute::DataMap &) const override;
    inline bool canComputeBatchWithCuda() const override { return true; }
-
-   double reduce(cudaStream_t *, const double *input, size_t nEvents) const;
+   inline bool isReducerNode() const override { return true; }
 
 protected:
+   double reduce(cudaStream_t *, const double *input, size_t nEvents) const;
+
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet const *_observables = nullptr;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;

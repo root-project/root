@@ -17,7 +17,7 @@
 \ingroup Roofitcore
 
 This class is responsible for evaluating a RooAbsReal object. Currently,
-it is being used for evaluating a RooNLLVarNew object and supplying the
+it is being used for evaluating a RooAbsArg object and supplying the
 value to the minimizer, during a fit. The class scans the dependencies and
 schedules the computations in a secure and efficient way. The computations
 take place in the RooBatchCompute library and can be carried off by
@@ -30,10 +30,10 @@ and gets destroyed when the fitting ends.
 #include "RooAbsCategory.h"
 #include "RooAbsData.h"
 #include "RooAbsReal.h"
+#include "RooAbsPdf.h"
 #include "RooArgList.h"
 #include "RooBatchCompute.h"
 #include "RooMsgService.h"
-#include "RooNLLVarNew.h"
 #include "RooRealVar.h"
 #include "RunContext.h"
 #include "RooDataSet.h"
@@ -280,27 +280,32 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
 
+   const std::size_t nOut = info.computeInScalarMode ? 1 : _dataset.size();
+
    if (info.computeInScalarMode) {
       _nonDerivedValues.push_back(nodeAbsReal->getVal(&_normSet));
 
+      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
+   } else if (node->isReducerNode()) {
+      _nonDerivedValues.push_back(0.0);
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
+      nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), 1, _dataMapCPU);
    } else {
       handleIntegral(node);
-      info.buffer =
-         info.copyAfterEvaluation ? makePinnedBuffer(_dataset.size(), info.stream) : makeCpuBuffer(_dataset.size());
+      info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeCpuBuffer(nOut);
       double *buffer = info.buffer->cpuWritePtr();
-      _dataMapCPU[node] = RooSpan<const double>(buffer, _dataset.size());
+      _dataMapCPU[node] = RooSpan<const double>(buffer, nOut);
       // compute node and measure the time the first time
       if (_getValInvocations == 1) {
          using namespace std::chrono;
          auto start = steady_clock::now();
-         nodeAbsReal->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
+         nodeAbsReal->computeBatch(nullptr, buffer, nOut, _dataMapCPU);
          info.cpuTime = duration_cast<microseconds>(steady_clock::now() - start);
       } else {
-         nodeAbsReal->computeBatch(nullptr, buffer, _dataset.size(), _dataMapCPU);
+         nodeAbsReal->computeBatch(nullptr, buffer, nOut, _dataMapCPU);
       }
       if (info.copyAfterEvaluation) {
-         _dataMapCUDA[node] = RooSpan<const double>(info.buffer->gpuReadPtr(), _dataset.size());
+         _dataMapCUDA[node] = RooSpan<const double>(info.buffer->gpuReadPtr(), nOut);
          if (info.event) {
             RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
          }
@@ -369,20 +374,8 @@ double RooFitDriver::getVal()
       updateMyServers(node);
    } // while (nNodes)
 
-   // Check if topNode is a RooNLLVarNew or any other RooAbsReal. In the latter case,
-   // do not call reduce() and do not recycle the topNode's memory as it will be returned
-   // to the caller of getValues().
-   auto pNLLVarNew = dynamic_cast<const RooNLLVarNew *>(&_topNode);
-   if (!pNLLVarNew)
-      return 0.0;
-
    // return the final value
-   NodeInfo &info = _nodeInfos.at(&_topNode);
-   if (info.computeInGPU) {
-      return pNLLVarNew->reduce(info.stream, _dataMapCUDA.at(&_topNode).data(), _dataset.size());
-   } else {
-      return pNLLVarNew->reduce(nullptr, _dataMapCPU.at(&_topNode).data(), _dataset.size());
-   }
+   return _dataMapCPU.at(&_topNode)[0];
 }
 
 /// Handles the computation of the integral of a PDF for normalization purposes,
@@ -418,6 +411,8 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
 
+   const std::size_t nOut = _dataset.size();
+
    NodeInfo &info = _nodeInfos.at(node);
    info.remServers = -1;
    // wait for every server to finish
@@ -428,23 +423,44 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
       if (infoServer.event)
          RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer.event);
    }
-   info.buffer =
-      info.copyAfterEvaluation ? makePinnedBuffer(_dataset.size(), info.stream) : makeGpuBuffer(_dataset.size());
+
+   if (node->isReducerNode()) {
+      _nonDerivedValues.push_back(0.0);
+      double *buffer = &_nonDerivedValues.back();
+      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(buffer, 1);
+      nodeAbsReal->computeBatch(nullptr, buffer, 1, _dataMapCPU);
+
+      // measure launching overhead (add computation time later)
+      if (_getValInvocations == 2) {
+         using namespace std::chrono;
+         RooBatchCompute::dispatchCUDA->cudaEventRecord(info.eventStart, info.stream);
+         auto start = steady_clock::now();
+         nodeAbsReal->computeBatch(info.stream, buffer, 1, _dataMapCUDA);
+         info.cudaTime = duration_cast<microseconds>(steady_clock::now() - start);
+      } else
+         nodeAbsReal->computeBatch(info.stream, buffer, 1, _dataMapCUDA);
+      RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
+      updateMyClients(node);
+
+      return;
+   }
+
+   info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeGpuBuffer(nOut);
    double *buffer = info.buffer->gpuWritePtr();
-   _dataMapCUDA[node] = RooSpan<const double>(buffer, _dataset.size());
+   _dataMapCUDA[node] = RooSpan<const double>(buffer, nOut);
    handleIntegral(node);
    // measure launching overhead (add computation time later)
    if (_getValInvocations == 2) {
       using namespace std::chrono;
       RooBatchCompute::dispatchCUDA->cudaEventRecord(info.eventStart, info.stream);
       auto start = steady_clock::now();
-      nodeAbsReal->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
+      nodeAbsReal->computeBatch(info.stream, buffer, nOut, _dataMapCUDA);
       info.cudaTime = duration_cast<microseconds>(steady_clock::now() - start);
    } else
-      nodeAbsReal->computeBatch(info.stream, buffer, _dataset.size(), _dataMapCUDA);
+      nodeAbsReal->computeBatch(info.stream, buffer, nOut, _dataMapCUDA);
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
-      _dataMapCPU[node] = RooSpan<const double>(info.buffer->cpuReadPtr(), _dataset.size());
+      _dataMapCPU[node] = RooSpan<const double>(info.buffer->cpuReadPtr(), nOut);
    }
    updateMyClients(node);
 }
