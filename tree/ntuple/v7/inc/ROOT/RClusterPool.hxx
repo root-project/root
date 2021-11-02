@@ -155,6 +155,9 @@ public:
    /// of the returned cluster are already pushed into the page pool associated with the page source upon return.
    /// The cluster remains valid until the next call to GetCluster().
    RCluster *GetCluster(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
+
+   /// Used by the unit tests to drain the queue of clusters to be preloaded
+   void WaitForInFlightClusters();
 }; // class RClusterPool
 
 } // namespace Detail

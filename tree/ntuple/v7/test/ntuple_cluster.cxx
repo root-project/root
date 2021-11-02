@@ -222,6 +222,7 @@ TEST(ClusterPool, GetClusterBasics)
    {
       RClusterPool c2(p2, 2);
       c2.GetCluster(0, {0});
+      c2.WaitForInFlightClusters();
    }
    ASSERT_EQ(4U, p2.fReqsClusterIds.size());
    EXPECT_EQ(0U, p2.fReqsClusterIds[0]);
@@ -238,6 +239,7 @@ TEST(ClusterPool, GetClusterBasics)
       RClusterPool c3(p3, 2);
       c3.GetCluster(0, {0});
       c3.GetCluster(1, {0});
+      c3.WaitForInFlightClusters();
    }
    ASSERT_EQ(4U, p3.fReqsClusterIds.size());
    EXPECT_EQ(0U, p3.fReqsClusterIds[0]);
@@ -249,6 +251,7 @@ TEST(ClusterPool, GetClusterBasics)
    {
       RClusterPool c4(p4, 3);
       c4.GetCluster(2, {0});
+      c4.WaitForInFlightClusters();
    }
    ASSERT_EQ(4U, p4.fReqsClusterIds.size());
    EXPECT_EQ(2U, p4.fReqsClusterIds[0]);
