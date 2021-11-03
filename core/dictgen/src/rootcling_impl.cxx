@@ -3801,6 +3801,10 @@ gOptIncludePaths("I", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
                 llvm::cl::desc("Specify an include path."),
                 llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
+gOptCompDefaultIncludePaths("compilerI", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+                    llvm::cl::desc("Specify a compiler default include path, to suppress unneeded `-isystem` arguments."),
+                    llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string>
 gOptSysIncludePaths("isystem", llvm::cl::ZeroOrMore,
                     llvm::cl::desc("Specify a system include path."),
                     llvm::cl::cat(gRootclingOptions));
@@ -4117,8 +4121,13 @@ int RootClingMain(int argc,
       clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
 
    for (const std::string &IncludePath : gOptSysIncludePaths) {
-      clingArgs.push_back("-isystem");
-      clingArgs.push_back(llvm::sys::path::convert_to_slash(IncludePath));
+      // Prevent mentioning compiler default include directories as -isystem
+      // (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129)
+      if (std::find(gOptCompDefaultIncludePaths.begin(), gOptCompDefaultIncludePaths.end(), IncludePath)
+          == gOptCompDefaultIncludePaths.end()) {
+         clingArgs.push_back("-isystem");
+         clingArgs.push_back(llvm::sys::path::convert_to_slash(IncludePath));
+      }
    }
 
    for (const std::string &WDiag : gOptWDiags) {
