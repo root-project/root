@@ -25,6 +25,7 @@
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
 #include <RooBatchCompute/DataKey.h>
+#include <RooStringView.h>
 
 #include <deque>
 #include <iostream>
