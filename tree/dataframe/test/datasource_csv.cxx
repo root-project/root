@@ -13,7 +13,7 @@ auto fileName0 = "RCsvDS_test_headers.csv";
 auto fileName1 = "RCsvDS_test_noheaders.csv";
 auto fileName2 = "RCsvDS_test_empty.csv";
 auto fileName3 = "RCsvDS_test_win.csv";
-auto url0 = "https://root.cern/files/dataframe_test_datasource.csv";
+auto url0 = "http://root.cern/files/dataframe_test_datasource.csv";
 
 
 TEST(RCsvDS, ColTypeNames)
