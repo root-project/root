@@ -1264,7 +1264,7 @@ const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve p.d.f (RooAbsPdf) with given name. A null pointer is returned if not found
 
-RooAbsPdf* RooWorkspace::pdf(const char* name) const
+RooAbsPdf* RooWorkspace::pdf(RooStringView name) const
 {
   return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name)) ;
 }
@@ -1273,7 +1273,7 @@ RooAbsPdf* RooWorkspace::pdf(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve function (RooAbsReal) with given name. Note that all RooAbsPdfs are also RooAbsReals. A null pointer is returned if not found.
 
-RooAbsReal* RooWorkspace::function(const char* name) const
+RooAbsReal* RooWorkspace::function(RooStringView name) const
 {
   return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name)) ;
 }
@@ -1282,7 +1282,7 @@ RooAbsReal* RooWorkspace::function(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve real-valued variable (RooRealVar) with given name. A null pointer is returned if not found
 
-RooRealVar* RooWorkspace::var(const char* name) const
+RooRealVar* RooWorkspace::var(RooStringView name) const
 {
   return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name)) ;
 }
@@ -1291,7 +1291,7 @@ RooRealVar* RooWorkspace::var(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
 
-RooCategory* RooWorkspace::cat(const char* name) const
+RooCategory* RooWorkspace::cat(RooStringView name) const
 {
   return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name)) ;
 }
@@ -1300,7 +1300,7 @@ RooCategory* RooWorkspace::cat(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve discrete function (RooAbsCategory) with given name. A null pointer is returned if not found
 
-RooAbsCategory* RooWorkspace::catfunc(const char* name) const
+RooAbsCategory* RooWorkspace::catfunc(RooStringView name) const
 {
   return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name)) ;
 }
@@ -1310,7 +1310,7 @@ RooAbsCategory* RooWorkspace::catfunc(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return RooAbsArg with given name. A null pointer is returned if none is found.
 
-RooAbsArg* RooWorkspace::arg(const char* name) const
+RooAbsArg* RooWorkspace::arg(RooStringView name) const
 {
   return _allOwnedNodes.find(name) ;
 }
@@ -1320,7 +1320,7 @@ RooAbsArg* RooWorkspace::arg(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return set of RooAbsArgs matching to given list of names
 
-RooArgSet RooWorkspace::argSet(const char* nameList) const
+RooArgSet RooWorkspace::argSet(RooStringView nameList) const
 {
   RooArgSet ret ;
 
@@ -1341,7 +1341,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 /// Return fundamental (i.e. non-derived) RooAbsArg with given name. Fundamental types
 /// are e.g. RooRealVar, RooCategory. A null pointer is returned if none is found.
 
-RooAbsArg* RooWorkspace::fundArg(const char* name) const
+RooAbsArg* RooWorkspace::fundArg(RooStringView name) const
 {
   RooAbsArg* tmp = arg(name) ;
   if (!tmp) {
@@ -1355,7 +1355,7 @@ RooAbsArg* RooWorkspace::fundArg(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
 
-RooAbsData* RooWorkspace::data(const char* name) const
+RooAbsData* RooWorkspace::data(RooStringView name) const
 {
   return (RooAbsData*)_dataList.FindObject(name) ;
 }
@@ -1364,7 +1364,7 @@ RooAbsData* RooWorkspace::data(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
 
-RooAbsData* RooWorkspace::embeddedData(const char* name) const
+RooAbsData* RooWorkspace::embeddedData(RooStringView name) const
 {
   return (RooAbsData*)_embeddedDataList.FindObject(name) ;
 }
@@ -2093,7 +2093,7 @@ void RooWorkspace::clearStudies()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return any type of object (RooAbsArg, RooAbsData or generic object) with given name)
 
-TObject* RooWorkspace::obj(const char* name) const
+TObject* RooWorkspace::obj(RooStringView name) const
 {
   // Try RooAbsArg first
   TObject* ret = arg(name) ;
@@ -2112,7 +2112,7 @@ TObject* RooWorkspace::obj(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return generic object with given name
 
-TObject* RooWorkspace::genobj(const char* name)  const
+TObject* RooWorkspace::genobj(RooStringView name)  const
 {
   // Find object by name
   TObject* gobj = _genObjects.FindObject(name) ;

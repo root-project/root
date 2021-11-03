@@ -209,6 +209,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSimWSTool.h
     RooStreamParser.h
     RooStringVar.h
+    RooStringView.h
     RooStudyManager.h
     RooStudyPackage.h
     RooSuperCategory.h
