@@ -1088,7 +1088,7 @@ void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
    args[0] = (Longptr_t)entry;
    args[1] = (Longptr_t)keysym;
    args[2] = (Longptr_t)mask;
-   Emit("KeyPressed(TGListTreeItem*,ULongptr_t,ULongptr_t)", args);
+   Emit("KeyPressed(TGListTreeItem*,UInt_t,UInt_t)", args);
    SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_KEY), keysym, mask);
 }
 
