@@ -96,7 +96,7 @@ void RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
             auto call = std::make_unique<TMethodCall>(cl, getter, "");
 
             if (call->ReturnType() == TMethodCall::kLong) {
-               Long_t l(0);
+               Longptr_t l(0);
                call->Execute(obj, l);
 
                AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"), m_cl);
