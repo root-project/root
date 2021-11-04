@@ -297,14 +297,18 @@ namespace SOFIE{
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
       }
       if (outputSize == 1) {
-         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + sizeof(tensor_" +
-               fOutputTensorNames[0] + ") / sizeof(tensor_" + fOutputTensorNames[0] + "[0]));\n";
+         size_t outputSize = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
+         
+         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " + 
+               std::to_string(outputSize) + ");\n";
       } else {
          for (size_t i = 0; i < outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {
+               size_t outputSize = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
                fGC += "\tstd::vector<float> ret_";
                fGC += std::to_string(i);
-               fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + sizeof(tensor_" + fOutputTensorNames[i] + ") / sizeof(tensor_" + fOutputTensorNames[i] + "[0]));\n";
+               fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + " + 
+               std::to_string(outputSize) + ");\n";
             }
          }
          fGC += "\tstd::vector<std::vector<float>> ret({";
