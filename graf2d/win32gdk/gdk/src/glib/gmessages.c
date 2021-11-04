@@ -507,7 +507,7 @@ g_logv (const gchar   *log_domain,
       test_level = 1 << i;
       if (log_level & test_level)
 	{
-	  guint depth = GPOINTER_TO_UINT (g_private_get (g_log_depth));
+	  uintptr_t depth = GPOINTER_TO_UINT (g_private_get (g_log_depth));
 	  GLogDomain *domain;
 	  GLogFunc log_func;
 	  gpointer data = NULL;

@@ -644,7 +644,7 @@ g_main_context_new ()
 	  if (context->wake_up_semaphore == NULL)
 	    g_error ("Cannot create wake-up semaphore: %s",
 		     g_win32_error_message (GetLastError ()));
-	  context->wake_up_rec.fd = (gint) context->wake_up_semaphore;
+	  context->wake_up_rec.fd = (glong) context->wake_up_semaphore;
 	  context->wake_up_rec.events = G_IO_IN;
 #ifdef G_MAIN_POLL_DEBUG
 	  g_print ("wake-up semaphore: %#x\n", (guint) context->wake_up_semaphore);

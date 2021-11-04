@@ -229,7 +229,7 @@ void g_static_mutex_free (GStaticMutex *mutex);
 
 struct _GStaticPrivate
 {
-  guint index;
+  gulong index;
 };
 #define G_STATIC_PRIVATE_INIT { 0 }
 void     g_static_private_init           (GStaticPrivate   *private_key);

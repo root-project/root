@@ -715,7 +715,7 @@ gdk_rgb_convert_8(GdkImage * image,
    for (y = 0; y < height; y++) {
       bp2 = bptr;
       obptr = obuf;
-      if (((unsigned long) obuf | (unsigned long) bp2) & 3) {
+      if (((gulong) obuf | (gulong) bp2) & 3) {
          for (x = 0; x < width; x++) {
             r = *bp2++;
             g = *bp2++;
@@ -1978,7 +1978,7 @@ gdk_rgb_convert_565(GdkImage * image,
    for (y = 0; y < height; y++) {
       bp2 = bptr;
       obptr = obuf;
-      if (((unsigned long) obuf | (unsigned long) bp2) & 3) {
+      if (((gulong) obuf | (gulong) bp2) & 3) {
          for (x = 0; x < width; x++) {
             r = *bp2++;
             g = *bp2++;
@@ -2096,7 +2096,7 @@ gdk_rgb_convert_565_gray(GdkImage * image,
    for (y = 0; y < height; y++) {
       bp2 = bptr;
       obptr = obuf;
-      if (((unsigned long) obuf | (unsigned long) bp2) & 3) {
+      if (((gulong) obuf | (gulong) bp2) & 3) {
          for (x = 0; x < width; x++) {
             g = *bp2++;
             ((guint16 *) obptr)[0] = ((g & 0xf8) << 8) |
@@ -2221,7 +2221,7 @@ gdk_rgb_convert_565_d(GdkImage * image,
       guint32 *dmp = DM_565 + ((y & (DM_HEIGHT - 1)) << DM_WIDTH_SHIFT);
       bp2 = bptr;
       obptr = obuf;
-      if (((unsigned long) obuf | (unsigned long) bp2) & 3) {
+      if (((gulong) obuf | (gulong) bp2) & 3) {
          for (x = x_align; x < width; x++) {
             gint32 rgb = *bp2++ << 20;
             rgb += *bp2++ << 10;
@@ -2451,7 +2451,7 @@ gdk_rgb_convert_888_lsb(GdkImage * image,
    for (y = 0; y < height; y++) {
       bp2 = bptr;
       obptr = obuf;
-      if (((unsigned long) obuf | (unsigned long) bp2) & 3) {
+      if (((gulong) obuf | (gulong) bp2) & 3) {
          for (x = 0; x < width; x++) {
             r = bp2[0];
             g = bp2[1];

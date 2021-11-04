@@ -104,7 +104,7 @@ GdkCursor *gdk_cursor_new(GdkCursorType cursor_type)
    return cursor;
 }
 
-GdkCursor *gdk_syscursor_new(unsigned long syscur)
+GdkCursor *gdk_syscursor_new(gulong syscur)
 {
    GdkCursorPrivate *private;
    GdkCursor *cursor;
