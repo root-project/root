@@ -107,10 +107,8 @@ RooDataSet* ToyMCStudy::merge() {
       return NULL;
    }
 
-   RooLinkedListIter iter = detailedData()->iterator();
-   TObject *o = NULL;
    int i = 0;
-   while((o = iter.Next())) {
+   for (auto * o : static_range_cast<TObject*>(*detailedData())) {
       ToyMCPayload *oneWorker = dynamic_cast< ToyMCPayload* >(o);
       if(!oneWorker) {
          coutW(Generation) << "Merging Results problem: not correct type" << endl;

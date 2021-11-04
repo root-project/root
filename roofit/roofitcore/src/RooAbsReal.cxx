@@ -1852,15 +1852,15 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
     // Loop over all categories provided by (multiple) Slice() arguments
     auto catTokens = ROOT::Split(sliceCatState, ",");
-    std::unique_ptr<TIterator> iter( sliceCatList.MakeIterator() );
+    auto iter = sliceCatList.begin();
     for (unsigned int i=0; i < catTokens.size(); ++i) {
-      auto scat = static_cast<RooCategory*>(iter->Next());
-      if (scat) {
+      if (auto scat = static_cast<RooCategory*>(*iter)) {
         // Set the slice position to the value indicate by slabel
         scat->setLabel(catTokens[i]) ;
         // Add the slice category to the master slice set
         sliceSet->add(*scat,kFALSE) ;
       }
+      ++iter;
     }
   }
 
@@ -2823,9 +2823,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 
   // Strip any 'internal normalization' arguments from list
   RooLinkedList plotArgList ;
-  RooFIter iter = plotArgListTmp.fwdIterator() ;
-  RooCmdArg* cmd ;
-  while ((cmd=(RooCmdArg*)iter.next())) {
+  for (auto * cmd : static_range_cast<RooCmdArg*>(plotArgListTmp)) {
     if (std::string("Normalization")==cmd->GetName()) {
       if (((RooCmdArg*)cmd)->getInt(1)!=0) {
       } else {

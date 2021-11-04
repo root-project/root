@@ -640,10 +640,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     auto catTokens = ROOT::Split(sliceCatState, ",");
 
     // Loop over all categories provided by (multiple) Slice() arguments
-    TIterator* iter = sliceCatList.MakeIterator() ;
-    RooCategory* scat ;
     unsigned int tokenIndex = 0;
-    while((scat=(RooCategory*)iter->Next())) {
+    for(auto * scat : static_range_cast<RooCategory*>(sliceCatList)) {
       const char* slabel = tokenIndex >= catTokens.size() ? nullptr : catTokens[tokenIndex++].c_str();
 
       if (slabel) {
@@ -653,7 +651,6 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
         sliceSet->add(*scat,kFALSE) ;
       }
     }
-    delete iter ;
   }
 
   // Check if we have a projection dataset
