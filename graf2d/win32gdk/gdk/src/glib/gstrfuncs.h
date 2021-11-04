@@ -146,7 +146,7 @@ gint	              g_strcasecmp     (const gchar *s1,
 					const gchar *s2);
 gint	              g_strncasecmp    (const gchar *s1,
 					const gchar *s2,
-					guint        n);
+					gssize       n);
 gchar*	              g_strdown	       (gchar	     *string);
 gchar*	              g_strup	       (gchar	     *string);
 
