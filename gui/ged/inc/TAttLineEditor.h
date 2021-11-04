@@ -42,7 +42,7 @@ public:
 
    virtual void   SetModel(TObject* obj);
    virtual void   DoLineColor(Pixel_t color);
-   virtual void   DoLineAlphaColor(ULong_t p);
+   virtual void   DoLineAlphaColor(ULongptr_t p);
    virtual void   DoLineStyle(Int_t style);
    virtual void   DoLineWidth(Int_t width);
    virtual void   DoAlpha();

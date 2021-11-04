@@ -374,7 +374,7 @@ void TGClient::FreeFont(const TGFont *font)
 void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
 {
    if (!w) return;
-   if (gVirtualX->NeedRedraw((ULong_t)w,force)) return;
+   if (gVirtualX->NeedRedraw((ULongptr_t)w,force)) return;
    if (force) {
       w->DoRedraw();
       return;
@@ -953,9 +953,9 @@ void TGClient::SetEditDisabled(Bool_t on)
 
 void TGClient::ProcessedEvent(Event_t *event, Window_t wid)
 {
-   Long_t args[2];
-   args[0] = (Long_t) event;
-   args[1] = (Long_t) wid;
+   Longptr_t args[2];
+   args[0] = (Longptr_t) event;
+   args[1] = (Longptr_t) wid;
 
    Emit("ProcessedEvent(Event_t*, Window_t)", args);
 }

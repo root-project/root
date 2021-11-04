@@ -93,9 +93,9 @@ public:
    virtual ~XSGui();
 
    virtual void   CloseWindow();
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t param, Long_t);
+   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t param, Longptr_t);
 
-      Bool_t   ProcessMenuMessage( Long_t param );
+      Bool_t   ProcessMenuMessage( Longptr_t param );
 
    //ClassDef(XSGui,1)
 }; // XSGui

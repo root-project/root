@@ -137,8 +137,8 @@ void RootShowerAbout::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages sent to this dialog.
 
-Bool_t RootShowerAbout::ProcessMessage(Long_t msg, Long_t /*parm1*/,
-                                       Long_t /*parm2*/)
+Bool_t RootShowerAbout::ProcessMessage(Longptr_t msg, Longptr_t /*parm1*/,
+                                       Longptr_t /*parm2*/)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

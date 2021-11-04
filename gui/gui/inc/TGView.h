@@ -68,7 +68,7 @@ public:
    virtual void   Clear(Option_t * = "");
    virtual void   SetVisibleStart(Int_t newTop, Int_t direction);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   DrawBorder();
    virtual void   Layout();
    virtual void   SetLayoutManager(TGLayoutManager*) { }

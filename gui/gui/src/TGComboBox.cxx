@@ -585,7 +585,7 @@ Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
 /// messages to the combobox message handling window. Parm2 contains
 /// the id of the selected listbox entry.
 
-Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
+Bool_t TGComboBox::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t parm2)
 {
    TGLBEntry *e;
 
@@ -632,7 +632,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
 
 void TGComboBox::Selected(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;
