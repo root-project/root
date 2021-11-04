@@ -31,7 +31,7 @@
 
 #include "gdkprivate-win32.h"
 
-static guint gdk_xid_hash(HANDLE * xid);
+static gulong gdk_xid_hash(HANDLE * xid);
 static gint gdk_xid_compare(HANDLE * a, HANDLE * b);
 
 
@@ -69,9 +69,9 @@ gpointer gdk_xid_table_lookup(HANDLE xid)
 }
 
 
-static guint gdk_xid_hash(HANDLE * xid)
+static gulong gdk_xid_hash(HANDLE * xid)
 {
-   return (guint) * xid;
+   return (gulong) * xid;
 }
 
 static gint gdk_xid_compare(HANDLE * a, HANDLE * b)

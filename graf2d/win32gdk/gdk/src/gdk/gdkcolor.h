@@ -15,7 +15,7 @@ extern "C" {
  *    colormaps is a bad idea.
  */
    struct _GdkColor {
-      gulong pixel;
+      unsigned long pixel;
       gushort red;
       gushort green;
       gushort blue;
@@ -65,10 +65,10 @@ extern "C" {
                          GdkColor * colors, gint ncolors);
    gint gdk_colors_alloc(GdkColormap * colormap,
                          gboolean contiguous,
-                         gulong * planes,
-                         gint nplanes, gulong * pixels, gint npixels);
+                         unsigned long * planes,
+                         gint nplanes, unsigned long * pixels, gint npixels);
    void gdk_colors_free(GdkColormap * colormap,
-                        gulong * pixels, gint npixels, gulong planes);
+                        unsigned long * pixels, gint npixels, unsigned long planes);
    gint gdk_color_white(GdkColormap * colormap, GdkColor * color);
    gint gdk_color_black(GdkColormap * colormap, GdkColor * color);
    gint gdk_color_alloc(GdkColormap * colormap, GdkColor * color);
