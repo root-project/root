@@ -148,15 +148,9 @@ void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
       }
     }
 
-    RooLinkedList* dlist = dynamic_cast<RooLinkedList*>(obj) ;
-    if (dlist) {
+    if (auto dlist = dynamic_cast<RooLinkedList*>(obj)) {
       if (TString(dlist->GetName()).BeginsWith(Form("%s_detailed_data",GetName()))) {
-	//cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") found detail block " <<dlist->GetName() << " with " << dlist->GetSize() << " entries" << endl ;
-	TIter diter = dlist->MakeIterator() ;
-	TNamed* dobj ;
-	while((dobj=(TNamed*)diter.Next())) {	  
-	  storeDetailedOutput(*dobj) ;
-	}
+        for(auto * dobj : static_range_cast<TNamed*>(*dlist)) storeDetailedOutput(*dobj) ;
       }
     }
   }
