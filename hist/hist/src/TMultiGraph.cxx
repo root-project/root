@@ -1095,7 +1095,7 @@ TH1F *TMultiGraph::GetHistogram()
    double dy = 0.05*(rwymax-rwymin);
    rwxmin = rwxmin - dx;
    rwxmax = rwxmax + dx;
-   if (gPad->GetLogy()) {
+   if (gPad && gPad->GetLogy()) {
       if (rwymin <= 0) rwymin = 0.001*rwymax;
       double r = rwymax/rwymin;
       rwymin = rwymin/(1+0.5*TMath::Log10(r));
