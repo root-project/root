@@ -1095,8 +1095,15 @@ TH1F *TMultiGraph::GetHistogram()
    double dy = 0.05*(rwymax-rwymin);
    rwxmin = rwxmin - dx;
    rwxmax = rwxmax + dx;
-   rwymin = rwymin - dy;
-   rwymax = rwymax + dy;
+   if (gPad && gPad->GetLogy()) {
+      if (rwymin <= 0) rwymin = 0.001*rwymax;
+      double r = rwymax/rwymin;
+      rwymin = rwymin/(1+0.5*TMath::Log10(r));
+      rwymax = rwymax*(1+0.2*TMath::Log10(r));
+   } else {
+      rwymin = rwymin - dy;
+      rwymax = rwymax + dy;
+   }
    fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(rwymin);
