@@ -55,7 +55,7 @@ public:
    void         OnElementClicked(TGLVEntry* entry, Int_t btn);
    void         OnElementSelected(TObject *obj); //*SIGNAL*
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void CloseWindow();
 
    ClassDef(TNewChainDlg, 0) // New chain dialog
@@ -105,7 +105,7 @@ public:
    void     Popup();
    void     SettingsChanged();
    void     UpdateFields(TQueryDescription *desc);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TNewQueryDlg, 0) // New query dialog
 };
@@ -140,7 +140,7 @@ public:
    virtual ~TUploadDataSetDlg();
 
    virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    void           AddFiles(const char *fileName);
    void           AddFiles(TList *fileList);
    void           BrowseFiles();

@@ -252,7 +252,7 @@ public:
    virtual void SetLogStep(Bool_t on = kTRUE);              //*TOGGLE* *GETTER=IsLogStep
 
    virtual void   Associate(const TGWindow *w);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   ValueChanged(Long_t val);     //*SIGNAL*
    virtual void   ValueSet(Long_t val);         //*SIGNAL*
    virtual void   Modified();                   //*SIGNAL*

@@ -53,8 +53,8 @@ public:
    virtual void ChangeIcon(ToolBarData_t *button, const char *new_icon);
    virtual void Cleanup();
    virtual TGButton *GetButton(Int_t id) const;
-   virtual Long_t    GetId(TGButton *button) const;
-   virtual void      SetId(TGButton *button, Long_t id);
+   virtual Longptr_t GetId(TGButton *button) const;
+   virtual void      SetId(TGButton *button, Longptr_t id);
 
    virtual void ButtonPressed();
    virtual void ButtonReleased();

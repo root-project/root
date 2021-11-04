@@ -132,7 +132,7 @@ void TAttFillEditor::SetModel(TObject* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot connected to the fill area color with alpha.
 
-void TAttFillEditor::DoFillAlphaColor(ULong_t p)
+void TAttFillEditor::DoFillAlphaColor(ULongptr_t p)
 {
    TColor *color = (TColor *)p;
 

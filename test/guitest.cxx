@@ -242,7 +242,7 @@ public:
    virtual ~TestMainFrame();
 
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
 };
 
 
@@ -274,7 +274,7 @@ public:
    virtual ~TestDialog();
 
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -299,7 +299,7 @@ public:
    virtual ~TestMsgBox();
 
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -319,7 +319,7 @@ public:
    virtual ~TestSliders();
 
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -336,7 +336,7 @@ public:
 
    void AddShutterItem(const char *name, shutterData_t data[]);
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -350,7 +350,7 @@ protected:
 public:
    TestDirList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
    virtual ~TestDirList();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -371,7 +371,7 @@ public:
    TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
    virtual ~TestFileList();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -390,7 +390,7 @@ public:
    virtual ~TestProgress();
 
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -422,7 +422,7 @@ public:
    virtual void CloseWindow();
 
    void SetLimits();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
 };
 
 
@@ -446,7 +446,7 @@ public:
    void   SetTitle();
    void   Popup();
    void   CloseWindow();
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 
@@ -698,7 +698,7 @@ void TestMainFrame::CloseWindow()
    gApplication->Terminate(0);
 }
 
-Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TestMainFrame::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    // Handle messages send to the TestMainFrame object. E.g. all menu button
    // messages.
@@ -1142,7 +1142,7 @@ void TestDialog::CloseWindow()
    DeleteWindow();
 }
 
-Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TestDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    // Process messages coming from widgets associated with the dialog.
 
@@ -1240,7 +1240,7 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                }
                break;
             case kCM_TAB:
-               printf("Tab item %ld activated\n", parm1);
+               printf("Tab item %zd activated\n", (size_t)parm1);
                break;
             default:
                break;
@@ -1411,7 +1411,7 @@ void TestMsgBox::CloseWindow()
    DeleteWindow();
 }
 
-Bool_t TestMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TestMsgBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    // Process messages sent to this dialog.
 
@@ -1575,7 +1575,7 @@ void TestSliders::CloseWindow()
    DeleteWindow();
 }
 
-Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TestSliders::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    // Process slider messages.
 
@@ -1607,7 +1607,7 @@ Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       case kC_HSLIDER:
          switch (GET_SUBMSG(msg)) {
             case kSL_POS:
-               sprintf(buf, "%ld", parm2);
+               sprintf(buf, "%zd", (size_t)parm2);
                switch (parm1) {
                   case HSId1:
                      fTbh1->Clear();
@@ -1723,7 +1723,7 @@ void TestShutter::CloseWindow()
    DeleteWindow();
 }
 
-Bool_t TestShutter::ProcessMessage(Long_t, Long_t parm1, Long_t)
+Bool_t TestShutter::ProcessMessage(Longptr_t, Longptr_t parm1, Longptr_t)
 {
    // Process messages sent to this dialog.
 
@@ -1784,7 +1784,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
    return dirname;
 }
 
-Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
+Bool_t TestDirList::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    // process message sent to this widget.
 
@@ -1967,7 +1967,7 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kPointer));
 }
 
-Bool_t TestFileList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
+Bool_t TestFileList::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    // process message sent to this widget.
 
@@ -2071,7 +2071,7 @@ void TestProgress::CloseWindow()
    DeleteWindow();
 }
 
-Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TestProgress::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    // Process slider messages.
 
@@ -2274,7 +2274,7 @@ void EntryTestDlg::SetLimits()
    }
 }
 
-Bool_t EntryTestDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
+Bool_t EntryTestDlg::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
@@ -2388,7 +2388,7 @@ void Editor::CloseWindow()
    DeleteWindow();
 }
 
-Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
+Bool_t Editor::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t)
 {
    // Process OK button.
 

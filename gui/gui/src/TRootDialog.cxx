@@ -137,8 +137,8 @@ const char *TRootDialog::GetParameters()
       // if necessary, replace the selected object by it's address
       if (selfobjpos == nparam-1) {
          if (params.Length()) params += ",";
-         param = TString::Format("(TObject*)0x%lx",
-               (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
+         param = TString::Format("(TObject*)0x%zx",
+               (size_t)fMenu->GetContextMenu()->GetSelectedObject());
          params += param;
       }
 
@@ -157,8 +157,8 @@ const char *TRootDialog::GetParameters()
    // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
       if (params.Length()) params += ",";
-      param = TString::Format("(TObject*)0x%lx",
-            (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
+      param = TString::Format("(TObject*)0x%zx",
+            (size_t)fMenu->GetContextMenu()->GetSelectedObject());
       params += param;
    }
 

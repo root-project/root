@@ -225,7 +225,7 @@ public:
 
    Bool_t         HandleTimerEvent(Event_t *ev, TTimer *t);
    void           TimerEvent(Event_t *ev)
-                     { Emit("TimerEvent(Event_t*)", (Long_t)ev); } // *SIGNAL*
+                     { Emit("TimerEvent(Event_t*)", (Longptr_t)ev); } // *SIGNAL*
 
    // hadndling dynamic context menus
    void DoClassMenu(Int_t);

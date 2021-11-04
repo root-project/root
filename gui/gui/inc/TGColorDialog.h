@@ -166,7 +166,7 @@ protected:
    void           UpdateHLSentries(Pixel_t *c);
    void           UpdateAlpha(Pixel_t *c);
    virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
 public:
    TGColorDialog(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Int_t *retc = nullptr,
@@ -177,7 +177,7 @@ public:
    TGColorPalette *GetCustomPalette() const { return fCpalette; }
 
    virtual void ColorSelected(Pixel_t); //*SIGNAL*
-   virtual void AlphaColorSelected(ULong_t); //*SIGNAL*
+   virtual void AlphaColorSelected(ULongptr_t); //*SIGNAL*
            void DoPreview();
    virtual void SetCurrentColor(Pixel_t col);
            void SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *selected);

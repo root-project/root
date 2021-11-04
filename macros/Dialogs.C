@@ -53,7 +53,7 @@ private:
 public:
    InputDialog(const char *prompt, const char *defval, char *retstr);
    ~InputDialog();
-   void ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 InputDialog::~InputDialog()
@@ -73,7 +73,7 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
 
    // command to be executed by buttons and text entry widget
    char cmd[128];
-   sprintf(cmd, "{long r__ptr=0x%lx; ((InputDialog*)r__ptr)->ProcessMessage($MSG,$PARM1,$PARM2);}", (Long_t)this);
+   sprintf(cmd, "{long r__ptr=0x%zx; ((InputDialog*)r__ptr)->ProcessMessage($MSG,$PARM1,$PARM2);}", (size_t)this);
 
    // create prompt label and textentry widget
    TGLabel *label = new TGLabel(fDialog, prompt);
@@ -159,7 +159,7 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
    gClient->WaitFor(fDialog);
 }
 
-void InputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+void InputDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    // Handle button and text enter events
 

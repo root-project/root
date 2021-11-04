@@ -108,7 +108,7 @@ public:
 
    virtual void AddFrame(TGFrame *f, TGLayoutHints *hints);
 
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t);
    virtual void Docked() { Emit("Docked()"); }        //*SIGNAL*
    virtual void Undocked() { Emit("Undocked()"); }    //*SIGNAL*
 

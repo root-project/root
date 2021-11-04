@@ -28,7 +28,7 @@ public:
    TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t markerStyle);
    virtual ~TGedMarkerPopup();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TGedMarkerPopup,0)  //marker select popup
 };
@@ -46,7 +46,7 @@ public:
    TGedMarkerSelect(const TGWindow *p, Style_t markerStyle, Int_t id);
    virtual ~TGedMarkerSelect() { if(fPicture) gClient->FreePicture(fPicture);}
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    Style_t        GetMarkerStyle() const { return fMarkerStyle; }
    void           SetMarkerStyle(Style_t pattern);
    virtual void   MarkerSelected(Style_t marker = 0) { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*

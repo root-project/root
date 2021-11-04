@@ -533,7 +533,7 @@ Bool_t TGVFileSplitter::HandleButton(Event_t *event)
 
 void TGVFileSplitter::LayoutHeader(TGFrame *f)
 {
-   Emit("LayoutHeader(TGFrame*)", (Long_t)f);
+   Emit("LayoutHeader(TGFrame*)", (Longptr_t)f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -565,7 +565,7 @@ void TGVFileSplitter::ButtonReleased()
 
 void TGVFileSplitter::DoubleClicked(TGVFileSplitter* splitter)
 {
-   Emit("DoubleClicked(TGVFileSplitter*)", (Long_t) splitter);
+   Emit("DoubleClicked(TGVFileSplitter*)", (Longptr_t) splitter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

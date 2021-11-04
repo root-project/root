@@ -234,7 +234,7 @@ const char *TGuiBldMenuDialog::GetParameters()
       // if necessary, replace the selected object by it's address
       if (selfobjpos == nparam-1) {
          if (params[0]) strlcat(params, ",", 1024-strlen(params));
-         snprintf(param, 255, "(TObject*)0x%lx", (Long_t)fObject);
+         snprintf(param, 255, "(TObject*)0x%zx", (size_t)fObject);
          strlcat(params, param, 1024-strlen(params));
       }
 
@@ -253,7 +253,7 @@ const char *TGuiBldMenuDialog::GetParameters()
    // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
       if (params[0]) strlcat(params, ",", 1024-strlen(params));
-      snprintf(param, 255, "(TObject*)0x%lx", (Long_t)fObject);
+      snprintf(param, 255, "(TObject*)0x%zx", (size_t)fObject);
       strlcat(params, param, 1024-strlen(params));
    }
 
@@ -363,9 +363,9 @@ void TGuiBldMenuDialog::Build()
                        !strncmp(basictype, "int", 3)  ||
                        !strncmp(basictype, "long", 4) ||
                        !strncmp(basictype, "short", 5)) {
-               Long_t ldefval = 0L;
+               Longptr_t ldefval = 0L;
                m->GetterMethod()->Execute(fObject, "", ldefval);
-               snprintf(val, 255, "%li", ldefval);
+               snprintf(val, 255, "%zi", (size_t)ldefval);
             }
 
             // Find out whether we have options ...
@@ -5497,8 +5497,8 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
 
       if (str.Contains("*DIALOG")) {
          TString str2;
-         str2.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", (ULong_t)this, method->GetName(),
-                  fPimpl->fMenuObject->ClassName(), (ULong_t)fPimpl->fMenuObject);
+         str2.Form("((TGuiBldDragManager*)0x%zx)->%s((%s*)0x%zx)", (size_t)this, method->GetName(),
+                  fPimpl->fMenuObject->ClassName(), (size_t)fPimpl->fMenuObject);
          gCling->Calc((char *)str2.Data());
          //delete fFrameMenu;  // suicide (BB)?
          //fFrameMenu = 0;

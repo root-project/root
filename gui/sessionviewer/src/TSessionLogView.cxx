@@ -132,7 +132,7 @@ void TSessionLogView::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process OK button.
 
-Bool_t TSessionLogView::ProcessMessage(Long_t msg, Long_t, Long_t)
+Bool_t TSessionLogView::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

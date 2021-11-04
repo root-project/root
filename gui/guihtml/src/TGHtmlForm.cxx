@@ -667,7 +667,7 @@ void TGHtml::EncodeText(TGString *str, const char *z)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages (GUI events) in the html widget.
 
-Bool_t TGHtml::ProcessMessage(Long_t msg, Long_t p1, Long_t p2)
+Bool_t TGHtml::ProcessMessage(Longptr_t msg, Longptr_t p1, Longptr_t p2)
 {
 /*
   OWidgetMessage *wmsg = (OWidgetMessage *) msg;

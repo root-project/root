@@ -576,9 +576,9 @@ void  TGedEditor::ExcludeClassEditor(TClass* cl, Bool_t recurse)
    TPair* pair = (TPair*) fExclMap.FindObject(cl);
    if (pair) {
       if (recurse && pair->Value() == 0)
-         pair->SetValue((TObject*)(Long_t)1); // hack, reuse TObject as Bool_t
+         pair->SetValue((TObject*)(Longptr_t)1); // hack, reuse TObject as Bool_t
    } else {
-      fExclMap.Add(cl, (TObject*)(Long_t)(recurse ? 1 : 0));
+      fExclMap.Add(cl, (TObject*)(Longptr_t)(recurse ? 1 : 0));
    }
 }
 

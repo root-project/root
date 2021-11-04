@@ -313,7 +313,7 @@ Bool_t TGView::HandleExpose(Event_t *event)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process scrollbar messages.
 
-Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGView::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch(GET_MSG(msg)) {
       case kC_HSCROLL:

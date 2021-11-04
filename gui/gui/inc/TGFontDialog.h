@@ -65,7 +65,7 @@ protected:
    Bool_t               Build(char **fontList, Int_t cnt);
    void                 GetFontName();
    virtual void         CloseWindow();
-   virtual Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t       ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
 public:
    TGFontDialog(const TGWindow *parent = 0, const TGWindow *t = 0,

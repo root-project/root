@@ -162,7 +162,7 @@ XSElementDlg::CloseWindow()
 
 /* ----- ProcessButton ----- */
 Bool_t
-XSElementDlg::ProcessButton(Long_t param)
+XSElementDlg::ProcessButton(Longptr_t param)
 {
    Int_t   activeTab;
 
@@ -213,7 +213,7 @@ LERROR:
 
 /* ----- ProcessMessage ----- */
 Bool_t
-XSElementDlg::ProcessMessage(Long_t msg, Long_t param1, Long_t /*param2*/)
+XSElementDlg::ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t /*param2*/)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

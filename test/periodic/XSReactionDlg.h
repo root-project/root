@@ -156,9 +156,9 @@ protected:
       Bool_t   ExecCommand();
 
    virtual void   CloseWindow();
-      Bool_t   ProcessButton(Long_t param1, Long_t param2);
-      Bool_t   ProcessCombo(Long_t param1, Long_t param2);
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t param1, Long_t param2);
+      Bool_t   ProcessButton(Longptr_t param1, Longptr_t param2);
+      Bool_t   ProcessCombo(Longptr_t param1, Longptr_t param2);
+   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2);
 
    //ClassDef(XSReactionDlg,1)
 }; // XSReactionDlg

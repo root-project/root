@@ -354,7 +354,7 @@ void TGSplitFrame::CloseAndCollapse()
 
 void TGSplitFrame::Docked(TGFrame* frame)
 {
-   Emit("Docked(TGFrame*)", (Long_t)frame);
+   Emit("Docked(TGFrame*)", (Longptr_t)frame);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -710,7 +710,7 @@ void TGSplitFrame::SwitchToMain()
 
 void TGSplitFrame::Undocked(TGFrame* frame)
 {
-   Emit("Undocked(TGFrame*)", (Long_t)frame);
+   Emit("Undocked(TGFrame*)", (Longptr_t)frame);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

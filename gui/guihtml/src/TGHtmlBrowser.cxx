@@ -603,7 +603,7 @@ void TGHtmlBrowser::MouseDown(const char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process Events.
 
-Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGHtmlBrowser::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
