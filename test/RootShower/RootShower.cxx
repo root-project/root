@@ -617,7 +617,7 @@ Bool_t RootShower::HandleConfigureNotify(Event_t *event)
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle messages send to the RootShower object.
 
-Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t RootShower::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    Window_t wdummy;
    int ax, ay;
@@ -837,14 +837,14 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         TString cmd;
                         fCA->cd();
                         TVirtualViewer3D *viewer3D = fCA->GetViewer3D("ogl");
-                        cmd.Form("((TGLViewer *)0x%lx)->SetCurrentCamera(TGLViewer::kCameraPerspXOY)",
-                                 (ULong_t)viewer3D);
+                        cmd.Form("((TGLViewer *)0x%zx)->SetCurrentCamera(TGLViewer::kCameraPerspXOY)",
+                                 (size_t)viewer3D);
                         gROOT->ProcessLine(cmd);
-                        cmd.Form("((TGLViewer *)0x%lx)->CurrentCamera().RotateRad(0.0, TMath::Pi())",
-                                 (ULong_t)viewer3D);
+                        cmd.Form("((TGLViewer *)0x%zx)->CurrentCamera().RotateRad(0.0, TMath::Pi())",
+                                 (size_t)viewer3D);
                         gROOT->ProcessLine(cmd);
-                        cmd.Form("((TGLViewer *)0x%lx)->CurrentCamera().Dolly(-100, 0, 0)",
-                                 (ULong_t)viewer3D);
+                        cmd.Form("((TGLViewer *)0x%zx)->CurrentCamera().Dolly(-100, 0, 0)",
+                                 (size_t)viewer3D);
                         gROOT->ProcessLine(cmd);
                      }
                      break;

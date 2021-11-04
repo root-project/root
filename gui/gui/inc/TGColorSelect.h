@@ -62,7 +62,7 @@ public:
    TG16ColorSelector(const TGWindow *p = nullptr);
    virtual ~TG16ColorSelector();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    void    SetActive(Int_t newat);
    Int_t   GetActive() { return fActive; }
@@ -89,12 +89,12 @@ public:
    virtual ~TGColorPopup();
 
    virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    void    PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void    EndPopup();
    void    PreviewColor(Pixel_t color);
-   void    PreviewAlphaColor(ULong_t color);
+   void    PreviewAlphaColor(ULongptr_t color);
 
    ClassDef(TGColorPopup,0)  // Color selector popup
 };
@@ -123,7 +123,7 @@ public:
    virtual ~TGColorSelect();
 
    virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    void    SetColor(Pixel_t color, Bool_t emit = kTRUE);
    void    SetAlphaColor(ULong_t color, Bool_t emit = kTRUE);

@@ -127,7 +127,7 @@ void RootShowerMsgBox::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages sent to this dialog.
 
-Bool_t RootShowerMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
+Bool_t RootShowerMsgBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    TRootHelpDialog* hd;
 

@@ -120,7 +120,7 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleFocusChange(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*
    virtual void   Closed() { Emit("Closed()"); }        //*SIGNAL*

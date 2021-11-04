@@ -1285,10 +1285,10 @@ Bool_t TGHtml::HandleRadioButton(TGHtmlInput *p)
 
 void TGHtml::ButtonClicked(const char *name, const char *val)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)name;
-   args[1] = (Long_t)val;
+   args[0] = (Longptr_t)name;
+   args[1] = (Longptr_t)val;
 
    Emit("ButtonClicked(char*,char*)", args);
 }
@@ -1298,11 +1298,11 @@ void TGHtml::ButtonClicked(const char *name, const char *val)
 
 void TGHtml::CheckToggled(const char *name, Bool_t on, const char *val)
 {
-   Long_t args[3];
+   Longptr_t args[3];
 
-   args[0] = (Long_t)name;
+   args[0] = (Longptr_t)name;
    args[1] = on;
-   args[2] = (Long_t)val;
+   args[2] = (Longptr_t)val;
 
    Emit("CheckToggled(char*,Bool_t,char*)", args);
 }
@@ -1312,10 +1312,10 @@ void TGHtml::CheckToggled(const char *name, Bool_t on, const char *val)
 
 void TGHtml::RadioChanged(const char *name, const char *val)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)name;
-   args[1] = (Long_t)val;
+   args[0] = (Longptr_t)name;
+   args[1] = (Longptr_t)val;
 
    Emit("RadioChanged(char*,char*)", args);
 }
@@ -1325,10 +1325,10 @@ void TGHtml::RadioChanged(const char *name, const char *val)
 
 void TGHtml::InputSelected(const char *name, const char *val)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)name;
-   args[1] = (Long_t)val;
+   args[0] = (Longptr_t)name;
+   args[1] = (Longptr_t)val;
 
    Emit("InputSelected(char*,char*)", args);
 }
