@@ -357,9 +357,7 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   _defNormSet(other._defNormSet)
 {
   // Clone contents of normalizarion set list
-  RooFIter iter = other._pdfNSetList.fwdIterator();
-  RooArgSet* nset ;
-  while((nset=(RooArgSet*)iter.next())) {
+  for(auto * nset : static_range_cast<RooArgSet*>(other._pdfNSetList)) {
     RooArgSet* tmp = (RooArgSet*) nset->snapshot() ;
     tmp->setName(nset->GetName()) ;
     _pdfNSetList.Add(tmp) ;
@@ -586,12 +584,13 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   std::vector<RooAbsArg*> pdfAllDeps; // All dependents of this PDF
 
   // Loop over the PDFs
-  RooAbsPdf* pdf;
-  RooArgSet* pdfNSetOrig;
-  for (RooLinkedListIter pdfIter = _pdfList.iterator(),
-      nIter = _pdfNSetList.iterator();
-      (pdfNSetOrig = static_cast<RooArgSet*>(nIter.Next()),
-       pdf = static_cast<RooAbsPdf*>(pdfIter.Next())); ) {
+  auto pdfIter = _pdfList.begin();
+  auto nIter = _pdfNSetList.begin();
+  for (;pdfIter != _pdfList.end(); (++pdfIter, ++nIter)) {
+
+    auto pdf = static_cast<RooAbsPdf*>(*pdfIter);
+    auto pdfNSetOrig = static_cast<RooArgSet*>(*nIter);
+
     pdfNSet.clear();
     pdfCSet.clear();
 
@@ -662,10 +661,11 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // Check if this PDF has dependents overlapping with one of the existing terms
     bool done = false;
     int j = 0;
-    for (RooLinkedListIter lIter = termList.iterator(),
-	ldIter = normList.iterator();
-      (termNormDeps = static_cast<RooArgSet*>(ldIter.Next()),
-       term = static_cast<RooArgSet*>(lIter.Next())); ++j) {
+    auto lIter = termList.begin();
+    auto ldIter = normList.begin();
+    for(;lIter != termList.end(); (++lIter, ++ldIter, ++j)) {
+      termNormDeps = static_cast<RooArgSet*>(*ldIter);
+      term = static_cast<RooArgSet*>(*lIter);
       // PDF should be added to existing term if
       // 1) It has overlapping normalization dependents with any other PDF in existing term
       // 2) It has overlapping dependents of any class for which integration is requested
@@ -718,10 +718,11 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   // Loop over list of terms again to determine 'imported' observables
   int i = 0;
   RooArgSet *normDeps;
-  for (RooLinkedListIter lIter = termList.iterator(),
-      ldIter = normList.iterator();
-      (normDeps = static_cast<RooArgSet*>(ldIter.Next()),
-       term= static_cast<RooArgSet*>(lIter.Next())); ++i) {
+  auto lIter = termList.begin();
+  auto ldIter = normList.begin();
+  for(;lIter != termList.end(); (++lIter, ++ldIter, ++i)) {
+    normDeps = static_cast<RooArgSet*>(*ldIter);
+    term = static_cast<RooArgSet*>(*lIter);
     // Make list of wholly imported dependents
     RooArgSet impDeps(depAllList[i]);
     impDeps.remove(*normDeps, kTRUE, kTRUE);

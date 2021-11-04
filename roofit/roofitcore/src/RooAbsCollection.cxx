@@ -1360,18 +1360,15 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
   // Make list of lists ;
   RooLinkedList listList ;
   listList.Add((RooAbsArg*)this) ;
-  RooFIter sIter = siblingList.fwdIterator() ;
-  RooAbsCollection* col ;
-  while((col=(RooAbsCollection*)sIter.next())) {
+  for(auto * col : static_range_cast<RooAbsCollection*>(siblingList)) {
     listList.Add(col) ;
   }
 
   RooLinkedList listListRRV ;
 
   // Make list of RRV-only components
-  RooFIter lIter = listList.fwdIterator() ;
   RooArgList* prevList = 0 ;
-  while((col=(RooAbsCollection*)lIter.next())) {
+  for(auto * col : static_range_cast<RooAbsCollection*>(listList)) {
     RooArgList* list = new RooArgList ;
     RooFIter iter = col->fwdIterator() ;
     RooAbsArg* arg ;

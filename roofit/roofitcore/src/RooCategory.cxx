@@ -492,8 +492,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
     auto& rangesMap = *_ranges;
 
     // Copy the data:
-    std::unique_ptr<TIterator> iter(props->_altRanges.MakeIterator());
-    while (TList* olist = (TList*)iter->Next()) {
+    for (auto * olist : static_range_cast<TList*>(props->_altRanges)) {
       std::vector<value_type>& vec = rangesMap[olist->GetName()];
 
 
