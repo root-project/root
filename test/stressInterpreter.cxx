@@ -137,9 +137,9 @@ private:
    Klass* fKlass;
 };
 
-unsigned long func(Long64_t& a, double b, const Klass& c) {
+ULongptr_t func(Long64_t& a, double b, const Klass& c) {
    if (--a > b) return func(a, b, c);
-   return (unsigned long) c.get();
+   return (ULongptr_t) c.get();
 }
 
 class InterpreterStress {
@@ -182,7 +182,7 @@ bool InterpreterStress::stressFuncCall() {
    int ntimes = fNtimes * 100000;
 
    Klass c;
-   unsigned long res[2];
+   ULongptr_t res[2];
    res[0] = res[1] = 0;
 
    int depth = 6; // That's all that Windows can handle...
@@ -196,7 +196,7 @@ bool InterpreterStress::stressFuncCall() {
    for (Long64_t a = ntimes; a > 0;) {
       res[1] = func(a, a - 1, c);
    }
-   if (res[0] != (unsigned long)&c) return false;
+   if (res[0] != (ULongptr_t)&c) return false;
    if (res[0] != res[1]) return false;
    return true;
 }
@@ -229,8 +229,8 @@ bool InterpreterStress::stressSTLDict() {
                            "std::vector<Klass%d_t> v%d;\n"
                            "void stressInterpreter_tmp%d() {\n"
                            "   v%d.push_back((Klass%d_t)0x12);\n"
-                           "   *((int*)0x%lx) = 17;}",
-                           i, i, i, i, i, i, (unsigned long) &res);
+                           "   *((int*)0x%zx) = 17;}",
+                           i, i, i, i, i, i, (size_t) &res);
       TString tmpfilename = TString::Format("stressInterpreter_tmp%d.C", i);
       {
          std::ofstream otmp(tmpfilename.Data());
@@ -293,7 +293,7 @@ bool InterpreterStress::stressReflection() {
       }
 
       CallFunc_t* mk = gInterpreter->CallFunc_Factory();
-      Long_t offset = -1;
+      Longptr_t offset = -1;
       gInterpreter->CallFunc_SetFuncProto(mk, k, fname, "double", &offset);
       if (!gInterpreter->CallFunc_IsValid(mk)) {
          std::cout << "Error: The CallFunc for Klass::" << fname << "(double) is invalid\n";
@@ -321,10 +321,10 @@ bool InterpreterStress::stressReflection() {
          continue;
       }
 
-      long ret = gInterpreter->CallFunc_ExecInt(mk, obj);
-      if (ret != (long) (funcnum + (-funcnum * 2 + 0.2))) {
+      Longptr_t ret = gInterpreter->CallFunc_ExecInt(mk, obj);
+      if (ret != (Longptr_t) (funcnum + (-funcnum * 2 + 0.2))) {
          std::cout << "Error: Execution of Klass::" << fname << " failed (result = "
-                   << ret << " rather than = " << (long) (funcnum + (-funcnum * 2 + 0.2)) << ")\n";
+                   << ret << " rather than = " << (Longptr_t) (funcnum + (-funcnum * 2 + 0.2)) << ")\n";
          success = false;
          gInterpreter->CallFunc_Delete(mk);
          gInterpreter->ClassInfo_Delete(k);

@@ -145,7 +145,7 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
    //Double_t x[]    = {5,5,5,5};
    //Double_t rMDF   = MDF(x);
    //LM:  need to return the address of the result since it is casted to a long (this should not be in a tutorial !)
-   Long_t iret = gROOT->ProcessLine(" Double_t xvalues[] = {5,5,5,5}; double result=MDF(xvalues); &result;");
+   Longptr_t iret = gROOT->ProcessLine(" Double_t xvalues[] = {5,5,5,5}; double result=MDF(xvalues); &result;");
    Double_t rMDF = * ( (Double_t*)iret);
    //printf("%f\n",rMDF);
    if (TMath::Abs(rMDF -refMDF) > 1e-2) return 4;
