@@ -61,13 +61,7 @@ RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
   _binning = other._binning->clone() ;
 
   // Copy constructor
-
-  TIterator* iter = other._altBinning.MakeIterator() ;
-  RooAbsBinning* binning ;
-  while((binning=(RooAbsBinning*)iter->Next())) {
-    _altBinning.Add(binning->clone()) ;
-  }
-  delete iter ;
+  for(auto * binning : static_range_cast<RooAbsBinning*>(other._altBinning)) _altBinning.Add(binning->clone());
 }
 
 
@@ -153,9 +147,7 @@ std::list<std::string> RooErrorVar::getBinningNames() const
 {
   std::list<std::string> binningNames(1, "");
 
-  RooFIter iter = _altBinning.fwdIterator();
-  const RooAbsArg* binning = 0;
-  while((binning = iter.next())) {
+  for(auto * binning : static_range_cast<RooAbsArg*>(_altBinning)) {
     const char* name = binning->GetName();
     binningNames.push_back(name);
   }
