@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "TROOT.h"
 #include "TCanvas.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
@@ -11,7 +12,7 @@ TEST(TMultiGraph, GetHistogram)
 {
    gROOT->SetBatch(1);
    auto c = new TCanvas();
-    c->SetLogy();
+   c->SetLogy();
 
    std::vector<double> x1;
    std::vector<double> sig1;
@@ -27,6 +28,7 @@ TEST(TMultiGraph, GetHistogram)
    auto g2 = new TGraph(x1.size(), x1.data(), sig2.data()); mg->Add(g2);
    auto h  = mg->GetHistogram();
 
-   EXPECT_DOUBLE_EQ(h->GetMinimum(), 0.652338);
-   EXPECT_DOUBLE_EQ(h->GetMaximum(), 79.9602);
+   double delta = 1.E-3;
+   EXPECT_NEAR(h->GetMinimum(), 0.65234, delta);
+   EXPECT_NEAR(h->GetMaximum(), 79.9602, delta);
 }
