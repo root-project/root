@@ -982,7 +982,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
    //    new (ret) (return_type) ((class_name*)obj)->func(args...);
    // }
    // else {
-   //    ((class_name*)obj)->func(args...);
+   //    (void)(((class_name*)obj)->func(args...));
    // }
    //
    const FunctionDecl *FD = GetDecl();
@@ -1085,8 +1085,9 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
+         callbuf << "(void)(";
          make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
-         callbuf << ";\n";
+         callbuf << ");\n";
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
