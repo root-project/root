@@ -158,8 +158,8 @@ void TGTableLayout::FindRowColSizesSinglyAttached()
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
-         Error("FindRowColSizesSinglyAttached", "didn't get TGTableLayoutHints from %s, layout = 0x%lx",
-               ptr->fFrame->GetName(), (ULong_t)ptr->fLayout);
+         Error("FindRowColSizesSinglyAttached", "didn't get TGTableLayoutHints from %s, layout = 0x%zx",
+               ptr->fFrame->GetName(), (size_t)ptr->fLayout);
          return;
       }
       UInt_t col = layout->GetAttachLeft();

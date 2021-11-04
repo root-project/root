@@ -60,7 +60,7 @@ public:
    virtual ~TGHtmlBrowserTest() { ; }
 
    virtual void      CloseWindow();
-   virtual Bool_t    ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   virtual Bool_t    ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
    void              Selected(const char *txt);
    void              URLChanged();
    void              Back();

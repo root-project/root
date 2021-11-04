@@ -47,7 +47,7 @@ public:
 
     // slots
     virtual void     CloseWindow();
-    virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+    virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 };
 
 #endif

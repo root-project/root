@@ -81,7 +81,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleSelection(Event_t *event);
    virtual Bool_t HandleSelectionRequest(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    virtual void AddEntry(TGString *s, Int_t id)
                         { fListBox->AddEntry(s, id); Resize(); }

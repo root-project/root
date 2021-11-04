@@ -1201,11 +1201,11 @@ void HistAction::paintHist()
    return;
 }
 
-Bool_t HistAction::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t HistAction::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    //------------------------------------------------------------------
    //
-   //    ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+   //    ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
    //
    // Processes information from all GUI items.
    // Selecting an item usually generates an event with 4 parameters.

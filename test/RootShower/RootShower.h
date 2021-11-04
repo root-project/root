@@ -176,7 +176,7 @@ public:
    virtual void        CloseWindow();
    virtual Bool_t      HandleConfigureNotify(Event_t *event);
    virtual Bool_t      HandleKey(Event_t *event);
-   virtual Bool_t      ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t      ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual Bool_t      HandleTimer(TTimer *);
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    void                Clicked(TGListTreeItem *item, Int_t x, Int_t y);

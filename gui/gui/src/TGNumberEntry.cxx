@@ -2054,7 +2054,7 @@ void TGNumberEntry::SetButtonToNum(Bool_t state)
 /// param % 10000 / 100 != 0 indicates log step
 /// param / 10000 != 0 indicates button down
 
-Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGNumberEntry::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:

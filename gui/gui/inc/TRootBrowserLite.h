@@ -152,7 +152,7 @@ public:
 
    // overridden from TGMainFrame
    void     CloseWindow() override;
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    void     ReallyDelete() override;
 
    // auxiliary (a la private) methods

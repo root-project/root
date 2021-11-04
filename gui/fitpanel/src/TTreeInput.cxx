@@ -130,7 +130,7 @@ TTreeInput::~TTreeInput()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle button and text enter events
 
-Bool_t TTreeInput::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TTreeInput::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

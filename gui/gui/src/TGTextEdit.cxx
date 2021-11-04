@@ -1583,7 +1583,7 @@ void TGTextEdit::Search(Bool_t close)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process context menu messages.
 
-Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGTextEdit::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    TString msg2;
    TGTextView::ProcessMessage(msg, parm1, parm2);
@@ -1698,7 +1698,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      break;
                   default:
-                     printf("No action implemented for menu id %ld\n", parm1);
+                     printf("No action implemented for menu id %zd\n", (size_t)parm1);
                      break;
                }
             default:
