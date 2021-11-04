@@ -1029,7 +1029,7 @@ void
 	G_UNLOCK (g_utils_global);
 }
 
-guint
+gulong
 	g_direct_hash (gconstpointer v)
 {
 	return GPOINTER_TO_UINT (v);

@@ -172,7 +172,7 @@ static void init_gray(GdkColorContext * cc)
 
    cc->num_colors = 256;        /* Bogus, but will never get here anyway? */
 
-   cc->clut = g_new(gulong, cc->num_colors);
+   cc->clut = g_new(unsigned long, cc->num_colors);
    cstart = g_new(GdkColor, cc->num_colors);
 
  retrygray:
@@ -250,7 +250,7 @@ static void init_color(GdkColorContext * cc)
    /* a CLUT for storing allocated pixel indices */
 
    cc->max_colors = cc->num_colors;
-   cc->clut = g_new(gulong, cc->max_colors);
+   cc->clut = g_new(unsigned long, cc->max_colors);
 
    for (cubeval = 0; cubeval < cc->max_colors; cubeval++)
       cc->clut[cubeval] = cubeval;
@@ -264,7 +264,7 @@ static void init_color(GdkColorContext * cc)
 static void init_true_color(GdkColorContext * cc)
 {
    GdkColorContextPrivate *ccp = (GdkColorContextPrivate *) cc;
-   gulong rmask, gmask, bmask;
+   unsigned long rmask, gmask, bmask;
 
    cc->mode = GDK_CC_MODE_TRUE;
 
@@ -537,7 +537,7 @@ void gdk_color_context_free(GdkColorContext * cc)
    g_free(cc);
 }
 
-gulong
+unsigned long
 gdk_color_context_get_pixel(GdkColorContext * cc,
                             gushort red,
                             gushort green, gushort blue, gint * failed)
@@ -564,7 +564,7 @@ gdk_color_context_get_pixel(GdkColorContext * cc,
 
    case GDK_CC_MODE_MY_GRAY:
       {
-         gulong ired, igreen, iblue;
+         unsigned long ired, igreen, iblue;
 
          red = red * 0.30 + green * 0.59 + blue * 0.11;
          green = 0;
@@ -600,7 +600,7 @@ gdk_color_context_get_pixel(GdkColorContext * cc,
 
    case GDK_CC_MODE_TRUE:
       {
-         gulong ired, igreen, iblue;
+         unsigned long ired, igreen, iblue;
 
          if (cc->clut == NULL) {
             red >>= 16 - cc->bits.red;
@@ -672,7 +672,7 @@ gdk_color_context_get_pixel(GdkColorContext * cc,
                                      cc->max_colors));
 
                   cc->clut = g_realloc(cc->clut,
-                                       cc->max_colors * sizeof(gulong));
+                                       cc->max_colors * sizeof(unsigned long));
                }
 
                /* Key and value are the same color structure */
@@ -702,7 +702,7 @@ gdk_color_context_get_pixels(GdkColorContext * cc,
                              gushort * greens,
                              gushort * blues,
                              gint ncolors,
-                             gulong * colors, gint * nallocated)
+                             unsigned long * colors, gint * nallocated)
 {
    gint i, k, idx;
    gint cmapsize, ncols = 0, nopen = 0, counter = 0;
@@ -962,7 +962,7 @@ gdk_color_context_get_pixels_incremental(GdkColorContext * cc,
                                          gushort * blues,
                                          gint ncolors,
                                          gint * used,
-                                         gulong * colors,
+                                         unsigned long * colors,
                                          gint * nallocated)
 {
    gint i, k, idx;
@@ -1267,7 +1267,7 @@ gdk_color_context_query_colors(GdkColorContext * cc,
          return 1;
       } else {
          gint first, last, half;
-         gulong half_pixel;
+         unsigned long half_pixel;
 
          for (i = 0, tc = colors; i < num_colors; i++) {
             first = 0;
@@ -1303,7 +1303,7 @@ gdk_color_context_add_palette(GdkColorContext * cc,
 {
    gint i, j, erg;
    gushort r, g, b;
-   gulong pixel[1];
+   unsigned long pixel[1];
 
    g_assert(cc != NULL);
 
@@ -1421,13 +1421,13 @@ void gdk_color_context_free_dither(GdkColorContext * cc)
    cc->fast_dither = NULL;
 }
 
-gulong
+unsigned long
 gdk_color_context_get_pixel_from_palette(GdkColorContext * cc,
                                          gushort * red,
                                          gushort * green,
                                          gushort * blue, gint * failed)
 {
-   gulong pixel = 0;
+   unsigned long pixel = 0;
    gint dif, dr, dg, db, j = -1;
    gint mindif = 0x7fffffff;
    gint err = 0, erg = 0, erb = 0;

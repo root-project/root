@@ -59,8 +59,8 @@
 #else	/* !G_DISABLE_CHECKS */
 static GPrivate* mem_chunk_recursion = NULL;
 #  define MEM_CHUNK_ROUTINE_COUNT()	GPOINTER_TO_UINT (g_private_get (mem_chunk_recursion))
-#  define ENTER_MEM_CHUNK_ROUTINE()	g_private_set (mem_chunk_recursion, GUINT_TO_POINTER (MEM_CHUNK_ROUTINE_COUNT () + 1))
-#  define LEAVE_MEM_CHUNK_ROUTINE()	g_private_set (mem_chunk_recursion, GUINT_TO_POINTER (MEM_CHUNK_ROUTINE_COUNT () - 1))
+#  define ENTER_MEM_CHUNK_ROUTINE()	g_private_set (mem_chunk_recursion, GUINT_TO_POINTER (MEM_CHUNK_ROUTINE_COUNT () + (uintptr_t)1))
+#  define LEAVE_MEM_CHUNK_ROUTINE()	g_private_set (mem_chunk_recursion, GUINT_TO_POINTER (MEM_CHUNK_ROUTINE_COUNT () - (uintptr_t)1))
 #endif	/* !G_DISABLE_CHECKS */
 
 #ifndef	REALLOC_0_WORKS

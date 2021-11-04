@@ -66,6 +66,12 @@ by Olivier Couet (package X11INT).
 #define IDC_HAND  MAKEINTRESOURCE(32649)
 #endif
 
+#ifdef _WIN64
+#define MAKELONGLONG(lo, hi) ((LONGLONG)lo + ((LONGLONG)hi << 32))
+#else
+#define MAKELONGLONG(lo, hi) MAKELONG(lo, hi)
+#endif
+
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
                   GdkGC          *gc,
@@ -379,10 +385,10 @@ static Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void SplitLong(Long_t ll, Long_t & i1, Long_t & i2)
+inline void SplitLong(Longptr_t ll, Longptr_t & i1, Longptr_t & i2)
 {
    union {
-      Long_t l;
+      Longptr_t l;
       Int_t i[2];
    } conv;
 
@@ -397,10 +403,10 @@ inline void SplitLong(Long_t ll, Long_t & i1, Long_t & i2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void AsmLong(Long_t i1, Long_t i2, Long_t & ll)
+inline void AsmLong(Longptr_t i1, Longptr_t i2, Longptr_t & ll)
 {
    union {
-      Long_t l;
+      Longptr_t l;
       Int_t i[2];
    } conv;
 
@@ -460,7 +466,7 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
       } else {
          strcpy(atomName, buffer);
       }
-      sprintf(propName, "#0x%0.4x", (unsigned) atomName);
+      sprintf(propName, "#0x%0.4tx", (ULongptr_t) atomName);
       _ChangeProperty(w, propName, (char *) data, nelements, type);
       free(atomName);
    }
@@ -488,7 +494,7 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
       handle = ::GetClipboardData(CF_TEXT);
       if (handle != NULL) {
          data = (char *) ::GlobalLock(handle);
-         *nitems_return = strlen(data);
+         *nitems_return = (ULong_t)strlen(data);
          *prop_return = (UChar_t *) malloc(*nitems_return + 1);
          destPtr = (char *) *prop_return;
          while (*data != '\0') {
@@ -1038,23 +1044,23 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    // Create cursors
    if (gEnv->GetValue("Win32.UseSysPointers", 0)) {
       fUseSysPointers = kTRUE;
-      fCursors[kBottomLeft] = gdk_syscursor_new((ULong_t)IDC_SIZENESW);
-      fCursors[kBottomRight] = gdk_syscursor_new((ULong_t)IDC_SIZENWSE);
-      fCursors[kTopLeft] = gdk_syscursor_new((ULong_t)IDC_SIZENWSE);
-      fCursors[kTopRight] = gdk_syscursor_new((ULong_t)IDC_SIZENESW);
-      fCursors[kBottomSide] =  gdk_syscursor_new((ULong_t)IDC_SIZENS);
-      fCursors[kLeftSide] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
-      fCursors[kTopSide] = gdk_syscursor_new((ULong_t)IDC_SIZENS);
-      fCursors[kRightSide] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
-      fCursors[kMove] = gdk_syscursor_new((ULong_t)IDC_SIZEALL);
-      fCursors[kCross] =gdk_syscursor_new((ULong_t)IDC_CROSS);
-      fCursors[kArrowHor] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
-      fCursors[kArrowVer] = gdk_syscursor_new((ULong_t)IDC_SIZENS);
-      fCursors[kHand] = gdk_syscursor_new((ULong_t)IDC_HAND);
-      fCursors[kPointer] = gdk_syscursor_new((ULong_t)IDC_ARROW);
-      fCursors[kCaret] =  gdk_syscursor_new((ULong_t)IDC_IBEAM);
-      fCursors[kWatch] = gdk_syscursor_new((ULong_t)IDC_WAIT);
-      fCursors[kNoDrop] = gdk_syscursor_new((ULong_t)IDC_NO);
+      fCursors[kBottomLeft] = gdk_syscursor_new((ULongptr_t)IDC_SIZENESW);
+      fCursors[kBottomRight] = gdk_syscursor_new((ULongptr_t)IDC_SIZENWSE);
+      fCursors[kTopLeft] = gdk_syscursor_new((ULongptr_t)IDC_SIZENWSE);
+      fCursors[kTopRight] = gdk_syscursor_new((ULongptr_t)IDC_SIZENESW);
+      fCursors[kBottomSide] =  gdk_syscursor_new((ULongptr_t)IDC_SIZENS);
+      fCursors[kLeftSide] = gdk_syscursor_new((ULongptr_t)IDC_SIZEWE);
+      fCursors[kTopSide] = gdk_syscursor_new((ULongptr_t)IDC_SIZENS);
+      fCursors[kRightSide] = gdk_syscursor_new((ULongptr_t)IDC_SIZEWE);
+      fCursors[kMove] = gdk_syscursor_new((ULongptr_t)IDC_SIZEALL);
+      fCursors[kCross] =gdk_syscursor_new((ULongptr_t)IDC_CROSS);
+      fCursors[kArrowHor] = gdk_syscursor_new((ULongptr_t)IDC_SIZEWE);
+      fCursors[kArrowVer] = gdk_syscursor_new((ULongptr_t)IDC_SIZENS);
+      fCursors[kHand] = gdk_syscursor_new((ULongptr_t)IDC_HAND);
+      fCursors[kPointer] = gdk_syscursor_new((ULongptr_t)IDC_ARROW);
+      fCursors[kCaret] =  gdk_syscursor_new((ULongptr_t)IDC_IBEAM);
+      fCursors[kWatch] = gdk_syscursor_new((ULongptr_t)IDC_WAIT);
+      fCursors[kNoDrop] = gdk_syscursor_new((ULongptr_t)IDC_NO);
    }
    else {
       fUseSysPointers = kFALSE;
@@ -1930,7 +1936,7 @@ XColor_t &TGWin32::GetColor(Int_t cid)
    XColor_t *col = (XColor_t*) fColors->GetValue(cid);
    if (!col) {
       col = new XColor_t;
-      fColors->Add(cid, (Long_t) col);
+      fColors->Add(cid, (Longptr_t) col);
    }
    return *col;
 }
@@ -2145,7 +2151,7 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 /// Open window and return window number.
 /// Return -1 if window initialization fails.
 
-Int_t TGWin32::InitWindow(ULong_t win)
+Int_t TGWin32::InitWindow(ULongptr_t win)
 {
    GdkWindowAttr attributes;
    unsigned long attr_mask = 0;
@@ -2225,8 +2231,8 @@ Int_t TGWin32::InitWindow(ULong_t win)
    ::BringWindowToTop(window);
 
    if (!fUseSysPointers) {
-      ::SetClassLong(window, GCL_HCURSOR,
-                    (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
+      ::SetClassLongPtr(window, GCLP_HCURSOR,
+                    (LONG_PTR)GDK_CURSOR_XID(fCursors[kPointer]));
    }
 
    // Initialise the window structure
@@ -2314,7 +2320,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          gdk_gc_set_foreground((GdkGC *) gGCecho, &GetColor(0).color);
       } else {
          if (fUseSysPointers)
-            cursor = gdk_syscursor_new((ULong_t)IDC_CROSS);
+            cursor = gdk_syscursor_new((ULongptr_t)IDC_CROSS);
          else
             cursor = gdk_cursor_new((GdkCursorType)GDK_CROSSHAIR);
          gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)cursor);
@@ -2458,15 +2464,15 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    GdkEvent *event;
    KeySym keysym;
    int key = -1;
-   int len_text = strlen(text);
-   int nt;                      // defined length of text
-   int pt;                      // cursor position in text
+   size_t len_text = strlen(text);
+   size_t nt;                      // defined length of text
+   size_t pt;                      // cursor position in text
 
    CurWnd = (GdkWindow *)gCws->window;
    // change the cursor shape
    if (cursor == NULL) {
       if (fUseSysPointers)
-         cursor = gdk_syscursor_new((ULong_t)IDC_HELP);
+         cursor = gdk_syscursor_new((ULongptr_t)IDC_HELP);
       else
          cursor = gdk_cursor_new((GdkCursorType)GDK_QUESTION_ARROW);
    }
@@ -2488,7 +2494,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
       char keybuf[8];
       char nbytes;
       UInt_t dx, ddx, h;
-      int i;
+      size_t i;
 
       if (EventsPending()) {
          event = gdk_event_get();
@@ -3952,7 +3958,8 @@ void TGWin32::SetOpacity(Int_t percent)
    if (percent == 0) return;
 
    // if 100 percent then just make white
-   ULong_t *orgcolors = 0, *tmpc = 0;
+   ULong_t *orgcolors = 0;
+   ULong_t *tmpc = 0;
    Int_t maxcolors = 0, ncolors, ntmpc = 0;
 
    // save previous allocated colors, delete at end when not used anymore
@@ -4889,8 +4896,8 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
       }
    }
    if (!fUseSysPointers) {
-      ::SetClassLong((HWND)GDK_DRAWABLE_XID(newWin), GCL_HCURSOR,
-                     (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
+      ::SetClassLongPtr((HWND)GDK_DRAWABLE_XID(newWin), GCLP_HCURSOR,
+                     (LONG_PTR)GDK_CURSOR_XID(fCursors[kPointer]));
    }
    return (Window_t) newWin;
 }
@@ -5839,10 +5846,12 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
 
 Int_t TGWin32::EventsPending()
 {
-   Int_t ret;
+   Int_t ret = 0;
 
    TGWin32MainThread::LockMSG();
-   ret = (Int_t)gdk_event_queue_find_first();
+   GList *list = gdk_event_queue_find_first();
+   if (list != nullptr)
+      ret = g_list_length(list);
    TGWin32MainThread::UnlockMSG();
 
    return ret;
@@ -6001,7 +6010,7 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
       }
       if (ev.fType == kSelectionNotify) {
          xev.selection.window = (GdkWindow *) ev.fUser[0];
-         xev.selection.requestor = (guint32) ev.fUser[0];
+         xev.selection.requestor = (ULongptr_t) ev.fUser[0];
          xev.selection.selection = (GdkAtom) ev.fUser[1];
          xev.selection.target = (GdkAtom) ev.fUser[2];
          xev.selection.property = (GdkAtom) ev.fUser[3];
@@ -6129,7 +6138,7 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fType = kClientMessage;
          ev.fFormat = 32;
          ev.fHandle = gWM_DELETE_WINDOW;
-         ev.fUser[0] = (Long_t) gWM_DELETE_WINDOW;
+         ev.fUser[0] = (Longptr_t) gWM_DELETE_WINDOW;
          if (sizeof(ev.fUser[0]) > 4) {
             AsmLong(xev.client.data.l[1], xev.client.data.l[3],
                     ev.fUser[1]);
@@ -6167,9 +6176,9 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          if (xev.key.length > 2) ev.fUser[4] = xev.key.string[2];
          HWND tmpwin = (HWND) GetWindow((HWND) GDK_DRAWABLE_XID((GdkWindow *)xev.key.window), GW_CHILD);
          if (tmpwin) {
-            ev.fUser[0] = (ULong_t) gdk_xid_table_lookup((HANDLE)tmpwin);
+            ev.fUser[0] = (ULongptr_t) gdk_xid_table_lookup((HANDLE)tmpwin);
          } else {
-            ev.fUser[0] = (ULong_t) xev.key.window;
+            ev.fUser[0] = (ULongptr_t) xev.key.window;
          }
       }
       if (ev.fType == kButtonPress || ev.fType == kButtonRelease) {
@@ -6185,9 +6194,9 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          tpoint.y = xev.button.y;
          HWND tmpwin = ChildWindowFromPoint((HWND) GDK_DRAWABLE_XID((GdkWindow *)xev.button.window), tpoint);
          if (tmpwin) {
-             ev.fUser[0] = (ULong_t) gdk_xid_table_lookup((HANDLE)tmpwin);
+             ev.fUser[0] = (ULongptr_t) gdk_xid_table_lookup((HANDLE)tmpwin);
          } else {
-            ev.fUser[0] = (ULong_t) 0;
+            ev.fUser[0] = (ULongptr_t) 0;
          }
       }
       if (ev.fType == kMotionNotify) {
@@ -6203,9 +6212,9 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          tpoint.y = xev.button.y;
          HWND tmpwin = ChildWindowFromPoint((HWND) GDK_DRAWABLE_XID((GdkWindow *)xev.motion.window), tpoint);
          if (tmpwin) {
-             ev.fUser[0] = (ULong_t)gdk_xid_table_lookup((HANDLE)tmpwin);
+             ev.fUser[0] = (ULongptr_t)gdk_xid_table_lookup((HANDLE)tmpwin);
          } else {
-            ev.fUser[0] = (ULong_t) xev.motion.window;
+            ev.fUser[0] = (ULongptr_t) xev.motion.window;
          }
       }
       if (ev.fType == kEnterNotify || ev.fType == kLeaveNotify) {
@@ -6256,14 +6265,14 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
       }
       if (ev.fType == kSelectionRequest) {
          ev.fWindow = (Window_t) xev.selection.window;
-         ev.fUser[0] = (ULong_t) xev.selection.window;
+         ev.fUser[0] = (ULongptr_t) xev.selection.window;
          ev.fUser[1] = xev.selection.selection;
          ev.fUser[2] = xev.selection.target;
          ev.fUser[3] = xev.selection.property;
       }
       if (ev.fType == kSelectionNotify) {
          ev.fWindow = (Window_t) xev.selection.window;
-         ev.fUser[0] = (ULong_t) xev.selection.window;
+         ev.fUser[0] = (ULongptr_t) xev.selection.window;
          ev.fUser[1] = xev.selection.selection;
          ev.fUser[2] = xev.selection.target;
          ev.fUser[3] = xev.selection.property;
@@ -6285,9 +6294,9 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          tpoint.y = xev.scroll.y;
          HWND tmpwin = ChildWindowFromPoint((HWND) GDK_DRAWABLE_XID((GdkWindow *)xev.scroll.window), tpoint);
          if (tmpwin) {
-             ev.fUser[0] = (ULong_t)gdk_xid_table_lookup((HANDLE)tmpwin);
+             ev.fUser[0] = (ULongptr_t)gdk_xid_table_lookup((HANDLE)tmpwin);
          } else {
-            ev.fUser[0] = (ULong_t) 0;
+            ev.fUser[0] = (ULongptr_t) 0;
          }
       }
    }
@@ -6529,7 +6538,7 @@ void TGWin32::SetClassHints(Window_t id, char *className, char *resourceName)
 
    char *class_string;
    char *s;
-   int len_nm, len_cl;
+   size_t len_nm, len_cl;
    GdkAtom prop;
 
    prop = gdk_atom_intern("WM_CLASS", kFALSE);
@@ -6554,7 +6563,7 @@ void TGWin32::SetClassHints(Window_t id, char *className, char *resourceName)
                             (Atom) XA_WM_CLASS, (Atom) XA_WM_CLASS, 8,
                             GDK_PROP_MODE_REPLACE,
                             (unsigned char *) class_string,
-                            len_nm + len_cl + 2);
+                            (Int_t)(len_nm + len_cl + 2));
       free(class_string);
    }
 }
@@ -7419,19 +7428,19 @@ Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    // otherwise, it fails...
    ::SetBitmapDimensionEx(hbitmap,width, height, &size);
 
-   return (Pixmap_t)gdk_pixmap_foreign_new((guint32)hbitmap);
+   return (Pixmap_t)gdk_pixmap_foreign_new((ULongptr_t)hbitmap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///register pixmap created by TGWin32GLManager
 
-Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
+Int_t TGWin32::AddPixmap(Window_t pix, UInt_t w, UInt_t h)
 {
    HBITMAP hBmp = reinterpret_cast<HBITMAP>(pix);
    SIZE sz = SIZE();
 
    SetBitmapDimensionEx(hBmp, w, h, &sz);
-   GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<guint32>(hBmp));
+   GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<ULongptr_t>(hBmp));
 
    Int_t wid = 0;
    for(; wid < fMaxNumberOfWindows; ++wid)
@@ -7468,7 +7477,7 @@ Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Register a window created by Qt as a ROOT window (like InitWindow()).
 
-Int_t TGWin32::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
+Int_t TGWin32::AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h)
 {
    Int_t wid;
    // Select next free window number
@@ -7499,7 +7508,7 @@ Int_t TGWin32::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
       goto again;
    }
 
-   gCws->window = gdk_window_foreign_new((guint32)qwid);
+   gCws->window = gdk_window_foreign_new(qwid);
 
    gCws->drawing       = gCws->window;
    gCws->buffer        = 0;
@@ -7516,7 +7525,7 @@ Int_t TGWin32::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a window created by Qt (like CloseWindow1()).
 
-void TGWin32::RemoveWindow(ULong_t qwid)
+void TGWin32::RemoveWindow(ULongptr_t qwid)
 {
    int wid;
 
@@ -7574,11 +7583,11 @@ UInt_t TGWin32::ScreenWidthMM() const
 void TGWin32::DeleteProperty(Window_t win, Atom_t& prop)
 {
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
-   Atom_t atom = (Atom_t)GetProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
+   Atom_t atom = (Atom_t)GetProp(hWnd,(LPCTSTR)MAKELONGLONG(prop,0));
    if (atom != 0) {
       GlobalDeleteAtom(atom);
    }
-   RemoveProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
+   RemoveProp(hWnd,(LPCTSTR)MAKELONGLONG(prop,0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7605,7 +7614,7 @@ Int_t TGWin32::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t len,
       return 0;
    if (prop == dndtypelist) {
       *act_type = XA_ATOM;
-      *prop_list = (unsigned char *)GetProp(hWnd, (LPCTSTR)MAKELONG(prop,0));
+      *prop_list = (unsigned char *)GetProp(hWnd, (LPCTSTR)MAKELONGLONG(prop,0));
       for (n = 0; prop_list[n]; n++);
       *nitems = n;
       return n;
@@ -7715,7 +7724,7 @@ void TGWin32::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
 void TGWin32::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
 {
    SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)win),
-           (LPCTSTR)MAKELONG(prop,0),
+           (LPCTSTR)MAKELONGLONG(prop,0),
            (HANDLE)typelist);
 }
 
@@ -7743,7 +7752,7 @@ Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input,
    while (hwnd) {
       GetWindowRect(hwnd, &rect);
       if (PtInRect(&rect, cpt)) {
-         if (GetProp(hwnd,(LPCTSTR)MAKELONG(dndaware,0))) {
+         if (GetProp(hwnd,(LPCTSTR)MAKELONGLONG(dndaware,0))) {
             win = (Window_t) gdk_xid_table_lookup(hwnd);
             if (win && win != dragwin && win != input)
                return win;
@@ -7754,7 +7763,7 @@ Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input,
             point = cpt;
             ::MapWindowPoints(NULL, hwndt, &point, 1);
             hwndc = ChildWindowFromPoint (hwndt, point);
-            if (GetProp(hwnd,(LPCTSTR)MAKELONG(dndaware,0))) {
+            if (GetProp(hwnd,(LPCTSTR)MAKELONGLONG(dndaware,0))) {
                win = (Window_t) gdk_xid_table_lookup(hwndc);
                if (win && win != dragwin && win != input)
                   return win;
@@ -7765,7 +7774,7 @@ Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input,
                done = TRUE;
             else
                hwndt = hwndc;
-            if (GetProp(hwndt,(LPCTSTR)MAKELONG(dndaware,0))) {
+            if (GetProp(hwndt,(LPCTSTR)MAKELONGLONG(dndaware,0))) {
                win = (Window_t) gdk_xid_table_lookup(hwndt);
                if (win && win != dragwin && win != input)
                   return win;
@@ -7789,7 +7798,7 @@ Bool_t TGWin32::IsDNDAware(Window_t win, Atom_t *typelist)
    Atom_t dndaware = InternAtom("XdndAware", kFALSE);
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
    while (window) {
-      version = (Atom_t)GetProp(window,(LPCTSTR)MAKELONG(dndaware,0));
+      version = (Atom_t)GetProp(window,(LPCTSTR)MAKELONGLONG(dndaware,0));
       if (version) return kTRUE;
       window = ::GetParent(window);
    }
@@ -7811,7 +7820,7 @@ void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
                  dwStyle | WS_EX_ACCEPTFILES);
    Atom_t dndaware = InternAtom("XdndAware", kFALSE);
    SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
-           (LPCTSTR)MAKELONG(dndaware,0),
+           (LPCTSTR)MAKELONGLONG(dndaware,0),
            (HANDLE)XDND_PROTOCOL_VERSION);
 
    if (typelist == 0)
@@ -7819,7 +7828,7 @@ void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
    for (n = 0; typelist[n]; n++);
    Atom_t dndtypelist = InternAtom("XdndTypeList", kFALSE);
    SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
-           (LPCTSTR)MAKELONG(dndtypelist,0),
+           (LPCTSTR)MAKELONGLONG(dndtypelist,0),
            (HANDLE)typelist);
 
 }

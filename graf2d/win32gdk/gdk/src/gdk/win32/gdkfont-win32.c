@@ -1528,7 +1528,7 @@ gint _gdk_font_strlen(GdkFont * font, const gchar * str)
    return strlen(str);
 }
 
-gint gdk_font_id(const GdkFont * font)
+glong gdk_font_id(const GdkFont * font)
 {
    const GdkFontPrivateWin32 *private;
 
@@ -1537,7 +1537,7 @@ gint gdk_font_id(const GdkFont * font)
    private = (const GdkFontPrivateWin32 *) font;
 
    if (font->type == GDK_FONT_FONT)
-      return (gint) ((GdkWin32SingleFont *) private->fonts->data)->xfont;
+      return (glong) ((GdkWin32SingleFont *) private->fonts->data)->xfont;
    else
       return 0;
 }
