@@ -230,7 +230,7 @@ void TGToolBar::ButtonPressed()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)a->Value();
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Pressed(id);
    }
 }
@@ -245,7 +245,7 @@ void TGToolBar::ButtonReleased()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)a->Value();
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Released(id);
    }
 }
@@ -260,7 +260,7 @@ void TGToolBar::ButtonClicked()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)a->Value();
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Clicked(id);
    }
 }
