@@ -40,8 +40,6 @@ if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
   set(nmcxxflags "${nmcxxflags} -D_WIN64")
 endif()
 
-string(REPLACE "-std=c++14" "" nmcxxflags "${nmcxxflags}")
-
 # Build iconv
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
