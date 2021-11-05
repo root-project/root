@@ -500,8 +500,10 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
 
    if (customCols.IsAlias(definedCol)) {
       error = "An alias with that name, pointing to column \"" + customCols.ResolveAlias(definedCol) +
-              "\", already exists. Aliases cannot be Redefined.";
-   } else {
+              "\", already exists. Aliases cannot be Redefined or Varied.";
+   }
+
+   if (error.empty()) {
       const bool isAlreadyDefined = customCols.HasName(definedCol);
       // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
       // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
@@ -515,7 +517,7 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
    }
 
    if (!error.empty()) {
-      error = "RDataFrame::" + where + ": cannot redefine column \"" + definedCol + "\". " + error;
+      error = "RDataFrame::" + where + ": cannot redefine or vary column \"" + definedCol + "\". " + error;
       throw std::runtime_error(error);
    }
 }
