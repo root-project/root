@@ -125,6 +125,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveViewer.cxx
     src/REveVSD.cxx
     src/REveVSDStructs.cxx
+  DICTIONARY_OPTIONS
+    -mByproduct Json
   DEPENDENCIES
     Core
     Geom
