@@ -98,13 +98,13 @@ JSROOT.define(['d3'], (d3) => {
          'oCourier New', 'bCourier New', 'boCourier New',
          'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol',
          'Verdana', 'iVerdana', 'bVerdana', 'biVerdana'],
-      // taken from https://www.math.utah.edu/~beebe/fonts/afm-widths.html
-      root_fonts_aver_width: [0.537, 0.510,
-         0.535, 0.520, 0.537,
-         0.54, 0.556, 0.56, 0.6,
-         0.6, 0.6, 0.6,
-         0.587, 0.514, 0.896, 0.587,
-         0.55, 0.55, 0.55, 0.55 ]
+      // taken from symbols.html, counted only for letters and digits
+    root_fonts_aver_width: [0.5778,0.5314,
+         0.5809, 0.5540, 0.5778,
+         0.5783,0.6034,0.6030,0.6003,
+         0.6004,0.6003,0.6005,
+         0.5564,0.5521,0.5664,0.5564,
+         0.5664,0.5495,0.5748,0.5578]
    };
 
    jsrp.createMenu = function(evnt, handler, menuname) {
@@ -1098,7 +1098,7 @@ JSROOT.define(['d3'], (d3) => {
       if (fontIndex !== null) {
 
          let indx = Math.floor(fontIndex / 10),
-             fontName = jsrp.root_fonts[indx] || "";
+             fontName = jsrp.root_fonts[indx] || "Arial";
 
          while (fontName.length > 0) {
             if (fontName[0] === 'b')
@@ -1121,7 +1121,7 @@ JSROOT.define(['d3'], (d3) => {
          this.name = name;
          this.style = style || null;
          this.weight = weight || null;
-         this.aver_width = 0.55;
+         this.aver_width = this.weight ? 0.58 : 0.55;
       }
 
       this.func = this.setFont.bind(this);
@@ -1179,9 +1179,22 @@ JSROOT.define(['d3'], (d3) => {
                .attr("font-style", null);
    }
 
-   /** @summary required for reasonable scaling of text in node.js
-     * @returns approximate width of given label */
-   FontHandler.prototype.approxTextWidth = function(label) { return label.length * this.size * this.aver_width; }
+   /** @summary Returns true in case of monospace font
+     * @private */
+   FontHandler.prototype.isMonospace = function() {
+      let n = this.name.toLowerCase();
+      return (n.indexOf("courier") == 0) || (n == "monospace") || (n == "monaco");
+   }
+
+   /** @summary Return full font declaration which can be set as font property like "12pt Arial bold"
+     * @private */
+   FontHandler.prototype.getFontHtml = function() {
+      let res = Math.round(this.size) + "pt " + this.name;
+      if (this.weight) res += " " + this.weight;
+      if (this.style) res += " " + this.style;
+      return res;
+   }
+
 
   // ===========================================================================
 
@@ -2693,6 +2706,50 @@ JSROOT.define(['d3'], (d3) => {
          if (trans) txt.attr("transform", trans);
       });
 
+      // finally process TLatex drawings
+      all_args.forEach(arg => {
+         if (!arg.txt_g) return;
+         any_text = true;
+         let txt_g = arg.txt_g;
+         delete arg.txt_g;
+         txt_g.attr('visibility', null);
+
+         let box = arg.text_rect;
+
+         if (arg.width) {
+            // adjust x position when scale into specified rectangle
+            if (arg.align[0] == "middle") arg.x += arg.width / 2; else
+               if (arg.align[0] == "end") arg.x += arg.width;
+         }
+
+         arg.dx = arg.dy = 0;
+
+         let scale = (f > 0) && (Math.abs(1-f)>0.01) ? 1/f : 1;
+
+         arg.dx = ((arg.align[0] == "middle") ? -0.5 : ((arg.align[0] == "end") ? -1 : 0)) * box.width * scale;
+
+         if (arg.height) {
+            if (arg.align[1].indexOf('bottom') === 0) arg.y += arg.height; else
+               if (arg.align[1] == 'middle') arg.y += arg.height / 2;
+         }
+
+         if (arg.align[1] == 'top')
+            arg.dy = -box.y1*scale;
+         else if (arg.align[1] == 'bottom')
+            arg.dy = -box.y2*scale;
+         else if (arg.align[1] == 'middle')
+            arg.dy = -0.5*(box.y1 + box.y2)*scale;
+
+         if (!arg.rotate) { arg.x += arg.dx; arg.y += arg.dy; arg.dx = arg.dy = 0; }
+
+         let trans = (arg.x || arg.y) ? "translate(" + Math.round(arg.x) + "," + Math.round(arg.y) + ")" : "";
+         if (arg.rotate) trans += " rotate(" + Math.round(arg.rotate) + ")";
+         if (scale !== 1) trans += ` scale(${scale.toFixed(3)})`;
+         if (arg.dx || arg.dy) trans += " translate(" + Math.round(arg.dx) + "," + Math.round(arg.dy) + ")";
+         if (trans) txt_g.attr("transform", trans);
+      });
+
+
       // when no any normal text drawn - remove font attributes
       if (!any_text)
          font.clearFont(draw_g);
@@ -2709,7 +2766,7 @@ JSROOT.define(['d3'], (d3) => {
    function _postprocessText(painter, txt_node, arg) {
       // complete rectangle with very rougth size estimations
       arg.box = !JSROOT.nodejs && !JSROOT.settings.ApproxTextSize && !arg.fast ? jsrp.getElementRect(txt_node, 'bbox') :
-               (arg.text_rect || { height: arg.font_size * 1.2, width: arg.font.approxTextWidth(arg.text) });
+               (arg.text_rect || { height: arg.font_size * 1.2, width: arg.text.length * arg.font_size * arg.font.aver_width });
 
       txt_node.attr('visibility', 'hidden'); // hide elements until text drawing is finished
 
@@ -2776,7 +2833,7 @@ JSROOT.define(['d3'], (d3) => {
             align[1] = 'bottom-base';
          else if ((arg.align % 10) == 3)
             align[1] = 'top';
-      } else if (arg.align && (typeof arg.align == 'object') && arg.align.length == 2) {
+      } else if (arg.align && (typeof arg.align == 'object') && (arg.align.length == 2)) {
          align = arg.align;
       }
 
@@ -2826,12 +2883,19 @@ JSROOT.define(['d3'], (d3) => {
 
          if (!arg.plain || arg.simple_latex) {
             JSROOT.require(['latex']).then(ltx => {
-               if (arg.simple_latex)
+               if (arg.simple_latex || ltx.isPlainText(arg.text)) {
+                  arg.simple_latex = true;
                   ltx.producePlainText(this, arg.txt_node, arg);
-               else
-                  ltx.produceLatex(this, arg.txt_node, arg);
+               } else if (JSROOT.settings.Latex === JSROOT.constants.Latex.Old) {
+                  ltx.produceOldLatex(this, arg.txt_node, arg);
+               } else {
+                  arg.txt_node.remove(); // just remove text node,
+                  delete arg.txt_node;
+                  arg.txt_g = arg.draw_g.append("svg:g");
+                  ltx.produceLatex(this, arg.txt_g, arg);
+               }
                arg.ready = true;
-               _postprocessText(this, arg.txt_node, arg);
+               _postprocessText(this, arg.txt_g || arg.txt_node, arg);
 
                if (arg.draw_g.property('draw_text_completed'))
                   _checkAllTextDrawing(this, arg.draw_g); // check if all other elements are completed

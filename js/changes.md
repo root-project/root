@@ -13,6 +13,8 @@
 10. Optmize TH2 col drawings to produce smaller SVG
 11. For sub-pads containers use svg:g with clip-path instead of svg:svg
 12. Let skip HEAD requests when reading files (#223)
+13. Fully redesing TLatex parsing, use many svg elements instead of plain text/tspan
+14. Make TLatex reliably working in node.js, does not depend from availability of canvas component
 
 
 ## Changes in 6.2.1

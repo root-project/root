@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "28/10/2021";
+   JSROOT.version_date = "5/11/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -255,21 +255,26 @@
         * @private */
       Latex: {
          /** @summary do not use Latex at all for text drawing */
-         Off: 0,
+         Off: 0, ///
          /** @summary convert only known latex symbols */
          Symbols: 1,
-         /** @summary normal latex processing */
+         /** @summary normal latex processing with svg */
          Normal: 2,
          /** @summary use MathJax for complex cases, otherwise simple SVG text */
          MathJax: 3,
          /** @summary always use MathJax for text rendering */
          AlwaysMathJax: 4,
+         /** @summary old latex processing with tspan */
+         Old: 5,
          fromString: function(s) {
             if (!s || (typeof s !== 'string'))
                return this.Normal;
             switch(s){
                case "off": return this.Off;
                case "symbols": return this.Symbols;
+               case "old": return this.Old;
+               case "exp":
+               case "experimental": return this.Normal;
                case "MathJax":
                case "mathjax":
                case "math": return this.MathJax;
@@ -278,7 +283,7 @@
                case "alwaysmathjax": return this.AlwaysMathJax;
             }
             let code = parseInt(s);
-            return (Number.isInteger(code) && (code >= this.Off) && (code <= this.AlwaysMathJax)) ? code : this.Normal;
+            return (Number.isInteger(code) && (code >= this.Off) && (code <= this.Old)) ? code : this.Normal;
          }
       }
    };

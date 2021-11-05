@@ -2713,7 +2713,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // TAxis object of histogram, where user range can be stored
       if (taxis) {
          if ((taxis.fFirst === taxis.fLast) || !taxis.TestBit(JSROOT.EAxisBits.kAxisRange) ||
-             ((taxis.fFirst<=1) && (taxis.fLast>=nbin))) taxis = undefined;
+             ((taxis.fFirst <= 1) && (taxis.fLast >= nbin))) taxis = undefined;
       }
 
       if (side == "left") {
@@ -2777,9 +2777,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           taxis = histo ? histo['f'+arg+"axis"] : null;
       if (!taxis) return;
 
-      let curr = "[1," + taxis.fNbins+"]";
+      let curr = "[1," + taxis.fNbins + "]";
       if (taxis.TestBit(JSROOT.EAxisBits.kAxisRange))
-          curr = "[" +taxis.fFirst+"," + taxis.fLast+"]";
+          curr = "[" + taxis.fFirst +"," + taxis.fLast +"]";
 
       menu.input(`Enter user range for axis ${arg} like [1,${taxis.fNbins}]`, curr).then(res => {
          if (!res) return;
@@ -4694,18 +4694,31 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
+
+      let first = 0, last = -1;
       if (this.is_projection == "X") {
          for (let i = 0; i < this.nbinsx; ++i) {
             let sum = 0;
             for (let j = jj1; j < jj2; ++j) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(i+1, sum);
          }
+         if (this.tt_handle) { first = this.tt_handle.i1+1; last = this.tt_handle.i2; }
       } else {
          for (let j = 0; j < this.nbinsy; ++j) {
             let sum = 0;
-            for (let i=ii1;i<ii2;++i) sum += histo.getBinContent(i+1,j+1);
+            for (let i = ii1; i < ii2; ++i) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(j+1, sum);
          }
+         if (this.tt_handle) { first = this.tt_handle.j1+1; last = this.tt_handle.j2; }
+      }
+
+      if (first < last) {
+         let axis = this.proj_hist.fXaxis
+         axis.fFirst = first;
+         axis.fLast = last;
+
+         if (((axis.fFirst==1) && (axis.fLast==axis.fNbins)) == axis.TestBit(JSROOT.EAxisBits.kAxisRange))
+            axis.InvertBit(JSROOT.EAxisBits.kAxisRange);
       }
 
       // reset statistic before display

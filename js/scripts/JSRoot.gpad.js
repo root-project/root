@@ -1224,11 +1224,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (opts.check_pad_range) {
          // take zooming out of pad or axis attributes
 
-         let applyAxisZoom = name => {
+         const applyAxisZoom = name => {
             if (this.zoomChangedInteractive(name)) return;
             this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
 
-            let axis = this.getAxis(name);
+            const axis = this.getAxis(name);
+
             if (axis && axis.TestBit(JSROOT.EAxisBits.kAxisRange)) {
                if ((axis.fFirst !== axis.fLast) && ((axis.fFirst > 1) || (axis.fLast < axis.fNbins))) {
                   this[`zoom_${name}min`] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
