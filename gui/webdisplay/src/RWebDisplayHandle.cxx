@@ -547,6 +547,9 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
 {
    std::unique_ptr<RWebDisplayHandle> handle;
 
+   if (args.GetBrowserKind() == RWebDisplayArgs::kOff)
+      return handle;
+
    auto try_creator = [&](std::unique_ptr<Creator> &creator) {
       if (!creator || !creator->IsActive())
          return false;

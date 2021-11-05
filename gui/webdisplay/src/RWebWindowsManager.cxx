@@ -234,6 +234,9 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
 
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
+   if (gROOT->GetWebDisplay() == "off")
+      return false;
+
    // explicitly protect server creation
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
@@ -509,7 +512,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
 
    // for embedded window no any browser need to be started
-   if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
+   // also when off is specified, no browser should be started
+   if ((user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded) || (user_args.GetBrowserKind() == RWebDisplayArgs::kOff))
       return 0;
 
    // catch window showing, used by the RBrowser to embed some of ROOT widgets

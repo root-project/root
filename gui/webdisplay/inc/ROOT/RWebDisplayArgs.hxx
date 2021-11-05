@@ -42,6 +42,7 @@ public:
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
+      kOff,      ///< disable web display, do not start any browser
       kCustom    ///< custom web browser, execution string should be provided
    };
 
