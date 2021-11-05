@@ -19,6 +19,9 @@ if(NOT MSVC)
     ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
 endif()
 
+# @pythonization decorator
+ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
+
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
