@@ -401,7 +401,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          TString argw;
          if (gROOT->IsBatch()) argw = "batch";
          if (*opt == '=') argw.Append(opt+1);
-         if (gSystem->Load("libROOTWebDisplay") >= 0) {
+         if (argw == "off") {
+            gROOT->SetWebDisplay(argw.Data());
+            gEnv->SetValue("Browser.Name", "TRootBrowser"); // force usage of TBrowser back
+         } else if (gSystem->Load("libROOTWebDisplay") >= 0) {
             gROOT->SetWebDisplay(argw.Data());
             gEnv->SetValue("Gui.Factory", "web");
          } else {
