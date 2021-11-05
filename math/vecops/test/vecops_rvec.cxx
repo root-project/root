@@ -13,6 +13,7 @@
 #include <sstream>
 #include <cmath>
 
+using namespace ROOT;
 using namespace ROOT::VecOps;
 
 void CheckEqual(const ROOT::RVecF &a, const ROOT::RVecF &b, std::string_view msg = "")
@@ -953,6 +954,17 @@ TEST(VecOps, Where)
    auto v6 = Where(v0 == 2 || v0 == 4, -1.0f, 1.0f);
    RVec<float> ref4{1, -1, 1, -1};
    CheckEqual(v6, ref4);
+
+   // Two temporary vectors as arguments
+   auto v7 = Where(v0 > 1 && v0 < 4, RVecF{1, 2, 3, 4}, RVecF{-1, -2, -3, -4});
+   RVecF ref5{-1, 2, 3, -4};
+   CheckEqual(v3, ref1);
+
+   // Scalar value of a different type
+   auto v8 = Where(v0 > 1, v0, -1);
+   CheckEqual(v8, RVecF{-1, 2, 3, 4});
+   auto v9 = Where(v0 > 1, -1, v0);
+   CheckEqual(v9, RVecF{1, -1, -1, -1});
 }
 
 TEST(VecOps, AtWithFallback)
