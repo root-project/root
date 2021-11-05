@@ -595,6 +595,7 @@ int G__cachingstat(const char *path, struct stat *buf) {
     e._errno = errno;
   }
   e.ctime = time(NULL);
+  memcpy(buf, &e.info, sizeof(struct stat));
   return e.retcode;
 }
 
