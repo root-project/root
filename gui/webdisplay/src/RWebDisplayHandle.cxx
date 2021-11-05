@@ -387,11 +387,11 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
 #ifdef _MSC_VER
    fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
    fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "$prog --headless --disable-gpu $geometry $url &");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url &"); // & in windows mean usage of spawn
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --incognito --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "fork: --headless --incognito --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --incognito --app=\'$url\' &");
+   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "fork: --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --new-window --app=\'$url\' &");
 #endif
 }
 
