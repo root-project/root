@@ -211,6 +211,31 @@ Decl *RedeclarableTemplateDecl::loadLazySpecializationImpl(
   return getASTContext().getExternalSource()->GetExternalDecl(ID);
 }
 
+/// Provide a tighter check than the ODRHash equivalence, by comparing
+/// the specialization's template arguments ("structurally") with the
+/// expected arguments.
+static bool
+TemplateSpecArgListStructurallyEquals(Decl *Spec,
+                                      ArrayRef<TemplateArgument> Args) {
+  const TemplateArgumentList *LoadedArgs = nullptr;
+  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(Spec)) {
+    LoadedArgs = &CTSD->getTemplateArgs();
+  } else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(Spec)) {
+    LoadedArgs = &VTSD->getTemplateArgs();
+  } else if (auto *FD = dyn_cast<FunctionDecl>(Spec)) {
+    LoadedArgs = FD->getTemplateSpecializationArgs();
+  } else if (auto *TAD = dyn_cast<TypeAliasDecl>(Spec)) {
+    // FIXME: LoadedArgs = &TAD->getTemplateArgs();
+    return true;
+  }
+  if (Args.size() != LoadedArgs->size())
+    return false;
+  for (int I = 0; I < Args.size(); ++I)
+    if (!Args[I].structurallyEquals((*LoadedArgs)[I]))
+      return false;
+  return true;
+}
+
 bool
 RedeclarableTemplateDecl::loadLazySpecializationsImpl(ArrayRef<TemplateArgument>
                                                       Args) const {
@@ -218,9 +243,14 @@ RedeclarableTemplateDecl::loadLazySpecializationsImpl(ArrayRef<TemplateArgument>
   CommonBase *CommonBasePtr = getMostRecentDecl()->getCommonPtr();
   if (auto *Specs = CommonBasePtr->LazySpecializations) {
     unsigned Hash = TemplateArgumentList::ComputeODRHash(Args);
-    for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I)
-      if (Specs[I+1].ODRHash && Specs[I+1].ODRHash == Hash)
-        LoadedSpecialization |= (bool)loadLazySpecializationImpl(Specs[I+1]);
+    for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I) {
+      if (!Specs[I+1].ODRHash || Specs[I+1].ODRHash != Hash)
+        continue;
+      if (Decl *Spec = loadLazySpecializationImpl(Specs[I + 1])) {
+        if (TemplateSpecArgListStructurallyEquals(Spec, Args))
+          LoadedSpecialization = true;
+      }
+    }
   }
   return LoadedSpecialization;
 }
