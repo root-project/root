@@ -215,6 +215,8 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kQt6);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
+   else if (kind == "off")
+      SetBrowserKind(kOff);
    else if (!SetSizeAsStr(kind))
       SetCustomExec(kind);
 
@@ -236,6 +238,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
       case kLocal: return "local";
       case kStandard: return "default";
       case kEmbedded: return "embed";
+      case kOff: return "off";
       case kCustom:
           auto pos = fExec.find(" ");
           return (pos == std::string::npos) ? fExec : fExec.substr(0,pos);
