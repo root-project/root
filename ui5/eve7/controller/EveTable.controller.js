@@ -34,8 +34,6 @@ sap.ui.define([
          let args = oEvent.getParameter("arguments");
          this.setupManagerAndViewType(EVE.$eve7tmp.eveViewerId, EVE.$eve7tmp.mgr);
          delete EVE.$eve7tmp;
-
-         this.checkViewReady();
       },
       setupManagerAndViewType: function(eveViewerId, mgr)
       {

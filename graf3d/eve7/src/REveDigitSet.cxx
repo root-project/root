@@ -504,7 +504,7 @@ int REveDigitSet::GetShapeIdxFromAtomIdx(int iAtomIdx) const
       }
    }
 
-   printf("REveDigitSet::GetShapeIdxFromAtomIdx:: Atom with idx %d dose not have a visible shape \n", iAtomIdx);
+   printf("REveDigitSet::GetShapeIdxFromAtomIdx:: Atom with idx %d does not have a visible shape \n", iAtomIdx);
    return -1;
 }
 

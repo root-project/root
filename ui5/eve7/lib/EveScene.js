@@ -10,22 +10,27 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    class EveScene {
 
-      constructor(mgr, scene, glctrl)
+      constructor(mgr, sceneInfo, glctrl)
       {
          this.mgr     = mgr;
-         this.scene   = scene;
-         this.id      = scene.fSceneId;
+         this.id      = sceneInfo.fSceneId;
          this.glctrl  = glctrl;
          this.creator = glctrl.viewer.creator;
          this.id2obj_map  = new Map; // base on element id
 
          this.first_time = true;
+         this.need_visibility_update = false;
 
          // register ourself for scene events
-         this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
+         this.mgr.RegisterSceneReceiver(this.id, this);
 
-         // AMT temporary solution ... resolve with callSceneReceivers in EveManager.js
-         scene.eve_scene = this;
+         if(this.mgr.is_rcore) {
+            this.SelectElement = this.SelectElementRCore;
+            this.UnselectElement = this.UnselectElementRCore;
+         } else {
+            this.SelectElement = this.SelectElementStd;
+            this.UnselectElement = this.UnselectElementStd;
+         }
       }
 
       //==============================================================================
@@ -40,21 +45,24 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             let obj3d = this.creator[fname](elem, elem.render_data);
 
             if (obj3d) {
-               // MT ??? why?, it can really be anything, even just container Object3D
-               obj3d._typename = "THREE.Mesh";
+               // Used by JSRoot
+               obj3d._typename = this.creator.GenerateTypeName(obj3d);
 
-               // add reference to a streamed eve element to obj3d
-               obj3d.eve_el = elem;
+               obj3d.eve_el = elem; // reference to the EveElement
+               obj3d.scene = this;  // required for change processing, esp. highlight/selection
 
                // SL: this is just identifier for highlight, required to show items on other places, set in creator
                obj3d.geo_object = elem.fMasterId || elem.fElementId;
                obj3d.geo_name = elem.fName; // used for highlight
-               obj3d.scene = this; // required for get changes when highlight/selection is changed
 
+               obj3d.matrixAutoUpdate = false;
                if (elem.render_data.matrix) {
-                  obj3d.matrixAutoUpdate = false;
-                  obj3d.matrix.fromArray(elem.render_data.matrix);
-                  obj3d.updateMatrixWorld(true);
+                  if (this.mgr.is_rcore) {
+                     obj3d.setMatrixFromArray(elem.render_data.matrix);
+                  } else {
+                     obj3d.matrix.fromArray(elem.render_data.matrix);
+                     obj3d.updateMatrixWorld(true);
+                  }
                }
 
                return obj3d;
@@ -145,6 +153,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          while (cont.children.length > 0)
             cont.remove(cont.children[0]);
 
+         this.mgr.UnRegisterSceneReceiver(this.id, this);
          this.first_time = true;
       }
 
@@ -184,8 +193,15 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       endChanges()
       {
-         if (this.glctrl)
+         if (this.glctrl) {
+            if (this.need_visibility_update) {
+               let p = this.mgr.GetElement(this.id);
+               this.update3DObjectsVisibility(p.childs, true);
+               this.need_visibility_update = false;
+            }
             this.glctrl.viewer.render();
+
+         }
       }
 
       elementAdded(el)
@@ -195,41 +211,36 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          let obj3d =  this.makeGLRepresentation(el);
          if ( ! obj3d) return;
 
-         // AMT this is an overkill, temporary solution
-         let scene = this.mgr.GetElement(el.fSceneId);
-         this.update3DObjectsVisibility(scene.childs, true);
-
+         // let scene = this.mgr.GetElement(this.id);
          let container = this.glctrl.getSceneContainer("scene" + this.id);
 
          container.add(obj3d);
 
          this.id2obj_map.set(el.fElementId, obj3d);
+
+         this.need_visibility_update = true;
       }
 
       replaceElement(el) {
          if (!this.glctrl) return;
 
+         let container = this.glctrl.getSceneContainer("scene" + this.id);
+
          try {
             let obj3d = this.getObj3D(el.fElementId);
-            let all_ancestor_children_visible = obj3d.all_ancestor_children_visible;
-            let visible = obj3d.visible;
 
-            let container = this.glctrl.getSceneContainer("scene" + this.id);
-
-            container.remove(obj3d);
+            if(obj3d) container.remove(obj3d);
 
             obj3d = this.makeGLRepresentation(el);
-            obj3d.all_ancestor_children_visible = all_ancestor_children_visible;
-            obj3d.visible = visible;
-            container.add(obj3d);
-
-            this.id2obj_map.set(el.fElementId, obj3d);
-
-            this.glctrl.viewer.render();
+            if (obj3d) {
+               container.add(obj3d);
+               this.id2obj_map.set(el.fElementId, obj3d);
+            }
          }
          catch (e) {
             console.error("replace element", e);
          }
+         this.need_visibility_update = true;
       }
 
       elementsRemoved(ids)
@@ -251,10 +262,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
             this.id2obj_map.delete(elId);
 
-            if (typeof obj3d.dispose !== 'function')
-               console.log("EveScene.elementsRemoved no dispose function for " + this.mgr.GetElement(elId)._typename, ", rnr obj ", obj3d._typename);
-            else
-               obj3d.dispose();
+            if (!this.mgr.is_rcore) {
+               if (typeof obj3d.dispose !== 'function')
+                  console.log("EveScene.elementsRemoved no dispose function for " + this.mgr.GetElement(elId)._typename, ", rnr obj ", obj3d._typename, obj3d);
+               else
+                  obj3d.dispose();
+            }
          }
       }
 
@@ -264,21 +277,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
          // visibility
          if (msg.changeBit & this.mgr.EChangeBits.kCBVisibility) {
-            // self
-            if (msg.rnr_self_changed)
-            {
-               let obj3d = this.getObj3D( el.fElementId );
-               if (obj3d)
-               {
-                  obj3d.visible = obj3d.all_ancestor_children_visible && el.fRnrSelf;
-               }
-            }
-            // children
-            if (msg.rnr_children_changed && el.childs)
-            {
-               let scene = this.mgr.GetElement(el.fSceneId);
-               this.update3DObjectsVisibility(scene.childs, true);
-            }
+            this.need_visibility_update = true;
          }
 
          // other change bits
@@ -301,12 +300,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          return undefined;
       }
 
-      sendSelectMIR(sel_id, obj3d, is_multi, indx)
+      sendSelectMIR(sel_id, eve_el, is_multi, indx)
       {
          indx = this.sanitizeIndx(indx);
          let is_secsel = indx !== undefined;
 
-         let fcall = "NewElementPickedStr(" + (obj3d ? obj3d.eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;
+         let fcall = "NewElementPickedStr(" + (eve_el ? eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;
          if (is_secsel)
          {
             fcall += ", \"" + indx.join(",") + "\"";
@@ -317,32 +316,32 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       /** interactive handler. Calculates selection state, apply to element and distribute to other scene */
-      processElementSelected(obj3d, indx, event)
+      processElementSelected(eve_el, indx, event)
       {
          // console.log("EveScene.processElementSelected", obj3d, col, indx, evnt);
 
          let is_multi  = event && event.ctrlKey ? true : false;
-         this.sendSelectMIR(this.mgr.global_selection_id, obj3d, is_multi, indx);
+         this.sendSelectMIR(this.mgr.global_selection_id, eve_el, is_multi, indx);
 
          return true;
       }
 
       /** interactive handler */
-      processElementHighlighted(obj3d, indx, evnt)
+      processElementHighlighted(eve_el, indx, event)
       {
-         if (this.mgr.MatchSelection(this.mgr.global_selection_id, obj3d.eve_el, indx))
+         // RenderCore viewer is organizing selection on stack, the last selection will set the color
+         if (!this.mgr.is_rcore && this.mgr.MatchSelection(this.mgr.global_selection_id, eve_el, indx))
             return true;
 
          // Need check for duplicates before call server, else server will un-higlight highlighted element
-         // console.log("EveScene.processElementHighlighted", obj3d.eve_el.fElementId, indx, evnt);
-         if (this.mgr.MatchSelection(this.mgr.global_highlight_id, obj3d.eve_el, indx))
+         if (this.mgr.MatchSelection(this.mgr.global_highlight_id, eve_el, indx))
             return true;
 
-         // when send queue below threshold, ignre highlight
+         // when send queue below threshold, ignore highlight
          if (this.mgr.CheckSendThreshold())
             return true;
 
-         this.sendSelectMIR(this.mgr.global_highlight_id, obj3d, false, indx);
+         this.sendSelectMIR(this.mgr.global_highlight_id, eve_el, false, indx);
 
          return true;
       }
@@ -395,59 +394,107 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          });
       }
 
-      SelectElement(selection_obj, element_id, sec_idcs, extra)
+      SelectElementStd(selection_obj, element_id, sec_idcs, extra)
       {
          let obj3d = this.getObj3D( element_id );
          if (!obj3d) return;
 
-         let opass = this.glctrl.viewer.outline_pass;
-         opass.id2obj_map[element_id] = opass.id2obj_map[element_id] || [];
+         let outline_map = this.glctrl.viewer.outline_map;
+         // console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, outline_map);
 
-         if (opass.id2obj_map[element_id][selection_obj.fElementId] !== undefined)
-         {
+         outline_map[element_id] = outline_map[element_id] || [];
+
+         if (outline_map[element_id][selection_obj.fElementId] !== undefined) {
             return;
          }
 
-         let stype  = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
-         let estype = THREE.OutlinePassEve.selection_enum[stype];
+         const ST_Selection = 0; // Matching THREE.OutlinePassEve.selection_enum
+         const ST_Highlight = 1;
+         let stype  = selection_obj.fName.endsWith("Selection") ? ST_Selection : ST_Highlight;
          let oe = this.mgr.GetElement(element_id);
-         // console.log("EveScene.SelectElement ", selection_obj.fName, oe.fName, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
 
          let res = {
-            "sel_type" : estype,
-            "sec_sel"  : (oe.fSecondarySelect && sec_idcs.length > 0) ? true: false,
+            "sel_type" : stype,
+            "sec_sel"  : (oe.fSecondarySelect && sec_idcs.length > 0) ? true : false,
             "geom"     : []
          };
 
-         // exit if you try to highlight an object that has already been selected
-         if (estype == THREE.OutlinePassEve.selection_enum["highlight"] &&
-             opass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
+         // Exit if we are trying to highlight an object that has already been selected.
+         if (stype == ST_Highlight &&
+             outline_map[element_id][this.mgr.global_selection_id] !== undefined)
          {
             if (!res.sec_sel)
             return;
          }
 
-         if (!res.sec_sel) opass.id2obj_map[element_id] = [];
+         if (!res.sec_sel) outline_map[element_id] = [];
 
-         if (obj3d.get_ctrl)
-         {
-            let ctrl = obj3d.get_ctrl();
+         if (obj3d.get_ctrl) {
+            let ctrl = obj3d.get_ctrl(obj3d);
             ctrl.DrawForSelection(sec_idcs, res, extra);
-            opass.id2obj_map[element_id][selection_obj.fElementId] = res;
+         } else {
+            res.geom.push(obj3d);
+         }
+         outline_map[element_id][selection_obj.fElementId] = res;
 
-            if (stype == "highlight" && selection_obj.sel_list) {
-               this.glctrl.viewer.remoteToolTip(selection_obj.sel_list[0].tooltip);
-            }
+         if (stype == ST_Highlight && selection_obj.sel_list) {
+            this.glctrl.viewer.remoteToolTip(selection_obj.sel_list[0].tooltip);
          }
       }
 
-      UnselectElement(selection_obj, element_id)
+      UnselectElementStd(selection_obj, element_id)
       {
-         let opass = this.glctrl.viewer.outline_pass;
-         // console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
-         if (opass.id2obj_map[element_id] !== undefined)
-         {
-            delete opass.id2obj_map[element_id][selection_obj.fElementId];
+         let outline_map = this.glctrl.viewer.outline_map;
+         // console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, outline_map);
+
+         if (outline_map[element_id] !== undefined) {
+            delete outline_map[element_id][selection_obj.fElementId];
+         }
+      }
+
+      SelectElementRCore(selection_obj, element_id, sec_idcs, extra)
+      {
+         let obj3d = this.getObj3D( element_id );
+         if (!obj3d) return;
+
+         let eve_el = this.mgr.GetElement(element_id);
+
+         let sid = selection_obj.fElementId;
+         let smap = this.glctrl.viewer.selection_map;
+         if (smap[sid] === undefined) {
+            smap[sid] = {};
+         }
+
+         let res = {
+            "sec_sel"  : (eve_el.fSecondarySelect && sec_idcs.length > 0) ? true : false,
+            "geom"     : []
+         };
+
+         if (obj3d.get_ctrl) {
+            let ctrl = obj3d.get_ctrl(obj3d);
+            ctrl.DrawForSelection(sec_idcs, res, extra);
+         } else {
+            res.geom.push(obj3d);
+         }
+         smap[sid][element_id] = res;
+         this.glctrl.viewer.make_selection_last_in_list(sid);
+
+         // Display tooltip.
+         // XXXX Should check if highlight request came from this viewer.
+         if (selection_obj.fIsHighlight && selection_obj.sel_list) {
+            this.glctrl.viewer.remoteToolTip(selection_obj.sel_list[0].tooltip);
+         }
+      }
+
+      UnselectElementRCore(selection_obj, element_id)
+      {
+         let sid = selection_obj.fElementId;
+         let smap = this.glctrl.viewer.selection_map;
+         if (smap[sid] !== undefined) {
+            delete smap[sid][element_id];
+            if (Object.keys(smap[sid]).length == 0) {
+               this.glctrl.viewer.remove_selection_from_list(sid);
+            }
          }
       }
 

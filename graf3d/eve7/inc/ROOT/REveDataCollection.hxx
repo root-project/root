@@ -116,6 +116,7 @@ class REveDataCollection : public REveElement
 {
 private:
    REveDataItemList* fItemList{nullptr};
+   int      fLayer{0};
 
 public:
    typedef std::vector<int> Ids_t;
@@ -138,8 +139,11 @@ public:
 
 
    TClass *GetItemClass() const { return fItemClass; }
-   void SetItemClass(TClass *cls) { fItemClass = cls;
-  }
+   void SetItemClass(TClass *cls) { fItemClass = cls;}
+
+   int GetLayer() const { return fLayer; }
+   void SetLayer(int i) { fLayer = i; }
+
    REveDataItemList* GetItemList() {return fItemList;}
 
    void SetFilterExpr(const char* filter);

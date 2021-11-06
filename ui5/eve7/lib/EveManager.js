@@ -44,10 +44,8 @@ sap.ui.define([], function() {
       globExceptionHandler(msg, url, lineNo, columnNo, error) {
          // NOTE: currently NOT connected, see onWebsocketOpened() below.
 
-         console.log("EveManager got global error", msg, url, lineNo, columnNo, error);
+         console.error("EveManager got global error", msg, url, lineNo, columnNo, error);
 
-         EVE.alert("Global Exception handler: " + msg + "\n" + url +
-            " line:" + lineNo + " col:" + columnNo);
          let suppress_alert = false;
          return suppress_alert;
       }
@@ -56,6 +54,7 @@ sap.ui.define([], function() {
       UseConnection(handle)
       {
          this.handle = handle;
+         this.is_rcore = (handle.getUserArgs("GLViewer") == "RCore");
 
          handle.setReceiver(this);
          handle.connect();
@@ -146,8 +145,15 @@ sap.ui.define([], function() {
             }
             else if (resp.content == "EndChanges") {
                this.ServerEndRedrawCallback();
-               if (resp.log)
-                  console.log(resp.log);
+               if (resp.log) {
+                  resp.log.forEach((item) => {
+                     // use console error above warning serverity
+                     if (item.lvl < 3)
+                        console.error(item.msg);
+                     else
+                        console.log(item.msg);
+                  });
+               }
             }
             else if (resp.content == "BrowseElement") {
                this.BrowseElement(resp.id);
@@ -199,6 +205,18 @@ sap.ui.define([], function() {
 
          if (elem.$receivers.indexOf(receiver)<0)
             elem.$receivers.push(receiver);
+      }
+
+      /** Disconnect scene from the updates */
+      UnRegisterSceneReceiver(id, receiver){
+         let elem = this.GetElement(id);
+
+         if (!elem) return;
+         let idx = elem.$receivers.indexOf(receiver);
+         if (idx > -1) { // only splice array when item is found
+            console.log("unregister scene receiver");
+            elem.$receivers.splice(idx, 1); // 2nd parameter means remove one item only
+          }
       }
 
       /** Returns list of scene elements */
@@ -427,10 +445,20 @@ sap.ui.define([], function() {
 
          let lastoff = offset;
 
-         for (let n=1; n<arr.length;++n) {
+         // Start at 1, EveScene does not have render data.
+         for (let n = 1; n < arr.length; ++n)
+         {
             let elem = arr[n];
 
             if (!elem.render_data) continue;
+
+            // in the scene change update check change bits are kCBElementAdded or kCBObjProps
+           //  see REveScene::StreamRepresentationChanges binary stream
+            if (this.scene_changes) {
+               if (!(elem.changeBit & this.EChangeBits.kCBObjProps
+                  || elem.changeBit & this.EChangeBits.kCBAdded))
+                  continue;
+            }
 
             let rd = elem.render_data,
                 off = offset + rd.rnr_offset,
@@ -686,25 +714,41 @@ sap.ui.define([], function() {
       {
          // console.log("ServerEndRedrawCallback ", this.listScenesToRedraw);
          let recs = new Set();
+         let viewers = new Set();
          for ( let i =0; i < this.listScenesToRedraw.length; i++) {
             let scene = this.listScenesToRedraw[i];
             if (scene.$receivers) {
                for (let r=0; r < scene.$receivers.length; r++) {
-                  recs.add( scene.$receivers[r]);
+                  let sr = scene.$receivers[r];
+                  recs.add(sr);
+                  if (sr.glctrl) { viewers.add(sr.glctrl.viewer)};
                }
             }
          }
+
+         if (this.is_rcore)
+         {
+            for (let v of viewers ) {
+               v.timeStampAttributesAndTextures();
+            }
+         }
+
          for (let item of recs) {
             try {
                item.endChanges();
             } catch (e) {
-               EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
-                  "You might want to reload the page in browser and / or check error consoles.");
                console.error("EveManager: Exception caught during update processing", e);
-
                // XXXX We might want to send e.name, e.message, e.stack back to the server.
             }
          }
+
+         if (this.is_rcore)
+         {
+            for (let v of viewers ) {
+               v.clearAttributesAndTextures();
+            }
+         }
+
 
          if (this.handle.kind != "file")
             this.handle.send("__REveDoneChanges");

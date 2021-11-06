@@ -80,3 +80,21 @@ void REveRenderData::SetMatrix(const double *arr)
       fMatrix.push_back(arr[i]);
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Calculate texture dimensions to hold nel elements with given alignment on x axis.
+/// Static function.
+///
+/// Implementation could be improved -- now it simply goes for near-square-root(size)
+/// dimensions that satisfy the alignment requirement. 
+
+void REveRenderData::CalcTextureSize(int nel, int align, int &sx, int &sy)
+{
+   if (nel <= 0) { sx = sy = 0; return; }
+
+   sx = (int) std::ceil(std::sqrt(nel));
+   int rx = sx % align;
+   if (rx > 0) sx += align - rx;
+   sy = nel / sx;
+   if (nel % sx > 0) sy += 1;
+}

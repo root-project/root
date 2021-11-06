@@ -65,6 +65,8 @@ sap.ui.define([
          return this.scene;
       }
 
+      get outline_map() { return this.outline_pass.id2obj_map; }
+
       //==============================================================================
       // THREE renderer creation, DOM/event handler setup, reset
       //==============================================================================

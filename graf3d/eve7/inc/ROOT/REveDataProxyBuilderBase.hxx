@@ -93,7 +93,6 @@ protected:
 private:
    REveDataCollection *m_collection{nullptr};
 
-   float                 m_layer{0.};
    bool                  m_haveWindow{false};
    bool                  m_modelsChanged{false};
 };

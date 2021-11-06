@@ -38,14 +38,16 @@ REveBoxSet* boxset(Int_t num=100)
 
 #define RND_BOX(x) (Float_t)r.Uniform(-(x), (x))
 
-   Float_t verts[24];
-   for (Int_t i=0; i<num; ++i) {
-      Float_t x = RND_BOX(10);
-      Float_t y = RND_BOX(10);
-      Float_t z = RND_BOX(10);
-      Float_t a = r.Uniform(0.2, 0.5);
-      Float_t d = 0.05;
-      Float_t verts[24] = {
+   const float R = 500;
+   const float A = 40;
+   const float D = 1;
+   for (int i = 0; i < num; ++i) {
+      float x = RND_BOX(R);
+      float y = RND_BOX(R);
+      float z = RND_BOX(R);
+      float a = r.Uniform(0.2*A, A);
+      float d = D;
+      float verts[24] = {
                            x - a + RND_BOX(d), y - a + RND_BOX(d), z - a + RND_BOX(d),
                            x - a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
                            x + a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),

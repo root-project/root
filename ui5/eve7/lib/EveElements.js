@@ -27,7 +27,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
 
          let s = this.obj3d.scene;
          if (s && (typeof s[fname] == "function"))
-            return s[fname](this.obj3d, arg, this.event);
+            return s[fname](this.obj3d.eve_el, arg, this.event);
          return false;
       }
 
@@ -594,6 +594,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
    class EveElements {
 
       constructor() { }
+
+      GenerateTypeName(obj) { return "THREE." + obj.type; }
 
       /** Test if render data has vertex buffer. Make logging if not. Only for debug purposes */
       TestRnr(name, obj, rnrData) {

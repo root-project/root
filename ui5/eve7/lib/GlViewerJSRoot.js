@@ -41,6 +41,8 @@ sap.ui.define([
          return this.geo_painter.getExtrasContainer();
       }
 
+      get outline_map() { return this.outline_pass.id2obj_map; }
+
       //==============================================================================
 
       createGeoPainter()
@@ -69,11 +71,6 @@ sap.ui.define([
             this.outline_pass.usePatternTexture = false;
             this.outline_pass.downSampleRatio = 1;
             this.outline_pass.glowDownSampleRatio = 3;
-            // this.outline_pass.id2obj_map = {};
-
-            // const sh = THREE.OutlinePassEve.selection_enum["select"]; // doesnt stand for spherical harmonics :P
-            // THREE.OutlinePassEve.selection_atts[sh].visibleEdgeColor.set('#dd1111');
-            // THREE.OutlinePassEve.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
 
             this._effectComposer.addPass( this.outline_pass );
 

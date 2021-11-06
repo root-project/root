@@ -2146,6 +2146,17 @@ if(webgui)
     endif()
     install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
+  ExternalProject_Add(
+    RENDERCORE
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore.tar.gz
+    URL_HASH SHA256=a0b1cc0d4e8d739b113ace87e33de77572cf019772899549cb082088943513e1
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
+    TIMEOUT 600
+  )
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
 
 #------------------------------------------------------------------------------------

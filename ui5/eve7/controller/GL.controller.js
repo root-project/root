@@ -220,7 +220,9 @@ sap.ui.define([
       onResize: function(event)
       {
          // TODO: should be specified somehow in XML file
-         this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+         if (this.viewer_class != "RCore") {
+            this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+         }
 
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
 

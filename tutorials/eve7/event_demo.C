@@ -61,7 +61,7 @@ REX::REvePointSet *getPointSet(int npoints = 2, float s=2, int color=28)
        ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
 
    ps->SetMarkerColor(color);
-   ps->SetMarkerSize(3+r.Uniform(1, 7));
+   ps->SetMarkerSize(8 + r.Uniform(1, 8));
    ps->SetMarkerStyle(4);
    return ps;
 }
@@ -81,6 +81,7 @@ void addPoints()
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetName("Points_2");
    ps2->SetTitle("Points_2 title"); // used as tooltip
+   ps2->SetAlwaysSecSelect(true);
    pntHolder->AddElement(ps2);
 
    event->AddElement(pntHolder);
@@ -135,12 +136,12 @@ void addJets()
    for (int i = 0; i < N_Jets; i++)
    {
       auto jet = new REX::REveJetCone(Form("Jet_%d", i));
-      jet->SetTitle(Form("Jet_%d title", i)); // used as tooltip
+      jet->SetTitle(Form("Jet_%d\n  pT = %.2f", i, r.Uniform(1, 40))); // used as tooltip
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
       jet->SetFillColor(kPink - 8);
-      jet->SetLineColor(kViolet - 7);
+      jet->SetLineColor(kBlack);
 
       jetHolder->AddElement(jet);
    }
@@ -159,6 +160,7 @@ void makeGeometryScene()
    auto b1 = new REX::REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
+   b1->SetNSegments(80);
    eveMng->GetGlobalScene()->AddElement(b1);
 
    // Debug of surface fill in RPhi (index buffer screwed).
@@ -199,16 +201,22 @@ void projectScenes(bool geomp, bool eventp)
    {
       for (auto &ie : eveMng->GetGlobalScene()->RefChildren())
       {
+         mngRhoPhi->SetCurrentDepth(0);
          mngRhoPhi->ImportElements(ie, rPhiGeomScene);
+         mngRhoZ  ->SetCurrentDepth(0);
          mngRhoZ  ->ImportElements(ie, rhoZGeomScene);
       }
    }
    if (eventp)
    {
+      int depth = 50;
       for (auto &ie : eveMng->GetEventScene()->RefChildren())
       {
+         mngRhoPhi->SetCurrentDepth(depth);
          mngRhoPhi->ImportElements(ie, rPhiEventScene);
+         mngRhoZ  ->SetCurrentDepth(depth);
          mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+         depth -= 10;
       }
    }
 
@@ -252,12 +260,7 @@ public:
       auto scene = eveMng->GetEventScene();
       scene->DestroyElements();
       makeEventScene();
-      for (auto &ie : scene->RefChildren()) {
-         if (mngRhoPhi)
-            mngRhoPhi->ImportElements(ie, rPhiEventScene);
-         if (mngRhoZ)
-            mngRhoZ->ImportElements(ie, rhoZEventScene);
-      }
+      projectScenes(false, true);
       // if (++fCount % 10 == 0) printf("At event %d\n", fCount);
    }
 

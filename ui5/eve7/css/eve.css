@@ -82,6 +82,11 @@
   white-space:   pre;
 }
 
+#posDatGUI
+{
+   position: relative;
+   float: right;
+}
 
 .eveNoSelectionCheckBox .sapMLIBSelectM {
    display: none;

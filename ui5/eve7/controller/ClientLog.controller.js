@@ -14,11 +14,6 @@ sap.ui.define([
 	return Controller.extend("rootui5.eve7.controller.ClientLog", {
 		onInit: function () {
 			// create any data and a model and set it to the view
-			let oLink = new Link({
-				text: "Show more information",
-				href: "http://sap.com",
-				target: "_blank"
-			});
 
 			let oMessageTemplate = new MessageItem({
 				type: '{type}',
@@ -26,8 +21,7 @@ sap.ui.define([
 				activeTitle: "{active}",
 				description: '{description}',
 				subtitle: '{subtitle}',
-				counter: '{counter}',
-				link: oLink
+				counter: '{counter}'
 			});
 
 			this.oMessageView = new MessageView({
