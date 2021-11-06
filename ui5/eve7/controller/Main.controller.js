@@ -92,20 +92,6 @@ sap.ui.define(['sap/ui/core/Component',
             let toolbar = pthis.byId("otb1");
             toolbar.addContentRight(logCtrl.getButton());
          });
-         consoleObj.alert = true;
-         EVE.alert = function (oText)
-         {
-            if (consoleObj.alert)
-            {
-               MessageBox.error(oText, {
-                  actions: ["Stop Alerts", MessageBox.Action.CLOSE],
-                  onClose: function (sAction)
-                  {
-                     if (sAction == "Stop Alerts") { consoleObj.alert = false; }
-                  }
-               });
-            }
-         };
       },
 
       UpdateCommandsButtons: function(cmds) {

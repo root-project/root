@@ -155,6 +155,7 @@ protected:
 
    Logger            fLogger;
    REveServerStatus  fServerStatus;
+   bool              fIsRCore{false};
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
@@ -253,6 +254,9 @@ public:
    static void         ExecuteInMainThread(std::function<void()> func);
    static void         QuitRoot();
 
+   static void    ErrorHandler(Int_t level, Bool_t abort, const char *location,
+                               const char *msg);
+
 
    // Access to internals, needed for low-level control in advanced
    // applications.
@@ -266,6 +270,7 @@ public:
    void Show(const RWebDisplayArgs &args = "");
 
    void GetServerStatus(REveServerStatus&);
+   bool IsRCore() const { return fIsRCore; }
 };
 
 R__EXTERN REveManager* gEve;

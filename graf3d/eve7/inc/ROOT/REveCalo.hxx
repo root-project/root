@@ -72,6 +72,7 @@ public:
 
    virtual ~REveCaloViz();
 
+   bool RequiresExtraSelectionData() const override { return true; };
    virtual REveElement* ForwardSelection();
    virtual REveElement* ForwardEdit();
 

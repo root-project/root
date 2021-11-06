@@ -90,6 +90,8 @@ public:
 
    const std::string GetRnrFunc() const { return fRnrFunc; }
 
+   void ResizeV(int s) { fVertexBuffer.resize(s); }
+
    int SizeV() const { return fVertexBuffer.size(); }
    int SizeN() const { return fNormalBuffer.size(); }
    int SizeI() const { return fIndexBuffer.size(); }
@@ -98,6 +100,8 @@ public:
    int GetBinarySize() { return (SizeV() + SizeN() + SizeT()) * sizeof(float) + SizeI() * sizeof(int); }
 
    int Write(char *msg, int maxlen);
+
+   static void CalcTextureSize(int nel, int align, int &sx, int &sy);
 };
 
 } // namespace Experimental
