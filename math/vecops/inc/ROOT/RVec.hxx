@@ -1363,8 +1363,8 @@ auto v1 = Take(v0, {1, 2, 0});
 will yield a new RVec<double> the content of which is the first, second and zeroth element of
 v0, i.e. `{7., 8., 9.}`.
 
-The `Argsort` helper extracts the indices which order the content of a `RVec`. For example,
-this snippet accomplish in a more expressive way what we just achieved:
+The `Argsort` and `StableArgsort` helper extracts the indices which order the content of a `RVec`.
+For example, this snippet accomplishes in a more expressive way what we just achieved:
 ~~~{.cpp}
 auto v1_indices = Argsort(v0); // The content of v1_indices is {1, 2, 0}.
 v1 = Take(v0, v1_indices);
@@ -2144,6 +2144,52 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v, Compare &&c)
    return i;
 }
 
+/// Return an RVec of indices that sort the input RVec
+/// while keeping the order of equal elements.
+/// This is the stable variant of `Argsort`.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVecD v {2., 3., 2., 1.};
+/// auto sortIndices = StableArgsort(v)
+/// // (ROOT::VecOps::RVec<unsigned long> &) { 3, 0, 2, 1 }
+/// auto values = Take(v, sortIndices)
+/// // (ROOT::VecOps::RVec<double> &) { 1.0000000, 2.0000000, 2.0000000, 3.0000000 }
+/// ~~~
+template <typename T>
+RVec<typename RVec<T>::size_type> StableArgsort(const RVec<T> &v)
+{
+   using size_type = typename RVec<T>::size_type;
+   RVec<size_type> i(v.size());
+   std::iota(i.begin(), i.end(), 0);
+   std::stable_sort(i.begin(), i.end(), [&v](size_type i1, size_type i2) { return v[i1] < v[i2]; });
+   return i;
+}
+
+/// Return an RVec of indices that sort the input RVec based on a comparison function
+/// while keeping the order of equal elements.
+/// This is the stable variant of `Argsort`.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVecD v {2., 3., 2., 1.};
+/// auto sortIndices = StableArgsort(v, [](double x, double y) {return x > y;})
+/// // (ROOT::VecOps::RVec<unsigned long> &) { 1, 0, 2, 3 }
+/// auto values = Take(v, sortIndices)
+/// // (ROOT::VecOps::RVec<double> &) { 3.0000000, 2.0000000, 2.0000000, 1.0000000 }
+/// ~~~
+template <typename T, typename Compare>
+RVec<typename RVec<T>::size_type> StableArgsort(const RVec<T> &v, Compare &&c)
+{
+   using size_type = typename RVec<T>::size_type;
+   RVec<size_type> i(v.size());
+   std::iota(i.begin(), i.end(), 0);
+   std::stable_sort(i.begin(), i.end(), [&v, &c](size_type i1, size_type i2) { return c(v[i1], v[i2]); });
+   return i;
+}
+
 /// Return elements of a vector at given indices
 ///
 /// Example code, at the ROOT prompt:
@@ -2289,6 +2335,66 @@ RVec<T> Sort(const RVec<T> &v, Compare &&c)
 {
    RVec<T> r(v);
    std::sort(r.begin(), r.end(), std::forward<Compare>(c));
+   return r;
+}
+
+/// Return copy of RVec with elements sorted in ascending order
+/// while keeping the order of equal elements.
+///
+/// This is the stable variant of `Sort`.
+///
+/// This helper is different from StableArgsort since it does not return an RVec of indices,
+/// but an RVec of values.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVecD v {2., 3., 2, 1.};
+/// auto v_sorted = StableSort(v);
+/// v_sorted
+/// // (ROOT::VecOps::RVec<double> &) { 1.0000000, 2.0000000, 2.0000000, 3.0000000 }
+/// ~~~
+template <typename T>
+RVec<T> StableSort(const RVec<T> &v)
+{
+   RVec<T> r(v);
+   std::stable_sort(r.begin(), r.end());
+   return r;
+}
+
+// clang-format off
+/// Return copy of RVec with elements sorted based on a comparison operator
+/// while keeping the order of equal elements.
+///
+/// The comparison operator has to fullfill the same requirements of the
+/// predicate of std::stable_sort.
+///
+/// This helper is different from StableArgsort since it does not return an RVec of indices,
+/// but an RVec of values.
+///
+/// This is the stable variant of `Sort`.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVecD v {2., 3., 2., 1.};
+/// auto v_sorted = StableSort(v, [](double x, double y) {return 1/x < 1/y;});
+/// v_sorted
+/// // (ROOT::VecOps::RVec<double> &) { 3.0000000, 2.0000000, 2.0000000, 1.0000000 }
+/// ~~~
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<RVecD> v {{2., 4.}, {3., 1.}, {2, 1.}, {1., 4.}};
+/// auto v_sorted = StableSort(StableSort(v, [](const RVecD &x, const RVecD &y) {return x[1] < y[1];}), [](const RVecD &x, const RVecD &y) {return x[0] < y[0];});
+/// v_sorted
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<double> > &) { { 1.0000000, 4.0000000 }, { 2.0000000, 1.0000000 }, { 2.0000000, 4.0000000 }, { 3.0000000, 1.0000000 } }
+/// ~~~
+// clang-format off
+template <typename T, typename Compare>
+RVec<T> StableSort(const RVec<T> &v, Compare &&c)
+{
+   RVec<T> r(v);
+   std::stable_sort(r.begin(), r.end(), std::forward<Compare>(c));
    return r;
 }
 
