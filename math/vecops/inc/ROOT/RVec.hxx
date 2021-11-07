@@ -1848,6 +1848,7 @@ R Sum(const RVec<T> &v, const R zero = R(0))
 /// Get the mean of the elements of an RVec
 ///
 /// The return type is a double precision floating point number.
+///
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
@@ -1866,6 +1867,7 @@ double Mean(const RVec<T> &v)
 /// Get the mean of the elements of an RVec with custom initial value
 ///
 /// The return type will be deduced from the `zero` parameter
+///
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
