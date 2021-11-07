@@ -37,8 +37,7 @@ ROOTTEST_ADD_TEST(execState
 
 ROOTTEST_ADD_TEST(execSharedPtr
                   MACRO execSharedPtr.C
-                  ERRREF execSharedPtr.eref
-                  ${WILLFAIL_ON_WIN32})
+                  ERRREF execSharedPtr.eref)
 
 ROOTTEST_ADD_TEST(execMTInit
                   MACRO execMTInit.C
