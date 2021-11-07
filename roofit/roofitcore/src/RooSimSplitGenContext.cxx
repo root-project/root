@@ -228,7 +228,7 @@ RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, Bool_t skipInit, B
   // Perform any subclass implementation-specific initialization
   // Can be skipped if this is a rerun with an identical configuration
   if (!skipInit) {
-    initGenerator(*_theEvent);
+    initGenerator(_theEvent);
   }
 
   // Generate lookup table from expected event counts

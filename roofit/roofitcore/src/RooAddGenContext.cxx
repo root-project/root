@@ -90,7 +90,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   }  
 
   ((RooAddPdf*)_pdf)->getProjCache(_vars) ;
-  _pdf->recursiveRedirectServers(*_theEvent) ;
+  _pdf->recursiveRedirectServers(_theEvent) ;
 
   _mcache = 0 ;
   _pcache = 0 ;
@@ -127,7 +127,7 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   }  
 
   ((RooAddModel*)_pdf)->getProjCache(_vars) ;
-  _pdf->recursiveRedirectServers(*_theEvent) ;
+  _pdf->recursiveRedirectServers(_theEvent) ;
 
   _mcache = 0 ;
   _pcache = 0 ;
