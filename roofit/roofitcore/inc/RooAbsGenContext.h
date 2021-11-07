@@ -75,7 +75,7 @@ protected:
   void resampleData(Double_t& ratio) ;
 
   const RooDataSet *_prototype; // Pointer to prototype dataset
-  RooArgSet *_theEvent;         // Pointer to observable event being generated
+  RooArgSet _theEvent;          // Pointer to observable event being generated
   Bool_t _isValid;              // Is context in valid state?
   Bool_t _verbose;              // Verbose messaging?
   UInt_t _expectedEvents;       // Number of expected events from extended p.d.f
