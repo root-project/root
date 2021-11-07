@@ -18,6 +18,9 @@
 #ifndef ROOT_UNITTESTSUPPORT_H
 #define ROOT_UNITTESTSUPPORT_H
 
+#include "TError.h"
+#include "TInterpreter.h"
+
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
@@ -27,6 +30,27 @@ using testing::StrEq;
 using testing::internal::GetCapturedStderr;
 using testing::internal::CaptureStderr;
 using testing::internal::RE;
+
+/// \brief Allows a user function to filter ROOT/cling diagnostics, e.g.
+/// ```c++
+/// FilterDiagsRAII RAII([] (int level, Bool_t abort,
+///                          const char *location, const char *msg) {
+///       EXPECT_THAT(msg, Not(HasSubstr("-Wunused-result")));
+///    });
+/// ```
+class FilterDiagsRAII {
+   ErrorHandlerFunc_t fPrevHandler;
+public:
+   FilterDiagsRAII(ErrorHandlerFunc_t fn) : fPrevHandler(::GetErrorHandler()) {
+      ::SetErrorHandler(fn);
+      gInterpreter->ReportDiagnosticsToErrorHandler();
+   }
+   ~FilterDiagsRAII() {
+      gInterpreter->ReportDiagnosticsToErrorHandler(/*enable=*/false);
+      ::SetErrorHandler(fPrevHandler);
+   }
+};
+
 class ExpectedDiagRAII {
 public:
    enum ExpectedDiagKind {
