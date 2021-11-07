@@ -1,4 +1,4 @@
-#include "TError.h"
+#include "ROOTUnitTestSupport.h"
 #include "TInterpreter.h"
 
 #include "gtest/gtest.h"
@@ -14,19 +14,6 @@
 // of C++ code, so if these tests fail because this interface was replaced by another
 // system, feel free to delete them as these tests here don't represent things the user
 // should do in his code.
-
-class FilterDiagsRAII {
-   ErrorHandlerFunc_t fPrevHandler;
-public:
-   FilterDiagsRAII(ErrorHandlerFunc_t fn) : fPrevHandler(::GetErrorHandler()) {
-      ::SetErrorHandler(fn);
-      gInterpreter->ReportDiagnosticsToErrorHandler();
-   }
-   ~FilterDiagsRAII() {
-      gInterpreter->ReportDiagnosticsToErrorHandler(/*enable=*/false);
-      ::SetErrorHandler(fPrevHandler);
-   }
-};
 
 TEST(TClingCallFunc, FunctionWrapper)
 {
