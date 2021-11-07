@@ -2252,7 +2252,7 @@ RVec<T> Reverse(const RVec<T> &v)
 
 /// Return copy of RVec with elements sorted in ascending order
 ///
-/// This helper is different from ArgSort since it does not return an RVec of indices,
+/// This helper is different from Argsort since it does not return an RVec of indices,
 /// but an RVec of values.
 ///
 /// Example code, at the ROOT prompt:
@@ -2277,7 +2277,7 @@ RVec<T> Sort(const RVec<T> &v)
 /// predicate of by std::sort.
 ///
 ///
-/// This helper is different from ArgSort since it does not return an RVec of indices,
+/// This helper is different from Argsort since it does not return an RVec of indices,
 /// but an RVec of values.
 ///
 /// Example code, at the ROOT prompt:
