@@ -21,6 +21,7 @@
 #include "RtypesCore.h"
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <string>
 #include <utility> // std::index_sequence
@@ -138,7 +139,7 @@ public:
 
    void TriggerChildrenCount() final
    {
-      R__ASSERT(!fName.empty()); // this method is to only be called on named filters
+      assert(!fName.empty()); // this method is to only be called on named filters
       fPrevData.IncrChildrenCount();
    }
 
