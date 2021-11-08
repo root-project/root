@@ -15,6 +15,8 @@
 #include "ROOT/RDF/RMergeableValue.hxx"
 #include "TError.h"
 
+#include <cassert>
+
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
@@ -22,43 +24,43 @@ RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Inte
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Run(slot, entry);
 }
 
 void RJittedAction::Initialize()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Initialize();
 }
 
 void RJittedAction::InitSlot(TTreeReader *r, unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->InitSlot(r, slot);
 }
 
 void RJittedAction::TriggerChildrenCount()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->TriggerChildrenCount();
 }
 
 void RJittedAction::FinalizeSlot(unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->FinalizeSlot(slot);
 }
 
 void RJittedAction::Finalize()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Finalize();
 }
 
 void *RJittedAction::PartialUpdate(unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->PartialUpdate(slot);
 }
 
@@ -74,13 +76,13 @@ bool RJittedAction::HasRun() const
 
 void RJittedAction::SetHasRun()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->SetHasRun();
 }
 
 std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->GetGraph();
 }
 
@@ -90,12 +92,12 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::Get
 */
 std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> RJittedAction::GetMergeableValue() const
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->GetMergeableValue();
 }
 
 ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->GetSampleCallback();
 }
