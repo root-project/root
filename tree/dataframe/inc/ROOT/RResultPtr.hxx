@@ -26,6 +26,14 @@ namespace RDF {
 template <typename T>
 class RResultPtr;
 
+namespace Experimental {
+template <typename T>
+class RResultMap;
+
+template <typename T>
+RResultMap<T> VariationsFor(RResultPtr<T> resPtr);
+} // namespace Experimental
+
 template <typename Proxied, typename DataSource>
 class RInterface;
 } // namespace RDF
@@ -103,6 +111,10 @@ class RResultPtr {
    template <typename T1>
    friend RResultPtr<T1> RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, ::ROOT::Detail::RDF::RLoopManager &,
                                                   std::shared_ptr<RDFInternal::RActionBase>);
+
+   template <typename T1>
+   friend ROOT::RDF::Experimental::RResultMap<T1> ROOT::RDF::Experimental::VariationsFor(RResultPtr<T1> resPtr);
+
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
