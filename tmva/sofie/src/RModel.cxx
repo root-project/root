@@ -233,6 +233,12 @@ namespace SOFIE{
          }
       }
       if (useSession) {
+         // add here specific operator code that needs to define session data members
+         fGC += "\n";
+         for (size_t id = 0; id < fOperators.size(); id++) {
+            std::string opName = std::to_string(id);
+            fGC += fOperators[id]->GenerateSessionMembersCode(opName);
+         }
          fGC += "\n";
          fGC += "Session(std::string filename =\"\") {\n";
          // here add initialization and reading of weight tensors
@@ -297,18 +303,18 @@ namespace SOFIE{
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
       }
       if (outputSize == 1) {
-         size_t outputSize = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
+         size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
          
          fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " + 
-               std::to_string(outputSize) + ");\n";
+               std::to_string(outputLength) + ");\n";
       } else {
          for (size_t i = 0; i < outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {
-               size_t outputSize = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
+               size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
                fGC += "\tstd::vector<float> ret_";
                fGC += std::to_string(i);
                fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + " + 
-               std::to_string(outputSize) + ");\n";
+               std::to_string(outputLength) + ");\n";
             }
          }
          fGC += "\tstd::vector<std::vector<float>> ret({";
