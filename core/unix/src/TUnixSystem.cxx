@@ -214,7 +214,6 @@ extern "C" {
 
 // FPE handling includes
 #if (defined(R__LINUX) && !defined(R__WINGCC))
-#include <fpu_control.h>
 #include <fenv.h>
 #include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
