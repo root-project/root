@@ -39,6 +39,8 @@ private:
 
    std::string fType;
 
+   bool fUseSession = false;
+
 public:
 
    ROperator_Conv() {}
@@ -144,6 +146,7 @@ public:
    }
 
    void Initialize(RModel& model) {
+      fUseSession = model.UseSession();
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
             std::runtime_error("TMVA SOFIE Conv op Input Tensor " + fNX + " is not found in model");
@@ -185,7 +188,7 @@ public:
                throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
             
             // here the acual broadcasting
-            if (!model.UseSession()) {
+            if (!fUseSession) {
                // in case of session the code is in GenerateInitCode
                fShapeB.resize(fShapeY.size(), 1.);
 
@@ -230,6 +233,26 @@ public:
       }
       return out.str();
    }
+   
+   // generate code for Session data members (e.g. internal vectors)
+   virtual std::string GenerateSessionMembersCode(std::string opName) {
+      opName = "op_" + opName;
+      std::stringstream out;
+      // matrix with convolution kernels
+      out << "std::vector<" << fType << "> fVec_" << opName << "_f = std::vector<" << fType << ">("
+          << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << ");\n";
+      // pad input matrix with zero
+      out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
+          << fShapeX[0] * fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) *
+                (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
+          << ");\n";
+      // output matrix of im2col
+      out << "std::vector<" << fType << "> fVec_" << opName << "_xcol = std::vector<" << fType << ">(" 
+          << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << ");\n";
+      out << "\n";
+
+      return out.str(); 
+   }
 
    std::string Generate(std::string OpName) {
       OpName = "op_" + OpName;
@@ -242,10 +265,14 @@ public:
       std::stringstream out;
       size_t bsize = fShapeX[0];
 
+      out << "\n//----  operator Conv " << OpName << "\n";
+
       // create first matrix with convolution kernels
-      if (fType == "float") {
-         out << "\t" << "float " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
-      }
+      if (fUseSession)
+         out << "\t" << fType << " * " << OpName << "_f = fVec_" << OpName << "_f.data();\n";
+      else 
+         out << "\t" << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
+
       // vectorize the (dilated)convolution kernels into a matrix
       // no need to transpose the matrix
       size_t hstride = fShapeW[3];
@@ -256,8 +283,7 @@ public:
       size_t kstride = fShapeW[1] * fShapeW[2] * fShapeW[3];
       size_t kstrideDil = fShapeW[1] * dstrideDil;
 
-      out << "\t"
-          << "for (std::size_t k = 0; k < " << fShapeW[0] << "; k++) {\n";
+      out << "\t" << "for (std::size_t k = 0; k < " << fShapeW[0] << "; k++) {\n";
       out << "\t" << "\t" << "for (std::size_t d = 0; d < " << fShapeW[1] << "; d++) {\n";
       out << "\t" << "\t" << "\t" << "for (std::size_t h = 0; h < " << fShapeW[2] << "; h++) {\n";
       out << "\t" << "\t" << "\t" << "\t" << "for (std::size_t w = 0; w < " << fShapeW[3] << "; w++) {\n";
@@ -277,10 +303,11 @@ public:
       out << "\t" << "}\n";
 
       // pad inputs with zero
-      if (fType == "float") {
-         out << "\t" << "float " << OpName << "_xpad[" <<  fShapeX[0] * fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2])
+      if (fUseSession)
+         out << "\t" << fType << " * " << OpName << "_xpad = fVec_" << OpName << "_xpad.data();\n";
+      else 
+         out << "\t" << fType << " " << OpName << "_xpad[" <<  fShapeX[0] * fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2])
           * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << "] = {0};\n";
-      }
       // Padding the input with zeros
       if (bsize == 1) {
          out << "\t" << "for (size_t c = 0; c < " << fShapeX[1] << "; c++) {\n";
@@ -325,13 +352,11 @@ public:
          out << "\t" << "float " << OpName << "_alpha = 1.0;\n";
          out << "\t" << "float " << OpName << "_beta = 0.0;\n";
 
-         if (fType == "float") {
-//         out << "\t" << "float " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1]
-//             * fShapeX[0] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
-            out << "\t"  << "std::vector<float> vec_" << OpName << "_xcol("
-             << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << ");\n";
-         out << "\t"  << "float * " << OpName << "_xcol = vec_" << OpName << "_xcol.data();\n";
-         }
+         if (fUseSession) 
+            out << "\t" << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n";
+         else
+            out << "\t" << "float " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] *
+                  fAttrKernelShape[1] * fShapeX[0] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
 
           // Loop on batch size 
          out << "\t" << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
