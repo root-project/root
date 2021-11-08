@@ -42,13 +42,6 @@ typedef char* caddr_t;
 #include <cygwin/version.h>
 #endif /* __CYGWIN__ */
 
-#if defined(R__LINUX) && !defined(R__GLIBC) && !defined(__CYGWIN__) \
-   || (defined(__CYGWIN__) && (CYGWIN_VERSION_API_MAJOR > 0 || CYGWIN_VERSION_API_MINOR < 213))
-extern size_t getpagesize PARAMS ((void));
-#else
-extern int getpagesize PARAMS ((void));
-#endif
-
 #ifndef SEEK_SET
 #define SEEK_SET 0
 #endif
