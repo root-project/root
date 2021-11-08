@@ -324,7 +324,7 @@
 #include <float.h>
 #endif /* CPU86 */
 #ifdef LINUX
-#include <fpu_control.h>
+#include <fenv.h>
 #endif /* LINUX */
 #ifdef TRILIBRARY
 #include "triangle.h"
@@ -4867,7 +4867,7 @@ void exactinit()
   REAL check, lastcheck;
   int every_other;
 #ifdef LINUX
-  int cword;
+  fenv_t fenv;
 #endif /* LINUX */
 
 #ifdef CPU86
@@ -4879,13 +4879,13 @@ void exactinit()
 #endif /* CPU86 */
 #ifdef LINUX
 #ifdef SINGLE
-  /*  cword = 4223; */
-  cword = 4210;                 /* set FPU control word for single precision */
+  /*  fenv.__control_word = 4223; */
+  fenv.__control_word = 4210;  /* set FPU control word for single precision */
 #else /* not SINGLE */
-  /*  cword = 4735; */
-  cword = 4722;                 /* set FPU control word for double precision */
+  /*  fenv.__control_word = 4735; */
+  fenv.__control_word = 4722;  /* set FPU control word for double precision */
 #endif /* not SINGLE */
-  _FPU_SETCW(cword);
+  fesetenv(&fenv);
 #endif /* LINUX */
 
   every_other = 1;
