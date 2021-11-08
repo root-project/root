@@ -88,7 +88,7 @@ TEST(DefinePerSample, Jitted)
 
 TEST_P(DefinePerSample, Tree)
 {
-   const std::string prefix = "rdfdatablockcallback_ttree";
+   const std::string prefix = "rdfdefinepersample_tree";
    InputFilesRAII file(1u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
 
@@ -108,7 +108,7 @@ TEST_P(DefinePerSample, Tree)
 
 TEST_P(DefinePerSample, TChain)
 {
-   const std::string prefix = "rdfdatablockcallback_tchain";
+   const std::string prefix = "rdfdefinepersample_chain";
    InputFilesRAII file(5u, prefix);
    ROOT::RDataFrame df("t", prefix + "*");
 
