@@ -38,8 +38,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDataSource.hxx
     ROOT/RDFHelpers.hxx
     ROOT/RLazyDS.hxx
-    ROOT/RResultPtr.hxx
     ROOT/RResultHandle.hxx
+    ROOT/RResultPtr.hxx
     ROOT/RRootDS.hxx
     ROOT/RSnapshotOptions.hxx
     ROOT/RTrivialDS.hxx
@@ -73,6 +73,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RNodeBase.hxx
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx
+    ROOT/RDF/RResultMap.hxx
     ROOT/RDF/RSlotStack.hxx
     ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/Utils.hxx
