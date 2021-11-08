@@ -659,11 +659,11 @@ public:
    /// friend branches with the same names of branches in the main TTree/TChain with names of the form
    /// '<friendname>_<branchname>' in order to differentiate them from the branches in the main tree/chain.
    ///
-   /// ### Writing to a subdirectory
+   /// ### Writing to a sub-directory
    ///
    /// Snapshot supports writing the TTree in a sub-directory inside the TFile. It is sufficient to specify the path to
-   /// the TTree as part of the TTree name, e.g. `df.Snapshot("subdir/t", "f.root")` write TTre `t` in the subdirectory
-   /// `subdir` of file `f.root` (creating file and subdirectory as needed).
+   /// the TTree as part of the TTree name, e.g. `df.Snapshot("subdir/t", "f.root")` write TTree `t` in the
+   /// sub-directory `subdir` of file `f.root` (creating file and sub-directory as needed).
    ///
    /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
    /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled with
