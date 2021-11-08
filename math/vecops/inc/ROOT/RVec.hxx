@@ -1806,7 +1806,7 @@ RVEC_VDT_UNARY_FUNCTION(fast_atan)
 /// RVec<float> v2 {4., 5., 6.};
 /// auto v1_dot_v2 = Dot(v1, v2);
 /// v1_dot_v2
-/// // (float) 32.f
+/// // (float) 32.0000f
 /// ~~~
 template <typename T, typename V>
 auto Dot(const RVec<T> &v0, const RVec<V> &v1) -> decltype(v0[0] * v1[0])
@@ -1902,9 +1902,9 @@ R Mean(const RVec<T> &v, const R zero)
 /// ~~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecF v {1.f, 2.f, 4.f};
-/// auto v_max = Max(v)
+/// auto v_max = Max(v);
 /// v_max
-/// (float) 4.f
+/// (float) 4.00000f
 /// ~~~~
 template <typename T>
 T Max(const RVec<T> &v)
@@ -1918,9 +1918,9 @@ T Max(const RVec<T> &v)
 /// ~~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecF v {1.f, 2.f, 4.f};
-/// auto v_min = Min(v)
+/// auto v_min = Min(v);
 /// v_min
-/// (float) 1.f
+/// (float) 1.00000f
 /// ~~~~
 template <typename T>
 T Min(const RVec<T> &v)
@@ -1938,7 +1938,7 @@ T Min(const RVec<T> &v)
 /// RVecF v {1.f, 2.f, 4.f};
 /// auto v_argmax = ArgMax(v);
 /// v_argmax
-/// // (int) 2
+/// // (unsigned long) 2
 /// ~~~~
 template <typename T>
 std::size_t ArgMax(const RVec<T> &v)
@@ -1956,7 +1956,7 @@ std::size_t ArgMax(const RVec<T> &v)
 /// RVecF v {1.f, 2.f, 4.f};
 /// auto v_argmin = ArgMin(v);
 /// v_argmin
-/// // (int) 0
+/// // (unsigned long) 0
 /// ~~~~
 template <typename T>
 std::size_t ArgMin(const RVec<T> &v)
@@ -2111,10 +2111,10 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecD v {2., 3., 1.};
-/// auto sortIndices = Argsort(v);
+/// auto sortIndices = Argsort(v)
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 2, 0, 1 }
 /// auto values = Take(v, sortIndices)
-/// // (ROOT::VecOps::RVec<double> &) { 1., 2., 3. }
+/// // (ROOT::VecOps::RVec<double> &) { 1.0000000, 2.0000000, 3.0000000 }
 /// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
@@ -2135,7 +2135,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 /// auto sortIndices = Argsort(v, [](double x, double y) {return x > y;})
 /// // (ROOT::VecOps::RVec<unsigned long> &) { 1, 0, 2 }
 /// auto values = Take(v, sortIndices)
-/// // (ROOT::VecOps::RVec<double> &) { 3., 2., 1. }
+/// // (ROOT::VecOps::RVec<double> &) { 3.0000000, 2.0000000, 1.0000000 }
 /// ~~~
 template <typename T, typename Compare>
 RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v, Compare &&c)
@@ -2240,7 +2240,7 @@ RVec<T> Drop(const RVec<T> &v, RVec<typename RVec<T>::size_type> idxs)
 /// RVecD v {2., 3., 1.};
 /// auto v_reverse = Reverse(v);
 /// v_reverse
-/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 3.0000000, 2.0000000 }
+/// // (ROOT::VecOps::RVec<double> &) { 1.0000000, 3.0000000, 2.0000000 }
 /// ~~~
 template <typename T>
 RVec<T> Reverse(const RVec<T> &v)
@@ -2261,7 +2261,7 @@ RVec<T> Reverse(const RVec<T> &v)
 /// RVecD v {2., 3., 1.};
 /// auto v_sorted = Sort(v);
 /// v_sorted
-/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000, 3.0000000 }
+/// // (ROOT::VecOps::RVec<double> &) { 1.0000000, 2.0000000, 3.0000000 }
 /// ~~~
 template <typename T>
 RVec<T> Sort(const RVec<T> &v)
@@ -2286,7 +2286,7 @@ RVec<T> Sort(const RVec<T> &v)
 /// RVecD v {2., 3., 1.};
 /// auto v_sorted = Sort(v, [](double x, double y) {return 1/x < 1/y;});
 /// v_sorted
-/// // (ROOT::VecOps::RVec<double>) { 3.0000000, 2.0000000, 1.0000000 }
+/// // (ROOT::VecOps::RVec<double> &) { 3.0000000, 2.0000000, 1.0000000 }
 /// ~~~
 template <typename T, typename Compare>
 RVec<T> Sort(const RVec<T> &v, Compare &&c)
@@ -2306,7 +2306,7 @@ RVec<T> Sort(const RVec<T> &v, Compare &&c)
 /// using namespace ROOT::VecOps;
 /// auto comb_idx = Combinations(3, 2);
 /// comb_idx
-/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1, 0, 1, 0, 1 } }
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<unsigned long> > &) { { 0, 0, 1, 1, 2, 2 }, { 0, 1, 0, 1, 0, 1 } }
 /// ~~~
 inline RVec<RVec<std::size_t>> Combinations(const std::size_t size1, const std::size_t size2)
 {
@@ -2337,8 +2337,7 @@ inline RVec<RVec<std::size_t>> Combinations(const std::size_t size1, const std::
 /// RVecD v2 {-4., -5.};
 /// auto comb_idx = Combinations(v1, v2);
 /// comb_idx
-/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1,
-/// 0, 1, 0, 1 } }
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<unsigned long> > &) { { 0, 0, 1, 1, 2, 2 }, { 0, 1, 0, 1, 0, 1 } }
 /// ~~~
 template <typename T1, typename T2>
 RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const RVec<T2> &v2)
@@ -2354,16 +2353,16 @@ RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const 
 /// RVecD v {1., 2., 3., 4.};
 /// auto v_1 = Combinations(v, 1);
 /// v_1
-/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 1, 2, 3 } }
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<unsigned long> > &) { { 0, 1, 2, 3 } }
 /// auto v_2 = Combinations(v, 2);
-/// auto v_2
-/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1, 1, 2 }, { 1, 2, 3, 2, 3, 3 } }
+/// v_2
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<unsigned long> > &) { { 0, 0, 0, 1, 1, 2 }, { 1, 2, 3, 2, 3, 3 } }
 /// auto v_3 = Combinations(v, 3);
 /// v_3
-/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1 }, { 1, 1, 2, 2 }, { 2, 3, 3, 3 } }
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<unsigned long> > &) { { 0, 0, 0, 1 }, { 1, 1, 2, 2 }, { 2, 3, 3, 3 } }
 /// auto v_4 = Combinations(v, 4);
 /// v_4
-/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0 }, { 1 }, { 2 }, { 3 } }
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<unsigned long> > &) { { 0 }, { 1 }, { 2 }, { 3 } }
 /// ~~~
 template <typename T>
 RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typename RVec<T>::size_type n)
@@ -2409,7 +2408,7 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
 /// RVecD v {2., 0., 3., 0., 1.};
 /// auto nonzero_idx = Nonzero(v);
 /// nonzero_idx
-/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type>) { 0, 2, 4 }
+/// // (ROOT::VecOps::RVec<unsigned long> &) { 0, 2, 4 }
 /// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
@@ -2440,7 +2439,7 @@ RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
 /// RVecD v2 {-4., -5., 2., 1.};
 /// auto v1_intersect_v2 = Intersect(v1, v2);
 /// v1_intersect_v2
-/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000 }
+/// // (ROOT::VecOps::RVec<double> &) { 1.0000000, 2.0000000 }
 /// ~~~
 template <typename T>
 RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = false)
@@ -2578,8 +2577,8 @@ RVec<T> Where(const RVec<int>& c, T v1, T v2)
 /// using namespace ROOT::VecOps;
 /// RVecF rvf {0.f, 1.f, 2.f};
 /// RVecI rvi {7, 8, 9};
-/// Concatenate(rvf, rvi);
-/// // (ROOT::VecOps::RVec<float>) { 2.0000000, 4.0000000, 4.0000000 }
+/// Concatenate(rvf, rvi)
+/// // (ROOT::VecOps::RVec<float>) { 0.00000f, 1.00000f, 2.00000f, 7.00000f, 8.00000f, 9.00000f }
 /// ~~~
 template <typename T0, typename T1, typename Common_t = typename std::common_type<T0, T1>::type>
 RVec<Common_t> Concatenate(const RVec<T0> &v0, const RVec<T1> &v1)
