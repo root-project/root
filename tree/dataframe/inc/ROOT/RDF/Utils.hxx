@@ -267,6 +267,21 @@ template <typename T>
 struct IsRVec<ROOT::VecOps::RVec<T>> : std::true_type {};
 // clang-format on
 
+/// Return a vector with all elements of v1 and v2 and duplicates removed.
+/// Precondition: each of v1 and v2 must not have duplicate elements.
+template <typename T>
+std::vector<T> Union(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   std::vector<T> res = v1;
+
+   // Add the variations coming from the input columns
+   for (const auto &e : v2)
+      if (std::find(v1.begin(), v1.end(), e) == v1.end())
+         res.emplace_back(e);
+
+   return res;
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
