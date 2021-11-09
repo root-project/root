@@ -148,17 +148,6 @@
 #   define UTMP_NO_ADDR
 #endif
 
-#if (defined(R__AIX) && !defined(_AIX43)) || \
-    (defined(R__SUNGCC3) && !defined(__arch64__))
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || defined(R__FBSD) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || \
-      defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
-      (defined(R__AIX) && defined(_AIX43)) || \
-      (defined(R__SOLARIS) && defined(_SOCKLEN_T))
-#   define USE_SOCKLEN_T
-#endif
-
 #if defined(R__LYNXOS)
 extern "C" {
    extern int putenv(const char *);
@@ -3073,13 +3062,7 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 TInetAddress TUnixSystem::GetSockName(int sock)
 {
    struct sockaddr addr;
-#if defined(USE_SIZE_T)
-   size_t len = sizeof(addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
-#else
-   int len = sizeof(addr);
-#endif
 
    TInetAddress ia;
    if (getsockname(sock, &addr, &len) == -1) {
@@ -3109,13 +3092,7 @@ TInetAddress TUnixSystem::GetSockName(int sock)
 TInetAddress TUnixSystem::GetPeerName(int sock)
 {
    struct sockaddr addr;
-#if defined(USE_SIZE_T)
-   size_t len = sizeof(addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
-#else
-   int len = sizeof(addr);
-#endif
 
    TInetAddress ia;
    if (getpeername(sock, &addr, &len) == -1) {
@@ -3482,13 +3459,7 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 {
    if (sock < 0) return -1;
 
-#if defined(USE_SOCKLEN_T) || defined(_AIX43)
    socklen_t optlen = sizeof(*val);
-#elif defined(USE_SIZE_T)
-   size_t optlen = sizeof(*val);
-#else
-   int optlen = sizeof(*val);
-#endif
 
    switch (opt) {
    case kSendBuffer:
