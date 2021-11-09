@@ -60,7 +60,7 @@ from . import pythonization
 
 # Pythonizor function
 @pythonization('TDirectoryFile')
-def pythonize_tdirectoryfile(klass, name):
+def pythonize_tdirectoryfile(klass):
     """
     TDirectoryFile inherits from TDirectory the pythonized attr syntax (__getattr__)
     and WriteObject method.

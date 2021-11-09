@@ -44,10 +44,9 @@ def _rtruediv(self, other):
         return NotImplemented
 
 @pythonization('TComplex')
-def pythonize_tcomplex(klass, name):
+def pythonize_tcomplex(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # implements __radd__ as equal to __add__
     klass.__radd__ = klass.__add__
