@@ -371,6 +371,11 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
+   // Certain complex queries trigger creation of temporary tables. Depending on the build options of sqlite,
+   // sqlite may try to store such temporary tables on disk, using our custom VFS module to do so.
+   // Creation of new database files, however, is not supported by the custom VFS module.  Thus we set the behavior
+   // of the database connection to "temp_store=2", meaning that temporary tables should always be maintained
+   // in memory.
    retval = sqlite3_exec(fDataSet->fDb, "PRAGMA temp_store=2;", nullptr, nullptr, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
