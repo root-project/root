@@ -667,9 +667,11 @@ fWeight(kDefWeight)
    //check consistency of histograms
    if(CheckConsistency(passed,total)) {
       // do not add cloned histograms to gDirectory
-      TDirectory::TContext ctx(nullptr);
-      fTotalHistogram = (TH1*)total.Clone();
-      fPassedHistogram = (TH1*)passed.Clone();
+      {
+         TDirectory::TContext ctx(nullptr);
+         fTotalHistogram = (TH1*)total.Clone();
+         fPassedHistogram = (TH1*)passed.Clone();
+      }
 
       TString newName = total.GetName();
       newName += TString("_clone");
@@ -730,9 +732,12 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   TDirectory::TContext ctx(nullptr);
-   fTotalHistogram = new TH1D("total","total",nbins,xbins);
-   fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
+   {  
+      // use separate scope for TContext 
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH1D("total","total",nbins,xbins);
+      fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
+   }
 
    Build(name,title);
 }
@@ -768,10 +773,11 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   TDirectory::TContext ctx(nullptr);
-   fTotalHistogram = new TH1D("total","total",nbinsx,xlow,xup);
-   fPassedHistogram = new TH1D("passed","passed",nbinsx,xlow,xup);
-
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH1D("total","total",nbinsx,xlow,xup);
+      fPassedHistogram = new TH1D("passed","passed",nbinsx,xlow,xup);
+   }
    Build(name,title);
 }
 
@@ -810,10 +816,11 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   TDirectory::TContext ctx(nullptr);
-   fTotalHistogram = new TH2D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup);
-   fPassedHistogram = new TH2D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup);
-
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH2D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup);
+      fPassedHistogram = new TH2D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup);
+   }
    Build(name,title);
 }
 
@@ -852,10 +859,11 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   TDirectory::TContext ctx(nullptr);
-   fTotalHistogram = new TH2D("total","total",nbinsx,xbins,nbinsy,ybins);
-   fPassedHistogram = new TH2D("passed","passed",nbinsx,xbins,nbinsy,ybins);
-
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH2D("total","total",nbinsx,xbins,nbinsy,ybins);
+      fPassedHistogram = new TH2D("passed","passed",nbinsx,xbins,nbinsy,ybins);
+   }
    Build(name,title);
 }
 
@@ -898,10 +906,11 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   TDirectory::TContext ctx(nullptr);
-   fTotalHistogram = new TH3D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
-   fPassedHistogram = new TH3D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
-
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH3D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
+      fPassedHistogram = new TH3D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
+   }
    Build(name,title);
 }
 
@@ -944,10 +953,11 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   TDirectory::TContext ctx(nullptr);
-   fTotalHistogram = new TH3D("total","total",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
-   fPassedHistogram = new TH3D("passed","passed",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
-
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH3D("total","total",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
+      fPassedHistogram = new TH3D("passed","passed",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
+   }
    Build(name,title);
 }
 
