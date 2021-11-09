@@ -13,10 +13,9 @@ from libROOTPythonizations import AddSetItemTCAPyz
 
 
 @pythonization('TClonesArray')
-def pythonize_tclonesarray(klass, name):
+def pythonize_tclonesarray(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # Add item setter method
     AddSetItemTCAPyz(klass)

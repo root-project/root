@@ -24,10 +24,9 @@ def _imul(self, c):
 
 
 @pythonization('TH1')
-def pythonize_th1(klass, name):
+def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: name of the class
 
     # Support hist *= scalar
     klass.__imul__ = _imul

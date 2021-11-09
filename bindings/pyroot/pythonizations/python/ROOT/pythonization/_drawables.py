@@ -55,17 +55,17 @@ def _init(self, *args):
 
 @pythonization([ 'TPad', 'TButton', 'TColorWheel',
                  'TPolyLine3D', 'TPolyMarker', 'TPolyMarker3D' ])
-def pythonize_drawables(klass, name):
+def pythonize_drawables(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
+
     klass._OriginalDraw = klass.Draw
     klass.Draw = _Draw
 
 @pythonization('TSlider')
-def pythonize_tslider(klass, name):
+def pythonize_tslider(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
+
     klass._original__init__ = klass.__init__
     klass.__init__ = _init
