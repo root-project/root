@@ -107,9 +107,7 @@ robust Streamer mechanism I opted for 3).
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#if defined(R__HPUX) || \
-    defined (R__SOLARIS) || defined(R__AIX) || defined(R__HIUX) || \
-    __GLIBC_MINOR__ > 0
+#ifndef WIN32
 union semun {
    int val;                      // value for SETVAL
    struct semid_ds *buf;         // buffer for IPC_STAT & IPC_SET
