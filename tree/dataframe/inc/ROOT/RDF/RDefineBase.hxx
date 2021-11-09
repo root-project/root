@@ -46,6 +46,7 @@ protected:
    const ROOT::RDF::ColumnNames_t fColumnNames;
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
+   std::vector<std::string> fVariations; ///< List of systematic variations that affect the value of this define.
 
 public:
    RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
@@ -66,6 +67,8 @@ public:
    virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinalizeSlot(unsigned int slot) = 0;
+
+   const std::vector<std::string> &GetVariations() const { return fVariations; }
 };
 
 } // ns RDF
