@@ -17,6 +17,9 @@
 class TH1D;
 class TH2D;
 class TH3D;
+template <typename T>
+class THnT;
+using THnD = THnT<double>;
 class TProfile;
 class TProfile2D;
 
@@ -94,6 +97,30 @@ struct TH3DModel {
    TH3DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins,
              int nbinsz, const double *zbins);
    std::shared_ptr<::TH3D> GetHistogram() const;
+};
+
+struct THnDModel {
+   TString fName;
+   TString fTitle;
+   int fDim;
+   std::vector<int> fNbins;
+   std::vector<double> fXmin;
+   std::vector<double> fXmax;
+   std::vector<std::vector<double>> fBinEdges;
+
+   THnDModel() = default;
+   THnDModel(const THnDModel &) = default;
+   ~THnDModel();
+   THnDModel(const ::THnD &h);
+   THnDModel(const char *name, const char *title, int dim, const int *nbins, const double *xmin, const double *xmax);
+   // alternate version with std::vector to allow more convenient initialization from PyRoot
+   THnDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+             const std::vector<double> &xmin, const std::vector<double> &xmax);
+   THnDModel(const char *name, const char *title, int dim, const int *nbins,
+             const std::vector<std::vector<double>> &xbins);
+   THnDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+             const std::vector<std::vector<double>> &xbins);
+   std::shared_ptr<::THnD> GetHistogram() const;
 };
 
 struct TProfile1DModel {
