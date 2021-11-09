@@ -371,6 +371,10 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
+   retval = sqlite3_exec(fDataSet->fDb, "PRAGMA temp_store=2;", nullptr, nullptr, nullptr);
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
+
    retval = sqlite3_prepare_v2(fDataSet->fDb, query.c_str(), -1, &fDataSet->fQuery, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
