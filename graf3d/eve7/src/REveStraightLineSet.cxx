@@ -347,4 +347,5 @@ void REveStraightLineSetProjected::UpdateProjection()
       proj.ProjectPointfv(trans, m.fV, pp, fDepth);
       AddMarker(pp, m.fLineId);
    }
+   StampObjProps();
 }
