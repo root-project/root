@@ -1792,7 +1792,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooAbsReal* nll=nullptr;
   std::unique_ptr<ROOT::Experimental::RooFitDriver> driver;
   std::unique_ptr<RooRealVar> weightVar;
-  std::unique_ptr<RooAbsReal> constraintsTerm;
 
   if (pc.getInt("BatchMode")==0) nll = createNLL(data,nllCmdList);
   else
@@ -1822,7 +1821,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
     const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
 
-    constraintsTerm = RooConstraintSum::createConstraintTerm(
+    auto constraintsTerm = RooConstraintSum::createConstraintTerm(
             "NewNLLVar_constr", // name
             *this, // pdf
             data, // observables
@@ -1849,11 +1848,18 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       weightVar.reset( new RooRealVar(weightVarName.c_str(), "Weight(s) of events", data.weight()) );
     }
 
-    std::string nllName = std::string("nll_") + this->GetName() + "_" + data.GetName();
-    nll = new ROOT::Experimental::RooNLLVarNew(nllName.c_str(), nllName.c_str(), *this,
-                           observables, weightVar.get(), constraintsTerm.get(), isExtended, rangeName);
+    RooArgList nllTerms;
+    nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
+                "RooNLLVarNew", "RooNLLVarNew",
+                *this, observables, weightVar.get(), isExtended, rangeName));
+    if(constraintsTerm) {
+      nllTerms.add(*constraintsTerm.release());
+    }
 
-    driver.reset(new ROOT::Experimental::RooFitDriver( data, static_cast<ROOT::Experimental::RooNLLVarNew&>(*nll), observables, batchMode, rangeName ));
+    std::string nllName = std::string("nll_") + this->GetName() + "_" + data.GetName();
+    nll = new RooAddition(nllName.c_str(), nllName.c_str(), nllTerms, true);
+
+    driver.reset(new ROOT::Experimental::RooFitDriver( data, *nll, observables, batchMode, rangeName ));
 
     // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
     if(!rangeName.empty()) {
