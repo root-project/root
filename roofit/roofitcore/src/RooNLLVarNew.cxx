@@ -69,19 +69,15 @@ std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet 
 \param pdf The pdf for which the nll is computed for
 \param observables The observabes of the pdf
 \param weight A pointer to the weight variable (if exists)
-\param constraints A pointer to the constraints (if exist)
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           RooAbsReal *weight, RooAbsReal *constraints, bool isExtended, std::string const &rangeName)
+                           RooAbsReal *weight, bool isExtended, std::string const &rangeName)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{&observables}, _isExtended{isExtended}
 //_rangeNormTerm{rangeName.empty() ? nullptr : createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName)}
 {
    if (weight)
       _weight = std::make_unique<RooTemplateProxy<RooAbsReal>>("_weight", "_weight", this, *weight);
-   if (constraints) {
-      _constraints = constraints;
-   }
    if (!rangeName.empty()) {
       auto term = createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName);
       _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", "_rangeNormTerm", this, *term);
@@ -94,8 +90,6 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 {
    if (other._weight)
       _weight = std::make_unique<RooTemplateProxy<RooAbsReal>>("_weight", this, *other._weight);
-   if (other._constraints)
-      _constraints = other._constraints;
    if (other._rangeNormTerm)
       _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", this, *other._rangeNormTerm);
 }
@@ -169,9 +163,6 @@ double RooNLLVarNew::reduce(cudaStream_t *stream, const double *input, size_t nE
 {
    auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
    double nll = dispatch->sumReduce(stream, input, nEvents);
-   if (_constraints) {
-      nll += _constraints->getVal();
-   }
    if (_isExtended) {
       assert(_sumWeight != 0.0);
       nll += _pdf->extendedTerm(_sumWeight, _observables);
@@ -202,7 +193,10 @@ RooSpan<const double> RooNLLVarNew::getValues(RooBatchCompute::RunContext &, con
    throw std::runtime_error("RooNLLVarNew::getValues was called directly which should not happen!");
 }
 
-bool RooNLLVarNew::getParameters(const RooArgSet *depList, RooArgSet &outSet, bool stripDisconnected) const
+void RooNLLVarNew::getParametersHook(const RooArgSet *nset, RooArgSet *params, Bool_t stripDisconnected) const
 {
-   return _pdf->getParameters(depList, outSet, stripDisconnected);
+   // strip away the observables and weights
+   params->remove(*_observables, true, true);
+   if (_weight)
+      params->remove(**_weight, true, true);
 }

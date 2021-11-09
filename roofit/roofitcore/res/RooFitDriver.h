@@ -55,7 +55,6 @@ public:
    std::string const &name() const { return _name; }
    std::string const &title() const { return _title; }
    RooArgSet const &parameters() const { return _parameters; }
-   double errorLevel() const { return _topNode.defaultErrorLevel(); }
 
    class RooAbsRealWrapper final : public RooAbsReal {
    public:
@@ -139,6 +138,7 @@ private:
    };
    void updateMyClients(const RooAbsArg *node);
    void updateMyServers(const RooAbsArg *node);
+   std::size_t getInputSize(RooAbsArg const &arg) const;
    void handleIntegral(const RooAbsArg *node);
    std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,

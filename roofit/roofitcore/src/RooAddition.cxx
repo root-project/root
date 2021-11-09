@@ -35,6 +35,7 @@ in the two sets.
 #include "RooArgSet.h"
 #include "RooNameReg.h"
 #include "RooNLLVar.h"
+#include "RooNLLVarNew.h"
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
 
@@ -198,7 +199,7 @@ Double_t RooAddition::defaultErrorLevel() const
   RooArgSet* comps = getComponents() ;
   TIterator* iter = comps->createIterator() ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    if (dynamic_cast<RooNLLVar*>(arg)) {
+    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {

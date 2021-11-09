@@ -280,9 +280,10 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
 
-   const std::size_t nOut = info.computeInScalarMode ? 1 : _dataset.size();
+   const std::size_t nOut = getInputSize(*node);
 
-   if (info.computeInScalarMode) {
+   if (nOut == 1) {
+      // compute in scalar mode
       _nonDerivedValues.push_back(nodeAbsReal->getVal(&_normSet));
 
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
@@ -378,6 +379,21 @@ double RooFitDriver::getVal()
    return _dataMapCPU.at(&_topNode)[0];
 }
 
+std::size_t RooFitDriver::getInputSize(RooAbsArg const &arg) const
+{
+   RooArgSet valueServers;
+   arg.treeNodeServerList(&valueServers, nullptr, true, true, true);
+   std::size_t inputSize = 1;
+   for (auto *server : valueServers) {
+      if (_dataMapCUDA.find(server) != _dataMapCUDA.end()) {
+         inputSize = std::max(inputSize, _dataMapCUDA.at(server).size());
+      } else if (_dataMapCPU.find(server) != _dataMapCPU.end()) {
+         inputSize = std::max(inputSize, _dataMapCPU.at(server).size());
+      }
+   }
+   return inputSize;
+}
+
 /// Handles the computation of the integral of a PDF for normalization purposes,
 /// before the pdf is computed.
 void RooFitDriver::handleIntegral(const RooAbsArg *node)
@@ -387,16 +403,10 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
    if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
       auto integral = pAbsPdf->getIntegral(_normSet);
 
-      RooArgSet valueServers;
-      integral->treeNodeServerList(&valueServers, nullptr, true, true, true);
-      std::size_t inputSize = 1;
-      for (auto *server : valueServers) {
-         inputSize = std::max(inputSize, _dataMapCPU[server].size());
-      }
+      std::size_t inputSize = getInputSize(*integral);
 
       NodeInfo info;
-      info.computeInScalarMode = inputSize == 1;
-      if (!info.computeInScalarMode && _batchMode == RooBatchCompute::BatchMode::Cuda) {
+      if (inputSize > 1 && _batchMode == RooBatchCompute::BatchMode::Cuda) {
          info.copyAfterEvaluation = true;
          info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
       }
@@ -411,7 +421,7 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
 
-   const std::size_t nOut = _dataset.size();
+   const std::size_t nOut = getInputSize(*node);
 
    NodeInfo &info = _nodeInfos.at(node);
    info.remServers = -1;

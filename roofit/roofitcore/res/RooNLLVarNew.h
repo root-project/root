@@ -28,18 +28,14 @@ class RooNLLVarNew : public RooAbsReal {
 public:
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, RooAbsReal *weight,
-                RooAbsReal *constraints, bool isExtended, std::string const &rangeName);
+                bool isExtended, std::string const &rangeName);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
-   using RooAbsArg::getParameters;
-   bool getParameters(const RooArgSet *depList, RooArgSet &outSet, bool stripDisconnected = true) const override;
+   void getParametersHook(const RooArgSet *nset, RooArgSet *list, Bool_t stripDisconnected) const override;
 
-   virtual Double_t defaultErrorLevel() const override
-   {
-      // Return default level for MINUIT error analysis
-      return 0.5;
-   }
+   /// Return default level for MINUIT error analysis.
+   double defaultErrorLevel() const override { return 0.5; }
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
    void computeBatch(cudaStream_t *, double *output, size_t nOut, RooBatchCompute::DataMap &) const override;
@@ -52,7 +48,6 @@ protected:
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet const *_observables = nullptr;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;
-   RooAbsReal const *_constraints = nullptr;
    mutable double _sumWeight = 0.0;         //!
    mutable double _sumCorrectionTerm = 0.0; //!
    bool _isExtended;
