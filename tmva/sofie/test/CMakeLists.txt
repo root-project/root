@@ -114,3 +114,15 @@ ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
+
+# gtest
+configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
+
+ROOT_ADD_GTEST(TestSofieConv2D TestConv2D.cxx
+  LIBRARIES
+    ROOTTMVASofie
+    ROOTTMVASofieParser
+    blas
+  INCLUDE_DIRS
+    ${CMAKE_CURRENT_BINARY_DIR}
+)

@@ -179,9 +179,11 @@ namespace SOFIE{
       }
       // for the session we need to include SOFIE_Common functions
       if (useSession)
-         fGC += "#include \"TMVA/SOFIE_common.hxx\"\n\n";
+         fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
+      if (useWeightFile)
+         fGC += "#include <fstream>\n";
       
-      fGC += ("namespace TMVA_SOFIE_" + fName + "{\n");
+      fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
       if (!fNeededBlasRoutines.empty()) {
          fGC += ("namespace BLAS{\n");
          for (auto &routine : fNeededBlasRoutines) {
