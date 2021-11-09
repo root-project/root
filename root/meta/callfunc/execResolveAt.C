@@ -14,7 +14,7 @@ void execResolveAt() {
    ClassInfo_t* gcl = TClass::GetClass("std::vector<float>")->GetClassInfo();
    //ClassInfo_t* gcl = gInterpreter->ClassInfo_Factory("vector<float>");
    CallFunc_t* mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
    gInterpreter->CallFunc_SetFuncProto(mc, gcl, "at", "vector<_Tp,_Alloc>::size_type", &offset);
    std::cerr << "is valid vector<_Tp,_Alloc>::size_type: " << gInterpreter->CallFunc_IsValid(mc) << std::endl;
 

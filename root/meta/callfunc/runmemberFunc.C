@@ -36,7 +36,7 @@ void runAllThroughTInterpreterInterfaces() {
    CallFunc_t* tagXCtor = gInterpreter->CallFunc_Factory();
    CallFunc_t* tagXDtor = gInterpreter->CallFunc_Factory();
    CallFunc_t* mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    // Construct TClass for A
    tagX = TClass::GetClass("A")->GetClassInfo();

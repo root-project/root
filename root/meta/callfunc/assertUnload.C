@@ -14,7 +14,7 @@ int assertUnload() {
    }
 
    TMethodCall mc(nullptr, "myFunc", "");
-   long result = 0;
+   Longptr_t result = 0;
 
    mc.Execute(result);
    if (result != 42) {
