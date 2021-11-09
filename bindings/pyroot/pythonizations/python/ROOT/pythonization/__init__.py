@@ -287,4 +287,4 @@ def _register_pythonizations():
     exclude = [ '_rdf_utils' ]
     for _, module_name, _ in  pkgutil.walk_packages(__path__):
         if module_name not in exclude:
-            module = importlib.import_module(__name__ + '.' + module_name)
+            importlib.import_module(__name__ + '.' + module_name)
