@@ -14,10 +14,9 @@ from ._generic import _add_getitem_checked
 
 
 @pythonization('TVectorT', is_prefix=True)
-def pythonize_tvectort(klass, name):
+def pythonize_tvectort(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # Support `len(v)` as `v.GetNoElements()`
     klass.__len__ = klass.GetNoElements

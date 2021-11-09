@@ -69,7 +69,7 @@ def _TFileOpen(klass, *args):
 
 # Pythonizor function
 @pythonization('TFile')
-def pythonize_tfile(klass, name):
+def pythonize_tfile(klass):
     """
     TFile inherits from
     - TDirectory the pythonized attr syntax (__getattr__) and WriteObject method.

@@ -9,6 +9,7 @@
 ################################################################################
 
 import importlib
+import inspect
 import pkgutil
 import re
 import sys
@@ -87,6 +88,8 @@ def pythonization(target, is_prefix=False):
                 filtering).
         '''
 
+        npars = _check_num_pars(user_pythonizor)
+
         def cppyy_pythonizor(klass, name):
             '''
             Wrapper function with the parameters that cppyy requires for a
@@ -107,7 +110,10 @@ def pythonization(target, is_prefix=False):
             pythonize_generic(klass, fqn)
 
             if passes_filter(name, _get_scope(fqn)):
-                user_pythonizor(klass, fqn)
+                if npars == 1:
+                    user_pythonizor(klass)
+                else:
+                    user_pythonizor(klass, fqn)
 
         # Register pythonizor in all the scopes of the requested classes
         for scope in scopes:
@@ -248,6 +254,30 @@ def _find_namespace_end(fqn):
         pos += 1
 
     return last_found
+
+def _check_num_pars(f):
+    '''
+    Checks the number of parameters of the `f` function.
+
+    Args:
+        f (function): user pythonizor function.
+
+    Returns:
+        int: number of positional parameters of `f`.
+    '''
+
+    if sys.version_info >= (3, 0):
+        npars = len(inspect.getfullargspec(f).args)
+    else:
+        npars = len(inspect.getargspec(f).args)
+
+    if npars == 0 or npars > 2:
+        raise TypeError("Pythonizor function {} has a wrong number of "
+                        "parameters ({}). Allowed parameters are the class to "
+                        "be pythonized and (optionally) its name."
+                        .format(f.__name__, npars))
+
+    return npars
 
 def _register_pythonizations():
     '''

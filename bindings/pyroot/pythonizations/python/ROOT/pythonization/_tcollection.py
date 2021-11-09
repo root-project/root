@@ -94,10 +94,9 @@ def _iter_pyz(self):
 
 
 @pythonization('TCollection')
-def pythonize_tcollection(klass, name):
+def pythonize_tcollection(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # Support `len(c)` as `c.GetEntries()`
     klass.__len__ = klass.GetEntries

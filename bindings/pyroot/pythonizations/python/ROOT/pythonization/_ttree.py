@@ -194,10 +194,9 @@ def pythonize_ttree(klass, name):
     klass.Branch = _Branch
 
 @pythonization('TChain')
-def pythonize_tchain(klass, name):
+def pythonize_tchain(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # TChain needs to be explicitly pythonized because it redefines
     # SetBranchAddress in C++. As a consequence, TChain does not

@@ -12,10 +12,9 @@ from . import pythonization
 
 
 @pythonization('TObjString')
-def pythonize_tobjstring(klass, name):
+def pythonize_tobjstring(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: name of the class
 
     # `len(s)` is the length of string representation
     klass.__len__ = lambda self: len(str(self))

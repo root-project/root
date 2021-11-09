@@ -12,10 +12,9 @@ from . import pythonization
 
 
 @pythonization('TString')
-def pythonize_tstring(klass, name):
+def pythonize_tstring(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: name of the class
 
     # Support `len(s)` as `s.Length()`
     klass.__len__ = klass.Length

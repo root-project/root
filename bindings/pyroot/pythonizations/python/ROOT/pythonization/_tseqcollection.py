@@ -247,10 +247,9 @@ def _index_pyz(self, val):
 
 
 @pythonization('TSeqCollection')
-def pythonize_tseqcollection(klass, name):
+def pythonize_tseqcollection(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # Item access methods
     klass.__getitem__ = _getitem_pyz

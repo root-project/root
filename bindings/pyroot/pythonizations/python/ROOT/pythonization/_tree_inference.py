@@ -122,9 +122,8 @@ def SaveXGBoost(self, xgb_model, key_name, output_path,
 
 
 @pythonization("TMVA::Experimental::SaveXGBoost")
-def pythonize_tree_inference(klass, name):
+def pythonize_tree_inference(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     klass.__init__ = SaveXGBoost
