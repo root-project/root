@@ -302,6 +302,7 @@ TEST_F(BulkApiMultipleTest, stdRead)
       increment(idx, idx_g);
       idx++;
    }
+   delete hfile;
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");
    printf("TTreeReader: Total elapsed time (seconds) for standard APIs: %.2f\n", sw.RealTime());
