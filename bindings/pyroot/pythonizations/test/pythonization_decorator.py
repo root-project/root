@@ -305,6 +305,39 @@ class PythonizationDecorator(unittest.TestCase):
             self.assertEqual(executed.pop(0), class_name)
         self.assertTrue(not executed)
 
+    # Test pythonizor with a single parameter (the class proxy)
+    def test_single_parameter_pythonizor(self):
+        # Define test class
+        class_name = 'MyClass6'
+        self._define_class(class_name)
+
+        executed = []
+
+        # Define pythonizor function for class
+        @pythonization(class_name)
+        def my_func(klass):
+            self.assertEqual(klass.__cpp_name__, class_name)
+            executed.append(class_name)
+
+        # Trigger execution of pythonizor
+        getattr(ROOT, class_name)
+
+        self.assertEqual(executed.pop(0), class_name)
+        self.assertTrue(not executed)
+
+    # Test pythonizor with wrong number of parameters
+    def test_wrong_pars_pythonizor(self):
+        # Define test class
+        class_name = 'MyClass7'
+        self._define_class(class_name)
+
+        # Define pythonizor function for class.
+        # Registration of pythonizor should fail
+        with self.assertRaises(TypeError):
+            @pythonization(class_name)
+            def my_func(klass, name, wrong_par):
+                pass
+
 
 if __name__ == '__main__':
     unittest.main()
