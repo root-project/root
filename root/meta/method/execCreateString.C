@@ -10,7 +10,7 @@ void execCreateString() {
 
    ClassInfo_t* gcl = TClass::GetClass("string")->GetClassInfo();
    CallFunc_t* mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
 // Bug 1: can not get a valid function for "string", but can get one for "basic_string<>"
    std::cerr << "Bug 1:\n";

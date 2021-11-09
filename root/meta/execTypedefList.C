@@ -121,7 +121,11 @@ int execTypedefList() {
    res = check("vector<int>::value_type","int"); if (res) return res;
    res = check("vector<int>::reference","int"); if (res) return res;
    res = check("Option_t","char"); if (res) return res;
+#ifdef _WIN64
+   res = check("KeySym_t","ULong64_t"); if (res) return res;
+#else
    res = check("KeySym_t","unsigned long"); if (res) return res;
+#endif
    res = check("TBuffer::CacheList_t","vector<TVirtualArray*>"); if (res) return res;
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
 

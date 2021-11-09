@@ -118,7 +118,7 @@ void runAllThroughTInterpreterInterfaces() {
    // is the global namespace.
    ClassInfo_t* globalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t* mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    // Run VoidFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "VoidFuncNoArgs", "", &offset);
@@ -126,13 +126,13 @@ void runAllThroughTInterpreterInterfaces() {
 
    // Run IntFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "IntFuncNoArgs", "", &offset);
-   Long_t result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
-   printf("Result of IntFuncNoArgs = %ld\n", result_long);
+   Longptr_t result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
+   printf("Result of IntFuncNoArgs = %zd\n", (size_t)result_long);
 
    // Run IntTFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "IntTFuncNoArgs", "", &offset);
    result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
-   printf("Result of IntFuncNoArgs = %ld\n", result_long);
+   printf("Result of IntFuncNoArgs = %zd\n", (size_t)result_long);
 
    // Run DoubleFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "DoubleFuncNoArgs", "", &offset);
@@ -172,7 +172,7 @@ void runAllThroughTInterpreterInterfaces() {
    gInterpreter->CallFunc_SetFuncProto(mc, namespaceA3, "NestedNamespaceIntOneArg", "int", &offset);
    gInterpreter->CallFunc_SetArg(mc, (Long_t)11);
    result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
-   printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %ld\n", result_long);
+   printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %zd\n", (size_t)result_long);
 
    // Cleanup
    gInterpreter->CallFunc_Delete(mc);
@@ -184,7 +184,7 @@ void runAllThroughTInterpreterInterfaces() {
 void runAllThroughTMethodCall() {
    printf("Running through TMethodCall...\n");
    TMethodCall method;
-   Long_t result_long = 0;
+   Longptr_t result_long = 0;
    Double_t result_double;
 
    // Run VoidFuncNoArgs
@@ -194,12 +194,12 @@ void runAllThroughTMethodCall() {
    // Run IntFuncNoArgs
    method = TMethodCall("IntFuncNoArgs", "");
    method.Execute(result_long);
-   printf("Result of IntFuncNoArgs = %ld\n", result_long);
+   printf("Result of IntFuncNoArgs = %zd\n", (size_t)result_long);
 
    // Run IntTFuncNoArgs
    method = TMethodCall("IntTFuncNoArgs", "");
    method.Execute(result_long);
-   printf("Result of IntFuncNoArgs = %ld\n", result_long);
+   printf("Result of IntFuncNoArgs = %zd\n", (size_t)result_long);
 
    // Run DoubleFuncNoArgs
    method = TMethodCall("DoubleFuncNoArgs", "");
@@ -232,7 +232,7 @@ void runAllThroughTMethodCall() {
    method.InitWithPrototype("A::A1::A2::A3::NestedNamespaceIntOneArg", "int");
    method.SetParam((Long_t)11);
    method.Execute(result_long);
-   printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %ld\n", result_long);
+   printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %zd\n", (size_t)result_long);
 }
 
 void runsimpleFunc() {
