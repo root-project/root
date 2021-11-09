@@ -40,7 +40,7 @@ TArrayL::TArrayL(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TArrayL object and initialize it with values of array.
 
-TArrayL::TArrayL(Int_t n, const Longptr_t *array)
+TArrayL::TArrayL(Int_t n, const Long_t *array)
 {
    fArray = nullptr;
    Set(n, array);
@@ -78,7 +78,7 @@ TArrayL::~TArrayL()
 /// Adopt array arr into TArrayL, i.e. don't copy arr but use it directly
 /// in TArrayL. User may not delete arr, TArrayL dtor will do it.
 
-void TArrayL::Adopt(Int_t n, Longptr_t *arr)
+void TArrayL::Adopt(Int_t n, Long_t *arr)
 {
    if (fArray)
       delete [] fArray;
@@ -90,7 +90,7 @@ void TArrayL::Adopt(Int_t n, Longptr_t *arr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add long c at position i. Check for out of bounds.
 
-void TArrayL::AddAt(Longptr_t c, Int_t i)
+void TArrayL::AddAt(Long_t c, Int_t i)
 {
    if (!BoundsOk("TArrayL::AddAt", i)) return;
    fArray[i] = c;
@@ -106,16 +106,16 @@ void TArrayL::Set(Int_t n)
 {
    if (n < 0) return;
    if (n != fN) {
-      Longptr_t *temp = fArray;
+      Long_t *temp = fArray;
       if (n != 0) {
-         fArray = new Longptr_t[n];
+         fArray = new Long_t[n];
          if (n < fN) {
-            memcpy(fArray, temp, n*sizeof(Longptr_t));
+            memcpy(fArray, temp, n*sizeof(Long_t));
          } else if (temp) {
-            memcpy(fArray, temp, fN*sizeof(Longptr_t));
-            memset(&fArray[fN], 0, (n-fN)*sizeof(Longptr_t));
+            memcpy(fArray, temp, fN*sizeof(Long_t));
+            memset(&fArray[fN], 0, (n-fN)*sizeof(Long_t));
          } else {
-            memset(fArray, 0, n*sizeof(Longptr_t));
+            memset(fArray, 0, n*sizeof(Long_t));
          }
       } else {
          fArray = nullptr;
@@ -129,7 +129,7 @@ void TArrayL::Set(Int_t n)
 /// Set size of this array to n longs and set the contents.
 /// This function should not be called if the array was declared via Adopt.
 
-void TArrayL::Set(Int_t n, const Longptr_t *array)
+void TArrayL::Set(Int_t n, const Long_t *array)
 {
    if (fArray && fN != n) {
       delete [] fArray;
@@ -138,8 +138,8 @@ void TArrayL::Set(Int_t n, const Longptr_t *array)
    fN = n;
    if ((fN == 0) || !array)
       return;
-   if (!fArray) fArray = new Longptr_t[fN];
-   memmove(fArray, array, n*sizeof(Longptr_t));
+   if (!fArray) fArray = new Long_t[fN];
+   memmove(fArray, array, n*sizeof(Long_t));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
