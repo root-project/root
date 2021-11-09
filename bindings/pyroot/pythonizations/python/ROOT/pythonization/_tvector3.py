@@ -14,10 +14,9 @@ from ._generic import _add_getitem_checked
 
 
 @pythonization('TVector3')
-def pythonize_tvector3(klass, name):
+def pythonize_tvector3(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     # `len(v)` is always 3
     klass.__len__ = lambda _: 3

@@ -230,10 +230,9 @@ def _histo_profile(self, fixed_args, *args):
 
 
 @pythonization([ "ROOT::RDataFrame<", "ROOT::RDF::RInterface<" ], is_prefix=True)
-def pythonize_rdataframe(klass, name):
+def pythonize_rdataframe(klass):
     # Parameters:
     # klass: class to be pythonized
-    # name: string containing the name of the class
 
     from cppyy.gbl.ROOT import RDF
 
