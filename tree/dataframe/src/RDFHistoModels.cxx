@@ -19,28 +19,33 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "THn.h"
 
 /**
-* \class ROOT::RDF::TH1DModel
-* \ingroup dataframe
-* \brief A struct which stores the parameters of a TH1D
-*
-* \class ROOT::RDF::TH2DModel
-* \ingroup dataframe
-* \brief A struct which stores the parameters of a TH2D
-*
-* \class ROOT::RDF::TH3DModel
-* \ingroup dataframe
-* \brief A struct which stores the parameters of a TH3D
-*
-* \class ROOT::RDF::TProfile1DModel
-* \ingroup dataframe
-* \brief A struct which stores the parameters of a TProfile
-*
-* \class ROOT::RDF::TProfile2DModel
-* \ingroup dataframe
-* \brief A struct which stores the parameters of a TProfile2D
-*/
+ * \class ROOT::RDF::TH1DModel
+ * \ingroup dataframe
+ * \brief A struct which stores the parameters of a TH1D
+ *
+ * \class ROOT::RDF::TH2DModel
+ * \ingroup dataframe
+ * \brief A struct which stores the parameters of a TH2D
+ *
+ * \class ROOT::RDF::TH3DModel
+ * \ingroup dataframe
+ * \brief A struct which stores the parameters of a TH3D
+ *
+ * \class ROOT::RDF::THnDModel
+ * \ingroup dataframe
+ * \brief A struct which stores the parameters of a THnD
+ *
+ * \class ROOT::RDF::TProfile1DModel
+ * \ingroup dataframe
+ * \brief A struct which stores the parameters of a TProfile
+ *
+ * \class ROOT::RDF::TProfile2DModel
+ * \ingroup dataframe
+ * \brief A struct which stores the parameters of a TProfile2D
+ */
 
 template <typename T>
 inline void FillVector(std::vector<double> &v, int size, T *a)
@@ -212,6 +217,71 @@ std::shared_ptr<::TH3D> TH3DModel::GetHistogram() const
 TH3DModel::~TH3DModel()
 {
 }
+
+THnDModel::THnDModel(const ::THnD &h)
+   : fName(h.GetName()), fTitle(h.GetTitle()), fDim(h.GetNdimensions()), fNbins(fDim), fXmin(fDim), fXmax(fDim),
+     fBinEdges(fDim)
+{
+   for (int idim = 0; idim < fDim; ++idim) {
+      fNbins[idim] = h.GetAxis(idim)->GetNbins();
+      SetAxisProperties(h.GetAxis(idim), fXmin[idim], fXmax[idim], fBinEdges[idim]);
+   }
+}
+
+THnDModel::THnDModel(const char *name, const char *title, int dim, const int *nbins, const double *xmin,
+                     const double *xmax)
+   : fName(name), fTitle(title), fDim(dim), fBinEdges(dim)
+{
+   fNbins.reserve(fDim);
+   fXmin.reserve(fDim);
+   fXmax.reserve(fDim);
+   for (int idim = 0; idim < fDim; ++idim) {
+      fNbins.push_back(nbins[idim]);
+      fXmin.push_back(xmin[idim]);
+      fXmax.push_back(xmax[idim]);
+   }
+}
+
+THnDModel::THnDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+                     const std::vector<double> &xmin, const std::vector<double> &xmax)
+   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(xmin), fXmax(xmax), fBinEdges(dim)
+{
+}
+
+THnDModel::THnDModel(const char *name, const char *title, int dim, const int *nbins,
+                     const std::vector<std::vector<double>> &xbins)
+   : fName(name), fTitle(title), fDim(dim), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins)
+{
+   fNbins.reserve(fDim);
+   for (int idim = 0; idim < fDim; ++idim) {
+      fNbins.push_back(nbins[idim]);
+   }
+}
+
+THnDModel::THnDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+                     const std::vector<std::vector<double>> &xbins)
+   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins)
+{
+}
+
+std::shared_ptr<::THnD> THnDModel::GetHistogram() const
+{
+   bool varbinning = false;
+   for (const auto &bins : fBinEdges) {
+      if (bins.size()) {
+         varbinning = true;
+         break;
+      }
+   }
+   std::shared_ptr<::THnD> h;
+   if (varbinning) {
+      h = std::make_shared<::THnD>(fName, fTitle, fDim, fNbins.data(), fBinEdges);
+   } else {
+      h = std::make_shared<::THnD>(fName, fTitle, fDim, fNbins.data(), fXmin.data(), fXmax.data());
+   }
+   return h;
+}
+THnDModel::~THnDModel() {}
 
 // Profiles
 
