@@ -10,11 +10,14 @@
 
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/Utils.hxx"
 
 using namespace ROOT::Internal::RDF;
 
-RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister)
-   : fLoopManager(lm), fNSlots(lm->GetNSlots()), fColumnNames(colNames), fColRegister(colRegister)
+RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister,
+                         const std::vector<std::string> &prevVariations)
+   : fLoopManager(lm), fNSlots(lm->GetNSlots()), fColumnNames(colNames),
+     fVariations(Union(prevVariations, colRegister.GetVariationDeps(fColumnNames))), fColRegister(colRegister)
 {
 }
 
