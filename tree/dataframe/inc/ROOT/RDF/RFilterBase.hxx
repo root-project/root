@@ -49,7 +49,8 @@ protected:
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
-               const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns);
+               const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
+               const std::vector<std::string> &prevVariations);
    RFilterBase &operator=(const RFilterBase &) = delete;
 
    virtual ~RFilterBase();
