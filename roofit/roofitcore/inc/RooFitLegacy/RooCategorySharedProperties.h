@@ -13,6 +13,18 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
+/**
+\file RooCategorySharedProperties.h
+\class RooCategorySharedProperties
+\ingroup Roofitcore
+
+RooCategorySharedProperties is the container for all properties
+that are shared between instance of RooCategory objects that
+are clones of each other. At present the only property that is
+shared in this way is the list of alternate named range definitions
+**/
+
 #ifndef ROO_CATEGORY_SHARED_PROPERTY
 #define ROO_CATEGORY_SHARED_PROPERTY
 
@@ -22,12 +34,14 @@
 class RooCategorySharedProperties : public RooSharedProperties {
 public:
 
-  RooCategorySharedProperties() ;
-  RooCategorySharedProperties(const char* uuidstr) ;
-  RooCategorySharedProperties(const RooCategorySharedProperties& other) ;
-  virtual ~RooCategorySharedProperties() ;
-
-  RooSharedProperties* clone() { return new RooCategorySharedProperties(*this)  ; }
+  /// Constructor.
+  RooCategorySharedProperties() {}
+  /// Constructor with unique-id string.
+  RooCategorySharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr) {}
+  /// Destructor.
+  virtual ~RooCategorySharedProperties() {
+    _altRanges.Delete() ;
+  }
 
 protected:
 
