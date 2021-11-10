@@ -143,7 +143,7 @@ public:
               ? Value
               : Sections[RE.Sections.SectionA].getLoadAddressWithOffset(
                     RE.Addend);
-      assert(Result <= UINT32_MAX && "relocation overflow");
+      // AXEL: assert(Result <= UINT32_MAX && "relocation overflow");
       LLVM_DEBUG(dbgs() << "\t\tOffset: " << RE.Offset
                         << " RelType: IMAGE_REL_I386_DIR32"
                         << " TargetSection: " << RE.Sections.SectionA
@@ -158,7 +158,7 @@ public:
       uint64_t Result =
           Sections[RE.Sections.SectionA].getLoadAddressWithOffset(RE.Addend) -
           Sections[0].getLoadAddress();
-      assert(Result <= UINT32_MAX && "relocation overflow");
+      // AXEL: assert(Result <= UINT32_MAX && "relocation overflow");
       LLVM_DEBUG(dbgs() << "\t\tOffset: " << RE.Offset
                         << " RelType: IMAGE_REL_I386_DIR32NB"
                         << " TargetSection: " << RE.Sections.SectionA
@@ -173,8 +173,8 @@ public:
                             ? Value
                             : Sections[RE.Sections.SectionA].getLoadAddress();
       Result = Result - Section.getLoadAddress() + RE.Addend - 4 - RE.Offset;
-      assert(static_cast<int64_t>(Result) <= INT32_MAX &&
-             "relocation overflow");
+      // AXEL: assert(static_cast<int64_t>(Result) <= INT32_MAX &&
+      //       "relocation overflow");
       assert(static_cast<int64_t>(Result) >= INT32_MIN &&
              "relocation underflow");
       LLVM_DEBUG(dbgs() << "\t\tOffset: " << RE.Offset
@@ -187,8 +187,8 @@ public:
     }
     case COFF::IMAGE_REL_I386_SECTION:
       // 16-bit section index of the section that contains the target.
-      assert(static_cast<uint32_t>(RE.SectionID) <= UINT16_MAX &&
-             "relocation overflow");
+      // AXEL: assert(static_cast<uint32_t>(RE.SectionID) <= UINT16_MAX &&
+      //       "relocation overflow");
       LLVM_DEBUG(dbgs() << "\t\tOffset: " << RE.Offset
                         << " RelType: IMAGE_REL_I386_SECTION Value: "
                         << RE.SectionID << '\n');
@@ -196,8 +196,8 @@ public:
       break;
     case COFF::IMAGE_REL_I386_SECREL:
       // 32-bit offset of the target from the beginning of its section.
-      assert(static_cast<uint64_t>(RE.Addend) <= UINT32_MAX &&
-             "relocation overflow");
+      // AXEL: assert(static_cast<uint64_t>(RE.Addend) <= UINT32_MAX &&
+      //       "relocation overflow");
       LLVM_DEBUG(dbgs() << "\t\tOffset: " << RE.Offset
                         << " RelType: IMAGE_REL_I386_SECREL Value: "
                         << RE.Addend << '\n');
