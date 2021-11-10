@@ -125,17 +125,19 @@ void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyWeights(TMatrixT<Doub
 template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
+   // short-circuit on empty
+   if (std::get<0>(fData).empty())
+      return;
    Event *event = nullptr;
 
    Int_t m = matrix.GetNrows();
-   Int_t n = event->GetNVariables();
 
    // Copy input variables.
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator++;
       event = std::get<0>(fData)[sampleIndex];
-      for (Int_t j = 0; j < n; j++) {
+      for (Int_t j = 0; j < static_cast<Int_t>(event ? event->GetNVariables() : 0); j++) {
          matrix(i, j) = event->GetValue(j);
       }
    }
@@ -145,7 +147,10 @@ void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &m
 template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event *event = std::get<0>(fData).front();
+   // short-circuit on empty
+   if (std::get<0>(fData).empty())
+      return;
+   Event *event = nullptr;
    const DataSetInfo &info = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = matrix.GetNcols();
@@ -177,7 +182,10 @@ void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &
 template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyWeights(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event *event = std::get<0>(fData).front();
+   // short-circuit on empty
+   if (std::get<0>(fData).empty())
+      return;
+   Event *event = nullptr;
    for (Int_t i = 0; i < matrix.GetNrows(); i++) {
       Int_t sampleIndex = *sampleIterator++;
       event = std::get<0>(fData)[sampleIndex];
@@ -190,16 +198,18 @@ template <>
 void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyInput(TMatrixT<Double_t> &matrix,
                                                                IndexIterator_t sampleIterator)
 {
-   Event *event = std::get<0>(fData).front();
+   // short-circuit on empty
+   if (std::get<0>(fData).empty())
+      return;
+   Event *event = nullptr;
    Int_t m = matrix.GetNrows();
-   Int_t n = event->GetNVariables();
 
    // Copy input variables.
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator++;
       event = std::get<0>(fData)[sampleIndex];
-      for (Int_t j = 0; j < n; j++) {
+      for (Int_t j = 0; j < static_cast<Int_t>(event ? event->GetNVariables() : 0); j++) {
          matrix(i, j) = event->GetValue(j);
       }
    }
@@ -210,7 +220,7 @@ template <>
 void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyOutput(TMatrixT<Double_t> &matrix,
                                                                 IndexIterator_t sampleIterator)
 {
-   Event *event = std::get<0>(fData).front();
+   Event *event = nullptr;
    const DataSetInfo &info = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = matrix.GetNcols();

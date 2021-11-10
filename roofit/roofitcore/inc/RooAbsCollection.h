@@ -179,14 +179,17 @@ public:
     removeAll();
   }
 
-  inline Int_t getSize() const { 
-    // Return the number of elements in the collection
-    return _list.size();
+  inline Int_t getSize() const R__SUGGEST_ALTERNATIVE("size() returns true size.")
+  {
+     // Return the number of elements in the collection
+     return _list.size();
   }
-  
-  inline RooAbsArg *first() const { 
-    // Return the first element in this collection
-    return _list.front();
+
+  inline RooAbsArg *first() const
+  {
+     // Return the first element in this collection
+     // calling front on an empty container is undefined
+     return _list.empty() ? nullptr : _list.front();
   }
 
   RooAbsArg * operator[](Storage_t::size_type i) const {

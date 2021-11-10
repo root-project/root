@@ -97,62 +97,71 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
-{ 
-  if (inPdfList.getSize()>inCoefList.getSize()+1) {
-    coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() 
-			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
-    assert(0) ;
-  }
- 
-  // Constructor with N PDFs and N or N-1 coefs
-  TIterator* pdfIter = inPdfList.createIterator() ;
-  TIterator* coefIter = inCoefList.createIterator() ;
-  RooAbsPdf* pdf ;
-  RooAbsReal* coef ;
+{
+   const std::string ownName(GetName() ? GetName() : "");
+   if (inPdfList.size() > inCoefList.size() + 1 || inPdfList.size() < inCoefList.size()) {
+      std::stringstream msgSs;
+      msgSs << "RooAddModel::RooAddModel(" << ownName
+            << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1";
+      const std::string msgStr = msgSs.str();
+      coutE(InputArguments) << msgStr << "\n";
+      throw std::runtime_error(msgStr);
+   }
 
-  while((coef = (RooAbsPdf*)coefIter->Next())) {
-    pdf = (RooAbsPdf*) pdfIter->Next() ;
-    if (!pdf) {
-      coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() 
-			    << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
-      assert(0) ;
-    }
-    if (!dynamic_cast<RooAbsReal*>(coef)) {
-      coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() << ") coefficient " << coef->GetName() << " is not of type RooAbsReal, ignored" << endl ;
-      continue ;
-    }
-    if (!dynamic_cast<RooAbsReal*>(pdf)) {
-      coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() << ") pdf " << pdf->GetName() << " is not of type RooAbsPdf, ignored" << endl ;
-      continue ;
-    }
-    _pdfList.add(*pdf) ;
-    _coefList.add(*coef) ;    
-  }
+   // Constructor with N PDFs and N or N-1 coefs
+   auto pdfIter = inPdfList.fwdIterator();
 
-  pdf = (RooAbsPdf*) pdfIter->Next() ;
-  if (pdf) {
-    if (!dynamic_cast<RooAbsReal*>(pdf)) {
-      coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() << ") last pdf " << coef->GetName() << " is not of type RooAbsPdf, fatal error" << endl ;
-      assert(0) ;
-    }
-    _pdfList.add(*pdf) ;  
-  } else {
-    _haveLastCoef=kTRUE ;
-  }
+   for (auto const &coef : inCoefList) {
+      auto pdf = pdfIter.next();
+      if (!pdf) {
+         std::stringstream msgSs;
+         msgSs << "RooAddModel::RooAddModel(" << ownName
+               << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1";
+         const std::string msgStr = msgSs.str();
+         coutE(InputArguments) << msgStr << "\n";
+         throw std::runtime_error(msgStr);
+      }
+      if (!coef) {
+         coutE(InputArguments) << "RooAddModel::RooAddModel(" << ownName
+                               << ") encountered and undefined coefficient, ignored\n";
+         continue;
+      }
+      if (!dynamic_cast<RooAbsReal *>(coef)) {
+         auto coefName = coef->GetName();
+         coutE(InputArguments) << "RooAddModel::RooAddModel(" << ownName << ") coefficient "
+                               << (coefName != nullptr ? coefName : "") << " is not of type RooAbsReal, ignored\n";
+         continue;
+      }
+      if (!dynamic_cast<RooAbsPdf *>(pdf)) {
+         coutE(InputArguments) << "RooAddModel::RooAddModel(" << ownName << ") pdf "
+                               << (pdf->GetName() ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored\n";
+         continue;
+      }
+      _pdfList.add(*pdf);
+      _coefList.add(*coef);
+   }
 
-  delete pdfIter ;
-  delete coefIter  ;
+   if (auto pdf = pdfIter.next()) {
+      if (!dynamic_cast<RooAbsPdf *>(pdf)) {
+         std::stringstream msgSs;
+         msgSs << "RooAddModel::RooAddModel(" << ownName << ") last pdf " << (pdf->GetName() ? pdf->GetName() : "")
+               << " is not of type RooAbsPdf, fatal error";
+         const std::string msgStr = msgSs.str();
+         coutE(InputArguments) << msgStr << "\n";
+         throw std::runtime_error(msgStr);
+      }
+      _pdfList.add(*pdf);
+   } else {
+      _haveLastCoef = kTRUE;
+   }
 
-  _coefCache = new Double_t[_pdfList.getSize()] ;
-  _coefErrCount = _errorCount ;
+   _coefCache = new Double_t[_pdfList.getSize()];
+   _coefErrCount = _errorCount;
 
-  if (ownPdfList) {
-    _ownedComps.addOwned(_pdfList) ;
-  }
-
+   if (ownPdfList) {
+      _ownedComps.addOwned(_pdfList);
+   }
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
