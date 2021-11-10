@@ -300,9 +300,9 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
 
 std::string PrettyPrintAddr(const void *const addr);
 
-void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
-                   std::string_view name, std::string_view expression, const ColumnNames_t &branches,
-                   const RColumnRegister &customCols, TTree *tree, RDataSource *ds);
+std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,
+                                             std::string_view expression, const ColumnNames_t &branches,
+                                             const RColumnRegister &customCols, TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
                                              RDataSource *ds, const RColumnRegister &customCols,
