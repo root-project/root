@@ -65,7 +65,7 @@ public:
    RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode> pd,
            const RDFInternal::RColumnRegister &colRegister, std::string_view name = "")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
-                    columns),
+                    columns, pd->GetVariations()),
         fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
         fPrevNode(*fPrevNodePtr)
    {
