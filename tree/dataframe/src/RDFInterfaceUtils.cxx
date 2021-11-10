@@ -627,10 +627,9 @@ std::string PrettyPrintAddr(const void *const addr)
 }
 
 /// Book the jitting of a Filter call
-void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
-                   std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
-                   std::string_view expression, const ColumnNames_t &branches, const RColumnRegister &customCols,
-                   TTree *tree, RDataSource *ds)
+std::shared_ptr<RDFDetail::RJittedFilter>
+BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name, std::string_view expression,
+              const ColumnNames_t &branches, const RColumnRegister &customCols, TTree *tree, RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -646,6 +645,9 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    ROOT::Internal::RDF::RColumnRegister *definesOnHeap = new ROOT::Internal::RDF::RColumnRegister(customCols);
    const auto definesOnHeapAddr = PrettyPrintAddr(definesOnHeap);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
+
+   const auto jittedFilter =
+      std::make_shared<RDFDetail::RJittedFilter>((*prevNodeOnHeap)->GetLoopManagerUnchecked(), name);
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
@@ -669,6 +671,8 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 
    auto lm = jittedFilter->GetLoopManagerUnchecked();
    lm->ToJitExec(filterInvocation.str());
+
+   return jittedFilter;
 }
 
 /// Book the jitting of a Define call
