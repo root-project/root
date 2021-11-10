@@ -46,6 +46,7 @@ static void CleanUpRooFitAtExit()
   RooMinuit::cleanup() ;
   RooArgSet::cleanup() ;
   RooDataSet::cleanup();
+  RooRealVar::cleanup();
 }
 
 

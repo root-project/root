@@ -134,6 +134,8 @@ public:
 
   void copyCacheFast(const RooRealVar& other, Bool_t setValDirty=kTRUE) { _value = other._value ; if (setValDirty) setValueDirty() ; }
 
+  static void cleanup() ;
+
   protected:
 
   static Bool_t _printScientific ;
@@ -164,7 +166,7 @@ public:
 
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache&) { ; } // variables don't need caches 
   static RooRealVarSharedProperties& _nullProp(); // Null property
-  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>& _sharedPropList(); // List of properties shared among clones of a variable
+  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>* sharedPropList(); // List of properties shared among clones of a variable
   
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; //! Shared binnings associated with this instance
 
