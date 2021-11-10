@@ -40,7 +40,8 @@ class RRange final : public RRangeBase {
 
 public:
    RRange(unsigned int start, unsigned int stop, unsigned int stride, std::shared_ptr<PrevNode> pd)
-      : RRangeBase(pd->GetLoopManagerUnchecked(), start, stop, stride, pd->GetLoopManagerUnchecked()->GetNSlots()),
+      : RRangeBase(pd->GetLoopManagerUnchecked(), start, stop, stride, pd->GetLoopManagerUnchecked()->GetNSlots(),
+                   pd->GetVariations()),
         fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
    {
    }
