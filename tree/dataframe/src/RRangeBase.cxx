@@ -14,8 +14,10 @@ using ROOT::Detail::RDF::RRangeBase;
 using ROOT::Detail::RDF::RLoopManager;
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
-                       const unsigned int nSlots)
-   : RNodeBase(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots) { }
+                       const unsigned int nSlots, const std::vector<std::string> &prevVariations)
+   : RNodeBase(prevVariations, implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+{
+}
 
 void RRangeBase::ResetCounters()
 {
