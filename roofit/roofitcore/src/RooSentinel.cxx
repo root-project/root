@@ -44,6 +44,7 @@ static void CleanUpRooFitAtExit()
   // Clean up function called at program termination before global objects go out of scope.
   RooArgSet::cleanup() ;
   RooDataSet::cleanup();
+  RooRealVar::cleanup();
 }
 
 
