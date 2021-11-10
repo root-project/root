@@ -9,11 +9,13 @@
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(checkEnumFwdDeclxDict x.h SELECTION selection_x.xml)
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(checkEnumFwdDeclyDict y.h SELECTION selection_y.xml)
 
-ROOTTEST_ADD_TEST(checkEnumFwdDecl
-                  MACRO checkEnumFwdDecl.py
-                  OUTREF empty.ref
-                  ERRREF empty.ref
-                  DEPENDS checkEnumFwdDeclyDict-libgen-build checkEnumFwdDeclxDict-libgen-build)
+if(ROOT_pyroot_FOUND)
+  ROOTTEST_ADD_TEST(checkEnumFwdDecl
+                    MACRO checkEnumFwdDecl.py
+                    OUTREF empty.ref
+                    ERRREF empty.ref
+                    DEPENDS checkEnumFwdDeclyDict-libgen-build checkEnumFwdDeclxDict-libgen-build)
+endif()
 
 ROOTTEST_ADD_TESTDIRS()
 
