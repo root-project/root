@@ -417,7 +417,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRealSumFunc.cxx
     src/RooRealSumPdf.cxx
     src/RooRealVar.cxx
-    src/RooRealVarSharedProperties.cxx
     src/RooRecursiveFraction.cxx
     src/RooRefCountList.cxx
     src/RooSTLRefCountList.cxx
@@ -456,7 +455,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinSamplingPdf.cxx
     src/RooBinWidthFunction.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
-    src/RooFitLegacy/RooCategorySharedProperties.cxx
     src/RooFitLegacy/RooHashTable.cxx
     src/RooFitLegacy/RooMinuit.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx

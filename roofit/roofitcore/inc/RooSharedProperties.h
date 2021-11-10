@@ -28,7 +28,13 @@ public:
   virtual ~RooSharedProperties() ;
   Bool_t operator==(const RooSharedProperties& other) const ;
 
-  virtual RooSharedProperties* clone() = 0 ;
+  // Copying and moving is disabled for RooSharedProperties and derived classes
+  // because it is not meaningful. Instead, one should copy and move around
+  // shared pointers to RooSharedProperties instances.
+  RooSharedProperties(const RooSharedProperties&) = delete;
+  RooSharedProperties& operator=(const RooSharedProperties&) = delete;
+  RooSharedProperties(RooSharedProperties &&) = delete;
+  RooSharedProperties& operator=(RooSharedProperties &&) = delete;
 
   virtual void Print(Option_t* opts=0) const ;
 
