@@ -40,7 +40,7 @@ class RJittedFilter final : public RFilterBase {
    std::unique_ptr<RFilterBase> fConcreteFilter = nullptr;
 
 public:
-   RJittedFilter(RLoopManager *lm, std::string_view name);
+   RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations);
    ~RJittedFilter() { fLoopManager->Deregister(this); }
 
    void SetFilter(std::unique_ptr<RFilterBase> f);

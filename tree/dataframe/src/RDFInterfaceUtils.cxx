@@ -646,8 +646,9 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string
    const auto definesOnHeapAddr = PrettyPrintAddr(definesOnHeap);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
-   const auto jittedFilter =
-      std::make_shared<RDFDetail::RJittedFilter>((*prevNodeOnHeap)->GetLoopManagerUnchecked(), name);
+   const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(
+      (*prevNodeOnHeap)->GetLoopManagerUnchecked(), name,
+      Union(customCols.GetVariationDeps(parsedExpr.fUsedCols), (*prevNodeOnHeap)->GetVariations()));
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
