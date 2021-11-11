@@ -78,6 +78,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/RVariation.hxx
     ROOT/RDF/RVariationBase.hxx
+    ROOT/RDF/RVariationReader.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
