@@ -22,6 +22,16 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
 
+// Implements the CValueExtractionPrinter interface.
+extern "C" {
+    CLING_LIB_EXPORT
+    void cling_SetValueNoAlloc(void * /*cling::Value* V*/) {
+    }
+    CLING_LIB_EXPORT
+    void cling_SetValueWithAlloc(void * /*cling::Value* V*/) {
+    }
+}
+
 using namespace clang;
 
 namespace cling {
@@ -430,6 +440,10 @@ namespace {
         return VSError(m_Sema, E, "cling::runtime::gCling");
       if (!(NSD = utils::Lookup::Namespace(m_Sema, "internal", NSD)))
         return VSError(m_Sema, E, "cling::runtime::internal namespace");
+    } else {
+      // C, ObjC,...
+      if (!(NSD = utils::Lookup::Namespace(m_Sema, "cling")))
+        return VSError(m_Sema, E, "cling namespace");
     }
     LookupResult R(*m_Sema, &m_Context->Idents.get("setValueNoAlloc"),
                    SourceLocation(), Sema::LookupOrdinaryName,
