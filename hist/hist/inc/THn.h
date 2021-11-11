@@ -28,15 +28,12 @@ class THnSparse;
 class TF1;
 
 class THn: public THnBase {
-private:
-   THn(const THn&); // Not implemented
-   THn& operator=(const THn&); // Not implemented
 
 protected:
    void AllocCoordBuf() const;
    void InitStorage(Int_t* nbins, Int_t chunkSize);
 
-   THn(): fCoordBuf() {}
+   THn() = default;
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
        const Double_t* xmin, const Double_t* xmax);
 
@@ -57,18 +54,20 @@ public:
       return GetArray().GetBin(idx);
    }
    Long64_t GetBin(const Double_t* x) const {
-      if (!fCoordBuf) AllocCoordBuf();
+      if (fCoordBuf.empty())
+         AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindFixBin(x[d]);
       }
-      return GetArray().GetBin(fCoordBuf);
+      return GetArray().GetBin(fCoordBuf.data());
    }
    Long64_t GetBin(const char* name[]) const {
-      if (!fCoordBuf) AllocCoordBuf();
+      if (fCoordBuf.empty())
+         AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindBin(name[d]);
       }
-      return GetArray().GetBin(fCoordBuf);
+      return GetArray().GetBin(fCoordBuf.data());
    }
 
    Long64_t GetBin(const Int_t* idx, Bool_t /*allocate*/ = kTRUE) {
@@ -176,7 +175,7 @@ public:
 
 protected:
    TNDArrayT<Double_t> fSumw2; // bin error, lazy allocation happens in TNDArrayT
-   mutable Int_t* fCoordBuf; //! Temporary buffer
+   mutable std::vector<Int_t> fCoordBuf; //! Temporary buffer
 
    ClassDef(THn, 1); //Base class for multi-dimensional histogram
 };
