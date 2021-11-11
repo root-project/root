@@ -1497,10 +1497,7 @@ public:
 
    void Finalize()
    {
-      const bool allNullFiles =
-         std::all_of(fOutputFiles.begin(), fOutputFiles.end(),
-                     [](const std::shared_ptr<ROOT::TBufferMergerFile> &ptr) { return ptr == nullptr; });
-      assert(!allNullFiles);
+      assert(std::any_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &ptr) { return ptr != nullptr; }));
 
       auto fileWritten = false;
       for (auto &file : fOutputFiles) {
