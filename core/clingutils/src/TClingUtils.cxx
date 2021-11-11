@@ -618,11 +618,8 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    // Try hard to avoid looking up in the Cling database as this could enduce
    // an unwanted autoparsing.
    // Note: this is always done by the callers and thus is redundant.
-   // Maybe replace with
+   // Keep it as assert:
    assert(! (fExistingTypeCheck && fExistingTypeCheck(tname,result)) );
-   if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
-      return ! result.empty();
-   }
 
    if (fAutoParse) fAutoParse(tname.c_str());
 
