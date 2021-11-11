@@ -66,7 +66,8 @@ fIntegral(0), fIntegralStatus(kNoInt)
 /// Destruct a THnBase
 
 THnBase::~THnBase() {
-   if (fIntegralStatus != kNoInt) delete [] fIntegral;
+   if (fIntegralStatus != kNoInt)
+      fIntegral.clear();
 }
 
 
@@ -398,7 +399,7 @@ void THnBase::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
 
    // generate a random bin
    Double_t p = gRandom->Rndm();
-   Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral, p);
+   Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral.data(), p);
    const Int_t nStaticBins = 40;
    Int_t bin[nStaticBins];
    Int_t* pBin = bin;
@@ -1154,8 +1155,7 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
    fTsumw = 0.;
    fTsumw2 = -1.;
    if (fIntegralStatus != kNoInt) {
-      delete [] fIntegral;
-      fIntegral = nullptr;
+      fIntegral.clear();
       fIntegralStatus = kNoInt;
    }
 }
@@ -1167,8 +1167,7 @@ Double_t THnBase::ComputeIntegral()
 {
    // delete old integral
    if (fIntegralStatus != kNoInt) {
-      delete [] fIntegral;
-      fIntegral = nullptr;
+      fIntegral.clear();
       fIntegralStatus = kNoInt;
    }
 
@@ -1179,7 +1178,7 @@ Double_t THnBase::ComputeIntegral()
    }
 
    // allocate integral array
-   fIntegral = new Double_t [GetNbins() + 1];
+   fIntegral.resize(GetNbins() + 1);
    fIntegral[0] = 0.;
 
    // fill integral array with contents of regular bins (non over/underflow)
@@ -1208,8 +1207,7 @@ Double_t THnBase::ComputeIntegral()
    // check sum of weights
    if (fIntegral[GetNbins()] == 0.) {
       Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
-      delete [] fIntegral;
-      fIntegral = nullptr;
+      fIntegral.clear();
       return 0.;
    }
 

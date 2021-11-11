@@ -50,35 +50,29 @@ protected:
    Double_t   fTsumw2;       ///<  Total sum of weights squared; -1 if no errors are calculated
    TArrayD    fTsumwx;       ///<  Total sum of weight*X for each dimension
    TArrayD    fTsumwx2;      ///<  Total sum of weight*X*X for each dimension
-   Double_t  *fIntegral;     ///<! Array with bin weight sums
+   std::vector<Double_t> fIntegral; ///<! vector with bin weight sums
    enum {
       kNoInt,
       kValidInt,
       kInvalidInt
    } fIntegralStatus;        ///<! status of integral
 
-private:
-   THnBase(const THnBase&); // Not implemented
-   THnBase& operator=(const THnBase&); // Not implemented
-
  protected:
-   THnBase():
-      fNdimensions(0), fEntries(0),
-      fTsumw(0), fTsumw2(-1.), fIntegral(0), fIntegralStatus(kNoInt)
-   {}
+    THnBase() : fNdimensions(0), fEntries(0), fTsumw(0), fTsumw2(-1.), fIntegral(), fIntegralStatus(kNoInt) {}
 
-   THnBase(const char* name, const char* title, Int_t dim,
-           const Int_t* nbins, const Double_t* xmin, const Double_t* xmax);
+    THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins, const Double_t *xmin,
+            const Double_t *xmax);
 
-   void UpdateXStat(const Double_t *x, Double_t w = 1.) {
-      if (GetCalculateErrors()) {
-         for (Int_t d = 0; d < fNdimensions; ++d) {
-            const Double_t xd = x[d];
-            fTsumwx[d]  += w * xd;
-            fTsumwx2[d] += w * xd * xd;
-         }
-      }
-   }
+    void UpdateXStat(const Double_t *x, Double_t w = 1.)
+    {
+       if (GetCalculateErrors()) {
+          for (Int_t d = 0; d < fNdimensions; ++d) {
+             const Double_t xd = x[d];
+             fTsumwx[d] += w * xd;
+             fTsumwx2[d] += w * xd * xd;
+          }
+       }
+    }
 
    /// Increment the statistics due to filled weight "w",
    void FillBinBase(Double_t w) {
