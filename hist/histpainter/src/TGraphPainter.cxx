@@ -164,6 +164,13 @@ End_Macro
 The following macro shows the option "B" usage. It can be combined with the
 option "1".
 
+The bar width is equal to:
+
+    bar_width  = 0.5*delta*gStyle->GetBarWidth();
+
+Where `delta` is equal to the X maximal value minus the X minimal value divided by the
+number of points in the graph.
+
 Begin_Macro(source)
 {
    auto c47 = new TCanvas("c47","c47",200,10,600,400);
