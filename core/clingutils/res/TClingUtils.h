@@ -177,7 +177,7 @@ public:
                       AutoParse_t autoParse,
                       bool *shuttingDownPtr,
                       const int *pgDebug = 0);
-   virtual ~TClingLookupHelper() { /* we're not owner */ }
+   virtual ~TClingLookupHelper() = default;
 
    virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
