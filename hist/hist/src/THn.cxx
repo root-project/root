@@ -187,6 +187,12 @@ THn::THn(const char* name, const char* title,
    fCoordBuf() {
 }
 
+THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+         const std::vector<std::vector<double>> &xbins)
+   : THnBase(name, title, dim, nbins, xbins), fSumw2(dim, nbins, kTRUE /*overflow*/), fCoordBuf()
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THn
 

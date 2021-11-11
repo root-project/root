@@ -62,6 +62,27 @@ fIntegral(0), fIntegralStatus(kNoInt)
    fAxes.SetOwner();
 }
 
+THnBase::THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+                 const std::vector<std::vector<double>> &xbins)
+   : TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim), fEntries(0), fTsumw(0), fTsumw2(-1.),
+     fTsumwx(dim), fTsumwx2(dim), fIntegral(0), fIntegralStatus(kNoInt)
+{
+   if (Int_t(xbins.size()) != fNdimensions) {
+      Error("THnBase", "Mismatched number of dimensions %d with number of bin edge vectors %lu", fNdimensions,
+            xbins.size());
+   }
+   for (Int_t i = 0; i < fNdimensions; ++i) {
+      if (Int_t(xbins[i].size()) != (nbins[i] + 1)) {
+         Error("THnBase", "Mismatched number of bins %d with number of bin edges %lu", nbins[i], xbins[i].size());
+      }
+      TAxis *axis = new TAxis(nbins[i], xbins[i].data());
+      axis->SetName(TString::Format("axis%d", i));
+      fAxes.AddAtAndExpand(axis, i);
+   }
+   SetTitle(title);
+   fAxes.SetOwner();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THnBase
 
