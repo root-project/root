@@ -64,6 +64,8 @@ The color creation and management class.
   - [Gray scale view of of canvas with colors](\ref C04)
   - [Color palettes](\ref C05)
   - [High quality predefined palettes](\ref C06)
+    - [Colour Vision Deficiency (CVD) friendly palettes](\ref C06a)
+    - [Non Colour Vision Deficiency (CVD) friendly palettes](\ref C06b)
   - [Palette inversion](\ref C061)
   - [Color transparency](\ref C07)
 
@@ -296,9 +298,8 @@ End_Macro
 \anchor C06
 ## High quality predefined palettes
 \since **6.04:**
-62 high quality palettes are predefined with 255 colors each.
-Despite the [disadvantages of the Rainbow color map](https://root.cern.ch/rainbow-color-map),
-it was kept in the list of predefined color maps.
+63 high quality palettes are predefined with 255 colors each.
+
 These palettes can be accessed "by name" with `gStyle->SetPalette(num)`.
 `num` can be taken within the following enum:
 
@@ -326,14 +327,36 @@ kWaterMelon=108,      kCool=109,        kCopper=110,
 kGistEarth=111,       kViridis=112,     kCividis=113
 ~~~
 
+One can immediately see the [disadvantages of the Rainbow color map](https://root.cern.ch/rainbow-color-map),
+which is misleading for colour-blinded people in a 2D plot (not so much in a 3D surfaces).
+
+The `kCMYK` palette, for instance, is also not great because it's dark, then lighter, then
+half-dark again. Some others, like `kAquamarine`, have almost no contrast therefore it would
+be almost impossible (for a color blind person) to see something with a such palette.
+
+Therefore the palettes are classified in two categories: those which are  Colour Vision Deficiency
+friendly and those which are not.
+
+
+An easy way to classify the palettes is to turn them into grayscale using TCanvas::SetGrayscale().
+The grayscale  version of a palette should be as proportional as possible, and monotonously
+increasing or decreasing.
+
+Unless it is symmetrical, then it is fine to have white in the
+borders and black in the centre (for example an axis that goes between
+-40 degrees and + 40 degrees, the 0 has a meaning).
+
+\anchor C06a
+### Colour Vision Deficiency (CVD) friendly palettes
+
 <table border=0>
 <tr><td>
 Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kDeepSea);
-   f2->Draw("surf2Z"); f2->SetTitle("kDeepSea");
+   f2->SetContour(99); gStyle->SetPalette(kBird);
+   f2->Draw("surf2Z"); f2->SetTitle("kBird (default)");
 }
 End_Macro
 </td><td>
@@ -369,8 +392,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kRainBow);
-   f2->Draw("surf2Z"); f2->SetTitle("kRainBow");
+   f2->SetContour(99); gStyle->SetPalette(kWaterMelon);
+   f2->Draw("surf2Z"); f2->SetTitle("kWaterMelon");
 }
 End_Macro
 </td><td>
@@ -388,8 +411,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kBird);
-   f2->Draw("surf2Z"); f2->SetTitle("kBird (default)");
+   f2->SetContour(99); gStyle->SetPalette(kDeepSea);
+   f2->Draw("surf2Z"); f2->SetTitle("kDeepSea");
 }
 End_Macro
 </td><td>
@@ -434,8 +457,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kColorPrintableOnGrey);
-   f2->Draw("surf2Z"); f2->SetTitle("kColorPrintableOnGrey");
+   f2->SetContour(99); gStyle->SetPalette(kCool);
+   f2->Draw("surf2Z"); f2->SetTitle("kCool");
 }
 End_Macro
 </td></tr>
@@ -453,8 +476,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kAquamarine);
-   f2->Draw("surf2Z"); f2->SetTitle("kAquamarine");
+   f2->SetContour(99); gStyle->SetPalette(kPigeon);
+   f2->Draw("surf2Z"); f2->SetTitle("kPigeon");
 }
 End_Macro
 </td><td>
@@ -462,8 +485,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kArmy);
-   f2->Draw("surf2Z"); f2->SetTitle("kArmy");
+   f2->SetContour(99); gStyle->SetPalette(kPlum);
+   f2->Draw("surf2Z"); f2->SetTitle("kPlum");
 }
 End_Macro
 </td></tr>
@@ -472,8 +495,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kAtlantic);
-   f2->Draw("surf2Z"); f2->SetTitle("kAtlantic");
+   f2->SetContour(99); gStyle->SetPalette(kGistEarth);
+   f2->Draw("surf2Z"); f2->SetTitle("kGistEarth");
 }
 End_Macro
 </td><td>
@@ -481,8 +504,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kAurora);
-   f2->Draw("surf2Z"); f2->SetTitle("kAurora");
+   f2->SetContour(99); gStyle->SetPalette(kViridis);
+   f2->Draw("surf2Z"); f2->SetTitle("kViridis");
 }
 End_Macro
 </td><td>
@@ -500,8 +523,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kBeach);
-   f2->Draw("surf2Z"); f2->SetTitle("kBeach");
+   f2->SetContour(99); gStyle->SetPalette(kRust);
+   f2->Draw("surf2Z"); f2->SetTitle("kRust");
 }
 End_Macro
 </td><td>
@@ -509,8 +532,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kBlackBody);
-   f2->Draw("surf2Z"); f2->SetTitle("kBlackBody");
+   f2->SetContour(99); gStyle->SetPalette(kCopper);
+   f2->Draw("surf2Z"); f2->SetTitle("kCopper");
 }
 End_Macro
 </td><td>
@@ -528,8 +551,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kBrownCyan);
-   f2->Draw("surf2Z"); f2->SetTitle("kBrownCyan");
+   f2->SetContour(99); gStyle->SetPalette(kSienna);
+   f2->Draw("surf2Z"); f2->SetTitle("kSienna");
 }
 End_Macro
 </td><td>
@@ -537,8 +560,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kCMYK);
-   f2->Draw("surf2Z"); f2->SetTitle("kCMYK");
+   f2->SetContour(99); gStyle->SetPalette(kSolar);
+   f2->Draw("surf2Z"); f2->SetTitle("kSolar");
 }
 End_Macro
 </td><td>
@@ -574,8 +597,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kDarkRainBow);
-   f2->Draw("surf2Z"); f2->SetTitle("kDarkRainBow");
+   f2->SetContour(99); gStyle->SetPalette(kSouthWest);
+   f2->Draw("surf2Z"); f2->SetTitle("kSouthWest");
 }
 End_Macro
 </td></tr>
@@ -584,8 +607,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kDarkTerrain);
-   f2->Draw("surf2Z"); f2->SetTitle("kDarkTerrain");
+   f2->SetContour(99); gStyle->SetPalette(kStarryNight);
+   f2->Draw("surf2Z"); f2->SetTitle("kStarryNight");
 }
 End_Macro
 </td><td>
@@ -640,8 +663,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kGreenPink);
-   f2->Draw("surf2Z"); f2->SetTitle("kGreenPink");
+   f2->SetContour(99); gStyle->SetPalette(kSunset);
+   f2->Draw("surf2Z"); f2->SetTitle("kSunset");
 }
 End_Macro
 </td><td>
@@ -649,8 +672,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kIsland);
-   f2->Draw("surf2Z"); f2->SetTitle("kIsland");
+   f2->SetContour(99); gStyle->SetPalette(kNeon);
+   f2->Draw("surf2Z"); f2->SetTitle("kNeon");
 }
 End_Macro
 </td><td>
@@ -668,8 +691,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kLightTemperature);
-   f2->Draw("surf2Z"); f2->SetTitle("kLightTemperature");
+   f2->SetContour(99); gStyle->SetPalette(kValentine);
+   f2->Draw("surf2Z"); f2->SetTitle("kValentine");
 }
 End_Macro
 </td><td>
@@ -686,8 +709,42 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kMint);
-   f2->Draw("surf2Z"); f2->SetTitle("kMint");
+   f2->SetContour(99); gStyle->SetPalette(kCividis);
+   f2->Draw("surf2Z"); f2->SetTitle("kCividis");
+}
+End_Macro
+</td></tr>
+</table>
+
+\anchor C06b
+### Non Colour Vision Deficiency (CVD) friendly palettes
+
+<table border=0>
+<tr><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kIsland);
+   f2->Draw("surf2Z"); f2->SetTitle("kIsland");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kRainBow);
+   f2->Draw("surf2Z"); f2->SetTitle("kRainBow");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kColorPrintableOnGrey);
+   f2->Draw("surf2Z"); f2->SetTitle("kColorPrintableOnGrey");
 }
 End_Macro
 </td></tr>
@@ -696,8 +753,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kNeon);
-   f2->Draw("surf2Z"); f2->SetTitle("kNeon");
+   f2->SetContour(99); gStyle->SetPalette(kAquamarine);
+   f2->Draw("surf2Z"); f2->SetTitle("kAquamarine");
 }
 End_Macro
 </td><td>
@@ -705,8 +762,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kPastel);
-   f2->Draw("surf2Z"); f2->SetTitle("kPastel");
+   f2->SetContour(99); gStyle->SetPalette(kArmy);
+   f2->Draw("surf2Z"); f2->SetTitle("kArmy");
 }
 End_Macro
 </td><td>
@@ -714,8 +771,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kPearl);
-   f2->Draw("surf2Z"); f2->SetTitle("kPearl");
+   f2->SetContour(99); gStyle->SetPalette(kAtlantic);
+   f2->Draw("surf2Z"); f2->SetTitle("kAtlantic");
 }
 End_Macro
 </td></tr>
@@ -724,8 +781,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kPigeon);
-   f2->Draw("surf2Z"); f2->SetTitle("kPigeon");
+   f2->SetContour(99); gStyle->SetPalette(kAurora);
+   f2->Draw("surf2Z"); f2->SetTitle("kAurora");
 }
 End_Macro
 </td><td>
@@ -733,8 +790,64 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kPlum);
-   f2->Draw("surf2Z"); f2->SetTitle("kPlum");
+   f2->SetContour(99); gStyle->SetPalette(kBeach);
+   f2->Draw("surf2Z"); f2->SetTitle("kBeach");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kBlackBody);
+   f2->Draw("surf2Z"); f2->SetTitle("kBlackBody");
+}
+End_Macro
+</td></tr>
+<tr><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kBrownCyan);
+   f2->Draw("surf2Z"); f2->SetTitle("kBrownCyan");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kCMYK);
+   f2->Draw("surf2Z"); f2->SetTitle("kCMYK");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kDarkRainBow);
+   f2->Draw("surf2Z"); f2->SetTitle("kDarkRainBow");
+}
+End_Macro
+</td></tr>
+<tr><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kDarkTerrain);
+   f2->Draw("surf2Z"); f2->SetTitle("kDarkTerrain");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kGreenPink);
+   f2->Draw("surf2Z"); f2->SetTitle("kGreenPink");
 }
 End_Macro
 </td><td>
@@ -761,8 +874,36 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kRust);
-   f2->Draw("surf2Z"); f2->SetTitle("kRust");
+   f2->SetContour(99); gStyle->SetPalette(kLightTemperature);
+   f2->Draw("surf2Z"); f2->SetTitle("kLightTemperature");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kMint);
+   f2->Draw("surf2Z"); f2->SetTitle("kMint");
+}
+End_Macro
+</td></tr>
+<tr><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kPastel);
+   f2->Draw("surf2Z"); f2->SetTitle("kPastel");
+}
+End_Macro
+</td><td>
+Begin_Macro
+{
+   c  = new TCanvas("c","c",0,0,300,300);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kPearl);
+   f2->Draw("surf2Z"); f2->SetTitle("kPearl");
 }
 End_Macro
 </td><td>
@@ -780,58 +921,11 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kSienna);
-   f2->Draw("surf2Z"); f2->SetTitle("kSienna");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kSolar);
-   f2->Draw("surf2Z"); f2->SetTitle("kSolar");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kSouthWest);
-   f2->Draw("surf2Z"); f2->SetTitle("kSouthWest");
-}
-End_Macro
-</td></tr>
-<tr><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kStarryNight);
-   f2->Draw("surf2Z"); f2->SetTitle("kStarryNight");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kSunset);
-   f2->Draw("surf2Z"); f2->SetTitle("kSunset");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kTemperatureMap);
    f2->Draw("surf2Z"); f2->SetTitle("kTemperatureMap");
 }
 End_Macro
-</td></tr>
-<tr><td>
+</td><td>
 Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
@@ -845,73 +939,8 @@ Begin_Macro
 {
    c  = new TCanvas("c","c",0,0,300,300);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kValentine);
-   f2->Draw("surf2Z"); f2->SetTitle("kValentine");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kVisibleSpectrum);
    f2->Draw("surf2Z"); f2->SetTitle("kVisibleSpectrum");
-}
-End_Macro
-</td></tr>
-<tr><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kWaterMelon);
-   f2->Draw("surf2Z"); f2->SetTitle("kWaterMelon");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kCool);
-   f2->Draw("surf2Z"); f2->SetTitle("kCool");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kCopper);
-   f2->Draw("surf2Z"); f2->SetTitle("kCopper");
-}
-End_Macro
-</td></tr>
-<tr><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kGistEarth);
-   f2->Draw("surf2Z"); f2->SetTitle("kGistEarth");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kViridis);
-   f2->Draw("surf2Z"); f2->SetTitle("kViridis");
-}
-End_Macro
-</td><td>
-Begin_Macro
-{
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
-   f2->SetContour(99); gStyle->SetPalette(kCividis);
-   f2->Draw("surf2Z"); f2->SetTitle("kCividis");
 }
 End_Macro
 </td></tr>
