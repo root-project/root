@@ -24,8 +24,9 @@
 #include <queue>
 #include <unordered_map>
 
-class RooAbsData;
 class RooAbsArg;
+class RooAbsCategory;
+class RooAbsData;
 
 namespace ROOT {
 namespace Experimental {
@@ -36,9 +37,13 @@ public:
    public:
       Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName);
 
+      void splitByCategory(RooAbsCategory const &splitCategory);
+
       std::size_t size() const { return _nEvents; }
       bool contains(RooAbsArg const *real) const { return _dataSpans.count(real->namePtr()); }
       RooSpan<const double> const &span(RooAbsArg const *real) const { return _dataSpans.at(real->namePtr()); }
+
+      std::map<const TNamed *, RooSpan<const double>> const &spans() const { return _dataSpans; }
 
    private:
       std::map<const TNamed *, RooSpan<const double>> _dataSpans;
@@ -156,7 +161,7 @@ private:
    double *_cudaMemDataset = nullptr;
 
    // used to get access to the data that we fit to
-   const Dataset _dataset;
+   Dataset _dataset;
 
    // used for preserving static info about the computation graph
    RooBatchCompute::DataMap _dataMapCPU;

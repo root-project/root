@@ -1798,12 +1798,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   {
     observables.remove(projDeps,true,true) ;
 
-    if(dynamic_cast<RooSimultaneous*>(this)) {
-      cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
-                       << ") simultaneous fit with batch mode not supported, exiting." << endl ;
-      return nullptr;
-    }
-
     cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
                      << ") fixing normalization set for coefficient determination to observables in data" << endl ;
     this->fixAddCoefNormalization(observables,false) ;

@@ -37,6 +37,8 @@ and gets destroyed when the fitting ends.
 #include "RooRealVar.h"
 #include "RunContext.h"
 #include "RooDataSet.h"
+#include "RooSimultaneous.h"
+#include "RooNLLVarNew.h"
 
 #include "RooBatchCompute.h"
 
@@ -79,7 +81,7 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
 
    // Get the category batches and cast the also to double branches to put in
    // the data map
-   for (auto const &item : data.getCategoryBatches()) {
+   for (auto const &item : data.getCategoryBatches(0, _nEvents)) {
 
       const TNamed *namePtr = RooNameReg::instance().constPtr(item.first.c_str());
       RooSpan<const RooAbsCategory::value_type> intSpan{item.second};
@@ -143,6 +145,43 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
    }
 }
 
+void RooFitDriver::Dataset::splitByCategory(RooAbsCategory const &category)
+{
+
+   std::stack<std::vector<double>> oldBuffers;
+   std::swap(_buffers, oldBuffers);
+
+   auto catVals = _dataSpans[category.namePtr()];
+
+   std::map<const TNamed *, RooSpan<const double>> dataMapSplit;
+
+   for (auto const &dataMapItem : _dataSpans) {
+
+      auto const &varNamePtr = dataMapItem.first;
+      if (varNamePtr == category.namePtr())
+         continue;
+
+      std::map<RooAbsCategory::value_type, std::vector<double>> valuesMap;
+
+      auto xVals = _dataSpans[varNamePtr];
+      for (std::size_t i = 0; i < xVals.size(); ++i) {
+         valuesMap[catVals[i]].push_back(xVals[i]);
+      }
+
+      for (auto const &item : valuesMap) {
+         RooAbsCategory::value_type index = item.first;
+         auto variableName = std::string("_") + category.lookupName(index) + "_" + varNamePtr->GetName();
+         auto variableNamePtr = RooNameReg::instance().constPtr(variableName.c_str());
+
+         _buffers.emplace(std::move(item.second));
+         auto const &values = _buffers.top();
+         dataMapSplit[variableNamePtr] = RooSpan<const double>(values.data(), values.size());
+      }
+   }
+
+   _dataSpans = std::move(dataMapSplit);
+}
+
 /**
 Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
 useful for the evaluation of it that will be done later. In case cuda mode is selected,
@@ -190,6 +229,20 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // so reversing the list gives us a topological ordering of the graph.
    RooArgSet serverSet;
    _topNode.treeNodeServerList(&serverSet, nullptr, true, true, true);
+
+   // If there is a RooSimultaneous in the model, split the dataset up according
+   // to the category. A limitation in this code is that we only support one
+   // RooSimultaneous per model.
+   bool hasSimul = false;
+   for (auto const &node : serverSet) {
+      if (auto simul = dynamic_cast<RooSimultaneous const *>(node)) {
+         if (hasSimul) {
+            throw std::runtime_error("Multiple RooSimultaneous in one model are not supported by the RooFitDriver.");
+         }
+         _dataset.splitByCategory(simul->indexCat());
+         hasSimul = true;
+      }
+   }
 
    // The treeNodeServerList recursion stops at fundamental RooAbsArgs, such as
    // RooRealVar. But there can also be servers to fundamental types if they are
