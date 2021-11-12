@@ -89,6 +89,8 @@ struct RColumnReadersInfo {
 /// Create a group of column readers, one per type in the parameter pack.
 /// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
 /// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
+///
+/// Pre-condition: colInfo.isDefine must not be null.
 template <typename... ColTypes>
 std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
 MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
