@@ -2226,11 +2226,6 @@ void TBranchElement::InitInfo()
             Bool_t seenExisting = kFALSE;
 
             fOnfileObject = new TVirtualArray( info->GetElement(0)->GetClassPointer(), arrlen );
-            if (fType == 31 || fType == 41) {
-               TBranchElement *parent = (TBranchElement*)GetMother()->GetSubBranch(this);
-               if (parent && parent->fOnfileObject == nullptr)
-                  parent->fOnfileObject = fOnfileObject;
-            }
             // Propagate this to all the other branch belonging to the same object.
             TObjArray *branches = toplevel ? GetListOfBranches() : GetMother()->GetSubBranch(this)->GetListOfBranches();
             Int_t nbranches = branches->GetEntriesFast();
