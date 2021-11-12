@@ -73,7 +73,7 @@ std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet 
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
                            RooAbsReal *weight, bool isExtended, std::string const &rangeName)
-   : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{&observables}, _isExtended{isExtended}
+   : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{observables}, _isExtended{isExtended}
 //_rangeNormTerm{rangeName.empty() ? nullptr : createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName)}
 {
    if (weight)
@@ -151,6 +151,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*n
    }
 
    output[0] = reduce(stream, logsBufferDataPtr, nEvents);
+   // std::cout << "RooNLLVar::computeBatch() " << output[0] << std::endl;
 }
 
 /** Reduce an array of nll values to the sum of them
@@ -165,7 +166,7 @@ double RooNLLVarNew::reduce(cudaStream_t *stream, const double *input, size_t nE
    double nll = dispatch->sumReduce(stream, input, nEvents);
    if (_isExtended) {
       assert(_sumWeight != 0.0);
-      nll += _pdf->extendedTerm(_sumWeight, _observables);
+      nll += _pdf->extendedTerm(_sumWeight, &_observables);
    }
    if (_rangeNormTerm) {
       nll += _sumCorrectionTerm;
@@ -175,7 +176,8 @@ double RooNLLVarNew::reduce(cudaStream_t *stream, const double *input, size_t nE
 
 double RooNLLVarNew::getValV(const RooArgSet *) const
 {
-   throw std::runtime_error("RooNLLVarNew::getValV was called directly which should not happen!");
+   // throw std::runtime_error("RooNLLVarNew::getValV was called directly which should not happen!");
+   return 0.0;
 }
 
 double RooNLLVarNew::evaluate() const
@@ -193,10 +195,10 @@ RooSpan<const double> RooNLLVarNew::getValues(RooBatchCompute::RunContext &, con
    throw std::runtime_error("RooNLLVarNew::getValues was called directly which should not happen!");
 }
 
-void RooNLLVarNew::getParametersHook(const RooArgSet *nset, RooArgSet *params, Bool_t stripDisconnected) const
+void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, Bool_t /*stripDisconnected*/) const
 {
    // strip away the observables and weights
-   params->remove(*_observables, true, true);
+   params->remove(_observables, true, true);
    if (_weight)
       params->remove(**_weight, true, true);
 }
