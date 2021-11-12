@@ -121,11 +121,10 @@ namespace SOFIE{
             fShapeC = model.GetTensorShape(fNC);
 
             bool broadcast_needed = false;
-            for (size_t i =0; i < fShapeC.size(); i++){
-               if (fShapeC[i]!=fShapeY[i]){
-                  broadcast_needed = true;
-                  break;
-               }
+
+            // broadcast is not needed if fShapeY[0] == 1 i.e. C and Y have same length
+            if (ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
+               broadcast_needed = true;
             }
 
             if (broadcast_needed){
