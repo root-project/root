@@ -90,7 +90,7 @@ def main():
    print("input data",xinput.shape)
    print(xinput)
    
-   name = "Conv2dModel"
+   name = "Conv2dModel_B" + str(bsize)
 
    saveOnnx=True
    loadModel=False
