@@ -24,8 +24,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#if defined(__sun) || defined(__sgi)
-#  include <fcntl.h>
+#include <fcntl.h>
 #endif
 
 #if defined(__linux__) && !defined(linux)
