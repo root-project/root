@@ -5234,6 +5234,12 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    RangeAxisChanged();
 }
 
+void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
+{
+   // emit signal
+   RangeAxisChanged();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively remove object from a pad and its sub-pads.
 
