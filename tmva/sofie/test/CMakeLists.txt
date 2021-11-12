@@ -117,8 +117,9 @@ add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
 
 # gtest
 configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
+configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
 
-ROOT_ADD_GTEST(TestSofieConv2D TestConv2D.cxx
+ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
   LIBRARIES
     ROOTTMVASofie
     ROOTTMVASofieParser
