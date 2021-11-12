@@ -40,6 +40,16 @@ public:
       void splitByCategory(RooAbsCategory const &splitCategory);
 
       std::size_t size() const { return _nEvents; }
+
+      std::size_t totalNumberOfEntries() const
+      {
+         std::size_t out = 0;
+         for (auto const &item : _dataSpans) {
+            out += item.second.size();
+         }
+         return out;
+      }
+
       bool contains(RooAbsArg const *real) const { return _dataSpans.count(real->namePtr()); }
       RooSpan<const double> const &span(RooAbsArg const *real) const { return _dataSpans.at(real->namePtr()); }
 
@@ -51,8 +61,9 @@ public:
       std::stack<std::vector<double>> _buffers;
    };
 
-   RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
-                RooBatchCompute::BatchMode batchMode, std::string_view rangeName);
+   RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
+                RooArgSet const &normSet, RooBatchCompute::BatchMode batchMode, std::string_view rangeName,
+                RooAbsCategory const *indexCat = nullptr);
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
