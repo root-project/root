@@ -192,10 +192,11 @@ there's also some cuda-related initialization.
 \param batchMode The computation mode of the RooBatchCompute library, accepted values are `RooBatchCompute::Cpu` and
 `RooBatchCompute::Cuda`.
 **/
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
-                           RooBatchCompute::BatchMode batchMode, std::string_view rangeName)
+RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
+                           RooArgSet const &normSet, RooBatchCompute::BatchMode batchMode, std::string_view rangeName,
+                           RooAbsCategory const *indexCat)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
-                                                              topNode.getParameters(data, true))},
+                                                              topNode.getParameters(observables, true))},
      _batchMode{batchMode}, _dataset{data, *std::unique_ptr<RooArgSet>(topNode.getObservables(data)), rangeName},
      _topNode{topNode}, _normSet{normSet}
 {
@@ -220,28 +221,14 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       }
    }
 
-   // Get observables for model
-   RooArgSet observables;
-   topNode.getObservables(data.get(), observables);
-
    // Get a serial list of the nodes in the computation graph.
    // treeNodeServelList() is recursive and adds the top node before the children,
    // so reversing the list gives us a topological ordering of the graph.
    RooArgSet serverSet;
    _topNode.treeNodeServerList(&serverSet, nullptr, true, true, true);
 
-   // If there is a RooSimultaneous in the model, split the dataset up according
-   // to the category. A limitation in this code is that we only support one
-   // RooSimultaneous per model.
-   bool hasSimul = false;
-   for (auto const &node : serverSet) {
-      if (auto simul = dynamic_cast<RooSimultaneous const *>(node)) {
-         if (hasSimul) {
-            throw std::runtime_error("Multiple RooSimultaneous in one model are not supported by the RooFitDriver.");
-         }
-         _dataset.splitByCategory(simul->indexCat());
-         hasSimul = true;
-      }
+   if (indexCat) {
+      _dataset.splitByCategory(*indexCat);
    }
 
    // The treeNodeServerList recursion stops at fundamental RooAbsArgs, such as
@@ -284,14 +271,15 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       return;
 
    // copy observable data to the gpu
+   // TODO: use separate buffers here
    _cudaMemDataset = static_cast<double *>(
-      RooBatchCompute::dispatchCUDA->cudaMalloc(_dataset.size() * _dataMapCPU.size() * sizeof(double)));
+      RooBatchCompute::dispatchCUDA->cudaMalloc(_dataset.totalNumberOfEntries() * sizeof(double)));
    size_t idx = 0;
    for (auto &record : _dataMapCPU) {
-      _dataMapCUDA[record.first] = RooSpan<double>(_cudaMemDataset + idx, _dataset.size());
-      RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, record.second.data(),
-                                                  _dataset.size() * sizeof(double));
-      idx += _dataset.size();
+      std::size_t size = record.second.size();
+      _dataMapCUDA[record.first] = RooSpan<double>(_cudaMemDataset + idx, size);
+      RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, record.second.data(), size * sizeof(double));
+      idx += size;
    }
 
    // create events and streams for every node
@@ -331,13 +319,14 @@ std::vector<double> RooFitDriver::getValues()
 void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 {
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
-   assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
+   auto nodeAbsCategory = dynamic_cast<RooAbsCategory const *>(node);
+   assert(nodeAbsReal || nodeAbsCategory);
 
    const std::size_t nOut = getInputSize(*node);
 
    if (nOut == 1) {
       // compute in scalar mode
-      _nonDerivedValues.push_back(nodeAbsReal->getVal(&_normSet));
+      _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(&_normSet));
 
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
    } else if (node->isReducerNode()) {
@@ -561,16 +550,19 @@ void RooFitDriver::updateMyServers(const RooAbsArg *node)
 /// Measure the time for transfering data from host to device and vice-versa
 std::pair<microseconds, microseconds> RooFitDriver::memcpyBenchmark()
 {
+   // For the number of bytes in this benchmark we take the average size of
+   // spans in the dataset.
+   std::size_t nBytes = _dataset.totalNumberOfEntries() * sizeof(double) / _dataset.spans().size();
+
    std::pair<microseconds, microseconds> ret;
-   auto hostArr =
-      static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMallocHost(_dataset.size() * sizeof(double)));
-   auto deviArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(_dataset.size() * sizeof(double)));
+   auto hostArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMallocHost(nBytes));
+   auto deviArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(nBytes));
    for (int i = 0; i < 5; i++) {
       auto start = steady_clock::now();
-      RooBatchCompute::dispatchCUDA->memcpyToCUDA(deviArr, hostArr, _dataset.size() * sizeof(double));
+      RooBatchCompute::dispatchCUDA->memcpyToCUDA(deviArr, hostArr, nBytes);
       ret.first += duration_cast<microseconds>(steady_clock::now() - start);
       start = steady_clock::now();
-      RooBatchCompute::dispatchCUDA->memcpyToCPU(hostArr, deviArr, _dataset.size() * sizeof(double));
+      RooBatchCompute::dispatchCUDA->memcpyToCPU(hostArr, deviArr, nBytes);
       ret.second += duration_cast<microseconds>(steady_clock::now() - start);
    }
    RooBatchCompute::dispatchCUDA->cudaFreeHost(hostArr);

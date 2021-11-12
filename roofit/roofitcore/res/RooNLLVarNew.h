@@ -42,11 +42,17 @@ public:
    inline bool canComputeBatchWithCuda() const override { return true; }
    inline bool isReducerNode() const override { return true; }
 
+   void setObservables(RooArgSet const &observables)
+   {
+      _observables.clear();
+      _observables.add(observables);
+   }
+
 protected:
    double reduce(cudaStream_t *, const double *input, size_t nEvents) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
-   RooArgSet const *_observables = nullptr;
+   RooArgSet _observables;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;
    mutable double _sumWeight = 0.0;         //!
    mutable double _sumCorrectionTerm = 0.0; //!

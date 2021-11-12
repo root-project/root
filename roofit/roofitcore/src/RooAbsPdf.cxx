@@ -207,6 +207,53 @@ bool interpretExtendedCmdArg(RooAbsPdf const& pdf, int extendedCmdArg) {
   return extendedCmdArg;
 }
 
+std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(
+        RooSimultaneous& simPdf, RooArgSet& observables, RooAbsReal* weight,
+        bool isExtended, std::string const& rangeName) {
+
+    // Prepare the NLLTerms for each component
+    RooArgList nllTerms;
+    for(auto const& catItem : simPdf.indexCat()) {
+        auto const& catName = catItem.first;
+        auto * pdf = simPdf.getPdf(catName.c_str());
+      auto nllName = std::string("nll_") + pdf->GetName();
+      nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
+                  nllName.c_str(), nllName.c_str(),
+                  *pdf, observables, weight, isExtended, rangeName));
+    }
+
+    RooArgSet newObservables;
+
+    // Rename the observables and weights in each component
+    std::size_t iNLL = 0;
+    for(auto const& catItem : simPdf.indexCat()) {
+        auto const& catName = catItem.first;
+        auto& nll = nllTerms[iNLL];
+        RooArgSet pdfObs;
+        nll.getObservables(&observables, pdfObs);
+        if(weight) pdfObs.add(*weight);
+        RooArgSet obsClones;
+        pdfObs.snapshot(obsClones);
+        for (RooAbsArg * arg : obsClones) {
+           auto newName = std::string("_") + catName + "_" + arg->GetName();
+           arg->setAttribute((std::string("ORIGNAME:") + arg->GetName()).c_str());
+           arg->SetName(newName.c_str());
+        }
+        nll.recursiveRedirectServers(obsClones, false, true);
+        nll.addOwnedComponents(obsClones);
+        obsClones.releaseOwnership();
+        newObservables.add(obsClones);
+        static_cast<ROOT::Experimental::RooNLLVarNew&>(nll).setObservables(obsClones);
+        ++iNLL;
+    }
+
+    observables.clear();
+    observables.add(newObservables);
+
+    // Time to sum the NLLs
+    return std::make_unique<RooAddition>("mynll", "mynll", nllTerms, true);
+}
+
 } // namespace
 
 using namespace std;
@@ -1843,9 +1890,18 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
 
     RooArgList nllTerms;
-    nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
-                "RooNLLVarNew", "RooNLLVarNew",
-                *this, observables, weightVar.get(), isExtended, rangeName));
+
+    if(auto simPdf = dynamic_cast<RooSimultaneous*>(this)) {
+      auto * simPdfClone = static_cast<RooSimultaneous*>(simPdf->cloneTree());
+      // Warning! This mutates "observables"
+      //auto * simPdfClone = simPdf;
+      nllTerms.add(*prepareSimultaneousModelForBatchMode(
+                  *simPdfClone, observables, weightVar.get(), isExtended, rangeName).release());
+    } else {
+      nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
+                  "RooNLLVarNew", "RooNLLVarNew",
+                  *this, observables, weightVar.get(), isExtended, rangeName));
+    }
     if(constraintsTerm) {
       nllTerms.add(*constraintsTerm.release());
     }
@@ -1853,7 +1909,14 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     std::string nllName = std::string("nll_") + this->GetName() + "_" + data.GetName();
     nll = new RooAddition(nllName.c_str(), nllName.c_str(), nllTerms, true);
 
-    driver.reset(new ROOT::Experimental::RooFitDriver( data, *nll, observables, batchMode, rangeName ));
+    if(auto simPdf = dynamic_cast<RooSimultaneous*>(this)) {
+      RooArgSet parameters;
+      getParameters(data.get(), parameters);
+      nll->recursiveRedirectServers(parameters);
+      driver.reset(new ROOT::Experimental::RooFitDriver( data, *nll, observables, observables, batchMode, rangeName, &simPdf->indexCat() ));
+    } else {
+      driver.reset(new ROOT::Experimental::RooFitDriver( data, *nll, observables, observables, batchMode, rangeName ));
+    }
 
     // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
     if(!rangeName.empty()) {
