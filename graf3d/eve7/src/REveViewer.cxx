@@ -17,6 +17,8 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
