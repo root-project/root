@@ -25,7 +25,6 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <fcntl.h>
-#endif
 
 #if defined(__linux__) && !defined(linux)
 # define linux
