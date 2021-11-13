@@ -711,6 +711,34 @@ TEST(VecOps, ArgsortWithComparisonOperator)
    RVec<size_type> ref2{0, 2, 1};
    CheckEqual(i2, ref2);
 }
+TEST(VecOps, StableArgsort)
+{
+   RVec<int> v{2, 0, 2, 1};
+   using size_type = typename RVec<int>::size_type;
+   auto i = StableArgsort(v);
+   RVec<size_type> ref{1, 3, 0, 2};
+   CheckEqual(i, ref);
+
+   // Test for stability
+   RVec<int> v1{0, 0, 2, 2, 2, 2, 1, 2, 1, 0, 1, 0, 0, 2, 0, 0, 0, 1, 1, 2};
+   auto i1 = StableArgsort(v1);
+   RVec<size_type> ref1{0, 1, 9, 11, 12, 14, 15, 16, 6, 8, 10, 17, 18, 2, 3, 4, 5, 7, 13, 19};
+   CheckEqual(i1, ref1);
+}
+
+TEST(VecOps, StableArgsortWithComparisonOperator)
+{
+   RVec<int> v{2, 0, 2, 1};
+   using size_type = typename RVec<int>::size_type;
+
+   auto i1 = Argsort(v, [](int x, int y) { return x < y; });
+   RVec<size_type> ref1{1, 3, 0, 2};
+   CheckEqual(i1, ref1);
+
+   auto i2 = Argsort(v, [](int x, int y) { return x > y; });
+   RVec<size_type> ref2{0, 2, 3, 1};
+   CheckEqual(i2, ref2);
+}
 
 TEST(VecOps, TakeIndices)
 {
@@ -804,6 +832,49 @@ TEST(VecOps, SortWithComparisonOperator)
    RVec<int> none{};
    auto v2 = Sort(none, std::greater<int>());
    CheckEqual(v2, none);
+}
+
+TEST(VecOps, StableSort)
+{
+   RVec<int> v{2, 0, 2, 1};
+
+   // Sort in ascending order
+   auto v1 = StableSort(v);
+   RVec<int> ref{0, 1, 2, 2};
+   CheckEqual(v1, ref);
+
+   // Corner-case: Empty vector
+   RVec<int> none{};
+   auto v2 = StableSort(none);
+   CheckEqual(v2, none);
+}
+
+TEST(VecOps, StableSortWithComparisonOperator)
+{
+   RVec<int> v{2, 0, 2, 1};
+
+   // Sort with comparison operator
+   auto v1 = StableSort(v, std::greater<int>());
+   RVec<int> ref{2, 2, 1, 0};
+   CheckEqual(v1, ref);
+
+   // Corner-case: Empty vector
+   RVec<int> none{};
+   auto v2 = StableSort(none, std::greater<int>());
+   CheckEqual(v2, none);
+
+   // Check stability
+   RVec<RVec<int>> vv{{0, 2}, {2, 2}, {0, 2}, {0, 2}, {2, 0}, {0, 1}, {1, 0}, {1, 2}, {2, 0}, {0, 0},
+                      {1, 1}, {0, 2}, {2, 1}, {2, 0}, {1, 1}, {1, 2}, {2, 2}, {1, 1}, {0, 2}, {0, 1}};
+   RVec<RVec<int>> vv1Ref{{0, 0}, {0, 1}, {0, 1}, {0, 2}, {0, 2}, {0, 2}, {0, 2}, {0, 2}, {1, 0}, {1, 1},
+                          {1, 1}, {1, 1}, {1, 2}, {1, 2}, {2, 0}, {2, 0}, {2, 0}, {2, 1}, {2, 2}, {2, 2}};
+   auto vv1 = ROOT::VecOps::StableSort(
+      ROOT::VecOps::StableSort(
+         vv, [](const RVec<int> &vSub1, const RVec<int> &vSub2) -> bool { return vSub1[1] < vSub2[1]; }),
+      [](const RVec<int> &vSub1, const RVec<int> &vSub2) -> bool { return vSub1[0] < vSub2[0]; });
+   bool isVv1Correct =
+      All(Map(vv1, vv1Ref, [](const RVec<int> &vSub, const RVec<int> &vRefSub) { return All(vSub == vRefSub); }));
+   EXPECT_TRUE(isVv1Correct);
 }
 
 TEST(VecOps, RVecBool)
