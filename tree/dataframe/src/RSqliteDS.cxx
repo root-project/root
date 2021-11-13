@@ -554,6 +554,7 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
    assert(entry + 1 == fNRow);
+   (void)entry;
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
       if (!fValues[i].fIsActive)
