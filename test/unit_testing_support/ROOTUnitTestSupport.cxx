@@ -13,10 +13,49 @@
 #include "ROOTUnitTestSupport.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 
 namespace ROOTUnitTestSupport {
+
+/// Error handler for gtests that generates failures for every received diagnostic > kInfo when this file is linked to.
+static struct ForbidDiagnostics {
+   ForbidDiagnostics() :
+      sOldErrorHandler{ ::GetErrorHandler() } {
+         SetErrorHandler(ForbidDiagnostics::handler);
+      }
+
+   ~ForbidDiagnostics() {
+      ::SetErrorHandler(sOldErrorHandler);
+   }
+
+   /// Diagnostic handler that's installed for all google tests.
+   /// It will generate a test failure when a diagnostic message is issued.
+   static void handler(int level, bool abort,
+         const char *location,
+         const char *msg) {
+      if (level <= gErrorIgnoreLevel) return;
+      if (level <= kInfo) {
+         std::cerr << "Diagnostic in '" << location << "': " << msg << std::endl;
+         return;
+      }
+
+      if (abort) {
+         std::cerr << "ROOTUnitTestSupport::ForbidDiagnostics::handler(): Forced to abort because of diagnostic with severity "
+            << level << " in '" << location << "' reading '" << msg << "'\n";
+         ::abort();
+      }
+
+      FAIL() << "Received unexpected diagnostic of severity "
+         << level
+         << " at '" << location << "' reading '" << msg << "'.\n"
+         << "Suppress those using ROOTUnitTestSupport.h";
+   }
+
+   ErrorHandlerFunc_t const sOldErrorHandler;
+} noDiagCheckerInstance;
+
 
 CheckDiagsRAII * CheckDiagsRAII::sActiveInstance = nullptr;
 
