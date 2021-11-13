@@ -165,7 +165,7 @@ public:
          auto varlist = tool->getObservables(p["data"], prefix);
 
          auto getBinnedData = [&tool, &p, &varlist](std::string const &binnedDataName) -> RooDataHist & {
-            auto *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(binnedDataName.c_str()));
+            auto *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(binnedDataName));
             if (!dh) {
                auto dhForImport = tool->readBinnedData(p["data"], binnedDataName, varlist);
                tool->workspace()->import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
@@ -195,7 +195,7 @@ public:
          if (p.has_child("normFactors")) {
             for (const auto &nf : p["normFactors"].children()) {
                std::string nfname(RooJSONFactoryWSTool::name(nf));
-               RooAbsReal *r = tool->workspace()->var(nfname.c_str());
+               RooAbsReal *r = tool->workspace()->var(nfname);
                if (r) {
                   normElems.add(*r);
                } else {

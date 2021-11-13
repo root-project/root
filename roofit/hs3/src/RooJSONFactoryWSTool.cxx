@@ -105,14 +105,14 @@ const RooFit::Experimental::JSONNode &RooJSONFactoryWSTool::irootnode() const
 template <>
 RooRealVar *RooJSONFactoryWSTool::request<RooRealVar>(const std::string &objname, const std::string &requestAuthor)
 {
-   RooRealVar *retval = this->workspace()->var(objname.c_str());
+   RooRealVar *retval = this->workspace()->var(objname);
    if (retval)
       return retval;
    if (irootnode().has_child("variables")) {
       const JSONNode &vars = irootnode()["variables"];
       if (vars.has_child(objname)) {
          this->importVariable(vars[objname]);
-         retval = this->workspace()->var(objname.c_str());
+         retval = this->workspace()->var(objname);
          if (retval)
             return retval;
       }
@@ -123,14 +123,14 @@ RooRealVar *RooJSONFactoryWSTool::request<RooRealVar>(const std::string &objname
 template <>
 RooAbsPdf *RooJSONFactoryWSTool::request<RooAbsPdf>(const std::string &objname, const std::string &requestAuthor)
 {
-   RooAbsPdf *retval = this->workspace()->pdf(objname.c_str());
+   RooAbsPdf *retval = this->workspace()->pdf(objname);
    if (retval)
       return retval;
    if (irootnode().has_child("pdfs")) {
       const JSONNode &pdfs = irootnode()["pdfs"];
       if (pdfs.has_child(objname)) {
          this->importFunction(pdfs[objname], true);
-         retval = this->workspace()->pdf(objname.c_str());
+         retval = this->workspace()->pdf(objname);
          if (retval)
             return retval;
       }
@@ -142,13 +142,13 @@ template <>
 RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname, const std::string &requestAuthor)
 {
    RooAbsReal *retval = nullptr;
-   retval = this->workspace()->pdf(objname.c_str());
+   retval = this->workspace()->pdf(objname);
    if (retval)
       return retval;
-   retval = this->workspace()->function(objname.c_str());
+   retval = this->workspace()->function(objname);
    if (retval)
       return retval;
-   retval = this->workspace()->var(objname.c_str());
+   retval = this->workspace()->var(objname);
    if (retval)
       return retval;
    if (isNumber(objname))
@@ -166,7 +166,7 @@ RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname
       const JSONNode &vars = irootnode()["variables"];
       if (vars.has_child(objname)) {
          this->importVariable(vars[objname]);
-         retval = this->workspace()->var(objname.c_str());
+         retval = this->workspace()->var(objname);
          if (retval)
             return retval;
       }
@@ -175,7 +175,7 @@ RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname
       const JSONNode &funcs = irootnode()["functions"];
       if (funcs.has_child(objname)) {
          this->importFunction(funcs[objname], false);
-         retval = this->workspace()->function(objname.c_str());
+         retval = this->workspace()->function(objname);
          if (retval)
             return retval;
       }
@@ -897,7 +897,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
       if (this->_workspace->pdf(name.c_str()))
          return;
    } else {
-      if (this->_workspace->function(name.c_str()))
+      if (this->_workspace->function(name))
          return;
    }
    // if the key we found is not a map, it's an error
@@ -968,7 +968,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
             return;
          }
       }
-      RooAbsReal *func = this->_workspace->function(name.c_str());
+      RooAbsReal *func = this->_workspace->function(name);
       if (!func) {
          std::stringstream err;
          err << "something went wrong importing function '" << name << "'.";
@@ -1073,7 +1073,7 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
          // combined measurement
          auto subMap = loadData(p);
          auto catname = p["index"].val();
-         RooCategory *channelCat = _workspace->cat(catname.c_str());
+         RooCategory *channelCat = _workspace->cat(catname);
          if (!channelCat) {
             std::stringstream ss;
             ss << "RooJSONFactoryWSTool() failed to retrieve channel category " << catname << std::endl;
@@ -1214,8 +1214,8 @@ RooArgSet RooJSONFactoryWSTool::getObservables(const JSONNode &n, const std::str
    RooArgList varlist;
    for (auto v : vars) {
       std::string name(v.first);
-      if (_workspace->var(name.c_str())) {
-         varlist.add(*(_workspace->var(name.c_str())));
+      if (_workspace->var(name)) {
+         varlist.add(*(_workspace->var(name)));
       } else {
          varlist.add(*RooJSONFactoryWSTool::createObservable(name, v.second));
       }
@@ -1246,7 +1246,7 @@ void RooJSONFactoryWSTool::clearScope()
 RooRealVar *RooJSONFactoryWSTool::createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var)
 {
    this->_workspace->factory(TString::Format("%s[%f]", name.c_str(), var.min));
-   RooRealVar *rrv = this->_workspace->var(name.c_str());
+   RooRealVar *rrv = this->_workspace->var(name);
    rrv->setMin(var.min);
    rrv->setMax(var.max);
    rrv->setConstant(true);
@@ -1350,7 +1350,7 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf &pd
       RooStats::ModelConfig mc{mcname.c_str(), pdf.GetName()};
       this->_workspace->import(mc);
    }
-   RooStats::ModelConfig *inwsmc = dynamic_cast<RooStats::ModelConfig *>(this->_workspace->obj(mcname.c_str()));
+   RooStats::ModelConfig *inwsmc = dynamic_cast<RooStats::ModelConfig *>(this->_workspace->obj(mcname));
    if (inwsmc) {
       inwsmc->SetWS(*(this->_workspace));
       inwsmc->SetPdf(pdf);
@@ -1405,7 +1405,7 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 {
    // import a RooRealVar object
    std::string name(RooJSONFactoryWSTool::name(p));
-   if (this->_workspace->var(name.c_str()))
+   if (this->_workspace->var(name))
       return;
    if (!p.is_map()) {
       std::stringstream ss;
@@ -1707,7 +1707,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Experimental::JSONNode &
             continue;
          for (const auto &var : snsh.children()) {
             std::string vname = RooJSONFactoryWSTool::name(var);
-            RooRealVar *rrv = this->_workspace->var(vname.c_str());
+            RooRealVar *rrv = this->_workspace->var(vname);
             if (!rrv)
                continue;
             this->configureVariable(var, *rrv);

@@ -214,7 +214,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
   ObjBuildConfig* obc = new ObjBuildConfig ;
 
   if (bc._masterCatName.length()>0) {
-    obc->_masterCat = _ws->cat(bc._masterCatName.c_str()) ;
+    obc->_masterCat = _ws->cat(bc._masterCatName) ;
     if (!obc->_masterCat) {
       coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: associated workspace " << _ws->GetName() 
 			    << " does not contain a category named " << bc._masterCatName 
@@ -249,7 +249,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
     for (pariter=sr._paramSplitMap.begin() ; pariter!=sr._paramSplitMap.end() ; ++pariter) {
       
       // Check that variable with given name exists in workspace
-      RooAbsArg* farg = _ws->fundArg(pariter->first.c_str()) ;
+      RooAbsArg* farg = _ws->fundArg(pariter->first) ;
       if (!farg) {
 	coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: associated workspace " << _ws->GetName() 
 			      << " does not contain a variable named " << pariter->first.c_str() 
@@ -357,7 +357,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
   // Check validity of build restriction specifications, if any
   map<string,string>::iterator riter ;
   for (riter=bc._restr.begin() ; riter!=bc._restr.end() ; ++riter) {
-    RooCategory* cat = _ws->cat(riter->first.c_str()) ;
+    RooCategory* cat = _ws->cat(riter->first) ;
     if (!cat) {
       coutE(ObjectHandling) << "RooSimWSTool::build(" << GetName() << ") ERROR: associated workspace " << _ws->GetName() 
 			    << " does not contain a category named " << riter->first
