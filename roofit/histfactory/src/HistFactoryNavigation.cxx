@@ -96,7 +96,7 @@ namespace RooStats {
       }
 
       // Get the ModelConfig
-      ModelConfig* mc = (ModelConfig*) wspace->obj(ModelConfigName.c_str());
+      ModelConfig* mc = (ModelConfig*) wspace->obj(ModelConfigName);
       if( !mc ) {
 	std::cout << "Error: Failed to find ModelConfig: " << ModelConfigName
 		  << " from workspace: " << WorkspaceName

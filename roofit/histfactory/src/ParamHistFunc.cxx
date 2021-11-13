@@ -313,7 +313,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
       gamma.setConstant( false );
 
       w.import( gamma, RooFit::RecycleConflictNodes() );
-      RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
+      RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName );
 
       paramSet.add( *gamma_wspace );
 
@@ -347,7 +347,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
         gamma.setConstant( false );
 
         w.import( gamma, RooFit::RecycleConflictNodes() );
-        RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
+        RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName );
 
         paramSet.add( *gamma_wspace );
 
@@ -384,7 +384,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
           gamma.setConstant( false );
 
           w.import( gamma, RooFit::RecycleConflictNodes() );
-          RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
+          RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName );
 
           paramSet.add( *gamma_wspace );
 
