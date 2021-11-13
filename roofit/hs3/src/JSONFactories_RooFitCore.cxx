@@ -29,7 +29,7 @@ public:
       RooArgList dependents;
       for (const auto &d : p["dependents"].children()) {
          std::string objname(RooJSONFactoryWSTool::name(d));
-         TObject *obj = tool->workspace()->obj(objname.c_str());
+         TObject *obj = tool->workspace()->obj(objname);
          if (obj->InheritsFrom(RooAbsArg::Class())) {
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
@@ -59,7 +59,7 @@ public:
       RooArgList dependents;
       for (const auto &d : p["dependents"].children()) {
          std::string objname(RooJSONFactoryWSTool::name(d));
-         TObject *obj = tool->workspace()->obj(objname.c_str());
+         TObject *obj = tool->workspace()->obj(objname);
          if (obj->InheritsFrom(RooAbsArg::Class())) {
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
@@ -361,7 +361,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       auto varlist = tool->getObservables(p["data"], name);
-      RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name.c_str()));
+      RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name));
       if (!dh) {
          auto dhForImport = tool->readBinnedData(p["data"], name, varlist);
          tool->workspace()->import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());

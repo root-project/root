@@ -212,7 +212,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       chanFile->Close();
 
       // Get the Paramater of Interest as a RooRealVar
-      RooRealVar* poi = dynamic_cast<RooRealVar*>( ws_single->var( (measurement.GetPOI()).c_str() ) );
+      RooRealVar* poi = dynamic_cast<RooRealVar*>( ws_single->var(measurement.GetPOI()));
 
       // do fit unless exportOnly requested
       if(! measurement.GetExportOnly()){
@@ -246,7 +246,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "simPdf", ws, measurement );
 
     // Get the Parameter of interest as a RooRealVar
-    RooRealVar* poi = dynamic_cast<RooRealVar*>( ws->var( (measurement.GetPOI()).c_str() ) );
+    RooRealVar* poi = dynamic_cast<RooRealVar*>( ws->var(measurement.GetPOI()));
     
     std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
       + rowTitle + "_model.root";

@@ -239,7 +239,7 @@ void topDriver( string input ) {
       ModelConfig* proto_config = (ModelConfig *) ws->obj("ModelConfig");
 
       std::cout << "Setting Parameter of Interest as :" << measurement.GetPOI() << endl;
-      RooRealVar* poi = (RooRealVar*) ws->var( (measurement.GetPOI()).c_str() );
+      RooRealVar* poi = (RooRealVar*) ws->var(measurement.GetPOI());
       RooArgSet * params= new RooArgSet;
       if(poi){
 	params->add(*poi);
@@ -298,8 +298,8 @@ void topDriver( string input ) {
     //
     ModelConfig * combined_config = (ModelConfig *) ws->obj("ModelConfig");
     cout << "Setting Parameter of Interest as :" << measurement.GetPOI() << endl;
-    RooRealVar* poi = (RooRealVar*) ws->var( (measurement.GetPOI()).c_str() );
-    //RooRealVar* poi = (RooRealVar*) ws->var((POI+"_comb").c_str());
+    RooRealVar* poi = (RooRealVar*) ws->var(measurement.GetPOI());
+    //RooRealVar* poi = (RooRealVar*) ws->var(POI+"_comb");
     RooArgSet * params= new RooArgSet;
     cout << poi << endl;
     if(poi){
@@ -524,7 +524,7 @@ void topDriver(string input ){
           // set poi in ModelConfig
           ModelConfig * proto_config = (ModelConfig *) ws->obj("ModelConfig");
           cout << "Setting Parameter of Interest as :" << POI << endl;
-          RooRealVar* poi = (RooRealVar*) ws->var(POI.c_str());
+          RooRealVar* poi = (RooRealVar*) ws->var(POI);
           RooArgSet * params= new RooArgSet;
 	  if(poi){
 	    params->add(*poi);
@@ -577,8 +577,8 @@ void topDriver(string input ){
           //
           ModelConfig * combined_config = (ModelConfig *) ws->obj("ModelConfig");
           cout << "Setting Parameter of Interest as :" << POI << endl;
-          RooRealVar* poi = (RooRealVar*) ws->var((POI).c_str());
-          //RooRealVar* poi = (RooRealVar*) ws->var((POI+"_comb").c_str());
+          RooRealVar* poi = (RooRealVar*) ws->var(POI);
+          //RooRealVar* poi = (RooRealVar*) ws->var(POI+"_comb");
           RooArgSet * params= new RooArgSet;
           cout << poi << endl;
 	  if(poi){

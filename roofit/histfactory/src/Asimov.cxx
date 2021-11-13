@@ -58,7 +58,7 @@ void RooStats::HistFactory::Asimov::ConfigureWorkspace(RooWorkspace* wspace) {
     double val  = itr->second;
 
     // Try to get the variable in the workspace
-    RooRealVar* var = wspace->var(param.c_str());
+    RooRealVar* var = wspace->var(param);
     if( !var ) {
       std::cout << "Error: Trying to set variable: " << var
 		<< " to a specific value in creation of asimov dataset: " << fName
@@ -96,7 +96,7 @@ void RooStats::HistFactory::Asimov::ConfigureWorkspace(RooWorkspace* wspace) {
     bool isConstant  = itr->second;
 
     // Try to get the variable in the workspace
-    RooRealVar* var = wspace->var(param.c_str());
+    RooRealVar* var = wspace->var(param);
     if( !var ) {
       std::cout << "Error: Trying to set variable: " << var
 		<< " constant in creation of asimov dataset: " << fName

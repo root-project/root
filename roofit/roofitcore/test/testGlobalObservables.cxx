@@ -103,7 +103,7 @@ public:
       std::vector<std::string> names{"x", "m", "s", "gm", "gs"};
       std::vector<double> values{0.0, 10.0, 2.0, 11.0, 1.0};
       for (std::size_t i = 0; i < names.size(); ++i) {
-         auto *var = _workspace->var(names[i].c_str());
+         auto *var = _workspace->var(names[i]);
          var->setVal(values[i]);
          var->setError(0.0);
       }

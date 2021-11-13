@@ -143,7 +143,7 @@ namespace HistFactory{
     RooArgSet params;
     for( unsigned int i = 0; i < poi_list.size(); ++i ) {
       std::string poi_name = poi_list.at(i);
-      RooRealVar* poi = (RooRealVar*) ws_single->var( poi_name.c_str() );
+      RooRealVar* poi = (RooRealVar*) ws_single->var(poi_name);
       if(poi){
         params.add(*poi);
       }
@@ -192,8 +192,8 @@ namespace HistFactory{
     // Notice that we get the "new" pdf, this is the one that is
     // used in the creation of these asimov datasets since they
     // are fitted (or may be, at least).
-    RooAbsPdf* pdf = ws_single->pdf(NewModelName.c_str());
-    if( !pdf ) pdf = ws_single->pdf( ModelName.c_str() );
+    RooAbsPdf* pdf = ws_single->pdf(NewModelName);
+    if( !pdf ) pdf = ws_single->pdf( ModelName );
     const RooArgSet* observables = ws_single->set("observables");
 
     // Create a SnapShot of the nominal values 
@@ -325,7 +325,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   RooArgList observables;
 
   for (unsigned int idx=0; idx < fObsNameVec.size(); ++idx) {
-    if (!proto->var(fObsNameVec[idx].c_str())) {
+    if (!proto->var(fObsNameVec[idx])) {
       const TAxis *axis = (idx == 0) ? hist->GetXaxis() : (idx == 1 ? hist->GetYaxis() : hist->GetZaxis());
       Int_t nbins = axis->GetNbins();
       Double_t xmin = axis->GetXmin();
@@ -340,7 +340,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       }
     }
 
-    observables.add(*proto->var(fObsNameVec[idx].c_str()));
+    observables.add(*proto->var(fObsNameVec[idx]));
   }
 
   return observables;
@@ -385,7 +385,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for(Int_t i=lowBin; i<highBin; ++i){
       std::stringstream str;
       str<<"_"<<i;
-      RooRealVar* temp = proto->var((prefix+str.str()).c_str());
+      RooRealVar* temp = proto->var(prefix+str.str());
       mean(i) = temp->getVal();
     }
 
@@ -430,7 +430,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       const HistoSys& histoSys = histoSysList.at(j);
       string histoSysName = histoSys.GetName();
 
-      RooRealVar* temp = (RooRealVar*) proto->var(("alpha_" + histoSysName).c_str());
+      RooRealVar* temp = (RooRealVar*) proto->var("alpha_" + histoSysName);
       if(!temp){
 
         temp = (RooRealVar*) proto->factory(("alpha_" + histoSysName + range).c_str());
@@ -439,8 +439,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         string command=("Gaussian::alpha_"+histoSysName+"Constraint(alpha_"+histoSysName+",nom_alpha_"+histoSysName+"[0.,-10,10],1.)");
         cxcoutI(HistFactory) << command << endl;
         constraintTermNames.push_back(  proto->factory( command.c_str() )->GetName() );
-        proto->var(("nom_alpha_"+histoSysName).c_str())->setConstant();
-        const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_alpha_"+histoSysName).c_str()));
+        proto->var("nom_alpha_"+histoSysName)->setConstant();
+        const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var("nom_alpha_"+histoSysName));
       } 
       params.add(* temp );
     }
@@ -514,14 +514,14 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         std::stringstream range;
         range << "[" << norm.GetVal() << "," << norm.GetLow() << "," << norm.GetHigh() << "]";
 
-        if( proto->obj(varname.c_str()) == NULL) {
+        if( proto->obj(varname) == NULL) {
           cxcoutI(HistFactory) << "making normFactor: " << norm.GetName() << endl;
           // remove "doRatio" and name can be changed when ws gets imported to the combined model.
           proto->factory((varname + range.str()).c_str());
         }
 
         if(norm.GetConst()) {
-          //	  proto->var(varname.c_str())->setConstant();
+          //	  proto->var(varname)->setConstant();
           //	  cout <<"setting " << varname << " constant"<<endl;
           cxcoutW(HistFactory) << "Const attribute to <NormFactor> tag is deprecated, will ignore." <<
               " Instead, add \n\t<ParamSetting Const=\"True\"> " << varname << " </ParamSetting>\n" <<
@@ -631,7 +631,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
          }
          
          // add Gaussian constraint terms (normal + log-normal case) 
-         RooRealVar* alpha = (RooRealVar*) proto->var((prefix + sys.GetName()).c_str());
+         RooRealVar* alpha = (RooRealVar*) proto->var(prefix + sys.GetName());
          if(!alpha) {
             
             alpha = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
@@ -639,7 +639,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             RooAbsArg * gausConstraint =  proto->factory(TString::Format("Gaussian::%sConstraint(%s,%s,%f)",alpha->GetName(),alpha->GetName(), nomAlpha->GetName(), gaussSigma) );             
              //cout << command << endl;
             constraintTermNames.push_back( gausConstraint->GetName() );
-            proto->var(("nom_" + prefix + sys.GetName()).c_str())->setConstant();
+            proto->var("nom_" + prefix + sys.GetName())->setConstant();
             const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*nomAlpha);	
          } 
          
@@ -807,7 +807,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
      for(Int_t i=lowBin; i<highBin; ++i){
        std::stringstream str;
        str<<"_"<<i;
-       RooRealVar* obs = (RooRealVar*) proto->var((obsPrefix+str.str()).c_str());
+       RooRealVar* obs = (RooRealVar*) proto->var(obsPrefix+str.str());
        cout << "expected number of events called: " << expPrefix << endl;
        RooAbsReal* exp = proto->function((expPrefix+str.str()).c_str());
        if(obs && exp){
@@ -865,7 +865,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // add gamma terms and their constraints
     for(it=gammaSyst.begin(); it!=gammaSyst.end(); ++it) {
       //cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
-      if(! proto->var(("alpha_"+it->first).c_str())){
+      if(! proto->var("alpha_"+it->first)){
 	//cout << "systematic not there" << endl;
 	nskipped++; 
 	continue;
@@ -903,14 +903,14 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1./scale,1./scale));
 	
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant()) {
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var("alpha_" + it->first)->isConstant()) {
+	proto->var("beta_" + it->first)->setConstant(true);
       }
       else {
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var("beta_" + it->first)->setConstant(false);
       }
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var("alpha_" + it->first)->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       editList+=precede + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
@@ -918,8 +918,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
       /*
-      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
-      cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      if( proto->pdf("alpha_"+it->first+"Constraint") && proto->var("alpha_"+it->first)
+      cout << " checked they are there" << proto->pdf("alpha_"+it->first+"Constraint") << " " << proto->var("alpha_"+it->first) << endl;
       else
 	cout << "NOT THERE" << endl;
       */
@@ -932,7 +932,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 	precede="";
 	cout << "Going to issue this edit command\n" << edit<< endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne)
 	  cxcoutWHF << "---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
@@ -942,7 +942,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // add uniform terms and their constraints
     for(it=uniformSyst.begin(); it!=uniformSyst.end(); ++it) {
       cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
-      if(! proto->var(("alpha_"+it->first).c_str())){
+      if(! proto->var("alpha_"+it->first)){
 	cout << "systematic not there" << endl;
 	nskipped++; 
 	continue;
@@ -955,12 +955,12 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{-1,1})",it->first.c_str(),it->first.c_str()));
       
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var("alpha_" + it->first)->isConstant())
+	proto->var("beta_" + it->first)->setConstant(true);
       else
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var("beta_" + it->first)->setConstant(false);
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var("alpha_" + it->first)->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
@@ -969,8 +969,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
       editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
-      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
-	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      if( proto->pdf("alpha_"+it->first+"Constraint") && proto->var("alpha_"+it->first))
+	cout << " checked they are there" << proto->pdf("alpha_"+it->first+"Constraint") << " " << proto->var("alpha_"+it->first) << endl;
       else
 	cout << "NOT THERE" << endl;
 
@@ -982,7 +982,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 	precede="";
 	cout << edit<< endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne)
 	  cxcoutWHF <<  "---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
@@ -996,7 +996,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // add lognormal terms and their constraints
     for(it=logNormSyst.begin(); it!=logNormSyst.end(); ++it) {
       cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
-      if(! proto->var(("alpha_"+it->first).c_str())){
+      if(! proto->var("alpha_"+it->first)){
 	cout << "systematic not there" << endl;
 	nskipped++; 
 	continue;
@@ -1037,8 +1037,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
       editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
-      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
-	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      if( proto->pdf("alpha_"+it->first+"Constraint") && proto->var("alpha_"+it->first) )
+	cout << " checked they are there" << proto->pdf("alpha_"+it->first+"Constraint") << " " << proto->var("alpha_"+it->first) << endl;
       else
 	cout << "NOT THERE" << endl;
 
@@ -1050,7 +1050,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 	precede="";
 	cout << edit<< endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne)
 	  cxcoutWHF << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
@@ -1071,7 +1071,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for(it=noSyst.begin(); it!=noSyst.end(); ++it) {
 
       cout << "remove constraint for parameter" << it->first << endl;
-      if(! proto->var(("alpha_"+it->first).c_str()) || ! proto->pdf(("alpha_"+it->first+"Constraint").c_str()) ) {
+      if(! proto->var("alpha_"+it->first) || ! proto->pdf("alpha_"+it->first+"Constraint") ) {
 	cout << "systematic not there" << endl;
 	nskipped++; 
 	continue;
@@ -1095,7 +1095,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 	precede="";
 	cout << edit << endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne) {
 	  cxcoutWHF << "---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	}
@@ -1401,7 +1401,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             RooArgList theObservables;
             std::vector<std::string>::iterator itr = fObsNameVec.begin();
             for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
-              theObservables.add( *proto->var(itr->c_str()) );
+              theObservables.add( *proto->var(*itr) );
             }
 
             // Create the list of terms to
@@ -1457,7 +1457,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               RooArgList theObservables;
               std::vector<std::string>::iterator itr = fObsNameVec.begin();
               for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
-                theObservables.add( *proto->var(itr->c_str()) );
+                theObservables.add( *proto->var(*itr) );
               }
 
               // Create the Parameters
@@ -1557,7 +1557,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               RooArgList theObservables;
               std::vector<std::string>::iterator itr = fObsNameVec.begin();
               for(; itr!=fObsNameVec.end(); ++itr ) {
-                theObservables.add( *proto->var(itr->c_str()) );
+                theObservables.add( *proto->var(*itr) );
               }
 
               // Create the Parameters
@@ -1702,7 +1702,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     //////////////////////////////////////
     // fix specified parameters
     for(unsigned int i=0; i<systToFix.size(); ++i){
-      RooRealVar* temp = proto->var((systToFix.at(i)).c_str());
+      RooRealVar* temp = proto->var(systToFix.at(i));
       if(temp) {
         // set the parameter constant
         temp->setConstant();
@@ -1712,7 +1712,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         if(systToFix.at(i)=="Lumi"){
           auxMeas = proto->var("nominalLumi");
         } else {
-          auxMeas = proto->var(TString::Format("nom_%s",temp->GetName()));
+          auxMeas = proto->var(std::string("nom_") + temp->GetName());
         }
 
         if(auxMeas){
@@ -1757,7 +1757,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     std::vector<std::string>::iterator itr = fObsNameVec.begin();
     for(; itr!=fObsNameVec.end(); ++itr ) {
-      observables.add( *proto->var(itr->c_str()) );
+      observables.add( *proto->var(*itr) );
       if (!observablesStr.empty()) { observablesStr += ","; }
       observablesStr += *itr;
     }
@@ -1879,7 +1879,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for (int i=1; i<=ax->GetNbins(); ++i) { // 1 or more dimension
 
       Double_t xval = ax->GetBinCenter(i);
-      proto->var( ObsNameVec[0].c_str() )->setVal( xval );
+      proto->var( ObsNameVec[0] )->setVal( xval );
 
       if(ObsNameVec.size()==1) {
 	Double_t fval = mnominal->GetBinContent(i);
@@ -1888,7 +1888,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
 	for(int j=1; j<=ay->GetNbins(); ++j) {
 	  Double_t yval = ay->GetBinCenter(j);
-	  proto->var( ObsNameVec[1].c_str() )->setVal( yval );
+	  proto->var( ObsNameVec[1] )->setVal( yval );
 
 	  if(ObsNameVec.size()==2) { 
 	    Double_t fval = mnominal->GetBinContent(i,j);
@@ -1897,7 +1897,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
 	    for(int k=1; k<=az->GetNbins(); ++k) {
 	      Double_t zval = az->GetBinCenter(k);
-	      proto->var( ObsNameVec[2].c_str() )->setVal( zval );
+	      proto->var( ObsNameVec[2] )->setVal( zval );
 	      Double_t fval = mnominal->GetBinContent(i,j,k);
 	      obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
 	    }
@@ -1970,7 +1970,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       else channelString << ',' << channel_name ;
       RooWorkspace * ch=chs[i].get();
       
-      RooAbsPdf* model = ch->pdf(("model_"+channel_name).c_str());
+      RooAbsPdf* model = ch->pdf("model_"+channel_name);
       if(!model) cout <<"failed to find model for channel"<<endl;
       //      cout << "int = " << model->createIntegral(*obsN)->getVal() << endl;;
       models.push_back(model);
@@ -2113,7 +2113,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       std::string paramName = param_itr->first;
       double paramVal = param_itr->second;
       
-      RooRealVar* temp = combined->var( paramName.c_str() );
+      RooRealVar* temp = combined->var( paramName );
       if(temp) {
         temp->setVal( paramVal );
         cxcoutI(HistFactory) <<"setting " << paramName << " to the value: " << paramVal <<  endl;
@@ -2124,7 +2124,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     for(unsigned int i=0; i<fSystToFix.size(); ++i){
       // make sure they are fixed
-      RooRealVar* temp = combined->var((fSystToFix.at(i)).c_str());
+      RooRealVar* temp = combined->var(fSystToFix[i]);
       if(temp) {
         temp->setConstant();
         cxcoutI(HistFactory) <<"setting " << fSystToFix.at(i) << " constant" << endl;
@@ -2548,13 +2548,13 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     }
   
     constraintTermNames.push_back( constrName );    
-    ConstraintTerms.add( *proto->pdf(constrName.c_str()) );
+    ConstraintTerms.add( *proto->pdf(constrName) );
 
     // Add the "observed" value to the 
     // list of global observables:
     RooArgSet* globalSet = const_cast<RooArgSet*>(proto->set("globalObservables"));
   
-    RooRealVar* nomVarInWorkspace = proto->var(nomName.c_str());
+    RooRealVar* nomVarInWorkspace = proto->var(nomName);
     if( ! globalSet->contains(*nomVarInWorkspace) ) {
       globalSet->add( *nomVarInWorkspace );	
     }

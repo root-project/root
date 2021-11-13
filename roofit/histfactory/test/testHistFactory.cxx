@@ -313,7 +313,7 @@ TEST_P(HFFixture, ModelProperties) {
 
   // Check that parameters are in the model
   for (const auto& systName : _systNames) {
-    auto& var = *ws->var(systName.c_str());
+    auto& var = *ws->var(systName);
 
     EXPECT_TRUE(channelPdf->dependsOnValue(var)) << "Expect channel pdf to depend on " << systName;
     if (!var.isConstant()) {
@@ -323,7 +323,7 @@ TEST_P(HFFixture, ModelProperties) {
 
   // Check that sub models depend on their systematic uncertainties.
   for (auto& subModelName : std::initializer_list<std::string>{"signal_channel1_shapes", "background1_channel1_shapes", "background2_channel1_shapes"}) {
-    auto subModel = ws->function(subModelName.c_str());
+    auto subModel = ws->function(subModelName);
     ASSERT_NE(subModel, nullptr) << "Unable to retrieve sub model with name " << subModelName;
     if (subModelName.find("signal") != std::string::npos) {
       EXPECT_FALSE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_0")));

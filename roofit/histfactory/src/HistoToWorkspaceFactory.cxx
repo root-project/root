@@ -159,7 +159,7 @@ namespace HistFactory{
     for(Int_t i=lowBin; i<highBin; ++i){
       std::stringstream str;
       str<<"_"<<i;
-      RooRealVar* temp = proto->var((prefix+str.str()).c_str());
+      RooRealVar* temp = proto->var(prefix+str.str());
       mean(i) = temp->getVal();
     }
 
@@ -198,7 +198,7 @@ namespace HistFactory{
       std::stringstream str;
       str<<"_"<<j;
 
-      RooRealVar* temp = (RooRealVar*) proto->var(("alpha_"+sourceName.at(j)).c_str());
+      RooRealVar* temp = (RooRealVar*) proto->var("alpha_"+sourceName.at(j));
       if(!temp){
         temp = (RooRealVar*) proto->factory(("alpha_"+sourceName.at(j)+range).c_str());
 
@@ -206,8 +206,8 @@ namespace HistFactory{
         string command=("Gaussian::alpha_"+sourceName.at(j)+"Constraint(alpha_"+sourceName.at(j)+",nom_"+sourceName.at(j)+"[0.,-10,10],1.)");
         cout << command << endl;
         likelihoodTermNames.push_back(  proto->factory( command.c_str() )->GetName() );
-	proto->var(("nom_"+sourceName.at(j)).c_str())->setConstant();
-	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_"+sourceName.at(j)).c_str()));
+	proto->var("nom_"+sourceName.at(j))->setConstant();
+	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var("nom_"+sourceName.at(j)));
 
       } 
 
@@ -391,9 +391,9 @@ namespace HistFactory{
      for(Int_t i=lowBin; i<highBin; ++i){
        std::stringstream str;
        str<<"_"<<i;
-       RooRealVar* obs = (RooRealVar*) proto->var((obsPrefix+str.str()).c_str());
+       RooRealVar* obs = (RooRealVar*) proto->var(obsPrefix+str.str());
        cout << "expected number of events called: " << expPrefix << endl;
-       RooAbsReal* exp = proto->function((expPrefix+str.str()).c_str());
+       RooAbsReal* exp = proto->function(expPrefix+str.str());
        if(obs && exp){
          
          //proto->Print();
@@ -490,12 +490,12 @@ namespace HistFactory{
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1./scale,1./scale));
 	
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var("alpha_" + it->first)->isConstant())
+	proto->var("beta_" + it->first)->setConstant(true);
       else
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var("beta_" + it->first)->setConstant(false);
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var("alpha_" + it->first)->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       //cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
@@ -505,8 +505,8 @@ namespace HistFactory{
       editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
       /*
-      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
-      cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      if( proto->pdf("alpha_"+it->first+"Constraint") && proto->var("alpha_"+it->first) )
+      cout << " checked they are there" << proto->pdf("alpha_"+it->first+"Constraint") << " " << proto->var("alpha_"+it->first) << endl;
       else
 	cout << "NOT THERE" << endl;
       */
@@ -519,7 +519,7 @@ namespace HistFactory{
 	precede="";
 	cout << "Going to issue this edit command\n" << edit<< endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne)
 	  cout << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
@@ -529,7 +529,7 @@ namespace HistFactory{
     // add uniform terms and their constraints
     for(it=uniformSyst.begin(); it!=uniformSyst.end(); ++it) {
       cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
-      if(! proto->var(("alpha_"+it->first).c_str())){
+      if(! proto->var("alpha_"+it->first)){
 	cout << "systematic not there" << endl;
 	nskipped++; 
 	continue;
@@ -542,12 +542,12 @@ namespace HistFactory{
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{-1,1})",it->first.c_str(),it->first.c_str()));
       
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var("alpha_" + it->first)->isConstant())
+	proto->var("beta_" + it->first)->setConstant(true);
       else
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var("beta_" + it->first)->setConstant(false);
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var("alpha_" + it->first)->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
@@ -556,8 +556,8 @@ namespace HistFactory{
       cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
       editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
-      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
-	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      if( proto->pdf("alpha_"+it->first+"Constraint") && proto->var("alpha_"+it->first) )
+	cout << " checked they are there" << proto->pdf("alpha_"+it->first+"Constraint") << " " << proto->var("alpha_"+it->first) << endl;
       else
 	cout << "NOT THERE" << endl;
 
@@ -569,7 +569,7 @@ namespace HistFactory{
 	precede="";
 	cout << edit<< endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne)
 	  cout << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
@@ -583,7 +583,7 @@ namespace HistFactory{
     // add lognormal terms and their constraints
     for(it=logNormSyst.begin(); it!=logNormSyst.end(); ++it) {
       cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
-      if(! proto->var(("alpha_"+it->first).c_str())){
+      if(! proto->var("alpha_"+it->first)){
 	cout << "systematic not there" << endl;
 	nskipped++; 
 	continue;
@@ -609,12 +609,12 @@ namespace HistFactory{
       //      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1.,1./scale));
       
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var("alpha_" + it->first)->isConstant())
+	proto->var("beta_" + it->first)->setConstant(true);
       else
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var("beta_" + it->first)->setConstant(false);
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var("alpha_" + it->first)->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
@@ -623,8 +623,8 @@ namespace HistFactory{
       cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
       editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
-      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
-	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      if( proto->pdf("alpha_"+it->first+"Constraint") && proto->var("alpha_"+it->first) )
+	cout << " checked they are there" << proto->pdf("alpha_"+it->first+"Constraint") << " " << proto->var("alpha_"+it->first) << endl;
       else
 	cout << "NOT THERE" << endl;
 
@@ -636,7 +636,7 @@ namespace HistFactory{
 	precede="";
 	cout << edit<< endl;
 	proto->factory( edit.c_str() );
-	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	RooAbsPdf* newOne = proto->pdf(lastPdf);
 	if(!newOne)
 	  cout << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
@@ -817,7 +817,7 @@ namespace HistFactory{
     //////////////////////////////////////
     // fix specified parameters
     for(unsigned int i=0; i<systToFix.size(); ++i){
-      RooRealVar* temp = proto->var((systToFix.at(i)).c_str());
+      RooRealVar* temp = proto->var(systToFix.at(i));
       if(temp) temp->setConstant();
       else cout << "could not find variable " << systToFix.at(i) << " could not set it to constant" << endl;
     }
@@ -887,7 +887,7 @@ namespace HistFactory{
       else ss << ',' << channel_name ;
       RooWorkspace * ch=chs[i];
       
-      RooAbsPdf* model = ch->pdf(("model_"+channel_name).c_str());
+      RooAbsPdf* model = ch->pdf("model_"+channel_name);
       models.push_back(model);
       globalObs.add(*ch->set("globalObservables"));
 
@@ -934,7 +934,7 @@ namespace HistFactory{
 
     for(unsigned int i=0; i<fSystToFix.size(); ++i){
       // make sure they are fixed
-      RooRealVar* temp = combined->var((fSystToFix.at(i)).c_str());
+      RooRealVar* temp = combined->var(fSystToFix.at(i));
       if(temp) {
         temp->setConstant();
         cout <<"setting " << fSystToFix.at(i) << " constant" << endl;
@@ -961,7 +961,7 @@ namespace HistFactory{
   {
 
     ModelConfig * combined_config = (ModelConfig *) combined->obj("ModelConfig");
-    RooDataSet * simData = (RooDataSet *) combined->obj(data_name.c_str());
+    RooDataSet * simData = (RooDataSet *) combined->obj(data_name);
     //    const RooArgSet * constrainedParams=combined_config->GetNuisanceParameters();
     const RooArgSet * POIs=combined_config->GetParametersOfInterest();
 
@@ -979,7 +979,7 @@ namespace HistFactory{
           combined->defineSet("constrainedParams", *constrainedParams);
     */
 
-    //RooAbsPdf* model=combined->pdf(model_name.c_str()); 
+    //RooAbsPdf* model=combined->pdf(model_name); 
     RooAbsPdf* model=combined_config->GetPdf();
     //    RooArgSet* allParams = model->getParameters(*simData);
 
