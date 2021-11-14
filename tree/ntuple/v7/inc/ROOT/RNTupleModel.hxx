@@ -174,12 +174,10 @@ public:
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
    Detail::RFieldBase *GetField(std::string_view fieldName);
-   REntry *GetDefaultEntry() { return fDefaultEntry.get(); }
+   REntry *GetDefaultEntry();
    std::unique_ptr<REntry> CreateEntry();
-   RNTupleVersion GetVersion() const { return RNTupleVersion(); }
    std::string GetDescription() const { return fDescription; }
-   void SetDescription(std::string_view description) { fDescription = std::string(description); }
-   RNTupleUuid GetUuid() const { return RNTupleUuid(); /* TODO */ }
+   void SetDescription(std::string_view description);
 };
 
 } // namespace Experimental

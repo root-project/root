@@ -751,6 +751,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    model->GetFieldZero()->SetOnDiskId(GetFieldZeroId());
    for (const auto &topDesc : GetTopLevelFields())
       model->AddField(topDesc.CreateField(*this));
+   model->Freeze();
    return model;
 }
 
