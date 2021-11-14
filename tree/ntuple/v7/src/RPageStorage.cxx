@@ -279,8 +279,8 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
 
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 {
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
-                                model.GetVersion(), model.GetUuid());
+   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author", RNTupleVersion(),
+                                RNTupleUuid());
 
    auto &fieldZero = *model.GetFieldZero();
    fDescriptorBuilder.AddField(

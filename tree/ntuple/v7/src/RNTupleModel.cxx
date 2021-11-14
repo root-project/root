@@ -100,8 +100,18 @@ ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetFie
    return field;
 }
 
+ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry()
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
+   return fDefaultEntry.get();
+}
+
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry()
 {
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+
    auto entry = std::make_unique<REntry>();
    for (auto& f : *fFieldZero) {
       if (f.GetParent() != GetFieldZero())
@@ -115,4 +125,11 @@ void ROOT::Experimental::RNTupleModel::Freeze()
 {
    if (!IsFrozen())
       fModelId = reinterpret_cast<uintptr_t>(this);
+}
+
+void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
+{
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to set description of frozen model"));
+   fDescription = std::string(description);
 }
