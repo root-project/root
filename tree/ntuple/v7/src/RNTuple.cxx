@@ -105,6 +105,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    if (!fModel) {
       throw RException(R__FAIL("null model"));
    }
+   fModel->Freeze();
    InitPageSource();
    ConnectModel(*fModel);
 }
@@ -284,6 +285,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    if (!fSink) {
       throw RException(R__FAIL("null sink"));
    }
+   fModel->Freeze();
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
       fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
