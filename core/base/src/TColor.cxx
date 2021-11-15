@@ -327,16 +327,19 @@ kWaterMelon=108,      kCool=109,        kCopper=110,
 kGistEarth=111,       kViridis=112,     kCividis=113
 ~~~
 
-One can immediately see the [disadvantages of the Rainbow color map](https://root.cern.ch/rainbow-color-map),
+As explained in [Crameri, F., Shephard, G.E. & Heron, P.J. The misuse of colour in science communication.
+Nat Commun 11, 5444 (2020)](https://doi.org/10.1038/s41467-020-19160-7) some color maps
+can visually distord data, specially for people with colour-vision deficiencies.
+
+For instance one can immediately see the [disadvantages of the Rainbow color map](https://root.cern.ch/rainbow-color-map),
 which is misleading for colour-blinded people in a 2D plot (not so much in a 3D surfaces).
 
-The `kCMYK` palette, for instance, is also not great because it's dark, then lighter, then
+The `kCMYK` palette, is also not great because it's dark, then lighter, then
 half-dark again. Some others, like `kAquamarine`, have almost no contrast therefore it would
 be almost impossible (for a color blind person) to see something with a such palette.
 
 Therefore the palettes are classified in two categories: those which are Colour Vision Deficiency
 friendly and those which are not.
-
 
 An easy way to classify the palettes is to turn them into grayscale using TCanvas::SetGrayscale().
 The grayscale version of a palette should be as proportional as possible, and monotonously
@@ -344,7 +347,7 @@ increasing or decreasing.
 
 Unless it is symmetrical, then it is fine to have white in the
 borders and black in the centre (for example an axis that goes between
--40 degrees and + 40 degrees, the 0 has a meaning).
+-40 degrees and + 40 degrees, the 0 has a meaning in the perceptualcolormap.C example).
 
 \anchor C06a
 ### Colour Vision Deficiency (CVD) friendly palettes
