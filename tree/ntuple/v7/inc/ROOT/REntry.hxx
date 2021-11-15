@@ -40,7 +40,7 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
-   friend class REntryBuilder;
+   friend class RNTupleModel;
 
    std::vector<Detail::RFieldValue> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
@@ -95,29 +95,6 @@ public:
 
    Iterator_t begin() { return fValues.begin(); }
    Iterator_t end() { return fValues.end(); }
-};
-
-class REntryBuilder {
-   REntry fEntry;
-
-public:
-   REntry MoveEntry();
-
-   /// Adds a value whose storage is managed by the entry
-   void AddValue(const Detail::RFieldValue &value);
-
-   /// Adds a value whose storage is _not_ managed by the entry
-   void CaptureValue(const Detail::RFieldValue &value);
-
-   /// While building the entry, adds a new value to the list and return the value's shared pointer
-   template <typename T, typename... ArgsT>
-   std::shared_ptr<T> AddValue(RField<T> *field, ArgsT &&...args)
-   {
-      auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fEntry.fValues.emplace_back(Detail::RFieldValue(field->CaptureValue(ptr.get())));
-      fEntry.fValuePtrs.emplace_back(ptr);
-      return ptr;
-   }
 };
 
 } // namespace Experimental

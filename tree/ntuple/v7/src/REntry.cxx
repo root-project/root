@@ -35,23 +35,3 @@ void ROOT::Experimental::REntry::CaptureValue(const Detail::RFieldValue& value)
 {
    fValues.push_back(value);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-ROOT::Experimental::REntry ROOT::Experimental::REntryBuilder::MoveEntry()
-{
-   ROOT::Experimental::REntry result;
-   std::swap(result, fEntry);
-   return result;
-}
-
-void ROOT::Experimental::REntryBuilder::AddValue(const Detail::RFieldValue &value)
-{
-   fEntry.fManagedValues.emplace_back(fEntry.fValues.size());
-   fEntry.fValues.push_back(value);
-}
-
-void ROOT::Experimental::REntryBuilder::CaptureValue(const Detail::RFieldValue &value)
-{
-   fEntry.fValues.push_back(value);
-}
