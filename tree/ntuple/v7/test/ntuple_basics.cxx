@@ -21,7 +21,12 @@ TEST(RNTuple, ReconstructModel)
    source.Attach();
 
    auto modelReconstructed = source.GetDescriptor().GenerateModel();
-   EXPECT_EQ(nullptr, modelReconstructed->GetDefaultEntry()->Get<float>("xyz"));
+   try {
+      modelReconstructed->GetDefaultEntry()->Get<float>("xyz");
+      FAIL() << "invalid field name should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
+   }
    auto vecPtr = modelReconstructed->GetDefaultEntry()->Get<std::vector<std::vector<float>>>("nnlo");
    EXPECT_TRUE(vecPtr != nullptr);
    // Don't crash
