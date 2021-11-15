@@ -1722,7 +1722,7 @@ g_io_channel_read_chars (GIOChannel	*channel,
 
   if (!channel->use_buffer)
     {
-      gint tmp_bytes;
+      gsize tmp_bytes;
       
       g_assert (!channel->read_buf || channel->read_buf->len == 0);
 
@@ -1914,7 +1914,7 @@ g_io_channel_write_chars (GIOChannel	*channel,
 
   if (!channel->use_buffer)
     {
-      gint tmp_bytes;
+      gsize tmp_bytes;
       
       g_assert (!channel->write_buf || channel->write_buf->len == 0);
       g_assert (channel->partial_write_buf[0] == '\0');
