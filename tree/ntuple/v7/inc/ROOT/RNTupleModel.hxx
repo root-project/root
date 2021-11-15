@@ -51,7 +51,7 @@ class RNTupleModel {
    /// Keeps track of which field names are taken.
    std::unordered_set<std::string> fFieldNames;
    ///
-   std::uintptr_t fModelId = 0;
+   std::uint64_t fModelId = 0;
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.
@@ -163,7 +163,7 @@ public:
 
    void Freeze();
    bool IsFrozen() const { return fModelId != 0; }
-   std::uintptr_t GetModelId() const { return fModelId; }
+   std::uint64_t GetModelId() const { return fModelId; }
 
    /// Ingests a model for a sub collection and attaches it to the current model
    ///
