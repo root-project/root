@@ -16,6 +16,7 @@
 #ifndef ROOT7_REntry
 #define ROOT7_REntry
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
@@ -86,18 +87,19 @@ public:
          if (v.GetField()->GetName() == fieldName)
             return v;
       }
-      return Detail::RFieldValue();
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
 
-   template<typename T>
-   T* Get(std::string_view fieldName) {
+   template <typename T>
+   T *Get(std::string_view fieldName) const
+   {
       for (auto& v : fValues) {
          if (v.GetField()->GetName() == fieldName) {
             R__ASSERT(v.GetField()->GetType() == RField<T>::TypeName());
-            return static_cast<T*>(v.GetRawPtr());
+            return v.Get<T>();
          }
       }
-      return nullptr;
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
