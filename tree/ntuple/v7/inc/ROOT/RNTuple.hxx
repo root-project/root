@@ -17,6 +17,7 @@
 #define ROOT7_RNTuple
 
 #include <ROOT/RConfig.hxx> // for R__unlikely
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
@@ -393,6 +394,9 @@ public:
    /// Multiple entries can have been instantiated from the tnuple model.  This method will perform
    /// a light check whether the entry comes from the ntuple's own model
    void Fill(REntry &entry) {
+      if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
+         throw RException(R__FAIL("mismatch between entry and model"));
+
       for (auto& value : entry) {
          fUnzippedClusterSize += value.GetField()->Append(value);
       }

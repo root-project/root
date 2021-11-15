@@ -513,3 +513,31 @@ TEST(RNTuple, ModelId)
    auto m2c = m2->Clone();
    EXPECT_EQ(m2->GetModelId(), m2c->GetModelId());
 }
+
+TEST(RNTuple, Entry)
+{
+   auto m1 = RNTupleModel::Create();
+   try {
+      m1->CreateEntry();
+      FAIL() << "creating entry of unfrozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to create entry"));
+   }
+   m1->Freeze();
+   auto e1 = m1->CreateEntry();
+
+   auto m2 = RNTupleModel::Create();
+   m2->Freeze();
+   auto e2 = m2->CreateEntry();
+
+   FileRaii fileGuard("test_ntuple_entry.root");
+   auto ntuple = RNTupleWriter::Recreate(std::move(m1), "ntpl", fileGuard.GetPath());
+   ntuple->Fill();
+   ntuple->Fill(*e1);
+   try {
+      ntuple->Fill(*e2);
+      FAIL() << "filling with wrong entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
+   }
+}

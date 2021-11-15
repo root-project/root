@@ -419,15 +419,6 @@ ROOT::Experimental::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 }
 
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RFieldZero::GenerateEntry() const
-{
-   auto entry = std::make_unique<REntry>();
-   for (auto& f : fSubFields) {
-      entry->AddValue(f->GenerateValue());
-   }
-   return entry;
-}
-
 void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitFieldZero(*this);
