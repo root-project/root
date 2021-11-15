@@ -86,7 +86,8 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    return collectionNTuple;
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName)
+const ROOT::Experimental::Detail::RFieldBase *
+ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
    if (fieldName.empty())
       return nullptr;
@@ -107,14 +108,14 @@ ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetFie
    return field;
 }
 
-ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry()
+ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
    return fDefaultEntry.get();
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry()
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
