@@ -470,7 +470,7 @@ std::unique_ptr<ROperator> make_ROperator_LSTM(const onnx::NodeProto& nodeproto,
    return op;
 }
 std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodeProto &nodeproto,
-                                                             const onnx::GraphProto &graphproto,
+                                                             const onnx::GraphProto &/*graphproto*/,
                                                              std::unordered_map<std::string, ETensorType> &tensor_type)
 {
 
@@ -507,7 +507,7 @@ std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodePro
       tensor_type[nodeproto.output(0)] = output_type;
    }
 
-   return std::move(op);
+   return op;
 }
 
 } //INTERNAL
