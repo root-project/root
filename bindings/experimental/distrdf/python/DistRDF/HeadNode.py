@@ -90,6 +90,22 @@ class EmptySourceHeadNode(Node.Node):
             self.npartitions = self.nentries
         return Ranges.get_balanced_ranges(self.nentries, self.npartitions)
 
+    def generate_rdf_creator(self):
+        """
+        Generates a function that is responsible for building an instance of
+        RDataFrame on a distributed mapper for a given entry range. Specific for
+        an empty data source.
+        """
+
+        nentries = self.nentries
+
+        def build_rdf_from_range(current_range):
+            """
+            Builds an RDataFrame instance for a distributed mapper.
+            """
+            return ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end)
+
+        return build_rdf_from_range
 
 class TreeHeadNode(Node.Node):
     """
@@ -210,3 +226,91 @@ class TreeHeadNode(Node.Node):
         logger.debug("%s clusters will be split along %s partitions.",
                      numclusters, self.npartitions)
         return Ranges.get_clustered_ranges(clustersinfiles, self.npartitions, self.friendinfo)
+
+    def generate_rdf_creator(self):
+        """
+        Generates a function that is responsible for building an instance of
+        RDataFrame on a distributed mapper for a given entry range. Specific for
+        the TTree data source.
+        """
+
+        maintreename = self.maintreename
+        defaultbranches = self.defaultbranches
+
+        def build_rdf_from_range(current_range):
+            """
+            Builds an RDataFrame instance for a distributed mapper.
+            """
+            # Build TEntryList for this range:
+            elists = ROOT.TEntryList()
+
+            # Build TChain of files for this range:
+            chain = ROOT.TChain(maintreename)
+            for start, end, filename, treenentries, subtreename in zip(
+                current_range.localstarts, current_range.localends, current_range.filelist,
+                current_range.treesnentries, current_range.treenames):
+                # Use default constructor of TEntryList rather than the
+                # constructor accepting treename and filename, otherwise
+                # the TEntryList would remove any url or protocol from the
+                # file name.
+                elist = ROOT.TEntryList()
+                elist.SetTreeName(subtreename)
+                elist.SetFileName(filename)
+                elist.EnterRange(start, end)
+                elists.AddSubList(elist)
+                chain.Add(filename + "?#" + subtreename, treenentries)
+
+            # We assume 'end' is exclusive
+            chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
+
+            # Connect the entry list to the chain
+            chain.SetEntryList(elists, "sync")
+
+            # Gather information about friend trees. Check that we got an
+            # RFriendInfo struct and that it's not empty
+            if (current_range.friendinfo is not None and
+                not current_range.friendinfo.fFriendNames.empty()):
+                # Zip together the information about friend trees. Each
+                # element of the iterator represents a single friend tree.
+                # If the friend is a TChain, the zipped information looks like:
+                # (name, alias), (file1.root, file2.root, ...), (subname1, subname2, ...)
+                # If the friend is a TTree, the file list is made of
+                # only one filename and the list of names of the sub trees
+                # is empty, so the zipped information looks like:
+                # (name, alias), (filename.root, ), ()
+                zipped_friendinfo = zip(
+                    current_range.friendinfo.fFriendNames,
+                    current_range.friendinfo.fFriendFileNames,
+                    current_range.friendinfo.fFriendChainSubNames
+                )
+                for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
+                    # Start a TChain with the current friend treename
+                    friend_chain = ROOT.TChain(str(friend_name))
+                    # Add each corresponding file to the TChain
+                    if friend_chainsubnames.empty():
+                        # This friend is a TTree, friend_filenames is a vector of size 1
+                        friend_chain.Add(str(friend_filenames[0]))
+                    else:
+                        # This friend is a TChain, add all files with their tree names
+                        for filename, chainsubname in zip(friend_filenames, friend_chainsubnames):
+                            fullpath = filename + "/" + chainsubname
+                            friend_chain.Add(str(fullpath))
+
+                    # Set cache on the same range as the parent TChain
+                    friend_chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
+                    # Finally add friend TChain to the parent (with alias)
+                    chain.AddFriend(friend_chain, friend_alias)
+
+            if defaultbranches is not None:
+                rdf = ROOT.RDataFrame(chain, defaultbranches)
+            else:
+                rdf = ROOT.RDataFrame(chain)
+
+            # Bind the TChain to the RDataFrame object before returning it. Not
+            # doing so would lead to the TChain being destroyed when leaving
+            # the scope of this function.
+            rdf._chain_lifeline = chain
+
+            return rdf
+
+        return build_rdf_from_range
