@@ -82,7 +82,10 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry();
 
-   Detail::RFieldValue GetValue(std::string_view fieldName) {
+   void CaptureValueUnsafe(std::string_view fieldName, void *where);
+
+   Detail::RFieldValue GetValue(std::string_view fieldName) const
+   {
       for (auto& v : fValues) {
          if (v.GetField()->GetName() == fieldName)
             return v;
