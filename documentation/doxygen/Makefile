@@ -1,7 +1,7 @@
 
 .PHONY: filter folders mathjax js images doxygen
 
-PYTHON_EXECUTABLE ?= /usr/bin/python
+PYTHON_EXECUTABLE ?= /usr/bin/python3
 export PYTHON_EXECUTABLE
 
 DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
@@ -52,7 +52,6 @@ doxygen: filter pyzdoc
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
-	./listlibs.sh
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
 	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C

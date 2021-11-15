@@ -334,12 +334,12 @@ The `kCMYK` palette, for instance, is also not great because it's dark, then lig
 half-dark again. Some others, like `kAquamarine`, have almost no contrast therefore it would
 be almost impossible (for a color blind person) to see something with a such palette.
 
-Therefore the palettes are classified in two categories: those which are  Colour Vision Deficiency
+Therefore the palettes are classified in two categories: those which are Colour Vision Deficiency
 friendly and those which are not.
 
 
 An easy way to classify the palettes is to turn them into grayscale using TCanvas::SetGrayscale().
-The grayscale  version of a palette should be as proportional as possible, and monotonously
+The grayscale version of a palette should be as proportional as possible, and monotonously
 increasing or decreasing.
 
 Unless it is symmetrical, then it is fine to have white in the
