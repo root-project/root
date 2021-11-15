@@ -42,6 +42,9 @@ that are associated to values are managed.
 class REntry {
    friend class RNTupleModel;
 
+   /// The entry must be linked to a specific model, identified by a model ID
+   std::uint64_t fModelId = 0;
+   /// Corresponds to the top-level fields of the linked model
    std::vector<Detail::RFieldValue> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
@@ -49,10 +52,12 @@ class REntry {
    /// Points into fValues and indicates the values that are owned by the entry and need to be destructed
    std::vector<std::size_t> fManagedValues;
 
+   REntry() = default;
+   explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
+
 public:
    using Iterator_t = decltype(fValues)::iterator;
 
-   REntry() = default;
    REntry(const REntry& other) = delete;
    REntry& operator=(const REntry& other) = delete;
    REntry(REntry &&other) = default;
@@ -92,6 +97,8 @@ public:
       }
       return nullptr;
    }
+
+   std::uint64_t GetModelId() const { return fModelId; }
 
    Iterator_t begin() { return fValues.begin(); }
    Iterator_t end() { return fValues.end(); }

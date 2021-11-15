@@ -38,8 +38,7 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
 }
 
 ROOT::Experimental::RNTupleModel::RNTupleModel()
-  : fFieldZero(std::make_unique<RFieldZero>())
-  , fDefaultEntry(std::make_unique<REntry>())
+   : fFieldZero(std::make_unique<RFieldZero>()), fDefaultEntry(std::unique_ptr<REntry>(new REntry()))
 {}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
@@ -48,9 +47,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    auto cloneFieldZero = fFieldZero->Clone("");
    cloneModel->fModelId = fModelId;
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
-   cloneModel->fDefaultEntry = cloneModel->fFieldZero->GenerateEntry();
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
+   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
+   for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
+      cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
+   }
    return cloneModel;
 }
 
@@ -113,7 +115,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
-   auto entry = std::make_unique<REntry>();
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
    for (auto& f : *fFieldZero) {
       if (f.GetParent() != GetFieldZero())
          continue;
@@ -129,6 +131,7 @@ void ROOT::Experimental::RNTupleModel::Freeze()
 
    static std::atomic<std::uint64_t> gLastModelId = 0;
    fModelId = ++gLastModelId;
+   fDefaultEntry->fModelId = fModelId;
 }
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
