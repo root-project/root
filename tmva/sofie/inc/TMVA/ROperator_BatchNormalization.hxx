@@ -106,12 +106,14 @@ public:
 		}
 
 		fShapeX = model.GetTensorShape(fNX);
-		if (fShapeX.size() != 4) {
-			throw
+      if (fShapeX.size() < 4)
+         fShapeX.resize(4, 1);
+      if (fShapeX.size() != 4) {
+         throw
 				std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx is not of 4 dimensions");
-		}
-		
-		fShapeScale = model.GetTensorShape(fNScale);
+      }
+
+      fShapeScale = model.GetTensorShape(fNScale);
 		fShapeB = model.GetTensorShape(fNB);
 		fShapeMean = model.GetTensorShape(fNMean);
 		fShapeVar = model.GetTensorShape(fNVar);
