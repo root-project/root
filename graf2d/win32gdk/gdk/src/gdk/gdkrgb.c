@@ -92,9 +92,9 @@ struct _GdkRgbInfo {
    GdkVisual *visual;
    GdkColormap *cmap;
 
-   gulong *color_pixels;
-   gulong *gray_pixels;
-   gulong *reserved_pixels;
+   unsigned long *color_pixels;
+   unsigned long *gray_pixels;
+   unsigned long *reserved_pixels;
 
    guint nred_shades;
    guint ngreen_shades;
@@ -148,9 +148,9 @@ static guchar *colorcube;
 static guchar *colorcube_d;
 
 static gint
-gdk_rgb_cmap_fail(const char *msg, GdkColormap * cmap, gulong * pixels)
+gdk_rgb_cmap_fail(const char *msg, GdkColormap * cmap, unsigned long * pixels)
 {
-   gulong free_pixels[256];
+   unsigned long free_pixels[256];
    gint n_free;
    gint i;
 
@@ -167,7 +167,7 @@ gdk_rgb_cmap_fail(const char *msg, GdkColormap * cmap, gulong * pixels)
 }
 
 static void
-gdk_rgb_make_colorcube(gulong * pixels, gint nr, gint ng, gint nb)
+gdk_rgb_make_colorcube(unsigned long * pixels, gint nr, gint ng, gint nb)
 {
    guchar rt[16], gt[16], bt[16];
    gint i;
@@ -191,7 +191,7 @@ gdk_rgb_make_colorcube(gulong * pixels, gint nr, gint ng, gint nb)
 
 /* this is the colorcube suitable for dithering */
 static void
-gdk_rgb_make_colorcube_d(gulong * pixels, gint nr, gint ng, gint nb)
+gdk_rgb_make_colorcube_d(unsigned long * pixels, gint nr, gint ng, gint nb)
 {
    gint r, g, b;
    gint i;
@@ -214,8 +214,8 @@ static gint gdk_rgb_try_colormap(gint nr, gint ng, gint nb)
    gint r0, g0, b0;
    GdkColormap *cmap;
    GdkColor color;
-   gulong pixels[256];
-   gulong junk[256];
+   unsigned long pixels[256];
+   unsigned long junk[256];
    gint i;
    gint d2;
    gint colors_needed;
@@ -488,7 +488,7 @@ static void gdk_rgb_set_gray_cmap(GdkColormap * cmap)
    gint i;
    GdkColor color;
    gint status;
-   gulong pixels[256];
+   unsigned long pixels[256];
    gint r, g, b, gray;
 
    for (i = 0; i < 256; i++) {
@@ -630,9 +630,9 @@ void gdk_rgb_init(void)
 }
 
 /* convert an rgb value into an X pixel code */
-gulong gdk_rgb_xpixel_from_rgb(guint32 rgb)
+unsigned long gdk_rgb_xpixel_from_rgb(guint32 rgb)
 {
-   gulong pixel = 0;
+   unsigned long pixel = 0;
 
    if (image_info->bitmap) {
       return ((rgb & 0xff0000) >> 16) +

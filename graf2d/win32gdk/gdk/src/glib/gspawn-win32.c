@@ -188,7 +188,7 @@ read_data (GString     *str,
            GError     **error)
 {
   GIOError gioerror;
-  gint bytes;
+  gsize bytes;
   gchar buf[4096];
 
  again:

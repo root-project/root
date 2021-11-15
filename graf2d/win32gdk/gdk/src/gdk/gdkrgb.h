@@ -43,7 +43,7 @@ extern "C" {
    void
     gdk_rgb_init(void);
 
-    gulong gdk_rgb_xpixel_from_rgb(guint32 rgb);
+    unsigned long gdk_rgb_xpixel_from_rgb(guint32 rgb);
 
    void
     gdk_rgb_gc_set_foreground(GdkGC * gc, guint32 rgb);
