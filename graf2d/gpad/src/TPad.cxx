@@ -5234,7 +5234,7 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    RangeAxisChanged();
 }
 
-void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
+void TPad::RangeAxis()
 {
    // emit signal
    RangeAxisChanged();
