@@ -747,7 +747,7 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
-   auto model = std::make_unique<RNTupleModel>();
+   auto model = RNTupleModel::Create();
    model->GetFieldZero()->SetOnDiskId(GetFieldZeroId());
    for (const auto &topDesc : GetTopLevelFields())
       model->AddField(topDesc.CreateField(*this));
