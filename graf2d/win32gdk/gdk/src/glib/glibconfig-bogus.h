@@ -84,11 +84,11 @@ typedef unsigned long long guint64;
 #define G_GINT64_FORMAT "I64i"
 #define G_GUINT64_FORMAT "I64u"
 
-typedef gint32 gssize;
-typedef guint32 gsize;
+typedef intptr_t  gssize;
+typedef uintptr_t gsize;
 
-#define GPOINTER_TO_INT(p)	((gint)(p))
-#define GPOINTER_TO_UINT(p)	((guint)(p))
+#define GPOINTER_TO_INT(p)	((intptr_t)   (p))
+#define GPOINTER_TO_UINT(p)	((uintptr_t)  (p))
 
 #define GINT_TO_POINTER(i)	((gpointer)(i))
 #define GUINT_TO_POINTER(u)	((gpointer)(u))
