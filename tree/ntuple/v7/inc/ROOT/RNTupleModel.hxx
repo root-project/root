@@ -161,7 +161,8 @@ public:
    }
 
    template <typename T>
-   T* Get(std::string_view fieldName) {
+   T *Get(std::string_view fieldName) const
+   {
       return fDefaultEntry->Get<T>(fieldName);
    }
 
@@ -176,10 +177,12 @@ public:
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 
+   std::unique_ptr<REntry> CreateEntry() const;
+   REntry *GetDefaultEntry() const;
+
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
-   Detail::RFieldBase *GetField(std::string_view fieldName);
-   REntry *GetDefaultEntry();
-   std::unique_ptr<REntry> CreateEntry();
+   const Detail::RFieldBase *GetField(std::string_view fieldName) const;
+
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
 };
