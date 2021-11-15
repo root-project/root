@@ -133,7 +133,7 @@ public:
       SetHasRun();
    }
 
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() final
    {
       auto prevNode = fPrevData.GetGraph();
       auto prevColumns = prevNode->GetDefinedColumns();
