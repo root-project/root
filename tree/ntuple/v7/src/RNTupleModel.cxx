@@ -19,6 +19,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/StringUtils.hxx>
 
+#include <atomic>
 #include <cstdlib>
 #include <memory>
 #include <utility>
@@ -123,8 +124,11 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
-   if (!IsFrozen())
-      fModelId = reinterpret_cast<uintptr_t>(this);
+   if (IsFrozen())
+      return;
+
+   static std::atomic<std::uint64_t> gLastModelId = 0;
+   fModelId = ++gLastModelId;
 }
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
