@@ -42,7 +42,7 @@ that are associated to values are managed.
 class REntry {
    friend class RNTupleModel;
 
-   /// The entry must be linked to a specific model, identified by a model ID
+   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
    std::vector<Detail::RFieldValue> fValues;
@@ -52,17 +52,10 @@ class REntry {
    /// Points into fValues and indicates the values that are owned by the entry and need to be destructed
    std::vector<std::size_t> fManagedValues;
 
+   // Creation of entries is done by the RNTupleModel class
+
    REntry() = default;
    explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
-
-public:
-   using Iterator_t = decltype(fValues)::iterator;
-
-   REntry(const REntry& other) = delete;
-   REntry& operator=(const REntry& other) = delete;
-   REntry(REntry &&other) = default;
-   REntry &operator=(REntry &&other) = default;
-   ~REntry();
 
    /// Adds a value whose storage is managed by the entry
    void AddValue(const Detail::RFieldValue& value);
@@ -78,6 +71,15 @@ public:
       fValuePtrs.emplace_back(ptr);
       return ptr;
    }
+
+public:
+   using Iterator_t = decltype(fValues)::iterator;
+
+   REntry(const REntry &other) = delete;
+   REntry &operator=(const REntry &other) = delete;
+   REntry(REntry &&other) = default;
+   REntry &operator=(REntry &&other) = default;
+   ~REntry();
 
    Detail::RFieldValue GetValue(std::string_view fieldName) {
       for (auto& v : fValues) {
