@@ -362,14 +362,14 @@ namespace SOFIE{
             std::string slength = std::to_string(length);
             fGC += "   f >> tensor_name >> length;\n";
             fGC += "   if (tensor_name != \"" + tensor_name + "\" ) {\n";
-            fGC += "      std::cout << \"Error in tensor name : expected tensor name is " + tensor_name +
-                   " read \" << tensor_name << std::endl;\n";
-            fGC += "      throw std::runtime_error(\"tmva-sofie failed to read the correct tensor name\");\n";
+            fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor name; expected name is " +
+                   tensor_name + " , read \" + tensor_name;\n";
+            fGC += "      throw std::runtime_error(err_msg);\n";
             fGC += "    }\n";
             fGC += "   if (length != " + slength + ") {\n";
-            fGC += "      std::cout << \"Error in tensor size : expected tensor size is " + slength +
-                   " read \" << length << std::endl;\n";
-            fGC += "      throw std::runtime_error(\"tmva-sofie failed to read the correct tensor size\");\n";
+            fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor size; expected size is " + 
+                   slength + " , read \" + length ;\n";
+            fGC += "      throw std::runtime_error(err_msg);\n";
             fGC += "    }\n";
             fGC += "    for (int i =0; i < length; ++i) \n";
             fGC += "       f >> " + tensor_name + "[i];\n";

@@ -189,7 +189,7 @@ public:
             
             // here the acual broadcasting
             if (!fUseSession) {
-               // in case of session the code is in GenerateInitCode
+
                fShapeB.resize(fShapeY.size(), 1.);
 
                std::shared_ptr<void> new_data_ptr(
@@ -199,12 +199,11 @@ public:
                fShapeB = model.GetTensorShape(fNB);
                fNB2 = fNB;   // use same name
             }
-            else { 
-               // we need to add bias as an intermediate tensor
-               // I need here to inser a new tensor
+            else {  
+               // In case of session add broadcasting code in Session constructor and in GenerateInitCode
+               // we need to add a new intermediate tensor for broadcasted bias tensor
                fNB2 = fNB + "bcast";
                model.AddIntermediateTensor(fNB2, model.GetTensorType(fNB), fShapeY);
-               //model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, new_data_ptr);
             }
          }
       }
@@ -214,7 +213,7 @@ public:
    std::string GenerateInitCode() {
       std::stringstream out;
       // generate initialization code for broadcasting of bias tensor  
-      if (fShapeB.size() != fShapeY.size() ) {
+      if (fShapeB.size() != fShapeY.size() && !fNB2.empty() ) {
          // include a separate scope to avoid defining unique operator temp variables 
          out << "   {\n"; 
          out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeB) << ";\n";
@@ -225,10 +224,11 @@ public:
          out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
              << original_bias_tensor << ", oldShape, newShape);\n";
          // extend the new broadcasted bias tensor for the batch dimension
-         out << "      int length = TMVA::Experimental::SOFIE::ConvertShapeToLength(newShape);\n";
+         int length =  fShapeY[1]*fShapeY[2]*fShapeY[3]; // output nc*h*w
          out << "      for (int i = 0; i < " << fShapeY[0] << " ; i++)\n";
-         out << "         std::copy(newData_ptr, newData_ptr + length , "
-            <<  new_bias_tensor << " + i * length);\n";
+         out << "         std::copy(newData_ptr, newData_ptr + " << length << ", "
+             <<  new_bias_tensor << " + i * " << length << ");\n";
+         out << "      delete [] newData_ptr;\n";
          out << "   }\n";
       }
       return out.str();

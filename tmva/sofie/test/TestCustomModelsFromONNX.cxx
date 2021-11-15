@@ -80,7 +80,8 @@ TEST(ONNX, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_Linear_16::infer(input.data());
+   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
@@ -101,7 +102,8 @@ TEST(ONNX, Linear32)
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_Linear_32::infer(input.data());
+   TMVA_SOFIE_Linear_32::Session s("Linear_32_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
@@ -122,7 +124,8 @@ TEST(ONNX, Linear64)
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_Linear_64::infer(input.data());
+   TMVA_SOFIE_Linear_64::Session s("Linear_64_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_64_ExpectedOutput::all_ones) / sizeof(float));
@@ -143,7 +146,8 @@ TEST(ONNX, LinearWithSelu)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_LinearWithSelu::infer(input.data());
+   TMVA_SOFIE_LinearWithSelu::Session s("LinearWithSelu_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
@@ -164,7 +168,8 @@ TEST(ONNX, LinearWithSigmoid)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_LinearWithSigmoid::infer(input.data());
+   TMVA_SOFIE_LinearWithSigmoid::Session s("LinearWithSigmoid_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));
@@ -185,7 +190,8 @@ TEST(ONNX, ConvWithPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithPadding::infer(input.data());
+   TMVA_SOFIE_ConvWithPadding::Session s("ConvWithPadding_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -206,7 +212,8 @@ TEST(ONNX, ConvWithoutPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithoutPadding::infer(input.data());
+   TMVA_SOFIE_ConvWithoutPadding::Session s("ConvWithoutPadding_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithoutPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -227,7 +234,8 @@ TEST(ONNX, ConvWithAutopadSameLower)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithAutopadSameLower::infer(input.data());
+   TMVA_SOFIE_ConvWithAutopadSameLower::Session s("ConvWithAutopadSameLower_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithAutopadSameLower_ExpectedOutput::all_ones) / sizeof(float));
@@ -248,7 +256,8 @@ TEST(ONNX, ConvWithStridesPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithStridesPadding::infer(input.data());
+   TMVA_SOFIE_ConvWithStridesPadding::Session s("ConvWithStridesPadding_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithStridesPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -269,7 +278,8 @@ TEST(ONNX, ConvWithStridesNoPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithStridesNoPadding::infer(input.data());
+   TMVA_SOFIE_ConvWithStridesNoPadding::Session s("ConvWithStridesNoPadding_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithStridesNoPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -290,7 +300,8 @@ TEST(ONNX, ConvWithAsymmetricPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithAsymmetricPadding::infer(input.data());
+   TMVA_SOFIE_ConvWithAsymmetricPadding::Session s("ConvWithAsymmetricPadding_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithAsymmetricPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -310,7 +321,8 @@ TEST(ONNX, RNNBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBatchwise::infer(input.data());
+   TMVA_SOFIE_RNNBatchwise::Session s("RNNBatchwise_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -335,7 +347,8 @@ TEST(ONNX, RNNBidirectional)
    std::vector<float> input({0.,    0.01, 0.02, 0.03, 0.04, 0.05,
                              0.06, 0.07, 0.08, 0.09, 0.1,  0.11,
                              0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBidirectional::infer(input.data());
+   TMVA_SOFIE_RNNBidirectional::Session s("RNNBidirectional_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -369,7 +382,8 @@ TEST(ONNX, RNNBidirectionalBatchwise)
       0,    0.01, 0.06, 0.07, 0.12, 0.13,
       0.02, 0.03, 0.08, 0.09, 0.14, 0.15,
       0.04, 0.05, 0.1,  0.11, 0.16, 0.17});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBidirectionalBatchwise::infer(input.data());
+   TMVA_SOFIE_RNNBidirectionalBatchwise::Session s("RNNBidirectionalBatchwise_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -401,7 +415,8 @@ TEST(ONNX, RNNDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNDefaults::infer(input.data());
+   TMVA_SOFIE_RNNDefaults::Session s("RNNDefaults_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -433,7 +448,8 @@ TEST(ONNX, RNNSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSeqLength::infer(input.data());
+   TMVA_SOFIE_RNNSeqLength::Session s("RNNSeqLength_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -473,7 +489,8 @@ TEST(ONNX, RNNSequence)
       0.06,    0.087,  0.01,    0.3,  -0.001,
       0.0,     0.0,    0.0,     0.0,   0.0,
       0.0,     0.0,    0.0,     0.0,   0.0});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSequence::infer(input.data());
+   TMVA_SOFIE_RNNSequence::Session s("RNNSequence_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -513,7 +530,8 @@ TEST(ONNX, RNNSequenceBatchwise)
       0.16,  -0.19,   0.003,  0.0,   0.0001,
       0.0,     0.0,   0.0,    0.0,   0.0,
       0.0,     0.0,   0.0,    0.0,   0.0});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSequenceBatchwise::infer(input.data());
+   TMVA_SOFIE_RNNSequenceBatchwise::Session s("RNNSequenceBatchwise_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -545,7 +563,8 @@ TEST(ONNX, LSTMBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMBatchwise::infer(input.data());
+   TMVA_SOFIE_LSTMBatchwise::Session s("LSTMBatchwise_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -575,7 +594,8 @@ TEST(ONNX, LSTMBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMBidirectional::infer(input.data());
+   TMVA_SOFIE_LSTMBidirectional::Session s("LSTMBidirectional_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
    std::vector<float> output_yc = output[2];
@@ -618,7 +638,8 @@ TEST(ONNX, LSTMDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMDefaults::infer(input.data());
+   TMVA_SOFIE_LSTMDefaults::Session s("LSTMDefaults_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -650,7 +671,8 @@ TEST(ONNX, LSTMInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMInitialBias::infer(input.data());
+   TMVA_SOFIE_LSTMInitialBias::Session s("LSTMInitialBias_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -682,7 +704,8 @@ TEST(ONNX, LSTMPeepholes)
    // Preparing the standard all-ones input
    std::vector<float> input(8);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMPeepholes::infer(input.data());
+   TMVA_SOFIE_LSTMPeepholes::Session s("LSTMPeepholes_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
