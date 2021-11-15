@@ -38,12 +38,24 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
 }
 
 ROOT::Experimental::RNTupleModel::RNTupleModel()
-   : fFieldZero(std::make_unique<RFieldZero>()), fDefaultEntry(std::unique_ptr<REntry>(new REntry()))
+  : fFieldZero(std::make_unique<RFieldZero>())
 {}
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
+{
+   auto model = CreateBare();
+   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
+   return model;
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
+{
+   return std::unique_ptr<RNTupleModel>(new RNTupleModel());
+}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
 {
-   auto cloneModel = std::make_unique<RNTupleModel>();
+   auto cloneModel = std::unique_ptr<RNTupleModel>(new RNTupleModel());
    auto cloneFieldZero = fFieldZero->Clone("");
    cloneModel->fModelId = fModelId;
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
