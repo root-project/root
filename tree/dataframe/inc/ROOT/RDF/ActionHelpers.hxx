@@ -75,6 +75,18 @@ public:
    template <typename... Args>
    void CallFinalizeTask(unsigned int, Args...) {}
 
+   template <typename H = Helper>
+   auto CallPartialUpdate(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot), (void *)(nullptr))
+   {
+      return &static_cast<Helper *>(this)->PartialUpdate(slot);
+   }
+
+   template <typename... Args>
+   [[noreturn]] void *CallPartialUpdate(...)
+   {
+      throw std::logic_error("This action does not support callbacks!");
+   }
+
    // Helper functions for RMergeableValue
    virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const
    {
