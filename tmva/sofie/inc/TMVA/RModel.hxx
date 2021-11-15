@@ -85,7 +85,7 @@ public:
 
 
    void Initialize();
-   void Generate(bool useSession = false, bool useWeightFile = false);
+   void Generate(bool useSession = true, bool useWeightFile = true);
 
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");
