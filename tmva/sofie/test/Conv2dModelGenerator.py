@@ -14,14 +14,16 @@ result = []
 
 class Net(nn.Module):
     
-    def __init__(self, nc = 1, ng = 1, nl = 4):
+    def __init__(self, nc = 1, ng = 1, nl = 4, use_bn = False):
         super(Net, self).__init__()
 
         self.nc = nc
         self.ng = ng
         self.nl = nl
+        self.use_bn = use_bn
         
-        self.conv0  = nn.Conv2d(in_channels=self.nc,   out_channels=4, kernel_size=2, groups=1, stride=1, padding=1)
+        self.conv0 = nn.Conv2d(in_channels=self.nc, out_channels=4, kernel_size=2, groups=1, stride=1, padding=1)
+        if (self.use_bn): self.bn1 = nn.BatchNorm2d(4)
         # output is 4x4 with optionally using group convolution
         self.conv1  = nn.Conv2d(in_channels=4,   out_channels=8, groups = self.ng,   kernel_size=3, stride=1, padding=1)
         #output is same 4x4
@@ -33,6 +35,8 @@ class Net(nn.Module):
     def forward(self, x):
       x = self.conv0(x)
       x = F.relu(x)
+      if (self.use_bn):
+         x = self.bn1(x)
       if (self.nl == 1) : return x
       x = self.conv1(x)
       x = F.relu(x)
@@ -50,11 +54,11 @@ def main():
    parser.add_argument('params', type=int, nargs='+',
                     help='parameters for the Conv network : batchSize , inputChannels, inputImageSize, nGroups, nLayers ')
    
-   #  parser.add_argument('--save-onnx', action='store_true', default=False,
-   #                      help='For Saving the current Model in the ONNX format')
-   #  parser.add_argument('--load', default=False,
-   #                      help='For Loading the saved Model from PyTorch format')
-   
+   parser.add_argument('--bn', action='store_true', default=False,
+                        help='For using batch norm layer')
+   parser.add_argument('--v', action='store_true', default=False,
+                        help='For verbose mode')
+
 
    args = parser.parse_args()
   
@@ -66,9 +70,11 @@ def main():
    nc = args.params[1] 
    d = args.params[2]
    ngroups = args.params[3]
-   nlayers = args.params[4] 
+   nlayers = args.params[4]
+   use_bn = args.bn
 
    print ("using batch-size =",bsize,"nchannels =",nc,"dim =",d,"ngroups =",ngroups,"nlayers =",nlayers)
+   if (use_bn): print("using batch normalization layer")
 
     #sample = torch.zeros([2,1,5,5])
    input  = torch.zeros([])
@@ -90,7 +96,9 @@ def main():
    print("input data",xinput.shape)
    print(xinput)
    
-   name = "Conv2dModel_B" + str(bsize)
+   name = "Conv2dModel"
+   if (use_bn): name += "_BN"
+   name += "_B" + str(bsize)
 
    saveOnnx=True
    loadModel=False
@@ -100,17 +108,8 @@ def main():
    model = Net(nc,ngroups,nlayers)
     
    model(xinput)
-
-   if loadModel :
-        print('Loading model from file....')
-        checkpoint = torch.load(name + ".pt")
-        model.load_state_dict(checkpoint['model_state_dict'])
-
-  
-   y = model.forward(xinput)
-
-   print("output data : shape, ",y.shape)
-   print(y)
+ 
+   model.forward(xinput)
 
    if savePtModel :
       torch.save({'model_state_dict':model.state_dict()}, name + ".pt")
@@ -122,6 +121,18 @@ def main():
                 name + ".onnx",
                 export_params=True
         )
+
+   if loadModel :
+        print('Loading model from file....')
+        checkpoint = torch.load(name + ".pt")
+        model.load_state_dict(checkpoint['model_state_dict'])
+
+   # evaluate model in test mode
+   model.eval()
+   y = model.forward(xinput)
+
+   print("output data : shape, ",y.shape)
+   print(y)
 
    outSize = y.nelement()
    yvec = y.reshape([outSize])
