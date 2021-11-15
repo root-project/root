@@ -48,6 +48,7 @@ void ROOT::Experimental::REntry::CaptureValueUnsafe(std::string_view fieldName, 
          fManagedValues.erase(itr);
       }
       fValues[i] = fValues[i].GetField()->CaptureValue(where);
+      return;
    }
    throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
 }
