@@ -132,7 +132,9 @@ public:
       EnsureValidFieldName(fieldNameDesc.first);
       auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
       field->SetDescription(fieldNameDesc.second);
-      auto ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
+      std::shared_ptr<T> ptr;
+      if (fDefaultEntry)
+         ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fFieldZero->Attach(std::move(field));
       return ptr;
    }
@@ -153,10 +155,12 @@ public:
    void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
       if (IsFrozen())
          throw RException(R__FAIL("invalid attempt to add field to frozen model"));
-      EnsureValidFieldName(fieldNameDesc.first);
-      if (!fromWhere) {
+      if (!fDefaultEntry)
+         throw RException(R__FAIL("invalid attempt capture value to a bare model's default entry"));
+      if (!fromWhere)
          throw RException(R__FAIL("null field fromWhere"));
-      }
+      EnsureValidFieldName(fieldNameDesc.first);
+
       auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
       field->SetDescription(fieldNameDesc.second);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
@@ -166,6 +170,8 @@ public:
    template <typename T>
    T *Get(std::string_view fieldName) const
    {
+      if (!fDefaultEntry)
+         throw RException(R__FAIL("invalid attempt to get bare model's default entry"));
       return fDefaultEntry->Get<T>(fieldName);
    }
 
@@ -181,6 +187,9 @@ public:
       std::unique_ptr<RNTupleModel> collectionModel);
 
    std::unique_ptr<REntry> CreateEntry() const;
+   /// In a bare entry, all values point to nullptr. The resulting entry shall use CaptureValueUnsafe() in order
+   /// set memory addresses to be serialized / deserialized
+   std::unique_ptr<REntry> CreateBareEntry() const;
    REntry *GetDefaultEntry() const;
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
