@@ -29,7 +29,8 @@ int main(int argc, char *argv[]){
    RModel *modelPtr;
    fileRead.GetObject("model",modelPtr);
    fileRead.Close();
-   modelPtr->Generate();
+   // in this case we don't write session class and weight file
+   modelPtr->Generate(false, false);
    modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
    return 0;
 }
