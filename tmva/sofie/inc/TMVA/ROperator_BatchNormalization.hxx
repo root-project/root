@@ -106,11 +106,10 @@ public:
 		}
 
 		fShapeX = model.GetTensorShape(fNX);
-      if (fShapeX.size() < 4)
-         fShapeX.resize(4, 1);
-      if (fShapeX.size() != 4) {
+      
+      if (fShapeX.size() <  2 || fShapeX.size() > 4) {
          throw
-				std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx is not of 4 dimensions");
+				std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx has wrong shape : " + ConvertShapeToString(fShapeX));
       }
 
       fShapeScale = model.GetTensorShape(fNScale);
@@ -122,13 +121,16 @@ public:
 
 		if (fShapeB.size() == 1) {
             // Broadcast scale, bias, input_mean and input_var to shape_X
-            auto original_B = model.GetInitializedTensorData(fNB);
+         auto original_B = model.GetInitializedTensorData(fNB);
 			auto original_S = model.GetInitializedTensorData(fNScale);
 			auto original_M = model.GetInitializedTensorData(fNMean);
 			auto original_V = model.GetInitializedTensorData(fNVar);
-			size_t batchSize = fShapeX[0], channels = fShapeX[1], height = fShapeX[2], width = fShapeX[3];
-			size_t n = batchSize * channels * height * width;
-            if (fType == "float") {
+         size_t batchSize = fShapeX[0];
+         size_t channels = fShapeX[1];
+         size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
+         size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
+         size_t n = batchSize * channels * height * width;
+         if (fType == "float") {
 				float *original_bias = static_cast<float*>(original_B.get());
 				float *original_scale = static_cast<float*>(original_S.get());
 				float *original_mean = static_cast<float*>(original_M.get());
@@ -172,7 +174,7 @@ public:
 				fShapeScale = model.GetTensorShape(fNScale);
 				fShapeMean = model.GetTensorShape(fNMean);
 				fShapeVar = model.GetTensorShape(fNVar);
-            }
+         }
         }
 	}
 
@@ -189,8 +191,11 @@ public:
 			length *= i;
 		}
 		//// Batch Norm op
-		size_t batchSize = fShapeX[0], channels = fShapeX[1], height = fShapeX[2], width = fShapeX[3];
-		size_t n = batchSize * channels * height * width;
+      size_t batchSize = fShapeX[0];
+      size_t channels = fShapeX[1];
+      size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
+      size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
+      size_t n = batchSize * channels * height * width;
 
 		//// copy X into Y
 		out << "\t" << "const int N ="<<batchSize * channels * height * width<<";\n";

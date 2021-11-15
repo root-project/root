@@ -54,17 +54,20 @@ std::vector<float> RunInference(float * x, int sId) {
    return *result;
 }
 
-
-
-void TestLinear(int nbatches, int inputSize = 10, int nlayers = 4)
+void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayers = 4)
 {
-   std::string modelName = "LinearModel_B" + std::to_string(nbatches);
+   std::string modelName = "LinearModel";
+   if (useBN) modelName += "_BN";
+   modelName += "_B" + std::to_string(nbatches);
+
    // network parameters : nbatches, inputDim, nlayers
    std::vector<int> params = {nbatches, inputSize, nlayers};
 
    std::string command = "python LinearModelGenerator.py ";
    for (size_t i = 0; i < params.size(); i++)
       command += "  " + std::to_string(params[i]);
+   if (useBN)
+      command += "  --bn";
 
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
@@ -98,9 +101,11 @@ void TestLinear(int nbatches, int inputSize = 10, int nlayers = 4)
    }
 }
 
-void TestConv2D( int nbatches, int ngroups = 2, int nchannels = 2, int nd = 4, int nlayers = 4)
+void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannels = 2, int nd = 4, int nlayers = 4)
 {
-   std::string modelName = "Conv2dModel_B" + std::to_string(nbatches);
+   std::string modelName = "Conv2dModel";
+   if (useBN) modelName += "_BN";
+   modelName += "_B" + std::to_string(nbatches);
 
    // input size is fixed to (nb, nc, nd, nd)
    
@@ -120,6 +125,7 @@ void TestConv2D( int nbatches, int ngroups = 2, int nchannels = 2, int nd = 4, i
       command += " ";
       command += argv[i];
    }
+   if (useBN) command += "  --bn";
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
    // TPython::ExecScript("Conv2dModelGenerator.py",5,argv);
@@ -172,4 +178,13 @@ TEST(SOFIE,Conv2d_B1) {
 TEST(SOFIE, Conv2d_B4)
 {
    TestConv2D(4);
+}
+// test with batch normalization
+TEST(SOFIE, Linear_BNORM_B4)
+{
+   TestLinear(8,true,5,4);
+}
+TEST(SOFIE, Conv2d_BNORM_B4)
+{
+   TestConv2D(5,true);
 }
