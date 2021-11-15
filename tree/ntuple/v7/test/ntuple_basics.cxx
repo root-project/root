@@ -499,6 +499,19 @@ TEST(RNTuple, ModelId)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to set description"));
    }
+   try {
+      m1->MakeField<float>("pt");
+      FAIL() << "changing frozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to add field"));
+   }
+   try {
+      float dummy;
+      m1->AddField<float>("pt", &dummy);
+      FAIL() << "changing frozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to add field"));
+   }
 
    EXPECT_NE(m1->GetModelId(), m2->GetModelId());
    // Freeze() should be idempotent call

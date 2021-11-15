@@ -124,6 +124,8 @@ public:
    std::shared_ptr<T> MakeField(std::pair<std::string_view, std::string_view> fieldNameDesc,
       ArgsT&&... args)
    {
+      if (IsFrozen())
+         throw RException(R__FAIL("invalid attempt to add field to frozen model"));
       EnsureValidFieldName(fieldNameDesc.first);
       auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
       field->SetDescription(fieldNameDesc.second);
@@ -146,6 +148,8 @@ public:
    /// Throws an exception if fromWhere is null.
    template <typename T>
    void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
+      if (IsFrozen())
+         throw RException(R__FAIL("invalid attempt to add field to frozen model"));
       EnsureValidFieldName(fieldNameDesc.first);
       if (!fromWhere) {
          throw RException(R__FAIL("null field fromWhere"));

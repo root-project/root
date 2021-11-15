@@ -59,10 +59,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 
 void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
-   if (!field) {
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to add field to frozen model"));
+   if (!field)
       throw RException(R__FAIL("null field"));
-   }
    EnsureValidFieldName(field->GetName());
+
    fDefaultEntry->AddValue(field->GenerateValue());
    fFieldZero->Attach(std::move(field));
 }
@@ -71,6 +73,8 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to add collection to frozen model"));
    EnsureValidFieldName(fieldName);
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
