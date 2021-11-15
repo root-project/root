@@ -67,7 +67,7 @@ public:
    virtual ~RActionImpl() = default;
    // call Helper::FinalizeTask if present, do nothing otherwise
    template <typename T = Helper>
-   auto CallFinalizeTask(unsigned int slot) -> decltype(&T::FinalizeTask, void())
+   auto CallFinalizeTask(unsigned int slot) -> decltype(std::declval<T>().FinalizeTask(slot))
    {
       static_cast<Helper *>(this)->FinalizeTask(slot);
    }
