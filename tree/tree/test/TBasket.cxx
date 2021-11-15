@@ -7,6 +7,7 @@
 #include "TMemFile.h"
 #include "TTree.h"
 
+#include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
 
 #include <vector>
@@ -141,6 +142,10 @@ TEST(TBasket, CreateAndGetBasket)
 
 TEST(TBasket, TestUnsupportedIO)
 {
+   ROOTUnitTestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TBasket::Streamer", "indicating this was written with a newer version of ROOT utilizing critical IO features this version of ROOT does not support", /*matchFullMessage=*/false);
+   diags.requiredDiag(kError, "TBranch::GetBasket", "File: tbasket_test.root at byte:", /*matchFullMessage=*/false);
+
    TMemFile *f;
    // Create a file; not using the CreateSampleFile helper as
    // we must corrupt the basket here.
@@ -283,6 +288,9 @@ UChar_t GetFeatures(const ROOT::TIOFeatures &settings) {
 
 TEST(TBasket, TestSettingIOBits)
 {
+   ROOTUnitTestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TestFeature", "A feature is being tested for that is not supported or known.");
+
    TMemFile *f;
    // Create a file; not using the CreateSampleFile helper as
    // we want to change around the IOBits
