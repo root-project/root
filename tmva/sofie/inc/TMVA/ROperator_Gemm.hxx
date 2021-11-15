@@ -30,6 +30,7 @@ namespace SOFIE{
       std::string fNA;
       std::string fNB;
       std::string fNC = "";
+      std::string fNC2; // bias tensor name after broadcasting
       std::string fNY;
       std::vector<size_t> fShapeA;
       std::vector<size_t> fShapeB;
@@ -119,7 +120,7 @@ namespace SOFIE{
          fShapeY = ShapeInference({fShapeA, fShapeB})[0];
          if (fNC != ""){
             fShapeC = model.GetTensorShape(fNC);
-
+            fNC2 = fNC;
             bool broadcast_needed = false;
 
             // broadcast is not needed if fShapeY[0] == 1 i.e. C and Y have same length
@@ -127,15 +128,27 @@ namespace SOFIE{
                broadcast_needed = true;
             }
 
-            if (broadcast_needed){
-               auto original_data = model.GetInitializedTensorData(fNC);
-               if (fType == "float"){
+            // std::cout << "doing broadcast " << broadcast_needed << " use session " << model.UseSession() <<
+            //    " shape C " << ConvertShapeToString(fShapeC) << " shape Y " << ConvertShapeToString(fShapeY)
+            //                << std::endl;
 
-                  std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(static_cast<float*>(original_data.get()), fShapeC, fShapeY), std::default_delete<float[]>());
+            if (broadcast_needed) {
+               if (!model.UseSession()) {
+                  auto original_data = model.GetInitializedTensorData(fNC);
+                  if (fType == "float") {
 
+                     std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(
+                                                           static_cast<float *>(original_data.get()), fShapeC, fShapeY),
+                                                        std::default_delete<float[]>());
 
-                  model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
-                  fShapeC = fShapeY;
+                     model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
+                     fShapeC = fShapeY;
+                  }
+               } else {
+                  // In case of session add broadcasting code in Session constructor and in GenerateInitCode
+                  // we need to add a new intermediate tensor for broadcasted bias tensor
+                  fNC2 = fNC + "bcast";
+                  model.AddIntermediateTensor(fNC2, model.GetTensorType(fNC), fShapeY);
                }
             }
          }
@@ -148,7 +161,26 @@ namespace SOFIE{
 
       }
 
-
+      std::string GenerateInitCode()
+      {
+         std::stringstream out;
+         // generate initialization code for broadcasting of bias tensor
+         if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
+            // include a separate scope to avoid defining unique operator temp variables
+            out << "   {\n";
+            out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeC) << ";\n";
+            out << "      std::vector<size_t> newShape = " << ConvertShapeToString(fShapeY) << ";\n";
+            std::string original_bias_tensor = "tensor_" + fNC;
+            std::string new_bias_tensor = "tensor_" + fNC2;
+            out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
+                << original_bias_tensor << ", oldShape, newShape);\n";
+            int length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
+            out << "      std::copy(newData_ptr, newData_ptr + " << length << ", " << new_bias_tensor << ");\n";
+            out << "      delete [] newData_ptr;\n";
+            out << "   }\n";
+         }
+         return out.str();
+      }
 
       std::string Generate(std::string OpName){
          OpName = "op_" + OpName;
@@ -171,11 +203,11 @@ namespace SOFIE{
          out << SP << "int " << OpName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
          out << SP << "int " << OpName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
          if (fNC != ""){
-            int length = 1;
-            for (auto& i: fShapeC){
-               length *= i;
-            }
-            out << SP << "std::copy(" << "tensor_" << fNC << ", " << "tensor_" << fNC << " + " << length << ", " << "tensor_" << fNY << ");\n";
+            size_t length = ConvertShapeToLength(fShapeY);
+            if (fNC2 == fNC)
+               // case broadcasting was not needed or done otside of session
+               assert(length == ConvertShapeToLength(fShapeC));
+            out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << length << ", " << "tensor_" << fNY << ");\n";
          }
          if (fType == "float"){
             out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
