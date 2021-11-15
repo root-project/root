@@ -282,8 +282,6 @@ public:
    Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
    size_t GetValueSize() const final { return 0; }
 
-   /// Generates managed values for the top-level sub fields
-   std::unique_ptr<REntry> GenerateEntry() const;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
