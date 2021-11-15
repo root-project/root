@@ -559,3 +559,46 @@ TEST(RNTuple, Entry)
       EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
    }
 }
+
+TEST(RNTuple, BareEntry)
+{
+   auto m = RNTupleModel::CreateBare();
+   auto f = m->MakeField<float>("pt");
+   EXPECT_FALSE(f);
+
+   FileRaii fileGuard("test_ntuple_bare_entry.root");
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+      const auto model = ntuple->GetModel();
+      try {
+         model->GetDefaultEntry();
+         FAIL() << "accessing default entry of bare model should throw";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to get bare model's default entry"));
+      }
+      try {
+         model->Get<float>("pt");
+         FAIL() << "accessing default entry of bare model should throw";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to get bare model's default entry"));
+      }
+
+      auto e1 = model->CreateEntry();
+      ASSERT_NE(nullptr, e1->Get<float>("pt"));
+      *(e1->Get<float>("pt")) = 1.0;
+      auto e2 = model->CreateBareEntry();
+      EXPECT_EQ(nullptr, e2->Get<float>("pt"));
+      float pt = 2.0;
+      e2->CaptureValueUnsafe("pt", &pt);
+
+      ntuple->Fill(*e1);
+      ntuple->Fill(*e2);
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2U, ntuple->GetNEntries());
+   ntuple->LoadEntry(0);
+   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+   ntuple->LoadEntry(1);
+   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+}

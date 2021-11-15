@@ -411,6 +411,8 @@ public:
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+
+   const RNTupleModel *GetModel() const { return fModel.get(); }
 };
 
 // clang-format off
