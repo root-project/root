@@ -7049,6 +7049,13 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
          }
       };
 
+      // The top-level declaration must have a LinkLibraries which means it was
+      // produced by rootcling and has a dictionary. If that is not the case, we
+      // should not bother visiting anything else.
+      if (D->hasOwningModule() &&
+          !D->getOwningModule()->getTopLevelModule()->LinkLibraries.size())
+         return {};
+
       llvm::DenseSet<Module *> TopLevelModules;
       ModuleCollector m(TopLevelModules);
       m.Collect(D);
