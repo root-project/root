@@ -50,24 +50,27 @@ class RNTupleModel {
    std::unique_ptr<REntry> fDefaultEntry;
    /// Keeps track of which field names are taken.
    std::unordered_set<std::string> fFieldNames;
-   ///
+   /// Free text set by the user
+   std::string fDescription;
+   /// Upon freezing, every model has a unique ID to distingusish it from other models.  Cloning preserves the ID.
+   /// Entries are linked to models via the ID.
    std::uint64_t fModelId = 0;
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.
    void EnsureValidFieldName(std::string_view fieldName);
 
-   /// Free text set by the user
-   std::string fDescription;
+   RNTupleModel();
 
 public:
-   RNTupleModel();
    RNTupleModel(const RNTupleModel&) = delete;
    RNTupleModel& operator =(const RNTupleModel&) = delete;
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;
-   static std::unique_ptr<RNTupleModel> Create() { return std::make_unique<RNTupleModel>(); }
+   static std::unique_ptr<RNTupleModel> Create();
+   /// A bare model has no default entry
+   static std::unique_ptr<RNTupleModel> CreateBare();
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    ///
