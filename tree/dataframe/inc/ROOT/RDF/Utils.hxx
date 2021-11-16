@@ -23,7 +23,7 @@
 #include <memory>
 #include <new> // std::hardware_destructive_interference_size
 #include <string>
-#include <type_traits> // std::decay
+#include <type_traits> // std::decay, std::false_type
 #include <vector>
 
 class TTree;
@@ -258,6 +258,14 @@ struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunct
 #endif
 
 bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec);
+
+// clang-format off
+template <typename>
+struct IsRVec : std::false_type {};
+
+template <typename T>
+struct IsRVec<ROOT::VecOps::RVec<T>> : std::true_type {};
+// clang-format on
 
 } // end NS RDF
 } // end NS Internal
