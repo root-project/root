@@ -361,7 +361,8 @@ A full set of colour-vision deficiency friendly and perceptually uniform colour 
 [downloaded](https://doi.org/10.5281/zenodo.4491293) and used with ROOT (since 6.26) via:
 `gStyle->SetPalette("filename.txt")` or `TColor::CreateColorTableFromFile("filename.txt")`.
 Remember to increase the number of contours for a smoother result, e.g.:
-`gStyle->SetNumberContours(99)`.
+`gStyle->SetNumberContours(99)` if you are drawing with "surf1z" or `gStyle->SetNumberContours(256)`
+if with "colz".
 
 \anchor C06a
 ### Colour Vision Deficiency (CVD) friendly palettes
