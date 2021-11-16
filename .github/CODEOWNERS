@@ -26,6 +26,7 @@
 /io/xml/ @pcanal @linev
 /main/ @pcanal
 /math/ @lmoneta
+/math/vecops @eguiraud
 /misc/ @Axel-Naumann
 /montecarlo/ @Axel-Naumann
 /net/ @gganis
