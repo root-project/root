@@ -7,6 +7,7 @@
 
 #include <TFile.h>
 
+#include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
 
 /// ROOT-10781
@@ -54,6 +55,12 @@ TEST(RooRealVar, AlternativeBinnings)
 TEST(RooRealVar, AlternativeBinningsPersistency) {
   RooArgSet localCopy;
   {
+    // Suppress all streamer info warnings. Revert if possible!
+    ROOTUnitTestSupport::CheckDiagsRAII diags;
+    diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "Do not try to write objects with the current class definition", false);
+    diags.optionalDiag(kWarning, "TStreamerInfo::CompareContent", "The following data member of", false);
+    diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false);
+
     TFile infile("testRooRealVar_data1.root");
     ASSERT_TRUE(infile.IsOpen());
 
