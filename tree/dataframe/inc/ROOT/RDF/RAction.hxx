@@ -17,6 +17,7 @@
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t, IsInternalColumn
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RVariedAction.hxx"
 
 #include <array>
 #include <cstddef> // std::size_t
@@ -154,6 +155,21 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return fHelper.CallPartialUpdate(slot); }
+
+   std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final
+   {
+      const auto nVariations = GetVariations().size();
+      assert(results.size() == nVariations + 1);
+
+      std::vector<Helper> helpers;
+      helpers.reserve(nVariations + 1);
+
+      for (auto i = 0u; i < nVariations + 1; ++i)
+         helpers.emplace_back(fHelper.CallMakeNew(results[i]));
+
+      return std::unique_ptr<RActionBase>(new RVariedAction<Helper, PrevNode, ColumnTypes_t>{
+         std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});
+   }
 
 private:
 
