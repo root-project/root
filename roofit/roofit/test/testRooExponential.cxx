@@ -12,6 +12,7 @@
 
 #include <numeric>
 
+#include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
 
 double simpleIntegration(RooRealVar& intVar, const RooAbsPdf& pdf) {
@@ -87,6 +88,12 @@ TEST(RooExponential, Integral)
 
 
 TEST(RooExponential, IO) {
+  // Suppress all streamer info warnings. Revert if possible!
+  ROOTUnitTestSupport::CheckDiagsRAII diags;
+  diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "Do not try to write objects with the current class definition", false);
+  diags.optionalDiag(kWarning, "TStreamerInfo::CompareContent", "The following data member of", false);
+  diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false);
+
   TFile file("./exponentialPdf.root");
   ASSERT_TRUE(file.IsOpen());
 

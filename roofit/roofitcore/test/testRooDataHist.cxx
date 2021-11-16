@@ -16,6 +16,7 @@
 #include "TMath.h"
 #include "TFile.h"
 
+#include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
 
 #include <algorithm>
@@ -183,6 +184,14 @@ TEST(RooDataHist, WeightedEntries)
 class RooDataHistIO : public testing::TestWithParam<const char*> {
 public:
   void SetUp() override {
+    // Suppress all streamer info warnings. Revert if possible!
+    ROOTUnitTestSupport::CheckDiagsRAII diags;
+    diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "Do not try to write objects with the current class definition", false);
+    diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "has a different checksum than the previously loaded StreamerInfo", false);
+    diags.optionalDiag(kWarning, "TStreamerInfo::CompareContent", "The following data member of", false);
+    diags.optionalDiag(kError,   "TBufferFile::CheckByteCount", "read too few bytes", false);
+    diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false);
+
     TFile file(GetParam(), "READ");
     ASSERT_TRUE(file.IsOpen());
 
@@ -199,7 +208,6 @@ protected:
 };
 
 TEST_P(RooDataHistIO, ReadLegacy) {
-
   RooDataHist& dataHist = *legacy;
 
   constexpr double targetBinContent = 20.;
