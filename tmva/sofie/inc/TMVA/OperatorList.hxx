@@ -6,4 +6,5 @@
 #include "TMVA/ROperator_Conv.hxx"
 #include "TMVA/ROperator_RNN.hxx"
 #include "TMVA/ROperator_LSTM.hxx"
-#include "ROperator_BatchNormalization.hxx"
+#include "TMVA/ROperator_BatchNormalization.hxx"
+#include "TMVA/ROperator_Pool.hxx"
