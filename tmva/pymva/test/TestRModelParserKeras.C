@@ -22,7 +22,8 @@ TEST(RModelParser_Keras, SEQUENTIAL)
                              0.63637339, 0.94483464, 0.11032887, 0.22424818,
                              0.50972592, 0.04671024, 0.39230661, 0.80500943};
 
-    std::vector<float> outputSequential = TMVA_SOFIE_KerasModelSequential::infer(inputSequential);
+    TMVA_SOFIE_KerasModelSequential::Session s("KerasSequentialModel.dat");
+    std::vector<float> outputSequential = s.infer(inputSequential);
 
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
@@ -68,7 +69,8 @@ TEST(RModelParser_Keras, FUNCTIONAL)
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float inputFunctional[]={0.60828574, 0.50069386, 0.75186709, 0.14968806, 0.7692464 ,0.77027585, 0.75095316, 0.96651197,
                              0.38536308, 0.95565917, 0.62796356, 0.13818375, 0.65484891,0.89220363, 0.23879365, 0.00635323};
-    std::vector<float> outputFunctional = TMVA_SOFIE_KerasModelFunctional::infer(inputFunctional);
+    TMVA_SOFIE_KerasModelFunctional::Session s("KerasFunctionalModel.dat");
+    std::vector<float> outputFunctional = s.infer(inputFunctional);
 
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
