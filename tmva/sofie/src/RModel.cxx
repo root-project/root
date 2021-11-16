@@ -368,7 +368,7 @@ namespace SOFIE{
             fGC += "    }\n";
             fGC += "   if (length != " + slength + ") {\n";
             fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor size; expected size is " + 
-                   slength + " , read \" + length ;\n";
+                   slength + " , read \" + std::to_string(length) ;\n";
             fGC += "      throw std::runtime_error(err_msg);\n";
             fGC += "    }\n";
             fGC += "    for (int i =0; i < length; ++i) \n";
