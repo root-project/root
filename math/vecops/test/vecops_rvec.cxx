@@ -982,6 +982,31 @@ TEST(VecOps, Concatenate)
    CheckEqual(res, ref);
 }
 
+TEST(VecOps, SwapDifferentSizes)
+{
+   RVec<int> fixed_vempty{};
+   RVec<int> fixed_vshort1{1, 2, 3};
+   RVec<int> fixed_vshort2{4, 5, 6};
+   RVec<int> fixed_vlong{7, 8, 9, 10, 11, 12, 13, 14};
+
+   RVec<int> vempty{};
+   RVec<int> vshort1{1, 2, 3};
+   RVec<int> vshort2{4, 5, 6};
+   RVec<int> vlong{7, 8, 9, 10, 11, 12, 13, 14};
+
+   swap(vshort1, vshort2);
+   CheckEqual(vshort1, fixed_vshort2);
+   CheckEqual(vshort2, fixed_vshort1);
+
+   swap(vempty, vshort2);
+   CheckEqual(vempty, fixed_vshort1);
+   CheckEqual(vshort2, fixed_vempty);
+
+   swap(vshort1, vlong);
+   CheckEqual(vshort1, fixed_vlong);
+   CheckEqual(vlong, fixed_vshort2);
+}
+
 TEST(VecOps, DeltaPhi)
 {
    // Two scalars (radians)
