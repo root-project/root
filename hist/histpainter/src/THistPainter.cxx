@@ -9550,8 +9550,8 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
 
    // Initialize the color levels
    if (ndivz >= 100) {
-      Warning("PaintSurface", "too many color levels, %d, reset to 8", ndivz);
-      ndivz = 8;
+      Warning("PaintSurface", "too many color levels, %d >= 100, reset to 99", ndivz);
+      ndivz = 99;
    }
    Double_t *funlevel = new Double_t[ndivz+1];
    Int_t *colorlevel = new Int_t[ndivz+1];
