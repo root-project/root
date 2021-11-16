@@ -1424,6 +1424,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
+      clingArgsStorage.push_back("-O1");
    }
 
    // Process externally passed arguments if present.
