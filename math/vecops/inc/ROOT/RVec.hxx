@@ -923,7 +923,7 @@ void RVecImpl<T>::swap(RVecImpl<T> &RHS)
    if (NumShared > RHS.size())
       NumShared = RHS.size();
    for (size_type i = 0; i != NumShared; ++i)
-      std::swap((*this)[i], RHS[i]);
+      std::iter_swap(this->begin() + i, RHS.begin() + i);
 
    // Copy over the extra elts.
    if (this->size() > RHS.size()) {
