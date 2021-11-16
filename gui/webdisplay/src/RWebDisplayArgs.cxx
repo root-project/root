@@ -185,7 +185,7 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 
    // very special handling of qt5/qt6 which can specify pointer as a string
    if ((kind.find("qt5:") == 0) || (kind.find("qt6:") == 0)) {
-      SetDriverData((void *) std::stoul(kind.substr(4)));
+      SetDriverData((void *) std::stoull(kind.substr(4)));
       kind.resize(3);
    }
 
@@ -330,7 +330,7 @@ std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std
    std::string where = "qt5";
    if (qparent) {
       where.append(":");
-      where.append(std::to_string((unsigned long) qparent));
+      where.append(std::to_string((uintptr_t) qparent));
    }
    if (!urlopt.empty()) {
       where.append("?");
