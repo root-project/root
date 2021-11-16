@@ -1785,6 +1785,13 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \see TColor::CreateColorTableFromFile, (which calls TColor::SetPalette)
+void TStyle::SetPalette(TString fileName, Float_t alpha)
+{
+   TColor::CreateColorTableFromFile(fileName, alpha);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change the time offset for time plotting.
 /// Times are expressed in seconds. The corresponding numbers usually have 9
 /// digits (or more if one takes into account fractions of seconds).
