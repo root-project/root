@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 
 ClassImp(TColor);
 
@@ -240,7 +241,7 @@ Begin_Macro(source)
 }
 End_Macro
 
- To define more a complex palette with a continuous gradient of color, one
+To define more a complex palette with a continuous gradient of color, one
 should use the static function `TColor::CreateGradientColorTable()`.
 The following example demonstrates how to proceed:
 
@@ -295,6 +296,13 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multipalette.C
 End_Macro
 
+\since **6.26:**
+The function `TColor::CreateColorTableFromFile("filename.txt")` allows you to create a color
+palette based on an input ASCII file. In contrast to `TColor::CreateGradientColorTable()`, here
+the length (spacing) is constant and can not be tuned. There is no gradient being interpolated
+between adjacent colors. The palette will contain the exact colors stored in the file, that
+comprises one line per color in the format "r g b" as floats.
+
 \anchor C06
 ## High quality predefined palettes
 \since **6.04:**
@@ -347,7 +355,13 @@ increasing or decreasing.
 
 Unless it is symmetrical, then it is fine to have white in the
 borders and black in the centre (for example an axis that goes between
--40 degrees and + 40 degrees, the 0 has a meaning in the perceptualcolormap.C example).
+-40 degrees and +40 degrees, the 0 has a meaning in the perceptualcolormap.C example).
+
+A full set of colour-vision deficiency friendly and perceptually uniform colour maps can be
+[downloaded](https://doi.org/10.5281/zenodo.4491293) and used with ROOT (since 6.26) via:
+`gStyle->SetPalette("filename.txt")` or `TColor::CreateColorTableFromFile("filename.txt")`.
+Remember to increase the number of contours for a smoother result, e.g.:
+`gStyle->SetNumberContours(99)`.
 
 \anchor C06a
 ### Colour Vision Deficiency (CVD) friendly palettes
@@ -2215,6 +2229,77 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
    TColor* color = nullptr;
    while ((color = (TColor*) iColor()))
       color->Allocate();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Static function creating a color palette based on an input text file.
+///
+/// Every color in the file will take the same amount of space in the palette.
+///
+/// \see https://doi.org/10.1038/s41467-020-19160-7
+/// \note This function is designed to load into ROOT the colour-vision
+/// deficiency friendly and perceptually uniform colour maps specially designed
+/// in https://doi.org/10.5281/zenodo.4491293, namely the .txt files stored
+/// in the subfolders of ScientificColourMaps7.zip, e.g. batlow/batlow.txt
+///
+/// \param fileName: Name of a .txt file (ASCII) containing three floats per
+/// line, separated by spaces, namely the r g b fractions of the color, each
+/// value being in the range [0,1].
+/// \param alpha the global transparency for all colors within this palette
+/// \return a positive value on success and -1 on error.
+/// \author Fernando Hueso-González
+Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
+{
+   std::ifstream f(fileName.Data());
+   if (!f.good()) {
+      ::Error("TColor::CreateColorPalette(const TString)", "%s does not exist or cannot be opened", fileName.Data());
+      return -1;
+   }
+
+   Int_t nLines = 0;
+   Float_t r, g, b;
+   std::vector<Float_t> reds, greens, blues;
+   while (f >> r >> g >> b) {
+      nLines++;
+      if (r < 0. || r > 1.) {
+         ::Error("TColor::CreateColorPalette(const TString)", "Red value %f outside [0,1] on line %d of %s ", r,
+                 nLines, fileName.Data());
+         f.close();
+         return -1;
+      }
+      if (g < 0. || g > 1.) {
+         ::Error("TColor::CreateColorPalette(const TString)", "Green value %f outside [0,1] on line %d of %s ", g,
+                 nLines, fileName.Data());
+         f.close();
+         return -1;
+      }
+      if (b < 0. || b > 1.) {
+         ::Error("TColor::CreateColorPalette(const TString)", "Blue value %f outside [0,1] on line %d of %s ", b,
+                 nLines, fileName.Data());
+         f.close();
+         return -1;
+      }
+      reds.emplace_back(r);
+      greens.emplace_back(g);
+      blues.emplace_back(b);
+   }
+   f.close();
+   if (nLines < 2) {
+      ::Error("TColor::CreateColorPalette(const TString)", "Found insufficient color lines (%d) on %s", nLines,
+              fileName.Data());
+      return -1;
+   }
+
+   TColor::InitializeColors();
+   Int_t *palette = new Int_t[nLines];
+
+   for (Int_t i = 0; i < nLines; ++i) {
+      new TColor(reds.at(i), greens.at(i), blues.at(i), alpha);
+      palette[i] = gHighestColorIndex;
+   }
+   TColor::SetPalette(nLines, palette);
+   delete[] palette;
+   return gHighestColorIndex + 1 - nLines;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
