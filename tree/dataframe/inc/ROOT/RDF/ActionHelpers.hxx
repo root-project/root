@@ -87,6 +87,20 @@ public:
       throw std::logic_error("This action does not support callbacks!");
    }
 
+   template <typename T = Helper>
+   auto CallMakeNew(void *typeErasedResSharedPtr) -> decltype(std::declval<T>().MakeNew(typeErasedResSharedPtr))
+   {
+      return static_cast<Helper *>(this)->MakeNew(typeErasedResSharedPtr);
+   }
+
+   template <typename... Args>
+   [[noreturn]] Helper CallMakeNew(void *, Args...)
+   {
+      const auto &actionName = static_cast<Helper *>(this)->GetActionName();
+      throw std::logic_error("The MakeNew method is not implemented for this action helper (" + actionName +
+                             "). Cannot Vary its result.");
+   }
+
    // Helper functions for RMergeableValue
    virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const
    {
