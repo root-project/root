@@ -16,6 +16,7 @@
 #include "TError.h"
 
 #include <cassert>
+#include <memory>
 
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
@@ -100,4 +101,10 @@ ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
 {
    assert(fConcreteAction != nullptr);
    return fConcreteAction->GetSampleCallback();
+}
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::MakeVariedAction(std::vector<void *> &&results)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->MakeVariedAction(std::move(results));
 }

@@ -62,6 +62,8 @@ public:
    std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> GetMergeableValue() const final;
 
    ROOT::RDF::SampleCallback_t GetSampleCallback() final;
+
+   std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final;
 };
 
 } // ns RDF

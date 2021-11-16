@@ -88,6 +88,8 @@ public:
    virtual ROOT::RDF::SampleCallback_t GetSampleCallback() = 0;
 
    const std::vector<std::string> &GetVariations() const { return fVariations; }
+
+   virtual std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) = 0;
 };
 } // namespace RDF
 } // namespace Internal
