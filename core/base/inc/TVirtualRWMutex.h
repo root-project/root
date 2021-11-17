@@ -105,7 +105,7 @@ public:
 // destructor. The exception mechanism takes care of calling the dtors  //
 // of local objects so it is exception safe.                            //
 // In contrast to std::lock_guard, TLockGuard constructor expects a     //
-// pointer, not the mutex object itself, to support polymorphism.       //
+// pointer, not the mutex object itself.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
