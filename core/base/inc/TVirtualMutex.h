@@ -108,8 +108,7 @@ public:
 #define R__LOCKGUARD_NAMED(name,mutex) TLockGuard _NAME2_(R__guard,name)(mutex)
 #define R__LOCKGUARD_UNLOCK(name) _NAME2_(R__guard,name).UnLock()
 #else
-//Note: no trailing semicolon needed below, so API is not exactly similar depending on flags
-//Also: mutex is not checked to be of type TVirtualMutex* (to-do).
+//@todo: mutex is not checked to be of type TVirtualMutex*.
 #define R__LOCKGUARD(mutex)  (void)(mutex); { }
 #define R__LOCKGUARD_NAMED(name,mutex) (void)(mutex); { }
 #define R__LOCKGUARD2(mutex) (void)(mutex); { }
