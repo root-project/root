@@ -20,12 +20,6 @@
 using ROOT::Detail::RDF::RDefineBase;
 namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in the header), but Windows needs it
 
-unsigned int RDefineBase::GetNextID()
-{
-   static std::atomic_uint id(0U);
-   return ++id;
-}
-
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
                          const RDFInternal::RBookedDefines &defines,
                          const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds,
