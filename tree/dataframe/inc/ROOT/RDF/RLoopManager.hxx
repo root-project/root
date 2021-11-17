@@ -201,7 +201,6 @@ public:
    /// Return all actions, either booked or already run
    std::vector<RDFInternal::RActionBase *> GetAllActions() const;
 
-   std::vector<RDFInternal::RActionBase *> GetBookedActions() { return fBookedActions; }
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
 
    const ColumnNames_t &GetBranchNames();
