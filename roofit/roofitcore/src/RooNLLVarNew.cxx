@@ -29,7 +29,7 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 #include "ROOT/StringUtils.hxx"
 
-#include "RooFit/Detail/Buffers.h"
+#include "Math/Util.h"
 
 #include <numeric>
 #include <stdexcept>
@@ -60,6 +60,12 @@ std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet 
    auto out =
       std::unique_ptr<RooAbsReal>{new RooAddition((baseName + "_correction").c_str(), "correction", termList, true)};
    return out;
+}
+
+template <class Input>
+double kahanSum(Input const &input)
+{
+   return ROOT::Math::KahanSum<double, 4u>::Accumulate(input.begin(), input.end()).Sum();
 }
 
 } // namespace
@@ -101,30 +107,30 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 \param nEvents The number of events to be processed
 \param dataMap A map containing spans with the input data for the computation
 **/
-void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*nOut*/,
+void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_t /*nOut*/,
                                 RooBatchCompute::DataMap &dataMap) const
 {
-   using namespace ROOT::Experimental::Detail;
-
    std::size_t nEvents = dataMap[&*_pdf].size();
 
-   RooBatchCompute::VarVector vars = {&*_pdf};
-   if (_weight)
-      vars.push_back(&**_weight);
-   RooBatchCompute::ArgVector args = {static_cast<double>(vars.size() - 1)};
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   std::vector<double> nlls(nEvents);
+   nlls.reserve(nEvents);
 
-   std::unique_ptr<AbsBuffer> logsBuffer = stream ? makeGpuBuffer(nEvents) : makeCpuBuffer(nEvents);
-   double *logsBufferDataPtr = stream ? logsBuffer->gpuWritePtr() : logsBuffer->cpuWritePtr();
-   dispatch->compute(stream, RooBatchCompute::NegativeLogarithms, logsBufferDataPtr, nEvents, dataMap, vars, args);
+   if (_weight) {
+      double const *probas = dataMap[&*_pdf].data();
+      double const *weights = dataMap[&**_weight].data();
+      for (std::size_t i = 0; i < nEvents; ++i)
+         nlls.push_back(-std::log(probas[i]) * weights[i]);
+   } else {
+      for (auto const &p : dataMap[&*_pdf])
+         nlls.push_back(-std::log(p));
+   }
 
    if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
       if (!_weight) {
          _sumWeight = nEvents;
       } else {
          auto weightSpan = dataMap[&**_weight];
-         _sumWeight = weightSpan.size() == 1 ? weightSpan[0] * nEvents
-                                             : dispatch->sumReduce(stream, dataMap[&**_weight].data(), nEvents);
+         _sumWeight = weightSpan.size() == 1 ? weightSpan[0] * nEvents : kahanSum(dataMap[&**_weight]);
       }
    }
    if (_rangeNormTerm) {
@@ -133,11 +139,11 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*n
          _sumCorrectionTerm = _sumWeight * rangeNormTermSpan[0];
       } else {
          if (!_weight) {
-            _sumCorrectionTerm = dispatch->sumReduce(stream, rangeNormTermSpan.data(), nEvents);
+            _sumCorrectionTerm = kahanSum(rangeNormTermSpan);
          } else {
             auto weightSpan = dataMap[&**_weight];
             if (weightSpan.size() == 1) {
-               _sumCorrectionTerm = weightSpan[0] * dispatch->sumReduce(stream, rangeNormTermSpan.data(), nEvents);
+               _sumCorrectionTerm = weightSpan[0] * kahanSum(rangeNormTermSpan);
             } else {
                // We don't need to use the library for now because the weights and
                // correction term integrals are always in the CPU map.
@@ -150,20 +156,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*n
       }
    }
 
-   output[0] = reduce(stream, logsBufferDataPtr, nEvents);
-   // std::cout << "RooNLLVar::computeBatch() " << output[0] << std::endl;
-}
-
-/** Reduce an array of nll values to the sum of them
-
-\param dispatch A pointer to the RooBatchCompute library interface used for this computation
-\param input The input array with the nlls to be reduced
-\param nEvents the number of events to be processed
-**/
-double RooNLLVarNew::reduce(cudaStream_t *stream, const double *input, size_t nEvents) const
-{
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   double nll = dispatch->sumReduce(stream, input, nEvents);
+   double nll = kahanSum(nlls);
    if (_isExtended) {
       assert(_sumWeight != 0.0);
       nll += _pdf->extendedTerm(_sumWeight, &_observables);
@@ -171,7 +164,7 @@ double RooNLLVarNew::reduce(cudaStream_t *stream, const double *input, size_t nE
    if (_rangeNormTerm) {
       nll += _sumCorrectionTerm;
    }
-   return nll;
+   output[0] = nll;
 }
 
 double RooNLLVarNew::getValV(const RooArgSet *) const
