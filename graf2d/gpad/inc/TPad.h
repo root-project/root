@@ -307,8 +307,7 @@ public:
    void              Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override; // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
    virtual void      RangeChanged() { Emit("RangeChanged()"); } // *SIGNAL*
    void              RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override;
-   void              RangeAxis() override;
-   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
+   virtual void      RangeAxisChanged() override { Emit("RangeAxisChanged()"); } // *SIGNAL*
    void              RecursiveRemove(TObject *obj) override;
    void              RedrawAxis(Option_t *option="") override;
    void              ResetView3D(TObject *view=nullptr) override { fPadView3D=view; }

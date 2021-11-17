@@ -4569,7 +4569,7 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
-   gPad->RangeAxis(); //emit RangeAxisChanged() signal to sync axes
+   gPad->RangeAxisChanged(); //emit RangeAxisChanged() signal to sync axes
    // fill Hparam structure with histo parameters
    if (!PaintInit()) {
       delete [] fXbuf; delete [] fYbuf;
