@@ -163,7 +163,6 @@ public:
 #define R__WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(mutex)
 
 #else
-//Note: no trailing semicolon needed below, so API is not exactly similar depending on flags
 //Also: mutex is not checked to be of type TVirtualMutex* (to-do).
 #define R__READ_LOCKGUARD(mutex) (void)mutex
 #define R__READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
