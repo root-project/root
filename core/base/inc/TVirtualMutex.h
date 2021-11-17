@@ -64,6 +64,7 @@ public:
 // of local objects so it is exception safe.                            //
 // In contrast to std::lock_guard, TLockGuard constructor expects a     //
 // pointer, not the mutex object itself, to support polymorphism.       //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 class TLockGuard {
