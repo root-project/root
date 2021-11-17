@@ -243,7 +243,7 @@ public:
           << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << ");\n";
       // pad input matrix with zero
       out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
-          << fShapeX[0] * fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) *
+          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) *
                 (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
           << ");\n";
       // output matrix of im2col
@@ -303,44 +303,6 @@ public:
       out << SP << SP << "}\n";
       out << SP << "}\n";
 
-      // pad inputs with zero
-      if (fUseSession)
-         out << SP << fType << " * " << OpName << "_xpad = fVec_" << OpName << "_xpad.data();\n";
-      else 
-         out << SP << fType << " " << OpName << "_xpad[" <<  fShapeX[0] * fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2])
-          * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << "] = {0};\n";
-      // Padding the input with zeros
-      if (bsize == 1) {
-         out << SP << "for (size_t c = 0; c < " << fShapeX[1] << "; c++) {\n";
-         out << SP << SP << "for (size_t h = 0; h < " << fShapeX[2] << "; h++) {\n";
-         out << SP << SP << SP << "size_t xpad_offset = c * "
-             << (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + (h + " << fAttrPads[0]
-             << ") * " << (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + " << fAttrPads[1] << ";\n";
-         out << SP << SP << SP << "size_t x_offset = c * " << fShapeX[2] * fShapeX[3] << " + h * " << fShapeX[3] << ";\n";
-         out << SP << SP << SP << "std::copy(tensor_" << fNX << " + x_offset, tensor_" << fNX
-             << " + x_offset + " << fShapeX[3] << ", " << OpName << "_xpad + xpad_offset);\n";
-         out << SP << SP << "}\n";
-         out << SP << "}\n";
-
-      } else { 
-         // case batch size is not 1 
-         out << SP << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
-         out << SP << SP << "for (size_t c = 0; c < " << fShapeX[1] << "; c++) {\n";
-         out << SP << SP << SP << "for (size_t h = 0; h < " << fShapeX[2] << "; h++) {\n";
-         out << SP << SP << SP << SP << "size_t xpad_offset = n * "
-             << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-             << " + c * " << (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-             << " + (h + " << fAttrPads[0] <<  ") * " << (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + "
-             << fAttrPads[1] << ";\n";
-         out << SP << SP << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << " + c * "
-             << fShapeX[2] * fShapeX[3] << " + h * " << fShapeX[3] << ";\n";
-         out << SP << SP << SP << "std::copy(tensor_" << fNX << " + x_offset, tensor_" << fNX
-             << " + x_offset + " << fShapeX[3] << ", " << OpName << "_xpad + xpad_offset);\n";
-         out << SP << SP << SP << "}\n";
-         out << SP << SP << "}\n";
-         out << SP << "}\n";
-      }
-
       out << SP << "char " << OpName << "_transA = 'T';\n";
       out << SP << "char " << OpName << "_transB = 'N';\n";
       out << SP << "int " << OpName << "_m = " << fShapeY[2] * fShapeY[3] << ";\n"; // output h*w
@@ -351,11 +313,16 @@ public:
       out << SP << "float " << OpName << "_alpha = 1.0;\n";
       out << SP << "float " << OpName << "_beta = 0.0;\n";
 
-      if (fUseSession) 
+      if (fUseSession) {
+         out << SP << fType << " * " << OpName << "_xpad = fVec_" << OpName << "_xpad.data();\n";
          out << SP << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n";
-      else
-         out << SP << fType << " " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] *
-               fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+      }
+      else {
+         out << SP << fType << " " << OpName << "_xpad[" << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) *
+                   (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << "] = {0};\n";
+         out << SP << fType << " " << OpName << "_xcol["
+             << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+      }
 
       // Loop on batch size 
       std::string outOffset = "offset_tensor_" + fNY;
@@ -363,7 +330,6 @@ public:
       out << SP << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
 
       // Padding the input with zeros
-
       out << SP << SP << "for (size_t c = 0; c < " << fShapeX[1] << "; c++) {\n";
       out << SP << SP << SP << "for (size_t h = 0; h < " << fShapeX[2] << "; h++) {\n";
       out << SP << SP << SP << SP << "size_t xpad_offset = c * "
