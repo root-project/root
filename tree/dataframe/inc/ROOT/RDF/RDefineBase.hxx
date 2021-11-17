@@ -39,9 +39,6 @@ protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
    std::vector<Long64_t> fLastCheckedEntry;
-   /// A unique ID that identifies this custom column.
-   /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
-   const unsigned int fID = GetNextID();
    RDFInternal::RBookedDefines fDefines;
    std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
    const std::map<std::string, std::vector<void *>> &fDSValuePtrs; // reference to RLoopManager's data member
@@ -49,8 +46,6 @@ protected:
    const ROOT::RDF::ColumnNames_t fColumnNames;
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
-
-   static unsigned int GetNextID();
 
 public:
    RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
@@ -73,8 +68,6 @@ public:
    virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinaliseSlot(unsigned int slot) = 0;
-   /// Return the unique identifier of this RDefineBase.
-   unsigned int GetID() const { return fID; }
 };
 
 } // ns RDF
