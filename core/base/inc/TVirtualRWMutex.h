@@ -163,7 +163,7 @@ public:
 #define R__WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(mutex)
 
 #else
-//Also: mutex is not checked to be of type TVirtualMutex* (to-do).
+//@todo: mutex is not checked to be of type TVirtualMutex*.
 #define R__READ_LOCKGUARD(mutex) (void)mutex
 #define R__READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
 
