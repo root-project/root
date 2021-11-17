@@ -39,7 +39,6 @@ public:
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
    void computeBatch(cudaStream_t *, double *output, size_t nOut, RooBatchCompute::DataMap &) const override;
-   inline bool canComputeBatchWithCuda() const override { return true; }
    inline bool isReducerNode() const override { return true; }
 
    void setObservables(RooArgSet const &observables)
@@ -49,8 +48,6 @@ public:
    }
 
 protected:
-   double reduce(cudaStream_t *, const double *input, size_t nEvents) const;
-
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;
@@ -69,6 +66,7 @@ protected:
    getValues(RooBatchCompute::RunContext &evalData, const RooArgSet *normSet = nullptr) const override;
 
 }; // end class RooNLLVar
+
 } // end namespace Experimental
 } // end namespace ROOT
 
