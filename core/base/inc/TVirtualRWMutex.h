@@ -151,7 +151,7 @@ public:
 
 // Zero overhead macros in case not compiled with thread support (-pthread)
 // Use with a trailing semicolon and pass a pointer as argument, e.g.:
-// TMutex m; R__LOCKGUARD(&m);
+// TMutex m; R__READ_LOCKGUARD(&m);
 // Warning: if program is compiled without pthread support, _REENTRANT will
 // be undefined and the macro has (silently) no effect, no locks are performed.
 #if defined (_REENTRANT) || defined (WIN32)
