@@ -38,8 +38,8 @@ class RooAbsDataStore : public TNamed, public RooPrintable {
 public:
 
   RooAbsDataStore() {}
-  RooAbsDataStore(std::string_view name, std::string_view title, const RooArgSet& vars)
-    : TNamed(TString{name},TString{title}), _vars{vars} {}
+  RooAbsDataStore(RooStringView name, RooStringView title, const RooArgSet& vars)
+    : TNamed(name,title), _vars{vars} {}
   RooAbsDataStore(const RooAbsDataStore& other, const char* newname=0)
     : RooAbsDataStore(other, other._vars, newname) {}
   RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& vars, const char* newname=0)
@@ -47,8 +47,6 @@ public:
   {
     if(newname) SetName(newname);
   }
-
-  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooAbsDataStore)
 
   virtual RooAbsDataStore* clone(const char* newname=0) const = 0 ;
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const = 0 ;

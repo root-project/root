@@ -107,7 +107,7 @@ RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _tree(0),
   _cacheTree(0),
@@ -128,7 +128,7 @@ RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _tree(0),
   _cacheTree(0),
@@ -149,7 +149,7 @@ RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _tree(0),
   _cacheTree(0),
@@ -177,7 +177,7 @@ RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _tree(0),
   _cacheTree(0),
@@ -198,7 +198,7 @@ RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const RooAbsDataStore& ads, const char* selExpr, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& ads, const char* selExpr, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _tree(0),
   _cacheTree(0),
@@ -227,7 +227,7 @@ RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(std::string_view name, std::string_view title, RooAbsDataStore& tds,
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
 			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
@@ -412,10 +412,10 @@ void RooTreeDataStore::initialize()
 /// Create TTree object that lives in memory, independent of current
 /// location of gDirectory
 
-void RooTreeDataStore::createTree(std::string_view name, std::string_view title)
+void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
 {
   if (!_tree) {
-    _tree = new TTree(TString{name},TString{title});
+    _tree = new TTree(name,title);
     _tree->ResetBit(kCanDelete);
     _tree->ResetBit(kMustCleanup);
     _tree->SetDirectory(nullptr);
@@ -433,7 +433,7 @@ void RooTreeDataStore::createTree(std::string_view name, std::string_view title)
   }
 
   if (!_cacheTree) {
-    _cacheTree = new TTree(TString{name} + "_cacheTree", TString{title});
+    _cacheTree = new TTree(TString{static_cast<const char*>(name)} + "_cacheTree", TString{static_cast<const char*>(title)});
     _cacheTree->SetDirectory(0) ;
     gDirectory->RecursiveRemove(_cacheTree) ;
   }
