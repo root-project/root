@@ -1,4 +1,4 @@
-#include "TMVA/ROperator_Transpose.hxx"
+s#include "TMVA/ROperator_Transpose.hxx"
 #include "TMVA/ROperator_Gemm.hxx"
 #include "TMVA/ROperator_Relu.hxx"
 #include "TMVA/ROperator_Selu.hxx"
@@ -12,3 +12,4 @@
 #include "TMVA/ROperator_Reshape.hxx"
 #include "TMVA/ROperator_Slice.hxx"
 #include "TMVA/ROperator_GRU.hxx"
+#include "TMVA/ROperator_Concat.hxx"
