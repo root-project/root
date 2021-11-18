@@ -37,9 +37,7 @@ public:
   RooCompositeDataStore() ; 
 
   // Ctors from DataStore
-  RooCompositeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> inputData) ;
-
-  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooCompositeDataStore)
+  RooCompositeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> inputData) ;
 
   // Empty ctor
   virtual RooAbsDataStore* clone(const char* newname=0) const { return new RooCompositeDataStore(*this,newname) ; }
