@@ -43,9 +43,7 @@ public:
   RooVectorDataStore() ; 
 
   // Empty ctor
-  RooVectorDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName=0) ;
-
-  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooVectorDataStore)
+  RooVectorDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=0) ;
 
   virtual RooAbsDataStore* clone(const char* newname=0) const override { return new RooVectorDataStore(*this,newname) ; }
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooVectorDataStore(*this,vars,newname) ; }
@@ -55,7 +53,7 @@ public:
   RooVectorDataStore(const RooVectorDataStore& other, const RooArgSet& vars, const char* newname=0) ;
 
 
-  RooVectorDataStore(std::string_view name, std::string_view title, RooAbsDataStore& tds, 
+  RooVectorDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
 		     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		     std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
 
@@ -68,7 +66,7 @@ public:
 
     template<class T>
     struct ArrayInfo {
-        ArrayInfo(std::string_view n, T const* d) : name{n}, data{d} {}
+        ArrayInfo(RooStringView n, T const* d) : name{n}, data{d} {}
         std::string name;
         T const* data;
     };

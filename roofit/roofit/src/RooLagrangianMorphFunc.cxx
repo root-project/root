@@ -833,7 +833,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          RooArgSet vars;
          vars.add(var);
 
-         RooDataHist *dh = new RooDataHist(histname.View(), histname.View(), vars, hist);
+         RooDataHist *dh = new RooDataHist(histname, histname, vars, hist);
          // add it to the list
          RooHistFunc *hf = new RooHistFunc(funcname, funcname, var, *dh);
          int idx = physics.getSize();
