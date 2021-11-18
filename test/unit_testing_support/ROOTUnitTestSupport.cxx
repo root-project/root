@@ -53,6 +53,14 @@ static struct ForbidDiagnostics {
         return;
       }
 
+      // FIXME: RNTuple warns that it's in beta stage.
+      if (level == kWarning
+          && strstr(msg, "The RNTuple file format will change. Do not store real data with this version of RNTuple!") != nullptr) {
+        std::cerr << "Warning in " << location << " " << msg << std::endl;
+        return;
+      }
+
+
       FAIL() << "Received unexpected diagnostic of severity "
          << level
          << " at '" << location << "' reading '" << msg << "'.\n"
