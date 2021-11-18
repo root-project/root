@@ -613,6 +613,19 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     // so that cache contents can be processed immediately
     _funcClone->getVal(_normSet) ;
 
+
+    //  WVE - Patch to allow customization of optimization level per component pdf
+    if (_funcClone->getAttribute("NoOptimizeLevel1")) {
+      coutI(Minimization) << " Optimization customization: Level-1 constant-term optimization prohibited by attribute NoOptimizeLevel1 set on top-level pdf  " 
+                          << funcClone->IsA()->GetName() << "::" << funcClone->GetName() << endl ;
+      return ;
+    }
+    if (_funcClone->getAttribute("NoOptimizeLevel2")) {
+      coutI(Minimization) << " Optimization customization: Level-2 constant-term optimization prohibited by attribute NoOptimizeLevel2 set on top-level pdf  " 
+                          << funcClone->IsA()->GetName() << "::" << funcClone->GetName() << endl ;
+      applyTrackingOpt=kFALSE ;
+    }
+    
     // Apply tracking optimization here. Default strategy is to track components
     // of RooAddPdfs and RooRealSumPdfs. If these components are a RooProdPdf
     // or a RooProduct respectively, track the components of these products instead
