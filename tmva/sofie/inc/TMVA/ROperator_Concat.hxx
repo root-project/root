@@ -1,5 +1,5 @@
-#ifndef TMVA_SOFIE_ROPERATOR_GEMM
-#define TMVA_SOFIE_ROPERATOR_GEMM
+#ifndef TMVA_SOFIE_ROPERATOR_Concat
+#define TMVA_SOFIE_ROPERATOR_Concat
 
 
 #include "TMVA/SOFIE_common.hxx"
