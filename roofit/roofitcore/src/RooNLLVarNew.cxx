@@ -26,6 +26,9 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 #include "RooAddition.h"
 #include "RooFormulaVar.h"
+#include "RooNaNPacker.h"
+
+#include "RooFit/Detail/Buffers.h"
 
 #include "ROOT/StringUtils.hxx"
 
@@ -111,18 +114,25 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
                                 RooBatchCompute::DataMap &dataMap) const
 {
    std::size_t nEvents = dataMap[&*_pdf].size();
+   auto probas = dataMap[&*_pdf];
+
+   auto logProbasBuffer = ROOT::Experimental::Detail::makeCpuBuffer(nEvents);
+   RooSpan<double> logProbas{logProbasBuffer->cpuWritePtr(), nEvents};
+   (*_pdf).getLogProbabilities(probas, logProbas.data());
 
    std::vector<double> nlls(nEvents);
    nlls.reserve(nEvents);
 
    if (_weight) {
-      double const *probas = dataMap[&*_pdf].data();
       double const *weights = dataMap[&**_weight].data();
-      for (std::size_t i = 0; i < nEvents; ++i)
-         nlls.push_back(-std::log(probas[i]) * weights[i]);
+      for (std::size_t i = 0; i < nEvents; ++i) {
+         // Explicitely add zero if zero weight to get rid of eventual NaNs in
+         // logProbas that have no weight anyway.
+         nlls.push_back(weights[i] == 0.0 ? 0.0 : -logProbas[i] * weights[i]);
+      }
    } else {
-      for (auto const &p : dataMap[&*_pdf])
-         nlls.push_back(-std::log(p));
+      for (auto const &p : logProbas)
+         nlls.push_back(-p);
    }
 
    if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
@@ -157,6 +167,29 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    }
 
    double nll = kahanSum(nlls);
+
+   if (std::isnan(nll)) {
+      // Special handling of evaluation errors.
+      // We can recover if the bin/event that results in NaN has a weight of zero:
+      RooNaNPacker nanPacker;
+      for (std::size_t i = 0; i < probas.size(); ++i) {
+         if (_weight) {
+            double const *weights = dataMap[&**_weight].data();
+            if (std::isnan(logProbas[i]) && weights[i] != 0.0) {
+               nanPacker.accumulate(logProbas[i]);
+            }
+         }
+         if (std::isnan(logProbas[i])) {
+            nanPacker.accumulate(logProbas[i]);
+         }
+      }
+
+      // Some events with evaluation errors. Return "badness" of errors.
+      if (nanPacker.getPayload() > 0.) {
+         nll = nanPacker.getNaNWithPayload();
+      }
+   }
+
    if (_isExtended) {
       assert(_sumWeight != 0.0);
       nll += _pdf->extendedTerm(_sumWeight, &_observables);
