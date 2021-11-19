@@ -256,7 +256,6 @@ public:
 
    std::string Generate(std::string OpName) {
       OpName = "op_" + OpName;
-      const std::string SP = "   ";   // empty space to inline the code and avoid using tabs
 
       if (fShapeX.empty() || fShapeW.empty() || (fNB != "" && fShapeB.empty()) || fShapeY.empty()) {
          throw

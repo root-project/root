@@ -27,7 +27,7 @@ struct RAttributes_Pool {
    std::vector<size_t> strides;
 };
 
-enum PoolOpMode { InvalidPool, AveragePool, MaxPool };
+enum PoolOpMode { InvalidPool, MaxPool, AveragePool, GlobalAveragePool };
 
 template<typename T>
 class ROperator_Pool final : public ROperator
@@ -102,8 +102,9 @@ public:
          throw std::runtime_error("TMVA SOFIE" + Name() + "Op : tensors with dimension " + std::to_string(input[0].size()) + " are not yet supported");
       }
 
-      size_t kHeight = ((fAttrKernelShape.empty())? input[1][2] : fAttrKernelShape[0]);
-      size_t kWidth = ((fAttrKernelShape.empty())? input[1][3] : fAttrKernelShape[1]);
+      assert(!fAttrKernelShape.empty());
+      size_t kHeight = fAttrKernelShape[0];
+      size_t kWidth = fAttrKernelShape[1];
 
       if (fAttrDilations.empty()) {
          fAttrDilations = {1, 1};
@@ -154,14 +155,26 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Conv Op input tensor" + fNX + " is not of 4 dimensions");
       }
+
+      // case of GlobalAveragePool. It is a pool case with kernel shape == image shape
+      if (fPoolMode == GlobalAveragePool) {
+         fPoolMode = AveragePool;
+         fAttrKernelShape.resize(2);
+         fAttrKernelShape[0] = fShapeX[2];
+         fAttrKernelShape[1] = fShapeX[3];
+         fAttrAutopad == "NOTSET";
+         assert(fAttrPads.empty());
+         assert(fAttrStrides.empty());
+      }
       // find shape of Y and add it in the list of intermidiate tensors
       fShapeY = ShapeInference({fShapeX})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
 
       fUseSession = model.UseSession();
 
-      // need cmath for INFINITY
-      model.AddNeededStdLib("cmath"); 
+      // need cmath for INFINITY when using MaxPool
+      if (fPoolMode == MaxPool) model.AddNeededStdLib("cmath"); 
+
    }
 
    std::string GenerateInitCode() {
@@ -185,7 +198,6 @@ public:
 
    std::string Generate(std::string OpName) {
       OpName = "op_" + OpName;
-      const std::string SP = "   ";   // empty space to inline the code and avoid using tabs
 
       if (fShapeX.empty() || fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Pool Op called to Generate without being initialized first");

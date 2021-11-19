@@ -8,3 +8,4 @@
 #include "TMVA/ROperator_LSTM.hxx"
 #include "TMVA/ROperator_BatchNormalization.hxx"
 #include "TMVA/ROperator_Pool.hxx"
+#include "TMVA/ROperator_Add.hxx"
