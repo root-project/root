@@ -180,6 +180,7 @@ private:
    const RooAbsReal &_topNode;
    RooArgSet _normSet;
    std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
+   std::unordered_map<const RooAbsArg *, NodeInfo> _integralInfos;
 
    // used for preserving resources
    std::vector<double> _nonDerivedValues;

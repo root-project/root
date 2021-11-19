@@ -196,7 +196,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
                            RooArgSet const &normSet, RooBatchCompute::BatchMode batchMode, std::string_view rangeName,
                            RooAbsCategory const *indexCat)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
-                                                              topNode.getParameters(observables, true))},
+                                                              topNode.getParameters(*data.get(), true))},
      _batchMode{batchMode}, _dataset{data, *std::unique_ptr<RooArgSet>(topNode.getObservables(data)), rangeName},
      _topNode{topNode}, _normSet{normSet}
 {
@@ -447,12 +447,15 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
 
       std::size_t inputSize = getInputSize(*integral);
 
-      NodeInfo info;
-      if (inputSize > 1 && _batchMode == RooBatchCompute::BatchMode::Cuda) {
-         info.copyAfterEvaluation = true;
-         info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
+      if (_integralInfos.count(integral) == 0) {
+         auto &info = _integralInfos[integral];
+         if (inputSize > 1 && _batchMode == RooBatchCompute::BatchMode::Cuda) {
+            info.copyAfterEvaluation = true;
+            info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
+         }
       }
-      computeCPUNode(integral, info);
+
+      computeCPUNode(integral, _integralInfos.at(integral));
    }
 }
 
