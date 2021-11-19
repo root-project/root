@@ -186,7 +186,7 @@ namespace SOFIE{
 
       std::string Generate(std::string OpName){
          OpName = "op_" + OpName;
-         const std::string SP = "   ";
+
          if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
             throw std::runtime_error("TMVA SOFIE Gemm Op called to Generate without being initialized first");
          }
