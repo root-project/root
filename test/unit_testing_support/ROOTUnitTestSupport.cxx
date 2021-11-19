@@ -60,6 +60,12 @@ static struct ForbidDiagnostics {
         return;
       }
 
+      // FIXME: DOAS backend is exprimental.
+      if (level == kWarning
+          && strstr(msg, "The DAOS backend is experimental and still under development") != nullptr) {
+        std::cerr << "Warning in " << location << " " << msg << std::endl;
+        return;
+      }
 
       FAIL() << "Received unexpected diagnostic of severity "
          << level
