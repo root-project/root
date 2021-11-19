@@ -983,8 +983,16 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, Bool_t fast) const {
 /// as the internal coordinates. In this case, values are looked up only by index.
 std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast) const
 {
-  // With fast, caller promises that layout of "coords" is identical to our internal "vars"
-  assert(!fast || coords.hasSameLayout(_vars));
+  // With fast, caller promises that layout of `coords` is identical to our internal `vars`.
+  // Previously, this was verified with an assert in debug mode like this:
+  //
+  //    assert(!fast || coords.hasSameLayout(_vars));
+  // 
+  // However, there are usecases where the externally provided `coords` have
+  // different names than the internal variables, even though they correspond
+  // to each other. For example, if the observables in the computation graph
+  // are renamed with `redirectServers`. Hence, we can't do a meaningful assert
+  // here.
 
   if (&_vars == &coords)
     fast = true;
@@ -1003,8 +1011,12 @@ std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast
       // Variable is not in external coordinates. Use current internal value.
       theVar = internalVar;
     }
-    // If fast is on, users promise that the sets have the same layout
-    assert(!fast || strcmp(internalVar->GetName(), theVar->GetName()) == 0);
+    // If fast is on, users promise that the sets have the same layout:
+    //
+    //   assert(!fast || strcmp(internalVar->GetName(), theVar->GetName()) == 0);
+    //
+    // This assert is commented out for the same reasons that applied to the
+    // other assert explained above.
 
     if (binning) {
       assert(dynamic_cast<const RooAbsReal*>(theVar));
