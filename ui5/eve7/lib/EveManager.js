@@ -303,7 +303,7 @@ sap.ui.define([], function() {
 
          // remove from parent list of children
          let mother = this.GetElement(elem.fMotherId);
-         if (mother) {
+         if (mother && mother.childs) {
             let mc = mother.childs;
             for (let i = 0; i < mc.length; ++i) {
 
@@ -313,7 +313,7 @@ sap.ui.define([], function() {
             }
          }
          else
-            console.warning("EveManager.prototype.removeElements mother not found in map, id = ", elem.fMotherId);
+            console.warning("EveManager.prototype.removeElements can't remove child from mother, mother id = ", elem.fMotherId);
 
          delete this.map[elId];
       }
