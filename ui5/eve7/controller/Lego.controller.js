@@ -69,6 +69,8 @@ sap.ui.define([
             this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // minimal latency
         },
         drawHist: function () {
+            if (!this.controllerIsMapped()) return;
+
             let domref = this.byId("legoPlotPlace").getDomRef();
             if (!this.jst_ptr) {
                 this.jst_ptr = 1;
@@ -83,6 +85,10 @@ sap.ui.define([
                 });
             }
         },
+        controllerIsMapped() {
+            let ev = this.mgr.GetElement(this.eveViewerId);
+            return ev.fRnrSelf;
+        },
         onResizeTimeout: function () {
             this.drawHist(); // AMT when to draw hist ??
             delete this.resize_tmout;
@@ -96,6 +102,8 @@ sap.ui.define([
         },
 
         endChanges: function (oEvent) {
+            if (!this.controllerIsMapped()) return;
+
             let domref = this.byId("legoPlotPlace").getDomRef();
             this.canvas_json = JSROOT.parse( atob(this.eve_lego.fTitle) );
             JSROOT.redraw(domref, this.canvas_json);
