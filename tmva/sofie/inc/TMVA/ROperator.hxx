@@ -34,9 +34,9 @@ public:
    //irtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
-
-
-
+protected:
+   // empty space to inline the generated code and avoid using tabs
+   const std::string SP = "   ";
 };
 
 
