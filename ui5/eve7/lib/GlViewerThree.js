@@ -359,6 +359,11 @@ sap.ui.define([
       //==============================================================================
 
       render: function() {
+         // AMT check if controller is attached in the splitter
+         let v = this.get_manager().GetElement(this.controller.eveViewerId);
+         if (!v.fRnrSelf)
+            return;
+         
          // Render through composer:
          this.composer.render(this.scene, this.camera);
 
