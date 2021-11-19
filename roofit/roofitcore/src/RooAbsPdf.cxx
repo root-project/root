@@ -176,6 +176,7 @@ called for each data event.
 #include "RooNLLVarNew.h"
 #include "RunContext.h"
 #include "RooSimultaneous.h"
+#include "RooBinSamplingPdf.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TClass.h"
@@ -1701,7 +1702,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"Extended,"
       "NumCPU,SplitRange,Constrained,"
-      "CloneData,OffsetLikelihood,IntegrateBins");
+      "CloneData,OffsetLikelihood");
 
   {
       // some arguments should not be filtered out, but we will use them also in fitTo
@@ -1715,7 +1716,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   {
       // some arguments should not be filtered out, but we will use them also in fitTo
       // to create the constraints term.
-      RooLinkedList tmp = pc.filterCmdList(fitCmdList,"Range,RangeWithName,SumCoefRange,ProjectedObservables",false);
+      RooLinkedList tmp = pc.filterCmdList(fitCmdList,
+              "Range,RangeWithName,SumCoefRange,ProjectedObservables,IntegrateBins",
+              false);
       std::unique_ptr<TIterator> iter{tmp.MakeIterator()} ;
       while(auto arg=(RooCmdArg*)iter->Next()) {
         nllCmdList.Add(arg);
@@ -1730,6 +1733,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   pc.defineString("addCoefRange","SumCoefRange",0,"") ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,minimizerDefaults.recoverFromNaN);
   pc.defineString("fitOpt","FitOptions",0,minimizerDefaults.fitOpt.c_str()) ;
@@ -1889,10 +1893,23 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       weightVar.reset( new RooRealVar(weightVarName.c_str(), "Weight(s) of events", data.weight()) );
     }
 
+
+    // Deal with the IntegrateBins argument
+    double integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
+    RooArgList binSamplingPdfs;
+    std::unique_ptr<RooAbsPdf> wrappedPdf;
+    wrappedPdf = RooBinSamplingPdf::create(*this, data, integrateOverBinsPrecision);
+    RooAbsPdf& pdf = wrappedPdf ? *wrappedPdf : *this;
+    if(wrappedPdf) {
+      binSamplingPdfs.add(*wrappedPdf.release());
+    }
+    // Done dealing with the IntegrateBins option
+
     RooArgList nllTerms;
 
-    if(auto simPdf = dynamic_cast<RooSimultaneous*>(this)) {
+    if(auto simPdf = dynamic_cast<RooSimultaneous*>(&pdf)) {
       auto * simPdfClone = static_cast<RooSimultaneous*>(simPdf->cloneTree());
+      simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       // Warning! This mutates "observables"
       //auto * simPdfClone = simPdf;
       nllTerms.add(*prepareSimultaneousModelForBatchMode(
@@ -1900,7 +1917,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     } else {
       nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
                   "RooNLLVarNew", "RooNLLVarNew",
-                  *this, observables, weightVar.get(), isExtended, rangeName));
+                  pdf, observables, weightVar.get(), isExtended, rangeName));
     }
     if(constraintsTerm) {
       nllTerms.add(*constraintsTerm.release());
@@ -1908,8 +1925,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
     std::string nllName = std::string("nll_") + this->GetName() + "_" + data.GetName();
     nll = new RooAddition(nllName.c_str(), nllName.c_str(), nllTerms, true);
+    nll->addOwnedComponents(binSamplingPdfs);
 
-    if(auto simPdf = dynamic_cast<RooSimultaneous*>(this)) {
+    if(auto simPdf = dynamic_cast<RooSimultaneous*>(&pdf)) {
       RooArgSet parameters;
       getParameters(data.get(), parameters);
       nll->recursiveRedirectServers(parameters);
@@ -3835,7 +3853,7 @@ void RooAbsPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
 {
   RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
 
-  auto integralSpan = dataMap[_norm];
+  auto integralSpan = dataMap.at(_norm);
 
   if(integralSpan.size() == 1) {
     double oneOverNorm = 1. / integralSpan[0];
