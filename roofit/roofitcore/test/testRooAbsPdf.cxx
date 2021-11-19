@@ -75,8 +75,12 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 {
   using namespace RooFit;
   constexpr bool verbose = false;
-  auto& msg = RooMsgService::instance();
-  msg.getStream(1).removeTopic(RooFit::Minimization);
+
+  if(!verbose) {
+    auto& msg = RooMsgService::instance();
+    msg.getStream(1).removeTopic(RooFit::Minimization);
+    msg.getStream(1).removeTopic(RooFit::Fitting);
+  }
 
   auto makeFakeDataXY = []() {
     RooRealVar x("x", "x", 0, 10);
@@ -132,7 +136,8 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
     }
 
     EXPECT_TRUE(fitResults[1]->isIdentical(*fitResults[0]));
-    EXPECT_TRUE(hijack.str().empty() != expectFastEvaluationsWarnings[iMean]) << "Stream contents: " << hijack.str();
+    EXPECT_EQ(hijack.str().find("does not implement the faster batch") != std::string::npos, expectFastEvaluationsWarnings[iMean])
+        << "Stream contents: " << hijack.str();
     ++iMean;
   }
 }
