@@ -46,7 +46,6 @@ public:
 
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
-      const std::string SP = "   ";
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Transpose Relu called to Generate without being initialized first");
       }
