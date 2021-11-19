@@ -141,7 +141,8 @@ void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nE
 {
   formula().computeBatch(stream, output, nEvents, dataMap);
   RooSpan<const double> normVal = dataMap.at(&*_norm);
-  for (size_t i=0; i<nEvents; i++) output[i]/=normVal[0];
+  // TODO: also deal with non-scalar integral batch
+  for (size_t i=0; i<nEvents; i++) output[i] = normalizeWithNaNPacking(output[i], normVal[0]);
 }
 
 
