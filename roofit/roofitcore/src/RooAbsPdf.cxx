@@ -336,6 +336,31 @@ RooAbsPdf::~RooAbsPdf()
 }
 
 
+double RooAbsPdf::normalizeWithNaNPacking(double rawVal, double normVal) const {
+
+    if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
+      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
+      logEvalError(msg.c_str());
+      clearValueAndShapeDirty();
+      return RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
+    }
+
+    if (rawVal < 0.) {
+      logEvalError(Form("p.d.f value is less than zero (%f), trying to recover", rawVal));
+      clearValueAndShapeDirty();
+      return RooNaNPacker::packFloatIntoNaN(-rawVal);
+    }
+
+    if (TMath::IsNaN(rawVal)) {
+      logEvalError("p.d.f value is Not-a-Number");
+      clearValueAndShapeDirty();
+      return rawVal;
+    }
+
+    return (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current value, normalized by integrating over
@@ -377,27 +402,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     // Evaluate denominator
     const double normVal = _norm->getVal();
 
-    if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
-      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
-      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
-      logEvalError(msg.c_str());
-      clearValueAndShapeDirty();
-      return _value = RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
-    }
-
-    if (rawVal < 0.) {
-      logEvalError(Form("p.d.f value is less than zero (%f), trying to recover", rawVal));
-      clearValueAndShapeDirty();
-      return _value = RooNaNPacker::packFloatIntoNaN(-rawVal);
-    }
-
-    if (TMath::IsNaN(rawVal)) {
-      logEvalError("p.d.f value is Not-a-Number");
-      clearValueAndShapeDirty();
-      return _value = rawVal;
-    }
-
-    _value = (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
+    _value = normalizeWithNaNPacking(rawVal, normVal);
 
     clearValueAndShapeDirty();
   }
@@ -806,12 +811,17 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 /// \param[in] evalData Struct with data that should be used for evaluation.
 /// \param[in] normSet Optional normalisation set to be used during computations.
 /// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const
-{
+RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
   auto pdfValues = getValues(evalData, normSet);
 
   evalData.logProbabilities.resize(pdfValues.size());
-  RooSpan<double> output( evalData.logProbabilities );
+  RooSpan<double> results( evalData.logProbabilities );
+  getLogProbabilities(getValues(evalData, normSet), results.data());
+  return results;
+}
+
+
+void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * output) const {
 
   if (checkInfNaNNeg(pdfValues)) {
     logBatchComputationErrors(pdfValues, 0);
@@ -830,15 +840,13 @@ RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext
       output[i] = theLog;
     }
 
-    return output;
+    return;
   }
 
   for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
     const double prob = pdfValues[i];
     output[i] = RooBatchCompute::fast_log(prob);;
   }
-
-  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3863,7 +3871,7 @@ void RooAbsPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
   } else {
     assert(integralSpan.size() == nEvents);
     for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] /= integralSpan[i];
+      output[i] = normalizeWithNaNPacking(output[i], integralSpan[i]);
     }
   }
 }

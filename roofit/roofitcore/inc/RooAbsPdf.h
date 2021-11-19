@@ -233,6 +233,7 @@ public:
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+  void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
 
@@ -332,6 +333,8 @@ private:
 
 
 protected:
+  double normalizeWithNaNPacking(double rawVal, double normVal) const;
+
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
   friend class RooEffGenContext ;
