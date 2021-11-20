@@ -126,7 +126,8 @@ if(PY_TORCH_FOUND)
     LIBRARIES
       ROOTTMVASofie
       ROOTTMVASofieParser
-      blas
+      ${BLAS_LINKER_FLAGS}
+      ${BLAS_LIBRARIES}
     INCLUDE_DIRS
       ${CMAKE_CURRENT_BINARY_DIR}
   )
