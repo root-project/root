@@ -15,8 +15,9 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
    auto find = mapOptypeOperator.find(nodeproto.op_type());
    if (find == mapOptypeOperator.end()){
       throw std::runtime_error("TMVA::SOFIE - Operator type " + nodeproto.op_type() + " is not yet supported");
-      //return std::unique_ptr<ROperator>
-   }else{
+      // std::unique_ptr<ROperator> op;
+      // return op;
+   } else {
       return (find->second)(nodeproto, graphproto, tensor_type);
    }
 }
@@ -324,7 +325,7 @@ std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto,
    else if (nodeproto.op_type() == "GlobalAveragePool")
       op_mode = GlobalAveragePool;
 
-   assert(type != Invalid);
+   assert(op_mode != InvalidPool);
 
    auto input_name = nodeproto.input(0);
    auto it = tensor_type.find(input_name);
@@ -378,6 +379,56 @@ std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto,
       default:
          throw
             std::runtime_error("TMVA::SOFIE - Unsupported - Operator Pool does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = (op->TypeInference({input_type}))[0];
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()) {
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
+
+   return op;
+}
+
+std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodeproto,
+                                                  const onnx::GraphProto & /*graphproto */,
+                                                  std::unordered_map<std::string, ETensorType> &tensor_type)
+{
+   // make Reshape operator
+   ETensorType input_type;
+
+   bool flatten = false;
+   if (nodeproto.op_type() == "Flatten")
+      flatten = true;
+  
+   auto input_name = nodeproto.input(0);
+   auto shape_name = (!flatten) ? nodeproto.input(1) : "";
+   auto it = tensor_type.find(input_name);
+   if (it != tensor_type.end()) {
+      input_type = it->second;
+   } else {
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Reshape op has input tensor" + input_name +
+                               " but its type is not yet registered");
+   }
+
+   std::unique_ptr<ROperator> op;
+   std::vector<int_t> attr_perm;
+
+   if (nodeproto.attribute_size() == 1) {
+      attr_perm.assign(nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end());
+   }
+
+   switch (input_type) {
+   case ETensorType::FLOAT:
+      if (!attr_perm.empty()) {
+         op.reset(new ROperator_Reshape<float>(attr_perm, input_name, shape_name, nodeproto.output(0)));
+      } else {
+         op.reset(new ROperator_Reshape<float>(input_name, shape_name, nodeproto.output(0)));
+      }
+      break;
+   default:
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
+                               std::to_string(static_cast<int>(input_type)));
    }
 
    ETensorType output_type = (op->TypeInference({input_type}))[0];
@@ -748,7 +799,11 @@ RModel RModelParser_ONNX::Parse(std::string filename){
 
 
    for (int i=0; i < graph.node_size(); i++){
-      rmodel.AddOperator(INTERNAL::make_ROperator(i, graph, tensor_type));
+      auto op = INTERNAL::make_ROperator(i, graph, tensor_type);
+      if (!op) {
+         break;
+      }
+      rmodel.AddOperator(std::move(op));
       std::string op_type = graph.node(i).op_type();
       if (op_type == "Gemm") {
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
