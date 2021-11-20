@@ -27,8 +27,14 @@ class RooCmdArg final : public TNamed {
 public:
 
   RooCmdArg();
+  /// Constructor from payload parameters. Note that the first payload
+  /// parameter has no default value, because otherwise the implicit creation
+  /// of a RooCmdArg from `const char*` would be possible. This would cause
+  /// ambiguity problems in RooFit code. It is not a problem that the first
+  /// parameter always has to be given, because creating a RooCmdArg with only
+  /// a name and no payload doesn't make sense anyway.
   RooCmdArg(const char* name, 
-	    Int_t i1=0, Int_t i2=0, 
+	    Int_t i1, Int_t i2=0,
 	    Double_t d1=0, Double_t d2=0, 
 	    const char* s1=0, const char* s2=0, 
 	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0,
