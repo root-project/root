@@ -212,8 +212,8 @@ namespace SOFIE{
             for (auto & dim: i.second.fShape){
                length *= dim;
             }
-            fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
             if (!useWeightFile) {
+               fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
                std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.fData);
                std::stringstream floats;
                for (size_t idx = 0; idx < length-1; idx++){
@@ -221,8 +221,13 @@ namespace SOFIE{
                }
                floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[length-1];
                fGC += floats.str();
+               fGC += "};\n";
             }
-            fGC += "};\n";
+            else {
+               fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
+               fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            }
+          
          }
       }
       for (auto&i: fIntermediateTensorInfos){

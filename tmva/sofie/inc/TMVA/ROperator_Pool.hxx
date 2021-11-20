@@ -248,7 +248,7 @@ public:
          doPadding |= (e > 0);
 
       // loop on batches and channels
-      out << SP << SP << "size_t outIndex = 0;\n";
+      out << SP << "size_t outIndex = 0;\n";
       out << SP << "for (size_t n = 0; n < " << fShapeX[0]*fShapeX[1] << "; n++) {\n";
       out << SP << SP << "size_t inputOffset = n*" << fShapeX[2]*fShapeX[3] << ";\n";
       out << SP << SP << "for (int i = hmin; i < hmax; i+=" << fAttrStrides[0] << ") {\n";

@@ -153,17 +153,18 @@ public:
       }
       fShapeX = model.GetTensorShape(fNX);
       if (fShapeX.size() != 4) {
+         std::cout << fNX << " : " << ConvertShapeToString(fShapeX) << std::endl;
          throw
-            std::runtime_error("TMVA SOFIE Conv Op input tensor" + fNX + " is not of 4 dimensions");
+            std::runtime_error("TMVA SOFIE Conv Op input data tensor" + fNX + " is not of 4 dimensions");
       }
       if (!model.CheckIfTensorAlreadyExist(fNW)) {
          throw
-            std::runtime_error("TMVA SOFIE Conv op Input Tensor " + fNW + " is not found in model");
+            std::runtime_error("TMVA SOFIE Conv op Input weight Tensor " + fNW + " is not found in model");
       }
       fShapeW = model.GetTensorShape(fNW);
       if (fShapeW.size() != 4) {
-         throw
-            std::runtime_error("TMVA SOFIE Conv Op input tensor" + fNW + " is not of 4 dimensions");
+         std::cout << fNW << " : " << ConvertShapeToString(fShapeW) << std::endl;
+         throw std::runtime_error("TMVA SOFIE Conv Op input weight tensor" + fNW + " is not of 4 dimensions");
       }
       fShapeY = ShapeInference({fShapeX, fShapeW})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);

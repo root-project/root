@@ -55,6 +55,7 @@ public:
                            ConvertShapeToString(shapeX1) + "shape 2 is " + ConvertShapeToString(shapeX2);
          throw std::runtime_error(msg);
       }
+      fShape = shapeX1;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX1), fShape);
    }
 

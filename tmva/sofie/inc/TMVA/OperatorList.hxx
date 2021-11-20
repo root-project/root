@@ -9,3 +9,4 @@
 #include "TMVA/ROperator_BatchNormalization.hxx"
 #include "TMVA/ROperator_Pool.hxx"
 #include "TMVA/ROperator_Add.hxx"
+#include "TMVA/ROperator_Reshape.hxx"
