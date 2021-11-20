@@ -198,24 +198,26 @@ public:
       size_t n = batchSize * channels * height * width;
 
 		//// copy X into Y
-		out << "\t" << "const int N ="<<batchSize * channels * height * width<<";\n";
-		out << "\t" << "const int "<<OpName<< "_incx = 1;\n";
-		out << "\t" << "const int "<<OpName<< "_incy = 1;\n";
-		out << "\t" << "BLAS::scopy_(&N, " << "tensor_" << fNX <<", &" << OpName << "_incx," << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n";
-	
-		//// blas saxpy (Y = -Bmean + Y)
-		out << "\t" << "float "<<OpName<< "_alpha = -1;\n";
-		out << "\t" << "BLAS::saxpy_(&N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx," << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n";
-        
-		//// Y *= scale*var
-		out << "\t" << "for (size_t i = 0; i < " << n << "; i++) {\n";
-		out << "\t" << "\t" << "tensor_" << fNY << "[i] *= tensor_" << fNScale << "[i] * tensor_" << fNVar << "[i]; \n";
-		out << "\t" << "}\n";
+      out << SP << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
+      out << SP << "constexpr int "<<OpName<< "_incx = 1;\n";
+		out << SP << "constexpr int "<<OpName<< "_incy = 1;\n";
+      out << SP << "BLAS::scopy_(&" << OpName << "_N, " << "tensor_" << fNX << ", &" << OpName << "_incx," << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
+
+      //// blas saxpy (Y = -Bmean + Y)
+		out << SP << "float "<<OpName<< "_alpha = -1;\n";
+		out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx," 
+                << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n ";
+
+         //// Y *= scale*var
+      out << SP << "for (size_t i = 0; i < " << n << "; i++) {\n";
+      out << SP << SP << "tensor_" << fNY << "[i] *= tensor_" << fNScale << "[i] * tensor_" << fNVar << "[i]; \n";
+		out << SP << "}\n";
 		
 		//// blas saxpy (Y = Bbias + Y)
-		out << "\t" <<OpName<< "_alpha = 1;\n";
-		out << "\t" << "BLAS::saxpy_(&N, &" << OpName << "_alpha, " << "tensor_" << fNB << ", &" << OpName << "_incx, " << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n";
-        // std::cout<<out;
+		out << SP <<OpName<< "_alpha = 1;\n";
+      out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNB << ", &" << OpName << "_incx, "
+                << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
+
 		return out.str();
 	}
 
