@@ -21,9 +21,9 @@
 #include "RooMinimizer.h"
 #include "RooGradMinimizerFcn.h"
 #include "RooFitResult.h"
-#include "TestStatistics/LikelihoodSerial.h"
-#include "TestStatistics/RooUnbinnedL.h"
-#include "TestStatistics/buildLikelihood.h"
+#include "RooFit/TestStatistics/LikelihoodSerial.h"
+#include "RooFit/TestStatistics/RooUnbinnedL.h"
+#include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/ProcessManager.h" // need to complete type for debugging
 #include "RooStats/ModelConfig.h"

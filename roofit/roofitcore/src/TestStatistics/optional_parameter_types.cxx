@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/optional_parameter_types.h>
+#include <RooFit/TestStatistics/optional_parameter_types.h>
 
 namespace RooFit {
 namespace TestStatistics {

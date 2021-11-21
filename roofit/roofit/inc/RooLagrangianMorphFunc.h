@@ -52,7 +52,7 @@
 #ifndef ROO_LAGRANGIAN_MORPH
 #define ROO_LAGRANGIAN_MORPH
 
-#include "Floats.h"
+#include "RooFit/Floats.h"
 #include "RooAbsArg.h"
 #include "RooAbsReal.h"
 #include "RooArgList.h"
@@ -212,7 +212,7 @@ protected:
 
 public:
   /// length of floating point digits precision supported by implementation.
-  static constexpr double implementedPrecision = SuperFloatPrecision::digits10;
+  static constexpr double implementedPrecision = RooFit::SuperFloatPrecision::digits10;
   void importToWorkspace(RooWorkspace *ws, const RooAbsReal *object);
   void importToWorkspace(RooWorkspace *ws, RooAbsData *object);
 
