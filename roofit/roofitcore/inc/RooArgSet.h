@@ -18,7 +18,7 @@
 
 #include "RooAbsCollection.h"
 #include "RooAbsArg.h"
-#include "UniqueId.h"
+#include "RooFit/UniqueId.h"
 
 
 class RooArgList ;
@@ -164,7 +164,7 @@ public:
   /// This ID can be used to check whether two RooAbsData are the same object,
   /// which is safer than memory address comparisons that might result in false
   /// positives when memory is recycled.
-  UniqueId<RooArgSet> const& uniqueId() const { return _uniqueId; }
+  RooFit::UniqueId<RooArgSet> const& uniqueId() const { return _uniqueId; }
 
 protected:
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
@@ -203,7 +203,7 @@ private:
   //to leak depending if RooArgSets are still alive. This depends on the order of destructions.
   static MemPool* memPool();
 #endif
-  const UniqueId<RooArgSet> _uniqueId; //!
+  const RooFit::UniqueId<RooArgSet> _uniqueId; //!
   
   ClassDefOverride(RooArgSet,1) // Set of RooAbsArg objects
 };

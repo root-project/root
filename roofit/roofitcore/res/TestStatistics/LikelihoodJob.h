@@ -15,7 +15,7 @@
 
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/types.h"
-#include "TestStatistics/LikelihoodWrapper.h"
+#include "RooFit/TestStatistics/LikelihoodWrapper.h"
 #include "RooArgList.h"
 
 #include "Math/MinimizerOptions.h"

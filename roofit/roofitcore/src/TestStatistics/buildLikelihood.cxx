@@ -10,14 +10,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/buildLikelihood.h>
+#include <RooFit/TestStatistics/buildLikelihood.h>
 
 #include <RooSimultaneous.h>
-#include <TestStatistics/RooBinnedL.h>
-#include <TestStatistics/RooUnbinnedL.h>
+#include <RooFit/TestStatistics/RooBinnedL.h>
+#include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RunContext.h> // necessary to complete RooUnbinnedL
-#include <TestStatistics/RooSubsidiaryL.h>
-#include <TestStatistics/RooSumL.h>
+#include <RooFit/TestStatistics/RooSubsidiaryL.h>
+#include <RooFit/TestStatistics/RooSumL.h>
 #include <RooAbsPdf.h>
 #include <RooAbsData.h>
 #include <RooRealSumPdf.h>

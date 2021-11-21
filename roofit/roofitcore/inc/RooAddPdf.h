@@ -145,7 +145,7 @@ protected:
 
 private:
   std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* defaultNorm = nullptr) const;
-  mutable UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = UniqueId<RooArgSet>::nullval; //!
+  mutable RooFit::UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = RooFit::UniqueId<RooArgSet>::nullval; //!
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; //!
 
   void finalizeConstruction();
