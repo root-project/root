@@ -13,7 +13,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooBinnedL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooBinnedL
 
-#include <TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/RooAbsL.h>
 #include "RooAbsReal.h"
 #include <vector>
 

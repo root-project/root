@@ -10,8 +10,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/RooRealL.h>
-#include <TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/RooRealL.h>
+#include <RooFit/TestStatistics/RooAbsL.h>
 
 namespace RooFit {
 namespace TestStatistics {

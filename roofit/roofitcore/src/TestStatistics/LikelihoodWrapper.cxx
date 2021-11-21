@@ -10,12 +10,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/LikelihoodWrapper.h>
+#include <RooFit/TestStatistics/LikelihoodWrapper.h>
 
-#include <TestStatistics/RooAbsL.h> // need complete type for likelihood->...
-#include <TestStatistics/MinuitFcnGrad.h>
-#include <TestStatistics/RooUnbinnedL.h>
-#include <TestStatistics/RooSumL.h> // need complete type for dynamic cast
+#include <RooFit/TestStatistics/RooAbsL.h> // need complete type for likelihood->...
+#include <RooFit/TestStatistics/MinuitFcnGrad.h>
+#include <RooFit/TestStatistics/RooUnbinnedL.h>
+#include <RooFit/TestStatistics/RooSumL.h> // need complete type for dynamic cast
 
 #include "RooMsgService.h"
 
