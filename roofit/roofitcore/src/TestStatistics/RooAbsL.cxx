@@ -10,8 +10,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/RooAbsL.h>
-#include <TestStatistics/ConstantTermsOptimizer.h>
+#include <RooFit/TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/ConstantTermsOptimizer.h>
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 

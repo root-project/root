@@ -10,8 +10,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "TestStatistics/MinuitFcnGrad.h"
-#include "TestStatistics/LikelihoodSerial.h"
+#include "RooFit/TestStatistics/MinuitFcnGrad.h"
+#include "RooFit/TestStatistics/LikelihoodSerial.h"
 #ifdef BUILD_WITH_ROOFIT_MULTIPROCESS
 #include "TestStatistics/LikelihoodJob.h"
 #include "TestStatistics/LikelihoodGradientJob.h"

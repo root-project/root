@@ -31,7 +31,7 @@ change the derivative of the log likelihood (which is what matters in fitting th
 value of the (log-)likelihood itself.
 **/
 
-#include <TestStatistics/RooSubsidiaryL.h>
+#include <RooFit/TestStatistics/RooSubsidiaryL.h>
 #include <RooAbsPdf.h> // for dynamic cast
 #include <RooErrorHandler.h>
 

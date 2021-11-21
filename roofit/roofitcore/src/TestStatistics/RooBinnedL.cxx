@@ -24,7 +24,7 @@ In extended mode, a
 \f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
-#include <TestStatistics/RooBinnedL.h>
+#include <RooFit/TestStatistics/RooBinnedL.h>
 
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"

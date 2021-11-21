@@ -13,7 +13,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooUnbinnedL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooUnbinnedL
 
-#include <TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/RooAbsL.h>
 
 // forward declarations
 class RooAbsPdf;

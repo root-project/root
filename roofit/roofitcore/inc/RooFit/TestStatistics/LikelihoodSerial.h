@@ -14,7 +14,7 @@
 #ifndef ROOT_ROOFIT_LikelihoodSerial
 #define ROOT_ROOFIT_LikelihoodSerial
 
-#include <TestStatistics/LikelihoodWrapper.h>
+#include <RooFit/TestStatistics/LikelihoodWrapper.h>
 #include "RooArgList.h"
 
 #include "Math/MinimizerOptions.h"

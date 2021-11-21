@@ -15,7 +15,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
-    Floats.h
+    RooFit/Floats.h
     Roo1DTable.h
     RooAbsAnaConvPdf.h
     RooAbsArg.h
@@ -237,19 +237,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitLegacy/RooNameSet.h
     RooFitLegacy/RooSetPair.h
     RooFitLegacy/RooTreeData.h
-    TestStatistics/ConstantTermsOptimizer.h
-    TestStatistics/LikelihoodGradientWrapper.h
-    TestStatistics/LikelihoodWrapper.h
-    TestStatistics/LikelihoodSerial.h
-    TestStatistics/MinuitFcnGrad.h
-    TestStatistics/RooAbsL.h
-    TestStatistics/RooBinnedL.h
-    TestStatistics/RooSubsidiaryL.h
-    TestStatistics/RooSumL.h
-    TestStatistics/RooRealL.h
-    TestStatistics/RooUnbinnedL.h
-    TestStatistics/optional_parameter_types.h
-    TestStatistics/buildLikelihood.h
+    RooFit/TestStatistics/ConstantTermsOptimizer.h
+    RooFit/TestStatistics/LikelihoodGradientWrapper.h
+    RooFit/TestStatistics/LikelihoodWrapper.h
+    RooFit/TestStatistics/LikelihoodSerial.h
+    RooFit/TestStatistics/MinuitFcnGrad.h
+    RooFit/TestStatistics/RooAbsL.h
+    RooFit/TestStatistics/RooBinnedL.h
+    RooFit/TestStatistics/RooSubsidiaryL.h
+    RooFit/TestStatistics/RooSumL.h
+    RooFit/TestStatistics/RooRealL.h
+    RooFit/TestStatistics/RooUnbinnedL.h
+    RooFit/TestStatistics/optional_parameter_types.h
+    RooFit/TestStatistics/buildLikelihood.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h

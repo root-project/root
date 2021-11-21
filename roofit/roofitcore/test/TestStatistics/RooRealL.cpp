@@ -12,8 +12,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "TestStatistics/RooRealL.h"
-#include "TestStatistics/RooUnbinnedL.h"
+#include <RooFit/TestStatistics/RooRealL.h>
+#include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RunContext.h> // necessary to complete RooUnbinnedL
 
 #include <RooRandom.h>

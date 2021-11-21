@@ -29,8 +29,8 @@
 
 #include "RooArgList.h" // cannot just use forward decl due to default argument in lastMinuitFit
 
-#include "TestStatistics/RooAbsL.h"
-#include "TestStatistics/MinuitFcnGrad.h"
+#include <RooFit/TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/MinuitFcnGrad.h>
 
 #include "RooSentinel.h"
 #include "RooMsgService.h"

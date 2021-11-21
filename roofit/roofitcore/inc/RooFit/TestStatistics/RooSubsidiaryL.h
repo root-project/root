@@ -13,7 +13,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooSubsidiaryL
 
-#include "TestStatistics/RooAbsL.h"
+#include <RooFit/TestStatistics/RooAbsL.h>
 #include "RooArgList.h"
 #include "RooArgSet.h"
 

@@ -17,7 +17,7 @@
 #ifndef ROO_LINEAR_COMB
 #define ROO_LINEAR_COMB
 
-#include "Floats.h"
+#include "RooFit/Floats.h"
 
 #include <list>
 #include <ostream>
@@ -29,7 +29,7 @@
 
 class RooLinearCombination : public RooAbsReal {
   RooListProxy _actualVars;
-  std::vector<SuperFloat> _coefficients;
+  std::vector<RooFit::SuperFloat> _coefficients;
   mutable RooArgSet *_nset; //!
 
 public:
@@ -39,9 +39,9 @@ public:
   virtual void printArgs(std::ostream &os) const override;
   ~RooLinearCombination();
   virtual TObject *clone(const char *newname) const override;
-  void add(SuperFloat c, RooAbsReal *t);
-  void setCoefficient(size_t idx, SuperFloat c);
-  SuperFloat getCoefficient(size_t idx);
+  void add(RooFit::SuperFloat c, RooAbsReal *t);
+  void setCoefficient(size_t idx, RooFit::SuperFloat c);
+  RooFit::SuperFloat getCoefficient(size_t idx);
   virtual Double_t evaluate() const override;
   virtual std::list<Double_t> *binBoundaries(RooAbsRealLValue &obs,
                                              Double_t xlo,

@@ -17,11 +17,11 @@
 #include "RooFit/MultiProcess/Queue.h"
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/types.h"
-#include "TestStatistics/RooAbsL.h"
-#include "TestStatistics/RooUnbinnedL.h"
-#include "TestStatistics/RooBinnedL.h"
-#include "TestStatistics/RooSubsidiaryL.h"
-#include "TestStatistics/RooSumL.h"
+#include "RooFit/TestStatistics/RooAbsL.h"
+#include "RooFit/TestStatistics/RooUnbinnedL.h"
+#include "RooFit/TestStatistics/RooBinnedL.h"
+#include "RooFit/TestStatistics/RooSubsidiaryL.h"
+#include "RooFit/TestStatistics/RooSumL.h"
 #include "RooRealVar.h"
 
 namespace RooFit {

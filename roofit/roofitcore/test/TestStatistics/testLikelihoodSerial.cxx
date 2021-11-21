@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/LikelihoodSerial.h>
+#include <RooFit/TestStatistics/LikelihoodSerial.h>
 
 #include <RooRandom.h>
 #include <RooWorkspace.h>
@@ -19,11 +19,11 @@
 #include <RooNLLVar.h>
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
-#include <TestStatistics/RooUnbinnedL.h>
-#include <TestStatistics/RooBinnedL.h>
-#include <TestStatistics/optional_parameter_types.h>
-#include <TestStatistics/buildLikelihood.h>
-#include <TestStatistics/RooRealL.h>
+#include <RooFit/TestStatistics/RooUnbinnedL.h>
+#include <RooFit/TestStatistics/RooBinnedL.h>
+#include <RooFit/TestStatistics/optional_parameter_types.h>
+#include <RooFit/TestStatistics/buildLikelihood.h>
+#include <RooFit/TestStatistics/RooRealL.h>
 
 #include "Math/Util.h"  // KahanSum
 

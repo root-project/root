@@ -10,9 +10,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <TestStatistics/RooSumL.h>
+#include <RooFit/TestStatistics/RooSumL.h>
 #include <RooAbsData.h>
-#include <TestStatistics/RooSubsidiaryL.h>
+#include <RooFit/TestStatistics/RooSubsidiaryL.h>
 
 #include <algorithm> // min, max
 
