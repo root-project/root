@@ -178,8 +178,8 @@ namespace SOFIE{
          fGC += "#include<" + i + ">\n";
       }
       // for the session we need to include SOFIE_Common functions
-      if (useSession)
-         fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
+      //needed for convolution operator (need to add a flag)
+      fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
       if (useWeightFile)
          fGC += "#include <fstream>\n";
       

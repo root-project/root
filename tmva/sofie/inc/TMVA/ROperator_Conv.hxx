@@ -242,11 +242,6 @@ public:
       // matrix with convolution kernels
       out << "std::vector<" << fType << "> fVec_" << opName << "_f = std::vector<" << fType << ">("
           << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << ");\n";
-      // pad input matrix with zero
-      out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
-          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) *
-                (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-          << ");\n";
       // output matrix of im2col
       out << "std::vector<" << fType << "> fVec_" << opName << "_xcol = std::vector<" << fType << ">(" 
           << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << ");\n";
@@ -303,7 +298,8 @@ public:
       out << SP << SP << "}\n";
       out << SP << "}\n";
 
-      out << SP << "char " << OpName << "_transA = 'T';\n";
+      //out << SP << "char " << OpName << "_transA = 'T';\n";
+      out << SP << "char " << OpName << "_transA = 'N';\n";
       out << SP << "char " << OpName << "_transB = 'N';\n";
       out << SP << "int " << OpName << "_m = " << fShapeY[2] * fShapeY[3] << ";\n"; // output h*w
       assert(fShapeY[1] == fShapeW[0]);
@@ -314,120 +310,81 @@ public:
       out << SP << "float " << OpName << "_beta = 0.0;\n";
 
       if (fUseSession) {
-         out << SP << fType << " * " << OpName << "_xpad = fVec_" << OpName << "_xpad.data();\n";
          out << SP << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n";
       }
       else {
-         out << SP << fType << " " << OpName << "_xpad[" << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) *
-                   (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << "] = {0};\n";
          out << SP << fType << " " << OpName << "_xcol["
              << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
       }
 
       // Loop on batch size 
-      std::string outOffset = "offset_tensor_" + fNY;
-      out << SP << "size_t " << outOffset << " = 0;\n";
       out << SP << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
 
-      // Padding the input with zeros
-      out << SP << SP << "for (size_t c = 0; c < " << fShapeX[1] << "; c++) {\n";
-      out << SP << SP << SP << "for (size_t h = 0; h < " << fShapeX[2] << "; h++) {\n";
-      out << SP << SP << SP << SP << "size_t xpad_offset = c * "
-         << (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + (h + "
-         << fAttrPads[0] << ") * " << (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + " << fAttrPads[1] << ";\n";
-      if (bsize == 1)
-         out << SP << SP << SP << SP << "size_t x_offset = c * " << fShapeX[2] * fShapeX[3] << " + h * " << fShapeX[3] << ";\n";
-      else
-         out << SP << SP << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << " + c * "
-            << fShapeX[2] * fShapeX[3] << " + h * " << fShapeX[3] << ";\n";
-
-      out << SP << SP << SP << SP << "std::copy(tensor_" << fNX << " + x_offset, tensor_" << fNX << " + x_offset + "
-         << fShapeX[3] << ", " << OpName << "_xpad + xpad_offset);\n";
-      out << SP << SP << SP << "}\n";
-      out << SP << SP << "}\n";
-
-         // IM2COL: Unroll the input tensor
-         // order input data as  (e.g. kernel 2x2)  and (xa,ya) is channel 1 and (xb,yb) is channel 2
-         //   (xa1,..,xak,ya1,..yak)(xb1,...,xbk,yb1,..,ybk)
-         //   (xa2,...xak+1,ya1,...yak)(......)
+      // IM2COL: Unroll the input tensor
+      // order input data as  (e.g. kernel 2x2)  and (xa,ya) is channel 1 and (xb,yb) is channel 2
+      //   (xa1,..,xak,ya1,..yak)(xb1,...,xbk,yb1,..,ybk)
+      //   (xa2,...xak+1,ya1,...yak)(......)
+      // trick for speed is using caffe im2col and output a matrix which contains filtered values as rows.
+      // By doing this one has consecutive memory reads and writes
+      // Resulting matrix op_xcol is (input channels * filter_h * filter_w , output_h * output_w)
+      assert(fAttrPads[0] == fAttrPads[2]);
+      assert(fAttrPads[1] == fAttrPads[3]);
       if (fAttrGroup == 1) {
-         // case of standard convolution
-
-         out << SP << SP << "size_t " << OpName << "_index = 0;\n";
-         out << SP << SP  << "for (size_t h = 0; h < " << fShapeX[2] + fAttrPads[0] + fAttrPads[2] - fAttrKernelShape[0] + 1
-             << "; h += " << fAttrStrides[0] << ") {\n";
-         out << SP << SP  << SP << "for (size_t w = 0; w < " << fShapeX[3] + fAttrPads[1] + fAttrPads[3] - fAttrKernelShape[1] + 1
-             << ";w += " << fAttrStrides[1] << ") {\n";
-         // loop on input channel must be done inside loop on input pixels
-         out << SP << SP <<  SP << SP << "for (size_t c = 0; c < " << fShapeW[1] << "; c++) {\n";
-         out << SP << SP << SP << SP << SP << "for (size_t x = 0; x < " << fAttrKernelShape[0] << "; x++) {\n";
-         out << SP << SP << SP << SP << SP << "size_t offset = "
-             << " c * " << (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-             << " + (h + x) * " << (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + w;\n";
-         //out << "assert( offset + 5 <= " << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " );\n";
-         //out << "assert( " << OpName << "_index + 5  <= " << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << " );\n";
-         out << SP << SP << SP << SP << SP << "std::copy(" << OpName << "_xpad + offset, " << OpName
-             << "_xpad + offset + " << fAttrKernelShape[1] << ", " << OpName << "_xcol + " << OpName << "_index);\n";
-         out << SP << SP << SP << SP << SP << OpName << "_index += " << fAttrKernelShape[1] << ";\n";
-         out << SP << SP << SP << SP << SP << "}\n";
-         out << SP << SP << SP << SP << "}\n";
-         out << SP << SP << SP << "}\n";
-         out << SP << SP << "}\n";
-         
-         out << SP <<  SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName << "_k,\n";
-         out << SP << SP  << SP << OpName << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
-             << " + " << outOffset << ", &" << OpName << "_m);\n";
-
-         out << SP << SP << outOffset << " += " << fShapeW[0]*fShapeY[2]*fShapeY[3]<< ";\n";
-
+         out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << ";\n";
+         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
+         // when using im2col - resulting matrix is transposed, is (input_c * filter_h * filter_y,  output_h *
+         // output_w)
+         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
+             << " + x_offset,"
+             //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
+             //  dilation_w,
+             //
+             << fShapeW[1] << "," << fShapeX[2] << "," << fShapeX[3] << "," << fAttrKernelShape[0] << ","
+             << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrStrides[0] << ","
+             << fAttrStrides[1] << ",1,1," << OpName << "_xcol);\n\n ";
+         // BLAS
+         out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
+             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName
+             << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
+         out << SP << SP << SP << OpName << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+             << " + out_offset, &" << OpName << "_m);\n";
       } else {
          // case of group convolution
-
-         // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each group)
+         // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
+         // group)
+         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
          out << SP << SP << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
-         // increment index by group offset
-         out << SP << SP << SP << "size_t index = 0;\n"; //g * " << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << ";\n";
-         //out << SP << SP << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
-         out << SP << SP << SP << "for (size_t h = 0; h < " << fShapeX[2] + fAttrPads[0] + fAttrPads[2] - fAttrKernelShape[0] + 1
-             << "; h += " << fAttrStrides[0] << ") {\n";
-         out << SP << SP << SP << SP << "for (size_t w = 0; w < "
-             << fShapeX[3] + fAttrPads[1] + fAttrPads[3] - fAttrKernelShape[1] + 1 << ";w += " << fAttrStrides[1] << ") {\n";
-         // loop on input equivalent channels = total input channels/ngroups = shapeW[1]
-         out << SP << SP << SP << SP << SP << "for (size_t c = 0 ; c <  " << fShapeW[1] << "; c++) {\n";
-         ///out << SP << SP << SP << "for (size_t c = g * " << fShapeW[1] << "; c < (g + 1) * " << fShapeW[1] << "; c++) {\n";
-         out << SP << SP << SP << SP << SP << SP << "for (size_t x = 0; x < " << fAttrKernelShape[0] << "; x++) {\n";
+         out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << " + g * "
+             << fShapeW[1] * fShapeX[2] * fShapeX[3] << ";\n ";
+         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << " + g * "
+             << fShapeW[0] * fShapeY[2] * fShapeY[3] / fAttrGroup << ";\n ";
 
-         out << SP << SP << SP << SP << SP << SP << SP << "size_t offset = " << " g * " <<
-                fShapeW[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-             << "+ c * " << (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-             << "+ (h + x) * " << (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << " + w;\n";
-         out << SP << SP << SP << SP << SP << SP << SP << "std::copy(" << OpName << "_xpad + offset, " << OpName
-             << "_xpad + offset + " << fAttrKernelShape[1] << ", " << OpName << "_xcol + index);\n";
-         out << SP << SP << SP << SP << SP << SP << SP << "index += " << fAttrKernelShape[1] << ";\n";
-         out << SP << SP << SP << SP << SP << SP << "}\n";
-         out << SP << SP << SP << SP << SP << "}\n";
-         out << SP << SP << SP << SP << "}\n";
-         out << SP << SP << SP << "}\n";   // end im2col loop 
+         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
+             << " + x_offset,"
+             //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
+             //  dilation_w,
+             //
+             << fShapeW[1] << "," << fShapeX[2] << "," << fShapeX[3] << "," << fAttrKernelShape[0] << ","
+             << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrStrides[0] << ","
+             << fAttrStrides[1] << ",1,1," << OpName << "_xcol);\n\n ";
 
-         // n must be divided by the number of groups 
+         // BLAS
+         // n must be divided by the number of groups
          out << SP << SP << SP << OpName << "_n = " << fShapeW[0] / fAttrGroup << ";\n";
          // offset g must be  g * k * n
-         out << SP << SP << SP << "size_t offset_f = g * " << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] / fAttrGroup << ";\n";
-         out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName
-             << "_m, &" << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &"
-             << OpName << "_k, " << OpName << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY << " + "
-             << outOffset << ", &" << OpName << "_m);\n";
-         // out << SP << SP << "for (size_t i = 0; i < " << fgHeight * xgWidth << "; i++) {\n";
-         // out << SP << SP << SP << "tensor_" << fNY << "[i + g * " << fgHeight * xgWidth << "] = "
-         //     << OpName << "_yg[i];\n";
+         out << SP << SP << SP << "size_t offset_f = g * "
+             << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] / fAttrGroup << ";\n";
+         out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
+             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName
+             << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
+         out << SP << SP << SP << OpName << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+             << " + out_offset"
+             << ", &" << OpName << "_m);\n";
 
-         out << SP << SP << SP << outOffset << " += " << fShapeW[0]*fShapeY[2]*fShapeY[3] / fAttrGroup << ";\n";
-         out << SP << SP << "}\n";    // end of group loop
-        
-         } // endif group convolution
+         out << SP << SP << "}\n"; // end of group loop
+      }
 
-          out << SP << "}\n"; // end of batch size loop
+      out << SP << "}\n"; // end of batch size loop
 
     
       if (fNB2 != "") {
