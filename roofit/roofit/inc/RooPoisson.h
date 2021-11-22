@@ -35,6 +35,12 @@ public:
   /// Switch on or off protection against negative means.
   void protectNegativeMean(bool flag = kTRUE) {_protectNegative = flag;}
 
+  /// Get the x variable.
+  RooAbsReal const& getX() const { return x.arg(); }
+
+  /// Get the mean parameter.
+  RooAbsReal const& getMean() const { return mean.arg(); }
+
 protected:
 
   RooRealProxy x ;
