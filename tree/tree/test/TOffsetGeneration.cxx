@@ -49,6 +49,8 @@ protected:
          tree->Fill();
       }
       file->Write();
+      file->Close();
+      delete file;
 
       file = new TFile("TOffsetGeneration3.root", "RECREATE");
       tree = new TTree("tree", "A test tree");
