@@ -617,12 +617,12 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     //  WVE - Patch to allow customization of optimization level per component pdf
     if (_funcClone->getAttribute("NoOptimizeLevel1")) {
       coutI(Minimization) << " Optimization customization: Level-1 constant-term optimization prohibited by attribute NoOptimizeLevel1 set on top-level pdf  " 
-                          << funcClone->IsA()->GetName() << "::" << funcClone->GetName() << endl ;
+                          << _funcClone->IsA()->GetName() << "::" << _funcClone->GetName() << endl ;
       return ;
     }
     if (_funcClone->getAttribute("NoOptimizeLevel2")) {
       coutI(Minimization) << " Optimization customization: Level-2 constant-term optimization prohibited by attribute NoOptimizeLevel2 set on top-level pdf  " 
-                          << funcClone->IsA()->GetName() << "::" << funcClone->GetName() << endl ;
+                          << _funcClone->IsA()->GetName() << "::" << _funcClone->GetName() << endl ;
       applyTrackingOpt=kFALSE ;
     }
     
