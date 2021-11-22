@@ -162,8 +162,8 @@ public:
          fAttrKernelShape.resize(2);
          fAttrKernelShape[0] = fShapeX[2];
          fAttrKernelShape[1] = fShapeX[3];
-         fAttrAutopad == "NOTSET";
-         assert(fAttrPads.empty());
+         fAttrAutopad = "VALID";
+         fAttrPads = {0, 0, 0, 0};
          assert(fAttrStrides.empty());
       }
       // find shape of Y and add it in the list of intermidiate tensors
