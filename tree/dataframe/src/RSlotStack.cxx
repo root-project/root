@@ -24,6 +24,7 @@ void ROOT::Internal::RDF::RSlotStack::ReturnSlot(unsigned int slot)
 {
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
    assert(fStack.size() < fSize && "Trying to put back a slot to a full stack!");
+   (void)fSize;
    fStack.push(slot);
 }
 
