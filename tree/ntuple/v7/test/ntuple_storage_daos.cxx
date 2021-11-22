@@ -1,8 +1,13 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RPageStorageDaos.hxx>
+#include "ROOTUnitTestSupport.h"
 
 TEST(RPageStorageDaos, Basics)
 {
+   ROOTUnitTestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
+   diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos", "The DAOS backend is experimental and still under development.", false);
+
    std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
 
    auto model = RNTupleModel::Create();
