@@ -571,62 +571,60 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
     EveElements.prototype.makeCalo2D = function(calo2D, rnrData)
     {
-        let nSquares =  rnrData.vtxBuff.length / 12;
-        let nTriang = 2* nSquares;
+       let body = new THREE.BufferGeometry();
+       if (rnrData.vtxBuff) {
+          let nSquares = rnrData.vtxBuff.length / 12;
+          let nTriang = 2 * nSquares;
 
-        let idxBuff =  new Uint16Array(nTriang * 3);
-        for (let s = 0; s < nSquares; ++s)
-        {
-            let boff = s * 6;
-            let ioff = s * 4;
+          let idxBuff = new Uint16Array(nTriang * 3);
+          for (let s = 0; s < nSquares; ++s) {
+             let boff = s * 6;
+             let ioff = s * 4;
 
-            // first triangle
-            idxBuff[boff    ] = ioff;
-            idxBuff[boff + 1] = ioff + 1 ;
-            idxBuff[boff + 2] = ioff + 2;
+             // first triangle
+             idxBuff[boff] = ioff;
+             idxBuff[boff + 1] = ioff + 1;
+             idxBuff[boff + 2] = ioff + 2;
 
-            // second triangle
-            idxBuff[boff + 3] = ioff + 2;
-            idxBuff[boff + 4] = ioff + 3;
-            idxBuff[boff + 5] = ioff;
-        }
-        let idcs = new THREE.BufferAttribute(idxBuff,1);
+             // second triangle
+             idxBuff[boff + 3] = ioff + 2;
+             idxBuff[boff + 4] = ioff + 3;
+             idxBuff[boff + 5] = ioff;
+          }
+          let idcs = new THREE.BufferAttribute(idxBuff, 1);
 
-        let body = new THREE.BufferGeometry();
-        body.setAttribute('position', new THREE.BufferAttribute( rnrData.vtxBuff, 3 ));
-        body.setIndex(new THREE.BufferAttribute(idxBuff,1));
-        body.computeVertexNormals();
+          body.setAttribute('position', new THREE.BufferAttribute(rnrData.vtxBuff, 3));
+          body.setIndex(new THREE.BufferAttribute(idxBuff, 1));
+          body.computeVertexNormals();
 
-        let ci = rnrData.idxBuff;
-        let colBuff = new Float32Array( nSquares * 4 *3 );
-        let off = 0;
-        for (let x = 0; x < ci.length; ++x)
-        {
-            let slice = ci[x*2];
-            let sliceColor =  calo2D.sliceColors[slice];
-            let tc = new THREE.Color(jsrp.getColor(sliceColor));
-            for (let i = 0; i < 4; ++i)
-            {
-                colBuff[off    ] = tc.r;
+          let ci = rnrData.idxBuff;
+          let colBuff = new Float32Array(nSquares * 4 * 3);
+          let off = 0;
+          for (let x = 0; x < ci.length; ++x) {
+             let slice = ci[x * 2];
+             let sliceColor = calo2D.sliceColors[slice];
+             let tc = new THREE.Color(jsrp.getColor(sliceColor));
+             for (let i = 0; i < 4; ++i) {
+                colBuff[off] = tc.r;
                 colBuff[off + 1] = tc.g;
                 colBuff[off + 2] = tc.b;
                 off += 3;
-            }
-        }
-        body.setAttribute( 'color', new THREE.BufferAttribute( colBuff, 3 ) );
+             }
+          }
+          body.setAttribute('color', new THREE.BufferAttribute(colBuff, 3));
+       }
+       let material = new THREE.MeshPhongMaterial({
+          color: 0xffffff,
+          flatShading: true,
+          vertexColors: THREE.VertexColors,
+          shininess: 0
+       });
+       let mesh = new THREE.Mesh(body, material);
 
-        let material = new THREE.MeshPhongMaterial( {
-	    color: 0xffffff,
-	    flatShading: true,
-	    vertexColors: THREE.VertexColors,
-	    shininess: 0
-        } );
-        let mesh = new THREE.Mesh(body, material);
+       mesh.get_ctrl = function () { return new Calo2DControl(mesh); };
+       mesh.dispose = function () { this.geometry.dispose(); this.material.dispose(); };
 
-        mesh.get_ctrl = function() { return new Calo2DControl(mesh); };
-        mesh.dispose  = function() { this.geometry.dispose(); this.material.dispose(); };
-
-        return mesh;
+       return mesh;
     }
 
     function Calo2DControl(mesh)
@@ -804,55 +802,52 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
     EveElements.prototype.makeCalo3D = function(calo3D, rnr_data)
     {
-        let vBuff = rnr_data.vtxBuff;
-        let protoSize = 6 * 2 * 3;
-        let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
-        let nBox = vBuff.length / 24;
-        let idxBuff = [];
-        for (let i = 0; i < nBox; ++i)
-        {
-            for (let c = 0; c < protoSize; c++) {
+       let body = new THREE.BufferGeometry();
+       if (rnr_data.vtxBuff) {
+          let vBuff = rnr_data.vtxBuff;
+          let protoSize = 6 * 2 * 3;
+          let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
+          let nBox = vBuff.length / 24;
+          let idxBuff = [];
+          for (let i = 0; i < nBox; ++i) {
+             for (let c = 0; c < protoSize; c++) {
                 let off = i * 8;
                 idxBuff.push(protoIdcs[c] + off);
-            }
-        }
+             }
+          }
 
-        let body = new THREE.BufferGeometry();
-        body.setAttribute('position', new THREE.BufferAttribute( vBuff, 3 ));
-        body.setIndex( idxBuff );
+          body.setAttribute('position', new THREE.BufferAttribute(vBuff, 3));
+          body.setIndex(idxBuff);
 
-        let material = 0;
-
-        let ci = rnr_data.idxBuff;
-        let off = 0
-        let colBuff = new Float32Array( nBox * 8 *3 );
-        for (let x = 0; x < nBox; ++x)
-        {
-            let slice = ci[x*2];
-            let sliceColor =  calo3D.sliceColors[slice];
-            let tc = new THREE.Color(jsrp.getColor(sliceColor));
-            for (let i = 0; i < 8; ++i)
-            {
-                colBuff[off    ] = tc.r;
+          let ci = rnr_data.idxBuff;
+          let off = 0
+          let colBuff = new Float32Array(nBox * 8 * 3);
+          for (let x = 0; x < nBox; ++x) {
+             let slice = ci[x * 2];
+             let sliceColor = calo3D.sliceColors[slice];
+             let tc = new THREE.Color(jsrp.getColor(sliceColor));
+             for (let i = 0; i < 8; ++i) {
+                colBuff[off] = tc.r;
                 colBuff[off + 1] = tc.g;
                 colBuff[off + 2] = tc.b;
                 off += 3;
-            }
-        }
-        body.setAttribute( 'color', new THREE.BufferAttribute( colBuff, 3 ) );
-        material = new THREE.MeshPhongMaterial( {
-            color: 0xffffff,
-            flatShading: true,
-            vertexColors: THREE.VertexColors,
-            shininess: 0
-        } );
+             }
+          }
+          body.setAttribute('color', new THREE.BufferAttribute(colBuff, 3));
+       }
+       let material = new THREE.MeshPhongMaterial({
+          color: 0xffffff,
+          flatShading: true,
+          vertexColors: THREE.VertexColors,
+          shininess: 0
+       });
 
 
-        let mesh = new THREE.Mesh(body, material);
-        mesh.get_ctrl = function() { return new Calo3DControl(mesh); };
-        mesh.dispose  = function() { this.geometry.dispose(); this.material.dispose(); };
+       let mesh = new THREE.Mesh(body, material);
+       mesh.get_ctrl = function () { return new Calo3DControl(mesh); };
+       mesh.dispose = function () { this.geometry.dispose(); this.material.dispose(); };
 
-        return mesh;
+       return mesh;
     }
 
     function Calo3DControl(mesh)
