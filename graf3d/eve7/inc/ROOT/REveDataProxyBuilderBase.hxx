@@ -50,7 +50,7 @@ public:
 
    virtual void CollectionBeingDestroyed(const REveDataCollection*);
 
-   void Build();
+   virtual void Build();
    // virtual void Build(REveElement* product);
 
    virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*);
