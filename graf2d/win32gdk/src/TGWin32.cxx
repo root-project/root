@@ -976,6 +976,10 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    GdkGCValues gcvals;
    int i;
 
+   HWND hDesktop = ::GetDesktopWindow();
+   if (!IsWindow(hDesktop) || !IsWindowVisible(hDesktop))
+      return -1;
+
    if (!Init((void*)dpyName)) {
       return -1;
    }
@@ -3100,23 +3104,24 @@ void TGWin32::SetDrawMode(EDrawMode mode)
    int i;
 
    switch (mode) {
-   case kCopy:
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_function(gGClist[i], GDK_COPY);
-      }
-      break;
-
-   case kXor:
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_function(gGClist[i], GDK_XOR);
-      }
-      break;
-
-   case kInvert:
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_function(gGClist[i], GDK_INVERT);
-      }
-      break;
+      case kCopy:
+         for (i = 0; i < kMAXGC; i++) {
+            if (gGClist[i])
+               gdk_gc_set_function(gGClist[i], GDK_COPY);
+         }
+         break;
+      case kXor:
+         for (i = 0; i < kMAXGC; i++) {
+            if (gGClist[i])
+               gdk_gc_set_function(gGClist[i], GDK_XOR);
+         }
+         break;
+      case kInvert:
+         for (i = 0; i < kMAXGC; i++) {
+            if (gGClist[i])
+               gdk_gc_set_function(gGClist[i], GDK_INVERT);
+         }
+         break;
    }
    fDrawMode = mode;
 }
