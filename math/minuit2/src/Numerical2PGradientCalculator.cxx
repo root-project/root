@@ -175,16 +175,24 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          {
 #ifdef _OPENMP
             // must create thread-local MnPrint instances when printing inside threads
-            MnPrint print("Numerical2PGradientCalculator[OpenMP]");
+            MnPrint printtl("Numerical2PGradientCalculator[OpenMP]");
 #endif
             if (i == 0 && j == 0) {
+#ifdef _OPENMP
+               printtl.Debug([&](std::ostream &os) {
+#else
                print.Debug([&](std::ostream &os) {
+#endif
                   os << std::setw(10) << "parameter" << std::setw(6) << "cycle" << std::setw(15) << "x" << std::setw(15)
                      << "step" << std::setw(15) << "f1" << std::setw(15) << "f2" << std::setw(15) << "grd"
                      << std::setw(15) << "g2" << std::endl;
                });
             }
+#ifdef _OPENMP
+            printtl.Debug([&](std::ostream &os) {
+#else
             print.Debug([&](std::ostream &os) {
+#endif
                const int pr = os.precision(13);
                const int iext = Trafo().ExtOfInt(i);
                os << std::setw(10) << Trafo().Name(iext) << std::setw(5) << j << "  " << x(i) << " " << step << " "
