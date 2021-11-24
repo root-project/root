@@ -333,17 +333,36 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
    R__LOG_DEBUG(10, RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
 
-   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
-   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
-   if (errorCode != TInterpreter::EErrorCode::kNoError) {
-      std::string msg = "\nAn error occurred during just-in-time compilation";
-      if (!context.empty())
-         msg += " in " + context;
-      msg += ". The lines above might indicate the cause of the crash\nAll RDF objects that have not run their event "
-             "loop yet should be considered in an invalid state.\n";
-      throw std::runtime_error(msg);
+   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError); // storage for cling errors
+
+   auto callCalc = [&errorCode, &context](const std::string &codeSlice) {
+      gInterpreter->Calc(codeSlice.c_str(), &errorCode);
+      if (errorCode != TInterpreter::EErrorCode::kNoError) {
+         std::string msg = "\nAn error occurred during just-in-time compilation";
+         if (!context.empty())
+            msg += " in " + context;
+         msg +=
+            ". The lines above might indicate the cause of the crash\nAll RDF objects that have not run their event "
+            "loop yet should be considered in an invalid state.\n";
+         throw std::runtime_error(msg);
+      }
+   };
+
+   // Call Calc every 1000 newlines in order to avoid jitting a very large function body, which is slow:
+   // see https://github.com/root-project/root/issues/9312 and https://github.com/root-project/root/issues/7604
+   std::size_t substr_start = 0;
+   std::size_t substr_end = 0;
+   while (substr_end != std::string::npos && substr_start != code.size() - 1) {
+      for (std::size_t i = 0u; i < 1000u && substr_end != std::string::npos; ++i) {
+         substr_end = code.find('\n', substr_end + 1);
+      }
+      const std::string subs = code.substr(substr_start, substr_end - substr_start);
+      substr_start = substr_end;
+
+      callCalc(subs);
    }
-   return res;
+
+   return 0; // we used to forward the return value of Calc, but that's not possible anymore.
 }
 
 bool IsInternalColumn(std::string_view colName)
