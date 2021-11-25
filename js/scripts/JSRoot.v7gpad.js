@@ -466,7 +466,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
       this.nticks3 = Math.floor(ndiv/10000);
 
-      if (this.nticks > 7) this.nticks = 7;
+      if (this.nticks > 20) this.nticks = 20;
 
       let gr_range = Math.abs(this.gr_range) || 100;
 
@@ -1389,7 +1389,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.input("set symlog constant", this.symlog || 10, "float").then(v => this.changeAxisAttr(2,"symlog", v)));
       menu.add("endsub:");
 
-      menu.add("Divisions", () => menu.input("Set axis devisions", this.v7EvalAttr("ndiv", 508), "int").then(val => this.changeAxisAttr(1, "ndiv", val)));
+      menu.add("Divisions", () => menu.input("Set axis devisions", this.v7EvalAttr("ndiv", 508), "int").then(val => this.changeAxisAttr(2, "ndiv", val)));
 
       menu.add("sub:Ticks");
       menu.addRColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color", col));
@@ -2157,7 +2157,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getLayerSvg("primitives_layer").select(".root_frame");
 
-      let top_rect, main_g;
+      let top_rect, main_svg;
 
       if (this.draw_g.empty()) {
 
@@ -2172,13 +2172,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // append for the moment three layers - for drawing and axis
          this.draw_g.append('svg:g').attr('class','grid_layer');
 
-         main_g = this.draw_g.append('svg:g').attr('class','main_layer');
+         main_svg = this.draw_g.append('svg:svg')
+                           .attr('class','main_layer')
+                           .attr("x", 0)
+                           .attr("y", 0)
+                           .attr('overflow', 'hidden');
 
          this.draw_g.append('svg:g').attr('class','axis_layer');
          this.draw_g.append('svg:g').attr('class','upper_layer');
       } else {
          top_rect = this.draw_g.select("rect");
-         main_g = this.draw_g.select(".main_layer");
+         main_svg = this.draw_g.select(".main_layer");
       }
 
       this.axes_drawn = false;
@@ -2194,7 +2198,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_g.attr("clip-path", `path('M0,0H${w}V${h}H0Z')`);
+      main_svg.attr("width", w)
+              .attr("height", h)
+              .attr("viewBox", "0 0 " + w + " " + h);
 
       let promise = Promise.resolve(true);
 
@@ -3076,7 +3082,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_parent.select(".primitives_layer")
-             .append("svg:g")
+             .append("svg:svg") // here was g before, svg used to blend all drawin outside
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
@@ -3104,8 +3110,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
       svg_pad.attr("display", pad_visible ? null : "none")
-             .attr("transform", `translate(${x},${y})`)
-             .attr("clip-path", `path('M0,0H${w}V${h}H0Z')`)
+             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
+             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
+             .attr("x", x)    // due to svg
+             .attr("y", y)   // due to svg
+             .attr("width", w)    // due to svg
+             .attr("height", h)   // due to svg
              .property('draw_x', x) // this is to make similar with canvas
              .property('draw_y', y)
              .property('draw_width', w)

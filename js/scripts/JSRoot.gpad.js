@@ -139,7 +139,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
       this.nticks3 = Math.floor(ndiv/10000);
 
-      if (axis && !is_gaxis && (this.nticks > 7)) this.nticks = 7;
+      if (axis && !is_gaxis && (this.nticks > 20)) this.nticks = 20;
 
       let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
       if (gr_range<=0) gr_range = 100;
@@ -747,7 +747,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // first draw ticks
 
-      let handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
+      const handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
 
       this.drawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
 
@@ -1283,7 +1283,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                                         logcheckmin: this.swap_xy,
                                         logminfactor: 0.0001 });
 
-      this.x_handle.assignFrameMembers(this,"x");
+      this.x_handle.assignFrameMembers(this, "x");
 
       this.y_handle = new TAxisPainter(this.getDom(), this.yaxis, true);
       this.y_handle.setPadName(this.getPadName());
@@ -1296,7 +1296,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                                         log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
                                         logminfactor: 3e-4 });
 
-      this.y_handle.assignFrameMembers(this,"y");
+      this.y_handle.assignFrameMembers(this, "y");
 
       this.setRootPadRange(pad);
    }
@@ -1861,7 +1861,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getLayerSvg("primitives_layer").select(".root_frame");
 
-      let top_rect, main_g;
+      let top_rect, main_svg;
 
       if (this.draw_g.empty()) {
 
@@ -1876,14 +1876,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // append for the moment three layers - for drawing and axis
          this.draw_g.append('svg:g').attr('class','grid_layer');
 
-         // main layer with the clipping
-         main_g = this.draw_g.append('svg:g').attr('class','main_layer');
+         main_svg = this.draw_g.append('svg:svg')
+                           .attr('class','main_layer')
+                           .attr("x", 0)
+                           .attr("y", 0)
+                           .attr('overflow', 'hidden');
 
          this.draw_g.append('svg:g').attr('class', 'axis_layer');
          this.draw_g.append('svg:g').attr('class', 'upper_layer');
       } else {
          top_rect = this.draw_g.select("path");
-         main_g = this.draw_g.select(".main_layer");
+         main_svg = this.draw_g.select(".main_layer");
       }
 
       this.axes_drawn = false;
@@ -1894,7 +1897,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_g.attr("clip-path", `path('M0,0H${w}V${h}H0Z')`);
+      main_svg.attr("width", w)
+              .attr("height", h)
+              .attr("viewBox", "0 0 " + w + " " + h);
 
       if (JSROOT.batch_mode) return;
 
@@ -1966,8 +1971,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (typeof main.fillPaletteMenu == 'function')
                main.fillPaletteMenu(menu);
 
-         if (faxis)
+         if (faxis) {
+            let handle = this[kind+"_handle"];
+
+            if (handle && (handle.kind == "labels") && (faxis.fNbins > 20))
+               menu.add("Find label", () => menu.input("Label id").then(id => {
+                  if (!id) return;
+                  for (let bin = 0; bin < faxis.fNbins; ++bin) {
+                     let lbl = handle.formatLabels(bin);
+                     if (lbl == id)
+                        return this.zoom(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin+5));
+                   }
+               }));
+
             menu.addTAxisMenu(main || this, faxis, kind);
+         }
          return true;
       }
 
@@ -2716,7 +2734,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_can.select(".primitives_layer")
-             .append("svg:g")
+             .append("svg:svg") // here was g before, svg used to blend all drawin outside
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
@@ -2743,8 +2761,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
       svg_pad.attr("display", pad_visible ? null : "none")
-             .attr("transform", `translate(${x},${y})`)
-             .attr("clip-path", `path('M0,0H${w}V${h}H0Z')`)
+             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
+             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
+             .attr("x", x)        // due to svg
+             .attr("y", y)        // due to svg
+             .attr("width", w)    // due to svg
+             .attr("height", h)   // due to svg
              .property('draw_x', x) // this is to make similar with canvas
              .property('draw_y', y)
              .property('draw_width', w)
@@ -2936,7 +2958,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (indx >= this._num_primitives) {
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
-            if (spenttm > 1000) console.log("Canvas drawing took " + (spenttm*1e-3).toFixed(2) + "s");
+            if (spenttm > 1000) console.log(`Canvas ${this.pad ? this.pad.fName : "---"} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
             delete this._start_tm;
          }
 
@@ -3907,13 +3929,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (this.painters && (this.painters.length > 0)) {
                menu.add("separator");
                let shown = [];
-               this.painters.forEach(pp => {
+               this.painters.forEach((pp,indx) => {
                   let obj = pp ? pp.getObject() : null;
                   if (!obj || (shown.indexOf(obj) >= 0)) return;
                   let name = ('_typename' in obj) ? (obj._typename + "::") : "";
                   if ('fName' in obj) name += obj.fName;
-                  if (!name.length) name = "item" + n;
-                  menu.add(name, n, this.itemContextMenu);
+                  if (!name.length) name = "item" + indx;
+                  menu.add(name, indx, this.itemContextMenu);
                });
             }
 

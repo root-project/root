@@ -1,20 +1,32 @@
 # JSROOT changelog
 
-## Changes in dev
-1. Fix problem with curved TGraph drawings (#218)
-2. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis
-3. Provide JSROOT.Painter.setDefaultDrawOpt to change default draw option
-4. Provide example of custom entries in context menu
-5. Fix problems with TGraph drawing updates
-6. Provide alternative location for zstd-codec
-7. Allows to use JSROOT.define() in external scripts
-8. Fix - properly draw TH1 with line option when fill attributes specified
-9. Fix error in objects drawing from the inspector
-10. Optmize TH2 col drawings to produce smaller SVG
-11. For sub-pads containers use svg:g with clip-path instead of svg:svg
-12. Let skip HEAD requests when reading files (#223)
-13. Fully redesing TLatex parsing, use many svg elements instead of plain text/tspan
-14. Make TLatex reliably working in node.js, does not depend from availability of canvas component
+## Changes in 6.3.1
+1. Fix bug with col draw option in TH2/RH2
+
+
+## Changes in 6.3.0
+1. Fully rewrite TLatex parsing, use svg elements instead of plain text/tspan
+2. Make TLatex reliably working in node.js, does not depend from availability of canvas component
+3. Many optimizations to produce smaller (and faster) SVG output
+4. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis in 3D plots
+5. Provide "Find label" command in TAxis context menu to zoom into bin region
+6. Allows to use JSROOT.define() in external scripts
+7. Provide JSROOT.Painter.setDefaultDrawOpt() to change class default draw option
+8. Provide example of custom entries in histogram context menu
+9. Provide alternative external location for zstd-codec, let use zstd even when not found locally
+10. Let skip HEAD requests when reading files, adding "^" symbol to file name (#223)
+11. Show long histogram names in stats box when possible
+12. Fix logic how "ndiv" parameter of TAxis is handled, showing really the configured number of ticks
+13. Fix problem with curved TGraph drawings (#218)
+14. Fix problems with TGraph drawing updates
+
+
+## Changes in 6.2.2
+1. Fix - proper fill TH1 which drawn with line option
+2. Fix - object drawing from inspector
+3. Fix - error with filling data of TGeoTrack in "extract tracks" example
+4. Fix - error in pad items context menu
+5. Fix - assigned dropped item name only when new painter created
 
 
 ## Changes in 6.2.1

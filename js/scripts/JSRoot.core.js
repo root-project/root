@@ -98,17 +98,17 @@
    "use strict";
 
    /** @summary JSROOT version id
-     * @desc For the JSROOT release the string in format "major.minor.patch" like "6.0.0"
-     * For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
-   JSROOT.version_id = "dev";
+     * @desc For the JSROOT release the string in format "major.minor.patch" like "6.3.0"
+     * For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.26.00" */
+   JSROOT.version_id = "6.3.1";
 
    /** @summary JSROOT version date
-     * @desc Release date in format day/month/year like "14/01/2021"*/
-   JSROOT.version_date = "5/11/2021";
+     * @desc Release date in format day/month/year like "19/11/2021"*/
+   JSROOT.version_date = "25/11/2021";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
-     * Like "6.0.0 14/01/2021" */
+     * Like "6.3.0 19/11/2021" */
    JSROOT.version = JSROOT.version_id + " " + JSROOT.version_date;
 
    /** @summary Location of JSROOT scripts
@@ -255,7 +255,7 @@
         * @private */
       Latex: {
          /** @summary do not use Latex at all for text drawing */
-         Off: 0, ///
+         Off: 0,
          /** @summary convert only known latex symbols */
          Symbols: 1,
          /** @summary normal latex processing with svg */
@@ -264,7 +264,7 @@
          MathJax: 3,
          /** @summary always use MathJax for text rendering */
          AlwaysMathJax: 4,
-         /** @summary old latex processing with tspan */
+         /** @summary old latex processing with tspan, deprecated, will be removed after release 6.4 */
          Old: 5,
          fromString: function(s) {
             if (!s || (typeof s !== 'string'))
@@ -1348,11 +1348,11 @@
          return Promise.resolve(res);
       }
 
-      function match_url(src) {
+      const match_url = src => {
          if (src == url) return true;
          let indx = src.indexOf(url);
          return (indx > 0) && (indx + url.length == src.length) && (src[indx-1] == "/");
-      }
+      };
 
       if (isstyle) {
          let styles = document.getElementsByTagName('link');
