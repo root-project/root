@@ -828,11 +828,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @ummary translate TLatex and draw inside provided g element
      * @desc use <text> together with normal <path> elements
      * @private */
-   const parseLatex = (painter, node, arg, label, curr) => {
+   const parseLatex = (node, arg, label, curr) => {
 
-      const curr_g = () => { if (!curr.g) curr.g = node.append("svg:g"); return curr.g; }
+      let nelements = 0;
 
-      const shift_position = dx => { curr.x += Math.round(dx); };
+      const currG = () => { if (!curr.g) curr.g = node.append("svg:g"); return curr.g; };
+
+      const shiftX = dx => { curr.x += Math.round(dx); };
 
       const extendPosition = (x1, y1, x2, y2) => {
          if (!curr.rect) {
@@ -849,7 +851,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!curr.parent)
             arg.text_rect = curr.rect;
-      }
+      };
 
       /** Position pos.g node which directly attached to curr.g and uses curr.g coordinates */
       const positionGNode = (pos, x, y, inside_gg) => {
@@ -869,18 +871,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             extendPosition(curr.x + pos.rect.x1, curr.y + pos.rect.y1, curr.x + pos.rect.x2, curr.y + pos.rect.y2);
          else
             extendPosition(pos.rect.x1, pos.rect.y1, pos.rect.x2, pos.rect.y2);
-      }
+      };
 
       /** Create special sub-container for elements like sqrt or braces  */
       const createGG = () => {
-         let gg = curr_g().append("svg:g");
+         let gg = currG();
+
+         // this is indicator that gg element will be the only one, one can use directly main container
+         if ((nelements == 1) && !label && !curr.x && !curr.y) {
+            return gg;
+         }
+
+         gg = gg.append("svg:g");
 
          if (curr.y)
             gg.attr('transform',`translate(${curr.x},${curr.y})`);
          else if (curr.x)
             gg.attr('transform',`translate(${curr.x})`);
          return gg;
-      }
+      };
 
       const extractSubLabel = (check_first, lbrace, rbrace) => {
          let pos = 0, n = 1, err = false;
@@ -917,10 +926,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       };
 
       const createSubPos = fscale => {
-         return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), bold: curr.bold, italic: curr.italic, color: curr.color, font: curr.font, parent: curr };
+         return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter };
       };
-
-      let isany = false;
 
       while (label) {
 
@@ -933,27 +940,34 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (best > 0) {
 
-            let alone = (best == label.length) && !isany && !found;
+            let alone = (best == label.length) && (nelements == 0) && !found;
+
+            nelements++;
 
             let s = translateLaTeX(label.substr(0, best));
             if ((s.length > 0) || alone) {
                // if single text element created, place it directly in the node
-               let g = curr.g || (alone ? node : curr_g()),
+               let g = curr.g || (alone ? node : currG()),
                    elem = g.append("svg:text");
 
                if (alone && !curr.g) curr.g = elem;
 
-               if (curr.font)
-                  curr.font.setFont(elem, 'without-size');
-
-               if (curr.color || arg.color) elem.attr("fill", curr.color || arg.color);
-               if (curr.fsize) elem.attr("font-size", Math.round(curr.fsize));
+               // apply font attributes only once, inherited by all other elements
+               if (curr.ufont)
+                  curr.font.setFont(curr.g /*, 'without-size' */);
 
                if (curr.bold !== undefined)
-                  elem.attr('font-weight', curr.bold ? 'bold' : 'normal');
+                  curr.g.attr('font-weight', curr.bold ? 'bold' : 'normal');
 
                if (curr.italic !== undefined)
-                  elem.attr('font-style', curr.italic ? 'italic' : 'normal');
+                  curr.g.attr('font-style', curr.italic ? 'italic' : 'normal');
+
+               // set fill color directly to element
+               elem.attr("fill", curr.color || arg.color || null);
+
+               // set font size directly to element to avoid complex control
+               if (curr.fisze !== curr.font.size)
+                  elem.attr("font-size", Math.round(curr.fsize));
 
                elem.text(s);
 
@@ -970,7 +984,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                extendPosition(curr.x, curr.last_y1, curr.x + rect.width, curr.last_y2);
 
                if (!alone) {
-                  shift_position(rect.width);
+                  shiftX(rect.width);
                } else if (curr.deco) {
                   elem.attr('text-decoration', curr.deco);
                   delete curr.deco; // inform that decoration was applied
@@ -983,17 +997,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // remove preceeding block and tag itself
          label = label.substr(best + found.name.length);
 
-         isany = true;
+         nelements++;
 
          if (found.accent) {
             let sublabel = extractSubLabel();
             if (sublabel === -1) return false;
 
-            let gg = createGG();
+            let gg = createGG(),
+                subpos = createSubPos();
 
-            let subpos = createSubPos();
-
-            parseLatex(painter, gg, arg, sublabel, subpos);
+            parseLatex(gg, arg, sublabel, subpos);
 
             let minw = curr.fsize*0.6, xpos = 0,
                 w = subpos.rect.width,
@@ -1024,7 +1037,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                default: createPath(gg).attr("d",`M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
             }
 
-            shift_position(subpos.rect.width);
+            shiftX(subpos.rect.width);
 
             continue;
          }
@@ -1033,24 +1046,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             curr.twolines = true;
 
-            let gg = createGG();
-
             let line1 = extractSubLabel(), line2 = extractSubLabel(true);
+            if ((line1 === -1) || (line2 === -1)) return false;
 
-            let fscale = (curr.parent && curr.parent.twolines) ? 0.7 : 1;
+            let gg = createGG(),
+                fscale = (curr.parent && curr.parent.twolines) ? 0.7 : 1,
+                subpos1 = createSubPos(fscale);
 
-            let subpos1 = createSubPos(fscale);
+            parseLatex(gg, arg, line1, subpos1);
 
-            parseLatex(painter, gg, arg, line1, subpos1);
+            let path = (found.twolines == 'line') ? createPath(gg) : null,
+                subpos2 = createSubPos(fscale);
 
-            let path;
-
-            if (found.twolines == 'line')
-               path = createPath(gg);
-
-            let subpos2 = createSubPos(fscale);
-
-            parseLatex(painter, gg, arg, line2, subpos2);
+            parseLatex(gg, arg, line2, subpos2);
 
             let w = Math.max(subpos1.rect.width, subpos2.rect.width),
                 dw = subpos1.rect.width - subpos2.rect.width,
@@ -1062,7 +1070,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (path) path.attr("d", `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
 
-            shift_position(w);
+            shiftX(w);
 
             delete curr.twolines;
 
@@ -1096,21 +1104,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          };
 
          if (found.low_up) {
-            let subs = extractLowUp(found.low_up);
+            const subs = extractLowUp(found.low_up);
             if (!subs) return false;
 
-            let pos_up, pos_low;
-
-            let x = curr.x, y1 = -curr.fsize, y2 = 0.25*curr.fsize, w1 = 0, w2 = 0;
+            let pos_up, pos_low,
+                x = curr.x, y1 = -curr.fsize, y2 = 0.25*curr.fsize, w1 = 0, w2 = 0;
 
             if (subs.up) {
                pos_up = createSubPos(0.6);
-               parseLatex(painter, curr_g(), arg, subs.up, pos_up);
+               parseLatex(currG(), arg, subs.up, pos_up);
             }
 
             if (subs.low) {
                pos_low = createSubPos(0.6);
-               parseLatex(painter, curr_g(), arg, subs.low, pos_low);
+               parseLatex(currG(), arg, subs.low, pos_low);
             }
 
             if ((curr.last_y1 !== undefined) && (curr.last_y2 !== undefined)) {
@@ -1127,7 +1134,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                w2 = pos_low.rect.width;
             }
 
-            shift_position(Math.max(w1,w2));
+            shiftX(Math.max(w1,w2));
 
             continue;
          }
@@ -1148,41 +1155,39 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             } else {
                x_up = 3*r; x_low = r;
                path.attr("d",`M0,${Math.round(0.25*h-r)}a${r},${r},0,0,0,${2*r},0v${2*r-h}a${r},${r},0,1,1,${2*r},0`);
+               // path.attr('transform','skewX(-3)'); could use skewX for italic-like style
             }
 
             if (subs.low) {
                let subpos1 = createSubPos(0.6);
-               parseLatex(painter, gg, arg, subs.low, subpos1);
+               parseLatex(gg, arg, subs.low, subpos1);
                positionGNode(subpos1, (x_low - subpos1.rect.width/2), 0.25*h - subpos1.rect.y1, true);
             }
 
             if (subs.up) {
                let subpos2 = createSubPos(0.6);
-               parseLatex(painter, gg, arg, subs.up, subpos2);
+               parseLatex(gg, arg, subs.up, subpos2);
                positionGNode(subpos2, (x_up - subpos2.rect.width/2), -0.75*h - subpos2.rect.y2, true);
             }
 
-            shift_position(w);
+            shiftX(w);
 
             continue;
          }
 
          if (found.braces) {
-            let rbrace = found.right, lbrace = rbrace ? found.name : "{";
+            let rbrace = found.right, lbrace = rbrace ? found.name : "{",
+                sublabel = extractSubLabel(false, lbrace, rbrace),
+                gg = createGG(),
+                subpos = createSubPos(),
+                path1 = createPath(gg);
 
-            let sublabel = extractSubLabel(false, lbrace, rbrace);
+            parseLatex(gg, arg, sublabel, subpos);
 
-            let gg = createGG(), subpos = createSubPos();
-
-            let path1 = createPath(gg);
-
-            parseLatex(painter, gg, arg, sublabel, subpos);
-
-            let path2 = createPath(gg);
-
-            let w = Math.max(2, Math.round(curr.fsize*0.2)),
-               r = subpos.rect, dy = Math.round(r.y2 - r.y1),
-               r_y1 = Math.round(r.y1), r_width = Math.round(r.width);
+            let path2 = createPath(gg),
+                w = Math.max(2, Math.round(curr.fsize*0.2)),
+                r = subpos.rect, dy = Math.round(r.y2 - r.y1),
+                r_y1 = Math.round(r.y1), r_width = Math.round(r.width);
 
             switch (found.braces) {
                case "||":
@@ -1206,7 +1211,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             extendPosition(curr.x, curr.y + r.y1, curr.x + 4*w + r.width, curr.y + r.y2);
 
-            shift_position(4*w + r.width);
+            shiftX(4*w + r.width);
 
             // values used for superscript
             curr.last_y1 = r.y1;
@@ -1216,11 +1221,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          if (found.deco) {
-            let gg = createGG(), sublabel = extractSubLabel(), subpos = createSubPos();
+            let sublabel = extractSubLabel(),
+                gg = createGG(),
+                subpos = createSubPos();
 
             subpos.deco = found.deco;
 
-            parseLatex(painter, gg, arg, sublabel, subpos);
+            parseLatex(gg, arg, sublabel, subpos);
 
             let r = subpos.rect;
 
@@ -1235,7 +1242,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             positionGNode(subpos, 0, 0, true);
 
-            shift_position(r.width);
+            shiftX(r.width);
 
             continue;
          }
@@ -1251,11 +1258,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             else
                subpos.italic = !subpos.italic;
 
-            parseLatex(painter, curr_g(), arg, sublabel, subpos);
+            parseLatex(currG(), arg, sublabel, subpos);
 
             positionGNode(subpos, curr.x, curr.y);
 
-            shift_position(subpos.rect.width);
+            shiftX(subpos.rect.width);
 
             continue;
          }
@@ -1282,14 +1289,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             let subpos = createSubPos();
 
-            parseLatex(painter, curr_g(), arg, sublabel, subpos);
+            parseLatex(currG(), arg, sublabel, subpos);
 
             let shiftx = 0, shifty = 0;
             if (found.name == "kern[") shiftx = foundarg; else shifty = foundarg;
 
             positionGNode(subpos, curr.x + shiftx * subpos.rect.width, curr.y + shifty * subpos.rect.height);
 
-            shift_position(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
+            shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
 
             continue;
          }
@@ -1302,17 +1309,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let subpos = createSubPos();
 
             if (found.name == "#color[")
-               subpos.color = painter.getColor(foundarg);
-            else if (found.name == "#font[")
+               subpos.color = curr.painter.getColor(foundarg);
+            else if (found.name == "#font[") {
                subpos.font = new JSROOT.FontHandler(foundarg);
-            else
+               subpos.ufont = true; // mark that custom font is applied
+            } else
                subpos.fsize *= foundarg;
 
-            parseLatex(painter, curr_g(), arg, sublabel, subpos);
+            parseLatex(currG(), arg, sublabel, subpos);
 
             positionGNode(subpos, curr.x, curr.y);
 
-            shift_position(subpos.rect.width);
+            shiftX(subpos.rect.width);
 
             continue;
          }
@@ -1325,13 +1333,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (found.arg) {
                subpos0 = createSubPos(0.7);
-               parseLatex(painter, gg, arg, foundarg.toString(), subpos0);
+               parseLatex(gg, arg, foundarg.toString(), subpos0);
             }
 
             // placeholder for the sqrt sign
             let path = createPath(gg);
 
-            parseLatex(painter, gg, arg, sublabel, subpos);
+            parseLatex(gg, arg, sublabel, subpos);
 
             let r = subpos.rect,
                 h = Math.round(r.height),
@@ -1348,7 +1356,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             extendPosition(curr.x, curr.y + r.y1-curr.fsize*0.1, curr.x + w + h*0.6, curr.y + r.y2);
 
-            shift_position(w + h*0.6);
+            shiftX(w + h*0.6);
 
             continue;
         }
@@ -1363,9 +1371,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    ltx.produceLatex = function(painter, node, arg) {
 
-      let pos = { lvl: 0, g: node, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, font: arg.font, parent: null };
+      let pos = { lvl: 0, g: node, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, font: arg.font, parent: null, painter: painter };
 
-      return parseLatex(painter, node, arg, arg.text, pos);
+      return parseLatex(node, arg, arg.text, pos);
    }
 
 
