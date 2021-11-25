@@ -35,8 +35,8 @@ class MyClass {};
 # namespace (if the latter is not specified, it defaults to the global
 # namespace, i.e. '::').
 #
-# On the other hand, the decorated function - the pythonizor - must accept
-# either one or two parameters:
+# The decorated function - the pythonizor - must accept either one or two
+# parameters:
 # 1. The class to be pythonized (proxy object where new behaviour can be
 # injected)
 # 2. The fully-qualified name of that class (optional).
@@ -145,8 +145,8 @@ def pair_pythonizor(klass, name):
 # can see this with the print we did inside the pythonizor.
 # Note that we could use the `name` parameter to e.g. further filter which
 # particular instantiations we would like to pythonize.
-p1 = ROOT.std.pair['int','int'](1,2) # prints 'Pythonizing class std::pair<int, int>' 
-p2 = ROOT.std.pair['int','double'](1,2.) # prints 'Pythonizing class std::pair<int, double>'
+p1 = ROOT.std.pair['int','int'](1,2) # prints 'Pythonizing class std::pair<int,int>'
+p2 = ROOT.std.pair['int','double'](1,2.) # prints 'Pythonizing class std::pair<int,double>'
 
 # Note that, to pythonize multiple classes in different namespaces, we can
 # stack multiple @pythonization decorators. For example, if we define these
