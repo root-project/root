@@ -12,7 +12,7 @@ from . import pythonization
 from ._rvec import add_array_interface_property
 
 
-@pythonization("std::vector<", is_prefix=True)
+@pythonization("vector<", ns="std", is_prefix=True)
 def pythonize_stl_vector(klass, name):
     # Parameters:
     # klass: class to be pythonized

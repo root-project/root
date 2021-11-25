@@ -117,7 +117,7 @@ def RTensorGetitem(self, idx):
     return self(idxVec)
 
 
-@pythonization("TMVA::Experimental::RTensor<", is_prefix=True)
+@pythonization("RTensor<", ns="TMVA::Experimental", is_prefix=True)
 def pythonize_rtensor(klass, name):
     # Parameters:
     # klass: class to be pythonized

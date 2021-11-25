@@ -51,7 +51,7 @@ class PythonizationDecorator(unittest.TestCase):
         executed = []
 
         # Define pythonizor function for class
-        @pythonization(fqn)
+        @pythonization(class_name, ns=ns)
         def my_func(klass, name):
             self.assertEqual(klass.__cpp_name__, fqn)
             self.assertEqual(name, fqn)
@@ -81,12 +81,12 @@ class PythonizationDecorator(unittest.TestCase):
             self.assertTrue(name.startswith(prefix))
             executed.append(name)
 
-        # Trigger execution of pythonizors
-        getattr(ROOT, class1)
-        getattr(ROOT, class2)
+        # Trigger execution of pythonizor
+        for class_name in class1, class2:
+            getattr(ROOT, class_name)
 
-        self.assertEqual(executed.pop(0), class1)
-        self.assertEqual(executed.pop(0), class2)
+        for class_name in class1, class2:
+            self.assertEqual(executed.pop(0), class_name)
         self.assertTrue(not executed)
 
     # Test @pythonization('NS::Prefix', is_prefix=True)
@@ -105,13 +105,13 @@ class PythonizationDecorator(unittest.TestCase):
         executed = []
 
         # Define pythonizor function for prefix
-        @pythonization(ns_prefix, is_prefix=True)
+        @pythonization(prefix, ns=ns, is_prefix=True)
         def my_func(klass, name):
             self.assertTrue(klass.__cpp_name__.startswith(ns_prefix))
             self.assertTrue(name.startswith(ns_prefix))
             executed.append(name)
 
-        # Trigger execution of pythonizors
+        # Trigger execution of pythonizor
         getattr(getattr(ROOT, ns), class1)
         getattr(getattr(ROOT, ns), class2)
 
@@ -119,17 +119,16 @@ class PythonizationDecorator(unittest.TestCase):
         self.assertEqual(executed.pop(0), fqn2)
         self.assertTrue(not executed)
 
-    # Test @pythonization(['MyClass', 'NS::MyClass'])
-    def test_multiple_classes(self):
+    # Test @pythonization(['OneClass', 'AnotherClass'])
+    def test_multiple_classes_global(self):
         # Define test classes
-        class_name = 'MyClass2'
-        ns = 'NS'
-        fqn = ns + '::' + class_name
-        self._define_class(class_name)
-        self._define_class(class_name, ns)
+        class1 = 'MyClass2'
+        class2 = 'MyClass3'
+        for class_name in class1, class2:
+            self._define_class(class_name)
 
         executed = []
-        target_classes = [ class_name, fqn ]
+        target_classes = [ class1, class2 ]
 
         # Define pythonizor function for classes
         @pythonization(target_classes)
@@ -139,27 +138,54 @@ class PythonizationDecorator(unittest.TestCase):
             executed.append(name)
 
         # Trigger execution of pythonizor
-        getattr(ROOT, class_name)
-        getattr(getattr(ROOT, ns), class_name)
+        for class_name in class1, class2:
+            getattr(ROOT, class_name)
 
-        self.assertEqual(executed.pop(0), class_name)
-        self.assertEqual(executed.pop(0), fqn)
+        for class_name in class1, class2:
+            self.assertEqual(executed.pop(0), class_name)
         self.assertTrue(not executed)
 
-    # Test @pythonization(['Prefix', 'NS::Prefix'], is_prefix=True)
-    def test_multiple_prefixes(self):
+    # Test @pythonization(['OneClass', 'AnotherClass'], ns='NS')
+    def test_multiple_classes_in_ns(self):
         # Define test classes
+        class1 = 'MyClass4'
+        class2 = 'MyClass5'
         ns = 'NS'
-        prefix = 'Prefix'
-        ns_prefix = ns + '::' + prefix
-        class1 = prefix + 'Class11'
-        class2 = prefix + 'Class22'
+        fqns = []
         for class_name in class1, class2:
-            self._define_class(class_name)
             self._define_class(class_name, ns)
+            fqns.append(ns + '::' + class_name)
 
         executed = []
-        target_prefixes = [ prefix, ns_prefix ]
+        target_classes = [ class1, class2 ]
+
+        # Define pythonizor function for classes
+        @pythonization(target_classes, ns=ns)
+        def my_func(klass, name):
+            self.assertTrue(klass.__cpp_name__ in fqns)
+            self.assertTrue(name in fqns)
+            executed.append(name)
+
+        # Trigger execution of pythonizor
+        for class_name in class1, class2:
+            getattr(getattr(ROOT, ns), class_name)
+
+        for class_name in fqns:
+            self.assertEqual(executed.pop(0), class_name)
+        self.assertTrue(not executed)
+
+    # Test @pythonization(['OnePrefix', 'AnotherPrefix'], is_prefix=True)
+    def test_multiple_prefixes_global(self):
+        # Define test classes
+        prefix1 = 'Prefix1'
+        prefix2 = 'Prefix2'
+        class1 = prefix1 + 'Class1'
+        class2 = prefix2 + 'Class2'
+        for class_name in class1, class2:
+            self._define_class(class_name)
+
+        executed = []
+        target_prefixes = [ prefix1, prefix2 ]
 
         # Define pythonizor function for prefixes
         @pythonization(target_prefixes, is_prefix=True)
@@ -168,59 +194,110 @@ class PythonizationDecorator(unittest.TestCase):
             self.assertTrue(any(name.startswith(p) for p in target_prefixes))
             executed.append(name)
 
-        # Trigger execution of pythonizors
+        # Trigger execution of pythonizor
         for class_name in class1, class2:
             getattr(ROOT, class_name)
-            getattr(getattr(ROOT, ns), class_name)
 
         for class_name in class1, class2:
            self.assertEqual(executed.pop(0), class_name)
+        self.assertTrue(not executed)
+
+    # Test @pythonization(['OnePrefix', 'AnotherPrefix'], ns='NS', is_prefix=True)
+    def test_multiple_prefixes_in_ns(self):
+        # Define test classes
+        ns = 'NS'
+        prefix1 = 'Prefix1'
+        prefix2 = 'Prefix2'
+        class1 = prefix1 + 'Class1'
+        class2 = prefix2 + 'Class2'
+        ns_prefixes = []
+        for class_name in class1, class2:
+            self._define_class(class_name, ns)
+        for prefix in prefix1, prefix2:
+            ns_prefixes.append(ns + '::' + prefix)
+
+        executed = []
+        target_prefixes = [ prefix1, prefix2 ]
+
+        # Define pythonizor function for prefixes
+        @pythonization(target_prefixes, ns=ns, is_prefix=True)
+        def my_func(klass, name):
+            self.assertTrue(any(klass.__cpp_name__.startswith(p) for p in ns_prefixes))
+            self.assertTrue(any(name.startswith(p) for p in ns_prefixes))
+            executed.append(name)
+
+        # Trigger execution of pythonizor
+        for class_name in class1, class2:
+            getattr(getattr(ROOT, ns), class_name)
+
+        for class_name in class1, class2:
            self.assertEqual(executed.pop(0), ns + '::' + class_name)
         self.assertTrue(not executed)
 
-    # Test @pythonization(['', 'NS::'], is_prefix=True)
-    def test_all_classes_in_ns_prefixes(self):
+    # Test @pythonization('', is_prefix=True)
+    def test_all_global_classes_prefix(self):
+        # Define test classes
+        class1 = 'Foo'
+        class2 = 'Bar'
+        for class_name in class1, class2:
+            self._define_class(class_name)
+
+        executed = []
+        target_prefix = ''
+
+        # Define pythonizor function for prefix.
+        # Match all classes in global namespace
+        @pythonization(target_prefix, is_prefix=True)
+        def my_func(klass, name):
+            self.assertTrue(klass.__cpp_name__.startswith(target_prefix))
+            self.assertTrue(name.startswith(target_prefix))
+            executed.append(name)
+
+        # Trigger execution of pythonizor
+        for class_name in class1, class2:
+            getattr(ROOT, class_name)
+
+        for class_name in class1, class2:
+           self.assertEqual(executed.pop(0), class_name)
+        self.assertTrue(not executed)
+
+    # Test @pythonization('', ns='NS', is_prefix=True)
+    def test_all_classes_in_ns_prefix(self):
         # Define test classes
         ns = 'NS'
         class1 = 'Foo'
         class2 = 'Bar'
         for class_name in class1, class2:
-            self._define_class(class_name)
             self._define_class(class_name, ns)
 
         executed = []
-        target_prefixes = [ '',       # matches all classes in global namespace
-                            ns + '::' # matches all classes in `ns` namespace
-                          ]
+        target_prefix = ''
+        ns_prefix = ns + '::' + target_prefix
 
-        # Define pythonizor function for prefixes
-        @pythonization(target_prefixes, is_prefix=True)
+        # Define pythonizor function for prefix.
+        # Match all classes in NS namespace
+        @pythonization(target_prefix, ns=ns, is_prefix=True)
         def my_func(klass, name):
-            self.assertTrue(any(klass.__cpp_name__.startswith(p) for p in target_prefixes))
-            self.assertTrue(any(name.startswith(p) for p in target_prefixes))
+            self.assertTrue(klass.__cpp_name__.startswith(ns_prefix))
+            self.assertTrue(name.startswith(ns_prefix))
             executed.append(name)
 
-        # Trigger execution of pythonizors
+        # Trigger execution of pythonizor
         for class_name in class1, class2:
-            getattr(ROOT, class_name)
             getattr(getattr(ROOT, ns), class_name)
 
         for class_name in class1, class2:
-           self.assertEqual(executed.pop(0), class_name)
-           self.assertEqual(executed.pop(0), ns + '::' + class_name)
+            self.assertEqual(executed.pop(0), ns + '::' + class_name)
         self.assertTrue(not executed)
 
-    # Test @pythonization(['MyClass', 'MyClass', 'NS::MyClass', 'NS::MyClass'])
+    # Test @pythonization(['MyClass', 'MyClass'])
     def test_repeated_targets(self):
-        # Define test classes
-        class_name = 'MyClass3'
-        ns = 'NS'
-        fqn = ns + '::' + class_name
+        # Define test class
+        class_name = 'MyClass6'
         self._define_class(class_name)
-        self._define_class(class_name, ns)
 
         executed = []
-        target_classes = [ class_name, class_name, fqn, fqn ]
+        target_classes = [ class_name, class_name ]
 
         # Define pythonizor function for classes
         @pythonization(target_classes)
@@ -231,59 +308,53 @@ class PythonizationDecorator(unittest.TestCase):
 
         # Trigger execution of pythonizor
         getattr(ROOT, class_name)
-        getattr(getattr(ROOT, ns), class_name)
 
         self.assertEqual(executed.pop(0), class_name)
-        self.assertEqual(executed.pop(0), fqn)
         # The following should be true since @pythonization removes repetitions
         self.assertTrue(not executed)
 
     # Test that @pythonization filters out non-matching classes
     def test_non_pythonized_classes(self):
-        ns1 = 'NS1'
-        ns2 = 'NS2'
+        ns = 'NS'
         prefix = 'Mat'
+        ns_prefix = ns + '::' + prefix
         class1 = 'Matches'
         class2 = 'DoesNotMatch'
 
-        for class_name,ns in (class1,ns1), (class2,ns2):
+        for class_name in class1, class2:
             self._define_class(class_name)
             self._define_class(class_name, ns)
 
         executed = []
-        target_classes = [ class1, ns1 + '::' + class1 ]
-        target_prefixes = [ prefix, ns1 + '::' + prefix ]
 
-        @pythonization(target_classes)
+        @pythonization(class1)
         def my_func1(klass, name):
-            self.assertTrue(klass.__cpp_name__ in target_classes)
-            self.assertTrue(name in target_classes)
+            self.assertEqual(klass.__cpp_name__, class1)
+            self.assertTrue(name, class1)
             executed.append(name)
 
-        @pythonization(target_prefixes, is_prefix=True)
+        @pythonization(prefix, ns=ns, is_prefix=True)
         def my_func2(klass, name):
-            self.assertTrue(any(klass.__cpp_name__.startswith(p) for p in target_prefixes))
-            self.assertTrue(any(name.startswith(p) for p in target_prefixes))
+            self.assertTrue(klass.__cpp_name__.startswith(ns_prefix))
+            self.assertTrue(name.startswith(ns_prefix))
             executed.append(name)
 
         # Trigger execution of pythonizors.
         # Non-matching classes should be filtered out
-        for class_name, ns in (class1,ns1), (class2,ns2):
+        for class_name in class1, class2:
             getattr(ROOT, class_name)
             getattr(getattr(ROOT, ns), class_name)
 
-        # Each first class access triggers the execution of the two pythonizors
-        for _ in range(2):
-            self.assertEqual(executed.pop(0), class1)
-        for _ in range(2):
-            self.assertEqual(executed.pop(0), ns1 + '::' + class1)
+        self.assertEqual(executed.pop(0), class1)
+        self.assertEqual(executed.pop(0), ns + '::' + class1)
+        # The list should be empty if non-matching classes have been discarded
         self.assertTrue(not executed)
 
     # Test passing as target an iterable that is not a list
     def test_iterable(self):
         # Define test classes
-        class1 = 'MyClass4'
-        class2 = 'MyClass5'
+        class1 = 'MyClass7'
+        class2 = 'MyClass8'
         for class_name in class1, class2:
             self._define_class(class_name)
 
@@ -308,7 +379,7 @@ class PythonizationDecorator(unittest.TestCase):
     # Test pythonizor with a single parameter (the class proxy)
     def test_single_parameter_pythonizor(self):
         # Define test class
-        class_name = 'MyClass6'
+        class_name = 'MyClass9'
         self._define_class(class_name)
 
         executed = []
@@ -328,8 +399,7 @@ class PythonizationDecorator(unittest.TestCase):
     # Test pythonizor with wrong number of parameters
     def test_wrong_pars_pythonizor(self):
         # Define test class
-        class_name = 'MyClass7'
-        self._define_class(class_name)
+        class_name = 'MyClass10'
 
         # Define pythonizor function for class.
         # Registration of pythonizor should fail
@@ -337,6 +407,47 @@ class PythonizationDecorator(unittest.TestCase):
             @pythonization(class_name)
             def my_func(klass, name, wrong_par):
                 pass
+
+    # Test @pythonization where class_name (wrongly) includes namespace
+    def test_wrong_class_name(self):
+        # Define test class
+        class_name = 'NS::MyClass11'
+
+        # Define pythonizor function for class.
+        # Registration of pythonizor should fail
+        with self.assertRaises(ValueError):
+            @pythonization(class_name)
+            def my_func(klass, name):
+                pass
+
+    # Test stacking of @pythonization decorators
+    def test_stacking_decorator(self):
+        # Define test classes
+        ns = 'NS'
+        class_name = 'MyClass12'
+        ns_class_name = ns + '::' + class_name
+        self._define_class(class_name)
+        self._define_class(class_name, ns)
+
+        executed = []
+        targets = [ class_name, ns_class_name ]
+
+        # Stack two @pythonization
+        @pythonization(class_name)
+        @pythonization(class_name, ns=ns)
+        def my_func(klass, name):
+            self.assertTrue(klass.__cpp_name__ in targets)
+            self.assertTrue(name in targets)
+            executed.append(name)
+
+        # Trigger execution of pythonizor
+        getattr(ROOT, class_name)
+        getattr(getattr(ROOT, ns), class_name)
+
+        # The pythonizor should have been triggered twice
+        self.assertEqual(executed.pop(0), class_name)
+        self.assertEqual(executed.pop(0), ns_class_name)
+        self.assertTrue(not executed)
 
 
 if __name__ == '__main__':

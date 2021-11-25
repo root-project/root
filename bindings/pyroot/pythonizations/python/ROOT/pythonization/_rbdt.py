@@ -36,7 +36,7 @@ def Compute(self, x):
     return self._OriginalCompute(x)
 
 
-@pythonization("TMVA::Experimental::RBDT", is_prefix=True)
+@pythonization("RBDT", ns="TMVA::Experimental", is_prefix=True)
 def pythonize_rbdt(klass):
     # Parameters:
     # klass: class to be pythonized

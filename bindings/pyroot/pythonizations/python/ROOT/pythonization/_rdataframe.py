@@ -229,7 +229,7 @@ def _histo_profile(self, fixed_args, *args):
     return res
 
 
-@pythonization([ "ROOT::RDataFrame<", "ROOT::RDF::RInterface<" ], is_prefix=True)
+@pythonization("RInterface<", ns="ROOT::RDF", is_prefix=True)
 def pythonize_rdataframe(klass):
     # Parameters:
     # klass: class to be pythonized
