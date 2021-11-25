@@ -117,8 +117,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           isndc = polyline.TestBit(kPolyLineNDC),
           cmd = "", func = this.getAxisToSvgFunc(isndc);
 
-      for (let n=0;n<=polyline.fLastPoint;++n)
-         cmd += ((n>0) ? "L" : "M") + func.x(polyline.fX[n]) + "," + func.y(polyline.fY[n]);
+      for (let n = 0; n <= polyline.fLastPoint; ++n)
+         cmd += ((n > 0) ? "L" : "M") + func.x(polyline.fX[n]) + "," + func.y(polyline.fY[n]);
 
       if (polyline._typename != "TPolyLine") fillatt.setSolidColor("none");
 
@@ -291,14 +291,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           .call(lineatt.func)
           .call(fillatt.func);
 
-      if (box.fBorderMode && box.fBorderSize && (fillatt.color!=='none')) {
+      if (box.fBorderMode && box.fBorderSize && fillatt.hasColor()) {
          let pww = box.fBorderSize, phh = box.fBorderSize,
              side1 = "M"+xx+","+yy + "h"+ww + "l"+(-pww)+","+phh + "h"+(2*pww-ww) +
                      "v"+(hh-2*phh)+ "l"+(-pww)+","+phh + "z",
              side2 = "M"+(xx+ww)+","+(yy+hh) + "v"+(-hh) + "l"+(-pww)+","+phh + "v"+(hh-2*phh)+
                      "h"+(2*pww-ww) + "l"+(-pww)+","+phh + "z";
 
-         if (box.fBorderMode<0) { let s = side1; side1 = side2; side2 = s; }
+         if (box.fBorderMode < 0) { let s = side1; side1 = side2; side2 = s; }
 
          this.draw_g.append("svg:path")
                     .attr("d", side1)
@@ -725,7 +725,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          let path = jsrp.buildSvgPath("bezier", this.bins, h0, 2);
 
-         if (this.lineatt.color != "none")
+         if (!this.lineatt.empty())
             this.draw_g.append("svg:path")
                .attr("class", "line")
                .attr("d", path.path)
@@ -1310,7 +1310,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             let grx = funcs.grx(pnt.x);
 
             // when drawing bars, take all points
-            if (!this.options.Bar && ((grx<0) || (grx>w))) return true;
+            if (!this.options.Bar && ((grx < 0) || (grx > w))) return true;
 
             let gry = funcs.gry(pnt.y);
 
@@ -1340,13 +1340,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          this.draw_kind = "nodes";
 
-         // here are up to five elements are collected, try to group them
          nodes = this.draw_g.selectAll(".grpoint")
                      .data(drawbins)
                      .enter()
                      .append("svg:g")
                      .attr("class", "grpoint")
-                     .attr("transform", d => "translate(" + d.grx1 + "," + d.gry1 + ")");
+                     .attr("transform", d => `translate(${d.grx1},${d.gry1})`);
       }
 
       if (this.options.Bar) {
@@ -1396,8 +1395,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let lw = this.lineatt.width + JSROOT.gStyle.fEndErrorSize, bb = 0,
              vv = this.options.Ends ? "m0," + lw + "v-" + 2*lw : "",
              hh = this.options.Ends ? "m" + lw + ",0h-" + 2*lw : "",
-             vleft = vv, vright = vv, htop = hh, hbottom = hh,
-             mm = this.options.MainError ? "M0,0L" : "M"; // command to draw main errors
+             vleft = vv, vright = vv, htop = hh, hbottom = hh;
+
+         const mainLine = (dx,dy) => {
+            if (!this.options.MainError) return `M${dx},${dy}`;
+            let res = "M0,0";
+            if (dx) return res + (dy ? `L${dx},${dy}` : `H${dx}`);
+            return dy ? res + `V${dy}` : res;
+         };
 
          switch (this.options.Ends) {
             case 2:  // option []
@@ -1435,45 +1440,48 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                    .style("stroke", "none")
                    .style("fill", "none")
                    .style("pointer-events", "visibleFill")
-                   .attr("d", d => "M"+d.grx0+","+d.gry0+"h"+(d.grx2-d.grx0)+"v"+(d.gry2-d.gry0)+"h"+(d.grx0-d.grx2)+"z");
+                   .attr("d", d => `M${d.grx0},${d.gry0}h${d.grx2-d.grx0}v${d.gry2-d.gry0}h${d.grx0-d.grx2}z`);
 
          visible.append("svg:path")
              .call(this.lineatt.func)
              .style("fill", "none")
              .attr("d", d => {
                 d.error = true;
-                return ((d.exlow > 0)  ? mm + (d.grx0+lw) + "," + d.grdx0 + vleft : "") +
-                       ((d.exhigh > 0) ? mm + (d.grx2-lw) + "," + d.grdx2 + vright : "") +
-                       ((d.eylow > 0)  ? mm + d.grdy0 + "," + (d.gry0-lw) + hbottom : "") +
-                       ((d.eyhigh > 0) ? mm + d.grdy2 + "," + (d.gry2+lw) + htop : "");
+                return ((d.exlow > 0)  ? mainLine(d.grx0+lw, d.grdx0) + vleft : "") +
+                       ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : "") +
+                       ((d.eylow > 0)  ? mainLine(d.grdy0, d.gry0-lw) + hbottom : "") +
+                       ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : "");
               });
       }
 
       if (this.options.Mark) {
-         // for tooltips use markers only if nodes where not created
+         // for tooltips use markers only if nodes were not created
          let path = "", pnt, grx, gry;
 
          this.createAttMarker({ attr: graph, style: this.options.Mark - 100 });
-
+         
          this.marker_size = this.markeratt.getFullSize();
 
          this.markeratt.resetPos();
-
-         // let produce SVG at maximum 1MB
-         let maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1;
+         
+         let want_tooltip = !JSROOT.batch_mode && JSROOT.settings.Tooltip && (!this.markeratt.fill || (this.marker_size < 7)) && !nodes,
+             hints_marker = "", hsz = Math.max(5, Math.round(this.marker_size*0.7)),
+             maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1; // let produce SVG at maximum 1MB
 
          if (!drawbins)
             drawbins = this.optimizeBins(maxnummarker);
          else if (this.canOptimize() && (drawbins.length > 1.5*maxnummarker))
             step = Math.min(2, Math.round(drawbins.length/maxnummarker));
 
-         for (let n = 0; n < drawbins.length; n+=step) {
+         for (let n = 0; n < drawbins.length; n += step) {
             pnt = drawbins[n];
             grx = funcs.grx(pnt.x);
             if ((grx > -this.marker_size) && (grx < w + this.marker_size)) {
                gry = funcs.gry(pnt.y);
-               if ((gry > -this.marker_size) && (gry < h + this.marker_size))
+               if ((gry > -this.marker_size) && (gry < h + this.marker_size)) {
                   path += this.markeratt.create(grx, gry);
+                  if (want_tooltip) hints_marker += `M${grx-hsz},${gry-hsz}h${2*hsz}v${2*hsz}h${-2*hsz}z`;
+               }
             }
          }
 
@@ -1481,10 +1489,15 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             this.draw_g.append("svg:path")
                        .attr("d", path)
                        .call(this.markeratt.func);
-            if ((nodes===null) && (this.draw_kind=="none"))
-               this.draw_kind = (this.options.Mark==101) ? "path" : "mark";
-
+            if ((nodes===null) && (this.draw_kind == "none"))
+               this.draw_kind = (this.options.Mark == 101) ? "path" : "mark";
          }
+         if (want_tooltip && hints_marker) 
+            this.draw_g.append("svg:path")
+                .attr("d", hints_marker)
+                .attr("stroke", "none")
+                .attr("fill", "none")
+                .attr("pointer-events", "visibleFill");
       }
 
       if (!JSROOT.batch_mode)
@@ -1612,7 +1625,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPainter.prototype.findBestBin = function(pnt) {
       if (!this.bins) return null;
 
-      let islines = (this.draw_kind=="lines"),
+      let islines = (this.draw_kind == "lines"),
           bestindx = -1,
           bestbin = null,
           bestdist = 1e10,
@@ -1653,11 +1666,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (!bestbin && islines) {
 
-         bestdist = 10000;
+         bestdist = 1e10;
 
-         function IsInside(x, x1, x2) {
-            return ((x1>=x) && (x>=x2)) || ((x1<=x) && (x<=x2));
-         }
+         const IsInside = (x, x1, x2) => ((x1>=x) && (x>=x2)) || ((x1<=x) && (x<=x2));
 
          let bin0 = this.bins[0], grx0 = funcs.grx(bin0.x), gry0, posy = 0;
          for (n = 1; n < this.bins.length; ++n) {
@@ -1810,7 +1821,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             if (!hint.islines) {
                elem.style('stroke', hint.color1 == 'black' ? 'green' : 'black').style('fill','none');
             } else {
-               if (this.options.Line)
+               if (this.options.Line || this.options.Curve)
                   elem.call(this.lineatt.func);
                else
                   elem.style('stroke','black');
@@ -2335,11 +2346,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          if ((n < ticks.length-1) || !exclude_last)
             this.drawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * this.szy * 0.5),
-                            text: this.format(ticks[n]), color: this.getColor[polar.fRadialLabelColor], latex: 0 });
+                            text: this.format(ticks[n]), color: this.getColor(polar.fRadialLabelColor), latex: 0 });
 
          if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
             let dr = (ticks[1] - ticks[0]) / nminor;
-            for (let nn=1;nn<nminor;++nn) {
+            for (let nn = 1; nn < nminor; ++nn) {
                let gridr = ticks[n] + dr*nn;
                if (gridr > this.scale_rmax) break;
                rx = this.r(gridr); ry = rx/this.szx*this.szy;
@@ -2380,7 +2391,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                          x: Math.round((this.szx+fontsize)*Math.cos(angle)),
                          y: Math.round((this.szy + fontsize/this.szx*this.szy)*(Math.sin(angle))),
                          text: lbls[n],
-                         color: this.getColor[polar.fPolarLabelColor], latex: 1 });
+                         color: this.getColor(polar.fPolarLabelColor), latex: 1 });
       }
 
       this.finishTextDrawing();
@@ -2593,11 +2604,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           main = this.getMainPainter(),
           best_dist2 = 1e10, bestindx = -1, bestpos = null;
 
-      for (let n=0;n<graph.fNpoints;++n) {
-         let pos = main.translate(graph.fX[n], graph.fY[n]);
-
-         let dist2 = (pos.x-pnt.x)*(pos.x-pnt.x) + (pos.y-pnt.y)*(pos.y-pnt.y);
-         if (dist2<best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
+      for (let n = 0; n < graph.fNpoints; ++n) {
+         let pos = main.translate(graph.fX[n], graph.fY[n]),
+             dist2 = (pos.x-pnt.x)*(pos.x-pnt.x) + (pos.y-pnt.y)*(pos.y-pnt.y);
+         if (dist2 < best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
       }
 
       let match_distance = 5;
@@ -2627,6 +2637,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Show tooltip
+     * @private */
    TGraphPolarPainter.prototype.showTooltip = function(hint) {
 
       if (!this.draw_g) return;
@@ -2663,6 +2675,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return hint;
    }
 
+   /** @summary Draw function for TGraphPolar
+     * @private */
    function drawGraphPolar(divid, graph, opt) {
       let painter = new TGraphPolarPainter(divid, graph);
       painter.decodeOptions(opt);
@@ -2708,6 +2722,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TSplinePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Update TSpline object
+     * @private */
    TSplinePainter.prototype.updateObject = function(obj, opt) {
       let spline = this.getObject();
 
@@ -3002,6 +3018,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.storeDrawOpt(opt);
    }
 
+   /** @summary Draw function for TSpline
+     * @private */
    jsrp.drawSpline = function(divid, spline, opt) {
       let painter = new TSplinePainter(divid, spline);
       painter.decodeOptions(opt);
@@ -3042,10 +3060,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TGraphTimePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Redraw object
+     * @private */
    TGraphTimePainter.prototype.redraw = function() {
       if (this.step === undefined) this.startDrawing();
    }
 
+   /** @summary Decode drawing options
+     * @private */
    TGraphTimePainter.prototype.decodeOptions = function(opt) {
 
       let d = new JSROOT.DrawOptions(opt || "REPEAT");
@@ -3085,6 +3107,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       });
    }
 
+   /** @summary Continue drawing
+     * @private */
    TGraphTimePainter.prototype.continueDrawing = function() {
       if (!this.options) return;
 
@@ -3148,7 +3172,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       });
    }
 
-   let drawGraphTime = (divid, gr, opt) => {
+   /** @summary Draw function for TGraphTime object
+     * @private */
+
+   const drawGraphTime = (divid, gr, opt) => {
 
       if (!gr.fFrame) {
          console.error('Frame histogram not exists');
@@ -3273,7 +3300,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       gr.fNpoints = j;
    }
 
-   let drawEfficiency = (divid, eff, opt) => {
+   /** @summary Draw function for TEfficiency object
+     * @private */
+   const drawEfficiency = (divid, eff, opt) => {
 
       if (!eff || !eff.fTotalHistogram || (eff.fTotalHistogram._typename.indexOf("TH1")!=0)) return null;
 
@@ -3363,28 +3392,6 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           time_display = false, time_format = "",
           rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
 
-      function computeGraphRange(res, gr) {
-         if (gr.fNpoints == 0) return;
-         if (res.first) {
-            res.xmin = res.xmax = gr.fX[0];
-            res.ymin = res.ymax = gr.fY[0];
-            res.first = false;
-         }
-         for (let i=0; i < gr.fNpoints; ++i) {
-            res.xmin = Math.min(res.xmin, gr.fX[i]);
-            res.xmax = Math.max(res.xmax, gr.fX[i]);
-            res.ymin = Math.min(res.ymin, gr.fY[i]);
-            res.ymax = Math.max(res.ymax, gr.fY[i]);
-         }
-         return res;
-      }
-
-      function padtoX(x) {
-         if (pad.fLogx && (x < 50))
-            return Math.exp(2.302585092994 * x);
-         return x;
-      }
-
       if (pad) {
          logx = pad.fLogx;
          logy = pad.fLogy;
@@ -3398,14 +3405,27 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          minimum = histo.fYaxis.fXmin;
          maximum = histo.fYaxis.fXmax;
          if (pad) {
+            const padtoX = x => (pad.fLogx && (x < 50)) ? Math.exp(2.302585092994 * x) : x;
             uxmin = padtoX(rw.xmin);
             uxmax = padtoX(rw.xmax);
          }
       } else {
          this.autorange = true;
 
-         for (let i = 0; i < graphs.arr.length; ++i)
-            computeGraphRange(rw, graphs.arr[i]);
+         graphs.arr.forEach(gr => {
+            if (gr.fNpoints == 0) return;
+            if (rw.first) {
+               rw.xmin = rw.xmax = gr.fX[0];
+               rw.ymin = rw.ymax = gr.fY[0];
+               rw.first = false;
+            }
+            for (let i = 0; i < gr.fNpoints; ++i) {
+               rw.xmin = Math.min(rw.xmin, gr.fX[i]);
+               rw.xmax = Math.max(rw.xmax, gr.fX[i]);
+               rw.ymin = Math.min(rw.ymin, gr.fY[i]);
+               rw.ymax = Math.max(rw.ymax, gr.fY[i]);
+            }
+         });
 
          if (graphs.arr[0] && graphs.arr[0].fHistogram && graphs.arr[0].fHistogram.fXaxis.fTimeDisplay) {
             time_display = true;
@@ -4120,6 +4140,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TRatioPlotPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
+   /** @summary Set grids range */
    TRatioPlotPainter.prototype.setGridsRange = function(xmin, xmax) {
       let ratio = this.getObject(),
           pp = this.getPadPainter();
@@ -4250,7 +4271,6 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                this._ratio_up_fp.fX2NDC = this.fX2NDC;
                this._ratio_up_fp.o_sizeChanged();
             }
-
             return this;
          });
       });

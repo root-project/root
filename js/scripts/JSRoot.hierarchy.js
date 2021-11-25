@@ -1256,8 +1256,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                let handle = null;
                if (obj._typename) handle = jsrp.getDrawHandle("ROOT." + obj._typename);
-               if (handle && handle.draw_field && obj[handle.draw_field])
+               if (handle && handle.draw_field && obj[handle.draw_field]) {
                   obj = obj[handle.draw_field];
+                  if (!drawopt) drawopt = handle.draw_field_opt || "";
+               }
 
                if ((typeof p.redrawObject == 'function') && p.redrawObject(obj, drawopt)) painter = p;
             });
