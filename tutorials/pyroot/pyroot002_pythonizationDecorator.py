@@ -31,7 +31,7 @@ class MyClass {};
 #
 # To convert a given Python function into a pythonizor, we need to decorate it
 # with the @pythonization decorator. Such decorator allows us to define which
-# is our target class, i.e. which class we want to pythonize.
+# class is our target, i.e. which class we want to pythonize.
 #
 # On the other hand, the decorated function - the pythonizor - must accept
 # either one or two parameters:
@@ -47,7 +47,7 @@ class MyClass {};
 # class is `MyClass`.
 # - The pythonizor function `pythonizor_of_myclass` provides and injects a new
 # implementation for `__str__`, the mechanism that Python provides to define
-# how to represent objects of a class as a string. This new implementation
+# how to represent objects as strings. This new implementation
 # always returns the string "This is a MyClass object".
 @pythonization('MyClass')
 def pythonizor_of_myclass(klass):
@@ -55,7 +55,7 @@ def pythonizor_of_myclass(klass):
 
 # Once we have defined our pythonizor function, let's see it in action.
 # We will now use the `MyClass` class for the first time from Python: we will
-# create a new object of that class. At this moment, the pythonizor will
+# create a new instance of that class. At this moment, the pythonizor will
 # execute and modify the class - pythonizors are always lazily run when a given
 # class is used for the first time from a Python script.
 my_object = ROOT.MyClass()
@@ -69,7 +69,7 @@ print(my_object)
 # class can be pythonized. Typical examples are the redefinition of dunder
 # methods (e.g. `__iter__` and `__next__` to make your objects iterable from
 # Python). If you need some inspiration, many ROOT classes are pythonized in
-# way we just saw; their pythonizations can be seen at:
+# the way we just saw; their pythonizations can be seen at:
 # https://github.com/root-project/root/tree/master/bindings/pyroot/pythonizations/python/ROOT/pythonization
 
 # The @pythonization decorator offers a few more options when it comes to
@@ -137,5 +137,5 @@ def pair_pythonizor(klass, name):
 # can see this with the print we did inside the pythonizor.
 # Note that we could use the `name` parameter to e.g. further filter which
 # particular instantiations we would like to pythonize.
-p1 = ROOT.std.pair['int','int'](1,2)
-p2 = ROOT.std.pair['int','double'](1,2.)
+p1 = ROOT.std.pair['int','int'](1,2) # prints 'Pythonizing class std::pair<int, int>' 
+p2 = ROOT.std.pair['int','double'](1,2.) # prints 'Pythonizing class std::pair<int, double>'
