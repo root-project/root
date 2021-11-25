@@ -2680,22 +2680,21 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          return func(obj, opt).then(tracks => {
             if (!tracks) return this;
 
-            // FIXME: probably tracks should be remembered??
+            // FIXME: probably tracks should be remembered?
             return this.drawExtras(tracks, "", false).then(()=> {
                this.updateClipping(true);
-               this.render3D(100);
-               return this;
+
+               return this.render3D(100);
             });
          });
       }
 
       return this.drawExtras(obj, itemname).then(is_any => {
-         if (is_any) {
-            if (hitem) hitem._painter = this; // set for the browser item back pointer
-            this.render3D(100);
-         }
+         if (!is_any) return this;
 
-         return this;
+         if (hitem) hitem._painter = this; // set for the browser item back pointer
+
+         return this.render3D(100);
       });
    }
 
@@ -2826,12 +2825,10 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          return promise;
 
       return promise.then(is_any => {
-         if (is_any) {
-            this.updateClipping(true);
-            this.render3D(100);
-         }
+         if (!is_any) return false;
 
-         return is_any;
+         this.updateClipping(true);
+         return this.render3D(100);
       });
    }
 
@@ -3353,6 +3350,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Call 3D rendering of the geometry
      * @param tmout - specifies delay, after which actual rendering will be invoked
+     * @param [measure] - when true, for the first time printout rendering time
+     * @returns {Promise} when tmout bigger than 0 is specified
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
      * superimposed with each other. If tmeout<=0, rendering performed immediately
      * Several special values are used:
@@ -3360,17 +3359,30 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    TGeoPainter.prototype.render3D = function(tmout, measure) {
 
       if (!this._renderer) {
-         console.warn('renderer object not exists - check code');
-         return;
+         if (!this.did_cleanup)
+            console.warn('renderer object not exists - check code');
+         else
+            console.warn('try to render after cleanup');
+         return this;
       }
+
+      let ret_promise = (tmout !== undefined) && (tmout > 0);
 
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
-      if ((tmout > 0) && this._webgl && !JSROOT.batch_mode) {
-         // do not shoot timeout many times
+      if ((tmout > 0) && this._webgl /* && !JSROOT.batch_mode */) {
+         if (JSROOT.batch_mode) tmout = 1; // use minimal timeout in batch mode
+         if (ret_promise)
+            return new Promise(resolveFunc => {
+               if (!this._render_resolveFuncs) this._render_resolveFuncs = [];
+               this._render_resolveFuncs.push(resolveFunc);
+               if (!this.render_tmout)
+                  this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
+            });
+
          if (!this.render_tmout)
-            this.render_tmout = setTimeout(() => this.render3D(0,measure), tmout);
-         return;
+            this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
+         return this;
       }
 
       if (this.render_tmout) {
@@ -3408,7 +3420,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          console.log(`three.js r${THREE.REVISION}, first render tm = ${this.first_render_tm}`);
       }
 
-      return jsrp.afterRender3D(this._renderer);
+      jsrp.afterRender3D(this._renderer);
+
+      if (this._render_resolveFuncs) {
+         this._render_resolveFuncs.forEach(func => func(this));
+         delete this._render_resolveFuncs;
+      }
+
    }
 
    /** @summary Start geo worker */
@@ -4066,6 +4084,11 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       this._main_painter = null;
       this._slave_painters = [];
+
+      if (this._render_resolveFuncs) {
+         this._render_resolveFuncs.forEach(func => func(this));
+         delete this._render_resolveFuncs;
+      }
 
       jsrp.cleanupRender3D(this._renderer);
 

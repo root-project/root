@@ -2336,7 +2336,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       let colindx, cmd1, cmd2, i, j, binz, dx, dy, entry, last_entry;
 
       const flush_last_entry = () => {
-         last_entry.path += "h"+dx + "v"+last_entry.dy + "h"+(-dx) + "z";
+         last_entry.path += `h${dx}v${last_entry.y2-last_entry.y}h${-dx}z`;
          last_entry.dy = 0;
          last_entry = null;
       };
@@ -2361,14 +2361,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
             cmd1 = "M"+handle.grx[i]+","+handle.gry[j];
 
-            dy = (handle.gry[j+dj] - handle.gry[j]) || 1;
+            dy = (handle.gry[j+dj] - handle.gry[j]) || -1;
 
             entry = entries[colindx];
 
             if (entry === undefined) {
                entry = entries[colindx] = { path: cmd1 };
             } else if (can_merge && (entry === last_entry)) {
-               entry.dy += dy;
+               entry.y2 = handle.gry[j] + dy;
                continue;
             } else {
                cmd2 = "m" + (handle.grx[i]-entry.x) + "," + (handle.gry[j]-entry.y);
@@ -2378,7 +2378,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             entry.x = handle.grx[i];
             entry.y = handle.gry[j];
             if (can_merge) {
-               entry.dy = dy;
+               entry.y2 = handle.gry[j] + dy;
                last_entry = entry;
             } else {
                entry.path += "h"+dx + "v"+dy + "h"+(-dx) + "z";
@@ -2919,7 +2919,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2,
           di = handle.stepi, dj = handle.stepj;
 
-      for (let loop=0;loop<2;++loop)
+      const makeLine = (dx, dy) => {
+         if (dx)
+            return dy ? `l${dx},${dy}` : `h${dx}`;
+         return dy ? `v${dy}` : "";
+      }
+
+      for (let loop = 0; loop < 2; ++loop)
          for (i = handle.i1; i < handle.i2; i += di)
             for (j = handle.j1; j < handle.j2; j += dj) {
 
@@ -2953,14 +2959,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                   dy = Math.round(y2-y1);
 
                   if ((dx!==0) || (dy!==0)) {
-                     cmd += "M"+Math.round(x1)+","+Math.round(y1)+"l"+dx+","+dy;
+                     cmd += "M"+Math.round(x1)+","+Math.round(y1) + makeLine(dx,dy);;
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(2/(dx*dx + dy*dy));
                         si  = Math.round(anr*(dx + dy));
                         co  = Math.round(anr*(dx - dy));
-                        if ((si!==0) && (co!==0))
-                           cmd+="l"+(-si)+","+co + "m"+si+","+(-co) + "l"+(-co)+","+(-si);
+                        if (si || co)
+                           cmd += `m${-si},${co}` + makeLine(si,-co) + makeLine(-co,-si);;
                      }
                   }
                }
@@ -2968,7 +2974,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       this.draw_g
          .append("svg:path")
-         .attr("class","th2_arrows")
          .attr("d", cmd)
          .style("fill", "none")
          .call(this.lineatt.func);
@@ -3064,25 +3069,25 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             elem.call(this.lineatt.func);
       }
 
-      if ((btn1.length>0) && (this.fillatt.color !== 'none'))
+      if ((btn1.length > 0) && this.fillatt.hasColor())
          this.draw_g.append("svg:path")
                     .attr("d", btn1)
                     .style("stroke","none")
                     .call(this.fillatt.func)
                     .style("fill", d3.rgb(this.fillatt.color).brighter(0.5).toString());
 
-      if (btn2.length>0)
+      if (btn2.length > 0)
          this.draw_g.append("svg:path")
                     .attr("d", btn2)
                     .style("stroke","none")
                     .call(this.fillatt.func)
-                    .style("fill", this.fillatt.color === 'none' ? 'red' : d3.rgb(this.fillatt.color).darker(0.5).toString());
+                    .style("fill", !this.fillatt.hasColor() ? 'red' : d3.rgb(this.fillatt.color).darker(0.5).toString());
 
       if (cross.length > 0) {
          let elem = this.draw_g.append("svg:path")
                                .attr("d", cross)
                                .style("fill", "none");
-         if (this.lineatt.color !== 'none')
+         if (!this.lineatt.empty())
             elem.call(this.lineatt.func);
          else
             elem.style('stroke','black');
@@ -3357,7 +3362,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
           handle = null;
 
-      // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
+      // if (this.lineatt.empty()) this.lineatt.color = 'cyan';
 
       if (this.isRH2Poly()) {
          handle = this.drawPolyBinsColor();
@@ -3940,7 +3945,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       // adjust font size
       for (let j = 0; j < nlines; ++j) {
          let line = lines[j];
-         if (j>0) maxlen = Math.max(maxlen, line.length);
+         if (j > 0) maxlen = Math.max(maxlen, line.length);
          if ((j == 0) || (line.indexOf('|') < 0)) continue;
          if (first_stat === 0) first_stat = j;
          let parts = line.split("|");
@@ -3972,10 +3977,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                this.drawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
                                width: width/num_cols, height: stepy, text: parts[n], draw_g: text_g });
          } else if (lines[j].indexOf('=') < 0) {
-            if (j==0) {
+            if (j == 0) {
                has_head = true;
-               if (lines[j].length > maxlen + 5)
-                  lines[j] = lines[j].substr(0,maxlen+2) + "...";
+               let max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
+               if (lines[j].length > max_hlen + 5)
+                  lines[j] = lines[j].substr(0,max_hlen+2) + "...";
             }
             this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
                             width: width-2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
