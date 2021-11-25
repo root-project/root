@@ -641,11 +641,11 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
                         retcode += retcodeTemp
                         continue
                     else:
-                        if obj.InheritsFrom(ROOT.TNamed.Class()): obj.SetName(setName)
+                        if isinstance(obj, ROOT.TNamed): obj.SetName(setName)
                         changeDirectory(destFile,destPathSplit)
                         obj.Write()
                 else:
-                    if obj.InheritsFrom(ROOT.TNamed.Class()): obj.SetName(setName)
+                    if isinstance(obj, ROOT.TNamed): obj.SetName(setName)
                     changeDirectory(destFile,destPathSplit)
                     obj.Write()
             elif issubclass(obj.__class__, ROOT.TCollection):
@@ -654,9 +654,9 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
                 obj.Write(setName, ROOT.TObject.kSingleKey)
             else:
                 if setName != "":
-                    if obj.InheritsFrom(ROOT.TNamed.Class()): obj.SetName(setName)
+                    if isinstance(obj, ROOT.TNamed): obj.SetName(setName)
                 else:
-                    if obj.InheritsFrom(ROOT.TNamed.Class()): obj.SetName(objectName)
+                    if isinstance(obj, ROOT.TNamed): obj.SetName(objectName)
                 changeDirectory(destFile,destPathSplit)
                 obj.Write()
             obj.Delete()
