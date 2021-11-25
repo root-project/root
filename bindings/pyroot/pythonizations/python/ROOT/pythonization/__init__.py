@@ -19,7 +19,7 @@ import cppyy
 from ._generic import pythonize_generic
 
 
-def pythonization(target, is_prefix=False):
+def pythonization(class_name, ns='::', is_prefix=False):
     '''
     Decorator that allows to pythonize C++ classes. To pythonize means to add
     some extra behaviour to a C++ class that is used from Python via PyROOT,
@@ -54,24 +54,20 @@ def pythonization(target, is_prefix=False):
     # Type check and parsing of target argument.
     # Retrieve the scope(s) of the class(es)/prefix(es) to register the
     # pythonizor in the right scope(s)
-    scopes, scope_to_targets = _parse_target(target)
+    target = _check_target(class_name)
+
+    # Remove trailing '::' from namespace
+    if ns.endswith('::'):
+        ns = ns[:-2]
 
     # Create a filter lambda for the target class(es)/prefix(es)
     if is_prefix:
-        def passes_filter(class_name, scope):
-            prefixes = scope_to_targets.get(scope)
-            if prefixes is None:
-                return False # no prefix registered for this scope
-            else:
-                return any(class_name.startswith(prefix)
-                           for prefix in prefixes)
+        def passes_filter(class_name):
+            return any(class_name.startswith(prefix)
+                       for prefix in target)
     else:
-        def passes_filter(class_name, scope):
-            classes = scope_to_targets.get(scope)
-            if classes is None:
-                return False # no class registered for this scope
-            else:
-                return class_name in classes
+        def passes_filter(class_name):
+            return class_name in target
 
     def pythonization_impl(user_pythonizor):
         '''
@@ -109,53 +105,48 @@ def pythonization(target, is_prefix=False):
             # Add pretty printing (done on all classes)
             pythonize_generic(klass, fqn)
 
-            if passes_filter(name, _get_scope(fqn)):
-                if npars == 1:
-                    user_pythonizor(klass)
-                else:
-                    user_pythonizor(klass, fqn)
+            if passes_filter(name):
+                _invoke(user_pythonizor, npars, klass, fqn)
 
-        # Register pythonizor in all the scopes of the requested classes
-        for scope in scopes:
-            cppyy.py.add_pythonization(cppyy_pythonizor, scope)
+        # Register pythonizor in the corresponding namespace
+        cppyy.py.add_pythonization(cppyy_pythonizor, ns)
 
-        return cppyy_pythonizor
+        # Return the original user function.
+        # We don't want to modify the user function, we just use the decorator
+        # to register the function as a pythonizor.
+        # This allows for correct chaining of multiple @pythonization decorators
+        # for a single function
+        return user_pythonizor
 
     return pythonization_impl
 
-def _parse_target(target):
+def _check_target(target):
     '''
-    Helper function to check the type of the `target` argument specified by the
-    user in a @pythonization decorator.
-    It also returns the received fully-qualified class name(s)/prefix(es) and
-    the corresponding scope(s), removing any repetition.
+    Helper function to check the type of the `class name` argument specified by
+    the user in a @pythonization decorator.
 
     Args:
-        target (string/iterable[string]): fully-qualified class name(s)/
-            prefix(es).
+        target (string/iterable[string]): class name(s)/prefix(es).
 
     Returns:
-        tuple[set,set]: fully-qualified class name(s)/prefix(es) and scope(s)
-            in `target`, with no repetitions.
+        list[string]: class name(s)/prefix(es) in `target`, with no repetitions.
     '''
 
-    scopes = set()
-    scope_to_targets = {}
-
     if _is_string(target):
-        _register_target(target, scopes, scope_to_targets)
+        _check_no_namespace(target)
+        target = [ target ]
     else:
-        try:
-            for name in target:
-                if _is_string(name):
-                    _register_target(name, scopes, scope_to_targets)
-                else:
-                    raise TypeError()
-        except TypeError:
-            raise TypeError('Invalid type of "target" argument in @pythonization: '
-                            'must be string or iterable of strings')
+        for name in target:
+            if _is_string(name):
+                _check_no_namespace(name)
+            else:
+                raise TypeError('Invalid type of "target" argument in '
+                                '@pythonization: must be string or iterable of '
+                                'strings')
+        # Remove possible duplicates
+        target = list(set(target))
 
-    return scopes, scope_to_targets
+    return target
 
 def _is_string(o):
     '''
@@ -173,87 +164,20 @@ def _is_string(o):
     else:
         return isinstance(o, basestring)
 
-def _register_target(target, scopes, scope_to_targets):
+def _check_no_namespace(target):
     '''
-    Registers all the targets of a pythonizor per scope.
+    Checks that a given target of a pythonizor does not specify a namespace
+    (only the class name / prefix of a class name should be present).
 
     Args:
-        target (string): fully-qualified class name/prefix.
-        scopes (list): list of scopes to add the scope of `target` to.
-        scope_to_targets (dict): map from scope to list of targets that have
-            been registered for that scope.
+        target (string): class name/prefix.
     '''
 
-    scope, class_name = _split_scope_and_class(target)
-    scopes.add(scope)
-    targets = scope_to_targets.get(scope)
-    if targets is None:
-        targets = []
-        scope_to_targets[scope] = targets
-    targets.append(class_name)
-
-def _get_scope(fqn):
-    '''
-    Parses and returns the scope in `fqn`.
-    Example: if `fqn` is "NS1::NS2::C", "NS1::NS2" is returned.
-
-    Args:
-        fqn (string): fully-qualified class name.
-
-    Returns:
-        string: scope of `fqn`.
-    '''
-
-    pos = _find_namespace_end(fqn)
-    if pos < 0: # global namespace
-        return ''
-    else:
-        return fqn[:pos]
-
-def _split_scope_and_class(fqn):
-    '''
-    Parses and returns the scope and class name in `fqn`.
-    Example: if `fqn` is "NS1::NS2::C", "NS1::NS2" and "C" are returned.
-
-    Args:
-        fqn (string): fully-qualified class name.
-
-    Returns:
-        tuple[string,string]: tuple with the scope of and class name of `fqn`.
-    '''
-
-    pos = _find_namespace_end(fqn)
-    if pos < 0: # global namespace
-        return '', fqn
-    else:
-        return fqn[:pos], fqn[pos+2:]
-
-def _find_namespace_end(fqn):
-    '''
-    Find the position where the namespace in `fqn` ends.
-
-    Args:
-        fqn (string): fully-qualified class name.
-
-    Returns:
-        integer: position where the namespace in `fqn` ends, i.e. the position
-            of the last '::', or -1 if there is no '::' in `fqn`.
-    '''
-
-    last_found = -1
-    prev_c = ''
-    pos = 0
-    for c in fqn:
-        if c == ':' and prev_c == ':':
-            last_found = pos - 1
-        elif c == '<':
-            # If we found a template, this is already the class name,
-            # so we're done!
-            break
-        prev_c = c
-        pos += 1
-
-    return last_found
+    if target.find('::') >= 0:
+        raise ValueError('Invalid value of "class_name" argument in '
+                         '@pythonization: namespace definition found ("{}"). '
+                         'Please use the "ns" parameter to specify the '
+                         'namespace'.format(target))
 
 def _check_num_pars(f):
     '''
@@ -272,12 +196,28 @@ def _check_num_pars(f):
         npars = len(inspect.getargspec(f).args)
 
     if npars == 0 or npars > 2:
-        raise TypeError("Pythonizor function {} has a wrong number of "
-                        "parameters ({}). Allowed parameters are the class to "
-                        "be pythonized and (optionally) its name."
+        raise TypeError('Pythonizor function {} has a wrong number of '
+                        'parameters ({}). Allowed parameters are the class to '
+                        'be pythonized and (optionally) its name.'
                         .format(f.__name__, npars))
 
     return npars
+
+def _invoke(user_pythonizor, npars, klass, fqn):
+    '''
+    Invokes the given user pythonizor function with the right arguments.
+
+    Args:
+        user_pythonizor (function): user pythonizor function.
+        npars (int): number of parameters of the user pythonizor function.
+        klass (class type): cppyy proxy of the class to be pythonized.
+        fqn (string): fully-qualified name of the class to be pythonized.
+    '''
+
+    if npars == 1:
+        user_pythonizor(klass)
+    else:
+        user_pythonizor(klass, fqn)
 
 def _register_pythonizations():
     '''

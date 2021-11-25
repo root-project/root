@@ -110,7 +110,7 @@ def add_array_interface_property(klass, name):
         klass.__array_interface__ = property(get_array_interface)
 
 
-@pythonization("ROOT::VecOps::RVec<", is_prefix=True)
+@pythonization("RVec<", ns="ROOT::VecOps", is_prefix=True)
 def pythonize_rvec(klass, name):
     # Parameters:
     # klass: class to be pythonized
