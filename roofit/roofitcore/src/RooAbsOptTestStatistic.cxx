@@ -38,6 +38,7 @@ parallelized calculation of test statistics.
 #include "RooFit.h"
 
 #include "Riostream.h"
+#include "TClass.h"
 #include <string.h>
 
 
