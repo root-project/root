@@ -69,6 +69,21 @@
 #include "LSTMPeepholes_FromROOT.hxx"
 #include "input_models/references/LSTMPeepholes.ref.hxx"
 
+#include "GRUBatchwise_FromROOT.hxx"
+#include "input_models/references/GRUBatchwise.ref.hxx"
+
+#include "GRUBidirectional_FromROOT.hxx"
+#include "input_models/references/GRUBidirectional.ref.hxx"
+
+#include "GRUDefaults_FromROOT.hxx"
+#include "input_models/references/GRUDefaults.ref.hxx"
+
+#include "GRUInitialBias_FromROOT.hxx"
+#include "input_models/references/GRUInitialBias.ref.hxx"
+
+#include "GRUSeqLength_FromROOT.hxx"
+#include "input_models/references/GRUSeqLength.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -702,5 +717,157 @@ TEST(ROOT, LSTMPeepholes)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, GRUBatchwise)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUBatchwise::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(GRUBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = GRUBatchwise_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(GRUBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, GRUBidirectional)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUBidirectional::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(GRUBidirectional_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = GRUBidirectional_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(GRUBidirectional_ExpectedOutput::all_ones) / sizeof(float));
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, GRUDefaults)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(6);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUDefaults::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(GRUDefaults_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = GRUDefaults_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(GRUDefaults_ExpectedOutput::all_ones) / sizeof(float));
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, GRUInitialBias)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(9);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUInitialBias::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(GRUInitialBias_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = GRUInitialBias_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(GRUInitialBias_ExpectedOutput::all_ones) / sizeof(float));
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, GRUSeqLength)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(18);
+   std::iota(input.begin(), input.end(), 1.0f);
+   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUSeqLength::infer(input.data());
+   std::vector<float> output_y = output[0];
+   std::vector<float> output_yh = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_y.size(), sizeof(GRUSeqLength_ExpectedOutput::all_ones_y) / sizeof(float));
+
+   float *correct_y = GRUSeqLength_ExpectedOutput::all_ones_y;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output_y.size(); ++i) {
+      EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_yh.size(), sizeof(GRUSeqLength_ExpectedOutput::all_ones_yh) / sizeof(float));
+
+   float *correct_yh = GRUSeqLength_ExpectedOutput::all_ones_yh;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output_yh.size(); ++i) {
+      EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
