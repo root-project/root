@@ -3526,8 +3526,9 @@ gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
                      llvm::cl::Hidden,
                      llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
                      llvm::cl::cat(gRootclingOptions));
+// Really llvm::cl::Required, will be changed in RootClingMain below.
 static llvm::cl::opt<std::string>
-gOptDictionaryFileName(llvm::cl::Positional, llvm::cl::Required,
+gOptDictionaryFileName(llvm::cl::Positional,
                       llvm::cl::desc("<output dictionary file>"),
                       llvm::cl::cat(gRootclingOptions));
 
@@ -3820,8 +3821,9 @@ static llvm::cl::list<std::string>
 gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
           llvm::cl::desc("Specify compiler diagnostics options."),
           llvm::cl::cat(gRootclingOptions));
+// Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
-gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::OneOrMore,
+gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
                          llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
                          llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
@@ -3960,6 +3962,11 @@ int RootClingMain(int argc,
    llvm::cl::alias optHelpAlias2("?",
                       llvm::cl::desc("Alias for -help"),
                       llvm::cl::aliasopt(optHelp));
+
+   // Set number of required arguments. We cannot do this globally since it
+   // would interfere with LLVM's option parsing.
+   gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
+   gOptDictionaryHeaderFiles.setNumOccurrencesFlag(llvm::cl::OneOrMore);
 
    // Copied from cling driver.
    // FIXME: Uncomment once we fix ROOT's teardown order.
