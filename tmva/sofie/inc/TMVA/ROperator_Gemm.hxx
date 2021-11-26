@@ -11,6 +11,7 @@
 #include <iterator>
 #include <iomanip>
 #include <limits>
+#include <cassert>
 
 namespace TMVA{
 namespace Experimental{
