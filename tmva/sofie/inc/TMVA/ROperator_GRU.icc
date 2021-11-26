@@ -16,13 +16,12 @@ template<typename T>
 auto ROperator_GRU<T>::ShapeInference(std::vector<std::vector<size_t>> input)
 -> std::vector<std::vector<size_t>> {
 	size_t num_directions = input[1][0];
-	size_t hidden_size = input[1][1];
+	size_t hidden_size = input[1][1] / 3;
 	if (fAttrLayout == 0) {
 		size_t seq_length = input[0][0];
 		size_t batch_size = input[0][1];
 		std::vector<std::vector<size_t>> ret(
 			{{seq_length, num_directions, batch_size, hidden_size},
-			{num_directions, batch_size, hidden_size},
 			{num_directions, batch_size, hidden_size}});
 		return ret;
 	} else {
