@@ -17,6 +17,9 @@ ROOTTEST_ADD_TEST(dask_test_include_headers
 ROOTTEST_ADD_TEST(dask_test_inv_mass 
                   MACRO test_inv_mass.py)
 
+ROOTTEST_ADD_TEST(dask_test_rungraphs
+                  MACRO test_rungraphs.py)
+
 ROOTTEST_ADD_TEST(dask_test_reducer_merge 
                   MACRO test_reducer_merge.py)
 
