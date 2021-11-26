@@ -22,9 +22,6 @@ add_custom_target(builtin_cppzmq_incl
 
 set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS builtin_cppzmq_incl)
 
-install(FILES ${cppzmq_HEADER_PATH}/zmq.hpp
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/)
-
 # find_package emulation
 set(cppzmq_FOUND TRUE CACHE BOOL "" FORCE)
 set(cppzmq_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include CACHE INTERNAL "" FORCE)
