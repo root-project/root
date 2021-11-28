@@ -53,6 +53,7 @@ from ._rooprodpdf import RooProdPdf
 from ._roosimultaneous import RooSimultaneous
 from ._roosimwstool import RooSimWSTool
 from ._rooworkspace import RooWorkspace
+from ._roovectordatastore import RooVectorDataStore
 
 
 # list of python classes that are used to pythonize RooFit classes
@@ -81,6 +82,7 @@ python_classes = [
     RooSimultaneous,
     RooSimWSTool,
     RooWorkspace,
+    RooVectorDataStore,
 ]
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit
@@ -141,8 +143,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
 
 
 def is_staticmethod(klass, func_name):
-    """Check if the function with name `func_name` of a class is a static method.
-    """
+    """Check if the function with name `func_name` of a class is a static method."""
 
     import sys
 

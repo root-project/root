@@ -127,6 +127,12 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
 
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
+
+  # NumPy compatibility
+  if(NOT MSVC OR win_broken_tests)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py)
+  endif()
+
 endif()
 
 if (dataframe)
