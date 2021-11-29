@@ -25,27 +25,28 @@ def pythonization(class_name, ns='::', is_prefix=False):
     Decorator that allows to pythonize C++ classes. To pythonize means to add
     some extra behaviour to a C++ class that is used from Python via PyROOT,
     so that such a class can be used in an easier / more "pythonic" way.
-    The injection of the pythonization behaviour in the C++ class is done
-    lazily, i.e. only when the class is first accessed from the application.
+    When a pythonization is registered with this decorator, the injection of
+    the new behaviour in the C++ class is done immediately, if the class has
+    already been used from the application, or lazily, i.e. only when the class
+    is first accessed from the application.
 
     Args:
-        target (string/iterable[string]): specifies either a single string or
-            multiple strings, where each string can be either (i) the
-            fully-qualified name of a C++ class to be pythonized, or (ii) a
-            prefix to match all classes whose fully-qualified name starts with
-            that prefix.
-
-            These are examples of prefixes and what they match:
-            - "" : all classes in the global namespace
-            - "C" : all classes in the global namespace whose name starts with
-              "C"
-            - "NS1::NS2::" : all classes in namespace "NS1::NS2"
-            - "NS1::NS2::C" : all classes in namespace "NS1::NS2" whose name
-              starts with "C"
-
-        is_prefix (boolean): if True, `target` contains one or multiple
+        class_name (string/iterable[string]): specifies either a single string or
+            multiple strings, where each string can be either (i) the name of a
+            C++ class to be pythonized, or (ii) a prefix to match all classes
+            whose name starts with that prefix.
+        ns (string): namespace of the classes to be pythonized. Default is the
+            global namespace (`::`).
+        is_prefix (boolean): if True, `class_name` contains one or multiple
             prefixes, each prefix potentially matching multiple classes.
             Default is False.
+            These are examples of prefixes and namespace and what they match:
+            - class_name="", ns="::" : all classes in the global namespace.
+            - class_name="C", ns="::" : all classes in the global namespace
+              whose name starts with "C"
+            - class_name="", ns="NS1::NS2" : all classes in namespace "NS1::NS2"
+            - class_name="C", ns="NS1::NS2" : all classes in namespace
+              "NS1::NS2" whose name starts with "C"
 
     Returns:
         function: function that receives the user-defined function and
@@ -78,11 +79,15 @@ def pythonization(class_name, ns='::', is_prefix=False):
 
         Args:
             user_pythonizor (function): user-provided function to be decorated.
-                It implements some pythonization. It must accept two
-                parameters: the class to be pythonized, i.e. the Python proxy
-                of the class in which new behaviour can be injected, and the
-                name of that class (can be used e.g. to do some more complex
+                It implements some pythonization. It can accept two parameters:
+                the class to be pythonized, i.e. the Python proxy of the class
+                in which new behaviour can be injected, and optionally the name
+                of that class (can be used e.g. to do some more complex
                 filtering).
+
+        Returns:
+            function: the user function, after being registered as a
+                pythonizor.
         '''
 
         npars = _check_num_pars(user_pythonizor)
@@ -114,7 +119,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
             if passes_filter(name):
                 _invoke(user_pythonizor, npars, klass, fqn)
 
-        # Register pythonizor in the corresponding namespace
+        # Register pythonizor in its namespace
         cppyy.py.add_pythonization(cppyy_pythonizor, ns)
 
         # Return the original user function.
