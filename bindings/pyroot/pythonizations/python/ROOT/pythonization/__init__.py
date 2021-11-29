@@ -15,6 +15,7 @@ import re
 import sys
 
 import cppyy
+gbl_namespace = cppyy.gbl
 
 from ._generic import pythonize_generic
 
@@ -85,6 +86,11 @@ def pythonization(class_name, ns='::', is_prefix=False):
         '''
 
         npars = _check_num_pars(user_pythonizor)
+
+        # Check whether any of the target classes has already been used.
+        # If so, the class proxy has to be immediately pythonized - even if we
+        # registered a pythonizor for it, the pythonizor would never be executed
+        _find_used_classes(ns, passes_filter, user_pythonizor, npars)
 
         def cppyy_pythonizor(klass, name):
             '''
@@ -218,6 +224,108 @@ def _invoke(user_pythonizor, npars, klass, fqn):
         user_pythonizor(klass)
     else:
         user_pythonizor(klass, fqn)
+
+def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
+    '''
+    Finds already instantiated classes in namespace `ns` that pass the filter
+    of `passes_filter`. Every matching class is pythonized with the
+    `user_pythonizor` function.
+    This makes sure a pythonizor is also applied to classes that have already
+    been used at the time the pythonizor is registered.
+
+    Args:
+        ns (string): namespace of the class names of prefixes in `targets`.
+        passes_filter (function): function that determines if a given class
+            is the target of `user_pythonizor`.
+        user_pythonizor (function): user pythonizor function.
+        npars (int): number of parameters of the user pythonizor function.
+    '''
+
+    ns_obj = _find_namespace(ns)
+    if ns_obj is None:
+        # Namespace has not been used yet, no need to inspect more
+        return
+
+    ns_vars = vars(ns_obj)
+    for var_name, var_value in ns_vars.items():
+        if str(var_value).startswith('<class cppyy.gbl.'):
+            # It's a class proxy, check if name matches
+            parsed_var_name = _get_class_name(var_name)
+            if passes_filter(parsed_var_name):
+                # Pythonize right away!
+                _invoke(user_pythonizor, npars, var_value, var_value.__cpp_name__)
+
+def _find_namespace(ns):
+    '''
+    Finds and returns the proxy object of the `ns` namespace, if it has already
+    been accessed.
+
+    Args:
+        ns (string): a namespace.
+
+    Returns:
+        namespace proxy object, if the namespace has already been accessed,
+            otherwise None.
+    '''
+
+    if ns == '':
+        return gbl_namespace
+
+    ns_obj = gbl_namespace
+    # Get all namespaces in a list
+    every_ns = ns.split('::')
+    for ns in every_ns:
+        ns_vars = vars(ns_obj)
+        if not ns in ns_vars:
+            return None
+        ns_obj = getattr(ns_obj, ns)
+
+    return ns_obj
+
+def _get_class_name(fqn):
+    '''
+    Parses and returns the class name in `fqn`.
+    Example: if `fqn` is "NS1::NS2::C", "C" is returned.
+
+    Args:
+        fqn (string): fully-qualified class name.
+
+    Returns:
+        string: class name in `fqn`.
+    '''
+
+    pos = _find_namespace_end(fqn)
+    if pos < 0: # no namespace found
+        return fqn
+    else:
+        return fqn[pos+2:]
+
+def _find_namespace_end(fqn):
+    '''
+    Find the position where the namespace in `fqn` ends.
+
+    Args:
+        fqn (string): fully-qualified class name.
+
+    Returns:
+        integer: position where the namespace in `fqn` ends, i.e. the position
+            of the last '::', or -1 if there is no '::' in `fqn`.
+    '''
+
+    last_found = -1
+    prev_c = ''
+    pos = 0
+    for c in fqn:
+        if c == ':' and prev_c == ':':
+            last_found = pos - 1
+        elif c == '<':
+            # If we found a template, this is already the class name,
+            # so we're done!
+            break
+        prev_c = c
+        pos += 1
+
+    return last_found
 
 def _register_pythonizations():
     '''

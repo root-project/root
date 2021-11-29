@@ -167,3 +167,34 @@ def pythonizor_for_first_and_second(klass, name):
 # If we now access both classes, we should see that the pythonizor runs twice.
 f = ROOT.FirstClass()
 s = ROOT.NS.SecondClass()
+
+# So far we have seen how pythonizations can be registered for classes that
+# have not been used yet. We have discussed how, in that case, the pythonizor
+# functions are executed lazily when their target class/es are used for the
+# first time in the application.
+# However, it can also happen that our target class/es have already been
+# accessed by the time we register a pythonization. In such a scenario, the
+# pythonizor is applied immediately (at registration time) to the target
+# class/es.
+
+# Let's see an example of what was just explained. We will define a new class
+# and immediately create an object of that class. We can check how the object
+# still does not have a new attribute `pythonized` that we are going to inject
+# in the next step.
+ROOT.gInterpreter.Declare('''
+class MyClass2 {};
+''')
+o = ROOT.MyClass2()
+try:
+    print(o.pythonized)
+except AttributeError:
+    print("Object has not been pythonized yet!")
+
+# After that, we will register a pythonization for `MyClass2`. Since the class
+# has already been used, the pythonization will happen right away.
+@pythonization('MyClass2')
+def pythonizor_for_myclass2(klass):
+    klass.pythonized = True
+
+# Now our object does have the `pythonized` attribute:
+print(o.pythonized) # prints True

@@ -9,6 +9,13 @@ class PythonizationDecorator(unittest.TestCase):
     Test the @pythonization decorator for user-defined classes.
     """
 
+    # Some already instantiated ROOT classes may match targets of @pythonization
+    # in some tests, and because of immediate pythonization they will be
+    # processed by the pythonizors. Just ignore them
+    exclude = [ 'TClass', 'TSystem', 'TUnixSystem', 'TMacOSXSystem',
+                'TWinNTSystem', 'TDictionary', 'TEnv', 'TInterpreter',
+                'TObject', 'TNamed', 'TROOT', 'TIter', 'TDirectory', 'TString' ]
+
     # Helpers
     def _define_class(self, class_name, namespace=None):
         if namespace is None:
@@ -66,7 +73,7 @@ class PythonizationDecorator(unittest.TestCase):
     # Test @pythonization('Prefix', is_prefix=True)
     def test_single_prefix_global(self):
         # Define test classes
-        prefix = 'Prefix'
+        prefix = 'OnePrefix'
         class1 = prefix + 'Class1'
         class2 = prefix + 'Class2'
         for class_name in class1, class2:
@@ -93,7 +100,7 @@ class PythonizationDecorator(unittest.TestCase):
     def test_single_prefix_in_ns(self):
         # Define test classes
         ns = 'NS'
-        prefix = 'Prefix'
+        prefix = 'TwoPrefix'
         class1 = prefix + 'Class1'
         fqn1 = ns + '::' + class1
         class2 = prefix + 'Class2'
@@ -177,8 +184,8 @@ class PythonizationDecorator(unittest.TestCase):
     # Test @pythonization(['OnePrefix', 'AnotherPrefix'], is_prefix=True)
     def test_multiple_prefixes_global(self):
         # Define test classes
-        prefix1 = 'Prefix1'
-        prefix2 = 'Prefix2'
+        prefix1 = 'ThreePrefix'
+        prefix2 = 'FourPrefix'
         class1 = prefix1 + 'Class1'
         class2 = prefix2 + 'Class2'
         for class_name in class1, class2:
@@ -206,8 +213,8 @@ class PythonizationDecorator(unittest.TestCase):
     def test_multiple_prefixes_in_ns(self):
         # Define test classes
         ns = 'NS'
-        prefix1 = 'Prefix1'
-        prefix2 = 'Prefix2'
+        prefix1 = 'FivePrefix'
+        prefix2 = 'SixPrefix'
         class1 = prefix1 + 'Class1'
         class2 = prefix2 + 'Class2'
         ns_prefixes = []
@@ -249,9 +256,10 @@ class PythonizationDecorator(unittest.TestCase):
         # Match all classes in global namespace
         @pythonization(target_prefix, is_prefix=True)
         def my_func(klass, name):
-            self.assertTrue(klass.__cpp_name__.startswith(target_prefix))
-            self.assertTrue(name.startswith(target_prefix))
-            executed.append(name)
+            if name not in self.exclude:
+                self.assertTrue(klass.__cpp_name__.startswith(target_prefix))
+                self.assertTrue(name.startswith(target_prefix))
+                executed.append(name)
 
         # Trigger execution of pythonizor
         for class_name in class1, class2:
@@ -447,6 +455,54 @@ class PythonizationDecorator(unittest.TestCase):
         # The pythonizor should have been triggered twice
         self.assertEqual(executed.pop(0), class_name)
         self.assertEqual(executed.pop(0), ns_class_name)
+        self.assertTrue(not executed)
+
+    # Test pythonization of already instantiated classes
+    def test_instantiated_classes(self):
+        # Define test classes
+        ns = 'NS'
+        class_name = 'MyClass13'
+        ns_class_name = ns + '::' + class_name
+        self._define_class(class_name)
+        self._define_class(class_name, ns)
+        class_template = 'ClassTemplate'
+        ROOT.gInterpreter.ProcessLine('template <class T> class {ct} {{ }};'
+                                      .format(ct=class_template))
+        templ_type = 'int'
+
+        # Instantiate classes
+        getattr(ROOT, class_name)
+        getattr(getattr(ROOT, ns), class_name)
+        getattr(ROOT, class_template)[templ_type]
+
+        executed = []
+        targets = [ class_name, ns_class_name ]
+
+        # Immediate pythonization should happen.
+        # Accesses classes are cached by cppyy using their class name as key in
+        # their namespace
+        @pythonization(class_name)
+        @pythonization(class_name, ns=ns)
+        def my_func1(klass, name):
+            self.assertTrue(klass.__cpp_name__ in targets)
+            self.assertTrue(name in targets)
+            executed.append(name)
+
+        self.assertTrue(class_name in executed)
+        self.assertTrue(ns_class_name in executed)
+        self.assertEqual(len(executed), 2)
+        executed.clear()
+
+        # Immediate pythonization should happen.
+        # Instantiated templates are also tested because they are cached by
+        # cppyy using their fully-qualified name as key in their namespace
+        @pythonization(class_template, is_prefix=True)
+        def my_func2(klass, name):
+            self.assertTrue(klass.__cpp_name__.startswith(class_template))
+            self.assertTrue(name.startswith(class_template))
+            executed.append(name)
+
+        self.assertEqual(executed.pop(0), class_template + '<' + templ_type + '>')
         self.assertTrue(not executed)
 
 

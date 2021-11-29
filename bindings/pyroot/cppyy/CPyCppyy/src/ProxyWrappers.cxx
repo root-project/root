@@ -644,6 +644,11 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
             }
         }
 
+        if (!parent && name.size() > 0) {
+        // Didn't find any scope in the name, so must be global
+	    parent = CreateScopeProxy(Cppyy::gGlobalScope);
+        }
+
         if (parent && !CPPScope_Check(parent)) {
         // Special case: parent found is not one of ours (it's e.g. a pure Python module), so
         // continuing would fail badly. One final lookup, then out of here ...
