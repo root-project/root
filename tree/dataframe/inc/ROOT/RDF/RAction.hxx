@@ -133,7 +133,7 @@ public:
       SetHasRun();
    }
 
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() final
    {
       auto prevNode = fPrevData.GetGraph();
       auto prevColumns = prevNode->GetDefinedColumns();
@@ -151,19 +151,9 @@ public:
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
-   void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
+   void *PartialUpdate(unsigned int slot) final { return fHelper.CallPartialUpdate(slot); }
 
 private:
-   // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
-   // the template parameter is required to defer instantiation of the method to SFINAE time
-   template <typename H = Helper>
-   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot), (void *)(nullptr))
-   {
-      return &fHelper.PartialUpdate(slot);
-   }
-
-   // this one is always available but has lower precedence thanks to `...`
-   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
 
    ROOT::RDF::SampleCallback_t GetSampleCallback() final { return fHelper.GetSampleCallback(); }
 };

@@ -24,9 +24,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#if defined(__sun) || defined(__sgi)
-#  include <fcntl.h>
-#endif
+#include <fcntl.h>
 
 #if defined(__linux__) && !defined(linux)
 # define linux
@@ -42,15 +40,6 @@
 
 #ifndef NOFILE
 #   define NOFILE 0
-#endif
-
-#if defined(__hpux)
-#define USE_SIGCHLD
-#endif
-
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
-#define USE_SIGCHLD
-#define SIGCLD SIGCHLD
 #endif
 
 #if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
@@ -69,23 +58,16 @@ namespace ROOT {
 
 extern ErrorHandler_t gErrSys;
 
-#if defined(USE_SIGCHLD)
 ////////////////////////////////////////////////////////////////////////////////
 
 static void SigChild(int)
 {
-   int         pid;
-#if defined(__hpux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
-    defined(__APPLE__)
+   int pid;
    int status;
-#else
-   union wait  status;
-#endif
 
    while ((pid = wait3(&status, WNOHANG, 0)) > 0)
       ;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Detach a daemon process from login session context.
@@ -208,15 +190,7 @@ out:
    // and execute the wait3() system call.
 
    if (ignsigcld) {
-#ifdef USE_SIGCHLD
-      signal(SIGCLD, SigChild);
-#else
-#if defined(__sun)
-      sigignore(SIGCHLD);
-#else
-      signal(SIGCLD, SIG_IGN);
-#endif
-#endif
+      signal(SIGCHLD, SigChild);
    }
 }
 

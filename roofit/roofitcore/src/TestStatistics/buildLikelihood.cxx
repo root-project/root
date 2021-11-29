@@ -1,18 +1,14 @@
-// Author: Patrick Bos, Netherlands eScience Center / NIKHEF 2021
-
-/*****************************************************************************
- * RooFit
- * Authors:                                                                  *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *                                                                           *
- * Copyright (c) 2000-2021, Regents of the University of California          *
- *                          and Stanford University. All rights reserved.    *
- *                                                                           *
- * Redistribution and use in source and binary forms,                        *
- * with or without modification, are permitted according to the terms        *
- * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
- *****************************************************************************/
+/*
+ * Project: RooFit
+ * Authors:
+ *   PB, Patrick Bos, Netherlands eScience Center, p.bos@esciencecenter.nl
+ *
+ * Copyright (c) 2021, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
 
 #include <TestStatistics/buildLikelihood.h>
 
@@ -351,7 +347,7 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
  * \return A unique pointer to a RooSubsidiaryL that contains all terms in
  * the pdf that can be calculated separately from the other components in the full likelihood.
  */
-std::shared_ptr<RooAbsL> buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
+std::unique_ptr<RooAbsL> buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
                                          ConstrainedParameters constrained_parameters,
                                          ExternalConstraints external_constraints, GlobalObservables global_observables,
                                          std::string global_observables_tag)
@@ -381,27 +377,27 @@ std::shared_ptr<RooAbsL> buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, RooAb
 }
 
 // delegating convenience overloads
-std::shared_ptr<RooAbsL>
+std::unique_ptr<RooAbsL>
 buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, ConstrainedParameters constrained_parameters)
 {
    return buildLikelihood(pdf, data, RooAbsL::Extended::Auto, constrained_parameters);
 }
-std::shared_ptr<RooAbsL>
+std::unique_ptr<RooAbsL>
 buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, ExternalConstraints external_constraints)
 {
    return buildLikelihood(pdf, data, RooAbsL::Extended::Auto, {}, external_constraints);
 }
-std::shared_ptr<RooAbsL>
+std::unique_ptr<RooAbsL>
 buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, GlobalObservables global_observables)
 {
    return buildLikelihood(pdf, data, RooAbsL::Extended::Auto, {}, {}, global_observables);
 }
-std::shared_ptr<RooAbsL>
+std::unique_ptr<RooAbsL>
 buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, std::string global_observables_tag)
 {
    return buildLikelihood(pdf, data, RooAbsL::Extended::Auto, {}, {}, {}, global_observables_tag);
 }
-std::shared_ptr<RooAbsL>
+std::unique_ptr<RooAbsL>
 buildLikelihood(RooAbsPdf *pdf, RooAbsData *data, ConstrainedParameters constrained_parameters, GlobalObservables global_observables)
 {
    return buildLikelihood(pdf, data, RooAbsL::Extended::Auto, constrained_parameters, {}, global_observables);

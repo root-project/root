@@ -11,6 +11,7 @@
 #include <iterator>
 #include <iomanip>
 #include <limits>
+#include <cassert>
 
 namespace TMVA{
 namespace Experimental{
@@ -30,6 +31,7 @@ namespace SOFIE{
       std::string fNA;
       std::string fNB;
       std::string fNC = "";
+      std::string fNC2; // bias tensor name after broadcasting
       std::string fNY;
       std::vector<size_t> fShapeA;
       std::vector<size_t> fShapeB;
@@ -110,33 +112,45 @@ namespace SOFIE{
          }
          fShapeA = model.GetTensorShape(fNA);
          if (fShapeA.size() != 2){
-            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA + " is not of 2 dimensions");
+            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
+                                     " is not of 2 dimensions: A " +  ConvertShapeToString(fShapeA));
          }
          fShapeB = model.GetTensorShape(fNB);
          if (fShapeB.size() != 2){
-            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNB + " is not of 2 dimensions");
+            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNB + " is not of 2 dimensions: B " +  ConvertShapeToString(fShapeB));
          }
          fShapeY = ShapeInference({fShapeA, fShapeB})[0];
          if (fNC != ""){
             fShapeC = model.GetTensorShape(fNC);
-
+            fNC2 = fNC;
             bool broadcast_needed = false;
-            for (size_t i =0; i < fShapeC.size(); i++){
-               if (fShapeC[i]!=fShapeY[i]){
-                  broadcast_needed = true;
-                  break;
-               }
+
+            // broadcast is not needed if fShapeY[0] == 1 i.e. C and Y have same length
+            if (ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
+               broadcast_needed = true;
             }
 
-            if (broadcast_needed){
-               auto original_data = model.GetInitializedTensorData(fNC);
-               if (fType == "float"){
+            // std::cout << "doing broadcast " << broadcast_needed << " use session " << model.UseSession() <<
+            //    " shape C " << ConvertShapeToString(fShapeC) << " shape Y " << ConvertShapeToString(fShapeY)
+            //                << std::endl;
 
-                  std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(static_cast<float*>(original_data.get()), fShapeC, fShapeY), std::default_delete<float[]>());
+            if (broadcast_needed) {
+               if (!model.UseSession()) {
+                  auto original_data = model.GetInitializedTensorData(fNC);
+                  if (fType == "float") {
 
+                     std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(
+                                                           static_cast<float *>(original_data.get()), fShapeC, fShapeY),
+                                                        std::default_delete<float[]>());
 
-                  model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
-                  fShapeC = fShapeY;
+                     model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
+                     fShapeC = fShapeY;
+                  }
+               } else {
+                  // In case of session add broadcasting code in Session constructor and in GenerateInitCode
+                  // we need to add a new intermediate tensor for broadcasted bias tensor
+                  fNC2 = fNC + "bcast";
+                  model.AddIntermediateTensor(fNC2, model.GetTensorType(fNC), fShapeY);
                }
             }
          }
@@ -149,35 +163,56 @@ namespace SOFIE{
 
       }
 
-
+      std::string GenerateInitCode()
+      {
+         std::stringstream out;
+         // generate initialization code for broadcasting of bias tensor
+         if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
+            // include a separate scope to avoid defining unique operator temp variables
+            out << "   {\n";
+            out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeC) << ";\n";
+            out << "      std::vector<size_t> newShape = " << ConvertShapeToString(fShapeY) << ";\n";
+            std::string original_bias_tensor = "tensor_" + fNC;
+            std::string new_bias_tensor = "tensor_" + fNC2;
+            out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
+                << original_bias_tensor << ", oldShape, newShape);\n";
+            int length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
+            out << "      std::copy(newData_ptr, newData_ptr + " << length << ", " << new_bias_tensor << ");\n";
+            out << "      delete [] newData_ptr;\n";
+            out << "   }\n";
+         }
+         return out.str();
+      }
 
       std::string Generate(std::string OpName){
          OpName = "op_" + OpName;
-         if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())){
+         const std::string SP = "   ";
+         if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
             throw std::runtime_error("TMVA SOFIE Gemm Op called to Generate without being initialized first");
          }
          std::stringstream out;
-         out <<"\t" << "char " << OpName << "_transA = " << (fAttrTransA ? "\'t\'" : "\'n\'") << ";\n";
-         out <<"\t" << "char " << OpName << "_transB = " << (fAttrTransB ? "\'t\'" : "\'n\'") << ";\n";
+         out << "\n//--------- Gemm\n";
+         out << SP << "char " << OpName << "_transA = " << (fAttrTransA ? "\'t\'" : "\'n\'") << ";\n";
+         out << SP << "char " << OpName << "_transB = " << (fAttrTransB ? "\'t\'" : "\'n\'") << ";\n";
          int m = (fAttrTransA ? fShapeA[1] : fShapeA[0]);
          int n = (fAttrTransB ? fShapeB[0] : fShapeB[1]);
          int k = (fAttrTransA ? fShapeA[0] : fShapeA[1]);
-         out <<"\t" << "int " << OpName << "_m = " << m << ";\n";
-         out <<"\t" << "int " << OpName << "_n = " << n << ";\n";
-         out <<"\t" << "int " << OpName << "_k = " << k << ";\n";
-         out <<"\t" << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ";\n";
-         out <<"\t" << "float " << OpName << "_beta = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ";\n";
-         out <<"\t" << "int " << OpName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
-         out <<"\t" << "int " << OpName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
+         out << SP << "int " << OpName << "_m = " << m << ";\n";
+         out << SP << "int " << OpName << "_n = " << n << ";\n";
+         out << SP << "int " << OpName << "_k = " << k << ";\n";
+         out << SP << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ";\n";
+         out << SP << "float " << OpName << "_beta = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ";\n";
+         out << SP << "int " << OpName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
+         out << SP << "int " << OpName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
          if (fNC != ""){
-            int length = 1;
-            for (auto& i: fShapeC){
-               length *= i;
-            }
-            out << "\t" << "std::copy(" << "tensor_" << fNC << ", " << "tensor_" << fNC << " + " << length << ", " << "tensor_" << fNY << ");\n";
+            size_t length = ConvertShapeToLength(fShapeY);
+            if (fNC2 == fNC)
+               // case broadcasting was not needed or done otside of session
+               assert(length == ConvertShapeToLength(fShapeC));
+            out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << length << ", " << "tensor_" << fNY << ");\n";
          }
          if (fType == "float"){
-            out << "\t" << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
              << "_n, &" << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << fNB
              << ", &" << OpName << "_ldb, " << "tensor_" << fNA << ", &" << OpName << "_lda, &" << OpName << "_beta, " << "tensor_" << fNY << ", &"
              << OpName << "_n);\n";

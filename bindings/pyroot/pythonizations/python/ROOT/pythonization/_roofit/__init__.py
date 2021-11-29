@@ -50,9 +50,11 @@ from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
 from ._roonllvar import RooNLLVar
 from ._rooprodpdf import RooProdPdf
+from ._roorealvar import RooRealVar
 from ._roosimultaneous import RooSimultaneous
 from ._roosimwstool import RooSimWSTool
 from ._rooworkspace import RooWorkspace
+from ._roovectordatastore import RooVectorDataStore
 
 
 # list of python classes that are used to pythonize RooFit classes
@@ -78,9 +80,11 @@ python_classes = [
     RooMsgService,
     RooNLLVar,
     RooProdPdf,
+    RooRealVar,
     RooSimultaneous,
     RooSimWSTool,
     RooWorkspace,
+    RooVectorDataStore,
 ]
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit
@@ -140,17 +144,32 @@ def get_defined_attributes(klass, consider_base_classes=False):
     return sorted([attr for attr in dir(klass) if is_defined(attr)])
 
 
+def is_staticmethod(klass, func_name):
+    """Check if the function with name `func_name` of a class is a static method."""
+
+    import sys
+
+    if sys.version_info >= (3, 0):
+        func = getattr(klass(), func_name)
+    else:
+        func = getattr(klass, func_name)
+
+    return type(func).__name__ == "function"
+
+
 def rebind_instancemethod(to_class, from_class, func_name):
     """
     Bind the instance method `from_class.func_name` also to class `to_class`.
     """
 
-    from_method = getattr(from_class, func_name)
-
     import sys
+
+    from_method = getattr(from_class, func_name)
 
     if sys.version_info >= (3, 0):
         to_method = from_method
+    elif is_staticmethod(from_class, func_name):
+        to_method = staticmethod(from_method)
     else:
         import new
 

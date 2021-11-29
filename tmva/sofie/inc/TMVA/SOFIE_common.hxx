@@ -1,8 +1,8 @@
 #ifndef TMVA_SOFIE_SOFIE_COMMON
 #define TMVA_SOFIE_SOFIE_COMMON
 
-#include "TMVA/RTensor.hxx"
-#include "TMVA/Types.h"
+// #include "TMVA/RTensor.hxx"
+// #include "TMVA/Types.h"
 
 #include <type_traits>
 #include <cstdint>
@@ -54,12 +54,12 @@ struct InitializedTensor{
    ETensorType fType;
    std::vector<std::size_t> fShape;
    std::shared_ptr<void> fData;     //! Transient
-   Int_t fSize=1;
+   int fSize=1;
    char* fPersistentData=nullptr;   //[fSize] Persistent
 
    void CastSharedToPersistent(){
       for(auto item:fShape){
-         fSize*=(Int_t)item;
+         fSize*=(int)item;
       }
       switch(fType){
          case ETensorType::FLOAT: fSize*=sizeof(float); break;
@@ -80,7 +80,7 @@ struct InitializedTensor{
           throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
       }
       }
-     }
+   }
 };
 
 template <typename T>

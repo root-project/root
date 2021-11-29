@@ -46,7 +46,8 @@ public:
 
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
-      if (fShape.empty()){
+      const std::string SP = "   ";
+      if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Transpose Relu called to Generate without being initialized first");
       }
       std::stringstream out;
@@ -54,9 +55,10 @@ public:
       for(auto& i: fShape){
          length *= i;
       }
-      out << "\t" << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << "\t\t" << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] > 0 )? tensor_" << fNX << "[id] : 0);\n";
-      out << "\t}\n";
+      out << "\n//------ RELU\n";
+      out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] > 0 )? tensor_" << fNX << "[id] : 0);\n";
+      out << SP << "}\n";
       return out.str();
    }
 

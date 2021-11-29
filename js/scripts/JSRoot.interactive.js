@@ -41,7 +41,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             }
          }
 
-         let hints = [], nhints = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false,
+         let hints = [], nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false,
             textheight = 11, hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
@@ -79,6 +79,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (!hints[n]) continue;
 
             nhints++;
+            
+            if (hint.exact) nexact++; 
 
             for (let l = 0; l < hint.lines.length; ++l)
                maxlen = Math.max(maxlen, hint.lines[l].length);
@@ -92,16 +94,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let layer = this.hints_layer(),
-            hintsg = layer.select(".objects_hints"); // group with all tooltips
-
-         let title = "", name = "", info = "",
-            hint = null, best_dist2 = 1e10, best_hint = null,
-            coordinates = pnt ? Math.round(pnt.x) + "," + Math.round(pnt.y) : "";
+             hintsg = layer.select(".objects_hints"), // group with all tooltips
+             title = "", name = "", info = "",
+             hint = null, best_dist2 = 1e10, best_hint = null, show_only_best = nhints > 15,
+             coordinates = pnt ? Math.round(pnt.x) + "," + Math.round(pnt.y) : "";
+            
          // try to select hint with exact match of the position when several hints available
          for (let k = 0; k < (hints ? hints.length : 0); ++k) {
             if (!hints[k]) continue;
             if (!hint) hint = hints[k];
-            if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
+            
+            // select exact hint if this is the only one  
+            if (hints[k].exact && (nexact < 2) && (!hint || !hint.exact)) { hint = hints[k]; break; }
 
             if (!pnt || (hints[k].x === undefined) || (hints[k].y === undefined)) continue;
 
@@ -119,9 +123,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          this.showObjectStatus(name, title, info, coordinates);
+         
 
          // end of closing tooltips
-         if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (nhints > 15)) {
+         if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (show_only_best && !best_hint)) {
             hintsg.remove();
             return;
          }
@@ -148,13 +153,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let viewmode = hintsg.property('viewmode') || "",
             actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
 
-         if (nhints > 1) {
+         if (show_only_best || (nhints == 1)) {
+            viewmode = "single";
+            posx += 15;
+         } else {
             // if there are many hints, place them left or right
 
             let bleft = 0.5, bright = 0.5;
 
-            if (viewmode == "left") bright = 0.7; else
-               if (viewmode == "right") bleft = 0.3;
+            if (viewmode == "left") 
+               bright = 0.7; 
+            else if (viewmode == "right") 
+               bleft = 0.3;
 
             if (posx <= bleft * frame_rect.width) {
                viewmode = "left";
@@ -165,10 +175,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             } else {
                posx = hintsg.property('startx');
             }
-         } else {
-            viewmode = "single";
-            posx += 15;
-         }
+         } 
 
          if (viewmode !== hintsg.property('viewmode')) {
             hintsg.property('viewmode', viewmode);
@@ -176,10 +183,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let curry = 10, // normal y coordinate
-            gapy = 10,  // y coordinate, taking into account all gaps
-            gapminx = -1111, gapmaxx = -1111,
-            minhinty = -frame_shift.y,
-            maxhinty = this.getCanvPainter().getPadHeight() - frame_rect.y - frame_shift.y;
+             gapy = 10,  // y coordinate, taking into account all gaps
+             gapminx = -1111, gapmaxx = -1111,
+             minhinty = -frame_shift.y,
+             maxhinty = this.getCanvPainter().getPadHeight() - frame_rect.y - frame_shift.y;
 
          function FindPosInGap(y) {
             for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
@@ -196,11 +203,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          for (let n = 0; n < hints.length; ++n) {
             let hint = hints[n],
                group = hintsg.select(".painter_hint_" + n);
+               
+            if (show_only_best && (hint !== best_hint)) hint = null;
+               
             if (hint === null) {
                group.remove();
                continue;
             }
-
+            
             let was_empty = group.empty();
 
             if (was_empty)
@@ -243,9 +253,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (nhints > 1) {
                let col = usecolor1 ? hint.color1 : hint.color2;
-               if ((col !== undefined) && (col !== 'none'))
-                  r.attr("stroke", col).attr("stroke-width", hint.exact ? 3 : 1);
+               if (col && (col !== 'none'))
+                  r.attr("stroke", col);
             }
+            r.attr("stroke-width", hint.exact ? 3 : 1);
 
             for (let l = 0; l < (hint.lines ? hint.lines.length : 0); l++)
                if (hint.lines[l] !== null) {

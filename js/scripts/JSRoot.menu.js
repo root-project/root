@@ -5,8 +5,6 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
    "use strict";
 
-   JSROOT.loadScript('$$$style/jquery-ui');
-
    if (typeof jQuery === 'undefined') globalThis.jQuery = $;
 
   /** @summary Produce exec string for WebCanas to set color value
@@ -192,6 +190,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          if (old_dlg) old_dlg.parentNode.removeChild(old_dlg);
          if (!kind) kind = "text";
          let inp_type = (kind == "int") ? "number" : "text";
+         if ((value === undefined) || (value === null)) value = "";
 
          $(document.body).append(
             `<div id="${dlg_id}">
@@ -663,16 +662,19 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
               }
             });
 
-         let newx = null, newy = null;
+         return JSROOT.loadScript('$$$style/jquery-ui').then(() => {
 
-         if (event.clientX + this.element.width() > $(window).width()) newx = $(window).width() - this.element.width() - 20;
-         if (event.clientY + this.element.height() > $(window).height()) newy = $(window).height() - this.element.height() - 20;
+            let newx = null, newy = null;
 
-         if (newx!==null) this.element.css('left', (newx>0 ? newx : 0) + window.pageXOffset);
-         if (newy!==null) this.element.css('top', (newy>0 ? newy : 0) + window.pageYOffset);
+            if (event.clientX + this.element.width() > $(window).width()) newx = $(window).width() - this.element.width() - 20;
+            if (event.clientY + this.element.height() > $(window).height()) newy = $(window).height() - this.element.height() - 20;
 
-         return new Promise(resolve => {
-            this.resolveFunc = resolve;
+            if (newx!==null) this.element.css('left', (newx>0 ? newx : 0) + window.pageXOffset);
+            if (newy!==null) this.element.css('top', (newy>0 ? newy : 0) + window.pageYOffset);
+
+            return new Promise(resolve => {
+               this.resolveFunc = resolve;
+            });
          });
       }
 

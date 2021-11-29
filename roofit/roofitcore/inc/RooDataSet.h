@@ -105,6 +105,8 @@ public:
   virtual Bool_t isNonPoissonWeighted() const override;
 
   virtual Double_t weight() const override;
+  /// Returns a pointer to the weight variable (if set).
+  RooRealVar* weightVar() { return _wgtVar; }
   virtual Double_t weightSquared() const override;
   virtual void weightError(double& lo, double& hi,ErrorType etype=SumW2) const override;
   double weightError(ErrorType etype=SumW2) const override;

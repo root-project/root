@@ -17,7 +17,8 @@ TEST(RModelParser_PyTorch, SEQUENTIAL)
                              0.5058, -1.2560,
                             -0.7750, -1.6701,
                              0.8171, -0.2858};
-    std::vector<float> outputSequential = TMVA_SOFIE_PyTorchModelSequential::infer(inputSequential);
+    TMVA_SOFIE_PyTorchModelSequential::Session s("PyTorchSequentialModel.dat");                    
+    std::vector<float> outputSequential = s.infer(inputSequential);
 
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
@@ -60,7 +61,8 @@ TEST(RModelParser_PyTorch, MODULE)
                         0.5626, -0.6466,
                        -1.8818,  0.4736,
                         1.1102,  1.8694};
-    std::vector<float> outputModule = TMVA_SOFIE_PyTorchModelModule::infer(inputModule);
+    TMVA_SOFIE_PyTorchModelModule::Session s("PyTorchModuleModel.dat");
+    std::vector<float> outputModule = s.infer(inputModule);
 
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");

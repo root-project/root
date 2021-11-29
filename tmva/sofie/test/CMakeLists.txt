@@ -114,3 +114,20 @@ ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
+
+# gtest
+# Look for needed python modules
+find_python_module(torch QUIET)
+if(PY_TORCH_FOUND)
+  configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
+  configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
+
+  ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
+    LIBRARIES
+      ROOTTMVASofie
+      ROOTTMVASofieParser
+      blas
+    INCLUDE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+  )
+endif()

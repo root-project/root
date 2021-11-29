@@ -577,62 +577,12 @@ struct Limits {
 // Trig and other functions
 
 #include <float.h>
+#include <math.h>
 
 #if defined(R__WIN32) && !defined(__CINT__)
 #   ifndef finite
 #      define finite _finite
 #   endif
-#endif
-#if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__GLIBC) || \
-    (defined(R__MACOSX) )
-// math functions are defined inline so we have to include them here
-#   include <math.h>
-#   ifdef R__SOLARIS_CC50
-       extern "C" { int finite(double); }
-#   endif
-// #   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
-// #      ifndef finite
-// #         define finite __finite
-// #      endif
-// #      ifndef isnan
-// #         define isnan  __isnan
-// #      endif
-// #   endif
-#else
-// don't want to include complete <math.h>
-extern "C" {
-   extern double sin(double);
-   extern double cos(double);
-   extern double tan(double);
-   extern double sinh(double);
-   extern double cosh(double);
-   extern double tanh(double);
-   extern double asin(double);
-   extern double acos(double);
-   extern double atan(double);
-   extern double atan2(double, double);
-   extern double sqrt(double);
-   extern double exp(double);
-   extern double pow(double, double);
-   extern double log(double);
-   extern double log10(double);
-#ifndef R__WIN32
-#   if !defined(finite)
-       extern int finite(double);
-#   endif
-#   if !defined(isnan)
-       extern int isnan(double);
-#   endif
-   extern double ldexp(double, int);
-   extern double ceil(double);
-   extern double floor(double);
-#else
-   _CRTIMP double ldexp(double, int);
-   _CRTIMP double ceil(double);
-   _CRTIMP double floor(double);
-#endif
-}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

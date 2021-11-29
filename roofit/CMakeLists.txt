@@ -5,6 +5,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(batchcompute)
+if (roofit_multiprocess AND NOT MSVC)
+  add_subdirectory(roofitZMQ)
+  add_subdirectory(multiprocess)
+endif(roofit_multiprocess AND NOT MSVC)
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
 if(mathmore)

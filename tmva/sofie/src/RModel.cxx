@@ -170,13 +170,20 @@ namespace SOFIE{
       }
    }
 
-   void RModel::Generate(){
+   void RModel::Generate(bool useSession, bool useWeightFile){
+      fUseSession = useSession;  // session flag is used in operator initialize
       Initialize();
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
       for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
       }
-      fGC += ("namespace TMVA_SOFIE_" + fName + "{\n");
+      // for the session we need to include SOFIE_Common functions
+      if (useSession)
+         fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
+      if (useWeightFile)
+         fGC += "#include <fstream>\n";
+      
+      fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
       if (!fNeededBlasRoutines.empty()) {
          fGC += ("namespace BLAS{\n");
          for (auto &routine : fNeededBlasRoutines) {
@@ -190,9 +197,14 @@ namespace SOFIE{
             } else if (routine == "Axpy") {
                fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
                        "\t                         const int * incx, float * y, const int * incy);\n");
+            } else if (routine == "Copy") {
+               fGC += ("\textern \"C\" void scopy_(const int *n, const float* x, const int *incx, float* y, const int* incy);\n");
             }
          }
          fGC += ("}//BLAS\n");
+      }
+      if (useSession) {
+         fGC += "struct Session {\n";
       }
       for (auto& i: fInitializedTensors){
          if (i.second.fType == ETensorType::FLOAT){
@@ -201,13 +213,16 @@ namespace SOFIE{
                length *= dim;
             }
             fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
-            std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.fData);
-            std::stringstream floats;
-            for (size_t idx = 0; idx < length-1; idx++){
-               floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[idx] << ", ";
+            if (!useWeightFile) {
+               std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.fData);
+               std::stringstream floats;
+               for (size_t idx = 0; idx < length-1; idx++){
+                  floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[idx] << ", ";
+               }
+               floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[length-1];
+               fGC += floats.str();
             }
-            floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[length-1];
-            fGC += floats.str() +"};\n";
+            fGC += "};\n";
          }
       }
       for (auto&i: fIntermediateTensorInfos){
@@ -216,8 +231,31 @@ namespace SOFIE{
             for (auto & dim: i.second.shape){
                length *= dim;
             }
-            fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "];\n";
+            //fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "];\n";
+            fGC += "std::vector<float> fTensor_" + i.first  + " = std::vector<float>(" + std::to_string(length) + ");\n";
+            fGC += "float * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
          }
+      }
+      if (useSession) {
+         // add here specific operator code that needs to define session data members
+         fGC += "\n";
+         for (size_t id = 0; id < fOperators.size(); id++) {
+            std::string opName = std::to_string(id);
+            fGC += fOperators[id]->GenerateSessionMembersCode(opName);
+         }
+         fGC += "\n";
+         fGC += "Session(std::string filename =\"\") {\n";
+         // here add initialization and reading of weight tensors
+         if (useWeightFile) {
+            fGC += "   if (filename.empty()) filename = \"" + fName + ".dat\";\n";
+            ReadInitializedTensorsFromFile();
+            fUseWeightFile = useWeightFile;
+         }
+         // add here initialization code
+         for (size_t id = 0; id < fOperators.size() ; id++){
+            fGC += fOperators[id]->GenerateInitCode();
+         }
+         fGC += "}\n\n";
       }
 
       size_t outputSize = fOutputTensorNames.size();
@@ -269,14 +307,18 @@ namespace SOFIE{
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
       }
       if (outputSize == 1) {
-         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + sizeof(tensor_" +
-               fOutputTensorNames[0] + ") / sizeof(tensor_" + fOutputTensorNames[0] + "[0]));\n";
+         size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
+         
+         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " + 
+               std::to_string(outputLength) + ");\n";
       } else {
          for (size_t i = 0; i < outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {
+               size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
                fGC += "\tstd::vector<float> ret_";
                fGC += std::to_string(i);
-               fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + sizeof(tensor_" + fOutputTensorNames[i] + ") / sizeof(tensor_" + fOutputTensorNames[i] + "[0]));\n";
+               fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + " + 
+               std::to_string(outputLength) + ");\n";
             }
          }
          fGC += "\tstd::vector<std::vector<float>> ret({";
@@ -295,10 +337,78 @@ namespace SOFIE{
       }
       fGC += "\treturn ret;\n";
       fGC += "}\n";
+      if (useSession) {
+         fGC += "};\n";
+      }
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
    }
 
+   void RModel::ReadInitializedTensorsFromFile() {
+      // generate the code to read initialized tensors from a text data file
+      fGC += "   std::ifstream f;\n";
+      fGC += "   f.open(filename);\n";
+      fGC += "   if (!f.is_open()){\n";
+      fGC += "      throw std::runtime_error(\"tmva-sofie failed to open file for input weights\");\n";
+      fGC += "   }\n";
+      fGC += "   std::string tensor_name;\n";
+      fGC += "   int length;\n";
+      
+      //loop on tensors and parse the file
+      for (auto& i: fInitializedTensors){
+         if (i.second.fType == ETensorType::FLOAT){
+            size_t length = 1;
+            for (auto & dim: i.second.fShape){
+               length *= dim;
+            }
+            std::string tensor_name = "tensor_" + i.first;
+            std::string slength = std::to_string(length);
+            fGC += "   f >> tensor_name >> length;\n";
+            fGC += "   if (tensor_name != \"" + tensor_name + "\" ) {\n";
+            fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor name; expected name is " +
+                   tensor_name + " , read \" + tensor_name;\n";
+            fGC += "      throw std::runtime_error(err_msg);\n";
+            fGC += "    }\n";
+            fGC += "   if (length != " + slength + ") {\n";
+            fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor size; expected size is " + 
+                   slength + " , read \" + std::to_string(length) ;\n";
+            fGC += "      throw std::runtime_error(err_msg);\n";
+            fGC += "    }\n";
+            fGC += "    for (int i =0; i < length; ++i) \n";
+            fGC += "       f >> " + tensor_name + "[i];\n";
+         }
+      }
+      fGC += "   f.close();\n";
+   }
 
+   void RModel::WriteInitializedTensorsToFile(std::string filename) {
+      // write the initialized tensors in a text file 
+      if (filename == ""){
+         filename = fName + ".data";
+      }
+
+      std::ofstream f;
+      f.open(filename);
+      if (!f.is_open()){
+         throw std::runtime_error("tmva-sofie failed to open file for tensor weight data");
+      }
+      for (auto& i: fInitializedTensors){
+         if (i.second.fType == ETensorType::FLOAT){
+            size_t length = 1;
+            for (auto &dim : i.second.fShape) {
+               length *= dim;
+            }
+            std::string tensor_name = "tensor_" + i.first;
+            f << tensor_name << " " << length << "\n";
+            const float * data = (std::static_pointer_cast<float>(i.second.fData)).get();
+            for (size_t idx = 0; idx < length - 1; idx++) {
+               f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[idx] << " ";
+            }
+            f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[length - 1];
+            f << "\n";
+         }
+      }
+      f.close();
+   }
 
    void RModel::PrintRequiredInputTensors(){
       std::cout << "Model requires following inputs:\n";
@@ -409,6 +519,11 @@ namespace SOFIE{
       }
       f << fGC;
       f.close();
+
+      // write weights in a text file
+      size_t pos = filename.find(".hxx");
+      filename.replace(pos,4,".dat");
+      if (fUseWeightFile) WriteInitializedTensorsToFile(filename);
    }
 
    void RModel::Streamer(TBuffer &R__b){
