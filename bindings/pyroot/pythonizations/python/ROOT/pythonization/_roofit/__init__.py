@@ -50,6 +50,7 @@ from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
 from ._roonllvar import RooNLLVar
 from ._rooprodpdf import RooProdPdf
+from ._roorealvar import RooRealVar
 from ._roosimultaneous import RooSimultaneous
 from ._roosimwstool import RooSimWSTool
 from ._rooworkspace import RooWorkspace
@@ -79,6 +80,7 @@ python_classes = [
     RooMsgService,
     RooNLLVar,
     RooProdPdf,
+    RooRealVar,
     RooSimultaneous,
     RooSimWSTool,
     RooWorkspace,
