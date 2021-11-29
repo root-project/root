@@ -154,6 +154,18 @@ Other notable additions and improvements include:
 
 
 ## RooFit Libraries
+### New PyROOT functions for interoperability with NumPy and Pandas
+
+New member functions of RooFit classes were introduced exclusively to PyROOT for better interoperability between RooFit and Numpy and Pandas:
+
+- `RooDataSet.from_numpy`: Import a RooDataSet from a dictionary of numpy arrays (static method)
+- `RooDataSet.to_numpy`: Export a RooDataSet to a dictionary of numpy arrays
+- `RooDataSet.from_pandas`: Import a RooDataSet from a Pandas dataframe (static method)
+- `RooDataSet.to_pandas`: Export a RooDataSet to a Pandas dataframe
+- `RooRealVar.bins`: Get bin boundaries for a `RooRealVar` as a NumPy array
+
+For more details, consult the tutorial [rf409_NumPyPandasToRooFit.py](https://root.cern/doc/v626/rf409__NumPyPandasToRooFit_8C.html).
+
 ### Creating RooFit datasets from RDataFrame
 RooFit now contains two RDataFrame action helpers, `RooDataSetHelper` and `RooDataHistHelper`, which allow for creating RooFit datasets by booking an action:
 ```c++
