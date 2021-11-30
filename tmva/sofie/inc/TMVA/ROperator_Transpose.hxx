@@ -98,14 +98,15 @@ public:
       }
 
       std::stringstream out;
-      out << "\t" << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << "\t\t " << "tensor_" << fNOutput << "[";
+      out << SP << "///------- Transpose operator\n" << std::endl;
+      out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
+      out << SP << SP << "tensor_" << fNOutput << "[";
       for (int i =0; i < dim; i++){
          out << "id / " << sizeofindex[i] << " % " << fShapeData[i] << " * " << new_sizeofindex[index_goto[i]];
          if (i != dim - 1) out << " + ";
       }
       out << "] = " << "tensor_" << fNData << "[id];\n";
-      out << "\t}\n";
+      out << SP << "}\n";
       return out.str();
    }
 
