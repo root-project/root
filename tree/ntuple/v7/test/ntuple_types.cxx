@@ -226,6 +226,7 @@ TEST(RNTuple, TClassTemplatedBase)
                                                       /*m_nmantissa=*/ (uint8_t)i,
                                                       /*m_scale=*/ static_cast<float>(i + 1),
                                                       /*m_flags=*/ 0,
+                                                      /*m_sgkey=*/ (uint32_t)(i + 1),
                                                       /*c_uint=*/ (uint8_t)i});
          ntuple->Fill();
       }
@@ -241,6 +242,7 @@ TEST(RNTuple, TClassTemplatedBase)
       EXPECT_EQ((fi + 1), viewKlass(i).m_params.m_scale);
       EXPECT_EQ(0, viewKlass(i).m_params.m_flags);
       EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.c_uint);
+      EXPECT_EQ(((uint32_t)(i + 1)), viewKlass(i).m_params.m_sgkey);
 
       EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2),
                                   static_cast<int>(i + 3)}), viewKlass(i));

@@ -34,11 +34,13 @@ struct DerivedC : public DerivedA, public DerivedA2 {
 /// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)
 ///
 struct IAuxSetOption {};
+namespace SG { typedef uint32_t sgkey_t; }
 
 struct PackedParameters {
    uint8_t m_nbits, m_nmantissa;
    float   m_scale;
    uint8_t m_flags;
+   SG::sgkey_t  m_sgkey = 123;
    const uint8_t c_uint = 10;
 };
 
