@@ -53,6 +53,7 @@ public:
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
       std::vector<std::vector<size_t>> ret;
       auto & input_shape = input[0]; 
+
       if (fOpMode == Reshape) {
          if (input.size() != 2) throw std::runtime_error("TMVA SOFIE Reshape Op needs 2 input tensors");
          auto output_shape = input[1]; // the provided shape
@@ -60,7 +61,7 @@ public:
          size_t output_length = ConvertShapeToLength(output_shape);
          // input_length == output_length) is the easy case : (2,3,4) -> (2,12)
          if (input_length != output_length) {
-            if (output_shape.size() > 1 && ((output_length == 0 && fAllowZero == 0) || output_length < 0)) {
+            if (output_shape.size() > 1 && ((output_length == 0 && fAllowZero == 0) || output_length > INT64_MAX)) {
                // in this case value 0 in shape are automatically corrected
                for (size_t i = 0; i < output_shape.size(); i++) {
                   if (output_shape[i] == 0 || output_shape[i] == static_cast<size_t>(-1)) {
@@ -134,13 +135,29 @@ public:
          throw std::runtime_error("TMVA Reshape Op Input Tensor is not found in model");
       }
       fShapeInput = model.GetTensorShape(fNData);
-      // fShapeOutput = model.GetTensorShape(fNShape);
-      if (fNShape.empty() && (fOpMode == Flatten || fOpMode == Squeeze)) {
-         fShapeOutput = ShapeInference({fShapeInput})[0];
-      } else {
-         // case of 2 input tensors
-         auto descShape = model.GetTensorShape(fNShape);
-         fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
+
+      // check if optional shape tensor exist
+      if (!fNShape.empty()) {
+         if (model.CheckIfTensorAlreadyExist(fNShape)){
+            auto dptr = model.GetInitializedTensorData(fNShape);
+            auto input_shape = static_cast<int64_t*>(dptr.get());
+            auto vec = model.GetTensorShape(fNShape);
+            assert(vec.size() == 1);
+            size_t n = vec[0];   // size of shape input tensor
+            
+            std::vector<size_t> descShape(n);
+            std::copy(input_shape, input_shape+n, descShape.begin());
+            fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
+         }
+         else {
+            throw std::runtime_error("TMVA Reshape Op Input Tensor is not found in model");
+         }
+      }
+      else {
+       if (fOpMode == Flatten || fOpMode == Squeeze) {
+          fShapeOutput = ShapeInference({fShapeInput})[0];
+      } else
+          throw std::runtime_error("TMVA Reshape Op : Invalid Input data");
       }
       model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
    }
@@ -171,7 +188,6 @@ public:
           << ".begin() );\n";
       return out.str();
    }
-
 
 };
 

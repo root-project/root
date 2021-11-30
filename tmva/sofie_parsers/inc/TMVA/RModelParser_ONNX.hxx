@@ -36,6 +36,8 @@ std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodePro
 std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Slice(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+
 
 using factoryMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
 const factoryMethodMap mapOptypeOperator = {
@@ -54,6 +56,7 @@ const factoryMethodMap mapOptypeOperator = {
    {"Add", &make_ROperator_Add},
    {"Reshape", &make_ROperator_Reshape},
    {"Flatten", &make_ROperator_Reshape},
+   {"Slice", &make_ROperator_Slice},
    {"Squeeze", &make_ROperator_Reshape},
    {"Unsqueeze", &make_ROperator_Reshape}
 };
