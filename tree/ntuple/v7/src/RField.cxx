@@ -75,7 +75,9 @@ std::vector<std::string> TokenizeTypeList(std::string templateType) {
 }
 
 std::string GetNormalizedType(const std::string &typeName) {
-   std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
+   std::string normalizedType(
+      TClassEdit::ResolveTypedef(TClassEdit::CleanType(typeName.c_str(),
+                                                       /*mode=*/2).c_str()));
 
    // TODO(jblomer): use a type translation map
    if (normalizedType == "Bool_t") normalizedType = "bool";
