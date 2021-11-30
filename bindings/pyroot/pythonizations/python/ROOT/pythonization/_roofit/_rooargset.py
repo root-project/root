@@ -17,6 +17,20 @@ import operator
 
 
 class RooArgSet(RooAbsCollection):
+    def __init__(self, *args, **kwargs):
+        """Pythonization of RooArgSet constructor to support implicit
+        conversion from Python sets.
+        """
+        # Note: This simple Pythonization caused me days of headache.
+        # Initially, I was also checking of `len(kwargs) == 0`, but it just
+        # didn't work. Eventually, I understood that when cppy attempts
+        # implicit conversion, a magic `__cppyy_no_implicit=True` keyword
+        # argument is added, hence the `len(kwargs) == 0` check breaks the
+        # implicit conversion!
+        if len(args) == 1 and isinstance(args[0], set):
+            return self._init(*args[0], **kwargs)
+        return self._init(*args, **kwargs)
+
     def __getitem__(self, key):
 
         # other than the RooArgList, the RooArgSet also supports string keys
