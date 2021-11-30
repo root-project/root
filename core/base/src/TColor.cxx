@@ -2314,8 +2314,14 @@ Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
 ///   - Red, Green, Blue: The end point color values.
 ///                       Each entry must be on [0, 1]
 ///   - NColors: Total number of colors in the table. Must be at least 1.
+///   - alpha: the opacity factor, between 0 and 1. Default is no transparency (1).
+///   - setPalette: activate the newly created palette (true by default). If false,
+///                 the caller is in charge of calling TColor::SetPalette using the
+///                 return value of the function (first palette color index) and
+///                 reconstructing the Int_t palette[NColors+1] array.
 ///
-/// Returns a positive value on success and -1 on error.
+/// Returns a positive value (the index of the first color of the palette) on
+/// success and -1 on error.
 ///
 /// The table is constructed by tracing lines between the given points in
 /// RGB space.  Each color value may have a value between 0 and 1.  The
@@ -2351,7 +2357,8 @@ Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
 
 Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                               Double_t* Red, Double_t* Green,
-                              Double_t* Blue, UInt_t NColors, Float_t alpha)
+                              Double_t* Blue, UInt_t NColors, Float_t alpha,
+                                      Bool_t setPalette)
 {
    TColor::InitializeColors();
 
@@ -2399,7 +2406,8 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
       }
    }
 
-   TColor::SetPalette(nPalette, palette);
+   if (setPalette)
+      TColor::SetPalette(nPalette, palette);
    delete [] palette;
    return gHighestColorIndex + 1 - NColors;
 }
