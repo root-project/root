@@ -39,8 +39,46 @@
 #include <exception>
 #include <iostream>
 #include <type_traits>
+#include <unordered_map>
 
 namespace {
+
+static const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
+   {"Bool_t",   "bool"},
+   {"Float_t",  "float"},
+   {"Double_t", "double"},
+   {"string",   "std::string"},
+
+   {"Char_t",        "char"},
+   {"int8_t",        "std::int8_t"},
+   {"signed char",   "char"},
+   {"UChar_t",       "std::uint8_t"},
+   {"unsigned char", "std::uint8_t"},
+   {"uint8_t",       "std::uint8_t"},
+
+   {"Short_t",        "std::int16_t"},
+   {"int16_t",        "std::int16_t"},
+   {"short",          "std::int16_t"},
+   {"UShort_t",       "std::uint16_t"},
+   {"unsigned short", "std::uint16_t"},
+   {"uint16_t",       "std::uint16_t"},
+
+   {"Int_t",        "std::int32_t"},
+   {"int32_t",      "std::int32_t"},
+   {"int",          "std::int32_t"},
+   {"UInt_t",       "std::uint32_t"},
+   {"unsigned",     "std::uint32_t"},
+   {"unsigned int", "std::uint32_t"},
+   {"uint32_t",     "std::uint32_t"},
+
+   {"Long_t",        "std::int64_t"},
+   {"Long64_t",      "std::int64_t"},
+   {"int64_t",       "std::int64_t"},
+   {"long",          "std::int64_t"},
+   {"ULong64_t",     "std::uint64_t"},
+   {"unsigned long", "std::uint64_t"},
+   {"uint64_t",      "std::uint64_t"}
+};
 
 /// Used in CreateField() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
@@ -79,37 +117,10 @@ std::string GetNormalizedType(const std::string &typeName) {
       TClassEdit::ResolveTypedef(TClassEdit::CleanType(typeName.c_str(),
                                                        /*mode=*/2).c_str()));
 
-   // TODO(jblomer): use a type translation map
-   if (normalizedType == "Bool_t") normalizedType = "bool";
-   if (normalizedType == "Float_t") normalizedType = "float";
-   if (normalizedType == "Double_t") normalizedType = "double";
-   if (normalizedType == "Char_t") normalizedType = "char";
-   if (normalizedType == "int8_t") normalizedType = "std::int8_t";
-   if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
-   if (normalizedType == "signed char") normalizedType = "char";
-   if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
-   if (normalizedType == "uint8_t") normalizedType = "std::uint8_t";
-   if (normalizedType == "Short_t") normalizedType = "std::int16_t";
-   if (normalizedType == "int16_t") normalizedType = "std::int16_t";
-   if (normalizedType == "short") normalizedType = "std::int16_t";
-   if (normalizedType == "unsigned short") normalizedType = "std::uint16_t";
-   if (normalizedType == "UShort_t") normalizedType = "std::uint16_t";
-   if (normalizedType == "uint16_t") normalizedType = "std::uint16_t";
-   if (normalizedType == "Int_t") normalizedType = "std::int32_t";
-   if (normalizedType == "int") normalizedType = "std::int32_t";
-   if (normalizedType == "int32_t") normalizedType = "std::int32_t";
-   if (normalizedType == "unsigned") normalizedType = "std::uint32_t";
-   if (normalizedType == "unsigned int") normalizedType = "std::uint32_t";
-   if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
-   if (normalizedType == "uint32_t") normalizedType = "std::uint32_t";
-   if (normalizedType == "Long64_t") normalizedType = "std::int64_t";
-   if (normalizedType == "Long_t") normalizedType = "std::int64_t";
-   if (normalizedType == "int64_t") normalizedType = "std::int64_t";
-   if (normalizedType == "long") normalizedType = "std::int64_t";
-   if (normalizedType == "unsigned long") normalizedType = "std::uint64_t";
-   if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
-   if (normalizedType == "uint64_t") normalizedType = "std::uint64_t";
-   if (normalizedType == "string") normalizedType = "std::string";
+   auto translatedType = typeTranslationMap.find(normalizedType);
+   if (translatedType != typeTranslationMap.end())
+      normalizedType = translatedType->second;
+
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
