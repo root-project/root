@@ -24,6 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Reshape.hxx
    TMVA/ROperator_Selu.hxx
    TMVA/ROperator_Sigmoid.hxx
+   TMVA/ROperator_Slice.hxx
    TMVA/ROperator_Transpose.hxx
    TMVA/ROperator_Pool.hxx
    TMVA/SOFIE_common.hxx
