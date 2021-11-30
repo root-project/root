@@ -86,10 +86,13 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType == "Char_t") normalizedType = "char";
    if (normalizedType == "int8_t") normalizedType = "std::int8_t";
    if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
+   if (normalizedType == "signed char") normalizedType = "char";
    if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
    if (normalizedType == "uint8_t") normalizedType = "std::uint8_t";
    if (normalizedType == "Short_t") normalizedType = "std::int16_t";
    if (normalizedType == "int16_t") normalizedType = "std::int16_t";
+   if (normalizedType == "short") normalizedType = "std::int16_t";
+   if (normalizedType == "unsigned short") normalizedType = "std::uint16_t";
    if (normalizedType == "UShort_t") normalizedType = "std::uint16_t";
    if (normalizedType == "uint16_t") normalizedType = "std::uint16_t";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
@@ -102,6 +105,8 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType == "Long64_t") normalizedType = "std::int64_t";
    if (normalizedType == "Long_t") normalizedType = "std::int64_t";
    if (normalizedType == "int64_t") normalizedType = "std::int64_t";
+   if (normalizedType == "long") normalizedType = "std::int64_t";
+   if (normalizedType == "unsigned long") normalizedType = "std::uint64_t";
    if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "uint64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "string") normalizedType = "std::string";
