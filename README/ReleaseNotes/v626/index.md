@@ -123,6 +123,7 @@ if __name__ == "__main__":
 
 Other notable additions and improvements include:
 
+- Enable triggering multiple distributed computation graphs through `RunGraphs`. This also allows sending both Spark and Dask jobs at the same time through a single function call.
 - Greatly reduce distributed tasks processing overhead. This involved:
     - Changing the distributed execution logic with the `TTree` data source to use `TEntryList` in order to select the range of entries that each task will read from the tree. This highly reduces the waiting time spent in retrieving the correct entries for processing, as it was previously done using the `Range` operation.
     - Refactoring the internal mechanism to store information about data sources and create ranges for the distributed tasks accordingly. This will also allow in the future to easily extend the supported data sources in distributed RDataFrame.

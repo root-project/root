@@ -686,6 +686,34 @@ where `n` is the number of dataset partitions. As with local RDataFrame, the res
 RDataFrame is another distributed RDataFrame on which we can define a new computation graph and run more distributed
 computations.
 
+### Distributed RunGraphs
+
+Submitting multiple distributed RDataFrame executions is supported through the % RunGraphs function. Similarly to its
+local counterpart, the function expects an iterable of objects representing an RDataFrame action. Each action will be
+triggered concurrently to send multiple computation graphs to a distributed cluster at the same time:
+
+~~~{.py}
+import ROOT
+RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
+
+# Create 3 different dataframes and book an histogram on each one
+histoproxies = [
+   RDataFrame(100)
+         .Define("x", "rdfentry_")
+         .Histo1D(("name", "title", 10, 0, 100), "x")
+   for _ in range(4)
+]
+
+# Execute the 3 computation graphs
+RunGraphs(histoproxies)
+# Retrieve all the histograms in one go
+histos = [histoproxy.GetValue() for histoproxy in histoproxies]
+~~~
+
+Every distributed backend supports this feature and graphs belonging to different backends can be still triggered with
+a single call to % RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
+
 \anchor transformations
 ## Transformations
 \anchor Filters
