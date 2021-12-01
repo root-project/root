@@ -5347,7 +5347,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
 void THistPainter::PaintCandlePlot(Option_t *)
 {
-   TH1D *hproj;
+   TH1D *hproj = nullptr;
    TH2D *h2 = (TH2D*)fH;
 
    TCandle myCandle;
@@ -5435,6 +5435,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
          }
       }
    }
+   delete hproj;
 }
 
 
