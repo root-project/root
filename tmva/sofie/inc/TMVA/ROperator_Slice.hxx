@@ -30,10 +30,14 @@ private:
    std::vector<size_t> fEnd;           // End values of slices
    std::vector<size_t> fSteps;         // step values of slices
 
+   std::vector<std::vector<IType>> fAttributes; // attributes for theversion <=10 case
+
 
 public:
 
    ROperator_Slice(){}
+
+   // ctor for versions >= 10
    ROperator_Slice(std::string nameData, std::vector<std::string> names, std::string nameOutput)
       : fNData(UTILITY::Clean_name(nameData)), 
       fNOutput(UTILITY::Clean_name(nameOutput))
@@ -48,9 +52,16 @@ public:
         fNames[3] = fNames[2];
         fNames[2] = "";
     }
-
    }
-
+   // ctor for versions < 10
+   ROperator_Slice(std::string nameData, std::vector<IType> starts, std::vector<IType> ends, std::vector<IType> axes, std::string nameOutput)
+      : fNData(UTILITY::Clean_name(nameData)), 
+      fNOutput(UTILITY::Clean_name(nameOutput))
+   {
+     fAttributes.push_back(starts);
+     fAttributes.push_back(ends);
+     fAttributes.push_back(axes); 
+    }
 
    // output type is same as input 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -81,6 +92,7 @@ public:
       shapes.push_back(fShapeInput);
 
       std::vector<std::vector<IType>> itensors(4);
+      if (fNames.size() > 0) {
       // loop on the extra 2 or 3 or 4 inputs
       for (size_t i = 0; i < fNames.size(); ++i) {
         if (!fNames[i].empty()) { 
@@ -91,24 +103,18 @@ public:
          assert(vec.size() == 1);
          itensors[i] = std::vector<IType>(tensor, tensor + vec[0]);
         }
-        //  size_t n = vec[0]; // size of shape input tensor
-        //  std::vector<size_t> descShape(n);
-        //  std::copy(tensor, tensor + n, descShape.begin());
-        //  shapes.push_back(descShape);
       }
-
+      } else {
+          assert (fAttributes.size() > 1);
+          for (size_t i = 0; i < fAttributes.size(); i++) {
+              itensors[i] = fAttributes[i];
+          }
+      }
       size_t dim = fShapeInput.size();
-    //   auto axes = std::vector<size_t>(dim);
-    //   for (size_t i = 0; i < axes.size(); i++) axes[i] = i;
       
       fSteps = std::vector<size_t>(dim, 1);
       fStart = std::vector<size_t>(dim, 0);
       fEnd = fShapeInput;
-
-     
-      //if (fNames.size() == 2) {
-      // case of default values 2 or 3 inputs
-
 
       auto istart = itensors[0];
       auto iend = itensors[1];
@@ -116,26 +122,26 @@ public:
       auto isteps  = itensors[3];
       
       // make tensor axis
-      // if size is 0 tensor axis is missing and use defaults
+      // if iaxes.size is =0 tensor axis is missing and use defaults
       if (iaxes.size() > 0) {  
-        // axis tensor is present
-        assert(fNames[2] == "axes");
         for (size_t i = 0; i < iaxes.size(); i++) {
             // negative axes - they count from the back
             if (iaxes[i] < 0) iaxes[i] = dim + iaxes[i];
             size_t jaxis = static_cast<size_t>(iaxes[i]);
             assert(jaxis < dim - 1);
+            size_t imax = fShapeInput[jaxis];
             // find start/end/step for given axis
-            int start = (istart[i] > 0) ? istart[i] : dim + istart[i];
+            IType start = (istart[i] > 0) ? istart[i] : imax + istart[i];
             if (start < 0) start = 0;
-            if (start > static_cast<int>(fShapeInput[jaxis]))
-               start = fShapeInput[jaxis];
+            if (start > static_cast<IType>(imax))
+               start = imax;
             fStart[jaxis] = start;
-            int ie = (iend[i] > 0) ? iend[i] : dim + iend[i];
+            IType ie = (iend[i] > 0) ? iend[i] : imax + iend[i];
             if (ie < 0)  ie = 0;
-            if (ie > static_cast<int>(fShapeInput[jaxis]))
-               ie = fShapeInput[jaxis];
+            if (ie > static_cast<IType>(imax))
+               ie = imax;
             fEnd[jaxis] = ie;
+            std::cout << " iaxis " << jaxis << " start " << start << " end " << ie << std::endl;
             if (isteps.size() > 0) {
                if (isteps[i] < 0) {
                   // to be done
@@ -157,15 +163,6 @@ public:
          throw std::runtime_error("TMVA SOFIE Slice Op called to Generate without being initialized first");
       }
 
-      // output of Slice is same as input
-      size_t length = ConvertShapeToLength(fShapeOutput);
-      if (length != ConvertShapeToLength(fShapeInput)) {
-         throw std::runtime_error("TMVA SOFIE Slice Op : wrong output shape - is " 
-         + ConvertShapeToString(fShapeOutput) + " and input is " + ConvertShapeToString(fShapeInput));
-      }
-      for (auto &i : fShapeOutput) {
-         length *= i;
-      }
       std::stringstream out;
       //std::string opName = "Slice";
 
@@ -176,7 +173,8 @@ public:
       for (int i = int(ndim-2); i >=0 ; i--) {
           strides[i] = strides[i+1]*fShapeInput[i+1];
       }
-    
+
+      out << SP << "size_t iOut = 0;\n";
       std::string MSP = SP;
       for (size_t idim = 0; idim < ndim; idim++) {
         out << MSP << "for (size_t i" << idim << " = " << fStart[idim] <<  "; i" << idim << " < " << fEnd[idim] 
