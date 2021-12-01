@@ -290,10 +290,10 @@ int TCandle::ParseOption(char * opt) {
          char indivOption[32];
          if (brOpen && brClose) {
             useIndivOption = true;
-            bool isHorizontal = IsHorizontal();
+            bool wasHorizontal = IsHorizontal();
             strlcpy(indivOption, brOpen, brClose-brOpen+2); //Now the string "(....)" including brackets is in this array
             sscanf(indivOption,"(%d)", (int*) &fOption);
-            if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
+            if (wasHorizontal && !IsHorizontal()) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
             snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c(%ld)",direction,(long)fOption);
@@ -347,10 +347,10 @@ int TCandle::ParseOption(char * opt) {
          char indivOption[32];
          if (brOpen && brClose) {
             useIndivOption = true;
-            bool isHorizontal = IsHorizontal();
+            bool wasHorizontal = IsHorizontal();
             strlcpy(indivOption, brOpen, brClose-brOpen +2); //Now the string "(....)" including brackets is in this array
             sscanf(indivOption,"(%d)", (int*) &fOption);
-            if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
+            if (wasHorizontal && !IsHorizontal()) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
             snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c(%ld)",direction,(long)fOption);
