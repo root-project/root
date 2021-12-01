@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <cassert>
 
 namespace TMVA{
 namespace Experimental{
@@ -24,7 +25,7 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
 
 std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
 
-   ETensorType input_type;
+   ETensorType input_type = ETensorType::UNDEFINED;
 
    for (int i = 0; i < 2; ++i) {
       auto input_name = nodeproto.input(i);
@@ -32,7 +33,9 @@ std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto& nodeproto, 
       if (it != tensor_type.end()){
          // according to ONNX both inputs have same time
          if (i == 0) input_type = it->second;
-      }else{
+         else
+            assert(it->second == input_type);
+      } else {
          throw std::runtime_error("TMVA::SOFIE ONNX Parser Add op has input tensor" + input_name + " but its type is not yet registered");
       }
    }

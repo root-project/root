@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 
 namespace TMVA {
 namespace Experimental {
@@ -218,12 +219,6 @@ public:
       // size_t kstride = fShapeW[1] * fShapeW[2] * fShapeW[3];
       // size_t kstrideDil = fShapeW[1] * dstrideDil;
 
-      // pad inputs with zero
-      // if (fUseSession)
-      //    out << SP << fType << " * " << OpName << "_xpad = fVec_" << OpName << "_xpad.data();\n";
-      // else 
-      //    out << SP << fType << " " << OpName << "_xpad[" <<  fShapeX[0] * fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2])
-      //     * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) << "] = {0};\n";
       
       assert(fShapeX[0] == fShapeY[0]);
       assert(fShapeX[1] == fShapeY[1]);
@@ -287,8 +282,7 @@ public:
          // compute average
          out << SP << SP << SP << SP << "value /= float(nsum);\n";
       }
-      //size_t outputSize = ConvertShapeToLegth(fShapeY);
-      //out << SP << SP << SP << SP << "assert(outIndex < " << outputSize << ")\n;";
+
       out << SP << SP << SP << SP << "tensor_" << fNY << "[outIndex++] = value;\n";
       out << SP << SP << SP << "}\n";   // end loop on j (columns of image)
       out << SP << SP << "}\n";   // end loop on i (image rows)
@@ -304,5 +298,6 @@ public:
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA
+
 
 #endif
