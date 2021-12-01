@@ -451,11 +451,11 @@ void TCandle::Calculate() {
          int bin = fProj->FindBin(fBoxDown-1.5*iqr);
          // extending only to the lowest data value within this range
          while (fProj->GetBinContent(bin) == 0 && bin <= fProj->GetNbinsX()) bin++;
-         fWhiskerDown = fProj->GetBinCenter(bin);
+         fWhiskerDown = fProj->GetXaxis()->GetBinLowEdge(bin);
 
          bin = fProj->FindBin(fBoxUp+1.5*iqr);
          while (fProj->GetBinContent(bin) == 0 && bin >= 1) bin--;
-         fWhiskerUp = fProj->GetBinCenter(bin);
+         fWhiskerUp = fProj->GetXaxis()->GetBinUpEdge(bin);
       } else { //Need a calculation for a raw-data candle
          fWhiskerUp = fBoxDown;
          fWhiskerDown = fBoxUp;
