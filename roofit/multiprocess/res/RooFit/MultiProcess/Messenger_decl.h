@@ -84,11 +84,12 @@ public:
 
    // -- MASTER - WORKER COMMUNICATION --
 
-   void publish_from_master_to_workers();
-   template <typename T, typename... Ts>
-   void publish_from_master_to_workers(T item, Ts... items);
+   template <typename T>
+   void publish_from_master_to_workers(T&& item);
+   template <typename T, typename T2, typename... Ts>
+   void publish_from_master_to_workers(T&& item, T2&& item2, Ts&&... items);
    template <typename value_t>
-   value_t receive_from_master_on_worker();
+   value_t receive_from_master_on_worker(bool *more = nullptr);
 
    void send_from_worker_to_master();
    template <typename T, typename... Ts>
