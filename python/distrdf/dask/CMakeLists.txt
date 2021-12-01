@@ -2,6 +2,9 @@
 # * `dask` and `distributed` are installed on that label for that python version
 if (ROOT_test_distrdf_dask_FOUND)
 
+ROOTTEST_ADD_TEST(dask_test_backend
+                  MACRO test_backend.py)
+
 ROOTTEST_ADD_TEST(dask_test_definepersample 
                   MACRO test_definepersample.py)
 

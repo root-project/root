@@ -2,6 +2,9 @@
 # * pyspark is installed on that label for that python version
 if (ROOT_test_distrdf_pyspark_FOUND)
 
+ROOTTEST_ADD_TEST(spark_test_backend
+                  MACRO test_backend.py)
+
 ROOTTEST_ADD_TEST(spark_test_definepersample 
                   MACRO test_definepersample.py)
 
