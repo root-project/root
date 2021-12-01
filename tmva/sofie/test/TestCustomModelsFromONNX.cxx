@@ -293,7 +293,8 @@ TEST(ONNX, ConvWithStridesNoPadding)
 }
 
 
-TEST(ONNX, ConvWithAsymmetricPadding)
+// Disables test (asymmetric padding not supported)
+TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
