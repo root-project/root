@@ -41,8 +41,8 @@ directly to draw a candle.
 
 TCandle::TCandle()
 {
-   fIsCalculated  = 0;
-   fIsRaw         = 0;
+   fIsCalculated  = false;
+   fIsRaw         = false;
    fPosCandleAxis = 0.;
    fCandleWidth   = 1.0;
    fHistoWidth    = 1.0;
@@ -54,7 +54,7 @@ TCandle::TCandle()
    fWhiskerUp     = 0.;
    fWhiskerDown   = 0.;
    fNDatapoints   = 0;
-   fDismiss       = 0;
+   fDismiss       = false;
    fLogX          = 0;
    fLogY          = 0;
    fLogZ          = 0;
@@ -63,7 +63,7 @@ TCandle::TCandle()
    fAxisMin       = 0.;
    fAxisMax       = 0.;
    fOption        = kNoOption;
-   fProj          = NULL;
+   fProj          = nullptr;
    fDatapoints    = 0;
 
 }
@@ -73,8 +73,8 @@ TCandle::TCandle()
 
 TCandle::TCandle(const char *opt)
 {
-   fIsCalculated  = 0;
-   fIsRaw         = 0;
+   fIsCalculated  = false;
+   fIsRaw         = false;
    fPosCandleAxis = 0.;
    fCandleWidth   = 1.0;
    fHistoWidth    = 1.0;
@@ -86,7 +86,7 @@ TCandle::TCandle(const char *opt)
    fWhiskerUp     = 0.;
    fWhiskerDown   = 0.;
    fNDatapoints   = 0;
-   fDismiss = 0;
+   fDismiss       = false;
    fLogX          = 0;
    fLogY          = 0;
    fLogZ          = 0;
@@ -95,7 +95,7 @@ TCandle::TCandle(const char *opt)
    fAxisMin       = 0.;
    fAxisMax       = 0.;
    fOption        = kNoOption;
-   fProj          = NULL;
+   fProj          = nullptr;
    fDatapoints    = 0;
 
 
@@ -129,8 +129,8 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fCandleWidth   = candleWidth;
    fHistoWidth    = candleWidth;
    fDatapoints    = points;
-   fProj          = NULL;
-   fDismiss       = 0;
+   fProj          = nullptr;
+   fDismiss       = false;
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
@@ -157,14 +157,14 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fWhiskerUp     = 0;
    fWhiskerDown   = 0;
    fNDatapoints   = 0;
-   fIsCalculated  = 0;
-   fIsRaw         = 0;
+   fIsCalculated  = false;
+   fIsRaw         = false;
    fPosCandleAxis = candlePos;
    fCandleWidth   = candleWidth;
    fHistoWidth    = candleWidth;
    fDatapoints    = 0;
    fProj          = proj;
-   fDismiss       = 0;
+   fDismiss       = false;
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
