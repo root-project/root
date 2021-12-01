@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 
 namespace TMVA {
 namespace Experimental {
