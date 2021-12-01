@@ -76,8 +76,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          sprintf(addr_prefix, addr_prefix_template, getpid());
 
          mq_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
-         auto rc = zmq_setsockopt(*mq_push_, ZMQ_SNDHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         mq_push_->set(zmq::sockopt::sndhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_master_to_queue");
          mq_push_->bind(addr);
          bound_ipc_addresses_.emplace_back(addr);
@@ -85,8 +84,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          mq_push_poller_.register_socket(*mq_push_, zmq::event_flags::pollout);
 
          mq_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
-         rc = zmq_setsockopt(*mq_pull_, ZMQ_RCVHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         mq_pull_->set(zmq::sockopt::rcvhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_queue_to_master");
          mq_pull_->bind(addr);
          bound_ipc_addresses_.emplace_back(addr);
@@ -94,15 +92,13 @@ Messenger::Messenger(const ProcessManager &process_manager)
          mq_pull_poller_.register_socket(*mq_pull_, zmq::event_flags::pollin);
 
          mw_pub_.reset(zmqSvc().socket_ptr(zmq::socket_type::pub));
-         rc = zmq_setsockopt(*mw_pub_, ZMQ_SNDHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         mw_pub_->set(zmq::sockopt::sndhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_master_to_workers");
          mw_pub_->bind(addr);
          bound_ipc_addresses_.emplace_back(addr);
 
          wm_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
-         rc = zmq_setsockopt(*wm_pull_, ZMQ_RCVHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         wm_pull_->set(zmq::sockopt::rcvhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_workers_to_master");
          wm_pull_->bind(addr);
          bound_ipc_addresses_.emplace_back(addr);
@@ -160,16 +156,14 @@ Messenger::Messenger(const ProcessManager &process_manager)
 
          // then the master-queue sockets
          mq_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
-         auto rc = zmq_setsockopt(*mq_push_, ZMQ_SNDHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         mq_push_->set(zmq::sockopt::sndhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_queue_to_master");
          mq_push_->connect(addr);
 
          mq_push_poller_.register_socket(*mq_push_, zmq::event_flags::pollout);
 
          mq_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
-         rc = zmq_setsockopt(*mq_pull_, ZMQ_RCVHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         mq_pull_->set(zmq::sockopt::rcvhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_master_to_queue");
          mq_pull_->connect(addr);
 
@@ -199,17 +193,14 @@ Messenger::Messenger(const ProcessManager &process_manager)
          qw_pull_poller_[0].register_socket(*this_worker_qw_pull_, zmq::event_flags::pollin);
 
          mw_sub_.reset(zmqSvc().socket_ptr(zmq::socket_type::sub));
-         auto rc = zmq_setsockopt(*mw_sub_, ZMQ_RCVHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
-         rc = zmq_setsockopt(*mw_sub_, ZMQ_SUBSCRIBE, "", 0);
-         assert(rc == 0);
+         mw_sub_->set(zmq::sockopt::rcvhwm, hwm);
+         mw_sub_->set(zmq::sockopt::subscribe, "");
          sprintf(addr, "%s_%s", addr_prefix, "from_master_to_workers");
          mw_sub_->connect(addr);
          mw_sub_poller_.register_socket(*mw_sub_, zmq::event_flags::pollin);
 
          wm_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
-         rc = zmq_setsockopt(*wm_push_, ZMQ_SNDHWM, &hwm, sizeof hwm);
-         assert(rc == 0);
+         wm_push_->set(zmq::sockopt::sndhwm, hwm);
          sprintf(addr, "%s_%s", addr_prefix, "from_workers_to_master");
          wm_push_->connect(addr);
 
@@ -478,8 +469,6 @@ void Messenger::set_send_flag(zmq::send_flags flag)
 }
 
 // -- MASTER - WORKER COMMUNICATION --
-
-void Messenger::publish_from_master_to_workers() {}
 
 void Messenger::send_from_worker_to_master() {}
 
