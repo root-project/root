@@ -588,6 +588,7 @@ void TCandle::Calculate() {
       if (fIsRaw) { //This is a raw-data candle
          if (!fProj) {
             fProj = new TH1D("hpa","hpa",100,min,max+0.0001*(max-min));
+            fProj->SetDirectory(nullptr);
             for (Long64_t i = 0; i < fNDatapoints; ++i) {
                fProj->Fill(fDatapoints[i]);
             }
