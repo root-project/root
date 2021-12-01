@@ -327,8 +327,11 @@ public:
       // trick for speed is using caffe im2col and output a matrix which contains filtered values as rows.
       // By doing this one has consecutive memory reads and writes
       // Resulting matrix op_xcol is (input channels * filter_h * filter_w , output_h * output_w)
-      assert(fAttrPads[0] == fAttrPads[2]);
-      assert(fAttrPads[1] == fAttrPads[3]);
+      if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
+         std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+         fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
+         fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+      }
       if (fAttrGroup == 1) {
          out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << ";\n";
          out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
