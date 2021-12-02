@@ -316,6 +316,7 @@ endif()
 if(WIN32)
   set(davix_defvalue OFF)
   set(pyroot_legacy_defvalue OFF)
+  set(roofit_multiprocess_defvalue OFF)
   set(roottest_defvalue OFF)
   set(rpath_defvalue OFF)
   set(runtime_cxxmodules_defvalue OFF)
@@ -346,6 +347,11 @@ endif()
 # Disable RDataFrame on 32-bit UNIX platforms due to ROOT-9236
 if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(dataframe_defvalue OFF)
+endif()
+
+# MultiProcess is not possible on Windows, so fail if it is manually set:
+if(roofit_multiprocess AND WIN32)
+    message(FATAL_ERROR ">>> Option 'roofit_multiprocess' is not supported on Windows.")
 endif()
 
 #---Options depending of CMake Generator-------------------------------------------------------
