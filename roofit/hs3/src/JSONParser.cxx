@@ -1,4 +1,5 @@
-#include <RooFitHS3/JSONParser.h>
+#include "JSONParser.h"
+
 #include <sstream>
 
 #include "nlohmann/json.hpp"

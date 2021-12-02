@@ -1,5 +1,4 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/JSONInterface.h>
 
 #include <RooDataHist.h>
 #include <RooProdPdf.h>
@@ -7,6 +6,13 @@
 #include <RooSimultaneous.h>
 #include <RooCategory.h>
 #include <RooHistFunc.h>
+#include <RooWorkspace.h>
+
+#include <TH1.h>
+
+#include "JSONInterface.h"
+
+using RooFit::Detail::JSONNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // individually implemented importers

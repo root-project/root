@@ -5,15 +5,17 @@
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#include <RooFitHS3/JSONInterface.h>
+#include "JSONInterface.h"
 
-#ifdef R__HAS_RYML
-#include <RooFitHS3/RYMLParser.h>
+#ifdef ROOFIT_HS3_WITH_RYML
+#include "RYMLParser.h"
 typedef TRYMLTree tree_t;
 #else
-#include <RooFitHS3/JSONParser.h>
+#include "JSONParser.h"
 typedef TJSONTree tree_t;
 #endif
+
+using RooFit::Detail::JSONNode;
 
 RooStats::HistFactory::JSONTool::JSONTool(RooStats::HistFactory::Measurement *m) : _measurement(m){};
 
@@ -230,29 +232,29 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
    this->Export(n);
    n.writeJSON(os);
 }
-void RooStats::HistFactory::JSONTool::PrintJSON(std::string filename)
+void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
 {
    std::ofstream out(filename);
    this->PrintJSON(out);
 }
 
-#ifdef R__HAS_RYML    
-void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)    
-{    
-   TRYMLTree p;    
-   auto &n = p.rootnode();    
-   n.set_map();    
-   this->Export(n);    
-   n.writeYML(os);    
-}    
-#else    
-void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream & /*os*/)       
-{    
-   std::cerr << "YAML export only support with rapidyaml!" << std::endl;    
-}    
-#endif    
+#ifdef ROOFIT_HS3_WITH_RYML
+void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
+{
+   TRYMLTree p;
+   auto &n = p.rootnode();
+   n.set_map();
+   this->Export(n);
+   n.writeYML(os);
+}
+#else
+void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream & /*os*/)
+{
+   std::cerr << "YAML export only support with rapidyaml!" << std::endl;
+}
+#endif
 
-void RooStats::HistFactory::JSONTool::PrintYAML(std::string filename)
+void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 {
    std::ofstream out(filename);
    this->PrintYAML(out);

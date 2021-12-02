@@ -6,6 +6,9 @@
 #include <iostream>
 #include <vector>
 
+namespace RooFit {
+namespace Detail {
+
 class JSONNode {
 protected:
    template <class Nd>
@@ -100,10 +103,13 @@ public:
    virtual const JSONNode &child(size_t pos) const = 0;
 };
 
+} // namespace Detail
+} // namespace RooFit
+
 class JSONTree {
-   virtual JSONNode &rootnode() = 0;
+   virtual RooFit::Detail::JSONNode &rootnode() = 0;
 };
 
-std::ostream &operator<<(std::ostream &os, JSONNode const &s);
+std::ostream &operator<<(std::ostream &os, RooFit::Detail::JSONNode const &s);
 
 #endif

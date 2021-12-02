@@ -1,9 +1,9 @@
 #ifndef RYML_PARSER_H
 #define RYML_PARSER_H
+
 #include "JSONInterface.h"
 #include "RConfigure.h"
 
-#ifdef R__HAS_RYML
 #include <list>
 #include <istream>
 #include <memory>
@@ -14,7 +14,7 @@ protected:
    std::unique_ptr<Impl> tree;
 
 public:
-   class Node : public JSONNode {
+   class Node : public RooFit::Detail::JSONNode {
    protected:
       TRYMLTree *tree;
       class Impl;
@@ -66,7 +66,5 @@ public:
    TRYMLTree(std::istream &is);
    Node &rootnode();
 };
-
-#endif
 
 #endif

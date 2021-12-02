@@ -5,6 +5,7 @@
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooPlot.h"
+#include "RooWorkspace.h"
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
@@ -18,7 +19,7 @@ using namespace RooFit;
 
 TEST(RooFitHS3, RooArgusBG)
 {
-   auto& msg = RooMsgService::instance();
+   auto &msg = RooMsgService::instance();
    msg.setGlobalKillBelow(RooFit::WARNING);
 
    // --- Observable ---

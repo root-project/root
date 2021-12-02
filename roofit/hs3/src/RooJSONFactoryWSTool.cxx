@@ -16,19 +16,30 @@
 #include <RooStats/ModelConfig.h>
 
 #include "TROOT.h"
+#include "TH1.h"
+
 #include "RConfigure.h"
 
-#ifdef R__HAS_RYML
-#include <RooFitHS3/RYMLParser.h>
+#ifdef ROOFIT_HS3_WITH_RYML
+#include "RYMLParser.h"
 typedef TRYMLTree tree_t;
 #else
-#include <RooFitHS3/JSONParser.h>
+#include "JSONParser.h"
 typedef TJSONTree tree_t;
 #endif
 
-ClassImp(RooJSONFactoryWSTool)
+using RooFit::Detail::JSONNode;
 
-   RooJSONFactoryWSTool::Var::Var(const JSONNode &val)
+namespace {
+
+void logInputArgumentsError(std::stringstream &&ss)
+{
+   oocoutE(static_cast<RooAbsArg *>(nullptr), InputArguments) << ss.str();
+}
+
+} // namespace
+
+RooJSONFactoryWSTool::Var::Var(const JSONNode &val)
 {
    if (val.is_map()) {
       if (!val.has_child("nbins"))
@@ -658,8 +669,9 @@ void RooJSONFactoryWSTool::importFunctions(const JSONNode &n)
       if (prefix.size() > 0)
          name = prefix + name;
       if (!p.has_child("type")) {
-         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no type given for '" << name
-                               << "', skipping." << std::endl;
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() no type given for '" << name << "', skipping." << std::endl;
+         logInputArgumentsError(std::move(ss));
          continue;
       }
       std::string functype(p["type"].val());
@@ -669,27 +681,30 @@ void RooJSONFactoryWSTool::importFunctions(const JSONNode &n)
       if (it != _importers.end()) {
          try {
             if (!it->second->importFunction(this, p)) {
-               coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << functype
-                                     << " does not import functions!" << std::endl;
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() importer for type " << functype << " does not import functions!"
+                  << std::endl;
+               logInputArgumentsError(std::move(ss));
             }
          } catch (const std::exception &ex) {
-            coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping."
-                                  << std::endl;
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() " << ex.what() << ". skipping." << std::endl;
+            logInputArgumentsError(std::move(ss));
          }
       } else { // generic import using the factory expressions
          auto expr = _funcFactoryExpressions.find(functype);
          if (expr != _funcFactoryExpressions.end()) {
             std::string expression = expr->second.generate(p);
             if (!this->_workspace->factory(expression.c_str())) {
-               coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create "
-                                     << expr->second.tclass->GetName() << " '" << name
-                                     << "', skipping. expression was\n"
-                                     << expression << std::endl;
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
+                  << "', skipping. expression was\n"
+                  << expression << std::endl;
+               logInputArgumentsError(std::move(ss));
             }
          } else {
-            coutE(InputArguments)
-               << "RooJSONFactoryWSTool(" << GetName() << ") no handling for functype '" << functype
-               << "' implemented, skipping."
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() no handling for functype '" << functype << "' implemented, skipping."
                << "\n"
                << "there are several possible reasons for this:\n"
                << " 1. " << functype << " is a custom type that is not available in RooFit.\n"
@@ -704,13 +719,15 @@ void RooJSONFactoryWSTool::importFunctions(const JSONNode &n)
                << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see "
                   "how to do this!"
                << std::endl;
+            logInputArgumentsError(std::move(ss));
             continue;
          }
       }
       RooAbsReal *func = this->_workspace->function(name.c_str());
       if (!func) {
-         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") something went wrong importing function '"
-                               << name << "'." << std::endl;
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() something went wrong importing function '" << name << "'." << std::endl;
+         logInputArgumentsError(std::move(ss));
       } else {
          ::importAttributes(func, p);
       }
@@ -801,8 +818,9 @@ std::map<std::string, RooAbsData *> RooJSONFactoryWSTool::loadData(const JSONNod
          auto catname = p["index"].val();
          RooCategory *channelCat = _workspace->cat(catname.c_str());
          if (!channelCat) {
-            coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to retrieve channel category "
-                                  << catname << std::endl;
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() failed to retrieve channel category " << catname << std::endl;
+            logInputArgumentsError(std::move(ss));
          } else {
             RooArgSet allVars;
             allVars.add(*channelCat);
@@ -822,8 +840,9 @@ std::map<std::string, RooAbsData *> RooJSONFactoryWSTool::loadData(const JSONNod
             dataMap[name] = data;
          }
       } else {
-         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create dataset" << name
-                               << std::endl;
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() failed to create dataset" << name << std::endl;
+         logInputArgumentsError(std::move(ss));
       }
    }
    return dataMap;
@@ -1030,8 +1049,9 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode &n)
       if (prefix.size() > 0)
          name = prefix + name;
       if (!p.has_child("type")) {
-         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no type given for '" << name
-                               << "', skipping." << std::endl;
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() no type given for '" << name << "', skipping." << std::endl;
+         logInputArgumentsError(std::move(ss));
          continue;
       }
       bool toplevel = false;
@@ -1046,27 +1066,29 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode &n)
       if (it != _importers.end()) {
          try {
             if (!it->second->importPdf(this, p)) {
-               coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << pdftype
-                                     << " does not import pdfs!" << std::endl;
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() importer for type " << pdftype << " does not import pdfs!" << std::endl;
+               logInputArgumentsError(std::move(ss));
             }
          } catch (const std::exception &ex) {
-            coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping."
-                                  << std::endl;
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() " << ex.what() << ". skipping." << std::endl;
+            logInputArgumentsError(std::move(ss));
          }
       } else { // default implementation using the factory expressions
          auto expr = _pdfFactoryExpressions.find(pdftype);
          if (expr != _pdfFactoryExpressions.end()) {
             std::string expression = expr->second.generate(p);
             if (!this->_workspace->factory(expression.c_str())) {
-               coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create "
-                                     << expr->second.tclass->GetName() << " '" << name
-                                     << "', skipping. expression was\n"
-                                     << expression << std::endl;
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
+                  << "', skipping. expression was\n"
+                  << expression << std::endl;
+               logInputArgumentsError(std::move(ss));
             }
          } else {
-            coutE(InputArguments)
-               << "RooJSONFactoryWSTool(" << GetName() << ") no handling for pdftype '" << pdftype
-               << "' implemented, skipping."
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() no handling for pdftype '" << pdftype << "' implemented, skipping."
                << "\n"
                << "there are several possible reasons for this:\n"
                << " 1. " << pdftype << " is a custom type that is not available in RooFit.\n"
@@ -1081,14 +1103,17 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode &n)
                << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see "
                   "how to do this!"
                << std::endl;
+            logInputArgumentsError(std::move(ss));
             continue;
          }
       }
       // post-processing: make sure that the pdf has been created, and attach needed attributes
       RooAbsPdf *pdf = this->_workspace->pdf(name.c_str());
       if (!pdf) {
-         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") something went wrong importing pdf '"
-                               << name << "'." << std::endl;
+
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() something went wrong importing pdf '" << name << "'." << std::endl;
+         logInputArgumentsError(std::move(ss));
       } else {
          ::importAttributes(pdf, p);
          if (toplevel) {
@@ -1126,8 +1151,10 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode &n)
                inwsmc->SetNuisanceParameters(nps);
                inwsmc->SetGlobalObservables(globs);
             } else {
-               coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") object '" << mcname
-                                     << "' in workspace is not of type RooStats::ModelConfig!" << std::endl;
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() object '" << mcname
+                  << "' in workspace is not of type RooStats::ModelConfig!" << std::endl;
+               logInputArgumentsError(std::move(ss));
             }
          }
       }
@@ -1146,8 +1173,9 @@ void RooJSONFactoryWSTool::importVariables(const JSONNode &n)
       if (this->_workspace->var(name.c_str()))
          continue;
       if (!p.is_map()) {
-         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name
-                               << "' is not a map, skipping." << std::endl;
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() node '" << name << "' is not a map, skipping." << std::endl;
+         logInputArgumentsError(std::move(ss));
          continue;
       }
       double val(p.has_child("value") ? p["value"].val_float() : 1.);
@@ -1335,8 +1363,9 @@ Bool_t RooJSONFactoryWSTool::exportJSON(const char *filename)
    // export the workspace in JSON
    std::ofstream out(filename);
    if (!out.is_open()) {
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") invalid output file '" << filename << "'."
-                            << std::endl;
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() invalid output file '" << filename << "'." << std::endl;
+      logInputArgumentsError(std::move(ss));
       return false;
    }
    return this->exportJSON(out);
@@ -1357,8 +1386,9 @@ Bool_t RooJSONFactoryWSTool::exportYML(const char *filename)
    // export the workspace in YML
    std::ofstream out(filename);
    if (!out.is_open()) {
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") invalid output file '" << filename << "'."
-                            << std::endl;
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() invalid output file '" << filename << "'." << std::endl;
+      logInputArgumentsError(std::move(ss));
       return false;
    }
    return this->exportYML(out);
@@ -1394,8 +1424,9 @@ Bool_t RooJSONFactoryWSTool::importJSON(const char *filename)
    // import a JSON file to the workspace
    std::ifstream infile(filename);
    if (!infile.is_open()) {
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") invalid input file '" << filename << "'."
-                            << std::endl;
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() invalid input file '" << filename << "'." << std::endl;
+      logInputArgumentsError(std::move(ss));
       return false;
    }
    return this->importJSON(infile);
@@ -1420,14 +1451,10 @@ Bool_t RooJSONFactoryWSTool::importYML(const char *filename)
    // import a YML file to the workspace
    std::ifstream infile(filename);
    if (!infile.is_open()) {
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") invalid input file '" << filename << "'."
-                            << std::endl;
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() invalid input file '" << filename << "'." << std::endl;
+      logInputArgumentsError(std::move(ss));
       return false;
    }
    return this->importYML(infile);
-}
-
-RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace(&ws)
-{
-   // default constructor
 }

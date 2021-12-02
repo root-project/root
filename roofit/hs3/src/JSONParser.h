@@ -8,7 +8,7 @@
 
 class TJSONTree : public JSONTree {
 public:
-   class Node : public JSONNode {
+   class Node : public RooFit::Detail::JSONNode {
    protected:
       TJSONTree *tree;
       class Impl;

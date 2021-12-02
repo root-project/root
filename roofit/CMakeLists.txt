@@ -19,5 +19,7 @@ if(xml)
   add_subdirectory(histfactory)
 endif()
 add_subdirectory(RDataFrameHelpers)
-add_subdirectory(hs3)
 
+if(NOT MSVC)
+  add_subdirectory(hs3)
+endif()

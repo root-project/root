@@ -1,4 +1,3 @@
-#include <RooFitHS3/RYMLParser.h>
 #include <sstream>
 #include <stdexcept>
 
@@ -6,6 +5,8 @@
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
 #include <c4/yml/common.hpp>
+
+#include "RYMLParser.h"
 
 namespace {
 size_t count_nlines(c4::csubstr src)

@@ -13,6 +13,13 @@
 #include <RooProdPdf.h>
 #include <RooPoisson.h>
 #include <RooProduct.h>
+#include <RooWorkspace.h>
+
+#include <TH1.h>
+
+#include "JSONInterface.h"
+
+using RooFit::Detail::JSONNode;
 
 namespace {
 inline void collectNames(const JSONNode &n, std::vector<std::string> &names)
@@ -508,7 +515,7 @@ public:
          TH1 *hist = NULL;
          ParamHistFunc *phf = NULL;
          PiecewiseInterpolation *pip = NULL;
-         RooStats::HistFactory::FlexibleInterpVar *fip = NULL;         
+         RooStats::HistFactory::FlexibleInterpVar *fip = NULL;
          std::vector<std::string> varnames;
          for (const auto &e : elems) {
             if (e->InheritsFrom(RooConstVar::Class())) {
