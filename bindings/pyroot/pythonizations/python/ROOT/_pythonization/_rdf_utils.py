@@ -27,7 +27,6 @@ class ndarray(numpy.ndarray):
         """
         obj = numpy.asarray(numpy_array).view(cls)
         obj.result_ptr = result_ptr
-        data = numpy_array
         return obj
 
     def __array_finalize__(self, obj):
