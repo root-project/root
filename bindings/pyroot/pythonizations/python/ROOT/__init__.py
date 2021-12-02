@@ -34,7 +34,7 @@ importlib.import_module(librootpyz_mod_name)
 sys.modules['libROOTPythonizations'] = sys.modules[librootpyz_mod_name]
 
 # Trigger the addition of the pythonizations
-from .pythonization import _register_pythonizations
+from ._pythonization import _register_pythonizations
 _register_pythonizations()
 
 # Check if we are in the IPython shell

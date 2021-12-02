@@ -125,7 +125,7 @@ class AsNumpyResult(object):
 
         if self._py_arrays is None:
             import numpy
-            from ROOT.pythonization._rdf_utils import ndarray
+            from ROOT._pythonization._rdf_utils import ndarray
 
             # Convert the C++ vectors to numpy arrays
             self._py_arrays = {}

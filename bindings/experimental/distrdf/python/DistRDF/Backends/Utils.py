@@ -16,7 +16,7 @@ import os
 from functools import singledispatch
 
 import ROOT
-from ROOT.pythonization._rdataframe import AsNumpyResult
+from ROOT._pythonization._rdataframe import AsNumpyResult
 
 from DistRDF.PythonMergeables import SnapshotResult
 
