@@ -29,7 +29,7 @@ private:
    std::string fNOutput;               // output tensor name
    std::vector<size_t> fShapeInput;     // input shape data
    std::vector<size_t> fShapeOutput;   // output shape data
-
+   std::vector<int64_t> fAttrAxes;         // axes attributes (provided for all version of Squeeze/Unsqueeze)
 
 public:
 
@@ -41,7 +41,15 @@ public:
       if (opMode == Reshape) fAllowZero = attr_value;
       if (opMode == Flatten) fAxis = attr_value;
    }
-
+   
+   // for squeeze/unsqueezed operators following old ONNX version (< 10)
+   // IN this cases axes are passed as attribute values
+   ROperator_Reshape(ReshapeOpMode opMode, std::vector<int64_t> attrAxes, std::string nameData, std::string nameOutput)
+      : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)),
+        fAttrAxes(attrAxes)
+   {
+      assert(fOpMode == Squeeze || fOpMode == Unsqueeze);
+   }
 
    // output type is same as input 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -89,7 +97,7 @@ public:
 
       } else if (fOpMode == Squeeze) {
          // squeeze 
-         // assume no axis is provided - remove all with value equal to 1
+         // assume no axis is provided - remove all axes with value equal to 1
          auto output_shape = input[0];
          if (input.size() == 1) {
             for (size_t i = 0; i < output_shape.size(); i++) {
@@ -129,66 +137,74 @@ public:
       return ret;
    }
 
+   void Initialize(RModel &model)
+   {
 
-   void Initialize(RModel& model){
-      if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
+      if (model.CheckIfTensorAlreadyExist(fNData) == false) { 
+          // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA Reshape Op Input Tensor is not found in model");
       }
       fShapeInput = model.GetTensorShape(fNData);
 
       // check if optional shape tensor exist
       if (!fNShape.empty()) {
-         if (model.CheckIfTensorAlreadyExist(fNShape)){
+         if (model.CheckIfTensorAlreadyExist(fNShape)) {
             auto dptr = model.GetInitializedTensorData(fNShape);
-            auto input_shape = static_cast<int64_t*>(dptr.get());
+            auto input_shape = static_cast<int64_t *>(dptr.get());
             auto vec = model.GetTensorShape(fNShape);
             assert(vec.size() == 1);
-            size_t n = vec[0];   // size of shape input tensor
-            
+            size_t n = vec[0]; // size of shape input tensor
+
             std::vector<size_t> descShape(n);
-            std::copy(input_shape, input_shape+n, descShape.begin());
+            std::copy(input_shape, input_shape + n, descShape.begin());
             fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
-         }
-         else {
+         } else {
             throw std::runtime_error("TMVA Reshape Op Input Tensor is not found in model");
          }
-      }
-      else {
-       if (fOpMode == Flatten || fOpMode == Squeeze) {
-          fShapeOutput = ShapeInference({fShapeInput})[0];
-      } else
-          throw std::runtime_error("TMVA Reshape Op : Invalid Input data");
+      } else if (!fAttrAxes.empty()) {
+         // case fNShape is empty and axes are provided as attributes
+         std::vector<size_t> descShape(fAttrAxes.size());
+         std::copy(fAttrAxes.begin(), fAttrAxes.end(), descShape.begin());
+         fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
+      } else if (fOpMode == Flatten || fOpMode == Squeeze) {
+         fShapeOutput = ShapeInference({fShapeInput})[0];
+      } else {
+         throw std::runtime_error("TMVA Reshape Op : Invalid Input/Attribute data");
       }
       model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName)
+   {
       OpName = "op_" + OpName;
-      if (fShapeInput.empty() || fShapeOutput.empty()){
+      if (fShapeInput.empty() || fShapeOutput.empty()) {
          throw std::runtime_error("TMVA SOFIE Reshape Op called to Generate without being initialized first");
       }
 
       // output of reshape is same as input
       size_t length = ConvertShapeToLength(fShapeOutput);
       if (length != ConvertShapeToLength(fShapeInput)) {
-         throw std::runtime_error("TMVA SOFIE Reshape Op : wrong output shape - is " 
-         + ConvertShapeToString(fShapeOutput) + " and input is " + ConvertShapeToString(fShapeInput));
+         throw std::runtime_error("TMVA SOFIE Reshape Op : wrong output shape - is " +
+                                  ConvertShapeToString(fShapeOutput) + " and input is " +
+                                  ConvertShapeToString(fShapeInput));
       }
       for (auto &i : fShapeOutput) {
          length *= i;
       }
       std::stringstream out;
       std::string opName = "Reshape";
-      if (fOpMode == Flatten) opName = "Flatten";
-      else if (fOpMode == Squeeze) opName = "Squeeze";
-      else if (fOpMode == Unsqueeze) opName = "Unsquueze";
+      if (fOpMode == Flatten)
+         opName = "Flatten";
+      else if (fOpMode == Squeeze)
+         opName = "Squeeze";
+      else if (fOpMode == Unsqueeze)
+         opName = "Unsquueze";
 
       out << SP << "///--------" << opName << " operator\n" << std::endl;
       out << SP << "std::copy( fTensor_" << fNData << ".begin(), fTensor_" << fNData << ".end(), fTensor_" << fNOutput
           << ".begin() );\n";
       return out.str();
    }
-
 };
 
 }//SOFIE
