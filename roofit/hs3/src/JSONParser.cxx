@@ -214,7 +214,18 @@ float TJSONTree::Node::val_float() const
 }
 bool TJSONTree::Node::val_bool() const
 {
-   return node->get().get<bool>();
+   auto const &nd = node->get();
+
+   // Attempting to convert zeroes and ones to bools.
+   if (nd.type() == nlohmann::json::value_t::number_unsigned) {
+      auto val = nd.get<unsigned int>();
+      if (val == 0)
+         return false;
+      if (val == 1)
+         return true;
+   }
+
+   return nd.get<bool>();
 }
 
 bool TJSONTree::Node::has_key() const
