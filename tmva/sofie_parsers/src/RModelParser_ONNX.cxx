@@ -428,14 +428,25 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
 
    // Reshape is having one attribute: allowzero (int) (default = 0)
    // Flatten is having one attribute: axis (int) (default=1)
+   // old version of reshape and squeeze have axes as attributes
    std::unique_ptr<ROperator> op;
    int attr_value = (opMode == Reshape) ? 0 : 1;     
-   if (nodeproto.attribute_size() > 0 )
+   if (opMode == Reshape && nodeproto.attribute_size() > 0 )
       attr_value = nodeproto.attribute(0).i();
+
+   std::vector<int64_t> attr_axes = {};
+   if (nodeproto.input_size() == 1 && (opMode == Squeeze || opMode == Unsqueeze)) {
+      std::string attribute_name = nodeproto.attribute(0).name();
+      if (attribute_name == "axes")
+         attr_axes = {nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end()};
+   }
 
    switch (input_type) {
    case ETensorType::FLOAT:
-      op.reset(new ROperator_Reshape<float>(opMode, attr_value, input_name, shape_name, nodeproto.output(0)));
+      if (attr_axes.empty())
+         op.reset(new ROperator_Reshape<float>(opMode, attr_value, input_name, shape_name, nodeproto.output(0)));
+      else // for old Squeeze and Unsqueeze
+         op.reset(new ROperator_Reshape<float>(opMode, attr_axes, input_name, nodeproto.output(0)));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
