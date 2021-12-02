@@ -7,6 +7,8 @@
 #include "RooPlot.h"
 #include "RooWorkspace.h"
 
+#include "TSystem.h"
+
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include "gtest/gtest.h"
@@ -41,7 +43,8 @@ TEST(RooFitHS3, RooArgusBG)
    RooRealVar nbkg("nbkg", "#background events", 800, 0., 10000);
    RooAddPdf model("model", "g+a", RooArgList(signalModel, background), RooArgList(nsig, nbkg));
 
-   RooJSONFactoryWSTool::loadExportKeys("wsexportkeys.json");
+   std::string rootetcPath = gSystem->Getenv("ROOTSYS");
+   RooJSONFactoryWSTool::loadExportKeys(rootetcPath + "/etc/RooFitHS3_wsexportkeys.json");
    RooWorkspace work;
    work.import(model);
    RooJSONFactoryWSTool tool(work);
