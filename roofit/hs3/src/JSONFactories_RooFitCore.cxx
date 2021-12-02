@@ -11,6 +11,7 @@
 #include <TH1.h>
 
 #include "JSONInterface.h"
+#include "static_execute.h"
 
 using RooFit::Detail::JSONNode;
 
@@ -19,6 +20,7 @@ using RooFit::Detail::JSONNode;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
+
 class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
    virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -44,7 +46,6 @@ public:
       return true;
    }
 };
-bool _rooprodpdffactory = RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory());
 
 class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
@@ -86,7 +87,6 @@ public:
       return true;
    }
 };
-bool _rooaddpdffactory = RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
 
 class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer {
 public:
@@ -114,7 +114,7 @@ public:
       return true;
    }
 };
-bool _roosimultaneousfactory = RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
+
 } // namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,8 +143,6 @@ public:
       return true;
    }
 };
-bool _roosimultaneousstreamer =
-   RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
 
 class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
@@ -161,5 +159,16 @@ public:
       return true;
    }
 };
-bool _roohistfuncstreamer = RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(), new RooHistFuncStreamer());
+
+STATIC_EXECUTE(
+
+   RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory());
+   RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
+   RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
+
+   RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
+   RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(), new RooHistFuncStreamer());
+
+)
+
 } // namespace

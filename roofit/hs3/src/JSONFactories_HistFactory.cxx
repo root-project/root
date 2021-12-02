@@ -18,6 +18,7 @@
 #include <TH1.h>
 
 #include "JSONInterface.h"
+#include "static_execute.h"
 
 using RooFit::Detail::JSONNode;
 
@@ -259,7 +260,6 @@ public:
       return true;
    }
 };
-bool _roohistogramfactory = RooJSONFactoryWSTool::registerImporter("histogram", new RooHistogramFactory());
 
 class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
@@ -425,7 +425,6 @@ public:
    }
 };
 
-bool _roorealsumpdffactory = RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory());
 } // namespace
 
 namespace {
@@ -447,8 +446,7 @@ public:
       return true;
    }
 };
-bool _flexibleinterpvarstreamer = RooJSONFactoryWSTool::registerExporter(
-   RooStats::HistFactory::FlexibleInterpVar::Class(), new FlexibleInterpVarStreamer());
+
 } // namespace
 
 namespace {
@@ -630,5 +628,15 @@ public:
       return true;
    }
 };
-bool _histfactorystreamer = RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new HistFactoryStreamer());
+
+STATIC_EXECUTE(
+
+   RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory());
+   RooJSONFactoryWSTool::registerImporter("histogram", new RooHistogramFactory());
+   RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),
+                                          new FlexibleInterpVarStreamer());
+   RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new HistFactoryStreamer());
+
+)
+
 } // namespace
