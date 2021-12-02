@@ -141,7 +141,7 @@ public:
             if (ie > static_cast<IType>(imax))
                ie = imax;
             fEnd[jaxis] = ie;
-            std::cout << " iaxis " << jaxis << " start " << start << " end " << ie << std::endl;
+            //std::cout << " iaxis " << jaxis << " start " << start << " end " << ie << std::endl;
             if (isteps.size() > 0) {
                if (isteps[i] < 0) {
                   // to be done
