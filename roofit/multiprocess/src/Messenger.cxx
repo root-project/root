@@ -103,6 +103,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          wm_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
          rc = zmq_setsockopt(*wm_pull_, ZMQ_RCVHWM, &hwm, sizeof hwm);
          assert(rc == 0);
+         (void)rc;
          sprintf(addr, "%s_%s", addr_prefix, "from_workers_to_master");
          wm_pull_->bind(addr);
          bound_ipc_addresses_.emplace_back(addr);
@@ -170,6 +171,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          mq_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
          rc = zmq_setsockopt(*mq_pull_, ZMQ_RCVHWM, &hwm, sizeof hwm);
          assert(rc == 0);
+         (void)rc;
          sprintf(addr, "%s_%s", addr_prefix, "from_master_to_queue");
          mq_pull_->connect(addr);
 
@@ -210,6 +212,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          wm_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
          rc = zmq_setsockopt(*wm_push_, ZMQ_SNDHWM, &hwm, sizeof hwm);
          assert(rc == 0);
+         (void)rc;
          sprintf(addr, "%s_%s", addr_prefix, "from_workers_to_master");
          wm_push_->connect(addr);
 
