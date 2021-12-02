@@ -31,10 +31,6 @@ class RooMinimizer;
 namespace RooFit {
 namespace TestStatistics {
 
-// forward declaration
-class LikelihoodSerial;
-//class LikelihoodGradientSerial;
-
 /// For communication with wrappers, an instance of this struct must be shared between them and MinuitFcnGrad. It keeps
 /// track of what has been evaluated for the current parameter set provided by Minuit.
 struct WrapperCalculationCleanFlags {
@@ -51,12 +47,13 @@ struct WrapperCalculationCleanFlags {
 
 class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
-   // factory
-   template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodSerial*/,
-             typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientSerial*/>
-   static MinuitFcnGrad *
-   create(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &likelihood, RooMinimizer *context,
-          std::vector<ROOT::Fit::ParameterSettings> &parameters, bool verbose = false);
+   enum class LikelihoodMode { serial, multiprocess };
+   enum class LikelihoodGradientMode { multiprocess };
+
+   MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
+                 std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                 LikelihoodMode likelihoodMode,
+                 LikelihoodGradientMode likelihoodGradientMode, bool verbose = false);
 
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
@@ -77,8 +74,10 @@ private:
    double DoEval(const double *x) const override;
 
 public:
-   /// IMultiGradFunction override necessary for Minuit
+   /// IMultiGradFunction overrides necessary for Minuit
    void Gradient(const double *x, double *grad) const override;
+   void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
+                               double *previous_gstep) const override;
 
    /// Part of IMultiGradFunction interface, used widely both in Minuit and in RooFit.
    inline unsigned int NDim() const override { return _nDim; }
@@ -90,15 +89,6 @@ public:
    inline void setOffsetting(Bool_t flag) override { likelihood->enableOffsetting(flag); }
 
 private:
-   template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodJob*/,
-             typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientJob*/>
-   MinuitFcnGrad(
-      const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
-      std::vector<ROOT::Fit::ParameterSettings> &parameters, bool verbose,
-      LikelihoodWrapperT * /* used only for template deduction */ = static_cast<LikelihoodWrapperT *>(nullptr),
-      LikelihoodGradientWrapperT * /* used only for template deduction */ =
-         static_cast<LikelihoodGradientWrapperT *>(nullptr));
-
    /// This override should not be used in this class, so it throws.
    double DoDerivative(const double *x, unsigned int icoord) const override;
 
@@ -118,43 +108,6 @@ private:
 public:
    mutable bool minuit_internal_roofit_x_mismatch_ = false;
 };
-
-
-/// \param[in] context RooMinimizer that creates and owns this class.
-/// \param[in] parameters The vector of ParameterSettings objects that describe the parameters used in the Minuit
-/// Fitter. Note that these must match the set used in the Fitter used by \p context! It can be passed in from
-/// RooMinimizer with fitter()->Config().ParamsSettings().
-template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
-MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
-                             std::vector<ROOT::Fit::ParameterSettings> &parameters, bool verbose,
-                             LikelihoodWrapperT * /* value unused */, LikelihoodGradientWrapperT * /* value unused */)
-   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context, verbose), minuit_internal_x_(NDim(), 0),
-     minuit_external_x_(NDim(), 0)
-{
-   synchronizeParameterSettings(parameters, kTRUE, verbose);
-
-   calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
-   likelihood = std::make_shared<LikelihoodWrapperT>(_likelihood, calculation_is_clean /*, _context*/);
-   gradient = std::make_shared<LikelihoodGradientWrapperT>(_likelihood, calculation_is_clean, getNDim(), _context);
-
-   likelihood->synchronizeParameterSettings(parameters);
-   gradient->synchronizeParameterSettings(this, parameters);
-
-   // Note: can be different than RooGradMinimizerFcn, where default options are passed
-   // (ROOT::Math::MinimizerOptions::DefaultStrategy() and ROOT::Math::MinimizerOptions::DefaultErrorDef())
-   likelihood->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
-   gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
-}
-
-// static function
-template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
-MinuitFcnGrad *
-MinuitFcnGrad::create(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &likelihood, RooMinimizer *context,
-                      std::vector<ROOT::Fit::ParameterSettings> &parameters, bool verbose)
-{
-   return new MinuitFcnGrad(likelihood, context, parameters, verbose, static_cast<LikelihoodWrapperT *>(nullptr),
-                            static_cast<LikelihoodGradientWrapperT *>(nullptr));
-}
 
 } // namespace TestStatistics
 } // namespace RooFit

@@ -45,22 +45,17 @@ class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
 class RooPlot ;
-namespace RooFit {
-namespace TestStatistics {
-class LikelihoodSerial;
-//class LikelihoodGradientSerial;
-}
-} // namespace RooFit
 
 class RooMinimizer : public TObject {
 public:
   enum class FcnMode { classic, gradient, generic_wrapper };
 
   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
-  static std::unique_ptr<RooMinimizer> create(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
-  template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodSerial*/,
-            typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientSerial*/>
-  static std::unique_ptr<RooMinimizer> create(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood);
+  explicit RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
+                        RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode likelihoodMode =
+                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode::serial,
+                        RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode likelihoodGradientMode =
+                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode::multiprocess);
 
   ~RooMinimizer() override;
 
@@ -118,6 +113,8 @@ public:
   ROOT::Math::IMultiGenFunction* getFitterMultiGenFcn() const;
   ROOT::Math::IMultiGenFunction* getMultiGenFcn() const;
 
+  inline Int_t getNPar() const { return fitterFcn()->getNDim() ; }
+
 protected:
 
   friend class RooAbsPdf ;
@@ -126,7 +123,6 @@ protected:
   void profileStart() ;
   void profileStop() ;
 
-  inline Int_t getNPar() const { return fitterFcn()->getNDim() ; }
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
 
@@ -136,10 +132,9 @@ protected:
   bool fitFcn() const;
 
 private:
-  template <typename LikelihoodWrapperT /*= RooFit::TestStatistics::LikelihoodSerial*/, typename LikelihoodGradientWrapperT /*= RooFit::TestStatistics::LikelihoodGradientSerial*/>
-  RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
-               LikelihoodWrapperT* /* used only for template deduction = static_cast<RooFit::TestStatistics::LikelihoodSerial*>(nullptr) */,
-               LikelihoodGradientWrapperT* /* used only for template deduction  = static_cast<RooFit::TestStatistics::LikelihoodGradientSerial*>(nullptr) */);
+  // constructor helper functions
+  void initMinimizerFirstPart();
+  void initMinimizerFcnDependentPart(double defaultErrorLevel);
 
   Int_t _printLevel = 1;
   Int_t _status = -99;
@@ -164,49 +159,5 @@ private:
 	
   ClassDefOverride(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
-
-
-template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
-RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood, LikelihoodWrapperT* /* value unused */,
-                           LikelihoodGradientWrapperT* /* value unused */) :
-   _fcnMode(FcnMode::generic_wrapper)
-{
-   RooSentinel::activate();
-
-   if (_theFitter)
-      delete _theFitter;
-   _theFitter = new ROOT::Fit::Fitter;
-   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
-   setEps(1.0); // default tolerance
-
-   _fcn = RooFit::TestStatistics::MinuitFcnGrad::create<LikelihoodWrapperT, LikelihoodGradientWrapperT>(likelihood, this, _theFitter->Config().ParamsSettings(), _verbose);
-
-   // default max number of calls
-   _theFitter->Config().MinimizerOptions().SetMaxIterations(500 * _fcn->getNDim());
-   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500 * _fcn->getNDim());
-
-   // Shut up for now
-   setPrintLevel(-1);
-
-   // Use +0.5 for 1-sigma errors
-   setErrorLevel(likelihood->defaultErrorLevel());
-
-   // Declare our parameters to MINUIT
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst(), _verbose);
-
-   // Now set default verbosity
-   if (RooMsgService::instance().silentMode()) {
-      setPrintLevel(-1);
-   } else {
-      setPrintLevel(1);
-   }
-}
-
-// static function
-template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
-std::unique_ptr<RooMinimizer> RooMinimizer::create(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood) {
-   return std::make_unique<RooMinimizer>(likelihood, static_cast<LikelihoodWrapperT*>(nullptr),
-                                         static_cast<LikelihoodGradientWrapperT*>(nullptr));
-}
 
 #endif

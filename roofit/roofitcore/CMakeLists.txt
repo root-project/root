@@ -9,6 +9,10 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if (roofit_multiprocess)
+  set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     Floats.h
@@ -473,6 +477,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/optional_parameter_types.cxx
     src/TestStatistics/buildLikelihood.cxx
+    ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES
@@ -492,6 +497,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   LINKDEF
     inc/LinkDef.h
 )
+
+if (roofit_multiprocess)
+  target_link_libraries(RooFitCore PRIVATE RooFitMultiProcess)
+  target_compile_definitions(RooFitCore PRIVATE -DBUILD_WITH_ROOFIT_MULTIPROCESS)
+  set(RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
+  target_include_directories(RooFitCore PRIVATE ${RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR})
+endif()
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
