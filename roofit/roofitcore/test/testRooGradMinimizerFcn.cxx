@@ -72,15 +72,15 @@ TEST_P(GradMinimizerParSeed, Gaussian1D)
 
    *values = *savedValues;
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
-   m1->setMinimizerType("Minuit2");
+   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+   m1.setMinimizerType("Minuit2");
 
-   m1->setStrategy(0);
-   m1->setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
-   m1->migrad();
+   m1.migrad();
 
-   RooFitResult *m1result = m1->lastMinuitFit();
+   RooFitResult *m1result = m1.lastMinuitFit();
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
    double mu1 = mu->getVal();
@@ -136,14 +136,14 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
    // when c++17 support arrives, change to this:
    // auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
-   m1->setMinimizerType("Minuit2");
+   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+   m1.setMinimizerType("Minuit2");
 
-   m1->setStrategy(0);
-   m1->setPrintLevel(100);
-   m1->setVerbose(kTRUE);
+   m1.setStrategy(0);
+   m1.setPrintLevel(100);
+   m1.setVerbose(kTRUE);
 
-   m1->migrad();
+   m1.migrad();
 }
 
 TEST(GradMinimizer, GaussianND)
@@ -207,15 +207,15 @@ TEST(GradMinimizer, GaussianND)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*(nll.get()), RooMinimizer::FcnMode::gradient);
-   m1->setMinimizerType("Minuit2");
+   RooMinimizer m1(*(nll.get()), RooMinimizer::FcnMode::gradient);
+   m1.setMinimizerType("Minuit2");
 
-   m1->setStrategy(0);
-   m1->setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
-   m1->migrad();
+   m1.migrad();
 
-   RooFitResult *m1result = m1->lastMinuitFit();
+   RooFitResult *m1result = m1.lastMinuitFit();
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
    std::vector<double> mean1(N);
@@ -271,16 +271,16 @@ TEST(GradMinimizerReverse, GaussianND)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
+   RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
 
-   m0->setMinimizerType("Minuit2");
+   m0.setMinimizerType("Minuit2");
 
-   m0->setStrategy(0);
-   m0->setPrintLevel(-1);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
 
-   m0->migrad();
+   m0.migrad();
 
-   RooFitResult *m0result = m0->lastMinuitFit();
+   RooFitResult *m0result = m0.lastMinuitFit();
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    std::vector<double> mean0(N);
@@ -451,15 +451,15 @@ TEST(GradMinimizer, BranchingPDF)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
-   m1->setMinimizerType("Minuit2");
+   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+   m1.setMinimizerType("Minuit2");
 
-   m1->setStrategy(0);
-   m1->setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
-   m1->migrad();
+   m1.migrad();
 
-   RooFitResult *m1result = m1->lastMinuitFit();
+   RooFitResult *m1result = m1.lastMinuitFit();
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
 
@@ -569,15 +569,15 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
    all_values.Print("v");
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
-   m1->setMinimizerType("Minuit2");
+   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+   m1.setMinimizerType("Minuit2");
 
-   m1->setStrategy(0);
-   m1->setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
-   m1->migrad();
+   m1.migrad();
 
-   RooFitResult *m1result = m1->lastMinuitFit();
+   RooFitResult *m1result = m1.lastMinuitFit();
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
 
@@ -640,8 +640,8 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
    RooDataSet *data = static_cast<RooDataSet *>(w.data(""));
    auto nll = sum.createNLL(*data);
 
-   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create(*nll, RooMinimizer::FcnMode::gradient);
-   m0->setMinimizerType("Minuit2");
-   m0->setStrategy(0);
-   m0->migrad();
+   RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
+   m0.setMinimizerType("Minuit2");
+   m0.setStrategy(0);
+   m0.migrad();
 }
