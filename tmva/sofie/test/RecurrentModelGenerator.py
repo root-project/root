@@ -11,6 +11,7 @@ import torch.nn.functional as F
 
 
 result = []
+verbose=False
 
 class Net(nn.Module):
     
@@ -43,8 +44,9 @@ class Net(nn.Module):
       # Reshaping the outputs such that it can be fit into the fully connected layer
       #out = lstm_out.view(self.hidden_dim,-1)
 
-      print("recurent output", rc_out)
-      print("hidden out ",self.hidden_cell)
+      if (verbose):
+         print("recurrent output", rc_out)
+         print("hidden out ",self.hidden_cell)
 
       out = rc_out[:,-1,:]
       out = self.fc(out)
@@ -61,7 +63,7 @@ def main():
    #print(arguments)
    parser = argparse.ArgumentParser(description='PyTorch model generator')
    parser.add_argument('params', type=int, nargs='+',
-                    help='parameters for the Recurrent network : batchSize , inputSize, hiddenSize, seqSize, nLayers ')
+                    help='parameters for the Recurrent network : batchSize , inputSize, seqSize, hiddenSize, nLayers ')
    
    parser.add_argument('--lstm', action='store_true', default=False,
                          help='For using LSTM  layer')
@@ -75,49 +77,44 @@ def main():
 
    args = parser.parse_args()
   
-   #args.params = (1,3,10,1)
+   ##args.params = (1,3,10,4,1)
 
    np = len(args.params)
-   if (np < 3) : exit()
+   if (np < 5) : exit()
    bsize = args.params[0]
-   nd = args.params[1] 
-   nh = args.params[2]
-   nt = args.params[3]
+   nd = args.params[1]
+   nt = args.params[2] 
+   nh = args.params[3]
    nl = args.params[4]
 
 
    type = "RNN"
    if (args.lstm): type = "LSTM"
-   if (args.gru) : type = "GRU"
+   if (args.gru): type = "GRU"
 
-   print ("using batch-size =",bsize,"inputSize=",nd,"hidden Size =",nh,"nlayers =",nl)
-   # if (use_bn): print("using batch normalization layer")
-   # if (use_maxpool): print("using maxpool  layer")
+   if (args.v) : verbose=True
 
-    #sample = torch.zeros([2,1,5,5])
-   input  = torch.zeros([])
-   for ib in range(0,bsize):
-      xa = torch.ones([1, nt, nd]) * (ib+1)
-      # if (nc > 1) : 
-      #    xb = xa.neg()
-      #    xc = torch.cat((xa,xb),1)  # concatenate tensors
-      #    if (nc > 2) :
-      #       xd = torch.zeros([1,nc-2,d,d])
-      #       xc = torch.cat((xa,xb,xd),1)
-      # else:
-      #    xc = xa
-        
+   print ("using batch-size =",bsize,"inputSize=",nd,"sequence length",nt,"hidden Size",nh,"nlayers",nl)
+
+   xinput = torch.zeros([])
+   xb  = torch.zeros([])
+   for ib in range(0, bsize):
+      for it in range(0,nt) :
+         xa = torch.ones([1, 1, nd]) * (it + 1) * pow(-1, ib + 2)
       #concatenate tensors 
+         if (it == 0):
+            xb = xa
+         else:
+            xb = torch.cat((xb,xa),1) 
       if (ib == 0) : 
-         xinput = xa
+         xinput = xb
       else :
-         xinput = torch.cat((xinput,xa),0) 
+         xinput = torch.cat((xinput,xb),0) 
 
    print("input data",xinput.shape)
    print(xinput)
   
    name = type + "Model"
-   # if (use_bn): name += "_BN"
    name += "_B" + str(bsize)
 
    saveOnnx=True
@@ -157,8 +154,6 @@ def main():
 
    outSize = y.nelement()
    yvec = y.reshape([outSize])
-   # for i in range(0,outSize):
-   #      print(float(yvec[i]))
 
    f = open(name + ".out", "w")
    for i in range(0,outSize):
