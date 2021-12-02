@@ -30,3 +30,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
   DEPENDENCIES
     Graf
 )
+
+check_cxx_compiler_flag(-Wbidirectional=none GCC_HAS_BIDIRECTIONAL_FLAG)
+if(GCC_HAS_BIDIRECTIONAL_FLAG)
+    set_source_files_properties(src/TPostScript.cxx COMPILE_FLAGS "-Wbidirectional=none")
+endif()
