@@ -1,14 +1,5 @@
 ROOT_ADD_GTEST(test_RooFitZMQ test_ZMQ.cpp LIBRARIES RooFitZMQ)
-target_include_directories(test_RooFitZMQ PRIVATE ${RooFitZMQ_INCLUDE_DIRS})
-
 ROOT_ADD_GTEST(test_RooFitZMQ_polling test_polling.cxx LIBRARIES RooFitZMQ)
-target_include_directories(test_RooFitZMQ_polling PRIVATE ${RooFitZMQ_INCLUDE_DIRS})
-
 ROOT_ADD_GTEST(test_RooFitZMQ_HWM test_HWM.cxx LIBRARIES RooFitZMQ)
-target_include_directories(test_RooFitZMQ_HWM PRIVATE ${RooFitZMQ_INCLUDE_DIRS})
-
 ROOT_ADD_GTEST(test_RooFitZMQ_load_balancing test_ZMQ_load_balancing.cxx LIBRARIES RooFitZMQ)
-target_include_directories(test_RooFitZMQ_load_balancing PRIVATE ${RooFitZMQ_INCLUDE_DIRS})
-
 ROOT_ADD_GTEST(test_RooFitZMQ_mkstemp test_mkstemp.cxx LIBRARIES RooFitZMQ)
-target_include_directories(test_RooFitZMQ_mkstemp PRIVATE ${RooFitZMQ_INCLUDE_DIRS})
