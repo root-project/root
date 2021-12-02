@@ -37,6 +37,8 @@ public:
    virtual LikelihoodGradientWrapper* clone() const = 0;
 
    virtual void fillGradient(double *grad) = 0;
+   virtual void
+   fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2, double *previous_gstep) = 0;
 
    /// Synchronize minimizer settings with calculators in child classes.
    virtual void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions &options);

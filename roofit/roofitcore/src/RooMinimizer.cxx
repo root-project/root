@@ -107,14 +107,7 @@ void RooMinimizer::cleanup()
 
 RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcnMode)
 {
-   RooSentinel::activate();
-
-   if (_theFitter) {
-      delete _theFitter;
-   }
-   _theFitter = new ROOT::Fit::Fitter;
-   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
-   setEps(1.0); // default tolerance
+   initMinimizerFirstPart();
 
    switch (_fcnMode) {
    case FcnMode::classic: {
@@ -126,11 +119,47 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
       setMinimizerType("Minuit2");
       break;
    }
+   case FcnMode::generic_wrapper : {
+      throw std::logic_error("In RooMinimizer constructor: fcnMode::generic_wrapper cannot be used on a RooAbsReal! "
+                             "Please use the TestStatistics::RooAbsL based constructor instead.");
+   }
    default: {
       throw std::logic_error("In RooMinimizer constructor: fcnMode has an unsupported value!");
    }
    }
 
+   initMinimizerFcnDependentPart(function.defaultErrorLevel());
+}
+
+RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
+                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode likelihoodMode,
+                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode likelihoodGradientMode)
+   : _fcnMode(FcnMode::generic_wrapper)
+{
+   initMinimizerFirstPart();
+   _fcn = new RooFit::TestStatistics::MinuitFcnGrad(likelihood, this, _theFitter->Config().ParamsSettings(), likelihoodMode,
+                                                    likelihoodGradientMode, _verbose);
+   initMinimizerFcnDependentPart(likelihood->defaultErrorLevel());
+}
+
+// constructor helpers
+
+/// Initialize the part of the minimizer that is independent of the function to be minimized
+void RooMinimizer::initMinimizerFirstPart()
+{
+   RooSentinel::activate();
+
+   if (_theFitter) {
+      delete _theFitter;
+   }
+   _theFitter = new ROOT::Fit::Fitter;
+   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+   setEps(1.0); // default tolerance
+}
+
+/// Initialize the part of the minimizer that is dependent on the function to be minimized
+void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
+{
    // default max number of calls
    _theFitter->Config().MinimizerOptions().SetMaxIterations(500 * _fcn->getNDim());
    _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500 * _fcn->getNDim());
@@ -139,7 +168,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    setPrintLevel(-1);
 
    // Use +0.5 for 1-sigma errors
-   setErrorLevel(function.defaultErrorLevel());
+   setErrorLevel(defaultErrorLevel);
 
    // Declare our parameters to MINUIT
    _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst(), _verbose);
@@ -150,11 +179,6 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    } else {
       setPrintLevel(1);
    }
-}
-
-// static function
-std::unique_ptr<RooMinimizer> RooMinimizer::create(RooAbsReal &function, FcnMode fcnMode) {
-   return std::make_unique<RooMinimizer>(function, fcnMode);
 }
 
 
@@ -190,10 +214,10 @@ void RooMinimizer::setStrategy(Int_t istrat)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change maximum number of MINUIT iterations 
+/// Change maximum number of MINUIT iterations
 /// (RooMinimizer default 500 * #parameters)
 
-void RooMinimizer::setMaxIterations(Int_t n) 
+void RooMinimizer::setMaxIterations(Int_t n)
 {
   _theFitter->Config().MinimizerOptions().SetMaxIterations(n);
 }
@@ -205,7 +229,7 @@ void RooMinimizer::setMaxIterations(Int_t n)
 /// Change maximum number of likelihood function calss from MINUIT
 /// (RooMinimizer default 500 * #parameters)
 
-void RooMinimizer::setMaxFunctionCalls(Int_t n) 
+void RooMinimizer::setMaxFunctionCalls(Int_t n)
 {
   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(n);
 }
@@ -240,7 +264,7 @@ void RooMinimizer::setEps(Double_t eps)
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable internal likelihood offsetting for enhanced numeric precision
 
-void RooMinimizer::setOffsetting(Bool_t flag) 
+void RooMinimizer::setOffsetting(Bool_t flag)
 {
   _fcn->setOffsetting(flag);
 }
@@ -261,7 +285,7 @@ void RooMinimizer::setMinimizerType(const char* type)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object 
+/// Return underlying ROOT fitter object
 
 ROOT::Fit::Fitter* RooMinimizer::fitter()
 {
@@ -270,9 +294,9 @@ ROOT::Fit::Fitter* RooMinimizer::fitter()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object 
+/// Return underlying ROOT fitter object
 
-const ROOT::Fit::Fitter* RooMinimizer::fitter() const 
+const ROOT::Fit::Fitter* RooMinimizer::fitter() const
 {
   return _theFitter ;
 }
@@ -427,7 +451,7 @@ Int_t RooMinimizer::hesse()
     _fcn->BackProp(_theFitter->Result());
 
     saveStatus("HESSE",_status) ;
-  
+
   }
 
   return _status ;
@@ -583,7 +607,7 @@ Int_t RooMinimizer::simplex()
   _fcn->BackProp(_theFitter->Result());
 
   saveStatus("SEEK",_status) ;
-    
+
   return _status ;
 }
 
@@ -766,15 +790,15 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   frame->addObject(point) ;
 
   // check first if a inimizer is available. If not means
-  // the minimization is not done , so do it 
+  // the minimization is not done , so do it
   if (_theFitter->GetMinimizer()==0) {
      coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!"
                          << endl ;
      return frame;
   }
 
-  
-  // remember our original value of ERRDEF  
+
+  // remember our original value of ERRDEF
   Double_t errdef= _theFitter->GetMinimizer()->ErrorDef();
 
   Double_t n[6] ;
