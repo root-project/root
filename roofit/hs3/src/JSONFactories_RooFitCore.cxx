@@ -137,8 +137,7 @@ public:
          RooAbsPdf *pdf = sim->getPdf(catname);
          if (!pdf)
             RooJSONFactoryWSTool::error("no pdf found for category");
-         auto &ch = channels[catname];
-         tool->exportObject(pdf, ch);
+         tool->exportObject(pdf, channels);
       }
       return true;
    }
