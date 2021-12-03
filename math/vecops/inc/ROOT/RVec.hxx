@@ -2365,10 +2365,10 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
    using size_type = typename RVec<T>::size_type;
    const size_type s = v.size();
    if (n > s) {
-      std::stringstream ss;
-      ss << "Cannot make unique combinations of size " << n << " from vector of size " << s << ".";
-      throw std::runtime_error(ss.str());
+      throw std::runtime_error("Cannot make unique combinations of size " + std::to_string(n) +
+                               " from vector of size " + std::to_string(s) + ".");
    }
+
    RVec<size_type> indices(s);
    for(size_type k=0; k<s; k++)
       indices[k] = k;
