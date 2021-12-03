@@ -101,10 +101,12 @@ void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayer
    }
 }
 
-void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannels = 2, int nd = 4, int nlayers = 4)
+void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannels = 2, int nd = 4, int nlayers = 4, int usePool = 0)
 {
    std::string modelName = "Conv2dModel";
    if (useBN) modelName += "_BN";
+   if (usePool == 1) modelName += "_MAXP";
+   if (usePool == 2) modelName += "_AVGP";
    modelName += "_B" + std::to_string(nbatches);
 
    // input size is fixed to (nb, nc, nd, nd)
@@ -126,8 +128,22 @@ void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannel
       command += argv[i];
    }
    if (useBN) command += "  --bn";
+   if (usePool == 1) command += " --maxpool";
+   if (usePool == 2) command += " --avgpool";
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
+
+   // some model needs some semplifications
+   if (usePool == 2) {
+      printf("simplify onnx model using onnxsim tool \n");
+      std::string cmd = "python -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
+      int ret = gSystem->Exec(cmd.c_str());
+      if (ret != 0) {
+         std::cout << "Error when simplifing ONNX model with AveragePool layer using onnx-simplifier (onnxsim) - skip the test" << std::endl;
+         GTEST_SKIP();
+         return;
+      }
+   }
    // TPython::ExecScript("Conv2dModelGenerator.py",5,argv);
 
   
@@ -180,11 +196,21 @@ TEST(SOFIE, Conv2d_B4)
    TestConv2D(4);
 }
 // test with batch normalization
-TEST(SOFIE, Linear_BNORM_B4)
+TEST(SOFIE, Linear_BNORM_B8)
 {
    TestLinear(8,true,5,4);
 }
-TEST(SOFIE, Conv2d_BNORM_B4)
+TEST(SOFIE, Conv2d_BNORM_B5)
 {
    TestConv2D(5,true);
+}
+// test with max pooling
+TEST(SOFIE, Conv2d_MAXPOOL_B2)
+{
+   TestConv2D(2,false,1,2,3,1,1);
+}
+// test with avg pooling
+TEST(SOFIE, Conv2d_AVGPOOL_B2)
+{
+   TestConv2D(2, false, 1, 2, 4, 1, 2);
 }

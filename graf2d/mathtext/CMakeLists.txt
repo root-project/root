@@ -19,4 +19,8 @@ ROOT_LINKER_LIBRARY(mathtext
   NOINSTALL
 )
 
+check_cxx_compiler_flag(-Wbidirectional=none GCC_HAS_BIDIRECTIONAL_FLAG)
+if(GCC_HAS_BIDIRECTIONAL_FLAG)
+    set_source_files_properties(src/fontembed.cxx COMPILE_FLAGS "-Wbidirectional=none")
+endif()
 set_property(TARGET mathtext PROPERTY POSITION_INDEPENDENT_CODE ON)

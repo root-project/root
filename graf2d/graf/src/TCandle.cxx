@@ -290,10 +290,10 @@ int TCandle::ParseOption(char * opt) {
          char indivOption[32];
          if (brOpen && brClose) {
             useIndivOption = true;
-            bool isHorizontal = IsHorizontal();
+            bool wasHorizontal = IsHorizontal();
             strlcpy(indivOption, brOpen, brClose-brOpen+2); //Now the string "(....)" including brackets is in this array
             sscanf(indivOption,"(%d)", (int*) &fOption);
-            if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
+            if (wasHorizontal && !IsHorizontal()) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
             snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c(%ld)",direction,(long)fOption);
@@ -347,10 +347,10 @@ int TCandle::ParseOption(char * opt) {
          char indivOption[32];
          if (brOpen && brClose) {
             useIndivOption = true;
-            bool isHorizontal = IsHorizontal();
+            bool wasHorizontal = IsHorizontal();
             strlcpy(indivOption, brOpen, brClose-brOpen +2); //Now the string "(....)" including brackets is in this array
             sscanf(indivOption,"(%d)", (int*) &fOption);
-            if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
+            if (wasHorizontal && !IsHorizontal()) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
             snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c(%ld)",direction,(long)fOption);
@@ -451,11 +451,11 @@ void TCandle::Calculate() {
          int bin = fProj->FindBin(fBoxDown-1.5*iqr);
          // extending only to the lowest data value within this range
          while (fProj->GetBinContent(bin) == 0 && bin <= fProj->GetNbinsX()) bin++;
-         fWhiskerDown = fProj->GetBinCenter(bin);
+         fWhiskerDown = fProj->GetXaxis()->GetBinLowEdge(bin);
 
          bin = fProj->FindBin(fBoxUp+1.5*iqr);
          while (fProj->GetBinContent(bin) == 0 && bin >= 1) bin--;
-         fWhiskerUp = fProj->GetBinCenter(bin);
+         fWhiskerUp = fProj->GetXaxis()->GetBinUpEdge(bin);
       } else { //Need a calculation for a raw-data candle
          fWhiskerUp = fBoxDown;
          fWhiskerDown = fBoxUp;
@@ -723,8 +723,9 @@ void TCandle::Paint(Option_t *)
      if (IsOption(kMedianNotched)) { // Check if we have to draw a box with notches
          Double_t x[] = {dimLeft,  dimLeft, dimLeft+fCandleWidth/3., dimLeft, dimLeft, dimRight,
                          dimRight, dimRight-fCandleWidth/3., dimRight, dimRight, dimLeft};
-         Double_t y[] = {fBoxDown, fMedian-fMedianErr, fMedian, fMedian+fMedianErr, fBoxUp, fBoxUp,
-                         fMedian+fMedianErr, fMedian, fMedian-fMedianErr, fBoxDown, fBoxDown};
+         Double_t yy1 = TMath::Max(fBoxDown, fMedian-fMedianErr), yy2 = TMath::Min(fMedian+fMedianErr, fBoxUp);
+         Double_t y[] = {fBoxDown, yy1, fMedian, yy2, fBoxUp, fBoxUp,
+                         yy2, fMedian, yy1, fBoxDown, fBoxDown};
          PaintBox(11, x, y, swapXY);
       } else { // draw a simple box
          Double_t x[] = {dimLeft, dimLeft, dimRight, dimRight, dimLeft};

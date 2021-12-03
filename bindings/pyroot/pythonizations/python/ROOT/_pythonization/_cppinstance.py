@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import cppyy
 import libcppyy
 from libROOTPythonizations import AddCPPInstancePickling
 
