@@ -1179,16 +1179,11 @@ public:
 
    reference operator[](size_type idx)
    {
-#ifndef NDEBUG
-      R__ASSERT(idx < size());
-#endif
       return begin()[idx];
    }
+
    const_reference operator[](size_type idx) const
    {
-#ifndef NDEBUG
-      R__ASSERT(idx < size());
-#endif
       return begin()[idx];
    }
 
