@@ -15,6 +15,7 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/SFT,\
  Josh Bendavid, CERN/CMS,\
  Jakob Blomer, CERN/SFT,\
+ Patrick Bos, Netherlands eScience Center,\
  Rene Brun, CERN/SFT,\
  Will Buttinger, STFC/ATLAS,\
  Philippe Canal, FNAL,\
@@ -155,6 +156,44 @@ Other notable additions and improvements include:
 
 
 ## RooFit Libraries
+### Parallel calculation of likelihood gradients during fitting
+This release features two new optional RooFit libraries: `RooFit::MultiProcess` and `RooFit::TestStatistics`.
+To activate both, build with `-Droofit_multiprocess=ON`.
+
+The `RooFit::TestStatistics` namespace contains a major refactoring of the `RooAbsTestStatistic`-`RooAbsOptTestStatistic`-`RooNLLVar` inheritance tree into:
+
+1. statistics-based classes on the one hand;
+2. calculation/evaluation/optimization based classes on the other hand.
+
+The main selling point of using `RooFit::TestStatistics` from a performance point of view is the implementation of the `RooFit::MultiProcess` based `LikelihoodGradientJob` calculator class.
+To use it to perform a "migrad" fit (using Minuit2), one should create a `RooMinimizer` using a new constructor with a `RooAbsL` likelihood parameter as follows:
+
+```c++
+using RooFit::TestStatistics::RooAbsL;
+using RooFit::TestStatistics::buildLikelihood;
+
+RooAbsPdf* pdf = ...;   // build a pdf
+RooAbsData* data = ...; // get some data
+
+std::shared_ptr<RooAbsL> likelihood = buildLikelihood(pdf, data, [OPTIONAL ARGUMENTS]);
+
+RooMinimizer m(likelihood);
+m.migrad();
+```
+
+The `RooMinimizer` object behaves as usual, except that behind the scenes it will now calculate each partial derivative on a separate process, ideally running on a separate CPU core.
+This can be used to speed up fits with many parameters (at least as many as there are cores to parallelize over), since every parameter corresponds to a partial derivative.
+The resulting fit parameters will be identical to those obtained with the non-parallelized gradients minimizer in most cases (see the usage notes linked below for exceptions).
+
+In upcoming releases, further developments are planned:
+
+- Benchmark/profile and optimize performance further
+- Add a `RooAbsPdf::fitTo` interface around these new classes
+- Achieve feature parity with existing `RooNLLVar` functionality, e.g. ranges are not yet supported.
+
+For more details, consult the usage notes in the [TestStatistics README.md](https://github.com/root-project/root/tree/master/roofit/roofitcore/src/TestStatistics/README.md).
+For benchmarking results on the prototype version of the parallelized gradient calculator, see the corresponding [CHEP19 proceedings paper](https://doi.org/10.1051/epjconf/202024506027).
+
 ### New PyROOT functions for interoperability with NumPy and Pandas
 
 New member functions of RooFit classes were introduced exclusively to PyROOT for better interoperability between RooFit and Numpy and Pandas:
