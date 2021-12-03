@@ -3,7 +3,6 @@
 
 #include "TFile.h"
 
-#include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
 
 using namespace RooStats;
@@ -11,12 +10,6 @@ using namespace RooStats;
 /// Test that we can correctly read a HypoTestInverterResult
 TEST(HypoTestInvResult, ReadFromFile)
 {
-  // Suppress all streamer info warnings. Revert if possible!
-  ROOTUnitTestSupport::CheckDiagsRAII diags;
-  diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "Do not try to write objects with the current class definition", false);
-  diags.optionalDiag(kWarning, "TStreamerInfo::CompareContent", "The following data member of", false);
-  diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false);
-
   const char* filename = "testHypoTestInvResult_1.root";
 
   TFile file(filename, "READ");
