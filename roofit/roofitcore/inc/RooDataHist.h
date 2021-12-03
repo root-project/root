@@ -279,7 +279,7 @@ protected:
   mutable std::vector<double> _maskedWeights; //! Copy of _wgt, but masked events have a weight of zero.
   mutable std::vector<double> _maskedSumw2; //! Copy of _sumW2, but masked events have a weight of zero.
  
-  mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
+  mutable unsigned long _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
 
   mutable std::unordered_map<int,std::vector<double>> _pbinvCache ; //! Cache for arrays of partial bin volumes
   std::vector<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
@@ -299,7 +299,7 @@ private:
   VarInfo _varInfo; //!
   VarInfo const& getVarInfo();
 
-  ClassDefOverride(RooDataHist, 6) // Binned data set
+  ClassDefOverride(RooDataHist, 7) // Binned data set
 };
 
 #endif
