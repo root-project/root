@@ -14,7 +14,6 @@
 #include "TFile.h"
 #include "TMemFile.h"
 
-#include "ROOTUnitTestSupport.h"
 #include "gtest/gtest.h"
 
 
@@ -80,13 +79,6 @@ public:
       outfile.WriteObject(&data, "data")
    */
   void SetUp() override {
-    // Suppress all streamer info warnings. Revert if possible!
-    ROOTUnitTestSupport::CheckDiagsRAII diags;
-    diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "Do not try to write objects with the current class definition", false);
-    diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "has a different checksum than the previously loaded StreamerInfo", false);
-    diags.optionalDiag(kWarning, "TStreamerInfo::CompareContent", "The following data member of", false);
-    diags.optionalDiag(kError,   "TBufferFile::CheckByteCount", "read too few bytes", false);
-
     TFile file(GetParam(), "READ");
     ASSERT_TRUE(file.IsOpen());
 
@@ -236,14 +228,6 @@ TEST(RooTemplateProxy, CategoryProxy) {
 
 // Read a simple v6.20 workspace to test proxy schema evolution
 TEST(RooProxy, Read6_20) {
-  // Suppress all streamer info warnings. Revert if possible!
-  ROOTUnitTestSupport::CheckDiagsRAII diags;
-  diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "Do not try to write objects with the current class definition", false);
-  diags.optionalDiag(kWarning, "TStreamerInfo::BuildCheck", "has a different checksum than the previously loaded StreamerInfo", false);
-  diags.optionalDiag(kWarning, "TStreamerInfo::CompareContent", "The following data member of", false);
-  diags.optionalDiag(kError,   "TBufferFile::CheckByteCount", "read too few bytes", false);
-  diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false);
-
   TFile file("testProxiesAndCategories_1.root", "READ");
   ASSERT_TRUE(file.IsOpen());
 
