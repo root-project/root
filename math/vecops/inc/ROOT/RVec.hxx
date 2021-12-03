@@ -2479,9 +2479,26 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
    RVec<size_type> indices(s);
    for(size_type k=0; k<s; k++)
       indices[k] = k;
-   RVec<RVec<size_type>> c(n);
-   for(size_type k=0; k<n; k++)
-      c[k].emplace_back(indices[k]);
+
+   const auto innersize = [=] {
+      size_type inners = s - n + 1;
+      for (size_type m = s - n + 2; m <= s; ++m)
+         inners *= m;
+
+      size_type factn = 1;
+      for (size_type i = 2; i <= n; ++i)
+         factn *= i;
+      inners /= factn;
+
+      return inners;
+   }();
+
+   RVec<RVec<size_type>> c(n, RVec<size_type>(innersize));
+   size_type inneridx = 0;
+   for (size_type k = 0; k < n; k++)
+      c[k][inneridx] = indices[k];
+   ++inneridx;
+
    while (true) {
       bool run_through = true;
       long i = n - 1;
@@ -2497,8 +2514,9 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
       indices[i]++;
       for (long j=i+1; j<(long)n; j++)
          indices[j] = indices[j-1] + 1;
-      for(size_type k=0; k<n; k++)
-         c[k].emplace_back(indices[k]);
+      for (size_type k = 0; k < n; k++)
+         c[k][inneridx] = indices[k];
+      ++inneridx;
    }
 }
 
