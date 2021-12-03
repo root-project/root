@@ -123,6 +123,7 @@ if __name__ == "__main__":
 
 Other notable additions and improvements include:
 
+- Enable triggering multiple distributed computation graphs through `RunGraphs`. This also allows sending both Spark and Dask jobs at the same time through a single function call.
 - Greatly reduce distributed tasks processing overhead. This involved:
     - Changing the distributed execution logic with the `TTree` data source to use `TEntryList` in order to select the range of entries that each task will read from the tree. This highly reduces the waiting time spent in retrieving the correct entries for processing, as it was previously done using the `Range` operation.
     - Refactoring the internal mechanism to store information about data sources and create ranges for the distributed tasks accordingly. This will also allow in the future to easily extend the supported data sources in distributed RDataFrame.
@@ -154,6 +155,18 @@ Other notable additions and improvements include:
 
 
 ## RooFit Libraries
+### New PyROOT functions for interoperability with NumPy and Pandas
+
+New member functions of RooFit classes were introduced exclusively to PyROOT for better interoperability between RooFit and Numpy and Pandas:
+
+- `RooDataSet.from_numpy`: Import a RooDataSet from a dictionary of numpy arrays (static method)
+- `RooDataSet.to_numpy`: Export a RooDataSet to a dictionary of numpy arrays
+- `RooDataSet.from_pandas`: Import a RooDataSet from a Pandas dataframe (static method)
+- `RooDataSet.to_pandas`: Export a RooDataSet to a Pandas dataframe
+- `RooRealVar.bins`: Get bin boundaries for a `RooRealVar` as a NumPy array
+
+For more details, consult the tutorial [rf409_NumPyPandasToRooFit.py](https://root.cern/doc/v626/rf409__NumPyPandasToRooFit_8C.html).
+
 ### Creating RooFit datasets from RDataFrame
 RooFit now contains two RDataFrame action helpers, `RooDataSetHelper` and `RooDataHistHelper`, which allow for creating RooFit datasets by booking an action:
 ```c++

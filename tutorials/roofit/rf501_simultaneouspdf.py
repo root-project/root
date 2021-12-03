@@ -53,8 +53,8 @@ model_ctl = ROOT.RooAddPdf("model_ctl", "model_ctl", [gx_ctl, px_ctl], [f_ctl])
 # ---------------------------------------------------------------
 
 # Generate 1000 events in x and y from model
-data = model.generate(ROOT.RooArgSet(x), 100)
-data_ctl = model_ctl.generate(ROOT.RooArgSet(x), 2000)
+data = model.generate({x}, 100)
+data_ctl = model_ctl.generate({x}, 2000)
 
 # Create index category and join samples
 # ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ sample.defineType("control")
 combData = ROOT.RooDataSet(
     "combData",
     "combined data",
-    ROOT.RooArgSet(x),
+    {x},
     ROOT.RooFit.Index(sample),
     ROOT.RooFit.Import("physics", data),
     ROOT.RooFit.Import("control", data_ctl),
@@ -106,7 +106,7 @@ combData.plotOn(frame1, Cut="sample==sample::physics")
 # and can thus not be integrated
 # NB2: The sampleSet *must* be named. It will not work to pass this as a temporary
 # because python will delete it. The same holds for fitTo() and plotOn() below.
-sampleSet = ROOT.RooArgSet(sample)
+sampleSet = {sample}
 simPdf.plotOn(frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sampleSet, combData), LineStyle="--")
 
 # The same plot for the control sample slice

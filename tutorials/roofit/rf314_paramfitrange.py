@@ -34,15 +34,13 @@ model = ROOT.RooExponential("model", "model", t, tau)
 # ------------------------------------
 
 # Generate complete dataset without acceptance cuts (for reference)
-dall = model.generate(ROOT.RooArgSet(t), 10000)
+dall = model.generate({t}, 10000)
 
 # Generate a (fake) prototype dataset for acceptance limit values
-tmp = ROOT.RooGaussian("gmin", "gmin", tmin, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.5)).generate(
-    ROOT.RooArgSet(tmin), 5000
-)
+tmp = ROOT.RooGaussian("gmin", "gmin", tmin, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.5)).generate({tmin}, 5000)
 
 # Generate dataset with t values that observe (t>tmin)
-dacc = model.generate(ROOT.RooArgSet(t), ProtoData=tmp)
+dacc = model.generate({t}, ProtoData=tmp)
 
 # Fit pdf to data in acceptance region
 # -----------------------------------------------------------------------

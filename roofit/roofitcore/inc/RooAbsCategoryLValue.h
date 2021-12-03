@@ -77,11 +77,11 @@ public:
 
   // Binned fit interface
   virtual void setBin(Int_t ibin, const char* rangeName=0) ;
-  /// Get index of plot bin for current value this category.
-  virtual Int_t getBin(const char* /*rangeName*/) const {
+  /// Get the index of the plot bin for the current value of this category.
+  virtual Int_t getBin(const char* /*rangeName*/=nullptr) const {
     return getCurrentOrdinalNumber();
   }
-  virtual Int_t numBins(const char* rangeName) const ;
+  virtual Int_t numBins(const char* rangeName=nullptr) const ;
   virtual Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const { 
     // Return volume of i-th bin (according to binning named rangeName if rangeName!=0)
     return 1.0 ; 

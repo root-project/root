@@ -43,7 +43,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
 # Create dummy dataset that has more observables than the above pdf
 y = ROOT.RooRealVar("y", "y", -10, 10)
-data = ROOT.RooDataSet("data", "data", ROOT.RooArgSet(x, y))
+data = ROOT.RooDataSet("data", "data", {x, y})
 
 # Basic information requests
 # ---------------------------------------------
@@ -65,7 +65,7 @@ model_obs.Print("v")
 # -------------------------------------------
 
 # Get list of parameters, list of observables
-model_params = model.getParameters(ROOT.RooArgSet(x))
+model_params = model.getParameters({x})
 model_params.Print("v")
 
 # Get list of parameters, a dataset

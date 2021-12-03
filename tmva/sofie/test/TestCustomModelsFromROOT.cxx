@@ -297,8 +297,8 @@ TEST(ROOT, ConvWithStridesNoPadding)
    }
 }
 
-
-TEST(ROOT, ConvWithAsymmetricPadding)
+// disabled
+TEST(DISABLED_ROOT, ConvWithAsymmetricPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 

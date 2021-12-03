@@ -32,20 +32,20 @@ decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 
 # Use landau pdf to get somewhat realistic distribution with long tail
 pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(0.25))
-expDataDterr = pdfDtErr.generate(ROOT.RooArgSet(dterr), 10000)
+expDataDterr = pdfDtErr.generate({dterr}, 10000)
 
 # Sample data from conditional decay_gm(dt|dterr)
 # ---------------------------------------------------------------------------------------------
 
 # Specify external dataset with dterr values to use decay_dm as
 # conditional pdf
-data = decay_gm.generate(ROOT.RooArgSet(dt), ProtoData=expDataDterr)
+data = decay_gm.generate({dt}, ProtoData=expDataDterr)
 
 # Fit conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
 
 # Specify dterr as conditional observable
-decay_gm.fitTo(data, ConditionalObservables=ROOT.RooArgSet(dterr))
+decay_gm.fitTo(data, ConditionalObservables={dterr})
 
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------

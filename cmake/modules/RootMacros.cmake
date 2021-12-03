@@ -1742,21 +1742,20 @@ endfunction()
 
 #----------------------------------------------------------------------------
 # function ROOT_ADD_GTEST(<testsuite> source1 source2...
-#                        [WILLFAIL]
-#                        [COPY_TO_BUILDDIR file1 file2...] -- files to copy in the build directory
+#                        [WILLFAIL] Negate output of test
+#                        [COPY_TO_BUILDDIR file1 file2] Copy listed files when ctest invokes the test.
 #                        [LIBRARIES lib1 lib2...] -- Libraries to link against
 #                        [LABELS label1 label2...] -- Labels to annotate the test
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
-
+#                        [FAILREGEX ...] Fail test if this regex matches.
+# Creates a new googletest exectuable, and registers it as a test.
+#----------------------------------------------------------------------------
 function(ROOT_ADD_GTEST test_suite)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "REPEATS" "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
-
-  # ROOTUnitTestSupport
-  if(NOT TARGET ROOTUnitTestSupport)
-    add_library(ROOTUnitTestSupport INTERFACE)
-    target_include_directories(ROOTUnitTestSupport INTERFACE ${CMAKE_SOURCE_DIR}/test/unit_testing_support)
-  endif()
+  cmake_parse_arguments(ARG
+    "WILLFAIL"
+    "REPEATS;FAILREGEX"
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1795,6 +1794,7 @@ function(ROOT_ADD_GTEST test_suite)
     COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
     ${willfail}
     ${labels}
+    FAILREGEX ${ARG_FAILREGEX}
   )
 endfunction()
 

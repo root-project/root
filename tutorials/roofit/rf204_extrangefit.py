@@ -59,7 +59,7 @@ model = ROOT.RooAddPdf("model", "(g1+g2)+a", [ebkg, esig])
 
 # Generate 1000 events from model so that nsig, come out to numbers <<500
 # in fit
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 
 # Perform unbinned extended ML fit to data
 r = model.fitTo(data, Extended=True, Save=True)

@@ -11,6 +11,7 @@
 #include "TSystem.h"
 
 #include "gtest/gtest.h"
+#include "ROOTUnitTestSupport.h"
 #include <stdlib.h>
 #include <memory>
 
@@ -118,6 +119,8 @@ TEST(TTreeReaderBasic, Interfaces) {
 
 
 TEST(TTreeReaderBasic, ErrorProbing) {
+   ROOTUnitTestSupport::CheckDiagsRAII diags{ kError, "TTreeReader::TTreeReader", "No TTree called doesNotExist was found in the selected TDirectory." };
+
    TTreeReader tr("doesNotExist", gROOT);
    EXPECT_EQ(TTreeReader::kEntryNoTree, tr.GetEntryStatus());
    EXPECT_EQ(nullptr, tr.GetTree());
@@ -463,6 +466,8 @@ TEST(TTreeReaderBasic, InfLoop)
 // ROOT-10019
 TEST(TTreeReaderBasic, DisappearingBranch)
 {
+   ROOTUnitTestSupport::CheckDiagsRAII diags{ kError, "TTreeReader::SetEntryBase()", "There was an error while notifying the proxies." };
+   diags.requiredDiag(kWarning, "TTreeReader::SetEntryBase()", "Unexpected error '-6' in TChain::LoadTree");
 
    auto createFile = [](const char *fileName, int ncols) {
       // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});

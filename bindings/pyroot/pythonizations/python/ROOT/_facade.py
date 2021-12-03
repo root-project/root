@@ -15,6 +15,8 @@ if sys.version_info[:3] > _numba_pyversion:
     # Python <= 2.7.5 cannot use exec in an inner function
     from ._numbadeclare import _NumbaDeclareDecorator
 
+from ._pythonization import pythonization
+
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -117,6 +119,9 @@ class ROOTFacade(types.ModuleType):
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
+
+        # @pythonization decorator
+        self.pythonization = pythonization
 
         self._is_ipython = is_ipython
 
@@ -341,7 +346,7 @@ class ROOTFacade(types.ModuleType):
     # Overload RooFit namespace
     @property
     def RooFit(self):
-        from .pythonization._roofit import pythonize_roofit_namespace
+        from ._pythonization._roofit import pythonize_roofit_namespace
         ns = self._fallback_getattr('RooFit')
         try:
             pythonize_roofit_namespace(ns)

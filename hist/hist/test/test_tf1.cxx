@@ -28,7 +28,7 @@ double functionConst(const double *x, const double *p)
    return *x + *p;
 }
 
-Float_t delta = 0.00000000001;
+constexpr Float_t delta = 1.E-11f;
 
 void coeffNamesGeneric(TString &formula, TObjArray *coeffNames)
 {
@@ -117,7 +117,10 @@ void test_setRange()
    TF1 f2("f2", "CONV(gaus, breitwigner)", 0, 1);
    f2.SetParameters(1, 1, 1, 1, 1, 1);
    f2.SetRange(-100, 100); // making our convolution much more accurate
-   EXPECT_NEAR(f2.Integral(-20, 20), 2.466, .005);
+   // Numeric integration of this function suffers from roundoff errors, so the default 1.E-12 accuracy won't be reached.
+   // By reducing the tolerance, we get rid of a GSL warning, which was picked up by the log checkers.
+   constexpr double tolerance = 1.E-6;
+   EXPECT_NEAR(f2.Integral(-20, 20, tolerance), 2.466, .005);
 }
 
 // Test that we can copy and clone TF1 objects based on NSUM and CONV

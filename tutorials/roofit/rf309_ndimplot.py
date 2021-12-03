@@ -29,7 +29,7 @@ fy = ROOT.RooFormulaVar("fy", "a0-a1*sqrt(10*abs(y))", [y, a0, a1])
 model = ROOT.RooGaussian("model", "Gaussian with shifting mean", x, fy, sigma)
 
 # Sample dataset from gauss(x,y)
-data = model.generate(ROOT.RooArgSet(x, y), 10000)
+data = model.generate({x, y}, 10000)
 
 # Make 2D plots of data and model
 # -------------------------------------------------------------
@@ -54,7 +54,7 @@ z = ROOT.RooRealVar("z", "z", -5, 5)
 gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
 model3 = ROOT.RooProdPdf("model3", "model3", [model, gz])
 
-data3 = model3.generate(ROOT.RooArgSet(x, y, z), 10000)
+data3 = model3.generate({x, y, z}, 10000)
 
 # Make 3D plots of data and model
 # -------------------------------------------------------------

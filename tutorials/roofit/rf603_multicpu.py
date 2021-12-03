@@ -36,7 +36,7 @@ fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [sig, bkg], [fsig])
 
 # Generate large dataset
-data = model.generate(ROOT.RooArgSet(x, y, z), 200000)
+data = model.generate({x, y, z}, 200000)
 
 # Parallel fitting
 # -------------------------------
@@ -53,8 +53,8 @@ model.fitTo(data, NumCPU=4, Timer=True)
 
 # Construct signal, likelihood projection on (y,z) observables and
 # likelihood ratio
-sigyz = sig.createProjection(ROOT.RooArgSet(x))
-totyz = model.createProjection(ROOT.RooArgSet(x))
+sigyz = sig.createProjection({x})
+totyz = model.createProjection({x})
 llratio_func = ROOT.RooFormulaVar("llratio", "log10(@0)-log10(@1)", [sigyz, totyz])
 
 # Calculate likelihood ratio for each event, subset of events with high

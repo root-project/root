@@ -29,7 +29,7 @@ genpdf = ROOT.RooGenericPdf("genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*al
 # ---------------------------------------------------------------
 
 # Generate a toy dataset from the interpreted pdf
-data = genpdf.generate(ROOT.RooArgSet(x), 10000)
+data = genpdf.generate({x}, 10000)
 
 # Fit the interpreted pdf to the generated data
 genpdf.fitTo(data)
@@ -62,7 +62,7 @@ g2 = ROOT.RooGaussian("g2", "h2", x, mean, sigma)
 # Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian
 # dataset with mean 10 and width 3
 g1 = ROOT.RooGaussian("g1", "g1", x, ROOT.RooFit.RooConst(10), ROOT.RooFit.RooConst(3))
-data2 = g1.generate(ROOT.RooArgSet(x), 1000)
+data2 = g1.generate({x}, 1000)
 
 # Fit and plot tailored standard pdf
 # -------------------------------------------------------------------

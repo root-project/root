@@ -111,20 +111,25 @@ def write_pyroot_block_for_member_func(func):
 
 def print_roofit_pythonization_page():
     """Prints the doxygen code for the RooFit pythonization page."""
-    from ROOT.pythonization import _roofit
+    from ROOT._pythonization import _roofit
+
+    def member_funcs_have_doc(python_class):
+        funcs_have_doc = False
+        for func_name in _roofit.get_defined_attributes(python_klass):
+            if not getattr(python_class, func_name).__doc__ is None:
+                funcs_have_doc = True
+        return funcs_have_doc
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
     print("\defgroup RoofitPythonizations Roofit pythonizations")
     print("\ingroup Roofitmain")
     for python_klass in _roofit.python_classes:
-        if python_klass.__doc__ is None:
+        if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):
             continue
         class_name = python_klass.__name__
         print("- [" + class_name + "](\\ref _" + class_name.lower() + ")")
 
-        func_names = _roofit.get_defined_attributes(python_klass)
-
-        for func_name in func_names:
+        for func_name in _roofit.get_defined_attributes(python_klass):
             func = getattr(python_klass, func_name)
             if func.__doc__ is None:
                 continue
@@ -134,19 +139,19 @@ def print_roofit_pythonization_page():
 
     # ...and then iterating over all pythonized classes and functions
     for python_klass in _roofit.python_classes:
-        if python_klass.__doc__ is None:
+
+        if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):
             continue
 
         print("\\anchor _" + python_klass.__name__.lower())
         print("## " + python_klass.__name__)
         print("\see " + python_klass.__name__)
-        print("")
-        print(inspect.cleandoc(python_klass.__doc__))
+        if not python_klass.__doc__ is None:
+            print("")
+            print(inspect.cleandoc(python_klass.__doc__))
         print("")
 
-        func_names = _roofit.get_defined_attributes(python_klass)
-
-        for func_name in func_names:
+        for func_name in _roofit.get_defined_attributes(python_klass):
             func = getattr(python_klass, func_name)
             if func.__doc__ is None:
                 continue
@@ -165,7 +170,7 @@ def print_roofit_pythonization_page():
 
 def print_pyroot_blocks_for_cpp_docs():
     """Print PyROOT blocks for the RooFit C++ documentation."""
-    from ROOT.pythonization import _roofit
+    from ROOT._pythonization import _roofit
 
     for python_klass in _roofit.python_classes:
 

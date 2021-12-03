@@ -19,6 +19,9 @@ if(NOT MSVC)
     ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
 endif()
 
+# @pythonization decorator
+ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
+
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
@@ -127,6 +130,12 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
 
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
+
+  # NumPy compatibility
+  if(NOT MSVC OR win_broken_tests)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py)
+  endif()
+
 endif()
 
 if (dataframe)
