@@ -19,6 +19,7 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
       // std::unique_ptr<ROperator> op;
       // return op;
    } else {
+      //std::cout << "create operator " << nodeproto.op_type() << std::endl;
       return (find->second)(nodeproto, graphproto, tensor_type);
    }
 }
@@ -489,14 +490,25 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
                                                   std::unordered_map<std::string, ETensorType> &tensor_type)
 {
    // make Reshape operator
-   ETensorType input_type;
+   ETensorType input_type = ETensorType::UNDEFINED;
 
-   bool flatten = false;
-   if (nodeproto.op_type() == "Flatten")
-      flatten = true;
+   
+   ReshapeOpMode opMode = Reshape;
+   if (nodeproto.op_type() == "Flatten") 
+      opMode = Flatten;
+   else if (nodeproto.op_type() == "Squeeze") 
+      opMode = Squeeze;
+   else if (nodeproto.op_type() == "Unsqueeze")
+      opMode = Unsqueeze;
+
   
+   //bool hasShapeInput = (opMode == Reshape) ? true : false;
+
+   // reshape has as extra input shape tensor (int64) but 
+   // it is not present for Flatten, Squeeze and Unsquueze
    auto input_name = nodeproto.input(0);
-   auto shape_name = (!flatten) ? nodeproto.input(1) : "";
+   // for squeeze is optional ? 
+   auto shape_name = (opMode == Reshape || opMode == Unsqueeze) ? nodeproto.input(1) : "";
    auto it = tensor_type.find(input_name);
    if (it != tensor_type.end()) {
       input_type = it->second;
@@ -505,23 +517,111 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
                                " but its type is not yet registered");
    }
 
+   // Reshape is having one attribute: allowzero (int) (default = 0)
+   // Flatten is having one attribute: axis (int) (default=1)
+   // old version of reshape and squeeze have axes as attributes
    std::unique_ptr<ROperator> op;
-   std::vector<int_t> attr_perm;
+   int attr_value = (opMode == Reshape) ? 0 : 1;     
+   if (opMode == Reshape && nodeproto.attribute_size() > 0 )
+      attr_value = nodeproto.attribute(0).i();
 
-   if (nodeproto.attribute_size() == 1) {
-      attr_perm.assign(nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end());
+   std::vector<int64_t> attr_axes = {};
+   if (nodeproto.input_size() == 1 && (opMode == Squeeze || opMode == Unsqueeze)) {
+      std::string attribute_name = nodeproto.attribute(0).name();
+      if (attribute_name == "axes")
+         attr_axes = {nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end()};
    }
 
    switch (input_type) {
    case ETensorType::FLOAT:
-      if (!attr_perm.empty()) {
-         op.reset(new ROperator_Reshape<float>(attr_perm, input_name, shape_name, nodeproto.output(0)));
-      } else {
-         op.reset(new ROperator_Reshape<float>(input_name, shape_name, nodeproto.output(0)));
-      }
+      if (attr_axes.empty())
+         op.reset(new ROperator_Reshape<float>(opMode, attr_value, input_name, shape_name, nodeproto.output(0)));
+      else // for old Squeeze and Unsqueeze
+         op.reset(new ROperator_Reshape<float>(opMode, attr_axes, input_name, nodeproto.output(0)));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
+                               std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = (op->TypeInference({input_type}))[0];
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()) {
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
+
+   return op;
+}
+
+std::unique_ptr<ROperator> make_ROperator_Slice(const onnx::NodeProto &nodeproto,
+                                                  const onnx::GraphProto & /*graphproto */,
+                                                  std::unordered_map<std::string, ETensorType> &tensor_type)
+{
+   // make Slice operator
+   ETensorType input_type = ETensorType::UNDEFINED;
+
+   auto input_name = nodeproto.input(0);
+   auto it = tensor_type.find(input_name);
+   if (it != tensor_type.end()) {
+      input_type = it->second;
+   } else {
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Slice op has input tensor" + input_name +
+                               " but its type is not yet registered");
+   }
+
+   std::vector<std::string> axisTensorNames;
+   if (nodeproto.input_size() > 1)
+      axisTensorNames.push_back(nodeproto.input(1));
+   if (nodeproto.input_size() > 2)
+      axisTensorNames.push_back(nodeproto.input(1));
+   if (nodeproto.input_size() > 3)
+      axisTensorNames.push_back(nodeproto.input(3));
+   if (nodeproto.input_size() > 4)
+      axisTensorNames.push_back(nodeproto.input(4));
+
+   // not sure how to find here type of the integer inputs
+   //std::cout << "Slice input(1) " << nodeproto.input(1) << "  " << nodeproto.input(2) << std::endl;
+   ETensorType axis_type = ETensorType::INT64;
+   //(tensor_type.find(starts_name) != tensor_type.end()) ? tensor_type.find(starts_name)->second
+   //                                                                             : ETensorType::UNDEFINED;
+   // for version < 10
+    std::vector<int64_t> attr_starts = {};
+    std::vector<int64_t> attr_ends = {};
+    std::vector<int64_t> attr_axes = {};
+    if (nodeproto.input_size() == 1) {
+       for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+          std::string attribute_name = nodeproto.attribute(i).name();
+          if (attribute_name == "starts")
+             attr_starts = {nodeproto.attribute(i).ints().begin(), nodeproto.attribute(i).ints().end()};
+          if (attribute_name == "ends")
+             attr_ends = {nodeproto.attribute(i).ints().begin(), nodeproto.attribute(i).ints().end()};
+          if (attribute_name == "axes")
+             attr_axes = {nodeproto.attribute(i).ints().begin(), nodeproto.attribute(i).ints().end()};
+       }
+    }
+
+   std::unique_ptr<ROperator> op;
+   switch (input_type) {
+   case ETensorType::FLOAT:
+      if (axisTensorNames.size() > 0) {
+         // for version >= 10
+         if (axis_type == ETensorType::INT32)
+            op.reset(new ROperator_Slice<float, int32_t>(input_name, axisTensorNames, nodeproto.output(0)));
+         else if (axis_type == ETensorType::INT64)
+            op.reset(new ROperator_Slice<float, int64_t>(input_name, axisTensorNames, nodeproto.output(0)));
+         else
+            throw std::runtime_error(
+               "TMVA::SOFIE - Unsupported - Operator Slice has invalid input type for input axis descriptors " +
+               std::to_string(static_cast<int>(axis_type)));
+      } else if (attr_starts.size() > 0 && attr_ends.size() > 0) {
+         op.reset(
+            new ROperator_Slice<float, int64_t>(input_name, attr_starts, attr_ends, attr_axes, nodeproto.output(0)));
+      } else {
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Slice has invalid attribues");
+      }
+      break;
+   default:
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Slice does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -805,6 +905,9 @@ RModel RModelParser_ONNX::Parse(std::string filename){
    const onnx::GraphProto& graph = model.graph(); //not a memory leak. model freed automatically at the end.
    google::protobuf::ShutdownProtobufLibrary();
 
+   // ONNX version is ir_version()  - model_version() returns 0
+   // std::cout << "ONNX Version " << model.ir_version() << std::endl;
+
    std::unordered_set<std::string> initializer_names;
    for (int i=0; i < graph.initializer_size(); i++){
       initializer_names.insert(graph.initializer(i).name());
@@ -820,8 +923,9 @@ RModel RModelParser_ONNX::Parse(std::string filename){
       //input datanode is not a weight node (has no initializer)
       const onnx::ValueInfoProto& valueinfoproto = graph.input(i);
       std::string input_name = valueinfoproto.name();
+
       ETensorType type = static_cast<ETensorType>(valueinfoproto.type().tensor_type().elem_type());
-      if (type != ETensorType::FLOAT){
+      if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64) {
          throw std::runtime_error("TMVA::SOFIE Data type in input tensor " + input_name + " not supported!\n");
       }
 
