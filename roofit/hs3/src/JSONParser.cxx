@@ -150,11 +150,34 @@ bool TJSONTree::Node::is_seq() const
    return node->get().is_array();
 }
 
+namespace {
+
+// To check whether it's allowed to reset the type of an object. We allow
+// this for nodes that have no type yet, or nodes with an empty string.
+bool isResettingPossible(nlohmann::json const &node)
+{
+
+   if (node.type() == nlohmann::json::value_t::null) {
+      return true;
+   }
+
+   if (node.type() == nlohmann::json::value_t::string) {
+      if (node.get<std::string>() == "") {
+         return true;
+      }
+   }
+   return false;
+}
+} // namespace
+
 void TJSONTree::Node::set_map()
 {
-   if (node->get().type() == nlohmann::json::value_t::null) {
+   if (node->get().type() == nlohmann::json::value_t::object)
+      return;
+
+   if (isResettingPossible(node->get())) {
       node->get() = nlohmann::json::object();
-   } else if (node->get().type() != nlohmann::json::value_t::object) {
+   } else {
       throw std::runtime_error("cannot declare " + this->key() + " to be of map-type, already of type " +
                                node->get().type_name());
    }
@@ -162,9 +185,12 @@ void TJSONTree::Node::set_map()
 
 void TJSONTree::Node::set_seq()
 {
-   if (node->get().type() == nlohmann::json::value_t::null) {
+   if (node->get().type() == nlohmann::json::value_t::array)
+      return;
+
+   if (isResettingPossible(node->get())) {
       node->get() = nlohmann::json::array();
-   } else if (node->get().type() != nlohmann::json::value_t::array) {
+   } else {
       throw std::runtime_error("cannot declare " + this->key() + " to be of seq-type, already of type " +
                                node->get().type_name());
    }
