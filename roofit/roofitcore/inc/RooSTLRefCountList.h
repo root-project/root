@@ -197,9 +197,9 @@ class RooSTLRefCountList {
 
   private:
     Container_t _storage;
-    std::vector<std::size_t> _refCount;
+    std::vector<unsigned long> _refCount;
 
-    ClassDef(RooSTLRefCountList<T>,1);
+    ClassDef(RooSTLRefCountList<T>,2);
 };
 
 
