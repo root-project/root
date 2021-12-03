@@ -686,6 +686,8 @@ if(ROOT_pyroot_FOUND)
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
+  list(APPEND requires_numpy roofit/rf409_NumPyPandasToRooFit.py)
+  list(APPEND requires_pandas roofit/rf409_NumPyPandasToRooFit.py)
   set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost requires_torch)
 
   # Now set up all the tests
