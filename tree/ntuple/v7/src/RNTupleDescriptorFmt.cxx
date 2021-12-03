@@ -180,7 +180,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
          + "  --  " + Detail::RColumnElementBase::GetTypeName(col.fType);
       std::string id = std::string("{id:") + std::to_string(col.fColumnId) + "}";
       output << nameAndType << std::setw(60 - nameAndType.length()) << id << std::endl;
-      if(col.fFieldDescription != "")
+      if (!col.fFieldDescription.empty())
          output << "    Description:         " << col.fFieldDescription << std::endl;
       output << "    # Elements:          " << col.fNElements << std::endl;
       output << "    # Pages:             " << col.fNPages << std::endl;
