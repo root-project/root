@@ -334,7 +334,8 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
                    << fNB << " + " << wbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the recurrence to f_reset_gate
-               size_t rbr_offset = fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
+               //size_t rbr_offset = fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
+               size_t rbr_offset =  4 * batch_size * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << rbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &"
                    << OpName << "_incy);\n";
@@ -677,18 +678,20 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
             + 2 * fAttrHiddenSize * fAttrHiddenSize;
          out << "\t" << "\t" << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
              << OpName << "_n, &" << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR
-             << " + " << rh_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, "
+             << " + " << rh_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
              << OpName << "_n, &" << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
          // Add the bias of the recurrence to feedback
-         size_t rbh_offset = (direction == 0) ?
+         if (!fNB.empty()) {
+            size_t rbh_offset = (direction == 0) ?
             5 * batch_size * fAttrHiddenSize : 6 * batch_size * fAttrHiddenSize
             + 5 * batch_size * fAttrHiddenSize;
-         out << "\t" << "\t" << "BLAS::saxpy_(&" << OpName << "_feedback_size, &" << OpName
+            out << "\t" << "\t" << "BLAS::saxpy_(&" << OpName << "_feedback_size, &" << OpName
              << "_alpha, tensor_" << fNB << " + " << rbh_offset << ", &" << OpName << "_incx, "
              << OpName << "_feedback, &" << OpName << "_incy);\n";
+         }
          // feedback = reset_gate o feedback
          out << "\t" << "\t" << "for (size_t i = 0; i < " << size << "; i++) {\n";
-         out << "\t" << "\t" << "\t" << OpName << "_feedback[i] *= " << OpName << "_reset_gate[i + offset]\n";
+         out << "\t" << "\t" << "\t" << OpName << "_feedback[i] *= " << OpName << "_reset_gate[i + offset];\n";
          out << "\t" << "\t" << "}\n";
       }
 
