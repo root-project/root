@@ -79,6 +79,17 @@ sap.ui.define([], function() {
       return this.map[id];
    }
 
+   EveManager.prototype.globExceptionHandler = function (msg, url, lineNo, columnNo, error) {
+      // NOTE: currently NOT connected, see onWebsocketOpened() below.
+
+      console.log("EveManager got global error", msg, url, lineNo, columnNo, error);
+
+      alert("Global Exception handler: " + msg + "\n" + url +
+         " line:" + lineNo + " col:" + columnNo);
+      let suppress_alert = false;
+      return suppress_alert;
+   }
+
    /** Attach websocket handle to manager, all communication runs through manager */
    EveManager.prototype.UseConnection = function(handle)
    {
@@ -113,8 +124,14 @@ sap.ui.define([], function() {
    }
 
 
-   EveManager.prototype.onWebsocketOpened = function() {
-      // console.log("opened!!!");
+   EveManager.prototype.onWebsocketOpened = function () {
+      // console.log("EveManager web socket opened.");
+
+      // Presumably not needed at this point - known places where issues
+      // can cause server-client protocol breach are handled.
+
+      // window.onerror = this.globExceptionHandler.bind(this);
+      // console.log("EveManager registered global error handler in window.onerror");
    },
 
    EveManager.prototype.RegisterController = function (c)
@@ -716,7 +733,15 @@ sap.ui.define([], function() {
          }
       }
       for (let item of recs) {
-         item.endChanges();
+         try {
+            item.endChanges();
+         } catch (e) {
+            alert("EveManager: Exception caught during update processing: " + e + "\n" +
+               "You might want to reload the page in browser and / or check error consoles.");
+            console.log("EveManager: Exception caught during update processing", e);
+
+            // XXXX We might want to send e.name, e.message, e.stack back to the server.
+         }
       }
 
       if (this.handle.kind != "file")
