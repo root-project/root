@@ -292,7 +292,7 @@ std::unique_ptr<ROperator> make_ROperator_GRU(const onnx::NodeProto& nodeproto, 
          attr_hidden_size = nodeproto.attribute(i).i();
       } else if (attribute_name == "layout") {
          attr_layout = nodeproto.attribute(i).i();
-      } else if (attribute_name == "linear_befoe_reset") {
+      } else if (attribute_name == "linear_before_reset") {
          attr_linear_before_reset = nodeproto.attribute(i).i();
       } else {
          std::cout << "TMVA SOFIE Warning - Model Loading - Attribute " << attribute_name << " in OperatorNode " << nodeproto.name() << " is not defined in ONNX IR and not applied!\n";
