@@ -608,7 +608,7 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
 /// Browser can specified when starting `root --web=firefox`
 /// Returns true when browser started
 /// It is convenience method, equivalent to:
-///  ~~~
+/// ~~~
 ///     RWebDisplayArgs args;
 ///     args.SetUrl(url);
 ///     args.SetStandalone(false);
