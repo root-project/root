@@ -436,7 +436,7 @@ std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto,
    RAttributes_Pool attr;
    // std::string attr_auto_pad = "NOTSET";
    // int attr_ceil_mode = 0;
-   // int attr_count_include_pad = 0;      
+   // int attr_count_include_pad = 0;
    // int attr_storage_order = 0;          // not for AveragePool
    // std::vector<size_t> attr_dilations;  // not for AveragePool
    // std::vector<size_t> attr_kernel_shape;
@@ -492,22 +492,22 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    // make Reshape operator
    ETensorType input_type = ETensorType::UNDEFINED;
 
-   
+
    ReshapeOpMode opMode = Reshape;
-   if (nodeproto.op_type() == "Flatten") 
+   if (nodeproto.op_type() == "Flatten")
       opMode = Flatten;
-   else if (nodeproto.op_type() == "Squeeze") 
+   else if (nodeproto.op_type() == "Squeeze")
       opMode = Squeeze;
    else if (nodeproto.op_type() == "Unsqueeze")
       opMode = Unsqueeze;
 
-  
+
    //bool hasShapeInput = (opMode == Reshape) ? true : false;
 
-   // reshape has as extra input shape tensor (int64) but 
+   // reshape has as extra input shape tensor (int64) but
    // it is not present for Flatten, Squeeze and Unsquueze
    auto input_name = nodeproto.input(0);
-   // for squeeze is optional ? 
+   // for squeeze is optional ?
    auto shape_name = (opMode == Reshape || opMode == Unsqueeze) ? nodeproto.input(1) : "";
    auto it = tensor_type.find(input_name);
    if (it != tensor_type.end()) {
@@ -521,7 +521,7 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    // Flatten is having one attribute: axis (int) (default=1)
    // old version of reshape and squeeze have axes as attributes
    std::unique_ptr<ROperator> op;
-   int attr_value = (opMode == Reshape) ? 0 : 1;     
+   int attr_value = (opMode == Reshape) ? 0 : 1;
    if (opMode == Reshape && nodeproto.attribute_size() > 0 )
       attr_value = nodeproto.attribute(0).i();
 
@@ -860,6 +860,43 @@ std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodePro
    ETensorType output_type = (op->TypeInference({input_type, input_type, input_type, input_type, input_type}))[0];
    auto it2 = tensor_type.find(nodeproto.output(0));
    if (it2 == tensor_type.end()) {
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
+
+   return op;
+}
+
+std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
+
+   ETensorType input_type = ETensorType::UNDEFINED;
+   std::vector<std::string>fInputs;
+   for (size_t i = 0; i < nodeproto.input_size(); ++i) {
+      auto input_name = nodeproto.input(i);
+      auto it = tensor_type.find(input_name);
+      if (it != tensor_type.end()){
+         if (i == 0) input_type = it->second;
+         else
+            assert(it->second == input_type);
+      } else {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Concat op has input tensor" + input_name + " but its type is not yet registered");
+      }
+      fInputs.push_back(input_name);
+   }
+
+   std::unique_ptr<ROperator> op;
+
+   fAxis = nodeproto.attribute(0).i();
+   switch(input_type){
+   case ETensorType::FLOAT:
+      op.reset(new ROperator_Add<float>(fInputs, fAxis, nodeproto.output(0)));
+      break;
+   default:
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Concat does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = (op->TypeInference({input_type}))[0];
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()){
       tensor_type[nodeproto.output(0)] = output_type;
    }
 
