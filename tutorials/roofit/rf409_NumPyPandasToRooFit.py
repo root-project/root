@@ -54,8 +54,10 @@ try:
     import matplotlib.pyplot as plt
 
     df.hist(column="x", bins=x.bins())
-except ImportError:
-    print('Skipping `df.hist(column="x", bins=x.bins())` because matplotlib could not be imported.')
+except Exception:
+    print(
+        'Skipping `df.hist(column="x", bins=x.bins())` because matplotlib could not be imported or was not able to display the plot.'
+    )
 
 del data
 del arrays
@@ -72,7 +74,7 @@ x_arr = np.random.normal(-1.0, 1.0, (n_events,))
 # Import the data to a RooDataSet, passing a dictionary of arrays and the
 # corresponding RooRealVars just like you would pass to the RooDataSet
 # constructor.
-data = ROOT.RooDataSet.from_numpy({"x" : x_arr}, ROOT.RooArgSet(x))
+data = ROOT.RooDataSet.from_numpy({"x": x_arr}, ROOT.RooArgSet(x))
 
 # Let's fit the Gaussian to the data. The mean is updated accordingly.
 fit_result = gauss.fitTo(data, PrintLevel=-1, Save=True)
