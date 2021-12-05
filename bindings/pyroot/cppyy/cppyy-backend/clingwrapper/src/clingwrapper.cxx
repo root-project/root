@@ -129,7 +129,13 @@ static std::set<std::string> g_builtins =
 // smart pointer types
 static std::set<std::string> gSmartPtrTypes =
     {"auto_ptr", "std::auto_ptr", "shared_ptr", "std::shared_ptr",
-     "unique_ptr", "std::unique_ptr", "weak_ptr", "std::weak_ptr"};
+     "unique_ptr", "std::unique_ptr", "weak_ptr", "std::weak_ptr",
+     "ROOT::ROwningPtr"};
+
+// observer pointer types that indicate ownership of return values to the
+// caller (all these "owner-pointers" must also be registered in the list of
+// smart pointers above)
+static std::set<std::string> gOwnerPtrTypes = {"ROOT::ROwningPtr"};
 
 // to filter out ROOT names
 static std::set<std::string> gInitialNames;
@@ -1353,6 +1359,15 @@ bool Cppyy::IsSubtype(TCppType_t derived, TCppType_t base)
     TClassRef& derived_type = type_from_handle(derived);
     TClassRef& base_type = type_from_handle(base);
     return derived_type->GetBaseClass(base_type) != 0;
+}
+
+bool Cppyy::IsOwnerPtr(TCppType_t klass)
+{
+    TClassRef& cr = type_from_handle(klass);
+    const std::string& tn = cr->GetName();
+    if (gOwnerPtrTypes.find(tn.substr(0, tn.find("<"))) != gOwnerPtrTypes.end())
+        return true;
+    return false;
 }
 
 bool Cppyy::IsSmartPtr(TCppType_t klass)

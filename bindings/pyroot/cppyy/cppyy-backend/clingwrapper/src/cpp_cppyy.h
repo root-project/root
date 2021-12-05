@@ -142,6 +142,8 @@ namespace Cppyy {
     RPY_EXPORTED
     bool        IsSmartPtr(TCppType_t type);
     RPY_EXPORTED
+    bool        IsOwnerPtr(TCppType_t type);
+    RPY_EXPORTED
     bool        GetSmartPtrInfo(const std::string&, TCppType_t* raw, TCppMethod_t* deref);
     RPY_EXPORTED
     void        AddSmartPtrType(const std::string&);

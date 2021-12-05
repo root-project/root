@@ -201,3 +201,6 @@ endif()
 
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
+
+# Test ROOT::ROwningPtr (raw pointer wrapper to indicate ownership of return values to Python)
+ROOT_ADD_PYUNITTEST(pyroot_rowningptr rowningptr.py)

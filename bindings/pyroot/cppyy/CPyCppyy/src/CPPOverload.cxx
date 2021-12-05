@@ -15,6 +15,7 @@
 #include "CPPInstance.h"
 #include "CallContext.h"
 #include "PyStrings.h"
+#include "ProxyWrappers.h"
 #include "Utility.h"
 
 // Standard
@@ -144,6 +145,41 @@ static inline PyObject* HandleReturn(
 // special case for python exceptions, propagated through C++ layer
     int ll_action = 0;
     if (result) {
+
+     // If the "smart pointer" is only an observing pointer that indicated
+     // ownership by the caller (aka. "owner pointer"), we create a new object
+     // with a raw pointer as C++ proxy and Python owning the object.
+     //
+     // Note that one can also set the special `__creates__` attribute of the
+     // CPPOverload on Python side to `True` in order to flag creating
+     // functions. However, this has at least two drawbacks:
+     //  1. This flag can't be applied at the granularity of indivirual C++ overloads
+     //  2. It's only on the Python side, so if you want to flag these
+     //     functions in C++ as well as in Python you have to do some bookkeeping
+        if(CPPInstance_Check(result)) {
+            auto cppInstance = (CPPInstance*)result;
+
+         // Any owner pointer must also be registered as a smart pointer. Like
+         // this, we have the owner pointer type available as
+         // `cppInstance->GetSmartIsA()` and the raw type as
+         // `cppInstance->ObjectIsA()`, and we don't need to do potentially
+         // expensive inspection operations to figure out the raw type from the
+         // owner pointer.
+            if (cppInstance->IsSmart()) {
+                if(Cppyy::IsOwnerPtr(cppInstance->GetSmartIsA())) {
+                 // Here we create a new Python object with the same flags that
+                 // you would also get if the function would have returned a
+                 // raw pointer to begin with, except for `kIsOwner`.
+                    PyObject * resultInNewObject = BindCppObjectNoCast(cppInstance->GetObject(), cppInstance->ObjectIsA(),
+                        CPPInstance::kNoWrapConv | CPPInstance::kIsOwner | CPPInstance::kIsRegulated
+                    );
+                 // We should not forget to delete the old Python object so the
+                 // memory used by the owner pointer does not leak.
+                    Py_DECREF(result);
+                    result = resultInNewObject;
+                }
+            }
+        }
 
     // if this method creates new objects, always take ownership
         if (IsCreator(pymeth->fMethodInfo->fFlags)) {
