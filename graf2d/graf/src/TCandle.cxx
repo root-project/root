@@ -723,9 +723,8 @@ void TCandle::Paint(Option_t *)
      if (IsOption(kMedianNotched)) { // Check if we have to draw a box with notches
          Double_t x[] = {dimLeft,  dimLeft, dimLeft+fCandleWidth/3., dimLeft, dimLeft, dimRight,
                          dimRight, dimRight-fCandleWidth/3., dimRight, dimRight, dimLeft};
-         Double_t yy1 = TMath::Max(fBoxDown, fMedian-fMedianErr), yy2 = TMath::Min(fMedian+fMedianErr, fBoxUp);
-         Double_t y[] = {fBoxDown, yy1, fMedian, yy2, fBoxUp, fBoxUp,
-                         yy2, fMedian, yy1, fBoxDown, fBoxDown};
+         Double_t y[] = {fBoxDown, fMedian-fMedianErr, fMedian, fMedian+fMedianErr, fBoxUp, fBoxUp,
+                         fMedian+fMedianErr, fMedian, fMedian-fMedianErr, fBoxDown, fBoxDown};
          PaintBox(11, x, y, swapXY);
       } else { // draw a simple box
          Double_t x[] = {dimLeft, dimLeft, dimRight, dimRight, dimLeft};
