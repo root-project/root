@@ -280,24 +280,45 @@ void REveDataCollection::SetFilterExpr(const char* filter)
 {
    static const REveException eh("REveDataCollection::SetFilterExpr ");
 
-   if (!fItemClass) throw eh + "item class has to be set before the filter expression.";
+   if (!fItemClass)
+      throw eh + "item class has to be set before the filter expression.";
 
    fFilterExpr = filter;
-
-   std::stringstream s;
-   s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)&fFilterFoo
-     << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName() << " &i=*p; return ("
-     << fFilterExpr.Data() << "); };";
-
-   // printf("%s\n", s.Data());
-   try {
-      gROOT->ProcessLine(s.str().c_str());
-      // AMT I don't know why ApplyFilter call is separated
-      ApplyFilter();
-   }
-   catch (const std::exception &exc)
+   if (fFilterExpr.Length())
    {
-      R__LOG_ERROR(REveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
+      std::stringstream s;
+      s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase
+        << (size_t)&fFilterFoo << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName()
+        << " &i=*p; return (" << fFilterExpr.Data() << "); };";
+
+      // printf("%s\n", s.Data());
+      try {
+         gROOT->ProcessLine(s.str().c_str());
+         // AMT I don't know why ApplyFilter call is separated
+         ApplyFilter();
+      }
+      catch (const std::exception &exc)
+      {
+         R__LOG_ERROR(REveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
+      }
+   }
+   else 
+   {
+      // Remove filter
+      fFilterFoo = nullptr;
+      Ids_t ids;
+      int idx = 0;
+      for (auto &ii : fItemList->fItems) {
+         if (ii->GetFiltered()) {
+            ii->SetFiltered(false);
+            ids.push_back(idx);
+            idx++;
+         }
+      }
+
+      StampObjProps();
+      fItemList->StampObjProps();
+      fItemList->fHandlerItemsChange(fItemList, ids);
    }
 }
 
