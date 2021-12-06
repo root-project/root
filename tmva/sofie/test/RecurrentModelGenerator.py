@@ -22,7 +22,7 @@ class Net(nn.Module):
       if (type == "LSTM") :
             self.rc = nn.LSTM(input_size, hidden_size, num_layers,  batch_first=True)
       if (type == "GRU"):
-            self.rc = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+            self.rc = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)
       if (type == "RNN"):
             self.rc = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
         # FC layer 
