@@ -40,8 +40,8 @@ void REveDataSimpleProxyBuilder::Clean()
          for (auto &compound : product->RefChildren()) {
             REveCollectionCompound *collComp = dynamic_cast<REveCollectionCompound *>(compound);
             collComp->DestroyElements();
+            collComp->fUsed = false;
          }
-         (spbIt)->second->lastChildIdx=0;
          (spbIt)->second->map.clear();
       }
    }
@@ -106,18 +106,25 @@ REveCompound *REveDataSimpleProxyBuilder::GetHolder(REveElement *product, int id
       itemHolder = pmIt->second;
       // printf("GetHolder already in map %d \n", idx);
    } else {
-      if (product->NumChildren() > idx) {
-         auto cIt = std::next(product->RefChildren().begin(), idx);
-         itemHolder = dynamic_cast<REveCollectionCompound *>(*cIt);
-         // printf("GetHolder isreused %d \n", idx);
+      if (product->NumChildren() > (int)spb->map.size()) {
+         for (auto &cr : product->RefChildren()) {
+            REveCollectionCompound *cc = (REveCollectionCompound *)(cr);
+            if (!cc->fUsed) {
+               itemHolder = cc;
+               break;
+            }
+         }
+         if (!itemHolder){
+            std::cerr << "REveDataSimpleProxyBuilder::GetHolder can't reuse product\n";
+         }
       }
       if (!itemHolder) {
          itemHolder = CreateCompound(true, true);
          product->AddElement(itemHolder);
-         // printf("Creating new holder\n");
+         printf("Creating new holder\n");
       }
-      spb->lastChildIdx = idx;
       spb->map.emplace(idx, itemHolder);
+      itemHolder->fUsed = true;
       itemHolder->SetMainColor(Collection()->GetDataItem(idx)->GetMainColor());
       std::string name(TString::Format("%s %d", Collection()->GetCName(), idx));
       itemHolder->SetName(name);
