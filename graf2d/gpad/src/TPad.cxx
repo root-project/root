@@ -4710,6 +4710,7 @@ static Bool_t ContainsTImage(TList *li)
 ///    - `EmbedFonts`:  a [PDF file with embedded fonts](\ref TPadPrintEmbedFonts) is generated.
 ///  -        `svg`:  a SVG file is produced
 ///  -        `tex`:  a TeX file is produced
+///    - `Standalone`:  a [standalone TeX file](\ref TPadPrintStandalone) is produced.
 ///  -        `gif`:  a GIF file is produced
 ///  -     `gif+NN`:  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
 ///  -        `xpm`:  a XPM file is produced
@@ -4770,6 +4771,16 @@ static Bool_t ContainsTImage(TList *li)
 /// Example:
 /// ~~~ {.cpp}
 ///     canvas->Print("example.pdf","EmbedFonts");
+/// ~~~
+///
+/// \anchor TPadPrintStandalone
+/// ### The "Standalone" option
+/// The "Standalone" option allows to generate a TeX file ready to be processed by
+/// tools like `pdflatex`.
+///
+/// Example:
+/// ~~~ {.cpp}
+///     canvas->Print("example.tex","Standalone");
 /// ~~~
 ///
 /// \anchor TPadPrintPS
@@ -5009,7 +5020,7 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a TeX file================================
-   if (strstr(opt,"tex")) {
+   if (strstr(opt,"tex") || strstr(opt,"Standalone")) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
@@ -5031,9 +5042,13 @@ void TPad::Print(const char *filename, Option_t *option)
          }
       }
 
+      Bool_t standalone = kFALSE;
+      if (strstr(opt,"Standalone")) standalone = kTRUE;
+
       // Create a new TeX file
       if (gVirtualPS) {
          gVirtualPS->SetName(psname);
+         if (standalone) gVirtualPS->SetTitle("Standalone");
          gVirtualPS->Open(psname);
          gVirtualPS->SetBit(kPrintingPS);
          gVirtualPS->NewPage();
@@ -5041,7 +5056,13 @@ void TPad::Print(const char *filename, Option_t *option)
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
-      if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());
+      if (!gSystem->AccessPathName(psname)) {
+         if (standalone) {
+            Info("Print", "Standalone TeX file %s has been created", psname.Data());
+         } else{
+            Info("Print", "TeX file %s has been created", psname.Data());
+         }
+      }
 
       delete gVirtualPS;
       gVirtualPS = 0;
