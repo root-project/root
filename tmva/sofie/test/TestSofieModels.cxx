@@ -63,7 +63,7 @@ void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayer
    // network parameters : nbatches, inputDim, nlayers
    std::vector<int> params = {nbatches, inputSize, nlayers};
 
-   std::string command = "python LinearModelGenerator.py ";
+   std::string command = "python3 LinearModelGenerator.py ";
    for (size_t i = 0; i < params.size(); i++)
       command += "  " + std::to_string(params[i]);
    if (useBN)
@@ -122,7 +122,7 @@ void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannel
    argv[2] = std::to_string(nd);
    argv[3] = std::to_string(ngroups);
    argv[4] = std::to_string(nlayers);
-   std::string command = "python Conv2dModelGenerator.py ";
+   std::string command = "python3 Conv2dModelGenerator.py ";
    for (int i = 0; i < 5; i++) {
       command += " ";
       command += argv[i];
@@ -136,7 +136,7 @@ void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannel
    // some model needs some semplifications
    if (usePool == 2) {
       printf("simplify onnx model using onnxsim tool \n");
-      std::string cmd = "python -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
+      std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
       int ret = gSystem->Exec(cmd.c_str());
       if (ret != 0) {
          std::cout << "Error when simplifing ONNX model with AveragePool layer using onnx-simplifier (onnxsim) - skip the test" << std::endl;
@@ -190,7 +190,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
    // network parameters : nbatches, inputDim, nlayers
    std::vector<int> params = {nbatches, inputSize, seqSize, hiddenSize, nlayers};
 
-   std::string command = "python RecurrentModelGenerator.py ";
+   std::string command = "python3 RecurrentModelGenerator.py ";
    for (size_t i = 0; i < params.size(); i++)
       command += "  " + std::to_string(params[i]);
    if (type == "LSTM")
@@ -202,7 +202,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
    gSystem->Exec(command.c_str());
    // need to simplify obtained recurrent ONNX model
    printf("simplify onnx model using onnxsim tool \n");
-   std::string cmd = "python -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
+   std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
    int ret = gSystem->Exec(cmd.c_str());
    if (ret != 0) {
       std::cout << "Error when simplifing ONNX Recurrent model using onnx-simplifier (onnxsim) - skip the test" << std::endl;
