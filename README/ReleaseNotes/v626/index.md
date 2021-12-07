@@ -287,6 +287,22 @@ The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In
 - In `TPaletteAxis` when the palette width is bigger than the palette height, the palette
   in automatically drawn horizontally.
 
+- The `.tex` file produced when saving canvas as `.tex`, needed to be included in an existing
+  LateX document to be visualized. The new `Standalone` option allows to generate a `.tex`
+  file which can be directly processed by LateX (for example with the `pdflatex` command)
+  in order to visualise it. This is done via the command:
+```
+canvas->Print(".tex", "Standalone");
+```
+  The generated  `.tex` file has the form:
+```
+\usepackage{tikz}
+\usetikzlibrary{patterns,plotmarks}
+\begin{document}
+<----- here the graphics output
+\end{document}
+```
+
 ## 3D Graphics Libraries
 
 
