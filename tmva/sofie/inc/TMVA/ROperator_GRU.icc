@@ -234,16 +234,16 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
    // Set the feedforward
    size_t feedforward_size = seq_length * batch_size * fAttrHiddenSize;
    if (fType == "float") {
-      out << "\t" << "float " << OpName << "_f_update_gate[" << feedforward_size << "];\n";
-      out << "\t" << "float " << OpName << "_f_reset_gate[" << feedforward_size << "];\n";
-      out << "\t" << "float " << OpName << "_f_hidden_gate[" << feedforward_size << "];\n";
+      out << "\t" << "float " << OpName << "_f_update_gate[" << feedforward_size << "] = {0};\n";
+      out << "\t" << "float " << OpName << "_f_reset_gate[" << feedforward_size << "] = {0};\n";
+      out << "\t" << "float " << OpName << "_f_hidden_gate[" << feedforward_size << "] = {0};\n";
    }
    // Set the gates
    size_t hidden_state_size = seq_length * num_directions * batch_size * fAttrHiddenSize;
    if (fType == "float") {
-      out << "\t" << "float " << OpName << "_update_gate[" << hidden_state_size << "];\n";
-      out << "\t" << "float " << OpName << "_reset_gate[" << hidden_state_size << "];\n";
-      out << "\t" << "float " << OpName << "_hidden_gate[" << hidden_state_size << "];\n";
+      out << "\t" << "float " << OpName << "_update_gate[" << hidden_state_size << "] = {0};\n";
+      out << "\t" << "float " << OpName << "_reset_gate[" << hidden_state_size << "] = {0};\n";
+      out << "\t" << "float " << OpName << "_hidden_gate[" << hidden_state_size << "] = {0};\n";
    }
    // Set the hidden state
    if (fAttrLayout == 0 && !fNY.empty()) {
@@ -252,12 +252,12 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
       }
    } else {
       if (fType == "float") {
-         out << "\t" << "float " << OpName << "_hidden_state[" << hidden_state_size << "];\n";
+         out << "\t" << "float " << OpName << "_hidden_state[" << hidden_state_size << "] = {0};\n";
       }
    }
 
    if (fType == "float") {
-      out << "\t" << "float " << OpName << "_feedback[" << batch_size * fAttrHiddenSize << "];\n";
+      out << "\t" << "float " << OpName << "_feedback[" << batch_size * fAttrHiddenSize << "] = {0};\n";
    }
 
    out << "\t" << "char " << OpName << "_transA = 'N';\n";
