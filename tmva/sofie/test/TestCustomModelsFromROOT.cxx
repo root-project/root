@@ -151,7 +151,7 @@ TEST(ROOT, Linear64)
 }
 
 
-TEST(ONNX, LinearWithSelu)
+TEST(ROOT, LinearWithSelu)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -172,7 +172,7 @@ TEST(ONNX, LinearWithSelu)
 }
 
 
-TEST(ONNX, LinearWithSigmoid)
+TEST(ROOT, LinearWithSigmoid)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
