@@ -283,7 +283,17 @@ void REveDataCollection::SetFilterExpr(const char* filter)
    if (!fItemClass)
       throw eh + "item class has to be set before the filter expression.";
 
-   fFilterExpr = filter;
+   if (filter) {
+      // printf("filter '%s'\n", filter);
+      int ibeg = 0, iend = strlen(filter);
+      while (ibeg < iend && isspace(filter[ibeg])) ++ibeg;
+      while (iend > ibeg && isspace(filter[iend-1])) --iend;
+      // printf("cleaned up beg=%d end=%d len =%d\n", ibeg, iend, (int)strlen(filter));
+      fFilterExpr = TString(filter + ibeg, iend - ibeg);
+   } else {
+      fFilterExpr = "";
+   }
+
    if (fFilterExpr.Length())
    {
       std::stringstream s;
@@ -312,8 +322,8 @@ void REveDataCollection::SetFilterExpr(const char* filter)
          if (ii->GetFiltered()) {
             ii->SetFiltered(false);
             ids.push_back(idx);
-            idx++;
          }
+         idx++;
       }
 
       StampObjProps();
