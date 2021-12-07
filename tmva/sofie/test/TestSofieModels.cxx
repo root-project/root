@@ -296,6 +296,11 @@ TEST(SOFIE, RNN_B1)
    TestRecurrent("RNN", 1, 3, 5, 4, 1);
 }
 
+TEST(DISABLED_SOFIE, LSTM_B1)
+{
+   TestRecurrent("LSTM", 1, 1, 1, 1, 1);
+}
+
 TEST(SOFIE, GRU_B1)
 {
    TestRecurrent("GRU", 1, 3, 5, 4, 1);

@@ -70,23 +70,27 @@ void ROperator_GRU<T>::Initialize(RModel &model) {
          // Broadcasting the bias
          auto original_data = model.GetInitializedTensorData(fNB);
          size_t num_directions = fShapeW[0];
-         size_t batch_size = (fAttrLayout == 0)? fShapeX[1] : fShapeX[0];
+         size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
+         size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];
          if (fType == "float") {
             float *original_bias = static_cast<float*>(original_data.get());
-            float *new_bias = new float[num_directions * 6 * batch_size * fAttrHiddenSize];
+            float *new_bias = new float[num_directions * 6 * seq_length * batch_size * fAttrHiddenSize];
             for (size_t direction = 0; direction < num_directions; direction++) {
                for (size_t i = 0; i < 6; i++) {
-                  for (size_t batch = 0; batch < batch_size; batch++) {
-                     size_t bias_offset = direction * 6 * fAttrHiddenSize + i * fAttrHiddenSize;
-                     size_t offset = direction * 6 * batch_size * fAttrHiddenSize
-                        + i * batch_size * fAttrHiddenSize + batch * fAttrHiddenSize;
-                     std::copy(original_bias + bias_offset, original_bias + bias_offset + fAttrHiddenSize,
-                        new_bias + offset);
+                  for (size_t seq = 0; seq < seq_length; seq++) {
+                     for (size_t batch = 0; batch < batch_size; batch++) {
+                        size_t bias_offset = direction * 6 * fAttrHiddenSize + i * fAttrHiddenSize;
+                        size_t offset = direction * 6 * batch_size * seq_length * fAttrHiddenSize +
+                                       i * batch_size * seq_length * fAttrHiddenSize + 
+                                       + seq *batch_size *fAttrHiddenSize + batch *fAttrHiddenSize;
+                        std::copy(original_bias + bias_offset, original_bias + bias_offset + fAttrHiddenSize,
+                                  new_bias + offset);
+                     }
                   }
                }
             }
 
-            std::vector<size_t> new_bias_shape = {num_directions, 6, batch_size, fAttrHiddenSize};
+            std::vector<size_t> new_bias_shape = {num_directions, 6, seq_length, batch_size, fAttrHiddenSize};
             std::shared_ptr<void> new_bias_ptr(new_bias, std::default_delete<float[]>());
             model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), new_bias_shape, new_bias_ptr);
             fShapeB = model.GetTensorShape(fNB);
@@ -324,29 +328,29 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &" << OpName << "_incy);\n";
                // Add the bias of the recurrence to f_update_gate
-               size_t rbz_offset = 3 * batch_size * fAttrHiddenSize;
+               size_t rbz_offset = 3 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << rbz_offset << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the weight to f_reset_gate
-               size_t wbr_offset = batch_size * fAttrHiddenSize;
+               size_t wbr_offset = batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << wbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the recurrence to f_reset_gate
                //size_t rbr_offset = fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
-               size_t rbr_offset =  4 * batch_size * fAttrHiddenSize;
+               size_t rbr_offset = 4 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << rbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the weight to f_hidden_gate
-               size_t wbh_offset = 2 * batch_size * fAttrHiddenSize;
+               size_t wbh_offset = 2 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << wbh_offset << ", &" << OpName << "_incx, " << OpName << "_f_hidden_gate, &"
                    << OpName << "_incy);\n";
                if (fAttrLinearBeforeReset == 0) {
                   // Add the bias of the recurrence to f_hidden_gate
-                  size_t rbh_offset = 5 * batch_size * fAttrHiddenSize;
+                  size_t rbh_offset = 5 * batch_size * seq_length * fAttrHiddenSize;
                   out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                       << fNB << " + " << rbh_offset << ", &" << OpName << "_incx, " << OpName
                       << "_f_hidden_gate, &" << OpName << "_incy);\n";
@@ -355,34 +359,34 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
          } else {
             if (fType == "float") {
                // Add the bias of the weight to f_update_gate
-               size_t wbz_offset = 6 * batch_size * fAttrHiddenSize;
+               size_t wbz_offset = 6 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << wbz_offset << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the recurrence to f_update_gate
-               size_t rbz_offset = 3 * fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
+               // size_t rbz_offset = 3 * fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
+               size_t rbz_offset = 9 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << rbz_offset << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the weight to f_reset_gate
-               size_t wbr_offset = 6 * batch_size * fAttrHiddenSize + batch_size * fAttrHiddenSize;
+               size_t wbr_offset =  7 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << wbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the recurrence to f_reset_gate
-               size_t rbr_offset = 3 * fAttrHiddenSize * fAttrHiddenSize + fAttrHiddenSize * fAttrHiddenSize
-                  + 3 * batch_size * fAttrHiddenSize;
+               size_t rbr_offset = 10 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << rbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &"
                    << OpName << "_incy);\n";
                // Add the bias of the weight to f_hidden_gate
-               size_t wbh_offset = 6 * batch_size * fAttrHiddenSize + 2 * batch_size * fAttrHiddenSize;
+               size_t wbh_offset = 8 * batch_size * seq_length * fAttrHiddenSize;
                out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << wbh_offset << ", &" << OpName << "_incx, " << OpName << "_f_hidden_gate, &"
                    << OpName << "_incy);\n";
                if (fAttrLinearBeforeReset == 0) {
                   // Add the bias of the recurrence to f_hidden_gate
-                  size_t rbh_offset = 6 * batch_size * fAttrHiddenSize + 5 * batch_size * fAttrHiddenSize;
+                  size_t rbh_offset = 11 * batch_size * seq_length * fAttrHiddenSize;
                   out << "\t" << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                       << fNB << " + " << rbh_offset << ", &" << OpName << "_incx, " << OpName
                       << "_f_hidden_gate, &" << OpName << "_incy);\n";
@@ -661,30 +665,43 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
              << "_n, &" << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
       } else { // fAttrLinearBeforeReset=1
          // feedback = previous_hidden_state * R_h^T
+         //LM fixes
+         size_t rh_offset = (direction == 0)
+                               ? 2 * fAttrHiddenSize * fAttrHiddenSize
+                               : 3 * fAttrHiddenSize * fAttrHiddenSize + 2 * fAttrHiddenSize * fAttrHiddenSize;
+         out << "\t" << "\t" << "if (seq == 0) {\n";
+         if (!fNInitial_h.empty()) {
+            // feedback = W * initial_hidden_state + bias
+            out << "\t" << "\t" << "\t"
+               << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+               << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
+               << rh_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &"
+               << OpName << "_n, &" << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
+         }
+         out << "\t" << "\t" << "} else {\n";
+         // case for seq > 0
          if (direction == 0) {
             if (fAttrDirection == "backward") {
-               out << "\t" << "\t" << "size_t previous_offset = (index + 1) * "
-                   << num_directions * batch_size * fAttrHiddenSize << ";\n";
+               out << "\t" << "\t" << "\t" << "size_t previous_offset = (index + 1) * "
+                  << num_directions * batch_size * fAttrHiddenSize << ";\n";
             } else {
-               out << "\t" << "\t" << "size_t previous_offset = (seq - 1) * "
-                   << num_directions * batch_size * fAttrHiddenSize << ";\n";
+               out << "\t" << "\t"  << "\t" << "size_t previous_offset = (seq - 1) * "
+                  << num_directions * batch_size * fAttrHiddenSize << ";\n";
             }
          } else {
-            out << "\t" << "\t" << "size_t previous_offset = (index + 1) * " << num_directions
+            out << "\t" << "\t" <<  "\t" << "size_t previous_offset = (index + 1) * " << num_directions
                 * batch_size * fAttrHiddenSize << " + " << batch_size * fAttrHiddenSize << ";\n";
          }
-         size_t rh_offset = (direction == 0) ?
-            2 * fAttrHiddenSize * fAttrHiddenSize : 3 * fAttrHiddenSize * fAttrHiddenSize
-            + 2 * fAttrHiddenSize * fAttrHiddenSize;
-         out << "\t" << "\t" << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
+         out << "\t" << "\t"  << "\t" << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
              << OpName << "_n, &" << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR
              << " + " << rh_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
              << OpName << "_n, &" << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
+         // endif on seq 0 or not 
+         out << "\t" << "\t" << "}\n";
          // Add the bias of the recurrence to feedback
          if (!fNB.empty()) {
-            size_t rbh_offset = (direction == 0) ?
-            5 * batch_size * fAttrHiddenSize : 6 * batch_size * fAttrHiddenSize
-            + 5 * batch_size * fAttrHiddenSize;
+            size_t rbh_offset = (direction == 0) ? 5 * batch_size * seq_length * fAttrHiddenSize
+                                                 : 11 * batch_size * seq_length * fAttrHiddenSize;
             out << "\t" << "\t" << "BLAS::saxpy_(&" << OpName << "_feedback_size, &" << OpName
              << "_alpha, tensor_" << fNB << " + " << rbh_offset << ", &" << OpName << "_incx, "
              << OpName << "_feedback, &" << OpName << "_incy);\n";
