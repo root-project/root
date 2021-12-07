@@ -21,7 +21,7 @@ namespace Experimental {
 class REveDataCollection;
 class REveElement;
 
-class REveCollectionCompound : public REveCompound // ?? Should this be in as REveDataSimpleProxyBuilder.hxx ?????
+class REveCollectionCompound : public REveCompound
 {
 private:
    REveDataCollection *fCollection{nullptr};   
@@ -29,6 +29,8 @@ public:
    REveCollectionCompound(REveDataCollection *c);
    virtual ~REveCollectionCompound();
    virtual REveElement *GetSelectionMaster() override;
+
+   bool fUsed{false};
 };
 
 //
@@ -43,7 +45,6 @@ public:
 
    struct SPBProduct {
       std::map<int, REveCollectionCompound*> map;
-      int lastChildIdx{0};
    }; 
    
    typedef  std::map<REveElement*, std::unique_ptr<SPBProduct*> > EProductMap_t;
