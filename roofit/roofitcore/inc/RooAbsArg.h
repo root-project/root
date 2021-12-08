@@ -588,7 +588,7 @@ protected:
 
 
 private:
-  void addParameters(RooArgSet& params, const RooArgSet* nset=0, Bool_t stripDisconnected=kTRUE) const;
+  void addParameters(RooAbsCollection& params, const RooArgSet* nset = nullptr, bool stripDisconnected = true) const;
 
   RefCountListLegacyIterator_t * makeLegacyIterator(const RefCountList_t& list) const;
 
