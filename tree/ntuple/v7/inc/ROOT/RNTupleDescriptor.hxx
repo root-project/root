@@ -786,6 +786,7 @@ private:
    std::vector<Internal::RNTupleSerializer::RClusterSummary> fClusterSummaries;
    std::vector<Internal::RNTupleSerializer::RClusterGroup> fClusterGroups;
 
+   RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
 public:
    /// Checks whether invariants hold:
    /// * NTuple name is valid

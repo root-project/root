@@ -800,6 +800,13 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
 
 
 ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::EnsureFieldExists(DescriptorId_t fieldId) const {
+   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0)
+      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist");
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
    // Reuse field name validity check
    auto validName = Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName());
@@ -1021,12 +1028,12 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescript
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
-   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0) {
-      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist in NTuple");
-   }
-   if (fDescriptor.fFieldDescriptors.count(linkId) == 0) {
-      return R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
-   }
+   auto fieldExists = RResult<void>::Success();
+   if (!(fieldExists = EnsureFieldExists(fieldId)))
+      return R__FORWARD_ERROR(fieldExists);
+   if (!(fieldExists = EnsureFieldExists(linkId)))
+      return  R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
+
    if (linkId == fDescriptor.GetFieldZeroId()) {
       return R__FAIL("cannot make FieldZero a child field");
    }
@@ -1064,8 +1071,9 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    const auto fieldId = columnDesc.GetFieldId();
    const auto index = columnDesc.GetIndex();
 
-   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0)
-      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist");
+   auto fieldExists = EnsureFieldExists(fieldId);
+   if (!fieldExists)
+      return R__FORWARD_ERROR(fieldExists);
    if (fDescriptor.FindColumnId(fieldId, index) != kInvalidDescriptorId) {
       return R__FAIL("column index clash");
    }
