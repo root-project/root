@@ -467,7 +467,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    TGeoManager::EDefaultUnits typ = TGeoManager::GetDefaultUnits();
    // compute radlen systematically with G3 formula for a valid material
    if ( typ == TGeoManager::kRootUnits && radlen>=0 ) {
-      //taken from Geant3 routine GSMATE
+      // taken from Geant3 routine GSMATE
       constexpr Double_t alr2av = 1.39621E-03;
       constexpr Double_t al183  = 5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
@@ -475,7 +475,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       fRadLen *= TGeoUnit::cm;
    }
    else if ( typ == TGeoManager::kG4Units && radlen>=0 ) {
-      //taken from Geant3 routine GSMATE
+      // taken from Geant3 routine GSMATE
       constexpr Double_t alr2av = 1.39621E-03;
       constexpr Double_t al183  = 5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
