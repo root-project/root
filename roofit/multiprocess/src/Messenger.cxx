@@ -69,8 +69,10 @@ Messenger::Messenger(const ProcessManager &process_manager)
 
    // high water mark for master-queue sending, which can be quite a busy channel, especially at the start of a run
    int hwm = 0;
-   // create zmq connections (zmq context is automatically created in the ZeroMQSvc class and maintained as singleton)
-   // and pollers where necessary
+   // create zmq connections and pollers where necessary
+   // Note: zmq context is automatically created in the ZeroMQSvc class and maintained as singleton.
+   // It is reset in the ProcessManager, if necessary. Do not do that here, see comments in ProcessManager
+   // constructor.
    try {
       if (process_manager.is_master()) {
          sprintf(addr_prefix, addr_prefix_template, getpid());
@@ -258,7 +260,18 @@ Messenger::~Messenger()
          socket.reset(nullptr);
       }
    }
-   zmqSvc().close_context();
+   // Dev note: do not call zmqSvc()::close_context from here! The Messenger
+   // is (a member of) a static variable (JobManager) and ZeroMQSvc is static
+   // as well (the singleton returned by zmqSvc()). Because of the "static
+   // destruction order fiasco", it is not guaranteed that ZeroMQSvc singleton
+   // state is still available at time of destruction of the Messenger. Instead
+   // of a compile time error, this will lead to segfaults at runtime when
+   // exiting the program (on some platforms), because even though the ZeroMQSvc
+   // singleton pointer may be overwritten with random data, it will usually
+   // not randomly become nullptr, which means the nullptr check in the getter
+   // will still pass and the randomized pointer will be dereferenced.
+   // Instead, we close context in any new ProcessManager that may be created,
+   // which means the Messenger will get a fresh context anyway.
 }
 
 void Messenger::test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id)

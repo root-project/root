@@ -37,6 +37,18 @@ namespace MultiProcess {
 /// \param N_workers Number of worker processes to spawn.
 ProcessManager::ProcessManager(std::size_t N_workers) : N_workers_(N_workers)
 {
+   // Note: zmq context is automatically created in the ZeroMQSvc class and maintained as singleton,
+   // but we must close any possibly existing state before reusing it. This assumes that our Messenger
+   // is the only user of ZeroMQSvc and that there is only one Messenger at a time. Beware that
+   // this must be designed more carefully if either of these assumptions change! Note also that this
+   // call must be done before the ProcessManager forks new processes, otherwise the master process'
+   // context that will be cloned to all forked processes will be closed multiple times, which will
+   // hang, because the ZeroMQ context creates threads and these will not be cloned along with the
+   // fork. See the ZeroMQ documentation for more details on this. In principle, one could design this
+   // in a more finegrained way by keeping the context on the master process and only recreating it
+   // on child processes (while avoiding calling the destructor on the child processes!). This
+   // approach may offer more flexibility if this is needed in the future.
+   zmqSvc().close_context();
    initialize_processes();
 }
 
