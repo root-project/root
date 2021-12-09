@@ -326,7 +326,6 @@ TEST_P(RealLVsMPFE, minimize)
    EXPECT_EQ(muerr0, muerr1);
    EXPECT_EQ(edm0, edm1);
 
-   m1.cleanup(); // necessary in tests to clean up global _theFitter
    delete savedValues;
 }
 
