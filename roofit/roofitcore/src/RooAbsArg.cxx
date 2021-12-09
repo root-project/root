@@ -1346,7 +1346,7 @@ void RooAbsArg::setProxyNormSet(const RooArgSet* nset)
   for (int i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
     if (!p) continue ;
-    getProxy(i)->changeNormSet(nset) ;
+    p->changeNormSet(nset);
   }
 }
 
