@@ -59,6 +59,11 @@ static struct ForbidDiagnostics {
         std::cerr << "Warning in " << location << " " << msg << std::endl;
         return;
       }
+      if (level == kWarning
+          && strstr(msg, "Pre-release format version: RC ") != nullptr) {
+        std::cerr << "Warning in " << location << " " << msg << std::endl;
+        return;
+      }
 
       // FIXME: DOAS backend is exprimental.
       if (level == kWarning
