@@ -117,8 +117,6 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    EXPECT_EQ(mu0, mu1);
    EXPECT_EQ(muerr0, muerr1);
    EXPECT_EQ(edm0, edm1);
-
-   m1.cleanup(); // necessary in tests to clean up global _theFitter
 }
 
 TEST(LikelihoodGradientJob, RepeatMigrad)
@@ -163,9 +161,6 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
 
    std::cout << "... running migrad second time ..." << std::endl;
    m1.migrad();
-
-   std::cout << "... cleaning up minimizer ..." << std::endl;
-   m1.cleanup(); // necessary in tests to clean up global _theFitter
 }
 
 TEST_P(LikelihoodGradientJob, GaussianND)
@@ -263,8 +258,6 @@ TEST_P(LikelihoodGradientJob, GaussianND)
       EXPECT_EQ(mean0[ix], mean1[ix]);
       EXPECT_EQ(std0[ix], std1[ix]);
    }
-
-   m1.cleanup(); // necessary in tests to clean up global _theFitter
 }
 
 INSTANTIATE_TEST_SUITE_P(NworkersSeed, LikelihoodGradientJob,
@@ -439,6 +432,4 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    EXPECT_FLOAT_EQ(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob);
    EXPECT_FLOAT_EQ(mu_sig_nominal, mu_sig_GradientJob);
    EXPECT_FLOAT_EQ(mu_sig_error_nominal, mu_sig_error_GradientJob);
-
-   m1.cleanup(); // necessary in tests to clean up global _theFitter
 }
