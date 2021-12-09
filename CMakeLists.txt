@@ -119,7 +119,7 @@ endif()
 #---Try to download a file to check internet connection-----------------------------------------
 message(STATUS "Checking internet connectivity...")
 file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
-  TIMEOUT 5 STATUS DOWNLOAD_STATUS
+  TIMEOUT 10 STATUS DOWNLOAD_STATUS
 )
 # Get the status code from the download status
 list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
