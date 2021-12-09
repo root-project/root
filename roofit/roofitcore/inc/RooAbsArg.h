@@ -206,8 +206,7 @@ public:
   }
   /// Return server of `this` that has the same name as `arg`. Returns `nullptr` if not found.
   inline RooAbsArg* findServer(const RooAbsArg& arg) const {
-    const auto serverIt = _serverList.findByNamePointer(&arg);
-    return serverIt != _serverList.end() ? *serverIt : nullptr;
+    return _serverList.findByNamePointer(&arg);
   }
   /// Return i-th server from server list.
   inline RooAbsArg* findServer(Int_t index) const {
