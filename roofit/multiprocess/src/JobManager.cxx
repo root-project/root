@@ -77,8 +77,22 @@ JobManager::~JobManager()
 {
    // The instance typically gets created by some Job. Once all Jobs are gone, the
    // JM will get destroyed. In this case, the job_objects map should have
-   // been emptied. This check makes sure:
-   assert(JobManager::job_objects_.empty());
+   // been emptied.
+   // The second case is when the program ends, at which time the static instance
+   // is destroyed. Jobs may still be present, for instance, the Job subclass
+   // RooFit::TestStatistics::LikelihoodGradientJob, will have
+   // been put into RooMinimizer::_theFitter->fObjFunction, as the gradient
+   // member. Because _theFitter is also a global static member, we cannot
+   // guarantee destruction order, and so the JobManager may be destroyed before
+   // all Jobs are destroyed. We cannot therefore make sure that the first
+   // condition is met. However, the Job objects stuck in _theFitter are not
+   // meant to be run again, because the program is ending anyway. So also in this
+   // case, we can safely shut down.
+   // There used to be an assert statement that checked whether the job_objects
+   // map was empty at destruction time, but that neglected the second possibility
+   // and led to assertion failures, which left the Messenger and ProcessManager
+   // objects intact, leading to the forked processes and their ZeroMQ resources
+   // to remain after exiting the main/master/parent process.
    messenger_ptr_.reset(nullptr);
    process_manager_ptr_.reset(nullptr);
    queue_ptr_.reset(nullptr);
