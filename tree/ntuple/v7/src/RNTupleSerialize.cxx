@@ -38,7 +38,7 @@ std::uint32_t SerializeFieldV1(
 {
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -71,7 +71,7 @@ std::uint32_t SerializeFieldTree(
    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
    void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -175,7 +175,7 @@ std::uint32_t SerializeColumnListV1(
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -554,7 +554,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 /// may have different version numbers
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePreamble(void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -631,7 +631,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeListFram
    if (nitems >= (1 << 28))
       throw RException(R__FAIL("list frame too large: " + std::to_string(nitems)));
 
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -827,7 +827,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(
    const RClusterSummary &clusterSummary, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -884,7 +884,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterGroup(
    const RClusterGroup &clusterGroup, void *buffer)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -929,7 +929,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
 {
    RContext context;
 
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -974,7 +974,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageListV1(
    void *buffer, const RNTupleDescriptor &desc, std::span<DescriptorId_t> physClusterIDs, const RContext &context)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
@@ -1020,7 +1020,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
    void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc, const RContext &context)
 {
-   auto base = reinterpret_cast<unsigned char *>((buffer != nullptr) ? buffer : 0);
+   auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
