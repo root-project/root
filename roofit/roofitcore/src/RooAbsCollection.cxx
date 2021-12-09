@@ -29,7 +29,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooAbsCollection.h"
 
 #include "TClass.h"
-#include "TStopwatch.h"
 #include "TRegexp.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
