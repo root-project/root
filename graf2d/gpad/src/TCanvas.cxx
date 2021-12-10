@@ -1996,7 +1996,10 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
       fCanvasImp->SetCanvasSize(ww, wh);
       fCw = ww;
       fCh = wh;
+      TPad *padsav = (TPad*)gPad;
+      cd();
       ResizePad();
+      if (padsav) padsav->cd();
    }
 }
 
