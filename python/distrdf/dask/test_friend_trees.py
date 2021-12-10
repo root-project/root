@@ -26,6 +26,7 @@ class DaskFriendTreesTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def create_parent_tree(self):
         """Creates a .root file with the parent TTree"""

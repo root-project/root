@@ -26,6 +26,7 @@ class RunGraphsTests(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def test_rungraphs_dask_3histos(self):
         """

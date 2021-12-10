@@ -39,6 +39,7 @@ class DefinePerSampleTest(unittest.TestCase):
         """Reset test environment."""
 
         cls.client.shutdown()
+        cls.client.close()
 
         for name in cls.filenames:
             os.remove(name)
