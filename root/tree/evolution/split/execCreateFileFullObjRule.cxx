@@ -26,10 +26,15 @@ public:
   Middle mid;
 };
 
+struct Momentum {
+  SomeVector pp;
+  double ee = 5;
+};
+
 struct StepPointMC {
   SomeVector position;
   SomeVector postPosition;
-  SomeVector momentum;
+  Momentum   momentum;
   SomeVector postMomentum;
 };
 
@@ -40,6 +45,7 @@ struct StepPointVector {
 #ifdef __ROOTCLING__
 #pragma link C++ options=version(11)  class SomeVector+;
 #pragma link C++ class Middle+;
+#pragma link C++ class Momentum+;
 #pragma link C++ class Holder+;
 #pragma link C++ class VecHolder+;
 #pragma link C++ class StepPointMC+;
@@ -66,7 +72,8 @@ void writefile(int splitlevel = 9)
   std::vector<StepPointMC> stepvec;
   mc.position = SomeVector{1.25, 2.5, 5, 1};
   mc.postPosition = SomeVector{2.5, 5, 10, 2};
-  mc.momentum = SomeVector{3.75, 7.5, 15, 3};
+  mc.momentum.pp = SomeVector{3.75, 7.5, 15, 3};
+  mc.momentum.ee = 66;
   mc.postMomentum = SomeVector{5, 10, 20, 4};
   step.vec.push_back(mc);
   mc.postMomentum = SomeVector{15, 20, 30, 5};

@@ -28,10 +28,15 @@ public:
   Middle mid;
 };
 
+struct Momentum {
+  SomeVector pp;
+  double ee = -1;
+};
+
 struct StepPointMC {
   SomeVector position;
   SomeVector postPosition;
-  SomeVector momentum;
+  Momentum   momentum;
   SomeVector postMomentum;
 };
 
@@ -43,6 +48,7 @@ struct StepPointVector {
 #ifdef __ROOTCLING__
 #pragma link C++ options=version(12)  class SomeVector+;
 #pragma link C++ class Middle+;
+#pragma link C++ class Momentum+;
 #pragma link C++ class Holder+;
 #pragma link C++ class VecHolder+;
 #pragma link C++ class StepPointMC+;
@@ -90,10 +96,12 @@ std::ostream &operator<<(std::ostream &os, const StepPointMC &s)
     for(auto &d : s.postPosition.data)
       format(os) << d << ", ";
     format(os) << s.postPosition.h;
-    os << "}\nmomentum:     {";
-    for(auto &d : s.momentum.data)
+    os << "}\nmomentum:     {{";
+    for(auto &d : s.momentum.pp.data)
       format(os) << d << ", ";
-    format(os) << s.momentum.h;
+    format(os) << s.momentum.pp.h;
+    os << "}, ";
+    format(os) << s.momentum.ee;
     os << "}\npostMomentum: {";
     for(auto &d : s.postMomentum.data)
       format(os) << d << ", ";
@@ -122,7 +130,7 @@ int check(const StepPointMC &step, std::vector<std::vector<double>> values)
 {
   int result = check(step.position, values[0]);
   result = check(step.position, values[1]) + result;
-  result = check(step.momentum, values[2]) + result;
+  result = check(step.momentum.pp, values[2]) + result;
   result = check(step.postMomentum, values[3]) + result;
   //fprintf(stderr, "result = %d\n", result);
   return result;
