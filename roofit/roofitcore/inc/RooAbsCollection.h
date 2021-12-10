@@ -54,6 +54,12 @@ ROOT::RRangeCast<T, true, Range_t> dynamic_range_cast(Range_t &&coll)
 
 class RooCmdArg;
 
+namespace RooFit {
+namespace Detail {
+struct HashAssistedFind;
+}
+}
+
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
   using Storage_t = std::vector<RooAbsArg*>;
@@ -380,10 +386,12 @@ protected:
 
 private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
-  mutable std::unique_ptr<std::unordered_map<const TNamed*, Storage_t::value_type>> _nameToItemMap; //!
+
+  using HashAssistedFind = RooFit::Detail::HashAssistedFind;
+  mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; //!
   std::size_t _sizeThresholdForMapSearch; //!
+
   void insert(RooAbsArg*);
-  RooAbsArg* tryFastFind(const TNamed* namePtr) const;
 
   ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
