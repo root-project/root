@@ -611,12 +611,7 @@ private:
   RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
   RefCountList_t _clientListValue; // subset of clients that requested value dirty flag propagation
 
-  struct ProxyListCache {
-    std::vector<RooAbsProxy*> cache;
-    bool isDirty = true;
-  };
   RooRefArray _proxyList        ; // list of proxies
-  ProxyListCache _proxyListCache; //! cache of the list of proxies
 
   std::vector<RooAbsCache*> _cacheList ; //! list of caches
 
@@ -666,6 +661,12 @@ private:
   friend std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);
   friend std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
   friend void RooRefArray::Streamer(TBuffer&);
+
+  struct ProxyListCache {
+    std::vector<RooAbsProxy*> cache;
+    bool isDirty = true;
+  };
+  ProxyListCache _proxyListCache; //! cache of the list of proxies. Avoids type casting.
 
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
