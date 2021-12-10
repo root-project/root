@@ -36,6 +36,7 @@ class RooAbsCategoryLValue;
 class Roo1DTable ;
 class RooPlot;
 class RooArgList;
+class RooSimultaneous;
 class TH1;
 class TH2F;
 class RooAbsBinning ;
@@ -220,6 +221,9 @@ public:
 	
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat, Bool_t createEmptyDataSets=kFALSE) const ;
+
+  // Split a dataset by categories of a RooSimultaneous
+  virtual TList* split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSets=kFALSE) const ;
 
   // Fast splitting for SimMaster setData
   Bool_t canSplitFast() const ; 
