@@ -19,13 +19,12 @@
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
 #include "RooMinimizer.h"
-#include "RooGradMinimizerFcn.h"
 #include "RooFitResult.h"
 #include "RooFit/TestStatistics/LikelihoodSerial.h"
 #include "RooFit/TestStatistics/RooUnbinnedL.h"
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/MultiProcess/JobManager.h"
-#include "RooFit/MultiProcess/ProcessManager.h" // need to complete type for debugging
+#include "RooFit/MultiProcess/Config.h"
 #include "RooStats/ModelConfig.h"
 #include "RunContext.h" // complete RooBatchCompute::RunContext type used in RooUnbinnedL
 
@@ -97,7 +96,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
 
    *values = *savedValues;
 
-   RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooMinimizer m1(likelihood, RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode::serial,
                    RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode::multiprocess);
@@ -147,7 +146,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
 
    // --------
 
-   RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooMinimizer m1(likelihood, RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode::serial,
                    RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode::multiprocess);
@@ -228,7 +227,7 @@ TEST_P(LikelihoodGradientJob, GaussianND)
 
    // --------
 
-   RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooMinimizer m1(likelihood, RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode::serial,
                    RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode::multiprocess);
@@ -397,7 +396,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    *values = *savedValues;
 
-   RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
       pdf, data, RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),

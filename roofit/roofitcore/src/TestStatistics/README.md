@@ -98,6 +98,9 @@ std::shared_ptr<RooAbsL> likelihood = /* see examples above */;
 RooMinimizer m(likelihood);
 ```
 
+By default, `RooFit::MultiProcess` spins up as many workers as there are cores in the system (as detected by `std::thread::hardware_concurrency()`).
+To change the number of workers, call `RooFit::MultiProcess::Config::setDefaultNWorkers(desired_N_workers)` **before** creating the `RooMinimizer`.
+
 As noted above, offsetting is purely a function of the `RooMinimizer` when using `TestStatistics` classes.
 Whereas with `fitTo` we can pass in a `RooFit::Offset(kTRUE)` optional `RooCmdArg` argument to activate offsetting, here we must do it on the minimizer as follows:
 ```c++
