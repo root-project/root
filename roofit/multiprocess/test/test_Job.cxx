@@ -17,6 +17,7 @@
 
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/types.h" // JobTask
+#include "RooFit/MultiProcess/Config.h"
 // needed to complete type returned from...
 #include "RooFit/MultiProcess/JobManager.h"     // ... Job::get_manager()
 #include "RooFit/MultiProcess/ProcessManager.h" // ... JobManager::process_manager()
@@ -165,7 +166,7 @@ TEST_P(TestMPJob, singleJobGetResult)
    // start parallel test
 
    xSquaredPlusBVectorParallel x_sq_plus_b_parallel(&x_sq_plus_b);
-   RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NumCPU);
 
    auto y_parallel = x_sq_plus_b_parallel.get_result();
 
@@ -192,7 +193,7 @@ TEST_P(TestMPJob, multiJobGetResult)
    xSquaredPlusBVectorSerial x_sq_plus_b2(b_initial + 1, x);
    xSquaredPlusBVectorParallel x_sq_plus_b_parallel(&x_sq_plus_b);
    xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(&x_sq_plus_b2);
-   RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NumCPU);
 
    // do stuff
    auto y_parallel = x_sq_plus_b_parallel.get_result();
@@ -225,7 +226,7 @@ TEST_P(TestMPJob, singleJobUpdateState)
    // start parallel test
    bool update_state = true;
    xSquaredPlusBVectorParallel x_sq_plus_b_parallel(&x_sq_plus_b, update_state);
-   RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NumCPU);
 
    auto y_parallel_before_change = x_sq_plus_b_parallel.get_result();
 
