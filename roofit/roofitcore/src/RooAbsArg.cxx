@@ -1229,6 +1229,7 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
 
   // Register proxy itself
   _proxyList.Add(&proxy) ;
+  _proxyListCache.isDirty = true;
 }
 
 
@@ -1240,6 +1241,7 @@ void RooAbsArg::unRegisterProxy(RooArgProxy& proxy)
 {
   _proxyList.Remove(&proxy) ;
   _proxyList.Compress() ;
+  _proxyListCache.isDirty = true;
 }
 
 
@@ -1261,6 +1263,7 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
 
   // Register proxy itself
   _proxyList.Add(&proxy) ;
+  _proxyListCache.isDirty = true;
 }
 
 
@@ -1273,6 +1276,7 @@ void RooAbsArg::unRegisterProxy(RooSetProxy& proxy)
 {
   _proxyList.Remove(&proxy) ;
   _proxyList.Compress() ;
+  _proxyListCache.isDirty = true;
 }
 
 
@@ -1295,6 +1299,7 @@ void RooAbsArg::registerProxy(RooListProxy& proxy)
   // Register proxy itself
   Int_t nProxyOld = _proxyList.GetEntries() ;
   _proxyList.Add(&proxy) ;
+  _proxyListCache.isDirty = true;
   if (_proxyList.GetEntries()!=nProxyOld+1) {
     cout << "RooAbsArg::registerProxy(" << GetName() << ") proxy registration failure! nold=" << nProxyOld << " nnew=" << _proxyList.GetEntries() << endl ;
   }
@@ -1310,6 +1315,7 @@ void RooAbsArg::unRegisterProxy(RooListProxy& proxy)
 {
   _proxyList.Remove(&proxy) ;
   _proxyList.Compress() ;
+  _proxyListCache.isDirty = true;
 }
 
 
@@ -1343,9 +1349,19 @@ Int_t RooAbsArg::numProxies() const
 
 void RooAbsArg::setProxyNormSet(const RooArgSet* nset)
 {
-  for (int i=0 ; i<numProxies() ; i++) {
-    RooAbsProxy* p = getProxy(i) ;
-    if (!p) continue ;
+  if (_proxyListCache.isDirty) {
+    // First time we loop over proxies: cache the results to avoid future
+    // costly dynamic_casts
+    _proxyListCache.cache.clear();
+    for (int i=0 ; i<numProxies() ; i++) {
+      RooAbsProxy* p = getProxy(i) ;
+      if (!p) continue ;
+      _proxyListCache.cache.push_back(p);
+    }
+    _proxyListCache.isDirty = false;
+  }
+
+  for ( auto& p : _proxyListCache.cache ) {
     p->changeNormSet(nset);
   }
 }
