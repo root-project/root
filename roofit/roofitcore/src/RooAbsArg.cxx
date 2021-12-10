@@ -2329,6 +2329,7 @@ void RooAbsArg::SetName(const char* name)
     //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
     _namePtr = newPtr;
     _namePtr->SetBit(RooNameReg::kRenamedArg);
+    RooNameReg::incrementRenameCounter();
   }
 }
 
@@ -2345,6 +2346,7 @@ void RooAbsArg::SetNameTitle(const char *name, const char *title)
     //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
     _namePtr = newPtr;
     _namePtr->SetBit(RooNameReg::kRenamedArg);
+    RooNameReg::incrementRenameCounter();
   }
 }
 
