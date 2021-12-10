@@ -76,8 +76,8 @@ protected:
    // Returns true if new proxies were created.
    virtual bool VisibilityModelChanges(int idx, REveElement*, const std::string& viewType, const REveViewContext*);
 
-   virtual void Build(const REveDataCollection* iItem, REveElement* product, const REveViewContext*);
-   virtual void BuildViewType(const REveDataCollection* iItem, REveElement* product, const std::string& viewType, const REveViewContext*);
+   virtual void BuildProduct(const REveDataCollection* iItem, REveElement* product, const REveViewContext*);
+   virtual void BuildProductViewType(const REveDataCollection* iItem, REveElement* product, const std::string& viewType, const REveViewContext*);
 
    virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*) = 0;
    virtual void FillImpliedSelected( REveElement::Set_t& /*impSet*/, Product*) {};

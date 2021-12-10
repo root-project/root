@@ -27,28 +27,28 @@ public:
    }
 
 protected:
-   using REveDataSimpleProxyBuilder::Build;
-   void Build(const void *iData, int index, REveElement *itemHolder, const REveViewContext *context) override
+   using REveDataSimpleProxyBuilder::BuildItem;
+   void BuildItem(const void *iData, int index, REveElement *itemHolder, const REveViewContext *context) override
    {
       if(iData) {
-         Build(*reinterpret_cast<const T*> (iData), index, itemHolder, context);
+         BuildItem(*reinterpret_cast<const T*> (iData), index, itemHolder, context);
       }
    }
 
-   virtual void Build(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const REveViewContext * /*context*/)
+   virtual void BuildItem(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const REveViewContext * /*context*/)
    {
       throw std::runtime_error("virtual Build(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }
 
-   using REveDataSimpleProxyBuilder::BuildViewType;
-   void BuildViewType(const void *iData, int index, REveElement *itemHolder, const std::string& viewType, const REveViewContext *context) override
+   using REveDataSimpleProxyBuilder::BuildItemViewType;
+   void BuildItemViewType(const void *iData, int index, REveElement *itemHolder, const std::string& viewType, const REveViewContext *context) override
    {
       if(iData) {
-         BuildViewType(*reinterpret_cast<const T*> (iData), index, itemHolder, viewType, context);
+         BuildItemViewType(*reinterpret_cast<const T*> (iData), index, itemHolder, viewType, context);
       }
    }
 
-   virtual void BuildViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const std::string& /*viewType*/, const REveViewContext * /*context*/)
+   virtual void BuildItemViewType(const T & /*iData*/, int /*index*/, REveElement * /*itemHolder*/, const std::string& /*viewType*/, const REveViewContext * /*context*/)
    {
       throw std::runtime_error("virtual BuildViewType(const T&, int, REveElement&, const REveViewContext*) not implemented by inherited class.");
    }

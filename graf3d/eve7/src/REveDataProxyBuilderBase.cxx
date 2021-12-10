@@ -87,11 +87,11 @@ void REveDataProxyBuilderBase::Build()
             auto oldSize = product->NumChildren();
             if (HaveSingleProduct())
             {
-               Build(m_collection, product, pp->m_viewContext);
+               BuildProduct(m_collection, product, pp->m_viewContext);
             }
             else
             {
-               BuildViewType(m_collection, product, pp->m_viewType, pp->m_viewContext);
+               BuildProductViewType(m_collection, product, pp->m_viewType, pp->m_viewContext);
             }
 
             // Project all children of current product.
@@ -143,14 +143,14 @@ void REveDataProxyBuilderBase::Build()
 //------------------------------------------------------------------------------
 
 void
-REveDataProxyBuilderBase::Build(const REveDataCollection*, REveElement*, const REveViewContext*)
+REveDataProxyBuilderBase::BuildProduct(const REveDataCollection*, REveElement*, const REveViewContext*)
 {
    assert("virtual Build(const REveEventItem*, REveElement*, const REveViewContext*) not implemented by inherited class");
 }
 
 
 void
-REveDataProxyBuilderBase::BuildViewType(const REveDataCollection*, REveElement*, const std::string&, const REveViewContext*)
+REveDataProxyBuilderBase::BuildProductViewType(const REveDataCollection*, REveElement*, const std::string&, const REveViewContext*)
 {
    assert("virtual BuildViewType(const FWEventItem*, TEveElementList*, FWViewType::EType, const FWViewContext*) not implemented by inherited class");
 }

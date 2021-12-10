@@ -106,6 +106,7 @@ REveCompound *REveDataSimpleProxyBuilder::GetHolder(REveElement *product, int id
       itemHolder = pmIt->second;
       // printf("GetHolder already in map %d \n", idx);
    } else {
+      int testIdx = 0;
       if (product->NumChildren() > (int)spb->map.size()) {
          for (auto &cr : product->RefChildren()) {
             REveCollectionCompound *cc = (REveCollectionCompound *)(cr);
@@ -113,15 +114,22 @@ REveCompound *REveDataSimpleProxyBuilder::GetHolder(REveElement *product, int id
                itemHolder = cc;
                break;
             }
+            testIdx++;
          }
          if (!itemHolder){
             std::cerr << "REveDataSimpleProxyBuilder::GetHolder can't reuse product\n";
          }
+         if (testIdx != (int)spb->map.size()) {
+            std::cout << "REveDataSimpleProxyBuilder::GetHolder number of used products do not match product size\n";
+         }
       }
       if (!itemHolder) {
+
+         if ((int)spb->map.size() != product->NumChildren()) {
+            std::cout << "REveDataSimpleProxyBuilder::GetHolder total number of products do not match product size\n";
+         };
          itemHolder = CreateCompound(true, true);
          product->AddElement(itemHolder);
-         printf("Creating new holder\n");
       }
       spb->map.emplace(idx, itemHolder);
       itemHolder->fUsed = true;
@@ -134,7 +142,7 @@ REveCompound *REveDataSimpleProxyBuilder::GetHolder(REveElement *product, int id
 }
 
 void
-REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
+REveDataSimpleProxyBuilder::BuildProduct(const REveDataCollection *collection,
                                   REveElement* product, const REveViewContext* vc)
 {
    // printf("REveDataSimpleProxyBuilder::Build %s %d\n", collection->GetCName(), collection->GetNItems());
@@ -145,13 +153,13 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
          REveCompound *itemHolder = GetHolder(product, index);
-         Build(collection->GetDataPtr(index), index, itemHolder, vc);
+         BuildItem(collection->GetDataPtr(index), index, itemHolder, vc);
       }
    }
 }
 
 void
-REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
+REveDataSimpleProxyBuilder::BuildProductViewType(const REveDataCollection* collection,
                                           REveElement* product, const std::string& viewType, const REveViewContext* vc)
 {
    auto size = collection->GetNItems();
@@ -161,7 +169,7 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
          REveCompound *itemHolder = GetHolder(product, index);
-         BuildViewType(collection->GetDataPtr(index), index, itemHolder, viewType, vc);
+         BuildItemViewType(collection->GetDataPtr(index), index, itemHolder, viewType, vc);
       }
    }
    //      printf("END Build view type [%s] product size %d\n",viewType.c_str(), product->NumChildren());
@@ -207,9 +215,9 @@ void REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t &i
          holder = GetHolder(p->m_elements, itemIdx);
 
          if (HaveSingleProduct())
-            Build(Collection()->GetDataPtr(itemIdx), itemIdx, holder, p->m_viewContext);
+            BuildItem(Collection()->GetDataPtr(itemIdx), itemIdx, holder, p->m_viewContext);
          else
-            BuildViewType(Collection()->GetDataPtr(itemIdx), itemIdx, holder, p->m_viewType,  p->m_viewContext);
+            BuildItemViewType(Collection()->GetDataPtr(itemIdx), itemIdx, holder, p->m_viewType,  p->m_viewContext);
 
          applyColorAttrToChildren(holder);
          p->m_elements->ProjectChild(holder);
@@ -232,9 +240,9 @@ REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompou
 
    if (item->GetVisible() ) {
       if (HaveSingleProduct())
-         Build(Collection()->GetDataPtr(idx), idx, iCompound, vc);
+         BuildItem(Collection()->GetDataPtr(idx), idx, iCompound, vc);
       else
-         BuildViewType(Collection()->GetDataPtr(idx), idx, iCompound, viewType, vc);
+         BuildItemViewType(Collection()->GetDataPtr(idx), idx, iCompound, viewType, vc);
       returnValue = true;
    }
    return returnValue;
