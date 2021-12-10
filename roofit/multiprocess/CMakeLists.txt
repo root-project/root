@@ -11,6 +11,7 @@ ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/Queue.cxx
         src/JobManager.cxx
         src/Job.cxx
+        src/Config.cxx
     DEPENDENCIES
         RooFitZMQ
 )
@@ -22,3 +23,5 @@ target_include_directories(RooFitMultiProcess
         INTERFACE $<BUILD_INTERFACE:${RooFitMultiProcess_INCLUDE_DIR}>)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+ROOT_INSTALL_HEADERS()

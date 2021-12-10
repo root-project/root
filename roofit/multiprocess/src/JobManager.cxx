@@ -18,8 +18,7 @@
 #include "RooFit/MultiProcess/Queue.h" // complete type for JobManager::queue()
 #include "RooFit/MultiProcess/worker.h"
 #include "RooFit/MultiProcess/util.h"
-
-#include <thread> // std::thread::hardware_concurrency()
+#include "RooFit/MultiProcess/Config.h"
 
 namespace RooFit {
 namespace MultiProcess {
@@ -40,16 +39,15 @@ namespace MultiProcess {
  * This is the way the Job class uses this class, see 'Job::get_manager()'.
  *
  * The default number of processes is set using 'std::thread::hardware_concurrency()'.
- * To change it, simply set 'JobManager::default_N_workers' to a different value
- * before creation of a new instance.
+ * To change it, use 'Config::setDefaultNWorkers()' to set it to a different value
+ * before creation of a new JobManager instance.
  */
 
 // static function
 JobManager *JobManager::instance()
 {
    if (!JobManager::is_instantiated()) {
-      assert(default_N_workers != 0);
-      instance_.reset(new JobManager(default_N_workers)); // can't use make_unique, because ctor is private
+      instance_.reset(new JobManager(Config::getDefaultNWorkers())); // can't use make_unique, because ctor is private
       instance_->messenger().test_connections(instance_->process_manager());
       // set send to non blocking on all processes after checking the connections are working:
       instance_->messenger().set_send_flag(zmq::send_flags::dontwait);
@@ -212,7 +210,6 @@ bool JobManager::is_activated() const
 std::map<std::size_t, Job *> JobManager::job_objects_;
 std::size_t JobManager::job_counter_ = 0;
 std::unique_ptr<JobManager> JobManager::instance_{nullptr};
-unsigned int JobManager::default_N_workers = std::thread::hardware_concurrency();
 
 } // namespace MultiProcess
 } // namespace RooFit
