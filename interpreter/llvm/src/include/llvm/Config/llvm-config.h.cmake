@@ -100,5 +100,10 @@
 /* Whether Timers signpost passes in Xcode Instruments */
 #cmakedefine01 LLVM_SUPPORT_XCODE_SIGNPOSTS
 
+/* Define if building libLLVM shared library */
+#cmakedefine LLVM_BUILD_LLVM_DYLIB
+
+/* Define if building LLVM with BUILD_SHARED_LIBS */
+#cmakedefine LLVM_BUILD_SHARED_LIBS
 
 #endif
