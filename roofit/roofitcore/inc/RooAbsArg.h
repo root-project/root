@@ -612,7 +612,12 @@ private:
   RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
   RefCountList_t _clientListValue; // subset of clients that requested value dirty flag propagation
 
+  struct ProxyListCache {
+    std::vector<RooAbsProxy*> cache;
+    bool isDirty = true;
+  };
   RooRefArray _proxyList        ; // list of proxies
+  ProxyListCache _proxyListCache; //! cache of the list of proxies
 
   std::vector<RooAbsCache*> _cacheList ; //! list of caches
 
