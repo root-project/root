@@ -34,6 +34,7 @@ class DaskHistoWriteTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def create_tree_with_data(self):
         """Creates a .root file with some data"""

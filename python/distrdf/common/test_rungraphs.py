@@ -54,6 +54,7 @@ class RunGraphsTests(unittest.TestCase):
         cls.sc.stop()
 
         cls.client.shutdown()
+        cls.client.close()
 
     def test_rungraphs_sparkanddask_3histos(self):
         """

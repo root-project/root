@@ -24,6 +24,7 @@ class ReducerMergeTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def assertHistoOrProfile(self, obj_1, obj_2):
         """Asserts equality between two 'ROOT.TH1' or 'ROOT.TH2' objects."""

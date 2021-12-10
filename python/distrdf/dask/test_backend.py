@@ -30,6 +30,7 @@ class DaskBackendInitTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def test_create_default_backend(self):
         """
@@ -70,6 +71,7 @@ class OperationSupportTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def test_action(self):
         """Check that action nodes are classified accurately."""
@@ -117,6 +119,7 @@ class InitializationTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def test_initialization(self):
         """
@@ -185,6 +188,7 @@ class EmptyTreeErrorTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def test_histo_from_empty_root_file(self):
         """
@@ -218,6 +222,7 @@ class ChangeAttributeTest(unittest.TestCase):
     def tearDownClass(cls):
         """Reset test environment."""
         cls.client.shutdown()
+        cls.client.close()
 
     def test_change_attribute_when_npartitions_greater_than_clusters(self):
         """
