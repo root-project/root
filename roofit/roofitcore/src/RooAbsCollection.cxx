@@ -61,7 +61,65 @@ char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooAbsCollection);
-  ;
+
+namespace RooFit {
+namespace Detail {
+
+/**
+ * Helper for hash-map-assisted finding of elements by name.
+ * Create this helper if finding of elements by name is needed.
+ * Upon creation, this object checks the global
+ * RooNameReg::renameCounter()
+ * and tracks elements of this collection by name. If an element
+ * gets renamed, this counter will be increased, and the name to
+ * object map becomes invalid. In this case, it has to be recreated.
+ */
+struct HashAssistedFind {
+
+  /// Inititalise empty hash map for fast finding by name.
+  template<typename It_t>
+  HashAssistedFind(It_t first, It_t last) :
+    currentRooNameRegCounter{ RooNameReg::instance().renameCounter() },
+    rooNameRegCounterWhereMapWasValid{ currentRooNameRegCounter }
+  {
+    nameToItemMap.reserve(std::distance(first, last));
+    for (auto it = first; it != last; ++it) {
+      nameToItemMap.emplace((*it)->namePtr(), *it);
+    }
+  }
+
+  bool isValid() const {
+    return (currentRooNameRegCounter == rooNameRegCounterWhereMapWasValid);
+  }
+
+  RooAbsArg * find(const TNamed * nptr) const {
+    assert(isValid());
+
+    auto item = nameToItemMap.find(nptr);
+    return item != nameToItemMap.end() ? const_cast<RooAbsArg *>(item->second) : nullptr;
+  }
+
+  void replace(const RooAbsArg * out, const RooAbsArg * in) {
+    nameToItemMap.erase(out->namePtr());
+    nameToItemMap.emplace(in->namePtr(), in);
+  }
+
+  void insert(const RooAbsArg * elm) {
+    nameToItemMap.emplace(elm->namePtr(), elm);
+  }
+
+  void erase(const RooAbsArg * elm) {
+    nameToItemMap.erase(elm->namePtr());
+  }
+
+  std::unordered_map<const TNamed *, const RooAbsArg * const> nameToItemMap;
+  const std::size_t & currentRooNameRegCounter;
+  std::size_t rooNameRegCounterWhereMapWasValid = 0;
+};
+
+}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -152,7 +210,7 @@ RooAbsCollection::~RooAbsCollection()
 
 void RooAbsCollection::safeDeleteList()
 {
-  _nameToItemMap = nullptr;
+  _hashAssistedFind = nullptr;
 
   // Handle trivial case here
   if (_list.size() > 1) {
@@ -575,9 +633,8 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
 
   // replace var1 with var2
-  if (_nameToItemMap) {
-    _nameToItemMap->erase((*var1It)->namePtr());
-    (*_nameToItemMap)[var2.namePtr()] = const_cast<RooAbsArg*>(&var2);
+  if (_hashAssistedFind) {
+    _hashAssistedFind->replace(*var1It, &var2);
   }
   *var1It = const_cast<RooAbsArg*>(&var2); //FIXME try to get rid of const_cast
 
@@ -624,8 +681,8 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
     _list.erase(std::remove(_list.begin(), _list.end(), &var), _list.end());
   }
 
-  if (_nameToItemMap && sizeBefore != _list.size()) {
-    _nameToItemMap->erase(var.namePtr());
+  if (_hashAssistedFind && sizeBefore != _list.size()) {
+    _hashAssistedFind->erase(&var);
   }
 
   return sizeBefore != _list.size();
@@ -657,7 +714,7 @@ Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Boo
 
 void RooAbsCollection::removeAll()
 {
-  _nameToItemMap = nullptr;
+  _hashAssistedFind = nullptr;
 
   if(_ownCont) {
     safeDeleteList() ;
@@ -830,9 +887,15 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
   const TNamed* nptr = RooNameReg::known(name);
   if (!nptr) return nullptr;
 
-  RooAbsArg* item = tryFastFind(nptr);
+  if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
+    if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
+      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+    }
 
-  return item ? item : findUsingNamePointer(_list, nptr);
+    return _hashAssistedFind->find(nptr);
+  }
+
+  return findUsingNamePointer(_list, nptr);
 }
 
 
@@ -843,9 +906,16 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
 {
   const auto nptr = arg.namePtr();
-  RooAbsArg* item = tryFastFind(nptr);
 
-  return item ? item : findUsingNamePointer(_list, nptr);
+  if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
+    if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
+      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+    }
+
+    return _hashAssistedFind->find(nptr);
+  }
+
+  return findUsingNamePointer(_list, nptr);
 }
 
 
@@ -1486,60 +1556,17 @@ void RooAbsCollection::insert(RooAbsArg* item) {
     _allRRV= false;
   }
 
-  if (_nameToItemMap) {
-    (*_nameToItemMap)[item->namePtr()] = item;
+  if (_hashAssistedFind) {
+    _hashAssistedFind->insert(item);
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Install an internal hash map for fast finding of elements by name.
+/// \param[in] flag Switch hash map on or off.
 void RooAbsCollection::useHashMapForFind(bool flag) const {
-  if (!flag && _nameToItemMap){
-    _nameToItemMap = nullptr;
-  }
-
-  if (flag && !_nameToItemMap) {
-    _nameToItemMap.reset(new std::unordered_map<const TNamed*, Storage_t::value_type>());
-    for (const auto item : _list) {
-      (*_nameToItemMap)[item->namePtr()] = item;
-    }
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Perform a search in a hash map.
-/// This only happens if this collection is larger than _sizeThresholdForMapSearch.
-/// This search is *not guaranteed* to find an existing
-/// element because elements can be renamed while
-/// being stored in the collection.
-RooAbsArg* RooAbsCollection::tryFastFind(const TNamed* namePtr) const {
-  if (_list.size() >= _sizeThresholdForMapSearch && !_nameToItemMap) {
-    useHashMapForFind(true);
-    assert(_nameToItemMap);
-  }
-
-  if (!_nameToItemMap) {
-    return nullptr;
-  }
-
-  auto item = _nameToItemMap->find(namePtr);
-  if (item != _nameToItemMap->end()) {
-    // Have an element. Check that it didn't get renamed.
-    if (item->second->namePtr() == item->first) {
-      return item->second;
-    } else {
-      // Item has been renamed / replaced.
-      _nameToItemMap->erase(item);
-      if (auto arg = findUsingNamePointer(_list, namePtr)) {
-        (*_nameToItemMap)[arg->namePtr()] = arg;
-        return arg;
-      }
-    }
-  }
-
-  return nullptr;
+  if (flag && !_hashAssistedFind) _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+  if (!flag) _hashAssistedFind = nullptr;
 }
 
 
