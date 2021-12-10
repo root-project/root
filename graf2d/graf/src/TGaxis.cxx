@@ -2305,9 +2305,14 @@ L160:
                      xi1 = gPad->XtoAbsPixel(u);
                      yi1 = gPad->YtoAbsPixel(v);
                      firstintlab = kFALSE;
+                     if (fNModLabs) {
+                        changelablogid++;
+                        ChangeLabelAttributes(changelablogid, 0, textaxis, chtemp);
+                     }
                      typolabel = chtemp;
                      typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),typolabel.Data());
+                     if (fNModLabs) ResetLabelAttributes(textaxis);
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
                      yi2 = gPad->YtoAbsPixel(v);
@@ -2319,9 +2324,14 @@ L160:
                         xi1 = xi2;
                         yi1 = yi2;
                         textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi=(UInt_t)(hi*1.3);
+                        if (fNModLabs) {
+                           changelablogid++;
+                           ChangeLabelAttributes(changelablogid, 0, textaxis, chtemp);
+                        }
                         typolabel = chtemp;
                         typolabel.ReplaceAll("-", "#minus");
                         textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),typolabel.Data());
+                        if (fNModLabs) ResetLabelAttributes(textaxis);
                      }
                   }
                }
@@ -2622,7 +2632,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 /// Change the label attributes of label number i. If needed.
 ///
 /// \param[in] i        Current label number to be changed if needed
-/// \param[in] nlabels  Totals number of labels on for this axis (useful when i is counted from the end)
+/// \param[in] nlabels  Totals number of labels for this axis (useful when i is counted from the end)
 /// \param[in] t        Original TLatex string holding the label to be changed
 /// \param[in] c        Text string to be drawn
 
@@ -2646,7 +2656,13 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
       SavedTextColor = t->GetTextColor();
       SavedTextFont  = t->GetTextFont();
       labNum = ml->GetLabNum();
-      if (labNum < 0) labNum = nlabels + labNum + 2;
+      if (labNum < 0) {
+         if (TestBit(TAxis::kMoreLogLabels)) {
+            Error("ChangeLabelAttributes", "reverse numbering in ChangeLabel doesn't work when more log labels are requested");
+            return;
+         }
+         labNum = nlabels + labNum + 2;
+      }
       if (i == labNum) {
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
@@ -2660,7 +2676,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset the label attributes to the value they have before the last call to
+/// Reset the labels' attributes to the values they had before the last call to
 /// ChangeLabelAttributes.
 
 void TGaxis::ResetLabelAttributes(TLatex* t)
