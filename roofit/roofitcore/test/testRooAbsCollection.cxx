@@ -106,3 +106,39 @@ TEST(RooArgSet, InsertAndDeduplicate) {
   RooArgSet set4{list, list2};
   EXPECT_EQ(set4.size(), set.size() + 1);
 }
+
+TEST(RooArgSet, HashAssistedFind) {
+  RooArgList list;
+  RooArgList list2;
+  for (unsigned int i = 0; i < 4; ++i) {
+    char name[] = {char('a'+i), '\0'};
+    list.addOwned(*(new RooRealVar(name, name, 0.)));
+  }
+  for (unsigned int i = 0; i < 5; ++i) {
+    char name[] = {char('a'+i), '\0'};
+    list2.addOwned(*(new RooRealVar(name, name, 0.)));
+    name[0] = char('a'+ 4 - i);
+    list2.addOwned(*(new RooRealVar(name, name, 0.)));
+  }
+
+  // Silence deduplication error messages
+  RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
+
+  RooArgSet set{list};
+  set.useHashMapForFind(true);
+  EXPECT_FALSE(set.add(RooRealVar("a", "a", 0)));
+  EXPECT_EQ(set.size(), list.size());
+
+  set.add(list2);
+  EXPECT_EQ(set.size(), 5);
+
+  // Renaming would invalidate the old hash map. Test that it gets regenerated correctly:
+  list.useHashMapForFind(true);
+
+  list[0].SetName("a'");
+  EXPECT_EQ(set.find("a"), nullptr);
+  EXPECT_EQ(set.find("a'"), & list[0]);
+
+  EXPECT_EQ(list.find("a"), nullptr);
+  EXPECT_EQ(list.find("a'"), & list[0]);
+}
