@@ -98,6 +98,7 @@ observable snapshots are stored in the dataset.
 #include "RooCategory.h"
 #include "RooTrace.h"
 #include "RooUniformBinning.h"
+#include "RooSimultaneous.h"
 
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
@@ -1589,6 +1590,116 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
    subset->add(*row, weight());
     } else {
    subset->add(*row, weight(), weightSquared());
+    }
+  }
+
+  delete cloneSet;
+  return dsetList;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Split dataset into subsets based on the categorisation of the RooSimultaneous
+/// A TList of RooDataSets is returned in which each RooDataSet is named
+/// after the state name of splitCat of which it contains the dataset subset.
+/// The observables splitCat itself is no longer present in the sub datasets, as well as the 
+/// observables of the other categories.
+/// If createEmptyDataSets is kFALSE (default) this method only creates datasets for states
+/// which have at least one entry The caller takes ownership of the returned list and its contents
+
+TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSets) const
+{
+  RooAbsCategoryLValue& splitCat = const_cast<RooAbsCategoryLValue&>(simpdf.indexCat());
+
+  // Sanity check
+  if (!splitCat.dependsOn(*get())) {
+    coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName()
+    << " doesn't depend on any variable in this dataset" << endl ;
+    return 0 ;
+  }
+
+  // Clone splitting category and attach to self
+  RooAbsCategory* cloneCat =0;
+  RooArgSet* cloneSet = 0;
+  if (splitCat.isDerived()) {
+    cloneSet = (RooArgSet*) RooArgSet(splitCat).snapshot(kTRUE) ;
+    if (!cloneSet) {
+      coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") Couldn't deep-clone splitting category, abort." << endl ;
+      return 0 ;
+    }
+    cloneCat = (RooAbsCategory*) cloneSet->find(splitCat.GetName()) ;
+    cloneCat->attachDataSet(*this) ;
+  } else {
+    cloneCat = dynamic_cast<RooAbsCategory*>(get()->find(splitCat.GetName())) ;
+    if (!cloneCat) {
+      coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName()
+      << " is fundamental and does not appear in this dataset" << endl ;
+      return 0 ;
+    }
+  }
+
+  // Split a dataset in a series of subsets, each corresponding
+  // to a state of splitCat
+  TList* dsetList = new TList ;
+
+  // Construct set of variables to be included in split sets = full set - split category
+  RooArgSet subsetVars(*get()) ;
+  if (splitCat.isDerived()) {
+    RooArgSet* vars = splitCat.getVariables() ;
+    subsetVars.remove(*vars,kTRUE,kTRUE) ;
+    delete vars ;
+  } else {
+    subsetVars.remove(splitCat,kTRUE,kTRUE) ;
+  }
+
+  // Add weight variable explicitly if dataset has weights, but no top-level weight
+  // variable exists (can happen with composite datastores)
+  Bool_t addWV(kFALSE) ;
+  RooRealVar newweight("weight","weight",-1e9,1e9) ;
+  if (isWeighted() && !IsA()->InheritsFrom(RooDataHist::Class())) {
+    subsetVars.add(newweight) ;
+    addWV = kTRUE ;
+  }
+
+  // By default, remove all category observables from the subdatasets
+  RooArgSet allObservables;
+  for( const auto& catPair : splitCat) {
+    const auto& catPdf = simpdf.getPdf(catPair.first.c_str());
+    allObservables.add(*(catPdf->getObservables(this)));
+  }
+  subsetVars.remove(allObservables, kTRUE, kTRUE);
+
+
+  // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
+  if (createEmptyDataSets) {
+    for (const auto& nameIdx : *cloneCat) {
+      // Add in the subset only the observables corresponding to this category
+      RooArgSet subsetVarsCat(subsetVars);
+      const auto& catPdf = simpdf.getPdf(nameIdx.first.c_str());
+      subsetVarsCat.add(*(catPdf->getObservables(this)));
+
+      RooAbsData* subset = emptyClone(nameIdx.first.c_str(), nameIdx.first.c_str(), &subsetVarsCat,(addWV?"weight":0)) ;
+      dsetList->Add((RooAbsArg*)subset) ;
+    }
+  }
+
+
+  // Loop over dataset and copy event to matching subset
+  const bool propWeightSquared = isWeighted();
+  for (Int_t i = 0; i < numEntries(); ++i) {
+    const RooArgSet* row =  get(i);
+    RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getCurrentLabel());
+    if (!subset) {
+      // Add in the subset only the observables corresponding to this category
+      RooArgSet subsetVarsCat(subsetVars);
+      const auto& catPdf = simpdf.getPdf(cloneCat->getCurrentLabel());
+      subsetVarsCat.add(*(catPdf->getObservables(this)));
+      subset = emptyClone(cloneCat->getCurrentLabel(),cloneCat->getCurrentLabel(),&subsetVarsCat,(addWV?"weight":0));
+      dsetList->Add((RooAbsArg*)subset);
+    }
+    if (!propWeightSquared) {
+      subset->add(*row, weight());
+    } else {
+      subset->add(*row, weight(), weightSquared());
     }
   }
 

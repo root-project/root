@@ -459,7 +459,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   RooAbsCategoryLValue& simCat = const_cast<RooAbsCategoryLValue&>(simpdf->indexCat());
 
   TString simCatName(simCat.GetName());
-  TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat,processEmptyDataSets());
+  TList* dsetList = const_cast<RooAbsData*>(data)->split(*simpdf,processEmptyDataSets());
   if (!dsetList) {
     coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl;
     throw std::runtime_error("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
