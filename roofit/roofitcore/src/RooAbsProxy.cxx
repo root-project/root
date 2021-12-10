@@ -63,7 +63,7 @@ RooAbsProxy::RooAbsProxy(const char* /*name*/, const RooAbsProxy& other) :
 
 void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet) 
 {
-  _nset = (RooArgSet*) newNormSet ;
+  _nset = const_cast<RooArgSet*>(newNormSet) ;
 }
 
 
