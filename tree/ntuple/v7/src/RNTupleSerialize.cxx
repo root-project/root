@@ -731,7 +731,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
          return R__FAIL("feature flag buffer too short");
       bytes += DeserializeInt64(bytes, f);
       bufSize -= sizeof(std::int64_t);
-      flags.emplace_back(abs(f));
+      flags.emplace_back((f < 0) ? -f : f);
    } while (f < 0);
 
    return (flags.size() * sizeof(std::int64_t));
