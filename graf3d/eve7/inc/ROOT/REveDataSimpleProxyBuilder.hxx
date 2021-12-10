@@ -52,14 +52,14 @@ public:
    virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*) override;
 
 protected:
-   void Build(const REveDataCollection* iCollection, REveElement* product, const REveViewContext*) override;
+   void BuildProduct(const REveDataCollection* iCollection, REveElement* product, const REveViewContext*) override;
 
-   void BuildViewType(const REveDataCollection* iCollection, REveElement* product, const std::string& viewType, const REveViewContext*) override;
+   void BuildProductViewType(const REveDataCollection* iCollection, REveElement* product, const std::string& viewType, const REveViewContext*) override;
 
    // Called once for every item in collection, the void* points to the
    // item properly offset in memory.
-   virtual void Build(const void* data, int index, REveElement* iCollectionHolder, const REveViewContext*) = 0;
-   virtual void BuildViewType(const void* data, int index, REveElement* iCollectionHolder, const std::string& viewType, const REveViewContext*) = 0;
+   virtual void BuildItem(const void* data, int index, REveElement* iCollectionHolder, const REveViewContext*) = 0;
+   virtual void BuildItemViewType(const void* data, int index, REveElement* iCollectionHolder, const std::string& viewType, const REveViewContext*) = 0;
 
    void ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p) override;
    void FillImpliedSelected(REveElement::Set_t& impSet, Product* p) override;
