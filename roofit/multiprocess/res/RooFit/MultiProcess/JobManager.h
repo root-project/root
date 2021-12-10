@@ -58,9 +58,6 @@ private:
    static std::map<std::size_t, Job *> job_objects_;
    static std::size_t job_counter_;
    static std::unique_ptr<JobManager> instance_;
-
-public:
-   static unsigned int default_N_workers; // no need for getters/setters, just public
 };
 
 } // namespace MultiProcess
