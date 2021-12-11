@@ -589,6 +589,7 @@ protected:
 
 private:
   void addParameters(RooAbsCollection& params, const RooArgSet* nset = nullptr, bool stripDisconnected = true) const;
+  std::size_t getParametersSizeEstimate(const RooArgSet* nset = nullptr) const;
 
   RefCountListLegacyIterator_t * makeLegacyIterator(const RefCountList_t& list) const;
 
