@@ -176,7 +176,7 @@ public:
     return find(var) != nullptr;
   }
   /// Check if this exact instance is in this collection.
-  Bool_t containsInstance(const RooAbsArg& var) const { 
+  virtual Bool_t containsInstance(const RooAbsArg& var) const { 
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
