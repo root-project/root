@@ -29,9 +29,9 @@ TEST(TChain, SetEntryListSyncNoSubLists) {
 
    const auto start1{0};
    const auto end1{5};
-   auto treename1{"tree10entries"};
-   auto filename1{"tree10entries.root"};
-   auto fullpath1{"tree10entries.root/tree10entries"};
+   auto treename1{"syncnosublists_tree10entries"};
+   auto filename1{"syncnosublists_tree10entries.root"};
+   auto fullpath1{"syncnosublists_tree10entries.root/syncnosublists_tree10entries"};
    const auto nentries1{10};
 
    FillTree(filename1, treename1, nentries1);
@@ -62,15 +62,15 @@ TEST(TChain, SetEntryListSyncWrongFile) {
 
    const auto start_1{0};
    const auto end_1{20};
-   auto treename1{"tree10entries"};
-   auto filename1{"tree10entries.root"};
-   auto fullpath1{"tree10entries.root/tree10entries"};
+   auto treename1{"syncwrongfile_tree10entries"};
+   auto filename1{"syncwrongfile_tree10entries.root"};
+   auto fullpath1{"syncwrongfile_tree10entries.root/syncwrongfile_tree10entries"};
    const auto nentries1{10};
 
    const auto start_2{0};
    const auto end_2{10};
-   auto treename2{"tree20entries"};
-   auto filename2{"tree20entries.root"};
+   auto treename2{"syncwrongfile_tree20entries"};
+   auto filename2{"syncwrongfile_tree20entries.root"};
    const auto nentries2{20};
 
    FillTree(filename1, treename1, nentries1);
@@ -119,14 +119,14 @@ TEST(TChain, SetEntryListSyncWrongNumberOfSubLists) {
 
    const auto start_1{0};
    const auto end_1{20};
-   auto treename1{"tree10entries"};
-   auto filename1{"tree10entries.root"};
-   auto fullpath1{"tree10entries.root/tree10entries"};
+   auto treename1{"syncwrongnumberofsublists_tree10entries"};
+   auto filename1{"syncwrongnumberofsublists_tree10entries.root"};
+   auto fullpath1{"syncwrongnumberofsublists_tree10entries.root/syncwrongnumberofsublists_tree10entries"};
    const auto nentries1{10};
 
-   auto treename2{"tree20entries"};
-   auto filename2{"tree20entries.root"};
-   auto fullpath2{"tree20entries.root/tree20entries"};
+   auto treename2{"syncwrongnumberofsublists_tree20entries"};
+   auto filename2{"syncwrongnumberofsublists_tree20entries.root"};
+   auto fullpath2{"syncwrongnumberofsublists_tree20entries.root/syncwrongnumberofsublists_tree20entries"};
    const auto nentries2{20};
 
    FillTree(filename1, treename1, nentries1);
