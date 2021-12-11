@@ -145,6 +145,10 @@ public:
   Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
 
 
+  /// Check if this exact instance is in this collection.
+  Bool_t containsInstance(const RooAbsArg& var) const override { 
+    return find(var) == &var;
+  }
 
   static void cleanup() ;
 
