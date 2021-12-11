@@ -27,14 +27,14 @@ TEST(TEntryList, addSubList) {
 
    const auto start1{0};
    const auto end1{20};
-   auto treename1{"tree10entries"};
-   auto filename1{"tree10entries.root"};
+   auto treename1{"entrylist_addsublist_tree10entries"};
+   auto filename1{"entrylist_addsublist_tree10entries.root"};
    const auto nentries1{10};
 
    const auto start2{0};
    const auto end2{10};
-   auto treename2{"tree20entries"};
-   auto filename2{"tree20entries.root"};
+   auto treename2{"entrylist_addsublist_tree20entries"};
+   auto filename2{"entrylist_addsublist_tree20entries.root"};
    const auto nentries2{20};
 
    FillTree(filename1, treename1, nentries1);
