@@ -201,7 +201,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
 
   auto callBatchFunc = [this](const RooAbsPdf& pdf) {
-      return pdf.getValues(*_dataUniform, RooBatchCompute::BatchMode::Cpu);
+      return pdf.getValues(*_dataUniform);
   };
 
   auto callScalarFunc = [compareLogs](const RooAbsPdf& pdf, const RooArgSet* theNormSet) {
