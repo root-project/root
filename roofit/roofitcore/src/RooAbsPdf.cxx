@@ -172,11 +172,7 @@ called for each data event.
 #include "RooHelpers.h"
 #include "RooFormulaVar.h"
 #include "RooDerivative.h"
-#include "RooFitDriver.h"
-#include "RooNLLVarNew.h"
-#include "RunContext.h"
-#include "RooSimultaneous.h"
-#include "RooBinSamplingPdf.h"
+#include "RooFit/BatchModeHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TClass.h"
@@ -206,53 +202,6 @@ bool interpretExtendedCmdArg(RooAbsPdf const& pdf, int extendedCmdArg) {
     return ext;
   }
   return extendedCmdArg;
-}
-
-std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(
-        RooSimultaneous& simPdf, RooArgSet& observables, RooAbsReal* weight,
-        bool isExtended, std::string const& rangeName) {
-
-    // Prepare the NLLTerms for each component
-    RooArgList nllTerms;
-    for(auto const& catItem : simPdf.indexCat()) {
-        auto const& catName = catItem.first;
-        auto * pdf = simPdf.getPdf(catName.c_str());
-      auto nllName = std::string("nll_") + pdf->GetName();
-      nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
-                  nllName.c_str(), nllName.c_str(),
-                  *pdf, observables, weight, isExtended, rangeName));
-    }
-
-    RooArgSet newObservables;
-
-    // Rename the observables and weights in each component
-    std::size_t iNLL = 0;
-    for(auto const& catItem : simPdf.indexCat()) {
-        auto const& catName = catItem.first;
-        auto& nll = nllTerms[iNLL];
-        RooArgSet pdfObs;
-        nll.getObservables(&observables, pdfObs);
-        if(weight) pdfObs.add(*weight);
-        RooArgSet obsClones;
-        pdfObs.snapshot(obsClones);
-        for (RooAbsArg * arg : obsClones) {
-           auto newName = std::string("_") + catName + "_" + arg->GetName();
-           arg->setAttribute((std::string("ORIGNAME:") + arg->GetName()).c_str());
-           arg->SetName(newName.c_str());
-        }
-        nll.recursiveRedirectServers(obsClones, false, true);
-        nll.addOwnedComponents(obsClones);
-        obsClones.releaseOwnership();
-        newObservables.add(obsClones);
-        static_cast<ROOT::Experimental::RooNLLVarNew&>(nll).setObservables(obsClones);
-        ++iNLL;
-    }
-
-    observables.clear();
-    observables.add(newObservables);
-
-    // Time to sum the NLLs
-    return std::make_unique<RooAddition>("mynll", "mynll", nllTerms, true);
 }
 
 } // namespace
@@ -1104,18 +1053,6 @@ std::unique_ptr<RooAbsReal> createMultiRangeNLLCorrectionTerm(
 }
 
 
-const char *constraintsTermCommandNames = "Constrain,GlobalObservables,GlobalObservablesTag,ExternalConstraints";
-
-void defineConstraintsTermCommands(RooCmdConfig& pc) {
-  pc.defineSet("cPars","Constrain",0,0) ;
-  pc.defineSet("glObs","GlobalObservables",0,0) ;
-  pc.defineString("globstag","GlobalObservablesTag",0,"") ;
-  pc.defineString("globssource","GlobalObservablesSource",0,"data") ;
-  pc.defineSet("extCons","ExternalConstraints",0,0) ;
-  pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
-}
-
-
 } // namespace
 
 
@@ -1129,12 +1066,15 @@ void defineConstraintsTermCommands(RooCmdConfig& pc) {
 
 RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 {
+  auto baseName = std::string("nll_") + GetName() + "_" + data.GetName();
 
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::createNLL(%s)",GetName())) ;
 
   pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
   pc.defineString("addCoefRange","SumCoefRange",0,"") ;
+  pc.defineString("globstag","GlobalObservablesTag",0,"") ;
+  pc.defineString("globssource","GlobalObservablesSource",0,"data") ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineInt("splitRange","SplitRange",0,0) ;
@@ -1145,12 +1085,14 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("optConst","Optimize",0,0) ;
   pc.defineInt("cloneData","CloneData", 0, 2);
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineSet("cPars","Constrain",0,0) ;
+  pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
+  pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineInt("BatchMode", "BatchMode", 0, 0);
   pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
-
-  defineConstraintsTermCommands(pc);
+  pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
 
   // Process and check varargs
   pc.process(cmdList) ;
@@ -1216,10 +1158,37 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
 
+  int batchMode = pc.getInt("BatchMode");
+
+  // Create the constraint term
+  auto constraintTerm = RooConstraintSum::createConstraintTerm(
+          baseName + "_constr", // name
+          *this, // pdf
+          data, // data
+          pc.getSet("cPars"), // Constrain RooCmdArg
+          pc.getSet("extCons"), // ExternalConstraints RooCmdArg
+          pc.getSet("glObs"), // GlobalObservables RooCmdArg
+          pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
+          takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
+          _myws // passing workspace to cache the set of constraints
+  );
+
+  // Construct BatchModeNLL if requested
+  if (batchMode != 0) {
+    return RooFit::BatchModeHelpers::createNLL(*this,
+                                               data,
+                                               std::move(constraintTerm),
+                                               rangeName ? rangeName : "",
+                                               addCoefRangeName ? addCoefRangeName : "",
+                                               projDeps,
+                                               ext,
+                                               pc.getDouble("IntegrateBins"),
+                                               batchMode);
+  }
+
   // Construct NLL
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal* nll ;
-  string baseName = Form("nll_%s_%s",GetName(),data.GetName()) ;
   RooAbsTestStatistic::Configuration cfg;
   cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
   cfg.nCPU = numcpu;
@@ -1236,7 +1205,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     cfg.rangeName = rangeName ? rangeName : "";
     auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
-    theNLL->batchMode(pc.getInt("BatchMode"));
+    theNLL->batchMode(batchMode);
     nll = theNLL;
   } else {
     // Composite case: multiple ranges
@@ -1268,19 +1237,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,true) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-
-  auto constraintTerm = RooConstraintSum::createConstraintTerm(
-          baseName + "_constr", // name
-          *this, // pdf
-          data, // data
-          pc.getSet("cPars"), // Constrain RooCmdArg
-          pc.getSet("extCons"), // ExternalConstraints RooCmdArg
-          pc.getSet("glObs"), // GlobalObservables RooCmdArg
-          pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
-          takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
-          true,  // clone constraint terms in the scalar case
-          _myws // passing workspace to cache the set of constraints
-  );
 
   // Include constraints, if any, in likelihood
   if (constraintTerm) {
@@ -1644,7 +1600,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 
   // Instantiate RooMinimizer
 
-  RooMinimizer m(nll, RooMinimizer::FcnMode::classic);
+  RooMinimizer m(nll);
   m.setMinimizerType(cfg.minType.c_str());
   m.setEvalErrorWall(cfg.doEEWall);
   m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
@@ -1707,41 +1663,15 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"Extended,"
-      "NumCPU,SplitRange,Constrained,"
-      "CloneData,OffsetLikelihood");
-
-  {
-      // some arguments should not be filtered out, but we will use them also in fitTo
-      // to create the constraints term.
-      RooLinkedList tmp = pc.filterCmdList(fitCmdList,constraintsTermCommandNames,false);
-      std::unique_ptr<TIterator> iter{tmp.MakeIterator()} ;
-      while(auto arg=(RooCmdArg*)iter->Next()) {
-        nllCmdList.Add(arg);
-      }
-  }
-  {
-      // some arguments should not be filtered out, but we will use them also in fitTo
-      // to create the constraints term.
-      RooLinkedList tmp = pc.filterCmdList(fitCmdList,
-              "Range,RangeWithName,SumCoefRange,ProjectedObservables,IntegrateBins",
-              false);
-      std::unique_ptr<TIterator> iter{tmp.MakeIterator()} ;
-      while(auto arg=(RooCmdArg*)iter->Next()) {
-        nllCmdList.Add(arg);
-      }
-  }
-
-  defineConstraintsTermCommands(pc);
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
+      "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
+      "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,OffsetLikelihood,"
+      "BatchMode,IntegrateBins");
 
   // Default-initialized instance of MinimizerConfig to get the default
   // minimizer parameter values.
   MinimizerConfig minimizerDefaults;
 
-  pc.defineString("addCoefRange","SumCoefRange",0,"") ;
-  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
-  pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,minimizerDefaults.recoverFromNaN);
   pc.defineString("fitOpt","FitOptions",0,minimizerDefaults.fitOpt.c_str()) ;
@@ -1754,9 +1684,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("initHesse","InitialHesse",0,minimizerDefaults.initHesse) ;
   pc.defineInt("hesse","Hesse",0,minimizerDefaults.hesse) ;
   pc.defineInt("minos","Minos",0,minimizerDefaults.minos) ;
-  pc.defineInt("BatchMode", "BatchMode", 0, 0);
-  pc.defineInt("ext","Extended",0,2) ;
-  pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("numee","PrintEvalErrors",0,minimizerDefaults.numee) ;
   pc.defineInt("doEEWall","EvalErrorWall",0,minimizerDefaults.doEEWall) ;
   pc.defineInt("doWarn","Warnings",0,minimizerDefaults.doWarn) ;
@@ -1766,9 +1693,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
   pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
   pc.defineObject("minosSet","Minos",0,minimizerDefaults.minosSet) ;
-  pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
-  pc.defineDouble("rangeLo","Range",0,-999.) ;
-  pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineMutex("FitOptions","Verbose") ;
   pc.defineMutex("FitOptions","Save") ;
   pc.defineMutex("FitOptions","Timer") ;
@@ -1786,17 +1710,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   // Decode command line arguments
-  const char* rangeNameCstr = pc.getString("rangeName",0,true);
-  const std::string rangeName = rangeNameCstr ? rangeNameCstr : "";
-  const char* addCoefRangeNameCstr = pc.getString("addCoefRange",0,kTRUE) ;
-  const std::string addCoefRangeName = addCoefRangeNameCstr ? addCoefRangeNameCstr : "";
   Double_t prefit = pc.getDouble("prefit");
   Int_t optConst = pc.getInt("optConst") ;
-  RooArgSet projDeps ;
-  auto tmp = static_cast<RooArgSet*>(pc.getObject("projDepSet")) ;
-  if (tmp) {
-    projDeps.add(*tmp) ;
-  }
 
   if (optConst > 1) {
     // optConst >= 2 is pre-computating values, which are never used when
@@ -1846,124 +1761,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
   }
 
-  RooArgSet observables;
-  this->getObservables(data.get(), observables);
-  RooAbsReal* nll=nullptr;
-  std::unique_ptr<ROOT::Experimental::RooFitDriver> driver;
-  std::unique_ptr<RooRealVar> weightVar;
-
-  if (pc.getInt("BatchMode")==0) nll = createNLL(data,nllCmdList);
-  else
-  {
-    observables.remove(projDeps,true,true) ;
-
-    cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
-                     << ") fixing normalization set for coefficient determination to observables in data" << endl ;
-    this->fixAddCoefNormalization(observables,false) ;
-    if(!addCoefRangeName.empty()) {
-      cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
-                       << ") fixing interpretation of coefficients of any component to range " << addCoefRangeName << endl ;
-      this->fixAddCoefRange(addCoefRangeName.c_str(),false) ;
-    }
-
-    const std::string globalObservablesSource = pc.getString("globssource","model",false);
-    if(globalObservablesSource != "data" && globalObservablesSource != "model") {
-      std::string errMsg = "RooAbsPdf::fitTo: GlobalObservablesSource can only be \"data\" or \"model\"!";
-      coutE(InputArguments) << errMsg << std::endl;
-      throw std::invalid_argument(errMsg);
-    }
-    const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
-
-    auto constraintsTerm = RooConstraintSum::createConstraintTerm(
-            "NewNLLVar_constr", // name
-            *this, // pdf
-            data, // observables
-            pc.getSet("cPars"), // Constrain RooCmdArg
-            pc.getSet("extCons"), // ExternalConstraints RooCmdArg
-            pc.getSet("glObs"), // GlobalObservables RooCmdArg
-            pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
-            takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
-            false    ); // clone Constraint is false
-
-    auto batchMode = static_cast<RooBatchCompute::BatchMode>(pc.getInt("BatchMode"));
-    const bool isExtended = interpretExtendedCmdArg(*this, pc.getInt("ext")) ;
-
-    if (data.isWeighted())
-    {
-      std::string weightVarName = "_weight";
-      if(auto * dataSet = dynamic_cast<RooDataSet const*>(&data)) {
-        if(dataSet->weightVar()) weightVarName = dataSet->weightVar()->GetName();
-      }
-      
-      // make a clone of the weight variable (or an initial instance, if it doesn't exist)
-      // the clone will hold the weight value (or values as a batch) and will participate
-      // in the computation graph of the RooFit driver. 
-      weightVar.reset( new RooRealVar(weightVarName.c_str(), "Weight(s) of events", data.weight()) );
-    }
-
-
-    // Deal with the IntegrateBins argument
-    double integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
-    RooArgList binSamplingPdfs;
-    std::unique_ptr<RooAbsPdf> wrappedPdf;
-    wrappedPdf = RooBinSamplingPdf::create(*this, data, integrateOverBinsPrecision);
-    RooAbsPdf& pdf = wrappedPdf ? *wrappedPdf : *this;
-    if(wrappedPdf) {
-      binSamplingPdfs.add(*wrappedPdf.release());
-    }
-    // Done dealing with the IntegrateBins option
-
-    RooArgList nllTerms;
-
-    if(auto simPdf = dynamic_cast<RooSimultaneous*>(&pdf)) {
-      auto * simPdfClone = static_cast<RooSimultaneous*>(simPdf->cloneTree());
-      simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
-      // Warning! This mutates "observables"
-      //auto * simPdfClone = simPdf;
-      nllTerms.add(*prepareSimultaneousModelForBatchMode(
-                  *simPdfClone, observables, weightVar.get(), isExtended, rangeName).release());
-    } else {
-      nllTerms.add(*new ROOT::Experimental::RooNLLVarNew(
-                  "RooNLLVarNew", "RooNLLVarNew",
-                  pdf, observables, weightVar.get(), isExtended, rangeName));
-    }
-    if(constraintsTerm) {
-      nllTerms.add(*constraintsTerm.release());
-    }
-
-    std::string nllName = std::string("nll_") + this->GetName() + "_" + data.GetName();
-    nll = new RooAddition(nllName.c_str(), nllName.c_str(), nllTerms, true);
-    nll->addOwnedComponents(binSamplingPdfs);
-
-    if(auto simPdf = dynamic_cast<RooSimultaneous*>(&pdf)) {
-      RooArgSet parameters;
-      getParameters(data.get(), parameters);
-      nll->recursiveRedirectServers(parameters);
-      driver.reset(new ROOT::Experimental::RooFitDriver( data, *nll, observables, observables, batchMode, rangeName, &simPdf->indexCat() ));
-    } else {
-      driver.reset(new ROOT::Experimental::RooFitDriver( data, *nll, observables, observables, batchMode, rangeName ));
-    }
-
-    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
-    if(!rangeName.empty()) {
-
-      std::string fitrangeValue;
-      auto subranges = ROOT::Split(rangeName, ",");
-      for(auto const& subrange : subranges) {
-        if(subrange.empty()) continue;
-        std::string fitrangeValueSubrange = std::string("fit_") + nll->GetName();
-        if(subranges.size() > 1) {
-          fitrangeValueSubrange += "_" + subrange;
-        }
-        fitrangeValue += fitrangeValueSubrange + ",";
-        for(auto * observable : static_range_cast<RooRealVar*>(observables)) {
-          observable->setRange(fitrangeValueSubrange.c_str(), observable->getMin(subrange.c_str()), observable->getMax(subrange.c_str()));
-        }
-      }
-      fitrangeValue = fitrangeValue.substr(0, fitrangeValue.size() - 1);
-      this->setStringAttribute("fitrange", fitrangeValue.c_str());
-    }
-  }
+  std::unique_ptr<RooAbsReal> nll{createNLL(data,nllCmdList)};
 
   MinimizerConfig cfg;
   cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
@@ -1986,9 +1784,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.minType = pc.getString("mintype","Minuit");
   cfg.minAlg = pc.getString("minalg","minuit");
 
-  auto out = minimizeNLL(driver ? *driver->makeAbsRealWrapper() : *nll, data, cfg);
-  delete nll;
-  return out.release();
+  return minimizeNLL(*nll, data, cfg).release();
 }
 
 
