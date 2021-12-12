@@ -62,6 +62,10 @@ enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration
 	 Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16 };
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
+/// For setting the batch mode flag with the BatchMode() command argument to
+/// RooAbsPdf::fitTo();
+enum class BatchModeOption { Off, Cpu, Cuda, Old };
+
 /**
  * \defgroup CmdArgs RooFit command arguments
  * These arguments can be passed to functions of RooFit objects.

@@ -14,8 +14,9 @@
 #ifndef RooFit_RooFitDriver_h
 #define RooFit_RooFitDriver_h
 
-#include "RooBatchCompute.h"
 #include "RooAbsReal.h"
+#include "RooBatchCompute.h"
+#include "RooGlobalFunc.h"
 
 #include "RooFit/Detail/Buffers.h"
 
@@ -62,7 +63,7 @@ public:
    };
 
    RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
-                RooArgSet const &normSet, RooBatchCompute::BatchMode batchMode, std::string_view rangeName,
+                RooArgSet const &normSet, RooFit::BatchModeOption batchMode, std::string_view rangeName,
                 RooAbsCategory const *indexCat = nullptr);
    ~RooFitDriver();
    std::vector<double> getValues();
@@ -171,7 +172,7 @@ private:
    std::string _title;
    RooArgSet _parameters;
 
-   const RooBatchCompute::BatchMode _batchMode = RooBatchCompute::BatchMode::Off;
+   const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
    double *_cudaMemDataset = nullptr;
 

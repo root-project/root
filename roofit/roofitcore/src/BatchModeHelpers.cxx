@@ -82,7 +82,8 @@ std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous 
 RooAbsReal *RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data,
                                                 std::unique_ptr<RooAbsReal> &&constraints, std::string const &rangeName,
                                                 std::string const &addCoefRangeName, RooArgSet const &projDeps,
-                                                bool isExtended, double integrateOverBinsPrecision, int batchMode)
+                                                bool isExtended, double integrateOverBinsPrecision,
+                                                RooFit::BatchModeOption batchMode)
 {
    std::unique_ptr<RooRealVar> weightVar;
 
@@ -151,12 +152,11 @@ RooAbsReal *RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data
       RooArgSet parameters;
       pdf.getParameters(data.get(), parameters);
       nll->recursiveRedirectServers(parameters);
-      driver = std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, observables,
-                                                                  static_cast<RooBatchCompute::BatchMode>(batchMode),
+      driver = std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, observables, batchMode,
                                                                   rangeName, &simPdf->indexCat());
    } else {
-      driver = std::make_unique<ROOT::Experimental::RooFitDriver>(
-         data, *nll, observables, observables, static_cast<RooBatchCompute::BatchMode>(batchMode), rangeName);
+      driver =
+         std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, observables, batchMode, rangeName);
    }
 
    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
