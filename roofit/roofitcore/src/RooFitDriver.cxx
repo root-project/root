@@ -193,7 +193,7 @@ there's also some cuda-related initialization.
 `RooBatchCompute::Cuda`.
 **/
 RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
-                           RooArgSet const &normSet, RooBatchCompute::BatchMode batchMode, std::string_view rangeName,
+                           RooArgSet const &normSet, RooFit::BatchModeOption batchMode, std::string_view rangeName,
                            RooAbsCategory const *indexCat)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(*data.get(), true))},
@@ -206,7 +206,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
          oocxcoutI(static_cast<RooAbsArg *>(nullptr), FastEvaluations) << message << std::endl;
       };
 
-      if (_batchMode == RooBatchCompute::BatchMode::Cuda && !RooBatchCompute::dispatchCUDA) {
+      if (_batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::dispatchCUDA) {
          throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
                                   ": Cuda implementation of the computing library is not available\n");
       }
@@ -216,7 +216,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
          log(std::string("using CPU computation library compiled with -m") +
              RooBatchCompute::dispatchCPU->architectureName());
       }
-      if (_batchMode == RooBatchCompute::BatchMode::Cuda) {
+      if (_batchMode == RooFit::BatchModeOption::Cuda) {
          log("using CUDA computation library");
       }
    }
@@ -267,7 +267,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    }
 
    // Extra steps for initializing in cuda mode
-   if (_batchMode != RooBatchCompute::BatchMode::Cuda)
+   if (_batchMode != RooFit::BatchModeOption::Cuda)
       return;
 
    // copy observable data to the gpu
@@ -292,7 +292,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
 
 RooFitDriver::~RooFitDriver()
 {
-   if (_batchMode == RooBatchCompute::BatchMode::Cuda) {
+   if (_batchMode == RooFit::BatchModeOption::Cuda) {
       RooBatchCompute::dispatchCUDA->cudaFree(_cudaMemDataset);
    }
 }
@@ -361,7 +361,7 @@ double RooFitDriver::getVal()
 {
    // In a cuda fit, use first 3 fits to determine the execution times
    // and the hardware that computes each part of the graph
-   if (_batchMode == RooBatchCompute::BatchMode::Cuda && ++_getValInvocations <= 3)
+   if (_batchMode == RooFit::BatchModeOption::Cuda && ++_getValInvocations <= 3)
       markGPUNodes();
 
    for (auto &item : _nodeInfos) {
@@ -379,7 +379,7 @@ double RooFitDriver::getVal()
    int nNodes = _nodeInfos.size();
    while (nNodes) {
       // find finished gpu nodes
-      if (_batchMode == RooBatchCompute::BatchMode::Cuda)
+      if (_batchMode == RooFit::BatchModeOption::Cuda)
          for (auto &it : _nodeInfos)
             if (it.second.remServers == -1 && !RooBatchCompute::dispatchCUDA->streamIsActive(it.second.stream)) {
                if (_getValInvocations == 2) {
@@ -449,7 +449,7 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
 
       if (_integralInfos.count(integral) == 0) {
          auto &info = _integralInfos[integral];
-         if (inputSize > 1 && _batchMode == RooBatchCompute::BatchMode::Cuda) {
+         if (inputSize > 1 && _batchMode == RooFit::BatchModeOption::Cuda) {
             info.copyAfterEvaluation = true;
             info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
          }

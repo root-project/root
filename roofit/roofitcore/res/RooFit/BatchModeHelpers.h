@@ -13,6 +13,8 @@
 #ifndef RooFit_BatchModeHelpers_h
 #define RooFit_BatchModeHelpers_h
 
+#include <RooGlobalFunc.h>
+
 #include <memory>
 #include <string>
 
@@ -26,7 +28,7 @@ namespace BatchModeHelpers {
 
 RooAbsReal *createNLL(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
                       std::string const &rangeName, std::string const &addCoefRangeName, RooArgSet const &projDeps,
-                      bool isExtended, double integrateOverBinsPrecision, int batchMode);
+                      bool isExtended, double integrateOverBinsPrecision, RooFit::BatchModeOption batchMode);
 
 }
 } // namespace RooFit

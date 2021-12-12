@@ -49,7 +49,6 @@ class RooAbsArg;
 namespace RooBatchCompute {
 
 enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
-enum class BatchMode { Off, Cpu, Cuda };
 
 struct RunContext;
 // We have to use map instead of unordered_map because the unordered_maps from
