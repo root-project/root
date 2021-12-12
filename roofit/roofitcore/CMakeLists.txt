@@ -250,6 +250,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/optional_parameter_types.h
     RooFit/TestStatistics/buildLikelihood.h
   SOURCES
+    src/BatchModeHelpers.cxx
     src/Buffers.cxx
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
