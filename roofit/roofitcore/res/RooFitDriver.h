@@ -75,8 +75,8 @@ public:
    class RooAbsRealWrapper final : public RooAbsReal {
    public:
       RooAbsRealWrapper() {}
-      RooAbsRealWrapper(RooFitDriver &driver)
-         : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{&driver}
+      RooAbsRealWrapper(RooFitDriver &driver, bool ownsDriver)
+         : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{&driver}, _ownsDriver{ownsDriver}
       {
       }
 
@@ -84,6 +84,9 @@ public:
          : RooAbsReal{other, name}, _driver{other._driver}
       {
       }
+
+      ~RooAbsRealWrapper() { if(_ownsDriver) delete _driver; }
+
       TObject *clone(const char *newname) const override { return new RooAbsRealWrapper(*this, newname); }
 
       double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
@@ -102,11 +105,12 @@ public:
 
    private:
       RooFitDriver *_driver = nullptr;
+      bool _ownsDriver;
    };
 
-   std::unique_ptr<RooAbsReal> makeAbsRealWrapper()
+   std::unique_ptr<RooAbsReal> makeAbsRealWrapper(bool ownsDriver=false)
    {
-      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this}};
+      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this, ownsDriver}};
    }
 
 private:
