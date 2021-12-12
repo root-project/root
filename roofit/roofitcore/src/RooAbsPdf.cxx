@@ -1158,7 +1158,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
 
-  int batchMode = pc.getInt("BatchMode");
+  RooFit::BatchModeOption batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
 
   // Create the constraint term
   auto constraintTerm = RooConstraintSum::createConstraintTerm(
@@ -1174,7 +1174,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   );
 
   // Construct BatchModeNLL if requested
-  if (batchMode != 0) {
+  if (batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old) {
     return RooFit::BatchModeHelpers::createNLL(*this,
                                                data,
                                                std::move(constraintTerm),
@@ -1205,7 +1205,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     cfg.rangeName = rangeName ? rangeName : "";
     auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
-    theNLL->batchMode(batchMode);
+    theNLL->batchMode(batchMode == RooFit::BatchModeOption::Old);
     nll = theNLL;
   } else {
     // Composite case: multiple ranges
