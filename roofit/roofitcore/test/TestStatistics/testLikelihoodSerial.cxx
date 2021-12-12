@@ -435,5 +435,5 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    nll_ts.evaluate();
    auto nll1 = nll_ts.getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_NEAR(nll0, nll1, 1e-14 * nll0);
 }
