@@ -334,7 +334,7 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<double> RooAbsReal::getValues(RooAbsData& data, RooBatchCompute::BatchMode batchMode) const {
+std::vector<double> RooAbsReal::getValues(RooAbsData& data, RooFit::BatchModeOption batchMode) const {
   ROOT::Experimental::RooFitDriver driver(data, *this, *data.get(), *data.get(), batchMode, "");
   return driver.getValues();
 }
