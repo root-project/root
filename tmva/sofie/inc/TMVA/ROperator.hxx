@@ -35,8 +35,9 @@ public:
    virtual ~ROperator(){}
 
 protected:
-   // empty space to inline the generated code and avoid using tabs
-   const std::string SP = "   ";
+   
+   const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
+   bool fUseSession = false;        ///< flag to identify if using the session class 
 };
 
 
