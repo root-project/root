@@ -56,12 +56,7 @@ protected:
    bool _isExtended;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _rangeNormTerm;
 
-   double getValV(const RooArgSet *normalisationSet = nullptr) const override;
-
    double evaluate() const override;
-
-   RooSpan<const double>
-   getValues(RooBatchCompute::RunContext &evalData, const RooArgSet *normSet = nullptr) const override;
 
 }; // end class RooNLLVar
 

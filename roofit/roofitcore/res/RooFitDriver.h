@@ -167,6 +167,7 @@ private:
       bool computeInScalarMode = false;
       bool computeInGPU = false;
       bool copyAfterEvaluation = false;
+      std::size_t outputSize = 1;
       ~NodeInfo()
       {
          if (event)
@@ -179,7 +180,6 @@ private:
    };
    void updateMyClients(const RooAbsArg *node);
    void updateMyServers(const RooAbsArg *node);
-   std::size_t getInputSize(RooAbsArg const &arg) const;
    void handleIntegral(const RooAbsArg *node);
    std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
@@ -196,6 +196,8 @@ private:
          _changeOperModeRAIIs.emplace(arg, opMode);
       }
    }
+
+   void determineOutputSizes(RooArgSet const &serverSet);
 
    std::string _name;
    std::string _title;
