@@ -198,22 +198,18 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       nll += _sumCorrectionTerm;
    }
    output[0] = nll;
-}
 
-double RooNLLVarNew::getValV(const RooArgSet *) const
-{
-   // throw std::runtime_error("RooNLLVarNew::getValV was called directly which should not happen!");
-   return 0.0;
+   // Since the output of this node is always of size one, it is possible that it is
+   // evaluated in scalar mode. We need to set the cached value and clear
+   // the dirty flag.
+   const_cast<RooNLLVarNew *>(this)->setCachedValue(nll);
+   const_cast<RooNLLVarNew *>(this)->clearValueDirty();
 }
 
 double RooNLLVarNew::evaluate() const
 {
    throw std::runtime_error("RooNLLVarNew::evaluate was called directly which should not happen!");
-}
-
-RooSpan<const double> RooNLLVarNew::getValues(RooBatchCompute::RunContext &, const RooArgSet *) const
-{
-   throw std::runtime_error("RooNLLVarNew::getValues was called directly which should not happen!");
+   return _value;
 }
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, Bool_t /*stripDisconnected*/) const
