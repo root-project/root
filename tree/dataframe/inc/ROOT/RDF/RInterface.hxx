@@ -1761,7 +1761,7 @@ public:
    /// - a `Fill` method that accepts as many arguments and with same types as the column names passed as columnList
    ///   (these types can also be passed as template parameters to this method)
    /// - a `Merge` method with signature `Merge(TCollection *)` or `Merge(const std::vector<T *>&)` that merges the
-   ///   objects assed as argument into the object on which `Merge` was called (an analogous of TH1::Merge). Note that
+   ///   objects passed as argument into the object on which `Merge` was called (an analogous of TH1::Merge). Note that
    ///   if the signature that takes a `TCollection*` is used, then T must inherit from TObject (to allow insertion in
    ///   the TCollection*).
    ///
