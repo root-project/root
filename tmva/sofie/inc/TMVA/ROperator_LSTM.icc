@@ -373,7 +373,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                 << fNW << ", &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &"
                << OpName << "_beta, " << OpName << "_ff_input_gate, &" << OpName << "_n);\n";
             // output_gate = input * weight_o^T
-            size_t wo_offset = 2 * fAttrHiddenSize * input_size;
+            size_t wo_offset = fAttrHiddenSize * input_size;
             out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                 << OpName <<"_n, &" << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_"
                << fNW << " + " << wo_offset << ", &" << OpName << "_k, " << OpName << "_input, &"
@@ -394,7 +394,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                << fNW << " + " << wi_offset << ", &" << OpName << "_k, " << OpName << "_input, &"
                << OpName << "_k, &" << OpName << "_beta, " << OpName << "_ff_input_gate, &" << OpName << "_n);\n";
             // output_gate = input * weight_o^T
-            size_t wo_offset = 4 * fAttrHiddenSize * input_size + 2 * fAttrHiddenSize * input_size;
+            size_t wo_offset = 4 * fAttrHiddenSize * input_size + 1 * fAttrHiddenSize * input_size;
             out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                 << OpName <<"_n, &" << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_"
                << fNW << " + " << wo_offset << ", &" << OpName << "_k, " << OpName << "_input, &"
@@ -411,7 +411,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
          // forget_gate = input * weight_f^T
          if (direction == 0) {
             if (fType == "float") {
-               size_t wf_offset = fAttrHiddenSize * input_size;
+               size_t wf_offset = 2 * fAttrHiddenSize * input_size;
                out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                    << OpName <<"_n, &" << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_"
                    << fNW << " + " << wf_offset << ", &" << OpName << "_k, " << OpName << "_input, &"
@@ -419,7 +419,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
             }
          } else {
             if (fType == "float") {
-               size_t wf_offset = 4 * fAttrHiddenSize * input_size + fAttrHiddenSize * input_size;
+               size_t wf_offset = 4 * fAttrHiddenSize * input_size + 2 * fAttrHiddenSize * input_size;
                out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                    << OpName <<"_n, &" << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_"
                    << fNW << " + " << wf_offset << ", &" << OpName << "_k, " << OpName << "_input, &"
@@ -436,12 +436,12 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << ", &" << OpName << "_incx, " << OpName << "_ff_input_gate, &" << OpName << "_incy);\n";
                // ff_output_gate += bias_o
-               size_t bo_offset = 2 * num_directions * seq_length * batch_size * fAttrHiddenSize;
+               size_t bo_offset =  seq_length * batch_size * fAttrHiddenSize;
                out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << bo_offset << ", &" << OpName << "_incx, " << OpName << "_ff_output_gate, &"
                    << OpName << "_incy);\n";
                // ff_cell_gate += bias_c
-               size_t bc_offset = 3 * num_directions * seq_length * batch_size * fAttrHiddenSize;
+               size_t bc_offset = 3 * seq_length * batch_size * fAttrHiddenSize;
                out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << bc_offset << ", &" << OpName << "_incx, " << OpName << "_ff_cell_gate, &"
                    << OpName << "_incy);\n";
@@ -449,19 +449,19 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
          } else {
             if (fType == "float") {
                // ff_input_gate += bias_i
-               size_t bi_offset = seq_length * batch_size * fAttrHiddenSize;
+               size_t bi_offset = 4 * seq_length * batch_size * fAttrHiddenSize;
                out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << bi_offset << ", &" << OpName << "_incx, " << OpName << "_ff_input_gate, &"
                    << OpName << "_incy);\n";
                // ff_output_gate += bias_o
-               size_t bo_offset = 2 * num_directions * seq_length * batch_size * fAttrHiddenSize
+               size_t bo_offset = 4 * seq_length * batch_size * fAttrHiddenSize
                   + seq_length * batch_size * fAttrHiddenSize;
                out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << bo_offset << ", &" << OpName << "_incx, " << OpName << "_ff_output_gate, &"
                    << OpName << "_incy);\n";
                // ff_cell_gate += bias_c
-               size_t bc_offset = 3 * num_directions * seq_length * batch_size * fAttrHiddenSize
-                  + seq_length * batch_size * fAttrHiddenSize;
+               size_t bc_offset = 4 * num_directions * seq_length * batch_size * fAttrHiddenSize
+                  + 3 * seq_length * batch_size * fAttrHiddenSize;
                out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                    << fNB << " + " << bc_offset << ", &" << OpName << "_incx, " << OpName << "_ff_cell_gate, &"
                    << OpName << "_incy);\n";
@@ -471,15 +471,15 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
             // ff_forget_gate += bias_f
             if (direction == 0) {
                if (fType == "float") {
-                  size_t bo_offset = num_directions * seq_length * batch_size * fAttrHiddenSize;
+                  size_t bo_offset = 2 * seq_length * batch_size * fAttrHiddenSize;
                   out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                       << fNB << " + " << bo_offset << ", &" << OpName << "_incx, " << OpName << "_ff_forget_gate, &"
                       << OpName << "_incy);\n";
                }
             } else {
                if (fType == "float") {
-                  size_t bo_offset = num_directions * seq_length * batch_size * fAttrHiddenSize
-                     + seq_length * batch_size * fAttrHiddenSize;
+                  size_t bo_offset = 4 * seq_length * batch_size * fAttrHiddenSize
+                     + 2 * seq_length * batch_size * fAttrHiddenSize;
                   out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_"
                       << fNB << " + " << bo_offset << ", &" << OpName << "_incx, " << OpName << "_ff_forget_gate, &"
                       << OpName << "_incy);\n";
@@ -536,7 +536,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                    << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << ", &"
                    << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName << "_n, &" << OpName
                    << "_alpha, " << OpName << "_input_gate + offset, &" << OpName << "_n);\n";
-               size_t ro_offset = 2 * fAttrHiddenSize * fAttrHiddenSize;
+               size_t ro_offset = fAttrHiddenSize * fAttrHiddenSize;
                out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                    << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                    << ro_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
@@ -547,7 +547,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                    << rc_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
                    << "_n, &" << OpName << "_alpha, " << OpName << "_cell_gate + offset, &" << OpName << "_n);\n";
                if (fAttrInputForget == 0) {
-                  size_t rf_offset = fAttrHiddenSize * fAttrHiddenSize;
+                  size_t rf_offset = 2 * fAttrHiddenSize * fAttrHiddenSize;
                   out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                       << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                       << rf_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
@@ -561,7 +561,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                    << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                    << ri_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
                    << "_n, &" << OpName << "_alpha, " << OpName << "_input_gate + offset, &" << OpName << "_n);\n";
-               size_t ro_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + 2 * fAttrHiddenSize * fAttrHiddenSize;
+               size_t ro_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + 1 * fAttrHiddenSize * fAttrHiddenSize;
                out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                    << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                    << ro_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
@@ -572,7 +572,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
                    << rc_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
                    << "_n, &" << OpName << "_alpha, " << OpName << "_cell_gate + offset, &" << OpName << "_n);\n";
                if (fAttrInputForget == 0) {
-                  size_t rf_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + fAttrHiddenSize * fAttrHiddenSize;
+                  size_t rf_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + 2 * fAttrHiddenSize * fAttrHiddenSize;
                   out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                       << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                       << rf_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName
@@ -596,7 +596,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
              << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << ", &"
              << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &" << OpName << "_n, &"
              << OpName << "_alpha, " << OpName << "_input_gate + offset, &" << OpName << "_n);\n";
-            size_t ro_offset = 2 * fAttrHiddenSize * fAttrHiddenSize;
+            size_t ro_offset = 1 * fAttrHiddenSize * fAttrHiddenSize;
             out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
              << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
              << ro_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
@@ -609,7 +609,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
              << OpName << "_n, &" << OpName << "_alpha, " << OpName << "_cell_gate + offset, &"
              << OpName << "_n);\n";
             if (fAttrInputForget == 0) {
-               size_t rf_offset = fAttrHiddenSize * fAttrHiddenSize;
+               size_t rf_offset = 2 * fAttrHiddenSize * fAttrHiddenSize;
                out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                    << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                    << rf_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
@@ -627,7 +627,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
              << ri_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
              << OpName << "_n, &" << OpName << "_alpha, " << OpName << "_input_gate + offset, &"
              << OpName << "_n);\n";
-            size_t ro_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + 2 * fAttrHiddenSize * fAttrHiddenSize;
+            size_t ro_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + fAttrHiddenSize * fAttrHiddenSize;
             out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
              << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
              << ro_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
@@ -640,7 +640,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
              << OpName << "_n, &" << OpName << "_alpha, " << OpName << "_cell_gate + offset, &"
              << OpName << "_n);\n";
             if (fAttrInputForget == 0) {
-               size_t rf_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + fAttrHiddenSize * fAttrHiddenSize;
+               size_t rf_offset = 4 * fAttrHiddenSize * fAttrHiddenSize + 2 * fAttrHiddenSize * fAttrHiddenSize;
                out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &"
                    << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                    << rf_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
