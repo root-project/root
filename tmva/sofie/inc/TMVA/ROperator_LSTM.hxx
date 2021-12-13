@@ -135,6 +135,12 @@ template <typename T> class ROperator_LSTM final : public ROperator {
     * \param OpName name of the operator
     */
    std::string Generate(std::string OpName);
+
+   /*! \brief Generate the code for the Session internal data vectors
+    *
+    * \param OpName name of the operator
+    */
+   std::string GenerateSessionMembersCode(std::string opName);
 };
 
 } // namespace SOFIE
