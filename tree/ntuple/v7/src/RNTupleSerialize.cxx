@@ -710,6 +710,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFeatureF
          if (flags[i] < 0)
             throw RException(R__FAIL("feature flag out of bounds"));
 
+         // The MSb indicates that another Int64 follows; set this bit to 1 for all except the last element
          if (i == (flags.size() - 1))
             SerializeInt64(flags[i], bytes);
          else
