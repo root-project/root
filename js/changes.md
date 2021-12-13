@@ -1,5 +1,9 @@
 # JSROOT changelog
 
+## Changes in 6.3.2
+1. Fix bug in TH1 drawing when minimum or/and maximum was configured for histogram
+
+
 ## Changes in 6.3.1
 1. Fix bug with col draw option in TH2/RH2
 
