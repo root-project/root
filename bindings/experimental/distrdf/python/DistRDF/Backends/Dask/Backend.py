@@ -42,10 +42,12 @@ class DaskBackend(Base.BaseBackend):
         execution. Currently, we try to get the total number of worker logical
         cores in the cluster.
         """
-        try:
-            return sum(worker['nthreads'] for worker in self.client.scheduler_info()['workers'].values())
-        except KeyError:
-            # If the scheduler doesn't have some information about the workers
+        workers_dict = self.client.scheduler_info().get("workers")
+        if workers_dict:
+            # The 'workers' key exists in the dictionary and it is non-empty
+            return sum(worker['nthreads'] for worker in workers_dict.values())
+        else:
+            # The scheduler doesn't have information about the workers
             return self.MIN_NPARTITIONS
 
     def ProcessAndMerge(self, ranges, mapper, reducer):
