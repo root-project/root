@@ -3533,7 +3533,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       if (!when_axis_changed) {
-         if (set_zoom && (this.draw_content || set_zoom2)) {
+         if (set_zoom && this.draw_content) {
             this.zoom_ymin = (hmin == -1111) ? this.ymin : hmin;
             this.zoom_ymax = (hmax == -1111) ? this.ymax : hmax;
          } else {
