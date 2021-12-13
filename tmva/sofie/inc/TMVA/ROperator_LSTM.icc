@@ -39,8 +39,9 @@ auto ROperator_LSTM<T>::ShapeInference(std::vector<std::vector<size_t>> input)
 template<typename T>
 auto ROperator_LSTM<T>::Initialize(RModel &model)
 -> void {
-	// Check the input and output tensors
-	if (!model.CheckIfTensorAlreadyExist(fNX)) {
+   fUseSession = model.UseSession();
+   // Check the input and output tensors
+   if (!model.CheckIfTensorAlreadyExist(fNX)) {
 		throw std::runtime_error("TMVA SOFIE LSTM Op input tensor " + fNX + "  is not found in model.");
 	}
 	fShapeX = model.GetTensorShape(fNX);
@@ -231,6 +232,53 @@ auto ROperator_LSTM<T>::Initialize(RModel &model)
 	}
 }
 
+// generate code for Session data members (e.g. internal vectors)
+template <typename T>
+std::string ROperator_LSTM<T>::GenerateSessionMembersCode(std::string opName)
+{
+   opName = "op_" + opName;
+   std::stringstream out;
+
+   size_t num_directions = fShapeW[0];
+   size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];
+   size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
+   size_t input_size = fShapeX[2];
+
+   if (fAttrLayout != 0) {
+      out << "std::vector<" << fType << "> fVec_" << opName << "_input = std::vector<" << fType << ">("
+          << seq_length * batch_size * input_size << ");\n";
+      out << "std::vector<" << fType << "> fVec_" << opName << "_initial_hidden_state = std::vector<" << fType << ">("
+          << num_directions * batch_size * fAttrHiddenSize << ");\n";
+      out << "std::vector<" << fType << "> fVec_" << opName << "_initial_cell_state = std::vector<" << fType << ">("
+          << num_directions * batch_size * fAttrHiddenSize << ");\n";
+   }
+   // Set the feedforward
+   size_t ff_size = seq_length * batch_size * fAttrHiddenSize;
+   out << "std::vector<" << fType << "> fVec_" << opName << "_ff_input_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
+   out << "std::vector<" << fType << "> fVec_" << opName << "_ff_output_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
+   out << "std::vector<" << fType << "> fVec_" << opName << "_ff_cell_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
+   if (fAttrInputForget == 0)
+      out << "std::vector<" << fType << "> fVec_" << opName << "_ff_forget_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
+   // gate results
+   size_t hs_size = seq_length * num_directions * batch_size * fAttrHiddenSize;
+   out << "std::vector<" << fType << "> fVec_" << opName << "_input_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
+   out << "std::vector<" << fType << "> fVec_" << opName << "_output_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
+   out << "std::vector<" << fType << "> fVec_" << opName << "_cell_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
+   if (fAttrInputForget == 0)
+      out << "std::vector<" << fType << "> fVec_" << opName << "_forget_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
+   // cell state     
+   out << "std::vector<" << fType << "> fVec_" << opName << "_cell_state = std::vector<" << fType << ">(" << hs_size << ");\n";
+   out << "std::vector<" << fType << "> fVec_" << opName << "_new_cell_state = std::vector<" << fType << ">(" << hs_size << ");\n";
+   // hiddden state
+   if (fAttrLayout != 0 || fNY.empty()) {
+      out << "std::vector<" << fType << "> fVec_" << opName << "_hidden_state = std::vector<" << fType << ">(" << hs_size << ");\n";
+   }
+
+   out << "\n";
+
+   return out.str();
+}
+
 template<typename T>
 auto ROperator_LSTM<T>::Generate(std::string OpName)
 -> std::string {
@@ -244,13 +292,13 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
 
    // set the input
    if (fAttrLayout == 0) {
-      if (fType == "float") {
-         out << SP << fType << " *" << OpName << "_input = tensor_" << fNX << ";\n";
-      }
+      out << SP << fType << " *" << OpName << "_input = tensor_" << fNX << ";\n";
    } else {
-      if (fType == "float") {
+      if (fUseSession) 
+         out << SP << fType << " * " << OpName << "_input = fVec_" << OpName << "_input.data();\n";
+      else
          out << SP << fType << "  " << OpName << "_input[" << seq_length * batch_size * input_size << "] = {0};\n";
-      }
+
       out << SP << "for(size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
       out << SP << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
       out << SP << SP << SP << "for(size_t i = 0; i < " << input_size << "; i++) {\n";
@@ -265,15 +313,16 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
    // Set the initial hidden state
    if (!fNInitial_h.empty()) {
       if (fAttrLayout == 0) {
-         if (fType == "float") {
-            out << SP << fType << " *" << OpName << "_initial_hidden_state = " << " tensor_"
+         out << SP << fType << " *" << OpName << "_initial_hidden_state = " << " tensor_"
                 << fNInitial_h << ";\n";
-         }
       } else {
-         if (fType == "float") {
+         if (fUseSession)
+            out << SP << fType << " * " << OpName << "_initial_hidden_state = fVec_" << OpName
+                   << "_initial_hidden_state.data();\n";
+         else
             out << SP << fType << "  " << OpName << "_initial_hidden_state[" << num_directions * batch_size *
                 fAttrHiddenSize << "] = {0};\n";
-         }
+
          for (size_t direction = 0; direction < num_directions; direction++) {
             out << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
             out << SP << SP << "for(size_t h = 0; h < " << fAttrHiddenSize << "; h++) {\n";
@@ -290,15 +339,16 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
    // Set the initial cell state
    if (!fNInitial_c.empty()) {
       if (fAttrLayout == 0) {
-         if (fType == "float") {
-            out << SP << fType << " *" << OpName << "_initial_cell_state = " << " tensor_"
+         out << SP << fType << " *" << OpName << "_initial_cell_state = " << " tensor_"
                 << fNInitial_c << ";\n";
-         }
       } else {
-         if (fType == "float") {
+         if (fUseSession)
+            out << SP << fType << " * " << OpName << "_initial_cell_state = fVec_" << OpName
+                << "_initial_cell_state.data();\n";
+         else
             out << SP << fType << "  " << OpName << "_initial_cell_state[" << num_directions * batch_size *
                 fAttrHiddenSize << "] = {0};\n";
-         }
+
          for (size_t direction = 0; direction < num_directions; direction++) {
             out << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
             out << SP << SP << "for(size_t h = 0; h < " << fAttrHiddenSize << "; h++) {\n";
@@ -314,7 +364,14 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
 
    // Set the feedforward
    size_t ff_size = seq_length * batch_size * fAttrHiddenSize;
-   if (fType == "float") {
+   if (fUseSession) {
+      out << SP << fType << " * " << OpName << "_ff_input_gate = fVec_" << OpName << "_ff_input_gate.data();\n";
+      out << SP << fType << " * " << OpName << "_ff_output_gate = fVec_" << OpName << "_ff_output_gate.data();\n";
+      out << SP << fType << " * " << OpName << "_ff_cell_gate = fVec_" << OpName << "_ff_cell_gate.data();\n";
+      if (fAttrInputForget == 0) {
+         out << SP << fType << " * " << OpName << "_ff_forget_gate = fVec_" << OpName << "_ff_forget_gate.data();\n";
+      }
+   } else {
       out << SP << fType << "  " << OpName << "_ff_input_gate[" << ff_size << "] = {0};\n";
       out << SP << fType << "  " << OpName << "_ff_output_gate[" << ff_size << "] = {0};\n";
       out << SP << fType << "  " << OpName << "_ff_cell_gate[" << ff_size << "] = {0};\n";
@@ -324,7 +381,14 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
    }
    // Set the gates
    size_t hidden_state_size = seq_length * num_directions * batch_size * fAttrHiddenSize;
-   if (fType == "float") {
+   if (fUseSession) {
+      out << SP << fType << " * " << OpName << "_input_gate = fVec_" << OpName << "_input_gate.data();\n";
+      out << SP << fType << " * " << OpName << "_output_gate = fVec_" << OpName << "_output_gate.data();\n";
+      out << SP << fType << " * " << OpName << "_cell_gate = fVec_" << OpName << "_cell_gate.data();\n";
+      if (fAttrInputForget == 0) {
+         out << SP << fType << " * " << OpName << "_forget_gate = fVec_" << OpName << "_forget_gate.data();\n";
+      }
+   } else {
       out << SP << fType << "  " << OpName << "_input_gate[" << hidden_state_size << "] = {0};\n";
       out << SP << fType << "  " << OpName << "_output_gate[" << hidden_state_size << "] = {0};\n";
       out << SP << fType << "  " << OpName << "_cell_gate[" << hidden_state_size << "] = {0};\n";
@@ -333,18 +397,21 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
       }
    }
    // Set the cell state and the new cell state = h(cell state)
-   if (fType == "float") {
+   if (fUseSession) {
+      out << SP << fType << " * " << OpName << "_cell_state = fVec_" << OpName << "_cell_state.data();\n";
+      out << SP << fType << " * " << OpName << "_new_cell_state = fVec_" << OpName << "_new_cell_state.data();\n";
+   } else {
       out << SP << fType << "  " << OpName << "_cell_state[" << hidden_state_size << "] = {0};\n";
       out << SP << fType << "  " << OpName << "_new_cell_state[" << hidden_state_size << "] = {0};\n";
    }
 
    // Set the hidden state
    if (fAttrLayout == 0 && !fNY.empty()) {
-      if (fType == "float") {
-         out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
-      }
+      out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
    } else {
-      if (fType == "float") {
+      if (fUseSession) {
+         out << SP << fType << " * " << OpName << "_hidden_state = fVec_" << OpName << "_hidden_state.data();\n";
+      } else {
          out << SP << fType << "  " << OpName << "_hidden_state[" << hidden_state_size << "] = {0};\n";
       }
    }
