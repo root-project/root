@@ -321,7 +321,7 @@ public:
       return std::make_unique<RMergeableFill<Hist_t>>(*fResultHist);
    }
 
-   std::string GetActionName() { return "Fill"; }
+   std::string GetActionName() { return "FillWithUnknownAxes"; }
 };
 
 extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
@@ -549,7 +549,7 @@ public:
       return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
    }
 
-   std::string GetActionName() { return "FillPar"; }
+   std::string GetActionName() { return "Fill"; }
 };
 
 class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
