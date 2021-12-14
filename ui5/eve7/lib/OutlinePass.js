@@ -2,148 +2,146 @@
  * @author spidersharma / http://eduperiment.com/
  */
 
-THREE.OutlinePass = function ( resolution, scene, camera ) {
 
-	// [{ "index": number, "isPoints": boolean, "pointSize": number, "vertShader": string, "fragShader":string },......]
-	this.renderScene = scene;
-	this.renderCamera = camera;
 
-	// [fElementId][elementId] -> { "sel_type": THREE.OutlinePass.selection_enum, "sec_sel": boolean, "geom": Primitive<> }
-	this.id2obj_map = {};
-	// R: Primitives
-	this._selectedObjects = [];
-	// [C1]: Selection Types - [C2]: Attributes(color, size, etc...) - [R2]: Primitives
-	this._groups = Array.from(Array(THREE.OutlinePass.selection_enum.total), () => []); // ES6 (could be replaced with vanilla Js)
 
-	this.edgeGlow = 0.0;
-	this.usePatternTexture = false;
-	this.edgeThickness = 1.0;
-	this.edgeStrength = 3.0;
-	this.downSampleRatio = 2;
-	this.glowDownSampleRatio = 2;
+class OutlinePass extends THREE.Pass { 
 
-	THREE.Pass.call( this );
+	constructor( resolution, scene, camera ) {
 
-	this.resolution = ( resolution !== undefined ) ? new THREE.Vector2( resolution.x, resolution.y ) : new THREE.Vector2( 256, 256 );
+		super();
 
-	var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat };
+		// [{ "index": number, "isPoints": boolean, "pointSize": number, "vertShader": string, "fragShader":string },......]
+		this.renderScene = scene;
+		this.renderCamera = camera;
 
-	var resx = Math.round( this.resolution.x / this.downSampleRatio );
-	var resy = Math.round( this.resolution.y / this.downSampleRatio );
+		// [fElementId][elementId] -> { "sel_type": OutlinePass.selection_enum, "sec_sel": boolean, "geom": Primitive<> }
+		this.id2obj_map = {};
+		// R: Primitives
+		this._selectedObjects = [];
+		// [C1]: Selection Types - [C2]: Attributes(color, size, etc...) - [R2]: Primitives
+		this._groups = Array.from(Array(OutlinePass.selection_enum.total), () => []); // ES6 (could be replaced with vanilla Js)
 
-	this.maskBufferMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff } );
-	this.maskBufferMaterial.side = THREE.DoubleSide;
+		this.edgeGlow = 0.0;
+		this.usePatternTexture = false;
+		this.edgeThickness = 1.0;
+		this.edgeStrength = 3.0;
+		this.downSampleRatio = 2;
+		this.glowDownSampleRatio = 2;
 
-	this.renderTargetMaskBuffer = [];
-	// +1 extra for the "accumulated" result
-	for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
-		let maskBuffer = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars )
-		maskBuffer.texture.name = "OutlinePass.submask"+i;
-		maskBuffer.texture.generateMipmaps = false;
+		this.resolution = ( resolution !== undefined ) ? new THREE.Vector2( resolution.x, resolution.y ) : new THREE.Vector2( 256, 256 );
 
-		this.renderTargetMaskBuffer.push(maskBuffer);
+		var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat };
+
+		var resx = Math.round( this.resolution.x / this.downSampleRatio );
+		var resy = Math.round( this.resolution.y / this.downSampleRatio );
+
+		this.maskBufferMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+		this.maskBufferMaterial.side = THREE.DoubleSide;
+
+		this.renderTargetMaskBuffer = [];
+		// +1 extra for the "accumulated" result
+		for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
+			let maskBuffer = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars )
+			maskBuffer.texture.name = "OutlinePass.submask"+i;
+			maskBuffer.texture.generateMipmaps = false;
+
+			this.renderTargetMaskBuffer.push(maskBuffer);
+		}
+
+		this.renderTargetMaskBufferMain = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars );
+		this.renderTargetMaskBufferMain.texture.name = "OutlinePass.mask";
+		this.renderTargetMaskBufferMain.texture.generateMipmaps = false;
+
+		this.depthMaterial = new THREE.MeshDepthMaterial();
+		this.depthMaterial.side = THREE.DoubleSide;
+		this.depthMaterial.depthPacking = THREE.RGBADepthPacking;
+		this.depthMaterial.blending = THREE.NoBlending;
+
+		this.prepareMaskMaterial = this.getPrepareMaskMaterial();
+		this.prepareMaskMaterial.side = THREE.DoubleSide;
+		this.prepareMaskMaterial.fragmentShader = replaceDepthToViewZ( this.prepareMaskMaterial.fragmentShader, this.renderCamera );
+
+		this.renderTargetDepthBuffer = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars );
+		this.renderTargetDepthBuffer.texture.name = "OutlinePass.depth";
+		this.renderTargetDepthBuffer.texture.generateMipmaps = false;
+
+		this.renderTargetMaskDownSampleBuffer = new THREE.WebGLRenderTarget( resx, resy, pars );
+		this.renderTargetMaskDownSampleBuffer.texture.name = "OutlinePass.depthDownSample";
+		this.renderTargetMaskDownSampleBuffer.texture.generateMipmaps = false;
+
+		this.renderTargetBlurBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
+		this.renderTargetBlurBuffer1.texture.name = "OutlinePass.blur1";
+		this.renderTargetBlurBuffer1.texture.generateMipmaps = false;
+		this.renderTargetBlurBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
+		this.renderTargetBlurBuffer2.texture.name = "OutlinePass.blur2";
+		this.renderTargetBlurBuffer2.texture.generateMipmaps = false;
+
+		this.edgeDetectionMaterial = this.getEdgeDetectionMaterial();
+		this.renderTargetEdgeBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
+		this.renderTargetEdgeBuffer1.texture.name = "OutlinePass.edge1";
+		this.renderTargetEdgeBuffer1.texture.generateMipmaps = false;
+		this.renderTargetEdgeBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
+		this.renderTargetEdgeBuffer2.texture.name = "OutlinePass.edge2";
+		this.renderTargetEdgeBuffer2.texture.generateMipmaps = false;
+
+		const MAX_EDGE_THICKNESS = 4;
+		const MAX_EDGE_GLOW = 4;
+
+		this.separableBlurMaterial1 = this.getSeperableBlurMaterial( MAX_EDGE_THICKNESS );
+		this.separableBlurMaterial1.uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
+		this.separableBlurMaterial1.uniforms[ "kernelRadius" ].value = 1;
+		this.separableBlurMaterial2 = this.getSeperableBlurMaterial( MAX_EDGE_GLOW );
+		this.separableBlurMaterial2.uniforms[ "texSize" ].value = new THREE.Vector2( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ) );
+		this.separableBlurMaterial2.uniforms[ "kernelRadius" ].value = MAX_EDGE_GLOW;
+
+		// Overlay material
+		this.overlayMaterial = this.getOverlayMaterial();
+
+		// copy material
+		if ( THREE.CopyShader === undefined )
+			console.error( "THREE.OutlinePass relies on THREE.CopyShader" );
+
+		var copyShader = THREE.CopyShader;
+
+		this.copyUniforms = THREE.UniformsUtils.clone( copyShader.uniforms );
+		this.copyUniforms[ "opacity" ].value = 1.0;
+
+		this.materialCopy = new THREE.ShaderMaterial( {
+			uniforms: this.copyUniforms,
+			vertexShader: copyShader.vertexShader,
+			fragmentShader: copyShader.fragmentShader,
+			blending: THREE.NoBlending,
+			depthTest: false,
+			depthWrite: false,
+			transparent: true
+		} );
+
+		this.enabled = true;
+		this.needsSwap = false;
+
+		this.oldClearColor = new THREE.Color();
+		this.oldClearAlpha = 1;
+
+		this.camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
+		this.scene = new THREE.Scene();
+
+		this.quad = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), null );
+		this.quad.frustumCulled = false; // Avoid getting clipped
+		this.scene.add( this.quad );
+
+		this.tempPulseColor1 = new THREE.Color();
+		this.tempPulseColor2 = new THREE.Color();
+		this.textureMatrix = new THREE.Matrix4();
+
+		function replaceDepthToViewZ( string, camera ) {
+			var type = camera.isPerspectiveCamera ? 'perspective' : 'orthographic';
+			return string.replace( /DEPTH_TO_VIEW_Z/g, type + 'DepthToViewZ' );
+		}
+
 	}
 
-	this.renderTargetMaskBufferMain = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars );
-	this.renderTargetMaskBufferMain.texture.name = "OutlinePass.mask";
-	this.renderTargetMaskBufferMain.texture.generateMipmaps = false;
-
-	this.depthMaterial = new THREE.MeshDepthMaterial();
-	this.depthMaterial.side = THREE.DoubleSide;
-	this.depthMaterial.depthPacking = THREE.RGBADepthPacking;
-	this.depthMaterial.blending = THREE.NoBlending;
-
-	this.prepareMaskMaterial = this.getPrepareMaskMaterial();
-	this.prepareMaskMaterial.side = THREE.DoubleSide;
-	this.prepareMaskMaterial.fragmentShader = replaceDepthToViewZ( this.prepareMaskMaterial.fragmentShader, this.renderCamera );
-
-	this.renderTargetDepthBuffer = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars );
-	this.renderTargetDepthBuffer.texture.name = "OutlinePass.depth";
-	this.renderTargetDepthBuffer.texture.generateMipmaps = false;
-
-	this.renderTargetMaskDownSampleBuffer = new THREE.WebGLRenderTarget( resx, resy, pars );
-	this.renderTargetMaskDownSampleBuffer.texture.name = "OutlinePass.depthDownSample";
-	this.renderTargetMaskDownSampleBuffer.texture.generateMipmaps = false;
-
-	this.renderTargetBlurBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
-	this.renderTargetBlurBuffer1.texture.name = "OutlinePass.blur1";
-	this.renderTargetBlurBuffer1.texture.generateMipmaps = false;
-	this.renderTargetBlurBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
-	this.renderTargetBlurBuffer2.texture.name = "OutlinePass.blur2";
-	this.renderTargetBlurBuffer2.texture.generateMipmaps = false;
-
-	this.edgeDetectionMaterial = this.getEdgeDetectionMaterial();
-	this.renderTargetEdgeBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
-	this.renderTargetEdgeBuffer1.texture.name = "OutlinePass.edge1";
-	this.renderTargetEdgeBuffer1.texture.generateMipmaps = false;
-	this.renderTargetEdgeBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
-	this.renderTargetEdgeBuffer2.texture.name = "OutlinePass.edge2";
-	this.renderTargetEdgeBuffer2.texture.generateMipmaps = false;
-
-	const MAX_EDGE_THICKNESS = 4;
-	const MAX_EDGE_GLOW = 4;
-
-	this.separableBlurMaterial1 = this.getSeperableBlurMaterial( MAX_EDGE_THICKNESS );
-	this.separableBlurMaterial1.uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
-	this.separableBlurMaterial1.uniforms[ "kernelRadius" ].value = 1;
-	this.separableBlurMaterial2 = this.getSeperableBlurMaterial( MAX_EDGE_GLOW );
-	this.separableBlurMaterial2.uniforms[ "texSize" ].value = new THREE.Vector2( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ) );
-	this.separableBlurMaterial2.uniforms[ "kernelRadius" ].value = MAX_EDGE_GLOW;
-
-	// Overlay material
-	this.overlayMaterial = this.getOverlayMaterial();
-
-	// copy material
-	if ( THREE.CopyShader === undefined )
-		console.error( "THREE.OutlinePass relies on THREE.CopyShader" );
-
-	var copyShader = THREE.CopyShader;
-
-	this.copyUniforms = THREE.UniformsUtils.clone( copyShader.uniforms );
-	this.copyUniforms[ "opacity" ].value = 1.0;
-
-	this.materialCopy = new THREE.ShaderMaterial( {
-		uniforms: this.copyUniforms,
-		vertexShader: copyShader.vertexShader,
-		fragmentShader: copyShader.fragmentShader,
-		blending: THREE.NoBlending,
-		depthTest: false,
-		depthWrite: false,
-		transparent: true
-	} );
-
-	this.enabled = true;
-	this.needsSwap = false;
-
-	this.oldClearColor = new THREE.Color();
-	this.oldClearAlpha = 1;
-
-	this.camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
-	this.scene = new THREE.Scene();
-
-	this.quad = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), null );
-	this.quad.frustumCulled = false; // Avoid getting clipped
-	this.scene.add( this.quad );
-
-	this.tempPulseColor1 = new THREE.Color();
-	this.tempPulseColor2 = new THREE.Color();
-	this.textureMatrix = new THREE.Matrix4();
-
-	function replaceDepthToViewZ( string, camera ) {
-
-		var type = camera.isPerspectiveCamera ? 'perspective' : 'orthographic';
-
-		return string.replace( /DEPTH_TO_VIEW_Z/g, type + 'DepthToViewZ' );
-
-	}
-
-};
-
-THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype), {
-
-	constructor: THREE.OutlinePass,
-
-	parseAtts: function (object, groups) {
+	parseAtts(object, groups) {
 		try {
 			let found = false;
 			// loop over groups
@@ -182,9 +180,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		}
 		finally {
 		}
-		},
+		}
 
-	checkForCustomAtts: function(){
+	checkForCustomAtts() {
 		/*
 		this.atts = {
 			"index": [],
@@ -207,7 +205,7 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		*/
 
 		// one array for each selection type
-		this._groups = Array.from(Array(THREE.OutlinePass.selection_enum.total), () => []);
+		this._groups = Array.from(Array(OutlinePass.selection_enum.total), () => []);
 
 		// fill in "this._groups"
 		for (const obj of this._selectedObjects){
@@ -266,9 +264,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		// 	}
 		// }
 		// this._groups = groups.filter(Array);
-	},
+	}
 
-	dispose: function () {
+	dispose() {
 
 		this.renderTargetMaskBufferMain.dispose();
 		for(const fbo of this.renderTargetMaskBuffer)
@@ -281,9 +279,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		this.renderTargetEdgeBuffer1.dispose();
 		this.renderTargetEdgeBuffer2.dispose();
 
-	},
+	}
 
-	setSize: function ( width, height ) {
+	setSize( width, height ) {
 
 		this.renderTargetMaskBufferMain.setSize( width, height );
 		for(const fbo of this.renderTargetMaskBuffer)
@@ -304,9 +302,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 
 		this.separableBlurMaterial2.uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
 
-	},
+	}
 
-	changeVisibilityOfSelectedObjects: function ( bVisible, object ) {
+	changeVisibilityOfSelectedObjects( bVisible, object ) {
 
 		function gatherSelectedMeshesCallBack( object ) {
 
@@ -337,9 +335,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			}
 		}
 
-	},
+	}
 
-	changeVisibilityOfNonSelectedObjects: function ( bVisible ) {
+	changeVisibilityOfNonSelectedObjects( bVisible ) {
 
 		var selectedMeshes = [];
 
@@ -395,13 +393,13 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 
 		this.renderScene.traverse( VisibilityChangeCallBack );
 
-	},
+	}
 
-	changeVisibilityAllObjects: function(bVisible){
+	changeVisibilityAllObjects(bVisible){
 		this.renderScene.traverse( function(object){ object.visible = bVisible; } );
-	},
+	}
 
-	updateTextureMatrix: function () {
+	updateTextureMatrix() {
 
 		this.textureMatrix.set( 0.5, 0.0, 0.0, 0.5,
 			0.0, 0.5, 0.0, 0.5,
@@ -410,9 +408,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		this.textureMatrix.multiply( this.renderCamera.projectionMatrix );
 		this.textureMatrix.multiply( this.renderCamera.matrixWorldInverse );
 
-	},
+	}
 
-	draw: function(renderer, group, selection_type){
+	draw(renderer, group, selection_type){
 		this.changeVisibilityOfSelectedObjects(true, group);
 
 		if(group[0].type === "Points"){
@@ -427,9 +425,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		renderer.render( this.renderScene, this.renderCamera );
 
 		this.changeVisibilityOfSelectedObjects(false, group);
-	},
+	}
 
-	render: function ( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
+	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
 		this._selectedObjects = Object.values(this.id2obj_map).flat();
 		// console.log(this.selectedObjects);
 		// debugger;
@@ -494,7 +492,7 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			//console.log(this._groups);
 
 			//console.log("$", this._groups[0]);
-			for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
+			for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
 				for(const group of this._groups[i])
 					if(group.length > 0)
 						this.draw(renderer, group, i);
@@ -535,7 +533,7 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			renderer.clear();
 			renderer.setClearColor( 0xffffff, 1 );
 
-			for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
+			for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
 				let group = this._groups[i];
 				if(group.length > 0){
 					this.quad.material = this.materialCopy;
@@ -549,7 +547,7 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 					this.edgeDetectionMaterial.uniforms[ "maskTexture" ].value = this.renderTargetMaskDownSampleBuffer.texture;
 					this.edgeDetectionMaterial.uniforms[ "texSize" ].value = new THREE.Vector2( this.renderTargetMaskDownSampleBuffer.width, this.renderTargetMaskDownSampleBuffer.height );
 
-					const att = THREE.OutlinePass.selection_atts[i];
+					const att = OutlinePass.selection_atts[i];
 					this.edgeDetectionMaterial.uniforms[ "visibleEdgeColor" ].value = att.visibleEdgeColor;
 					this.edgeDetectionMaterial.uniforms[ "hiddenEdgeColor" ].value = att.hiddenEdgeColor;
 
@@ -561,13 +559,13 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 
 
 			//>-----------------
-			// for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
+			// for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
 			// 	const sel = this.sel[i];
 			// 	if(sel.length > 0){
 			// 		this.changeVisibilityOfSelectedObjects(true, sel);
 
 			// 		// 3. Apply Edge Detection Pass
-			// 		const att = THREE.OutlinePass.selection_atts[i];
+			// 		const att = OutlinePass.selection_atts[i];
 			// 		this.edgeDetectionMaterial.uniforms[ "visibleEdgeColor" ].value = att.visibleEdgeColor;
 			// 		this.edgeDetectionMaterial.uniforms[ "hiddenEdgeColor" ].value = att.hiddenEdgeColor;
 			// 		renderer.render( this.scene, this.camera );
@@ -580,13 +578,13 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			// 4. Apply Blur on "glowDownSampleRatio" res
 			this.quad.material = this.separableBlurMaterial1;
 			this.separableBlurMaterial1.uniforms[ "colorTexture" ].value = this.renderTargetEdgeBuffer1.texture;
-			this.separableBlurMaterial1.uniforms[ "direction" ].value = THREE.OutlinePass.BlurDirectionX;
+			this.separableBlurMaterial1.uniforms[ "direction" ].value = OutlinePass.BlurDirectionX;
 			this.separableBlurMaterial1.uniforms[ "kernelRadius" ].value = this.edgeThickness;
 			renderer.setRenderTarget( this.renderTargetBlurBuffer1 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
 			this.separableBlurMaterial1.uniforms[ "colorTexture" ].value = this.renderTargetBlurBuffer1.texture;
-			this.separableBlurMaterial1.uniforms[ "direction" ].value = THREE.OutlinePass.BlurDirectionY;
+			this.separableBlurMaterial1.uniforms[ "direction" ].value = OutlinePass.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
@@ -594,12 +592,12 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			// Apply Blur on "downSampleRatio*glowDownSampleRatio" res
 			this.quad.material = this.separableBlurMaterial2;
 			this.separableBlurMaterial2.uniforms[ "colorTexture" ].value = this.renderTargetEdgeBuffer1.texture;
-			this.separableBlurMaterial2.uniforms[ "direction" ].value = THREE.OutlinePass.BlurDirectionX;
+			this.separableBlurMaterial2.uniforms[ "direction" ].value = OutlinePass.BlurDirectionX;
 			renderer.setRenderTarget( this.renderTargetBlurBuffer2 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
 			this.separableBlurMaterial2.uniforms[ "colorTexture" ].value = this.renderTargetBlurBuffer2.texture;
-			this.separableBlurMaterial2.uniforms[ "direction" ].value = THREE.OutlinePass.BlurDirectionY;
+			this.separableBlurMaterial2.uniforms[ "direction" ].value = OutlinePass.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer2 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
@@ -626,9 +624,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 			for(const obj of sec_sel)
 				if(obj) this.renderScene.remove(obj);
 		}
-	},
+	}
 
-	getPrepareMaskMaterial: function () {
+	getPrepareMaskMaterial() {
 
 		return new THREE.ShaderMaterial( {
 
@@ -665,9 +663,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 					gl_FragColor = vec4(0.0, depthTest, 1.0, 1.0);
 				}`
 		} );
-	},
+	}
 
-	getEdgeDetectionMaterial: function () {
+	getEdgeDetectionMaterial() {
 
 		return new THREE.ShaderMaterial( {
 
@@ -727,9 +725,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 				transparent: false
 		} );
 
-	},
+	}
 
-	getSeperableBlurMaterial: function ( maxRadius ) {
+	getSeperableBlurMaterial( maxRadius ) {
 
 		return new THREE.ShaderMaterial( {
 
@@ -783,9 +781,9 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 				}"
 		} );
 
-	},
+	}
 
-	getOverlayMaterial: function () {
+	getOverlayMaterial() {
 
 		return new THREE.ShaderMaterial( {
 
@@ -844,39 +842,38 @@ THREE.OutlinePass.prototype = Object.assign(Object.create(THREE.Pass.prototype),
 		} );
 
 	}
+	
+//	customAtt(mesh, opts){
+//		opts = opts || {};
+//
+//		if(opts.index === undefined)
+//			throw "you gotta pass a valid index";
+//		this.index = opts.index;
+//
+//		this.isPoint = mesh.isPoints || opts.isPoints || false;
+//		if(this.isPoint)
+//			this.pointSize = opts.pointSize || 20;
+//
+//		this.hasCustomVertShader = (opts.vertShader !== undefined);
+//		if(this.hasCustomVertShader) this.vertShader = opts.vertShader;
+//
+//		this.hasCustomFragShader = (opts.fragShader !== undefined);
+//		if(this.hasCustomFragShader) this.fragShader = opts.fragShader;
+//	}
 
-} );
 
-if(false){
-	THREE.OutlinePass.customAtt = function(mesh, opts){
-		opts = opts || {};
-
-		if(opts.index === undefined)
-			throw "you gotta pass a valid index";
-		this.index = opts.index;
-
-		this.isPoint = mesh.isPoints || opts.isPoints || false;
-		if(this.isPoint)
-			this.pointSize = opts.pointSize || 20;
-
-		this.hasCustomVertShader = (opts.vertShader !== undefined);
-		if(this.hasCustomVertShader) this.vertShader = opts.vertShader;
-
-		this.hasCustomFragShader = (opts.fragShader !== undefined);
-		if(this.hasCustomFragShader) this.fragShader = opts.fragShader;
-	};
 }
 
-THREE.OutlinePass.BlurDirectionX = new THREE.Vector2( 1.0, 0.0 );
-THREE.OutlinePass.BlurDirectionY = new THREE.Vector2( 0.0, 1.0 );
+OutlinePass.BlurDirectionX = new THREE.Vector2( 1.0, 0.0 );
+OutlinePass.BlurDirectionY = new THREE.Vector2( 0.0, 1.0 );
 
-THREE.OutlinePass.selection_enum = {
+OutlinePass.selection_enum = {
 	"select": 0,
 	"highlight": 1,
 	"total": 2
 };
 
-THREE.OutlinePass.selection_atts = [
+OutlinePass.selection_atts = [
 	{
 		visibleEdgeColor: new THREE.Color( 1, 0, 0 ),
 		hiddenEdgeColor: new THREE.Color( 1, 0, 0.5 )
@@ -896,3 +893,5 @@ THREE.OutlinePass.selection_atts = [
 		// edgeStrength: 3.0,
 	}
 ];
+
+THREE.OutlinePass = OutlinePass;
