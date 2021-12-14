@@ -1,7 +1,6 @@
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElements',
-   'rootui5/eve7/lib/OrbitControlsEve',
    'rootui5/eve7/lib/OutlinePass',
    'rootui5/eve7/lib/FXAAShader'
 ], function(GlViewer, EveElements) {
@@ -126,6 +125,8 @@ sap.ui.define([
          this.outline_pass.usePatternTexture = false;
          this.outline_pass.downSampleRatio = 1;
          this.outline_pass.glowDownSampleRatio = 3;
+         this.outline_pass.id2obj_map = {};
+
 
          // This does not work ... seems it is not standard pass?
          // this.outline_pass.renderToScreen = true;
@@ -189,8 +190,6 @@ sap.ui.define([
          if (e0_buttons == 1) {// Selection on mouseup without move
             this.handleMouseSelect(event);
          } else if (e0_buttons == 2) { // Context menu on delay without move
-            // Was needed for "on press with timeout"
-            // this.controls.resetMouseDown(event);
             JSROOT.Painter.createMenu(event, this).then(menu => { this.showContextMenu(event, menu) });
          }
       },
@@ -267,7 +266,7 @@ sap.ui.define([
          this.get_view().getDomRef().appendChild(this.ttip);
 
          // Setup controls
-         this.controls = new THREE.OrbitControlsEve(this.camera, this.get_view().getDomRef());
+         this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
 
          this.controls.addEventListener('change', this.render.bind(this));
 
@@ -341,7 +340,8 @@ sap.ui.define([
             this.camera.top = ey;
             this.camera.bottom = -ey;
 
-            this.controls.resetOrthoPanZoom();
+            if (typeof this.controls.resetOrthoPanZoom == 'function')
+               this.controls.resetOrthoPanZoom();
 
             this.controls.screenSpacePanning = true;
             this.controls.enableRotate = false;
@@ -363,7 +363,10 @@ sap.ui.define([
          let v = this.get_manager().GetElement(this.controller.eveViewerId);
          if (!v.fRnrSelf)
             return;
-         
+
+         // fill selected objects for outline pass before rendering
+         this.outline_pass._selectedObjects = Object.values(this.outline_pass.id2obj_map).flat();
+
          // Render through composer:
          this.composer.render(this.scene, this.camera);
 
