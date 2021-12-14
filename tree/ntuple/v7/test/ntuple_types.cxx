@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include "TInterpreter.h"
 
 TEST(RNTuple, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
@@ -214,6 +215,9 @@ TEST(RNTuple, TClassMultipleInheritance)
 
 TEST(RNTuple, TClassTemplatedBase)
 {
+   // For non-cxxmodules builds, cling needs to parse the header for the `SG::sgkey_t` type to be known
+   gInterpreter->ProcessLine("#include \"CustomStruct.hxx\"");
+
    FileRaii fileGuard("test_ntuple_tclass.ntuple");
    {
       auto model = RNTupleModel::Create();

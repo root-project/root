@@ -11,7 +11,6 @@
 #pragma link C++ class DerivedC+;
 
 #pragma link C++ class IAuxSetOption+;
-#pragma link C++ typedef SG::sgkey_t+;
 #pragma link C++ class PackedParameters+;
 #pragma link C++ class PackedContainer<int>+;
 

@@ -16,6 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               SOURCES CustomStruct.cxx
                               LINKDEF CustomStructLinkDef.h
                               DEPENDENCIES RIO)
+configure_file(CustomStruct.hxx . COPYONLY)
 if(MSVC)
   add_custom_command(TARGET CustomStruct POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStruct.dll
