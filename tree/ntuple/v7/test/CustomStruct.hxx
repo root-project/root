@@ -1,3 +1,6 @@
+#ifndef ROOT7_RNTuple_Test_CustomStruct
+#define ROOT7_RNTuple_Test_CustomStruct
+
 #include <string>
 #include <vector>
 
@@ -67,3 +70,5 @@ struct ComplexStruct {
 
    int a = 0;
 };
+
+#endif
