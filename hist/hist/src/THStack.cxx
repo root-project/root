@@ -787,18 +787,19 @@ void THStack::Paint(Option_t *choptin)
          Int_t ny = nx;
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
+
+         TH1 *h;
+         Int_t i = 0;
+         TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+         while (lnk) {
+            i++;
+            padsav->cd(i);
+            h = (TH1*)lnk->GetObject();
+            h->Draw(lnk->GetOption());
+            lnk = (TObjOptLink*)lnk->Next();
+         }
+         padsav->cd();
       }
-      TH1 *h;
-      Int_t i = 0;
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
-      while (lnk) {
-         i++;
-         padsav->cd(i);
-         h = (TH1*)lnk->GetObject();
-         h->Draw(lnk->GetOption());
-         lnk = (TObjOptLink*)lnk->Next();
-      }
-      padsav->cd();
       return;
    }
 
