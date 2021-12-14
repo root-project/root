@@ -60,6 +60,7 @@ class RDataSource;
 } // namespace ROOT
 
 namespace {
+using ROOT::Internal::RDF::IsStrInVec;
 using ROOT::RDF::ColumnNames_t;
 
 /// A string expression such as those passed to Filter and Define, digested to a standardized form
@@ -72,11 +73,6 @@ struct ParsedExpression {
    /// The list of variable names used in fExpr, with same ordering and size as fUsedCols
    ColumnNames_t fVarNames;
 };
-
-static bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
-{
-   return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
-}
 
 // look at expression `expr` and return a list of column names used, including aliases
 static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_t &treeBranchNames,
