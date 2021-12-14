@@ -64,6 +64,11 @@ int f() { return; }
           ^
 ```
 More details at [PR #8737](https://github.com/root-project/root/pull/8737).
+- Continuation of input lines using backslash `\` is supported in ROOT's prompt, e.g.
+```cpp
+root [0] std::cout \
+root (cont'ed, cancel with .@) [1]<< "ROOT\n";
+```
 
 ## I/O Libraries
 
@@ -91,6 +96,11 @@ Try 'root --help' for more information.
 - `TTreeReader::GetEntryStatus` now always reports `kEntryBeyondEnd` after an event loop correctly completes. In previous versions, it could sometime return `kEntryNotFound` even for well-behaved event loops.
 - Add `TEntryList::AddSubList` to specifically add a sub-list to the main list of entries. Consequently, add also a new option `"sync"` in `TChain::SetEntryList` to connect the sub-trees of the chain to the sub-lists of the entry list in lockstep (PR [#8660](https://github.com/root-project/root/pull/8660)).
 - Add `TEntryList::EnterRange` to add all entries in a certain range `[start, end)` to the entry list (PR [#8740](https://github.com/root-project/root/pull/8740)).
+
+## RNTuple
+
+- ROOT's experimental successor of TTree has been upgraded to the version 1 of the binary format specification. Compared to the v0 format, the header is ~40% smaller and the footer ~100% smaller (after zstd compression). As of version 1, RNTuple is supposed to stay backwards compatible. More details in PR [#8897](https://github.com/root-project/root/pull/8897).
+RNTuple is still experimental and is scheduled to become production grade in 2024. Thus, we appreciate feedback and suggestions for improvement.
 
 ## RDataFrame
 
