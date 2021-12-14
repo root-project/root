@@ -272,8 +272,6 @@ sap.ui.define([
                }
                else if (event.buttons == 2) // Context menu on delay without move
                {
-                  // Was needed for "on press with timeout"
-                  // glc.controls.resetMouseDown(event);
                   JSROOT.Painter.createMenu(event2, glc).then(menu => { glc.showContextMenu(event2, menu) });
                }
             }
@@ -398,7 +396,8 @@ sap.ui.define([
             this.camera._bottom = -ey;
             this.camera.updateProjectionMatrix();
 
-            this.controls.resetOrthoPanZoom();
+            if (typeof this.controls.resetOrthoPanZoom == 'function')
+               this.controls.resetOrthoPanZoom();
 
             this.controls.screenSpacePanning = true;
             this.controls.enableRotate = false;

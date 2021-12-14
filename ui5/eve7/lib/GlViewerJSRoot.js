@@ -77,6 +77,7 @@ sap.ui.define([
             this.outline_pass.usePatternTexture = false;
             this.outline_pass.downSampleRatio = 1;
             this.outline_pass.glowDownSampleRatio = 3;
+            this.outline_pass.id2obj_map = {};
 
             // const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
             // THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');
@@ -274,6 +275,10 @@ sap.ui.define([
 
       render: function()
       {
+         // fill selected objects for outline pass before rendering
+         let outline_pass = this.geo_painter.outline_pass;
+         if (outline_pass) outline_pass._selectedObjects = Object.values(outline_pass.id2obj_map).flat();
+         
          this.geo_painter.render3D();
       },
 
