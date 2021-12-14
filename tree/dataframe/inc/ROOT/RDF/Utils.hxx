@@ -257,6 +257,8 @@ struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunct
 };
 #endif
 
+bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

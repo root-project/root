@@ -420,6 +420,11 @@ void CheckDefineType(RDefineBase &define, const std::type_info &tid)
    }
 }
 
+bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
+{
+   return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
